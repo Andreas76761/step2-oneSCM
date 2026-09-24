@@ -26,7 +26,11 @@ describe('Stammdaten und Draft Manual (ADR-032, ADR-033)', () => {
       .toEqual(['1 A', '1.1 A1', '2 B']);
     const outlineVariant = { roles: ['dealer'], divisions: ['car'], marketScope: 'blueprint' as const, markets: [] };
     expect(variantProblems({ roles: ['all'], divisions: [], market: null }, outlineVariant)).toEqual([]);
-    expect(variantProblems({ roles: ['hq'], divisions: ['van'], market: 'FR' }, outlineVariant)).toHaveLength(3);
+    expect(variantProblems({ roles: ['hq'], divisions: ['van'], market: 'FR' }, outlineVariant)).toEqual([
+      'Rolle HQ gehört nicht zur Variante', 'Sparte VAN gehört nicht zur Variante', 'marktspezifisch (FR) in einer Blueprint-Gliederung',
+    ]);
+    expect(variantProblems({ roles: [], divisions: ['unconfirmed'], market: null }, outlineVariant)).toEqual(['Sparte ungeklärt – bitte zuordnen']);
+    expect(variantProblems({ roles: [], divisions: ['unconfirmed'], market: null }, { ...outlineVariant, divisions: [] })).toEqual([]);
     expect(variantProblems({ roles: ['dealer'], divisions: ['car'], market: 'FR' }, { ...outlineVariant, marketScope: 'markets', markets: ['FR'] })).toEqual([]);
 
     const built = await build('outlines');
@@ -35,6 +39,7 @@ describe('Stammdaten und Draft Manual (ADR-032, ADR-033)', () => {
       expect((await call('GET', '/outlines')).json.markets).toEqual(['DE', 'FR', 'IT', 'ES', 'GB', 'NL']);
       expect((await call('POST', '/outlines', { name: 'X' }, 'u-leser')).status).toBe(403);
       expect((await call('POST', '/outlines', { name: 'X', roles: ['kunde'] })).status).toBe(400);
+      expect((await call('POST', '/outlines', { name: 'X', divisions: ['unconfirmed'] })).status).toBe(400);
       expect((await call('POST', '/outlines', { name: 'X', marketScope: 'markets', markets: [] })).status).toBe(400);
       expect((await call('POST', '/outlines', { name: 'X', marketScope: 'markets', markets: ['US'] })).status).toBe(400);
       expect((await call('POST', '/outlines', { name: 'Leer', content: 'nur Text ohne Gliederung', format: 'markdown' })).status).toBe(400);

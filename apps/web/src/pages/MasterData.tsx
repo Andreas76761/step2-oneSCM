@@ -231,7 +231,7 @@ export function FaqPage() {
             {ref?.roles.filter((r) => r.code !== 'all').map((r) => <label key={r.code} className="inline"><input type="checkbox" checked={form.roles.includes(r.code)} onChange={() => setForm({ ...form, roles: toggle(form.roles, r.code) })} /> {r.icon} {r.label}</label>)}
           </fieldset>
           <fieldset className="checks"><legend>Sparten (keine = alle)</legend>
-            {ref?.divisions.filter((d) => d.code !== 'all').map((d) => <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> {d.icon} {d.label}</label>)}
+            {ref?.divisions.filter((d) => d.code !== 'all' && d.code !== 'unconfirmed').map((d) => <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> {d.icon} {d.label}</label>)}
           </fieldset>
           <label className="inline">Status
             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="draft">Entwurf</option><option value="published">veröffentlicht</option></select>

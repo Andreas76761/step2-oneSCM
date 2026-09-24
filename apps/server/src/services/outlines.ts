@@ -31,7 +31,7 @@ async function projectMarkets(ctx: Ctx) {
 async function validVariant(ctx: Ctx, input: OutlineInput, base?: Row) {
   const roles = input.roles !== undefined ? [...new Set(input.roles.map(String))] : parseJson<string[]>(base?.roles, []);
   const divisions = input.divisions !== undefined ? [...new Set(input.divisions.map(String))] : parseJson<string[]>(base?.divisions, []);
-  const bad = [...roles.filter((r) => !ROLE_CODES.includes(r) || r === 'all'), ...divisions.filter((d) => !DIVISION_CODES.includes(d) || d === 'all')];
+  const bad = [...roles.filter((r) => !ROLE_CODES.includes(r) || r === 'all'), ...divisions.filter((d) => !DIVISION_CODES.includes(d) || d === 'all' || d === 'unconfirmed')];
   if (bad.length) throw badRequest(`Unbekannte Rollen/Sparten: ${bad.join(', ')}.`);
   const marketScope = (input.marketScope ?? base?.market_scope ?? 'blueprint') as MarketScope;
   if (marketScope !== 'blueprint' && marketScope !== 'markets') throw badRequest('marketScope muss blueprint oder markets sein.');

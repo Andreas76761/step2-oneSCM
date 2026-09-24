@@ -1,5 +1,6 @@
 // Gliederungen (ADR-032): Einlesen aus Markdown/JSON, Nummerierung, Ausgabe. Reine Fachlogik ohne I/O.
 import { headingKey } from './markdown.js';
+import { DIVISIONS, ROLES } from './reference.js';
 
 export interface OutlineTreeNode {
   title: string;
@@ -105,15 +106,22 @@ export function outlineToMarkdown(title: string, nodes: (NumberedNode & { number
 /** Vergleichsschlüssel für die automatische Zuordnung (Nummern und Formatierung ignoriert) */
 export const matchKey = (title: string) => headingKey(title);
 
-/** Passt ein Schnipsel zur Variante einer Gliederung? Allgemeine Inhalte passen immer. */
+const roleLabel = (c: string) => ROLES.find((r) => r.code === c)?.label ?? c;
+const divisionLabel = (c: string) => DIVISIONS.find((d) => d.code === c)?.label ?? c;
+
+/** Passt ein Schnipsel zur Variante einer Gliederung? Allgemeine Inhalte passen immer; „ungeklärt“ wird eigens gemeldet. */
 export function variantProblems(
   snippet: { roles: string[]; divisions: string[]; market: string | null },
   outline: { roles: string[]; divisions: string[]; marketScope: 'blueprint' | 'markets'; markets: string[] },
 ): string[] {
   const problems: string[] = [];
   const general = (codes: string[]) => !codes.length || codes.includes('all');
-  if (outline.roles.length && !general(snippet.roles) && !snippet.roles.some((r) => outline.roles.includes(r))) problems.push(`Rolle ${snippet.roles.join(', ')} gehört nicht zur Variante`);
-  if (outline.divisions.length && !general(snippet.divisions) && !snippet.divisions.some((d) => outline.divisions.includes(d))) problems.push(`Sparte ${snippet.divisions.join(', ')} gehört nicht zur Variante`);
+  if (outline.roles.length && !general(snippet.roles) && !snippet.roles.some((r) => outline.roles.includes(r))) problems.push(`Rolle ${snippet.roles.map(roleLabel).join(', ')} gehört nicht zur Variante`);
+  const divisions = snippet.divisions.filter((d) => d !== 'unconfirmed');
+  if (outline.divisions.length) {
+    if (!divisions.length && snippet.divisions.includes('unconfirmed')) problems.push('Sparte ungeklärt – bitte zuordnen');
+    else if (!general(divisions) && !divisions.some((d) => outline.divisions.includes(d))) problems.push(`Sparte ${divisions.map(divisionLabel).join(', ')} gehört nicht zur Variante`);
+  }
   if (snippet.market) {
     if (outline.marketScope === 'blueprint') problems.push(`marktspezifisch (${snippet.market}) in einer Blueprint-Gliederung`);
     else if (!outline.markets.includes(snippet.market)) problems.push(`Markt ${snippet.market} gehört nicht zur Variante`);

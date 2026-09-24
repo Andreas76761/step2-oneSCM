@@ -39,7 +39,7 @@ function VariantFields({ form, setForm, markets }: { form: VariantForm; setForm:
       </fieldset>
       <fieldset className="checks">
         <legend>Sparten (keine Auswahl = alle)</legend>
-        {ref?.divisions.filter((d) => d.code !== 'all').map((d) => (
+        {ref?.divisions.filter((d) => d.code !== 'all' && d.code !== 'unconfirmed').map((d) => (
           <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> {d.icon} {d.label}</label>
         ))}
       </fieldset>
