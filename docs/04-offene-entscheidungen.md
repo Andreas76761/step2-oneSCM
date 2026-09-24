@@ -48,6 +48,7 @@
 |---|---|---|---|
 | 24.09.2026 | Auftraggeber (Andreas) | E-01 … E-15, W-01 … W-09 | Übernahme aller vorläufigen Annahmen aus Etappe 1 ohne Änderung; E-15 um die in Etappe 2 umgesetzte OIDC-Anbindung konkretisiert |
 | 24.09.2026 | Auftraggeber (Andreas) | E-16 | Cloud-KI erlaubt (Aktivierung per Konfiguration), Anthropic + OpenAI-kompatibel, Evidenz je Satz + Übernahme durch die Redaktion |
+| 24.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 11 | Stammdaten und Draft Manual (ADR-032, ADR-033): Märkte konfigurierbar (Vorbelegung DE, FR, IT, ES, GB, NL), Planung = Redaktionsplanung je Kapitel, Gliederungen als zusätzliche Sicht neben der Kapitelstruktur, FAQ gepflegt mit Vorschlägen aus dem Assistenten |
 | 24.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 10 | Integrationen & API, Bilder & Medien (Alternativtext als Pflicht), Kontexthilfe für oneSCM, Release-Pipeline (ADR-028 … ADR-031) |
 | 24.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 9 | Handbuch-Assistent (RAG), mehrstufige Freigabe (erweitert E-12 als Option je Projekt), Betrieb & Performance (ADR-025 … ADR-027) |
 | 24.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 8 | Mehrsprachige Releases, Import aus Fremdsystemen (Git, Confluence-HTML, Word), Analytik & Berichte, Skalierung mit ANN-Index/pgvector und Lasttest 50 000 Abschnitte (ADR-021 … ADR-024) |

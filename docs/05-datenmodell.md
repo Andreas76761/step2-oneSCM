@@ -43,6 +43,10 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`,
 | – | `api_tokens` | API-Tokens je Projekt: SHA-256, Präfix, Scopes, Ablauf, Widerruf, letzte Nutzung (ADR-028) |
 | – | `webhook_subscriptions`, `webhook_deliveries` | Webhook-Abos (Ziel, Ereignisse, Geheimnis) und Zustellprotokoll (Status, Versuche, Antwortcode) (ADR-028); `source_connections` um `kind` (git/confluence), `space_key`, `webhook_secret` erweitert |
 | – | `media_assets` | Bilder je Projekt, inhaltsadressiert (`media/<sha256>`), Format, Abmessungen, Herkunft (ADR-029) |
+| – | `outlines`, `outline_nodes` | Gliederungen je Variante (Rollen, Sparten, Blueprint/Märkte), Versionen über `family_id`/`version_no`, Kapitel und Unterkapitel (ADR-032); `projects.markets` |
+| – | `outline_assignments` | Zuordnung Textschnipsel → Gliederungseintrag mit Reihenfolge (Draft Manual, ADR-033) |
+| – | `plan_items` | Redaktionsplanung je Gliederungseintrag: Verantwortliche, Termin, Status, Notiz |
+| – | `abbreviations`, `faq_entries` | Abkürzungsverzeichnis; FAQ mit Rollen/Sparten, Status, Herkunft (manuell/Assistent); `media_assets.title` für das Bildverzeichnis |
 | – | `help_contexts` | Kontext-ID → Kapitel/Abschnitt, Herkunft manuell/Front-Matter (ADR-030); `projects.help_public` schaltet die öffentliche Einbettung frei |
 | AuditEvent | `audit_events` | jede Änderung, Entscheidung, Freigabe; `project_id` (NULL = systemweit) |
 | Requirement / TestCase / ApiOperation / DocumentationItem | `requirements`, `test_cases`, `api_operations`, `documentation_items` (+ Verknüpfungen) | Schema vorhanden; Etappe 1 liest die Quellen direkt aus `traceability/*.json` und OpenAPI (ADR-010) |

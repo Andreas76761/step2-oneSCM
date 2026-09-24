@@ -48,8 +48,9 @@
 │   │   │   ├── rewrite.ts         KI-Umformulierung: Anfrage, Antwort, Satzprüfung
 │   │   │   ├── translate.ts       Übersetzung: Satzzerlegung, Anfrage, Prüfung (ADR-020)
 │   │   │   ├── media.ts           Bildformate, Bildverweise im Markdown (ADR-029)
+│   │   │   ├── outline.ts         Gliederungen: Einlesen, Nummerierung, Variantenprüfung (ADR-032)
 │   │   │   └── gate.ts            Qualitätsgate
-│   │   ├── services/              Anwendungslogik mit DB (u. a. insights: Evidenz/Optimierung, render: HTML/PDF, terminology, compare: Versionsvergleich, rewrite/rewriteBatch: KI-Vorschläge und Kapitel-Aufträge, projects: Mandanten, backup, semantic: Suche/Index, vectorIndex: exakt/HNSW/pgvector, releases, collaboration, translations, connections: Git-Quellen, analytics: Kennzahlen/Bericht/BI-Export, workflow: mehrstufige Freigabe, assistant: Handbuch-Assistent, tokens/webhooks: Integrationen, media: Bilder, contextHelp: Kontexthilfe)
+│   │   ├── services/              Anwendungslogik mit DB (u. a. insights: Evidenz/Optimierung, render: HTML/PDF, terminology, compare: Versionsvergleich, rewrite/rewriteBatch: KI-Vorschläge und Kapitel-Aufträge, projects: Mandanten, backup, semantic: Suche/Index, vectorIndex: exakt/HNSW/pgvector, releases, collaboration, translations, connections: Git-Quellen, analytics: Kennzahlen/Bericht/BI-Export, workflow: mehrstufige Freigabe, assistant: Handbuch-Assistent, tokens/webhooks: Integrationen, media: Bilder, contextHelp: Kontexthilfe, outlines: Gliederungen/Draft Manual/Planung, masterData: Abkürzungen/FAQ/Bildverzeichnis)
 │   │   └── routes/                HTTP-Routen je Ressource
 │   ├── assets/help-widget.js      Einbettungsskript der Kontexthilfe (ADR-030)
 │   ├── scripts/release.ts         Release-Werkzeug: check, bump, notes (ADR-031)

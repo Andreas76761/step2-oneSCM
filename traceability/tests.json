@@ -866,6 +866,46 @@
     ]
   },
   {
+    "id": "T-166",
+    "title": "Gliederungen: Upload Markdown/JSON, Varianten Rolle/Sparte/Blueprint/Märkte, Einträge, Versionen, Export, Projekttrennung",
+    "file": "apps/server/test/masterData.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-19"
+    ]
+  },
+  {
+    "id": "T-167",
+    "title": "Draft Manual: automatische und manuelle Zuordnung, Dopplungen, Lücken, Widersprüche, Warnungen, Export, Backup",
+    "file": "apps/server/test/masterData.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-20",
+      "US-006",
+      "US-007"
+    ]
+  },
+  {
+    "id": "T-168",
+    "title": "Redaktionsplanung: Verantwortliche, Termin, Status, Überfälligkeit, Fortschritt",
+    "file": "apps/server/test/masterData.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-19"
+    ]
+  },
+  {
+    "id": "T-169",
+    "title": "Abkürzungen mit Vorschlägen, FAQ mit Vorschlägen aus dem Assistenten, Bildverzeichnis",
+    "file": "apps/server/test/masterData.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-19",
+      "NFR-13",
+      "NFR-16"
+    ]
+  },
+  {
     "id": "T-216",
     "title": "UI: mehrstufige Freigabe mit Workflow-Editor und offenen Entscheidungen",
     "file": "e2e/tests/app.spec.ts",
@@ -909,6 +949,16 @@
     "level": "e2e",
     "requirements": [
       "NFR-17"
+    ]
+  },
+  {
+    "id": "T-221",
+    "title": "UI: Navigation einklappbar, Stammdaten, Inhaltsverzeichnis, Draft Manual mit Kennzeichnung, Abkürzungen, FAQ, Planung",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-19",
+      "NFR-20"
     ]
   }
 ]

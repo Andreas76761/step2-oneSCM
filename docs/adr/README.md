@@ -33,3 +33,5 @@
 | [ADR-029](ADR-029-bilder-medien.md) | Bilder & Medien: inhaltsadressiert, Alternativtext als Pflicht, in allen Ausgaben | akzeptiert, umgesetzt |
 | [ADR-030](ADR-030-kontexthilfe.md) | Kontexthilfe für oneSCM: Kontext-IDs, Deep-Links, Hilfe-Widget | akzeptiert, umgesetzt |
 | [ADR-031](ADR-031-release-pipeline.md) | Release-Pipeline: GHCR-Image, SBOM, cosign, Helm-OCI, Release-Notes | akzeptiert, umgesetzt |
+| [ADR-032](ADR-032-stammdaten-gliederungen.md) | Stammdaten und Gliederungen je Variante, einklappbare Navigation | akzeptiert, umgesetzt |
+| [ADR-033](ADR-033-draft-manual.md) | Draft Manual: Zuordnung von Schnipseln, Kennzeichnung von Dopplungen, Lücken, Widersprüchen, Warnungen | akzeptiert, umgesetzt |
