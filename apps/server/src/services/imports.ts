@@ -7,6 +7,7 @@ import { classifySnippet } from '../domain/classify.js';
 import { CONVERTIBLE, docxToMarkdown, htmlToMarkdown } from '../domain/convert.js';
 import { chapterOf, headingKey, parseMarkdown } from '../domain/markdown.js';
 import { normalizedHash, sha256 } from '../domain/similarity.js';
+import { finishConnectionImport } from './connections.js';
 import { badRequest, notFound, Problem } from '../problem.js';
 
 interface Entry {
@@ -56,6 +57,7 @@ export async function runImportJob(ctx: Ctx, payload: { importId: string }) {
 export async function failImportJob(ctx: Ctx, payload: { importId: string }, error: string) {
   await ctx.db.run("UPDATE imports SET status = 'failed', error = ?, finished_at = ? WHERE id = ?", error, now(), payload.importId);
   await audit(ctx, 'system', 'import.failed', 'import', payload.importId, { error });
+  await finishConnectionImport(ctx, payload.importId, 'failed', error);
 }
 
 async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<Entry[]> {
@@ -102,6 +104,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
     entries = await readEntries(ctx, fileName, data);
   } catch (e) {
     await db.run("UPDATE imports SET status = 'failed', error = ?, finished_at = ?, stats = ? WHERE id = ?", (e as Error).message, now(), json(stats), importId);
+    await finishConnectionImport(ctx, importId, 'failed', (e as Error).message);
     return;
   }
 
@@ -146,6 +149,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   const status = stats.failed === 0 ? 'completed' : stats.failed === stats.files ? 'failed' : 'completed_with_errors';
   await db.run('UPDATE imports SET status = ?, finished_at = ?, stats = ? WHERE id = ?', status, now(), json(stats), importId);
   await audit(ctx, 'system', 'import.finished', 'import', importId, { status, ...stats });
+  await finishConnectionImport(ctx, importId, status, stats.failed ? `${stats.failed} von ${stats.files} Dateien fehlerhaft (Import ${importId})` : null);
 }
 
 interface Original {

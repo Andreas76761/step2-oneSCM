@@ -376,7 +376,7 @@ function Connections({ onSynced }: { onSynced: () => void }) {
   const waitFor = async (id: string) => {
     for (let i = 0; i < 120; i++) {
       const c = await get<any>(`/source-connections/${id}`);
-      if (!['queued', 'syncing'].includes(c.status)) {
+      if (!['queued', 'syncing', 'importing'].includes(c.status)) {
         notify(c.status === 'failed' ? `Abgleich „${c.name}“ fehlgeschlagen: ${c.lastError}` : `Abgleich „${c.name}“ abgeschlossen (Commit ${c.lastCommit?.slice(0, 7)}).`, c.status === 'failed' ? 'error' : 'ok');
         break;
       }
@@ -415,7 +415,7 @@ function Connections({ onSynced }: { onSynced: () => void }) {
                 <td className="small">{c.lastSyncAt ? new Date(c.lastSyncAt).toLocaleString('de-DE') : '–'}{c.lastCommit && <><br />Commit {c.lastCommit.slice(0, 7)}</>}</td>
                 <td className="small">{c.intervalMinutes ? `alle ${c.intervalMinutes} min` : 'manuell'}{c.nextSyncAt && <><br />nächster: {new Date(c.nextSyncAt).toLocaleTimeString('de-DE')}</>}</td>
                 <td><div className="actions">
-                  {canSync && <button className="btn small" aria-label={`${c.name} jetzt abgleichen`} disabled={['queued', 'syncing'].includes(c.status)} onClick={() => run(() => post(`/source-connections/${c.id}/sync`))}>Jetzt abgleichen</button>}
+                  {canSync && <button className="btn small" aria-label={`${c.name} jetzt abgleichen`} disabled={['queued', 'syncing', 'importing'].includes(c.status)} onClick={() => run(() => post(`/source-connections/${c.id}/sync`))}>Jetzt abgleichen</button>}
                   {isAdmin && <button className="btn small ghost" aria-label={`${c.name} entfernen`} onClick={() => confirm(`Verbindung „${c.name}“ entfernen? Importierte Quellen bleiben erhalten.`) && run(async () => (await del(`/source-connections/${c.id}`), null))}>Entfernen</button>}
                 </div></td>
               </tr>

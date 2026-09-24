@@ -32,7 +32,7 @@ function dto(r: Row) {
   return {
     id: r.id, kind: r.kind, name: r.name, url: r.url, branch: r.branch, subPath: r.sub_path, credentialEnv: r.credential_env,
     credentialAvailable: r.credential_env ? !!process.env[r.credential_env] : null,
-    intervalMinutes: r.interval_minutes, status: r.status, nextSyncAt: r.next_sync_at, lastSyncAt: r.last_sync_at, lastCommit: r.last_commit,
+    intervalMinutes: r.interval_minutes, status: r.status, nextSyncAt: r.next_sync_at, lastSyncAt: r.last_sync_at, lastCommit: r.last_commit, pendingCommit: r.pending_commit ?? null,
     lastImportId: r.last_import_id, lastError: r.last_error, createdBy: r.created_by, createdAt: r.created_at,
   };
 }
@@ -122,6 +122,12 @@ export async function updateConnection(ctx: Ctx, id: string, input: ConnectionIn
     await ctx.db.run(`UPDATE source_connections SET ${Object.keys(v).map((k) => `${k} = ?`).join(', ')} WHERE id = ?`, ...Object.values(v), id);
     await audit(ctx, actor, 'source_connection.updated', 'source_connection', id, v);
     if (v.interval_minutes !== undefined && v.interval_minutes !== before.interval_minutes) await schedule(ctx, id, Number(v.interval_minutes));
+    // andere Quelle (URL, Branch, Unterordner): Stand zurücksetzen und neu abgleichen – derselbe Commit liefert andere Dateien
+    const sourceChanged = (['url', 'branch', 'sub_path'] as const).some((k) => k in v && v[k] !== before[k]);
+    if (sourceChanged) {
+      await ctx.db.run("UPDATE source_connections SET last_commit = NULL, pending_commit = NULL, status = 'queued' WHERE id = ?", id);
+      await ctx.jobs.enqueue('source-sync', { connectionId: id, actor }, 1);
+    }
   });
   ctx.jobs.wake();
   return getConnection(ctx, id);
@@ -138,7 +144,7 @@ export async function deleteConnection(ctx: Ctx, id: string, actor: string) {
 
 export async function requestSync(ctx: Ctx, id: string, actor: string, force = false) {
   const c = await load(ctx, id);
-  if (c.status === 'queued' || c.status === 'syncing') return dto(c);
+  if (['queued', 'syncing', 'importing'].includes(c.status)) return dto(c);
   await ctx.db.tx(async () => {
     await ctx.db.run("UPDATE source_connections SET status = 'queued' WHERE id = ?", id);
     await ctx.jobs.enqueue('source-sync', { connectionId: id, actor, force }, 1);
@@ -227,8 +233,10 @@ export async function runSync(ctx: Ctx, payload: { connectionId: string; token?:
       await ctx.db.run("UPDATE source_connections SET status = 'idle', last_sync_at = ?, last_error = NULL WHERE id = ?", now(), c.id);
       await audit(ctx, actor, 'source_connection.synced', 'source_connection', c.id, { commit: repo.commit, unchanged: true });
     } else {
+      // Commit gilt erst nach erfolgreichem Import als abgeglichen (finishConnectionImport)
+      await ctx.db.run("UPDATE source_connections SET status = 'importing', pending_commit = ? WHERE id = ?", repo.commit, c.id);
       const imp = await createImport(ctx, `${c.name.replace(/[^\w.-]+/g, '_')}@${repo.commit.slice(0, 7)}.zip`, repo.data, actor);
-      await ctx.db.run("UPDATE source_connections SET status = 'idle', last_sync_at = ?, last_commit = ?, last_import_id = ?, last_error = NULL WHERE id = ?", now(), repo.commit, imp.id, c.id);
+      await ctx.db.run('UPDATE source_connections SET last_sync_at = ?, last_import_id = ?, last_error = NULL WHERE id = ?', now(), imp.id, c.id);
       await audit(ctx, actor, 'source_connection.synced', 'source_connection', c.id, { commit: repo.commit, importId: imp.id, files: repo.files });
     }
   } catch (e) {
@@ -242,4 +250,19 @@ export async function runSync(ctx: Ctx, payload: { connectionId: string; token?:
 /** Job endgültig abgebrochen (z. B. Neustart während des Klonens) */
 export async function failSync(ctx: Ctx, payload: { connectionId: string }, error: string) {
   await ctx.db.run("UPDATE source_connections SET status = 'failed', last_error = ? WHERE id = ?", error, payload.connectionId);
+}
+
+/** Nach Abschluss eines Imports: Commit der Verbindung übernehmen (Erfolg) oder Fehler melden (Import fehlgeschlagen). */
+export async function finishConnectionImport(ctx: Ctx, importId: string, status: string, detail: string | null) {
+  const c = await ctx.db.get('SELECT id, pending_commit FROM source_connections WHERE last_import_id = ? AND pending_commit IS NOT NULL', importId);
+  if (!c) return;
+  if (status === 'failed') {
+    await ctx.db.run("UPDATE source_connections SET status = 'failed', pending_commit = NULL, last_error = ? WHERE id = ?", `Import fehlgeschlagen: ${detail ?? 'unbekannter Fehler'}`, c.id);
+    return;
+  }
+  // teilweise fehlerhafte Dateien: Stand übernehmen (ein erneuter Import desselben Commits ändert nichts), Fehler sichtbar machen
+  await ctx.db.run(
+    "UPDATE source_connections SET status = 'idle', last_commit = pending_commit, pending_commit = NULL, last_error = ? WHERE id = ?",
+    status === 'completed_with_errors' ? `Import mit Fehlern: ${detail}` : null, c.id,
+  );
 }

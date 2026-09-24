@@ -17,7 +17,8 @@ CREATE TABLE source_connections (
   schedule_token TEXT,                   -- nur der zuletzt geplante Folgejob läuft (keine doppelten Ketten)
   next_sync_at TEXT,
   last_sync_at TEXT,
-  last_commit TEXT,
+  last_commit TEXT,                      -- zuletzt erfolgreich importierter Commit
+  pending_commit TEXT,                   -- Commit des laufenden Imports (wird erst bei Erfolg zu last_commit)
   last_import_id TEXT REFERENCES imports(id),
   last_error TEXT,
   created_by TEXT NOT NULL,

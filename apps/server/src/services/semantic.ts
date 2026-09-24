@@ -119,7 +119,10 @@ export async function semanticSearch(ctx: Ctx, input: { q?: string; limit?: numb
   const q = input.q?.trim();
   if (!q) throw badRequest('Suchtext (q) fehlt.');
   if (q.length > 1000) throw badRequest('Suchtext ist zu lang (max. 1000 Zeichen).');
-  const limit = Math.min(Math.max(Number(input.limit ?? 20), 1), 100);
+  const rawLimit = Number(input.limit ?? 20);
+  if (!Number.isFinite(rawLimit)) throw badRequest('limit muss eine Zahl sein.');
+  const limit = Math.min(Math.max(Math.trunc(rawLimit), 1), 100);
+  if (input.minScore !== undefined && !Number.isFinite(Number(input.minScore))) throw badRequest('minScore muss eine Zahl sein.');
   // fehlende Vektoren: wenige sofort berechnen, viele im Hintergrund (Suche läuft über den vorhandenen Bestand)
   let done = complete.get(ctx.db);
   if (!done) complete.set(ctx.db, (done = new Map()));

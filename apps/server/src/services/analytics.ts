@@ -157,14 +157,24 @@ export async function approvalDecisions(ctx: Ctx, from?: string, to?: string) {
 
 export async function approvalStats(ctx: Ctx, from?: string, to?: string) {
   const list = await approvalDecisions(ctx, from, to);
+  // Ablehnungen auch vor Beginn des Zeitraums berücksichtigen (vollständige Historie der betroffenen Versionen)
+  const approvedIds = [...new Set(list.filter((d) => d.decision === 'approved').map((d) => d.versionId))];
+  const rejectedBefore = new Set<string>();
+  for (let i = 0; i < approvedIds.length; i += 500) {
+    const part = approvedIds.slice(i, i + 500);
+    for (const r of await ctx.db.all<{ id: string }>(
+      `SELECT DISTINCT chapter_version_id AS id FROM approvals WHERE decision = 'rejected' AND chapter_version_id IN (${part.map(() => '?').join(',')})`, ...part,
+    )) rejectedBefore.add(r.id);
+  }
+  const approvals = list.filter((d) => d.decision === 'approved');
   const review = list.map((d) => d.reviewHours).filter((h): h is number => h !== null).sort((a, b) => a - b);
   const lead = list.map((d) => d.leadHours).filter((h): h is number => h !== null).sort((a, b) => a - b);
   return {
     decisions: list.length,
     approved: list.filter((d) => d.decision === 'approved').length,
     rejected: list.filter((d) => d.decision === 'rejected').length,
-    /** Anteil der Entscheidungen, die im ersten Anlauf freigegeben wurden (je Version) */
-    firstPassRate: pct(list.filter((d) => d.decision === 'approved' && !list.some((x) => x.versionId === d.versionId && x.decision === 'rejected')).length, new Set(list.map((d) => d.versionId)).size),
+    /** Anteil der Freigaben im Zeitraum ohne vorherige Ablehnung derselben Version */
+    firstPassRate: pct(approvals.filter((d) => !rejectedBefore.has(d.versionId)).length, approvals.length),
     reviewHours: { median: quantile(review, 0.5), p90: quantile(review, 0.9), max: review.at(-1) ?? null },
     leadHours: { median: quantile(lead, 0.5), p90: quantile(lead, 0.9), max: lead.at(-1) ?? null },
   };

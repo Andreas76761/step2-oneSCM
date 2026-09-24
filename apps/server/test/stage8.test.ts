@@ -272,6 +272,33 @@ describe('Git-Quellverbindungen (ADR-022)', () => {
       // Intervall 0: keine Planung mehr
       expect((await call('PATCH', `/source-connections/${id}`, { intervalMinutes: 0 })).json.nextSyncAt).toBeNull();
 
+      // Import schlägt fehl (nur ungültige Dateien): Commit gilt nicht als abgeglichen, nächster Abgleich versucht es erneut
+      const good = conn.lastCommit;
+      fs.writeFileSync(path.join(repo, 'docs', 'anmeldung.md'), Buffer.from([0xff, 0xfe, 0x00, 0x41]));
+      fs.writeFileSync(path.join(repo, 'docs', 'teil', 'lager.docx'), 'keine Word-Datei');
+      git('commit', '-qam', 'kaputt');
+      await call('POST', `/source-connections/${id}/sync`, {});
+      await built.ctx.jobs.idle();
+      conn = (await call('GET', `/source-connections/${id}`)).json;
+      expect(conn).toMatchObject({ status: 'failed', lastCommit: good, pendingCommit: null, lastError: expect.stringContaining('Import fehlgeschlagen') });
+      const importsBefore = (await call('GET', '/imports')).json.length;
+      await call('POST', `/source-connections/${id}/sync`, {});
+      await built.ctx.jobs.idle();
+      expect((await call('GET', '/imports')).json.length).toBe(importsBefore + 1); // derselbe Commit wird erneut importiert
+      git('revert', '--no-edit', 'HEAD');
+      await call('POST', `/source-connections/${id}/sync`, {});
+      await built.ctx.jobs.idle();
+      conn = (await call('GET', `/source-connections/${id}`)).json;
+      expect(conn).toMatchObject({ status: 'idle', lastCommit: git('rev-parse', 'HEAD'), lastError: null });
+
+      // Unterordner geändert: gleicher Commit, andere Dateien → sofort neu abgleichen
+      const patched = (await call('PATCH', `/source-connections/${id}`, { subPath: 'docs/teil' })).json;
+      expect(patched.status).toBe('queued');
+      await built.ctx.jobs.idle();
+      conn = (await call('GET', `/source-connections/${id}`)).json;
+      expect(conn).toMatchObject({ status: 'idle', lastCommit: git('rev-parse', 'HEAD') });
+      expect((await call('GET', `/imports/${conn.lastImportId}`)).json.items.map((i: any) => i.path)).toEqual(['lager.docx']);
+
       // Fehlerfälle: fehlender Branch, fehlende Zugangsdaten-Variable
       const broken = (await call('POST', '/source-connections', { name: 'Kaputt', url: repo, branch: 'gibt-es-nicht' })).json;
       const noCred = (await call('POST', '/source-connections', { name: 'Token', url: repo, credentialEnv: 'GIT_CREDENTIAL_FEHLT' })).json;
@@ -338,6 +365,9 @@ describe('Analytik und Berichte (ADR-023)', () => {
       expect(flowToday).toMatchObject({ approvals: 1, rejections: 1, imports: 1 });
       expect(flowToday.findingsOpened).toBeGreaterThanOrEqual(1);
       expect(a.approvals).toMatchObject({ decisions: 2, approved: 1, rejected: 1, firstPassRate: 0 });
+      // Ablehnung vor dem Zeitraum zählt trotzdem (keine Erstfreigabe)
+      await built.ctx.db.run("UPDATE approvals SET created_at = ? WHERE decision = 'rejected'", `${ago(30)}T12:00:00.000Z`);
+      expect((await call('GET', `/analytics?from=${ago(7)}&to=${today}`)).json.approvals).toMatchObject({ decisions: 1, approved: 1, rejected: 0, firstPassRate: 0 });
       expect(a.approvals.reviewHours.median).not.toBeNull();
       expect(a.approvals.leadHours.median).not.toBeNull();
       expect((await call('GET', '/analytics?from=2026-13-01')).status).toBe(400);
@@ -471,6 +501,8 @@ describe('Skalierung der semantischen Suche (ADR-024)', () => {
         const old = (await call('GET', `/search/semantic?q=${q}&limit=50&minScore=-1`)).json;
         expect(old.hits.some((h: any) => h.text.includes('Werkstatt repariert'))).toBe(false);
         expect(old.indexed).toBe(41);
+        expect((await call('GET', `/search/semantic?q=${q}&limit=foo`)).status).toBe(400);
+        expect((await call('GET', `/search/semantic?q=${q}&minScore=abc`)).status).toBe(400);
         const status = (await call('GET', '/semantic-index')).json;
         expect(status).toMatchObject({ snippets: 41, indexed: 41, index: { setting: engine, engine, vectors: 41 } });
         // anderes Projekt sieht nichts
