@@ -24,6 +24,8 @@ export interface Db {
   tx<T>(fn: () => Promise<T>): Promise<T>;
   /** Fortlaufende, lesbare Nummer (#34) für Tabellen mit Spalte `seq`. */
   nextSeq(table: 'text_snippets' | 'quality_findings'): Promise<number>;
+  /** Führt `fn` außerhalb eines Transaktionskontexts aus (für Timer/Hintergrundarbeit, die sonst die Transaktion erben würde). */
+  outside<T>(fn: () => T): T;
   close(): Promise<void>;
 }
 
@@ -109,6 +111,10 @@ class SqliteDb implements Db {
     return ((await this.get<{ m: number | null }>(`SELECT MAX(seq) AS m FROM ${table}`))?.m ?? 0) + 1;
   }
 
+  outside<T>(fn: () => T): T {
+    return this.als.exit(fn);
+  }
+
   async close() {
     while (this.lock) await this.lock;
     this.raw.close();
@@ -188,6 +194,10 @@ class PostgresDb implements Db {
     // Serialisierung über eine transaktionsgebundene Advisory-Sperre je Tabelle
     if (this.als.getStore()) await this.run('SELECT pg_advisory_xact_lock(hashtext(?))', table);
     return ((await this.get<{ m: number | null }>(`SELECT MAX(seq) AS m FROM ${table}`))?.m ?? 0) + 1;
+  }
+
+  outside<T>(fn: () => T): T {
+    return this.als.exit(fn);
   }
 
   async close() {

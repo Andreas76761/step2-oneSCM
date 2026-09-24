@@ -51,7 +51,7 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
 
 **OIDC-Modus** (`AUTH_MODE=oidc`, Produktion, ADR-011): Die UI meldet über den OpenID-Connect-Provider an (Authorization Code + PKCE), die API prüft das Bearer-Token. Beim Provider benötigen Sie:
 1. einen **öffentlichen Client** (z. B. `onescm-web`) mit Redirect-URI `https://<app>/` und Post-Logout-URI `https://<app>/`;
-2. ein Access-Token mit Zielgruppe `OIDC_AUDIENCE` (optional) und einem Claim mit den Gruppen/Rollen des Benutzers;
+2. ein Access-Token mit der Zielgruppe `OIDC_AUDIENCE` (Pflicht – Tokens für andere Anwendungen desselben Providers werden abgelehnt) und einem Claim mit den Gruppen/Rollen des Benutzers;
 3. die Gruppen `onescm-reader`, `onescm-editor`, `onescm-reviewer`, `onescm-approver`, `onescm-admin` (oder eine eigene Zuordnung über `OIDC_PERMISSION_MAP`).
 
 ## Arbeitsablauf in der App
@@ -107,7 +107,7 @@ Jeder Test trägt eine ID (`[T-xxx]`), die in [`traceability/tests.json`](tracea
 | `AUTH_MODE` | `demo` | `oidc` für den Produktivbetrieb |
 | `OIDC_ISSUER` | – | Issuer-URL des Providers (Discovery unter `/.well-known/openid-configuration`) |
 | `OIDC_CLIENT_ID` | – | Client-ID der Web-UI |
-| `OIDC_AUDIENCE` | – | erwartete Zielgruppe (`aud`) des Access-Tokens |
+| `OIDC_AUDIENCE` | – | **Pflicht im OIDC-Modus:** erwartete Zielgruppe (`aud`) des Access-Tokens |
 | `OIDC_SCOPE` | `openid profile` | angeforderte Scopes |
 | `OIDC_PERMISSIONS_CLAIM` | `roles` | Claim mit Gruppen/Rollen, Punktnotation erlaubt (z. B. `realm_access.roles`) |
 | `OIDC_PERMISSION_MAP` | Standardgruppen | JSON: `{"gruppe": ["read","edit"]}` |

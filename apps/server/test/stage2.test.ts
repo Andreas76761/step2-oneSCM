@@ -54,6 +54,36 @@ describe('Persistente Jobqueue (ADR-008)', () => {
     expect(calls).toBe(2);
     expect(failed).toEqual(['dauerhaft']);
     expect(await second.ctx.db.get("SELECT status, attempts, error FROM jobs WHERE type = 'broken'")).toMatchObject({ status: 'failed', attempts: 2, error: 'dauerhaft' });
+
+    // Lease-Rückholung im laufenden Betrieb (nicht nur beim Start): Job einer „abgestürzten“ Instanz
+    const lq = new JobQueue(second.ctx.db, { leaseMs: 50, pollMs: 10 });
+    const reclaimed: string[] = [];
+    const exhausted: string[] = [];
+    lq.register('orphan', async (p) => void reclaimed.push(p.name), async (p, err) => void exhausted.push(`${p.name}: ${err}`));
+    await lq.start();
+    const stale = new Date(Date.now() - 60_000).toISOString();
+    for (const [name, attempts] of [['wiederholbar', 1], ['ausgeschöpft', 3]] as const) {
+      await second.ctx.db.run(
+        "INSERT INTO jobs (id, type, payload, status, attempts, max_attempts, run_after, locked_by, locked_at, created_at) VALUES (?, 'orphan', ?, 'running', ?, 3, ?, 'w_tot', ?, ?)",
+        `job_${name}`, JSON.stringify({ name }), attempts, stale, stale, stale,
+      );
+    }
+    lq.wake();
+    await lq.idle();
+    await lq.stop();
+    expect(reclaimed).toEqual(['wiederholbar']);
+    expect(exhausted).toEqual(['ausgeschöpft: Lease abgelaufen (Worker nicht mehr aktiv)']);
+
+    // Import und Job werden atomar angelegt: schlägt das Einreihen fehl, bleibt kein Import zurück
+    const original = second.ctx.jobs.enqueue.bind(second.ctx.jobs);
+    second.ctx.jobs.enqueue = async () => {
+      throw new Error('Verbindung verloren');
+    };
+    const mp2 = multipart('atomar.md', MD);
+    const failed2 = await second.app.inject({ method: 'POST', url: '/api/v1/imports', payload: mp2.payload, headers: { ...mp2.headers, 'x-user-id': 'u-admin' } });
+    second.ctx.jobs.enqueue = original;
+    expect(failed2.statusCode).toBe(500);
+    expect(await second.ctx.db.get("SELECT COUNT(*) AS n FROM imports WHERE file_name = 'atomar.md'")).toEqual({ n: 0 });
     await second.app.close();
     fs.rmSync(dataDir, { recursive: true, force: true });
   });
@@ -61,7 +91,7 @@ describe('Persistente Jobqueue (ADR-008)', () => {
 
 describe('OIDC-Anmeldung (ENTSCHEIDUNG E-15)', () => {
   let app: Awaited<ReturnType<typeof buildApp>>['app'];
-  let sign: (claims: Record<string, unknown>, opts?: { issuer?: string; expired?: boolean }) => Promise<string>;
+  let sign: (claims: Record<string, unknown>, opts?: { issuer?: string; expired?: boolean; audience?: string | null }) => Promise<string>;
   let foreignToken: string;
   const issuer = 'https://idp.example.test/realms/onescm';
   const dataDir = tempDir();
@@ -73,14 +103,15 @@ describe('OIDC-Anmeldung (ENTSCHEIDUNG E-15)', () => {
       issuer, audience: 'onescm-api', clientId: 'onescm-web', scope: 'openid profile', jwksUri: null, jwks: { keys: [jwk] },
       permissionsClaim: 'realm_access.roles', permissionMap: DEFAULT_PERMISSION_MAP,
     };
-    sign = (claims, opts = {}) =>
-      new SignJWT(claims)
+    sign = (claims, opts = {}) => {
+      const jwt = new SignJWT(claims)
         .setProtectedHeader({ alg: 'RS256', kid: 'k1' })
         .setIssuer(opts.issuer ?? issuer)
-        .setAudience('onescm-api')
         .setIssuedAt()
-        .setExpirationTime(opts.expired ? Math.floor(Date.now() / 1000) - 3600 : '5m')
-        .sign(privateKey);
+        .setExpirationTime(opts.expired ? Math.floor(Date.now() / 1000) - 3600 : '5m');
+      if (opts.audience !== null) jwt.setAudience(opts.audience ?? 'onescm-api');
+      return jwt.sign(privateKey);
+    };
     const other = await generateKeyPair('RS256');
     foreignToken = await new SignJWT({ sub: 'x' }).setProtectedHeader({ alg: 'RS256', kid: 'k1' }).setIssuer(issuer).setAudience('onescm-api').setExpirationTime('5m').sign(other.privateKey);
     ({ app } = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'oidc'), logger: false, webDist: null, authMode: 'oidc', oidc }));
@@ -106,6 +137,11 @@ describe('OIDC-Anmeldung (ENTSCHEIDUNG E-15)', () => {
     expect((await call('/chapters', foreignToken)).statusCode).toBe(401);
     expect((await call('/chapters', await sign({ sub: 'a' }, { expired: true }))).statusCode).toBe(401);
     expect((await call('/chapters', await sign({ sub: 'a' }, { issuer: 'https://evil.example.test' }))).statusCode).toBe(401);
+    // Token desselben Providers, aber für eine andere Anwendung (aud) → abgelehnt
+    const otherAud = await sign({ sub: 'a', realm_access: { roles: ['onescm-admin'] } }, { audience: 'andere-api' });
+    expect((await call('/chapters', otherAud)).statusCode).toBe(401);
+    const noAud = await sign({ sub: 'a', realm_access: { roles: ['onescm-admin'] } }, { audience: null });
+    expect((await call('/chapters', noAud)).statusCode).toBe(401);
 
     // Redaktion: lesen ja, Einstellungen ändern nein
     const editor = await sign({ sub: 'u-123', name: 'Erika Redaktion', realm_access: { roles: ['onescm-editor', 'offline_access'] } });

@@ -48,9 +48,10 @@ export function permissionsFromClaims(payload: JWTPayload, oidc: Pick<OidcConfig
 }
 
 export async function verifyToken(token: string, oidc: OidcConfig): Promise<JWTPayload> {
+  if (!oidc.audience) throw new Error('OIDC_AUDIENCE ist nicht konfiguriert.');
   const { payload } = await jwtVerify(token, await keysFor(oidc), {
     issuer: oidc.issuer,
-    ...(oidc.audience ? { audience: oidc.audience } : {}),
+    audience: oidc.audience, // immer prüfen: verhindert, dass Tokens anderer Clients/APIs akzeptiert werden
     clockTolerance: 30,
   });
   return payload;

@@ -6,7 +6,7 @@
 §13 verlangt rollenbasierte Zugriffssteuerung. Etappe 1 arbeitete mit Demo-Benutzern ohne echte Anmeldung.
 
 ## Entscheidung
-- `AUTH_MODE=oidc`: Die API akzeptiert ausschließlich `Authorization: Bearer <JWT>` eines OIDC-Providers (Keycloak, Entra ID, Okta …). Geprüft werden Signatur (JWKS aus der Discovery oder `OIDC_JWKS_URI`), Aussteller, Zielgruppe (`OIDC_AUDIENCE`) und Ablaufzeit (30 s Toleranz). Keine Sitzungen, keine Cookies – die API bleibt zustandslos.
+- `AUTH_MODE=oidc`: Die API akzeptiert ausschließlich `Authorization: Bearer <JWT>` eines OIDC-Providers (Keycloak, Entra ID, Okta …). Geprüft werden Signatur (JWKS aus der Discovery oder `OIDC_JWKS_URI`), Aussteller, Zielgruppe (`OIDC_AUDIENCE`, Pflicht – sonst würden Tokens anderer Clients/APIs desselben Providers akzeptiert) und Ablaufzeit (30 s Toleranz). Keine Sitzungen, keine Cookies – die API bleibt zustandslos.
 - Technische Berechtigungen kommen aus einem Claim (`OIDC_PERMISSIONS_CLAIM`, Punktnotation wie `realm_access.roles`) und werden über `OIDC_PERMISSION_MAP` abgebildet (Standard: Gruppen `onescm-reader/-editor/-reviewer/-approver/-admin`). Direkte Berechtigungsnamen (`edit`, `approve` …) werden ebenfalls anerkannt.
 - Benutzer-ID im Audit: `oidc:<sub>`; Anzeigename und Berechtigungen werden bei jeder Anfrage in `users` aktualisiert.
 - Web-UI: Authorization Code Flow mit PKCE (`oidc-client-ts`), Token im `sessionStorage`, stille Erneuerung. `GET /api/v1/auth/config` liefert Issuer und Client-ID. Downloads laufen per `fetch` mit Token.

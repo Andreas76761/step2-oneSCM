@@ -7,7 +7,8 @@
   - PostgreSQL: `UPDATE … WHERE id = (SELECT … FOR UPDATE SKIP LOCKED)` – mehrere Instanzen arbeiten parallel, ohne einen Job doppelt zu nehmen.
   - SQLite: Abholung in einer Transaktion (eine Instanz).
 - Fehler → erneuter Versuch mit exponentiellem Backoff bis `max_attempts` (Standard 3), danach `failed` und fachlicher Fehler-Handler (z. B. Import auf `failed`).
-- Neustart: Jobs im Status `running`, deren Lease (`JOB_LEASE_MS`, Standard 10 min) abgelaufen ist, werden wieder eingereiht; bei SQLite alle.
+- Lease: Laufende Jobs verlängern ihre Lease per Heartbeat (alle `JOB_LEASE_MS`/3). Bei **jedem Polling** werden Jobs mit abgelaufener Lease (`JOB_LEASE_MS`, Standard 10 min) zurückgeholt – erneut eingereiht oder, bei ausgeschöpften Versuchen, endgültig fehlgeschlagen samt Fehler-Handler. SQLite (eine Instanz) holt beim Start alle laufenden Jobs zurück.
+- Anlegen atomar: Fachdatensatz (Import, Analyselauf), Audit und Job werden in einer Transaktion geschrieben; der Worker wird erst nach dem Commit geweckt, Timer entstehen außerhalb des Transaktionskontexts (`Db.outside`).
 - Handler sind idempotent: Der Import-Job löscht sein Protokoll vor jedem Lauf und erkennt eigene Revisionen wieder; die Analyse schreibt alle Ergebnisse in einer Transaktion.
 - Payloads enthalten nur IDs; die Originaldatei liegt im Object-Store (`uploads/<sha256>`).
 - `JOB_WORKER=0` startet eine reine API-Instanz ohne Worker.

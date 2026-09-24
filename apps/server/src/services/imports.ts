@@ -29,13 +29,17 @@ export async function createImport(ctx: Ctx, fileName: string, data: Buffer, act
   const hash = sha256(data);
   await ctx.store.put(`uploads/${hash}`, data);
   const id = newId('imp');
-  await ctx.db.run(
-    'INSERT INTO imports (id, project_id, file_name, kind, sha256, byte_size, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : 'md', hash, data.length, 'queued', actor, now(),
-  );
-  await audit(ctx.db, actor, 'import.created', 'import', id, { fileName, sha256: hash });
-  // Persistenter Job: Originaldatei liegt im Object-Store, der Job kennt nur die Import-ID (ADR-008)
-  await ctx.jobs.enqueue('import', { importId: id });
+  // Import, Audit und Job atomar: kein Import ohne Job, kein Job ohne Import (ADR-008)
+  await ctx.db.tx(async () => {
+    await ctx.db.run(
+      'INSERT INTO imports (id, project_id, file_name, kind, sha256, byte_size, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : 'md', hash, data.length, 'queued', actor, now(),
+    );
+    await audit(ctx.db, actor, 'import.created', 'import', id, { fileName, sha256: hash });
+    // Persistenter Job: Originaldatei liegt im Object-Store, der Job kennt nur die Import-ID
+    await ctx.jobs.enqueue('import', { importId: id });
+  });
+  ctx.jobs.wake();
   return getImport(ctx, id);
 }
 

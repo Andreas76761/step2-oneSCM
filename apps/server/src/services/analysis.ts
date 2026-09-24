@@ -27,12 +27,15 @@ const maxSeverity = (list: Severity[]) => SEVERITIES.find((s) => list.includes(s
 export async function startAnalysis(ctx: Ctx, actor: string) {
   const settings = (await getSettings(ctx.db)).analysis;
   const id = newId('run');
-  await ctx.db.run(
-    "INSERT INTO analysis_runs (id, project_id, status, method, settings, started_at) VALUES (?, ?, 'queued', ?, ?, ?)",
-    id, ctx.projectId, 'tfidf-cosine-1.0 + rules-1.0', json(settings), now(),
-  );
-  await audit(ctx.db, actor, 'analysis.started', 'analysis_run', id, settings);
-  await ctx.jobs.enqueue('analysis', { runId: id });
+  await ctx.db.tx(async () => {
+    await ctx.db.run(
+      "INSERT INTO analysis_runs (id, project_id, status, method, settings, started_at) VALUES (?, ?, 'queued', ?, ?, ?)",
+      id, ctx.projectId, 'tfidf-cosine-1.0 + rules-1.0', json(settings), now(),
+    );
+    await audit(ctx.db, actor, 'analysis.started', 'analysis_run', id, settings);
+    await ctx.jobs.enqueue('analysis', { runId: id });
+  });
+  ctx.jobs.wake();
   return getAnalysisRun(ctx, id);
 }
 

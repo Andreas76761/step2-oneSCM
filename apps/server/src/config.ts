@@ -9,7 +9,8 @@ export const REPO_ROOT = path.resolve(here, '..', '..', '..');
 
 export interface OidcConfig {
   issuer: string;
-  audience: string | null;
+  /** erwartete Zielgruppe (`aud`) – Pflicht, damit Tokens anderer Clients/APIs desselben Providers abgelehnt werden */
+  audience: string;
   /** Client-ID der Web-UI (Authorization Code + PKCE) */
   clientId: string;
   scope: string;
@@ -62,11 +63,12 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
   if (authMode === 'oidc' && !oidc) {
     const issuer = process.env.OIDC_ISSUER;
     const clientId = process.env.OIDC_CLIENT_ID;
-    if (!issuer || !clientId) throw new Error('AUTH_MODE=oidc erfordert OIDC_ISSUER und OIDC_CLIENT_ID.');
+    const audience = process.env.OIDC_AUDIENCE;
+    if (!issuer || !clientId || !audience) throw new Error('AUTH_MODE=oidc erfordert OIDC_ISSUER, OIDC_CLIENT_ID und OIDC_AUDIENCE.');
     oidc = {
       issuer,
       clientId,
-      audience: process.env.OIDC_AUDIENCE ?? null,
+      audience,
       scope: process.env.OIDC_SCOPE ?? 'openid profile',
       jwksUri: process.env.OIDC_JWKS_URI ?? null,
       jwks: parseJsonEnv('OIDC_JWKS'),
