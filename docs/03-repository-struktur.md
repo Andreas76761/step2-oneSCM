@@ -6,7 +6,8 @@
 ├── CHANGELOG.md
 ├── package.json                   npm-Workspaces (apps/server, apps/web, e2e)
 ├── Dockerfile / docker-compose.yml
-├── .github/workflows/ci.yml       Node 20 + 22: Typecheck, Unit/API-Tests, Build, E2E
+├── .github/workflows/ci.yml       Node 20 + 22: Typecheck, Unit/API-Tests, Build, E2E; Helm; Release-Prüfung (Versionen, actionlint, Image)
+├── .github/workflows/release.yml  Tag vX.Y.Z → GHCR-Image, SBOM, cosign, Helm-OCI, GitHub-Release (ADR-031)
 ├── reference/                     unverändertes Projektpaket (Masterprompt, Referenz-UI)
 ├── deploy/helm/onescm/       Helm-Chart (ADR-027)
 ├── docs/
@@ -46,9 +47,12 @@
 │   │   │   ├── generator.ts       Kapitelstruktur (extraktiv)
 │   │   │   ├── rewrite.ts         KI-Umformulierung: Anfrage, Antwort, Satzprüfung
 │   │   │   ├── translate.ts       Übersetzung: Satzzerlegung, Anfrage, Prüfung (ADR-020)
+│   │   │   ├── media.ts           Bildformate, Bildverweise im Markdown (ADR-029)
 │   │   │   └── gate.ts            Qualitätsgate
-│   │   ├── services/              Anwendungslogik mit DB (u. a. insights: Evidenz/Optimierung, render: HTML/PDF, terminology, compare: Versionsvergleich, rewrite/rewriteBatch: KI-Vorschläge und Kapitel-Aufträge, projects: Mandanten, backup, semantic: Suche/Index, vectorIndex: exakt/HNSW/pgvector, releases, collaboration, translations, connections: Git-Quellen, analytics: Kennzahlen/Bericht/BI-Export, workflow: mehrstufige Freigabe, assistant: Handbuch-Assistent)
+│   │   ├── services/              Anwendungslogik mit DB (u. a. insights: Evidenz/Optimierung, render: HTML/PDF, terminology, compare: Versionsvergleich, rewrite/rewriteBatch: KI-Vorschläge und Kapitel-Aufträge, projects: Mandanten, backup, semantic: Suche/Index, vectorIndex: exakt/HNSW/pgvector, releases, collaboration, translations, connections: Git-Quellen, analytics: Kennzahlen/Bericht/BI-Export, workflow: mehrstufige Freigabe, assistant: Handbuch-Assistent, tokens/webhooks: Integrationen, media: Bilder, contextHelp: Kontexthilfe)
 │   │   └── routes/                HTTP-Routen je Ressource
+│   ├── assets/help-widget.js      Einbettungsskript der Kontexthilfe (ADR-030)
+│   ├── scripts/release.ts         Release-Werkzeug: check, bump, notes (ADR-031)
 │   └── test/                      Vitest Unit- und API-Tests (SQLite; PostgreSQL mit TEST_DATABASE_URL)
 ├── apps/web/                      React + TypeScript (Vite)
 │   └── src/pages/                 eine Seite je Navigationspunkt (Abschnitt 14)

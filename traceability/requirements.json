@@ -313,5 +313,42 @@
       "docs/adr/ADR-027-betrieb-skalierung.md",
       "deploy/helm/onescm/values.yaml"
     ]
+  },
+  {
+    "id": "NFR-15",
+    "title": "Integrationen & API: API-Tokens mit Scopes, signierte Webhooks mit Wiederholung, Push-Webhooks, Confluence-Cloud-Anbindung",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-028-integrationen.md"
+    ]
+  },
+  {
+    "id": "NFR-16",
+    "title": "Bilder & Medien: Bilder aus Quellen versioniert übernehmen, in Werkstatt, Export, PDF und Online-Hilfe anzeigen, Alternativtext als Pflicht",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-029-bilder-medien.md"
+    ]
+  },
+  {
+    "id": "NFR-17",
+    "title": "Kontexthilfe für oneSCM: Kontext-IDs, Deep-Links, einbettbares Hilfe-Widget mit Assistent, rollen- und sprachabhängig",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-030-kontexthilfe.md"
+    ]
+  },
+  {
+    "id": "NFR-18",
+    "title": "Release-Pipeline: Container-Image in GHCR, SBOM, cosign-Signatur, Versions-Tags, Release-Notes aus dem CHANGELOG",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-031-release-pipeline.md",
+      ".github/workflows/release.yml"
+    ]
   }
 ]
