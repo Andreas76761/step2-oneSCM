@@ -462,7 +462,7 @@ test('[T-219] Bilder: Anzeige in der Kapitelwerkstatt, Bild mit Pflicht-Alternat
   const block = page.getByRole('article').filter({ hasText: 'Die Bildschirmmaske zeigt die Anmeldung.' });
   await block.getByRole('button', { name: 'Bearbeiten' }).click();
   await block.getByRole('button', { name: '🖼️ Bild einfügen' }).click();
-  await block.getByLabel('Bilddatei (PNG, JPEG, GIF, WebP)').setInputFiles({ name: 'knopf.png', mimeType: 'image/png', buffer: png(12, 6, [200, 30, 30]) });
+  await block.getByLabel(/^Bilddatei/).setInputFiles({ name: 'knopf.png', mimeType: 'image/png', buffer: png(12, 6, [200, 30, 30]) });
   const insert = block.getByRole('button', { name: 'Einfügen' });
   await expect(insert).toBeDisabled();
   await block.getByLabel('Alternativtext (Pflicht)').fill('Knopf „Anmelden“');
@@ -619,4 +619,92 @@ test('[T-221] Navigation einklappbar, Stammdaten: Inhaltsverzeichnis anlegen, Dr
   await page.getByRole('row', { name: /^1 / }).getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Planung für 1 gespeichert.')).toBeVisible();
   await expect(page.getByRole('progressbar', { name: 'Fortschritt in Prozent' })).not.toHaveAttribute('value', '0');
+});
+
+test('[T-222] Varianten-Handbuch aus dem Draft Manual, Varianten-Export, Suche, Darstellung, Gliederungsvergleich, Drag & Drop, Stammdaten-Import', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // Draft Manual → Kapitel der Variante erzeugen, in der Werkstatt als eigene Gruppe
+  await page.goto('/draft-manual');
+  await page.getByLabel('Gliederung').selectOption({ label: 'E2E Händler Pkw – V2' });
+  await page.getByRole('button', { name: 'Kapitel für Freigabe erzeugen' }).click();
+  await expect(page.getByText(/Kapitelentwürfe erzeugt/)).toBeVisible();
+  const variantTable = page.getByRole('table', { name: 'Kapitel der Variante' });
+  await expect(variantTable.getByRole('cell', { name: /E2E-Anhang/ })).toBeVisible();
+  await expect(variantTable.getByText('Entwurf erzeugt').first()).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await variantTable.getByRole('link', { name: 'Werkstatt' }).first().click();
+  await expect(page.getByRole('heading', { name: 'Variante: E2E Händler Pkw' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Kapitel der Quellen' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Quellen', exact: true })).toBeVisible();
+
+  // Export: Handbuch der Variante mit Verzeichnissen wählbar
+  await nav.getByRole('link', { name: 'Export' }).click();
+  await page.getByLabel('Handbuch').selectOption({ label: 'Variante: E2E Händler Pkw – V2' });
+  await expect(page.getByLabel(/Verzeichnisse anhängen/)).toBeChecked();
+
+  // Globale Suche mit Tastenkürzel „/“
+  await page.locator('main').click();
+  await page.keyboard.press('/');
+  await expect(page.getByRole('searchbox', { name: 'Suche im Projekt' })).toBeFocused();
+  await page.keyboard.type('Vertrag');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Suche');
+  await expect(page.getByRole('status').filter({ hasText: /Treffer in/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Vertragsbearbeitung/ }).first()).toBeVisible();
+  await expect(page.locator('.search-hits mark').first()).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Darstellung: Dunkel bleibt nach Neuladen
+  await page.getByLabel('Darstellung').selectOption('dark');
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Darstellung').selectOption('system');
+  await expect(page.locator('html')).not.toHaveAttribute('data-theme', /./);
+
+  // Gliederung: Versionsvergleich und Drag & Drop
+  await nav.getByRole('button', { name: 'Stammdaten' }).click();
+  await nav.getByRole('link', { name: 'Inhaltsverzeichnis', exact: true }).click();
+  await page.getByRole('link', { name: /E2E Händler Pkw/ }).first().click();
+  await expect(page.getByRole('heading', { name: 'E2E Händler Pkw – Version 2' })).toBeVisible();
+  await page.getByLabel('Vergleichen mit').selectOption({ label: 'V1' });
+  const cmp = page.getByRole('region', { name: 'Versionsvergleich' });
+  await expect(cmp.getByRole('heading', { name: 'V1 → V2' })).toBeVisible();
+  // E2E-Anhang entstand in V1, in V2 kamen Zuordnungen hinzu (automatisch/manuell im Draft Manual)
+  await expect(cmp.getByRole('row', { name: /E2E-Anhang/ })).toContainText('geändert');
+  await expect(cmp.getByRole('row', { name: /E2E-Anhang/ })).toContainText('Zuordnungen: +1');
+  expect(await axe()).toEqual([]);
+  const tree = page.getByRole('list', { name: 'Gliederung' });
+  const items = tree.locator(':scope > li');
+  await page.getByRole('button', { name: 'Vergleich schließen' }).click();
+  const moved = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().includes('/outline-nodes/'));
+  // HTML5-Drag & Drop mit gemeinsamem DataTransfer (dragTo scrollt bei langen Listen zwischen Start und Ziel)
+  const dt = await page.evaluateHandle(() => new DataTransfer());
+  await items.filter({ hasText: 'E2E-Anhang' }).dispatchEvent('dragstart', { dataTransfer: dt });
+  await items.first().dispatchEvent('dragover', { dataTransfer: dt });
+  await items.first().dispatchEvent('drop', { dataTransfer: dt });
+  expect((await moved).status()).toBe(200);
+  await expect(page.getByText('Verschoben.', { exact: true })).toBeVisible();
+  await expect(items.first()).toContainText('E2E-Anhang');
+  await expect(items.first().locator('.num')).toHaveText('1');
+
+  // Stammdaten-Import aus CSV mit Vorschau
+  await nav.getByRole('link', { name: 'Abkürzungen', exact: true }).click();
+  await page.getByRole('button', { name: 'Aus CSV/Excel importieren' }).click();
+  const imp = page.locator('.card').filter({ has: page.getByText('Import aus CSV oder Excel', { exact: true }) });
+  await imp.getByLabel('Datei').setInputFiles({ name: 'abk.csv', mimeType: 'text/csv', buffer: Buffer.from('Abkürzung;Bedeutung\nE2EI;Import aus CSV\nE2EX;Ende-zu-Ende-Test\n;ohne Kürzel\n') });
+  await imp.getByRole('button', { name: 'Vorschau' }).click();
+  await expect(imp.getByRole('status').filter({ hasText: /Vorschau: 3 Zeilen · 1 neu · 0 aktualisieren · 1 unverändert · 1 Fehler/ })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await imp.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(page.getByText(/Import übernommen: 1 neu/)).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Import aus CSV' })).toBeVisible();
+
+  // Quellen: vollständiger Stand als Option beim Import
+  await nav.getByRole('link', { name: 'Quellen' }).click();
+  await expect(page.getByLabel(/vollständige Stand/)).not.toBeChecked();
 });
