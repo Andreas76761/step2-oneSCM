@@ -14,13 +14,14 @@ import { checkDecider, clearWorkflowSql, recordApproval, startWorkflow, workflow
 
 /** Kapitel aus den Quellen (Standard) oder die Kapitel einer Handbuch-Variante (outline = Gliederungs-ID, ADR-034) */
 /** Standard: Kapitel der Quellen; `outlineFamilyId`: Kapitel einer Handbuch-Variante; `all`: beide (ADR-034) */
-export async function listChapters(ctx: Ctx, opts: { outlineFamilyId?: string } = {}) {
+export async function listChapters(ctx: Ctx, opts: { outlineFamilyId?: string; outlineId?: string } = {}) {
   const chapters = opts.outlineFamilyId === 'all'
     ? await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? ORDER BY CASE WHEN outline_family_id IS NULL THEN 0 ELSE 1 END, outline_family_id, position, title', ctx.projectId)
     : opts.outlineFamilyId
     ? await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id = ? ORDER BY position, title', ctx.projectId, opts.outlineFamilyId)
     : await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id IS NULL ORDER BY position, title', ctx.projectId);
-  return Promise.all(chapters.map((c) => chapterSummary(ctx, c)));
+  // outlineId: Inhalte der Variantenkapitel an dieser Gliederungsversion messen
+  return Promise.all(chapters.map((c) => chapterSummary(ctx, opts.outlineId && c.outline_family_id ? { ...c, outline_id: opts.outlineId } : c)));
 }
 
 async function chapterSummary(ctx: Ctx, c: Row) {

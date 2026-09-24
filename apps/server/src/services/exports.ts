@@ -226,7 +226,7 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   const chapterIds = input.chapterIds?.length
     ? input.chapterIds
     : (outline
-      ? await ctx.db.all("SELECT DISTINCT chapter_id, c.position FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id = ? AND v.status = 'approved' ORDER BY c.position", ctx.projectId, outline.family_id)
+      ? await ctx.db.all("SELECT DISTINCT chapter_id, c.position FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id = ? AND c.outline_node_key IN (SELECT node_key FROM outline_nodes WHERE outline_id = ? AND level = 1) AND v.status = 'approved' ORDER BY c.position", ctx.projectId, outline.family_id, outline.id)
       : await ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id IS NULL AND v.status = 'approved'", ctx.projectId)
     ).map((r) => r.chapter_id as string);
 

@@ -118,6 +118,28 @@ describe('Etappe 12: Handbuch-Varianten aus dem Draft Manual (ADR-034)', () => {
       const rel2 = (await call('POST', '/releases', { version: 'haendler-1.1', outlineId: v2.id }, 'u-freigabe')).json;
       expect(rel2.previousReleaseId).toBe(rel.json.id);
       expect(rel2.changes.map((c: any) => c.change)).toEqual(['unchanged']);
+
+      // Review: V1 bleibt aktiv, V3 wird bearbeitet – Stand und Entwürfe folgen der angefragten Version
+      await call('PATCH', `/outlines/${outline.id}`, { status: 'active' });
+      const v3 = (await call('POST', `/outlines/${v2.id}/versions`, {})).json;
+      const zweck3 = v3.nodes.find((n: any) => n.title === 'Zweck');
+      await call('DELETE', `/outline-nodes/${zweck3.id}`);
+      expect((await call('GET', `/outlines/${v3.id}/chapters`)).json.chapters[0].snippetCount).toBeLessThan(3);
+      expect((await call('GET', `/outlines/${outline.id}/chapters`)).json.chapters[0].snippetCount).toBe(3);
+      const gen3 = (await call('POST', `/outlines/${v3.id}/generate`, {}, 'u-redaktion')).json;
+      const v3text = (await call('GET', `/chapter-versions/${(await call('GET', `/chapters/${gen3.results[0].chapterId}/versions`)).json[0].id}`)).json
+        .sections.flatMap((x: any) => x.blocks.map((b: any) => b.text)).join('\n');
+      expect(v3text).not.toContain('Die Anmeldung öffnet oneSCM für alle Nutzer.');
+      // Review: Kapitel, die in der gewählten Version fehlen, werden nicht veröffentlicht bzw. exportiert
+      const v4 = (await call('POST', `/outlines/${v2.id}/versions`, {})).json;
+      await call('DELETE', `/outline-nodes/${v4.nodes.find((n: any) => n.title === 'Anmeldung').id}`);
+      expect((await call('POST', '/releases', { version: 'haendler-2.0', outlineId: v4.id }, 'u-freigabe')).status).toBe(422);
+      const exp4 = (await call('POST', '/exports', { format: 'md', outlineId: v4.id })).json;
+      expect((await call('GET', `/exports/${exp4.id}/download`)).body).not.toContain('## 1. Anmeldung');
+      // Review: Gliederung aus der Kapitelstruktur übernimmt keine Variantenkapitel; Analytik zählt nur Quellenkapitel
+      const fromCh = (await call('POST', '/outlines', { name: 'Aus Kapiteln', fromChapters: true })).json;
+      expect(fromCh.nodes.filter((n: any) => n.level === 1).map((n: any) => n.title)).toEqual(['Anmeldung']);
+      expect((await call('GET', '/analytics')).json.current).toMatchObject({ chapters: 1, approvedChapters: 0, inReview: 0 });
       expect((await built.ctx.db.get("SELECT COUNT(*) AS n FROM audit_events WHERE action = 'outline.variant_materialized'"))!.n).toBeGreaterThanOrEqual(2);
     } finally {
       await built.app.close();

@@ -180,10 +180,12 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
   if (await db.get('SELECT id FROM handbook_releases WHERE project_id = ? AND version = ?', ctx.projectId, version)) throw conflict(`Release ${version} existiert bereits.`);
   const outline = input.outlineId ? await outlineOf(ctx, input.outlineId) : null;
   const family = outline ? { sql: 'outline_family_id = ?', params: [outline.family_id] } : { sql: 'outline_family_id IS NULL', params: [] };
+  // Variante: nur Kapitel, die in der gewählten Gliederungsversion vorkommen
+  const inVersion = outline ? { sql: ' AND c.outline_node_key IN (SELECT node_key FROM outline_nodes WHERE outline_id = ? AND level = 1)', params: [outline.id] } : { sql: '', params: [] };
   const rows = await db.all(
     `SELECT c.id AS chapter_id, c.title, c.position, v.id AS version_id FROM chapters c JOIN generated_chapter_versions v ON v.chapter_id = c.id
-     WHERE c.project_id = ? AND c.${family.sql} AND v.status = 'approved' ORDER BY c.position, c.title`,
-    ctx.projectId, ...family.params,
+     WHERE c.project_id = ? AND c.${family.sql}${inVersion.sql} AND v.status = 'approved' ORDER BY c.position, c.title`,
+    ctx.projectId, ...family.params, ...inVersion.params,
   );
   if (!rows.length) throw unprocessable('Keine freigegebenen Kapitel – es gibt nichts zu veröffentlichen.');
   const blockers: { chapterId: string; checks: unknown }[] = [];

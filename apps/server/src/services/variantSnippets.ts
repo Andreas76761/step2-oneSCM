@@ -16,10 +16,17 @@ export interface VariantSnippetRef {
   subPosition: number;
 }
 
-/** Zugeordnete Schnipsel eines Varianten-Kapitels in Gliederungsreihenfolge (Kapitel vor Unterkapiteln) */
+/**
+ * Zugeordnete Schnipsel eines Varianten-Kapitels in Gliederungsreihenfolge (Kapitel vor Unterkapiteln).
+ * Maßgeblich ist die Gliederungsversion, aus der das Kapitel zuletzt erzeugt wurde (`chapters.outline_id`),
+ * sonst die aktive bzw. neueste Version der Familie.
+ */
 export async function variantSnippetRefs(ctx: Ctx, chapter: Row): Promise<{ refs: VariantSnippetRef[]; subchapters: { id: string; title: string; position: number }[] }> {
   if (!chapter.outline_family_id) return { refs: [], subchapters: [] };
-  const outline = await effectiveOutline(ctx, chapter.outline_family_id);
+  const pinned = chapter.outline_id
+    ? await ctx.db.get('SELECT * FROM outlines WHERE id = ? AND family_id = ? AND project_id = ?', chapter.outline_id, chapter.outline_family_id, ctx.projectId)
+    : undefined;
+  const outline = pinned ?? await effectiveOutline(ctx, chapter.outline_family_id);
   if (!outline) return { refs: [], subchapters: [] };
   const node = await ctx.db.get('SELECT id FROM outline_nodes WHERE outline_id = ? AND node_key = ? AND level = 1', outline.id, chapter.outline_node_key);
   if (!node) return { refs: [], subchapters: [] };

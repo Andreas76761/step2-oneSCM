@@ -42,10 +42,11 @@ export async function materializeVariant(ctx: Ctx, outlineId: string, user: User
       const title = `${n.number}. ${n.title}`;
       const position = Number(n.number) * 1000;
       const cur = await ctx.db.get('SELECT id FROM chapters WHERE project_id = ? AND key = ?', ctx.projectId, key);
-      if (cur) await ctx.db.run('UPDATE chapters SET title = ?, position = ? WHERE id = ?', title, position, cur.id);
+      // Inhalte kommen ab jetzt aus dieser Gliederungsversion
+      if (cur) await ctx.db.run('UPDATE chapters SET title = ?, position = ?, outline_id = ? WHERE id = ?', title, position, outlineId, cur.id);
       else {
         const id = newId('ch');
-        await ctx.db.run('INSERT INTO chapters (id, project_id, key, title, position, outline_family_id, outline_node_key) VALUES (?, ?, ?, ?, ?, ?, ?)', id, ctx.projectId, key, title, position, o.family_id, n.nodeKey);
+        await ctx.db.run('INSERT INTO chapters (id, project_id, key, title, position, outline_family_id, outline_node_key, outline_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', id, ctx.projectId, key, title, position, o.family_id, n.nodeKey, outlineId);
         created.push(id);
       }
     }
@@ -58,7 +59,8 @@ export async function materializeVariant(ctx: Ctx, outlineId: string, user: User
 export async function variantChapters(ctx: Ctx, outlineId: string) {
   const o = await outlineOf(ctx, outlineId);
   const keys = new Set((await ctx.db.all('SELECT node_key FROM outline_nodes WHERE outline_id = ? AND level = 1', outlineId)).map((r) => `ol:${o.family_id}:${r.node_key}`));
-  const all = await listChapters(ctx, { outlineFamilyId: o.family_id });
+  // Stand gemessen an der angefragten Gliederungsversion
+  const all = await listChapters(ctx, { outlineFamilyId: o.family_id, outlineId });
   const rows = await ctx.db.all('SELECT id, key FROM chapters WHERE project_id = ? AND outline_family_id = ?', ctx.projectId, o.family_id);
   const keyOf = new Map(rows.map((r) => [r.id, r.key]));
   return { outlineId, familyId: o.family_id, name: o.name, chapters: all.filter((c) => keys.has(keyOf.get(c.id))) };

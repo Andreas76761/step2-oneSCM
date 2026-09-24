@@ -36,7 +36,8 @@ export async function computeKpis(ctx: Ctx): Promise<Kpis> {
   const snippets = await n(`SELECT COUNT(*) AS n ${cur}`, pid);
   const confirmedSnippets = await n(`SELECT COUNT(*) AS n ${cur} AND s.evidence_status IN ('source_confirmed','manually_confirmed')`, pid);
   // aktueller Stand je Kapitel: höchste Versionsnummer
-  const latest = `SELECT v.id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ?
+  // Kennzahlen beziehen sich auf das Handbuch der Quellen; Handbuch-Varianten (ADR-034) zählen nicht mit
+  const latest = `SELECT v.id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id IS NULL
     AND v.version_no = (SELECT MAX(v2.version_no) FROM generated_chapter_versions v2 WHERE v2.chapter_id = v.chapter_id)`;
   const blocks = await n(`SELECT COUNT(*) AS n FROM content_blocks b WHERE b.deleted_at IS NULL AND b.kind <> 'gap' AND b.chapter_version_id IN (${latest})`, pid);
   const evidenced = await n(`SELECT COUNT(*) AS n FROM content_blocks b WHERE b.deleted_at IS NULL AND b.kind <> 'gap' AND b.chapter_version_id IN (${latest})
@@ -46,8 +47,8 @@ export async function computeKpis(ctx: Ctx): Promise<Kpis> {
     openFindings: await n("SELECT COUNT(*) AS n FROM quality_findings WHERE project_id = ? AND status IN ('open','deferred')", pid),
     openBlockers: await n("SELECT COUNT(*) AS n FROM quality_findings WHERE project_id = ? AND status IN ('open','deferred') AND severity = 'blocker'", pid),
     chapters: await n("SELECT COUNT(*) AS n FROM chapters WHERE project_id = ? AND key <> '__none__' AND outline_family_id IS NULL", pid),
-    approvedChapters: await n("SELECT COUNT(DISTINCT v.chapter_id) AS n FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved'", pid),
-    inReview: await n("SELECT COUNT(*) AS n FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'in_review'", pid),
+    approvedChapters: await n("SELECT COUNT(DISTINCT v.chapter_id) AS n FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id IS NULL AND v.status = 'approved'", pid),
+    inReview: await n("SELECT COUNT(*) AS n FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id IS NULL AND v.status = 'in_review'", pid),
     evidenceCoverage: pct(evidenced, blocks),
   };
 }

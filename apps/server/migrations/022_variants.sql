@@ -3,6 +3,8 @@
 -- Kapitel einer Gliederung (Variante); NULL = Kapitel aus den Quellen
 ALTER TABLE chapters ADD COLUMN outline_family_id TEXT;
 ALTER TABLE chapters ADD COLUMN outline_node_key TEXT;
+-- Gliederungsversion, aus der das Variantenkapitel zuletzt erzeugt wurde (Quelle seiner Inhalte)
+ALTER TABLE chapters ADD COLUMN outline_id TEXT;
 CREATE INDEX idx_chapters_outline ON chapters (project_id, outline_family_id);
 
 -- Stabile Kennung eines Gliederungseintrags über Versionen hinweg

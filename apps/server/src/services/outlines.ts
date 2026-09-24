@@ -117,7 +117,8 @@ async function insertTree(ctx: Ctx, outlineId: string, tree: OutlineTreeNode[]) 
 
 /** Aktuelle Kapitelstruktur (aus den Quellen) als Ausgangsgliederung */
 async function treeFromChapters(ctx: Ctx): Promise<OutlineTreeNode[]> {
-  const chapters = await ctx.db.all("SELECT id, title FROM chapters WHERE project_id = ? AND key <> '__none__' ORDER BY position, title", ctx.projectId);
+  // nur Kapitel der Quellen, keine Kapitel von Handbuch-Varianten (ADR-034)
+  const chapters = await ctx.db.all("SELECT id, title FROM chapters WHERE project_id = ? AND key <> '__none__' AND outline_family_id IS NULL ORDER BY position, title", ctx.projectId);
   const out: OutlineTreeNode[] = [];
   for (const c of chapters) {
     const subs = await ctx.db.all('SELECT title FROM subchapters WHERE chapter_id = ? ORDER BY position, title', c.id);
