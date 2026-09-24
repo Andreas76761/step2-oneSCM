@@ -43,6 +43,10 @@ describe('Stammdaten und Draft Manual (ADR-032, ADR-033)', () => {
       expect((await call('POST', '/outlines', { name: 'X', marketScope: 'markets', markets: [] })).status).toBe(400);
       expect((await call('POST', '/outlines', { name: 'X', marketScope: 'markets', markets: ['US'] })).status).toBe(400);
       expect((await call('POST', '/outlines', { name: 'Leer', content: 'nur Text ohne Gliederung', format: 'markdown' })).status).toBe(400);
+      // falsch typisierte Variante (auch aus hochgeladenem JSON) → 400 statt 500
+      expect((await call('POST', '/outlines', { name: 'X', content: JSON.stringify({ roles: 'dealer', nodes: [{ title: 'A' }] }), format: 'json' })).status).toBe(400);
+      expect((await call('POST', '/outlines', { name: 'X', content: JSON.stringify({ divisions: 'car', nodes: [{ title: 'A' }] }), format: 'json' })).status).toBe(400);
+      expect((await call('POST', '/outlines', { name: 'X', marketScope: 'markets', markets: 'FR' })).status).toBe(400);
 
       // Upload Markdown: Händler, Pkw, Blueprint
       const md = '# 1. Anmeldung\n## 1.1 Zweck\n## 1.2 Schritte\n# 2. Aufträge\n## 2.1 Anlegen\n';
@@ -70,6 +74,10 @@ describe('Stammdaten und Draft Manual (ADR-032, ADR-033)', () => {
       expect((await call('PATCH', `/outline-nodes/${n(o, 'Anmeldung').id}`, { parentId: n(o, 'Abrechnung').id })).status).toBe(400); // hat Unterkapitel
       o = (await call('DELETE', `/outline-nodes/${n(o, 'Schritte').id}`)).json;
       expect(o.nodes).toHaveLength(6);
+      // Strukturänderungen im Audit (wer, was)
+      const actions = (await built.ctx.db.all("SELECT action, actor FROM audit_events WHERE action LIKE 'outline_node.%' ORDER BY at")).map((r) => r.action);
+      expect(actions).toEqual(expect.arrayContaining(['outline_node.created', 'outline_node.updated', 'outline_node.deleted']));
+      expect(await built.ctx.db.get("SELECT details FROM audit_events WHERE action = 'outline_node.updated' AND details LIKE '%Auftrag anlegen%'")).toBeTruthy();
 
       // Export und Wiederimport (JSON behält die Variante)
       const exp = await call('GET', `/outlines/${id}/export?format=json`);
@@ -114,6 +122,13 @@ describe('Stammdaten und Draft Manual (ADR-032, ADR-033)', () => {
 
       const outline = (await call('POST', '/outlines', { name: 'Blueprint', content: '# Anmeldung\n## Zweck\n## Schritte\n# Aufträge\n', format: 'markdown' })).json;
       const node = (t: string) => outline.nodes.find((x: any) => x.title === t).id;
+      // mehrdeutig: zwei gleichnamige Unterkapitel unter einem Kapitel → keine automatische Zuordnung dorthin
+      const amb = (await call('POST', '/outlines', { name: 'Mehrdeutig', nodes: [{ title: 'Anmeldung', children: [{ title: 'Zweck' }, { title: '1.1 Zweck' }] }] })).json;
+      await call('POST', `/outlines/${amb.id}/auto-assign`, {});
+      const ambDraft = (await call('GET', `/outlines/${amb.id}/draft`)).json;
+      expect(ambDraft.nodes.filter((x: any) => x.level === 2).map((x: any) => x.snippets.length)).toEqual([0, 0]);
+      expect(ambDraft.nodes[0].snippets.map((s: any) => s.text)).toContain('Die Anmeldung öffnet oneSCM für alle Nutzer.');
+      await call('DELETE', `/outlines/${amb.id}`);
       // automatische Zuordnung über Kapitel-/Unterkapiteltitel (Nummern ignoriert)
       const auto = (await call('POST', `/outlines/${outline.id}/auto-assign`, {}, 'u-redaktion')).json;
       expect(auto).toMatchObject({ assigned: 3, remaining: 2 });

@@ -13,6 +13,9 @@
 - Projekte haben eine Marktliste (`PATCH /api/v1/projects/{id}` mit `markets`).
 - „Einstellungen“ steht in der Navigation unten.
 
+### Behoben (Review Etappe 11)
+- Falsch typisierte Varianten (z. B. `"roles": "dealer"` in hochgeladenem JSON) ergeben 400 statt 500; gleichnamige Unterkapitel eines Kapitels gelten bei der automatischen Zuordnung als mehrdeutig; Änderungen an Gliederungseinträgen stehen im Audit.
+
 ## 0.10.0 – Etappe 10 (24.09.2026)
 
 ### Hinzugefügt

@@ -28,14 +28,20 @@ async function projectMarkets(ctx: Ctx) {
 }
 
 /** Variante prüfen: Rollen, Sparten, Blueprint oder Märkte des Projekts */
+/** Liste aus Nutzdaten (auch hochgeladenem JSON) – falsch typisierte Angaben sind ein Eingabefehler */
+function stringList(v: unknown, field: string): string[] {
+  if (!Array.isArray(v)) throw badRequest(`${field} muss eine Liste sein.`);
+  return [...new Set(v.map(String))];
+}
+
 async function validVariant(ctx: Ctx, input: OutlineInput, base?: Row) {
-  const roles = input.roles !== undefined ? [...new Set(input.roles.map(String))] : parseJson<string[]>(base?.roles, []);
-  const divisions = input.divisions !== undefined ? [...new Set(input.divisions.map(String))] : parseJson<string[]>(base?.divisions, []);
+  const roles = input.roles !== undefined ? stringList(input.roles, 'roles') : parseJson<string[]>(base?.roles, []);
+  const divisions = input.divisions !== undefined ? stringList(input.divisions, 'divisions') : parseJson<string[]>(base?.divisions, []);
   const bad = [...roles.filter((r) => !ROLE_CODES.includes(r) || r === 'all'), ...divisions.filter((d) => !DIVISION_CODES.includes(d) || d === 'all' || d === 'unconfirmed')];
   if (bad.length) throw badRequest(`Unbekannte Rollen/Sparten: ${bad.join(', ')}.`);
   const marketScope = (input.marketScope ?? base?.market_scope ?? 'blueprint') as MarketScope;
   if (marketScope !== 'blueprint' && marketScope !== 'markets') throw badRequest('marketScope muss blueprint oder markets sein.');
-  let markets = input.markets !== undefined ? [...new Set(input.markets.map((m) => String(m).toUpperCase()))] : parseJson<string[]>(base?.markets, []);
+  let markets = input.markets !== undefined ? stringList(input.markets, 'markets').map((m) => m.toUpperCase()) : parseJson<string[]>(base?.markets, []);
   if (marketScope === 'blueprint') markets = [];
   else {
     const allowed = await projectMarkets(ctx);
@@ -270,6 +276,7 @@ export async function addNode(ctx: Ctx, outlineId: string, input: { title?: stri
     }
     await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description) VALUES (?, ?, ?, ?, ?, ?, ?)', id, outlineId, parentId, parentId ? 2 : 1, position, title, input.description?.trim().slice(0, 1000) || null);
     await touch(ctx, outlineId, user);
+    await audit(ctx, user.id, 'outline_node.created', 'outline_node', id, { outlineId, title, parentId, afterId: input.afterId ?? null });
   });
   return getOutline(ctx, outlineId);
 }
@@ -306,6 +313,11 @@ export async function updateNode(ctx: Ctx, nodeId: string, input: { title?: stri
       }
     }
     await touch(ctx, n.outline_id, user);
+    await audit(ctx, user.id, 'outline_node.updated', 'outline_node', nodeId, {
+      outlineId: n.outline_id, from: { title: n.title, parentId: n.parent_id ?? null },
+      ...(input.title !== undefined ? { title: stripNumber(input.title) } : {}), ...(input.description !== undefined ? { description: true } : {}),
+      ...(input.parentId !== undefined ? { parentId: input.parentId ?? null } : {}), ...(input.move ? { move: input.move } : {}),
+    });
   });
   return getOutline(ctx, n.outline_id);
 }
@@ -322,6 +334,7 @@ export async function deleteNode(ctx: Ctx, nodeId: string, user: User) {
     for (const id of ids.slice(1)) await ctx.db.run('DELETE FROM outline_nodes WHERE id = ?', id);
     await ctx.db.run('DELETE FROM outline_nodes WHERE id = ?', nodeId);
     await touch(ctx, n.outline_id, user);
+    await audit(ctx, user.id, 'outline_node.deleted', 'outline_node', nodeId, { outlineId: n.outline_id, title: n.title, removedNodes: ids.length });
   });
   return getOutline(ctx, n.outline_id);
 }
@@ -522,7 +535,12 @@ export async function autoAssign(ctx: Ctx, outlineId: string, user: User) {
   await outlineRow(ctx, outlineId);
   const nodes = await nodesOf(ctx, outlineId);
   const chapterNodes = new Map(nodes.filter((n) => n.level === 1).map((n) => [matchKey(n.title), n]));
-  const subNodes = new Map(nodes.filter((n) => n.level === 2).map((n) => [`${n.parentId}|${matchKey(n.title)}`, n]));
+  // gleichnamige Unterkapitel (auch unter einem Kapitel) sind mehrdeutig → dort keine Zuordnung
+  const subNodes = new Map<string, typeof nodes[number] | null>();
+  for (const n of nodes.filter((x) => x.level === 2)) {
+    const k = `${n.parentId}|${matchKey(n.title)}`;
+    subNodes.set(k, subNodes.has(k) ? null : n);
+  }
   const subAnywhere = new Map<string, typeof nodes[number] | null>();
   for (const n of nodes.filter((x) => x.level === 2)) {
     const k = matchKey(n.title);
@@ -537,8 +555,10 @@ export async function autoAssign(ctx: Ctx, outlineId: string, user: User) {
   const plan: { snippetId: string; nodeId: string }[] = [];
   for (const r of rows) {
     const ch = chapterNodes.get(matchKey(r.chapter_title));
-    let target = ch && r.sub_title ? subNodes.get(`${ch.id}|${matchKey(r.sub_title)}`) : undefined;
-    if (!target && r.sub_title) target = subAnywhere.get(matchKey(r.sub_title)) ?? undefined;
+    const scoped = ch && r.sub_title ? subNodes.get(`${ch.id}|${matchKey(r.sub_title)}`) : undefined;
+    let target = scoped ?? undefined;
+    // nur ohne passendes Unterkapitel im eigenen Kapitel woanders suchen (mehrdeutig im Kapitel → Kapitel selbst)
+    if (!target && scoped === undefined && r.sub_title) target = subAnywhere.get(matchKey(r.sub_title)) ?? undefined;
     target ??= ch;
     if (target) plan.push({ snippetId: r.id, nodeId: target.id });
   }
