@@ -26,6 +26,17 @@ services:
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
       OIDC_PERMISSIONS_CLAIM: ${OIDC_PERMISSIONS_CLAIM:-roles}
+      # Für mehrere Instanzen: OBJECT_STORE=s3 mit S3_BUCKET (und S3_ENDPOINT für S3-kompatible Speicher), siehe README.
+      # Zugangsdaten: AWS_* aus der Host-Umgebung; leer lassen, um die Instanzrolle zu nutzen.
+      OBJECT_STORE: ${OBJECT_STORE:-local}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_PREFIX: ${S3_PREFIX:-}
+      S3_REGION: ${S3_REGION:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
       UPLOAD_MAX_BYTES: 52428800
       ZIP_MAX_FILES: 5000
     volumes:

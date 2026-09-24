@@ -36,7 +36,13 @@
 | E-14 | Story-IDs für P1/P2 | Welche IDs? | US-011 Evidenzansicht, US-013 Optimierungsdashboard, US-014 gefilterter Export, US-015 Terminologie, US-016 Freigabeworkflow, US-017 Suche/Filter, US-018 Datenschutzprüfung, US-019 Versionsvergleich | `traceability/requirements.json` |
 | E-15 | Authentifizierung | IdP? Rollenmodell? | Berechtigungen `read`, `edit`, `decide`, `approve`, `admin`. Produktion: OpenID Connect (beliebiger Provider), Berechtigungen aus einem Gruppen-/Rollen-Claim (Standard-Gruppen `onescm-reader/-editor/-reviewer/-approver/-admin`). Demo-Benutzer nur im Demo-Modus | `AUTH_MODE`, `OIDC_*` (README) |
 
-## 4.3 Entscheidungsprotokoll
+## 4.3 Neue offene Entscheidung (Etappe 4)
+
+| ID | Gruppe | Frage(n) | Stand |
+|---|---|---|---|
+| E-16 | LLM-gestützte Umformulierung (ADR-007, optional) | Dürfen Quelltexte an einen externen KI-Dienst übertragen werden (Datenschutz, Vertraulichkeit)? Welcher Anbieter/Betrieb (Cloud, EU-Region, on-prem)? Muss jeder umformulierte Satz einzeln belegt und freigegeben werden? | **offen** – nicht umgesetzt; der Generator bleibt extraktiv |
+
+## 4.4 Entscheidungsprotokoll
 
 | Datum | Entscheider | Umfang | Anmerkung |
 |---|---|---|---|

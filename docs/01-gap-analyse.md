@@ -75,3 +75,13 @@ Weiterhin offen nach Etappe 2: Freigabeworkflow, eigene Terminologiemaske, HTML/
 | US-016 Freigabeworkflow | ✅ Entwurf → eingereicht → freigegeben/abgelehnt, Zurückziehen, Sperre während der Prüfung (einstufig gemäß E-12) |
 
 Offen (Etappe 4): US-019 Vergleich ganzer Kapitelversionen, S3-kompatibler Object-Store, optionale LLM-Umformulierung.
+
+## 1.6 Stand nach Etappe 4 (24.09.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| US-019 Versionsvergleich | ✅ Vergleich ganzer Kapitelversionen über die Lineage der Absätze; Seite „Versionsvergleich“ |
+| Mehrinstanzbetrieb | ✅ S3-kompatibler Object-Store; zusammen mit PostgreSQL und der verteilten Jobqueue horizontal skalierbar |
+| Lineage-Stabilität | ✅ behoben (Lückenhinweise und Blöcke mit gleichen Quellen verloren bei Neugenerierung ihre Lineage) |
+
+Damit sind alle User Stories US-001 … US-020 umgesetzt. Offen ist nur die optionale LLM-Umformulierung (E-16).

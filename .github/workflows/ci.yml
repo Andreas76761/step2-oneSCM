@@ -34,12 +34,21 @@ jobs:
         run: npm run typecheck
       - name: Lint
         run: npm run lint
-      - name: Unit- und API-Tests (SQLite)
+      - name: Unit- und API-Tests (SQLite + s3rver)
         run: npm test
-      - name: Unit- und API-Tests (PostgreSQL)
+      - name: S3-Server starten (moto, S3-kompatibel)
+        run: |
+          python3 -m venv /tmp/moto && /tmp/moto/bin/pip install -q 'moto[server]'
+          nohup /tmp/moto/bin/moto_server -p 9000 > /tmp/moto.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:9000/moto-api/ > /dev/null && break; sleep 1; done
+      - name: Unit- und API-Tests (PostgreSQL + moto-S3)
         run: npm test
         env:
           TEST_DATABASE_URL: postgres://onescm:onescm@localhost:5432/onescm_test
+          TEST_S3_ENDPOINT: http://localhost:9000
+          AWS_ACCESS_KEY_ID: onescm
+          AWS_SECRET_ACCESS_KEY: onescm-secret
+          AWS_REGION: us-east-1
       - name: Traceability prüfen (P0-Abdeckung, x-requirements)
         run: npm run traceability && git diff --exit-code docs/traceability.md
       - name: Build

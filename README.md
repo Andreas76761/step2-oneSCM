@@ -3,7 +3,7 @@
 Revisionssichere Webapp, die aus vielen Markdown-Texten ein konsistentes, rollen- und spartenspezifisches oneSCM-Benutzerhandbuch erzeugt.
 Grundlage ist das Projektpaket in [`reference/`](reference/) (Masterprompt v1.0 und Referenz-UI).
 
-> **Status: Etappe 3 (v0.3.0).** Alle P0-Stories und die P1-Stories US-011, US-013 … US-018 sind umgesetzt. Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
+> **Status: Etappe 4 (v0.4.0).** Alle P0-, P1- und P2-Stories (US-001 … US-020) sind umgesetzt. Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
 
 ## Dokumentation
 
@@ -60,7 +60,7 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
 2. **Dashboard → Analyse starten:** erzeugt Cluster, Dopplungen, Widersprüche, Lücken sowie Datenschutz-, Terminologie- und Lesbarkeitsbefunde.
 3. **Widersprüche / Dopplungen / Textcluster:** Befunde mit Begründung entscheiden und Canonical Topics festlegen. Offene Blocker sperren Generierung, Freigabe und Export.
 4. **Kapitelgenerator:** Entwurf ausschließlich aus bestätigten Quellen erzeugen (`source_confirmed` / `manually_confirmed`).
-5. **Kapitelwerkstatt:** Absätze bearbeiten, verschieben, löschen, sperren, klassifizieren, kommentieren. Versionen vergleichen und wiederherstellen.
+5. **Kapitelwerkstatt:** Absätze bearbeiten, verschieben, löschen, sperren, klassifizieren, kommentieren, einzelne Absatzversionen wiederherstellen. **Versionen vergleichen** zeigt die Unterschiede zweier ganzer Kapitelversionen.
 6. **Evidenz:** je Absatz prüfen, auf welcher Quelle er beruht und ob sie aktuell und bestätigt ist.
 7. **Freigabe:** Redaktion reicht ein (Qualitätsgate muss bestanden sein), die Freigabe entscheidet: freigeben oder ablehnen. Alles wird protokolliert.
 8. **Export / Rollen- und Spartenansichten:** gefiltert als Markdown, HTML, PDF oder JSON. Enthalten sind allgemeine Inhalte plus die passenden spezifischen.
@@ -105,7 +105,10 @@ Jeder Test trägt eine ID (`[T-xxx]`), die in [`traceability/tests.json`](tracea
 | `DATABASE_URL` | – | `postgres://user:pass@host:5432/db` → PostgreSQL (Produktion). Ohne Angabe: SQLite in `DB_PATH` |
 | `DB_PATH` | `$DATA_DIR/onescm.db` | SQLite-Datei (Demo/Entwicklung) |
 | `DB_POOL_SIZE` | `10` | Verbindungen im PostgreSQL-Pool |
-| `DATA_DIR` | `./data` | Object-Store (Originaldateien, Exporte); bei mehreren Instanzen gemeinsames Volume |
+| `DATA_DIR` | `./data` | lokaler Object-Store (Originaldateien, Exporte) bei `OBJECT_STORE=local` |
+| `OBJECT_STORE` | `local` | `s3` für AWS S3 oder S3-kompatible Speicher (MinIO, Ceph …) – empfohlen für mehrere Instanzen |
+| `S3_BUCKET` / `S3_PREFIX` | – | Bucket (Pflicht bei `s3`) und optionales Präfix |
+| `S3_ENDPOINT` / `S3_REGION` / `S3_FORCE_PATH_STYLE` | AWS / `us-east-1` / automatisch | für S3-kompatible Speicher; Zugangsdaten über `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` oder Instanzrolle |
 | `AUTH_MODE` | `demo` | `oidc` für den Produktivbetrieb |
 | `OIDC_ISSUER` | – | Issuer-URL des Providers (Discovery unter `/.well-known/openid-configuration`) |
 | `OIDC_CLIENT_ID` | – | Client-ID der Web-UI |
@@ -120,7 +123,7 @@ Jeder Test trägt eine ID (`[T-xxx]`), die in [`traceability/tests.json`](tracea
 | `ZIP_MAX_FILES` | 5000 | maximale Dateien je ZIP |
 | `LOG` | `1` | `0` schaltet das Request-Logging ab |
 
-Mehrere Instanzen sind mit PostgreSQL möglich: Jobs werden per `FOR UPDATE SKIP LOCKED` verteilt (ADR-008). `DATA_DIR/objects` muss dann ein gemeinsames Volume sein.
+Mehrere Instanzen sind mit PostgreSQL und `OBJECT_STORE=s3` möglich: Jobs werden per `FOR UPDATE SKIP LOCKED` verteilt, Dateien liegen im gemeinsamen Bucket (ADR-008).
 
 Sicherheit: Markdown/HTML aus Quellen wird nie ausgeführt (eigener Parser, `react-markdown` ohne Raw-HTML, Rohtext als `text/plain` + `nosniff`). Dazu eine restriktive CSP, Datenschutzblocker vor Export und ein Auditprotokoll (`GET /api/v1/audit-events`).
 

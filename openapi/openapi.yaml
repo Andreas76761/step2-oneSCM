@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.3.0
+  version: 0.4.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -537,6 +537,41 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Kapitel }
         '404': { $ref: '#/components/responses/Problem' }
+  /chapters/{chapterId}/compare:
+    get:
+      operationId: compareChapterVersions
+      summary: Zwei Kapitelversionen vergleichen (ohne Parameter vorletzte gegen neueste)
+      tags: [Kapitelwerkstatt]
+      x-requirements: [US-019, US-009]
+      x-extension: true
+      parameters:
+        - { $ref: '#/components/parameters/ChapterId' }
+        - { name: from, in: query, schema: { type: string }, description: Ausgangsversion }
+        - { name: to, in: query, schema: { type: string }, description: Zielversion }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200':
+          description: Unterschiede je Absatz (added, removed, changed, moved, unchanged)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  from: { type: object }
+                  to: { type: object }
+                  summary: { type: object, properties: { added: { type: integer }, removed: { type: integer }, changed: { type: integer }, moved: { type: integer }, unchanged: { type: integer } } }
+                  entries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        change: { type: string, enum: [added, removed, changed, moved, unchanged] }
+                        section: { type: string }
+                        fields: { type: array, items: { type: string } }
+                        from: { type: [object, 'null'] }
+                        to: { type: [object, 'null'] }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /chapters/{chapterId}/versions:
     get:
       operationId: listChapterVersions

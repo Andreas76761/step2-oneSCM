@@ -18,7 +18,7 @@ import { terminologyRoutes } from './routes/terminology.js';
 import { failAnalysisJob, runAnalysis } from './services/analysis.js';
 import { failImportJob, runImportJob } from './services/imports.js';
 import { seedTerminology } from './services/terminology.js';
-import { LocalObjectStore } from './storage.js';
+import { LocalObjectStore, S3ObjectStore } from './storage.js';
 
 /** Öffentliche Endpunkte ohne Anmeldung */
 const PUBLIC_PATHS = new Set(['/api/v1/health', '/api/v1/auth/config']);
@@ -37,7 +37,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
   const jobs = new JobQueue(db, { onError: (type, err) => app.log.error({ err }, `Job ${type} fehlgeschlagen`) });
   const ctx: Ctx = {
     db,
-    store: new LocalObjectStore(path.join(config.dataDir, 'objects')),
+    store: config.objectStore.kind === 's3' ? new S3ObjectStore(config.objectStore) : new LocalObjectStore(path.join(config.dataDir, 'objects')),
     jobs,
     config,
     projectId: DEFAULT_PROJECT_ID,
@@ -80,7 +80,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
         if (PUBLIC_PATHS.has(req.url.split('?')[0])) return;
         req.user = await authenticate(ctx, req.headers);
       });
-      api.get('/health', async () => ({ status: 'ok', database: db.dialect, auth: config.authMode }));
+      api.get('/health', async () => ({ status: 'ok', database: db.dialect, auth: config.authMode, objectStore: ctx.store.kind }));
       sourceRoutes(api, ctx);
       qualityRoutes(api, ctx);
       chapterRoutes(api, ctx);

@@ -9,7 +9,7 @@
 | [ADR-005](ADR-005-markdown-parser.md) | Eigener, nicht ausführender Markdown-Struktur-Parser | akzeptiert |
 | [ADR-006](ADR-006-aehnlichkeit.md) | Austauschbare Ähnlichkeits-Engine, TF-IDF-Kosinus | akzeptiert (E-05) |
 | [ADR-007](ADR-007-extraktiver-generator.md) | Extraktiver Kapitelgenerator, LLM nur optional hinter Schnittstelle | akzeptiert (E-09) |
-| [ADR-008](ADR-008-jobs-storage.md) | Persistente Jobqueue und Object-Storage-Abstraktion | akzeptiert, umgesetzt |
+| [ADR-008](ADR-008-jobs-storage.md) | Persistente Jobqueue und Object-Store (Dateisystem oder S3-kompatibel) | akzeptiert, umgesetzt |
 | [ADR-009](ADR-009-berechtigungen.md) | Trennung fachlicher Rollen und technischer Berechtigungen | akzeptiert (E-03, E-15) |
 | [ADR-010](ADR-010-traceability.md) | Traceability aus OpenAPI `x-requirements` und Test-Registry | akzeptiert |
 | [ADR-011](ADR-011-oidc.md) | Anmeldung über OpenID Connect (Bearer-JWT, PKCE in der UI) | akzeptiert, umgesetzt |

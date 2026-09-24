@@ -112,3 +112,22 @@ test('[T-203] Freigabeworkflow in der UI: einreichen, freigeben; Terminologie pf
   await page.getByRole('button', { name: /herunterladen/ }).click();
   expect((await download).suggestedFilename()).toMatch(/\.pdf$/);
 });
+
+test('[T-204] Versionsvergleich in der UI: Unterschiede zwischen zwei Kapitelversionen', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '4. Vertragsbearbeitung');
+  await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h });
+  const v2 = await (await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).json();
+  const block = v2.sections.find((s: any) => s.code === 'purpose').blocks[0];
+  await request.patch(`/api/v1/content-blocks/${block.id}`, { headers: h, data: { text: 'Das Autohaus erfasst in der Vertragsbearbeitung Serviceverträge.' } });
+
+  await page.goto(`/werkstatt/${ch.id}`);
+  await page.getByRole('link', { name: 'Versionen vergleichen' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Versionsvergleich');
+  await expect(page.locator('.tile', { hasText: '✎ geändert' })).toContainText('1');
+  const changed = page.getByRole('article', { name: /geändert: Zweck/ });
+  await expect(changed.locator('.ddel')).toContainText('Serviceverträge für Fahrzeuge');
+  await expect(changed.locator('.dadd')).toContainText('erfasst in der Vertragsbearbeitung Serviceverträge.');
+  await page.getByLabel('unveränderte Absätze anzeigen').check();
+  await expect(page.getByRole('article', { name: /unverändert/ }).first()).toBeVisible();
+});

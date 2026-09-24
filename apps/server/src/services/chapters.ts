@@ -128,11 +128,30 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
       const mode = b.mode === 'manually_edited' && sourcesChanged ? 'needs_regeneration' : b.mode;
       await insertBlock(ctx, versionId, { ...b, mode, lineageId: b.lineageId, sourceIds: sources }, actor, sourcesChanged ? 'Quelle geändert – Prüfung erforderlich' : 'aus Vorversion übernommen (manuell geschützt)');
     }
+    // Lineage stabil halten (Grundlage für Historie und Versionsvergleich, US-019): zuerst exakte Zuordnung über
+    // Abschnitt + Blocktyp + Quellen (erfasst auch quellenlose Lückenhinweise), dann über dieselben Quellen;
+    // jede Lineage wird höchstens einmal vergeben.
+    const srcKey = (ids: string[]) => [...ids].sort().join('|');
+    const exact = new Map<string, string[]>();
+    const bySources = new Map<string, string[]>();
+    for (const p of prevGenerated) {
+      const ids = p.sources.map((s: Row) => s.snippetId as string);
+      const push = (m: Map<string, string[]>, k: string) => m.set(k, [...(m.get(k) ?? []), p.lineageId]);
+      push(exact, `${p.section}#${p.kind}#${srcKey(ids)}`);
+      if (ids.length) push(bySources, srcKey(ids));
+    }
+    const used = new Set<string>();
+    const take = (m: Map<string, string[]>, k: string) => {
+      const list = m.get(k) ?? [];
+      const hit = list.find((l) => !used.has(l));
+      if (hit) used.add(hit);
+      return hit;
+    };
     let pos = 0;
     for (const g of result.blocks) {
-      const key = [...g.sourceIds].sort().join('|');
+      const key = srcKey(g.sourceIds);
       if (g.sourceIds.length && carriedSourceKeys.has(key)) continue;
-      const lineage = prevGenerated.find((p) => [...p.sources.map((s: Row) => s.snippetId)].sort().join('|') === key && key)?.lineageId ?? newId('ln');
+      const lineage = take(exact, `${g.section}#${g.kind}#${key}`) ?? (key ? take(bySources, key) : undefined) ?? newId('ln');
       await insertBlock(ctx, versionId, {
         section: g.section, position: pos++, kind: g.kind, text: g.text, mode: 'generated', market: g.market, release: g.release, scopeStatus: g.scopeStatus,
         roles: g.roles, divisions: g.divisions, sourceIds: g.sourceIds, lineageId: lineage, justification: null, comment: null,

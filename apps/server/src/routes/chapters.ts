@@ -4,12 +4,26 @@ import type { Ctx } from '../context.js';
 import {
   approveVersion, createBlock, submitVersion, withdrawVersion, deleteBlock, generate, getChapter, getChapterVersion, listBlockVersions, listChapters, listChapterVersions, patchBlock, restoreBlock, versionGate,
 } from '../services/chapters.js';
+import { compareVersions } from '../services/compare.js';
 import { evidenceForVersion } from '../services/insights.js';
+import { unprocessable } from '../problem.js';
 import { userOf } from './helpers.js';
 
 export function chapterRoutes(app: FastifyInstance, ctx: Ctx) {
   app.get('/chapters', async (req) => (userOf(ctx, req), listChapters(ctx)));
   app.get<{ Params: { chapterId: string } }>('/chapters/:chapterId', async (req) => (userOf(ctx, req), getChapter(ctx, req.params.chapterId)));
+  app.get<{ Params: { chapterId: string }; Querystring: { from?: string; to?: string } }>('/chapters/:chapterId/compare', async (req) => {
+    userOf(ctx, req);
+    let { from, to } = req.query;
+    if (!from || !to) {
+      // Standard: vorletzte gegen neueste Version
+      const versions = await listChapterVersions(ctx, req.params.chapterId);
+      to ??= versions[0]?.id;
+      from ??= versions.find((v) => v.id !== to)?.id;
+      if (!from || !to) throw unprocessable('Zum Vergleichen werden mindestens zwei Versionen benötigt.');
+    }
+    return compareVersions(ctx, req.params.chapterId, from, to);
+  });
   app.get<{ Params: { chapterId: string } }>('/chapters/:chapterId/versions', async (req) => (userOf(ctx, req), listChapterVersions(ctx, req.params.chapterId)));
   app.post<{ Params: { chapterId: string } }>('/chapters/:chapterId/generate', async (req, reply) => {
     const user = userOf(ctx, req, 'edit');
