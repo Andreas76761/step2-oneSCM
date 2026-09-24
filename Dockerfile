@@ -8,7 +8,8 @@ COPY apps/web/package.json apps/web/
 COPY e2e/package.json e2e/
 RUN npm ci --workspace apps/server --workspace apps/web --include-workspace-root
 COPY . .
-RUN npm run build && npm prune --omit=dev --workspace apps/server --workspace apps/web
+# nicht hochgezogene Abhängigkeiten liegen unter apps/server/node_modules (Verzeichnis immer anlegen, damit COPY gelingt)
+RUN npm run build && npm prune --omit=dev --workspace apps/server --workspace apps/web && mkdir -p apps/server/node_modules
 
 FROM node:22-bookworm-slim
 # Version aus der Release-Pipeline (ADR-031); ohne Angabe gilt die Version aus package.json
@@ -20,6 +21,7 @@ WORKDIR /app
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./
 COPY --from=build /app/apps/server/package.json apps/server/
+COPY --from=build /app/apps/server/node_modules apps/server/node_modules
 COPY --from=build /app/apps/server/dist apps/server/dist
 COPY --from=build /app/apps/server/migrations apps/server/migrations
 COPY --from=build /app/apps/server/assets apps/server/assets

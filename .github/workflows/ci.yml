@@ -106,3 +106,6 @@ jobs:
           grep -q "\"version\":\"ci-${GITHUB_SHA::7}\"" /tmp/health.json
           curl -sf http://localhost:3000/help/widget.js | grep -q OneScmHelp
           docker rm -f smoke
+      - name: Container-Logs bei Fehler
+        if: failure()
+        run: docker logs smoke || true
