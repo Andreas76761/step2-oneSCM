@@ -283,6 +283,53 @@
     ]
   },
   {
+    "id": "T-121",
+    "title": "Freigabeworkflow: einreichen, zurückziehen, ablehnen, freigeben; eingereichte Version gesperrt",
+    "file": "apps/server/test/stage3.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-012",
+      "US-016"
+    ]
+  },
+  {
+    "id": "T-122",
+    "title": "Terminologie: Begriffe pflegen, Konsistenzprüfung, Analyse nutzt aktive Begriffe",
+    "file": "apps/server/test/stage3.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-015"
+    ]
+  },
+  {
+    "id": "T-123",
+    "title": "Evidenzansicht: Quellen je Absatz, fehlende, manuelle, unbestätigte und veraltete Evidenz",
+    "file": "apps/server/test/stage3.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-011",
+      "US-012"
+    ]
+  },
+  {
+    "id": "T-124",
+    "title": "Optimierungsübersicht: Kennzahlen je Kapitel, priorisierte Empfehlungen",
+    "file": "apps/server/test/stage3.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-013"
+    ]
+  },
+  {
+    "id": "T-125",
+    "title": "Export HTML ohne ausführbare Inhalte und PDF; Formatprüfung",
+    "file": "apps/server/test/stage3.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-014"
+    ]
+  },
+  {
     "id": "T-201",
     "title": "UI: Navigation, Import einer MD-Datei, Quellenliste",
     "file": "e2e/tests/app.spec.ts",
@@ -302,6 +349,18 @@
       "US-008",
       "US-009",
       "US-010"
+    ]
+  },
+  {
+    "id": "T-203",
+    "title": "UI: Freigabeworkflow, Evidenzansicht, Terminologie pflegen, PDF-Export",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "US-011",
+      "US-014",
+      "US-015",
+      "US-016"
     ]
   }
 ]

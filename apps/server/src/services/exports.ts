@@ -4,6 +4,7 @@ import { json, newId, now, parseJson } from '../db.js';
 import { DIVISIONS, ROLES } from '../domain/reference.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { gateForChapter, getChapterVersion } from './chapters.js';
+import { escapeHtml, markdownToHtml, markdownToPdf, renderPdf } from './render.js';
 
 export interface ExportFilter {
   roles?: string[];
@@ -14,8 +15,17 @@ export interface ExportFilter {
 
 export interface ExportInput extends ExportFilter {
   chapterIds?: string[];
-  format?: 'md' | 'json';
+  format?: ExportFormat;
 }
+
+export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'json'] as const;
+export type ExportFormat = (typeof EXPORT_FORMATS)[number];
+export const CONTENT_TYPES: Record<ExportFormat, string> = {
+  md: 'text/markdown; charset=utf-8',
+  html: 'text/html; charset=utf-8',
+  pdf: 'application/pdf',
+  json: 'application/json',
+};
 
 type Block = { roles: string[]; divisions: string[]; market: string | null; release: string | null; kind: string };
 
@@ -40,23 +50,37 @@ export function badgeLine(b: Pick<Block, 'roles' | 'divisions' | 'market' | 'rel
 }
 
 const KIND_PREFIX: Record<string, string> = { note: 'ℹ️ **Hinweis:** ', tip: '💡 **Tipp:** ', warning: '⚠️ **Warnung:** ', xref: '↗️ ' };
+const KIND_LABEL: Record<string, string> = { note: 'Hinweis', tip: 'Tipp', warning: 'Warnung', xref: 'Querverweis' };
 
-export function renderMarkdown(chapters: { title: string; versionNo: number; approvedAt: string | null; sections: { code: string; title: string; blocks: any[] }[] }[], f: ExportFilter): string {
-  const out: string[] = [];
-  const filterDesc = [
+type ExportChapter = { title: string; versionNo: number; approvedAt: string | null; sections: { code: string; title: string; blocks: any[] }[] };
+
+function filterDescription(f: ExportFilter): string {
+  const parts = [
     f.roles?.length ? `Rollen: ${f.roles.map((c) => ROLES.find((r) => r.code === c)?.label ?? c).join(', ')}` : null,
     f.divisions?.length ? `Sparten: ${f.divisions.map((c) => DIVISIONS.find((d) => d.code === c)?.label ?? c).join(', ')}` : null,
     f.market ? `Markt: ${f.market}` : null,
     f.release ? `Release: ${f.release}` : null,
   ].filter(Boolean);
-  out.push('# oneSCM Benutzerhandbuch', '', `> Exportiert am ${now().slice(0, 10)}${filterDesc.length ? ` · Filter: ${filterDesc.join(' · ')}` : ' · ungefiltert'}`, '');
-  for (const ch of chapters) {
-    out.push(`## ${ch.title}`, '', `*Freigegebene Version ${ch.versionNo}${ch.approvedAt ? ` vom ${ch.approvedAt.slice(0, 10)}` : ''}*`, '');
+  return parts.length ? `Filter: ${parts.join(' · ')}` : 'ungefiltert';
+}
+
+/** Kapitel → sichtbare Abschnitte/Blöcke nach Filter (gemeinsam für alle Formate). */
+function visible(chapters: ExportChapter[], f: ExportFilter) {
+  return chapters.map((ch) => ({
+    ...ch,
+    sections: ch.sections.map((s) => ({ ...s, blocks: s.blocks.filter((b) => b.kind !== 'gap' && blockMatches(b, f)) })).filter((s) => s.blocks.length),
+  }));
+}
+
+const versionLine = (ch: ExportChapter) => `Freigegebene Version ${ch.versionNo}${ch.approvedAt ? ` vom ${ch.approvedAt.slice(0, 10)}` : ''}`;
+
+export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter): string {
+  const out: string[] = ['# oneSCM Benutzerhandbuch', '', `> Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, ''];
+  for (const ch of visible(chapters, f)) {
+    out.push(`## ${ch.title}`, '', `*${versionLine(ch)}*`, '');
     for (const s of ch.sections) {
-      const blocks = s.blocks.filter((b) => b.kind !== 'gap' && blockMatches(b, f));
-      if (!blocks.length) continue;
       out.push(`### ${s.title}`, '');
-      for (const b of blocks) {
+      for (const b of s.blocks) {
         const badges = badgeLine(b);
         if (badges) out.push(`> ${badges}`, '');
         out.push(`${KIND_PREFIX[b.kind] ?? ''}${b.text}`, '');
@@ -66,9 +90,102 @@ export function renderMarkdown(chapters: { title: string; versionNo: number; app
   return out.join('\n');
 }
 
+/** Eigenständiges, druckfähiges HTML ohne Skripte (CSP im Dokument, HTML aus Quellen escaped). */
+export function renderHtml(chapters: ExportChapter[], f: ExportFilter): string {
+  const body: string[] = [];
+  const toc: string[] = [];
+  visible(chapters, f).forEach((ch, i) => {
+    toc.push(`<li><a href="#k${i}">${escapeHtml(ch.title)}</a></li>`);
+    body.push(`<section class="chapter" id="k${i}"><h2>${escapeHtml(ch.title)}</h2><p class="meta">${escapeHtml(versionLine(ch))}</p>`);
+    for (const s of ch.sections) {
+      body.push(`<h3>${escapeHtml(s.title)}</h3>`);
+      for (const b of s.blocks) {
+        const badges = badgeLine(b);
+        body.push(`<div class="block kind-${escapeHtml(b.kind)}">`);
+        if (badges) body.push(`<p class="badges">${escapeHtml(badges)}</p>`);
+        if (KIND_LABEL[b.kind] && b.kind !== 'xref') body.push(`<p class="label">${KIND_LABEL[b.kind]}</p>`);
+        body.push(markdownToHtml(b.text), '</div>');
+      }
+    }
+    body.push('</section>');
+  });
+  return `<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>oneSCM Benutzerhandbuch</title>
+<style>
+body{font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#0f172a;max-width:860px;margin:0 auto;padding:24px}
+h1{font-size:26px}h2{font-size:21px;border-bottom:2px solid #1d63d8;padding-bottom:4px;margin-top:36px}h3{font-size:16px;margin:20px 0 6px}
+.meta,.filter{color:#5b6474;font-size:13px}.badges{font-size:12px;color:#334155;margin:0 0 4px}
+.block{margin:6px 0 10px}.kind-note,.kind-tip{background:#eaf1fd;border-left:4px solid #1d63d8;padding:6px 10px}
+.kind-warning{background:#fdecec;border-left:4px solid #b91c1c;padding:6px 10px}.label{font-weight:600;margin:0 0 2px}
+table{border-collapse:collapse}td,th{border:1px solid #cbd5e1;padding:4px 8px}pre{background:#f3f4f6;padding:8px;white-space:pre-wrap}
+nav ol{columns:2}
+@media print{body{max-width:none;padding:0}.chapter{break-before:page}a{color:inherit;text-decoration:none}nav{break-after:page}}
+</style></head><body>
+<h1>oneSCM Benutzerhandbuch</h1>
+<p class="filter">Exportiert am ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f))}</p>
+<nav><h2>Inhalt</h2><ol>${toc.join('')}</ol></nav>
+${body.join('\n')}
+</body></html>`;
+}
+
+/** Badge-Zeile ohne Emojis (PDF-Schrift enthält keine Emojis): Text + Farbe statt Icon. */
+function pdfBadges(b: Block): string {
+  const parts: string[] = [];
+  for (const r of ROLES) if (b.roles.includes(r.code) && r.code !== 'all') parts.push(`Rolle ${r.label}`);
+  for (const d of DIVISIONS) if (b.divisions.includes(d.code) && d.code !== 'all') parts.push(`Sparte ${d.label}`);
+  if (b.market) parts.push(`Markt ${b.market}`);
+  if (b.release) parts.push(`Release ${b.release}`);
+  return parts.join(' · ');
+}
+
+export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter): Promise<Buffer> {
+  const content: unknown[] = [
+    { text: 'oneSCM Benutzerhandbuch', style: 'title' },
+    { text: `Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, style: 'meta', margin: [0, 0, 0, 16] },
+  ];
+  visible(chapters, f).forEach((ch, i) => {
+    content.push({ text: ch.title, style: 'chapter', tocItem: true, ...(i > 0 ? { pageBreak: 'before' } : {}) });
+    content.push({ text: versionLine(ch), style: 'meta', margin: [0, 0, 0, 8] });
+    for (const s of ch.sections) {
+      content.push({ text: s.title, style: 'section' });
+      for (const b of s.blocks) {
+        const badges = pdfBadges(b);
+        const inner: unknown[] = [];
+        if (badges) inner.push({ text: badges, style: 'badges' });
+        if (KIND_LABEL[b.kind] && b.kind !== 'xref') inner.push({ text: KIND_LABEL[b.kind], bold: true });
+        inner.push(...markdownToPdf(b.text));
+        const box = b.kind === 'warning' ? '#fdecec' : b.kind === 'note' || b.kind === 'tip' ? '#eaf1fd' : null;
+        content.push(box ? { table: { widths: ['*'], body: [[{ stack: inner, fillColor: box }]] }, layout: 'noBorders', margin: [0, 2, 0, 8] } : { stack: inner, margin: [0, 0, 0, 4] });
+      }
+    }
+  });
+  return renderPdf({
+    info: { title: 'oneSCM Benutzerhandbuch', creator: 'oneSCM Handbook Studio' },
+    pageSize: 'A4',
+    pageMargins: [48, 56, 48, 56],
+    defaultStyle: { font: 'Roboto', fontSize: 10, lineHeight: 1.25 },
+    footer: (page: number, pages: number) => ({ text: `Seite ${page} von ${pages}`, alignment: 'center', fontSize: 8, color: '#64748b', margin: [0, 20, 0, 0] }),
+    styles: {
+      title: { fontSize: 22, bold: true, margin: [0, 0, 0, 4] },
+      meta: { fontSize: 9, color: '#5b6474' },
+      chapter: { fontSize: 17, bold: true, color: '#1d63d8', margin: [0, 0, 0, 2] },
+      section: { fontSize: 12.5, bold: true, margin: [0, 10, 0, 4] },
+      badges: { fontSize: 8.5, color: '#334155', margin: [0, 0, 0, 2] },
+      md_h1: { fontSize: 13, bold: true, margin: [0, 6, 0, 4] },
+      md_h2: { fontSize: 12, bold: true, margin: [0, 6, 0, 4] },
+      md_h3: { fontSize: 11, bold: true, margin: [0, 4, 0, 3] },
+      md_h4: { fontSize: 10, bold: true, margin: [0, 4, 0, 3] },
+    },
+    content,
+  });
+}
+
 export async function createExport(ctx: Ctx, input: ExportInput, actor: string) {
   const format = input.format ?? 'md';
-  if (!['md', 'json'].includes(format)) throw badRequest('format muss md oder json sein.');
+  if (!(EXPORT_FORMATS as readonly string[]).includes(format)) throw badRequest(`format muss eines von ${EXPORT_FORMATS.join(', ')} sein.`);
   const chapterIds = input.chapterIds?.length
     ? input.chapterIds
     : (await ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved'", ctx.projectId)).map((r) => r.chapter_id as string);
@@ -92,20 +209,28 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   chapters.sort((a, b) => a.position - b.position);
 
   const filter: ExportFilter = { roles: input.roles, divisions: input.divisions, market: input.market ?? null, release: input.release ?? null };
-  const content = format === 'md'
-    ? renderMarkdown(chapters, filter)
-    : JSON.stringify({ filter, chapters: chapters.map((c) => ({ ...c, sections: c.sections.map((s: any) => ({ ...s, blocks: s.blocks.filter((b: any) => b.kind !== 'gap' && blockMatches(b, filter)) })) })) }, null, 2);
+  let data: Buffer;
+  let preview: string | null;
+  if (format === 'pdf') {
+    data = await renderPdfExport(chapters, filter);
+    preview = null;
+  } else {
+    const text = format === 'md' ? renderMarkdown(chapters, filter) : format === 'html' ? renderHtml(chapters, filter) : JSON.stringify({ filter, chapters: visible(chapters, filter) }, null, 2);
+    data = Buffer.from(text, 'utf8');
+    // Vorschau für die UI immer als Markdown bzw. JSON (HTML wird dort nicht eingebettet)
+    preview = (format === 'json' ? text : renderMarkdown(chapters, filter)).slice(0, 4000);
+  }
 
   const id = newId('exp');
   const key = `exports/${id}.${format}`;
-  await ctx.store.put(key, Buffer.from(content, 'utf8'));
+  await ctx.store.put(key, data);
   const fileName = `onescm-handbuch-${now().slice(0, 10)}.${format}`;
   await ctx.db.run(
     'INSERT INTO exports (id, project_id, params, status, format, storage_key, file_name, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     id, ctx.projectId, json({ ...input, skipped }), 'completed', format, key, fileName, actor, now(),
   );
   await audit(ctx.db, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped });
-  return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, downloadUrl: `/api/v1/exports/${id}/download`, preview: content.slice(0, 4000) };
+  return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, downloadUrl: `/api/v1/exports/${id}/download`, preview, byteSize: data.length };
 }
 
 export async function listExports(ctx: Ctx) {
@@ -117,6 +242,6 @@ export async function listExports(ctx: Ctx) {
 export async function downloadExport(ctx: Ctx, id: string) {
   const e = await ctx.db.get('SELECT * FROM exports WHERE id = ?', id);
   if (!e) throw notFound(`Export ${id}`);
-  return { fileName: e.file_name as string, format: e.format as string, data: await ctx.store.get(e.storage_key) };
+  return { fileName: e.file_name as string, format: e.format as ExportFormat, data: await ctx.store.get(e.storage_key) };
 }
 

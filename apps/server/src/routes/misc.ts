@@ -7,7 +7,8 @@ import {
   BLOCK_MODES, CHAPTER_SECTIONS, DECISIONS, DIVISIONS, EVIDENCE_STATUSES, FINDING_TYPES, PERMISSIONS, ROLES, SEVERITIES,
 } from '../domain/reference.js';
 import { badRequest } from '../problem.js';
-import { createExport, downloadExport, listExports } from '../services/exports.js';
+import { CONTENT_TYPES, createExport, downloadExport, listExports } from '../services/exports.js';
+import { optimizationOverview } from '../services/insights.js';
 import { buildMatrix, matrixCsv, matrixMarkdown, matrixXlsx } from '../services/traceability.js';
 import { list, userOf } from './helpers.js';
 
@@ -22,7 +23,7 @@ export function miscRoutes(app: FastifyInstance, ctx: Ctx) {
   app.get<{ Params: { exportId: string } }>('/exports/:exportId/download', async (req, reply) => {
     userOf(ctx, req);
     const f = await downloadExport(ctx, req.params.exportId);
-    reply.header('Content-Type', f.format === 'md' ? 'text/markdown; charset=utf-8' : 'application/json').header('Content-Disposition', `attachment; filename="${f.fileName}"`);
+    reply.header('Content-Type', CONTENT_TYPES[f.format] ?? 'application/octet-stream').header('Content-Disposition', `attachment; filename="${f.fileName}"`);
     return f.data;
   });
 
@@ -104,6 +105,8 @@ export function miscRoutes(app: FastifyInstance, ctx: Ctx) {
       lastAnalysis: (await db.get('SELECT id, status, started_at AS startedAt, finished_at AS finishedAt, stats FROM analysis_runs ORDER BY started_at DESC LIMIT 1')) ?? null,
     };
   });
+
+  app.get('/optimizations', async (req) => (userOf(ctx, req), optimizationOverview(ctx)));
 
   app.get<{ Querystring: { entityType?: string; entityId?: string; limit?: string } }>('/audit-events', async (req) => {
     userOf(ctx, req);

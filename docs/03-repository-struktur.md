@@ -39,7 +39,7 @@
 │   │   │   ├── privacy.ts         Datenschutzmuster
 │   │   │   ├── generator.ts       Kapitelstruktur (extraktiv)
 │   │   │   └── gate.ts            Qualitätsgate
-│   │   ├── services/              Anwendungslogik mit DB
+│   │   ├── services/              Anwendungslogik mit DB (u. a. insights: Evidenz/Optimierung, render: HTML/PDF, terminology)
 │   │   └── routes/                HTTP-Routen je Ressource
 │   └── test/                      Vitest Unit- und API-Tests (SQLite; PostgreSQL mit TEST_DATABASE_URL)
 ├── apps/web/                      React + TypeScript (Vite)

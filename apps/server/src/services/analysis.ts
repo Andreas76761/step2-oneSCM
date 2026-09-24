@@ -7,6 +7,7 @@ import { detectPrivacy } from '../domain/privacy.js';
 import { DECISION_CODES, DECISIONS, SEVERITIES, type Severity } from '../domain/reference.js';
 import { clusterPairs, TfidfEngine, type SimilarityPair } from '../domain/similarity.js';
 import { badRequest, notFound, unprocessable } from '../problem.js';
+import { listTerms } from './terminology.js';
 
 interface NewFinding {
   type: string;
@@ -67,6 +68,7 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
   const rolesOf = groupCodes(await db.all('SELECT snippet_id, role_code AS code FROM snippet_roles'));
   const divsOf = groupCodes(await db.all('SELECT snippet_id, division_code AS code FROM snippet_divisions'));
   const found: NewFinding[] = [];
+  const terms = await listTerms(ctx);
 
   // Stufe 1: identischer Hash
   const hashGroups = new Map<string, Row[]>();
@@ -142,7 +144,7 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
     if (privacy.length) {
       found.push({ type: 'privacy', subtype: privacy[0].kind, severity: 'blocker', chapterId: s.chapter_id, a: s.id, method: 'privacy-patterns-1.0', reason: `Mögliche personenbezogene Daten: ${privacy.map((h) => `${h.kind} (${h.match})`).join(', ')}`, details: { hits: privacy } });
     }
-    for (const t of all.terminology) {
+    for (const t of terms) {
       const hit = t.avoid.find((w) => new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(s.text));
       if (hit) found.push({ type: 'terminology', subtype: 'avoid_term', severity: 'low', chapterId: s.chapter_id, a: s.id, method: 'terminology-list', reason: `„${hit}“ → bevorzugt „${t.preferred}“`, details: { term: hit, preferred: t.preferred } });
     }

@@ -1,6 +1,6 @@
 # 5. Datenmodell
 
-Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql` (dialektneutral für SQLite und PostgreSQL, ADR-003).
+Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`, `003_workflow_terminology.sql` (dialektneutral für SQLite und PostgreSQL, ADR-003).
 
 ## Entitäten aus Masterprompt §9 → Tabellen
 
@@ -21,10 +21,11 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql` 
 | CanonicalTopic | `canonical_topics`, `canonical_topic_members` | führendes Kapitel, Begründung, Entscheider |
 | QualityFinding | `quality_findings` | Typ, Untertyp (Regel), Schwere, Status, Score, Methode, Begründung, Entscheidung (+ Begründung, Entscheider, Zeit), `fingerprint` für stabile Wiedererkennung |
 | – | `analysis_runs` | Analyselauf mit verwendeten Einstellungen |
-| GeneratedChapterVersion | `generated_chapter_versions` | `draft`/`approved`/`superseded`; `approved` ist unveränderlich |
+| GeneratedChapterVersion | `generated_chapter_versions` | `draft` → `in_review` (gesperrt, `submitted_by/at`, Kommentar) → `approved`/zurück zu `draft`; `superseded`; `approved` ist unveränderlich |
 | ContentBlock | `content_blocks` | `lineage_id` verbindet Blöcke über Kapitelversionen, Modus, Soft-Delete |
 | – | `content_block_roles`, `content_block_divisions`, `content_block_sources` | m:n Rollen, Sparten und **Quellenbeziehung je Absatz** |
 | ContentBlockVersion | `content_block_versions` | append-only Snapshot je Änderung (Vergleich/Wiederherstellung) |
+| – | `terminology_terms` | Terminologie: bevorzugter Begriff, zu vermeidende Varianten (JSON), Definition, `active`/`retired` (US-015) |
 | Approval | `approvals` | Freigeber, Entscheidung, Kommentar, Gate-Ergebnis |
 | AuditEvent | `audit_events` | jede Änderung, Entscheidung, Freigabe |
 | Requirement / TestCase / ApiOperation / DocumentationItem | `requirements`, `test_cases`, `api_operations`, `documentation_items` (+ Verknüpfungen) | Schema vorhanden; Etappe 1 liest die Quellen direkt aus `traceability/*.json` und OpenAPI (ADR-010) |

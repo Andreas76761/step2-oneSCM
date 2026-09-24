@@ -46,7 +46,7 @@ export function ExportPage() {
           <div className="form-row">
             <label>Markt <select value={market} onChange={(e) => setMarket(e.target.value)}><option value="">alle</option>{ref?.markets.map((m) => <option key={m.code}>{m.code}</option>)}</select></label>
             <label>Release <select value={release} onChange={(e) => setRelease(e.target.value)}><option value="">alle</option>{ref?.releases.map((m) => <option key={m.code}>{m.code}</option>)}</select></label>
-            <label>Format <select value={format} onChange={(e) => setFormat(e.target.value)}><option value="md">Markdown</option><option value="json">JSON</option></select></label>
+            <label>Format <select value={format} onChange={(e) => setFormat(e.target.value)}><option value="md">Markdown</option><option value="html">HTML (druckfähig)</option><option value="pdf">PDF</option><option value="json">JSON</option></select></label>
           </div>
           <button className="btn primary" onClick={run}>Export erstellen</button>
           <ErrorBox error={error} />
@@ -56,7 +56,8 @@ export function ExportPage() {
             <>
               <p><DownloadButton className="btn primary" href={result.downloadUrl} name={result.fileName}>⬇ {result.fileName} herunterladen</DownloadButton></p>
               {result.skipped.map((s: any) => <div key={s.chapterId} className="alert small">{s.reason}</div>)}
-              {result.format === 'md' ? <div className="export-preview"><Md text={result.preview} /></div> : <pre className="source small">{result.preview}</pre>}
+              {result.preview === null ? <p className="muted">PDF erstellt ({Math.round(result.byteSize / 1024)} KB) – Vorschau nach dem Herunterladen.</p>
+                : result.format === 'json' ? <pre className="source small">{result.preview}</pre> : <div className="export-preview"><Md text={result.preview} /></div>}
             </>
           )}
         </Card>

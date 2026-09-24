@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const NAV = ['Dashboard', 'Quellen', 'Textcluster', 'Widersprüche', 'Dopplungen', 'Kapitelgenerator', 'Kapitelwerkstatt', 'Rollenansichten', 'Spartenansichten', 'Optimierungen', 'Freigabe', 'Export', 'Traceability', 'Einstellungen'];
+const NAV = ['Dashboard', 'Quellen', 'Textcluster', 'Widersprüche', 'Dopplungen', 'Kapitelgenerator', 'Kapitelwerkstatt', 'Rollenansichten', 'Spartenansichten', 'Optimierungen', 'Terminologie', 'Evidenz', 'Freigabe', 'Export', 'Traceability', 'Einstellungen'];
 
 test('[T-201] Navigation, Import einer MD-Datei und Quellenliste', async ({ page }) => {
   const errors: string[] = [];
@@ -65,4 +65,50 @@ test('[T-202] Widerspruch entscheiden, Kapitel generieren, Icons in der Kapitelw
   await expect(page.getByText('v2 edited')).toBeVisible();
   await page.getByRole('tab', { name: 'Quellen' }).click();
   await expect(page.locator('.ws-right')).toContainText('benutzerverwaltung/user_management.md');
+});
+
+test('[T-203] Freigabeworkflow in der UI: einreichen, freigeben; Terminologie pflegen; PDF-Export', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  const chapters = await (await request.get('/api/v1/chapters', { headers: h })).json();
+  const ch = chapters.find((c: any) => c.title === '5. MO-Check');
+  // Kapitel generieren und Lücken per API entfernen (Qualitätsgate)
+  const v = await (await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).json();
+  for (const s of v.sections) {
+    for (const b of s.blocks) {
+      if (b.kind === 'gap') await request.delete(`/api/v1/content-blocks/${b.id}?reason=entfällt`, { headers: h });
+      else if (b.scopeStatus === 'unconfirmed') await request.patch(`/api/v1/content-blocks/${b.id}`, { headers: h, data: { scopeStatus: 'confirmed' } });
+    }
+  }
+
+  await page.goto('/freigabe');
+  await page.locator('tr', { hasText: '5. MO-Check' }).click();
+  await page.getByLabel('Hinweis an die Freigabe (optional)').fill('Bitte fachlich prüfen');
+  await page.getByRole('button', { name: 'Zur Freigabe einreichen' }).click();
+  await expect(page.getByRole('status')).toContainText('Zur Freigabe eingereicht');
+  await expect(page.locator('tr', { hasText: '5. MO-Check' })).toContainText('eingereicht');
+  await page.getByLabel('Kommentar (Pflicht)').fill('Fachlich geprüft');
+  await page.getByRole('button', { name: 'Freigeben', exact: true }).click();
+  await expect(page.getByRole('status')).toContainText('freigegeben');
+  await expect(page.locator('tr', { hasText: '5. MO-Check' })).toContainText('freigegeben');
+
+  // Evidenzansicht der freigegebenen Version
+  await page.getByRole('link', { name: 'Evidenz je Absatz ansehen →' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Evidenz');
+  await expect(page.locator('.tile', { hasText: 'Nachweisquote' })).toContainText('100 %');
+
+  // Terminologie pflegen
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Terminologie' }).click();
+  await page.getByLabel('Bevorzugter Begriff').fill('Arbeitsliste');
+  await page.getByLabel('Zu vermeidende Begriffe').fill('Aufgabenliste, To-do-Liste');
+  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.locator('tr', { hasText: 'Arbeitsliste' })).toContainText('To-do-Liste');
+
+  // PDF-Export der freigegebenen Kapitel
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Export' }).click();
+  await page.getByLabel('Format').selectOption('pdf');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByText(/PDF erstellt \(\d+ KB\)/)).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: /herunterladen/ }).click();
+  expect((await download).suggestedFilename()).toMatch(/\.pdf$/);
 });

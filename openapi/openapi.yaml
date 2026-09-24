@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.2.0
+  version: 0.3.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -204,7 +204,10 @@ components:
         id: { type: string }
         chapterId: { type: string }
         versionNo: { type: integer }
-        status: { type: string, enum: [draft, approved, superseded] }
+        status: { type: string, enum: [draft, in_review, approved, superseded] }
+        submittedBy: { type: [string, 'null'] }
+        submittedAt: { type: [string, 'null'] }
+        submitComment: { type: [string, 'null'] }
         sections:
           type: array
           items:
@@ -235,7 +238,7 @@ components:
         divisions: { type: array, items: { $ref: '#/components/schemas/DivisionCode' } }
         market: { type: [string, 'null'] }
         release: { type: [string, 'null'] }
-        format: { type: string, enum: [md, json], default: md }
+        format: { type: string, enum: [md, html, pdf, json], default: md }
 security:
   - oidcBearer: []
   - demoUser: []
@@ -595,7 +598,7 @@ paths:
   /chapter-versions/{versionId}/approve:
     post:
       operationId: approveChapterVersion
-      summary: Fachliche Freigabe (nur bei bestandenem Qualitätsgate)
+      summary: Fachliche Entscheidung über eine eingereichte Version – freigeben oder ablehnen (zurück in den Entwurf)
       tags: [Freigabe]
       x-requirements: [US-012, US-016]
       parameters: [{ $ref: '#/components/parameters/VersionId' }]
@@ -614,6 +617,113 @@ paths:
         '200': { description: Freigegeben, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
         '403': { $ref: '#/components/responses/Problem' }
         '409': { description: Gate nicht bestanden oder Version nicht im Entwurf, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+  /chapter-versions/{versionId}/submit:
+    post:
+      operationId: submitChapterVersion
+      summary: Kapitelversion zur Freigabe einreichen (nur mit bestandenem Qualitätsgate; danach gesperrt)
+      tags: [Freigabe]
+      x-requirements: [US-012, US-016]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { comment: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Eingereicht, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { description: Gate nicht bestanden oder falscher Status, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+  /chapter-versions/{versionId}/withdraw:
+    post:
+      operationId: withdrawChapterVersion
+      summary: Einreichung zurückziehen (Version wird wieder bearbeitbarer Entwurf)
+      tags: [Freigabe]
+      x-requirements: [US-016]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { reason: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Zurückgezogen }
+        '409': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/evidence:
+    get:
+      operationId: getEvidence
+      summary: Evidenz je Absatz – Quellen, Revision, Bestätigung, Auffälligkeiten
+      tags: [Kapitelwerkstatt]
+      x-requirements: [US-011, US-012]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Evidenzübersicht }
+        '404': { $ref: '#/components/responses/Problem' }
+  /optimizations:
+    get:
+      operationId: getOptimizations
+      summary: Kennzahlen je Kapitel und priorisierte Handlungsempfehlungen
+      tags: [System]
+      x-requirements: [US-013]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Übersicht }
+  /terminology:
+    get:
+      operationId: listTerms
+      summary: Begriffe der Terminologie
+      tags: [System]
+      x-requirements: [US-015]
+      x-extension: true
+      parameters: [{ name: includeRetired, in: query, schema: { type: boolean } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Begriffe }
+    post:
+      operationId: createTerm
+      summary: Begriff anlegen (bevorzugt, zu vermeiden, Definition)
+      tags: [System]
+      x-requirements: [US-015]
+      x-extension: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [preferred]
+              properties:
+                preferred: { type: string }
+                avoid: { type: array, items: { type: string } }
+                definition: { type: [string, 'null'] }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Angelegt }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /terminology/{termId}:
+    patch:
+      operationId: updateTerm
+      summary: Begriff ändern oder ausmustern (status retired)
+      tags: [System]
+      x-requirements: [US-015]
+      x-extension: true
+      parameters: [{ name: termId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preferred: { type: string }
+                avoid: { type: array, items: { type: string } }
+                definition: { type: [string, 'null'] }
+                status: { type: string, enum: [active, retired] }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Begriff }
+        '404': { $ref: '#/components/responses/Problem' }
   /content-blocks/{blockId}:
     patch:
       operationId: patchContentBlock

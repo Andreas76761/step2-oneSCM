@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { put } from '../api';
 import { Decision, Card, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
@@ -13,7 +14,7 @@ export function SettingsPage() {
 
   const save = async () => {
     try {
-      await put('/settings', { analysis: draft.analysis, import: draft.import, terminology: draft.terminology, readability: draft.readability });
+      await put('/settings', { analysis: draft.analysis, import: draft.import, readability: draft.readability });
       notify('Einstellungen gespeichert.');
       s.reload();
     } catch (e) {
@@ -62,21 +63,9 @@ export function SettingsPage() {
           <label className="block">Max. Uploadgröße (MB) <input type="number" value={Math.round(draft.import.maxUploadBytes / 1048576)} onChange={(e) => setDraft({ ...draft, import: { ...draft.import, maxUploadBytes: Number(e.target.value) * 1048576 } })} /></label>
           <label className="block">Max. Dateien je ZIP <input type="number" value={draft.import.maxZipFiles} onChange={(e) => setDraft({ ...draft, import: { ...draft.import, maxZipFiles: Number(e.target.value) } })} /></label>
         </Card>
-        <Card title="Terminologie und Lesbarkeit">
-          <table className="table compact">
-            <thead><tr><th>Bevorzugt</th><th>Zu vermeiden (kommagetrennt)</th><th /></tr></thead>
-            <tbody>
-              {draft.terminology.map((t: any, i: number) => (
-                <tr key={i}>
-                  <td><input value={t.preferred} onChange={(e) => setDraft({ ...draft, terminology: draft.terminology.map((x: any, j: number) => (j === i ? { ...x, preferred: e.target.value } : x)) })} aria-label="Bevorzugter Begriff" /></td>
-                  <td><input value={t.avoid.join(', ')} onChange={(e) => setDraft({ ...draft, terminology: draft.terminology.map((x: any, j: number) => (j === i ? { ...x, avoid: e.target.value.split(',').map((y: string) => y.trim()).filter(Boolean) } : x)) })} aria-label="Zu vermeidende Begriffe" /></td>
-                  <td><button className="btn ghost small" onClick={() => setDraft({ ...draft, terminology: draft.terminology.filter((_: any, j: number) => j !== i) })}>✕</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button className="btn small" onClick={() => setDraft({ ...draft, terminology: [...draft.terminology, { preferred: '', avoid: [] }] })}>+ Begriff</button>
+        <Card title="Lesbarkeit">
           <label className="block">Max. Wörter je Satz <input type="number" value={draft.readability.maxSentenceWords} onChange={(e) => setDraft({ ...draft, readability: { maxSentenceWords: Number(e.target.value) } })} /></label>
+          <p className="small muted">Begriffe werden seit Etappe 3 unter <Link to="/terminologie">Terminologie</Link> gepflegt.</p>
         </Card>
       </div>
     </Page>

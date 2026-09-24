@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
 import {
   Badge, Diff, DivisionBadges, Empty, ErrorBox, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad,
@@ -89,7 +89,7 @@ export function WorkshopPage() {
         </header>
         <ErrorBox error={version.error} />
         {!v && <Empty>Für dieses Kapitel gibt es noch keine generierte Version.</Empty>}
-        {v && !editable && <div className="alert">Version {v.versionNo} ist <strong>{v.status === 'approved' ? 'freigegeben und unveränderlich' : 'ersetzt'}</strong>. Änderungen erfordern eine neue Version.</div>}
+        {v && !editable && <div className="alert">Version {v.versionNo} ist <strong>{v.status === 'approved' ? 'freigegeben und unveränderlich' : v.status === 'in_review' ? 'zur Freigabe eingereicht' : 'ersetzt'}</strong>. {v.status === 'in_review' ? 'Zum Bearbeiten die Einreichung im Tab „Freigabe“ zurückziehen.' : 'Änderungen erfordern eine neue Version.'}</div>}
         {v?.sections.map((s: any, si: number) => (
           <section key={s.code} className="ws-section">
             <h2>{si + 1}. {s.title}</h2>
@@ -348,12 +348,13 @@ function HistoryTab({ block, editable, onRestored }: { block?: any; editable: bo
 
 export function ApprovalPanel({ version, onApproved }: { version: any; onApproved: () => void }) {
   const { notify } = useApp();
-  const gate = useLoad<any>(`/chapter-versions/${version.id}/gate`, [version.id, JSON.stringify(version.sections.map((s: any) => s.blocks.map((b: any) => b.versionNo)))]);
+  const gate = useLoad<any>(`/chapter-versions/${version.id}/gate`, [version.id, version.status, JSON.stringify(version.sections.map((s: any) => s.blocks.map((b: any) => b.versionNo)))]);
   const [comment, setComment] = useState('');
-  const decide = async (decision: 'approved' | 'rejected') => {
+  const act = async (path: string, body: unknown, msg: string) => {
     try {
-      await post(`/chapter-versions/${version.id}/approve`, { comment, decision });
-      notify(decision === 'approved' ? 'Kapitelversion freigegeben.' : 'Freigabe abgelehnt (protokolliert).');
+      await post(`/chapter-versions/${version.id}/${path}`, body);
+      notify(msg);
+      setComment('');
       onApproved();
     } catch (e) {
       notify(errorText(e), 'error');
@@ -361,6 +362,7 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
   };
   return (
     <div>
+      <p className="small">Status: <Status s={version.status} />{version.submittedBy && version.status === 'in_review' && <> · eingereicht von {version.submittedBy} am {new Date(version.submittedAt).toLocaleString('de-DE')}{version.submitComment && <> – „{version.submitComment}“</>}</>}</p>
       <h3>Qualitätsgate {gate.data && (gate.data.passed ? <span className="tag st-approved">bestanden</span> : <span className="tag sev-blocker">nicht bestanden</span>)}</h3>
       <ul className="gate">
         {gate.data?.checks.map((c: any) => (
@@ -370,12 +372,23 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
           </li>
         ))}
       </ul>
+      <Link className="small" to={`/evidenz/${version.id}`}>Evidenz je Absatz ansehen →</Link>
       {version.status === 'draft' && (
         <>
-          <label className="block">Kommentar zur fachlichen Freigabe (Pflicht) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
+          <h3>Zur Freigabe einreichen</h3>
+          <p className="small muted">Nach dem Einreichen ist die Version bis zur Entscheidung gesperrt (Entscheidung E-12: einstufige Freigabe).</p>
+          <label className="block">Hinweis an die Freigabe (optional) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
+          <button className="btn primary" disabled={!gate.data?.passed} onClick={() => act('submit', { comment }, 'Zur Freigabe eingereicht.')}>Zur Freigabe einreichen</button>
+        </>
+      )}
+      {version.status === 'in_review' && (
+        <>
+          <h3>Fachliche Entscheidung</h3>
+          <label className="block">Kommentar (Pflicht) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
           <div className="row-actions">
-            <button className="btn primary" disabled={!gate.data?.passed || !comment.trim()} onClick={() => decide('approved')}>Freigeben</button>
-            <button className="btn" disabled={!comment.trim()} onClick={() => decide('rejected')}>Ablehnen</button>
+            <button className="btn primary" disabled={!gate.data?.passed || !comment.trim()} onClick={() => act('approve', { comment, decision: 'approved' }, 'Kapitelversion freigegeben.')}>Freigeben</button>
+            <button className="btn" disabled={!comment.trim()} onClick={() => act('approve', { comment, decision: 'rejected' }, 'Abgelehnt – Version ist wieder ein bearbeitbarer Entwurf.')}>Ablehnen</button>
+            <button className="btn ghost" onClick={() => act('withdraw', { reason: comment }, 'Einreichung zurückgezogen.')}>Einreichung zurückziehen</button>
           </div>
         </>
       )}

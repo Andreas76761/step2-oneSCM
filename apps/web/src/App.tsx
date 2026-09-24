@@ -16,6 +16,8 @@ import { SettingsPage } from './pages/Settings';
 import { SourcesPage } from './pages/Sources';
 import { TraceabilityPage } from './pages/Traceability';
 import { WorkshopPage } from './pages/Workshop';
+import { TerminologyPage } from './pages/Terminology';
+import { EvidencePage } from './pages/Evidence';
 
 // Navigation gemäß Masterprompt §14
 const NAV = [
@@ -29,6 +31,8 @@ const NAV = [
   { to: '/rollen', label: 'Rollenansichten', icon: '👥' },
   { to: '/sparten', label: 'Spartenansichten', icon: '🚘' },
   { to: '/optimierungen', label: 'Optimierungen', icon: '✨' },
+  { to: '/terminologie', label: 'Terminologie', icon: '📖' },
+  { to: '/evidenz', label: 'Evidenz', icon: '🔎' },
   { to: '/freigabe', label: 'Freigabe', icon: '✅' },
   { to: '/export', label: 'Export', icon: '📤' },
   { to: '/traceability', label: 'Traceability', icon: '🔗' },
@@ -90,7 +94,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
         <aside className="sidebar">
           <div className="brand">
             <strong>oneSCM Handbook Studio</strong>
-            <span>v0.1 · Etappe 1</span>
+            <span>v{__APP_VERSION__}</span>
           </div>
           <nav aria-label="Hauptnavigation">
             {NAV.map((n) => (
@@ -132,6 +136,9 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/rollen" element={<FilteredViewPage mode="role" />} />
             <Route path="/sparten" element={<FilteredViewPage mode="division" />} />
             <Route path="/optimierungen" element={<OptimizationsPage />} />
+            <Route path="/terminologie" element={<TerminologyPage />} />
+            <Route path="/evidenz" element={<EvidencePage />} />
+            <Route path="/evidenz/:versionId" element={<EvidencePage />} />
             <Route path="/freigabe" element={<ApprovalPage />} />
             <Route path="/export" element={<ExportPage />} />
             <Route path="/traceability" element={<TraceabilityPage />} />

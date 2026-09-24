@@ -13,3 +13,4 @@
 | [ADR-009](ADR-009-berechtigungen.md) | Trennung fachlicher Rollen und technischer Berechtigungen | akzeptiert (E-03, E-15) |
 | [ADR-010](ADR-010-traceability.md) | Traceability aus OpenAPI `x-requirements` und Test-Registry | akzeptiert |
 | [ADR-011](ADR-011-oidc.md) | Anmeldung über OpenID Connect (Bearer-JWT, PKCE in der UI) | akzeptiert, umgesetzt |
+| [ADR-012](ADR-012-export-rendering.md) | Sicherer Export als HTML (marked, escaped) und PDF (pdfmake) | akzeptiert, umgesetzt |

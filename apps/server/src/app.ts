@@ -14,8 +14,10 @@ import { chapterRoutes } from './routes/chapters.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
 import { sourceRoutes } from './routes/sources.js';
+import { terminologyRoutes } from './routes/terminology.js';
 import { failAnalysisJob, runAnalysis } from './services/analysis.js';
 import { failImportJob, runImportJob } from './services/imports.js';
+import { seedTerminology } from './services/terminology.js';
 import { LocalObjectStore } from './storage.js';
 
 /** Öffentliche Endpunkte ohne Anmeldung */
@@ -31,6 +33,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
   const app = Fastify({ logger: config.logger ? { level: 'info' } : false, bodyLimit: 5 * 1024 * 1024 });
   const db = await openDb(config.database);
   await seedReferenceData(db, config.authMode);
+  await seedTerminology(db, DEFAULT_PROJECT_ID);
   const jobs = new JobQueue(db, { onError: (type, err) => app.log.error({ err }, `Job ${type} fehlgeschlagen`) });
   const ctx: Ctx = {
     db,
@@ -82,6 +85,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       qualityRoutes(api, ctx);
       chapterRoutes(api, ctx);
       miscRoutes(api, ctx);
+      terminologyRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

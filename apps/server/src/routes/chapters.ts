@@ -2,8 +2,9 @@
 import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
 import {
-  approveVersion, createBlock, deleteBlock, generate, getChapter, getChapterVersion, listBlockVersions, listChapters, listChapterVersions, patchBlock, restoreBlock, versionGate,
+  approveVersion, createBlock, submitVersion, withdrawVersion, deleteBlock, generate, getChapter, getChapterVersion, listBlockVersions, listChapters, listChapterVersions, patchBlock, restoreBlock, versionGate,
 } from '../services/chapters.js';
+import { evidenceForVersion } from '../services/insights.js';
 import { userOf } from './helpers.js';
 
 export function chapterRoutes(app: FastifyInstance, ctx: Ctx) {
@@ -21,6 +22,15 @@ export function chapterRoutes(app: FastifyInstance, ctx: Ctx) {
     const user = userOf(ctx, req, 'edit');
     reply.code(201);
     return createBlock(ctx, req.params.versionId, (req.body ?? {}) as any, user.id);
+  });
+  app.get<{ Params: { versionId: string } }>('/chapter-versions/:versionId/evidence', async (req) => (userOf(ctx, req), evidenceForVersion(ctx, req.params.versionId)));
+  app.post<{ Params: { versionId: string }; Body: any }>('/chapter-versions/:versionId/submit', async (req) => {
+    const user = userOf(ctx, req, 'edit');
+    return submitVersion(ctx, req.params.versionId, (req.body ?? {}) as any, user.id);
+  });
+  app.post<{ Params: { versionId: string }; Body: any }>('/chapter-versions/:versionId/withdraw', async (req) => {
+    const user = userOf(ctx, req, 'edit');
+    return withdrawVersion(ctx, req.params.versionId, (req.body ?? {}) as any, user.id);
   });
   app.post<{ Params: { versionId: string }; Body: any }>('/chapter-versions/:versionId/approve', async (req) => {
     const user = userOf(ctx, req, 'approve');
