@@ -94,11 +94,15 @@ export async function optimizationOverview(ctx: Ctx) {
     const byType: Record<string, number> = {};
     for (const f of open.filter((o) => o.chapter_id === c.id)) byType[f.type] = (byType[f.type] ?? 0) + f.n;
     const latest = c.versions[0] ?? null;
+    // Freigegebene Version bleibt gültig (und wird exportiert), auch wenn schon ein neuerer Entwurf existiert
+    const approvedVersion = c.versions.find((v) => v.status === 'approved') ?? null;
     const evidence = latest ? (await evidenceForVersion(ctx, latest.id)).summary : null;
     const confirmedPct = c.snippetCount ? Math.round((c.confirmedSnippetCount / c.snippetCount) * 100) : 0;
     rows.push({
       chapterId: c.id, title: c.title, snippets: c.snippetCount, confirmedPct, openFindings: c.openFindings, blockers: c.openBlockers, findingsByType: byType,
-      latestVersion: latest ? { id: latest.id, versionNo: latest.versionNo, status: latest.status } : null, evidence,
+      latestVersion: latest ? { id: latest.id, versionNo: latest.versionNo, status: latest.status } : null,
+      approvedVersion: approvedVersion ? { id: approvedVersion.id, versionNo: approvedVersion.versionNo } : null,
+      evidence,
     });
     const rec = (priority: 1 | 2 | 3, text: string, target: Recommendation['target']) => recommendations.push({ priority, chapterId: c.id, chapter: c.title, text, target });
     if (c.openBlockers) rec(1, `${c.openBlockers} Blocker-Befund(e) klären`, 'widersprueche');
@@ -113,7 +117,7 @@ export async function optimizationOverview(ctx: Ctx) {
   recommendations.sort((a, b) => a.priority - b.priority || a.chapter.localeCompare(b.chapter));
   const totals = {
     chapters: rows.length,
-    approved: rows.filter((r) => r.latestVersion?.status === 'approved').length,
+    approved: rows.filter((r) => r.approvedVersion).length,
     inReview: rows.filter((r) => r.latestVersion?.status === 'in_review').length,
     blockers: rows.reduce((s, r) => s + r.blockers, 0),
     evidenceCoverage: (() => {

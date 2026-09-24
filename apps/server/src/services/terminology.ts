@@ -72,9 +72,18 @@ export interface TermInput {
 /** Ein zu vermeidender Begriff darf nicht zugleich irgendwo bevorzugt sein (sonst widersprüchliche Befunde). */
 async function assertConsistent(ctx: Ctx, preferred: string, avoid: string[], selfId: string | null) {
   if (avoid.some((a) => a.toLowerCase() === preferred.toLowerCase())) throw unprocessable('Der bevorzugte Begriff darf nicht zugleich zu vermeiden sein.');
+  // Eindeutigkeit über alle Begriffe inkl. ausgemusterter (UNIQUE-Constraint), ohne Groß-/Kleinschreibung
+  for (const t of await listTerms(ctx, { includeRetired: true })) {
+    if (t.id === selfId || t.preferred.toLowerCase() !== preferred.toLowerCase()) continue;
+    throw conflict(
+      t.status === 'retired'
+        ? `„${t.preferred}“ ist als ausgemusterter Begriff vorhanden – bitte den bestehenden Begriff reaktivieren.`
+        : `„${t.preferred}“ ist bereits als Begriff erfasst.`,
+      { existingTermId: t.id, existingStatus: t.status },
+    );
+  }
   for (const t of await listTerms(ctx)) {
     if (t.id === selfId) continue;
-    if (t.preferred.toLowerCase() === preferred.toLowerCase()) throw conflict(`„${preferred}“ ist bereits als Begriff erfasst.`);
     const clash = avoid.find((a) => a.toLowerCase() === t.preferred.toLowerCase());
     if (clash) throw unprocessable(`„${clash}“ ist an anderer Stelle der bevorzugte Begriff.`);
     if (t.avoid.some((a) => a.toLowerCase() === preferred.toLowerCase())) throw unprocessable(`„${preferred}“ steht bei „${t.preferred}“ auf der Liste der zu vermeidenden Begriffe.`);

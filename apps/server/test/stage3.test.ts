@@ -144,6 +144,15 @@ describe('Terminologieverwaltung (US-015)', () => {
     expect(retired.json.status).toBe('retired');
     expect((await call('GET', '/terminology')).json.map((t: any) => t.preferred)).not.toContain('anmelden');
     expect((await call('GET', '/terminology?includeRetired=true')).json.map((t: any) => t.preferred)).toContain('anmelden');
+    // Ausgemusterter Begriff: Neuanlage (auch in anderer Schreibweise) → 409 mit Hinweis auf Reaktivierung statt 500
+    for (const spelling of ['anmelden', 'Anmelden']) {
+      const dup = await call('POST', '/terminology', { preferred: spelling }, 'u-redaktion');
+      expect(dup.status).toBe(409);
+      expect(dup.json).toMatchObject({ existingTermId: anmelden.id, existingStatus: 'retired' });
+      expect(dup.json.detail).toContain('reaktivieren');
+    }
+    const kennwortId = created.json.id;
+    expect((await call('PATCH', `/terminology/${kennwortId}`, { preferred: 'ANMELDEN' }, 'u-redaktion')).status).toBe(409);
 
     await call('POST', '/quality/analysis');
     await ctx.jobs.idle();
@@ -184,8 +193,13 @@ describe('Evidenz und Optimierung (US-011, US-013)', () => {
   });
 
   it('[T-124] Optimierungsübersicht liefert Kennzahlen je Kapitel und priorisierte Empfehlungen', async () => {
+    // Neuer Entwurf zu einem freigegebenen Kapitel: die freigegebene Version zählt weiter (sie wird exportiert)
+    await draft('1.');
     const o = (await call('GET', '/optimizations')).json;
     expect(o.totals).toMatchObject({ chapters: 2, approved: 1 });
+    const anm = o.chapters.find((c: any) => c.title === '1. Anmeldung');
+    expect(anm.latestVersion.status).toBe('draft');
+    expect(anm.approvedVersion.versionNo).toBeLessThan(anm.latestVersion.versionNo);
     const k = o.chapters.find((c: any) => c.title === '2. Kennwort');
     expect(k).toMatchObject({ confirmedPct: 0, latestVersion: { status: 'draft' } });
     expect(k.evidence.withoutEvidence).toBe(1);
