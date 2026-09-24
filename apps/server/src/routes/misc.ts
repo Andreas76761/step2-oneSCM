@@ -18,7 +18,8 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
     const user = userOf(req.ctx, req, 'read');
     const b = (req.body ?? {}) as any;
     reply.code(201);
-    return createExport(req.ctx, { chapterIds: list(b.chapterIds), roles: list(b.roles), divisions: list(b.divisions), market: b.market || null, release: b.release || null, format: b.format }, user.id);
+    return createExport(req.ctx, { chapterIds: list(b.chapterIds), roles: list(b.roles), divisions: list(b.divisions), market: b.market || null, release: b.release || null, format: b.format,
+      outlineId: typeof b.outlineId === 'string' && b.outlineId ? b.outlineId : undefined, appendices: typeof b.appendices === 'boolean' ? b.appendices : undefined }, user.id);
   });
   app.get('/exports', async (req) => (userOf(req.ctx, req), listExports(req.ctx)));
   app.get<{ Params: { exportId: string } }>('/exports/:exportId/download', async (req, reply) => {
@@ -103,7 +104,7 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
       sources: await one('SELECT COUNT(*) AS n FROM source_documents WHERE project_id = ?', pid),
       revisions: await one('SELECT COUNT(*) AS n FROM source_revisions r JOIN source_documents d ON d.id = r.document_id WHERE d.project_id = ?', pid),
       imports: await one('SELECT COUNT(*) AS n FROM imports WHERE project_id = ?', pid),
-      chapters: await one('SELECT COUNT(*) AS n FROM chapters WHERE project_id = ?', pid),
+      chapters: await one('SELECT COUNT(*) AS n FROM chapters WHERE project_id = ? AND outline_family_id IS NULL', pid),
       snippets: await one(`SELECT COUNT(*) AS n ${cur}`, pid),
       confirmedSnippets: await one(`SELECT COUNT(*) AS n ${cur} AND s.evidence_status IN ('source_confirmed','manually_confirmed')`, pid),
       openFindings: await db.all("SELECT type, severity, COUNT(*) AS n FROM quality_findings WHERE project_id = ? AND status IN ('open','deferred') GROUP BY type, severity", pid),

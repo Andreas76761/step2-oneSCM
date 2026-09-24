@@ -15,11 +15,13 @@ export function ReleasesPage() {
   const releases = useLoad<any[]>('/releases');
   const me = useLoad<any>('/me');
   const canPublish = !!me.data?.permissions.some((p: string) => p === 'approve' || p === 'admin');
-  const [form, setForm] = useState({ version: '', title: 'oneSCM Benutzerhandbuch', notes: '' });
+  const outlines = useLoad<any>('/outlines');
+  const [form, setForm] = useState({ version: '', title: 'oneSCM Benutzerhandbuch', notes: '', outlineId: '' });
+  const outlineName = (id: string | null) => outlines.data?.items.find((o: any) => o.id === id)?.name ?? null;
   const [open, setOpen] = useState<string | null>(null);
   const publish = async () => {
     try {
-      const r = await post<any>('/releases', form);
+      const r = await post<any>('/releases', { ...form, outlineId: form.outlineId || undefined });
       notify(`Version ${r.version} veröffentlicht (${r.chapters.length} Kapitel).`);
       setForm({ ...form, version: '', notes: '' });
       setOpen(r.id);
@@ -35,13 +37,19 @@ export function ReleasesPage() {
       {canPublish && (
         <Card title="Neue Version veröffentlichen">
           <div className="form-row">
+            <label>Handbuch
+              <select value={form.outlineId} aria-label="Handbuch" onChange={(e) => setForm({ ...form, outlineId: e.target.value, title: outlineName(e.target.value) ?? 'oneSCM Benutzerhandbuch' })}>
+                <option value="">Kapitel der Quellen</option>
+                {outlines.data?.items.map((o: any) => <option key={o.id} value={o.id}>Variante: {o.name} – V{o.versionNo}</option>)}
+              </select>
+            </label>
             <label>Version <input value={form.version} onChange={(e) => setForm({ ...form, version: e.target.value })} placeholder="z. B. 2026.1" aria-label="Versionsnummer" /></label>
             <label>Titel <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} aria-label="Titel des Handbuchs" /></label>
           </div>
           <label className="block">Einleitung / Hinweise (Markdown, optional)
             <textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} aria-label="Einleitung" />
           </label>
-          <p className="small muted">Enthalten sind alle Kapitel mit freigegebener Version. Offene Blocker- oder Datenschutzbefunde verhindern die Veröffentlichung.</p>
+          <p className="small muted">{form.outlineId ? 'Enthalten sind die freigegebenen Kapitel der Variante, gefiltert nach Rollen, Sparten und Blueprint/Märkten; Abkürzungen, Glossar, Bildverzeichnis und FAQ werden als Verzeichnisse beigefügt.' : 'Enthalten sind alle Kapitel der Quellen mit freigegebener Version.'} Offene Blocker- oder Datenschutzbefunde verhindern die Veröffentlichung.</p>
           <button className="btn primary" disabled={!form.version.trim()} onClick={publish}>Veröffentlichen</button>
         </Card>
       )}
@@ -53,7 +61,7 @@ export function ReleasesPage() {
               return (
                 <li key={r.id}>
                   <div className="block-meta">
-                    <strong>Version {r.version}</strong>
+                    <strong>Version {r.version}</strong>{r.outlineId && <span className="tag">Variante</span>}
                     <span className="small muted">{r.title} · {new Date(r.createdAt).toLocaleString('de-DE')} · {r.createdBy} · {r.chapters.length} Kapitel · {changed.length} Änderungen{r.languages?.length ? ` · Sprachen: DE, ${r.languages.map((l: any) => l.language.toUpperCase()).join(', ')}` : ''}</span>
                   </div>
                   <div className="row-actions">

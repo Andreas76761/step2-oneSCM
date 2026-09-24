@@ -101,12 +101,12 @@ async function insertTree(ctx: Ctx, outlineId: string, tree: OutlineTreeNode[]) 
   let pos = 0;
   for (const c of tree) {
     const id = newId('on');
-    await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description) VALUES (?, ?, NULL, 1, ?, ?, ?)', id, outlineId, (pos += 10), c.title, c.description ?? null);
+    await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description, node_key) VALUES (?, ?, NULL, 1, ?, ?, ?, ?)', id, outlineId, (pos += 10), c.title, c.description ?? null, id);
     const children: { title: string; id: string }[] = [];
     let sub = 0;
     for (const s of c.children ?? []) {
       const sid = newId('on');
-      await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description) VALUES (?, ?, ?, 2, ?, ?, ?)', sid, outlineId, id, (sub += 10), s.title, s.description ?? null);
+      await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description, node_key) VALUES (?, ?, ?, 2, ?, ?, ?, ?)', sid, outlineId, id, (sub += 10), s.title, s.description ?? null, sid);
       children.push({ title: s.title, id: sid });
     }
     idMap.push({ title: c.title, id, children });
@@ -216,7 +216,8 @@ export async function newOutlineVersion(ctx: Ctx, id: string, input: { name?: st
     for (const n of await ctx.db.all('SELECT * FROM outline_nodes WHERE outline_id = ? ORDER BY level, position', id)) {
       const nn = newId('on');
       map.set(n.id, nn);
-      await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description) VALUES (?, ?, ?, ?, ?, ?, ?)', nn, nid, n.parent_id ? map.get(n.parent_id) : null, n.level, n.position, n.title, n.description);
+      // node_key bleibt über Versionen gleich (Kapitel der Variante behalten ihre Historie, ADR-034)
+      await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description, node_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', nn, nid, n.parent_id ? map.get(n.parent_id) : null, n.level, n.position, n.title, n.description, n.node_key ?? n.id);
     }
     for (const a of await ctx.db.all('SELECT * FROM outline_assignments WHERE outline_id = ?', id)) {
       await ctx.db.run('INSERT INTO outline_assignments (outline_id, snippet_id, node_id, position, assigned_by, assigned_at) VALUES (?, ?, ?, ?, ?, ?)', nid, a.snippet_id, map.get(a.node_id), a.position, a.assigned_by, a.assigned_at);
@@ -274,7 +275,7 @@ export async function addNode(ctx: Ctx, outlineId: string, input: { title?: stri
       position = siblings[idx].position + 1;
       for (const s of siblings.slice(idx + 1)) await ctx.db.run('UPDATE outline_nodes SET position = position + 10 WHERE id = ?', s.id);
     }
-    await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description) VALUES (?, ?, ?, ?, ?, ?, ?)', id, outlineId, parentId, parentId ? 2 : 1, position, title, input.description?.trim().slice(0, 1000) || null);
+    await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description, node_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', id, outlineId, parentId, parentId ? 2 : 1, position, title, input.description?.trim().slice(0, 1000) || null, id);
     await touch(ctx, outlineId, user);
     await audit(ctx, user.id, 'outline_node.created', 'outline_node', id, { outlineId, title, parentId, afterId: input.afterId ?? null });
   });

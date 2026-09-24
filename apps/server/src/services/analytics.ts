@@ -45,7 +45,7 @@ export async function computeKpis(ctx: Ctx): Promise<Kpis> {
     snippets, confirmedSnippets, confirmedShare: pct(confirmedSnippets, snippets),
     openFindings: await n("SELECT COUNT(*) AS n FROM quality_findings WHERE project_id = ? AND status IN ('open','deferred')", pid),
     openBlockers: await n("SELECT COUNT(*) AS n FROM quality_findings WHERE project_id = ? AND status IN ('open','deferred') AND severity = 'blocker'", pid),
-    chapters: await n("SELECT COUNT(*) AS n FROM chapters WHERE project_id = ? AND key <> '__none__'", pid),
+    chapters: await n("SELECT COUNT(*) AS n FROM chapters WHERE project_id = ? AND key <> '__none__' AND outline_family_id IS NULL", pid),
     approvedChapters: await n("SELECT COUNT(DISTINCT v.chapter_id) AS n FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved'", pid),
     inReview: await n("SELECT COUNT(*) AS n FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'in_review'", pid),
     evidenceCoverage: pct(evidenced, blocks),
@@ -199,7 +199,7 @@ async function chapterRows(ctx: Ctx) {
        (SELECT MAX(v.approved_at) FROM generated_chapter_versions v WHERE v.chapter_id = c.id AND v.status = 'approved') AS approved_at,
        (SELECT COUNT(*) FROM quality_findings f WHERE f.chapter_id = c.id AND f.status IN ('open','deferred')) AS open_findings,
        (SELECT COUNT(*) FROM quality_findings f WHERE f.chapter_id = c.id AND f.status IN ('open','deferred') AND f.severity = 'blocker') AS open_blockers
-     FROM chapters c WHERE c.project_id = ? AND c.key <> '__none__' ORDER BY c.position, c.title`,
+     FROM chapters c WHERE c.project_id = ? AND c.key <> '__none__' AND c.outline_family_id IS NULL ORDER BY c.position, c.title`,
     ctx.projectId,
   );
   return rows.map((r) => ({

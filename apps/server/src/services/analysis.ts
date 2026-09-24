@@ -148,7 +148,7 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
     found.push({ type: 'gap', subtype: 'empty_subchapter', severity: 'medium', chapterId: sc.chapter_id, method: 'structure-rules-1.0', reason: `Unterkapitel „${sc.title}“ enthält keinen Text`, details: { subchapterId: sc.id } });
   }
   for (const c of await db.all(
-    `SELECT c.id, c.title FROM chapters c WHERE c.project_id = ? AND NOT EXISTS (
+    `SELECT c.id, c.title FROM chapters c WHERE c.project_id = ? AND c.outline_family_id IS NULL AND NOT EXISTS (
        SELECT 1 FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE s.chapter_id = c.id AND r.is_current = 1
        AND s.evidence_status IN ('source_confirmed','manually_confirmed'))`,
     ctx.projectId,

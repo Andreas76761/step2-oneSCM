@@ -7,7 +7,7 @@ import { ApprovalPanel } from './Workshop';
 const ORDER: Record<string, number> = { in_review: 0, draft: 1, approved: 2, superseded: 3 };
 
 export function ApprovalPage() {
-  const chapters = useLoad<any[]>('/chapters');
+  const chapters = useLoad<any[]>('/chapters?outline=all');
   const withVersion = (chapters.data ?? []).filter((c) => c.versions[0]).sort((a, b) => (ORDER[a.versions[0].status] ?? 9) - (ORDER[b.versions[0].status] ?? 9));
   const [sel, setSel] = useState<string | null>(null);
   const current = withVersion.find((c) => c.id === sel) ?? withVersion[0];

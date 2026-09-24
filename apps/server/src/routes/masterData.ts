@@ -9,6 +9,7 @@ import {
   addNode, assignSnippets, autoAssign, createOutline, deleteNode, deleteOutline, draftManual, exportDraft, exportOutline, getOutline, listOutlines,
   moveAssignment, newOutlineVersion, outlineCandidates, outlinePlan, setPlanItem, unassignSnippet, updateNode, updateOutline,
 } from '../services/outlines.js';
+import { generateVariant, materializeVariant, variantChapters } from '../services/variants.js';
 import { badRequest } from '../problem.js';
 import { num, userOf } from './helpers.js';
 
@@ -72,6 +73,11 @@ export function masterDataRoutes(app: FastifyInstance, _ctx: Ctx) {
     reply.code(204);
   });
   app.post<P<'outlineId'>>('/outlines/:outlineId/auto-assign', async (req) => autoAssign(req.ctx, req.params.outlineId, userOf(req.ctx, req, 'edit')));
+
+  // Handbuch-Variante (ADR-034): Kapitel der Gliederung anlegen, Entwürfe erzeugen, Stand der Freigabe
+  app.get<P<'outlineId'>>('/outlines/:outlineId/chapters', async (req) => (userOf(req.ctx, req), variantChapters(req.ctx, req.params.outlineId)));
+  app.post<P<'outlineId'>>('/outlines/:outlineId/materialize', async (req) => materializeVariant(req.ctx, req.params.outlineId, userOf(req.ctx, req, 'edit')));
+  app.post<P<'outlineId'>>('/outlines/:outlineId/generate', async (req) => generateVariant(req.ctx, req.params.outlineId, userOf(req.ctx, req, 'edit')));
 
   // Redaktionsplanung
   app.get<P<'outlineId'>>('/outlines/:outlineId/plan', async (req) => (userOf(req.ctx, req), outlinePlan(req.ctx, req.params.outlineId)));

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, download, patch, post, qs } from '../api';
-import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Card, Empty, ErrorBox, Md, Page, Status, errorText, useApp, useLoad } from '../components/ui';
 import { variantText } from './Outlines';
 
 type FlagType = 'duplicate' | 'contradiction' | 'gap' | 'warning';
@@ -86,6 +86,61 @@ function Candidates({ outline, nodes, canEdit, onAssigned }: { outline: any; nod
   );
 }
 
+const RESULT: Record<string, string> = { generated: 'Entwurf erzeugt', skipped: 'übersprungen', blocked: 'blockiert' };
+
+/** Handbuch-Variante (ADR-034): aus dem Draft Manual Kapitelentwürfe erzeugen, die über Werkstatt und Freigabe laufen */
+function VariantCard({ outlineId, canEdit }: { outlineId: string; canEdit: boolean }) {
+  const { notify } = useApp();
+  const chapters = useLoad<any>(`/outlines/${outlineId}/chapters`, [outlineId]);
+  const [results, setResults] = useState<any[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => setResults(null), [outlineId]);
+  const generate = async () => {
+    setBusy(true);
+    try {
+      const r = await post<any>(`/outlines/${outlineId}/generate`, {});
+      setResults(r.results);
+      notify(`${r.generated} Kapitelentwürfe erzeugt – Prüfung und Freigabe in der Werkstatt.`);
+      chapters.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const list: any[] = chapters.data?.chapters ?? [];
+  const approved = list.filter((c) => c.versions.some((v: any) => v.status === 'approved')).length;
+  return (
+    <Card title="Handbuch dieser Variante">
+      <p className="small">
+        Aus den Zuordnungen entstehen eigene Kapitel mit Versionen. Sie werden in der Werkstatt geprüft, freigegeben und unter
+        {' '}<Link to="/export">Export</Link> bzw. <Link to="/veroeffentlichung">Veröffentlichung</Link> als Handbuch der Variante ausgegeben.
+      </p>
+      {canEdit && <button className="btn primary" disabled={busy} onClick={generate}>{busy ? 'Erzeuge …' : 'Kapitel für Freigabe erzeugen'}</button>}
+      {list.length > 0 && (
+        <table className="table compact" aria-label="Kapitel der Variante">
+          <caption className="small muted">{list.length} Kapitel · {approved} freigegeben</caption>
+          <thead><tr><th>Kapitel</th><th>Schnipsel</th><th>Stand</th>{results && <th>Ergebnis</th>}<th /></tr></thead>
+          <tbody>
+            {list.map((c) => {
+              const r = results?.find((x) => x.chapterId === c.id);
+              return (
+                <tr key={c.id}>
+                  <td>{c.title}</td>
+                  <td>{c.snippetCount}</td>
+                  <td>{c.versions[0] ? <>V{c.versions[0].versionNo} <Status s={c.versions[0].status} /></> : <span className="muted">kein Entwurf</span>}</td>
+                  {results && <td className="small">{r ? `${RESULT[r.status]}${r.message ? ` – ${r.message}` : ''}` : '–'}</td>}
+                  <td>{c.versions[0] && <Link to={`/werkstatt/${c.id}`}>Werkstatt</Link>}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </Card>
+  );
+}
+
 export function DraftManualPage() {
   const { outlineId } = useParams();
   const navigate = useNavigate();
@@ -139,6 +194,7 @@ export function DraftManualPage() {
               <FlagChip type="gap" count={d.summary.gap} />
             </div>
           </Card>
+          <VariantCard outlineId={d.outline.id} canEdit={canEdit} />
           <div className="draft-layout">
             <div>
               {!nodes.length && <Empty>Die Gliederung hat noch keine Einträge.</Empty>}

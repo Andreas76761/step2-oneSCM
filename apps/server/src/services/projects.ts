@@ -74,7 +74,7 @@ export async function listProjects(ctx: Ctx, user: User) {
     const eff = await effectiveUser(ctx, user, p);
     if (!eff) continue;
     const counts = await ctx.db.get(
-      'SELECT (SELECT COUNT(*) FROM chapters WHERE project_id = ?) AS chapters, (SELECT COUNT(*) FROM source_documents WHERE project_id = ?) AS sources',
+      'SELECT (SELECT COUNT(*) FROM chapters WHERE project_id = ? AND outline_family_id IS NULL) AS chapters, (SELECT COUNT(*) FROM source_documents WHERE project_id = ?) AS sources',
       p.id, p.id,
     );
     out.push(dto(p, eff, counts));

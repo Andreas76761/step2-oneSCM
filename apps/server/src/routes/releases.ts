@@ -6,11 +6,12 @@ import { userOf } from './helpers.js';
 
 export function releaseRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get('/releases', async (req) => (userOf(req.ctx, req), listReleases(req.ctx)));
-  app.post<{ Body: { version?: string; title?: string; notes?: string } }>('/releases', async (req, reply) => {
+  app.post<{ Body: { version?: string; title?: string; notes?: string; outlineId?: string } }>('/releases', async (req, reply) => {
     // Veröffentlichen ist eine Freigabeentscheidung
     const user = userOf(req.ctx, req, 'approve');
     reply.code(201);
-    return createRelease(req.ctx, req.body ?? {}, user.id);
+    const b = req.body ?? {};
+    return createRelease(req.ctx, { version: b.version, title: b.title, notes: b.notes, outlineId: typeof b.outlineId === 'string' && b.outlineId ? b.outlineId : undefined }, user.id);
   });
   app.get<{ Params: { releaseId: string } }>('/releases/:releaseId', async (req) => (userOf(req.ctx, req), getRelease(req.ctx, req.params.releaseId)));
   app.get<{ Params: { releaseId: string }; Querystring: { format?: string; language?: string } }>('/releases/:releaseId/download', async (req, reply) => {

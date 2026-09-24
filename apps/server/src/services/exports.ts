@@ -7,6 +7,8 @@ import { gateForChapter, getChapterVersion } from './chapters.js';
 import { escapeHtml, markdownToHtml, markdownToPdf, renderPdf } from './render.js';
 import { assertIdsInProject } from './projects.js';
 import { dataUri, inlineMedia, loadMedia, type MediaFile } from './media.js';
+import { appendixHtmlSections, appendixMarkdown, appendixPdf } from './appendixRender.js';
+import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
 
 type Media = Map<string, MediaFile>;
 
@@ -15,11 +17,24 @@ export interface ExportFilter {
   divisions?: string[];
   market?: string | null;
   release?: string | null;
+  /** Handbuch-Variante (ADR-034): Blueprint ohne marktspezifische Inhalte bzw. nur die gewählten Märkte */
+  blueprint?: boolean;
+  markets?: string[];
+}
+
+/** Titel und Anhang eines Exports (Varianten-Export) */
+export interface ExportExtras {
+  title?: string;
+  appendices?: Appendices | null;
 }
 
 export interface ExportInput extends ExportFilter {
   chapterIds?: string[];
   format?: ExportFormat;
+  /** Handbuch-Variante (ADR-034): freigegebene Kapitel dieser Gliederung, Filter aus ihrer Variante, Verzeichnisse im Anhang */
+  outlineId?: string;
+  /** Verzeichnisse anhängen (Standard: bei Varianten ja) */
+  appendices?: boolean;
 }
 
 export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'json'] as const;
@@ -41,6 +56,8 @@ export function blockMatches(b: Block, f: ExportFilter): boolean {
   if (f.divisions?.length && !generalDiv && !b.divisions.some((d) => f.divisions!.includes(d))) return false;
   if (f.market && b.market && b.market !== f.market) return false;
   if (f.release && b.release && b.release !== f.release) return false;
+  if (f.blueprint && b.market) return false;
+  if (f.markets?.length && b.market && !f.markets.includes(b.market)) return false;
   return true;
 }
 
@@ -62,7 +79,8 @@ function filterDescription(f: ExportFilter): string {
   const parts = [
     f.roles?.length ? `Rollen: ${f.roles.map((c) => ROLES.find((r) => r.code === c)?.label ?? c).join(', ')}` : null,
     f.divisions?.length ? `Sparten: ${f.divisions.map((c) => DIVISIONS.find((d) => d.code === c)?.label ?? c).join(', ')}` : null,
-    f.market ? `Markt: ${f.market}` : null,
+    f.market ? `Markt: ${f.market}` : f.markets && f.markets.length > 1 ? `Märkte: ${f.markets.join(', ')}` : null,
+    f.blueprint ? 'Blueprint (ohne marktspezifische Inhalte)' : null,
     f.release ? `Release: ${f.release}` : null,
   ].filter(Boolean);
   return parts.length ? `Filter: ${parts.join(' · ')}` : 'ungefiltert';
@@ -79,8 +97,8 @@ export function visible(chapters: ExportChapter[], f: ExportFilter) {
 const versionLine = (ch: ExportChapter) => `Freigegebene Version ${ch.versionNo}${ch.approvedAt ? ` vom ${ch.approvedAt.slice(0, 10)}` : ''}`;
 
 /** `media`: Bilder als data:-URIs einbetten (eigenständige Datei); ohne: Verweise bleiben `media:<sha>` */
-export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter, media?: Media): string {
-  const out: string[] = ['# oneSCM Benutzerhandbuch', '', `> Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, ''];
+export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter, media?: Media, extras: ExportExtras = {}): string {
+  const out: string[] = [`# ${extras.title ?? 'oneSCM Benutzerhandbuch'}`, '', `> Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, ''];
   for (const ch of visible(chapters, f)) {
     out.push(`## ${ch.title}`, '', `*${versionLine(ch)}*`, '');
     for (const s of ch.sections) {
@@ -92,11 +110,13 @@ export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter, media
       }
     }
   }
+  if (extras.appendices && hasAppendices(extras.appendices)) out.push(appendixMarkdown(extras.appendices));
   return out.join('\n');
 }
 
 /** Eigenständiges, druckfähiges HTML ohne Skripte (CSP im Dokument, HTML aus Quellen escaped). */
-export function renderHtml(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map()): string {
+export function renderHtml(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}): string {
+  const title = extras.title ?? 'oneSCM Benutzerhandbuch';
   const images = (sha: string) => (media.has(sha) ? dataUri(media.get(sha)!) : null);
   const body: string[] = [];
   const toc: string[] = [];
@@ -115,11 +135,16 @@ export function renderHtml(chapters: ExportChapter[], f: ExportFilter, media: Me
     }
     body.push('</section>');
   });
+  // Verzeichnisse im Anhang (Varianten-Export)
+  for (const a of extras.appendices ? appendixHtmlSections(extras.appendices, images) : []) {
+    toc.push(`<li><a href="#${a.id}">${escapeHtml(a.title)}</a></li>`);
+    body.push(`<section class="chapter" id="${a.id}"><h2>${escapeHtml(a.title)}</h2>${a.html}</section>`);
+  }
   return `<!doctype html>
 <html lang="de"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>oneSCM Benutzerhandbuch</title>
+<title>${escapeHtml(title)}</title>
 <style>
 body{font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#0f172a;max-width:860px;margin:0 auto;padding:24px}
 h1{font-size:26px}h2{font-size:21px;border-bottom:2px solid #1d63d8;padding-bottom:4px;margin-top:36px}h3{font-size:16px;margin:20px 0 6px}
@@ -131,7 +156,7 @@ img{max-width:100%;height:auto;border:1px solid #e2e8f0}
 nav ol{columns:2}
 @media print{body{max-width:none;padding:0}.chapter{break-before:page}a{color:inherit;text-decoration:none}nav{break-after:page}}
 </style></head><body>
-<h1>oneSCM Benutzerhandbuch</h1>
+<h1>${escapeHtml(title)}</h1>
 <p class="filter">Exportiert am ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f))}</p>
 <nav><h2>Inhalt</h2><ol>${toc.join('')}</ol></nav>
 ${body.join('\n')}
@@ -148,9 +173,10 @@ function pdfBadges(b: Block): string {
   return parts.join(' · ');
 }
 
-export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter, media?: Media): Promise<Buffer> {
+export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter, media?: Media, extras: ExportExtras = {}): Promise<Buffer> {
+  const title = extras.title ?? 'oneSCM Benutzerhandbuch';
   const content: unknown[] = [
-    { text: 'oneSCM Benutzerhandbuch', style: 'title' },
+    { text: title, style: 'title' },
     { text: `Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, style: 'meta', margin: [0, 0, 0, 16] },
   ];
   visible(chapters, f).forEach((ch, i) => {
@@ -169,8 +195,9 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
       }
     }
   });
+  if (extras.appendices) content.push(...appendixPdf(extras.appendices, media));
   return renderPdf({
-    info: { title: 'oneSCM Benutzerhandbuch', creator: 'oneSCM Handbook Studio' },
+    info: { title, creator: 'oneSCM Handbook Studio' },
     pageSize: 'A4',
     pageMargins: [48, 56, 48, 56],
     defaultStyle: { font: 'Roboto', fontSize: 10, lineHeight: 1.25 },
@@ -194,9 +221,14 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   const format = input.format ?? 'md';
   if (!(EXPORT_FORMATS as readonly string[]).includes(format)) throw badRequest(`format muss eines von ${EXPORT_FORMATS.join(', ')} sein.`);
   if (input.chapterIds?.length) await assertIdsInProject(ctx, 'chapterId', input.chapterIds);
+  const outline = input.outlineId ? await outlineOf(ctx, input.outlineId) : null;
+  // ohne Auswahl: freigegebene Kapitel der Quellen bzw. der Variante
   const chapterIds = input.chapterIds?.length
     ? input.chapterIds
-    : (await ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved'", ctx.projectId)).map((r) => r.chapter_id as string);
+    : (outline
+      ? await ctx.db.all("SELECT DISTINCT chapter_id, c.position FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id = ? AND v.status = 'approved' ORDER BY c.position", ctx.projectId, outline.family_id)
+      : await ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id IS NULL AND v.status = 'approved'", ctx.projectId)
+    ).map((r) => r.chapter_id as string);
 
   const blockers: { chapterId: string; checks: unknown }[] = [];
   const skipped: { chapterId: string; reason: string }[] = [];
@@ -216,19 +248,29 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   if (blockers.length) throw conflict('Export blockiert: offene Blocker- oder Datenschutzbefunde.', { blockers });
   chapters.sort((a, b) => a.position - b.position);
 
-  const filter: ExportFilter = { roles: input.roles, divisions: input.divisions, market: input.market ?? null, release: input.release ?? null };
+  const vf = outline ? variantFilter(outline) : null;
+  const filter: ExportFilter = {
+    roles: input.roles ?? (vf?.roles.length ? vf.roles : undefined), divisions: input.divisions ?? (vf?.divisions.length ? vf.divisions : undefined),
+    market: input.market ?? vf?.market ?? null, release: input.release ?? null,
+    ...(vf ? { blueprint: vf.blueprint, markets: vf.markets } : {}),
+  };
+  const extras: ExportExtras = {
+    title: outline ? outline.name : undefined,
+    appendices: (input.appendices ?? !!outline) ? await appendicesFor(ctx, outline, visible(chapters, filter)) : null,
+  };
   // Bilder der sichtbaren Absätze (ADR-029) – eingebettet, damit die Datei eigenständig bleibt
   const media = format === 'json' ? new Map() : await loadMedia(ctx, visible(chapters, filter).flatMap((ch) => ch.sections.flatMap((s) => s.blocks.map((b: any) => b.text as string))));
   let data: Buffer;
   let preview: string | null;
   if (format === 'pdf') {
-    data = await renderPdfExport(chapters, filter, media);
+    data = await renderPdfExport(chapters, filter, media, extras);
     preview = null;
   } else {
-    const text = format === 'md' ? renderMarkdown(chapters, filter, media) : format === 'html' ? renderHtml(chapters, filter, media) : JSON.stringify({ filter, chapters: visible(chapters, filter) }, null, 2);
+    const text = format === 'md' ? renderMarkdown(chapters, filter, media, extras) : format === 'html' ? renderHtml(chapters, filter, media, extras)
+      : JSON.stringify({ title: extras.title ?? null, filter, chapters: visible(chapters, filter), appendices: extras.appendices ?? null }, null, 2);
     data = Buffer.from(text, 'utf8');
     // Vorschau für die UI immer als Markdown bzw. JSON (HTML wird dort nicht eingebettet)
-    preview = (format === 'json' ? text : renderMarkdown(chapters, filter)).slice(0, 4000);
+    preview = (format === 'json' ? text : renderMarkdown(chapters, filter, undefined, { title: extras.title })).slice(0, 4000);
   }
 
   const id = newId('exp');

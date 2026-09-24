@@ -380,3 +380,4 @@ ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px
 .faq-entry summary { cursor: pointer; }
 .glossary-entry { margin: 6px 0; }
 .glossary-entry dd { margin: 2px 0 8px 16px; }
+.toc-group { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 14px 0 0; }

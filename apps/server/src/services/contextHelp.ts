@@ -142,7 +142,7 @@ function validQuery(q: HelpQuery, languages: string[]) {
 
 /** Neuestes Release des Projekts (Grundlage der öffentlichen Einbettung) */
 export async function latestRelease(ctx: Ctx) {
-  const r = await ctx.db.get('SELECT id, version, chapters FROM handbook_releases WHERE project_id = ? ORDER BY created_at DESC LIMIT 1', ctx.projectId);
+  const r = await ctx.db.get('SELECT id, version, chapters FROM handbook_releases WHERE project_id = ? AND outline_family_id IS NULL ORDER BY created_at DESC LIMIT 1', ctx.projectId);
   return r ? { id: r.id as string, version: r.version as string, chapters: parseJson<{ chapterId: string; chapterVersionId: string }[]>(r.chapters, []) } : null;
 }
 
