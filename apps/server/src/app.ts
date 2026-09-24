@@ -10,6 +10,7 @@ import { DEFAULT_PROJECT_ID, seedReferenceData, type Ctx } from './context.js';
 import { openDb } from './db.js';
 import { JobQueue } from './jobs.js';
 import { createProvider } from './llm.js';
+import { readiness, registerOps, requestId } from './ops.js';
 import { Problem } from './problem.js';
 import { chapterRoutes } from './routes/chapters.js';
 import { projectRoutes } from './routes/projects.js';
@@ -22,10 +23,10 @@ import { failAnalysisJob, runAnalysis } from './services/analysis.js';
 import { failImportJob, runImportJob } from './services/imports.js';
 import { assertParamsInProject, resolveProject, withProject } from './services/projects.js';
 import { seedTerminology } from './services/terminology.js';
-import { LocalObjectStore, S3ObjectStore } from './storage.js';
+import { createObjectStore } from './storage.js';
 
 /** Öffentliche Endpunkte ohne Anmeldung */
-const PUBLIC_PATHS = new Set(['/api/v1/health', '/api/v1/auth/config']);
+const PUBLIC_PATHS = new Set(['/api/v1/health', '/api/v1/health/live', '/api/v1/health/ready', '/api/v1/auth/config']);
 
 export interface BuildOptions {
   /** Jobqueue nicht starten (z. B. reine API-Instanz ohne Worker) */
@@ -34,14 +35,19 @@ export interface BuildOptions {
 
 export async function buildApp(overrides: Partial<AppConfig> = {}, options: BuildOptions = {}) {
   const config = loadConfig(overrides);
-  const app = Fastify({ logger: config.logger ? { level: 'info' } : false, bodyLimit: 5 * 1024 * 1024 });
+  const app = Fastify({
+    logger: config.logger ? { level: process.env.LOG_LEVEL ?? 'info' } : false,
+    bodyLimit: 5 * 1024 * 1024,
+    genReqId: requestId,
+    trustProxy: process.env.TRUST_PROXY === '1',
+  });
   const db = await openDb(config.database);
   await seedReferenceData(db, config.authMode);
   await seedTerminology(db, DEFAULT_PROJECT_ID);
   const jobs = new JobQueue(db, { onError: (type, err) => app.log.error({ err }, `Job ${type} fehlgeschlagen`) });
   const ctx: Ctx = {
     db,
-    store: config.objectStore.kind === 's3' ? new S3ObjectStore(config.objectStore) : new LocalObjectStore(path.join(config.dataDir, 'objects')),
+    store: createObjectStore(config.objectStore, config.dataDir),
     jobs,
     config,
     llm: createProvider(config.llm),
@@ -81,6 +87,19 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     return payload;
   });
 
+  // Betrieb: Request-ID in der Antwort, Metriken, Rate-Limiting (ADR-015)
+  app.addHook('onRequest', async (req, reply) => {
+    reply.header('X-Request-Id', req.id);
+  });
+  const workerExpected = options.worker !== false && process.env.JOB_WORKER !== '0';
+  await registerOps(app, ctx, config.ops, async (req) => {
+    try {
+      return (await authenticate(ctx, req.headers)).permissions.includes('admin');
+    } catch {
+      return false;
+    }
+  });
+
   app.decorateRequest('user', null);
   app.decorateRequest('globalUser', null);
   app.decorateRequest('ctx', null as unknown as Ctx);
@@ -100,12 +119,20 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
         const scoped = await resolveProject(ctx, user, Array.isArray(header) ? header[0] : header);
         req.ctx = scoped.ctx;
         req.user = scoped.user;
+        req.log = req.log.child({ userId: user.id, projectId: scoped.ctx.projectId });
       });
       // Mandantentrennung: IDs in Pfaden müssen zum Projekt der Anfrage gehören
       api.addHook('preHandler', async (req) => {
         await assertParamsInProject(req.ctx, req.params as Record<string, string>);
       });
       api.get('/health', async () => ({ status: 'ok', database: db.dialect, auth: config.authMode, objectStore: ctx.store.kind, llm: ctx.llm?.id ?? 'none' }));
+      // Liveness: Prozess antwortet; Readiness: Abhängigkeiten erreichbar (für Load Balancer/Kubernetes)
+      api.get('/health/live', async () => ({ status: 'ok' }));
+      api.get('/health/ready', async (_req, reply) => {
+        const r = await readiness(ctx, workerExpected);
+        reply.code(r.ready ? 200 : 503);
+        return r;
+      });
       sourceRoutes(api, ctx);
       qualityRoutes(api, ctx);
       chapterRoutes(api, ctx);

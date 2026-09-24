@@ -42,6 +42,10 @@ services:
       LLM_MODEL: ${LLM_MODEL:-}
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_BASE_URL: ${LLM_BASE_URL:-}
+      # Betrieb (ADR-015): Metriken unter /metrics mit Bearer-Token, Rate-Limits je Benutzer und Minute
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-1200}
+      RATE_LIMIT_EXPENSIVE_MAX: ${RATE_LIMIT_EXPENSIVE_MAX:-60}
       UPLOAD_MAX_BYTES: 52428800
       ZIP_MAX_FILES: 5000
     volumes:

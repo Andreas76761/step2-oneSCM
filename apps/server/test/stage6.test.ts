@@ -139,3 +139,111 @@ describe('Mandanten/Projekte (ADR-014)', () => {
     expect((await call('GET', '/chapters', undefined, 'u-leser', C)).status).toBe(200);
   });
 });
+
+describe('Betrieb: Health, Metriken, Request-ID, Rate-Limiting (ADR-015)', () => {
+  const dataDir = tempDir();
+  let built: Awaited<ReturnType<typeof buildApp>>;
+  beforeAll(async () => {
+    built = await buildApp({
+      dataDir, database: await freshDatabase(dataDir, 'betrieb'), logger: false, webDist: null, authMode: 'demo',
+      ops: { metricsToken: 'geheim-123', rateLimitMax: 25, rateLimitExpensiveMax: 2 },
+    });
+  });
+  afterAll(async () => {
+    await built.app.close();
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  it('[T-134] Liveness/Readiness, Request-ID, geschützte Metriken und Limits je Benutzer', async () => {
+    const inject = (method: 'GET' | 'POST', url: string, headers: Record<string, string> = {}, payload?: unknown) => built.app.inject({ method, url, headers, payload: payload as any });
+    expect((await inject('GET', '/api/v1/health/live')).json()).toEqual({ status: 'ok' });
+    const ready = await inject('GET', '/api/v1/health/ready');
+    expect(ready.statusCode).toBe(200);
+    expect(ready.json()).toMatchObject({ ready: true, checks: { database: { ok: true }, objectStore: { ok: true }, jobQueue: { ok: true } } });
+
+    // Request-ID: übernommen oder erzeugt
+    expect((await inject('GET', '/api/v1/health', { 'x-request-id': 'trace-42' })).headers['x-request-id']).toBe('trace-42');
+    expect((await inject('GET', '/api/v1/health', { 'x-request-id': 'böse id<script>' })).headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
+
+    // Metriken nur mit Token oder als Administration
+    expect((await inject('GET', '/metrics')).statusCode).toBe(401);
+    expect((await inject('GET', '/metrics', { authorization: 'Bearer falsch-123' })).statusCode).toBe(401);
+    expect((await inject('GET', '/metrics', { 'x-user-id': 'u-leser' })).statusCode).toBe(401);
+    await inject('GET', '/api/v1/chapters', { 'x-user-id': 'u-leser' });
+    const m = await inject('GET', '/metrics', { authorization: 'Bearer geheim-123' });
+    expect(m.statusCode).toBe(200);
+    expect(m.body).toContain('onescm_http_requests_total{method="GET",route="/api/v1/chapters",status="200"}');
+    expect(m.body).toContain('onescm_http_request_duration_seconds_bucket');
+    expect(m.body).toMatch(/onescm_projects\{state="active"\} 1/);
+    expect(m.body).toContain('onescm_process_resident_memory_bytes');
+    expect((await inject('GET', '/metrics', { 'x-user-id': 'u-admin' })).statusCode).toBe(200);
+
+    // Aufwendige Aktionen: engeres Limit je Benutzer; andere Benutzer sind nicht betroffen
+    const analysis = (user: string) => inject('POST', '/api/v1/quality/analysis', { 'x-user-id': user });
+    expect((await analysis('u-redaktion')).statusCode).toBe(202);
+    expect((await analysis('u-redaktion')).statusCode).toBe(202);
+    const limited = await analysis('u-redaktion');
+    expect(limited.statusCode).toBe(429);
+    expect(limited.headers['content-type']).toContain('application/problem+json');
+    expect(limited.json().detail).toContain('Zu viele Anfragen');
+    expect(limited.headers['retry-after']).toBeDefined();
+    expect((await analysis('u-admin')).statusCode).toBe(202);
+    // Allgemeines Limit; Health-Checks sind ausgenommen
+    let last = 0;
+    for (let i = 0; i < 30; i++) last = (await inject('GET', '/api/v1/chapters', { 'x-user-id': 'u-leser' })).statusCode;
+    expect(last).toBe(429);
+    expect((await inject('GET', '/api/v1/health/ready')).statusCode).toBe(200);
+    expect((await inject('GET', '/metrics', { authorization: 'Bearer geheim-123' })).body).toMatch(/onescm_rate_limited_total\{kind="expensive"\} 1/);
+    await built.ctx.jobs.idle();
+  });
+});
+
+describe('Backup und Wiederherstellung (ADR-015)', () => {
+  const srcDir = tempDir();
+  const dstDir = tempDir();
+  afterAll(() => {
+    fs.rmSync(srcDir, { recursive: true, force: true });
+    fs.rmSync(dstDir, { recursive: true, force: true });
+  });
+
+  it('[T-135] portables Backup aus SQLite, Wiederherstellung in frische Datenbank (PostgreSQL in der CI) inkl. Objekten', async () => {
+    const { createBackup, restoreBackup, RestoreError } = await import('../src/services/backup.js');
+    // Quelle: immer SQLite – in der PostgreSQL-CI prüft der Test damit auch den Umzug SQLite → PostgreSQL
+    const src = await buildApp({ dataDir: srcDir, database: `${srcDir}/quelle.db`, logger: false, webDist: null, authMode: 'demo' });
+    const inj = (method: 'GET' | 'POST', url: string, payload?: unknown, project?: string) =>
+      src.app.inject({ method, url: `/api/v1${url}`, payload: payload as any, headers: { 'x-user-id': 'u-admin', ...(project ? { 'x-project-id': project } : {}) } });
+    const P = (await inj('POST', '/projects', { name: 'Zweites Handbuch', visibility: 'open' })).json().id;
+    const mp = multipart('backup.md', Buffer.from(md('1. Sicherung', 'Dieses Kapitel beschreibt die Datensicherung.')));
+    await src.app.inject({ method: 'POST', url: '/api/v1/imports', payload: mp.payload, headers: { ...mp.headers, 'x-user-id': 'u-admin', 'x-project-id': P } });
+    await src.ctx.jobs.idle();
+    const chapter = (await inj('GET', '/chapters', undefined, P)).json()[0];
+    const v = (await inj('POST', `/chapters/${chapter.id}/generate`, {}, P)).json();
+    const { data, manifest } = await createBackup(src.ctx.db, src.ctx.store, '0.6.0');
+    await src.app.close();
+    expect(manifest).toMatchObject({ format: 'onescm-backup', version: 1, sourceDialect: 'sqlite', missingObjects: [] });
+    expect(manifest.tables.content_blocks).toBeGreaterThan(0);
+    expect(manifest.objects).toBe(2); // Upload + Quelldatei
+
+    const dst = await buildApp({ dataDir: dstDir, database: await freshDatabase(dstDir, 'ziel'), logger: false, webDist: null, authMode: 'demo' }, { worker: false });
+    try {
+      await expect(restoreBackup(dst.ctx.db, dst.ctx.store, Buffer.from('kein zip'))).rejects.toThrow();
+      const r = await restoreBackup(dst.ctx.db, dst.ctx.store, data);
+      expect(r.objects).toBe(2);
+      expect(r.restored.generated_chapter_versions).toBe(1);
+      const get = (url: string, project?: string) => dst.app.inject({ method: 'GET', url: `/api/v1${url}`, headers: { 'x-user-id': 'u-admin', ...(project ? { 'x-project-id': project } : {}) } });
+      expect((await get('/projects')).json().map((p: any) => p.name)).toEqual(expect.arrayContaining(['Zweites Handbuch']));
+      const restored = (await get(`/chapter-versions/${v.id}`, P)).json();
+      expect(restored.sections.flatMap((s: any) => s.blocks).map((b: any) => b.text)).toEqual(v.sections.flatMap((s: any) => s.blocks).map((b: any) => b.text));
+      const rev = restored.sections.flatMap((s: any) => s.blocks).find((b: any) => b.sources.length).sources[0].revisionId;
+      expect((await get(`/source-revisions/${rev}/raw`, P)).body).toContain('Datensicherung');
+      // Neue Nummern setzen nach dem Restore fort
+      const before = (await dst.ctx.db.get<{ m: number }>('SELECT MAX(seq) AS m FROM text_snippets'))!.m;
+      expect(await dst.ctx.db.nextSeq('text_snippets')).toBe(before + 1);
+      // Zweites Einspielen nur mit force
+      await expect(restoreBackup(dst.ctx.db, dst.ctx.store, data)).rejects.toBeInstanceOf(RestoreError);
+      expect((await restoreBackup(dst.ctx.db, dst.ctx.store, data, { force: true })).restored.chapters).toBe(1);
+    } finally {
+      await dst.app.close();
+    }
+  });
+});
