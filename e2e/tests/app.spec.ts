@@ -131,3 +131,22 @@ test('[T-204] Versionsvergleich in der UI: Unterschiede zwischen zwei Kapitelver
   await page.getByLabel('unveränderte Absätze anzeigen').check();
   await expect(page.getByRole('article', { name: /unverändert/ }).first()).toBeVisible();
 });
+
+test('[T-205] KI-Vorschlag in der Kapitelwerkstatt: Satz-Evidenz prüfen und übernehmen', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  expect(await (await request.get('/api/v1/llm/status', { headers: h })).json()).toMatchObject({ enabled: true, provider: 'demo' });
+  const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '4. Vertragsbearbeitung');
+  await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h });
+
+  await page.goto(`/werkstatt/${ch.id}`);
+  const purpose = page.locator('.ws-section', { has: page.getByRole('heading', { name: '1. Zweck' }) }).getByRole('article').first();
+  await purpose.getByRole('button', { name: '✨ KI-Vorschlag' }).click();
+  const proposal = purpose.locator('.rewrite');
+  await expect(proposal).toContainText('jeder Satz belegt');
+  await expect(proposal.locator('.rewrite-sentences li').first()).toContainText('Abdeckung');
+  await proposal.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(page.getByText(/KI-Vorschlag übernommen/)).toBeVisible();
+  await expect(purpose.locator('.tag.st-ai_rewritten')).toHaveText('✨ KI-umformuliert');
+  await purpose.locator('.block-meta').first().click();
+  await expect(page.getByRole('heading', { name: 'Satz-Evidenz (KI-umformuliert)' })).toBeVisible();
+});

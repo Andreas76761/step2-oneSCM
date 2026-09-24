@@ -40,10 +40,11 @@
 
 | ID | Gruppe | Frage(n) | Stand |
 |---|---|---|---|
-| E-16 | LLM-gestützte Umformulierung (ADR-007, optional) | Dürfen Quelltexte an einen externen KI-Dienst übertragen werden (Datenschutz, Vertraulichkeit)? Welcher Anbieter/Betrieb (Cloud, EU-Region, on-prem)? Muss jeder umformulierte Satz einzeln belegt und freigegeben werden? | **offen** – nicht umgesetzt; der Generator bleibt extraktiv |
+| E-16 | LLM-gestützte Umformulierung (ADR-007, optional) | Dürfen Quelltexte an einen externen KI-Dienst übertragen werden (Datenschutz, Vertraulichkeit)? Welcher Anbieter/Betrieb (Cloud, EU-Region, on-prem)? Muss jeder umformulierte Satz einzeln belegt und freigegeben werden? | **entschieden 24.09.2026:** a) Cloud-Dienst erlaubt, standardmäßig aus, Aktivierung per Konfiguration; b) Anthropic Claude und OpenAI-kompatible Endpunkte; c) Quellen je Satz, Umformulierung nur als Vorschlag mit Übernahme durch die Redaktion – umgesetzt in Etappe 5 ([ADR-013](adr/ADR-013-ki-umformulierung.md)) |
 
 ## 4.4 Entscheidungsprotokoll
 
 | Datum | Entscheider | Umfang | Anmerkung |
 |---|---|---|---|
 | 24.09.2026 | Auftraggeber (Andreas) | E-01 … E-15, W-01 … W-09 | Übernahme aller vorläufigen Annahmen aus Etappe 1 ohne Änderung; E-15 um die in Etappe 2 umgesetzte OIDC-Anbindung konkretisiert |
+| 24.09.2026 | Auftraggeber (Andreas) | E-16 | Cloud-KI erlaubt (Aktivierung per Konfiguration), Anthropic + OpenAI-kompatibel, Evidenz je Satz + Übernahme durch die Redaktion |

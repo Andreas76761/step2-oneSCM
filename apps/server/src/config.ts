@@ -3,6 +3,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_RULE_SEVERITY } from './domain/contradictions.js';
+import { DEFAULT_MODELS, type LlmConfig, type LlmProviderId } from './llm.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..', '..');
@@ -37,6 +38,8 @@ export interface AppConfig {
   oidc: OidcConfig | null;
   /** Ablage der Originaldateien und Exporte (ADR-008) */
   objectStore: ObjectStoreConfig;
+  /** KI-Dienst für Umformulierungsvorschläge (ADR-013); null = ausgeschaltet (Standard) */
+  llm: LlmConfig | null;
 }
 
 export type ObjectStoreConfig =
@@ -54,6 +57,26 @@ function objectStoreFromEnv(): ObjectStoreConfig {
     region: process.env.S3_REGION || process.env.AWS_REGION || undefined,
     endpoint: process.env.S3_ENDPOINT || undefined,
     forcePathStyle: process.env.S3_FORCE_PATH_STYLE ? process.env.S3_FORCE_PATH_STYLE === 'true' : undefined,
+  };
+}
+
+/** ENTSCHEIDUNG(E-16): KI-Umformulierung nur, wenn der Betreiber einen Anbieter konfiguriert. */
+function llmFromEnv(): LlmConfig | null {
+  const provider = (process.env.LLM_PROVIDER ?? 'none').toLowerCase();
+  if (provider === 'none' || provider === '') return null;
+  if (!['anthropic', 'openai', 'demo'].includes(provider)) throw new Error('LLM_PROVIDER muss none, anthropic, openai oder demo sein.');
+  const id = provider as LlmProviderId;
+  const model = process.env.LLM_MODEL || DEFAULT_MODELS[id];
+  if (!model) throw new Error(`LLM_PROVIDER=${id} erfordert LLM_MODEL.`);
+  const apiKey = process.env.LLM_API_KEY || (id === 'anthropic' ? process.env.ANTHROPIC_API_KEY : id === 'openai' ? process.env.OPENAI_API_KEY : undefined) || undefined;
+  if (id === 'anthropic' && !apiKey) throw new Error('LLM_PROVIDER=anthropic erfordert LLM_API_KEY oder ANTHROPIC_API_KEY.');
+  return {
+    provider: id,
+    model,
+    apiKey,
+    baseUrl: process.env.LLM_BASE_URL || undefined,
+    timeoutMs: Number(process.env.LLM_TIMEOUT_MS || 60_000),
+    maxTokens: Number(process.env.LLM_MAX_TOKENS || 4000),
   };
 }
 
@@ -108,6 +131,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     authMode,
     oidc,
     objectStore: overrides.objectStore ?? objectStoreFromEnv(),
+    llm: overrides.llm !== undefined ? overrides.llm : llmFromEnv(),
   };
 }
 
@@ -130,5 +154,7 @@ export const DEFAULT_SETTINGS = {
   },
   // Terminologie: seit Etappe 3 eigene Tabelle `terminology_terms` (US-015)
   readability: { maxSentenceWords: 30 },
+  // ENTSCHEIDUNG(E-16): Mindestabdeckung der Inhaltswörter eines umformulierten Satzes durch seine Quellen
+  rewrite: { minSupport: 0.5 },
 };
 export type Settings = typeof DEFAULT_SETTINGS;

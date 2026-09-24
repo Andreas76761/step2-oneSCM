@@ -66,7 +66,7 @@ export const CHAPTER_SECTIONS = [
 export type SectionCode = (typeof CHAPTER_SECTIONS)[number]['code'];
 export const SECTION_CODES = CHAPTER_SECTIONS.map((s) => s.code) as string[];
 
-export const BLOCK_MODES = ['generated', 'manually_edited', 'locked', 'needs_regeneration', 'approved'] as const;
+export const BLOCK_MODES = ['generated', 'manually_edited', 'locked', 'needs_regeneration', 'ai_rewritten', 'approved'] as const;
 export type BlockMode = (typeof BLOCK_MODES)[number];
 export const BLOCK_KINDS = ['paragraph', 'list', 'note', 'tip', 'warning', 'xref', 'gap', 'table', 'code'] as const;
 

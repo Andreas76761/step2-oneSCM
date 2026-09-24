@@ -1,4 +1,5 @@
 // Qualitätsgate (US-012). ENTSCHEIDUNG(E-12): keine Ausnahmen, einstufige Freigabe.
+import { sentenceEvidenceProblems } from './rewrite.js';
 
 export interface GateBlock {
   id: string;
@@ -8,6 +9,10 @@ export interface GateBlock {
   justification: string | null;
   scopeStatus: string;
   mode: string;
+  /** für die Satz-Evidenz KI-umformulierter Absätze (ADR-013) */
+  text?: string;
+  sourceIds?: string[];
+  sentences?: { text: string; sourceIds: string[] }[] | null;
 }
 
 export interface GateFinding {
@@ -64,6 +69,15 @@ export function evaluateGate(blocks: GateBlock[], findings: GateFinding[], opts:
       label: 'Rolle, Sparte, Markt und Release bestätigt oder bewusst allgemein markiert',
       passed: unscoped.length === 0,
       details: unscoped.map((b) => `Block ${b.id} (${b.section})`),
+    });
+    const sentenceIssues = blocks
+      .map((b) => ({ b, problems: sentenceEvidenceProblems({ kind: b.kind, text: b.text ?? '', mode: b.mode, sourceIds: b.sourceIds ?? [], sentences: b.sentences ?? null }) }))
+      .filter((x) => x.problems.length);
+    checks.push({
+      code: 'sentence_evidence',
+      label: 'KI-umformulierte Absätze: jeder Satz mit Quelle des Absatzes belegt',
+      passed: sentenceIssues.length === 0,
+      details: sentenceIssues.map((x) => `Block ${x.b.id} (${x.b.section}): ${x.problems.join('; ')}`),
     });
     const stale = blocks.filter((b) => b.mode === 'needs_regeneration');
     checks.push({

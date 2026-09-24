@@ -3,7 +3,7 @@ import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { evaluateGate, type GateResult } from '../domain/gate.js';
 import { generateChapter, GENERATOR_ID, type GenSnippet } from '../domain/generator.js';
-import { BLOCK_KINDS, BLOCK_MODES, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, ROLE_CODES, SECTION_CODES } from '../domain/reference.js';
+import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, ROLE_CODES, SECTION_CODES } from '../domain/reference.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 
 // ---------- Kapitel ----------
@@ -125,8 +125,8 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
       const sources: string[] = b.sources.map((s: Row) => s.snippetId);
       carriedSourceKeys.add([...sources].sort().join('|'));
       const sourcesChanged = sources.some((s) => !currentIds.has(s));
-      const mode = b.mode === 'manually_edited' && sourcesChanged ? 'needs_regeneration' : b.mode;
-      await insertBlock(ctx, versionId, { ...b, mode, lineageId: b.lineageId, sourceIds: sources }, actor, sourcesChanged ? 'Quelle geändert – Prüfung erforderlich' : 'aus Vorversion übernommen (manuell geschützt)');
+      const mode = (b.mode === 'manually_edited' || b.mode === 'ai_rewritten') && sourcesChanged ? 'needs_regeneration' : b.mode;
+      await insertBlock(ctx, versionId, { ...b, mode, lineageId: b.lineageId, sourceIds: sources, sentences: b.sentences }, actor, sourcesChanged ? 'Quelle geändert – Prüfung erforderlich' : 'aus Vorversion übernommen (manuell geschützt)');
     }
     // Lineage stabil halten (Grundlage für Historie und Versionsvergleich, US-019): zuerst exakte Zuordnung über
     // Abschnitt + Blocktyp + Quellen (erfasst auch quellenlose Lückenhinweise), dann über dieselben Quellen;
@@ -163,7 +163,7 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
   return { ...(await getChapterVersion(ctx, versionId)), generation: { gaps: result.gaps, usedSnippets: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated } };
 }
 
-const MANUAL_MODES = ['manually_edited', 'locked', 'needs_regeneration'];
+const MANUAL_MODES = ['manually_edited', 'locked', 'needs_regeneration', 'ai_rewritten'];
 
 /** Bei freigegebenen Blöcken zählt der Modus vor der Freigabe (manuelle Änderungen bleiben geschützt). */
 async function effectiveMode(ctx: Ctx, blockId: string, mode: string): Promise<string> {
@@ -187,15 +187,22 @@ interface BlockInput {
   lineageId: string;
   justification: string | null;
   comment: string | null;
+  /** Satz-Evidenz eines übernommenen KI-Vorschlags (ADR-013) */
+  sentences?: Sentence[] | null;
+}
+
+export interface Sentence {
+  text: string;
+  sourceIds: string[];
 }
 
 async function insertBlock(ctx: Ctx, versionId: string, b: BlockInput, actor: string, reason: string) {
   const id = newId('cb');
   const { db } = ctx;
   await db.run(
-    `INSERT INTO content_blocks (id, chapter_version_id, lineage_id, section_code, position, kind, text, mode, market_code, release_code, scope_status, justification, comment, version_no, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-    id, versionId, b.lineageId, b.section, b.position, b.kind, b.text, b.mode, b.market, b.release, b.scopeStatus, b.justification, b.comment, now(),
+    `INSERT INTO content_blocks (id, chapter_version_id, lineage_id, section_code, position, kind, text, mode, market_code, release_code, scope_status, justification, comment, sentence_sources, version_no, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+    id, versionId, b.lineageId, b.section, b.position, b.kind, b.text, b.mode, b.market, b.release, b.scopeStatus, b.justification, b.comment, b.sentences ? json(b.sentences) : null, now(),
   );
   for (const r of b.roles) await db.run('INSERT INTO content_block_roles VALUES (?, ?) ON CONFLICT DO NOTHING', id, r);
   for (const d of b.divisions) await db.run('INSERT INTO content_block_divisions VALUES (?, ?) ON CONFLICT DO NOTHING', id, d);
@@ -204,18 +211,19 @@ async function insertBlock(ctx: Ctx, versionId: string, b: BlockInput, actor: st
   return id;
 }
 
-async function blockRow(ctx: Ctx, id: string) {
+export async function blockRow(ctx: Ctx, id: string) {
   const b = await ctx.db.get('SELECT * FROM content_blocks WHERE id = ?', id);
   if (!b) throw notFound(`Content Block ${id}`);
   return b;
 }
 
-async function blockDto(ctx: Ctx, b: Row) {
+export async function blockDto(ctx: Ctx, b: Row) {
   const { db } = ctx;
   return {
     id: b.id, chapterVersionId: b.chapter_version_id, lineageId: b.lineage_id, section: b.section_code, position: b.position, kind: b.kind, text: b.text, mode: b.mode,
     market: b.market_code, release: b.release_code, scopeStatus: b.scope_status, justification: b.justification, comment: b.comment, versionNo: b.version_no,
     deletedAt: b.deleted_at, updatedAt: b.updated_at,
+    sentences: parseJson<Sentence[] | null>(b.sentence_sources, null),
     roles: (await db.all('SELECT role_code FROM content_block_roles WHERE block_id = ? ORDER BY role_code', b.id)).map((r) => r.role_code as string),
     divisions: (await db.all('SELECT division_code FROM content_block_divisions WHERE block_id = ? ORDER BY division_code', b.id)).map((r) => r.division_code as string),
     sources: (await db.all(
@@ -232,9 +240,12 @@ async function activeBlocks(ctx: Ctx, versionId: string) {
 }
 
 type BlockDto = Awaited<ReturnType<typeof blockDto>>;
-const gateBlock = (b: BlockDto) => ({ id: b.id, kind: b.kind, section: b.section, sourceCount: b.sources.length, justification: b.justification, scopeStatus: b.scopeStatus, mode: b.mode });
+const gateBlock = (b: BlockDto) => ({
+  id: b.id, kind: b.kind, section: b.section, sourceCount: b.sources.length, justification: b.justification, scopeStatus: b.scopeStatus, mode: b.mode,
+  text: b.text, sourceIds: b.sources.map((s) => s.snippetId), sentences: b.sentences,
+});
 
-async function snapshot(ctx: Ctx, blockId: string, versionNo: number, changeType: string, actor: string, reason: string | null) {
+export async function snapshot(ctx: Ctx, blockId: string, versionNo: number, changeType: string, actor: string, reason: string | null) {
   const b = await blockDto(ctx, await blockRow(ctx, blockId));
   const { sources, ...rest } = b;
   await ctx.db.run(
@@ -271,7 +282,7 @@ export async function listChapterVersions(ctx: Ctx, chapterId: string) {
 
 // ---------- Kapitelwerkstatt ----------
 
-async function assertEditable(ctx: Ctx, versionId: string) {
+export async function assertEditable(ctx: Ctx, versionId: string) {
   const v = await ctx.db.get('SELECT status, version_no FROM generated_chapter_versions WHERE id = ?', versionId);
   if (!v) throw notFound(`Kapitelversion ${versionId}`);
   if (v.status === 'in_review') throw conflict(`Kapitelversion ${v.version_no} ist zur Freigabe eingereicht – zum Bearbeiten die Einreichung zurückziehen.`);
@@ -301,7 +312,7 @@ function validatePatch(p: BlockPatch) {
   if (p.kind && !(BLOCK_KINDS as readonly string[]).includes(p.kind)) throw badRequest(`Unbekannter Blocktyp. Erlaubt: ${BLOCK_KINDS.join(', ')}`);
   if (p.roles?.some((r) => !ROLE_CODES.includes(r))) throw badRequest('Unbekannte Rolle.');
   if (p.divisions?.some((d) => !DIVISION_CODES.includes(d))) throw badRequest('Unbekannte Sparte.');
-  if (p.mode && !(BLOCK_MODES as readonly string[]).includes(p.mode)) throw badRequest('Unbekannter Bearbeitungsmodus.');
+  if (p.mode && !['locked', 'manually_edited', 'generated'].includes(p.mode)) throw badRequest('mode muss locked, manually_edited oder generated sein.');
   if (p.scopeStatus && !['confirmed', 'general', 'unconfirmed'].includes(p.scopeStatus)) throw badRequest('scopeStatus muss confirmed, general oder unconfirmed sein.');
 }
 
@@ -327,6 +338,8 @@ export async function patchBlock(ctx: Ctx, id: string, p: BlockPatch, actor: str
     if (p.text !== undefined) {
       if (!p.text.trim()) throw unprocessable('Text darf nicht leer sein – zum Entfernen DELETE verwenden.');
       upd('text', p.text);
+      // Manuell geänderter Text: die Satz-Evidenz eines KI-Vorschlags gilt nicht mehr
+      if (p.text !== b.text) upd('sentence_sources', null);
     }
     if (p.section !== undefined) (upd('section_code', p.section), (changeType = 'moved'));
     if (p.position !== undefined) (upd('position', p.position), (changeType = p.text === undefined ? 'moved' : changeType));
@@ -417,8 +430,9 @@ export async function restoreBlock(ctx: Ctx, id: string, versionNo: number, acto
   await db.tx(async () => {
     await db.run(
       `UPDATE content_blocks SET text = ?, section_code = ?, kind = ?, market_code = ?, release_code = ?, scope_status = ?, justification = ?, comment = ?,
-       mode = ?, deleted_at = NULL, version_no = ?, updated_at = ? WHERE id = ?`,
-      s.text, s.section, s.kind, s.market, s.release, s.scopeStatus, s.justification, s.comment, s.mode === 'approved' ? 'manually_edited' : s.mode === 'generated' ? 'manually_edited' : s.mode,
+       sentence_sources = ?, mode = ?, deleted_at = NULL, version_no = ?, updated_at = ? WHERE id = ?`,
+      s.text, s.section, s.kind, s.market, s.release, s.scopeStatus, s.justification, s.comment, s.sentences ? json(s.sentences) : null,
+      s.mode === 'approved' || s.mode === 'generated' ? 'manually_edited' : s.mode,
       b.version_no + 1, now(), id,
     );
     await db.run('DELETE FROM content_block_roles WHERE block_id = ?', id);
