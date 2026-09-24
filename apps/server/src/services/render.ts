@@ -1,6 +1,7 @@
 // Sichere Darstellung von Markdown für den Export (US-014, §13).
 // Eingebettetes HTML aus Quellen wird nie ausgeführt: HTML-Tokens werden als Text escaped,
-// Links nur für http(s)/mailto/Anker, Bilder werden durch ihren Alternativtext ersetzt (keine externen Abrufe).
+// Links nur für http(s)/mailto/Anker. Bilder nur aus der eigenen Medienablage (`media:<sha>`, ADR-029) – eingebettet
+// oder als Datei der Online-Hilfe; externe Bilder werden durch ihren Alternativtext ersetzt (keine externen Abrufe).
 import { Marked, type Token, type Tokens } from 'marked';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -13,6 +14,11 @@ export const escapeHtml = (s: string) =>
 const decodeEntities = (s: string) =>
   s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 
+/** Bildquelle für `media:<sha>` (data:-URI oder relativer Pfad) – null: nur Alternativtext */
+export type ImageSource = (sha: string) => string | null;
+/** Während eines (synchronen) Aufrufs von markdownToHtml gesetzt */
+let imageSource: ImageSource | null = null;
+
 const marked = new Marked({ gfm: true, async: false });
 marked.use({
   walkTokens(t) {
@@ -23,19 +29,48 @@ marked.use({
       return escapeHtml(token.text);
     },
     image(token) {
+      const sha = /^media:([a-f0-9]{64})$/.exec(token.href)?.[1];
+      const src = sha && imageSource ? imageSource(sha) : null;
+      if (src) return `<img src="${escapeHtml(src)}" alt="${escapeHtml(token.text)}" loading="lazy">`;
       return escapeHtml(token.text || '[Bild]');
     },
   },
 });
 
 /** Markdown → HTML-Fragment ohne ausführbare Inhalte */
-export function markdownToHtml(md: string): string {
-  return marked.parse(md) as string;
+export function markdownToHtml(md: string, images?: ImageSource): string {
+  imageSource = images ?? null;
+  try {
+    return marked.parse(md) as string;
+  } finally {
+    imageSource = null;
+  }
 }
 
 // ---------------------------------------------------------------- PDF (pdfmake)
 
 type PdfNode = Record<string, unknown> | string;
+
+/** Bilder für die PDF-Ausgabe (pdfmake: nur PNG und JPEG) */
+export interface PdfImage {
+  mime: string;
+  data: Buffer;
+  width: number | null;
+  height: number | null;
+}
+let pdfImages: Map<string, PdfImage> | null = null;
+const PDF_WIDTH = 499; // A4 abzüglich Seitenränder
+
+function pdfImage(t: Tokens.Image): PdfNode | null {
+  const sha = /^media:([a-f0-9]{64})$/.exec(t.href)?.[1];
+  const img = sha ? pdfImages?.get(sha) : undefined;
+  if (!img || (img.mime !== 'image/png' && img.mime !== 'image/jpeg')) return null;
+  const node: Record<string, unknown> = { image: `data:${img.mime};base64,${img.data.toString('base64')}`, margin: [0, 2, 0, 6] };
+  // Bildschirmfotos in natürlicher Größe (96 dpi → pt), höchstens Satzspiegelbreite
+  if (img.width) node.width = Math.min(PDF_WIDTH, Math.round(img.width * 0.75));
+  else node.fit = [PDF_WIDTH, 400];
+  return node;
+}
 
 function inline(tokens: Token[] | undefined, style: Record<string, unknown> = {}): PdfNode[] {
   const out: PdfNode[] = [];
@@ -86,9 +121,23 @@ export function tokensToPdf(tokens: Token[]): PdfNode[] {
         out.push({ text: inline(h.tokens), style: `md_h${Math.min(h.depth, 4)}` });
         break;
       }
-      case 'paragraph':
-        out.push({ text: inline((t as Tokens.Paragraph).tokens), margin: [0, 0, 0, 6] });
+      case 'paragraph': {
+        // Bilder sind in pdfmake Blockelemente: Absatz an Bildern aufteilen
+        let run: Token[] = [];
+        const flush = () => {
+          if (run.some((x) => x.type !== 'text' || (x as Tokens.Text).text.trim())) out.push({ text: inline(run), margin: [0, 0, 0, 6] });
+          run = [];
+        };
+        for (const x of (t as Tokens.Paragraph).tokens) {
+          const img = x.type === 'image' ? pdfImage(x as Tokens.Image) : null;
+          if (img) {
+            flush();
+            out.push(img);
+          } else run.push(x);
+        }
+        flush();
         break;
+      }
       case 'text':
         out.push({ text: inline((t as Tokens.Text).tokens ?? [t]), margin: [0, 0, 0, 4] });
         break;
@@ -132,7 +181,14 @@ export function tokensToPdf(tokens: Token[]): PdfNode[] {
   return out;
 }
 
-export const markdownToPdf = (md: string) => tokensToPdf(marked.lexer(md));
+export function markdownToPdf(md: string, images?: Map<string, PdfImage>) {
+  pdfImages = images ?? null;
+  try {
+    return tokensToPdf(marked.lexer(md));
+  } finally {
+    pdfImages = null;
+  }
+}
 
 const require = createRequire(import.meta.url);
 let pdfmake: any = null;

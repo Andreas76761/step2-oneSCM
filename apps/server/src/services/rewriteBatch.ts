@@ -29,6 +29,7 @@ async function eligibleBlocks(ctx: Ctx, versionId: string) {
   const rows = await ctx.db.all(
     `SELECT b.id FROM content_blocks b WHERE b.chapter_version_id = ? AND b.deleted_at IS NULL AND b.mode <> 'locked'
        AND b.kind IN (${REWRITABLE_KINDS.map(() => '?').join(',')})
+       AND b.text NOT LIKE '%![%](%' -- Absätze mit Bildern bleiben unverändert (ADR-029)
        AND EXISTS (SELECT 1 FROM content_block_sources s WHERE s.block_id = b.id)
        AND NOT EXISTS (SELECT 1 FROM rewrite_proposals p WHERE p.block_id = b.id AND p.status = 'proposed')
      ORDER BY b.position`,

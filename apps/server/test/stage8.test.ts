@@ -203,7 +203,8 @@ describe('Git-Quellverbindungen (ADR-022)', () => {
       const imp = (await call('GET', `/imports/${conn.lastImportId}`)).json;
       expect(imp.status).toBe('completed');
       expect(imp.fileName).toMatch(/^Handbuch-Repo@[0-9a-f]{7}\.zip$/);
-      expect(imp.items.map((i: any) => i.path).sort()).toEqual(['anmeldung.md', 'teil/lager.docx']); // kein README, kein Bild, kein Symlink
+      expect(imp.items.map((i: any) => i.path).sort()).toEqual(['anmeldung.md', 'bild.png', 'teil/lager.docx']); // kein README, kein Symlink
+      expect(imp.items.find((i: any) => i.path === 'bild.png').status).toBe('skipped'); // Bilder werden übernommen (ADR-029), ungültige übersprungen
       expect((await call('GET', '/chapters')).json.map((c: any) => c.title)).toEqual(expect.arrayContaining(['1. Anmeldung', '2. Lager']));
 
       // Unveränderter Stand: kein neuer Import
@@ -221,7 +222,7 @@ describe('Git-Quellverbindungen (ADR-022)', () => {
       conn = (await call('GET', `/source-connections/${id}`)).json;
       expect(conn.lastCommit).toBe(git('rev-parse', 'HEAD'));
       const imp2 = (await call('GET', `/imports/${conn.lastImportId}`)).json;
-      expect(Object.fromEntries(imp2.items.map((i: any) => [i.path, i.status]))).toEqual({ 'anmeldung.md': 'imported', 'teil/lager.docx': 'identical' });
+      expect(Object.fromEntries(imp2.items.map((i: any) => [i.path, i.status]))).toEqual({ 'anmeldung.md': 'imported', 'bild.png': 'skipped', 'teil/lager.docx': 'identical' });
       expect((await call('GET', '/sources')).json.find((s: any) => s.path === 'anmeldung.md').revisions).toHaveLength(2);
 
       // Nur ein geplanter Folgejob gilt (ältere Planungen sind wirkungslos)

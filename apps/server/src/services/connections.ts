@@ -11,6 +11,7 @@ import JSZip from 'jszip';
 import { audit, getSettings, type Ctx } from '../context.js';
 import { newId, now, type Row } from '../db.js';
 import { CONVERTIBLE } from '../domain/convert.js';
+import { MEDIA_EXT } from '../domain/media.js';
 import { badRequest, notFound } from '../problem.js';
 import { createImport } from './imports.js';
 import { assertSafeUrl } from './webhooks.js';
@@ -238,7 +239,7 @@ async function fetchRepository(ctx: Ctx, c: Row) {
     // Symbolische Links (Modus 120000) nie importieren – mit core.symlinks=false liegen sie als Textdatei mit dem Linkziel vor
     const links = new Set((await git(ctx, ['ls-files', '-s', '-z'], target, env)).split('\0').filter((l) => l.startsWith('120000 ')).map((l) => path.join(target, l.split('\t')[1])));
     const settings = (await getSettings(ctx.db)).import;
-    const exts = new Set(['.md', '.markdown', ...Object.keys(CONVERTIBLE).filter((x) => settings.allowedExtensions.includes(x))]);
+    const exts = new Set(['.md', '.markdown', ...Object.keys(MEDIA_EXT), ...Object.keys(CONVERTIBLE).filter((x) => settings.allowedExtensions.includes(x))]);
     const root = path.join(target, c.sub_path || '');
     if (!fs.existsSync(root) || !fs.lstatSync(root).isDirectory()) throw new Error(`Unterordner „${c.sub_path}“ existiert im Repository nicht.`);
     const zip = new JSZip();
@@ -338,19 +339,67 @@ async function fetchConfluence(ctx: Ctx, c: Row) {
     }
     // next-Links sind relativ zur Basis (Cloud: „/rest/api/…“ bzw. „/wiki/rest/api/…“)
     const link = data._links?.next;
-    next = link ? (/^https?:/.test(link) ? link : `${base.replace(/\/wiki$/, '')}${link.startsWith('/wiki') ? '' : base.endsWith('/wiki') ? '/wiki' : ''}${link}`) : null;
-    if (next && new URL(next).origin !== new URL(base).origin) throw new Error('Confluence: Folgeseite auf fremdem Host.');
+    next = link ? confluenceLink(base, link) : null;
   }
   if (!pages.length) throw new Error(`Keine Seiten im Bereich „${c.space_key}“ gefunden.`);
   pages.sort((a, b) => a.id.localeCompare(b.id));
-  const commit = sha256(pages.map((p) => `${p.id}:${p.version}`).join('|'));
   const zip = new JSZip();
-  const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+  const attr = (tag: string, name: string) => new RegExp(`\\b${name}=["']([^"']*)["']`).exec(tag)?.[1];
+  const state: string[] = [];
+  let files = 0;
   for (const p of pages) {
+    state.push(`${p.id}:${p.version}`);
+    // Bilder (ADR-029): <ac:image><ri:attachment ri:filename="…"/></ac:image> → Anhang laden und als <img> referenzieren
+    let html = p.html;
+    const imageTags = [...html.matchAll(/<ac:image\b([^>]*)>([\s\S]*?)<\/ac:image>/g)];
+    if (imageTags.length) {
+      const attachments = await confluenceAttachments(ctx, base, headers, p.id);
+      const loaded = new Map<string, string | null>();
+      for (const [, , inner] of imageTags) {
+        const file = attr(inner, 'ri:filename');
+        const a = file ? attachments.find((x) => x.title === file) : undefined;
+        if (!file || !a || loaded.has(file)) continue;
+        loaded.set(file, null);
+        if (!MEDIA_EXT[path.extname(file).toLowerCase()] || a.size > settings.maxEntryBytes) continue;
+        const res = await fetch(confluenceLink(base, a.download), { headers, redirect: 'error', signal: AbortSignal.timeout(ctx.config.git.timeoutMs) });
+        if (!res.ok) continue;
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (buf.length > settings.maxEntryBytes) continue;
+        if (++files > settings.maxZipFiles) throw new Error(`Mehr als ${settings.maxZipFiles} Dateien im Bereich.`);
+        zip.file(`${c.space_key}/attachments/${p.id}/${file}`, buf);
+        loaded.set(file, `attachments/${p.id}/${encodeURIComponent(file)}`);
+        state.push(`${p.id}/${file}:${a.version}`);
+      }
+      html = html.replace(/<ac:image\b([^>]*)>([\s\S]*?)<\/ac:image>/g, (_all, attrs: string, inner: string) => {
+        const file = attr(inner, 'ri:filename');
+        const alt = attr(attrs, 'ac:alt') ?? attr(attrs, 'ac:title') ?? '';
+        const src = file ? loaded.get(file) : null;
+        return src ? `<img src="${esc(src)}" alt="${alt}">` : alt ? `<img alt="${alt}">` : '';
+      });
+    }
     const slug = p.title.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'seite';
-    zip.file(`${c.space_key}/${slug}-${p.id}.html`, `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(c.space_key)} : ${esc(p.title)}</title></head><body><div id="main-content">${p.html}</div></body></html>`);
+    zip.file(`${c.space_key}/${slug}-${p.id}.html`, `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(c.space_key)} : ${esc(p.title)}</title></head><body><div id="main-content">${html}</div></body></html>`);
   }
-  return { commit, data: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }), files: pages.length };
+  // Stand über Seiten- und Anhangversionen: ein ausgetauschter Screenshot löst einen neuen Import aus
+  const commit = sha256(state.join('|'));
+  return { commit, data: await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }), files: pages.length + files };
+}
+
+/** Relativer Confluence-Link (Cloud: „/rest/api/…“ bzw. „/wiki/…“) → absolute URL auf demselben Host */
+function confluenceLink(base: string, link: string) {
+  const url = /^https?:/.test(link) ? link : `${base.replace(/\/wiki$/, '')}${link.startsWith('/wiki') ? '' : base.endsWith('/wiki') ? '/wiki' : ''}${link}`;
+  if (new URL(url).origin !== new URL(base).origin) throw new Error('Confluence: Verweis auf fremden Host.');
+  return url;
+}
+
+async function confluenceAttachments(ctx: Ctx, base: string, headers: Record<string, string>, pageId: string) {
+  const res = await fetch(`${base}/rest/api/content/${encodeURIComponent(pageId)}/child/attachment?limit=200&expand=version`, { headers, redirect: 'error', signal: AbortSignal.timeout(ctx.config.git.timeoutMs) });
+  if (!res.ok) return [];
+  const data = (await res.json()) as { results?: any[] };
+  return (data.results ?? []).map((a) => ({
+    title: String(a.title ?? ''), download: String(a._links?.download ?? ''), version: Number(a.version?.number ?? 0), size: Number(a.extensions?.fileSize ?? 0),
+  })).filter((a) => a.title && a.download);
 }
 
 // ------------------------------------------------------------------ Push-Webhook (ADR-028)

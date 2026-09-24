@@ -312,3 +312,9 @@ ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px
 .block-check { display: block; margin: 4px 0; }
 .webhook { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
 .webhook h3 { font-size: 15px; word-break: break-all; }
+
+/* Bilder & Medien (ADR-029) */
+.md .md-img { display: block; max-width: 100%; height: auto; margin: 6px 0; border: 1px solid var(--border, #e2e8f0); border-radius: 4px; }
+.md .md-img-alt { color: var(--muted, #5b6474); font-style: italic; }
+.md .md-img-missing-alt { color: #b91c1c; font-weight: 600; }
+.image-insert { border: 1px solid var(--border, #e2e8f0); border-radius: 6px; padding: 8px 10px; margin: 6px 0; display: grid; gap: 6px; }

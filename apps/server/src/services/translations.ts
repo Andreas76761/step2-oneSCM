@@ -13,6 +13,8 @@ import { LlmError } from '../llm.js';
 import { badRequest, conflict, notFound, Problem, unprocessable } from '../problem.js';
 import { getChapterVersion } from './chapters.js';
 import { renderHtml, renderMarkdown, type ExportChapter } from './exports.js';
+import { loadMedia } from './media.js';
+import { preserveImages } from '../domain/media.js';
 
 /** Übersetzt werden Absätze mit Text; Lückenhinweise und erzeugte Statusangaben nicht */
 const TRANSLATABLE = ['paragraph', 'list', 'note', 'tip', 'warning', 'table', 'xref'];
@@ -179,7 +181,7 @@ export async function runMachineTranslation(ctx: Ctx, id: string, actor: string)
     const sentences = splitSentences(b.source_text, b.kind);
     try {
       const out = await call(sentences, b.kind);
-      const text = out.map((s) => s.text).filter(Boolean).join(b.kind === 'list' || /^\s*(\d+\.|[-*])\s+/m.test(b.source_text) ? '\n' : ' ');
+      const text = preserveImages(b.source_text, out.map((s) => s.text).filter(Boolean).join(b.kind === 'list' || /^\s*(\d+\.|[-*])\s+/m.test(b.source_text) ? '\n' : ' '));
       const issues = checkTranslation(b.source_text, text, out);
       await ctx.db.run(
         "UPDATE translation_blocks SET text = ?, sentences = ?, issues = ?, mode = 'machine', provider = ?, model = ?, updated_by = ?, updated_at = ? WHERE id = ?",
@@ -262,9 +264,10 @@ export async function exportTranslation(ctx: Ctx, id: string, format: string) {
     })),
   };
   const heading = `oneSCM – ${LANGUAGES[t.language] ?? t.language}${t.status === 'approved' ? '' : ' (Entwurf)'}`;
+  const media = await loadMedia(ctx, chapter.sections.flatMap((s) => s.blocks.map((b) => b.text as string)));
   const body = format === 'md'
-    ? renderMarkdown([chapter], {}).replace(/^# oneSCM Benutzerhandbuch/, `# ${heading}`)
-    : renderHtml([chapter], {}).replace(/<html lang="de">/, `<html lang="${t.language}">`).replace('<h1>oneSCM Benutzerhandbuch</h1>', `<h1>${heading.replace(/[<>&]/g, '')}</h1>`);
+    ? renderMarkdown([chapter], {}, media).replace(/^# oneSCM Benutzerhandbuch/, `# ${heading}`)
+    : renderHtml([chapter], {}, media).replace(/<html lang="de">/, `<html lang="${t.language}">`).replace('<h1>oneSCM Benutzerhandbuch</h1>', `<h1>${heading.replace(/[<>&]/g, '')}</h1>`);
   return { data: Buffer.from(body, 'utf8'), fileName: `onescm-${t.language}-${(t.title ?? 'kapitel').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.${format}`, type: format === 'md' ? 'text/markdown; charset=utf-8' : 'text/html; charset=utf-8' };
 }
 

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
-import Markdown from 'react-markdown';
-import { ApiError, download, get } from '../api';
+import Markdown, { defaultUrlTransform } from 'react-markdown';
+import { ApiError, download, get, mediaUrl, post } from '../api';
 
 // ---------- Referenzdaten & Benachrichtigungen ----------
 
@@ -119,7 +119,7 @@ const STATUS_LABEL: Record<string, string> = {
   open: 'offen', deferred: 'zurückgestellt', resolved: 'entschieden', ignored: 'ignoriert', obsolete: 'obsolet',
   draft: 'Entwurf', in_review: '⏳ eingereicht', rejected: 'abgelehnt', approved: 'freigegeben', superseded: 'ersetzt', proposed: 'Vorschlag', confirmed: 'bestätigt', dissolved: 'aufgelöst',
   generated: 'generiert', manually_edited: 'manuell bearbeitet', ai_rewritten: '✨ KI-umformuliert', invalid: 'ungültig', accepted: 'übernommen', stale: 'veraltet', locked: '🔒 gesperrt', needs_regeneration: '⟳ prüfen', queued: 'wartet', processing: 'läuft',
-  completed: 'abgeschlossen', completed_with_errors: 'mit Fehlern', cancelled: 'abgebrochen', failed: 'fehlgeschlagen', imported: 'importiert', identical: 'identisch', skipped: 'übersprungen', idle: 'aktuell', syncing: 'gleicht ab', importing: 'importiert gerade',
+  completed: 'abgeschlossen', completed_with_errors: 'mit Fehlern', cancelled: 'abgebrochen', failed: 'fehlgeschlagen', imported: 'importiert', identical: 'identisch', skipped: 'übersprungen', media: 'Bild', idle: 'aktuell', syncing: 'gleicht ab', importing: 'importiert gerade',
   source_confirmed: 'Quelle bestätigt', manually_confirmed: 'manuell bestätigt', unconfirmed: 'unbestätigt', open_question: 'offene Frage', general: 'allgemein',
 };
 export const statusLabel = (s: string) => STATUS_LABEL[s] ?? s;
@@ -196,10 +196,68 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
   );
 }
 
+/** Bild aus der Medienablage; externe Bilder werden nicht geladen (nur Alternativtext, wie im Export) */
+function MdImage({ src, alt }: { src?: string; alt?: string }) {
+  const sha = /^media:([a-f0-9]{64})$/.exec(src ?? '')?.[1];
+  const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!sha) return;
+    let alive = true;
+    mediaUrl(sha).then((u) => alive && setUrl(u), () => alive && setFailed(true));
+    return () => {
+      alive = false;
+    };
+  }, [sha]);
+  if (!alt) return <span className="md-img-missing-alt" role="img" aria-label="Bild ohne Alternativtext">⚠️ Bild ohne Alternativtext</span>;
+  if (!sha || failed) return <span className="md-img-alt">[Bild: {alt}]</span>;
+  return url ? <img className="md-img" src={url} alt={alt} loading="lazy" /> : <span className="md-img-alt" aria-busy="true">[Bild: {alt}]</span>;
+}
+
+/** Bild hochladen und als Markdown-Verweis einfügen; Alternativtext ist Pflicht (Barrierefreiheit, ADR-029) */
+export function ImageInsert({ onInsert }: { onInsert: (markdown: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [alt, setAlt] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  if (!open) return <button type="button" className="btn small" onClick={() => setOpen(true)}>🖼️ Bild einfügen</button>;
+  const insert = async () => {
+    if (!file || !alt.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const m = await post<{ sha256: string }>('/media', fd);
+      onInsert(`![${alt.trim().replace(/([\\[\]])/g, '\\$1')}](media:${m.sha256})`);
+      setOpen(false);
+      setFile(null);
+      setAlt('');
+    } catch (e) {
+      setError(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <fieldset className="image-insert">
+      <legend>Bild einfügen</legend>
+      <label>Bilddatei (PNG, JPEG, GIF, WebP) <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
+      <label>Alternativtext (Pflicht) <input value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="Was zeigt das Bild?" /></label>
+      <ErrorBox error={error} />
+      <div className="row-actions">
+        <button type="button" className="btn primary small" disabled={!file || !alt.trim() || busy} onClick={insert}>{busy ? 'Lädt hoch …' : 'Einfügen'}</button>
+        <button type="button" className="btn small" onClick={() => setOpen(false)}>Abbrechen</button>
+      </div>
+    </fieldset>
+  );
+}
+
 /** Markdown-Vorschau ohne HTML-Ausführung (kein rehype-raw, §13). */
 export const Md = ({ text }: { text: string }) => (
   <div className="md">
-    <Markdown skipHtml>{text}</Markdown>
+    <Markdown skipHtml urlTransform={(url) => (url.startsWith('media:') ? url : defaultUrlTransform(url))} components={{ img: ({ src, alt }) => <MdImage src={typeof src === 'string' ? src : undefined} alt={alt} /> }}>{text}</Markdown>
   </div>
 );
 

@@ -29,7 +29,7 @@ export function SourcesPage() {
       for (let i = 0; i < 40; i++) {
         const cur = await get<any>(`/imports/${imp.id}`);
         if (!['queued', 'processing'].includes(cur.status)) {
-          notify(`Import ${statusLabel(cur.status)}: ${cur.stats.imported} importiert, ${cur.stats.identical} identisch, ${cur.stats.failed} Fehler, ${cur.stats.skipped} übersprungen`, cur.status === 'failed' ? 'error' : 'ok');
+          notify(`Import ${statusLabel(cur.status)}: ${cur.stats.imported} importiert, ${cur.stats.identical} identisch, ${cur.stats.media ?? 0} Bilder, ${cur.stats.failed} Fehler, ${cur.stats.skipped} übersprungen`, cur.status === 'failed' ? 'error' : 'ok');
           break;
         }
         await new Promise((r) => setTimeout(r, 500));

@@ -4,10 +4,12 @@ import path from 'node:path';
 import { audit, getSettings, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { classifySnippet } from '../domain/classify.js';
-import { CONVERTIBLE, docxToMarkdown, htmlToMarkdown } from '../domain/convert.js';
+import { CONVERTIBLE, docxToMarkdown, embedDataImages, htmlToMarkdown } from '../domain/convert.js';
 import { chapterOf, headingKey, parseMarkdown } from '../domain/markdown.js';
+import { MEDIA_EXT, resolveRelative, rewriteImages } from '../domain/media.js';
 import { normalizedHash, sha256 } from '../domain/similarity.js';
 import { finishConnectionImport } from './connections.js';
+import { storeMedia } from './media.js';
 import { badRequest, notFound, Problem } from '../problem.js';
 
 interface Entry {
@@ -15,6 +17,8 @@ interface Entry {
   data?: Buffer;
   error?: string;
   skipped?: string;
+  /** Bilddatei im ZIP (ADR-029) – wird als Medium abgelegt, nicht als Dokument */
+  media?: boolean;
 }
 
 const MD_EXT = ['.md', '.markdown'];
@@ -71,7 +75,8 @@ async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<En
     const p = f.name.replace(/\\/g, '/').replace(/^\/+/, '');
     if (p.startsWith('__MACOSX/') || path.basename(p).startsWith('.')) continue;
     const ext = path.extname(p).toLowerCase();
-    if (!MD_EXT.includes(ext) && !(CONVERTIBLE[ext] && settings.allowedExtensions.includes(ext))) {
+    const media = !!MEDIA_EXT[ext];
+    if (!media && !MD_EXT.includes(ext) && !(CONVERTIBLE[ext] && settings.allowedExtensions.includes(ext))) {
       out.push({ path: p, skipped: 'Kein unterstütztes Format – übersprungen' });
       continue;
     }
@@ -84,7 +89,7 @@ async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<En
     try {
       const buf = await f.async('nodebuffer');
       if (buf.length > settings.maxEntryBytes) out.push({ path: p, error: `Datei größer als ${settings.maxEntryBytes} Bytes` });
-      else out.push({ path: p, data: buf });
+      else out.push({ path: p, data: buf, media });
     } catch (e) {
       out.push({ path: p, error: `Entpacken fehlgeschlagen: ${(e as Error).message}` });
     }
@@ -98,7 +103,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   const { db } = ctx;
   await db.run("UPDATE imports SET status = 'processing' WHERE id = ?", importId);
   await db.run('DELETE FROM import_items WHERE import_id = ?', importId); // Wiederholung nach Abbruch
-  const stats = { files: 0, imported: 0, identical: 0, failed: 0, skipped: 0, snippets: 0 };
+  const stats = { files: 0, imported: 0, identical: 0, failed: 0, skipped: 0, snippets: 0, media: 0 };
   let cache = newCache();
   const items: unknown[][] = [];
   let entries: Entry[];
@@ -110,8 +115,29 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
     return;
   }
 
+  // Bilder zuerst ablegen, damit Dokumente sie über ihren relativen Pfad referenzieren können (ADR-029)
+  const mediaByPath = new Map<string, string>();
+  const mediaItems = new Map<string, { status: string; message: string; sha: string | null }>();
+  for (const entry of entries.filter((e) => e.media && e.data)) {
+    try {
+      const m = await storeMedia(ctx, entry.data!, path.posix.basename(entry.path), importId);
+      mediaByPath.set(entry.path, m.sha);
+      mediaItems.set(entry.path, { status: 'media', message: `Bild ${m.mime}${m.width ? `, ${m.width}×${m.height}` : ''}`, sha: m.sha });
+    } catch {
+      mediaItems.set(entry.path, { status: 'skipped', message: 'Kein gültiges Bild (PNG, JPEG, GIF, WebP) – übersprungen', sha: null });
+    }
+  }
+  const images: ImageResolver = { byPath: mediaByPath, importId };
+
   for (const entry of entries) {
     stats.files++;
+    const mediaItem = mediaItems.get(entry.path);
+    if (entry.media && mediaItem) {
+      if (mediaItem.status === 'media') stats.media++;
+      else stats.skipped++;
+      items.push([newId('ii'), importId, entry.path, mediaItem.sha, mediaItem.status, mediaItem.message, null, stats.files]);
+      continue;
+    }
     const item = { id: newId('ii'), path: entry.path, sha256: entry.data ? sha256(entry.data) : null as string | null, status: 'imported', message: null as string | null, revisionId: null as string | null };
     try {
       if (entry.skipped) {
@@ -120,7 +146,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
       } else if (entry.error) {
         throw new Error(entry.error);
       } else {
-        const converted = await convertEntry(ctx, entry.path, entry.data!);
+        const converted = await convertEntry(ctx, entry.path, entry.data!, images);
         if (converted.skip) {
           item.status = 'skipped';
           item.message = converted.skip;
@@ -147,7 +173,8 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   }
   await insertMany(ctx, 'import_items (id, import_id, path, sha256, status, message, revision_id, position)', items);
 
-  const status = stats.failed === 0 ? 'completed' : stats.failed === stats.files ? 'failed' : 'completed_with_errors';
+  // Bilder zählen nicht als Dokumente: schlagen alle Dokumente fehl, ist der Import fehlgeschlagen
+  const status = stats.failed === 0 ? 'completed' : stats.failed === stats.files - mediaItems.size ? 'failed' : 'completed_with_errors';
   await db.run('UPDATE imports SET status = ?, finished_at = ?, stats = ? WHERE id = ?', status, now(), json(stats), importId);
   await audit(ctx, 'system', 'import.finished', 'import', importId, { status, ...stats });
   await finishConnectionImport(ctx, importId, status, stats.failed ? `${stats.failed} von ${stats.files} Dateien fehlerhaft (Import ${importId})` : null);
@@ -158,16 +185,34 @@ interface Original {
   data: Buffer;
 }
 
+/** Bilder des laufenden Imports (Pfad im ZIP → SHA-256) */
+interface ImageResolver {
+  byPath: Map<string, string>;
+  importId: string;
+}
+
+const missingWarning = (missing: string[]) =>
+  missing.length ? [`Bild nicht gefunden: ${[...new Set(missing)].slice(0, 5).join(', ')}${missing.length > 5 ? ' …' : ''}`] : [];
+
 /** Markdown direkt übernehmen, HTML/Word umwandeln (ADR-022). Die Originaldatei wird zusätzlich aufbewahrt. */
-async function convertEntry(ctx: Ctx, filePath: string, data: Buffer): Promise<{ markdown: Buffer; original?: Original; warnings: string[]; skip?: string }> {
+async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: ImageResolver): Promise<{ markdown: Buffer; original?: Original; warnings: string[]; skip?: string }> {
   const format = CONVERTIBLE[path.extname(filePath).toLowerCase()];
+  const fromZip = (target: string) => {
+    const p = resolveRelative(filePath, target);
+    return p ? images?.byPath.get(p) ?? null : null;
+  };
   if (!format) {
-    decoder.decode(data); // nur gültiges UTF-8
-    return { markdown: data, warnings: [] };
+    const text = decoder.decode(data); // nur gültiges UTF-8
+    // Relative Bildverweise auf mitgelieferte Bilder zeigen danach auf das abgelegte Medium (Zeilen bleiben erhalten)
+    const res = rewriteImages(text, fromZip);
+    return { markdown: res.changed ? Buffer.from(res.markdown, 'utf8') : data, warnings: missingWarning(res.missing) };
   }
   const title = path.basename(filePath, path.extname(filePath));
   const settings = (await getSettings(ctx.db)).import;
-  const res = format === 'html' ? htmlToMarkdown(decodeHtml(data), title) : await docxToMarkdown(data, title, settings.maxEntryBytes * 5);
+  const embed = async (buf: Buffer, name: string) => (await storeMedia(ctx, buf, name, images?.importId ?? null)).sha;
+  const res = format === 'html'
+    ? htmlToMarkdown(await embedDataImages(decodeHtml(data), embed), title, { resolve: fromZip })
+    : await docxToMarkdown(data, title, settings.maxEntryBytes * 5, embed);
   return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.warnings, skip: res.skip };
 }
 

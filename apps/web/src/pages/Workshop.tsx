@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
 import {
-  Badge, Diff, DivisionBadges, Empty, ErrorBox, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad,
+  Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad,
   activatable,
 } from '../components/ui';
 import { SourceViewer } from './Sources';
@@ -162,7 +162,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
       setBusy(false);
     }
   };
-  const [text, setText] = useState(b.text);
+  const [text, setText] = useState<string>(b.text);
   const [reason, setReason] = useState('');
   const locked = b.mode === 'locked';
 
@@ -192,6 +192,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
       {mode === 'edit' ? (
         <div onClick={(e) => e.stopPropagation()}>
           <textarea rows={Math.max(3, text.split('\n').length + 1)} value={text} onChange={(e) => setText(e.target.value)} aria-label="Text bearbeiten" />
+          <ImageInsert onInsert={(md) => setText((t) => `${t.trimEnd()}\n\n${md}`)} />
           <input placeholder="Änderungsgrund (optional)" value={reason} onChange={(e) => setReason(e.target.value)} />
           <div className="row-actions">
             <button className="btn primary small" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { text, reason, expectedVersionNo: b.versionNo }), 'Block gespeichert (manuell bearbeitet).')}>Speichern</button>
@@ -435,6 +436,7 @@ function AddBlock({ versionId, section, onAdded }: { versionId: string; section:
         </label>
       </div>
       <textarea rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder="Text (Markdown)" aria-label="Neuer Text" />
+      <ImageInsert onInsert={(md) => setText((t) => (t.trim() ? `${t.trimEnd()}\n\n${md}` : md))} />
       <input value={justification} onChange={(e) => setJustification(e.target.value)} placeholder="Begründung / Beleg (Pflicht für Freigabe, wenn keine Quelle)" />
       <div className="row-actions">
         <button className="btn primary small" disabled={!text.trim()} onClick={save}>Hinzufügen</button>

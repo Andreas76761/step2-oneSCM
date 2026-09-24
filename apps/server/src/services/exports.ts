@@ -6,6 +6,9 @@ import { badRequest, conflict, notFound } from '../problem.js';
 import { gateForChapter, getChapterVersion } from './chapters.js';
 import { escapeHtml, markdownToHtml, markdownToPdf, renderPdf } from './render.js';
 import { assertIdsInProject } from './projects.js';
+import { dataUri, inlineMedia, loadMedia, type MediaFile } from './media.js';
+
+type Media = Map<string, MediaFile>;
 
 export interface ExportFilter {
   roles?: string[];
@@ -75,7 +78,8 @@ export function visible(chapters: ExportChapter[], f: ExportFilter) {
 
 const versionLine = (ch: ExportChapter) => `Freigegebene Version ${ch.versionNo}${ch.approvedAt ? ` vom ${ch.approvedAt.slice(0, 10)}` : ''}`;
 
-export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter): string {
+/** `media`: Bilder als data:-URIs einbetten (eigenständige Datei); ohne: Verweise bleiben `media:<sha>` */
+export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter, media?: Media): string {
   const out: string[] = ['# oneSCM Benutzerhandbuch', '', `> Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, ''];
   for (const ch of visible(chapters, f)) {
     out.push(`## ${ch.title}`, '', `*${versionLine(ch)}*`, '');
@@ -84,7 +88,7 @@ export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter): stri
       for (const b of s.blocks) {
         const badges = badgeLine(b);
         if (badges) out.push(`> ${badges}`, '');
-        out.push(`${KIND_PREFIX[b.kind] ?? ''}${b.text}`, '');
+        out.push(`${KIND_PREFIX[b.kind] ?? ''}${media ? inlineMedia(b.text, media) : b.text}`, '');
       }
     }
   }
@@ -92,7 +96,8 @@ export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter): stri
 }
 
 /** Eigenständiges, druckfähiges HTML ohne Skripte (CSP im Dokument, HTML aus Quellen escaped). */
-export function renderHtml(chapters: ExportChapter[], f: ExportFilter): string {
+export function renderHtml(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map()): string {
+  const images = (sha: string) => (media.has(sha) ? dataUri(media.get(sha)!) : null);
   const body: string[] = [];
   const toc: string[] = [];
   visible(chapters, f).forEach((ch, i) => {
@@ -105,7 +110,7 @@ export function renderHtml(chapters: ExportChapter[], f: ExportFilter): string {
         body.push(`<div class="block kind-${escapeHtml(b.kind)}">`);
         if (badges) body.push(`<p class="badges">${escapeHtml(badges)}</p>`);
         if (KIND_LABEL[b.kind] && b.kind !== 'xref') body.push(`<p class="label">${KIND_LABEL[b.kind]}</p>`);
-        body.push(markdownToHtml(b.text), '</div>');
+        body.push(markdownToHtml(b.text, images), '</div>');
       }
     }
     body.push('</section>');
@@ -122,6 +127,7 @@ h1{font-size:26px}h2{font-size:21px;border-bottom:2px solid #1d63d8;padding-bott
 .block{margin:6px 0 10px}.kind-note,.kind-tip{background:#eaf1fd;border-left:4px solid #1d63d8;padding:6px 10px}
 .kind-warning{background:#fdecec;border-left:4px solid #b91c1c;padding:6px 10px}.label{font-weight:600;margin:0 0 2px}
 table{border-collapse:collapse}td,th{border:1px solid #cbd5e1;padding:4px 8px}pre{background:#f3f4f6;padding:8px;white-space:pre-wrap}
+img{max-width:100%;height:auto;border:1px solid #e2e8f0}
 nav ol{columns:2}
 @media print{body{max-width:none;padding:0}.chapter{break-before:page}a{color:inherit;text-decoration:none}nav{break-after:page}}
 </style></head><body>
@@ -142,7 +148,7 @@ function pdfBadges(b: Block): string {
   return parts.join(' · ');
 }
 
-export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter): Promise<Buffer> {
+export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter, media?: Media): Promise<Buffer> {
   const content: unknown[] = [
     { text: 'oneSCM Benutzerhandbuch', style: 'title' },
     { text: `Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, style: 'meta', margin: [0, 0, 0, 16] },
@@ -157,7 +163,7 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
         const inner: unknown[] = [];
         if (badges) inner.push({ text: badges, style: 'badges' });
         if (KIND_LABEL[b.kind] && b.kind !== 'xref') inner.push({ text: KIND_LABEL[b.kind], bold: true });
-        inner.push(...markdownToPdf(b.text));
+        inner.push(...markdownToPdf(b.text, media));
         const box = b.kind === 'warning' ? '#fdecec' : b.kind === 'note' || b.kind === 'tip' ? '#eaf1fd' : null;
         content.push(box ? { table: { widths: ['*'], body: [[{ stack: inner, fillColor: box }]] }, layout: 'noBorders', margin: [0, 2, 0, 8] } : { stack: inner, margin: [0, 0, 0, 4] });
       }
@@ -211,13 +217,15 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   chapters.sort((a, b) => a.position - b.position);
 
   const filter: ExportFilter = { roles: input.roles, divisions: input.divisions, market: input.market ?? null, release: input.release ?? null };
+  // Bilder der sichtbaren Absätze (ADR-029) – eingebettet, damit die Datei eigenständig bleibt
+  const media = format === 'json' ? new Map() : await loadMedia(ctx, visible(chapters, filter).flatMap((ch) => ch.sections.flatMap((s) => s.blocks.map((b: any) => b.text as string))));
   let data: Buffer;
   let preview: string | null;
   if (format === 'pdf') {
-    data = await renderPdfExport(chapters, filter);
+    data = await renderPdfExport(chapters, filter, media);
     preview = null;
   } else {
-    const text = format === 'md' ? renderMarkdown(chapters, filter) : format === 'html' ? renderHtml(chapters, filter) : JSON.stringify({ filter, chapters: visible(chapters, filter) }, null, 2);
+    const text = format === 'md' ? renderMarkdown(chapters, filter, media) : format === 'html' ? renderHtml(chapters, filter, media) : JSON.stringify({ filter, chapters: visible(chapters, filter) }, null, 2);
     data = Buffer.from(text, 'utf8');
     // Vorschau für die UI immer als Markdown bzw. JSON (HTML wird dort nicht eingebettet)
     preview = (format === 'json' ? text : renderMarkdown(chapters, filter)).slice(0, 4000);

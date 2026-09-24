@@ -35,7 +35,7 @@ export function setCurrentProjectId(id: string) {
   }
 }
 
-function authHeaders(): Record<string, string> {
+export function authHeaders(): Record<string, string> {
   const headers: Record<string, string> = { 'X-Project-Id': currentProjectId() };
   if (authMode() === 'oidc') {
     const token = accessToken();
@@ -91,4 +91,19 @@ export async function download(path: string, fallbackName: string) {
   a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Bild aus der Medienablage (ADR-029) als Objekt-URL – mit Anmeldung, daher nicht direkt per <img src> */
+const mediaCache = new Map<string, Promise<string>>();
+export function mediaUrl(sha: string): Promise<string> {
+  const key = `${currentProjectId()}/${sha}`;
+  if (!mediaCache.has(key)) {
+    const p = fetch(`/api/v1/media/${sha}`, { headers: authHeaders() }).then(async (res) => {
+      if (!res.ok) throw new ApiError(res.status, null);
+      return URL.createObjectURL(await res.blob());
+    });
+    p.catch(() => mediaCache.delete(key));
+    mediaCache.set(key, p);
+  }
+  return mediaCache.get(key)!;
 }

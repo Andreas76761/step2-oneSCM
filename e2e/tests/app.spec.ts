@@ -1,3 +1,4 @@
+import { crc32, deflateSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
 
 const NAV = ['Dashboard', 'Quellen', 'Textcluster', 'Widersprüche', 'Dopplungen', 'Kapitelgenerator', 'Kapitelwerkstatt', 'Rollenansichten', 'Spartenansichten', 'Optimierungen', 'Terminologie', 'Evidenz', 'Freigabe', 'Export', 'Traceability', 'Einstellungen'];
@@ -420,4 +421,53 @@ test('[T-218] Integrationen: API-Token erstellen und verwenden, Webhook anlegen 
   await tokens.getByRole('button', { name: 'Token E2E-Bot widerrufen' }).click();
   await expect(tokens.getByText('widerrufen', { exact: true })).toBeVisible();
   expect((await request.get('/api/v1/chapters', { headers: { authorization: `Bearer ${token}` } })).status()).toBe(401);
+});
+
+/** Kleines gültiges PNG (einfarbig) */
+function png(w: number, h: number, rgb: [number, number, number]) {
+  const chunk = (type: string, data: Buffer) => {
+    const td = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+    const out = Buffer.alloc(12 + data.length);
+    out.writeUInt32BE(data.length, 0);
+    td.copy(out, 4);
+    out.writeUInt32BE(crc32(td), 8 + data.length);
+    return out;
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0);
+  ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  const row = Buffer.concat([Buffer.from([0]), Buffer.from(Array.from({ length: w }, () => rgb).flat())]);
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(Buffer.concat(Array.from({ length: h }, () => row)))), chunk('IEND', Buffer.alloc(0))]);
+}
+
+test('[T-219] Bilder: Anzeige in der Kapitelwerkstatt, Bild mit Pflicht-Alternativtext einfügen', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  const up = await request.post('/api/v1/media', { headers: h, multipart: { file: { name: 'maske.png', mimeType: 'image/png', buffer: png(40, 20, [29, 99, 216]) } } });
+  expect(up.status()).toBe(201);
+  const { sha256 } = await up.json();
+  const md = `---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# 11. E2E-Bilder\n\n## 11.1 Zweck\n\nDie Bildschirmmaske zeigt die Anmeldung.\n\n![Anmeldemaske im Browser](media:${sha256})\n`;
+  expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name: 'e2e_bilder.md', mimeType: 'text/markdown', buffer: Buffer.from(md) } } })).status()).toBe(202);
+  let ch: any;
+  await expect.poll(async () => (ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '11. E2E-Bilder'))).toBeTruthy();
+  expect((await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).ok()).toBe(true);
+
+  await page.goto(`/werkstatt/${ch.id}`);
+  const img = page.getByRole('img', { name: 'Anmeldemaske im Browser' });
+  await expect(img).toBeVisible();
+  await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBe(40);
+
+  // Bild in einen Absatz einfügen: Einfügen erst mit Alternativtext möglich
+  const block = page.getByRole('article').filter({ hasText: 'Die Bildschirmmaske zeigt die Anmeldung.' });
+  await block.getByRole('button', { name: 'Bearbeiten' }).click();
+  await block.getByRole('button', { name: '🖼️ Bild einfügen' }).click();
+  await block.getByLabel('Bilddatei (PNG, JPEG, GIF, WebP)').setInputFiles({ name: 'knopf.png', mimeType: 'image/png', buffer: png(12, 6, [200, 30, 30]) });
+  const insert = block.getByRole('button', { name: 'Einfügen' });
+  await expect(insert).toBeDisabled();
+  await block.getByLabel('Alternativtext (Pflicht)').fill('Knopf „Anmelden“');
+  await insert.click();
+  await expect(block.getByLabel('Text bearbeiten')).toHaveValue(/!\[Knopf „Anmelden“\]\(media:[a-f0-9]{64}\)$/);
+  await block.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByRole('img', { name: 'Knopf „Anmelden“' })).toBeVisible();
 });
