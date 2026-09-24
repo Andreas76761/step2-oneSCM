@@ -20,7 +20,16 @@ Bis Etappe 7 las jede semantische Suche alle aktuellen Abschnitte samt Text und 
 ## Messung
 Lasttest `npm run perf:semantic -w apps/server -- 50000`; Ergebnisse in [docs/lasttest-semantik.md](../lasttest-semantik.md).
 
-MESSUNG
+Kurzfassung (50 000 Abschnitte, SQLite, Details im Lasttest):
+
+| Verfahren | Antwortzeit p50 | Recall@10 |
+|---|---|---|
+| exakt (Speicher), lokales Modell | 42 ms | 1,000 |
+| HNSW (Speicher), lokales Modell, ef = 800 | 18 ms | 0,996 |
+| exakt, gruppierte Vektoren | 39 ms | 1,000 |
+| HNSW, gruppierte Vektoren, ef = 100 | 2 ms | 1,000 |
+
+Der HNSW-Aufbau für 50 000 Vektoren dauert 90–100 s im Hintergrund. Vor Einführung der Duplikat-Aliase erreichte der Graph auf Daten mit vielen identischen Vektoren nur einen Recall von 0,44 (pgvector 1,0).
 
 ## Konsequenzen
 - CI und docker-compose nutzen `pgvector/pgvector:pg16`; ohne Erweiterung oder ohne Recht, sie anzulegen, fällt der Server auf den Speicherindex zurück.
