@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { patch, post } from '../api';
-import { Assumption, Card, Empty, ErrorBox, Modal, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { Decision, Card, Empty, ErrorBox, Modal, Page, Status, errorText, useApp, useLoad } from '../components/ui';
 
 export function ClustersPage() {
   const { notify } = useApp();
@@ -24,7 +24,7 @@ export function ClustersPage() {
 
   return (
     <Page title="Textcluster" subtitle="Semantisch verwandte Textabschnitte kapitelintern und kapitelübergreifend konsolidieren">
-      <Assumption id="E-05">Verfahren TF-IDF-Kosinus (tfidf-cosine-1.0); Schwellenwert unter Einstellungen. Vorschläge werden bei jeder Analyse neu berechnet, bestätigte Cluster bleiben erhalten.</Assumption>
+      <Decision id="E-05">Verfahren TF-IDF-Kosinus (tfidf-cosine-1.0); Schwellenwert unter Einstellungen. Vorschläge werden bei jeder Analyse neu berechnet, bestätigte Cluster bleiben erhalten.</Decision>
       <div className="filters">
         <select aria-label="Clusterstatus" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">Vorschläge und bestätigte</option>
@@ -77,13 +77,20 @@ export function ClustersPage() {
       {canonical && (
         <CanonicalDialog
           title={canonical.name}
-          chapters={[...new Map(canonical.members.map((m: any) => [m.chapterId, m.chapter])).entries()] as [string, string][]}
+          chapters={leadSuggestion(canonical.members)}
           onClose={() => setCanonical(null)}
           onSubmit={(body) => act(() => post('/canonical-topics', { ...body, clusterId: canonical.id }), 'Canonical Topic festgelegt – andere Kapitel erhalten bei der Generierung einen Querverweis.').then(() => setCanonical(null))}
         />
       )}
     </Page>
   );
+}
+
+/** ENTSCHEIDUNG(E-06): Vorschlag = Kapitel mit den meisten Cluster-Mitgliedern (steht zuerst); festgelegt wird nur manuell. */
+function leadSuggestion(members: { chapterId: string; chapter: string }[]): [string, string][] {
+  const counts = new Map<string, { title: string; n: number }>();
+  for (const m of members) counts.set(m.chapterId, { title: m.chapter, n: (counts.get(m.chapterId)?.n ?? 0) + 1 });
+  return [...counts.entries()].sort((a, b) => b[1].n - a[1].n).map(([id, v], i) => [id, i === 0 && counts.size > 1 ? `${v.title} (Vorschlag: ${v.n} Textabschnitte)` : v.title]);
 }
 
 export function CanonicalDialog({ title, chapters, onClose, onSubmit }: { title: string; chapters: [string, string][]; onClose: () => void; onSubmit: (b: { title: string; leadChapterId: string; reason: string }) => void }) {

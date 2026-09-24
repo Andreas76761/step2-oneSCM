@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { post } from '../api';
-import { Badge, Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Badge, Card, DownloadButton, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export function ExportPage() {
   const { ref, notify } = useApp();
@@ -54,7 +54,7 @@ export function ExportPage() {
         <Card title="Ergebnis">
           {!result ? <Empty>Noch kein Export in dieser Sitzung.</Empty> : (
             <>
-              <p><a className="btn primary" href={result.downloadUrl}>⬇ {result.fileName} herunterladen</a></p>
+              <p><DownloadButton className="btn primary" href={result.downloadUrl} name={result.fileName}>⬇ {result.fileName} herunterladen</DownloadButton></p>
               {result.skipped.map((s: any) => <div key={s.chapterId} className="alert small">{s.reason}</div>)}
               {result.format === 'md' ? <div className="export-preview"><Md text={result.preview} /></div> : <pre className="source small">{result.preview}</pre>}
             </>
@@ -72,7 +72,7 @@ export function ExportPage() {
                   <td>{h.fileName}</td>
                   <td className="small">{[h.params.roles?.join(','), h.params.divisions?.join(','), h.params.market, h.params.release].filter(Boolean).join(' · ') || 'ungefiltert'}</td>
                   <td>{h.createdBy}</td>
-                  <td><a href={h.downloadUrl}>Download</a></td>
+                  <td><DownloadButton className="btn link" href={h.downloadUrl} name={h.fileName}>Download</DownloadButton></td>
                 </tr>
               ))}
             </tbody>

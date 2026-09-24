@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { currentUserId, get, setCurrentUserId } from './api';
+import { initAuth, login, logout, type AuthConfig } from './auth';
 import { AppCtx, type Reference } from './components/ui';
 import { ClustersPage } from './pages/Clusters';
 import { ContradictionsPage } from './pages/Contradictions';
@@ -35,7 +36,33 @@ const NAV = [
 ];
 
 export function App() {
+  const [auth, setAuth] = useState<{ config: AuthConfig; signedIn: boolean } | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  useEffect(() => {
+    initAuth()
+      .then(({ config, user }) => setAuth({ config, signedIn: config.mode === 'demo' || !!user }))
+      .catch((e) => setAuthError(String(e?.message ?? e)));
+  }, []);
+
+  if (authError) return <div className="login"><div className="card"><h1>Anmeldung nicht möglich</h1><p className="alert error">{authError}</p></div></div>;
+  if (!auth) return <div className="login"><p className="muted">Lade …</p></div>;
+  if (!auth.signedIn) {
+    return (
+      <div className="login">
+        <div className="card">
+          <h1>oneSCM Handbook Studio</h1>
+          <p className="muted">Bitte melden Sie sich mit Ihrem Unternehmenskonto an.</p>
+          <button className="btn primary" onClick={() => void login()}>Anmelden</button>
+        </div>
+      </div>
+    );
+  }
+  return <Studio mode={auth.config.mode} />;
+}
+
+function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   const [ref, setRef] = useState<Reference | null>(null);
+  const [me, setMe] = useState<{ id: string; name: string; permissions: string[] } | null>(null);
   const [userId, setUser] = useState(currentUserId());
   const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'error' } | null>(null);
 
@@ -43,6 +70,9 @@ export function App() {
     get<Reference>('/reference').then(setRef).catch(() => setRef(null));
   }, []);
   useEffect(reloadRef, [reloadRef]);
+  useEffect(() => {
+    get('/me').then(setMe).catch(() => setMe(null));
+  }, [userId]);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), toast.kind === 'error' ? 9000 : 3500);
@@ -53,7 +83,6 @@ export function App() {
     setCurrentUserId(id);
     setUser(id);
   };
-  const user = ref?.users.find((u) => u.id === userId);
 
   return (
     <AppCtx.Provider value={{ ref, reloadRef, notify: (msg, kind = 'ok') => setToast({ msg, kind }), userId, setUserId }}>
@@ -71,13 +100,23 @@ export function App() {
             ))}
           </nav>
           <div className="user-box">
-            <label htmlFor="user-select">Demo-Benutzer</label>
-            <select id="user-select" value={userId} onChange={(e) => setUserId(e.target.value)}>
-              {ref?.users.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </select>
-            <small title="Technische Berechtigungen – getrennt von fachlichen Rollen (ADR-009)">Berechtigungen: {user?.permissions.join(', ') ?? '–'}</small>
+            {mode === 'demo' ? (
+              <>
+                <label htmlFor="user-select">Demo-Benutzer</label>
+                <select id="user-select" value={userId} onChange={(e) => setUserId(e.target.value)}>
+                  {ref?.users.map((u) => (
+                    <option key={u.id} value={u.id}>{u.name}</option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <>
+                <span>Angemeldet als</span>
+                <strong className="user-name">{me?.name ?? '…'}</strong>
+                <button className="btn small" onClick={() => void logout()}>Abmelden</button>
+              </>
+            )}
+            <small title="Technische Berechtigungen – getrennt von fachlichen Rollen (ADR-009)">Berechtigungen: {me?.permissions.join(', ') || '–'}</small>
           </div>
         </aside>
         <main className="main" key={userId}>

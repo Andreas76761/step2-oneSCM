@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, get, patch, qs } from '../api';
 import {
-  Assumption, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
+  Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
 } from '../components/ui';
 
 export function SourcesPage() {
@@ -62,7 +62,7 @@ export function SourcesPage() {
             <input type="file" accept=".zip,.md,.markdown" data-testid="file-input" disabled={busy} onChange={(e) => void upload(e.target.files?.[0] ?? undefined)} />
             <span>{busy ? 'Import läuft …' : 'ZIP- oder MD-Datei hierher ziehen oder auswählen'}</span>
           </label>
-          <Assumption id="E-01">Erlaubt sind .md, .markdown und .zip; Grenzen unter Einstellungen. Identische Dateien (gleicher Pfad, gleicher SHA-256) erzeugen keine neue Revision.</Assumption>
+          <Decision id="E-01">Erlaubt sind .md, .markdown und .zip; Grenzen unter Einstellungen. Identische Dateien (gleicher Pfad, gleicher SHA-256) erzeugen keine neue Revision.</Decision>
         </Card>
         <Card title="Importprotokoll">
           <ErrorBox error={imports.error} />

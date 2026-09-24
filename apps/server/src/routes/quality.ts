@@ -9,7 +9,7 @@ import { num, userOf } from './helpers.js';
 export function qualityRoutes(app: FastifyInstance, ctx: Ctx) {
   app.post('/quality/analysis', async (req, reply) => {
     const user = userOf(ctx, req, 'edit');
-    const run = startAnalysis(ctx, user.id);
+    const run = await startAnalysis(ctx, user.id);
     reply.code(202).header('Location', `/api/v1/quality/analysis/${run.id}`);
     return run;
   });

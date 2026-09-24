@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import Markdown from 'react-markdown';
-import { ApiError, get } from '../api';
+import { ApiError, download, get } from '../api';
 
 // ---------- Referenzdaten & Benachrichtigungen ----------
 
@@ -185,10 +185,11 @@ export const Md = ({ text }: { text: string }) => (
 export const ErrorBox = ({ error }: { error: string | null }) => (error ? <div className="alert error" role="alert">{error}</div> : null);
 export const Empty = ({ children }: { children: ReactNode }) => <div className="empty">{children}</div>;
 
-export function Assumption({ id, children }: { id: string; children: ReactNode }) {
+/** Hinweis auf eine fachliche Entscheidung (docs/04-offene-entscheidungen.md, entschieden am 24.09.2026). */
+export function Decision({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <div className="alert assumption" title="Vorläufige Annahme – P0-Entscheidung offen (docs/04-offene-entscheidungen.md)">
-      <strong>Annahme {id}:</strong> {children}
+    <div className="alert decision" title="Fachliche Entscheidung vom 24.09.2026 – Details in docs/04-offene-entscheidungen.md">
+      <strong>Entscheidung {id}:</strong> {children}
     </div>
   );
 }
@@ -249,4 +250,14 @@ export function useDialog<T>() {
 
 export function useRef2() {
   return useApp().ref;
+}
+
+/** Download-Schaltfläche mit Anmeldung */
+export function DownloadButton({ href, name, children, className }: { href: string; name: string; children: ReactNode; className?: string }) {
+  const { notify } = useApp();
+  return (
+    <button className={className ?? 'btn'} onClick={() => download(href, name).catch((e) => notify(errorText(e), 'error'))}>
+      {children}
+    </button>
+  );
 }

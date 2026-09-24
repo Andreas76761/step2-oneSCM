@@ -1,10 +1,10 @@
-# 4. Offene Widersprüche und P0-Entscheidungen
+# 4. Widersprüche und P0-Entscheidungen
 
-> **Keine der folgenden Entscheidungen ist fachlich getroffen.** Die Spalte „Vorläufige Annahme“ beschreibt, womit Etappe 1 technisch arbeitet. Jede Annahme ist im Code mit `ANNAHME(E-xx)` markiert und – wo möglich – über `Einstellungen` bzw. Umgebungsvariablen konfigurierbar. Eine fachliche Freigabe wird nirgends behauptet.
+> **Status: entschieden am 24.09.2026.** Der Auftraggeber hat alle vorläufigen Annahmen aus Etappe 1 unverändert als Entscheidungen übernommen („Übernimm alle vorläufigen Annahmen“). Im Code sind die Stellen mit `ENTSCHEIDUNG(E-xx)` markiert, in der UI blau als „Entscheidung“ hinterlegt. Konfigurierbare Werte bleiben unter **Einstellungen** bzw. per Umgebungsvariable änderbar; eine Änderung ist eine neue fachliche Entscheidung und wird hier nachgetragen.
 
 ## 4.1 Widersprüche im Auftrag
 
-| ID | Widerspruch | Fundstellen | Vorläufige Behandlung |
+| ID | Widerspruch | Fundstellen | Entschiedene Behandlung |
 |---|---|---|---|
 | W-01 | „Datenschutzprüfung“ ist P1, aber Datenschutzblocker sind Teil des P0-Qualitätsgates und Pflichttest | §5 vs. US-012, §13, §16 | Datenschutzmuster-Prüfung in Etappe 1 umgesetzt |
 | W-02 | „Freigabeworkflow“ ist P1, aber „Fachliche Freigabe ist protokolliert“ ist P0 | §5 vs. US-012 | einstufige, protokollierte Freigabe in Etappe 1; mehrstufiger Workflow P1 |
@@ -14,11 +14,11 @@
 | W-06 | Referenz-UI („MD Content Studio v1.3“) nutzt andere Navigation, Status (`übernehmen/Widerspruch/überarbeiten`, `offen/freigegeben/verworfen`) und Pfade (`/api/upload`, `/api/analysis`) | REFERENZ_UI.png vs. §10, §14 | Masterprompt ist verbindlich; Referenz-UI nur als visuelle Vorlage (Layout, Karten, Tabellen, Schwellen-Slider) |
 | W-07 | Bearbeitungsmodus `approved` auf Blockebene vs. Regel „veröffentlichte Versionen sind unveränderlich“ auf Versionsebene | §8, §9 | Freigabe erfolgt je Kapitelversion; beim Freigeben erhalten alle Blöcke den Modus `approved`; danach 409 bei Änderung |
 | W-08 | US-008 „nur bestätigte Quellen“ vs. §15 „Empfehlung als vorläufige Annahme verwenden“ – Klassifikationen sind initial alle unbestätigt, Generierung wäre ohne manuelle Bestätigung leer | US-008, §15 | Generierung nutzt nur Snippets mit Evidenzstatus `source_confirmed`/`manually_confirmed`; Demo-Daten enthalten Front-Matter (→ `source_confirmed`); Snippets lassen sich in „Quellen“ bestätigen |
-| W-09 | Story-IDs US-011, US-013…019 fehlen | §4 | vorläufige Vergabe, siehe `traceability/requirements.json` (E-14) |
+| W-09 | Story-IDs US-011, US-013…019 fehlen | §4 | Vergabe gemäß E-14, siehe `traceability/requirements.json` |
 
-## 4.2 P0-Entscheidungen (entscheidungspflichtig nach §15)
+## 4.2 P0-Entscheidungen (nach §15)
 
-| ID | Gruppe | Offene Frage(n) | Vorläufige Annahme (Etappe 1) | Konfigurierbar über |
+| ID | Gruppe | Frage(n) | Entscheidung (24.09.2026) | Konfigurierbar über |
 |---|---|---|---|---|
 | E-01 | Importformate, Limits, Teilfehler, Revisionslogik | Erlaubte Endungen? Max. Größe? ZIP-Tiefe? Verhalten bei Teilfehlern? Wann ist eine Revision „identisch“? | `.md`, `.markdown`, `.zip`; max. 50 MB Upload, 5 000 Dateien, 20 MB entpackt je Datei; Teilfehler → Status `completed_with_errors`, andere Dateien werden übernommen; identisch = gleicher SHA-256 wie letzte Revision desselben Pfads | `UPLOAD_MAX_BYTES`, `ZIP_MAX_FILES`, Einstellungen `import.*` |
 | E-02 | Markdown-Mapping, Snippet-Granularität | Absatz- oder Satzebene? Listen als ein Snippet? Tabellen? | Absatz, Liste, Tabelle, Codeblock, Zitat je ein Snippet; H1 = Kapitel, H2 = Unterkapitel, H3–H6 = `heading_path`; Kapitelidentität über normalisierten H1-Titel (projektweit) | Code (`domain/markdown.ts`) |
@@ -34,4 +34,10 @@
 | E-12 | Qualitätsgates, Freigeberrollen, Ausnahmen | Vier-Augen? Ausnahmegenehmigung? | Gate gemäß US-012; einstufige Freigabe; keine Ausnahmen möglich | – |
 | E-13 | Traceability-Ebenen, Tests, Status, Nachweise | Welche Ebenen? Nachweisformat? | Story ↔ API-Operation ↔ Test ↔ Doku ↔ Release; Nachweis = Testdatei + CI-Lauf | `traceability/*.json` |
 | E-14 | Story-IDs für P1/P2 | Welche IDs? | US-011 Evidenzansicht, US-013 Optimierungsdashboard, US-014 gefilterter Export, US-015 Terminologie, US-016 Freigabeworkflow, US-017 Suche/Filter, US-018 Datenschutzprüfung, US-019 Versionsvergleich | `traceability/requirements.json` |
-| E-15 | Authentifizierung | IdP? Rollenmodell? | Demo-Benutzer, Auswahl in der UI, Header `X-User-Id`; Berechtigungen `read`, `edit`, `decide`, `approve`, `admin` | `users`-Tabelle |
+| E-15 | Authentifizierung | IdP? Rollenmodell? | Berechtigungen `read`, `edit`, `decide`, `approve`, `admin`. Produktion: OpenID Connect (beliebiger Provider), Berechtigungen aus einem Gruppen-/Rollen-Claim (Standard-Gruppen `onescm-reader/-editor/-reviewer/-approver/-admin`). Demo-Benutzer nur im Demo-Modus | `AUTH_MODE`, `OIDC_*` (README) |
+
+## 4.3 Entscheidungsprotokoll
+
+| Datum | Entscheider | Umfang | Anmerkung |
+|---|---|---|---|
+| 24.09.2026 | Auftraggeber (Andreas) | E-01 … E-15, W-01 … W-09 | Übernahme aller vorläufigen Annahmen aus Etappe 1 ohne Änderung; E-15 um die in Etappe 2 umgesetzte OIDC-Anbindung konkretisiert |

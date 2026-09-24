@@ -1,10 +1,18 @@
 # ADR-003 SQLite für Demo/Test, PostgreSQL für Produktion
 
-**Status:** akzeptiert – PostgreSQL-Adapter folgt in Etappe 2
+**Status:** akzeptiert – PostgreSQL-Adapter umgesetzt in Etappe 2
 
 ## Entscheidung
-Etappe 1 nutzt `better-sqlite3` (synchron, transaktionssicher, keine Infrastruktur für Demo/Tests). Migrationen (`apps/server/migrations/*.sql`) verwenden nur dialektneutrales SQL (TEXT/INTEGER/REAL, keine SQLite-Spezialitäten außer `AUTOINCREMENT`-freie IDs). IDs sind Präfix-UUIDs (Text), Zeitstempel ISO-8601 (Text). Zugriff erfolgt ausschließlich über `db.ts`, sodass ein PostgreSQL-Adapter (`pg`) ohne Änderung der Services ergänzt werden kann.
+- Datenzugriff ausschließlich über die asynchrone Schnittstelle `Db` (`apps/server/src/db.ts`): `all`, `get`, `run`, `tx`, `nextSeq`.
+- Zwei Adapter, gewählt über `DATABASE_URL`:
+  - **PostgreSQL** (`postgres://…`, Treiber `pg`, Verbindungspool) für den Produktivbetrieb.
+  - **SQLite** (`better-sqlite3`, Dateipfad) für Demo, Entwicklung und schnelle Tests.
+- SQL wird in einem gemeinsamen Dialekt geschrieben: `?`-Platzhalter, `ON CONFLICT … DO NOTHING/UPDATE`, `NULLS LAST`, `LOWER(…) LIKE LOWER(?)`. Der PostgreSQL-Adapter übersetzt Platzhalter in `$n` und quotiert camelCase-Aliase (PostgreSQL faltet unquotierte Bezeichner klein).
+- Migrationen (`apps/server/migrations/*.sql`) sind dialektneutral; für PostgreSQL wird `REAL` beim Anwenden zu `DOUBLE PRECISION` (exakte Scores).
+- Transaktionen: PostgreSQL nutzt je Transaktion eine Pool-Verbindung, die über `AsyncLocalStorage` an alle Aufrufe innerhalb der Transaktion gebunden wird; verschachtelte `tx`-Aufrufe laufen in der äußeren mit. SQLite serialisiert Transaktionen über eine Sperre.
+- Fortlaufende Nummern (`seq`) werden in PostgreSQL über eine transaktionsgebundene Advisory-Sperre vergeben.
 
 ## Konsequenzen
-- SQLite ist **nicht** für Produktionslast freigegeben (Schreib-Nebenläufigkeit).
-- JSON-Felder werden als TEXT gespeichert; in PostgreSQL später als `jsonb`.
+- Dieselbe Testsuite läuft gegen beide Datenbanken (`TEST_DATABASE_URL`); die CI prüft beide.
+- ESLint (`no-floating-promises`) stellt sicher, dass kein Datenbankaufruf unabgewartet bleibt.
+- JSON-Felder bleiben TEXT (in beiden Dialekten gleich); eine spätere Umstellung auf `jsonb` ist eine eigene Migration.

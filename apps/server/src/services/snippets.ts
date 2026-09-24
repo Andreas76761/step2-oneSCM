@@ -29,10 +29,10 @@ const BASE = `
 const SELECT = `SELECT s.*, r.revision_no, r.is_current, d.id AS document_id, d.path, c.title AS chapter_title, c.position AS chapter_position,
   sc.title AS subchapter_title, sc.position AS subchapter_position`;
 
-export function toSnippetDto(ctx: Ctx, s: Row) {
-  const roles = ctx.db.all('SELECT role_code AS code, score, method, model_version AS modelVersion, evidence_status AS evidenceStatus, evidence FROM snippet_roles WHERE snippet_id = ? ORDER BY role_code', s.id);
-  const divisions = ctx.db.all('SELECT division_code AS code, score, method, model_version AS modelVersion, evidence_status AS evidenceStatus, evidence FROM snippet_divisions WHERE snippet_id = ? ORDER BY division_code', s.id);
-  const findings = ctx.db.all(
+export async function toSnippetDto(ctx: Ctx, s: Row) {
+  const roles = await ctx.db.all('SELECT role_code AS code, score, method, model_version AS modelVersion, evidence_status AS evidenceStatus, evidence FROM snippet_roles WHERE snippet_id = ? ORDER BY role_code', s.id);
+  const divisions = await ctx.db.all('SELECT division_code AS code, score, method, model_version AS modelVersion, evidence_status AS evidenceStatus, evidence FROM snippet_divisions WHERE snippet_id = ? ORDER BY division_code', s.id);
+  const findings = await ctx.db.all(
     "SELECT id, seq, type, severity, status FROM quality_findings WHERE (snippet_a_id = ? OR snippet_b_id = ?) AND status NOT IN ('obsolete') ORDER BY seq",
     s.id, s.id,
   );
@@ -61,12 +61,12 @@ export function toSnippetDto(ctx: Ctx, s: Row) {
   };
 }
 
-export function searchSnippets(ctx: Ctx, q: SnippetQuery) {
+export async function searchSnippets(ctx: Ctx, q: SnippetQuery) {
   const where: string[] = ['d.project_id = ?'];
   const params: unknown[] = [ctx.projectId];
   if (!q.includeHistoric) where.push('r.is_current = 1');
   if (q.q) {
-    where.push('(s.text LIKE ? OR d.path LIKE ? OR CAST(s.seq AS TEXT) = ?)');
+    where.push('(LOWER(s.text) LIKE LOWER(?) OR LOWER(d.path) LIKE LOWER(?) OR CAST(s.seq AS TEXT) = ?)');
     params.push(`%${q.q}%`, `%${q.q}%`, q.q.replace(/^#/, ''));
   }
   if (q.chapterId) (where.push('s.chapter_id = ?'), params.push(q.chapterId));
@@ -81,18 +81,18 @@ export function searchSnippets(ctx: Ctx, q: SnippetQuery) {
     params.push(q.findingType);
   }
   const whereSql = `WHERE ${where.join(' AND ')}`;
-  const total = ctx.db.get<{ n: number }>(`SELECT COUNT(*) n ${BASE} ${whereSql}`, ...params)!.n;
+  const total = (await ctx.db.get<{ n: number }>(`SELECT COUNT(*) AS n ${BASE} ${whereSql}`, ...params))!.n;
   const pageSize = Math.min(Math.max(q.pageSize ?? 50, 1), 500);
   const page = Math.max(q.page ?? 1, 1);
-  const rows = ctx.db.all(
+  const rows = await ctx.db.all(
     `${SELECT} ${BASE} ${whereSql} ORDER BY c.position, COALESCE(sc.position, 0), d.path, s.position LIMIT ? OFFSET ?`,
     ...params, pageSize, (page - 1) * pageSize,
   );
-  return { total, page, pageSize, items: rows.map((r) => toSnippetDto(ctx, r)) };
+  return { total, page, pageSize, items: await Promise.all(rows.map((r) => toSnippetDto(ctx, r))) };
 }
 
-export function getSnippet(ctx: Ctx, id: string) {
-  const row = ctx.db.get(`${SELECT} ${BASE} WHERE s.id = ?`, id);
+export async function getSnippet(ctx: Ctx, id: string) {
+  const row = await ctx.db.get(`${SELECT} ${BASE} WHERE s.id = ?`, id);
   if (!row) throw notFound(`Textabschnitt ${id}`);
   return toSnippetDto(ctx, row);
 }
@@ -110,34 +110,34 @@ export interface SnippetPatch {
 }
 
 /** Ändert ausschließlich Klassifikation/Evidenz – der Ursprungstext bleibt unverändert (ADR-004). */
-export function patchSnippet(ctx: Ctx, id: string, patch: SnippetPatch, actor: string) {
-  const before = getSnippet(ctx, id);
+export async function patchSnippet(ctx: Ctx, id: string, patch: SnippetPatch, actor: string) {
+  const before = await getSnippet(ctx, id);
   const { db } = ctx;
   if (patch.roles?.some((r) => !ROLE_CODES.includes(r))) throw badRequest(`Unbekannte Rolle. Erlaubt: ${ROLE_CODES.join(', ')}`);
   if (patch.divisions?.some((r) => !DIVISION_CODES.includes(r))) throw badRequest(`Unbekannte Sparte. Erlaubt: ${DIVISION_CODES.join(', ')}`);
   if (patch.evidenceStatus && !(EVIDENCE_STATUSES as readonly string[]).includes(patch.evidenceStatus)) throw badRequest(`Unbekannter Evidenzstatus. Erlaubt: ${EVIDENCE_STATUSES.join(', ')}`);
 
-  db.tx(() => {
+  await db.tx(async () => {
     if (patch.roles) {
-      db.run('DELETE FROM snippet_roles WHERE snippet_id = ?', id);
-      for (const code of patch.roles) db.run("INSERT INTO snippet_roles VALUES (?, ?, 1, 'manual', 'manual', 'manually_confirmed', ?)", id, code, `bestätigt durch ${actor}`);
+      await db.run('DELETE FROM snippet_roles WHERE snippet_id = ?', id);
+      for (const code of patch.roles) await db.run("INSERT INTO snippet_roles VALUES (?, ?, 1, 'manual', 'manual', 'manually_confirmed', ?)", id, code, `bestätigt durch ${actor}`);
     } else if (patch.confirmRoles) {
-      db.run("UPDATE snippet_roles SET evidence_status = 'manually_confirmed', evidence = ? WHERE snippet_id = ? AND evidence_status <> 'source_confirmed'", `bestätigt durch ${actor}`, id);
+      await db.run("UPDATE snippet_roles SET evidence_status = 'manually_confirmed', evidence = ? WHERE snippet_id = ? AND evidence_status <> 'source_confirmed'", `bestätigt durch ${actor}`, id);
     }
     if (patch.divisions) {
-      db.run('DELETE FROM snippet_divisions WHERE snippet_id = ?', id);
-      for (const code of patch.divisions) db.run("INSERT INTO snippet_divisions VALUES (?, ?, 1, 'manual', 'manual', 'manually_confirmed', ?)", id, code, `bestätigt durch ${actor}`);
+      await db.run('DELETE FROM snippet_divisions WHERE snippet_id = ?', id);
+      for (const code of patch.divisions) await db.run("INSERT INTO snippet_divisions VALUES (?, ?, 1, 'manual', 'manual', 'manually_confirmed', ?)", id, code, `bestätigt durch ${actor}`);
     } else if (patch.confirmDivisions) {
-      db.run("UPDATE snippet_divisions SET evidence_status = 'manually_confirmed', evidence = ? WHERE snippet_id = ? AND evidence_status <> 'source_confirmed'", `bestätigt durch ${actor}`, id);
+      await db.run("UPDATE snippet_divisions SET evidence_status = 'manually_confirmed', evidence = ? WHERE snippet_id = ? AND evidence_status <> 'source_confirmed'", `bestätigt durch ${actor}`, id);
     }
-    if (patch.evidenceStatus) db.run('UPDATE text_snippets SET evidence_status = ? WHERE id = ?', patch.evidenceStatus, id);
-    if (patch.market !== undefined) db.run('UPDATE text_snippets SET market_code = ? WHERE id = ?', patch.market || null, id);
-    if (patch.release !== undefined) db.run('UPDATE text_snippets SET release_code = ? WHERE id = ?', patch.release || null, id);
-    if (patch.market !== undefined || patch.release !== undefined || patch.confirmScope) db.run("UPDATE text_snippets SET scope_status = 'confirmed' WHERE id = ?", id);
-    if (patch.note !== undefined) db.run('UPDATE text_snippets SET note = ? WHERE id = ?', patch.note, id);
-    if (patch.market) db.run('INSERT OR IGNORE INTO markets (code, label) VALUES (?, ?)', patch.market, patch.market);
-    if (patch.release) db.run('INSERT OR IGNORE INTO release_scopes (code, label) VALUES (?, ?)', patch.release, patch.release);
-    audit(db, actor, 'snippet.classified', 'snippet', id, { patch, before: { roles: before.roles, divisions: before.divisions, evidenceStatus: before.evidenceStatus } });
+    if (patch.evidenceStatus) await db.run('UPDATE text_snippets SET evidence_status = ? WHERE id = ?', patch.evidenceStatus, id);
+    if (patch.market !== undefined) await db.run('UPDATE text_snippets SET market_code = ? WHERE id = ?', patch.market || null, id);
+    if (patch.release !== undefined) await db.run('UPDATE text_snippets SET release_code = ? WHERE id = ?', patch.release || null, id);
+    if (patch.market !== undefined || patch.release !== undefined || patch.confirmScope) await db.run("UPDATE text_snippets SET scope_status = 'confirmed' WHERE id = ?", id);
+    if (patch.note !== undefined) await db.run('UPDATE text_snippets SET note = ? WHERE id = ?', patch.note, id);
+    if (patch.market) await db.run('INSERT INTO markets (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', patch.market, patch.market);
+    if (patch.release) await db.run('INSERT INTO release_scopes (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', patch.release, patch.release);
+    await audit(db, actor, 'snippet.classified', 'snippet', id, { patch, before: { roles: before.roles, divisions: before.divisions, evidenceStatus: before.evidenceStatus } });
   });
   return getSnippet(ctx, id);
 }

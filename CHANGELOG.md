@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.0 – Etappe 2 (24.09.2026)
+
+### Entschieden
+- Alle P0-Entscheidungen E-01 … E-15 und Widersprüche W-01 … W-09 als Übernahme der vorläufigen Annahmen festgelegt (Entscheidungsprotokoll in docs/04). Markierungen `ANNAHME` → `ENTSCHEIDUNG`, UI-Hinweise entsprechend.
+
+### Hinzugefügt
+- PostgreSQL-Adapter (`DATABASE_URL`) neben SQLite; asynchrone Datenbankschnittstelle mit Transaktionen über `AsyncLocalStorage` (ADR-003).
+- OIDC-Anmeldung: Bearer-JWT-Prüfung in der API, Berechtigungen aus IdP-Gruppen, PKCE-Login in der UI, `GET /api/v1/auth/config` (ADR-011).
+- Persistente Jobqueue (Tabelle `jobs`) mit Wiederholung, Backoff, Lease und Neustart-Sicherheit; Import- und Analyse-Jobs idempotent (ADR-008).
+- Vorschlag des führenden Kapitels für Canonical Topics (E-06).
+- Tests T-118 … T-120; die Testsuite läuft gegen SQLite und PostgreSQL. ESLint-Prüfung auf unabgewartete Promises.
+- CI: PostgreSQL-Service, Lint; docker-compose mit PostgreSQL.
+
+### Geändert
+- Downloads (Export, Traceability) laufen authentifiziert per `fetch`.
+- Migration 002: `import_items.position` ersetzt die SQLite-`rowid`-Sortierung.
+
 ## 0.1.0 – Etappe 1 (24.09.2026)
 
 ### Hinzugefügt

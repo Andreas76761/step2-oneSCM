@@ -3,7 +3,7 @@
 **Stand:** 24.09.2026 · **Basis:** `reference/CLAUDE_MASTER_PROMPT.md` v1.0, `reference/REFERENZ_UI.png`
 **Ausgangslage:** leeres Repository (keine Commits, kein Code, keine Daten).
 
-Legende Status: ✅ im ersten Implementierungsschritt umgesetzt · 🟡 umgesetzt als *vorläufige Annahme* (P0-Entscheidung offen, konfigurierbar) · ⏳ bewusst späteren Etappen zugeordnet · ❓ fachlich ungeklärt
+Legende Status: ✅ im ersten Implementierungsschritt umgesetzt · 🟡 umgesetzt als *vorläufige Annahme* (seit 24.09.2026 als Entscheidung übernommen, siehe 1.4) · ⏳ bewusst späteren Etappen zugeordnet · ❓ fachlich ungeklärt
 
 ## 1.1 Anforderungen vs. Ist
 
@@ -51,3 +51,15 @@ Legende Status: ✅ im ersten Implementierungsschritt umgesetzt · 🟡 umgesetz
 | Regelbasierte Widerspruchserkennung | False Positives | Befunde sind *Hinweise*, nie automatische Entscheidung; Schwellen konfigurierbar |
 | Tausende Quellen, paarweiser Vergleich O(n²) | Laufzeit | invertierter Index über Terme, Vergleich nur von Kandidaten mit gemeinsamen Termen; Job im Hintergrund |
 | SQLite in Produktion | Nebenläufigkeit | nur Demo/Test; PostgreSQL in Etappe 2 |
+
+## 1.4 Stand nach Etappe 2 (24.09.2026)
+
+| Lücke aus Etappe 1 | Ergebnis Etappe 2 |
+|---|---|
+| Alle 🟡-Punkte (offene P0-Entscheidungen) | ✅ als Entscheidungen übernommen (docs/04, Entscheidungsprotokoll); Code-Markierung `ENTSCHEIDUNG(E-xx)` |
+| Produktion PostgreSQL | ✅ PostgreSQL-Adapter (`DATABASE_URL`), gemeinsame Testsuite läuft gegen SQLite **und** PostgreSQL (ADR-003) |
+| Echte Authentifizierung | ✅ OpenID Connect: Bearer-JWT in der API, PKCE-Anmeldung in der UI, Berechtigungen aus IdP-Gruppen (ADR-011) |
+| In-Process-Jobqueue | ✅ persistente Jobqueue in der Datenbank mit Wiederholung, Lease und Neustart-Sicherheit (ADR-008) |
+| E-06 Vorschlag führendes Kapitel | ✅ UI schlägt das Kapitel mit den meisten Cluster-Mitgliedern vor |
+
+Weiterhin offen (Etappe 3, P1): mehrstufiger Freigabeworkflow, eigene Terminologiemaske, HTML/PDF-Export, S3-kompatibler Object-Store für Mehrinstanzbetrieb.

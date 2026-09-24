@@ -1,6 +1,6 @@
 # ADR-007 Extraktiver Kapitelgenerator
 
-**Status:** vorläufig – abhängig von P0-Entscheidung E-09
+**Status:** akzeptiert (Entscheidung E-09 vom 24.09.2026)
 
 ## Kontext
 US-008 verlangt „keine fachlichen Details erfinden“ und Rückverfolgbarkeit jedes Absatzes.

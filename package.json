@@ -1,9 +1,13 @@
 {
   "name": "onescm-handbook-studio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "oneSCM Handbook Studio – revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen",
-  "workspaces": ["apps/server", "apps/web", "e2e"],
+  "workspaces": [
+    "apps/server",
+    "apps/web",
+    "e2e"
+  ],
   "scripts": {
     "dev": "npm run dev -w apps/server & npm run dev -w apps/web",
     "build": "npm run build -w apps/web && npm run build -w apps/server",
@@ -12,7 +16,10 @@
     "test": "npm run test -w apps/server",
     "test:e2e": "npm run test -w e2e",
     "traceability": "npm run traceability -w apps/server",
-    "demo:seed": "npm run demo:seed -w apps/server"
+    "demo:seed": "npm run demo:seed -w apps/server",
+    "lint": "npm run lint -w apps/server"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

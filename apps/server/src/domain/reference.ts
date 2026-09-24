@@ -1,5 +1,5 @@
 // Referenzdaten gemäß Masterprompt §2 (US-003, US-004, US-010).
-// ANNAHME(E-04, E-11): Liste, Icons und Farben wie im Masterprompt; Farbe trägt keine eigene Bedeutung,
+// ENTSCHEIDUNG(E-04, E-11): Liste, Icons und Farben wie im Masterprompt; Farbe trägt keine eigene Bedeutung,
 // sie wird immer zusammen mit Icon und Textlabel verwendet.
 
 export const ROLES = [
@@ -25,7 +25,7 @@ export type DivisionCode = (typeof DIVISIONS)[number]['code'];
 export const ROLE_CODES = ROLES.map((r) => r.code) as string[];
 export const DIVISION_CODES = DIVISIONS.map((d) => d.code) as string[];
 
-// ANNAHME(E-08): zulässige Evidenzstatus.
+// ENTSCHEIDUNG(E-08): zulässige Evidenzstatus.
 export const EVIDENCE_STATUSES = ['source_confirmed', 'manually_confirmed', 'unconfirmed', 'open_question'] as const;
 export type EvidenceStatus = (typeof EVIDENCE_STATUSES)[number];
 export const CONFIRMED_EVIDENCE: readonly string[] = ['source_confirmed', 'manually_confirmed'];
@@ -70,7 +70,7 @@ export const BLOCK_MODES = ['generated', 'manually_edited', 'locked', 'needs_reg
 export type BlockMode = (typeof BLOCK_MODES)[number];
 export const BLOCK_KINDS = ['paragraph', 'list', 'note', 'tip', 'warning', 'xref', 'gap', 'table', 'code'] as const;
 
-// ANNAHME(E-15): technische Berechtigungen (getrennt von fachlichen Rollen, ADR-009)
+// ENTSCHEIDUNG(E-15): technische Berechtigungen (getrennt von fachlichen Rollen, ADR-009)
 export const PERMISSIONS = ['read', 'edit', 'decide', 'approve', 'admin'] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 

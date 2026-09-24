@@ -1,5 +1,5 @@
 // Klassifikation von Rolle, Sparte, Markt und Release (US-003, US-004).
-// ANNAHME(E-03, E-04): Schlüsselwortregeln; automatische Zuordnungen bleiben immer `unconfirmed`.
+// ENTSCHEIDUNG(E-03, E-04): Schlüsselwortregeln; automatische Zuordnungen bleiben immer `unconfirmed`.
 // Nur explizite Angaben im Front-Matter der Quelle gelten als `source_confirmed`.
 import { DIVISION_CODES, ROLE_CODES, type EvidenceStatus } from './reference.js';
 
