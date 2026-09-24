@@ -54,11 +54,16 @@ export function ReleasesPage() {
                 <li key={r.id}>
                   <div className="block-meta">
                     <strong>Version {r.version}</strong>
-                    <span className="small muted">{r.title} · {new Date(r.createdAt).toLocaleString('de-DE')} · {r.createdBy} · {r.chapters.length} Kapitel · {changed.length} Änderungen</span>
+                    <span className="small muted">{r.title} · {new Date(r.createdAt).toLocaleString('de-DE')} · {r.createdBy} · {r.chapters.length} Kapitel · {changed.length} Änderungen{r.languages?.length ? ` · Sprachen: DE, ${r.languages.map((l: any) => l.language.toUpperCase()).join(', ')}` : ''}</span>
                   </div>
                   <div className="row-actions">
                     <button className="btn small" onClick={() => get(r.id, 'site', `online-hilfe-${r.version}.zip`)}>Online-Hilfe (ZIP)</button>
                     <button className="btn small" onClick={() => get(r.id, 'md', `handbuch-${r.version}.md`)}>Markdown</button>
+                    {r.languages?.map((l: any) => (
+                      <button key={l.language} className="btn small" title={`${l.translated} von ${l.total} Kapiteln übersetzt`} onClick={() => download(`/api/v1/releases/${r.id}/download?format=md&language=${l.language}`, `handbuch-${r.version}-${l.language}.md`).catch((e) => notify(errorText(e), 'error'))}>
+                        Markdown {l.language.toUpperCase()} ({l.translated}/{l.total})
+                      </button>
+                    ))}
                     <button className="btn small ghost" aria-expanded={open === r.id} onClick={() => setOpen(open === r.id ? null : r.id)}>{open === r.id ? 'Details ausblenden' : 'Änderungen anzeigen'}</button>
                   </div>
                   {open === r.id && (

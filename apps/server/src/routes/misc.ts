@@ -9,6 +9,7 @@ import {
 import { badRequest } from '../problem.js';
 import { CONTENT_TYPES, createExport, downloadExport, listExports } from '../services/exports.js';
 import { optimizationOverview } from '../services/insights.js';
+import { translationStatus } from '../services/translations.js';
 import { buildMatrix, matrixCsv, matrixMarkdown, matrixXlsx } from '../services/traceability.js';
 import { list, userOf } from './helpers.js';
 
@@ -112,6 +113,7 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
       divisionCoverage: await db.all(`SELECT sd.division_code AS code, COUNT(*) AS n FROM snippet_divisions sd JOIN text_snippets s ON s.id = sd.snippet_id JOIN source_revisions r ON r.id = s.revision_id
         JOIN source_documents d ON d.id = r.document_id WHERE r.is_current = 1 AND d.project_id = ? GROUP BY sd.division_code`, pid),
       lastAnalysis: (await db.get('SELECT id, status, started_at AS startedAt, finished_at AS finishedAt, stats FROM analysis_runs WHERE project_id = ? ORDER BY started_at DESC LIMIT 1', pid)) ?? null,
+      translations: await translationStatus(req.ctx),
     };
   });
 
