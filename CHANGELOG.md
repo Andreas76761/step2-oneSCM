@@ -5,7 +5,7 @@
 ### Hinzugefügt
 - Versionsvergleich ganzer Kapitelversionen (US-019): `GET /chapters/{id}/compare`, Seite „Versionsvergleich“ mit hinzugefügten, entfernten, geänderten und verschobenen Absätzen, Textdiff und Feldänderungen.
 - S3-kompatibler Object-Store (`OBJECT_STORE=s3`) für den Mehrinstanzbetrieb; unveränderliche Ablage per bedingtem Schreiben (ADR-008).
-- CI prüft den S3-Speicher gegen MinIO, lokal gegen s3rver. `/health` meldet den Speichertyp.
+- CI prüft den S3-Speicher gegen einen moto-S3-Server, lokal gegen s3rver. `/health` meldet den Speichertyp.
 - Tests T-126, T-127, E2E T-204.
 
 ### Behoben

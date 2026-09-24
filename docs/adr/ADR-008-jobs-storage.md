@@ -15,7 +15,7 @@
 - `storage.ts`: Interface `ObjectStore` (`put`, `get`, `exists`), Schlüssel = SHA-256 bzw. eindeutige IDs, Inhalte werden nie überschrieben.
   - `LocalObjectStore` (Dateisystem unter `DATA_DIR/objects`) für Einzelinstanz, Demo und Tests.
   - `S3ObjectStore` (Etappe 4) für den Mehrinstanzbetrieb: AWS S3 oder S3-kompatibel (MinIO, Ceph …) über `OBJECT_STORE=s3`, `S3_BUCKET`, optional `S3_PREFIX`, `S3_ENDPOINT`, `S3_REGION`, `S3_FORCE_PATH_STYLE`. Zugangsdaten über die Standardkette des AWS-SDK (Umgebungsvariablen, Instanzrolle). Unveränderlichkeit: `HEAD` + bedingtes `PUT` (`If-None-Match: *`); 412/409 = existiert bereits; Speicher ohne bedingtes Schreiben (501) fallen auf ein normales `PUT` nach der `HEAD`-Prüfung zurück.
-  - Getestet gegen `s3rver` (lokal) und MinIO (CI).
+  - Getestet gegen `s3rver` (lokal) und moto-Server (CI; das Docker-Image `minio/minio` ist nicht mehr verfügbar).
 
 ## Alternativen
 pg-boss/BullMQ: ausgereifter, aber zusätzliche Abhängigkeit (Redis bzw. pg-only) und kein SQLite-Betrieb für Demo/Tests.

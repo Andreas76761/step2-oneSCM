@@ -129,7 +129,7 @@ describe('S3-kompatibler Object-Store (ADR-008)', () => {
 
   beforeAll(async () => {
     if (process.env.TEST_S3_ENDPOINT) {
-      // Echter S3-kompatibler Speicher (in der CI: MinIO)
+      // Echter S3-kompatibler Speicher (in der CI: moto-Server)
       endpoint = process.env.TEST_S3_ENDPOINT;
     } else {
       // s3rver akzeptiert nur seine festen Testzugangsdaten (vorhandene AWS-Variablen der Umgebung überschreiben)
