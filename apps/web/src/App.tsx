@@ -27,6 +27,9 @@ import { AnalyticsPage } from './pages/Analytics';
 import { AssistantPage } from './pages/Assistant';
 import { IntegrationsPage } from './pages/Integrations';
 import { ContextHelpAdminPage, ContextHelpPage } from './pages/ContextHelp';
+import { OutlinesPage } from './pages/Outlines';
+import { DraftManualPage } from './pages/DraftManual';
+import { AbbreviationsPage, FaqPage, GlossaryPage, ImageIndexPage, PlanningPage } from './pages/MasterData';
 
 // Navigation gemäß Masterprompt §14
 const NAV = [
@@ -37,6 +40,7 @@ const NAV = [
   { to: '/dopplungen', label: 'Dopplungen', icon: '📑' },
   { to: '/generator', label: 'Kapitelgenerator', icon: '⚙️' },
   { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: '✏️' },
+  { to: '/draft-manual', label: 'Draft Manual', icon: '📝' },
   { to: '/rollen', label: 'Rollenansichten', icon: '👥' },
   { to: '/sparten', label: 'Spartenansichten', icon: '🚘' },
   { to: '/optimierungen', label: 'Optimierungen', icon: '✨' },
@@ -52,8 +56,26 @@ const NAV = [
   { to: '/traceability', label: 'Traceability', icon: '🔗' },
   { to: '/projekte', label: 'Projekte', icon: '🗂️' },
   { to: '/integrationen', label: 'Integrationen', icon: '🔌' },
-  { to: '/einstellungen', label: 'Einstellungen', icon: '⚙' },
 ];
+
+// Stammdaten (ADR-032): unten in der Navigation, mit Untermenü
+const MASTER_DATA = [
+  { to: '/stammdaten/inhaltsverzeichnis', label: 'Inhaltsverzeichnis', icon: '🗂' },
+  { to: '/stammdaten/abkuerzungen', label: 'Abkürzungen', icon: '🔤' },
+  { to: '/stammdaten/glossar', label: 'Glossar', icon: '📘' },
+  { to: '/stammdaten/bildverzeichnis', label: 'Bildverzeichnis', icon: '🖼️' },
+  { to: '/stammdaten/faq', label: 'FAQ', icon: '❔' },
+  { to: '/stammdaten/planung', label: 'Planung', icon: '📅' },
+];
+
+const COLLAPSE_KEY = 'onescm.nav.collapsed';
+const readCollapsed = () => {
+  try {
+    return localStorage.getItem(COLLAPSE_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
 
 export function App() {
   const [auth, setAuth] = useState<{ config: AuthConfig; signedIn: boolean } | null>(null);
@@ -89,6 +111,23 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   const projectId = currentProjectId();
   const [navOpen, setNavOpen] = useState(false);
   const location = useLocation();
+  // Einklappbare Navigation (nur Symbole); Zustand je Browser gemerkt
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      try {
+        localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1');
+      } catch {
+        /* ohne Speicher: nur für diese Sitzung */
+      }
+      return !c;
+    });
+  };
+  const inMasterData = location.pathname.startsWith('/stammdaten');
+  const [masterOpen, setMasterOpen] = useState(inMasterData);
+  useEffect(() => {
+    if (inMasterData) setMasterOpen(true);
+  }, [inMasterData]);
   const mainRef = useRef<HTMLElement>(null);
   const firstRender = useRef(true);
   const [unread, setUnread] = useState(0);
@@ -146,11 +185,14 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   return (
     <AppCtx.Provider value={{ ref, reloadRef, notify: (msg, kind = 'ok') => setToast({ msg, kind }), userId, setUserId }}>
       <a className="skip-link" href="#main">Zum Inhalt springen</a>
-      <div className="shell">
-        <aside className="sidebar">
+      <div className={`shell${collapsed ? " nav-collapsed" : ""}`}>
+        <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
           <div className="brand">
             <strong>oneSCM Handbook Studio</strong>
             <span>v{__APP_VERSION__}</span>
+            <button type="button" className="collapse-toggle" aria-expanded={!collapsed} aria-controls="main-nav" aria-label={collapsed ? 'Navigation ausklappen' : 'Navigation einklappen'} title={collapsed ? 'Navigation ausklappen' : 'Navigation einklappen'} onClick={toggleCollapsed}>
+              {collapsed ? '»' : '«'}
+            </button>
           </div>
           <div className="project-box">
             <label htmlFor="project-select">Projekt</label>
@@ -163,14 +205,29 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             {navOpen ? '✕ Menü schließen' : '☰ Menü'}
           </button>
           <nav id="main-nav" aria-label="Hauptnavigation" className={navOpen ? 'open' : ''}>
-            <NavLink to="/aufgaben" className={({ isActive }) => (isActive ? 'active' : '')}>
-              <span aria-hidden="true">🔔</span> Aufgaben & Hinweise{unread > 0 && <span className="count" aria-label={`${unread} ungelesen`}>{unread}</span>}
+            <NavLink to="/aufgaben" title="Aufgaben & Hinweise" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span aria-hidden="true" className="nav-icon">🔔</span> <span className="nav-label">Aufgaben & Hinweise</span>{unread > 0 && <span className="count" aria-label={`${unread} ungelesen`}>{unread}</span>}
             </NavLink>
             {NAV.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
-                <span aria-hidden="true">{n.icon}</span> {n.label}
+              <NavLink key={n.to} to={n.to} end={n.to === '/'} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
+                <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
               </NavLink>
             ))}
+            <div className="nav-bottom">
+              <button type="button" className={`nav-group${inMasterData ? ' active-group' : ''}`} aria-expanded={masterOpen} aria-controls="nav-stammdaten" title="Stammdaten" onClick={() => setMasterOpen(!masterOpen)}>
+                <span aria-hidden="true" className="nav-icon">🗃</span> <span className="nav-label">Stammdaten</span><span aria-hidden="true" className="nav-caret">{masterOpen ? '▾' : '▸'}</span>
+              </button>
+              <div id="nav-stammdaten" className="nav-sub" hidden={!masterOpen}>
+                {MASTER_DATA.map((n) => (
+                  <NavLink key={n.to} to={n.to} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
+                    <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+              <NavLink to="/einstellungen" title="Einstellungen" className={({ isActive }) => (isActive ? 'active' : '')}>
+                <span aria-hidden="true" className="nav-icon">⚙</span> <span className="nav-label">Einstellungen</span>
+              </NavLink>
+            </div>
           </nav>
           <div className="user-box">
             {mode === 'demo' ? (
@@ -217,6 +274,16 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/analytik" element={<AnalyticsPage />} />
             <Route path="/assistent" element={<AssistantPage />} />
             <Route path="/integrationen" element={<IntegrationsPage />} />
+            <Route path="/draft-manual" element={<DraftManualPage />} />
+            <Route path="/draft-manual/:outlineId" element={<DraftManualPage />} />
+            <Route path="/stammdaten" element={<Navigate to="/stammdaten/inhaltsverzeichnis" replace />} />
+            <Route path="/stammdaten/inhaltsverzeichnis" element={<OutlinesPage />} />
+            <Route path="/stammdaten/inhaltsverzeichnis/:outlineId" element={<OutlinesPage />} />
+            <Route path="/stammdaten/abkuerzungen" element={<AbbreviationsPage />} />
+            <Route path="/stammdaten/glossar" element={<GlossaryPage />} />
+            <Route path="/stammdaten/bildverzeichnis" element={<ImageIndexPage />} />
+            <Route path="/stammdaten/faq" element={<FaqPage />} />
+            <Route path="/stammdaten/planung" element={<PlanningPage />} />
             <Route path="/kontexthilfe" element={<ContextHelpAdminPage />} />
             <Route path="/hilfe/:contextKey" element={<ContextHelpPage />} />
             <Route path="/traceability" element={<TraceabilityPage />} />
