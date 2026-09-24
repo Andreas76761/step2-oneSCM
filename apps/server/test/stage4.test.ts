@@ -23,6 +23,8 @@ Dieses Kapitel beschreibt den Vergleich von Versionen.
 1. Version auswählen.
 2. Vergleich starten.
 
+Danach die markierten Absätze prüfen.
+
 Ergebnis: Die Unterschiede werden angezeigt.
 
 Hinweis: Freigegebene Versionen bleiben unverändert.
@@ -88,21 +90,35 @@ describe('Versionsvergleich (US-019)', () => {
     const purpose = b.find((x: any) => x.section === 'purpose');
     const hint = b.find((x: any) => x.section === 'hints');
     const result = b.find((x: any) => x.section === 'result');
+    const steps = b.filter((x: any) => x.section === 'steps');
+    expect(steps).toHaveLength(2);
     await call('PATCH', `/content-blocks/${purpose.id}`, { text: 'Dieses Kapitel erklärt, wie Versionen verglichen werden.' }, 'u-redaktion');
     await call('PATCH', `/content-blocks/${hint.id}`, { section: 'troubleshooting' }, 'u-redaktion');
     await call('DELETE', `/content-blocks/${result.id}?reason=entfällt`, undefined, 'u-redaktion');
+    // Umsortierung innerhalb eines Abschnitts (Pfeiltasten der Kapitelwerkstatt)
+    await call('PATCH', `/content-blocks/${steps[1].id}`, { position: steps[0].position - 5 }, 'u-redaktion');
+    // Nur die Begründung ändern: Werte müssen im Vergleich sichtbar sein
+    await call('PATCH', `/content-blocks/${steps[0].id}`, { justification: 'Geprüft durch Redaktion' }, 'u-redaktion');
     await call('POST', `/chapter-versions/${v2.id}/content-blocks`, { section: 'hints', kind: 'tip', text: 'Tipp: Vergleichen Sie vor jeder Freigabe.', justification: 'Redaktion' }, 'u-redaktion');
 
     const diff = await call('GET', `/chapters/${chapterId}/compare?from=${v1.id}&to=${v2.id}`);
     expect(diff.status).toBe(200);
     const d = diff.json;
     expect(d).toMatchObject({ chapterTitle: '1. Vergleich', from: { versionNo: 1, status: 'superseded' }, to: { versionNo: 2, status: 'draft' } });
-    expect(d.summary).toMatchObject({ changed: 1, moved: 1, removed: 1, added: 1 });
-    const changed = d.entries.find((e: any) => e.change === 'changed');
+    expect(d.summary).toMatchObject({ changed: 2, moved: 2, removed: 1, added: 1 });
+    const changed = d.entries.find((e: any) => e.change === 'changed' && e.fields.includes('text'));
     expect(changed.fields).toEqual(['text']);
     expect(changed.from.text).toBe('Dieses Kapitel beschreibt den Vergleich von Versionen.');
     expect(changed.to.text).toBe('Dieses Kapitel erklärt, wie Versionen verglichen werden.');
-    expect(d.entries.find((e: any) => e.change === 'moved')).toMatchObject({ section: 'troubleshooting', from: { section: 'hints' }, to: { section: 'troubleshooting' }, fields: ['section'] });
+    expect(d.entries.find((e: any) => e.change === 'moved' && e.section === 'troubleshooting')).toMatchObject({ from: { section: 'hints' }, to: { section: 'troubleshooting' }, fields: ['section'] });
+    // Genau ein Schritt gilt als umsortiert (längste gemeinsam geordnete Teilfolge bleibt stehen)
+    const reordered = d.entries.filter((e: any) => e.section === 'steps' && e.fields.includes('order'));
+    expect(reordered).toHaveLength(1);
+    expect(reordered[0]).toMatchObject({ change: 'moved', fields: ['order'] });
+    const just = d.entries.find((e: any) => e.fields.includes('justification'));
+    expect(just.from.justification ?? null).not.toBe('Geprüft durch Redaktion');
+    expect(just.to.justification).toBe('Geprüft durch Redaktion');
+    expect(just.to).toHaveProperty('scopeStatus');
     expect(d.entries.find((e: any) => e.change === 'removed')).toMatchObject({ section: 'result', to: null, from: { text: expect.stringMatching(/^Ergebnis:/) } });
     expect(d.entries.find((e: any) => e.change === 'added')).toMatchObject({ section: 'hints', from: null, to: { kind: 'tip' } });
     // Reihenfolge folgt der Kapitelstruktur

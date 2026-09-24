@@ -55,15 +55,16 @@ export function ComparePage() {
                 <div className="block-meta">
                   <span className={`tag ${CHANGE[e.change].cls}`}>{CHANGE[e.change].label}</span>
                   <strong>{title(e.section)}</strong>
-                  {e.change === 'moved' && <span className="small muted">aus „{title(e.from.section)}“</span>}
+                  {e.fields.includes('section') && <span className="small muted">aus „{title(e.from.section)}“</span>}
+                  {e.fields.includes('order') && !e.fields.includes('section') && <span className="small muted">Reihenfolge geändert</span>}
                   {e.fields.length > 0 && e.change === 'changed' && <span className="small muted">geändert: {e.fields.map((f: string) => d.fieldLabels[f]).join(', ')}</span>}
                   {(e.to ?? e.from) && <><RoleBadges codes={(e.to ?? e.from).roles.filter((r: string) => r !== 'all')} /><DivisionBadges codes={(e.to ?? e.from).divisions.filter((x: string) => x !== 'all')} /></>}
                   {e.to && <Status s={e.to.mode} />}
                 </div>
                 {e.change === 'changed' && e.fields.includes('text') ? <Diff a={e.from.text} b={e.to.text} /> : <Md text={(e.to ?? e.from).text} />}
-                {e.change === 'changed' && e.fields.some((f: string) => f !== 'text') && (
+                {e.change === 'changed' && e.fields.some((f: string) => !['text', 'section', 'order'].includes(f)) && (
                   <ul className="small">
-                    {e.fields.filter((f: string) => f !== 'text').map((f: string) => (
+                    {e.fields.filter((f: string) => !['text', 'section', 'order'].includes(f)).map((f: string) => (
                       <li key={f}>{d.fieldLabels[f]}: {fmt(e.from, f)} → {fmt(e.to, f)}</li>
                     ))}
                   </ul>
