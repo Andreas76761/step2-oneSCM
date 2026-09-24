@@ -1,23 +1,27 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Empty, Page, Status, useLoad } from '../components/ui';
+import { Card, Decision, Empty, Page, Status, useLoad } from '../components/ui';
 import { ApprovalPanel } from './Workshop';
+
+const ORDER: Record<string, number> = { in_review: 0, draft: 1, approved: 2, superseded: 3 };
 
 export function ApprovalPage() {
   const chapters = useLoad<any[]>('/chapters');
-  const drafts = (chapters.data ?? []).filter((c) => c.versions[0]);
+  const withVersion = (chapters.data ?? []).filter((c) => c.versions[0]).sort((a, b) => (ORDER[a.versions[0].status] ?? 9) - (ORDER[b.versions[0].status] ?? 9));
   const [sel, setSel] = useState<string | null>(null);
-  const current = drafts.find((c) => c.id === sel) ?? drafts[0];
-  const version = useLoad<any>(current ? `/chapter-versions/${current.versions[0].id}` : null, [current?.versions[0]?.id]);
+  const current = withVersion.find((c) => c.id === sel) ?? withVersion[0];
+  const version = useLoad<any>(current ? `/chapter-versions/${current.versions[0].id}` : null, [current?.versions[0]?.id, current?.versions[0]?.status]);
+  const waiting = withVersion.filter((c) => c.versions[0].status === 'in_review').length;
   return (
-    <Page title="Freigabe" subtitle="Nur Kapitel mit bestandenem Qualitätsgate können fachlich freigegeben werden">
+    <Page title="Freigabe" subtitle={`Freigabeworkflow: Entwurf → eingereicht → freigegeben oder abgelehnt · ${waiting} Version(en) warten auf Entscheidung`}>
+      <Decision id="E-12">Einstufige Freigabe ohne Ausnahmen. Einreichen und Freigeben setzen ein bestandenes Qualitätsgate voraus; eine eingereichte Version ist bis zur Entscheidung gesperrt.</Decision>
       <div className="grid2">
         <Card title="Kapitelversionen">
-          {!drafts.length ? <Empty>Noch keine generierten Kapitel.</Empty> : (
+          {!withVersion.length ? <Empty>Noch keine generierten Kapitel.</Empty> : (
             <table className="table compact">
               <thead><tr><th>Kapitel</th><th>Version</th><th>Status</th><th>Blocker</th><th /></tr></thead>
               <tbody>
-                {drafts.map((c) => (
+                {withVersion.map((c) => (
                   <tr key={c.id} className={`clickable ${current?.id === c.id ? 'selected' : ''}`} onClick={() => setSel(c.id)}>
                     <td>{c.title}</td>
                     <td>V{c.versions[0].versionNo}</td>

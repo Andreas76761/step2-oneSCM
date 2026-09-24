@@ -123,6 +123,8 @@ fieldset { border: 1px solid var(--border); border-radius: 8px; margin: 8px 0; p
 .sev-high { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
 .sev-medium { background: var(--info-bg); color: var(--primary); }
 .st-approved, .st-resolved, .st-completed, .st-confirmed, .st-imported, .st-source_confirmed, .st-manually_confirmed { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); }
+.st-in_review { background: var(--info-bg); color: var(--primary); border-color: var(--primary); }
+.st-rejected { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); }
 .st-open, .st-draft, .st-proposed, .st-unconfirmed, .st-needs_regeneration, .st-completed_with_errors { background: var(--warn-bg); color: var(--warn); border-color: var(--warn); }
 .st-failed, .st-open_question { background: var(--danger-bg); color: var(--danger); border-color: var(--danger); }
 .badge { display: inline-flex; gap: 3px; align-items: center; border: 1px solid; border-radius: 999px; padding: 0 8px; font-size: 12px; background: var(--surface); white-space: nowrap; margin: 1px 3px 1px 0; }
@@ -156,7 +158,7 @@ dl.meta dt { color: var(--muted); font-size: 12px; }
 dl.meta dd { margin: 0; }
 
 .barlist { display: flex; flex-direction: column; gap: 8px; }
-.bar-row { display: grid; grid-template-columns: 120px 1fr 36px; align-items: center; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: minmax(120px, 38%) 1fr 36px; align-items: center; gap: 8px; }
 .bar-track { height: 12px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
 .bar { display: block; height: 100%; background: var(--bar); border-radius: 0 4px 4px 0; min-width: 2px; }
 .bar-row:hover .bar { filter: brightness(1.1); }
@@ -221,3 +223,5 @@ dl.meta dd { margin: 0; }
 .login .card { max-width: 420px; width: 100%; text-align: center; }
 .login h1 { margin-bottom: 8px; }
 .user-box .user-name { color: #fff; }
+
+.section-title { font-size: 16px; margin: 8px 0 12px; }

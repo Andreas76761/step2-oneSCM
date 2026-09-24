@@ -107,12 +107,7 @@ export const DEFAULT_SETTINGS = {
     crossChapter: true,
     ruleSeverity: DEFAULT_RULE_SEVERITY as Record<string, string>,
   },
-  // Terminologie- und Lesbarkeitsregeln (US-015), redaktionell pflegbar
-  terminology: [
-    { preferred: 'Freigabe', avoid: ['Genehmigung', 'Approval'] },
-    { preferred: 'Autohaus', avoid: ['Händlerbetrieb'] },
-    { preferred: 'anmelden', avoid: ['einloggen'] },
-  ] as { preferred: string; avoid: string[] }[],
+  // Terminologie: seit Etappe 3 eigene Tabelle `terminology_terms` (US-015)
   readability: { maxSentenceWords: 30 },
 };
 export type Settings = typeof DEFAULT_SETTINGS;

@@ -3,7 +3,7 @@
 Revisionssichere Webapp, die aus vielen Markdown-Texten ein konsistentes, rollen- und spartenspezifisches oneSCM-Benutzerhandbuch erzeugt.
 Grundlage ist das Projektpaket in [`reference/`](reference/) (Masterprompt v1.0 und Referenz-UI).
 
-> **Status: Etappe 2 (v0.2.0).** Alle P0-Stories sind umgesetzt. Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
+> **Status: Etappe 3 (v0.3.0).** Alle P0-Stories und die P1-Stories US-011, US-013 … US-018 sind umgesetzt. Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
 
 ## Dokumentation
 
@@ -61,9 +61,11 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
 3. **Widersprüche / Dopplungen / Textcluster:** Befunde mit Begründung entscheiden und Canonical Topics festlegen. Offene Blocker sperren Generierung, Freigabe und Export.
 4. **Kapitelgenerator:** Entwurf ausschließlich aus bestätigten Quellen erzeugen (`source_confirmed` / `manually_confirmed`).
 5. **Kapitelwerkstatt:** Absätze bearbeiten, verschieben, löschen, sperren, klassifizieren, kommentieren. Versionen vergleichen und wiederherstellen.
-6. **Freigabe:** Das Qualitätsgate muss bestanden sein; die Freigabe wird protokolliert.
-7. **Export / Rollen- und Spartenansichten:** gefiltert. Enthalten sind allgemeine Inhalte plus die passenden spezifischen.
-8. **Traceability:** Matrix als Excel, CSV oder Markdown.
+6. **Evidenz:** je Absatz prüfen, auf welcher Quelle er beruht und ob sie aktuell und bestätigt ist.
+7. **Freigabe:** Redaktion reicht ein (Qualitätsgate muss bestanden sein), die Freigabe entscheidet: freigeben oder ablehnen. Alles wird protokolliert.
+8. **Export / Rollen- und Spartenansichten:** gefiltert als Markdown, HTML, PDF oder JSON. Enthalten sind allgemeine Inhalte plus die passenden spezifischen.
+9. **Terminologie / Optimierungen:** Begriffe pflegen; Kennzahlen und priorisierte Empfehlungen je Kapitel.
+10. **Traceability:** Matrix als Excel, CSV oder Markdown.
 
 ### Import
 

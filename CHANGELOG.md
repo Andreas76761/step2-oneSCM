@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.0 – Etappe 3 (24.09.2026)
+
+### Hinzugefügt
+- Freigabeworkflow (US-016): Einreichen (nur mit bestandenem Qualitätsgate), Zurückziehen, Freigeben, Ablehnen zurück in den Entwurf; eingereichte Versionen sind gesperrt; Freigabe-Eingang in der UI.
+- Terminologieverwaltung (US-015): Tabelle `terminology_terms`, Seite „Terminologie“, Konsistenzprüfung, Ausmustern mit Audit; bestehende Einträge aus der Einstellung werden einmalig übernommen.
+- Evidenzansicht (US-011): Quellen je Absatz mit Revision, Bestätigung und Auffälligkeiten; Seite „Evidenz“.
+- Optimierungsübersicht (US-013): Kennzahlen je Kapitel, Nachweisquote, priorisierte Empfehlungen.
+- Export als HTML und PDF (US-014, ADR-012) – eingebettetes HTML aus Quellen wird nie ausgeführt.
+- Tests T-121 … T-125 und E2E T-203.
+
+### Geändert
+- `POST /chapter-versions/{id}/approve` erwartet jetzt eine eingereichte Version (`in_review`).
+- Terminologie ist nicht mehr Teil der Einstellungen.
+
+### Behoben (Review zu Etappe 2)
+- OIDC: `OIDC_AUDIENCE` ist Pflicht, `aud` wird immer geprüft.
+- Jobqueue: Lease-Rückholung bei jedem Polling, Heartbeat; Import/Analyselauf und Job atomar angelegt.
+
 ## 0.2.0 – Etappe 2 (24.09.2026)
 
 ### Entschieden

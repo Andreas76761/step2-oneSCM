@@ -316,14 +316,14 @@ describe('Kapitelgenerierung und Werkstatt (US-008, US-009)', () => {
     versionId = regen.id;
   });
 
-  it('[T-112] Qualitätsgate blockiert Freigabe; Freigabe protokolliert; Version danach unveränderlich', async () => {
+  it('[T-112] Qualitätsgate blockiert Einreichen und Freigabe; Freigabe protokolliert; Version danach unveränderlich', async () => {
     const gate = (await call('GET', `/chapter-versions/${versionId}/gate`)).json;
     expect(gate.passed).toBe(false);
     expect(gate.checks.find((c: any) => c.code === 'evidence_per_block').passed).toBe(false);
-    expect((await call('POST', `/chapter-versions/${versionId}/approve`, { comment: 'ok' }, 'u-redaktion')).status).toBe(403);
-    const blocked = await call('POST', `/chapter-versions/${versionId}/approve`, { comment: 'ok' }, 'u-freigabe');
+    const blocked = await call('POST', `/chapter-versions/${versionId}/submit`, {}, 'u-redaktion');
     expect(blocked.status).toBe(409);
     expect(blocked.json.gate.passed).toBe(false);
+    expect((await call('POST', `/chapter-versions/${versionId}/approve`, { comment: 'ok' }, 'u-freigabe')).json.detail).toContain('zuerst zur Freigabe eingereicht');
 
     const v = (await call('GET', `/chapter-versions/${versionId}`)).json;
     for (const b of blocks(v)) {
@@ -331,19 +331,27 @@ describe('Kapitelgenerierung und Werkstatt (US-008, US-009)', () => {
       else if (b.scopeStatus === 'unconfirmed') await call('PATCH', `/content-blocks/${b.id}`, { mode: 'manually_edited', scopeStatus: 'general' }, 'u-redaktion');
     }
     expect((await call('GET', `/chapter-versions/${versionId}/gate`)).json.passed).toBe(true);
-    expect((await call('POST', `/chapter-versions/${versionId}/approve`, {}, 'u-freigabe')).status).toBe(422);
-    const ok = await call('POST', `/chapter-versions/${versionId}/approve`, { comment: 'Fachlich geprüft' }, 'u-freigabe');
-    expect(ok.status).toBe(200);
-    expect(ok.json.status).toBe('approved');
-    expect(ok.json.approvals[0]).toMatchObject({ approver: 'u-freigabe', decision: 'approved', comment: 'Fachlich geprüft' });
-    expect(blocks(ok.json).every((b: any) => b.mode === 'approved')).toBe(true);
-    const anyBlock = blocks(ok.json)[0];
+    await freigeben(versionId, 'Fachlich geprüft');
+    const ok = (await call('GET', `/chapter-versions/${versionId}`)).json;
+    expect(ok.status).toBe('approved');
+    expect(ok.approvals[ok.approvals.length - 1]).toMatchObject({ approver: 'u-freigabe', decision: 'approved', comment: 'Fachlich geprüft' });
+    expect(blocks(ok).every((b: any) => b.mode === 'approved')).toBe(true);
+    const anyBlock = blocks(ok)[0];
     expect((await call('PATCH', `/content-blocks/${anyBlock.id}`, { text: 'nachträglich' })).status).toBe(409);
     expect((await call('POST', `/chapter-versions/${versionId}/approve`, { comment: 'nochmal' }, 'u-freigabe')).status).toBe(409);
     const audit = (await call('GET', `/audit-events?entityType=chapter_version&entityId=${versionId}`)).json;
-    expect(audit.map((a: any) => a.action)).toContain('chapter_version.approved');
+    expect(audit.map((a: any) => a.action)).toEqual(expect.arrayContaining(['chapter_version.submitted', 'chapter_version.approved']));
   });
 });
+
+/** Einreichen (Redaktion) und freigeben (Freigabe) – Workflow US-016 */
+async function freigeben(versionId: string, comment = 'Freigabe Test') {
+  const sub = await call('POST', `/chapter-versions/${versionId}/submit`, { comment: 'Bitte prüfen' }, 'u-redaktion');
+  expect(sub.status, JSON.stringify(sub.json)).toBe(200);
+  const res = await call('POST', `/chapter-versions/${versionId}/approve`, { comment }, 'u-freigabe');
+  expect(res.status, JSON.stringify(res.json)).toBe(200);
+  return res.json;
+}
 
 async function approveChapter(prefix: string) {
   const v = (await call('POST', `/chapters/${await chapterId(prefix)}/generate`, {}, 'u-redaktion')).json;
@@ -351,9 +359,7 @@ async function approveChapter(prefix: string) {
     if (b.kind === 'gap') await call('DELETE', `/content-blocks/${b.id}?reason=entfällt`, undefined, 'u-redaktion');
     else if (b.scopeStatus === 'unconfirmed') await call('PATCH', `/content-blocks/${b.id}`, { scopeStatus: 'confirmed' }, 'u-redaktion');
   }
-  const res = await call('POST', `/chapter-versions/${v.id}/approve`, { comment: 'Freigabe Test' }, 'u-freigabe');
-  expect(res.status).toBe(200);
-  return res.json;
+  return freigeben(v.id);
 }
 
 describe('Export (US-010, US-012, US-014)', () => {

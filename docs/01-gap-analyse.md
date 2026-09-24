@@ -62,4 +62,16 @@ Legende Status: ✅ im ersten Implementierungsschritt umgesetzt · 🟡 umgesetz
 | In-Process-Jobqueue | ✅ persistente Jobqueue in der Datenbank mit Wiederholung, Lease und Neustart-Sicherheit (ADR-008) |
 | E-06 Vorschlag führendes Kapitel | ✅ UI schlägt das Kapitel mit den meisten Cluster-Mitgliedern vor |
 
-Weiterhin offen (Etappe 3, P1): mehrstufiger Freigabeworkflow, eigene Terminologiemaske, HTML/PDF-Export, S3-kompatibler Object-Store für Mehrinstanzbetrieb.
+Weiterhin offen nach Etappe 2: Freigabeworkflow, eigene Terminologiemaske, HTML/PDF-Export (→ Etappe 3), S3-kompatibler Object-Store (→ Etappe 4).
+
+## 1.5 Stand nach Etappe 3 (24.09.2026)
+
+| P1-Story | Ergebnis |
+|---|---|
+| US-011 Evidenz- und Quellenansicht | ✅ `GET /chapter-versions/{id}/evidence`, Seite „Evidenz“: Quellen je Absatz, Revision, Bestätigung, Auffälligkeiten (fehlend, nur begründet, veraltet, unbestätigt, ausgeschlossen) |
+| US-013 Optimierungsdashboard | ✅ `GET /optimizations`: Kennzahlen je Kapitel, Nachweisquote, priorisierte Empfehlungen mit Sprung ins passende Modul |
+| US-014 Gefilterter Export | ✅ zusätzlich HTML (eigenständig, ohne Skripte) und PDF (ADR-012) |
+| US-015 Terminologieverwaltung | ✅ Tabelle `terminology_terms`, Seite „Terminologie“, Konsistenzprüfung, Ausmustern mit Audit; Analyse nutzt aktive Begriffe |
+| US-016 Freigabeworkflow | ✅ Entwurf → eingereicht → freigegeben/abgelehnt, Zurückziehen, Sperre während der Prüfung (einstufig gemäß E-12) |
+
+Offen (Etappe 4): US-019 Vergleich ganzer Kapitelversionen, S3-kompatibler Object-Store, optionale LLM-Umformulierung.

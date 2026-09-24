@@ -113,7 +113,8 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
       "INSERT INTO generated_chapter_versions (id, chapter_id, version_no, status, title, based_on_version_id, generator, generated_by, generated_at) VALUES (?, ?, ?, 'draft', ?, ?, ?, ?, ?)",
       versionId, chapterId, (prev?.version_no ?? 0) + 1, chapter.title, prev?.id ?? null, GENERATOR_ID, actor, now(),
     );
-    if (prev?.status === 'draft') await db.run("UPDATE generated_chapter_versions SET status = 'superseded' WHERE id = ?", prev.id);
+    // Offener Entwurf oder eingereichte Version wird durch die neue Version ersetzt
+    if (prev?.status === 'draft' || prev?.status === 'in_review') await db.run("UPDATE generated_chapter_versions SET status = 'superseded' WHERE id = ?", prev.id);
 
     // Manuelle und gesperrte Blöcke übernehmen – nie still überschreiben (US-009).
     const prevBlocks = prev ? await Promise.all((await activeBlocks(ctx, prev.id)).map(async (b) => ({ ...b, mode: await effectiveMode(ctx, b.id, b.mode) }))) : [];
@@ -238,6 +239,7 @@ export async function getChapterVersion(ctx: Ctx, versionId: string) {
   return {
     id: v.id, chapterId: v.chapter_id, versionNo: v.version_no, status: v.status, title: v.title, basedOnVersionId: v.based_on_version_id,
     generator: v.generator, generatedBy: v.generated_by, generatedAt: v.generated_at, approvedAt: v.approved_at,
+    submittedBy: v.submitted_by, submittedAt: v.submitted_at, submitComment: v.submit_comment,
     sections: CHAPTER_SECTIONS.map((s) => ({ code: s.code, title: s.title, blocks: blocks.filter((b) => b.section === s.code) })),
     approvals: approvals.map((a) => ({ id: a.id, approver: a.approver, decision: a.decision, comment: a.comment, gateResult: parseJson(a.gate_result, {}), createdAt: a.created_at })),
     deletedBlocks: await ctx.db.all('SELECT id, section_code AS section, text, deleted_at AS deletedAt FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NOT NULL', versionId),
@@ -245,7 +247,7 @@ export async function getChapterVersion(ctx: Ctx, versionId: string) {
 }
 
 export async function listChapterVersions(ctx: Ctx, chapterId: string) {
-  return await ctx.db.all('SELECT id, version_no AS versionNo, status, generated_at AS generatedAt, generated_by AS generatedBy, approved_at AS approvedAt FROM generated_chapter_versions WHERE chapter_id = ? ORDER BY version_no DESC', chapterId);
+  return await ctx.db.all('SELECT id, version_no AS versionNo, status, generated_at AS generatedAt, generated_by AS generatedBy, approved_at AS approvedAt, submitted_at AS submittedAt, submitted_by AS submittedBy FROM generated_chapter_versions WHERE chapter_id = ? ORDER BY version_no DESC', chapterId);
 }
 
 // ---------- Kapitelwerkstatt ----------
@@ -253,6 +255,7 @@ export async function listChapterVersions(ctx: Ctx, chapterId: string) {
 async function assertEditable(ctx: Ctx, versionId: string) {
   const v = await ctx.db.get('SELECT status, version_no FROM generated_chapter_versions WHERE id = ?', versionId);
   if (!v) throw notFound(`Kapitelversion ${versionId}`);
+  if (v.status === 'in_review') throw conflict(`Kapitelversion ${v.version_no} ist zur Freigabe eingereicht – zum Bearbeiten die Einreichung zurückziehen.`);
   if (v.status !== 'draft') throw conflict(`Kapitelversion ${v.version_no} ist ${v.status === 'approved' ? 'freigegeben und unveränderlich' : 'ersetzt'} – bitte eine neue Version generieren.`);
 }
 
@@ -420,24 +423,70 @@ export async function versionGate(ctx: Ctx, versionId: string) {
   return gateForChapter(ctx, v.chapter_id, 'approve', versionId);
 }
 
-export async function approveVersion(ctx: Ctx, versionId: string, input: { comment: string; decision?: 'approved' | 'rejected' }, actor: string) {
+// Freigabeworkflow (US-016, ENTSCHEIDUNG E-12: einstufig, keine Ausnahmen):
+// draft --submit--> in_review --approve--> approved
+//                   in_review --reject/withdraw--> draft (wieder bearbeitbar)
+
+async function versionRow(ctx: Ctx, versionId: string) {
   const v = await ctx.db.get('SELECT * FROM generated_chapter_versions WHERE id = ?', versionId);
   if (!v) throw notFound(`Kapitelversion ${versionId}`);
-  if (v.status !== 'draft') throw conflict(`Kapitelversion ist bereits ${v.status}.`);
-  if (!input.comment?.trim()) throw unprocessable('Die fachliche Freigabe benötigt einen Kommentar.');
+  return v;
+}
+
+const STATUS_LABEL: Record<string, string> = { draft: 'ein Entwurf', in_review: 'zur Freigabe eingereicht', approved: 'bereits freigegeben', superseded: 'durch eine neuere Version ersetzt' };
+
+/** Status bedingt ändern – schützt vor parallelen Aktionen. */
+async function transition(ctx: Ctx, versionId: string, from: string, set: string, ...params: unknown[]) {
+  const res = await ctx.db.run(`UPDATE generated_chapter_versions SET ${set} WHERE id = ? AND status = ?`, ...params, versionId, from);
+  if (!res.changes) throw conflict('Kapitelversion wurde zwischenzeitlich geändert.');
+}
+
+/** Zur Freigabe einreichen: nur mit bestandenem Qualitätsgate; danach ist die Version bis zur Entscheidung gesperrt. */
+export async function submitVersion(ctx: Ctx, versionId: string, input: { comment?: string }, actor: string) {
+  const v = await versionRow(ctx, versionId);
+  if (v.status !== 'draft') throw conflict(`Kapitelversion ist ${STATUS_LABEL[v.status] ?? v.status}.`);
+  const gate = await gateForChapter(ctx, v.chapter_id, 'approve', versionId);
+  if (!gate.passed) throw conflict('Qualitätsgate nicht bestanden – Einreichen nicht möglich.', { gate });
+  await ctx.db.tx(async () => {
+    await transition(ctx, versionId, 'draft', "status = 'in_review', submitted_by = ?, submitted_at = ?, submit_comment = ?", actor, now(), input.comment?.trim() || null);
+    await audit(ctx.db, actor, 'chapter_version.submitted', 'chapter_version', versionId, { comment: input.comment, gate });
+  });
+  return getChapterVersion(ctx, versionId);
+}
+
+/** Einreichung zurückziehen (z. B. für weitere Korrekturen) */
+export async function withdrawVersion(ctx: Ctx, versionId: string, input: { reason?: string }, actor: string) {
+  const v = await versionRow(ctx, versionId);
+  if (v.status !== 'in_review') throw conflict(`Kapitelversion ist ${STATUS_LABEL[v.status] ?? v.status}.`);
+  await ctx.db.tx(async () => {
+    await transition(ctx, versionId, 'in_review', "status = 'draft', submitted_by = NULL, submitted_at = NULL, submit_comment = NULL");
+    await audit(ctx.db, actor, 'chapter_version.withdrawn', 'chapter_version', versionId, { reason: input.reason });
+  });
+  return getChapterVersion(ctx, versionId);
+}
+
+/** Fachliche Entscheidung über eine eingereichte Version: freigeben oder ablehnen (zurück in den Entwurf). */
+export async function approveVersion(ctx: Ctx, versionId: string, input: { comment: string; decision?: 'approved' | 'rejected' }, actor: string) {
+  const v = await versionRow(ctx, versionId);
+  if (v.status !== 'in_review') {
+    throw conflict(v.status === 'draft' ? 'Kapitelversion muss zuerst zur Freigabe eingereicht werden.' : `Kapitelversion ist ${STATUS_LABEL[v.status] ?? v.status}.`);
+  }
+  if (!input.comment?.trim()) throw unprocessable('Die fachliche Entscheidung benötigt einen Kommentar.');
   const decision = input.decision ?? 'approved';
+  if (!['approved', 'rejected'].includes(decision)) throw badRequest('decision muss approved oder rejected sein.');
   const gate = await versionGate(ctx, versionId);
   const { db } = ctx;
   if (decision === 'rejected') {
-    await db.run('INSERT INTO approvals (id, chapter_version_id, approver, decision, comment, gate_result, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)', newId('ap'), versionId, actor, 'rejected', input.comment.trim(), json(gate), now());
-    await audit(db, actor, 'chapter_version.rejected', 'chapter_version', versionId, { comment: input.comment });
+    await db.tx(async () => {
+      await transition(ctx, versionId, 'in_review', "status = 'draft'");
+      await db.run('INSERT INTO approvals (id, chapter_version_id, approver, decision, comment, gate_result, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)', newId('ap'), versionId, actor, 'rejected', input.comment.trim(), json(gate), now());
+      await audit(db, actor, 'chapter_version.rejected', 'chapter_version', versionId, { comment: input.comment });
+    });
     return getChapterVersion(ctx, versionId);
   }
   if (!gate.passed) throw conflict('Qualitätsgate nicht bestanden – Freigabe nicht möglich.', { gate });
   await db.tx(async () => {
-    // Bedingte Aktualisierung schützt vor paralleler Doppelfreigabe
-    const approved = await db.run("UPDATE generated_chapter_versions SET status = 'approved', approved_at = ? WHERE id = ? AND status = 'draft'", now(), versionId);
-    if (!approved.changes) throw conflict('Kapitelversion wurde zwischenzeitlich geändert.');
+    await transition(ctx, versionId, 'in_review', "status = 'approved', approved_at = ?", now());
     await db.run("UPDATE generated_chapter_versions SET status = 'superseded' WHERE chapter_id = ? AND status = 'approved' AND id <> ?", v.chapter_id, versionId);
     for (const b of await db.all('SELECT id, version_no FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NULL', versionId)) {
       await db.run("UPDATE content_blocks SET mode = 'approved', version_no = ?, updated_at = ? WHERE id = ?", b.version_no + 1, now(), b.id);
