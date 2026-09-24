@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { currentProjectId, currentUserId, get, setCurrentProjectId, setCurrentUserId } from './api';
 import { initAuth, login, logout, type AuthConfig } from './auth';
 import { AppCtx, type Reference } from './components/ui';
@@ -74,6 +74,26 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'error' } | null>(null);
   const [projects, setProjects] = useState<{ id: string; name: string; archivedAt: string | null }[]>([]);
   const projectId = currentProjectId();
+  const [navOpen, setNavOpen] = useState(false);
+  const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  const firstRender = useRef(true);
+  // Nach einem Seitenwechsel: Menü schließen und Fokus auf die Seitenüberschrift setzen (WCAG 2.4.3)
+  useEffect(() => {
+    setNavOpen(false);
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const t = setTimeout(() => {
+      const h1 = mainRef.current?.querySelector<HTMLElement>('h1');
+      if (h1) {
+        h1.tabIndex = -1;
+        h1.focus({ preventScroll: false });
+      }
+    }, 50);
+    return () => clearTimeout(t);
+  }, [location.pathname]);
   const reloadProjects = useCallback(() => {
     get<any[]>('/projects').then((list) => {
       setProjects(list);
@@ -103,6 +123,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
 
   return (
     <AppCtx.Provider value={{ ref, reloadRef, notify: (msg, kind = 'ok') => setToast({ msg, kind }), userId, setUserId }}>
+      <a className="skip-link" href="#main">Zum Inhalt springen</a>
       <div className="shell">
         <aside className="sidebar">
           <div className="brand">
@@ -116,7 +137,10 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
               {!projects.some((p) => p.id === projectId) && <option value={projectId}>{projectId}</option>}
             </select>
           </div>
-          <nav aria-label="Hauptnavigation">
+          <button className="btn nav-toggle" aria-expanded={navOpen} aria-controls="main-nav" onClick={() => setNavOpen(!navOpen)}>
+            {navOpen ? '✕ Menü schließen' : '☰ Menü'}
+          </button>
+          <nav id="main-nav" aria-label="Hauptnavigation" className={navOpen ? 'open' : ''}>
             {NAV.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
                 <span aria-hidden="true">{n.icon}</span> {n.label}
@@ -143,7 +167,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <small title="Technische Berechtigungen – getrennt von fachlichen Rollen (ADR-009)">Berechtigungen: {me?.permissions.join(', ') || '–'}</small>
           </div>
         </aside>
-        <main className="main" key={userId}>
+        <main className="main" key={userId} id="main" ref={mainRef} tabIndex={-1}>
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/quellen" element={<SourcesPage />} />

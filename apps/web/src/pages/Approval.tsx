@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Decision, Empty, Page, Status, useLoad } from '../components/ui';
+import { Card, Decision, Empty, Page, Status, useLoad, activatable } from '../components/ui';
 import { ApprovalPanel } from './Workshop';
 
 const ORDER: Record<string, number> = { in_review: 0, draft: 1, approved: 2, superseded: 3 };
@@ -22,7 +22,7 @@ export function ApprovalPage() {
               <thead><tr><th>Kapitel</th><th>Version</th><th>Status</th><th>Blocker</th><th /></tr></thead>
               <tbody>
                 {withVersion.map((c) => (
-                  <tr key={c.id} className={`clickable ${current?.id === c.id ? 'selected' : ''}`} onClick={() => setSel(c.id)}>
+                  <tr key={c.id} className={`clickable ${current?.id === c.id ? 'selected' : ''}`} {...activatable(() => setSel(c.id))} aria-current={current?.id === c.id ? 'true' : undefined}>
                     <td>{c.title}</td>
                     <td>V{c.versions[0].versionNo}</td>
                     <td><Status s={c.versions[0].status} /></td>

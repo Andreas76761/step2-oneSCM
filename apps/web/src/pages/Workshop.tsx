@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
 import {
   Badge, Diff, DivisionBadges, Empty, ErrorBox, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad,
+  activatable,
 } from '../components/ui';
 import { SourceViewer } from './Sources';
 
@@ -172,7 +173,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
   };
 
   return (
-    <article className={`block kind-${b.kind} mode-${b.mode} ${selected ? 'selected' : ''}`} onClick={onSelect} aria-label={`Block ${KIND_LABEL[b.kind] ?? b.kind}`}>
+    <article className={`block kind-${b.kind} mode-${b.mode} ${selected ? 'selected' : ''}`} {...activatable(onSelect)} aria-current={selected ? 'true' : undefined} aria-label={`Block ${KIND_LABEL[b.kind] ?? b.kind}`}>
       <div className="block-meta">
         <span className="tag">{KIND_LABEL[b.kind] ?? b.kind}</span>
         <Status s={b.mode} />
@@ -462,7 +463,7 @@ function SourcesTab({ block }: { block?: any }) {
       {block.sources.map((s: any) => (
         <div key={s.snippetId} className="source-item">
           <div className="small"><strong>#{s.seq}</strong> {s.path} · Rev. {s.revisionNo}{s.isCurrent ? '' : ' (veraltet)'} · Z. {s.lineStart}–{s.lineEnd} · <Status s={s.evidenceStatus} /></div>
-          <pre className="source small">{texts[s.snippetId] ?? '…'}</pre>
+          <pre tabIndex={0} aria-label="Quelltext" className="source small">{texts[s.snippetId] ?? '…'}</pre>
           <button className="btn link small" onClick={() => setViewer(s)}>Quelle öffnen</button>
         </div>
       ))}
