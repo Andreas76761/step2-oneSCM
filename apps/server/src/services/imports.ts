@@ -35,7 +35,7 @@ export async function createImport(ctx: Ctx, fileName: string, data: Buffer, act
       'INSERT INTO imports (id, project_id, file_name, kind, sha256, byte_size, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : 'md', hash, data.length, 'queued', actor, now(),
     );
-    await audit(ctx.db, actor, 'import.created', 'import', id, { fileName, sha256: hash });
+    await audit(ctx, actor, 'import.created', 'import', id, { fileName, sha256: hash });
     // Persistenter Job: Originaldatei liegt im Object-Store, der Job kennt nur die Import-ID
     await ctx.jobs.enqueue('import', { importId: id });
   });
@@ -54,7 +54,7 @@ export async function runImportJob(ctx: Ctx, payload: { importId: string }) {
 /** Job endgültig fehlgeschlagen (nach allen Wiederholungen). */
 export async function failImportJob(ctx: Ctx, payload: { importId: string }, error: string) {
   await ctx.db.run("UPDATE imports SET status = 'failed', error = ?, finished_at = ? WHERE id = ?", error, now(), payload.importId);
-  await audit(ctx.db, 'system', 'import.failed', 'import', payload.importId, { error });
+  await audit(ctx, 'system', 'import.failed', 'import', payload.importId, { error });
 }
 
 async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<Entry[]> {
@@ -137,7 +137,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
 
   const status = stats.failed === 0 ? 'completed' : stats.failed === stats.files ? 'failed' : 'completed_with_errors';
   await db.run('UPDATE imports SET status = ?, finished_at = ?, stats = ? WHERE id = ?', status, now(), json(stats), importId);
-  await audit(db, 'system', 'import.finished', 'import', importId, { status, ...stats });
+  await audit(ctx, 'system', 'import.finished', 'import', importId, { status, ...stats });
 }
 
 async function storeRevision(ctx: Ctx, importId: string, filePath: string, data: Buffer, text: string) {

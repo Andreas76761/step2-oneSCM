@@ -5,6 +5,7 @@ import { evaluateGate, type GateResult } from '../domain/gate.js';
 import { generateChapter, GENERATOR_ID, type GenSnippet } from '../domain/generator.js';
 import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, ROLE_CODES, SECTION_CODES } from '../domain/reference.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
+import { assertIdsInProject } from './projects.js';
 
 // ---------- Kapitel ----------
 
@@ -158,7 +159,7 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
       }, actor, 'generiert');
     }
     await normalizePositions(ctx, versionId);
-    await audit(db, actor, 'chapter.generated', 'chapter_version', versionId, { chapterId, gaps: result.gaps, used: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, carried: carried.length });
+    await audit(ctx, actor, 'chapter.generated', 'chapter_version', versionId, { chapterId, gaps: result.gaps, used: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, carried: carried.length });
   });
   return { ...(await getChapterVersion(ctx, versionId)), generation: { gaps: result.gaps, usedSnippets: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated } };
 }
@@ -329,6 +330,7 @@ export async function patchBlock(ctx: Ctx, id: string, p: BlockPatch, actor: str
     p.market !== undefined || p.release !== undefined || p.scopeStatus !== undefined || p.justification !== undefined || p.sourceIds !== undefined;
   if (b.mode === 'locked' && contentChange && !unlocking) throw conflict('Block ist gesperrt. Zum Bearbeiten zuerst entsperren (mode: manually_edited).');
 
+  if (p.sourceIds) await assertIdsInProject(ctx, 'snippetId', p.sourceIds);
   const { db } = ctx;
   let changeType = 'edited';
   await db.tx(async () => {
@@ -369,14 +371,11 @@ export async function patchBlock(ctx: Ctx, id: string, p: BlockPatch, actor: str
     }
     if (p.sourceIds) {
       await db.run('DELETE FROM content_block_sources WHERE block_id = ?', id);
-      for (const s of p.sourceIds) {
-        if (!await db.get('SELECT id FROM text_snippets WHERE id = ?', s)) throw badRequest(`Textabschnitt ${s} existiert nicht.`);
-        await db.run('INSERT INTO content_block_sources VALUES (?, ?)', id, s);
-      }
+      for (const s of p.sourceIds) await db.run('INSERT INTO content_block_sources VALUES (?, ?)', id, s);
     }
     if (p.position !== undefined || p.section !== undefined) await normalizePositions(ctx, b.chapter_version_id);
     await snapshot(ctx, id, b.version_no + 1, changeType, actor, p.reason ?? null);
-    await audit(db, actor, `content_block.${changeType}`, 'content_block', id, { ...p, previousVersion: b.version_no });
+    await audit(ctx, actor, `content_block.${changeType}`, 'content_block', id, { ...p, previousVersion: b.version_no });
   });
   return blockDto(ctx, await blockRow(ctx, id));
 }
@@ -386,6 +385,7 @@ export async function createBlock(ctx: Ctx, versionId: string, p: BlockPatch & {
   await assertEditable(ctx, versionId);
   if (!p.text?.trim()) throw unprocessable('Text ist Pflicht.');
   if (!p.section) throw unprocessable('Abschnitt (section) ist Pflicht.');
+  if (p.sourceIds?.length) await assertIdsInProject(ctx, 'snippetId', p.sourceIds);
   let id = '';
   await ctx.db.tx(async () => {
     const maxPos = (await ctx.db.get<{ m: number | null }>('SELECT MAX(position) AS m FROM content_blocks WHERE chapter_version_id = ? AND section_code = ?', versionId, p.section))?.m;
@@ -395,7 +395,7 @@ export async function createBlock(ctx: Ctx, versionId: string, p: BlockPatch & {
       justification: p.justification ?? null, comment: p.comment ?? null,
     }, actor, p.reason ?? 'manuell hinzugefügt');
     await normalizePositions(ctx, versionId);
-    await audit(ctx.db, actor, 'content_block.created', 'content_block', id, p);
+    await audit(ctx, actor, 'content_block.created', 'content_block', id, p);
   });
   return blockDto(ctx, await blockRow(ctx, id));
 }
@@ -408,7 +408,7 @@ export async function deleteBlock(ctx: Ctx, id: string, reason: string | undefin
   await ctx.db.tx(async () => {
     await ctx.db.run('UPDATE content_blocks SET deleted_at = ?, version_no = ?, updated_at = ? WHERE id = ?', now(), b.version_no + 1, now(), id);
     await snapshot(ctx, id, b.version_no + 1, 'deleted', actor, reason ?? null);
-    await audit(ctx.db, actor, 'content_block.deleted', 'content_block', id, { reason });
+    await audit(ctx, actor, 'content_block.deleted', 'content_block', id, { reason });
   });
 }
 
@@ -443,7 +443,7 @@ export async function restoreBlock(ctx: Ctx, id: string, versionNo: number, acto
     for (const sid of s.sourceIds ?? []) await db.run('INSERT INTO content_block_sources VALUES (?, ?)', id, sid);
     await normalizePositions(ctx, b.chapter_version_id);
     await snapshot(ctx, id, b.version_no + 1, 'restored', actor, `Wiederhergestellt aus Version ${versionNo}`);
-    await audit(db, actor, 'content_block.restored', 'content_block', id, { fromVersion: versionNo });
+    await audit(ctx, actor, 'content_block.restored', 'content_block', id, { fromVersion: versionNo });
   });
   return blockDto(ctx, await blockRow(ctx, id));
 }
@@ -482,7 +482,7 @@ export async function submitVersion(ctx: Ctx, versionId: string, input: { commen
   if (!gate.passed) throw conflict('Qualitätsgate nicht bestanden – Einreichen nicht möglich.', { gate });
   await ctx.db.tx(async () => {
     await transition(ctx, versionId, 'draft', "status = 'in_review', submitted_by = ?, submitted_at = ?, submit_comment = ?", actor, now(), input.comment?.trim() || null);
-    await audit(ctx.db, actor, 'chapter_version.submitted', 'chapter_version', versionId, { comment: input.comment, gate });
+    await audit(ctx, actor, 'chapter_version.submitted', 'chapter_version', versionId, { comment: input.comment, gate });
   });
   return getChapterVersion(ctx, versionId);
 }
@@ -493,7 +493,7 @@ export async function withdrawVersion(ctx: Ctx, versionId: string, input: { reas
   if (v.status !== 'in_review') throw conflict(`Kapitelversion ist ${STATUS_LABEL[v.status] ?? v.status}.`);
   await ctx.db.tx(async () => {
     await transition(ctx, versionId, 'in_review', "status = 'draft', submitted_by = NULL, submitted_at = NULL, submit_comment = NULL");
-    await audit(ctx.db, actor, 'chapter_version.withdrawn', 'chapter_version', versionId, { reason: input.reason });
+    await audit(ctx, actor, 'chapter_version.withdrawn', 'chapter_version', versionId, { reason: input.reason });
   });
   return getChapterVersion(ctx, versionId);
 }
@@ -513,7 +513,7 @@ export async function approveVersion(ctx: Ctx, versionId: string, input: { comme
     await db.tx(async () => {
       await transition(ctx, versionId, 'in_review', "status = 'draft'");
       await db.run('INSERT INTO approvals (id, chapter_version_id, approver, decision, comment, gate_result, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)', newId('ap'), versionId, actor, 'rejected', input.comment.trim(), json(gate), now());
-      await audit(db, actor, 'chapter_version.rejected', 'chapter_version', versionId, { comment: input.comment });
+      await audit(ctx, actor, 'chapter_version.rejected', 'chapter_version', versionId, { comment: input.comment });
     });
     return getChapterVersion(ctx, versionId);
   }
@@ -526,7 +526,7 @@ export async function approveVersion(ctx: Ctx, versionId: string, input: { comme
       await snapshot(ctx, b.id, b.version_no + 1, 'approved', actor, input.comment.trim());
     }
     await db.run('INSERT INTO approvals (id, chapter_version_id, approver, decision, comment, gate_result, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)', newId('ap'), versionId, actor, 'approved', input.comment.trim(), json(gate), now());
-    await audit(db, actor, 'chapter_version.approved', 'chapter_version', versionId, { comment: input.comment, gate });
+    await audit(ctx, actor, 'chapter_version.approved', 'chapter_version', versionId, { comment: input.comment, gate });
   });
   return getChapterVersion(ctx, versionId);
 }

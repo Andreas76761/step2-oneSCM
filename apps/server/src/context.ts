@@ -82,6 +82,11 @@ export function requirePermission(user: User, perm: Permission) {
   }
 }
 
-export async function audit(db: Db, actor: string, action: string, entityType: string, entityId: string, details: unknown = {}) {
-  await db.run('INSERT INTO audit_events (id, at, actor, action, entity_type, entity_id, details) VALUES (?, ?, ?, ?, ?, ?, ?)', newId('ae'), now(), actor, action, entityType, entityId, json(details));
+/** Audit-Eintrag; mit Kontext im Projekt, mit reiner Datenbank systemweit (z. B. Einstellungen, Projektverwaltung). */
+export async function audit(scope: Pick<Ctx, 'db' | 'projectId'> | Db, actor: string, action: string, entityType: string, entityId: string, details: unknown = {}) {
+  const [db, projectId] = 'projectId' in scope ? [scope.db, scope.projectId] : [scope, null];
+  await db.run(
+    'INSERT INTO audit_events (id, at, actor, action, entity_type, entity_id, details, project_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    newId('ae'), now(), actor, action, entityType, entityId, json(details), projectId,
+  );
 }

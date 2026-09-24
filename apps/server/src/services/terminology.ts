@@ -102,7 +102,7 @@ export async function createTerm(ctx: Ctx, input: TermInput, actor: string) {
        VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)`,
       id, ctx.projectId, preferred, json(avoid), input.definition?.trim() || null, actor, now(), actor, now(),
     );
-    await audit(ctx.db, actor, 'term.created', 'term', id, { preferred, avoid });
+    await audit(ctx, actor, 'term.created', 'term', id, { preferred, avoid });
   });
   return getTerm(ctx, id);
 }
@@ -120,7 +120,7 @@ export async function updateTerm(ctx: Ctx, id: string, input: TermInput, actor: 
       'UPDATE terminology_terms SET preferred = ?, avoid = ?, definition = ?, status = ?, updated_by = ?, updated_at = ? WHERE id = ?',
       preferred, json(avoid), input.definition !== undefined ? input.definition?.trim() || null : before.definition, status, actor, now(), id,
     );
-    await audit(ctx.db, actor, status === 'retired' && before.status === 'active' ? 'term.retired' : 'term.updated', 'term', id, { before, after: { preferred, avoid, status } });
+    await audit(ctx, actor, status === 'retired' && before.status === 'active' ? 'term.retired' : 'term.updated', 'term', id, { before, after: { preferred, avoid, status } });
   });
   return getTerm(ctx, id);
 }

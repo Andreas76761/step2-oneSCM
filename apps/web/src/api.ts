@@ -2,6 +2,7 @@
 import { accessToken, authMode, login } from './auth';
 
 const USER_KEY = 'onescm.user';
+const PROJECT_KEY = 'onescm.project';
 
 export function currentUserId(): string {
   try {
@@ -18,6 +19,31 @@ export function setCurrentUserId(id: string) {
   }
 }
 
+/** Aktuelles Projekt (ADR-014); ohne Auswahl das Standardprojekt */
+export function currentProjectId(): string {
+  try {
+    return localStorage.getItem(PROJECT_KEY) ?? 'p_default';
+  } catch {
+    return 'p_default';
+  }
+}
+export function setCurrentProjectId(id: string) {
+  try {
+    localStorage.setItem(PROJECT_KEY, id);
+  } catch {
+    /* ohne Speicher weiter mit Standard */
+  }
+}
+
+function authHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'X-Project-Id': currentProjectId() };
+  if (authMode() === 'oidc') {
+    const token = accessToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+  } else headers['X-User-Id'] = currentUserId();
+  return headers;
+}
+
 export class ApiError extends Error {
   constructor(public status: number, public problem: any) {
     super(problem?.detail ?? problem?.title ?? `HTTP ${status}`);
@@ -25,11 +51,7 @@ export class ApiError extends Error {
 }
 
 export async function api<T = any>(method: string, path: string, body?: unknown): Promise<T> {
-  const headers: Record<string, string> = {};
-  if (authMode() === 'oidc') {
-    const token = accessToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
-  } else headers['X-User-Id'] = currentUserId();
+  const headers = authHeaders();
   let payload: BodyInit | undefined;
   if (body instanceof FormData) payload = body;
   else if (body !== undefined) {
@@ -60,8 +82,7 @@ export function qs(params: Record<string, string | number | boolean | undefined 
 
 /** Datei mit Anmeldung herunterladen (Links allein tragen im OIDC-Modus kein Token). */
 export async function download(path: string, fallbackName: string) {
-  const headers: Record<string, string> = authMode() === 'oidc' ? { Authorization: `Bearer ${accessToken() ?? ''}` } : { 'X-User-Id': currentUserId() };
-  const res = await fetch(path, { headers });
+  const res = await fetch(path, { headers: authHeaders() });
   if (!res.ok) throw new ApiError(res.status, await res.json().catch(() => null));
   const name = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') ?? '')?.[1] ?? fallbackName;
   const url = URL.createObjectURL(await res.blob());
