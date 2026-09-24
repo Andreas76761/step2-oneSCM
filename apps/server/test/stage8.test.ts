@@ -295,3 +295,95 @@ describe('Git-Quellverbindungen (ADR-022)', () => {
     }
   });
 });
+
+describe('Analytik und Berichte (ADR-023)', () => {
+  const dataDir = tempDir();
+  afterAll(() => fs.rmSync(dataDir, { recursive: true, force: true }));
+
+  it('[T-145] Kennzahlen-Zeitreihe mit Fortschreibung, Flussgrößen, Freigabedauer, Projektbericht (PDF) und BI-Export (CSV/JSON)', async () => {
+    const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'analytics'), logger: false, webDist: null, authMode: 'demo' });
+    const call = client(built);
+    try {
+      await importFile(built, 'a.md', `${FM}# 1. Anmeldung\n\n## 1.1 Zweck\n\nDieses Kapitel beschreibt die Anmeldung.\n\n# =HYPERLINK("http://x")\n\n## Zweck\n\nDer Auftrag wird angelegt.\n\nDer Auftrag wird angelegt.\n`);
+      expect((await call('POST', '/quality/analysis', {}, 'u-redaktion')).status).toBe(202);
+      await built.ctx.jobs.idle();
+      const chapters = (await call('GET', '/chapters')).json.filter((c: any) => c.title !== 'Ohne Kapitel');
+      const c1 = chapters.find((c: any) => c.title === '1. Anmeldung');
+      // eine Ablehnung, dann Freigabe
+      const v = (await call('POST', `/chapters/${c1.id}/generate`, {}, 'u-redaktion')).json;
+      for (const b of v.sections.flatMap((s: any) => s.blocks)) if (b.kind === 'gap') await call('DELETE', `/content-blocks/${b.id}?reason=entfällt`, undefined, 'u-redaktion');
+      await call('POST', `/chapter-versions/${v.id}/submit`, {}, 'u-redaktion');
+      expect((await call('POST', `/chapter-versions/${v.id}/approve`, { comment: 'nachbessern', decision: 'rejected' }, 'u-freigabe')).status).toBe(200);
+      await call('POST', `/chapter-versions/${v.id}/submit`, {}, 'u-redaktion');
+      expect((await call('POST', `/chapter-versions/${v.id}/approve`, { comment: 'ok' }, 'u-freigabe')).status).toBe(200);
+
+      // ältere Snapshots (vor 10 und 5 Tagen) für die Zeitreihe
+      const today = new Date().toISOString().slice(0, 10);
+      const ago = (d: number) => new Date(Date.now() - d * 86_400_000).toISOString().slice(0, 10);
+      const old = { snippets: 1, confirmedSnippets: 0, confirmedShare: 0, openFindings: 9, openBlockers: 2, chapters: 1, approvedChapters: 0, inReview: 0, evidenceCoverage: 0 };
+      await built.ctx.db.run('INSERT INTO kpi_snapshots (project_id, day, metrics, updated_at) VALUES (?, ?, ?, ?)', 'p_default', ago(10), JSON.stringify(old), new Date().toISOString());
+      await built.ctx.db.run('INSERT INTO kpi_snapshots (project_id, day, metrics, updated_at) VALUES (?, ?, ?, ?)', 'p_default', ago(5), JSON.stringify({ ...old, openFindings: 4 }), new Date().toISOString());
+
+      const a = (await call('GET', `/analytics?from=${ago(7)}&to=${today}`)).json;
+      expect(a.current).toMatchObject({ chapters: 2, approvedChapters: 1, inReview: 0 });
+      expect(a.current.snippets).toBeGreaterThanOrEqual(3);
+      expect(a.current.openFindings).toBeGreaterThanOrEqual(1); // Dublette
+      expect(a.current.evidenceCoverage).toBe(100);
+      expect(a.series).toHaveLength(8);
+      expect(a.series[0]).toMatchObject({ day: ago(7), openFindings: 9 }); // fortgeschrieben aus dem Snapshot vor dem Zeitraum
+      expect(a.series[2]).toMatchObject({ day: ago(5), openFindings: 4 });
+      expect(a.series[6].openFindings).toBe(4);
+      expect(a.series[7]).toMatchObject({ day: today, approvedChapters: 1 });
+      const flowToday = a.flow.find((d: any) => d.day === today);
+      expect(flowToday).toMatchObject({ approvals: 1, rejections: 1, imports: 1 });
+      expect(flowToday.findingsOpened).toBeGreaterThanOrEqual(1);
+      expect(a.approvals).toMatchObject({ decisions: 2, approved: 1, rejected: 1, firstPassRate: 0 });
+      expect(a.approvals.reviewHours.median).not.toBeNull();
+      expect(a.approvals.leadHours.median).not.toBeNull();
+      expect((await call('GET', '/analytics?from=2026-13-01')).status).toBe(400);
+      expect((await call('GET', `/analytics?from=${today}&to=${ago(3)}`)).status).toBe(400);
+
+      // Projektbericht
+      const pdf = await call('GET', '/analytics/report');
+      expect(pdf.status).toBe(200);
+      expect(pdf.headers['content-type']).toBe('application/pdf');
+      expect(pdf.raw.subarray(0, 5).toString()).toBe('%PDF-');
+      expect(pdf.raw.length).toBeGreaterThan(3000);
+
+      // BI-Export
+      const csv = await call('GET', '/analytics/export/chapters');
+      expect(csv.headers['content-type']).toContain('text/csv');
+      expect(csv.body.startsWith('﻿chapterId,chapter,latestVersion,latestStatus,approvedAt,openFindings,openBlockers\r\n')).toBe(true);
+      expect(csv.body).toContain(`"'=HYPERLINK(""http://x"")"`); // Formel-Injektion entschärft
+      expect(csv.body).toContain(',approved,');
+      const appr = (await call('GET', '/analytics/export/approvals?format=json')).json;
+      expect(appr.rows.map((r: any) => r.decision)).toEqual(['rejected', 'approved']);
+      expect(appr.rows[1]).toMatchObject({ chapter: '1. Anmeldung', versionNo: v.versionNo });
+      expect((await call('GET', `/analytics/export/kpis?format=json&from=${ago(1)}`)).json.rows).toHaveLength(2);
+      expect((await call('GET', '/analytics/export/findings?format=json')).json.rows[0].id).toMatch(/^B-\d+$/);
+      expect((await call('GET', '/analytics/export/flow')).body.split('\r\n')[0]).toBe('﻿day,findingsOpened,findingsResolved,approvals,rejections,imports,releases');
+      expect((await call('GET', '/analytics/export/nutzer')).status).toBe(400);
+      expect((await call('GET', '/analytics/export/chapters?format=xml')).status).toBe(400);
+
+      // Projektgrenzen; archivierte Projekte schreiben keine Snapshots
+      const other = (await call('POST', '/projects', { name: 'Leer' })).json;
+      const oa = (await call('GET', '/analytics', undefined, 'u-admin', other.id)).json;
+      expect(oa.current).toMatchObject({ snippets: 0, chapters: 0, openFindings: 0 });
+      expect(oa.approvals.decisions).toBe(0);
+      await call('PATCH', `/projects/${other.id}`, { archived: true });
+      await built.ctx.db.run('DELETE FROM kpi_snapshots WHERE project_id = ?', other.id);
+      expect((await call('GET', '/analytics', undefined, 'u-admin', other.id)).status).toBe(200);
+      expect(await built.ctx.db.get('SELECT day FROM kpi_snapshots WHERE project_id = ?', other.id)).toBeUndefined();
+
+      // Täglicher Job: genau eine geplante Ausführung
+      const { runDailySnapshots } = await import('../src/services/analytics.js');
+      const { withProject } = await import('../src/services/projects.js');
+      await runDailySnapshots(built.ctx, (id) => withProject(built.ctx, id));
+      const daily = await built.ctx.db.all("SELECT run_after FROM jobs WHERE type = 'kpi-daily' AND status = 'queued'");
+      expect(daily.length).toBeGreaterThanOrEqual(1);
+      expect(daily.every((j: any) => j.run_after > new Date().toISOString())).toBe(true);
+    } finally {
+      await built.app.close();
+    }
+  });
+});

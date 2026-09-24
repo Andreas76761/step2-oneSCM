@@ -25,6 +25,8 @@ import { deliverNotification } from './services/collaboration.js';
 import { runIndexJob } from './services/semantic.js';
 import { failSync, runSync } from './services/connections.js';
 import { connectionRoutes } from './routes/connections.js';
+import { analyticsRoutes } from './routes/analytics.js';
+import { ensureDailyJob, runDailySnapshots } from './services/analytics.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
 import { rewriteRoutes } from './routes/rewrite.js';
@@ -110,7 +112,11 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     if (await archived(c)) return failSync(c, p, ARCHIVED);
     await runSync(c, p);
   }, async (p, err) => failSync(await connectionCtx(p), p, err));
-  if (options.worker !== false && process.env.JOB_WORKER !== '0') await jobs.start();
+  jobs.register('kpi-daily', async () => runDailySnapshots(ctx, (id) => withProject(ctx, id)));
+  if (options.worker !== false && process.env.JOB_WORKER !== '0') {
+    await ensureDailyJob(ctx);
+    await jobs.start();
+  }
 
   await app.register(multipart, { limits: { fileSize: 512 * 1024 * 1024, files: 1 } });
 
@@ -193,6 +199,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       semanticRoutes(api, ctx);
       releaseRoutes(api, ctx);
       connectionRoutes(api, ctx);
+      analyticsRoutes(api, ctx);
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
     },
