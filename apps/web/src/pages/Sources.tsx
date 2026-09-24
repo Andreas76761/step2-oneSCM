@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { api, get, patch, qs } from '../api';
+import { api, del, get, patch, post, qs } from '../api';
 import {
   Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
   activatable,
 } from '../components/ui';
+
+const ENGINE_LABEL: Record<string, string> = { exact: 'exakte Suche', hnsw: 'HNSW-Näherung', pgvector: 'pgvector' };
 
 export function SourcesPage() {
   const { notify } = useApp();
@@ -60,10 +62,10 @@ export function SourcesPage() {
               void upload(e.dataTransfer.files[0]);
             }}
           >
-            <input type="file" accept=".zip,.md,.markdown" data-testid="file-input" disabled={busy} onChange={(e) => void upload(e.target.files?.[0] ?? undefined)} />
-            <span>{busy ? 'Import läuft …' : 'ZIP- oder MD-Datei hierher ziehen oder auswählen'}</span>
+            <input type="file" accept=".zip,.md,.markdown,.html,.htm,.docx" data-testid="file-input" disabled={busy} onChange={(e) => void upload(e.target.files?.[0] ?? undefined)} />
+            <span>{busy ? 'Import läuft …' : 'ZIP-, Markdown-, HTML- oder Word-Datei hierher ziehen oder auswählen'}</span>
           </label>
-          <Decision id="E-01">Erlaubt sind .md, .markdown und .zip; Grenzen unter Einstellungen. Identische Dateien (gleicher Pfad, gleicher SHA-256) erzeugen keine neue Revision.</Decision>
+          <Decision id="E-01">Erlaubt sind .md, .markdown, .zip sowie Confluence-/HTML-Export und Word (.docx), die in Markdown umgewandelt werden (Original bleibt erhalten); Grenzen unter Einstellungen. Identische Inhalte (gleicher Pfad, gleicher SHA-256) erzeugen keine neue Revision.</Decision>
         </Card>
         <Card title="Importprotokoll">
           <ErrorBox error={imports.error} />
@@ -86,6 +88,8 @@ export function SourcesPage() {
           )}
         </Card>
       </div>
+
+      <Connections onSynced={() => (imports.reload(), chapters.reload(), snippets.reload())} />
 
       <SemanticSearch chapters={chapters.data ?? []} onOpen={async (id) => setSelected(await get(`/snippets/${id}`))} />
 
@@ -337,7 +341,8 @@ function SemanticSearch({ chapters, onOpen }: { chapters: any[]; onOpen: (id: st
       {result && (
         <>
           <p className="small muted">
-            {result.hits.length} Treffer · Modell {result.model}{result.external ? ' (externer Dienst)' : ' (lokal)'} · {result.indexed} Abschnitte im Index
+            {result.hits.length} Treffer · Modell {result.model}{result.external ? ' (externer Dienst)' : ' (lokal)'} · {result.indexed} Abschnitte im Index ({ENGINE_LABEL[result.engine] ?? result.engine})
+            {result.pending > 0 && <> · {result.pending} Abschnitte werden noch indiziert</>}
             {result.excluded > 0 && <> · {result.excluded} wegen Datenschutz nicht übertragen</>}
           </p>
           {!result.hits.length ? <Empty>Keine ähnlichen Textabschnitte gefunden.</Empty> : (
@@ -353,6 +358,88 @@ function SemanticSearch({ chapters, onOpen }: { chapters: any[]; onOpen: (id: st
             </ol>
           )}
         </>
+      )}
+    </Card>
+  );
+}
+
+/** Git-Quellverbindungen mit automatischer Neu-Synchronisierung (ADR-022) */
+function Connections({ onSynced }: { onSynced: () => void }) {
+  const { notify } = useApp();
+  const list = useLoad<any[]>('/source-connections');
+  const me = useLoad<any>('/me');
+  const isAdmin = !!me.data?.permissions.includes('admin');
+  const canSync = !!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin');
+  const empty = { name: '', url: '', branch: '', subPath: '', intervalMinutes: '0', credentialEnv: '' };
+  const [form, setForm] = useState<Record<string, string> | null>(null);
+
+  const waitFor = async (id: string) => {
+    for (let i = 0; i < 120; i++) {
+      const c = await get<any>(`/source-connections/${id}`);
+      if (!['queued', 'syncing', 'importing'].includes(c.status)) {
+        notify(c.status === 'failed' ? `Abgleich „${c.name}“ fehlgeschlagen: ${c.lastError}` : `Abgleich „${c.name}“ abgeschlossen (Commit ${c.lastCommit?.slice(0, 7)}).`, c.status === 'failed' ? 'error' : 'ok');
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    list.reload();
+    onSynced();
+  };
+  const run = async (fn: () => Promise<any>) => {
+    try {
+      const c = await fn();
+      list.reload();
+      if (c?.id) void waitFor(c.id);
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const save = () => run(async () => {
+    const c = await post('/source-connections', { ...form, intervalMinutes: Number(form!.intervalMinutes), branch: form!.branch || null, credentialEnv: form!.credentialEnv || null });
+    setForm(null);
+    return c;
+  });
+
+  return (
+    <Card title="Quellverbindungen (Git)" actions={isAdmin && <button className="btn" onClick={() => setForm(empty)}>Verbindung anlegen</button>}>
+      <ErrorBox error={list.error} />
+      {!list.data?.length ? <Empty>Keine Git-Repositories verbunden. Markdown-, HTML- und Word-Dateien eines Repository-Ordners lassen sich automatisch abgleichen.</Empty> : (
+        <table className="table compact">
+          <thead><tr><th>Name</th><th>Repository</th><th>Status</th><th>Letzter Abgleich</th><th>Intervall</th><th><span className="sr-only">Aktionen</span></th></tr></thead>
+          <tbody>
+            {list.data.map((c) => (
+              <tr key={c.id}>
+                <td>{c.name}</td>
+                <td className="small">{c.url}{c.branch && <> · {c.branch}</>}{c.subPath && <> · /{c.subPath}</>}{c.credentialAvailable === false && <div className="tag st-failed">{c.credentialEnv} fehlt</div>}</td>
+                <td><Status s={c.status} />{c.lastError && <div className="small" role="note">{c.lastError}</div>}</td>
+                <td className="small">{c.lastSyncAt ? new Date(c.lastSyncAt).toLocaleString('de-DE') : '–'}{c.lastCommit && <><br />Commit {c.lastCommit.slice(0, 7)}</>}</td>
+                <td className="small">{c.intervalMinutes ? `alle ${c.intervalMinutes} min` : 'manuell'}{c.nextSyncAt && <><br />nächster: {new Date(c.nextSyncAt).toLocaleTimeString('de-DE')}</>}</td>
+                <td><div className="actions">
+                  {canSync && <button className="btn small" aria-label={`${c.name} jetzt abgleichen`} disabled={['queued', 'syncing', 'importing'].includes(c.status)} onClick={() => run(() => post(`/source-connections/${c.id}/sync`))}>Jetzt abgleichen</button>}
+                  {isAdmin && <button className="btn small ghost" aria-label={`${c.name} entfernen`} onClick={() => confirm(`Verbindung „${c.name}“ entfernen? Importierte Quellen bleiben erhalten.`) && run(async () => (await del(`/source-connections/${c.id}`), null))}>Entfernen</button>}
+                </div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {form && (
+        <Modal title="Git-Quellverbindung anlegen" onClose={() => setForm(null)}>
+          <div>
+            <label className="block">Name<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+            <label className="block">Repository-URL (https)<input value={form.url} placeholder="https://git.example.org/handbuch.git" onChange={(e) => setForm({ ...form, url: e.target.value })} /></label>
+            <label className="block">Branch (leer: Standard)<input value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} /></label>
+            <label className="block">Unterordner<input value={form.subPath} placeholder="docs/handbuch" onChange={(e) => setForm({ ...form, subPath: e.target.value })} /></label>
+            <label className="block">Automatischer Abgleich
+              <select value={form.intervalMinutes} onChange={(e) => setForm({ ...form, intervalMinutes: e.target.value })}>
+                <option value="0">nur manuell</option><option value="15">alle 15 Minuten</option><option value="60">stündlich</option><option value="1440">täglich</option>
+              </select>
+            </label>
+            <label className="block">Token aus Umgebungsvariable (optional)<input value={form.credentialEnv} placeholder="GIT_CREDENTIAL_HANDBUCH" onChange={(e) => setForm({ ...form, credentialEnv: e.target.value })} /></label>
+            <p className="small">Zugangsdaten werden nie gespeichert: Der Betrieb hinterlegt das Token als Umgebungsvariable GIT_CREDENTIAL_… des Servers.</p>
+            <div className="actions"><button className="btn primary" disabled={!form.name || !form.url} onClick={() => void save()}>Anlegen und abgleichen</button></div>
+          </div>
+        </Modal>
       )}
     </Card>
   );

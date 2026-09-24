@@ -27,7 +27,10 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`,
 | – | `content_block_roles`, `content_block_divisions`, `content_block_sources` | m:n Rollen, Sparten und **Quellenbeziehung je Absatz** |
 | ContentBlockVersion | `content_block_versions` | append-only Snapshot je Änderung (Vergleich/Wiederherstellung) |
 | – | `snippet_embeddings` | Vektor je Textabschnitt und Modell (Base64, normalisiert), Text-Hash für inkrementelle Aktualisierung (ADR-017) |
-| – | `handbook_releases` | Handbuch-Version: Kapitel-Snapshot, Änderungen zur Vorversion, Online-Hilfe und Markdown im Object-Store (ADR-018) |
+| – | `handbook_releases` | Handbuch-Version: Kapitel-Snapshot, Änderungen zur Vorversion, Online-Hilfe und Markdown im Object-Store (ADR-018); `languages` = Sprachfassungen mit Abdeckung und Markdown-Schlüssel (ADR-021) |
+| – | `source_connections` | Git-Quellverbindung: URL, Branch, Unterordner, Name der Token-Variable, Intervall, Planungstoken, letzter erfolgreich importierter Commit, Commit des laufenden Imports, letzter Import/Fehler (ADR-022); `source_revisions.source_format`/`original_key` für umgewandelte HTML-/Word-Quellen |
+| – | `kpi_snapshots` | Kennzahlen je Projekt und Tag (JSON) für Zeitreihen (ADR-023) |
+| – | `snippet_vectors` | nur PostgreSQL mit pgvector, zur Laufzeit angelegt: Vektor als `vector` mit HNSW-Index je Dimension; abgeleitet aus `snippet_embeddings`, nicht im Backup (ADR-024) |
 | – | `comments`, `notifications` | Diskussionen/Aufgaben an Absatz-Lineage, Befund oder Kapitel; Benachrichtigungen mit Zustellstatus je Kanal (ADR-019) |
 | – | `translations`, `translation_blocks` | Übersetzung einer freigegebenen Kapitelversion je Sprache; Absätze mit Satz-Zuordnung, Prüfbefunden, Modus (ADR-020) |
 | – | `rewrite_batches` | KI-Umformulierung ganzer Kapitel: Status, Fortschritt (gültig/ungültig/übersprungen/Fehler), Tokens, Abbruch; Vorschläge verweisen über `batch_id` darauf |

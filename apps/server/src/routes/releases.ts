@@ -13,9 +13,9 @@ export function releaseRoutes(app: FastifyInstance, _ctx: Ctx) {
     return createRelease(req.ctx, req.body ?? {}, user.id);
   });
   app.get<{ Params: { releaseId: string } }>('/releases/:releaseId', async (req) => (userOf(req.ctx, req), getRelease(req.ctx, req.params.releaseId)));
-  app.get<{ Params: { releaseId: string }; Querystring: { format?: string } }>('/releases/:releaseId/download', async (req, reply) => {
+  app.get<{ Params: { releaseId: string }; Querystring: { format?: string; language?: string } }>('/releases/:releaseId/download', async (req, reply) => {
     userOf(req.ctx, req);
-    const f = await downloadRelease(req.ctx, req.params.releaseId, req.query.format ?? 'site');
+    const f = await downloadRelease(req.ctx, req.params.releaseId, req.query.format ?? 'site', req.query.language);
     reply.header('Content-Type', f.type).header('Content-Disposition', `attachment; filename="${f.fileName}"`);
     return f.data;
   });

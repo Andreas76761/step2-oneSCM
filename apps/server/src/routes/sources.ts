@@ -2,7 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
 import { badRequest } from '../problem.js';
-import { createImport, getImport, getRevisionRaw, listImports, listSources } from '../services/imports.js';
+import { createImport, getImport, getRevisionOriginal, getRevisionRaw, listImports, listSources } from '../services/imports.js';
 import { getSnippet, patchSnippet, searchSnippets } from '../services/snippets.js';
 import { num, userOf } from './helpers.js';
 
@@ -25,6 +25,12 @@ export function sourceRoutes(app: FastifyInstance, _ctx: Ctx) {
     // Quelltext wird als text/plain ausgeliefert – eingebettetes HTML wird nie ausgeführt.
     reply.header('Content-Type', 'text/plain; charset=utf-8').header('X-Content-Type-Options', 'nosniff');
     return getRevisionRaw(req.ctx, req.params.revisionId);
+  });
+  app.get<{ Params: { revisionId: string } }>('/source-revisions/:revisionId/original', async (req, reply) => {
+    userOf(req.ctx, req);
+    const o = await getRevisionOriginal(req.ctx, req.params.revisionId);
+    reply.header('Content-Type', o.contentType).header('Content-Disposition', `attachment; filename="${encodeURIComponent(o.fileName)}"`);
+    return o.data;
   });
 
   app.get<{ Querystring: Record<string, string> }>('/snippets', async (req) => {

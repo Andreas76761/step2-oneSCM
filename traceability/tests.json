@@ -613,5 +613,92 @@
     "requirements": [
       "NFR-07"
     ]
+  },
+  {
+    "id": "T-142",
+    "title": "Mehrsprachiges Release: Online-Hilfe je Sprache mit Umschalter, Rückfall auf Deutsch, Übersetzungsstand",
+    "file": "apps/server/test/stage8.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-08",
+      "NFR-05",
+      "NFR-07"
+    ]
+  },
+  {
+    "id": "T-143",
+    "title": "Confluence-HTML-Export, HTML und Word werden umgewandelt; Original abrufbar und im Backup",
+    "file": "apps/server/test/stage8.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-09",
+      "US-001"
+    ]
+  },
+  {
+    "id": "T-144",
+    "title": "Git-Quellverbindung: Validierung, Abgleich, unveränderter Commit, neue Revision, Planung, Projektgrenzen",
+    "file": "apps/server/test/stage8.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-09",
+      "US-001"
+    ]
+  },
+  {
+    "id": "T-145",
+    "title": "Analytik: Zeitreihe mit Fortschreibung, Flussgrößen, Freigabedauer, PDF-Bericht, BI-Export",
+    "file": "apps/server/test/stage8.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-10"
+    ]
+  },
+  {
+    "id": "T-146",
+    "title": "HNSW-Graph: Trefferquote, Filter, exakte Suche, kNN-Paare",
+    "file": "apps/server/test/stage8.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-11"
+    ]
+  },
+  {
+    "id": "T-147",
+    "title": "Suchverfahren exact, hnsw und pgvector liefern dieselben Treffer; Aktualisierung, Kapitelfilter, Status",
+    "file": "apps/server/test/stage8.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-11",
+      "NFR-04"
+    ]
+  },
+  {
+    "id": "T-148",
+    "title": "Hybride Analyse großer Bestände über kNN statt n²-Vergleich",
+    "file": "apps/server/test/stage8.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-11",
+      "US-005"
+    ]
+  },
+  {
+    "id": "T-214",
+    "title": "UI: HTML-Import und Git-Quellverbindung mit Abgleich",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-09"
+    ]
+  },
+  {
+    "id": "T-215",
+    "title": "UI: Analytik mit Diagrammen, Projektbericht und BI-Export",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-10"
+    ]
   }
 ]

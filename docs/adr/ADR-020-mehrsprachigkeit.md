@@ -12,4 +12,4 @@
 
 ## Konsequenzen
 - Die Prüfung ist formal (Zuordnung, Zahlen, Struktur); die inhaltliche Richtigkeit verantwortet die sprachliche Freigabe.
-- Handbuch-Releases (ADR-018) enthalten weiterhin die deutsche Fassung; mehrsprachige Releases sind ein möglicher nächster Schritt.
+- Mehrsprachige Handbuch-Releases: siehe ADR-021 (Etappe 8).

@@ -273,3 +273,51 @@ test('[T-213] Übersetzung: Zielsprache festlegen, KI-Übersetzung mit Prüfung,
   await page.getByRole('button', { name: 'Export Markdown' }).click();
   expect((await download).suggestedFilename()).toMatch(/^onescm-en-.*\.md$/);
 });
+
+test('[T-214] Import aus Fremdsystemen: HTML-Datei hochladen, Git-Repository verbinden und abgleichen', async ({ page }) => {
+  const { execFileSync } = await import('node:child_process');
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const path = await import('node:path');
+  await page.goto('/quellen');
+  await page.getByTestId('file-input').setInputFiles({
+    name: 'confluence-seite.html',
+    mimeType: 'text/html',
+    buffer: Buffer.from('<html><head><title>Handbuch : 12. Kasse</title></head><body><div id="main-content"><h1>Zweck</h1><p>Die Kasse bucht Zahlungen aus Confluence.</p></div></body></html>'),
+  });
+  await expect(page.getByRole('status')).toContainText('Import abgeschlossen');
+  await page.getByLabel('Suche', { exact: true }).fill('aus Confluence');
+  await expect(page.getByRole('cell', { name: /Die Kasse bucht Zahlungen aus Confluence/ })).toBeVisible();
+
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'onescm-e2e-git-'));
+  const git = (...args: string[]) => execFileSync('git', ['-c', 'user.name=E2E', '-c', 'user.email=e2e@example.org', ...args], { cwd: repo });
+  git('init', '-q', '-b', 'main');
+  fs.writeFileSync(path.join(repo, 'lager.md'), '# 13. Lager\n\n## 13.1 Zweck\n\nDas Lager kommt aus dem Git-Repository.\n');
+  git('add', '-A');
+  git('commit', '-q', '-m', 'init');
+  await page.getByRole('button', { name: 'Verbindung anlegen' }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Name').fill('Handbuch-Repo');
+  await dialog.getByLabel('Repository-URL (https)').fill(repo);
+  await dialog.getByRole('button', { name: 'Anlegen und abgleichen' }).click();
+  await expect(page.getByRole('status')).toContainText('Abgleich „Handbuch-Repo“ abgeschlossen');
+  await expect(page.locator('tr', { hasText: 'Handbuch-Repo' }).getByText('aktuell')).toBeVisible();
+  await page.getByLabel('Suche', { exact: true }).fill('Git-Repository');
+  await expect(page.getByRole('cell', { name: /Das Lager kommt aus dem Git-Repository/ })).toBeVisible();
+  fs.rmSync(repo, { recursive: true, force: true });
+});
+
+test('[T-215] Analytik: Kennzahlen, Diagramme, Projektbericht und BI-Export', async ({ page }) => {
+  await page.goto('/analytik');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Analytik');
+  await expect(page.getByText('Nachweisabdeckung').first()).toBeVisible();
+  await expect(page.getByRole('img', { name: /Befunde und Freigaben/ })).toBeVisible();
+  let download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Projektbericht (PDF)' }).click();
+  expect((await download).suggestedFilename()).toMatch(/^projektbericht-\d{4}-\d{2}-\d{2}\.pdf$/);
+  download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Kapitelstatus als CSV' }).click();
+  expect((await download).suggestedFilename()).toBe('chapters.csv');
+  await page.getByLabel('Zeitraum').selectOption('30');
+  await expect(page.getByRole('img', { name: /Qualität in Prozent/ })).toBeVisible();
+});

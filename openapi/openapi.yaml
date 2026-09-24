@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.7.0
+  version: 0.8.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -31,6 +31,8 @@ tags:
   - name: Veröffentlichung
   - name: Kollaboration
   - name: Übersetzung
+  - name: Quellverbindungen
+  - name: Analytik
   - name: System
 components:
   securitySchemes:
@@ -55,6 +57,9 @@ components:
     BatchId: { name: batchId, in: path, required: true, schema: { type: string } }
     ProjectId: { name: projectId, in: path, required: true, schema: { type: string } }
     ReleaseId: { name: releaseId, in: path, required: true, schema: { type: string } }
+    ConnectionId: { name: connectionId, in: path, required: true, schema: { type: string } }
+    From: { name: from, in: query, schema: { type: string, format: date }, description: 'Beginn (JJJJ-MM-TT, Standard: 89 Tage vor Ende)' }
+    To: { name: to, in: query, schema: { type: string, format: date }, description: 'Ende (JJJJ-MM-TT, Standard: heute)' }
     CommentId: { name: commentId, in: path, required: true, schema: { type: string } }
     TranslationId: { name: translationId, in: path, required: true, schema: { type: string } }
     TranslationBlockId: { name: translationBlockId, in: path, required: true, schema: { type: string } }
@@ -342,9 +347,9 @@ paths:
   /imports:
     post:
       operationId: createImport
-      summary: ZIP- oder Markdown-Datei importieren
+      summary: ZIP-, Markdown-, HTML- (Confluence-Export) oder Word-Datei importieren (HTML/Word werden in Markdown umgewandelt, ADR-022)
       tags: [Import]
-      x-requirements: [US-001, US-002, US-003, US-004]
+      x-requirements: [US-001, US-002, US-003, US-004, NFR-09]
       requestBody:
         required: true
         content:
@@ -404,6 +409,130 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Rohtext, content: { text/plain: { schema: { type: string } } }' }
         '404': { $ref: '#/components/responses/Problem' }
+  /source-revisions/{revisionId}/original:
+    get:
+      operationId: getRevisionOriginal
+      summary: Originaldatei einer umgewandelten Revision (HTML als text/plain, Word als .docx; ADR-022)
+      tags: [Import]
+      x-requirements: [NFR-09, US-001]
+      x-extension: true
+      parameters: [{ name: revisionId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Originaldatei }
+        '404': { description: Revision unbekannt oder Markdown-Quelle ohne Original }
+  /source-connections:
+    get:
+      operationId: listSourceConnections
+      summary: Git-Quellverbindungen des Projekts mit Stand des letzten Abgleichs
+      tags: [Quellverbindungen]
+      x-requirements: [NFR-09]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+    post:
+      operationId: createSourceConnection
+      summary: Git-Repository verbinden und sofort abgleichen (Berechtigung admin; nur https, Token nur über Umgebungsvariable GIT_CREDENTIAL_*)
+      tags: [Quellverbindungen]
+      x-requirements: [NFR-09]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [name, url], properties: { name: { type: string, maxLength: 120 }, url: { type: string }, branch: { type: [string, 'null'] }, subPath: { type: string }, credentialEnv: { type: [string, 'null'], pattern: '^GIT_CREDENTIAL_[A-Z0-9_]+$' }, intervalMinutes: { type: integer, description: '0 = nur manuell, sonst 5 … 10080' } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Angelegt, Abgleich eingeplant }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /source-connections/{connectionId}:
+    get:
+      operationId: getSourceConnection
+      summary: Quellverbindung mit Status, letztem Commit, Fehler und nächstem Abgleich
+      tags: [Quellverbindungen]
+      x-requirements: [NFR-09]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ConnectionId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateSourceConnection
+      summary: Quellverbindung ändern; neues Intervall plant den nächsten Abgleich neu (Berechtigung admin)
+      tags: [Quellverbindungen]
+      x-requirements: [NFR-09]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ConnectionId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, url: { type: string }, branch: { type: [string, 'null'] }, subPath: { type: string }, credentialEnv: { type: [string, 'null'] }, intervalMinutes: { type: integer } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteSourceConnection
+      summary: Quellverbindung entfernen (Importe und Revisionen bleiben erhalten; Berechtigung admin)
+      tags: [Quellverbindungen]
+      x-requirements: [NFR-09]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ConnectionId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: Entfernt }
+  /source-connections/{connectionId}/sync:
+    post:
+      operationId: syncSourceConnection
+      summary: Abgleich jetzt anstoßen; unveränderter Commit erzeugt keinen Import (force erzwingt ihn; Berechtigung edit)
+      tags: [Quellverbindungen]
+      x-requirements: [NFR-09, US-001]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ConnectionId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { force: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '202': { description: Abgleich eingeplant }
+        '429': { description: Rate-Limit }
+  /analytics:
+    get:
+      operationId: getAnalytics
+      summary: Kennzahlen aktuell und je Tag, Aktivität je Tag, Freigabedauer und Erstfreigabequote (ADR-023)
+      tags: [Analytik]
+      x-requirements: [NFR-10]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/From' }, { $ref: '#/components/parameters/To' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+        '400': { description: Ungültiger Zeitraum }
+  /analytics/report:
+    get:
+      operationId: getProjectReport
+      summary: Projektbericht als PDF (Kennzahlen, Aktivität, Freigabeprozess, Kapitelstatus, Blocker, Übersetzungen, Releases)
+      tags: [Analytik]
+      x-requirements: [NFR-10]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/From' }, { $ref: '#/components/parameters/To' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'PDF, content: { application/pdf: {} }' }
+        '429': { description: Rate-Limit }
+  /analytics/export/{dataset}:
+    get:
+      operationId: exportAnalytics
+      summary: BI-Export mit stabilen Spaltennamen als CSV (UTF-8 mit BOM, Formelschutz) oder JSON
+      tags: [Analytik]
+      x-requirements: [NFR-10]
+      x-extension: true
+      parameters:
+        - { name: dataset, in: path, required: true, schema: { type: string, enum: [kpis, flow, approvals, chapters, findings] } }
+        - { name: format, in: query, schema: { type: string, enum: [csv, json] } }
+        - { $ref: '#/components/parameters/From' }
+        - { $ref: '#/components/parameters/To' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: CSV oder JSON }
+        '400': { description: Unbekannter Datensatz oder Format }
   /snippets:
     get:
       operationId: listSnippets
@@ -1178,9 +1307,9 @@ paths:
   /search/semantic:
     get:
       operationId: semanticSearch
-      summary: Semantische Suche über aktuelle Textabschnitte des Projekts (Embeddings, ADR-017)
+      summary: Semantische Suche über aktuelle Textabschnitte des Projekts (Embeddings, ADR-017; Verfahren exact, hnsw oder pgvector, ADR-024)
       tags: [Suche]
-      x-requirements: [NFR-04, US-017]
+      x-requirements: [NFR-04, NFR-11, US-017]
       x-extension: true
       parameters: [{ name: q, in: query, schema: { type: string } }, { name: limit, in: query, schema: { type: integer } }, { name: chapterId, in: query, schema: { type: string } }, { name: minScore, in: query, schema: { type: number } }]
       responses:
@@ -1192,9 +1321,9 @@ paths:
   /semantic-index:
     get:
       operationId: getSemanticIndex
-      summary: Stand des Embedding-Index (Modell, indizierte und ausgeschlossene Abschnitte)
+      summary: Stand des Embedding-Index (Modell, indizierte und ausgeschlossene Abschnitte, Suchverfahren und HNSW-Aufbau)
       tags: [Suche]
-      x-requirements: [NFR-04]
+      x-requirements: [NFR-04, NFR-11]
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -1223,7 +1352,7 @@ paths:
       operationId: createRelease
       summary: Handbuch-Version aus allen freigegebenen Kapiteln veröffentlichen (Berechtigung approve)
       tags: [Veröffentlichung]
-      x-requirements: [NFR-05, US-014]
+      x-requirements: [NFR-05, US-014, NFR-08]
       x-extension: true
       requestBody:
         content: { application/json: { schema: { type: object, required: [version], properties: { version: { type: string }, title: { type: string }, notes: { type: string } } } } }
@@ -1248,9 +1377,9 @@ paths:
       operationId: downloadRelease
       summary: Statische Online-Hilfe (ZIP, ohne Skripte) oder Markdown
       tags: [Veröffentlichung]
-      x-requirements: [NFR-05, US-014]
+      x-requirements: [NFR-05, NFR-08, US-014]
       x-extension: true
-      parameters: [{ $ref: '#/components/parameters/ReleaseId' }, { name: format, in: query, schema: { type: string, enum: [site, md] } }]
+      parameters: [{ $ref: '#/components/parameters/ReleaseId' }, { name: format, in: query, schema: { type: string, enum: [site, md] } }, { name: language, in: query, description: 'Sprachfassung des Markdown-Handbuchs (ADR-021)', schema: { type: string } }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: OK }

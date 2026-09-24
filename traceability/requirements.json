@@ -248,5 +248,42 @@
     "documentation": [
       "docs/adr/ADR-020-mehrsprachigkeit.md"
     ]
+  },
+  {
+    "id": "NFR-08",
+    "title": "Mehrsprachige Releases: Online-Hilfe und Markdown je Sprache mit Rückfall auf Deutsch, Übersetzungsstand",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-021-mehrsprachige-releases.md"
+    ]
+  },
+  {
+    "id": "NFR-09",
+    "title": "Import aus Fremdsystemen: Confluence-/HTML-Export, Word (.docx) und Git-Repositories mit Neu-Synchronisierung",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-022-fremdsysteme.md"
+    ]
+  },
+  {
+    "id": "NFR-10",
+    "title": "Analytik: Kennzahlen-Zeitreihen, Freigabedauer, Projektbericht (PDF) und BI-Export",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-023-analytik.md"
+    ]
+  },
+  {
+    "id": "NFR-11",
+    "title": "Skalierung der semantischen Suche: HNSW-/pgvector-Index, Lasttest mit 50 000 Textabschnitten",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-024-vektorindex.md",
+      "docs/lasttest-semantik.md"
+    ]
   }
 ]
