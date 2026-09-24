@@ -13,6 +13,19 @@ export function SourcesPage() {
   const imports = useLoad<any[]>('/imports');
   const chapters = useLoad<any[]>('/chapters');
   const [busy, setBusy] = useState(false);
+  const [snapshot, setSnapshot] = useState(false);
+  const sources = useLoad<any[]>('/sources');
+  const removed = (sources.data ?? []).filter((d) => d.removedAt);
+  const restore = async (id: string, p: string) => {
+    try {
+      await post(`/source-documents/${id}/restore`, {});
+      notify(`„${p}“ wiederhergestellt.`);
+      sources.reload();
+      snippets.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
   const [openImport, setOpenImport] = useState<string | null>(null);
   const [params] = useSearchParams();
   // Sprung aus der globalen Suche: /quellen?q=…
@@ -31,12 +44,12 @@ export function SourcesPage() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const imp = await api<any>('POST', '/imports', fd);
+      const imp = await api<any>('POST', `/imports${snapshot && file.name.toLowerCase().endsWith('.zip') ? '?snapshot=true' : ''}`, fd);
       notify(`Import „${imp.fileName}“ angenommen – Verarbeitung läuft.`);
       for (let i = 0; i < 40; i++) {
         const cur = await get<any>(`/imports/${imp.id}`);
         if (!['queued', 'processing'].includes(cur.status)) {
-          notify(`Import ${statusLabel(cur.status)}: ${cur.stats.imported} importiert, ${cur.stats.identical} identisch, ${cur.stats.media ?? 0} Bilder, ${cur.stats.failed} Fehler, ${cur.stats.skipped} übersprungen`, cur.status === 'failed' ? 'error' : 'ok');
+          notify(`Import ${statusLabel(cur.status)}: ${cur.stats.imported} importiert, ${cur.stats.identical} identisch, ${cur.stats.media ?? 0} Bilder, ${cur.stats.failed} Fehler, ${cur.stats.skipped} übersprungen${cur.stats.removed ? `, ${cur.stats.removed} als entfernt markiert` : ''}`, cur.status === 'failed' ? 'error' : 'ok');
           break;
         }
         await new Promise((r) => setTimeout(r, 500));
@@ -44,6 +57,7 @@ export function SourcesPage() {
       imports.reload();
       chapters.reload();
       snippets.reload();
+      sources.reload();
     } catch (e) {
       notify(errorText(e), 'error');
     } finally {
@@ -72,13 +86,14 @@ export function SourcesPage() {
             <input type="file" accept=".zip,.md,.markdown,.html,.htm,.docx" data-testid="file-input" disabled={busy} onChange={(e) => void upload(e.target.files?.[0] ?? undefined)} />
             <span>{busy ? 'Import läuft …' : 'ZIP-, Markdown-, HTML- oder Word-Datei hierher ziehen oder auswählen'}</span>
           </label>
+          <label className="inline small"><input type="checkbox" checked={snapshot} onChange={(e) => setSnapshot(e.target.checked)} /> ZIP ist der vollständige Stand – fehlende Dateien als entfernt markieren</label>
           <Decision id="E-01">Erlaubt sind .md, .markdown, .zip sowie Confluence-/HTML-Export und Word (.docx), die in Markdown umgewandelt werden (Original bleibt erhalten); Grenzen unter Einstellungen. Identische Inhalte (gleicher Pfad, gleicher SHA-256) erzeugen keine neue Revision.</Decision>
         </Card>
         <Card title="Importprotokoll">
           <ErrorBox error={imports.error} />
           {!imports.data?.length ? <Empty>Noch keine Importe.</Empty> : (
             <table className="table compact">
-              <thead><tr><th>Datei</th><th>Status</th><th>Importiert</th><th>Identisch</th><th>Fehler</th><th>Zeit</th></tr></thead>
+              <thead><tr><th>Datei</th><th>Status</th><th>Importiert</th><th>Identisch</th><th>Fehler</th><th>Entfernt</th><th>Zeit</th></tr></thead>
               <tbody>
                 {imports.data.map((i) => (
                   <tr key={i.id} className="clickable" {...activatable(() => setOpenImport(i.id))}>
@@ -87,6 +102,7 @@ export function SourcesPage() {
                     <td>{i.stats.imported ?? '–'}</td>
                     <td>{i.stats.identical ?? '–'}</td>
                     <td>{i.stats.failed ?? '–'}</td>
+                    <td>{i.stats.removed || '–'}</td>
                     <td>{new Date(i.createdAt).toLocaleString('de-DE')}</td>
                   </tr>
                 ))}
@@ -95,6 +111,24 @@ export function SourcesPage() {
           )}
         </Card>
       </div>
+
+      {removed.length > 0 && (
+        <Card title={`Entfernte Quelldateien (${removed.length})`}>
+          <p className="small muted">Diese Dateien fehlen im letzten vollständigen Stand. Ihre Textabschnitte zählen nicht mehr für Analyse, Draft Manual und Generierung; zugeordnete Schnipsel sind im Draft Manual markiert.</p>
+          <table className="table compact">
+            <thead><tr><th>Datei</th><th>Entfernt am</th><th /></tr></thead>
+            <tbody>
+              {removed.map((d) => (
+                <tr key={d.id}>
+                  <td>{d.path}</td>
+                  <td>{new Date(d.removedAt).toLocaleString('de-DE')}</td>
+                  <td><button className="btn small" onClick={() => restore(d.id, d.path)}>Wiederherstellen</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
 
       <Connections onSynced={() => (imports.reload(), chapters.reload(), snippets.reload())} />
 

@@ -116,7 +116,9 @@ describe('Bilder & Medien (ADR-029)', () => {
         return { status: res.statusCode, json: res.json() };
       };
       expect((await upload('x.png', png(2, 2), 'u-leser')).status).toBe(403);
-      expect((await upload('x.svg', Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>'))).status).toBe(400);
+      // SVG wird seit ADR-036 bereinigt übernommen; nicht wohlgeformtes SVG wird abgelehnt
+      expect((await upload('x.svg', Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>'))).status).toBe(201);
+      expect((await upload('y.svg', Buffer.from('<svg><g></svg>'))).status).toBe(400);
       const up = await upload('neu.png', png(3, 3, [200, 0, 0]));
       expect(up.status).toBe(201);
       expect(up.json).toMatchObject({ mime: 'image/png', width: 3, height: 3, markdown: `![Alternativtext](media:${up.json.sha256})` });
@@ -218,12 +220,12 @@ describe('Bilder & Medien (ADR-029)', () => {
       // Word: eingebettetes Bild mit Alternativtext
       await importFile(built, '7-berichte.docx', await docxWithImage(bild, 'Berichtsübersicht'));
       expect(await rawOf('7-berichte.docx')).toContain(`![Berichtsübersicht](media:${sha256(bild)})`);
-      // HTML mit data:-URI und nicht unterstütztem SVG
+      // HTML mit data:-URIs (PNG und – bereinigt, ADR-036 – SVG)
       const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>').toString('base64');
       await importFile(built, '9-hilfe.html', `<html><head><title>9. Hilfe</title></head><body><p>Die Hilfe öffnen Sie über F1.</p><img src="data:image/png;base64,${bild.toString('base64')}" alt="Hilfefenster"><img src="data:image/svg+xml;base64,${svg}" alt="Symbol"></body></html>`);
       const h = await rawOf('9-hilfe.html');
       expect(h).toContain(`![Hilfefenster](media:${sha256(bild)})`);
-      expect(h).toContain('[Bild: Symbol]');
+      expect(h).toMatch(/!\[Symbol\]\(media:[0-9a-f]{64}\)/);
       expect(h).not.toContain('base64');
 
       // Confluence Cloud: Bildanhänge werden geladen; externe Bild-URLs nicht
@@ -236,7 +238,10 @@ describe('Bilder & Medien (ADR-029)', () => {
       const lager = await rawOf('LG/8-lager-301.html');
       expect(lager).toContain(`![Lagerübersicht](media:${sha256(anhang)})`);
       expect(lager).not.toContain('evil.example');
-      expect((await call('GET', '/media')).json.map((m: any) => m.sha256).sort()).toEqual([sha256(anhang), sha256(bild)].sort());
+      // Word/HTML-Bild, Confluence-Anhang und das bereinigte SVG aus dem HTML
+      const mediaList = (await call('GET', '/media')).json;
+      expect(mediaList.map((m: any) => m.sha256)).toEqual(expect.arrayContaining([sha256(anhang), sha256(bild)]));
+      expect(mediaList.map((m: any) => m.mime).sort()).toEqual(['image/png', 'image/png', 'image/svg+xml']);
     } finally {
       await built.app.close();
       await conf.close();

@@ -10,7 +10,9 @@ import {
   moveAssignment, newOutlineVersion, outlineCandidates, outlinePlan, setPlanItem, unassignSnippet, updateNode, updateOutline,
 } from '../services/outlines.js';
 import { generateVariant, materializeVariant, variantChapters } from '../services/variants.js';
-import { badRequest } from '../problem.js';
+import { badRequest, Problem } from '../problem.js';
+import { importMasterData } from '../services/masterDataImport.js';
+import { getSettings } from '../context.js';
 import { num, userOf } from './helpers.js';
 
 type P<T extends string> = { Params: Record<T, string> };
@@ -87,6 +89,18 @@ export function masterDataRoutes(app: FastifyInstance, _ctx: Ctx) {
   // Redaktionsplanung
   app.get<P<'outlineId'>>('/outlines/:outlineId/plan', async (req) => (userOf(req.ctx, req), outlinePlan(req.ctx, req.params.outlineId)));
   app.put<P<'nodeId'> & { Body: any }>('/outline-nodes/:nodeId/plan', async (req) => setPlanItem(req.ctx, req.params.nodeId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+
+  // Stammdaten-Import aus CSV/Excel (ADR-036): ?kind=abbreviations|glossary|faq, ?apply=true übernimmt (sonst Vorschau)
+  app.post<{ Querystring: { kind?: string; apply?: string } }>('/master-data/import', async (req) => {
+    const user = userOf(req.ctx, req, 'edit');
+    if (!req.isMultipart()) throw badRequest('Erwartet multipart/form-data mit Feld „file“.');
+    const file = await req.file();
+    if (!file) throw badRequest('Feld „file“ fehlt.');
+    const data = await file.toBuffer();
+    const max = (await getSettings(req.ctx.db)).import.maxUploadBytes;
+    if (data.length > max) throw new Problem(413, 'Content Too Large', `Datei überschreitet ${max} Bytes.`);
+    return importMasterData(req.ctx, req.query.kind ?? '', file.filename, data, req.query.apply === 'true', user);
+  });
 
   // Abkürzungen
   app.get('/abbreviations', async (req) => (userOf(req.ctx, req), listAbbreviations(req.ctx)));

@@ -2,6 +2,7 @@
 import type { Ctx } from '../context.js';
 import { newId, now } from '../db.js';
 import { imageRefs, mediaShas, sniffImage } from '../domain/media.js';
+import { looksLikeSvg, sanitizeSvg, SvgRejected } from '../domain/svg.js';
 import { sha256 } from '../domain/similarity.js';
 import { badRequest, notFound } from '../problem.js';
 
@@ -13,10 +14,20 @@ export interface MediaFile {
   height: number | null;
 }
 
-/** Bild ablegen (idempotent). Nur Rasterbilder mit gültiger Signatur. */
-export async function storeMedia(ctx: Ctx, data: Buffer, originalName: string | null, importId: string | null = null) {
-  const info = sniffImage(data);
-  if (!info) throw badRequest(`${originalName ?? 'Datei'}: kein unterstütztes Bildformat (PNG, JPEG, GIF, WebP).`);
+/** Bild ablegen (idempotent). Rasterbilder mit gültiger Signatur; SVG wird bereinigt neu geschrieben (ADR-036). */
+export async function storeMedia(ctx: Ctx, input: Buffer, originalName: string | null, importId: string | null = null) {
+  let data = input;
+  let info = sniffImage(data);
+  if (!info && looksLikeSvg(data)) {
+    try {
+      const clean = sanitizeSvg(new TextDecoder('utf-8', { fatal: true }).decode(data));
+      data = Buffer.from(clean.svg, 'utf8');
+      info = { mime: 'image/svg+xml', width: clean.width, height: clean.height };
+    } catch (e) {
+      throw badRequest(`${originalName ?? 'Datei'}: SVG abgelehnt – ${e instanceof SvgRejected ? e.message : 'keine gültige UTF-8-Datei.'}`);
+    }
+  }
+  if (!info) throw badRequest(`${originalName ?? 'Datei'}: kein unterstütztes Bildformat (PNG, JPEG, GIF, WebP, SVG).`);
   const sha = sha256(data);
   const key = `media/${sha}`;
   await ctx.store.put(key, data);

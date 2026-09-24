@@ -19,3 +19,6 @@ ALTER TABLE source_documents ADD COLUMN removed_in_import TEXT;
 
 -- Erinnerungen an überfällige Planungstermine
 ALTER TABLE plan_items ADD COLUMN reminded_at TEXT;
+-- Vollständiger Stand (ADR-036): fehlende Dateien eines Snapshot-Imports gelten als entfernt; Herkunft für die Abgrenzung
+ALTER TABLE imports ADD COLUMN origin TEXT;
+ALTER TABLE imports ADD COLUMN snapshot INTEGER NOT NULL DEFAULT 0;

@@ -1,7 +1,7 @@
 // Stammdaten (ADR-032): Abkürzungen, Glossar, Bildverzeichnis, FAQ, Redaktionsplanung
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { del, mediaUrl, patch, post, put } from '../api';
+import { Link, useSearchParams } from 'react-router-dom';
+import { api, del, mediaUrl, patch, post, put } from '../api';
 import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 
 function useCanEdit() {
@@ -24,6 +24,69 @@ function useRun(reload: () => void) {
   };
 }
 
+// ---------- Import aus CSV/Excel (ADR-036) ----------
+
+const ACTION: Record<string, { label: string; cls: string }> = {
+  create: { label: 'neu', cls: 'st-approved' }, update: { label: 'aktualisieren', cls: 'st-in_review' }, unchanged: { label: 'unverändert', cls: '' }, error: { label: 'Fehler', cls: 'st-failed' },
+};
+const COLUMNS: Record<string, string> = {
+  abbreviations: 'Abkürzung; Bedeutung; Beschreibung', glossary: 'Begriff; Definition; Vermeiden', faq: 'Frage; Antwort; Rollen; Sparten; Status',
+};
+
+function MasterDataImport({ kind, onDone }: { kind: 'abbreviations' | 'glossary' | 'faq'; onDone: () => void }) {
+  const { notify } = useApp();
+  const [open, setOpen] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [result, setResult] = useState<any | null>(null);
+  const [busy, setBusy] = useState(false);
+  const send = async (apply: boolean) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const r = await api<any>('POST', `/master-data/import?kind=${kind}${apply ? '&apply=true' : ''}`, fd);
+      setResult(r);
+      if (apply) {
+        notify(`Import übernommen: ${r.summary.create} neu, ${r.summary.update} aktualisiert${r.summary.error ? `, ${r.summary.error} Zeilen mit Fehlern` : ''}.`, r.summary.error ? 'error' : 'ok');
+        onDone();
+      }
+    } catch (e) {
+      notify(errorText(e), 'error');
+      setResult(null);
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (!open) return <div className="filters"><button className="btn" onClick={() => setOpen(true)}>Aus CSV/Excel importieren</button></div>;
+  return (
+    <Card title="Import aus CSV oder Excel">
+      <p className="small muted">Erste Zeile = Spaltenüberschriften ({COLUMNS[kind]}). Trennzeichen Semikolon, Komma oder Tabulator; bei Excel zählt das erste Tabellenblatt. Vorhandene Einträge werden aktualisiert.</p>
+      <div className="filters">
+        <label className="inline">Datei <input type="file" accept=".csv,.txt,.xlsx" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null); }} /></label>
+        <button className="btn" disabled={!file || busy} onClick={() => send(false)}>Vorschau</button>
+        <button className="btn primary" disabled={!file || busy || !result || result.applied} onClick={() => send(true)}>Übernehmen</button>
+        <button className="btn ghost" onClick={() => { setOpen(false); setResult(null); setFile(null); }}>Schließen</button>
+      </div>
+      {result && (
+        <>
+          <p className="small" role="status">{result.applied ? 'Übernommen' : 'Vorschau'}: {result.summary.rows} Zeilen · {result.summary.create} neu · {result.summary.update} aktualisieren · {result.summary.unchanged} unverändert · {result.summary.error} Fehler</p>
+          <div className="table-wrap" role="region" aria-label="Importvorschau" tabIndex={0}>
+            <table className="table compact">
+              <thead><tr><th>Zeile</th><th>Eintrag</th><th>Aktion</th><th>Hinweis</th></tr></thead>
+              <tbody>
+                {result.rows.filter((r: any) => r.action !== 'unchanged').map((r: any) => (
+                  <tr key={r.row}><td>{r.row}</td><td>{r.key || '–'}</td><td><span className={`tag ${ACTION[r.action].cls}`}>{ACTION[r.action].label}</span></td><td className="small">{r.message ?? ''}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </Card>
+  );
+}
+
 // ---------- Abkürzungen ----------
 
 export function AbbreviationsPage() {
@@ -35,6 +98,7 @@ export function AbbreviationsPage() {
   const [edit, setEdit] = useState<any | null>(null);
   return (
     <Page title="Abkürzungen" subtitle="Abkürzungsverzeichnis des Handbuchs">
+      {canEdit && <MasterDataImport kind="abbreviations" onDone={() => (list.reload(), sugg.reload())} />}
       {canEdit && (
         <Card title="Abkürzung erfassen">
           <form className="filters" onSubmit={async (e) => {
@@ -110,6 +174,7 @@ export function GlossaryPage() {
   const letters = [...new Set(items.map((t) => t.preferred[0]?.toUpperCase() ?? '#'))];
   return (
     <Page title="Glossar" subtitle="Fachbegriffe mit Definition – gepflegt gemeinsam mit der Terminologie">
+      {canEdit && <MasterDataImport kind="glossary" onDone={terms.reload} />}
       <div className="filters">
         <label className="inline">Suche <input value={q} onChange={(e) => setQ(e.target.value)} /></label>
         <Link className="btn" to="/terminologie">Begriffe verwalten (Terminologie)</Link>
@@ -223,6 +288,7 @@ export function FaqPage() {
   };
   return (
     <Page title="FAQ" subtitle="Häufige Fragen je Rolle und Sparte – mit Vorschlägen aus dem Handbuch-Assistenten" actions={canEdit && <button className="btn primary" onClick={() => setForm(emptyFaq())}>Frage hinzufügen</button>}>
+      {canEdit && <MasterDataImport kind="faq" onDone={() => (list.reload(), sugg.reload())} />}
       {form && (
         <Card title={form.id ? 'FAQ-Eintrag bearbeiten' : 'Neuer FAQ-Eintrag'}>
           <label className="block">Frage <input value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} /></label>
@@ -285,7 +351,9 @@ const PLAN_LABEL: Record<string, string> = { open: 'offen', in_progress: 'in Arb
 export function PlanningPage() {
   const { ref } = useApp();
   const list = useLoad<any>('/outlines');
-  const [outlineId, setOutlineId] = useState<string | null>(null);
+  // Sprung aus einer Erinnerung: /stammdaten/planung?outline=…
+  const [params] = useSearchParams();
+  const [outlineId, setOutlineId] = useState<string | null>(params.get('outline'));
   const selected = outlineId ?? list.data?.items.find((o: any) => o.status === 'active')?.id ?? list.data?.items[0]?.id ?? null;
   const plan = useLoad<any>(selected ? `/outlines/${selected}/plan` : null, [selected]);
   const canEdit = useCanEdit();

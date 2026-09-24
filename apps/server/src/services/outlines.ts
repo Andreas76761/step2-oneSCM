@@ -7,6 +7,7 @@ import { countNodes, matchKey, MAX_NODES, numberNodes, outlineToMarkdown, parseO
 import { DIVISION_CODES, ROLE_CODES } from '../domain/reference.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { assertIdsInProject } from './projects.js';
+import { collaborators, systemNotice } from './collaboration.js';
 
 export type MarketScope = 'blueprint' | 'markets';
 export const OUTLINE_STATUS = ['draft', 'active', 'archived'] as const;
@@ -379,6 +380,7 @@ interface SnippetInfo {
   subchapter: string | null;
   path: string;
   isCurrent: boolean;
+  removed?: boolean;
   evidenceStatus: string;
   roles: string[];
   divisions: string[];
@@ -393,7 +395,7 @@ async function snippetInfos(ctx: Ctx, ids: string[]): Promise<Map<string, Snippe
     if (!part.length) break;
     const marks = part.map(() => '?').join(',');
     const rows = await ctx.db.all(
-      `SELECT s.id, s.seq, s.text, s.kind, s.norm_hash, s.evidence_status, s.market_code, r.is_current, d.path, c.title AS chapter_title, sc.title AS sub_title
+      `SELECT s.id, s.seq, s.text, s.kind, s.norm_hash, s.evidence_status, s.market_code, r.is_current, d.path, d.removed_at, c.title AS chapter_title, sc.title AS sub_title
        FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
        JOIN chapters c ON c.id = s.chapter_id LEFT JOIN subchapters sc ON sc.id = s.subchapter_id WHERE s.id IN (${marks})`, ...part,
     );
@@ -401,7 +403,7 @@ async function snippetInfos(ctx: Ctx, ids: string[]): Promise<Map<string, Snippe
     const divs = await ctx.db.all(`SELECT snippet_id, division_code FROM snippet_divisions WHERE snippet_id IN (${marks})`, ...part);
     for (const r of rows) {
       out.set(r.id, {
-        id: r.id, seq: r.seq, text: r.text, kind: r.kind, chapter: r.chapter_title, subchapter: r.sub_title ?? null, path: r.path, isCurrent: !!r.is_current,
+        id: r.id, seq: r.seq, text: r.text, kind: r.kind, chapter: r.chapter_title, subchapter: r.sub_title ?? null, path: r.path, isCurrent: !!r.is_current, removed: !!r.removed_at,
         evidenceStatus: r.evidence_status, market: r.market_code ?? null, normHash: r.norm_hash,
         roles: roles.filter((x) => x.snippet_id === r.id).map((x) => x.role_code), divisions: divs.filter((x) => x.snippet_id === r.id).map((x) => x.division_code),
       });
@@ -432,7 +434,8 @@ async function findingFlags(ctx: Ctx, ids: string[]): Promise<Map<string, Flag[]
 
 function evidenceFlags(s: SnippetInfo, outline: Row): Flag[] {
   const flags: Flag[] = [];
-  if (!s.isCurrent) flags.push({ type: 'warning', label: 'Veraltet: Die Quelle hat eine neuere Revision.' });
+  if (s.removed) flags.push({ type: 'warning', label: 'Quelle entfernt: Die Datei fehlt im letzten vollständigen Import.' });
+  else if (!s.isCurrent) flags.push({ type: 'warning', label: 'Veraltet: Die Quelle hat eine neuere Revision.' });
   if (s.evidenceStatus === 'unconfirmed' || s.evidenceStatus === 'open_question') flags.push({ type: 'warning', label: s.evidenceStatus === 'open_question' ? 'Offene Frage zur Quelle' : 'Quelle nicht bestätigt' });
   for (const p of variantProblems(s, { roles: parseJson(outline.roles, []), divisions: parseJson(outline.divisions, []), marketScope: outline.market_scope, markets: parseJson(outline.markets, []) })) flags.push({ type: 'warning', label: `Variante: ${p}` });
   return flags;
@@ -658,7 +661,8 @@ export async function setPlanItem(ctx: Ctx, nodeId: string, input: { assignee?: 
   await ctx.db.tx(async () => {
     await ctx.db.run(
       `INSERT INTO plan_items (node_id, outline_id, assignee, due_date, status, note, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT (node_id) DO UPDATE SET assignee = excluded.assignee, due_date = excluded.due_date, status = excluded.status, note = excluded.note, updated_by = excluded.updated_by, updated_at = excluded.updated_at`,
+       ON CONFLICT (node_id) DO UPDATE SET assignee = excluded.assignee, due_date = excluded.due_date, status = excluded.status, note = excluded.note, updated_by = excluded.updated_by, updated_at = excluded.updated_at,
+         reminded_at = CASE WHEN plan_items.due_date IS NOT DISTINCT FROM excluded.due_date AND plan_items.assignee IS NOT DISTINCT FROM excluded.assignee THEN plan_items.reminded_at ELSE NULL END`,
       nodeId, n.outline_id, assignee, dueDate, status, note, user.id, now(),
     );
     await audit(ctx, user.id, 'plan_item.updated', 'outline_node', nodeId, { assignee, dueDate, status });
@@ -728,4 +732,43 @@ export async function compareOutlines(ctx: Ctx, fromId: string, toId: string) {
     summary: { added: count('added'), removed: count('removed'), changed: count('changed'), unchanged: count('unchanged') },
     variant, entries,
   };
+}
+
+// ---------- Erinnerungen an überfällige Planung (ADR-036) ----------
+
+/**
+ * Überfällige Einträge der Redaktionsplanung (Termin vor heute, nicht erledigt) einmal je Termin melden: an die verantwortliche
+ * Person (Kennung oder Name eines Benutzers), sonst an die Administratoren des Projekts. Hinweis im Posteingang, Webhook/E-Mail je Einstellung.
+ */
+export async function remindOverduePlans(ctx: Ctx, forProject: (id: string) => Ctx, today = now().slice(0, 10)) {
+  const rows = await ctx.db.all(
+    `SELECT p.*, n.title, o.project_id, o.name AS outline_name, o.id AS outline_id FROM plan_items p JOIN outline_nodes n ON n.id = p.node_id JOIN outlines o ON o.id = p.outline_id
+     JOIN projects pr ON pr.id = o.project_id
+     WHERE p.due_date IS NOT NULL AND p.due_date < ? AND p.status <> 'done' AND p.reminded_at IS NULL AND pr.archived_at IS NULL ORDER BY o.project_id, p.due_date`,
+    today,
+  );
+  let sent = 0;
+  for (const p of rows) {
+    const pctx = forProject(p.project_id);
+    const people = await collaborators(pctx);
+    const who = p.assignee ? people.filter((u) => u.id.toLowerCase() === String(p.assignee).toLowerCase() || u.name.toLowerCase() === String(p.assignee).toLowerCase()) : [];
+    const to = (who.length ? who : people.filter((u) => u.permissions.includes('admin'))).map((u) => u.id);
+    await pctx.db.tx(async () => {
+      const res = await pctx.db.run('UPDATE plan_items SET reminded_at = ? WHERE node_id = ? AND reminded_at IS NULL', now(), p.node_id);
+      if (!res.changes) return;
+      const due = new Date(`${p.due_date}T00:00:00Z`).toLocaleDateString('de-DE', { timeZone: 'UTC' });
+      const body = `Planung überfällig: „${p.title}“ in „${p.outline_name}“ war fällig am ${due}${p.assignee ? ` (verantwortlich: ${p.assignee})` : ''}.`;
+      if (to.length) await systemNotice(pctx, p.outline_id, body, to, 'plan_overdue', 'outline');
+      await audit(pctx, 'system', 'plan_item.reminded', 'outline_node', p.node_id, { dueDate: p.due_date, recipients: to });
+      sent++;
+    });
+  }
+  ctx.jobs.wake();
+  return sent;
+}
+
+/** Stündliche Prüfung (eine Kette je Installation) */
+export async function ensurePlanReminderJob(ctx: Ctx, next = false) {
+  if (!next && (await ctx.db.get("SELECT id FROM jobs WHERE type = 'plan-reminders' AND status IN ('queued','running')"))) return;
+  await ctx.jobs.enqueue('plan-reminders', {}, 1, next ? 3_600_000 : 90_000);
 }

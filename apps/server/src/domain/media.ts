@@ -1,9 +1,10 @@
 // Bilder in Handbuchinhalten (ADR-029). Bilder werden im Markdown als `![Alternativtext](media:<sha256>)` referenziert;
-// die Datei liegt inhaltsadressiert im Object-Store. Erlaubt sind Rasterformate (PNG, JPEG, GIF, WebP) – kein SVG (Skripte).
+// die Datei liegt inhaltsadressiert im Object-Store. Erlaubt sind Rasterformate (PNG, JPEG, GIF, WebP) und SVG, das beim
+// Import aus einer Positivliste neu geschrieben wird (ADR-036, domain/svg.ts).
 import path from 'node:path';
 
-export const MEDIA_EXT: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' };
-export const MIME_EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' };
+export const MEDIA_EXT: Record<string, string> = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
+export const MIME_EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp', 'image/svg+xml': 'svg' };
 
 export interface ImageInfo {
   mime: string;

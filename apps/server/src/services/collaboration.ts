@@ -6,7 +6,7 @@ import { json, newId, now, parseJson, type Row } from '../db.js';
 import { badRequest, conflict, forbidden, notFound } from '../problem.js';
 import { effectiveUser } from './projects.js';
 
-export const ENTITY_TYPES = ['block', 'finding', 'chapter'] as const;
+export const ENTITY_TYPES = ['block', 'finding', 'chapter', 'outline'] as const;
 export type EntityType = (typeof ENTITY_TYPES)[number];
 
 /** Prüft, dass das Objekt zum Projekt gehört, und liefert den Link in der Web-UI. */
@@ -25,6 +25,9 @@ async function entityInfo(ctx: Ctx, type: string, id: string): Promise<{ link: s
   } else if (type === 'chapter') {
     const r = await db.get('SELECT title FROM chapters WHERE id = ? AND project_id = ?', id, ctx.projectId);
     if (r) return { link: `/werkstatt/${id}`, label: `Kapitel „${r.title}“` };
+  } else if (type === 'outline') {
+    const r = await db.get('SELECT name, version_no FROM outlines WHERE id = ? AND project_id = ?', id, ctx.projectId);
+    if (r) return { link: `/stammdaten/planung?outline=${id}`, label: `Gliederung „${r.name}“ V${r.version_no}` };
   } else throw badRequest(`entityType muss eines von ${ENTITY_TYPES.join(', ')} sein.`);
   throw notFound(`${type} ${id}`);
 }
@@ -208,14 +211,14 @@ export async function deliverNotification(ctx: Ctx, notificationId: string) {
  * Systemhinweis in der Kapitel-Diskussion (z. B. Freigabeworkflow, ADR-025): Kommentar von „system“ und Benachrichtigung
  * der Empfänger über alle Kanäle. Läuft in der Transaktion des Aufrufers.
  */
-export async function systemNotice(ctx: Ctx, chapterId: string, body: string, recipients: string[], type: string) {
-  const info = await entityInfo(ctx, 'chapter', chapterId);
+export async function systemNotice(ctx: Ctx, chapterId: string, body: string, recipients: string[], type: string, entityType: EntityType = 'chapter') {
+  const info = await entityInfo(ctx, entityType, chapterId);
   const id = newId('cm');
   const to = [...new Set(recipients)];
   await ctx.db.run(
     `INSERT INTO comments (id, project_id, entity_type, entity_id, parent_id, kind, body, mentions, assignee, due_date, status, author, created_at, updated_at)
-     VALUES (?, ?, 'chapter', ?, NULL, 'comment', ?, ?, NULL, NULL, 'open', 'system', ?, ?)`,
-    id, ctx.projectId, chapterId, body, json(to), now(), now(),
+     VALUES (?, ?, ?, ?, NULL, 'comment', ?, ?, NULL, NULL, 'open', 'system', ?, ?)`,
+    id, ctx.projectId, entityType, chapterId, body, json(to), now(), now(),
   );
   await notify(ctx, to, type, id, body, info.link);
   return id;

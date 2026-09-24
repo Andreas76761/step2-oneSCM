@@ -2,8 +2,29 @@ import fs from 'node:fs';
 import JSZip from 'jszip';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
+import ExcelJS from 'exceljs';
 import { client, importFile } from './api-helpers.js';
+import { sanitizeSvg } from '../src/domain/svg.js';
+import { parseCsv } from '../src/domain/tabular.js';
+import { remindOverduePlans } from '../src/services/outlines.js';
 import { freshDatabase, tempDir } from './helpers.js';
+
+type Built = Awaited<ReturnType<typeof buildApp>>;
+async function upload(built: Built, url: string, name: string, content: string | Buffer, user = 'u-admin') {
+  const boundary = '----onescm' + Math.random().toString(16).slice(2);
+  const payload = Buffer.concat([
+    Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${name}"\r\nContent-Type: application/octet-stream\r\n\r\n`),
+    Buffer.isBuffer(content) ? content : Buffer.from(content), Buffer.from(`\r\n--${boundary}--\r\n`),
+  ]);
+  const res = await built.app.inject({ method: 'POST', url: `/api/v1${url}`, payload, headers: { 'content-type': `multipart/form-data; boundary=${boundary}`, 'x-user-id': user } });
+  await built.ctx.jobs.idle();
+  return { status: res.statusCode, json: res.json() };
+}
+async function zipOf(files: Record<string, string | Buffer>) {
+  const z = new JSZip();
+  for (const [k, v] of Object.entries(files)) z.file(k, v);
+  return z.generateAsync({ type: 'nodebuffer' });
+}
 
 const fm = (extra = '') => `---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n${extra}---\n`;
 
@@ -163,6 +184,114 @@ describe('Etappe 12: Handbuch-Varianten aus dem Draft Manual (ADR-034)', () => {
       expect((await call('GET', '/search?q=%25%25')).json.total).toBe(0);
       expect((await call('GET', '/search?q=_')).status).toBe(400);
       expect((await call('GET', '/search?q=Anmeldung', undefined, 'u-admin', 'p_fremd')).status).toBeGreaterThanOrEqual(400);
+    } finally {
+      await built.app.close();
+    }
+  });
+
+  it('[T-172] Betrieb & Pflege: entfernte Quelldateien, bereinigter SVG-Import, Stammdaten aus CSV/Excel, Erinnerung an überfällige Planung', async () => {
+    // Einheit: SVG-Bereinigung und CSV
+    const clean = sanitizeSvg('<?xml version="1.0"?><svg width="80" height="20" onload="x()"><script>alert(1)</script><a href="javascript:x()"><text>Hi</text></a><rect fill="url(http://e/x)" style="fill:red;behavior:url(x)"/><foreignObject><p>x</p></foreignObject></svg>');
+    expect(clean).toEqual({ svg: '<svg width="80" height="20" xmlns="http://www.w3.org/2000/svg"><text>Hi</text><rect style="fill:red"/></svg>', width: 80, height: 20 });
+    expect(() => sanitizeSvg('<!DOCTYPE svg [<!ENTITY a "b">]><svg>&a;</svg>')).toThrow(/Entities/);
+    expect(parseCsv('﻿Abkürzung;Bedeutung\n"A;B";"mit ""Zitat"""\r\nX;Y\n\n')).toEqual([['Abkürzung', 'Bedeutung'], ['A;B', 'mit "Zitat"'], ['X', 'Y']]);
+
+    const built = await build('care');
+    const call = client(built);
+    try {
+      // Vollständiger Stand: fehlende Dateien derselben Herkunft werden als entfernt markiert, einzelne Uploads bleiben unberührt
+      const md = (t: string) => `${fm()}# 1. ${t}\n\nText zu ${t}.\n`;
+      await upload(built, '/imports?snapshot=true', 'stand1.zip', await zipOf({ 'a.md': md('Anmeldung'), 'b.md': md('Aufträge') }));
+      await importFile(built, 'einzeln.md', md('Einzeln'));
+      const imp2 = (await upload(built, '/imports?snapshot=true', 'stand2.zip', await zipOf({ 'a.md': md('Anmeldung') }))).json;
+      const done = (await call('GET', `/imports/${imp2.id}`)).json;
+      expect(done.stats).toMatchObject({ removed: 1 });
+      expect(done.items.find((i: any) => i.status === 'removed')).toMatchObject({ path: 'b.md' });
+      let sources = (await call('GET', '/sources')).json;
+      const b = sources.find((d: any) => d.path === 'b.md');
+      expect(b).toMatchObject({ removedAt: expect.any(String), removedInImport: imp2.id });
+      expect(b.revisions.every((r: any) => !r.isCurrent)).toBe(true);
+      expect(sources.find((d: any) => d.path === 'einzeln.md').removedAt).toBeNull();
+      expect((await call('GET', '/search?q=Text zu Aufträge')).json.groups.find((g: any) => g.type === 'snippet')).toBeUndefined();
+      // Wiederherstellen (nur mit Bearbeitungsrecht), erneut auftauchende Datei hebt die Markierung ebenfalls auf
+      expect((await call('POST', `/source-documents/${b.id}/restore`, {}, 'u-leser')).status).toBe(403);
+      expect((await call('POST', `/source-documents/${b.id}/restore`, {})).json).toMatchObject({ removedAt: null });
+      expect((await call('POST', `/source-documents/${b.id}/restore`, {})).status).toBe(409);
+      await upload(built, '/imports?snapshot=true', 'stand3.zip', await zipOf({ 'a.md': md('Anmeldung') }));
+      await upload(built, '/imports?snapshot=true', 'stand4.zip', await zipOf({ 'a.md': md('Anmeldung'), 'b.md': md('Aufträge') }));
+      sources = (await call('GET', '/sources')).json;
+      expect(sources.find((d: any) => d.path === 'b.md')).toMatchObject({ removedAt: null });
+      expect(sources.find((d: any) => d.path === 'b.md').revisions[0].isCurrent).toBe(true);
+      // Stand ohne Dokumente entfernt nichts
+      await upload(built, '/imports?snapshot=true', 'leer.zip', await zipOf({ 'bild.png': Buffer.from('kein bild') }));
+      expect((await call('GET', '/sources')).json.filter((d: any) => d.removedAt)).toEqual([]);
+
+      // SVG: Upload wird bereinigt gespeichert und mit Sandbox-CSP ausgeliefert; ungültiges SVG wird abgelehnt
+      const svgUp = await upload(built, '/media', 'logo.svg', '<svg viewBox="0 0 100 50"><script>alert(1)</script><rect width="10" height="10" onclick="x()"/></svg>');
+      expect(svgUp.status).toBe(201);
+      expect(svgUp.json).toMatchObject({ mime: 'image/svg+xml', width: 100, height: 50 });
+      const media = await built.app.inject({ method: 'GET', url: `/api/v1/media/${svgUp.json.sha256}`, headers: { 'x-user-id': 'u-leser' } });
+      expect(media.headers['content-type']).toBe('image/svg+xml');
+      expect(media.headers['content-security-policy']).toContain('sandbox');
+      expect(media.body).toBe('<svg viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10"/></svg>');
+      expect((await upload(built, '/media', 'x.svg', '<!DOCTYPE svg><svg/>')).status).toBe(400);
+      // SVG im ZIP-Import, im Text referenziert, im PDF als Vektorgrafik
+      const zipImp = (await upload(built, '/imports', 'bilder.zip', await zipOf({ 'c.md': `${fm()}# 3. Bilder\n\n![Ablauf](img/ablauf.svg)\n`, 'img/ablauf.svg': '<svg width="40" height="20"><circle cx="5" cy="5" r="4"/></svg>', 'img/kaputt.svg': '<svg><g></svg>' }))).json;
+      const items = (await call('GET', `/imports/${zipImp.id}`)).json.items;
+      expect(items.find((i: any) => i.path === 'img/ablauf.svg')).toMatchObject({ status: 'media' });
+      expect(items.find((i: any) => i.path === 'img/kaputt.svg')).toMatchObject({ status: 'skipped', message: expect.stringContaining('Nicht passendes Ende-Tag') });
+      const { renderPdfExport } = await import('../src/services/exports.js');
+      const { loadMedia } = await import('../src/services/media.js');
+      const svgMd = (await call('GET', '/snippets?q=Ablauf')).json.items[0].text;
+      expect(svgMd).toMatch(/!\[Ablauf\]\(media:[0-9a-f]{64}\)/);
+      const pdf = await renderPdfExport([{ title: 'Bilder', versionNo: 1, approvedAt: null, sections: [{ code: 'x', title: 'X', blocks: [{ kind: 'text', text: svgMd, roles: [], divisions: [], market: null, release: null }] }] }], {}, await loadMedia(built.ctx, [svgMd]));
+      expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
+
+      // Stammdaten aus CSV (Vorschau, Übernahme) und Excel
+      await call('POST', '/abbreviations', { abbreviation: 'DMS', expansion: 'Dealer-Management-System' });
+      const csv = 'Abkürzung;Bedeutung;Beschreibung\nDMS;Dealer-Management-System;\nVIN;Fahrzeug-Identifizierungsnummer;17 Zeichen\nSAP;;\nVIN;doppelt;\n';
+      expect((await upload(built, '/master-data/import?kind=abbreviations', 'abk.csv', csv, 'u-leser')).status).toBe(403);
+      const preview = (await upload(built, '/master-data/import?kind=abbreviations', 'abk.csv', csv)).json;
+      expect(preview.summary).toEqual({ rows: 4, create: 1, update: 0, unchanged: 1, error: 2 });
+      expect(preview.rows.map((r: any) => r.action)).toEqual(['unchanged', 'create', 'error', 'error']);
+      expect((await call('GET', '/abbreviations')).json).toHaveLength(1);
+      const applied = (await upload(built, '/master-data/import?kind=abbreviations&apply=true', 'abk.csv', csv)).json;
+      expect(applied).toMatchObject({ applied: true, summary: { create: 1, error: 2 } });
+      expect((await call('GET', '/abbreviations')).json.map((a: any) => a.abbreviation)).toEqual(['DMS', 'VIN']);
+      expect((await upload(built, '/master-data/import?kind=abbreviations', 'x.csv', 'Name;Wert\nA;B\n')).status).toBe(400);
+      expect((await upload(built, '/master-data/import?kind=abbreviations', 'x.pdf', 'x')).status).toBe(415);
+      expect((await upload(built, '/master-data/import?kind=unbekannt', 'x.csv', 'a\nb')).status).toBe(400);
+
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('FAQ');
+      ws.addRow(['Frage', 'Antwort', 'Rollen', 'Status']);
+      ws.addRow(['Wie melde ich mich an?', 'Mit dem DMS-Konto.', 'dealer, hq', 'veröffentlicht']);
+      ws.addRow(['Wo?', 'Im Portal.', 'kunde', '']);
+      const xlsx = Buffer.from(await wb.xlsx.writeBuffer());
+      const faq = (await upload(built, '/master-data/import?kind=faq&apply=true', 'faq.xlsx', xlsx)).json;
+      expect(faq.summary).toMatchObject({ create: 1, error: 1 });
+      expect(faq.rows[1].message).toMatch(/Unbekannte Rollen/);
+      expect((await call('GET', '/faq')).json[0]).toMatchObject({ question: 'Wie melde ich mich an?', roles: ['dealer', 'hq'], status: 'published' });
+      const gl = (await upload(built, '/master-data/import?kind=glossary&apply=true', 'glossar.csv', 'Begriff,Definition,Vermeiden\nAuftrag,Bestellung eines Händlers,"Order, Bestellung"\n')).json;
+      expect(gl.summary).toMatchObject({ create: 1, error: 0 });
+      expect((await call('GET', '/terminology')).json.find((t: any) => t.preferred === 'Auftrag')).toMatchObject({ definition: 'Bestellung eines Händlers', avoid: ['Order', 'Bestellung'] });
+
+      // Erinnerung an überfällige Planung: einmal je Termin an die verantwortliche Person, sonst an Administratoren
+      const o = (await call('POST', '/outlines', { name: 'Plan', nodes: [{ title: 'A' }, { title: 'B' }, { title: 'C' }] })).json;
+      const [na, nb, nc] = o.nodes;
+      await call('PUT', `/outline-nodes/${na.id}/plan`, { assignee: 'u-redaktion', dueDate: '2026-01-10', status: 'in_progress' });
+      await call('PUT', `/outline-nodes/${nb.id}/plan`, { assignee: 'Jemand Extern', dueDate: '2026-01-10' });
+      await call('PUT', `/outline-nodes/${nc.id}/plan`, { assignee: 'u-redaktion', dueDate: '2026-01-10', status: 'done' });
+      const forProject = (id: string) => ({ ...built.ctx, projectId: id });
+      expect(await remindOverduePlans(built.ctx, forProject as any, '2026-01-11')).toBe(2);
+      expect(await remindOverduePlans(built.ctx, forProject as any, '2026-01-12')).toBe(0);
+      const inbox = (await call('GET', '/notifications', undefined, 'u-redaktion')).json.items;
+      expect(inbox.map((n: any) => [n.type, n.link])).toContainEqual(['plan_overdue', `/stammdaten/planung?outline=${o.id}`]);
+      expect(inbox.find((n: any) => n.type === 'plan_overdue').text).toContain('„A“ in „Plan“ war fällig am 10.1.2026');
+      expect((await call('GET', '/notifications', undefined, 'u-admin')).json.items.some((n: any) => n.text.includes('„B“'))).toBe(true);
+      // neuer Termin → erneute Erinnerung möglich
+      await call('PUT', `/outline-nodes/${na.id}/plan`, { dueDate: '2026-01-20' });
+      expect(await remindOverduePlans(built.ctx, forProject as any, '2026-01-21')).toBe(1);
     } finally {
       await built.app.close();
     }
