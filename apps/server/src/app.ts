@@ -19,6 +19,8 @@ import { projectRoutes } from './routes/projects.js';
 import { semanticRoutes } from './routes/semantic.js';
 import { releaseRoutes } from './routes/releases.js';
 import { collaborationRoutes } from './routes/collaboration.js';
+import { translationRoutes } from './routes/translations.js';
+import { failMachineTranslation, runMachineTranslation } from './services/translations.js';
 import { deliverNotification } from './services/collaboration.js';
 import { runIndexJob } from './services/semantic.js';
 import { miscRoutes } from './routes/misc.js';
@@ -84,6 +86,12 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
   const batchCtx = (p: any) => jobCtx(
     'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?', p.batchId,
   );
+  const translationCtx = (p: any) => jobCtx('SELECT project_id FROM translations WHERE id = ?', p.translationId);
+  jobs.register('translate', async (p) => {
+    const c = await translationCtx(p);
+    if (await archived(c)) return failMachineTranslation(c, p.translationId, ARCHIVED);
+    await runMachineTranslation(c, p.translationId, p.actor);
+  }, async (p, err) => failMachineTranslation(await translationCtx(p), p.translationId, err));
   jobs.register('notify', async (p) => deliverNotification(ctx, p.notificationId));
   jobs.register('semantic-index', async (p) => {
     const c = withProject(ctx, p.projectId);
@@ -177,6 +185,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       semanticRoutes(api, ctx);
       releaseRoutes(api, ctx);
       collaborationRoutes(api, ctx);
+      translationRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

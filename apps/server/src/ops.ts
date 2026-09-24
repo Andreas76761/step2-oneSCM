@@ -39,6 +39,7 @@ const EXPENSIVE: [string, RegExp][] = [
   ['POST', /^\/api\/v1\/chapter-versions\/[^/]+\/rewrite-jobs$/],
   ['POST', /^\/api\/v1\/semantic-index$/],
   ['POST', /^\/api\/v1\/releases$/],
+  ['POST', /^\/api\/v1\/translations\/[^/]+\/machine$/],
   ['GET', /^\/api\/v1\/search\/semantic$/],
 ];
 const isExpensive = (req: FastifyRequest) => EXPENSIVE.some(([m, re]) => req.method === m && re.test(req.url.split('?')[0]));

@@ -244,3 +244,21 @@ test('[T-212] Diskussion am Absatz: Erwähnung und Aufgabe, Hinweise und Aufgabe
   await page.getByRole('button', { name: 'Alle als gelesen markieren' }).click();
   await expect(page.getByRole('link', { name: /Aufgaben & Hinweise/ }).locator('.count')).toHaveCount(0);
 });
+
+test('[T-213] Übersetzung: Zielsprache festlegen, KI-Übersetzung mit Prüfung, Freigabe und Export', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  expect((await request.patch('/api/v1/projects/p_default', { headers: h, data: { languages: ['en'] } })).ok()).toBe(true);
+  await page.goto('/uebersetzungen');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Übersetzungen');
+  await page.getByRole('button', { name: '+ Englisch' }).click();
+  await expect(page.getByText('Übersetzung Englisch angelegt.')).toBeVisible();
+  await page.getByRole('button', { name: '✨ Unübersetzte Absätze mit KI übersetzen' }).click();
+  await expect(page.getByLabel('Übersetzter Kapiteltitel')).toHaveValue(/\[EN\]/);
+  await expect(page.getByText(/\d+ Sätze der Quelle zugeordnet/).first()).toBeVisible();
+  await page.getByLabel('Kommentar zur Freigabe der Übersetzung').fill('Sprachlich geprüft');
+  await page.getByRole('button', { name: 'Übersetzung freigeben' }).click();
+  await expect(page.getByText('Übersetzung Englisch freigegeben.')).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export Markdown' }).click();
+  expect((await download).suggestedFilename()).toMatch(/^onescm-en-.*\.md$/);
+});

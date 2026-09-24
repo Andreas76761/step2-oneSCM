@@ -287,3 +287,100 @@ describe('Kollaboration: Kommentare, Aufgaben, Benachrichtigungen (ADR-019)', ()
     }
   });
 });
+
+describe('Mehrsprachigkeit (ADR-020)', () => {
+  const dataDir = tempDir();
+  // Nachgebildeter KI-Dienst: „übersetzt“ Satz für Satz und verändert absichtlich die Frist
+  const llm = http.createServer((req, res) => {
+    let d = '';
+    req.on('data', (c) => (d += c));
+    req.on('end', () => {
+      const body = JSON.parse(d);
+      const data = JSON.parse(body.messages[1].content.match(/<<<DATA\n([\s\S]*)\nDATA>>>/)[1]);
+      const sentences = data.sentences.map((s: any) => ({ text: s.text.replace('14 Tage', '15 days').replace(/^(\s*(?:\d+\.|[-*])\s+)?/, (m: string) => `${m}EN: `), sources: [s.n] }));
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ sentences }) } }] }));
+    });
+  });
+  let url = '';
+  beforeAll(async () => {
+    await new Promise<void>((ok) => llm.listen(0, '127.0.0.1', () => ok()));
+    url = `http://127.0.0.1:${(llm.address() as AddressInfo).port}/v1`;
+  });
+  afterAll(async () => {
+    await new Promise<void>((ok) => llm.close(() => ok()));
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  it('[T-141] Übersetzung freigegebener Kapitel: KI mit Satz-Zuordnung, Prüfung, Nachbearbeitung, Freigabe je Sprache, Export, veraltet nach neuer Freigabe', async () => {
+    const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'sprachen'), logger: false, webDist: null, authMode: 'demo', llm: { provider: 'openai', model: 'gpt-test', baseUrl: url } });
+    const call = client(built);
+    const approveChapter = async (chapterId: string, edit?: string) => {
+      const v = (await call('POST', `/chapters/${chapterId}/generate`, {}, 'u-redaktion')).json;
+      const blocks = v.sections.flatMap((s: any) => s.blocks);
+      for (const b of blocks) if (b.kind === 'gap') await call('DELETE', `/content-blocks/${b.id}?reason=entfällt`, undefined, 'u-redaktion');
+      if (edit) await call('PATCH', `/content-blocks/${blocks.find((b: any) => b.section === 'purpose').id}`, { text: edit }, 'u-redaktion');
+      await call('POST', `/chapter-versions/${v.id}/submit`, {}, 'u-redaktion');
+      await call('POST', `/chapter-versions/${v.id}/approve`, { comment: 'ok' }, 'u-freigabe');
+      return v;
+    };
+    try {
+      await importMd(built, 's.md', `${FM}# 1. Reklamation\n\n## 1.1 Zweck\n\nDieses Kapitel beschreibt Reklamationen. Die Frist beträgt 14 Tage.\n\n## 1.2 Schritte\n\n1. Reklamation öffnen.\n2. Grund erfassen.\n`);
+      const chapterId = (await call('GET', '/chapters')).json.find((c: any) => c.title === '1. Reklamation').id;
+      expect((await call('POST', '/translations', { chapterId, language: 'en' }, 'u-redaktion')).status).toBe(422); // keine Zielsprache
+      expect((await call('PATCH', '/projects/p_default', { languages: ['en', 'xx'] })).status).toBe(400);
+      expect((await call('PATCH', '/projects/p_default', { languages: ['en', 'fr'] })).json.languages).toEqual(['en', 'fr']);
+      expect((await call('POST', '/translations', { chapterId, language: 'en' }, 'u-redaktion')).status).toBe(422); // noch keine Freigabe
+      await approveChapter(chapterId);
+
+      const tr = (await call('POST', '/translations', { chapterId, language: 'en' }, 'u-redaktion')).json;
+      expect(tr).toMatchObject({ language: 'en', status: 'draft', sourceVersionNo: 1, translated: 0, outdated: false });
+      expect((await call('POST', '/translations', { chapterId, language: 'en' }, 'u-redaktion')).status).toBe(409);
+      expect((await call('POST', `/translations/${tr.id}/machine`, {}, 'u-leser')).status).toBe(403);
+      expect((await call('POST', `/translations/${tr.id}/machine`, {}, 'u-redaktion')).status).toBe(202);
+      await built.ctx.jobs.idle();
+
+      const d = (await call('GET', `/translations/${tr.id}`)).json;
+      expect(d).toMatchObject({ jobStatus: 'completed', title: '1. EN: Reklamation', translated: d.blocks, flagged: 1 });
+      expect(d.sections.map((s: any) => s.translatedTitle)).toEqual(expect.arrayContaining(['Purpose', 'Step-by-step instructions']));
+      const purpose = d.sections.find((s: any) => s.code === 'purpose').blocks[0];
+      expect(purpose).toMatchObject({ mode: 'machine', provider: 'openai', model: 'gpt-test', issues: ['numbers_changed'] });
+      expect(purpose.sentences).toEqual([{ text: 'EN: Dieses Kapitel beschreibt Reklamationen.', sources: [1] }, { text: 'EN: Die Frist beträgt 15 days.', sources: [2] }]);
+      const steps = d.sections.find((s: any) => s.code === 'steps').blocks[0];
+      expect(steps).toMatchObject({ text: '1. EN: Reklamation öffnen.\n2. EN: Grund erfassen.', issues: [] });
+
+      // Freigabe verlangt geprüfte Übersetzung; Nachbearbeitung behebt den Befund
+      expect((await call('POST', `/translations/${tr.id}/approve`, { comment: 'ok' }, 'u-freigabe')).status).toBe(409);
+      const fixed = (await call('PATCH', `/translation-blocks/${purpose.id}`, { text: 'This chapter describes complaints. The deadline is 14 days.' }, 'u-redaktion')).json;
+      expect(fixed).toMatchObject({ mode: 'edited', issues: [], sentences: null });
+      const bad = (await call('PATCH', `/translation-blocks/${steps.id}`, { text: 'Open the complaint and enter the reason.' }, 'u-redaktion')).json;
+      expect(bad.issues).toEqual(['structure_changed']);
+      await call('PATCH', `/translation-blocks/${steps.id}`, { text: '1. Open the complaint.\n2. Enter the reason.' }, 'u-redaktion');
+      await call('PATCH', `/translations/${tr.id}`, { title: '1. Complaints' }, 'u-redaktion');
+      expect((await call('POST', `/translations/${tr.id}/approve`, { comment: 'Fachlich geprüft' }, 'u-redaktion')).status).toBe(403);
+      expect((await call('POST', `/translations/${tr.id}/approve`, { comment: 'Fachlich geprüft' }, 'u-freigabe')).json).toMatchObject({ status: 'approved', approvedBy: 'u-freigabe' });
+      expect((await call('PATCH', `/translation-blocks/${steps.id}`, { text: '1. X.\n2. Y.' }, 'u-redaktion')).status).toBe(409);
+
+      // Export in der Zielsprache
+      const md = (await call('GET', `/translations/${tr.id}/export?format=md`)).body;
+      expect(md).toContain('# oneSCM – Englisch');
+      expect(md).toContain('## 1. Complaints');
+      expect(md).toContain('### Purpose');
+      expect(md).toContain('The deadline is 14 days.');
+      const html = (await call('GET', `/translations/${tr.id}/export?format=html`)).body;
+      expect(html).toContain('<html lang="en">');
+
+      // Neue deutsche Freigabe → Übersetzung veraltet, neue Übersetzung möglich
+      await approveChapter(chapterId, 'Dieses Kapitel erklärt Reklamationen. Die Frist beträgt 14 Tage.');
+      expect((await call('GET', `/translations?chapterId=${chapterId}`)).json[0]).toMatchObject({ id: tr.id, outdated: true, status: 'approved' });
+      const tr2 = (await call('POST', '/translations', { chapterId, language: 'en' }, 'u-redaktion')).json;
+      expect(tr2).toMatchObject({ sourceVersionNo: 2, outdated: false });
+      // Mandantentrennung
+      const P = (await call('POST', '/projects', { name: 'Fremd', visibility: 'open' })).json.id;
+      expect((await call('GET', `/translations/${tr.id}`, undefined, 'u-admin', P)).status).toBe(404);
+      expect((await call('PATCH', `/translation-blocks/${steps.id}`, { text: 'x' }, 'u-admin', P)).status).toBe(404);
+    } finally {
+      await built.app.close();
+    }
+  });
+});

@@ -22,6 +22,7 @@ import { ComparePage } from './pages/Compare';
 import { ProjectsPage } from './pages/Projects';
 import { ReleasesPage } from './pages/Releases';
 import { InboxPage } from './pages/Discussion';
+import { TranslationsPage } from './pages/Translations';
 
 // Navigation gemäß Masterprompt §14
 const NAV = [
@@ -39,6 +40,7 @@ const NAV = [
   { to: '/evidenz', label: 'Evidenz', icon: '🔎' },
   { to: '/freigabe', label: 'Freigabe', icon: '✅' },
   { to: '/export', label: 'Export', icon: '📤' },
+  { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
   { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
   { to: '/traceability', label: 'Traceability', icon: '🔗' },
   { to: '/projekte', label: 'Projekte', icon: '🗂️' },
@@ -202,6 +204,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/freigabe" element={<ApprovalPage />} />
             <Route path="/export" element={<ExportPage />} />
             <Route path="/veroeffentlichung" element={<ReleasesPage />} />
+            <Route path="/uebersetzungen" element={<TranslationsPage />} />
             <Route path="/aufgaben" element={<InboxPage onRead={reloadUnread} />} />
             <Route path="/traceability" element={<TraceabilityPage />} />
             <Route path="/projekte" element={<ProjectsPage onChanged={reloadProjects} />} />
