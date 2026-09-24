@@ -305,3 +305,10 @@ ol.stages li.stage-active strong { text-decoration: underline; }
 /* Handbuch-Assistent (ADR-026) */
 .answer p { margin: 6px 0; }
 ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px solid var(--border, #ccc); }
+
+/* Integrationen (ADR-028) */
+.inline-fieldset { display: inline-flex; gap: 8px; border: 0; padding: 0; margin: 0; align-items: center; flex-wrap: wrap; }
+.inline-fieldset legend { float: left; margin-right: 6px; }
+.block-check { display: block; margin: 4px 0; }
+.webhook { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
+.webhook h3 { font-size: 15px; word-break: break-all; }

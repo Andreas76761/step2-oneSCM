@@ -370,8 +370,9 @@ function Connections({ onSynced }: { onSynced: () => void }) {
   const me = useLoad<any>('/me');
   const isAdmin = !!me.data?.permissions.includes('admin');
   const canSync = !!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin');
-  const empty = { name: '', url: '', branch: '', subPath: '', intervalMinutes: '0', credentialEnv: '' };
+  const empty = { kind: 'git', name: '', url: '', branch: '', subPath: '', spaceKey: '', intervalMinutes: '0', credentialEnv: '' };
   const [form, setForm] = useState<Record<string, string> | null>(null);
+  const [hookInfo, setHookInfo] = useState<{ url: string; secret: string } | null>(null);
 
   const waitFor = async (id: string) => {
     for (let i = 0; i < 120; i++) {
@@ -395,13 +396,19 @@ function Connections({ onSynced }: { onSynced: () => void }) {
     }
   };
   const save = () => run(async () => {
-    const c = await post('/source-connections', { ...form, intervalMinutes: Number(form!.intervalMinutes), branch: form!.branch || null, credentialEnv: form!.credentialEnv || null });
+    const f = form!;
+    const body = f.kind === 'confluence'
+      ? { kind: 'confluence', name: f.name, url: f.url, spaceKey: f.spaceKey, intervalMinutes: Number(f.intervalMinutes), credentialEnv: f.credentialEnv || null }
+      : { kind: 'git', name: f.name, url: f.url, subPath: f.subPath, intervalMinutes: Number(f.intervalMinutes), branch: f.branch || null, credentialEnv: f.credentialEnv || null };
+    const c = await post('/source-connections', body);
     setForm(null);
+    // Push-Webhook: URL und Geheimnis einmalig anzeigen (ADR-028)
+    if (c.webhookSecret) setHookInfo({ url: `${location.origin}${c.webhookPath}`, secret: c.webhookSecret });
     return c;
   });
 
   return (
-    <Card title="Quellverbindungen (Git)" actions={isAdmin && <button className="btn" onClick={() => setForm(empty)}>Verbindung anlegen</button>}>
+    <Card title="Quellverbindungen (Git, Confluence)" actions={isAdmin && <button className="btn" onClick={() => setForm(empty)}>Verbindung anlegen</button>}>
       <ErrorBox error={list.error} />
       {!list.data?.length ? <Empty>Keine Git-Repositories verbunden. Markdown-, HTML- und Word-Dateien eines Repository-Ordners lassen sich automatisch abgleichen.</Empty> : (
         <table className="table compact">
@@ -410,7 +417,7 @@ function Connections({ onSynced }: { onSynced: () => void }) {
             {list.data.map((c) => (
               <tr key={c.id}>
                 <td>{c.name}</td>
-                <td className="small">{c.url}{c.branch && <> · {c.branch}</>}{c.subPath && <> · /{c.subPath}</>}{c.credentialAvailable === false && <div className="tag st-failed">{c.credentialEnv} fehlt</div>}</td>
+                <td className="small">{c.kind === 'confluence' ? 'Confluence · ' : ''}{c.url}{c.spaceKey && <> · Bereich {c.spaceKey}</>}{c.branch && <> · {c.branch}</>}{c.subPath && <> · /{c.subPath}</>}{c.credentialAvailable === false && <div className="tag st-failed">{c.credentialEnv} fehlt</div>}</td>
                 <td><Status s={c.status} />{c.lastError && <div className="small" role="note">{c.lastError}</div>}</td>
                 <td className="small">{c.lastSyncAt ? new Date(c.lastSyncAt).toLocaleString('de-DE') : '–'}{c.lastCommit && <><br />Commit {c.lastCommit.slice(0, 7)}</>}</td>
                 <td className="small">{c.intervalMinutes ? `alle ${c.intervalMinutes} min` : 'manuell'}{c.nextSyncAt && <><br />nächster: {new Date(c.nextSyncAt).toLocaleTimeString('de-DE')}</>}</td>
@@ -426,19 +433,42 @@ function Connections({ onSynced }: { onSynced: () => void }) {
       {form && (
         <Modal title="Git-Quellverbindung anlegen" onClose={() => setForm(null)}>
           <div>
+            <label className="block">Art
+              <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>
+                <option value="git">Git-Repository</option>
+                <option value="confluence">Confluence Cloud (Bereich)</option>
+              </select>
+            </label>
             <label className="block">Name<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
-            <label className="block">Repository-URL (https)<input value={form.url} placeholder="https://git.example.org/handbuch.git" onChange={(e) => setForm({ ...form, url: e.target.value })} /></label>
-            <label className="block">Branch (leer: Standard)<input value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} /></label>
-            <label className="block">Unterordner<input value={form.subPath} placeholder="docs/handbuch" onChange={(e) => setForm({ ...form, subPath: e.target.value })} /></label>
+            {form.kind === 'confluence' ? (
+              <>
+                <label className="block">Confluence-URL<input value={form.url} placeholder="https://firma.atlassian.net/wiki" onChange={(e) => setForm({ ...form, url: e.target.value })} /></label>
+                <label className="block">Bereichsschlüssel<input value={form.spaceKey} placeholder="HB" onChange={(e) => setForm({ ...form, spaceKey: e.target.value })} /></label>
+              </>
+            ) : (
+              <>
+                <label className="block">Repository-URL (https)<input value={form.url} placeholder="https://git.example.org/handbuch.git" onChange={(e) => setForm({ ...form, url: e.target.value })} /></label>
+                <label className="block">Branch (leer: Standard)<input value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} /></label>
+                <label className="block">Unterordner<input value={form.subPath} placeholder="docs/handbuch" onChange={(e) => setForm({ ...form, subPath: e.target.value })} /></label>
+              </>
+            )}
             <label className="block">Automatischer Abgleich
               <select value={form.intervalMinutes} onChange={(e) => setForm({ ...form, intervalMinutes: e.target.value })}>
                 <option value="0">nur manuell</option><option value="15">alle 15 Minuten</option><option value="60">stündlich</option><option value="1440">täglich</option>
               </select>
             </label>
-            <label className="block">Token aus Umgebungsvariable (optional)<input value={form.credentialEnv} placeholder="GIT_CREDENTIAL_HANDBUCH" onChange={(e) => setForm({ ...form, credentialEnv: e.target.value })} /></label>
-            <p className="small">Zugangsdaten werden nie gespeichert: Der Betrieb hinterlegt das Token als Umgebungsvariable GIT_CREDENTIAL_… des Servers.</p>
-            <div className="actions"><button className="btn primary" disabled={!form.name || !form.url} onClick={() => void save()}>Anlegen und abgleichen</button></div>
+            <label className="block">Zugangsdaten aus Umgebungsvariable (optional)<input value={form.credentialEnv} placeholder={form.kind === 'confluence' ? 'CONFLUENCE_CREDENTIAL_HANDBUCH' : 'GIT_CREDENTIAL_HANDBUCH'} onChange={(e) => setForm({ ...form, credentialEnv: e.target.value })} /></label>
+            <p className="small">Zugangsdaten werden nie gespeichert: Der Betrieb hinterlegt das Token als Umgebungsvariable {form.kind === 'confluence' ? 'CONFLUENCE_CREDENTIAL_… („E-Mail:API-Token“)' : 'GIT_CREDENTIAL_…'} des Servers.</p>
+            <div className="actions"><button className="btn primary" disabled={!form.name || !form.url || (form.kind === 'confluence' && !form.spaceKey)} onClick={() => void save()}>Anlegen und abgleichen</button></div>
           </div>
+        </Modal>
+      )}
+      {hookInfo && (
+        <Modal title="Push-Webhook einrichten" onClose={() => setHookInfo(null)}>
+          <p>Im Git-Server (GitHub: Webhook mit „Secret“, GitLab: „Secret token“) für Push-Ereignisse eintragen. Das Geheimnis wird nur jetzt angezeigt.</p>
+          <label className="block">Payload-URL<input readOnly value={hookInfo.url} /></label>
+          <label className="block">Geheimnis<input readOnly value={hookInfo.secret} /></label>
+          <div className="actions"><button className="btn primary" onClick={() => setHookInfo(null)}>Eingetragen</button></div>
         </Modal>
       )}
     </Card>

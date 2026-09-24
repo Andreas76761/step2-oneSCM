@@ -27,6 +27,8 @@ import { failSync, runSync } from './services/connections.js';
 import { connectionRoutes } from './routes/connections.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { assistantRoutes } from './routes/assistant.js';
+import { integrationRoutes } from './routes/integrations.js';
+import { deliverWebhook, failWebhookDelivery } from './services/webhooks.js';
 import { ensureDailyJob, runDailySnapshots } from './services/analytics.js';
 import { ensureEscalationJob, escalateOverdue } from './services/workflow.js';
 import { miscRoutes } from './routes/misc.js';
@@ -116,6 +118,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     if (await archived(c)) return failSync(c, p, ARCHIVED);
     await runSync(c, p);
   }, async (p, err) => failSync(await connectionCtx(p), p, err));
+  const deliveryCtx = (p: any) => jobCtx('SELECT s.project_id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id WHERE d.id = ?', p.deliveryId);
+  jobs.register('webhook-deliver', async (p) => deliverWebhook(await deliveryCtx(p), p), async (p, err) => failWebhookDelivery(await deliveryCtx(p), p, err));
   jobs.register('kpi-daily', async () => runDailySnapshots(ctx, (id) => withProject(ctx, id)), undefined, { background: true });
   jobs.register('approval-escalation', async () => {
     await escalateOverdue(ctx, (id) => withProject(ctx, id));
@@ -177,12 +181,16 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       api.addHook('onRequest', async (req) => {
         req.ctx = ctx;
         const url = req.url.split('?')[0];
-        if (PUBLIC_PATHS.has(url)) return;
+        // öffentlich: Health, Anmeldekonfiguration, eingehende Webhooks (eigene Signaturprüfung, ADR-028)
+        if (PUBLIC_PATHS.has(url) || url.startsWith('/api/v1/hooks/')) return;
         const user = await authenticate(ctx, req.headers);
         req.globalUser = user;
         req.user = user;
-        // Projektverwaltung arbeitet projektübergreifend mit globalen Berechtigungen
-        if (url === '/api/v1/projects' || url.startsWith('/api/v1/projects/')) return;
+        // Projektverwaltung arbeitet projektübergreifend mit globalen Berechtigungen – nicht für API-Tokens
+        if (url === '/api/v1/projects' || url.startsWith('/api/v1/projects/')) {
+          if (user.token) throw new Problem(403, 'Forbidden', 'API-Tokens haben keinen Zugriff auf die Projektverwaltung.');
+          return;
+        }
         const header = req.headers['x-project-id'];
         const scoped = await resolveProject(ctx, user, Array.isArray(header) ? header[0] : header);
         req.ctx = scoped.ctx;
@@ -213,6 +221,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       connectionRoutes(api, ctx);
       analyticsRoutes(api, ctx);
       assistantRoutes(api, ctx);
+      integrationRoutes(api, ctx);
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
     },

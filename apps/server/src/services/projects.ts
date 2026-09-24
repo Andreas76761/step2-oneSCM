@@ -42,6 +42,15 @@ export async function effectiveUser(ctx: Ctx, user: User, project: Row): Promise
 
 /** Projekt einer Anfrage auflösen (Header `X-Project-Id`, Standard `p_default`). */
 export async function resolveProject(ctx: Ctx, user: User, projectId: string | undefined) {
+  if (user.token) {
+    // API-Token: nur das gebundene Projekt, Berechtigungen = Scopes (archiviert: nur lesen)
+    const id = projectId?.trim() || user.token.projectId;
+    if (id !== user.token.projectId) throw forbidden('Das API-Token gilt nicht für dieses Projekt.');
+    const p = await ctx.db.get('SELECT * FROM projects WHERE id = ?', id);
+    if (!p) throw new Problem(404, 'Not Found', `Projekt ${id} wurde nicht gefunden.`);
+    const perms = p.archived_at ? user.token.scopes.filter((s) => s === 'read') : user.token.scopes;
+    return { ctx: withProject(ctx, id), user: { ...user, permissions: perms } };
+  }
   const id = projectId?.trim() || DEFAULT_PROJECT_ID;
   const p = await ctx.db.get('SELECT * FROM projects WHERE id = ?', id);
   if (!p) throw new Problem(404, 'Not Found', `Projekt ${id} wurde nicht gefunden.`);
@@ -192,6 +201,9 @@ const OWNER_SQL: Record<string, string> = {
   releaseId: 'SELECT project_id FROM handbook_releases WHERE id = ?',
   connectionId: 'SELECT project_id FROM source_connections WHERE id = ?',
   answerId: 'SELECT project_id FROM assistant_log WHERE id = ?',
+  tokenId: 'SELECT project_id FROM api_tokens WHERE id = ?',
+  webhookId: 'SELECT project_id FROM webhook_subscriptions WHERE id = ?',
+  deliveryId: 'SELECT s.project_id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id WHERE d.id = ?',
   batchId: 'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?',
 };
 

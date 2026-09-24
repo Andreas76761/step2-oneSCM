@@ -56,6 +56,8 @@ export interface AppConfig {
   vectorIndex: EngineSetting;
   /** OpenTelemetry-Tracing (ADR-027) */
   tracing: TracingConfig;
+  /** Integrationen (ADR-028): http und interne Ziele nur für Tests/abgeschottete Netze */
+  integrations: { allowInsecure: boolean };
 }
 
 export type EngineSetting = 'auto' | 'exact' | 'hnsw' | 'pgvector';
@@ -167,6 +169,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     notify: { ...notifyFromEnv(), ...overrides.notify },
     vectorIndex: overrides.vectorIndex ?? vectorIndexFromEnv(),
     tracing: overrides.tracing ?? tracingFromEnv(),
+    integrations: { allowInsecure: process.env.INTEGRATIONS_ALLOW_INSECURE === '1', ...overrides.integrations },
     git: { allowFile: process.env.GIT_ALLOW_FILE === '1', timeoutMs: Number(process.env.GIT_TIMEOUT_MS ?? 120_000), ...overrides.git },
   };
 }

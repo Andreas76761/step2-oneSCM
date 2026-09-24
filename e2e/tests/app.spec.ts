@@ -301,6 +301,11 @@ test('[T-214] Import aus Fremdsystemen: HTML-Datei hochladen, Git-Repository ver
   await dialog.getByLabel('Name').fill('Handbuch-Repo');
   await dialog.getByLabel('Repository-URL (https)').fill(repo);
   await dialog.getByRole('button', { name: 'Anlegen und abgleichen' }).click();
+  // Push-Webhook: URL und Geheimnis werden einmalig angezeigt
+  const hook = page.getByRole('dialog', { name: 'Push-Webhook einrichten' });
+  await expect(hook.getByLabel('Geheimnis')).toHaveValue(/^whsec_/);
+  await expect(hook.getByLabel('Payload-URL')).toHaveValue(/\/api\/v1\/hooks\/source-connections\/conn_/);
+  await hook.getByRole('button', { name: 'Eingetragen' }).click();
   await expect(page.getByRole('status')).toContainText('Abgleich „Handbuch-Repo“ abgeschlossen');
   await expect(page.locator('tr', { hasText: 'Handbuch-Repo' }).getByText('aktuell')).toBeVisible();
   await page.getByLabel('Suche', { exact: true }).fill('Git-Repository');
@@ -383,4 +388,36 @@ test('[T-217] Handbuch-Assistent: Frage mit Quellenangabe, Bewertung, Wissenslü
   const gaps = page.locator('.card', { hasText: 'Wissenslücken' });
   await expect(gaps.getByRole('cell', { name: 'Wie konfiguriere ich den Quantencomputer?' })).toBeVisible();
   await expect(gaps.getByRole('cell', { name: /Zurückweisung ohne Kommentar/ })).toBeVisible();
+});
+
+test('[T-218] Integrationen: API-Token erstellen und verwenden, Webhook anlegen und testen', async ({ page, request }) => {
+  await page.goto('/integrationen');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Integrationen');
+  const tokens = page.locator('.card', { hasText: 'API-Tokens' });
+  await tokens.getByLabel('Name').fill('E2E-Bot');
+  await tokens.getByRole('button', { name: 'Token erstellen' }).click();
+  const secret = page.getByRole('dialog', { name: 'API-Token „E2E-Bot“' });
+  const token = (await secret.getByLabel('API-Token „E2E-Bot“').textContent())!.trim();
+  expect(token).toMatch(/^oscm_/);
+  await secret.getByRole('button', { name: 'Gespeichert' }).click();
+  await expect(tokens.getByRole('cell', { name: 'E2E-Bot', exact: true })).toBeVisible();
+  // Token funktioniert ohne Benutzerkopf
+  const res = await request.get('/api/v1/chapters', { headers: { authorization: `Bearer ${token}` } });
+  expect(res.ok()).toBe(true);
+
+  await page.getByRole('button', { name: 'Webhook anlegen' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Webhook anlegen' });
+  await dlg.getByLabel('Ziel-URL (https)').fill('http://127.0.0.1:9/hook');
+  await dlg.getByLabel('import.finished').check();
+  await dlg.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByRole('dialog', { name: 'Webhook-Geheimnis' }).getByLabel('Webhook-Geheimnis')).toContainText('whsec_');
+  await page.getByRole('button', { name: 'Gespeichert' }).click();
+  await page.getByRole('button', { name: 'Testen' }).click();
+  await expect(page.getByText('Testereignis gesendet.')).toBeVisible();
+  await expect(page.locator('.webhook').getByRole('cell', { name: 'ping' })).toBeVisible();
+  // Widerruf
+  page.once('dialog', (d) => void d.accept());
+  await tokens.getByRole('button', { name: 'Token E2E-Bot widerrufen' }).click();
+  await expect(tokens.getByText('widerrufen', { exact: true })).toBeVisible();
+  expect((await request.get('/api/v1/chapters', { headers: { authorization: `Bearer ${token}` } })).status()).toBe(401);
 });
