@@ -208,6 +208,21 @@ dl.meta dd { margin: 0; }
 .batch-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 6px 0 10px; }
 .batch-status progress { width: 220px; }
 .batch-list { list-style: none; padding: 0; margin: 0; }
+.semantic-hits { padding-left: 1.2rem; margin: 6px 0 0; }
+.semantic-hits li { margin-bottom: 8px; }
+.release-list { list-style: none; padding: 0; margin: 0; }
+.release-list > li { border-top: 1px solid var(--border); padding: 10px 0; }
+.release-detail { margin-top: 8px; }
+.comment-list { list-style: none; padding: 0; margin: 0 0 10px; }
+.comment-list > li { border-top: 1px solid var(--border); padding: 8px 0; }
+.comment-list > li.reply { margin-left: 16px; border-left: 3px solid var(--border); padding-left: 8px; }
+.comment-list > li.unread { border-left: 3px solid var(--primary); padding-left: 8px; }
+.comment-form { border-top: 1px solid var(--border); padding-top: 8px; }
+.tr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-top: 1px solid var(--border); padding: 8px 0; }
+.tr-source { color: var(--muted); }
+.tr-target textarea { width: 100%; }
+@media (max-width: 800px) { .tr-row { grid-template-columns: 1fr; } }
+.sidebar nav .count { margin-left: 6px; background: #b91c1c; color: #fff; border-radius: 999px; padding: 0 7px; font-size: 12px; }
 .batch-list > li { border-top: 1px solid var(--border); padding: 10px 0; }
 .block.kind-gap { border-style: dashed; color: var(--muted); }
 .block.kind-warning { background: var(--danger-bg); }

@@ -109,4 +109,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: Betrieb & Härtung, KI-Umformu
 | KI ganzer Kapitel (US-008/US-009) | ✅ Hintergrundjob mit Fortschritt, Abbruch und Fortsetzen; Sammelprüfung und Sammelübernahme; Nutzung/Kosten |
 | Barrierefreiheit (NFR-03, §15) | ✅ WCAG 2.2 AA automatisch geprüft (hell/dunkel), Tastatur und Fokus, schmale Bildschirme ([ADR-016](adr/ADR-016-barrierefreiheit.md)) |
 
-Bekannte Grenzen: Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016).
+## 1.9 Stand nach Etappe 7 (24.09.2026)
+
+Umfang vom Auftraggeber am 24.09.2026 festgelegt: semantische Suche, Veröffentlichung & Versionierung, Kollaboration, Mehrsprachigkeit.
+
+| Punkt | Ergebnis |
+|---|---|
+| Semantische Suche (NFR-04) | ✅ Embeddings lokal oder über einen OpenAI-kompatiblen Dienst, Suche und optionale hybride Analyse ([ADR-017](adr/ADR-017-semantische-suche.md)) |
+| Veröffentlichung (NFR-05) | ✅ Handbuch-Releases mit Änderungsliste und statischer Online-Hilfe ([ADR-018](adr/ADR-018-releases.md)) |
+| Kollaboration (NFR-06) | ✅ Diskussionen, @Erwähnungen, Aufgaben, Benachrichtigungen In-App/Webhook/E-Mail ([ADR-019](adr/ADR-019-kollaboration.md)) |
+| Mehrsprachigkeit (NFR-07) | ✅ Übersetzung freigegebener Kapitel mit Satz-Zuordnung, Prüfung und Freigabe je Sprache ([ADR-020](adr/ADR-020-mehrsprachigkeit.md)) |
+
+Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016).

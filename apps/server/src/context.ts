@@ -5,6 +5,8 @@ import { json, newId, now, parseJson, type Db } from './db.js';
 import { DEMO_USERS, DIVISIONS, ROLES, type Permission } from './domain/reference.js';
 import type { JobQueue } from './jobs.js';
 import type { LlmProvider } from './llm.js';
+import type { EmbeddingProvider } from './embeddings.js';
+import type { Notifier } from './notify.js';
 import { forbidden } from './problem.js';
 import type { ObjectStore } from './storage.js';
 
@@ -17,6 +19,10 @@ export interface Ctx {
   config: AppConfig;
   /** KI-Dienst für Umformulierungsvorschläge; null = ausgeschaltet */
   llm: LlmProvider | null;
+  /** Embedding-Anbieter (ADR-017) */
+  embeddings: EmbeddingProvider;
+  /** Benachrichtigungskanäle (ADR-019) */
+  notifier: Notifier;
   projectId: string;
   log: (msg: string, extra?: unknown) => void;
 }
@@ -45,7 +51,10 @@ export async function seedReferenceData(db: Db, authMode: AppConfig['authMode'])
     // Demo-Benutzer nur im Demo-Modus (ENTSCHEIDUNG E-15)
     if (authMode === 'demo') {
       for (const u of DEMO_USERS) {
-        await db.run('INSERT INTO users (id, name, permissions) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, permissions = excluded.permissions', u.id, u.name, json(u.permissions));
+        await db.run(
+          'INSERT INTO users (id, name, permissions, email) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, permissions = excluded.permissions, email = excluded.email',
+          u.id, u.name, json(u.permissions), u.email,
+        );
       }
     }
   });

@@ -10,6 +10,7 @@ import { json, newId, now, parseJson, type Row } from '../db.js';
 import { PERMISSIONS } from '../domain/reference.js';
 import { badRequest, conflict, forbidden, notFound, Problem } from '../problem.js';
 import { seedTerminology } from './terminology.js';
+import { LANGUAGES } from '../domain/translate.js';
 
 export type Visibility = 'open' | 'restricted';
 
@@ -52,7 +53,7 @@ export async function resolveProject(ctx: Ctx, user: User, projectId: string | u
 function dto(p: Row, eff: User | null, counts?: Row) {
   return {
     id: p.id, name: p.name, description: p.description ?? null, visibility: p.visibility as Visibility, createdAt: p.created_at, createdBy: p.created_by ?? null,
-    archivedAt: p.archived_at ?? null, myPermissions: eff?.permissions ?? [],
+    archivedAt: p.archived_at ?? null, myPermissions: eff?.permissions ?? [], languages: parseJson<string[]>(p.languages, []),
     ...(counts ? { chapters: counts.chapters ?? 0, sources: counts.sources ?? 0 } : {}),
   };
 }
@@ -103,7 +104,7 @@ export async function createProject(ctx: Ctx, input: { name?: string; descriptio
   return dto(p, await effectiveUser(ctx, user, p));
 }
 
-export async function updateProject(ctx: Ctx, id: string, input: { name?: string; description?: string | null; visibility?: string; archived?: boolean }, user: User) {
+export async function updateProject(ctx: Ctx, id: string, input: { name?: string; description?: string | null; visibility?: string; archived?: boolean; languages?: unknown }, user: User) {
   const p = await projectRow(ctx, id);
   const set: string[] = [];
   const vals: unknown[] = [];
@@ -118,6 +119,13 @@ export async function updateProject(ctx: Ctx, id: string, input: { name?: string
   if (input.archived !== undefined) {
     if (id === DEFAULT_PROJECT_ID && input.archived) throw conflict('Das Standardprojekt kann nicht archiviert werden.');
     set.push('archived_at = ?'), vals.push(input.archived ? (p.archived_at ?? now()) : null);
+  }
+  if (input.languages !== undefined) {
+    // Zielsprachen für Übersetzungen (ADR-020); Quellsprache ist Deutsch
+    if (!Array.isArray(input.languages) || input.languages.some((l) => typeof l !== 'string' || !LANGUAGES[l])) {
+      throw badRequest(`languages muss eine Liste aus ${Object.keys(LANGUAGES).join(', ')} sein.`);
+    }
+    set.push('languages = ?'), vals.push(json([...new Set(input.languages as string[])]));
   }
   if (!set.length) throw badRequest('Keine Änderung angegeben.');
   await ctx.db.tx(async () => {
@@ -178,6 +186,10 @@ const OWNER_SQL: Record<string, string> = {
   runId: 'SELECT project_id FROM analysis_runs WHERE id = ?',
   exportId: 'SELECT project_id FROM exports WHERE id = ?',
   termId: 'SELECT project_id FROM terminology_terms WHERE id = ?',
+  commentId: 'SELECT project_id FROM comments WHERE id = ?',
+  translationId: 'SELECT project_id FROM translations WHERE id = ?',
+  translationBlockId: 'SELECT t.project_id FROM translation_blocks b JOIN translations t ON t.id = b.translation_id WHERE b.id = ?',
+  releaseId: 'SELECT project_id FROM handbook_releases WHERE id = ?',
   batchId: 'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?',
 };
 

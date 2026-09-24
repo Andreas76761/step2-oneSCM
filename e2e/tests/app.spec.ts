@@ -19,7 +19,7 @@ test('[T-201] Navigation, Import einer MD-Datei und Quellenliste', async ({ page
   });
   await expect(page.getByRole('status')).toContainText('Import abgeschlossen');
   await expect(page.getByRole('cell', { name: 'e2e_hinweis.md' })).toBeVisible();
-  await page.getByLabel('Suche').fill('E2E-Test');
+  await page.getByLabel('Suche', { exact: true }).fill('E2E-Test');
   await expect(page.getByRole('cell', { name: /im E2E-Test für alle Sparten/ })).toBeVisible();
   // Sparten-Icon + Label werden gemeinsam dargestellt (US-010)
   await expect(page.locator('tr', { hasText: 'im E2E-Test' }).locator('.badge', { hasText: 'Alle' })).toContainText('🔄');
@@ -194,4 +194,82 @@ test('[T-207] Ganzes Kapitel umformulieren: Fortschritt, Sammelprüfung, alle g�
 
   await page.goto('/einstellungen');
   await expect(page.getByRole('cell', { name: 'demo/demo-extractive' })).toBeVisible();
+});
+
+test('[T-210] Semantische Suche auf der Quellenseite', async ({ page }) => {
+  await page.goto('/quellen');
+  const search = page.getByRole('search', { name: 'Semantische Suche' });
+  await search.getByLabel('Semantische Suchanfrage').fill('Vertrag zur Prüfung senden');
+  await search.getByRole('button', { name: 'Suchen' }).click();
+  await expect(page.getByText(/\d+ Treffer · Modell local-hash-384 \(lokal\)/)).toBeVisible();
+  const first = page.locator('.semantic-hits li').first();
+  await expect(first).toContainText('Ähnlichkeit');
+  await first.getByRole('button').click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+
+  // Verfahren der Analyse wird gespeichert (und wieder zurückgesetzt)
+  await page.goto('/einstellungen');
+  await page.getByLabel('Verfahren (ADR-017)').selectOption('hybrid');
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel('Verfahren (ADR-017)')).toHaveValue('hybrid');
+  await page.getByLabel('Verfahren (ADR-017)').selectOption('tfidf');
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
+});
+
+test('[T-211] Handbuch-Version veröffentlichen, Änderungen ansehen, Online-Hilfe herunterladen', async ({ page }) => {
+  await page.goto('/veroeffentlichung');
+  await page.getByLabel('Versionsnummer').fill('2026.9');
+  await page.getByRole('button', { name: 'Veröffentlichen' }).click();
+  await expect(page.getByText(/Version 2026\.9 veröffentlicht \(\d+ Kapitel\)/)).toBeVisible();
+  await expect(page.getByRole('table').getByText('neu').first()).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Online-Hilfe (ZIP)' }).first().click();
+  expect((await download).suggestedFilename()).toBe('onescm-handbuch-2026.9-online-hilfe.zip');
+});
+
+test('[T-212] Diskussion am Absatz: Erwähnung und Aufgabe, Hinweise und Aufgaben der erwähnten Person', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '3. Benutzerverwaltung');
+  await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h });
+  await page.goto(`/werkstatt/${ch.id}`);
+  await page.getByRole('article').first().locator('.block-meta').first().click();
+  await page.getByRole('tab', { name: 'Diskussion' }).click();
+  await page.getByLabel('Kommentartext').fill('Bitte Formulierung prüfen @u-redaktion');
+  await page.getByRole('button', { name: 'Senden' }).click();
+  await expect(page.getByText('Kommentar gespeichert.')).toBeVisible();
+  await page.getByLabel('Kommentartext').fill('Screenshot ergänzen');
+  await page.getByLabel('Art des Eintrags').selectOption('task');
+  await page.getByLabel('Zuständige Person').selectOption('u-redaktion');
+  await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
+  await expect(page.locator('.discussion').getByText('Aufgabe offen')).toBeVisible();
+
+  // als Redaktion: Zähler, Hinweise, Aufgabe erledigen
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  await expect(page.getByRole('link', { name: /Aufgaben & Hinweise/ }).locator('.count')).toHaveText('2');
+  await page.getByRole('link', { name: /Aufgaben & Hinweise/ }).click();
+  await expect(page.getByText(/hat Sie erwähnt/)).toBeVisible();
+  await expect(page.locator('.card', { hasText: 'Meine offenen Aufgaben' }).getByText('Screenshot ergänzen')).toBeVisible();
+  await page.getByRole('button', { name: 'Alle als gelesen markieren' }).click();
+  await expect(page.getByRole('link', { name: /Aufgaben & Hinweise/ }).locator('.count')).toHaveCount(0);
+});
+
+test('[T-213] Übersetzung: Zielsprache festlegen, KI-Übersetzung mit Prüfung, Freigabe und Export', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  expect((await request.patch('/api/v1/projects/p_default', { headers: h, data: { languages: ['en'] } })).ok()).toBe(true);
+  await page.goto('/uebersetzungen');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Übersetzungen');
+  await page.getByRole('button', { name: '+ Englisch' }).click();
+  await expect(page.getByText('Übersetzung Englisch angelegt.')).toBeVisible();
+  await page.getByRole('button', { name: '✨ Unübersetzte Absätze mit KI übersetzen' }).click();
+  await expect(page.getByLabel('Übersetzter Kapiteltitel')).toHaveValue(/\[EN\]/);
+  await expect(page.getByText(/\d+ Sätze der Quelle zugeordnet/).first()).toBeVisible();
+  await page.getByLabel('Kommentar zur Freigabe der Übersetzung').fill('Sprachlich geprüft');
+  await page.getByRole('button', { name: 'Übersetzung freigeben' }).click();
+  await expect(page.getByText('Übersetzung Englisch freigegeben.')).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export Markdown' }).click();
+  expect((await download).suggestedFilename()).toMatch(/^onescm-en-.*\.md$/);
 });

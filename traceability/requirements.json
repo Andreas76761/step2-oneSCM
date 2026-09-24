@@ -212,5 +212,41 @@
     "documentation": [
       "docs/adr/ADR-016-barrierefreiheit.md"
     ]
+  },
+  {
+    "id": "NFR-04",
+    "title": "Semantische Suche und hybride Analyse mit Embeddings",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-017-semantische-suche.md"
+    ]
+  },
+  {
+    "id": "NFR-05",
+    "title": "Veröffentlichung: Handbuch-Releases, Änderungslisten, statische Online-Hilfe",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-018-releases.md"
+    ]
+  },
+  {
+    "id": "NFR-06",
+    "title": "Kollaboration: Kommentare, Aufgaben, @Erwähnungen, Benachrichtigungen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-019-kollaboration.md"
+    ]
+  },
+  {
+    "id": "NFR-07",
+    "title": "Mehrsprachigkeit: Übersetzung mit Satz-Zuordnung und Freigabe je Sprache",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-020-mehrsprachigkeit.md"
+    ]
   }
 ]

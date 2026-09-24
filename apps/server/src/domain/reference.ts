@@ -75,9 +75,10 @@ export const PERMISSIONS = ['read', 'edit', 'decide', 'approve', 'admin'] as con
 export type Permission = (typeof PERMISSIONS)[number];
 
 export const DEMO_USERS = [
-  { id: 'u-redaktion', name: 'Redaktion (Demo)', permissions: ['read', 'edit'] },
-  { id: 'u-fachpruefung', name: 'Fachprüfung (Demo)', permissions: ['read', 'edit', 'decide'] },
-  { id: 'u-freigabe', name: 'Freigabe (Demo)', permissions: ['read', 'decide', 'approve'] },
-  { id: 'u-admin', name: 'Administration (Demo)', permissions: ['read', 'edit', 'decide', 'approve', 'admin'] },
-  { id: 'u-leser', name: 'Lesezugriff (Demo)', permissions: ['read'] },
+  // E-Mail-Adressen unter der reservierten Domain example.com (RFC 2606) – keine Echtdaten
+  { id: 'u-redaktion', name: 'Redaktion (Demo)', permissions: ['read', 'edit'], email: 'redaktion@example.com' },
+  { id: 'u-fachpruefung', name: 'Fachprüfung (Demo)', permissions: ['read', 'edit', 'decide'], email: 'fachpruefung@example.com' },
+  { id: 'u-freigabe', name: 'Freigabe (Demo)', permissions: ['read', 'decide', 'approve'], email: 'freigabe@example.com' },
+  { id: 'u-admin', name: 'Administration (Demo)', permissions: ['read', 'edit', 'decide', 'approve', 'admin'], email: 'admin@example.com' },
+  { id: 'u-leser', name: 'Lesezugriff (Demo)', permissions: ['read'], email: 'leser@example.com' },
 ];

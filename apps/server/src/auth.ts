@@ -80,9 +80,11 @@ export async function authenticate(ctx: Ctx, headers: Record<string, string | st
     permissions: permissionsFromClaims(payload, oidc),
   };
   // Anzeigename und Berechtigungen für Audit-Auswertungen aktuell halten
+  // E-Mail nur aus bestätigtem Claim (für Benachrichtigungen, ADR-019)
+  const email = typeof payload.email === 'string' && payload.email_verified !== false ? payload.email : null;
   await ctx.db.run(
-    'INSERT INTO users (id, name, permissions) VALUES (?, ?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, permissions = excluded.permissions',
-    user.id, user.name, json(user.permissions),
+    'INSERT INTO users (id, name, permissions, email) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, permissions = excluded.permissions, email = excluded.email',
+    user.id, user.name, json(user.permissions), email,
   );
   return user;
 }

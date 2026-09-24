@@ -10,10 +10,19 @@ import { DEFAULT_PROJECT_ID, seedReferenceData, type Ctx } from './context.js';
 import { openDb } from './db.js';
 import { JobQueue } from './jobs.js';
 import { createProvider } from './llm.js';
+import { createEmbeddingProvider } from './embeddings.js';
+import { Notifier } from './notify.js';
 import { readiness, registerOps, requestId } from './ops.js';
 import { Problem } from './problem.js';
 import { chapterRoutes } from './routes/chapters.js';
 import { projectRoutes } from './routes/projects.js';
+import { semanticRoutes } from './routes/semantic.js';
+import { releaseRoutes } from './routes/releases.js';
+import { collaborationRoutes } from './routes/collaboration.js';
+import { translationRoutes } from './routes/translations.js';
+import { failMachineTranslation, runMachineTranslation } from './services/translations.js';
+import { deliverNotification } from './services/collaboration.js';
+import { runIndexJob } from './services/semantic.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
 import { rewriteRoutes } from './routes/rewrite.js';
@@ -52,6 +61,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     jobs,
     config,
     llm: createProvider(config.llm),
+    embeddings: createEmbeddingProvider(config.embeddings),
+    notifier: new Notifier(config.notify),
     projectId: DEFAULT_PROJECT_ID,
     log: (msg, extra) => app.log.info(extra ?? {}, msg),
   };
@@ -75,6 +86,17 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
   const batchCtx = (p: any) => jobCtx(
     'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?', p.batchId,
   );
+  const translationCtx = (p: any) => jobCtx('SELECT project_id FROM translations WHERE id = ?', p.translationId);
+  jobs.register('translate', async (p) => {
+    const c = await translationCtx(p);
+    if (await archived(c)) return failMachineTranslation(c, p.translationId, ARCHIVED);
+    await runMachineTranslation(c, p.translationId, p.actor);
+  }, async (p, err) => failMachineTranslation(await translationCtx(p), p.translationId, err));
+  jobs.register('notify', async (p) => deliverNotification(ctx, p.notificationId));
+  jobs.register('semantic-index', async (p) => {
+    const c = withProject(ctx, p.projectId);
+    if (!(await archived(c))) await runIndexJob(c);
+  });
   jobs.register('rewrite-batch', async (p) => {
     const c = await batchCtx(p);
     if (await archived(c)) return failBatch(c, p.batchId, ARCHIVED);
@@ -160,6 +182,10 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       terminologyRoutes(api, ctx);
       rewriteRoutes(api, ctx);
       projectRoutes(api, ctx);
+      semanticRoutes(api, ctx);
+      releaseRoutes(api, ctx);
+      collaborationRoutes(api, ctx);
+      translationRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

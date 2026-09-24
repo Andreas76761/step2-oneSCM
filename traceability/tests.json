@@ -526,5 +526,92 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-137",
+    "title": "Lokale Embeddings: Suche mit Flexion/Komposita, inkrementeller Index je Projekt, Index-Job",
+    "file": "apps/server/test/stage7.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-04"
+    ]
+  },
+  {
+    "id": "T-138",
+    "title": "OpenAI-kompatible Embeddings: semantische Treffer, hybride Analyse, kein Versand personenbezogener Daten",
+    "file": "apps/server/test/stage7.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-04",
+      "US-005",
+      "US-006"
+    ]
+  },
+  {
+    "id": "T-139",
+    "title": "Handbuch-Release: Snapshot freigegebener Kapitel, Änderungen zum Vorgänger, Online-Hilfe ohne Skripte",
+    "file": "apps/server/test/stage7.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-05",
+      "US-014",
+      "US-019"
+    ]
+  },
+  {
+    "id": "T-140",
+    "title": "Kollaboration: Diskussion am Absatz, @Erwähnung, Aufgaben, Benachrichtigung In-App/Webhook/E-Mail",
+    "file": "apps/server/test/stage7.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-06",
+      "US-009"
+    ]
+  },
+  {
+    "id": "T-141",
+    "title": "Übersetzung: KI mit Satz-Zuordnung, Prüfung, Nachbearbeitung, Freigabe je Sprache, Export, veraltet",
+    "file": "apps/server/test/stage7.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-07",
+      "US-014"
+    ]
+  },
+  {
+    "id": "T-210",
+    "title": "UI: semantische Suche auf der Quellenseite",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-04"
+    ]
+  },
+  {
+    "id": "T-211",
+    "title": "UI: Handbuch-Version veröffentlichen, Online-Hilfe herunterladen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-05"
+    ]
+  },
+  {
+    "id": "T-212",
+    "title": "UI: Diskussion, Aufgabe, Hinweise der erwähnten Person",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-06"
+    ]
+  },
+  {
+    "id": "T-213",
+    "title": "UI: Übersetzung mit KI, Freigabe und Export",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-07"
+    ]
   }
 ]

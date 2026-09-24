@@ -124,6 +124,16 @@ export class DemoProvider implements LlmProvider {
   async complete(req: LlmRequest): Promise<LlmResponse> {
     const data = extractPromptData(req.user);
     if (!data) throw new LlmError('Demo-Anbieter: Eingabedaten nicht gefunden.');
+    // Übersetzung (ADR-020): kennzeichnet den Text mit der Zielsprache statt wirklich zu übersetzen
+    const tr = data as unknown as { targetLanguage?: string; sentences: { n: number; text: string }[] };
+    if (tr.targetLanguage) {
+      const tag = `[${tr.targetLanguage.toUpperCase()}]`;
+      const sentences = tr.sentences.map((s) => {
+        const marker = s.text.match(/^\s*(?:\d+\.|[-*])\s+/)?.[0] ?? '';
+        return { text: `${marker}${tag} ${s.text.slice(marker.length)}`, sources: [s.n] };
+      });
+      return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
+    }
     const parts = data.blockType === 'list'
       ? data.paragraph.split('\n').map((l) => l.trim()).filter(Boolean)
       : data.paragraph.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ0-9])/).map((s) => s.trim()).filter(Boolean);

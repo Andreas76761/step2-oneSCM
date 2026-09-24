@@ -1,0 +1,417 @@
+import fs from 'node:fs';
+import http from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { buildApp } from '../src/app.js';
+import { localEmbedding, dot } from '../src/embeddings.js';
+import { freshDatabase, tempDir } from './helpers.js';
+
+function multipart(fileName: string, data: Buffer) {
+  const boundary = '----onescm' + Math.random().toString(16).slice(2);
+  const head = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${fileName}"\r\nContent-Type: application/octet-stream\r\n\r\n`);
+  return { payload: Buffer.concat([head, data, Buffer.from(`\r\n--${boundary}--\r\n`)]), headers: { 'content-type': `multipart/form-data; boundary=${boundary}` } };
+}
+
+type Built = Awaited<ReturnType<typeof buildApp>>;
+function client(built: Built) {
+  return async (method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', url: string, body?: unknown, user = 'u-admin', project?: string) => {
+    const headers: Record<string, string> = { 'x-user-id': user };
+    if (project) headers['x-project-id'] = project;
+    const res = await built.app.inject({ method, url: `/api/v1${url}`, payload: body as any, headers });
+    let json: any = null;
+    try {
+      json = res.json();
+    } catch {
+      /* kein JSON */
+    }
+    return { status: res.statusCode, json, body: res.body, headers: res.headers };
+  };
+}
+async function importMd(built: Built, name: string, content: string, project?: string) {
+  const mp = multipart(name, Buffer.from(content));
+  const res = await built.app.inject({ method: 'POST', url: '/api/v1/imports', payload: mp.payload, headers: { ...mp.headers, 'x-user-id': 'u-admin', ...(project ? { 'x-project-id': project } : {}) } });
+  expect(res.statusCode).toBe(202);
+  await built.ctx.jobs.idle();
+}
+const FM = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n';
+
+describe('Semantische Suche und hybride Analyse (ADR-017)', () => {
+  const dataDir = tempDir();
+  const requests: any[] = [];
+  // Nachgebildeter OpenAI-kompatibler Embedding-Dienst: Texte über Fahrzeuge bzw. Autos erhalten denselben Vektor
+  const server = http.createServer((req, res) => {
+    let data = '';
+    req.on('data', (c) => (data += c));
+    req.on('end', () => {
+      const body = JSON.parse(data);
+      requests.push({ path: req.url, auth: req.headers.authorization, body });
+      const vec = (t: string) => (/fahrzeug|auto|pkw|wagen/i.test(t) ? [1, 0, 0, 0.01] : /rechnung|zahlung/i.test(t) ? [0, 1, 0, 0.01] : [0, 0, 1, 0.01]);
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ data: body.input.map((t: string, index: number) => ({ index, embedding: vec(t) })), model: body.model }));
+    });
+  });
+  let url = '';
+  beforeAll(async () => {
+    await new Promise<void>((ok) => server.listen(0, '127.0.0.1', () => ok()));
+    url = `http://127.0.0.1:${(server.address() as AddressInfo).port}/v1`;
+  });
+  afterAll(async () => {
+    await new Promise<void>((ok) => server.close(() => ok()));
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  it('[T-137] lokale Embeddings: Suche findet flektierte Formen und Komposita; Index inkrementell und je Projekt', async () => {
+    // Einheit: Flexion/Kompositum ähnlicher als fremdes Thema
+    const q = localEmbedding('Vertrag freigeben');
+    expect(dot(q, localEmbedding('Die Freigabe des Vertrags erfolgt durch die MO.'))).toBeGreaterThan(dot(q, localEmbedding('Rechnungen werden monatlich gedruckt.')));
+
+    const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'semantik-lokal'), logger: false, webDist: null, authMode: 'demo' });
+    const call = client(built);
+    try {
+      await importMd(built, 'a.md', `${FM}# 1. Verträge\n\n## 1.1 Freigabe\n\nDie Freigabe des Servicevertrags erfolgt durch die Marktorganisation.\n\nRechnungen werden monatlich gedruckt.\n`);
+      expect((await call('GET', '/semantic-index')).json).toMatchObject({ provider: 'local', model: 'local-hash-384', external: false, indexed: 0 });
+      const r = (await call('GET', `/search/semantic?q=${encodeURIComponent('Serviceverträge freigeben')}`)).json;
+      expect(r).toMatchObject({ provider: 'local', computed: 2 });
+      expect(r.hits[0].text).toContain('Freigabe des Servicevertrags');
+      expect(r.hits[0].chapterTitle).toBe('1. Verträge');
+      expect((await call('GET', '/semantic-index')).json.indexed).toBe(2);
+      // zweite Suche nutzt den gespeicherten Index
+      expect((await call('GET', '/search/semantic?q=Rechnung')).json).toMatchObject({ computed: 0, hits: [expect.objectContaining({ text: expect.stringContaining('Rechnungen') })] });
+      expect((await call('GET', '/search/semantic')).status).toBe(400);
+      // anderes Projekt sieht nichts davon
+      const P = (await call('POST', '/projects', { name: 'Leer', visibility: 'open' })).json.id;
+      expect((await call('GET', '/search/semantic?q=Freigabe', undefined, 'u-admin', P)).json.hits).toEqual([]);
+      // Index-Job
+      expect((await call('POST', '/semantic-index', {}, 'u-leser')).status).toBe(403);
+      expect((await call('POST', '/semantic-index')).status).toBe(202);
+      await built.ctx.jobs.idle();
+    } finally {
+      await built.app.close();
+    }
+  });
+
+  it('[T-138] OpenAI-kompatibler Dienst: semantische Treffer ohne gemeinsame Begriffe, hybride Analyse, kein Versand bei Datenschutzbefund', async () => {
+    const built = await buildApp({
+      dataDir, database: await freshDatabase(dataDir, 'semantik-dienst'), logger: false, webDist: null, authMode: 'demo',
+      embeddings: { provider: 'openai', model: 'text-embedding-test', apiKey: 'emb-key', baseUrl: url },
+    });
+    const call = client(built);
+    try {
+      await importMd(built, 'b.md', `${FM}# 1. Stammdaten\n\n## 1.1 Anlage\n\nNeue Fahrzeuge werden im Bestand angelegt.\n\n## 1.2 Pflege\n\nDer PKW erscheint danach in der Übersicht.\n\n## 1.3 Abrechnung\n\nZahlungen werden täglich verbucht.\n`);
+      const r = (await call('GET', `/search/semantic?q=${encodeURIComponent('Wagen')}`)).json;
+      expect(r).toMatchObject({ provider: 'openai', model: 'text-embedding-test', external: true });
+      expect(r.hits.map((h: any) => h.text)).toEqual(expect.arrayContaining([expect.stringContaining('Fahrzeuge'), expect.stringContaining('PKW')]));
+      expect(r.hits.every((h: any) => !h.text.includes('Zahlungen'))).toBe(true);
+      expect(requests.at(-1)).toMatchObject({ path: '/v1/embeddings', auth: 'Bearer emb-key', body: { model: 'text-embedding-test', input: ['Wagen'] } });
+
+      // Hybride Analyse findet die Umschreibung, die TF-IDF nicht erkennt
+      await call('POST', '/quality/analysis');
+      await built.ctx.jobs.idle();
+      const tfidf = (await call('GET', '/quality/findings?type=duplicate')).json;
+      const dupFahrzeug = (list: any[]) => list.filter((f: any) => /Fahrzeuge|PKW/.test(`${f.a?.text ?? ''} ${f.b?.text ?? ''} ${JSON.stringify(f)}`));
+      expect(dupFahrzeug(tfidf.items ?? tfidf)).toHaveLength(0);
+      expect((await call('PUT', '/settings', { semantic: { analysisMethod: 'hybrid', embeddingThreshold: 0.9 } })).status).toBe(200);
+      expect((await call('PUT', '/settings', { semantic: { analysisMethod: 'magie' } })).status).toBe(400);
+      const run = (await call('POST', '/quality/analysis')).json;
+      await built.ctx.jobs.idle();
+      const runDone = (await call('GET', `/quality/analysis/${run.id}`)).json;
+      expect(JSON.stringify(runDone)).toContain('text-embedding-test');
+      const hybrid = (await call('GET', '/quality/findings?type=duplicate')).json;
+      const found = dupFahrzeug(hybrid.items ?? hybrid);
+      expect(found.length).toBeGreaterThanOrEqual(1);
+      expect(found[0].method).toContain('hybrid');
+
+      // Datenschutz: Abschnitt mit offenem Befund wird nicht an den Dienst übertragen
+      await importMd(built, 'c.md', `${FM}# 2. Kontakt\n\n## 2.1 Ansprechpartner\n\nFahrzeugfragen an max.mustermann@firma.de senden.\n`);
+      await call('POST', '/quality/analysis');
+      await built.ctx.jobs.idle();
+      const sent = requests.flatMap((x) => x.body.input as string[]);
+      expect(sent.some((t) => t.includes('max.mustermann'))).toBe(false);
+      expect((await call('GET', '/semantic-index')).json.excluded).toBe(1);
+    } finally {
+      await built.app.close();
+    }
+  });
+});
+
+describe('Handbuch-Releases und Online-Hilfe (ADR-018)', () => {
+  const dataDir = tempDir();
+  afterAll(() => fs.rmSync(dataDir, { recursive: true, force: true }));
+
+  it('[T-139] Release aus freigegebenen Kapiteln, Änderungen zum Vorgänger, statische Online-Hilfe, unveränderlich', async () => {
+    const JSZip = (await import('jszip')).default;
+    const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'releases'), logger: false, webDist: null, authMode: 'demo' });
+    const call = client(built);
+    // Kapitel generieren, Lücken entfernen, einreichen und freigeben
+    const approve = async (chapterId: string, edit?: string) => {
+      const v = (await call('POST', `/chapters/${chapterId}/generate`, {}, 'u-redaktion')).json;
+      const blocks = v.sections.flatMap((s: any) => s.blocks);
+      for (const b of blocks) if (b.kind === 'gap') await call('DELETE', `/content-blocks/${b.id}?reason=entfällt`, undefined, 'u-redaktion');
+      if (edit) await call('PATCH', `/content-blocks/${blocks.find((b: any) => b.section === 'purpose').id}`, { text: edit }, 'u-redaktion');
+      expect((await call('POST', `/chapter-versions/${v.id}/submit`, {}, 'u-redaktion')).status).toBe(200);
+      expect((await call('POST', `/chapter-versions/${v.id}/approve`, { comment: 'ok' }, 'u-freigabe')).status).toBe(200);
+      return v;
+    };
+    try {
+      await importMd(built, 'r.md', `${FM}# 1. Anmeldung\n\n## 1.1 Zweck\n\nDieses Kapitel beschreibt die Anmeldung.\n\n# 2. Aufträge\n\n## 2.1 Zweck\n\nDieses Kapitel beschreibt Aufträge <script>alert(1)</script>.\n`);
+      expect((await call('POST', '/releases', { version: '2026.1' }, 'u-freigabe')).status).toBe(422); // noch nichts freigegeben
+      const [c1, c2] = (await call('GET', '/chapters')).json.filter((c: any) => c.title !== 'Ohne Kapitel');
+      await approve(c1.id);
+      await approve(c2.id);
+
+      expect((await call('POST', '/releases', { version: '2026.1' }, 'u-redaktion')).status).toBe(403);
+      expect((await call('POST', '/releases', { version: 'v 1/..' }, 'u-freigabe')).status).toBe(400);
+      const r1 = await call('POST', '/releases', { version: '2026.1', title: 'Handbuch Händlerportal', notes: 'Erste Ausgabe.' }, 'u-freigabe');
+      expect(r1.status).toBe(201);
+      expect(r1.json.chapters.map((c: any) => c.title)).toEqual(['1. Anmeldung', '2. Aufträge']);
+      expect(r1.json.changes.map((c: any) => c.change)).toEqual(['new', 'new']);
+      expect((await call('POST', '/releases', { version: '2026.1' }, 'u-freigabe')).status).toBe(409);
+
+      // Online-Hilfe: eigenständige Seiten ohne Skripte, Quell-HTML escaped
+      const site = await built.app.inject({ method: 'GET', url: `/api/v1/releases/${r1.json.id}/download?format=site`, headers: { 'x-user-id': 'u-leser' } });
+      expect(site.headers['content-type']).toBe('application/zip');
+      const zip = await JSZip.loadAsync(site.rawPayload);
+      expect(Object.keys(zip.files).sort()).toEqual(['aenderungen.html', 'index.html', 'kapitel-01.html', 'kapitel-02.html']);
+      const index = await zip.file('index.html')!.async('string');
+      expect(index).toContain('Handbuch Händlerportal');
+      expect(index).toContain('Erste Ausgabe.');
+      const k2 = await zip.file('kapitel-02.html')!.async('string');
+      expect(k2).not.toMatch(/<script/i);
+      expect(k2).toContain('&lt;script&gt;');
+      expect(k2).toContain("default-src 'none'");
+      expect((await call('GET', `/releases/${r1.json.id}/download?format=md`)).body).toContain('# Handbuch Händlerportal – Version 2026.1');
+
+      // Neue Freigabe von Kapitel 1 → Release 2026.2 mit Änderungsliste
+      await approve(c1.id, 'Dieses Kapitel erklärt die Anmeldung am Portal.');
+      const r2 = (await call('POST', '/releases', { version: '2026.2' }, 'u-freigabe')).json;
+      expect(r2.previousReleaseId).toBe(r1.json.id);
+      expect(r2.changes).toEqual([
+        expect.objectContaining({ title: '1. Anmeldung', change: 'updated', fromVersionNo: 1, toVersionNo: 2, summary: expect.objectContaining({ changed: 1 }) }),
+        expect.objectContaining({ title: '2. Aufträge', change: 'unchanged' }),
+      ]);
+      const zip2 = await JSZip.loadAsync((await built.app.inject({ method: 'GET', url: `/api/v1/releases/${r2.id}/download`, headers: { 'x-user-id': 'u-leser' } })).rawPayload);
+      expect(await zip2.file('aenderungen.html')!.async('string')).toContain('Geändert: 1. Anmeldung – Version 1 → 2 (1 geändert)');
+      // Release 2026.1 bleibt unverändert
+      expect((await call('GET', `/releases/${r1.json.id}`)).json.chapters[0].versionNo).toBe(1);
+      expect((await call('GET', '/releases')).json.map((r: any) => r.version)).toEqual(['2026.2', '2026.1']);
+      // Mandantentrennung
+      const P = (await call('POST', '/projects', { name: 'Anderes', visibility: 'open' })).json.id;
+      expect((await call('GET', `/releases/${r1.json.id}`, undefined, 'u-admin', P)).status).toBe(404);
+
+      // Backup enthält die Release-Dateien: nach Wiederherstellung in einen leeren Speicher herunterladbar
+      const { createBackup, restoreBackup } = await import('../src/services/backup.js');
+      const { data } = await createBackup(built.ctx.db, built.ctx.store, '0.7.0');
+      const target = await buildApp({ dataDir: tempDir(), database: await freshDatabase(tempDir(), 'releases-ziel'), logger: false, webDist: null, authMode: 'demo' }, { worker: false });
+      try {
+        await restoreBackup(target.ctx.db, target.ctx.store, data);
+        const site2 = await target.app.inject({ method: 'GET', url: `/api/v1/releases/${r1.json.id}/download?format=site`, headers: { 'x-user-id': 'u-leser' } });
+        expect(site2.statusCode).toBe(200);
+        expect((await target.app.inject({ method: 'GET', url: `/api/v1/releases/${r2.id}/download?format=md`, headers: { 'x-user-id': 'u-leser' } })).statusCode).toBe(200);
+      } finally {
+        await target.app.close();
+      }
+    } finally {
+      await built.app.close();
+    }
+  });
+});
+
+describe('Kollaboration: Kommentare, Aufgaben, Benachrichtigungen (ADR-019)', () => {
+  const dataDir = tempDir();
+  const hooks: any[] = [];
+  const hook = http.createServer((req, res) => {
+    let d = '';
+    req.on('data', (c) => (d += c));
+    req.on('end', () => {
+      hooks.push(JSON.parse(d));
+      res.writeHead(200).end('ok');
+    });
+  });
+  let hookUrl = '';
+  beforeAll(async () => {
+    await new Promise<void>((ok) => hook.listen(0, '127.0.0.1', () => ok()));
+    hookUrl = `http://127.0.0.1:${(hook.address() as AddressInfo).port}/hook`;
+  });
+  afterAll(async () => {
+    await new Promise<void>((ok) => hook.close(() => ok()));
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  it('[T-140] Diskussion am Absatz mit @Erwähnung, Aufgaben mit Zuständigkeit, Benachrichtigung per In-App, Webhook und E-Mail', async () => {
+    const built = await buildApp({
+      dataDir, database: await freshDatabase(dataDir, 'kollaboration'), logger: false, webDist: null, authMode: 'demo',
+      notify: { webhookUrl: hookUrl, smtpUrl: 'json', mailFrom: 'Studio <noreply@example.com>', appUrl: 'https://handbuch.example.com' },
+    });
+    const call = client(built);
+    try {
+      await importMd(built, 'k.md', `${FM}# 1. Kollaboration\n\n## 1.1 Zweck\n\nDieses Kapitel beschreibt die Zusammenarbeit.\n`);
+      const chapterId = (await call('GET', '/chapters')).json[0].id;
+      const v = (await call('POST', `/chapters/${chapterId}/generate`, {}, 'u-redaktion')).json;
+      const block = v.sections.find((s: any) => s.code === 'purpose').blocks[0];
+      const entity = { entityType: 'block', entityId: block.lineageId };
+
+      // Lesende dürfen kommentieren und erwähnen; unbekannte Namen werden ignoriert
+      const c1 = await call('POST', '/comments', { ...entity, body: '@u-redaktion bitte prüfen, ob @u-niemand recht hat.' }, 'u-leser');
+      expect(c1.status).toBe(201);
+      expect(c1.json).toMatchObject({ kind: 'comment', mentions: ['u-redaktion'], authorName: 'Lesezugriff (Demo)' });
+      expect((await call('POST', '/comments', { ...entity, kind: 'task', body: 'x', assignee: 'u-redaktion' }, 'u-leser')).status).toBe(403);
+      await built.ctx.jobs.idle();
+      expect(hooks.at(-1)).toMatchObject({ type: 'mention', userId: 'u-redaktion', link: `https://handbuch.example.com/werkstatt/${chapterId}` });
+      expect(hooks.at(-1).text).toContain('Lesezugriff (Demo) hat Sie erwähnt');
+      expect(built.ctx.notifier.sentMails.at(-1)).toMatchObject({ to: 'redaktion@example.com', subject: expect.stringContaining('erwähnt') });
+
+      // Aufgabe mit Zuständigkeit und Frist
+      const task = (await call('POST', '/comments', { ...entity, kind: 'task', body: 'Screenshots ergänzen', assignee: 'u-fachpruefung', dueDate: '2026-10-01' }, 'u-redaktion')).json;
+      expect(task).toMatchObject({ kind: 'task', status: 'open', assignee: 'u-fachpruefung', assigneeName: 'Fachprüfung (Demo)', dueDate: '2026-10-01' });
+      expect((await call('POST', '/comments', { ...entity, kind: 'task', body: 'x', assignee: 'u-niemand' }, 'u-redaktion')).status).toBe(400);
+      const mine = (await call('GET', '/tasks?assignee=me&status=open', undefined, 'u-fachpruefung')).json;
+      expect(mine).toEqual([expect.objectContaining({ id: task.id, link: `/werkstatt/${chapterId}` })]);
+      expect((await call('PATCH', `/comments/${task.id}`, { status: 'done' }, 'u-leser')).status).toBe(403);
+      expect((await call('PATCH', `/comments/${task.id}`, { status: 'done' }, 'u-fachpruefung')).json).toMatchObject({ status: 'done', doneBy: 'u-fachpruefung' });
+      expect((await call('PATCH', `/comments/${c1.json.id}`, { body: 'geändert' }, 'u-redaktion')).status).toBe(403); // nur die verfassende Person
+
+      // Antwort benachrichtigt die ursprüngliche Person
+      await call('POST', '/comments', { ...entity, parentId: c1.json.id, body: 'Ist erledigt.' }, 'u-redaktion');
+      await built.ctx.jobs.idle();
+      const types = (user: string) => call('GET', '/notifications', undefined, user).then((r) => r.json.items.map((n: any) => n.type));
+      expect(await types('u-redaktion')).toEqual(['task_done', 'mention']);
+      expect(await types('u-fachpruefung')).toEqual(['assigned']);
+      expect(await types('u-leser')).toEqual(['reply']);
+      const n = (await call('GET', '/notifications?unread=true', undefined, 'u-redaktion')).json;
+      expect(n.unread).toBe(2);
+      expect(n.items[0].delivered).toMatchObject({ webhook: expect.any(String), email: expect.any(String) });
+      expect((await call('POST', '/notifications/read', {}, 'u-redaktion')).json.marked).toBe(2);
+      expect((await call('GET', '/notifications?unread=true', undefined, 'u-redaktion')).json.unread).toBe(0);
+
+      // Diskussion bleibt über eine Neugenerierung erhalten (Lineage)
+      await call('POST', `/chapters/${chapterId}/generate`, {}, 'u-redaktion');
+      const thread = (await call('GET', `/comments?entityType=block&entityId=${block.lineageId}`)).json;
+      expect(thread.map((c: any) => c.body)).toEqual([c1.json.body, 'Screenshots ergänzen', 'Ist erledigt.']);
+      expect(thread[2].parentId).toBe(c1.json.id);
+
+      // Ausgangskommentar nach der Antwort ändern (PostgreSQL legt die Zeile dabei physisch neu an) –
+      // das Backup muss Antworten trotzdem nach ihrem Ausgangskommentar einspielen
+      await call('PATCH', `/comments/${c1.json.id}`, { body: `${c1.json.body} (ergänzt)` }, 'u-leser');
+      const { createBackup, restoreBackup } = await import('../src/services/backup.js');
+      const { data } = await createBackup(built.ctx.db, built.ctx.store, '0.7.0');
+      const target = await buildApp({ dataDir: tempDir(), database: await freshDatabase(tempDir(), 'kollab-ziel'), logger: false, webDist: null, authMode: 'demo' }, { worker: false });
+      try {
+        await restoreBackup(target.ctx.db, target.ctx.store, data);
+        const restored = await target.app.inject({ method: 'GET', url: `/api/v1/comments?entityType=block&entityId=${block.lineageId}`, headers: { 'x-user-id': 'u-admin' } });
+        expect(restored.json().map((c: any) => c.parentId)).toEqual([null, null, c1.json.id]);
+      } finally {
+        await target.app.close();
+      }
+
+      // Mandantentrennung und Zugriff
+      const P = (await call('POST', '/projects', { name: 'Vertraulich' })).json.id;
+      expect((await call('GET', `/comments?entityType=block&entityId=${block.lineageId}`, undefined, 'u-admin', P)).status).toBe(404);
+      expect((await call('PATCH', `/comments/${task.id}`, { status: 'open' }, 'u-admin', P)).status).toBe(404);
+      expect((await call('GET', '/collaborators')).json.map((u: any) => u.id)).toEqual(expect.arrayContaining(['u-leser', 'u-redaktion']));
+      expect((await call('GET', '/collaborators', undefined, 'u-admin', P)).json.map((u: any) => u.id)).toEqual(['u-admin']);
+    } finally {
+      await built.app.close();
+    }
+  });
+});
+
+describe('Mehrsprachigkeit (ADR-020)', () => {
+  const dataDir = tempDir();
+  // Nachgebildeter KI-Dienst: „übersetzt“ Satz für Satz und verändert absichtlich die Frist
+  const llm = http.createServer((req, res) => {
+    let d = '';
+    req.on('data', (c) => (d += c));
+    req.on('end', () => {
+      const body = JSON.parse(d);
+      const data = JSON.parse(body.messages[1].content.match(/<<<DATA\n([\s\S]*)\nDATA>>>/)[1]);
+      const sentences = data.sentences.map((s: any) => ({ text: s.text.replace('14 Tage', '15 days').replace(/^(\s*(?:\d+\.|[-*])\s+)?/, (m: string) => `${m}EN: `), sources: [s.n] }));
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(JSON.stringify({ choices: [{ message: { content: JSON.stringify({ sentences }) } }] }));
+    });
+  });
+  let url = '';
+  beforeAll(async () => {
+    await new Promise<void>((ok) => llm.listen(0, '127.0.0.1', () => ok()));
+    url = `http://127.0.0.1:${(llm.address() as AddressInfo).port}/v1`;
+  });
+  afterAll(async () => {
+    await new Promise<void>((ok) => llm.close(() => ok()));
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  it('[T-141] Übersetzung freigegebener Kapitel: KI mit Satz-Zuordnung, Prüfung, Nachbearbeitung, Freigabe je Sprache, Export, veraltet nach neuer Freigabe', async () => {
+    const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'sprachen'), logger: false, webDist: null, authMode: 'demo', llm: { provider: 'openai', model: 'gpt-test', baseUrl: url } });
+    const call = client(built);
+    const approveChapter = async (chapterId: string, edit?: string) => {
+      const v = (await call('POST', `/chapters/${chapterId}/generate`, {}, 'u-redaktion')).json;
+      const blocks = v.sections.flatMap((s: any) => s.blocks);
+      for (const b of blocks) if (b.kind === 'gap') await call('DELETE', `/content-blocks/${b.id}?reason=entfällt`, undefined, 'u-redaktion');
+      if (edit) await call('PATCH', `/content-blocks/${blocks.find((b: any) => b.section === 'purpose').id}`, { text: edit }, 'u-redaktion');
+      await call('POST', `/chapter-versions/${v.id}/submit`, {}, 'u-redaktion');
+      await call('POST', `/chapter-versions/${v.id}/approve`, { comment: 'ok' }, 'u-freigabe');
+      return v;
+    };
+    try {
+      await importMd(built, 's.md', `${FM}# 1. Reklamation\n\n## 1.1 Zweck\n\nDieses Kapitel beschreibt Reklamationen. Die Frist beträgt 14 Tage.\n\n## 1.2 Schritte\n\n1. Reklamation öffnen.\n2. Grund erfassen.\n`);
+      const chapterId = (await call('GET', '/chapters')).json.find((c: any) => c.title === '1. Reklamation').id;
+      expect((await call('POST', '/translations', { chapterId, language: 'en' }, 'u-redaktion')).status).toBe(422); // keine Zielsprache
+      expect((await call('PATCH', '/projects/p_default', { languages: ['en', 'xx'] })).status).toBe(400);
+      expect((await call('PATCH', '/projects/p_default', { languages: ['en', 'fr'] })).json.languages).toEqual(['en', 'fr']);
+      expect((await call('POST', '/translations', { chapterId, language: 'en' }, 'u-redaktion')).status).toBe(422); // noch keine Freigabe
+      await approveChapter(chapterId);
+
+      const tr = (await call('POST', '/translations', { chapterId, language: 'en' }, 'u-redaktion')).json;
+      expect(tr).toMatchObject({ language: 'en', status: 'draft', sourceVersionNo: 1, translated: 0, outdated: false });
+      expect((await call('POST', '/translations', { chapterId, language: 'en' }, 'u-redaktion')).status).toBe(409);
+      expect((await call('POST', `/translations/${tr.id}/machine`, {}, 'u-leser')).status).toBe(403);
+      expect((await call('POST', `/translations/${tr.id}/machine`, {}, 'u-redaktion')).status).toBe(202);
+      await built.ctx.jobs.idle();
+
+      const d = (await call('GET', `/translations/${tr.id}`)).json;
+      expect(d).toMatchObject({ jobStatus: 'completed', title: '1. EN: Reklamation', translated: d.blocks, flagged: 1 });
+      expect(d.sections.map((s: any) => s.translatedTitle)).toEqual(expect.arrayContaining(['Purpose', 'Step-by-step instructions']));
+      const purpose = d.sections.find((s: any) => s.code === 'purpose').blocks[0];
+      expect(purpose).toMatchObject({ mode: 'machine', provider: 'openai', model: 'gpt-test', issues: ['numbers_changed'] });
+      expect(purpose.sentences).toEqual([{ text: 'EN: Dieses Kapitel beschreibt Reklamationen.', sources: [1] }, { text: 'EN: Die Frist beträgt 15 days.', sources: [2] }]);
+      const steps = d.sections.find((s: any) => s.code === 'steps').blocks[0];
+      expect(steps).toMatchObject({ text: '1. EN: Reklamation öffnen.\n2. EN: Grund erfassen.', issues: [] });
+
+      // Leere übersetzte Sätze decken den deutschen Satz nicht ab
+      const { checkTranslation } = await import('../src/domain/translate.js');
+      expect(checkTranslation('Satz eins. Satz zwei.', 'Sentence one.', [{ text: 'Sentence one.', sources: [1] }, { text: ' ', sources: [2] }])).toEqual(['uncovered_source']);
+
+      // Freigabe verlangt geprüfte Übersetzung; Nachbearbeitung behebt den Befund
+      expect((await call('POST', `/translations/${tr.id}/approve`, { comment: 'ok' }, 'u-freigabe')).status).toBe(409);
+      const fixed = (await call('PATCH', `/translation-blocks/${purpose.id}`, { text: 'This chapter describes complaints. The deadline is 14 days.' }, 'u-redaktion')).json;
+      expect(fixed).toMatchObject({ mode: 'edited', issues: [], sentences: null });
+      const bad = (await call('PATCH', `/translation-blocks/${steps.id}`, { text: 'Open the complaint and enter the reason.' }, 'u-redaktion')).json;
+      expect(bad.issues).toEqual(['structure_changed']);
+      await call('PATCH', `/translation-blocks/${steps.id}`, { text: '1. Open the complaint.\n2. Enter the reason.' }, 'u-redaktion');
+      await call('PATCH', `/translations/${tr.id}`, { title: '1. Complaints' }, 'u-redaktion');
+      expect((await call('POST', `/translations/${tr.id}/approve`, { comment: 'Fachlich geprüft' }, 'u-redaktion')).status).toBe(403);
+      expect((await call('POST', `/translations/${tr.id}/approve`, { comment: 'Fachlich geprüft' }, 'u-freigabe')).json).toMatchObject({ status: 'approved', approvedBy: 'u-freigabe' });
+      expect((await call('PATCH', `/translation-blocks/${steps.id}`, { text: '1. X.\n2. Y.' }, 'u-redaktion')).status).toBe(409);
+
+      // Export in der Zielsprache
+      const md = (await call('GET', `/translations/${tr.id}/export?format=md`)).body;
+      expect(md).toContain('# oneSCM – Englisch');
+      expect(md).toContain('## 1. Complaints');
+      expect(md).toContain('### Purpose');
+      expect(md).toContain('The deadline is 14 days.');
+      const html = (await call('GET', `/translations/${tr.id}/export?format=html`)).body;
+      expect(html).toContain('<html lang="en">');
+
+      // Neue deutsche Freigabe → Übersetzung veraltet, neue Übersetzung möglich
+      await approveChapter(chapterId, 'Dieses Kapitel erklärt Reklamationen. Die Frist beträgt 14 Tage.');
+      expect((await call('GET', `/translations?chapterId=${chapterId}`)).json[0]).toMatchObject({ id: tr.id, outdated: true, status: 'approved' });
+      const tr2 = (await call('POST', '/translations', { chapterId, language: 'en' }, 'u-redaktion')).json;
+      expect(tr2).toMatchObject({ sourceVersionNo: 2, outdated: false });
+      // Mandantentrennung
+      const P = (await call('POST', '/projects', { name: 'Fremd', visibility: 'open' })).json.id;
+      expect((await call('GET', `/translations/${tr.id}`, undefined, 'u-admin', P)).status).toBe(404);
+      expect((await call('PATCH', `/translation-blocks/${steps.id}`, { text: 'x' }, 'u-admin', P)).status).toBe(404);
+    } finally {
+      await built.app.close();
+    }
+  });
+});

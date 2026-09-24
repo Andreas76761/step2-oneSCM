@@ -14,7 +14,7 @@ export function SettingsPage() {
 
   const save = async () => {
     try {
-      await put('/settings', { analysis: draft.analysis, import: draft.import, readability: draft.readability });
+      await put('/settings', { analysis: draft.analysis, import: draft.import, readability: draft.readability, rewrite: draft.rewrite, semantic: draft.semantic });
       notify('Einstellungen gespeichert.');
       s.reload();
     } catch (e) {
@@ -41,6 +41,17 @@ export function SettingsPage() {
           {slider('duplicateThreshold', 'Dopplungsschwelle', 'Ab dieser Ähnlichkeit gilt ein Paar als semantische Dopplung (Stufe 2/3).')}
           {slider('contradictionThreshold', 'Widerspruchskandidaten', 'Ab dieser Ähnlichkeit werden Texte auf Widerspruchsmuster geprüft.')}
           <label><input type="checkbox" checked={a.crossChapter} onChange={(e) => setA('crossChapter', e.target.checked)} /> Kapitelübergreifend analysieren</label>
+          <label className="block">Verfahren (ADR-017)
+            <select value={draft.semantic.analysisMethod} onChange={(e) => setDraft({ ...draft, semantic: { ...draft.semantic, analysisMethod: e.target.value } })}>
+              <option value="tfidf">TF-IDF (Standard, Entscheidung E-05)</option>
+              <option value="hybrid">Hybrid: TF-IDF + Embeddings</option>
+            </select>
+          </label>
+          {draft.semantic.analysisMethod === 'hybrid' && (
+            <label className="block">Embedding-Schwelle für zusätzliche Paare
+              <input type="number" step="0.01" min="0.3" max="1" value={draft.semantic.embeddingThreshold} onChange={(e) => setDraft({ ...draft, semantic: { ...draft.semantic, embeddingThreshold: Number(e.target.value) } })} />
+            </label>
+          )}
         </Card>
         <Card title="Schweregrad je Widerspruchsregel (Blockerdefinition)">
           <table className="table compact">

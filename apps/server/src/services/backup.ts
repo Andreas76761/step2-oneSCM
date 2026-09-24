@@ -24,13 +24,19 @@ export function backupTables(): string[] {
 }
 
 /** Reihenfolge innerhalb einer Tabelle, falls sie auf sich selbst verweist */
-const ROW_ORDER: Record<string, string> = { generated_chapter_versions: 'ORDER BY chapter_id, version_no' };
+const ROW_ORDER: Record<string, string> = {
+  generated_chapter_versions: 'ORDER BY chapter_id, version_no',
+  // Antworten nach ihrem Ausgangskommentar, Releases nach ihrem Vorgänger (Anlagezeit ist unveränderlich)
+  comments: 'ORDER BY created_at, id',
+  handbook_releases: 'ORDER BY created_at, id',
+};
 
 async function objectKeys(db: Db): Promise<string[]> {
   const keys = new Set<string>();
   for (const r of await db.all<{ k: string }>('SELECT storage_key AS k FROM source_revisions')) keys.add(r.k);
   for (const r of await db.all<{ k: string }>('SELECT storage_key AS k FROM exports WHERE storage_key IS NOT NULL')) keys.add(r.k);
   for (const r of await db.all<{ sha256: string }>('SELECT DISTINCT sha256 FROM imports')) keys.add(`uploads/${r.sha256}`);
+  for (const r of await db.all<{ s: string; m: string }>('SELECT site_key AS s, markdown_key AS m FROM handbook_releases')) (keys.add(r.s), keys.add(r.m));
   return [...keys].sort();
 }
 

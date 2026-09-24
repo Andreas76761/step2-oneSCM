@@ -87,6 +87,8 @@ export function SourcesPage() {
         </Card>
       </div>
 
+      <SemanticSearch chapters={chapters.data ?? []} onOpen={async (id) => setSelected(await get(`/snippets/${id}`))} />
+
       <Card title={`Textabschnitte (${snippets.data?.total ?? 0})`}>
         <div className="filters">
           <input placeholder="Suche im Text, Pfad oder #ID …" aria-label="Suche" value={filter.q ?? ''} onChange={(e) => setF('q', e.target.value)} />
@@ -298,5 +300,60 @@ function SnippetDialog({ snippet, onClose, onSaved }: { snippet: any; onClose: (
       </div>
       {showSource && <SourceViewer revisionId={s.source.revisionId} lineStart={s.lineStart} lineEnd={s.lineEnd} onClose={() => setShowSource(false)} />}
     </Modal>
+  );
+}
+
+/** Semantische Suche (ADR-017): findet Aussagen auch bei anderer Formulierung */
+function SemanticSearch({ chapters, onOpen }: { chapters: any[]; onOpen: (id: string) => void }) {
+  const [q, setQ] = useState('');
+  const [chapterId, setChapterId] = useState('');
+  const [result, setResult] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const search = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!q.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      setResult(await get(`/search/semantic${qs({ q, chapterId, limit: 15 })}`));
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Card title="Semantische Suche">
+      <form className="filters" onSubmit={search} role="search" aria-label="Semantische Suche">
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Frage oder Aussage, z. B. „Wer gibt Verträge frei?“" aria-label="Semantische Suchanfrage" />
+        <select aria-label="Kapitel für die semantische Suche" value={chapterId} onChange={(e) => setChapterId(e.target.value)}>
+          <option value="">Alle Kapitel</option>
+          {chapters.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+        </select>
+        <button className="btn primary" disabled={busy || !q.trim()}>{busy ? 'Suche …' : 'Suchen'}</button>
+      </form>
+      <ErrorBox error={error} />
+      {result && (
+        <>
+          <p className="small muted">
+            {result.hits.length} Treffer · Modell {result.model}{result.external ? ' (externer Dienst)' : ' (lokal)'} · {result.indexed} Abschnitte im Index
+            {result.excluded > 0 && <> · {result.excluded} wegen Datenschutz nicht übertragen</>}
+          </p>
+          {!result.hits.length ? <Empty>Keine ähnlichen Textabschnitte gefunden.</Empty> : (
+            <ol className="semantic-hits">
+              {result.hits.map((h: any) => (
+                <li key={h.snippetId}>
+                  <button className="btn link" onClick={() => onOpen(h.snippetId)}>#{h.seq}</button>{' '}
+                  <span className="tag">Ähnlichkeit {Math.round(h.score * 100)} %</span>{' '}
+                  <span className="small muted">{h.chapterTitle ?? 'Ohne Kapitel'} · {h.path}</span>
+                  <div>{h.text.slice(0, 220)}{h.text.length > 220 ? '…' : ''}</div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </>
+      )}
+    </Card>
   );
 }

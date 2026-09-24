@@ -39,7 +39,7 @@ export function ProjectsPage({ onChanged }: { onChanged: () => void }) {
                 {projects.data.map((p) => (
                   <tr key={p.id} aria-current={p.id === currentProjectId() ? 'true' : undefined}>
                     <td><strong>{p.name}</strong>{p.id === currentProjectId() && <span className="tag st-approved">aktiv</span>}{p.archivedAt && <span className="tag">archiviert</span>}{p.description && <div className="small muted">{p.description}</div>}</td>
-                    <td>{p.visibility === 'open' ? 'offen' : 'eingeschränkt'}</td>
+                    <td>{p.visibility === 'open' ? 'offen' : 'eingeschränkt'}{p.languages?.length > 0 && <div className="small muted">Sprachen: de → {p.languages.join(', ')}</div>}</td>
                     <td>{p.chapters}</td>
                     <td>{p.sources}</td>
                     <td className="small">{p.myPermissions.map((x: string) => PERM_LABEL[x] ?? x).join(', ')}</td>
@@ -56,6 +56,7 @@ export function ProjectsPage({ onChanged }: { onChanged: () => void }) {
                             </button>
                           )}
                           <button className="btn small" onClick={() => setMembersOf(membersOf === p.id ? null : p.id)} aria-expanded={membersOf === p.id}>Mitglieder</button>
+                          <LanguagePicker project={p} onSave={(languages) => run(() => patch(`/projects/${p.id}`, { languages }), 'Zielsprachen gespeichert.')} />
                         </>
                       )}
                     </td>
@@ -136,5 +137,21 @@ function Members({ projectId, name }: { projectId: string; name: string }) {
       </fieldset>
       <button className="btn primary small" disabled={!userId.trim()} onClick={() => act(() => put(`/projects/${projectId}/members/${encodeURIComponent(userId.trim())}`, { permissions: perms }), 'Mitgliedschaft gespeichert.')}>Speichern</button>
     </Card>
+  );
+}
+
+const LANGS = ['en', 'fr', 'es', 'it', 'nl', 'pl', 'cs', 'pt'];
+
+/** Zielsprachen des Projekts für Übersetzungen (ADR-020) */
+function LanguagePicker({ project, onSave }: { project: any; onSave: (languages: string[]) => void }) {
+  const [open, setOpen] = useState(false);
+  const [sel, setSel] = useState<string[]>(project.languages ?? []);
+  if (!open) return <button className="btn small" onClick={() => setOpen(true)}>Sprachen</button>;
+  return (
+    <fieldset className="checks">
+      <legend>Zielsprachen</legend>
+      {LANGS.map((l) => <label key={l}><input type="checkbox" checked={sel.includes(l)} onChange={() => setSel(sel.includes(l) ? sel.filter((x) => x !== l) : [...sel, l])} /> {l}</label>)}
+      <button className="btn small primary" onClick={() => (onSave(sel), setOpen(false))}>Speichern</button>
+    </fieldset>
   );
 }
