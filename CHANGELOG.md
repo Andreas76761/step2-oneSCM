@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.12.0 – Etappe 12 (24.09.2026)
+
+### Hinzugefügt
+- **Handbuch-Varianten (ADR-034):** Aus Gliederung und Draft Manual entstehen eigene Kapitel mit Versionen („Kapitel für Freigabe erzeugen“), die über Werkstatt, Qualitätsgate und Freigabe laufen; neue Gliederungsversionen führen dieselben Kapitel fort. Export und Veröffentlichung je Variante mit Variantenfilter (Rollen, Sparten, Blueprint/Märkte), Titel der Gliederung und **Verzeichnissen** – Abkürzungsverzeichnis, Glossar, Bildverzeichnis, FAQ der Variante – in Markdown, HTML, PDF, JSON und als Seite der Online-Hilfe.
+- **Bedienkomfort (ADR-035):** Drag & Drop für Schnipsel im Draft Manual und Einträge der Gliederung; Vergleich von Gliederungsversionen; **globale Suche** (Tastenkürzel „/“) über Kapitel, Texte, Schnipsel, Quellen, Gliederungen und Stammdaten; Darstellung System/Hell/Dunkel; bessere mobile Ansicht.
+- **Betrieb & Pflege (ADR-036):** Import als **vollständiger Stand** (ZIP-Option, Git/Confluence immer) markiert fehlende Quelldateien als entfernt, wiederherstellbar; **SVG** wird bereinigt übernommen (Positivliste, keine Skripte/externen Verweise), im PDF als Vektorgrafik; **Stammdaten-Import** aus CSV/Excel mit Vorschau für Abkürzungen, Glossar und FAQ; stündliche **Erinnerung an überfällige Planung**.
+- Migration `022_variants.sql`; Tests T-170 … T-172, E2E T-222 (axe in den neuen Zuständen und für die Suchseite); Anforderungen NFR-21 … NFR-23.
+
+### Geändert
+- `GET /api/v1/chapters` liefert standardmäßig nur Kapitel der Quellen (`?outline=<Familie>` bzw. `?outline=all` für Varianten); Werkstatt gruppiert nach Handbuch, Freigabe und Übersetzungen zeigen alle Kapitel.
+- `POST /api/v1/releases` und `POST /api/v1/exports` akzeptieren `outlineId` (Exporte zusätzlich `appendices`); `POST /api/v1/imports?snapshot=true`.
+- SVG-Upload ist erlaubt (bisher 400); ADR-029 in diesem Punkt abgelöst.
+
 ## 0.11.0 – Etappe 11 (24.09.2026)
 
 ### Hinzugefügt
