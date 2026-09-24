@@ -228,6 +228,24 @@ export async function approveTranslation(ctx: Ctx, id: string, input: { comment?
   return summary(ctx, await row(ctx, id));
 }
 
+/** Übersetztes Kapitel in der Exportstruktur (übersetzte Abschnittstitel, nur übersetzte Absätze) */
+export async function translatedChapter(ctx: Ctx, id: string): Promise<ExportChapter & { language: string; approved: boolean }> {
+  const t = await getTranslation(ctx, id);
+  const src = await getChapterVersion(ctx, t.chapterVersionId);
+  const byBlock = new Map(t.sections.flatMap((s) => s.blocks).map((b) => [b.blockId, b]));
+  return {
+    language: t.language,
+    approved: t.status === 'approved',
+    title: t.title ?? src.title,
+    versionNo: src.versionNo,
+    approvedAt: t.approvedAt ?? src.approvedAt,
+    sections: src.sections.map((s) => ({
+      code: s.code, title: SECTION_TITLES[t.language]?.[s.code] ?? s.title,
+      blocks: s.blocks.filter((b) => byBlock.get(b.id)?.text).map((b) => ({ ...b, text: byBlock.get(b.id)!.text! })),
+    })),
+  };
+}
+
 /** Export einer Übersetzung (Markdown/HTML) in derselben Struktur wie der deutsche Export */
 export async function exportTranslation(ctx: Ctx, id: string, format: string) {
   const t = await getTranslation(ctx, id);
@@ -248,4 +266,26 @@ export async function exportTranslation(ctx: Ctx, id: string, format: string) {
     ? renderMarkdown([chapter], {}).replace(/^# oneSCM Benutzerhandbuch/, `# ${heading}`)
     : renderHtml([chapter], {}).replace(/<html lang="de">/, `<html lang="${t.language}">`).replace('<h1>oneSCM Benutzerhandbuch</h1>', `<h1>${heading.replace(/[<>&]/g, '')}</h1>`);
   return { data: Buffer.from(body, 'utf8'), fileName: `onescm-${t.language}-${(t.title ?? 'kapitel').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.${format}`, type: format === 'md' ? 'text/markdown; charset=utf-8' : 'text/html; charset=utf-8' };
+}
+
+/** Übersetzungsstand je Zielsprache für das Dashboard (ADR-021) */
+export async function translationStatus(ctx: Ctx) {
+  const current = await ctx.db.all(
+    "SELECT v.id, v.chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved'",
+    ctx.projectId,
+  );
+  const currentIds = new Set(current.map((v) => v.id as string));
+  const out = [];
+  for (const language of await projectLanguages(ctx)) {
+    const rows = await ctx.db.all('SELECT chapter_version_id, status FROM translations WHERE project_id = ? AND language = ?', ctx.projectId, language);
+    const upToDate = rows.filter((r) => currentIds.has(r.chapter_version_id));
+    out.push({
+      language, languageName: LANGUAGES[language] ?? language, chapters: current.length,
+      approved: upToDate.filter((r) => r.status === 'approved').length,
+      draft: upToDate.filter((r) => r.status === 'draft').length,
+      outdated: rows.filter((r) => !currentIds.has(r.chapter_version_id)).length,
+      missing: current.length - upToDate.length,
+    });
+  }
+  return out;
 }

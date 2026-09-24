@@ -8,6 +8,8 @@ import { gateForChapter, getChapterVersion } from './chapters.js';
 import { compareVersions } from './compare.js';
 import { badgeLine, KIND_LABEL, renderMarkdown, visible, type ExportChapter } from './exports.js';
 import { escapeHtml, markdownToHtml } from './render.js';
+import { projectLanguages, translatedChapter } from './translations.js';
+import { LANGUAGES } from '../domain/translate.js';
 
 interface ReleaseChapter {
   chapterId: string;
@@ -32,6 +34,7 @@ function releaseDto(r: Row) {
     previousReleaseId: r.previous_release_id ?? null,
     chapters: parseJson<ReleaseChapter[]>(r.chapters, []), changes: parseJson<ChapterChange[]>(r.changes, []),
     siteUrl: `/api/v1/releases/${r.id}/download?format=site`, markdownUrl: `/api/v1/releases/${r.id}/download?format=md`,
+    languages: parseJson<{ language: string; translated: number; total: number }[]>(r.languages, []).map(({ language, translated, total }) => ({ language, translated, total })),
   };
 }
 
@@ -53,20 +56,37 @@ nav.toc ol{padding-left:1.2rem}h2{border-bottom:2px solid #1d63d8;padding-bottom
 table{border-collapse:collapse}td,th{border:1px solid #cbd5e1;padding:4px 8px}pre{background:#f3f4f6;padding:8px;white-space:pre-wrap}
 a{color:#1d63d8}.pager{display:flex;justify-content:space-between;margin-top:30px}`;
 
-function page(title: string, releaseLabel: string, body: string) {
+/** Oberflächentexte der Online-Hilfe je Sprache (sonst Englisch) */
+const UI: Record<string, Record<string, string>> = {
+  de: { home: 'oneSCM Benutzerhandbuch', skip: 'Zum Inhalt springen', toc: 'Inhalt', changes: 'Änderungen in dieser Version', published: 'veröffentlicht am', version: 'Version', approved: 'Freigegebene Version', fallback: '', languages: 'Sprache', pager: 'Kapitel blättern' },
+  en: { home: 'oneSCM user manual', skip: 'Skip to content', toc: 'Contents', changes: 'Changes in this version', published: 'published on', version: 'Version', approved: 'Approved version', fallback: 'Not yet translated – German version shown.', languages: 'Language', pager: 'Browse chapters' },
+  fr: { home: 'Manuel utilisateur oneSCM', skip: 'Aller au contenu', toc: 'Sommaire', changes: 'Modifications de cette version', published: 'publié le', version: 'Version', approved: 'Version approuvée', fallback: 'Pas encore traduit – version allemande affichée.', languages: 'Langue', pager: 'Parcourir les chapitres' },
+  es: { home: 'Manual de usuario oneSCM', skip: 'Ir al contenido', toc: 'Índice', changes: 'Cambios en esta versión', published: 'publicado el', version: 'Versión', approved: 'Versión aprobada', fallback: 'Aún no traducido: se muestra la versión alemana.', languages: 'Idioma', pager: 'Recorrer capítulos' },
+  it: { home: 'Manuale utente oneSCM', skip: 'Vai al contenuto', toc: 'Indice', changes: 'Modifiche in questa versione', published: 'pubblicato il', version: 'Versione', approved: 'Versione approvata', fallback: 'Non ancora tradotto: viene mostrata la versione tedesca.', languages: 'Lingua', pager: 'Sfoglia i capitoli' },
+};
+const ui = (lang: string) => UI[lang] ?? UI.en;
+
+interface SiteLang {
+  code: string;
+  /** Pfadpräfix zum Wurzelverzeichnis der Site, von dieser Sprache aus */
+  prefix: string;
+}
+
+function page(title: string, releaseLabel: string, body: string, lang = 'de', switcher = '') {
   // Eigenständig und ohne Skripte (ADR-012): eigene CSP, keine externen Ressourcen
   return `<!doctype html>
-<html lang="de"><head><meta charset="utf-8">
+<html lang="${lang}"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)} – ${escapeHtml(releaseLabel)}</title><style>${PAGE_CSS}</style></head>
-<body><a href="#inhalt" style="position:absolute;left:-999px">Zum Inhalt springen</a>
-<header><a href="index.html">oneSCM Benutzerhandbuch</a> · ${escapeHtml(releaseLabel)}</header>
+<body><a href="#inhalt" style="position:absolute;left:-999px">${escapeHtml(ui(lang).skip)}</a>
+<header><a href="index.html">${escapeHtml(ui(lang).home)}</a> · ${escapeHtml(releaseLabel)}${switcher}</header>
 <main id="inhalt">${body}</main></body></html>`;
 }
 
-function chapterHtml(ch: ExportChapter) {
-  const out: string[] = [`<h1>${escapeHtml(ch.title)}</h1>`, `<p class="meta">Freigegebene Version ${ch.versionNo}${ch.approvedAt ? ` vom ${ch.approvedAt.slice(0, 10)}` : ''}</p>`];
+function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false) {
+  const out: string[] = [`<h1>${escapeHtml(ch.title)}</h1>`, `<p class="meta">${escapeHtml(ui(lang).approved)} ${ch.versionNo}${ch.approvedAt ? ` · ${ch.approvedAt.slice(0, 10)}` : ''}</p>`];
+  if (fallback) out.push(`<p class="meta" lang="${lang}"><strong>${escapeHtml(ui(lang).fallback)}</strong></p>`);
   for (const s of ch.sections) {
     out.push(`<h2>${escapeHtml(s.title)}</h2>`);
     for (const b of s.blocks) {
@@ -90,24 +110,43 @@ export function changesText(changes: ChapterChange[]) {
   });
 }
 
-async function buildSite(version: string, title: string, notes: string | null, chapters: ExportChapter[], changes: ChapterChange[], createdAt: string) {
+/**
+ * Statische Online-Hilfe: Deutsch im Wurzelverzeichnis, jede weitere Sprache in einem Unterordner (en/, fr/ …)
+ * mit denselben Dateinamen und einem Sprachumschalter. Kapitel ohne freigegebene Übersetzung erscheinen auf Deutsch.
+ */
+async function buildSite(
+  version: string, title: string, notes: string | null, chapters: ExportChapter[], changes: ChapterChange[], createdAt: string,
+  translations: Map<string, (ExportChapter | null)[]>,
+) {
   const zip = new JSZip();
-  const label = `Version ${version}`;
+  const langs: SiteLang[] = [{ code: 'de', prefix: '' }, ...[...translations.keys()].map((code) => ({ code, prefix: `${code}/` }))];
+  const lines = changesText(changes);
   const vis = visible(chapters, {});
   const files = vis.map((_, i) => `kapitel-${String(i + 1).padStart(2, '0')}.html`);
-  const lines = changesText(changes);
-  zip.file('index.html', page(title, label, `<h1>${escapeHtml(title)}</h1>
-<p class="meta">${escapeHtml(label)} · veröffentlicht am ${createdAt.slice(0, 10)}</p>
-${notes ? markdownToHtml(notes) : ''}
-<nav class="toc" aria-label="Inhalt"><h2>Inhalt</h2><ol>${vis.map((ch, i) => `<li><a href="${files[i]}">${escapeHtml(ch.title)}</a></li>`).join('')}</ol></nav>
-<p><a href="aenderungen.html">Änderungen in dieser Version</a></p>`));
-  zip.file('aenderungen.html', page('Änderungen', label, `<h1>Änderungen in ${escapeHtml(label)}</h1>
-${lines.length ? `<ul>${lines.map((l) => `<li>${escapeHtml(l)}</li>`).join('')}</ul>` : '<p>Keine inhaltlichen Änderungen gegenüber der Vorversion.</p>'}`));
-  vis.forEach((ch, i) => {
-    const prev = i > 0 ? `<a href="${files[i - 1]}">← ${escapeHtml(vis[i - 1].title)}</a>` : '<span></span>';
-    const next = i < vis.length - 1 ? `<a href="${files[i + 1]}">${escapeHtml(vis[i + 1].title)} →</a>` : '<span></span>';
-    zip.file(files[i], page(ch.title, label, `${chapterHtml(ch)}<nav class="pager" aria-label="Kapitel blättern">${prev}${next}</nav>`));
-  });
+  const switcher = (current: string, file: string) => langs.length < 2 ? '' :
+    ` · <nav aria-label="${escapeHtml(ui(current).languages)}" style="display:inline">${langs.map((l) => {
+      const up = current === 'de' ? '' : '../';
+      const href = `${up}${l.prefix}${file}`;
+      return l.code === current ? `<strong lang="${l.code}">${l.code.toUpperCase()}</strong>` : `<a href="${href}" lang="${l.code}" hreflang="${l.code}">${l.code.toUpperCase()}</a>`;
+    }).join(' ')}</nav>`;
+  for (const l of langs) {
+    const u = ui(l.code);
+    const label = `${u.version} ${version}`;
+    const translated = l.code === 'de' ? null : translations.get(l.code)!;
+    const pages = vis.map((ch, i) => ({ ch: translated?.[i] ? visible([translated[i]!], {})[0] : ch, fallback: !!translated && !translated[i] }));
+    zip.file(`${l.prefix}index.html`, page(title, label, `<h1>${escapeHtml(title)}</h1>
+<p class="meta">${escapeHtml(label)} · ${escapeHtml(u.published)} ${createdAt.slice(0, 10)}</p>
+${notes && l.code === 'de' ? markdownToHtml(notes) : ''}
+<nav class="toc" aria-label="${escapeHtml(u.toc)}"><h2>${escapeHtml(u.toc)}</h2><ol>${pages.map((p, i) => `<li><a href="${files[i]}">${escapeHtml(p.ch.title)}</a>${p.fallback ? ' <span class="meta">(DE)</span>' : ''}</li>`).join('')}</ol></nav>
+<p><a href="aenderungen.html">${escapeHtml(u.changes)}</a></p>`, l.code, switcher(l.code, 'index.html')));
+    zip.file(`${l.prefix}aenderungen.html`, page(u.changes, label, `<h1>${escapeHtml(u.changes)}</h1>
+${lines.length ? `<ul lang="de">${lines.map((x) => `<li>${escapeHtml(x)}</li>`).join('')}</ul>` : '<p>–</p>'}`, l.code, switcher(l.code, 'aenderungen.html')));
+    pages.forEach((p, i) => {
+      const prev = i > 0 ? `<a href="${files[i - 1]}">← ${escapeHtml(pages[i - 1].ch.title)}</a>` : '<span></span>';
+      const next = i < pages.length - 1 ? `<a href="${files[i + 1]}">${escapeHtml(pages[i + 1].ch.title)} →</a>` : '<span></span>';
+      zip.file(`${l.prefix}${files[i]}`, page(p.ch.title, label, `<div${p.fallback ? ' lang="de"' : ''}>${chapterHtml(p.ch, l.code, p.fallback)}</div><nav class="pager" aria-label="${escapeHtml(u.pager)}">${prev}${next}</nav>`, l.code, switcher(l.code, files[i])));
+    });
+  }
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
 }
 
@@ -158,27 +197,54 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
   const createdAt = now();
   const title = input.title?.trim() || 'oneSCM Benutzerhandbuch';
   const notes = input.notes?.trim() || null;
-  const site = await buildSite(version, title, notes, chapters, changes, createdAt);
+  // Freigegebene Übersetzungen genau der veröffentlichten Kapitelversionen (ADR-021)
+  const translations = new Map<string, (ExportChapter | null)[]>();
+  const languages: { language: string; translated: number; total: number; markdownKey: string }[] = [];
+  for (const lang of await projectLanguages(ctx)) {
+    const list: (ExportChapter | null)[] = [];
+    for (const c of releaseChapters) {
+      const tr = await db.get("SELECT id FROM translations WHERE chapter_version_id = ? AND language = ? AND status = 'approved'", c.chapterVersionId, lang);
+      list.push(tr ? await translatedChapter(ctx, tr.id) : null);
+    }
+    const translated = list.filter(Boolean).length;
+    if (!translated) continue;
+    translations.set(lang, list);
+    languages.push({ language: lang, translated, total: list.length, markdownKey: `releases/${id}/handbuch-${lang}.md` });
+  }
+  const site = await buildSite(version, title, notes, chapters, changes, createdAt, translations);
   const md = renderMarkdown(chapters, {}).replace(/^# oneSCM Benutzerhandbuch/, `# ${title} – Version ${version}`);
   const siteKey = `releases/${id}/site.zip`;
   const mdKey = `releases/${id}/handbuch.md`;
   await ctx.store.put(siteKey, site);
   await ctx.store.put(mdKey, Buffer.from(md, 'utf8'));
+  for (const l of languages) {
+    // Kapitel ohne freigegebene Übersetzung auf Deutsch (im Markdown gekennzeichnet)
+    const chs = translations.get(l.language)!.map((t, i) => t ?? { ...chapters[i], title: `${chapters[i].title} (DE)` });
+    const lmd = renderMarkdown(chs, {}).replace(/^# oneSCM Benutzerhandbuch/, `# ${title} – ${LANGUAGES[l.language] ?? l.language} – Version ${version}`);
+    await ctx.store.put(l.markdownKey, Buffer.from(lmd, 'utf8'));
+  }
   await db.tx(async () => {
     await db.run(
-      `INSERT INTO handbook_releases (id, project_id, version, title, notes, chapters, changes, previous_release_id, site_key, markdown_key, created_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      id, ctx.projectId, version, title, notes, json(releaseChapters), json(changes), prevRow?.id ?? null, siteKey, mdKey, actor, createdAt,
+      `INSERT INTO handbook_releases (id, project_id, version, title, notes, chapters, changes, previous_release_id, site_key, markdown_key, created_by, created_at, languages)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, ctx.projectId, version, title, notes, json(releaseChapters), json(changes), prevRow?.id ?? null, siteKey, mdKey, actor, createdAt, json(languages),
     );
-    await audit(ctx, actor, 'release.published', 'release', id, { version, chapters: releaseChapters.length, changes: changesText(changes) });
+    await audit(ctx, actor, 'release.published', 'release', id, { version, chapters: releaseChapters.length, changes: changesText(changes), languages: languages.map((l) => l.language) });
   });
   return getRelease(ctx, id);
 }
 
-export async function downloadRelease(ctx: Ctx, id: string, format: string) {
+export async function downloadRelease(ctx: Ctx, id: string, format: string, language?: string) {
   const r = await ctx.db.get('SELECT * FROM handbook_releases WHERE id = ?', id);
   if (!r) throw notFound(`Release ${id}`);
   if (format === 'site') return { data: await ctx.store.get(r.site_key), fileName: `onescm-handbuch-${r.version}-online-hilfe.zip`, type: 'application/zip' };
-  if (format === 'md') return { data: await ctx.store.get(r.markdown_key), fileName: `onescm-handbuch-${r.version}.md`, type: 'text/markdown; charset=utf-8' };
+  if (format === 'md') {
+    if (language && language !== 'de') {
+      const l = parseJson<{ language: string; markdownKey: string }[]>(r.languages, []).find((x) => x.language === language);
+      if (!l) throw notFound(`Sprache ${language} in Release ${r.version}`);
+      return { data: await ctx.store.get(l.markdownKey), fileName: `onescm-handbuch-${r.version}-${language}.md`, type: 'text/markdown; charset=utf-8' };
+    }
+    return { data: await ctx.store.get(r.markdown_key), fileName: `onescm-handbuch-${r.version}.md`, type: 'text/markdown; charset=utf-8' };
+  }
   throw badRequest('format muss site oder md sein.');
 }

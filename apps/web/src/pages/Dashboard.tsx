@@ -55,6 +55,20 @@ export function DashboardPage() {
           <BarList label="Spartenabdeckung" rows={(ref?.divisions ?? []).map((r) => ({ key: r.code, label: <Badge item={r} />, value: d?.divisionCoverage.find((x: any) => x.code === r.code)?.n ?? 0 }))} />
         </Card>
       </div>
+      {d?.translations?.length > 0 && (
+        <Card title="Übersetzungsstand" actions={<Link className="small" to="/uebersetzungen">Übersetzungen →</Link>}>
+          <table className="table compact">
+            <thead><tr><th>Sprache</th><th>freigegeben</th><th>in Arbeit</th><th>fehlt</th><th>veraltet</th><th>von Kapiteln</th></tr></thead>
+            <tbody>
+              {d.translations.map((t: any) => (
+                <tr key={t.language}>
+                  <td>{t.languageName}</td><td>{t.approved}</td><td>{t.draft}</td><td>{t.missing}</td><td>{t.outdated}</td><td>{t.chapters}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
       <Card title="Kapitelstatus">
         <table className="table">
           <thead>
