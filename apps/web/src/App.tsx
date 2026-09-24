@@ -21,6 +21,7 @@ import { EvidencePage } from './pages/Evidence';
 import { ComparePage } from './pages/Compare';
 import { ProjectsPage } from './pages/Projects';
 import { ReleasesPage } from './pages/Releases';
+import { InboxPage } from './pages/Discussion';
 
 // Navigation gemäß Masterprompt §14
 const NAV = [
@@ -80,6 +81,15 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   const location = useLocation();
   const mainRef = useRef<HTMLElement>(null);
   const firstRender = useRef(true);
+  const [unread, setUnread] = useState(0);
+  const reloadUnread = useCallback(() => {
+    get<any>('/notifications?unread=true').then((n) => setUnread(n.unread)).catch(() => setUnread(0));
+  }, []);
+  useEffect(() => {
+    reloadUnread();
+    const t = setInterval(reloadUnread, 30_000);
+    return () => clearInterval(t);
+  }, [reloadUnread, userId, location.pathname]);
   // Nach einem Seitenwechsel: Menü schließen und Fokus auf die Seitenüberschrift setzen (WCAG 2.4.3)
   useEffect(() => {
     setNavOpen(false);
@@ -143,6 +153,9 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             {navOpen ? '✕ Menü schließen' : '☰ Menü'}
           </button>
           <nav id="main-nav" aria-label="Hauptnavigation" className={navOpen ? 'open' : ''}>
+            <NavLink to="/aufgaben" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span aria-hidden="true">🔔</span> Aufgaben & Hinweise{unread > 0 && <span className="count" aria-label={`${unread} ungelesen`}>{unread}</span>}
+            </NavLink>
             {NAV.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
                 <span aria-hidden="true">{n.icon}</span> {n.label}
@@ -189,6 +202,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/freigabe" element={<ApprovalPage />} />
             <Route path="/export" element={<ExportPage />} />
             <Route path="/veroeffentlichung" element={<ReleasesPage />} />
+            <Route path="/aufgaben" element={<InboxPage onRead={reloadUnread} />} />
             <Route path="/traceability" element={<TraceabilityPage />} />
             <Route path="/projekte" element={<ProjectsPage onChanged={reloadProjects} />} />
             <Route path="/einstellungen" element={<SettingsPage />} />

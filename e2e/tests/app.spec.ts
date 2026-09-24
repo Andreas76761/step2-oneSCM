@@ -218,3 +218,29 @@ test('[T-211] Handbuch-Version veröffentlichen, Änderungen ansehen, Online-Hil
   await page.getByRole('button', { name: 'Online-Hilfe (ZIP)' }).first().click();
   expect((await download).suggestedFilename()).toBe('onescm-handbuch-2026.9-online-hilfe.zip');
 });
+
+test('[T-212] Diskussion am Absatz: Erwähnung und Aufgabe, Hinweise und Aufgaben der erwähnten Person', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '3. Benutzerverwaltung');
+  await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h });
+  await page.goto(`/werkstatt/${ch.id}`);
+  await page.getByRole('article').first().locator('.block-meta').first().click();
+  await page.getByRole('tab', { name: 'Diskussion' }).click();
+  await page.getByLabel('Kommentartext').fill('Bitte Formulierung prüfen @u-redaktion');
+  await page.getByRole('button', { name: 'Senden' }).click();
+  await expect(page.getByText('Kommentar gespeichert.')).toBeVisible();
+  await page.getByLabel('Kommentartext').fill('Screenshot ergänzen');
+  await page.getByLabel('Art des Eintrags').selectOption('task');
+  await page.getByLabel('Zuständige Person').selectOption('u-redaktion');
+  await page.getByRole('button', { name: 'Aufgabe anlegen' }).click();
+  await expect(page.locator('.discussion').getByText('Aufgabe offen')).toBeVisible();
+
+  // als Redaktion: Zähler, Hinweise, Aufgabe erledigen
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  await expect(page.getByRole('link', { name: /Aufgaben & Hinweise/ }).locator('.count')).toHaveText('2');
+  await page.getByRole('link', { name: /Aufgaben & Hinweise/ }).click();
+  await expect(page.getByText(/hat Sie erwähnt/)).toBeVisible();
+  await expect(page.locator('.card', { hasText: 'Meine offenen Aufgaben' }).getByText('Screenshot ergänzen')).toBeVisible();
+  await page.getByRole('button', { name: 'Alle als gelesen markieren' }).click();
+  await expect(page.getByRole('link', { name: /Aufgaben & Hinweise/ }).locator('.count')).toHaveCount(0);
+});

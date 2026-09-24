@@ -6,6 +6,7 @@ import {
   activatable,
 } from '../components/ui';
 import { SourceViewer } from './Sources';
+import { DiscussionPanel } from './Discussion';
 
 const REWRITABLE = ['paragraph', 'list', 'note', 'tip', 'warning'];
 
@@ -22,7 +23,8 @@ export function WorkshopPage() {
   const llm = useLoad<any>('/llm/status');
   const [batchOpen, setBatchOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
-  const [tab, setTab] = useState<'sources' | 'findings' | 'history' | 'approval'>('sources');
+  const [tab, setTab] = useState<'sources' | 'discussion' | 'findings' | 'history' | 'approval'>('sources');
+  const me = useLoad<any>('/me');
 
   useEffect(() => {
     if (!chapterId && chapters.data?.length) {
@@ -121,13 +123,16 @@ export function WorkshopPage() {
 
       <aside className="ws-right" aria-label="Details">
         <div className="tabs" role="tablist">
-          {(['sources', 'findings', 'history', 'approval'] as const).map((t) => (
+          {(['sources', 'discussion', 'findings', 'history', 'approval'] as const).map((t) => (
             <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>
-              {{ sources: 'Quellen', findings: 'Befunde', history: 'Historie', approval: 'Freigabe' }[t]}
+              {{ sources: 'Quellen', discussion: 'Diskussion', findings: 'Befunde', history: 'Historie', approval: 'Freigabe' }[t]}
             </button>
           ))}
         </div>
         {tab === 'sources' && <SourcesTab block={selectedBlock} />}
+        {tab === 'discussion' && (selectedBlock
+          ? <DiscussionPanel entityType="block" entityId={selectedBlock.lineageId} canEdit={!!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin')} />
+          : <Empty>Block in der Mitte auswählen, um die Diskussion zu sehen – sie bleibt über neue Versionen erhalten.</Empty>)}
         {tab === 'findings' && chapterId && <FindingsTab chapterId={chapterId} />}
         {tab === 'history' && <HistoryTab block={selectedBlock} editable={editable} onRestored={refresh} />}
         {tab === 'approval' && v && <ApprovalPanel version={v} onApproved={refresh} />}

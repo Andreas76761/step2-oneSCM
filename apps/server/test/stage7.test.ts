@@ -202,3 +202,88 @@ describe('Handbuch-Releases und Online-Hilfe (ADR-018)', () => {
     }
   });
 });
+
+describe('Kollaboration: Kommentare, Aufgaben, Benachrichtigungen (ADR-019)', () => {
+  const dataDir = tempDir();
+  const hooks: any[] = [];
+  const hook = http.createServer((req, res) => {
+    let d = '';
+    req.on('data', (c) => (d += c));
+    req.on('end', () => {
+      hooks.push(JSON.parse(d));
+      res.writeHead(200).end('ok');
+    });
+  });
+  let hookUrl = '';
+  beforeAll(async () => {
+    await new Promise<void>((ok) => hook.listen(0, '127.0.0.1', () => ok()));
+    hookUrl = `http://127.0.0.1:${(hook.address() as AddressInfo).port}/hook`;
+  });
+  afterAll(async () => {
+    await new Promise<void>((ok) => hook.close(() => ok()));
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  it('[T-140] Diskussion am Absatz mit @Erwähnung, Aufgaben mit Zuständigkeit, Benachrichtigung per In-App, Webhook und E-Mail', async () => {
+    const built = await buildApp({
+      dataDir, database: await freshDatabase(dataDir, 'kollaboration'), logger: false, webDist: null, authMode: 'demo',
+      notify: { webhookUrl: hookUrl, smtpUrl: 'json', mailFrom: 'Studio <noreply@example.com>', appUrl: 'https://handbuch.example.com' },
+    });
+    const call = client(built);
+    try {
+      await importMd(built, 'k.md', `${FM}# 1. Kollaboration\n\n## 1.1 Zweck\n\nDieses Kapitel beschreibt die Zusammenarbeit.\n`);
+      const chapterId = (await call('GET', '/chapters')).json[0].id;
+      const v = (await call('POST', `/chapters/${chapterId}/generate`, {}, 'u-redaktion')).json;
+      const block = v.sections.find((s: any) => s.code === 'purpose').blocks[0];
+      const entity = { entityType: 'block', entityId: block.lineageId };
+
+      // Lesende dürfen kommentieren und erwähnen; unbekannte Namen werden ignoriert
+      const c1 = await call('POST', '/comments', { ...entity, body: '@u-redaktion bitte prüfen, ob @u-niemand recht hat.' }, 'u-leser');
+      expect(c1.status).toBe(201);
+      expect(c1.json).toMatchObject({ kind: 'comment', mentions: ['u-redaktion'], authorName: 'Lesezugriff (Demo)' });
+      expect((await call('POST', '/comments', { ...entity, kind: 'task', body: 'x', assignee: 'u-redaktion' }, 'u-leser')).status).toBe(403);
+      await built.ctx.jobs.idle();
+      expect(hooks.at(-1)).toMatchObject({ type: 'mention', userId: 'u-redaktion', link: `https://handbuch.example.com/werkstatt/${chapterId}` });
+      expect(hooks.at(-1).text).toContain('Lesezugriff (Demo) hat Sie erwähnt');
+      expect(built.ctx.notifier.sentMails.at(-1)).toMatchObject({ to: 'redaktion@example.com', subject: expect.stringContaining('erwähnt') });
+
+      // Aufgabe mit Zuständigkeit und Frist
+      const task = (await call('POST', '/comments', { ...entity, kind: 'task', body: 'Screenshots ergänzen', assignee: 'u-fachpruefung', dueDate: '2026-10-01' }, 'u-redaktion')).json;
+      expect(task).toMatchObject({ kind: 'task', status: 'open', assignee: 'u-fachpruefung', assigneeName: 'Fachprüfung (Demo)', dueDate: '2026-10-01' });
+      expect((await call('POST', '/comments', { ...entity, kind: 'task', body: 'x', assignee: 'u-niemand' }, 'u-redaktion')).status).toBe(400);
+      const mine = (await call('GET', '/tasks?assignee=me&status=open', undefined, 'u-fachpruefung')).json;
+      expect(mine).toEqual([expect.objectContaining({ id: task.id, link: `/werkstatt/${chapterId}` })]);
+      expect((await call('PATCH', `/comments/${task.id}`, { status: 'done' }, 'u-leser')).status).toBe(403);
+      expect((await call('PATCH', `/comments/${task.id}`, { status: 'done' }, 'u-fachpruefung')).json).toMatchObject({ status: 'done', doneBy: 'u-fachpruefung' });
+      expect((await call('PATCH', `/comments/${c1.json.id}`, { body: 'geändert' }, 'u-redaktion')).status).toBe(403); // nur die verfassende Person
+
+      // Antwort benachrichtigt die ursprüngliche Person
+      await call('POST', '/comments', { ...entity, parentId: c1.json.id, body: 'Ist erledigt.' }, 'u-redaktion');
+      await built.ctx.jobs.idle();
+      const types = (user: string) => call('GET', '/notifications', undefined, user).then((r) => r.json.items.map((n: any) => n.type));
+      expect(await types('u-redaktion')).toEqual(['task_done', 'mention']);
+      expect(await types('u-fachpruefung')).toEqual(['assigned']);
+      expect(await types('u-leser')).toEqual(['reply']);
+      const n = (await call('GET', '/notifications?unread=true', undefined, 'u-redaktion')).json;
+      expect(n.unread).toBe(2);
+      expect(n.items[0].delivered).toMatchObject({ webhook: expect.any(String), email: expect.any(String) });
+      expect((await call('POST', '/notifications/read', {}, 'u-redaktion')).json.marked).toBe(2);
+      expect((await call('GET', '/notifications?unread=true', undefined, 'u-redaktion')).json.unread).toBe(0);
+
+      // Diskussion bleibt über eine Neugenerierung erhalten (Lineage)
+      await call('POST', `/chapters/${chapterId}/generate`, {}, 'u-redaktion');
+      const thread = (await call('GET', `/comments?entityType=block&entityId=${block.lineageId}`)).json;
+      expect(thread.map((c: any) => c.body)).toEqual([c1.json.body, 'Screenshots ergänzen', 'Ist erledigt.']);
+      expect(thread[2].parentId).toBe(c1.json.id);
+
+      // Mandantentrennung und Zugriff
+      const P = (await call('POST', '/projects', { name: 'Vertraulich' })).json.id;
+      expect((await call('GET', `/comments?entityType=block&entityId=${block.lineageId}`, undefined, 'u-admin', P)).status).toBe(404);
+      expect((await call('PATCH', `/comments/${task.id}`, { status: 'open' }, 'u-admin', P)).status).toBe(404);
+      expect((await call('GET', '/collaborators')).json.map((u: any) => u.id)).toEqual(expect.arrayContaining(['u-leser', 'u-redaktion']));
+      expect((await call('GET', '/collaborators', undefined, 'u-admin', P)).json.map((u: any) => u.id)).toEqual(['u-admin']);
+    } finally {
+      await built.app.close();
+    }
+  });
+});

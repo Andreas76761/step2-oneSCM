@@ -6,6 +6,7 @@ import { DEFAULT_RULE_SEVERITY } from './domain/contradictions.js';
 import { DEFAULT_MODELS, type LlmConfig, type LlmProviderId } from './llm.js';
 import { opsFromEnv, type OpsConfig } from './ops.js';
 import { embeddingsFromEnv, type EmbeddingConfig } from './embeddings.js';
+import { notifyFromEnv, type NotifyConfig } from './notify.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..', '..');
@@ -46,6 +47,8 @@ export interface AppConfig {
   ops: OpsConfig;
   /** Embeddings für semantische Suche/hybride Analyse (ADR-017); Standard lokal ohne Netzwerk */
   embeddings: EmbeddingConfig;
+  /** Benachrichtigungen per Webhook/E-Mail (ADR-019) */
+  notify: NotifyConfig;
 }
 
 export type ObjectStoreConfig =
@@ -140,6 +143,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     llm: overrides.llm !== undefined ? overrides.llm : llmFromEnv(),
     ops: { ...opsFromEnv(), ...overrides.ops },
     embeddings: overrides.embeddings ?? embeddingsFromEnv(),
+    notify: { ...notifyFromEnv(), ...overrides.notify },
   };
 }
 
