@@ -1,6 +1,6 @@
 // Extraktiver Kapitelgenerator (US-008, ADR-007).
 // Es wird ausschließlich Quelltext bestätigter Snippets übernommen; nichts wird hinzuerfunden.
-// ANNAHME(E-09): Zuordnung zu den Standardabschnitten per Heuristik (Überschrift, Präfix, Listentyp).
+// ENTSCHEIDUNG(E-09): Zuordnung zu den Standardabschnitten per Heuristik (Überschrift, Präfix, Listentyp).
 import { CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, ROLES, type SectionCode } from './reference.js';
 
 export const GENERATOR_ID = 'extractive-1.0';

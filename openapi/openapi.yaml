@@ -1,13 +1,15 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.1.0
+  version: 0.2.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
     Operationen mit `x-extension: true` ergänzen die verbindliche Operationsliste aus Masterprompt §10 (siehe docs/01-gap-analyse.md, Lücke 10).
     Fehler werden als `application/problem+json` (RFC 9457) geliefert.
-    Authentifizierung (vorläufig, E-15): Header `X-User-Id` mit einem Demo-Benutzer; ohne Header nur Lesezugriff.
+    Authentifizierung (ENTSCHEIDUNG E-15), je nach Betriebsart (`GET /auth/config`):
+    - `oidc`: `Authorization: Bearer <JWT>` eines OpenID-Connect-Providers; technische Berechtigungen aus einem Gruppen-/Rollen-Claim.
+    - `demo`: Header `X-User-Id` mit einem Demo-Benutzer; ohne Header nur Lesezugriff. Nur für Entwicklung und Demo.
 servers:
   - url: /api/v1
 tags:
@@ -22,6 +24,11 @@ tags:
   - name: System
 components:
   securitySchemes:
+    oidcBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access-Token des konfigurierten OIDC-Providers (AUTH_MODE=oidc)
     demoUser:
       type: apiKey
       in: header
@@ -35,6 +42,13 @@ components:
     BlockId: { name: blockId, in: path, required: true, schema: { type: string } }
     ClusterId: { name: clusterId, in: path, required: true, schema: { type: string } }
   responses:
+    Unauthorized:
+      description: Nicht angemeldet oder Token ungültig
+      headers:
+        WWW-Authenticate: { schema: { type: string, example: Bearer } }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
     Problem:
       description: Fehler (RFC 9457)
       content:
@@ -223,6 +237,7 @@ components:
         release: { type: [string, 'null'] }
         format: { type: string, enum: [md, json], default: md }
 security:
+  - oidcBearer: []
   - demoUser: []
 paths:
   /imports:
@@ -241,6 +256,7 @@ paths:
               properties:
                 file: { type: string, format: binary }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '202':
           description: Import angenommen, Verarbeitung im Hintergrund
           content: { application/json: { schema: { $ref: '#/components/schemas/Import' } } }
@@ -254,6 +270,7 @@ paths:
       x-requirements: [US-001]
       x-extension: true
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Liste, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Import' } } } } }
   /imports/{importId}:
     get:
@@ -263,6 +280,7 @@ paths:
       x-requirements: [US-001]
       parameters: [{ $ref: '#/components/parameters/ImportId' }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Import, content: { application/json: { schema: { $ref: '#/components/schemas/Import' } } } }
         '404': { $ref: '#/components/responses/Problem' }
   /sources:
@@ -273,6 +291,7 @@ paths:
       x-requirements: [US-001, US-011]
       x-extension: true
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Quellen }
   /source-revisions/{revisionId}/raw:
     get:
@@ -283,6 +302,7 @@ paths:
       x-extension: true
       parameters: [{ name: revisionId, in: path, required: true, schema: { type: string } }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Rohtext, content: { text/plain: { schema: { type: string } } } }
         '404': { $ref: '#/components/responses/Problem' }
   /snippets:
@@ -305,6 +325,7 @@ paths:
         - { name: page, in: query, schema: { type: integer, minimum: 1 } }
         - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 500 } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200':
           description: Seite
           content:
@@ -325,6 +346,7 @@ paths:
       x-extension: true
       parameters: [{ $ref: '#/components/parameters/SnippetId' }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Textabschnitt, content: { application/json: { schema: { $ref: '#/components/schemas/Snippet' } } } }
         '404': { $ref: '#/components/responses/Problem' }
     patch:
@@ -335,6 +357,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/SnippetId' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SnippetPatch' } } } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Aktualisiert, content: { application/json: { schema: { $ref: '#/components/schemas/Snippet' } } } }
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
@@ -346,6 +369,7 @@ paths:
       tags: [Qualität]
       x-requirements: [US-005, US-006, US-007, US-012]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '202': { description: Analyselauf angenommen }
         '403': { $ref: '#/components/responses/Problem' }
   /quality/analysis/{runId}:
@@ -357,6 +381,7 @@ paths:
       x-extension: true
       parameters: [{ name: runId, in: path, required: true, schema: { type: string } }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Analyselauf }
         '404': { $ref: '#/components/responses/Problem' }
   /quality/findings:
@@ -372,6 +397,7 @@ paths:
         - { name: chapterId, in: query, schema: { type: string } }
         - { name: minScore, in: query, schema: { type: number } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Befunde, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Finding' } } } } }
   /quality/findings/{findingId}:
     get:
@@ -382,6 +408,7 @@ paths:
       x-extension: true
       parameters: [{ $ref: '#/components/parameters/FindingId' }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Befund, content: { application/json: { schema: { $ref: '#/components/schemas/Finding' } } } }
         '404': { $ref: '#/components/responses/Problem' }
   /quality/findings/{findingId}/decision:
@@ -393,6 +420,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/FindingId' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Decision' } } } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Entschieden, content: { application/json: { schema: { $ref: '#/components/schemas/Finding' } } } }
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
@@ -406,6 +434,7 @@ paths:
       x-extension: true
       parameters: [{ name: status, in: query, schema: { type: string, enum: [proposed, confirmed, dissolved] } }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Cluster }
   /clusters/{clusterId}:
     patch:
@@ -420,6 +449,7 @@ paths:
           application/json:
             schema: { type: object, properties: { name: { type: string }, status: { type: string, enum: [proposed, confirmed, dissolved] } } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Cluster }
         '404': { $ref: '#/components/responses/Problem' }
   /clusters/{clusterId}/merge:
@@ -433,6 +463,7 @@ paths:
       requestBody:
         content: { application/json: { schema: { type: object, properties: { clusterIds: { type: array, items: { type: string } } } } } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Zusammengeführter Cluster }
   /clusters/{clusterId}/split:
     post:
@@ -445,6 +476,7 @@ paths:
       requestBody:
         content: { application/json: { schema: { type: object, properties: { snippetIds: { type: array, items: { type: string } }, name: { type: string } } } } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Beide Cluster }
   /canonical-topics:
     get:
@@ -454,6 +486,7 @@ paths:
       x-requirements: [US-006]
       x-extension: true
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Liste }
     post:
       operationId: createCanonicalTopic
@@ -476,6 +509,7 @@ paths:
                 leadSnippetId: { type: string }
                 reason: { type: string }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Angelegt }
         '422': { $ref: '#/components/responses/Problem' }
   /chapters:
@@ -486,6 +520,7 @@ paths:
       x-requirements: [US-002, US-010, US-013]
       x-extension: true
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Kapitel }
   /chapters/{chapterId}:
     get:
@@ -496,6 +531,7 @@ paths:
       x-extension: true
       parameters: [{ $ref: '#/components/parameters/ChapterId' }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Kapitel }
         '404': { $ref: '#/components/responses/Problem' }
   /chapters/{chapterId}/versions:
@@ -507,6 +543,7 @@ paths:
       x-extension: true
       parameters: [{ $ref: '#/components/parameters/ChapterId' }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Versionen }
   /chapters/{chapterId}/generate:
     post:
@@ -516,6 +553,7 @@ paths:
       x-requirements: [US-006, US-008, US-009, US-012]
       parameters: [{ $ref: '#/components/parameters/ChapterId' }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Neue Kapitelversion, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
         '409': { description: Blockiert durch offene Blocker-Befunde, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
         '422': { $ref: '#/components/responses/Problem' }
@@ -527,6 +565,7 @@ paths:
       x-requirements: [US-008, US-009, US-010, US-011]
       parameters: [{ $ref: '#/components/parameters/VersionId' }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Kapitelversion, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
         '404': { $ref: '#/components/responses/Problem' }
   /chapter-versions/{versionId}/gate:
@@ -538,6 +577,7 @@ paths:
       x-extension: true
       parameters: [{ $ref: '#/components/parameters/VersionId' }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Gate-Ergebnis, content: { application/json: { schema: { $ref: '#/components/schemas/GateResult' } } } }
   /chapter-versions/{versionId}/content-blocks:
     post:
@@ -549,6 +589,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/VersionId' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/BlockPatch' } } } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
         '409': { $ref: '#/components/responses/Problem' }
   /chapter-versions/{versionId}/approve:
@@ -569,6 +610,7 @@ paths:
                 comment: { type: string }
                 decision: { type: string, enum: [approved, rejected], default: approved }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Freigegeben, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
         '403': { $ref: '#/components/responses/Problem' }
         '409': { description: Gate nicht bestanden oder Version nicht im Entwurf, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
@@ -581,6 +623,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/BlockId' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/BlockPatch' } } } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
         '409': { $ref: '#/components/responses/Problem' }
     delete:
@@ -592,6 +635,7 @@ paths:
         - { $ref: '#/components/parameters/BlockId' }
         - { name: reason, in: query, schema: { type: string } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '204': { description: Gelöscht }
         '409': { $ref: '#/components/responses/Problem' }
   /content-blocks/{blockId}/versions:
@@ -603,6 +647,7 @@ paths:
       x-extension: true
       parameters: [{ $ref: '#/components/parameters/BlockId' }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Versionen }
   /content-blocks/{blockId}/restore:
     post:
@@ -616,6 +661,7 @@ paths:
         required: true
         content: { application/json: { schema: { type: object, required: [versionNo], properties: { versionNo: { type: integer } } } } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
   /exports:
     post:
@@ -625,6 +671,7 @@ paths:
       x-requirements: [US-010, US-012, US-014]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExportRequest' } } } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Export erstellt }
         '409': { description: Blockiert (offene Blocker-/Datenschutzbefunde), content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
     get:
@@ -634,6 +681,7 @@ paths:
       x-requirements: [US-014]
       x-extension: true
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Exporte }
   /exports/{exportId}/download:
     get:
@@ -644,6 +692,7 @@ paths:
       x-extension: true
       parameters: [{ name: exportId, in: path, required: true, schema: { type: string } }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Datei }
   /traceability:
     get:
@@ -653,6 +702,7 @@ paths:
       x-requirements: [US-020]
       parameters: [{ name: format, in: query, schema: { type: string, enum: [json, csv, md, xlsx], default: json } }]
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Matrix }
   /settings:
     get:
@@ -662,6 +712,7 @@ paths:
       x-requirements: [US-005, US-001, US-015]
       x-extension: true
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Einstellungen }
     put:
       operationId: putSettings
@@ -671,6 +722,7 @@ paths:
       x-extension: true
       requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Einstellungen }
         '403': { $ref: '#/components/responses/Problem' }
   /reference:
@@ -681,6 +733,7 @@ paths:
       x-requirements: [US-003, US-004, US-010]
       x-extension: true
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Referenzdaten }
   /me:
     get:
@@ -690,6 +743,7 @@ paths:
       x-requirements: [US-003]
       x-extension: true
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Benutzer }
   /dashboard:
     get:
@@ -699,6 +753,7 @@ paths:
       x-requirements: [US-013]
       x-extension: true
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Kennzahlen }
   /audit-events:
     get:
@@ -712,11 +767,33 @@ paths:
         - { name: entityId, in: query, schema: { type: string } }
         - { name: limit, in: query, schema: { type: integer } }
       responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Ereignisse }
+  /auth/config:
+    get:
+      operationId: getAuthConfig
+      summary: Anmeldekonfiguration für die Web-UI (Betriebsart, OIDC-Issuer, Client-ID)
+      tags: [System]
+      x-requirements: [US-003, US-012]
+      x-extension: true
+      security: []
+      responses:
+        '200':
+          description: Konfiguration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode: { type: string, enum: [demo, oidc] }
+                  issuer: { type: string }
+                  clientId: { type: string }
+                  scope: { type: string }
+                  audience: { type: [string, 'null'] }
   /health:
     get:
       operationId: health
-      summary: Lebenszeichen
+      summary: Lebenszeichen (mit Datenbanktyp und Anmeldemodus)
       tags: [System]
       x-requirements: [US-020]
       x-extension: true

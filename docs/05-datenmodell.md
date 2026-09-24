@@ -1,6 +1,6 @@
 # 5. Datenmodell
 
-Migration: `apps/server/migrations/001_init.sql` (dialektneutral, ADR-003).
+Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql` (dialektneutral für SQLite und PostgreSQL, ADR-003).
 
 ## Entitäten aus Masterprompt §9 → Tabellen
 
@@ -9,7 +9,9 @@ Migration: `apps/server/migrations/001_init.sql` (dialektneutral, ADR-003).
 | Project | `projects` | Etappe 1: ein Standardprojekt `p_default` |
 | SourceDocument | `source_documents` | eindeutig je Projekt + Pfad |
 | SourceRevision | `source_revisions` | SHA-256, `revision_no`, `is_current`, Front-Matter; Original im Object-Store (`storage_key`) |
-| – | `imports`, `import_items` | Importlauf und Protokoll je Datei (`imported`/`identical`/`failed`/`skipped`) |
+| – | `imports`, `import_items` | Importlauf und Protokoll je Datei (`imported`/`identical`/`failed`/`skipped`), Reihenfolge über `position` |
+| – | `jobs` | persistente Jobqueue: Typ, Payload, Status, Versuche, `run_after`, Lease (ADR-008) |
+| – | `users` | Demo-Benutzer bzw. OIDC-Identitäten (`oidc:<sub>`) mit technischen Berechtigungen (ADR-009, ADR-011) |
 | Chapter / Subchapter | `chapters`, `subchapters` | Identität über normalisierten Titel ohne Nummerierung (E-02) |
 | TextSnippet | `text_snippets` | **unveränderlicher** Text, Position, Zeilen, `heading_path` (H3–H6), Hashes, Evidenzstatus, Markt, Release |
 | Role / Division | `roles`, `divisions` | Referenzdaten mit Icon, Label, Farbe |

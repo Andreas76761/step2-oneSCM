@@ -22,7 +22,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 
 | Etappe | Inhalt | Abnahme |
 |---|---|---|
-| **1 (dieser Commit)** | alle P0-Stories in erster, lauffähiger Ausprägung auf SQLite, Demo-Daten, Unit-/API-/E2E-Tests, CI, Doku | Tests grün, Traceability-Matrix vollständig, offene Entscheidungen sichtbar |
-| 2 | Klärung der P0-Entscheidungen (docs/04) und Umsetzung der Ergebnisse; PostgreSQL-Adapter; echte Authentifizierung (OIDC) | Fachliche Abnahme der Entscheidungen |
-| 3 | P1: Freigabeworkflow mit Vier-Augen-Prinzip, Terminologieverwaltung, Evidenzansicht, gefilterter Export HTML/PDF, Optimierungsdashboard-Ausbau | |
+| **1** ✅ | alle P0-Stories in erster, lauffähiger Ausprägung auf SQLite, Demo-Daten, Unit-/API-/E2E-Tests, CI, Doku | Tests grün, Traceability-Matrix vollständig, offene Entscheidungen sichtbar |
+| **2** ✅ | P0-Entscheidungen übernommen (24.09.2026); PostgreSQL-Adapter; OIDC-Anmeldung; persistente Jobqueue | Tests grün auf SQLite und PostgreSQL, Entscheidungsprotokoll |
+| 3 | P1: Freigabeworkflow (US-016, gemäß E-12 einstufig), Terminologieverwaltung, Evidenzansicht, gefilterter Export HTML/PDF, Optimierungsdashboard-Ausbau | |
 | 4 | P2: Vergleich ganzer Kapitelversionen; optional LLM-Umformulierung (ADR-007) mit Quellenbindung je Satz | |

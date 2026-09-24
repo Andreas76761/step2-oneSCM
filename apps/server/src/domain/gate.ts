@@ -1,4 +1,4 @@
-// Qualitätsgate (US-012). ANNAHME(E-12): keine Ausnahmen, einstufige Freigabe.
+// Qualitätsgate (US-012). ENTSCHEIDUNG(E-12): keine Ausnahmen, einstufige Freigabe.
 
 export interface GateBlock {
   id: string;

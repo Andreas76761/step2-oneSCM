@@ -1,5 +1,5 @@
 // Widerspruchsregeln (US-007, Masterprompt §7).
-// Befunde sind Prüfhinweise, keine fachliche Bewertung. ANNAHME(E-07): Schweregrade konfigurierbar.
+// Befunde sind Prüfhinweise, keine fachliche Bewertung. ENTSCHEIDUNG(E-07): Schweregrade konfigurierbar.
 import type { Severity } from './reference.js';
 
 export type ContradictionRule =

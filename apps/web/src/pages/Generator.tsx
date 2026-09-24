@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { post } from '../api';
-import { Assumption, Card, ErrorBox, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { Decision, Card, ErrorBox, Page, Status, errorText, useApp, useLoad } from '../components/ui';
 
 export function GeneratorPage() {
   const { notify, ref } = useApp();
@@ -23,7 +23,7 @@ export function GeneratorPage() {
 
   return (
     <Page title="Kapitelgenerator" subtitle="Professionelle Kapitelentwürfe ausschließlich aus bestätigten Quellen erzeugen">
-      <Assumption id="E-09">Der Generator ist extraktiv (ADR-007): Er übernimmt bestätigte Quelltexte, ordnet sie der Standardstruktur zu, führt exakte Dopplungen zusammen und setzt Querverweise für Canonical Topics. Es werden keine Inhalte erfunden; Abschnitte ohne Quelle werden als Lücke markiert.</Assumption>
+      <Decision id="E-09">Der Generator ist extraktiv (ADR-007): Er übernimmt bestätigte Quelltexte, ordnet sie der Standardstruktur zu, führt exakte Dopplungen zusammen und setzt Querverweise für Canonical Topics. Es werden keine Inhalte erfunden; Abschnitte ohne Quelle werden als Lücke markiert.</Decision>
       <Card>
         <ErrorBox error={chapters.error} />
         <table className="table">

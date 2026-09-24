@@ -1,5 +1,5 @@
 // Datenschutzprüfung (§13, US-012). Treffer sind Blocker für Freigabe und Export.
-// ANNAHME(E-07): Musterliste; Beispiel-Domains (RFC 2606) und Platzhalter werden nicht gemeldet.
+// ENTSCHEIDUNG(E-07): Musterliste; Beispiel-Domains (RFC 2606) und Platzhalter werden nicht gemeldet.
 
 export interface PrivacyHit {
   kind: 'email' | 'phone' | 'iban';

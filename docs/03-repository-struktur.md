@@ -25,10 +25,11 @@
 │   ├── migrations/                SQL-Migrationen (001_init.sql …)
 │   ├── src/
 │   │   ├── app.ts / index.ts      HTTP-App, Fehler als application/problem+json
-│   │   ├── config.ts              Konfiguration (Env) + vorläufige Annahmen
-│   │   ├── db.ts                  Datenbankzugriff + Migrationen
+│   │   ├── config.ts              Konfiguration (Env), Standardwerte der Entscheidungen
+│   │   ├── auth.ts                Anmeldung: OIDC (Bearer-JWT) oder Demo-Modus
+│   │   ├── db.ts                  Datenbankschnittstelle, Adapter SQLite/PostgreSQL, Migrationen
 │   │   ├── storage.ts             Object-Storage-Abstraktion (lokales FS)
-│   │   ├── jobs.ts                Hintergrundjobs (in-process Queue)
+│   │   ├── jobs.ts                persistente Jobqueue (Tabelle jobs)
 │   │   ├── domain/                reine Fachlogik, ohne I/O (unit-testbar)
 │   │   │   ├── reference.ts       Rollen, Sparten, Icons, Evidenzstatus
 │   │   │   ├── markdown.ts        Struktur-Extraktion
@@ -40,7 +41,7 @@
 │   │   │   └── gate.ts            Qualitätsgate
 │   │   ├── services/              Anwendungslogik mit DB
 │   │   └── routes/                HTTP-Routen je Ressource
-│   └── test/                      Vitest Unit- und API-Tests
+│   └── test/                      Vitest Unit- und API-Tests (SQLite; PostgreSQL mit TEST_DATABASE_URL)
 ├── apps/web/                      React + TypeScript (Vite)
 │   └── src/pages/                 eine Seite je Navigationspunkt (Abschnitt 14)
 └── e2e/                           Playwright

@@ -1,2 +1,3 @@
 import { defineConfig } from 'vitest/config';
-export default defineConfig({ test: { include: ['test/**/*.test.ts'], testTimeout: 20000, pool: 'forks' } });
+// Mit PostgreSQL teilen sich alle Testdateien eine Datenbank → nacheinander ausführen.
+export default defineConfig({ test: { include: ['test/**/*.test.ts'], testTimeout: 30000, pool: 'forks', fileParallelism: !process.env.TEST_DATABASE_URL } });

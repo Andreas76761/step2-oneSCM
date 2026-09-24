@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { post, qs } from '../api';
-import { Assumption, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Severity, Status, errorText, useApp, useLoad } from '../components/ui';
+import { Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Severity, Status, errorText, useApp, useLoad } from '../components/ui';
 import { SourceViewer } from './Sources';
 
 export function ContradictionsPage() {
@@ -11,7 +11,7 @@ export function ContradictionsPage() {
 
   return (
     <Page title="Widersprüche" subtitle="Widersprüchliche Aussagen vor der Generierung fachlich klären">
-      <Assumption id="E-07">Blocker: Negation, Pflicht/Optional, abweichende Zahl/Frist, Datenschutz. Hinweise sind Prüfvorschläge und keine fachliche Bewertung.</Assumption>
+      <Decision id="E-07">Blocker: Negation, Pflicht/Optional, abweichende Zahl/Frist, Datenschutz. Hinweise sind Prüfvorschläge und keine fachliche Bewertung.</Decision>
       <Card>
         <div className="filters">
           <label className="slider">Treffer ab Ähnlichkeit

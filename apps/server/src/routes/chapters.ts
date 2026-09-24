@@ -32,7 +32,7 @@ export function chapterRoutes(app: FastifyInstance, ctx: Ctx) {
   });
   app.delete<{ Params: { blockId: string }; Querystring: { reason?: string } }>('/content-blocks/:blockId', async (req, reply) => {
     const user = userOf(ctx, req, 'edit');
-    deleteBlock(ctx, req.params.blockId, req.query.reason, user.id);
+    await deleteBlock(ctx, req.params.blockId, req.query.reason, user.id);
     reply.code(204);
   });
   app.get<{ Params: { blockId: string } }>('/content-blocks/:blockId/versions', async (req) => (userOf(ctx, req), listBlockVersions(ctx, req.params.blockId)));

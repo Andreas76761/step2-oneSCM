@@ -1,10 +1,17 @@
 import type { FastifyRequest } from 'fastify';
-import { requirePermission, resolveUser, type Ctx, type User } from '../context.js';
+import { requirePermission, type Ctx, type User } from '../context.js';
 import type { Permission } from '../domain/reference.js';
 
-export function userOf(ctx: Ctx, req: FastifyRequest, perm: Permission = 'read'): User {
-  const header = req.headers['x-user-id'];
-  const user = resolveUser(ctx.db, Array.isArray(header) ? header[0] : header);
+declare module 'fastify' {
+  interface FastifyRequest {
+    user: User | null;
+  }
+}
+
+/** Angemeldeter Benutzer (gesetzt im onRequest-Hook) mit Prüfung der technischen Berechtigung. */
+export function userOf(_ctx: Ctx, req: FastifyRequest, perm: Permission = 'read'): User {
+  const user = req.user;
+  if (!user) throw new Error('Benutzer nicht aufgelöst');
   requirePermission(user, perm);
   return user;
 }

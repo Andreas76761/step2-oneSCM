@@ -71,22 +71,22 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   if (!['md', 'json'].includes(format)) throw badRequest('format muss md oder json sein.');
   const chapterIds = input.chapterIds?.length
     ? input.chapterIds
-    : ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved'", ctx.projectId).map((r) => r.chapter_id);
+    : (await ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved'", ctx.projectId)).map((r) => r.chapter_id as string);
 
   const blockers: { chapterId: string; checks: unknown }[] = [];
   const skipped: { chapterId: string; reason: string }[] = [];
   const chapters: any[] = [];
   for (const cid of chapterIds) {
-    const chapter = ctx.db.get('SELECT id, title, position FROM chapters WHERE id = ?', cid);
+    const chapter = await ctx.db.get('SELECT id, title, position FROM chapters WHERE id = ?', cid);
     if (!chapter) throw notFound(`Kapitel ${cid}`);
-    const gate = gateForChapter(ctx, cid, 'export');
+    const gate = await gateForChapter(ctx, cid, 'export');
     if (!gate.passed) blockers.push({ chapterId: cid, checks: gate.checks.filter((c) => !c.passed) });
-    const v = ctx.db.get("SELECT id FROM generated_chapter_versions WHERE chapter_id = ? AND status = 'approved'", cid);
+    const v = await ctx.db.get("SELECT id FROM generated_chapter_versions WHERE chapter_id = ? AND status = 'approved'", cid);
     if (!v) {
       skipped.push({ chapterId: cid, reason: `Kapitel „${chapter.title}“ hat keine freigegebene Version.` });
       continue;
     }
-    chapters.push({ ...getChapterVersion(ctx, v.id), position: chapter.position });
+    chapters.push({ ...(await getChapterVersion(ctx, v.id)), position: chapter.position });
   }
   if (blockers.length) throw conflict('Export blockiert: offene Blocker- oder Datenschutzbefunde.', { blockers });
   chapters.sort((a, b) => a.position - b.position);
@@ -100,22 +100,22 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   const key = `exports/${id}.${format}`;
   await ctx.store.put(key, Buffer.from(content, 'utf8'));
   const fileName = `onescm-handbuch-${now().slice(0, 10)}.${format}`;
-  ctx.db.run(
+  await ctx.db.run(
     'INSERT INTO exports (id, project_id, params, status, format, storage_key, file_name, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     id, ctx.projectId, json({ ...input, skipped }), 'completed', format, key, fileName, actor, now(),
   );
-  audit(ctx.db, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped });
+  await audit(ctx.db, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped });
   return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, downloadUrl: `/api/v1/exports/${id}/download`, preview: content.slice(0, 4000) };
 }
 
-export function listExports(ctx: Ctx) {
-  return ctx.db.all('SELECT * FROM exports WHERE project_id = ? ORDER BY created_at DESC', ctx.projectId).map((e) => ({
+export async function listExports(ctx: Ctx) {
+  return (await ctx.db.all('SELECT * FROM exports WHERE project_id = ? ORDER BY created_at DESC', ctx.projectId)).map((e) => ({
     id: e.id, status: e.status, format: e.format, fileName: e.file_name, params: parseJson(e.params, {}), createdBy: e.created_by, createdAt: e.created_at, downloadUrl: `/api/v1/exports/${e.id}/download`,
   }));
 }
 
 export async function downloadExport(ctx: Ctx, id: string) {
-  const e = ctx.db.get('SELECT * FROM exports WHERE id = ?', id);
+  const e = await ctx.db.get('SELECT * FROM exports WHERE id = ?', id);
   if (!e) throw notFound(`Export ${id}`);
   return { fileName: e.file_name as string, format: e.format as string, data: await ctx.store.get(e.storage_key) };
 }

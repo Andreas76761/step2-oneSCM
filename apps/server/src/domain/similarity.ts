@@ -1,5 +1,5 @@
 // Ähnlichkeits-Engine (US-005, US-006, ADR-006).
-// ANNAHME(E-05): TF-IDF-Kosinus über normalisierte Tokens; austauschbar über SimilarityEngine.
+// ENTSCHEIDUNG(E-05): TF-IDF-Kosinus über normalisierte Tokens; austauschbar über SimilarityEngine.
 import { createHash } from 'node:crypto';
 
 export const SIMILARITY_METHOD = 'tfidf-cosine';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { put } from '../api';
-import { Assumption, Card, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Decision, Card, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export function SettingsPage() {
   const { ref, notify } = useApp();
@@ -33,7 +33,7 @@ export function SettingsPage() {
 
   return (
     <Page title="Einstellungen" subtitle="Schwellenwerte, Blockerdefinition, Uploadgrenzen, Terminologie" actions={<button className="btn primary" onClick={save}>Speichern</button>}>
-      <Assumption id="E-01 · E-05 · E-07">Alle Werte sind vorläufige Annahmen zu offenen P0-Entscheidungen (docs/04-offene-entscheidungen.md) und bewusst konfigurierbar. Speichern erfordert die Berechtigung „admin“.</Assumption>
+      <Decision id="E-01 · E-05 · E-07">Die Standardwerte entsprechen den fachlichen Entscheidungen vom 24.09.2026 (docs/04-offene-entscheidungen.md) und bleiben konfigurierbar. Speichern erfordert die Berechtigung „admin“.</Decision>
       <div className="grid2">
         <Card title="Analyse (semantische Ähnlichkeit)">
           {slider('clusterThreshold', 'Clusterschwelle', 'Ab dieser Ähnlichkeit werden Texte zu einem Cluster vorgeschlagen.')}

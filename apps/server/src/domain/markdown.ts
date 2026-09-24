@@ -1,6 +1,6 @@
 // Struktur-Extraktion aus Markdown (US-002, ADR-005).
 // Der Parser führt kein HTML aus und rendert nichts; er liefert nur Struktur und Quellpositionen.
-// ANNAHME(E-02): Snippet-Granularität = Absatz | Liste | Tabelle | Codeblock | Zitat.
+// ENTSCHEIDUNG(E-02): Snippet-Granularität = Absatz | Liste | Tabelle | Codeblock | Zitat.
 import { parse as parseYaml } from 'yaml';
 
 export const NO_CHAPTER_TITLE = 'Ohne Kapitel';

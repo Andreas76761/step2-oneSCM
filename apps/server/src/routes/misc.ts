@@ -1,6 +1,6 @@
 // Export, Traceability, Einstellungen, Referenzdaten, Dashboard, Audit (US-010, US-012, US-013, US-014, US-020)
 import type { FastifyInstance } from 'fastify';
-import { audit, getSettings, resolveUser, saveSettings, type Ctx } from '../context.js';
+import { audit, getSettings, saveSettings, type Ctx } from '../context.js';
 import { parseJson } from '../db.js';
 import { RULE_LABELS } from '../domain/contradictions.js';
 import {
@@ -56,8 +56,8 @@ export function miscRoutes(app: FastifyInstance, ctx: Ctx) {
         if (a[k] !== undefined && (typeof a[k] !== 'number' || a[k] < 0.05 || a[k] > 1)) throw badRequest(`analysis.${k} muss eine Zahl zwischen 0,05 und 1 sein.`);
       }
     }
-    saveSettings(ctx.db, body);
-    audit(ctx.db, user.id, 'settings.updated', 'settings', 'project', body);
+    await saveSettings(ctx.db, body);
+    await audit(ctx.db, user.id, 'settings.updated', 'settings', 'project', body);
     return getSettings(ctx.db);
   });
 
@@ -66,35 +66,42 @@ export function miscRoutes(app: FastifyInstance, ctx: Ctx) {
     return {
       roles: ROLES, divisions: DIVISIONS, evidenceStatuses: EVIDENCE_STATUSES, findingTypes: FINDING_TYPES, severities: SEVERITIES, decisions: DECISIONS,
       sections: CHAPTER_SECTIONS, blockModes: BLOCK_MODES, permissions: PERMISSIONS, contradictionRules: RULE_LABELS,
-      markets: ctx.db.all('SELECT code, label FROM markets ORDER BY code'), releases: ctx.db.all('SELECT code, label FROM release_scopes ORDER BY code'),
-      users: ctx.db.all('SELECT id, name, permissions FROM users ORDER BY name').map((u) => ({ ...u, permissions: parseJson(u.permissions, []) })),
+      markets: await ctx.db.all('SELECT code, label FROM markets ORDER BY code'), releases: await ctx.db.all('SELECT code, label FROM release_scopes ORDER BY code'),
+      // Benutzerliste (für die Demo-Auswahl) nur im Demo-Modus
+      users: ctx.config.authMode === 'demo'
+        ? (await ctx.db.all("SELECT id, name, permissions FROM users WHERE id LIKE 'u-%' ORDER BY name")).map((u) => ({ ...u, permissions: parseJson(u.permissions, []) }))
+        : [],
     };
   });
-  app.get('/me', async (req) => {
-    const h = req.headers['x-user-id'];
-    return resolveUser(ctx.db, Array.isArray(h) ? h[0] : h);
-  });
+  app.get('/me', async (req) => userOf(ctx, req));
+
+  // Öffentlich: Anmeldekonfiguration für die Web-UI (ENTSCHEIDUNG E-15)
+  app.get('/auth/config', async () =>
+    ctx.config.authMode === 'oidc'
+      ? { mode: 'oidc', issuer: ctx.config.oidc!.issuer, clientId: ctx.config.oidc!.clientId, scope: ctx.config.oidc!.scope, audience: ctx.config.oidc!.audience }
+      : { mode: 'demo' },
+  );
 
   app.get('/dashboard', async (req) => {
     userOf(ctx, req);
     const { db } = ctx;
-    const one = (sql: string, ...p: unknown[]) => (db.get<{ n: number }>(sql, ...p)?.n ?? 0);
-    const snippets = one('SELECT COUNT(*) n FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1');
-    const byType = db.all("SELECT type, severity, COUNT(*) n FROM quality_findings WHERE status IN ('open','deferred') GROUP BY type, severity");
+    const one = async (sql: string, ...p: unknown[]) => (await db.get<{ n: number }>(sql, ...p))?.n ?? 0;
+    const snippets = await one('SELECT COUNT(*) AS n FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1');
+    const byType = await db.all("SELECT type, severity, COUNT(*) AS n FROM quality_findings WHERE status IN ('open','deferred') GROUP BY type, severity");
     return {
-      sources: one('SELECT COUNT(*) n FROM source_documents'),
-      revisions: one('SELECT COUNT(*) n FROM source_revisions'),
-      imports: one('SELECT COUNT(*) n FROM imports'),
-      chapters: one('SELECT COUNT(*) n FROM chapters'),
+      sources: await one('SELECT COUNT(*) AS n FROM source_documents'),
+      revisions: await one('SELECT COUNT(*) AS n FROM source_revisions'),
+      imports: await one('SELECT COUNT(*) AS n FROM imports'),
+      chapters: await one('SELECT COUNT(*) AS n FROM chapters'),
       snippets,
-      confirmedSnippets: one("SELECT COUNT(*) n FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1 AND s.evidence_status IN ('source_confirmed','manually_confirmed')"),
+      confirmedSnippets: await one("SELECT COUNT(*) AS n FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1 AND s.evidence_status IN ('source_confirmed','manually_confirmed')"),
       openFindings: byType,
-      clusters: one("SELECT COUNT(*) n FROM semantic_clusters WHERE status <> 'dissolved'"),
-      canonicalTopics: one('SELECT COUNT(*) n FROM canonical_topics'),
-      versions: db.all('SELECT status, COUNT(*) n FROM generated_chapter_versions GROUP BY status'),
-      roleCoverage: db.all('SELECT sr.role_code AS code, COUNT(*) n FROM snippet_roles sr JOIN text_snippets s ON s.id = sr.snippet_id JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1 GROUP BY sr.role_code'),
-      divisionCoverage: db.all('SELECT sd.division_code AS code, COUNT(*) n FROM snippet_divisions sd JOIN text_snippets s ON s.id = sd.snippet_id JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1 GROUP BY sd.division_code'),
-      lastAnalysis: db.get('SELECT id, status, started_at AS startedAt, finished_at AS finishedAt, stats FROM analysis_runs ORDER BY started_at DESC LIMIT 1') ?? null,
+      clusters: await one("SELECT COUNT(*) AS n FROM semantic_clusters WHERE status <> 'dissolved'"),
+      canonicalTopics: await one('SELECT COUNT(*) AS n FROM canonical_topics'),
+      versions: await db.all('SELECT status, COUNT(*) AS n FROM generated_chapter_versions GROUP BY status'),
+      roleCoverage: await db.all('SELECT sr.role_code AS code, COUNT(*) AS n FROM snippet_roles sr JOIN text_snippets s ON s.id = sr.snippet_id JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1 GROUP BY sr.role_code'),
+      divisionCoverage: await db.all('SELECT sd.division_code AS code, COUNT(*) AS n FROM snippet_divisions sd JOIN text_snippets s ON s.id = sd.snippet_id JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1 GROUP BY sd.division_code'),
+      lastAnalysis: (await db.get('SELECT id, status, started_at AS startedAt, finished_at AS finishedAt, stats FROM analysis_runs ORDER BY started_at DESC LIMIT 1')) ?? null,
     };
   });
 
@@ -106,7 +113,7 @@ export function miscRoutes(app: FastifyInstance, ctx: Ctx) {
     const p: unknown[] = [];
     if (entityType) (where.push('entity_type = ?'), p.push(entityType));
     if (entityId) (where.push('entity_id = ?'), p.push(entityId));
-    return ctx.db.all(`SELECT * FROM audit_events ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY at DESC LIMIT ?`, ...p, limit).map((e) => ({
+    return (await ctx.db.all(`SELECT * FROM audit_events ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY at DESC LIMIT ?`, ...p, limit)).map((e) => ({
       id: e.id, at: e.at, actor: e.actor, action: e.action, entityType: e.entity_type, entityId: e.entity_id, details: parseJson(e.details, {}),
     }));
   });

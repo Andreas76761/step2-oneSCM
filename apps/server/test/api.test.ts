@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import JSZip from 'jszip';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -7,6 +6,7 @@ import { buildApp } from '../src/app.js';
 import { REPO_ROOT } from '../src/config.js';
 import type { Ctx } from '../src/context.js';
 import { buildDemoZip } from '../scripts/demo-zip.js';
+import { freshDatabase, tempDir } from './helpers.js';
 
 type App = Awaited<ReturnType<typeof buildApp>>['app'];
 let app: App;
@@ -49,8 +49,8 @@ const openFindings = async (q = '') => (await call('GET', `/quality/findings?sta
 const blocks = (v: any) => v.sections.flatMap((s: any) => s.blocks);
 
 beforeAll(async () => {
-  dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'onescm-test-'));
-  ({ app, ctx } = await buildApp({ dataDir, dbPath: path.join(dataDir, 'test.db'), logger: false, webDist: null }));
+  dataDir = tempDir();
+  ({ app, ctx } = await buildApp({ dataDir, database: await freshDatabase(dataDir), logger: false, webDist: null, authMode: 'demo' }));
 });
 afterAll(async () => {
   await app.close();

@@ -1,12 +1,35 @@
+# Produktionsnahes Setup: App + PostgreSQL. Für OIDC AUTH_MODE=oidc und OIDC_* setzen (siehe README).
 services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: onescm
+      POSTGRES_USER: onescm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-onescm-change-me}
+    volumes:
+      - onescm-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U onescm -d onescm"]
+      interval: 5s
+      retries: 10
   app:
     build: .
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "3000:3000"
     environment:
+      DATABASE_URL: postgres://onescm:${POSTGRES_PASSWORD:-onescm-change-me}@db:5432/onescm
+      AUTH_MODE: ${AUTH_MODE:-demo}
+      OIDC_ISSUER: ${OIDC_ISSUER:-}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
+      OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
+      OIDC_PERMISSIONS_CLAIM: ${OIDC_PERMISSIONS_CLAIM:-roles}
       UPLOAD_MAX_BYTES: 52428800
       ZIP_MAX_FILES: 5000
     volumes:
       - onescm-data:/data
 volumes:
+  onescm-db:
   onescm-data:

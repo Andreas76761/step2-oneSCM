@@ -1,4 +1,4 @@
-import { Card, ErrorBox, Page, useLoad } from '../components/ui';
+import { Card, DownloadButton, ErrorBox, Page, useLoad } from '../components/ui';
 
 export function TraceabilityPage() {
   const m = useLoad<any>('/traceability');
@@ -8,9 +8,9 @@ export function TraceabilityPage() {
       subtitle="Anforderung ↔ API-Operation ↔ Test ↔ Dokumentation ↔ Release"
       actions={
         <>
-          <a className="btn" href="/api/v1/traceability?format=xlsx">⬇ Excel</a>
-          <a className="btn" href="/api/v1/traceability?format=csv">⬇ CSV</a>
-          <a className="btn" href="/api/v1/traceability?format=md">⬇ Markdown</a>
+          <DownloadButton href="/api/v1/traceability?format=xlsx" name="traceability.xlsx">⬇ Excel</DownloadButton>
+          <DownloadButton href="/api/v1/traceability?format=csv" name="traceability.csv">⬇ CSV</DownloadButton>
+          <DownloadButton href="/api/v1/traceability?format=md" name="traceability.md">⬇ Markdown</DownloadButton>
         </>
       }
     >
@@ -29,7 +29,7 @@ export function TraceabilityPage() {
                     <td><strong>{r.requirement}</strong></td>
                     <td>{r.title}</td>
                     <td>{r.priority}</td>
-                    <td className="small">{r.idStatus === 'provisional' ? 'vorläufig' : 'Masterprompt'}</td>
+                    <td className="small">{r.idStatus === 'decided' ? 'entschieden (E-14)' : 'Masterprompt'}</td>
                     <td className="small mono">{r.apiOperations.map((o: string) => <div key={o}>{o}</div>)}</td>
                     <td className="small">{r.tests.join(', ')}</td>
                     <td className="small">{r.documentation.map((d: string) => <div key={d}>{d}</div>)}</td>
