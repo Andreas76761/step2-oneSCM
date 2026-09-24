@@ -165,6 +165,12 @@ describe('Kontexthilfe für oneSCM (ADR-030)', () => {
       expect(answered.body).toContain('value="Wo lege ich Aufträge an?"');
       const log = await built.ctx.db.get("SELECT user_id, role_code FROM assistant_log WHERE user_id = 'help-widget'");
       expect(log).toMatchObject({ user_id: 'help-widget', role_code: 'hq' });
+      // Englisch angefragt, aber nicht übersetzt: Assistent antwortet aus der angezeigten deutschen Fassung
+      await call('PATCH', '/projects/p_default', { languages: ['en'] });
+      const en = await embed('/help/embed/p_default/order.create?language=en', { method: 'POST', payload: 'question=Wo+lege+ich+Auftr%C3%A4ge+an%3F&language=en' });
+      expect(en.body).toContain('Not yet translated');
+      expect(en.body).toContain('class="answer" role="status"');
+      expect(en.body.slice(en.body.indexOf('class="answer"'))).toContain('Menü Verkauf');
       const tooShort = await embed('/help/embed/p_default/order.create', { method: 'POST', payload: 'question=a' });
       expect(tooShort.statusCode).toBe(200);
       expect(tooShort.body).toContain('role="alert"');

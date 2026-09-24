@@ -12,7 +12,8 @@ export function connectionRoutes(app: FastifyInstance, ctx: Ctx) {
       const raw = typeof req.body === 'string' ? req.body : '';
       // GitHub sendet bei application/x-www-form-urlencoded das JSON im Feld „payload“
       const body = req.headers['content-type']?.includes('urlencoded') ? new URLSearchParams(raw).get('payload') ?? '' : raw;
-      const res = await handlePushWebhook(ctx, req.params.hookConnectionId, req.headers, req.headers['x-hub-signature-256'] ? raw : body);
+      // Signatur über den Rohrumpf, Auswertung des (ggf. aus dem Formularfeld gelösten) JSON
+      const res = await handlePushWebhook(ctx, req.params.hookConnectionId, req.headers, raw, body);
       reply.code(res.status === 'queued' ? 202 : 200);
       return res;
     });

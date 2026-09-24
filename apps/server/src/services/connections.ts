@@ -408,7 +408,7 @@ async function confluenceAttachments(ctx: Ctx, base: string, headers: Record<str
  * Eingehender Push eines Git-Servers: GitHub (X-Hub-Signature-256 = HMAC-SHA256 des Rumpfs) oder GitLab (X-Gitlab-Token).
  * Öffentlicher Endpunkt – authentisiert ausschließlich über das Geheimnis der Verbindung.
  */
-export async function handlePushWebhook(base: Ctx, connectionId: string, headers: Record<string, string | string[] | undefined>, rawBody: string) {
+export async function handlePushWebhook(base: Ctx, connectionId: string, headers: Record<string, string | string[] | undefined>, rawBody: string, payloadText = rawBody) {
   const h = (n: string) => {
     const v = headers[n];
     return Array.isArray(v) ? v[0] : v;
@@ -425,7 +425,7 @@ export async function handlePushWebhook(base: Ctx, connectionId: string, headers
   if (h('x-github-event') === 'ping') return { status: 'pong' };
   let payload: any = {};
   try {
-    payload = JSON.parse(rawBody || '{}');
+    payload = JSON.parse(payloadText || '{}');
   } catch {
     throw new Problem(400, 'Bad Request', 'Rumpf ist kein JSON.');
   }

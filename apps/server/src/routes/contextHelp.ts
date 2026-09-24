@@ -141,7 +141,8 @@ export async function publicHelpRoutes(app: FastifyInstance, base: Ctx, embedOri
         state.question = String(input.question ?? '').slice(0, 500);
         try {
           const rel = await latestRelease(ctx);
-          state.answer = await ask(ctx, { question: state.question, language: lang, role, division }, helpUser, { versionIds: rel?.chapters.map((c) => c.chapterVersionId) ?? [] });
+          // Sprache der angezeigten Hilfe: ohne freigegebene Übersetzung die deutsche Fassung
+          state.answer = await ask(ctx, { question: state.question, language: state.help.language, role, division }, helpUser, { versionIds: rel?.chapters.map((c) => c.chapterVersionId) ?? [] });
         } catch (e) {
           if (!(e instanceof Problem) || e.status >= 500) throw e;
           state.error = e.detail;

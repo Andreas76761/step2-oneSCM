@@ -124,6 +124,12 @@ describe('Integrationen & API (ADR-028)', () => {
       await expect(assertSafeUrl('http://example.org/x', false)).rejects.toThrow(/https/);
       await expect(assertSafeUrl('https://127.0.0.1/x', false)).rejects.toThrow(/internen Netz/);
       await expect(assertSafeUrl('https://10.1.2.3/x', false)).rejects.toThrow(/internen Netz/);
+      // IPv4-abgebildete und Link-Local-Adressen (IPv6) sowie weitere nicht öffentliche Bereiche
+      for (const host of ['[::ffff:127.0.0.1]', '[::ffff:7f00:1]', '[::ffff:a00:1]', '[fe81::1]', '[febf::1]', '[::1]', '[::]', '[fd00::1]', '[ff02::1]', '0.0.0.0', '169.254.169.254', '100.64.0.1', '192.0.0.8', '198.18.0.1', '224.0.0.1']) {
+        await expect(assertSafeUrl(`https://${host}/x`, false), host).rejects.toThrow(/internen Netz/);
+      }
+      await expect(assertSafeUrl('https://[2606:4700:4700::1111]/x', false)).resolves.toBeTruthy();
+      await expect(assertSafeUrl('https://1.1.1.1/x', false)).resolves.toBeTruthy();
       await expect(assertSafeUrl('https://user:pw@hooks.example.org/x', false)).rejects.toThrow(/Zugangsdaten/);
     } finally {
       delete process.env.JOB_BACKOFF_MS;
@@ -167,6 +173,14 @@ describe('Integrationen & API (ADR-028)', () => {
       expect(ok.statusCode).toBe(202);
       await built.ctx.jobs.idle();
       expect((await call('GET', `/source-connections/${conn.id}`)).json).toMatchObject({ status: 'idle', lastCommit: git('rev-parse', 'HEAD') });
+      // GitHub mit Inhaltstyp application/x-www-form-urlencoded: Signatur über den Rohrumpf, JSON im Feld „payload“
+      const form = `payload=${encodeURIComponent(raw)}`;
+      const viaForm = await built.app.inject({
+        method: 'POST', url: conn.webhookPath, payload: form,
+        headers: { 'content-type': 'application/x-www-form-urlencoded', 'x-github-event': 'push', 'x-hub-signature-256': `sha256=${createHmac('sha256', conn.webhookSecret).update(form).digest('hex')}` },
+      });
+      expect(viaForm.statusCode, viaForm.body).toBe(202);
+      await built.ctx.jobs.idle();
       // GitLab: Token-Header
       expect((await push({ ref: 'refs/heads/main', project: { default_branch: 'main' } }, { 'x-gitlab-token': conn.webhookSecret })).statusCode).toBe(202);
       await built.ctx.jobs.idle();

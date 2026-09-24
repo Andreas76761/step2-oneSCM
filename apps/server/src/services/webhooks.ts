@@ -1,7 +1,7 @@
 // Ausgehende Webhooks (ADR-028): Abos je Projekt, HMAC-signierte Zustellung über die Jobqueue mit Wiederholung.
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { lookup } from 'node:dns/promises';
-import { isIP } from 'node:net';
+import { BlockList, isIP } from 'node:net';
 import { audit, WEBHOOK_EVENTS, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { badRequest, notFound } from '../problem.js';
@@ -20,8 +20,29 @@ export function verifySignature(secret: string, timestamp: string, body: string,
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
-const PRIVATE_V4 = [/^10\./, /^127\./, /^169\.254\./, /^172\.(1[6-9]|2\d|3[01])\./, /^192\.168\./, /^0\./, /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./];
-const isPrivate = (ip: string) => (isIP(ip) === 4 ? PRIVATE_V4.some((r) => r.test(ip)) : /^(::1|fc|fd|fe80|::ffff:(10|127|192\.168|169\.254)\.)/i.test(ip) || ip === '::');
+// Nicht öffentliche Bereiche (RFC 6890 u. a.): privat, Loopback, Link-Local, CGNAT, Benchmark, Multicast, reserviert
+const BLOCKED = new BlockList();
+for (const [net, prefix] of [['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.0.2.0', 24],
+  ['192.168.0.0', 16], ['198.18.0.0', 15], ['198.51.100.0', 24], ['203.0.113.0', 24], ['224.0.0.0', 4], ['240.0.0.0', 4]] as const) BLOCKED.addSubnet(net, prefix, 'ipv4');
+for (const [net, prefix] of [['::', 128], ['::1', 128], ['fc00::', 7], ['fe80::', 10], ['fec0::', 10], ['ff00::', 8], ['2001:db8::', 32], ['64:ff9b::', 96], ['100::', 64]] as const) BLOCKED.addSubnet(net, prefix, 'ipv6');
+
+/** IPv4 hinter einer IPv4-abgebildeten bzw. -kompatiblen IPv6-Adresse (::ffff:7f00:1 oder ::ffff:127.0.0.1) */
+function embeddedV4(ip: string): string | null {
+  const m = /^::(?:ffff:(?:0:)?)?(?:(\d+\.\d+\.\d+\.\d+)|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/i.exec(ip);
+  if (!m) return null;
+  if (m[1]) return m[1];
+  const hi = parseInt(m[2], 16);
+  const lo = parseInt(m[3], 16);
+  return `${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`;
+}
+
+export function isPrivateAddress(ip: string): boolean {
+  const family = isIP(ip);
+  if (family === 4) return BLOCKED.check(ip, 'ipv4');
+  if (family !== 6) return true; // unbekanntes Format: sicherheitshalber sperren
+  const v4 = embeddedV4(ip);
+  return (v4 !== null && BLOCKED.check(v4, 'ipv4')) || BLOCKED.check(ip, 'ipv6');
+}
 
 /** Ziel-URL prüfen: https, keine Zugangsdaten, kein internes Netz (SSRF) – außer INTEGRATIONS_ALLOW_INSECURE (Tests, abgeschottete Netze) */
 export async function assertSafeUrl(raw: string, allowInsecure: boolean, resolve = true) {
@@ -37,7 +58,7 @@ export async function assertSafeUrl(raw: string, allowInsecure: boolean, resolve
   const host = url.hostname.replace(/^\[|\]$/g, '');
   const addresses = isIP(host) ? [host] : (await lookup(host, { all: true }).catch(() => [])).map((a) => a.address);
   if (!addresses.length) throw badRequest(`Host ${host} ist nicht auflösbar.`);
-  if (addresses.some(isPrivate)) throw badRequest('Ziele im internen Netz sind nicht erlaubt.');
+  if (addresses.some(isPrivateAddress)) throw badRequest('Ziele im internen Netz sind nicht erlaubt.');
   return url;
 }
 
