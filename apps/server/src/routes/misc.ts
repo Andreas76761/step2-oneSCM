@@ -57,6 +57,8 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
         if (a[k] !== undefined && (typeof a[k] !== 'number' || a[k] < 0.05 || a[k] > 1)) throw badRequest(`analysis.${k} muss eine Zahl zwischen 0,05 und 1 sein.`);
       }
     }
+    const mins = body.rewrite?.minSupport;
+    if (mins !== undefined && (typeof mins !== 'number' || mins < 0.1 || mins > 1)) throw badRequest('rewrite.minSupport muss eine Zahl zwischen 0,1 und 1 sein.');
     await saveSettings(req.ctx.db, body);
     await audit(req.ctx.db, user.id, 'settings.updated', 'settings', 'project', body);
     return getSettings(req.ctx.db);

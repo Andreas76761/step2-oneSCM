@@ -30,9 +30,9 @@ export function ProjectsPage({ onChanged }: { onChanged: () => void }) {
   return (
     <Page title="Projekte" subtitle="Mehrere Handbücher getrennt verwalten – Daten, Freigaben und Audit sind je Projekt getrennt">
       <ErrorBox error={projects.error} />
-      <div className="grid2">
-        <Card title="Projekte">
+      <Card title="Projekte">
           {!projects.data?.length ? <Empty>Keine zugänglichen Projekte.</Empty> : (
+            <div className="table-wrap">
             <table className="table">
               <thead><tr><th>Name</th><th>Sichtbarkeit</th><th>Kapitel</th><th>Quellen</th><th>Meine Rechte</th><th /></tr></thead>
               <tbody>
@@ -63,11 +63,12 @@ export function ProjectsPage({ onChanged }: { onChanged: () => void }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
           <p className="small muted">Offen: alle angemeldeten Benutzer mit ihren globalen Berechtigungen. Eingeschränkt: nur Mitglieder mit den hier vergebenen Berechtigungen. Archivierte Projekte sind nur lesbar.</p>
-        </Card>
-        {isAdmin && (
-          <Card title="Neues Projekt">
+      </Card>
+      {isAdmin && (
+        <Card title="Neues Projekt">
             <label className="block">Name <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} aria-label="Projektname" /></label>
             <label className="block">Beschreibung (optional) <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} aria-label="Projektbeschreibung" /></label>
             <label className="block">Sichtbarkeit
@@ -79,9 +80,8 @@ export function ProjectsPage({ onChanged }: { onChanged: () => void }) {
             <button className="btn primary" disabled={!form.name.trim()} onClick={async () => {
               if (await run(() => post('/projects', form), `Projekt „${form.name}“ angelegt.`)) setForm({ name: '', description: '', visibility: 'restricted' });
             }}>Anlegen</button>
-          </Card>
-        )}
-      </div>
+        </Card>
+      )}
       {membersOf && isAdmin && <Members projectId={membersOf} name={projects.data?.find((p) => p.id === membersOf)?.name ?? ''} />}
     </Page>
   );

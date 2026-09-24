@@ -2,6 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
 import { acceptProposal, getProposal, listProposals, llmStatus, proposeRewrite, rejectProposal } from '../services/rewrite.js';
+import { acceptValid, cancelBatch, getBatch, listBatches, llmUsage, startBatch, versionProposals } from '../services/rewriteBatch.js';
 import { userOf } from './helpers.js';
 
 export function rewriteRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -22,4 +23,25 @@ export function rewriteRoutes(app: FastifyInstance, _ctx: Ctx) {
     const user = userOf(req.ctx, req, 'edit');
     return rejectProposal(req.ctx, req.params.proposalId, req.body ?? {}, user.id);
   });
+
+  // Ganze Kapitel (Hintergrundjob), Sammelprüfung und Nutzung
+  app.post<{ Params: { versionId: string }; Body: { instructions?: string } }>('/chapter-versions/:versionId/rewrite-jobs', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    const batch = await startBatch(req.ctx, req.params.versionId, req.body ?? {}, user.id);
+    reply.code(202).header('Location', `/api/v1/rewrite-jobs/${batch.id}`);
+    return batch;
+  });
+  app.get<{ Params: { versionId: string } }>('/chapter-versions/:versionId/rewrite-jobs', async (req) => (userOf(req.ctx, req), listBatches(req.ctx, req.params.versionId)));
+  app.get<{ Params: { batchId: string } }>('/rewrite-jobs/:batchId', async (req) => (userOf(req.ctx, req), getBatch(req.ctx, req.params.batchId)));
+  app.post<{ Params: { batchId: string } }>('/rewrite-jobs/:batchId/cancel', async (req) => {
+    const user = userOf(req.ctx, req, 'edit');
+    return cancelBatch(req.ctx, req.params.batchId, user.id);
+  });
+  app.get<{ Params: { versionId: string }; Querystring: { status?: string } }>('/chapter-versions/:versionId/rewrite-proposals', async (req) =>
+    (userOf(req.ctx, req), versionProposals(req.ctx, req.params.versionId, req.query.status)));
+  app.post<{ Params: { versionId: string }; Body: { proposalIds?: string[]; reason?: string } }>('/chapter-versions/:versionId/rewrite-proposals/accept-valid', async (req) => {
+    const user = userOf(req.ctx, req, 'edit');
+    return acceptValid(req.ctx, req.params.versionId, req.body ?? {}, user.id);
+  });
+  app.get<{ Querystring: { from?: string; to?: string } }>('/llm/usage', async (req) => (userOf(req.ctx, req), llmUsage(req.ctx, req.query)));
 }

@@ -176,3 +176,22 @@ test('[T-206] Projekte: anlegen, wechseln, Daten getrennt, Mitglied hinzufügen'
   await page.goto('/werkstatt');
   await expect(page.getByRole('button', { name: '4. Vertragsbearbeitung' })).toBeVisible();
 });
+
+test('[T-207] Ganzes Kapitel umformulieren: Fortschritt, Sammelprüfung, alle gültigen übernehmen; Nutzung in den Einstellungen', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '3. Benutzerverwaltung');
+  await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h });
+
+  await page.goto(`/werkstatt/${ch.id}`);
+  await page.getByRole('button', { name: '✨ Kapitel umformulieren' }).click();
+  const panel = page.getByRole('region', { name: 'KI-Umformulierung des Kapitels' });
+  await panel.getByRole('button', { name: 'Vorschläge für alle Absätze anfordern' }).click();
+  await expect(panel.getByRole('heading', { name: /Sammelprüfung: \d+ offene Vorschläge/ })).toBeVisible();
+  await expect(panel).toContainText('abgeschlossen');
+  await panel.getByRole('button', { name: /Alle gültigen übernehmen/ }).click();
+  await expect(page.getByText(/\d+ Vorschläge übernommen/)).toBeVisible();
+  await expect(page.locator('.tag.st-ai_rewritten').first()).toBeVisible();
+
+  await page.goto('/einstellungen');
+  await expect(page.getByRole('cell', { name: 'demo/demo-extractive' })).toBeVisible();
+});

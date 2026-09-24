@@ -247,3 +247,88 @@ describe('Backup und Wiederherstellung (ADR-015)', () => {
     }
   });
 });
+
+describe('KI-Umformulierung ganzer Kapitel (ADR-013, Etappe 6)', () => {
+  const dataDir = tempDir();
+  let built: Awaited<ReturnType<typeof buildApp>>;
+  const call = async (method: 'GET' | 'POST', url: string, body?: unknown, user = 'u-redaktion') => {
+    const res = await built.app.inject({ method, url: `/api/v1${url}`, payload: body as any, headers: { 'x-user-id': user } });
+    return { status: res.statusCode, json: res.json() as any };
+  };
+  beforeAll(async () => {
+    built = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'kapitel-ki'), logger: false, webDist: null, authMode: 'demo', llm: { provider: 'demo', model: 'demo-extractive' } });
+    const content = `---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# 1. Batch\n\n## 1.1 Zweck\n\nDieses Kapitel beschreibt die Stapelverarbeitung.\n\n## 1.2 Schritte\n\n1. Kapitel öffnen.\n2. Umformulierung starten.\n\nErgebnis: Alle Absätze haben einen Vorschlag.\n\nHinweis: Vorschläge werden einzeln geprüft.\n`;
+    const mp = multipart('batch.md', Buffer.from(content));
+    await built.app.inject({ method: 'POST', url: '/api/v1/imports', payload: mp.payload, headers: { ...mp.headers, 'x-user-id': 'u-admin' } });
+    await built.ctx.jobs.idle();
+  });
+  afterAll(async () => {
+    await built.app.close();
+    fs.rmSync(dataDir, { recursive: true, force: true });
+  });
+
+  it('[T-136] Hintergrundjob je Kapitel, Sammelprüfung, Sammelübernahme, Abbruch, Fortsetzen und Nutzung', async () => {
+    const chapterId = (await call('GET', '/chapters')).json[0].id;
+    const v = (await call('POST', `/chapters/${chapterId}/generate`)).json;
+    // geeignet: aus Quelltext abgeleitete Absätze; erzeugte Rollen-/Statushinweise nicht
+    const eligible = v.sections.flatMap((s: any) => s.blocks).filter((b: any) => b.sources.length && ['paragraph', 'list', 'note', 'tip', 'warning'].includes(b.kind) && !['responsibilities', 'status'].includes(b.section));
+    expect(eligible.length).toBe(4);
+    const statusBlock = v.sections.find((s: any) => s.code === 'status').blocks[0];
+    expect((await call('POST', `/content-blocks/${statusBlock.id}/rewrite-proposals`)).status).toBe(422);
+    expect((await call('POST', `/chapter-versions/${v.id}/rewrite-jobs`, {}, 'u-leser')).status).toBe(403);
+
+    // Läuft bereits ein Auftrag, wird kein zweiter gestartet
+    await built.ctx.db.run("INSERT INTO rewrite_batches (id, chapter_version_id, status, created_by, created_at) VALUES ('rwb_x', ?, 'processing', 'u-admin', '2026-09-24T00:00:00Z')", v.id);
+    expect((await call('POST', `/chapter-versions/${v.id}/rewrite-jobs`)).status).toBe(409);
+    await built.ctx.db.run("DELETE FROM rewrite_batches WHERE id = 'rwb_x'");
+
+    const started = await call('POST', `/chapter-versions/${v.id}/rewrite-jobs`, { instructions: 'kürzer' });
+    expect(started.status).toBe(202);
+    expect(started.json).toMatchObject({ status: 'queued', total: eligible.length });
+    await built.ctx.jobs.idle();
+    const done = (await call('GET', `/rewrite-jobs/${started.json.id}`)).json;
+    expect(done).toMatchObject({ status: 'completed', total: eligible.length, done: eligible.length, valid: eligible.length, invalid: 0, failed: 0, instructions: 'kürzer' });
+    expect((await call('GET', `/chapter-versions/${v.id}/rewrite-jobs`)).json[0].id).toBe(started.json.id);
+
+    // Sammelprüfung: offene Vorschläge mit Abschnitt; kein zweiter Lauf für dieselben Absätze
+    const open = (await call('GET', `/chapter-versions/${v.id}/rewrite-proposals`)).json;
+    expect(open).toHaveLength(eligible.length);
+    expect(open.every((p: any) => p.batchId === started.json.id && p.section && p.proposedText)).toBe(true);
+    expect((await call('POST', `/chapter-versions/${v.id}/rewrite-jobs`)).status).toBe(422);
+
+    // Ausgewählte übernehmen, dann alle übrigen gültigen
+    const first = await call('POST', `/chapter-versions/${v.id}/rewrite-proposals/accept-valid`, { proposalIds: [open[0].id] });
+    expect(first.json).toEqual({ accepted: [open[0].id], errors: [] });
+    const rest = (await call('POST', `/chapter-versions/${v.id}/rewrite-proposals/accept-valid`)).json;
+    expect(rest.accepted).toHaveLength(eligible.length - 1);
+    const after = (await call('GET', `/chapter-versions/${v.id}`)).json.sections.flatMap((s: any) => s.blocks);
+    expect(after.filter((b: any) => b.mode === 'ai_rewritten')).toHaveLength(eligible.length);
+    expect((await call('GET', `/chapter-versions/${v.id}/gate`)).json.checks.find((c: any) => c.code === 'sentence_evidence').passed).toBe(true);
+
+    // Nutzung je Anbieter/Modell
+    const usage = (await call('GET', '/llm/usage')).json;
+    expect(usage.items).toEqual([expect.objectContaining({ provider: 'demo', model: 'demo-extractive', requests: eligible.length, accepted: eligible.length })]);
+    expect(usage.totals.requests).toBe(eligible.length);
+
+    // Abbruch: vor dem ersten Absatz angefordert → cancelled, nichts übertragen
+    await built.ctx.jobs.stop();
+    const b2 = (await call('POST', `/chapter-versions/${v.id}/rewrite-jobs`)).json;
+    expect((await call('POST', `/rewrite-jobs/${b2.id}/cancel`)).json.cancelRequested).toBe(true);
+    await built.ctx.jobs.start();
+    await built.ctx.jobs.idle();
+    expect((await call('GET', `/rewrite-jobs/${b2.id}`)).json).toMatchObject({ status: 'cancelled', done: 0 });
+    expect((await call('POST', `/rewrite-jobs/${b2.id}/cancel`)).status).toBe(409);
+
+    // Fortsetzen nach Neustart: bereits bearbeitete Absätze werden nicht erneut übertragen
+    await built.ctx.jobs.stop();
+    const b3 = (await call('POST', `/chapter-versions/${v.id}/rewrite-jobs`)).json;
+    const { proposeRewrite } = await import('../src/services/rewrite.js');
+    await proposeRewrite(built.ctx, eligible[0].id, { batchId: b3.id }, 'u-redaktion');
+    await built.ctx.jobs.start();
+    await built.ctx.jobs.idle();
+    const r3 = (await call('GET', `/rewrite-jobs/${b3.id}`)).json;
+    expect(r3).toMatchObject({ status: 'completed', done: eligible.length - 1 });
+    const n = await built.ctx.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM rewrite_proposals WHERE batch_id = ?', b3.id);
+    expect(Number(n!.n)).toBe(eligible.length);
+  });
+});

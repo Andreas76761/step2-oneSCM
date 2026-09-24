@@ -112,6 +112,8 @@ fieldset { border: 1px solid var(--border); border-radius: 8px; margin: 8px 0; p
 .slider { display: flex; gap: 8px; align-items: center; }
 
 .table { width: 100%; border-collapse: collapse; }
+.table-wrap { overflow-x: auto; }
+.table td.row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .table th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); padding: 8px; background: var(--surface-2); }
 .table td { border-bottom: 1px solid var(--border); padding: 8px; vertical-align: top; }
 .table.compact td, .table.compact th { padding: 5px 8px; }
@@ -196,6 +198,11 @@ dl.meta dd { margin: 0; }
 .rewrite-sentences li { margin-bottom: .25rem; }
 .rewrite-sentences li.fail { color: var(--danger); }
 .sev-text { color: var(--danger); }
+.rewrite-batch { border: 1px dashed #8b5cf6; }
+.batch-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 6px 0 10px; }
+.batch-status progress { width: 220px; }
+.batch-list { list-style: none; padding: 0; margin: 0; }
+.batch-list > li { border-top: 1px solid var(--border); padding: 10px 0; }
 .block.kind-gap { border-style: dashed; color: var(--muted); }
 .block.kind-warning { background: var(--danger-bg); }
 .block.kind-note, .block.kind-tip { background: var(--info-bg); }

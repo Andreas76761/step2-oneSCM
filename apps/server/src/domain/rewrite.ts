@@ -157,6 +157,15 @@ export function joinSentences(kind: string, sentences: { text: string }[]): stri
 
 const squash = (t: string) => t.replace(/\s+/g, ' ').trim();
 
+/**
+ * Nur Absätze, die selbst durch ihre Quellen gedeckt sind, lassen sich prüfbar umformulieren
+ * (nicht z. B. vom Generator erzeugte Rollen- oder Statushinweise).
+ */
+export function derivedFromSources(text: string, sources: RewriteSource[], minSupport: number): boolean {
+  const [c] = checkSentences([{ text, sources: sources.map((s) => s.label) }], sources, { minSupport });
+  return !c.issues.includes('low_support');
+}
+
 /** Qualitätsgate: gespeicherte Satz-Evidenz passt zum Blocktext und zu den Quellen des Blocks. */
 export function sentenceEvidenceProblems(b: { kind: string; text: string; mode: string; sourceIds: string[]; sentences: { text: string; sourceIds: string[] }[] | null }): string[] {
   if (!b.sentences) return b.mode === 'ai_rewritten' ? ['keine Satz-Evidenz gespeichert'] : [];

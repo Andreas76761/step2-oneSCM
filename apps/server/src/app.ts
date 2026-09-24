@@ -21,6 +21,7 @@ import { sourceRoutes } from './routes/sources.js';
 import { terminologyRoutes } from './routes/terminology.js';
 import { failAnalysisJob, runAnalysis } from './services/analysis.js';
 import { failImportJob, runImportJob } from './services/imports.js';
+import { failBatch, runBatch } from './services/rewriteBatch.js';
 import { assertParamsInProject, resolveProject, withProject } from './services/projects.js';
 import { seedTerminology } from './services/terminology.js';
 import { createObjectStore } from './storage.js';
@@ -60,6 +61,10 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
   const runCtx = (p: any) => jobCtx('SELECT project_id FROM analysis_runs WHERE id = ?', p.runId);
   jobs.register('import', async (p) => runImportJob(await importCtx(p), p), async (p, err) => failImportJob(await importCtx(p), p, err));
   jobs.register('analysis', async (p) => void (await runAnalysis(await runCtx(p), p.runId)), async (p, err) => failAnalysisJob(await runCtx(p), p, err));
+  const batchCtx = (p: any) => jobCtx(
+    'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?', p.batchId,
+  );
+  jobs.register('rewrite-batch', async (p) => runBatch(await batchCtx(p), p.batchId), async (p, err) => failBatch(await batchCtx(p), p.batchId, err));
   if (options.worker !== false && process.env.JOB_WORKER !== '0') await jobs.start();
 
   await app.register(multipart, { limits: { fileSize: 512 * 1024 * 1024, files: 1 } });
