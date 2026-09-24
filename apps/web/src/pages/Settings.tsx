@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { put } from '../api';
+import { api, del, put } from '../api';
 import { Decision, Card, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export function SettingsPage() {
@@ -81,6 +81,7 @@ export function SettingsPage() {
           <label className="block">Max. Wörter je Satz <input type="number" value={draft.readability.maxSentenceWords} onChange={(e) => setDraft({ ...draft, readability: { maxSentenceWords: Number(e.target.value) } })} /></label>
           <p className="small muted">Begriffe werden seit Etappe 3 unter <Link to="/terminologie">Terminologie</Link> gepflegt.</p>
         </Card>
+        <LayoutCard />
         <Card title="KI-Umformulierung">
           <label className="block">Mindestabdeckung je Satz durch die zitierten Quellen (0,1–1)
             <input type="number" step="0.05" min="0.1" max="1" value={draft.rewrite.minSupport} onChange={(e) => setDraft({ ...draft, rewrite: { minSupport: Number(e.target.value) } })} />
@@ -89,6 +90,90 @@ export function SettingsPage() {
         </Card>
       </div>
     </Page>
+  );
+}
+
+/** Kontrast zu Weiß (WCAG) – die Hausfarbe dient als Hintergrund weißer Schrift und als Schriftfarbe */
+function contrast(hex: string) {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return 0;
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 1.05 / (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] + 0.05);
+}
+
+/** Firmen-Layout (ADR-038) für PDF, HTML, Word und Online-Hilfe */
+function LayoutCard() {
+  const { notify } = useApp();
+  const layout = useLoad<any>('/layout');
+  const media = useLoad<any[]>('/media');
+  const [d, setD] = useState<any | null>(null);
+  useEffect(() => setD(layout.data ? { ...layout.data } : null), [layout.data]);
+  if (!d) return <Card title="Layout"><ErrorBox error={layout.error} /></Card>;
+  const ratio = contrast(d.primaryColor);
+  const set = (k: string, v: unknown) => setD({ ...d, [k]: v });
+  const save = async () => {
+    try {
+      const { docxTemplate: _t, ...body } = d;
+      await put('/layout', body);
+      notify('Layout gespeichert.');
+      layout.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const uploadLogo = async (file?: File) => {
+    if (!file) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const m = await api<any>('POST', '/media', fd);
+      set('logoSha', m.sha256);
+      media.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const uploadTemplate = async (file?: File) => {
+    if (!file) return;
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      await api('POST', '/layout/docx-template', fd);
+      notify(`Word-Vorlage „${file.name}“ übernommen.`);
+      layout.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const logos = (media.data ?? []).filter((m) => m.mime === 'image/png' || m.mime === 'image/jpeg');
+  const tpl = layout.data?.docxTemplate;
+  return (
+    <Card title="Layout (PDF, HTML, Word, Online-Hilfe)">
+      <label className="block">Firmenname <input value={d.companyName ?? ''} onChange={(e) => set('companyName', e.target.value)} /></label>
+      <div className="form-row">
+        <label>Hausfarbe <input type="color" value={d.primaryColor} onChange={(e) => set('primaryColor', e.target.value)} aria-label="Hausfarbe (Farbwähler)" /></label>
+        <label>Farbwert <input value={d.primaryColor} onChange={(e) => set('primaryColor', e.target.value)} aria-label="Hausfarbe als Farbwert" /></label>
+        <span className={`small ${ratio >= 4.5 ? '' : 'error-text'}`} role="status">Kontrast zu Weiß {ratio.toFixed(1)} : 1 {ratio >= 4.5 ? '✓' : '– zu hell (mind. 4,5 : 1)'}</span>
+      </div>
+      <div className="form-row">
+        <label>Logo
+          <select value={d.logoSha ?? ''} onChange={(e) => set('logoSha', e.target.value || null)}>
+            <option value="">kein Logo</option>
+            {logos.map((m) => <option key={m.sha256} value={m.sha256}>{m.originalName ?? m.sha256.slice(0, 12)}{m.width ? ` (${m.width}×${m.height})` : ''}</option>)}
+          </select>
+        </label>
+        <label>Logo hochladen (PNG/JPEG) <input type="file" accept="image/png,image/jpeg" onChange={(e) => void uploadLogo(e.target.files?.[0])} /></label>
+      </div>
+      <label className="inline"><input type="checkbox" checked={!!d.cover} onChange={(e) => set('cover', e.target.checked)} /> Titelseite mit Logo, Firmenname, Untertitel und Vertraulichkeitshinweis</label>
+      <label className="block">Untertitel der Titelseite <input value={d.coverSubtitle ?? ''} onChange={(e) => set('coverSubtitle', e.target.value)} /></label>
+      <div className="form-row">
+        <label>Kopfzeile <input value={d.headerText ?? ''} onChange={(e) => set('headerText', e.target.value)} placeholder="Standard: Firmenname · Titel" /></label>
+        <label>Fußzeile <input value={d.footerText ?? ''} onChange={(e) => set('footerText', e.target.value)} placeholder="z. B. Nur für den internen Gebrauch" /></label>
+      </div>
+      <label className="block">Vertraulichkeitshinweis <input value={d.confidentiality ?? ''} onChange={(e) => set('confidentiality', e.target.value)} placeholder="z. B. VERTRAULICH" /></label>
+      <p className="small">Word-Vorlage: {tpl ? <><strong>{tpl.name}</strong> (Formatvorlagen: {[tpl.styles.title, tpl.styles.heading1, tpl.styles.heading2].filter(Boolean).join(', ') || 'keine erkannt'}) <button className="btn small" onClick={() => del('/layout/docx-template').then(() => (notify('Word-Vorlage entfernt.'), layout.reload())).catch((e) => notify(errorText(e), 'error'))}>Entfernen</button></> : 'keine – eigene Formatvorlagen in der Hausfarbe'}</p>
+      <label className="block">Word-Vorlage hochladen (.dotx/.docx – übernommen werden die Formatvorlagen) <input type="file" accept=".dotx,.docx" onChange={(e) => void uploadTemplate(e.target.files?.[0])} /></label>
+      <button className="btn primary" disabled={ratio < 4.5} onClick={save}>Layout speichern</button>
+    </Card>
   );
 }
 

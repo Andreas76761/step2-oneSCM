@@ -9,6 +9,8 @@ import { assertIdsInProject } from './projects.js';
 import { dataUri, inlineMedia, loadMedia, type MediaFile } from './media.js';
 import { appendixHtmlSections, appendixMarkdown, appendixPdf } from './appendixRender.js';
 import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
+import { DEFAULT_LAYOUT, resolveLayout, type ResolvedLayout } from './layout.js';
+import { renderDocx } from './docx.js';
 
 type Media = Map<string, MediaFile>;
 
@@ -26,7 +28,11 @@ export interface ExportFilter {
 export interface ExportExtras {
   title?: string;
   appendices?: Appendices | null;
+  /** Firmen-Layout (ADR-038) */
+  layout?: ResolvedLayout;
 }
+
+const NO_LAYOUT: ResolvedLayout = { ...DEFAULT_LAYOUT, logo: null, stylesXml: null };
 
 export interface ExportInput extends ExportFilter {
   chapterIds?: string[];
@@ -37,12 +43,13 @@ export interface ExportInput extends ExportFilter {
   appendices?: boolean;
 }
 
-export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'json'] as const;
+export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'docx', 'json'] as const;
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];
 export const CONTENT_TYPES: Record<ExportFormat, string> = {
   md: 'text/markdown; charset=utf-8',
   html: 'text/html; charset=utf-8',
   pdf: 'application/pdf',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   json: 'application/json',
 };
 
@@ -117,7 +124,12 @@ export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter, media
 /** Eigenständiges, druckfähiges HTML ohne Skripte (CSP im Dokument, HTML aus Quellen escaped). */
 export function renderHtml(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}): string {
   const title = extras.title ?? 'oneSCM Benutzerhandbuch';
+  const l = extras.layout ?? NO_LAYOUT;
   const images = (sha: string) => (media.has(sha) ? dataUri(media.get(sha)!) : null);
+  // Titelseite (ADR-038)
+  const cover = l.cover ? `<header class="cover">${l.logo ? `<img class="logo" src="${escapeHtml(dataUri(l.logo))}" alt="${escapeHtml(l.companyName ?? 'Logo')}">` : ''}
+${l.companyName ? `<p class="company">${escapeHtml(l.companyName)}</p>` : ''}<h1>${escapeHtml(title)}</h1>${l.coverSubtitle ? `<p class="subtitle">${escapeHtml(l.coverSubtitle)}</p>` : ''}
+<p class="filter">Stand ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f))}</p>${l.confidentiality ? `<p class="confidential">${escapeHtml(l.confidentiality)}</p>` : ''}</header>` : '';
   const body: string[] = [];
   const toc: string[] = [];
   visible(chapters, f).forEach((ch, i) => {
@@ -147,19 +159,24 @@ export function renderHtml(chapters: ExportChapter[], f: ExportFilter, media: Me
 <title>${escapeHtml(title)}</title>
 <style>
 body{font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#0f172a;max-width:860px;margin:0 auto;padding:24px}
-h1{font-size:26px}h2{font-size:21px;border-bottom:2px solid #1d63d8;padding-bottom:4px;margin-top:36px}h3{font-size:16px;margin:20px 0 6px}
+h1{font-size:26px}h2{font-size:21px;border-bottom:2px solid ${l.primaryColor};color:${l.primaryColor};padding-bottom:4px;margin-top:36px}h3{font-size:16px;margin:20px 0 6px}
+.cover{min-height:60vh;display:flex;flex-direction:column;justify-content:center;border-left:8px solid ${l.primaryColor};padding-left:24px}.cover .logo{max-width:220px;border:0}
+.company{font-weight:700;color:${l.primaryColor};font-size:18px;margin:16px 0 0}.subtitle{font-size:18px;margin:4px 0}.confidential{color:#b91c1c;font-weight:700;margin-top:24px}
+.running{color:#5b6474;font-size:12px;text-align:right}
 .meta,.filter{color:#5b6474;font-size:13px}.badges{font-size:12px;color:#334155;margin:0 0 4px}
-.block{margin:6px 0 10px}.kind-note,.kind-tip{background:#eaf1fd;border-left:4px solid #1d63d8;padding:6px 10px}
+.block{margin:6px 0 10px}.kind-note,.kind-tip{background:#eaf1fd;border-left:4px solid ${l.primaryColor};padding:6px 10px}
 .kind-warning{background:#fdecec;border-left:4px solid #b91c1c;padding:6px 10px}.label{font-weight:600;margin:0 0 2px}
 table{border-collapse:collapse}td,th{border:1px solid #cbd5e1;padding:4px 8px}pre{background:#f3f4f6;padding:8px;white-space:pre-wrap}
 img{max-width:100%;height:auto;border:1px solid #e2e8f0}
 nav ol{columns:2}
-@media print{body{max-width:none;padding:0}.chapter{break-before:page}a{color:inherit;text-decoration:none}nav{break-after:page}}
+@media print{body{max-width:none;padding:0}.chapter{break-before:page}a{color:inherit;text-decoration:none}nav{break-after:page}.cover{break-after:page;min-height:90vh}}
 </style></head><body>
-<h1>${escapeHtml(title)}</h1>
-<p class="filter">Exportiert am ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f))}</p>
+${l.headerText ? `<p class="running">${escapeHtml(l.headerText)}</p>` : ''}
+${cover || `<h1>${escapeHtml(title)}</h1>
+<p class="filter">Exportiert am ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f))}</p>`}
 <nav><h2>Inhalt</h2><ol>${toc.join('')}</ol></nav>
 ${body.join('\n')}
+${l.footerText ? `<footer class="running">${escapeHtml(l.footerText)}</footer>` : ''}
 </body></html>`;
 }
 
@@ -175,7 +192,17 @@ function pdfBadges(b: Block): string {
 
 export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter, media?: Media, extras: ExportExtras = {}): Promise<Buffer> {
   const title = extras.title ?? 'oneSCM Benutzerhandbuch';
-  const content: unknown[] = [
+  const l = extras.layout ?? NO_LAYOUT;
+  const content: unknown[] = l.cover ? [
+    // Titelseite (ADR-038)
+    ...(l.logo ? [{ image: dataUri(l.logo), fit: [200, 90], margin: [0, 80, 0, 40] }] : [{ text: '', margin: [0, 160, 0, 0] }]),
+    ...(l.companyName ? [{ text: l.companyName, fontSize: 14, bold: true, color: l.primaryColor, margin: [0, 0, 0, 8] }] : []),
+    { text: title, style: 'title' },
+    ...(l.coverSubtitle ? [{ text: l.coverSubtitle, fontSize: 14, margin: [0, 0, 0, 12] }] : []),
+    { text: `Stand ${now().slice(0, 10)} · ${filterDescription(f)}`, style: 'meta' },
+    ...(l.confidentiality ? [{ text: l.confidentiality, bold: true, color: '#b91c1c', margin: [0, 40, 0, 0] }] : []),
+    { text: '', pageBreak: 'after' },
+  ] : [
     { text: title, style: 'title' },
     { text: `Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, style: 'meta', margin: [0, 0, 0, 16] },
   ];
@@ -201,11 +228,14 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
     pageSize: 'A4',
     pageMargins: [48, 56, 48, 56],
     defaultStyle: { font: 'Roboto', fontSize: 10, lineHeight: 1.25 },
-    footer: (page: number, pages: number) => ({ text: `Seite ${page} von ${pages}`, alignment: 'center', fontSize: 8, color: '#64748b', margin: [0, 20, 0, 0] }),
+    header: (page: number) => (l.cover && page === 1) || !(l.headerText || l.companyName) ? null
+      : { text: l.headerText ?? [l.companyName, title].filter(Boolean).join(' · '), alignment: 'right', fontSize: 8, color: '#64748b', margin: [48, 24, 48, 0] },
+    footer: (page: number, pages: number) => (l.cover && page === 1 ? null
+      : { text: `${l.footerText ? `${l.footerText} · ` : ''}Seite ${page} von ${pages}`, alignment: 'center', fontSize: 8, color: '#64748b', margin: [0, 20, 0, 0] }),
     styles: {
       title: { fontSize: 22, bold: true, margin: [0, 0, 0, 4] },
       meta: { fontSize: 9, color: '#5b6474' },
-      chapter: { fontSize: 17, bold: true, color: '#1d63d8', margin: [0, 0, 0, 2] },
+      chapter: { fontSize: 17, bold: true, color: l.primaryColor, margin: [0, 0, 0, 2] },
       section: { fontSize: 12.5, bold: true, margin: [0, 10, 0, 4] },
       badges: { fontSize: 8.5, color: '#334155', margin: [0, 0, 0, 2] },
       md_h1: { fontSize: 13, bold: true, margin: [0, 6, 0, 4] },
@@ -215,6 +245,17 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
     },
     content,
   });
+}
+
+/** Word-Export (ADR-038) aus den sichtbaren Absätzen */
+export async function renderDocxExport(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}): Promise<Buffer> {
+  return renderDocx(visible(chapters, f).map((ch) => ({
+    title: ch.title, meta: versionLine(ch),
+    sections: ch.sections.map((s) => ({
+      title: s.title,
+      blocks: s.blocks.map((b: any) => ({ kind: b.kind, text: b.text, badges: pdfBadges(b), label: KIND_LABEL[b.kind] && b.kind !== 'xref' ? KIND_LABEL[b.kind] : null })),
+    })),
+  })), { title: extras.title ?? 'oneSCM Benutzerhandbuch', filterLine: filterDescription(f), media, layout: extras.layout ?? NO_LAYOUT, appendices: extras.appendices });
 }
 
 export async function createExport(ctx: Ctx, input: ExportInput, actor: string) {
@@ -256,6 +297,7 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   };
   const extras: ExportExtras = {
     title: outline ? outline.name : undefined,
+    layout: format === 'pdf' || format === 'html' || format === 'docx' ? await resolveLayout(ctx) : undefined,
     appendices: (input.appendices ?? !!outline) ? await appendicesFor(ctx, outline, visible(chapters, filter)) : null,
   };
   // Bilder der sichtbaren Absätze (ADR-029) – eingebettet, damit die Datei eigenständig bleibt
@@ -264,6 +306,9 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   let preview: string | null;
   if (format === 'pdf') {
     data = await renderPdfExport(chapters, filter, media, extras);
+    preview = null;
+  } else if (format === 'docx') {
+    data = await renderDocxExport(chapters, filter, media, extras);
     preview = null;
   } else {
     const text = format === 'md' ? renderMarkdown(chapters, filter, media, extras) : format === 'html' ? renderHtml(chapters, filter, media, extras)

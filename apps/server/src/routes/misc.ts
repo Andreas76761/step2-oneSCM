@@ -12,6 +12,7 @@ import { optimizationOverview } from '../services/insights.js';
 import { translationStatus } from '../services/translations.js';
 import { buildMatrix, matrixCsv, matrixMarkdown, matrixXlsx } from '../services/traceability.js';
 import { globalSearch } from '../services/search.js';
+import { deleteDocxTemplate, getLayout, updateLayout, uploadDocxTemplate } from '../services/layout.js';
 import { list, userOf } from './helpers.js';
 
 export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -23,6 +24,18 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
       outlineId: typeof b.outlineId === 'string' && b.outlineId ? b.outlineId : undefined, appendices: typeof b.appendices === 'boolean' ? b.appendices : undefined }, user.id);
   });
   app.get('/exports', async (req) => (userOf(req.ctx, req), listExports(req.ctx)));
+  // Firmen-Layout (ADR-038): lesen für alle, ändern nur Administration
+  app.get('/layout', async (req) => (userOf(req.ctx, req), getLayout(req.ctx)));
+  app.put<{ Body: any }>('/layout', async (req) => updateLayout(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+  app.post('/layout/docx-template', async (req) => {
+    const user = userOf(req.ctx, req, 'admin');
+    if (!req.isMultipart()) throw badRequest('Erwartet multipart/form-data mit Feld „file“.');
+    const file = await req.file();
+    if (!file) throw badRequest('Feld „file“ fehlt.');
+    return uploadDocxTemplate(req.ctx, file.filename, await file.toBuffer(), user);
+  });
+  app.delete('/layout/docx-template', async (req) => deleteDocxTemplate(req.ctx, userOf(req.ctx, req, 'admin')));
+
   // Globale Suche (ADR-035)
   app.get<{ Querystring: { q?: string; limit?: string } }>('/search', async (req) => (userOf(req.ctx, req), globalSearch(req.ctx, req.query.q ?? '', Number(req.query.limit) || 8)));
   app.get<{ Params: { exportId: string } }>('/exports/:exportId/download', async (req, reply) => {

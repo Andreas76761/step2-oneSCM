@@ -8,6 +8,7 @@ import { gateForChapter, getChapterVersion } from './chapters.js';
 import { compareVersions } from './compare.js';
 import { badgeLine, KIND_LABEL, renderMarkdown, visible, type ExportChapter, type ExportFilter } from './exports.js';
 import { appendixHtmlSections } from './appendixRender.js';
+import { resolveLayout, type ResolvedLayout } from './layout.js';
 import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
 import { escapeHtml, markdownToHtml, type ImageSource } from './render.js';
 import { inlineMedia, loadMedia, type MediaFile } from './media.js';
@@ -77,16 +78,22 @@ interface SiteLang {
   prefix: string;
 }
 
-function page(title: string, releaseLabel: string, body: string, lang = 'de', switcher = '') {
+/** Firmen-Layout der Online-Hilfe (ADR-038): Hausfarbe in Kopfzeile und Überschriften, Logo, Firmenname, Fußzeile */
+interface SiteBrand { color: string; logoFile: string | null; company: string | null; footer: string | null }
+
+function pageOf(title: string, releaseLabel: string, body: string, lang = 'de', switcher = '', brand?: SiteBrand) {
+  const up = lang === 'de' ? '' : '../';
+  const css = brand && brand.color !== '#1d63d8' ? `${PAGE_CSS}header{background:${brand.color}}h2{border-bottom-color:${brand.color}}.kind-note,.kind-tip{border-left-color:${brand.color}}` : PAGE_CSS;
+  const logo = brand?.logoFile ? `<img src="${up}${brand.logoFile}" alt="${escapeHtml(brand.company ?? 'Logo')}" style="height:28px;vertical-align:middle;margin-right:10px;border:0;background:#fff;padding:2px">` : '';
   // Eigenständig und ohne Skripte (ADR-012): eigene CSP, keine externen Ressourcen
   return `<!doctype html>
 <html lang="${lang}"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapeHtml(title)} – ${escapeHtml(releaseLabel)}</title><style>${PAGE_CSS}</style></head>
+<title>${escapeHtml(title)} – ${escapeHtml(releaseLabel)}</title><style>${css}</style></head>
 <body><a href="#inhalt" style="position:absolute;left:-999px">${escapeHtml(ui(lang).skip)}</a>
-<header><a href="index.html">${escapeHtml(ui(lang).home)}</a> · ${escapeHtml(releaseLabel)}${switcher}</header>
-<main id="inhalt">${body}</main></body></html>`;
+<header>${logo}${brand?.company ? `${escapeHtml(brand.company)} · ` : ''}<a href="index.html">${escapeHtml(ui(lang).home)}</a> · ${escapeHtml(releaseLabel)}${switcher}</header>
+<main id="inhalt">${body}</main>${brand?.footer ? `<footer class="meta" style="max-width:860px;margin:0 auto;padding:0 20px 20px">${escapeHtml(brand.footer)}</footer>` : ''}</body></html>`;
 }
 
 function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false, images?: ImageSource) {
@@ -122,9 +129,16 @@ export function changesText(changes: ChapterChange[]) {
 async function buildSite(
   version: string, title: string, notes: string | null, chapters: ExportChapter[], changes: ChapterChange[], createdAt: string,
   translations: Map<string, (ExportChapter | null)[]>, appUrl: string | null = null, media: Map<string, MediaFile> = new Map(),
-  filter: ExportFilter = {}, appendices: Appendices | null = null,
+  filter: ExportFilter = {}, appendices: Appendices | null = null, layout: ResolvedLayout | null = null,
 ) {
   const zip = new JSZip();
+  let brand: SiteBrand | undefined;
+  if (layout) {
+    const logoFile = layout.logo ? `bilder/logo.${MIME_EXT[layout.logo.mime] ?? 'png'}` : null;
+    if (layout.logo && logoFile) zip.file(logoFile, layout.logo.data);
+    brand = { color: layout.primaryColor, logoFile, company: layout.companyName, footer: layout.footerText };
+  }
+  const page = (title: string, label: string, body: string, lang = 'de', sw = '') => pageOf(title, label, body, lang, sw, brand);
   // Bilder (ADR-029) als Dateien unter bilder/ – einmal je Inhalt, von allen Sprachen gemeinsam genutzt
   const imageFile = (sha: string) => `bilder/${sha}.${MIME_EXT[media.get(sha)!.mime] ?? 'bin'}`;
   for (const sha of media.keys()) zip.file(imageFile(sha), media.get(sha)!.data);
@@ -245,7 +259,7 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
   const allTexts = [chapters, ...[...translations.values()].map((l) => l.filter((c): c is ExportChapter => !!c))]
     .flatMap((chs) => visible(chs, filter).flatMap((ch) => ch.sections.flatMap((s) => s.blocks.map((b: any) => b.text as string))));
   const media = await loadMedia(ctx, allTexts);
-  const site = await buildSite(version, title, notes, chapters, changes, createdAt, translations, ctx.config.notify.appUrl, media, filter, appendices);
+  const site = await buildSite(version, title, notes, chapters, changes, createdAt, translations, ctx.config.notify.appUrl, media, filter, appendices, await resolveLayout(ctx));
   const md = renderMarkdown(chapters, filter, media, { title: `${title} – Version ${version}`, appendices });
   const siteKey = `releases/${id}/site.zip`;
   const mdKey = `releases/${id}/handbuch.md`;

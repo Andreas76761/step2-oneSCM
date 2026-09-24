@@ -438,3 +438,4 @@ ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px
 .sync-head { margin-bottom: 4px; }
 .sync-snippet { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; border-top: 1px dashed var(--border); }
 .sync-snippet .flag { margin-left: 6px; }
+.error-text { color: var(--danger); font-weight: 600; }
