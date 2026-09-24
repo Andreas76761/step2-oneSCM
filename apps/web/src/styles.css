@@ -187,6 +187,13 @@ dl.meta dd { margin: 0; }
 .block.mode-locked { border-left-color: var(--muted); }
 .block.mode-approved { border-left-color: var(--ok); }
 .block.mode-needs_regeneration { border-left-color: var(--warn); }
+.block.mode-ai_rewritten { border-left-color: #8b5cf6; }
+.st-ai_rewritten { color: #8b5cf6; border-color: #8b5cf6; }
+.rewrite { margin: .5rem 0; padding: .6rem .75rem; border: 1px dashed #8b5cf6; border-radius: 6px; background: var(--surface); }
+.rewrite-sentences { margin: .5rem 0; padding-left: 1.25rem; }
+.rewrite-sentences li { margin-bottom: .25rem; }
+.rewrite-sentences li.fail { color: var(--danger); }
+.sev-text { color: var(--danger); }
 .block.kind-gap { border-style: dashed; color: var(--muted); }
 .block.kind-warning { background: var(--danger-bg); }
 .block.kind-note, .block.kind-tip { background: var(--info-bg); }

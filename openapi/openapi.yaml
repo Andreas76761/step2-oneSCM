@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.4.0
+  version: 0.5.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -21,6 +21,7 @@ tags:
   - name: Freigabe
   - name: Export
   - name: Traceability
+  - name: KI-Umformulierung
   - name: System
 components:
   securitySchemes:
@@ -41,6 +42,7 @@ components:
     VersionId: { name: versionId, in: path, required: true, schema: { type: string } }
     BlockId: { name: blockId, in: path, required: true, schema: { type: string } }
     ClusterId: { name: clusterId, in: path, required: true, schema: { type: string } }
+    ProposalId: { name: proposalId, in: path, required: true, schema: { type: string } }
   responses:
     Unauthorized:
       description: Nicht angemeldet oder Token ungültig
@@ -55,6 +57,38 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
   schemas:
+    RewriteProposal:
+      type: object
+      description: KI-Umformulierungsvorschlag mit Prüfergebnis je Satz (ADR-013, Entscheidung E-16)
+      properties:
+        id: { type: string }
+        blockId: { type: string }
+        blockVersionNo: { type: integer, description: Blockversion, auf die sich der Vorschlag bezieht }
+        provider: { type: string, enum: [anthropic, openai, demo] }
+        model: { type: string }
+        promptHash: { type: string, description: SHA-256 der übertragenen Anfrage }
+        sentSnippetIds: { type: array, items: { type: string }, description: an den KI-Dienst übertragene Textabschnitte }
+        originalText: { type: string }
+        proposedText: { type: string }
+        valid: { type: boolean, description: jeder Satz belegt und geprüft }
+        status: { type: string, enum: [proposed, invalid, accepted, rejected, stale] }
+        sentences:
+          type: array
+          items:
+            type: object
+            properties:
+              text: { type: string }
+              sourceLabels: { type: array, items: { type: string } }
+              sourceIds: { type: array, items: { type: string } }
+              support: { type: number, description: Anteil der durch die Quellen gedeckten Inhaltswörter }
+              issues: { type: array, items: { type: string, enum: [no_sources, unknown_source, new_numbers, low_support, privacy, empty] } }
+              details: { type: array, items: { type: string } }
+        usage: { type: [object, 'null'] }
+        createdBy: { type: string }
+        createdAt: { type: string }
+        decidedBy: { type: [string, 'null'] }
+        decidedAt: { type: [string, 'null'] }
+        decisionReason: { type: [string, 'null'] }
     Problem:
       type: object
       required: [type, title, status]
@@ -170,7 +204,7 @@ components:
         position: { type: integer }
         kind: { type: string, enum: [paragraph, list, note, tip, warning, xref, gap, table, code] }
         text: { type: string }
-        mode: { type: string, enum: [generated, manually_edited, locked, needs_regeneration, approved] }
+        mode: { type: string, enum: [generated, manually_edited, locked, needs_regeneration, ai_rewritten, approved] }
         roles: { type: array, items: { $ref: '#/components/schemas/RoleCode' } }
         divisions: { type: array, items: { $ref: '#/components/schemas/DivisionCode' } }
         market: { type: [string, 'null'] }
@@ -180,6 +214,10 @@ components:
         comment: { type: [string, 'null'] }
         versionNo: { type: integer }
         sources: { type: array, items: { type: object } }
+        sentences:
+          description: Satz-Evidenz eines übernommenen KI-Vorschlags (ADR-013); null, wenn nicht KI-umformuliert
+          type: [array, 'null']
+          items: { type: object, properties: { text: { type: string }, sourceIds: { type: array, items: { type: string } } } }
     BlockPatch:
       type: object
       properties:
@@ -808,6 +846,95 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
+  /llm/status:
+    get:
+      operationId: getLlmStatus
+      summary: Konfigurierter KI-Dienst für Umformulierungsvorschläge (ausgeschaltet, wenn nicht eingerichtet)
+      tags: [KI-Umformulierung]
+      x-requirements: [US-008, US-009]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200':
+          description: Status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled: { type: boolean }
+                  provider: { type: [string, 'null'], enum: [anthropic, openai, demo, null] }
+                  model: { type: [string, 'null'] }
+                  external: { type: boolean, description: Daten verlassen die eigene Umgebung }
+                  issueLabels: { type: object }
+  /content-blocks/{blockId}/rewrite-proposals:
+    post:
+      operationId: createRewriteProposal
+      summary: KI-Umformulierung anfordern (Vorschlag; jeder Satz muss Quellen des Absatzes zitieren)
+      tags: [KI-Umformulierung]
+      x-requirements: [US-008, US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/BlockId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { instructions: { type: string, maxLength: 500, description: Hinweis der Redaktion, z. B. „kürzer“ } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Vorschlag (status proposed oder invalid), content: { application/json: { schema: { $ref: '#/components/schemas/RewriteProposal' } } } }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { description: 'Nicht umformulierbar: ohne Quelle, Lücke/Querverweis, Datenschutzbefund oder personenbezogene Daten', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '502': { description: KI-Dienst nicht erreichbar oder Antwort unbrauchbar, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '503': { description: KI-Umformulierung nicht eingerichtet, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    get:
+      operationId: listRewriteProposals
+      summary: Umformulierungsvorschläge eines Absatzes (neueste zuerst)
+      tags: [KI-Umformulierung]
+      x-requirements: [US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/BlockId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Vorschläge, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/RewriteProposal' } } } } }
+  /rewrite-proposals/{proposalId}:
+    get:
+      operationId: getRewriteProposal
+      summary: Umformulierungsvorschlag
+      tags: [KI-Umformulierung]
+      x-requirements: [US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ProposalId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Vorschlag, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteProposal' } } } }
+        '404': { $ref: '#/components/responses/Problem' }
+  /rewrite-proposals/{proposalId}/accept:
+    post:
+      operationId: acceptRewriteProposal
+      summary: Gültigen, aktuellen Vorschlag übernehmen (Modus ai_rewritten mit Satz-Evidenz)
+      tags: [KI-Umformulierung]
+      x-requirements: [US-008, US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ProposalId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { reason: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Aktualisierter Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
+        '409': { description: 'Ungültig, veraltet, bereits entschieden oder Block gesperrt', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+  /rewrite-proposals/{proposalId}/reject:
+    post:
+      operationId: rejectRewriteProposal
+      summary: Vorschlag verwerfen
+      tags: [KI-Umformulierung]
+      x-requirements: [US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ProposalId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { reason: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Vorschlag, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteProposal' } } } }
+        '409': { $ref: '#/components/responses/Problem' }
   /exports:
     post:
       operationId: createExport

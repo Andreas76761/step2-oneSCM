@@ -85,3 +85,15 @@ Offen (Etappe 4): US-019 Vergleich ganzer Kapitelversionen, S3-kompatibler Objec
 | Lineage-Stabilität | ✅ behoben (Lückenhinweise und Blöcke mit gleichen Quellen verloren bei Neugenerierung ihre Lineage) |
 
 Damit sind alle User Stories US-001 … US-020 umgesetzt. Offen ist nur die optionale LLM-Umformulierung (E-16).
+
+## 1.7 Stand nach Etappe 5 (24.09.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| E-16 KI-Umformulierung | ✅ entschieden (Cloud erlaubt, Anthropic + OpenAI-kompatibel, Evidenz je Satz + Übernahme durch die Redaktion) und umgesetzt ([ADR-013](adr/ADR-013-ki-umformulierung.md)) |
+| Nichts erfinden (US-008) | ✅ automatische Satzprüfung: Quellen, unbekannte Quellen, neue Zahlen, Wortabdeckung, Datenschutz; ungültige Vorschläge sind nicht übernehmbar |
+| Nachvollziehbarkeit (US-009, §9) | ✅ Modus `ai_rewritten`, Satz-Evidenz am Absatz, Blockversion `rewritten`, Audit mit Anbieter/Modell/Prompt-Hash/übertragenen Textabschnitten |
+| Qualitätsgate (US-012) | ✅ neue Prüfung `sentence_evidence` |
+| Datenschutz (§13) | ✅ keine Übertragung bei offenen Datenschutzbefunden oder neuen personenbezogenen Daten; Rückfrage vor Übertragung an externe Dienste |
+
+Offene Punkte aus dem Auftrag bestehen nicht mehr.

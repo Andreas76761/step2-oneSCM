@@ -4,6 +4,7 @@ import { DEFAULT_SETTINGS } from './config.js';
 import { json, newId, now, parseJson, type Db } from './db.js';
 import { DEMO_USERS, DIVISIONS, ROLES, type Permission } from './domain/reference.js';
 import type { JobQueue } from './jobs.js';
+import type { LlmProvider } from './llm.js';
 import { forbidden } from './problem.js';
 import type { ObjectStore } from './storage.js';
 
@@ -14,6 +15,8 @@ export interface Ctx {
   store: ObjectStore;
   jobs: JobQueue;
   config: AppConfig;
+  /** KI-Dienst für Umformulierungsvorschläge; null = ausgeschaltet */
+  llm: LlmProvider | null;
   projectId: string;
   log: (msg: string, extra?: unknown) => void;
 }

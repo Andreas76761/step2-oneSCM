@@ -6,6 +6,8 @@ import {
 } from '../components/ui';
 import { SourceViewer } from './Sources';
 
+const REWRITABLE = ['paragraph', 'list', 'note', 'tip', 'warning'];
+
 const KIND_LABEL: Record<string, string> = { paragraph: 'Absatz', list: 'Liste', note: 'ℹ️ Hinweis', tip: '💡 Tipp', warning: '⚠️ Warnung', xref: '↗️ Querverweis', gap: '⚠ Lücke', table: 'Tabelle', code: 'Code' };
 
 export function WorkshopPage() {
@@ -16,6 +18,7 @@ export function WorkshopPage() {
   const chapter = chapters.data?.find((c) => c.id === chapterId);
   const [versionId, setVersionId] = useState<string | null>(null);
   const version = useLoad<any>(versionId ? `/chapter-versions/${versionId}` : null, [versionId]);
+  const llm = useLoad<any>('/llm/status');
   const [selected, setSelected] = useState<string | null>(null);
   const [tab, setTab] = useState<'sources' | 'findings' | 'history' | 'approval'>('sources');
 
@@ -103,6 +106,7 @@ export function WorkshopPage() {
                 onSelect={() => setSelected(b.id)}
                 prev={s.blocks[bi - 1]}
                 next={s.blocks[bi + 1]}
+                llm={llm.data}
                 onChanged={refresh}
               />
             ))}
@@ -128,9 +132,27 @@ export function WorkshopPage() {
   );
 }
 
-function BlockCard({ block: b, editable, selected, onSelect, prev, next, onChanged }: { block: any; editable: boolean; selected: boolean; onSelect: () => void; prev?: any; next?: any; onChanged: () => void }) {
+function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, onChanged }: { block: any; editable: boolean; selected: boolean; onSelect: () => void; prev?: any; next?: any; llm?: any; onChanged: () => void }) {
   const { ref, notify } = useApp();
   const [mode, setMode] = useState<'view' | 'edit' | 'classify'>('view');
+  const [proposal, setProposal] = useState<any | null>(null);
+  // Nach Übernahme, Wiederherstellung oder Neuladen den Editor mit dem aktuellen Text füllen
+  useEffect(() => {
+    if (mode !== 'edit') setText(b.text);
+  }, [b.text, b.versionNo, mode]);
+  const [busy, setBusy] = useState(false);
+  const canRewrite = llm?.enabled && REWRITABLE.includes(b.kind) && b.sources.length > 0;
+  const requestRewrite = async () => {
+    if (llm.external && !confirm(`Absatz und ${b.sources.length} Quelltext(e) werden zur Umformulierung an ${llm.provider} (${llm.model}) übertragen. Fortfahren?`)) return;
+    setBusy(true);
+    try {
+      setProposal(await post(`/content-blocks/${b.id}/rewrite-proposals`, {}));
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
   const [text, setText] = useState(b.text);
   const [reason, setReason] = useState('');
   const locked = b.mode === 'locked';
@@ -170,6 +192,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, onChang
       ) : (
         <Md text={b.text} />
       )}
+      {proposal && <RewriteProposal proposal={proposal} block={b} llm={llm} onClose={() => setProposal(null)} onDecided={() => (setProposal(null), onChanged())} />}
       {b.justification && <p className="small muted">Begründung: {b.justification}</p>}
       {b.comment && <p className="small comment">💬 {b.comment}</p>}
       {mode === 'classify' && <ClassifyForm block={b} onDone={() => (setMode('view'), onChanged())} />}
@@ -177,6 +200,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, onChang
         <div className="row-actions" onClick={(e) => e.stopPropagation()}>
           {!locked && <button className="btn small" onClick={() => setMode('edit')}>Bearbeiten</button>}
           {!locked && <button className="btn small" onClick={() => setMode('classify')}>Zuordnen</button>}
+          {!locked && canRewrite && !proposal && <button className="btn small" disabled={busy} onClick={requestRewrite}>{busy ? 'KI formuliert …' : '✨ KI-Vorschlag'}</button>}
           {!locked && prev && <button className="btn small" aria-label="nach oben" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { position: prev.position - 5 }), 'Verschoben.')}>↑</button>}
           {!locked && next && <button className="btn small" aria-label="nach unten" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { position: next.position + 5 }), 'Verschoben.')}>↓</button>}
           {!locked && (
@@ -191,6 +215,47 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, onChang
         </div>
       )}
     </article>
+  );
+}
+
+/** KI-Vorschlag: Textdiff, Sätze mit Quellen und Prüfergebnis; übernehmen nur bei bestandener Satzprüfung (ADR-013). */
+function RewriteProposal({ proposal: p, block: b, llm, onClose, onDecided }: { proposal: any; block: any; llm: any; onClose: () => void; onDecided: () => void }) {
+  const { notify } = useApp();
+  const seqOf = (id: string) => b.sources.find((s: any) => s.snippetId === id)?.seq;
+  const decide = async (action: 'accept' | 'reject') => {
+    try {
+      await post(`/rewrite-proposals/${p.id}/${action}`, {});
+      notify(action === 'accept' ? 'KI-Vorschlag übernommen – jeder Satz ist mit seinen Quellen verknüpft.' : 'KI-Vorschlag verworfen.');
+      onDecided();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  return (
+    <div className="rewrite" onClick={(e) => e.stopPropagation()} aria-label="KI-Vorschlag">
+      <div className="block-meta">
+        <strong>✨ KI-Vorschlag</strong>
+        <span className="small muted">{p.provider} · {p.model}</span>
+        <span className={`tag ${p.valid ? 'st-approved' : 'sev-blocker'}`}>{p.valid ? 'jeder Satz belegt' : 'Satzprüfung nicht bestanden'}</span>
+      </div>
+      <Diff a={p.originalText} b={p.proposedText} />
+      <ol className="rewrite-sentences small">
+        {p.sentences.map((s: any, i: number) => (
+          <li key={i} className={s.issues.length ? 'fail' : 'ok'}>
+            {s.text}{' '}
+            {s.sourceIds.map((id: string) => <span key={id} className="tag">#{seqOf(id)}</span>)}
+            <span className="muted"> · Abdeckung {Math.round(s.support * 100)} %</span>
+            {s.issues.map((x: string) => <div key={x} className="sev-text">✖ {llm?.issueLabels?.[x] ?? x}</div>)}
+            {s.details.map((d: string, j: number) => <div key={j} className="muted">{d}</div>)}
+          </li>
+        ))}
+      </ol>
+      <div className="row-actions">
+        <button className="btn primary small" disabled={!p.valid} onClick={() => decide('accept')}>Übernehmen</button>
+        <button className="btn small" onClick={() => decide('reject')}>Verwerfen</button>
+        <button className="btn ghost small" onClick={onClose}>Schließen</button>
+      </div>
+    </div>
   );
 }
 
@@ -281,6 +346,16 @@ function SourcesTab({ block }: { block?: any }) {
   if (!block.sources.length) return <Empty>{block.justification ? `Keine Quelle – manuelle Begründung: ${block.justification}` : 'Dieser Block hat weder Quelle noch Begründung (Qualitätsgate!).'}</Empty>;
   return (
     <div>
+      {block.sentences && (
+        <div className="source-item">
+          <h3>Satz-Evidenz (KI-umformuliert)</h3>
+          <ol className="small">
+            {block.sentences.map((s: any, i: number) => (
+              <li key={i}>{s.text} {s.sourceIds.map((id: string) => <span key={id} className="tag">#{block.sources.find((x: any) => x.snippetId === id)?.seq ?? '?'}</span>)}</li>
+            ))}
+          </ol>
+        </div>
+      )}
       {block.sources.map((s: any) => (
         <div key={s.snippetId} className="source-item">
           <div className="small"><strong>#{s.seq}</strong> {s.path} · Rev. {s.revisionNo}{s.isCurrent ? '' : ' (veraltet)'} · Z. {s.lineStart}–{s.lineEnd} · <Status s={s.evidenceStatus} /></div>

@@ -391,5 +391,55 @@
     "requirements": [
       "US-019"
     ]
+  },
+  {
+    "id": "T-128",
+    "title": "KI-Umformulierung über die Claude-API: Vorschlag, Übernahme mit Satz-Evidenz, Gate, Neugenerierung, Wiederherstellen",
+    "file": "apps/server/test/stage5.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-008",
+      "US-009",
+      "US-012"
+    ]
+  },
+  {
+    "id": "T-129",
+    "title": "KI-Umformulierung über OpenAI-kompatible API: ungültige Sätze, Verwerfen, veraltete Vorschläge, Listen",
+    "file": "apps/server/test/stage5.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-008",
+      "US-009"
+    ]
+  },
+  {
+    "id": "T-130",
+    "title": "KI-Umformulierung: ausgeschaltet, Berechtigung, Sperre, Lücken, Datenschutz, Anbieterfehler",
+    "file": "apps/server/test/stage5.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-009",
+      "US-012"
+    ]
+  },
+  {
+    "id": "T-131",
+    "title": "Satzprüfung (Quellen, Zahlen, Abdeckung, Datenschutz) und Gate-Regel Satz-Evidenz",
+    "file": "apps/server/test/stage5.test.ts",
+    "level": "unit",
+    "requirements": [
+      "US-008",
+      "US-012"
+    ]
+  },
+  {
+    "id": "T-205",
+    "title": "UI: KI-Vorschlag prüfen und übernehmen (Demo-Anbieter)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "US-009"
+    ]
   }
 ]

@@ -1,6 +1,6 @@
 # 5. Datenmodell
 
-Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`, `003_workflow_terminology.sql` (dialektneutral für SQLite und PostgreSQL, ADR-003).
+Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`, `003_workflow_terminology.sql`, `004_rewrite.sql` (dialektneutral für SQLite und PostgreSQL, ADR-003).
 
 ## Entitäten aus Masterprompt §9 → Tabellen
 
@@ -22,9 +22,10 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`,
 | QualityFinding | `quality_findings` | Typ, Untertyp (Regel), Schwere, Status, Score, Methode, Begründung, Entscheidung (+ Begründung, Entscheider, Zeit), `fingerprint` für stabile Wiedererkennung |
 | – | `analysis_runs` | Analyselauf mit verwendeten Einstellungen |
 | GeneratedChapterVersion | `generated_chapter_versions` | `draft` → `in_review` (gesperrt, `submitted_by/at`, Kommentar) → `approved`/zurück zu `draft`; `superseded`; `approved` ist unveränderlich |
-| ContentBlock | `content_blocks` | `lineage_id` verbindet Blöcke über Kapitelversionen, Modus, Soft-Delete |
+| ContentBlock | `content_blocks` | `lineage_id` verbindet Blöcke über Kapitelversionen, Modus, Soft-Delete; `sentence_sources` = Satz-Evidenz KI-umformulierter Absätze (JSON) |
 | – | `content_block_roles`, `content_block_divisions`, `content_block_sources` | m:n Rollen, Sparten und **Quellenbeziehung je Absatz** |
 | ContentBlockVersion | `content_block_versions` | append-only Snapshot je Änderung (Vergleich/Wiederherstellung) |
+| – | `rewrite_proposals` | KI-Umformulierungsvorschläge: Blockversion, Anbieter, Modell, Prompt-Hash, übertragene Textabschnitte, Sätze mit Prüfergebnis, Status `proposed`/`invalid`/`accepted`/`rejected`/`stale` (ADR-013) |
 | – | `terminology_terms` | Terminologie: bevorzugter Begriff, zu vermeidende Varianten (JSON), Definition, `active`/`retired` (US-015) |
 | Approval | `approvals` | Freigeber, Entscheidung, Kommentar, Gate-Ergebnis |
 | AuditEvent | `audit_events` | jede Änderung, Entscheidung, Freigabe |
@@ -38,6 +39,6 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`,
 | 2. Redaktion an versionierten Content Blocks | `content_block_versions` bei jeder Änderung |
 | 3. Rollen und Sparten unabhängige m:n | getrennte Tabellen für Snippets und Blöcke |
 | 4. Veröffentlichte Versionen unveränderlich | 409 bei jeder Änderung an Blöcken einer nicht-`draft`-Version |
-| 5. Evidenz oder Begründung je Absatz | Qualitätsgate-Prüfung `evidence_per_block` |
+| 5. Evidenz oder Begründung je Absatz | Qualitätsgate-Prüfung `evidence_per_block`; bei KI-Umformulierung zusätzlich je Satz (`sentence_evidence`) |
 | 6. Klassifikation mit Modell, Version, Score, Bestätigung | Spalten in `snippet_roles`/`snippet_divisions` |
 | 7. Canonical Topics verhindern Wiederholungen | Generator ersetzt Nicht-Leitkapitel-Inhalte durch Querverweise |

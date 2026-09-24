@@ -3,7 +3,7 @@
 Revisionssichere Webapp, die aus vielen Markdown-Texten ein konsistentes, rollen- und spartenspezifisches oneSCM-Benutzerhandbuch erzeugt.
 Grundlage ist das Projektpaket in [`reference/`](reference/) (Masterprompt v1.0 und Referenz-UI).
 
-> **Status: Etappe 4 (v0.4.0).** Alle P0-, P1- und P2-Stories (US-001 … US-020) sind umgesetzt. Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
+> **Status: Etappe 5 (v0.5.0).** Alle P0-, P1- und P2-Stories (US-001 … US-020) sind umgesetzt, dazu die optionale KI-Umformulierung mit Quellenbindung je Satz (E-16, ADR-013). Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
 
 ## Dokumentation
 
@@ -60,7 +60,7 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
 2. **Dashboard → Analyse starten:** erzeugt Cluster, Dopplungen, Widersprüche, Lücken sowie Datenschutz-, Terminologie- und Lesbarkeitsbefunde.
 3. **Widersprüche / Dopplungen / Textcluster:** Befunde mit Begründung entscheiden und Canonical Topics festlegen. Offene Blocker sperren Generierung, Freigabe und Export.
 4. **Kapitelgenerator:** Entwurf ausschließlich aus bestätigten Quellen erzeugen (`source_confirmed` / `manually_confirmed`).
-5. **Kapitelwerkstatt:** Absätze bearbeiten, verschieben, löschen, sperren, klassifizieren, kommentieren, einzelne Absatzversionen wiederherstellen. **Versionen vergleichen** zeigt die Unterschiede zweier ganzer Kapitelversionen.
+5. **Kapitelwerkstatt:** Absätze bearbeiten, verschieben, löschen, sperren, klassifizieren, kommentieren, einzelne Absatzversionen wiederherstellen. **Versionen vergleichen** zeigt die Unterschiede zweier ganzer Kapitelversionen. Mit eingerichtetem KI-Dienst (`LLM_PROVIDER`) liefert **✨ KI-Vorschlag** eine Umformulierung, in der jeder Satz seine Quellen nennt; nur geprüfte Vorschläge lassen sich übernehmen (ADR-013).
 6. **Evidenz:** je Absatz prüfen, auf welcher Quelle er beruht und ob sie aktuell und bestätigt ist.
 7. **Freigabe:** Redaktion reicht ein (Qualitätsgate muss bestanden sein), die Freigabe entscheidet: freigeben oder ablehnen. Alles wird protokolliert.
 8. **Export / Rollen- und Spartenansichten:** gefiltert als Markdown, HTML, PDF oder JSON. Enthalten sind allgemeine Inhalte plus die passenden spezifischen.
@@ -109,6 +109,10 @@ Jeder Test trägt eine ID (`[T-xxx]`), die in [`traceability/tests.json`](tracea
 | `OBJECT_STORE` | `local` | `s3` für AWS S3 oder S3-kompatible Speicher (MinIO, Ceph …) – empfohlen für mehrere Instanzen |
 | `S3_BUCKET` / `S3_PREFIX` | – | Bucket (Pflicht bei `s3`) und optionales Präfix |
 | `S3_ENDPOINT` / `S3_REGION` / `S3_FORCE_PATH_STYLE` | AWS / `us-east-1` / automatisch | für S3-kompatible Speicher; Zugangsdaten über `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` oder Instanzrolle |
+| `LLM_PROVIDER` | `none` | KI-Umformulierung (ADR-013): `anthropic`, `openai` (OpenAI-kompatibel, auch Azure/vLLM/Ollama) oder `demo` (offline, nur Demo/Tests) |
+| `LLM_MODEL` | `claude-sonnet-5` bei `anthropic` | Modell; bei `openai` Pflicht |
+| `LLM_API_KEY` | – | Schlüssel; alternativ `ANTHROPIC_API_KEY` bzw. `OPENAI_API_KEY` |
+| `LLM_BASE_URL` / `LLM_TIMEOUT_MS` / `LLM_MAX_TOKENS` | Anbieter-Standard / `60000` / `4000` | eigener Endpunkt (z. B. EU-Region, Proxy, selbst betrieben), Zeitlimit, Antwortlänge |
 | `AUTH_MODE` | `demo` | `oidc` für den Produktivbetrieb |
 | `OIDC_ISSUER` | – | Issuer-URL des Providers (Discovery unter `/.well-known/openid-configuration`) |
 | `OIDC_CLIENT_ID` | – | Client-ID der Web-UI |

@@ -9,10 +9,12 @@ import { loadConfig, type AppConfig } from './config.js';
 import { DEFAULT_PROJECT_ID, seedReferenceData, type Ctx } from './context.js';
 import { openDb } from './db.js';
 import { JobQueue } from './jobs.js';
+import { createProvider } from './llm.js';
 import { Problem } from './problem.js';
 import { chapterRoutes } from './routes/chapters.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
+import { rewriteRoutes } from './routes/rewrite.js';
 import { sourceRoutes } from './routes/sources.js';
 import { terminologyRoutes } from './routes/terminology.js';
 import { failAnalysisJob, runAnalysis } from './services/analysis.js';
@@ -40,6 +42,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     store: config.objectStore.kind === 's3' ? new S3ObjectStore(config.objectStore) : new LocalObjectStore(path.join(config.dataDir, 'objects')),
     jobs,
     config,
+    llm: createProvider(config.llm),
     projectId: DEFAULT_PROJECT_ID,
     log: (msg, extra) => app.log.info(extra ?? {}, msg),
   };
@@ -80,12 +83,13 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
         if (PUBLIC_PATHS.has(req.url.split('?')[0])) return;
         req.user = await authenticate(ctx, req.headers);
       });
-      api.get('/health', async () => ({ status: 'ok', database: db.dialect, auth: config.authMode, objectStore: ctx.store.kind }));
+      api.get('/health', async () => ({ status: 'ok', database: db.dialect, auth: config.authMode, objectStore: ctx.store.kind, llm: ctx.llm?.id ?? 'none' }));
       sourceRoutes(api, ctx);
       qualityRoutes(api, ctx);
       chapterRoutes(api, ctx);
       miscRoutes(api, ctx);
       terminologyRoutes(api, ctx);
+      rewriteRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

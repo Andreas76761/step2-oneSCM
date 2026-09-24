@@ -14,3 +14,4 @@
 | [ADR-010](ADR-010-traceability.md) | Traceability aus OpenAPI `x-requirements` und Test-Registry | akzeptiert |
 | [ADR-011](ADR-011-oidc.md) | Anmeldung über OpenID Connect (Bearer-JWT, PKCE in der UI) | akzeptiert, umgesetzt |
 | [ADR-012](ADR-012-export-rendering.md) | Sicherer Export als HTML (marked, escaped) und PDF (pdfmake) | akzeptiert, umgesetzt |
+| [ADR-013](ADR-013-ki-umformulierung.md) | KI-gestützte Umformulierung als Vorschlag mit Quellenbindung je Satz | akzeptiert, umgesetzt (E-16) |
