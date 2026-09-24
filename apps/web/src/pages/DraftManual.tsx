@@ -1,5 +1,6 @@
 // Draft Manual (ADR-033): Textschnipsel einer Gliederung zuordnen, Dopplungen, Lücken, Widersprüche und Warnungen farblich
 import { useEffect, useState } from 'react';
+import type React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, download, patch, post, qs } from '../api';
 import { Card, Empty, ErrorBox, Md, Page, Status, errorText, useApp, useLoad } from '../components/ui';
@@ -13,6 +14,22 @@ const FLAG: Record<FlagType, { icon: string; label: string }> = {
   warning: { icon: '⚠', label: 'Warnung' },
 };
 const ORDER: FlagType[] = ['contradiction', 'duplicate', 'warning', 'gap'];
+
+// Drag & Drop (ADR-035): Schnipsel-Kennungen im eigenen Datenformat
+const DND = 'application/x-onescm-snippets';
+const dragSnippets = (e: React.DragEvent, ids: string[]) => {
+  e.dataTransfer.setData(DND, JSON.stringify(ids));
+  e.dataTransfer.effectAllowed = 'move';
+};
+const droppedSnippets = (e: React.DragEvent): string[] | null => {
+  try {
+    const v = JSON.parse(e.dataTransfer.getData(DND) || 'null');
+    return Array.isArray(v) && v.every((x) => typeof x === 'string') ? v : null;
+  } catch {
+    return null;
+  }
+};
+const accepts = (e: React.DragEvent) => e.dataTransfer.types.includes(DND);
 
 export const FlagChip = ({ type, count }: { type: FlagType; count?: number }) => (
   <span className={`flag flag-${type}`}><span aria-hidden="true">{FLAG[type].icon}</span> {FLAG[type].label}{count !== undefined ? `: ${count}` : ''}</span>
@@ -35,7 +52,7 @@ function Candidates({ outline, nodes, canEdit, onAssigned }: { outline: any; nod
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
   const [target, setTarget] = useState('');
-  const data = useLoad<any>(`/outlines/${outline.id}/candidates${qs({ q: q || undefined, page, pageSize: 25 })}`, [outline.id, q, page]);
+  const data = useLoad<any>(`/outlines/${outline.id}/candidates${qs({ q: q || undefined, page, pageSize: 25 })}`, [outline.id, q, page, outline.updatedAt]);
   useEffect(() => setSelected([]), [outline.id, q, page]);
   const assign = async () => {
     try {
@@ -66,7 +83,8 @@ function Candidates({ outline, nodes, canEdit, onAssigned }: { outline: any; nod
       <ErrorBox error={data.error} />
       {data.data && !data.data.items.length && <Empty>Alle passenden Schnipsel sind zugeordnet.</Empty>}
       {data.data?.items.map((s: any) => (
-        <div key={s.id} className={`draft-snippet sev-${severity(s.flags)}`}>
+        <div key={s.id} className={`draft-snippet sev-${severity(s.flags)}`} draggable={canEdit}
+          onDragStart={(e) => dragSnippets(e, selected.includes(s.id) ? selected : [s.id])}>
           <label className="inline small">
             {canEdit && <input type="checkbox" checked={selected.includes(s.id)} onChange={() => setSelected(selected.includes(s.id) ? selected.filter((x) => x !== s.id) : [...selected, s.id])} />}
             #{s.seq} · {s.chapter}{s.subchapter ? ` › ${s.subchapter}` : ''}
@@ -151,6 +169,23 @@ export function DraftManualPage() {
   const selectedId = outlineId ?? list.data?.items.find((o: any) => o.status === 'active')?.id ?? list.data?.items[0]?.id ?? null;
   const draft = useLoad<any>(selectedId ? `/outlines/${selectedId}/draft` : null, [selectedId]);
   const [onlyFlagged, setOnlyFlagged] = useState(false);
+  const [dropAt, setDropAt] = useState<string | null>(null);
+  // Ablegen auf einem Eintrag (ans Ende) oder auf einem Schnipsel (davor)
+  const drop = (e: React.DragEvent, nodeId: string, beforeSnippetId?: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDropAt(null);
+    const ids = droppedSnippets(e);
+    if (!ids?.length || !d || (beforeSnippetId && ids.includes(beforeSnippetId))) return;
+    void run(() => post(`/outlines/${d.outline.id}/assignments`, { nodeId, snippetIds: ids, ...(beforeSnippetId ? { beforeSnippetId } : {}) }), ids.length > 1 ? `${ids.length} Schnipsel zugeordnet.` : 'Schnipsel zugeordnet.');
+  };
+  const over = (e: React.DragEvent, key: string) => {
+    if (!canEdit || !accepts(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    if (dropAt !== key) setDropAt(key);
+  };
   const d = draft.data;
   const run = async (fn: () => Promise<any>, msg?: string) => {
     try {
@@ -203,13 +238,15 @@ export function DraftManualPage() {
                 if (onlyFlagged && !snippets.length && !n.flags.length) return null;
                 const H = n.level === 1 ? 'h2' : 'h3';
                 return (
-                  <section key={n.id} className={`draft-node${n.flags.some((f: any) => f.type === 'gap') ? ' gap' : ''}`} aria-labelledby={`h-${n.id}`}>
+                  <section key={n.id} className={`draft-node${n.flags.some((f: any) => f.type === 'gap') ? ' gap' : ''}${dropAt === n.id ? ' drop-target' : ''}`} aria-labelledby={`h-${n.id}`}
+                    onDragOver={(e) => over(e, n.id)} onDragLeave={() => setDropAt(null)} onDrop={(e) => drop(e, n.id)}>
                     <div className="draft-node-head">
                       <H id={`h-${n.id}`}>{n.number} {n.title}</H>
                       <FlagList flags={n.flags} />
                     </div>
                     {snippets.map((s: any, i: number) => (
-                      <article key={s.id} className={`draft-snippet sev-${severity(s.flags)}`} aria-label={`Schnipsel #${s.seq}`}>
+                      <article key={s.id} className={`draft-snippet sev-${severity(s.flags)}${dropAt === s.id ? ' drop-target' : ''}`} aria-label={`Schnipsel #${s.seq}`}
+                        draggable={canEdit} onDragStart={(e) => dragSnippets(e, [s.id])} onDragOver={(e) => over(e, s.id)} onDrop={(e) => drop(e, n.id, s.id)}>
                         <div className="small muted">#{s.seq} · Quelle: {s.path} · {s.chapter}{s.subchapter ? ` › ${s.subchapter}` : ''}</div>
                         <Md text={s.text} />
                         <FlagList flags={s.flags} />

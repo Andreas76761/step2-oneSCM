@@ -1,6 +1,6 @@
 // Stammdaten › Inhaltsverzeichnis (ADR-032): Gliederungen je Variante (Rolle, Sparte, Blueprint oder Märkte),
 // Versionen speichern, hochladen, bearbeiten, erweitern, exportieren
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { currentProjectId, del, download, patch, post } from '../api';
 import { Card, Empty, ErrorBox, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
@@ -127,6 +127,46 @@ function MarketsEditor({ markets, onSaved }: { markets: string[]; onSaved: () =>
   );
 }
 
+const NODE_DND = 'application/x-onescm-outline-node';
+const CHANGE: Record<string, { label: string; cls: string }> = {
+  added: { label: 'neu', cls: 'st-approved' }, removed: { label: 'entfernt', cls: 'st-failed' }, changed: { label: 'geändert', cls: 'st-in_review' }, unchanged: { label: 'unverändert', cls: '' },
+};
+
+/** Versionsvergleich (ADR-035): Einträge über ihre stabile Kennung, Änderungen an Titel, Position, Ebene, Zuordnungen und Variante */
+function OutlineCompare({ outlineId, withId, onClose }: { outlineId: string; withId: string; onClose: () => void }) {
+  const cmp = useLoad<any>(`/outlines/${outlineId}/compare?with=${encodeURIComponent(withId)}`, [outlineId, withId]);
+  const [all, setAll] = useState(false);
+  const c = cmp.data;
+  return (
+    <section className="outline-compare" aria-label="Versionsvergleich">
+      <ErrorBox error={cmp.error} />
+      {c && (
+        <>
+          <div className="filters">
+            <h3>V{c.from.versionNo} → V{c.to.versionNo}</h3>
+            <span className="small" role="status">{c.summary.added} neu · {c.summary.removed} entfernt · {c.summary.changed} geändert · {c.summary.unchanged} unverändert</span>
+            <label className="inline small"><input type="checkbox" checked={all} onChange={(e) => setAll(e.target.checked)} /> auch unveränderte</label>
+            <button className="btn small ghost" onClick={onClose}>Vergleich schließen</button>
+          </div>
+          {c.variant.length > 0 && <ul className="small">{c.variant.map((v: string) => <li key={v}>Variante – {v}</li>)}</ul>}
+          <table className="table compact">
+            <thead><tr><th>Eintrag</th><th>Änderung</th><th>Details</th></tr></thead>
+            <tbody>
+              {c.entries.filter((e: any) => all || e.change !== 'unchanged').map((e: any) => (
+                <tr key={e.nodeKey}>
+                  <td>{(e.to ?? e.from).number} {(e.to ?? e.from).title}</td>
+                  <td><span className={`tag ${CHANGE[e.change].cls}`}>{CHANGE[e.change].label}</span></td>
+                  <td className="small">{e.change === 'removed' ? `${e.snippetsRemoved} Zuordnungen gelöst` : e.change === 'added' ? `${e.snippetsAdded} Zuordnungen` : e.details.join(' · ') || '–'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </section>
+  );
+}
+
 export function OutlinesPage() {
   const { outlineId } = useParams();
   const navigate = useNavigate();
@@ -141,6 +181,10 @@ export function OutlinesPage() {
   const [editVariant, setEditVariant] = useState<VariantForm | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [editing, setEditing] = useState<{ id: string; title: string } | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropAt, setDropAt] = useState<string | null>(null);
+  const [compareWith, setCompareWith] = useState('');
+  useEffect(() => setCompareWith(''), [outlineId]);
   const o = detail.data;
   const run = async (fn: () => Promise<any>, msg?: string) => {
     try {
@@ -190,13 +234,28 @@ export function OutlinesPage() {
               )}
             </div>
             {o.versions.length > 1 && (
-              <p className="small">Versionen: {o.versions.map((v: any) => (
-                <Link key={v.id} className="tag" to={`/stammdaten/inhaltsverzeichnis/${v.id}`} aria-current={v.id === o.id ? 'true' : undefined}>V{v.versionNo}{v.status === 'active' ? ' (aktiv)' : ''}</Link>
-              ))}</p>
+              <div className="filters">
+                <p className="small">Versionen: {o.versions.map((v: any) => (
+                  <Link key={v.id} className="tag" to={`/stammdaten/inhaltsverzeichnis/${v.id}`} aria-current={v.id === o.id ? 'true' : undefined}>V{v.versionNo}{v.status === 'active' ? ' (aktiv)' : ''}</Link>
+                ))}</p>
+                <label className="inline small">Vergleichen mit
+                  <select value={compareWith} onChange={(e) => setCompareWith(e.target.value)}>
+                    <option value="">–</option>
+                    {o.versions.filter((v: any) => v.id !== o.id).map((v: any) => <option key={v.id} value={v.id}>V{v.versionNo}</option>)}
+                  </select>
+                </label>
+              </div>
             )}
+            {compareWith && <OutlineCompare outlineId={o.id} withId={compareWith} onClose={() => setCompareWith('')} />}
+            {canEdit && o.nodes.length > 1 && <p className="small muted">Einträge per Drag &amp; Drop umsortieren: auf einen Eintrag ziehen, um davor einzuordnen (übernimmt dessen Ebene).</p>}
             <ol className="outline-tree" aria-label="Gliederung">
               {o.nodes.map((n: any, i: number) => (
-                <li key={n.id} className={`level-${n.level}`}>
+                <li key={n.id} className={`level-${n.level}${dropAt === n.id ? ' drop-target' : ''}${dragId === n.id ? ' dragging' : ''}`}
+                  draggable={canEdit && editing?.id !== n.id}
+                  onDragStart={(e) => { e.dataTransfer.setData(NODE_DND, n.id); e.dataTransfer.effectAllowed = 'move'; setDragId(n.id); }}
+                  onDragEnd={() => { setDragId(null); setDropAt(null); }}
+                  onDragOver={(e) => { if (!e.dataTransfer.types.includes(NODE_DND) || dragId === n.id) return; e.preventDefault(); if (dropAt !== n.id) setDropAt(n.id); }}
+                  onDrop={(e) => { e.preventDefault(); const id = e.dataTransfer.getData(NODE_DND); setDropAt(null); if (id && id !== n.id) void run(() => patch(`/outline-nodes/${id}`, { beforeId: n.id }), 'Verschoben.'); }}>
                   <span className="num">{n.number}</span>
                   {editing && editing.id === n.id ? (
                     <form className="title" onSubmit={(e) => { e.preventDefault(); const title = editing.title; void run(() => patch(`/outline-nodes/${n.id}`, { title }), 'Umbenannt.').then(() => setEditing(null)); }}>

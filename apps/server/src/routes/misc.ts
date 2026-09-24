@@ -11,6 +11,7 @@ import { CONTENT_TYPES, createExport, downloadExport, listExports } from '../ser
 import { optimizationOverview } from '../services/insights.js';
 import { translationStatus } from '../services/translations.js';
 import { buildMatrix, matrixCsv, matrixMarkdown, matrixXlsx } from '../services/traceability.js';
+import { globalSearch } from '../services/search.js';
 import { list, userOf } from './helpers.js';
 
 export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -22,6 +23,8 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
       outlineId: typeof b.outlineId === 'string' && b.outlineId ? b.outlineId : undefined, appendices: typeof b.appendices === 'boolean' ? b.appendices : undefined }, user.id);
   });
   app.get('/exports', async (req) => (userOf(req.ctx, req), listExports(req.ctx)));
+  // Globale Suche (ADR-035)
+  app.get<{ Querystring: { q?: string; limit?: string } }>('/search', async (req) => (userOf(req.ctx, req), globalSearch(req.ctx, req.query.q ?? '', Number(req.query.limit) || 8)));
   app.get<{ Params: { exportId: string } }>('/exports/:exportId/download', async (req, reply) => {
     userOf(req.ctx, req);
     const f = await downloadExport(req.ctx, req.params.exportId);

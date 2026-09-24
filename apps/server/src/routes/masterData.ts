@@ -6,7 +6,7 @@ import {
   setMediaTitle, updateAbbreviation, updateFaq,
 } from '../services/masterData.js';
 import {
-  addNode, assignSnippets, autoAssign, createOutline, deleteNode, deleteOutline, draftManual, exportDraft, exportOutline, getOutline, listOutlines,
+  addNode, assignSnippets, autoAssign, compareOutlines, createOutline, deleteNode, deleteOutline, draftManual, exportDraft, exportOutline, getOutline, listOutlines,
   moveAssignment, newOutlineVersion, outlineCandidates, outlinePlan, setPlanItem, unassignSnippet, updateNode, updateOutline,
 } from '../services/outlines.js';
 import { generateVariant, materializeVariant, variantChapters } from '../services/variants.js';
@@ -49,6 +49,11 @@ export function masterDataRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.delete<P<'nodeId'>>('/outline-nodes/:nodeId', async (req) => deleteNode(req.ctx, req.params.nodeId, userOf(req.ctx, req, 'edit')));
 
   // Draft Manual
+  app.get<P<'outlineId'> & { Querystring: { with?: string } }>('/outlines/:outlineId/compare', async (req) => {
+    userOf(req.ctx, req);
+    if (!req.query.with) throw badRequest('with (Kennung der Vergleichsversion) ist Pflicht.');
+    return compareOutlines(req.ctx, req.query.with, req.params.outlineId);
+  });
   app.get<P<'outlineId'>>('/outlines/:outlineId/draft', async (req) => (userOf(req.ctx, req), draftManual(req.ctx, req.params.outlineId)));
   app.get<P<'outlineId'> & { Querystring: { flags?: string } }>('/outlines/:outlineId/draft/export', async (req, reply) => {
     userOf(req.ctx, req);

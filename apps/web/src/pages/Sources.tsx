@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api, del, get, patch, post, qs } from '../api';
 import {
   Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
@@ -13,7 +14,13 @@ export function SourcesPage() {
   const chapters = useLoad<any[]>('/chapters');
   const [busy, setBusy] = useState(false);
   const [openImport, setOpenImport] = useState<string | null>(null);
-  const [filter, setFilter] = useState<Record<string, string>>({});
+  const [params] = useSearchParams();
+  // Sprung aus der globalen Suche: /quellen?q=…
+  const [filter, setFilter] = useState<Record<string, string>>((): Record<string, string> => { const q = params.get('q'); return q ? { q } : {}; });
+  useEffect(() => {
+    const q = params.get('q');
+    if (q) setFilter((f) => (f.q === q ? f : { ...f, q }));
+  }, [params]);
   const [page, setPage] = useState(1);
   const snippets = useLoad<any>(`/snippets${qs({ ...filter, page, pageSize: 25 })}`, [filter, page]);
   const [selected, setSelected] = useState<any | null>(null);

@@ -287,8 +287,10 @@ async function touch(ctx: Ctx, outlineId: string, user: User) {
 }
 
 /** Titel/Beschreibung ändern oder verschieben (move: up | down; parentId: unter ein anderes Kapitel bzw. null = Kapitel) */
-export async function updateNode(ctx: Ctx, nodeId: string, input: { title?: string; description?: string | null; move?: 'up' | 'down'; parentId?: string | null }, user: User) {
+export async function updateNode(ctx: Ctx, nodeId: string, input: { title?: string; description?: string | null; move?: 'up' | 'down'; parentId?: string | null; beforeId?: string | null }, user: User) {
   const n = await nodeRow(ctx, nodeId);
+  if (input.beforeId !== undefined && typeof input.beforeId !== 'string' && input.beforeId !== null) throw badRequest('beforeId muss eine Kennung oder null sein.');
+  if (input.parentId !== undefined && typeof input.parentId !== 'string' && input.parentId !== null) throw badRequest('parentId muss eine Kennung oder null sein.');
   await ctx.db.tx(async () => {
     if (input.title !== undefined) {
       const title = stripNumber(input.title);
@@ -296,7 +298,23 @@ export async function updateNode(ctx: Ctx, nodeId: string, input: { title?: stri
       await ctx.db.run('UPDATE outline_nodes SET title = ? WHERE id = ?', title, nodeId);
     }
     if (input.description !== undefined) await ctx.db.run('UPDATE outline_nodes SET description = ? WHERE id = ?', input.description?.trim().slice(0, 1000) || null, nodeId);
-    if (input.parentId !== undefined && (input.parentId ?? null) !== (n.parent_id ?? null)) {
+    if (input.beforeId !== undefined) {
+      // Drag & Drop: vor einem Eintrag einordnen (übernimmt dessen Ebene) bzw. mit null ans Ende von parentId
+      const target = input.beforeId ? await nodeRow(ctx, input.beforeId) : null;
+      if (target && (target.outline_id !== n.outline_id || target.id === nodeId)) throw badRequest('beforeId muss ein anderer Eintrag derselben Gliederung sein.');
+      const parentId: string | null = target ? (target.parent_id ?? null) : input.parentId !== undefined ? input.parentId : (n.parent_id ?? null);
+      if (parentId) {
+        const p = await nodeRow(ctx, parentId);
+        if (p.outline_id !== n.outline_id || p.level !== 1 || p.id === nodeId) throw badRequest('Ziel muss ein Kapitel derselben Gliederung sein.');
+        if (await ctx.db.get('SELECT id FROM outline_nodes WHERE parent_id = ?', nodeId)) throw badRequest('Ein Kapitel mit Unterkapiteln kann nicht selbst Unterkapitel werden.');
+      }
+      const siblings = (await ctx.db.all(`SELECT id FROM outline_nodes WHERE outline_id = ? AND ${parentId ? 'parent_id = ?' : 'parent_id IS NULL'} ORDER BY position`, n.outline_id, ...(parentId ? [parentId] : [])))
+        .map((r) => r.id as string).filter((id) => id !== nodeId);
+      const at = target ? siblings.indexOf(target.id) : siblings.length;
+      siblings.splice(at, 0, nodeId);
+      await ctx.db.run('UPDATE outline_nodes SET parent_id = ?, level = ? WHERE id = ?', parentId, parentId ? 2 : 1, nodeId);
+      for (const [i, id] of siblings.entries()) await ctx.db.run('UPDATE outline_nodes SET position = ? WHERE id = ?', (i + 1) * 10, id);
+    } else if (input.parentId !== undefined && (input.parentId ?? null) !== (n.parent_id ?? null)) {
       if (input.parentId) {
         const p = await nodeRow(ctx, input.parentId);
         if (p.outline_id !== n.outline_id || p.level !== 1 || p.id === nodeId) throw badRequest('Ziel muss ein Kapitel derselben Gliederung sein.');
@@ -318,6 +336,7 @@ export async function updateNode(ctx: Ctx, nodeId: string, input: { title?: stri
       outlineId: n.outline_id, from: { title: n.title, parentId: n.parent_id ?? null },
       ...(input.title !== undefined ? { title: stripNumber(input.title) } : {}), ...(input.description !== undefined ? { description: true } : {}),
       ...(input.parentId !== undefined ? { parentId: input.parentId ?? null } : {}), ...(input.move ? { move: input.move } : {}),
+      ...(input.beforeId !== undefined ? { beforeId: input.beforeId } : {}),
     });
   });
   return getOutline(ctx, n.outline_id);
@@ -486,7 +505,8 @@ export async function outlineCandidates(ctx: Ctx, outlineId: string, q: { q?: st
 }
 
 /** Schnipsel einem Knoten zuordnen (verschiebt bereits zugeordnete) */
-export async function assignSnippets(ctx: Ctx, outlineId: string, input: { nodeId?: string; snippetIds?: string[] }, user: User) {
+/** Schnipsel einem Knoten zuordnen (auch verschieben); `beforeSnippetId`: dort vor diesem Schnipsel einfügen (Drag & Drop) */
+export async function assignSnippets(ctx: Ctx, outlineId: string, input: { nodeId?: string; snippetIds?: string[]; beforeSnippetId?: string | null }, user: User) {
   await outlineRow(ctx, outlineId);
   const ids = [...new Set((input.snippetIds ?? []).map(String))];
   if (!input.nodeId || !ids.length) throw badRequest('nodeId und snippetIds sind Pflicht.');
@@ -494,11 +514,21 @@ export async function assignSnippets(ctx: Ctx, outlineId: string, input: { nodeI
   const node = await nodeRow(ctx, input.nodeId);
   if (node.outline_id !== outlineId) throw badRequest('nodeId gehört nicht zu dieser Gliederung.');
   await assertIdsInProject(ctx, 'snippetId', ids);
+  const before = input.beforeSnippetId ? String(input.beforeSnippetId) : null;
+  if (before && (ids.includes(before) || !(await ctx.db.get('SELECT 1 AS x FROM outline_assignments WHERE outline_id = ? AND node_id = ? AND snippet_id = ?', outlineId, node.id, before)))) {
+    throw badRequest('beforeSnippetId muss ein anderer Schnipsel in diesem Eintrag sein.');
+  }
   await ctx.db.tx(async () => {
     let pos = (await ctx.db.get<{ m: number | null }>('SELECT MAX(position) AS m FROM outline_assignments WHERE node_id = ?', node.id))?.m ?? 0;
     for (const sid of ids) {
       await ctx.db.run('DELETE FROM outline_assignments WHERE outline_id = ? AND snippet_id = ?', outlineId, sid);
       await ctx.db.run('INSERT INTO outline_assignments (outline_id, snippet_id, node_id, position, assigned_by, assigned_at) VALUES (?, ?, ?, ?, ?, ?)', outlineId, sid, node.id, (pos += 10), user.id, now());
+    }
+    if (before) {
+      // Reihenfolge neu: eingefügte Schnipsel direkt vor dem Ziel
+      const rest = (await ctx.db.all('SELECT snippet_id FROM outline_assignments WHERE node_id = ? ORDER BY position', node.id)).map((r) => r.snippet_id as string).filter((x) => !ids.includes(x));
+      const order = rest.flatMap((x) => (x === before ? [...ids, x] : [x]));
+      for (const [i, sid] of order.entries()) await ctx.db.run('UPDATE outline_assignments SET position = ? WHERE outline_id = ? AND snippet_id = ?', (i + 1) * 10, outlineId, sid);
     }
     await touch(ctx, outlineId, user);
     await audit(ctx, user.id, 'outline.snippets_assigned', 'outline', outlineId, { nodeId: node.id, snippets: ids.length });
@@ -634,4 +664,68 @@ export async function setPlanItem(ctx: Ctx, nodeId: string, input: { assignee?: 
     await audit(ctx, user.id, 'plan_item.updated', 'outline_node', nodeId, { assignee, dueDate, status });
   });
   return (await outlinePlan(ctx, n.outline_id)).items.find((i) => i.nodeId === nodeId);
+}
+
+// ---------- Versionsvergleich (ADR-035) ----------
+
+type NodeChange = 'added' | 'removed' | 'changed' | 'unchanged';
+
+/**
+ * Zwei Versionen derselben Gliederung vergleichen: Einträge über ihre stabile Kennung (node_key), Änderungen an
+ * Titel, Nummer/Ebene und Zuordnungen sowie an der Variante (Name, Rollen, Sparten, Märkte).
+ */
+export async function compareOutlines(ctx: Ctx, fromId: string, toId: string) {
+  const [a, b] = [await outlineRow(ctx, fromId), await outlineRow(ctx, toId)];
+  if (a.family_id !== b.family_id) throw badRequest('Nur Versionen derselben Gliederung können verglichen werden.');
+  const load = async (id: string) => {
+    const keys = new Map((await ctx.db.all('SELECT id, node_key FROM outline_nodes WHERE outline_id = ?', id)).map((r) => [r.id as string, (r.node_key ?? r.id) as string]));
+    const snippets = new Map<string, string[]>();
+    for (const r of await ctx.db.all('SELECT node_id, snippet_id FROM outline_assignments WHERE outline_id = ? ORDER BY position', id)) {
+      const k = keys.get(r.node_id)!;
+      snippets.set(k, [...(snippets.get(k) ?? []), r.snippet_id as string]);
+    }
+    return { nodes: (await nodesOf(ctx, id)).map((n) => ({ ...n, key: keys.get(n.id)! })), snippets };
+  };
+  const [from, to] = [await load(fromId), await load(toId)];
+  const entries: { nodeKey: string; change: NodeChange; details: string[]; from: { number: string; title: string } | null; to: { number: string; title: string } | null; snippetsAdded: number; snippetsRemoved: number }[] = [];
+  const snippetDiff = (k: string) => {
+    const x = new Set(from.snippets.get(k) ?? []);
+    const y = new Set(to.snippets.get(k) ?? []);
+    return { added: [...y].filter((s) => !x.has(s)).length, removed: [...x].filter((s) => !y.has(s)).length };
+  };
+  const fromByKey = new Map(from.nodes.map((n) => [n.key, n]));
+  const toKeys = new Set(to.nodes.map((n) => n.key));
+  for (const n of to.nodes) {
+    const o = fromByKey.get(n.key);
+    const d = snippetDiff(n.key);
+    if (!o) {
+      entries.push({ nodeKey: n.key, change: 'added', details: [], from: null, to: { number: n.number, title: n.title }, snippetsAdded: d.added, snippetsRemoved: 0 });
+      continue;
+    }
+    const details = [
+      o.title !== n.title ? `umbenannt (vorher „${o.title}“)` : null,
+      o.number !== n.number ? `verschoben (vorher ${o.number})` : null,
+      o.level !== n.level ? (n.level === 1 ? 'zum Kapitel hochgestuft' : 'zum Unterkapitel herabgestuft') : null,
+      d.added || d.removed ? `Zuordnungen: +${d.added} / −${d.removed}` : null,
+    ].filter((x): x is string => !!x);
+    entries.push({ nodeKey: n.key, change: details.length ? 'changed' : 'unchanged', details, from: { number: o.number, title: o.title }, to: { number: n.number, title: n.title }, snippetsAdded: d.added, snippetsRemoved: d.removed });
+  }
+  for (const o of from.nodes) {
+    if (toKeys.has(o.key)) continue;
+    entries.push({ nodeKey: o.key, change: 'removed', details: [], from: { number: o.number, title: o.title }, to: null, snippetsAdded: 0, snippetsRemoved: (from.snippets.get(o.key) ?? []).length });
+  }
+  const variant: string[] = [];
+  if (a.name !== b.name) variant.push(`Name: „${a.name}“ → „${b.name}“`);
+  for (const [field, label] of [['roles', 'Rollen'], ['divisions', 'Sparten'], ['markets', 'Märkte']] as const) {
+    const x = parseJson<string[]>(a[field], []).join(', ');
+    const y = parseJson<string[]>(b[field], []).join(', ');
+    if (x !== y) variant.push(`${label}: ${x || '–'} → ${y || '–'}`);
+  }
+  if (a.market_scope !== b.market_scope) variant.push(`Geltung: ${a.market_scope === 'markets' ? 'Märkte' : 'Blueprint'} → ${b.market_scope === 'markets' ? 'Märkte' : 'Blueprint'}`);
+  const count = (c: NodeChange) => entries.filter((e) => e.change === c).length;
+  return {
+    from: { id: a.id, versionNo: a.version_no }, to: { id: b.id, versionNo: b.version_no },
+    summary: { added: count('added'), removed: count('removed'), changed: count('changed'), unchanged: count('unchanged') },
+    variant, entries,
+  };
 }
