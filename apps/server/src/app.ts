@@ -59,12 +59,27 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
   const jobCtx = async (sql: string, id: string) => withProject(ctx, (await db.get<{ project_id: string }>(sql, id))?.project_id ?? DEFAULT_PROJECT_ID);
   const importCtx = (p: any) => jobCtx('SELECT project_id FROM imports WHERE id = ?', p.importId);
   const runCtx = (p: any) => jobCtx('SELECT project_id FROM analysis_runs WHERE id = ?', p.runId);
-  jobs.register('import', async (p) => runImportJob(await importCtx(p), p), async (p, err) => failImportJob(await importCtx(p), p, err));
-  jobs.register('analysis', async (p) => void (await runAnalysis(await runCtx(p), p.runId)), async (p, err) => failAnalysisJob(await runCtx(p), p, err));
+  // Archivierte Projekte sind nur lesbar: noch wartende Jobs werden als fehlgeschlagen beendet statt ausgeführt
+  const ARCHIVED = 'Projekt ist archiviert – Job nicht ausgeführt.';
+  const archived = async (c: Ctx) => !!(await db.get<{ archived_at: string | null }>('SELECT archived_at FROM projects WHERE id = ?', c.projectId))?.archived_at;
+  jobs.register('import', async (p) => {
+    const c = await importCtx(p);
+    if (await archived(c)) return failImportJob(c, p, ARCHIVED);
+    await runImportJob(c, p);
+  }, async (p, err) => failImportJob(await importCtx(p), p, err));
+  jobs.register('analysis', async (p) => {
+    const c = await runCtx(p);
+    if (await archived(c)) return failAnalysisJob(c, p, ARCHIVED);
+    await runAnalysis(c, p.runId);
+  }, async (p, err) => failAnalysisJob(await runCtx(p), p, err));
   const batchCtx = (p: any) => jobCtx(
     'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?', p.batchId,
   );
-  jobs.register('rewrite-batch', async (p) => runBatch(await batchCtx(p), p.batchId), async (p, err) => failBatch(await batchCtx(p), p.batchId, err));
+  jobs.register('rewrite-batch', async (p) => {
+    const c = await batchCtx(p);
+    if (await archived(c)) return failBatch(c, p.batchId, ARCHIVED);
+    await runBatch(c, p.batchId);
+  }, async (p, err) => failBatch(await batchCtx(p), p.batchId, err));
   if (options.worker !== false && process.env.JOB_WORKER !== '0') await jobs.start();
 
   await app.register(multipart, { limits: { fileSize: 512 * 1024 * 1024, files: 1 } });

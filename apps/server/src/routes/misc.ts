@@ -1,6 +1,6 @@
 // Export, Traceability, Einstellungen, Referenzdaten, Dashboard, Audit (US-010, US-012, US-013, US-014, US-020)
 import type { FastifyInstance } from 'fastify';
-import { audit, getSettings, saveSettings, type Ctx } from '../context.js';
+import { audit, getSettings, requirePermission, saveSettings, type Ctx } from '../context.js';
 import { parseJson } from '../db.js';
 import { RULE_LABELS } from '../domain/contradictions.js';
 import {
@@ -49,7 +49,9 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
 
   app.get('/settings', async (req) => (userOf(req.ctx, req), getSettings(req.ctx.db)));
   app.put<{ Body: any }>('/settings', async (req) => {
-    const user = userOf(req.ctx, req, 'admin');
+    // Einstellungen gelten systemweit: globale Berechtigung „admin“ erforderlich (nicht nur Projekt-Administration)
+    const user = req.globalUser!;
+    requirePermission(user, 'admin');
     const body = (req.body ?? {}) as any;
     const a = body.analysis;
     if (a) {
@@ -117,7 +119,7 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
     const { entityType, entityId } = req.query;
     const limit = Math.min(Number(req.query.limit ?? 200), 1000);
     // Projektereignisse; systemweite Ereignisse (Einstellungen) nur für die Administration
-    const where: string[] = [req.user?.permissions.includes('admin') ? '(project_id = ? OR project_id IS NULL)' : 'project_id = ?'];
+    const where: string[] = [req.globalUser?.permissions.includes('admin') ? '(project_id = ? OR project_id IS NULL)' : 'project_id = ?'];
     const p: unknown[] = [req.ctx.projectId];
     if (entityType) (where.push('entity_type = ?'), p.push(entityType));
     if (entityId) (where.push('entity_id = ?'), p.push(entityId));

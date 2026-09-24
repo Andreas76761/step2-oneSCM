@@ -123,6 +123,26 @@ describe('Mandanten/Projekte (ADR-014)', () => {
     expect((await call('POST', '/terminology', { preferred: 'Kunde' }, 'u-leser')).status).toBe(403); // im Standardprojekt weiter nur lesend
     expect((await call('GET', '/projects', undefined, 'u-leser')).json.find((p: any) => p.id === C)).toMatchObject({ myPermissions: ['read', 'edit'] });
 
+    // Projekt-Administration ist keine globale Administration: systemweite Einstellungen bleiben gesperrt
+    await call('PUT', `/projects/${C}/members/u-redaktion`, { permissions: ['admin'] });
+    expect((await call('GET', '/me', undefined, 'u-redaktion', C)).json.permissions).toContain('admin');
+    expect((await call('PUT', '/settings', { readability: { maxSentenceWords: 5 } }, 'u-redaktion', C)).status).toBe(403);
+    const audit = (await call('GET', '/audit-events?limit=500', undefined, 'u-redaktion', C)).json;
+    expect(audit.every((e: any) => e.projectId === C)).toBe(true);
+    await call('DELETE', `/projects/${C}/members/u-redaktion`);
+
+    // Wartender Import eines später archivierten Projekts wird nicht mehr ausgeführt
+    await built.ctx.jobs.stop();
+    const mp = multipart('spaet.md', Buffer.from(md('1. Spät', 'Dieser Import wartet auf den Worker.')));
+    const queued = await built.app.inject({ method: 'POST', url: '/api/v1/imports', payload: mp.payload, headers: { ...mp.headers, 'x-user-id': 'u-admin', 'x-project-id': C } });
+    expect(queued.statusCode).toBe(202);
+    await call('PATCH', `/projects/${C}`, { archived: true });
+    await built.ctx.jobs.start();
+    await built.ctx.jobs.idle();
+    expect((await call('GET', `/imports/${queued.json().id}`, undefined, 'u-admin', C)).json).toMatchObject({ status: 'failed', error: expect.stringContaining('archiviert') });
+    expect((await call('GET', '/chapters', undefined, 'u-admin', C)).json).toEqual([]);
+    await call('PATCH', `/projects/${C}`, { archived: false });
+
     // Archiviert: nur lesbar; Standardprojekt nicht archivierbar
     expect((await call('PATCH', '/projects/p_default', { archived: true })).status).toBe(409);
     expect((await call('PATCH', `/projects/${C}`, { archived: true })).json.archivedAt).toBeTruthy();
@@ -282,9 +302,17 @@ describe('KI-Umformulierung ganzer Kapitel (ADR-013, Etappe 6)', () => {
     expect((await call('POST', `/chapter-versions/${v.id}/rewrite-jobs`)).status).toBe(409);
     await built.ctx.db.run("DELETE FROM rewrite_batches WHERE id = 'rwb_x'");
 
-    const started = await call('POST', `/chapter-versions/${v.id}/rewrite-jobs`, { instructions: 'kürzer' });
-    expect(started.status).toBe(202);
+    // Parallele Starts: genau einer wird angenommen (eindeutiger Index auf aktive Aufträge)
+    await built.ctx.jobs.stop();
+    const both = await Promise.all([1, 2].map(() => call('POST', `/chapter-versions/${v.id}/rewrite-jobs`, { instructions: 'kürzer' })));
+    expect(both.map((x) => x.status).sort()).toEqual([202, 409]);
+    const started = both.find((x) => x.status === 202)!;
     expect(started.json).toMatchObject({ status: 'queued', total: eligible.length });
+    // der Datenbank-Index allein verhindert einen zweiten aktiven Auftrag (auch ohne Vorprüfung, z. B. zweite Instanz)
+    await expect(built.ctx.db.run(
+      "INSERT INTO rewrite_batches (id, chapter_version_id, status, created_by, created_at) VALUES ('rwb_dup', ?, 'queued', 'u-admin', '2026-09-24T00:00:00Z')", v.id,
+    )).rejects.toThrow();
+    await built.ctx.jobs.start();
     await built.ctx.jobs.idle();
     const done = (await call('GET', `/rewrite-jobs/${started.json.id}`)).json;
     expect(done).toMatchObject({ status: 'completed', total: eligible.length, done: eligible.length, valid: eligible.length, invalid: 0, failed: 0, instructions: 'kürzer' });
