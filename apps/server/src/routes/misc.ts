@@ -12,6 +12,7 @@ import { optimizationOverview } from '../services/insights.js';
 import { translationStatus } from '../services/translations.js';
 import { buildMatrix, matrixCsv, matrixMarkdown, matrixXlsx } from '../services/traceability.js';
 import { globalSearch } from '../services/search.js';
+import { refreshSearchIndex } from '../services/searchIndex.js';
 import { deleteDocxTemplate, getLayout, updateLayout, uploadDocxTemplate } from '../services/layout.js';
 import { list, userOf } from './helpers.js';
 
@@ -37,7 +38,11 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.delete('/layout/docx-template', async (req) => deleteDocxTemplate(req.ctx, userOf(req.ctx, req, 'admin')));
 
   // Globale Suche (ADR-035)
-  app.get<{ Querystring: { q?: string; limit?: string } }>('/search', async (req) => (userOf(req.ctx, req), globalSearch(req.ctx, req.query.q ?? '', Number(req.query.limit) || 8)));
+  app.get<{ Querystring: { q?: string; limit?: string; types?: string; page?: string } }>('/search', async (req) => (userOf(req.ctx, req), globalSearch(req.ctx, req.query.q ?? '', {
+    limit: Number(req.query.limit) || undefined, page: Number(req.query.page) || undefined, types: req.query.types ? req.query.types.split(',') : [],
+  })));
+  // Suchindex vollständig neu aufbauen (Administration, z. B. nach einer Wiederherstellung)
+  app.post('/search/reindex', async (req) => (userOf(req.ctx, req, 'admin'), refreshSearchIndex(req.ctx, true)));
   app.get<{ Params: { exportId: string } }>('/exports/:exportId/download', async (req, reply) => {
     userOf(req.ctx, req);
     const f = await downloadExport(req.ctx, req.params.exportId);

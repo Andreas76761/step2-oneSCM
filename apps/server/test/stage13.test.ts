@@ -176,4 +176,55 @@ describe('Etappe 13', () => {
       await built.app.close();
     }
   });
+
+  it('[T-175] Volltextsuche: Index je Datenbank, Umlaute, Präfix, alle Wörter, Relevanz, Filter, Seiten, Hervorhebung, sofort aktuell, Projekttrennung', async () => {
+    const built = await build('fts');
+    const call = client(built);
+    try {
+      await importFile(built, 'a.md', `${fm()}# 1. Anmeldung\n\n## 1.1 Übersicht\n\nDie Anmeldung öffnet oneSCM für alle Händler.\n\n## 1.2 Schritte\n\nIn Frankreich gilt zusätzlich die lokale Anmeldung.\n\n# 2. Aufträge\n\nAufträge werden im DMS angelegt; die Übersicht zeigt offene Aufträge.\n`);
+      const s = (q: string, extra = '') => call('GET', `/search?q=${encodeURIComponent(q)}${extra}`).then((r) => r.json);
+      // Umlaute/Groß-/Kleinschreibung egal, Präfix je Wort
+      expect((await s('ubersicht')).hits.map((h: any) => h.excerpt)).toEqual([expect.stringContaining('die Übersicht zeigt offene Aufträge')]);
+      expect((await s('ÜBERSICHT')).total).toBe((await s('ubersicht')).total);
+      expect((await s('Anmel')).hits.map((h: any) => h.type)).toContain('chapter');
+      // alle Wörter müssen vorkommen
+      const both = await s('Anmeldung Frankreich');
+      expect(both.hits.map((h: any) => h.type)).toEqual(['snippet']);
+      expect(both.hits[0].excerpt).toContain('Frankreich');
+      expect(both.hits[0].excerptParts.filter((p: any) => p.hit).map((p: any) => p.text.toLowerCase())).toEqual(expect.arrayContaining(['frankreich']));
+      // Relevanz: Treffer im Titel vor Treffern im Text
+      expect((await s('Aufträge')).hits[0]).toMatchObject({ type: 'chapter', title: '2. Aufträge' });
+      // Filter, Bereiche mit Anzahl, Seiten
+      const all = await s('Anmeldung');
+      expect(all.facets.find((f: any) => f.type === 'snippet').count).toBe(2);
+      const onlySnippets = await s('Anmeldung', '&types=snippet');
+      expect(onlySnippets.hits.every((h: any) => h.type === 'snippet')).toBe(true);
+      expect(onlySnippets.total).toBe(2);
+      expect(onlySnippets.facets.length).toBe(all.facets.length);
+      const p2 = await s('Anmeldung', '&types=snippet&limit=1&page=2');
+      expect(p2.hits).toHaveLength(1);
+      expect(p2.hits[0].id).not.toBe((await s('Anmeldung', '&types=snippet&limit=1')).hits[0].id);
+      expect((await call('GET', '/search?q=Anmeldung&types=kunde')).status).toBe(400);
+      expect((await s('%%')).total).toBe(0);
+
+      // sofort aktuell: neue, geänderte und gelöschte Einträge
+      const abk = (await call('POST', '/abbreviations', { abbreviation: 'SPID', expansion: 'Sistema Pubblico di Identità Digitale' })).json;
+      expect((await s('Identita')).hits.map((h: any) => h.title)).toEqual(['SPID']);
+      await call('PATCH', `/abbreviations/${abk.id}`, { expansion: 'Öffentliches Identitätssystem' });
+      expect((await s('Pubblico')).total).toBe(0);
+      expect((await s('Identitätssystem')).total).toBe(1);
+      await call('DELETE', `/abbreviations/${abk.id}`);
+      expect((await s('Identitätssystem')).total).toBe(0);
+      // Projekttrennung
+      const other = (await call('POST', '/projects', { name: 'Anderes Projekt' })).json;
+      expect((await call('GET', '/search?q=Frankreich', undefined, 'u-admin', other.id)).json.total).toBe(0);
+      // Neuaufbau nur Administration; Suchindex ist abgeleitet und nicht im Backup
+      expect((await call('POST', '/search/reindex', {}, 'u-redaktion')).status).toBe(403);
+      expect((await call('POST', '/search/reindex', {})).json.rebuilt).toEqual(['chapter', 'block', 'source', 'outline', 'abbreviation', 'term', 'faq']);
+      const { backupTables } = await import('../src/services/backup.js');
+      expect(backupTables().some((t) => t.startsWith('search_'))).toBe(false);
+    } finally {
+      await built.app.close();
+    }
+  });
 });
