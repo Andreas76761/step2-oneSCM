@@ -36,7 +36,7 @@ async function approvedPassages(ctx: Ctx, opts: { language: string; role?: strin
       : []
     : await db.all(
       `SELECT v.id, v.chapter_id, v.version_no, c.title FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id
-       WHERE c.project_id = ? AND v.status = 'approved' ORDER BY c.position, c.title`,
+       WHERE c.project_id = ? AND v.status = 'approved' AND c.outline_family_id IS NULL ORDER BY c.position, c.title`,
       ctx.projectId,
     );
   const sectionTitle = new Map(CHAPTER_SECTIONS.map((s) => [s.code as string, s.title as string]));

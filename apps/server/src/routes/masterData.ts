@@ -6,10 +6,13 @@ import {
   setMediaTitle, updateAbbreviation, updateFaq,
 } from '../services/masterData.js';
 import {
-  addNode, assignSnippets, autoAssign, createOutline, deleteNode, deleteOutline, draftManual, exportDraft, exportOutline, getOutline, listOutlines,
+  addNode, assignSnippets, autoAssign, compareOutlines, createOutline, deleteNode, deleteOutline, draftManual, exportDraft, exportOutline, getOutline, listOutlines,
   moveAssignment, newOutlineVersion, outlineCandidates, outlinePlan, setPlanItem, unassignSnippet, updateNode, updateOutline,
 } from '../services/outlines.js';
-import { badRequest } from '../problem.js';
+import { generateVariant, materializeVariant, variantChapters } from '../services/variants.js';
+import { badRequest, Problem } from '../problem.js';
+import { importMasterData } from '../services/masterDataImport.js';
+import { getSettings } from '../context.js';
 import { num, userOf } from './helpers.js';
 
 type P<T extends string> = { Params: Record<T, string> };
@@ -48,6 +51,11 @@ export function masterDataRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.delete<P<'nodeId'>>('/outline-nodes/:nodeId', async (req) => deleteNode(req.ctx, req.params.nodeId, userOf(req.ctx, req, 'edit')));
 
   // Draft Manual
+  app.get<P<'outlineId'> & { Querystring: { with?: string } }>('/outlines/:outlineId/compare', async (req) => {
+    userOf(req.ctx, req);
+    if (!req.query.with) throw badRequest('with (Kennung der Vergleichsversion) ist Pflicht.');
+    return compareOutlines(req.ctx, req.query.with, req.params.outlineId);
+  });
   app.get<P<'outlineId'>>('/outlines/:outlineId/draft', async (req) => (userOf(req.ctx, req), draftManual(req.ctx, req.params.outlineId)));
   app.get<P<'outlineId'> & { Querystring: { flags?: string } }>('/outlines/:outlineId/draft/export', async (req, reply) => {
     userOf(req.ctx, req);
@@ -73,9 +81,26 @@ export function masterDataRoutes(app: FastifyInstance, _ctx: Ctx) {
   });
   app.post<P<'outlineId'>>('/outlines/:outlineId/auto-assign', async (req) => autoAssign(req.ctx, req.params.outlineId, userOf(req.ctx, req, 'edit')));
 
+  // Handbuch-Variante (ADR-034): Kapitel der Gliederung anlegen, Entwürfe erzeugen, Stand der Freigabe
+  app.get<P<'outlineId'>>('/outlines/:outlineId/chapters', async (req) => (userOf(req.ctx, req), variantChapters(req.ctx, req.params.outlineId)));
+  app.post<P<'outlineId'>>('/outlines/:outlineId/materialize', async (req) => materializeVariant(req.ctx, req.params.outlineId, userOf(req.ctx, req, 'edit')));
+  app.post<P<'outlineId'>>('/outlines/:outlineId/generate', async (req) => generateVariant(req.ctx, req.params.outlineId, userOf(req.ctx, req, 'edit')));
+
   // Redaktionsplanung
   app.get<P<'outlineId'>>('/outlines/:outlineId/plan', async (req) => (userOf(req.ctx, req), outlinePlan(req.ctx, req.params.outlineId)));
   app.put<P<'nodeId'> & { Body: any }>('/outline-nodes/:nodeId/plan', async (req) => setPlanItem(req.ctx, req.params.nodeId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+
+  // Stammdaten-Import aus CSV/Excel (ADR-036): ?kind=abbreviations|glossary|faq, ?apply=true übernimmt (sonst Vorschau)
+  app.post<{ Querystring: { kind?: string; apply?: string } }>('/master-data/import', async (req) => {
+    const user = userOf(req.ctx, req, 'edit');
+    if (!req.isMultipart()) throw badRequest('Erwartet multipart/form-data mit Feld „file“.');
+    const file = await req.file();
+    if (!file) throw badRequest('Feld „file“ fehlt.');
+    const data = await file.toBuffer();
+    const max = (await getSettings(req.ctx.db)).import.maxUploadBytes;
+    if (data.length > max) throw new Problem(413, 'Content Too Large', `Datei überschreitet ${max} Bytes.`);
+    return importMasterData(req.ctx, req.query.kind ?? '', file.filename, data, req.query.apply === 'true', user);
+  });
 
   // Abkürzungen
   app.get('/abbreviations', async (req) => (userOf(req.ctx, req), listAbbreviations(req.ctx)));

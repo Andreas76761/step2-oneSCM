@@ -368,5 +368,32 @@
     "documentation": [
       "docs/adr/ADR-033-draft-manual.md"
     ]
+  },
+  {
+    "id": "NFR-21",
+    "title": "Handbuch-Varianten: aus Gliederung und Draft Manual Kapitelversionen erzeugen, freigeben und je Variante exportieren/veröffentlichen – mit Inhaltsverzeichnis, Abkürzungen, Glossar, Bildverzeichnis und FAQ",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-034-handbuch-varianten.md"
+    ]
+  },
+  {
+    "id": "NFR-22",
+    "title": "Bedienkomfort: Drag & Drop für Schnipsel und Gliederung, Vergleich von Gliederungsversionen, globale Suche, wählbare dunkle Darstellung, mobile Ansicht",
+    "priority": "P3",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-035-bedienkomfort.md"
+    ]
+  },
+  {
+    "id": "NFR-23",
+    "title": "Betrieb & Pflege: gelöschte Quelldateien erkennen, SVG bereinigt importieren, Stammdaten aus CSV/Excel importieren, an überfällige Planung erinnern",
+    "priority": "P3",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-036-betrieb-pflege.md"
+    ]
   }
 ]

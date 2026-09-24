@@ -4,7 +4,11 @@ import { Badge, Card, DownloadButton, Empty, ErrorBox, Md, Page, errorText, useA
 
 export function ExportPage() {
   const { ref, notify } = useApp();
-  const chapters = useLoad<any[]>('/chapters');
+  const outlines = useLoad<any>('/outlines');
+  const [outlineId, setOutlineId] = useState('');
+  const outline = outlines.data?.items.find((o: any) => o.id === outlineId);
+  const chapters = useLoad<any[]>(outline ? `/chapters?outline=${outline.familyId}` : '/chapters', [outline?.familyId]);
+  const [appendices, setAppendices] = useState(true);
   const history = useLoad<any[]>('/exports');
   const [chapterIds, setChapterIds] = useState<string[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
@@ -20,7 +24,7 @@ export function ExportPage() {
   const run = async () => {
     setError(null);
     try {
-      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, format });
+      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, format, ...(outline ? { outlineId, appendices } : {}) });
       setResult(r);
       notify(`Export erstellt (${r.chapters} Kapitel).`);
       history.reload();
@@ -34,6 +38,16 @@ export function ExportPage() {
     <Page title="Export" subtitle="Freigegebene Kapitel rollen-, sparten-, markt- und releasegefiltert exportieren">
       <div className="grid2">
         <Card title="Exportumfang">
+          <div className="form-row">
+            <label>Handbuch
+              <select value={outlineId} onChange={(e) => { setOutlineId(e.target.value); setChapterIds([]); }}>
+                <option value="">Kapitel der Quellen</option>
+                {outlines.data?.items.map((o: any) => <option key={o.id} value={o.id}>Variante: {o.name} – V{o.versionNo}</option>)}
+              </select>
+            </label>
+            {outline && <label className="inline"><input type="checkbox" checked={appendices} onChange={(e) => setAppendices(e.target.checked)} /> Verzeichnisse anhängen (Abkürzungen, Glossar, Bilder, FAQ)</label>}
+          </div>
+          {outline && <p className="small muted">Filter der Variante (Rollen, Sparten, Blueprint/Märkte) werden angewendet; weitere Auswahl unten schränkt zusätzlich ein.</p>}
           <fieldset className="checks">
             <legend>Kapitel (leer = alle freigegebenen)</legend>
             {!approved.length && <p className="small muted">Noch kein Kapitel freigegeben.</p>}

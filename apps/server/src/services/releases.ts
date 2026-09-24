@@ -6,7 +6,9 @@ import { json, newId, now, parseJson, type Row } from '../db.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { gateForChapter, getChapterVersion } from './chapters.js';
 import { compareVersions } from './compare.js';
-import { badgeLine, KIND_LABEL, renderMarkdown, visible, type ExportChapter } from './exports.js';
+import { badgeLine, KIND_LABEL, renderMarkdown, visible, type ExportChapter, type ExportFilter } from './exports.js';
+import { appendixHtmlSections } from './appendixRender.js';
+import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
 import { escapeHtml, markdownToHtml, type ImageSource } from './render.js';
 import { inlineMedia, loadMedia, type MediaFile } from './media.js';
 import { MIME_EXT } from '../domain/media.js';
@@ -34,6 +36,7 @@ function releaseDto(r: Row) {
   return {
     id: r.id, version: r.version, title: r.title, notes: r.notes ?? null, createdBy: r.created_by, createdAt: r.created_at,
     previousReleaseId: r.previous_release_id ?? null,
+    outlineId: r.outline_id ?? null, outlineFamilyId: r.outline_family_id ?? null,
     chapters: parseJson<ReleaseChapter[]>(r.chapters, []), changes: parseJson<ChapterChange[]>(r.changes, []),
     siteUrl: `/api/v1/releases/${r.id}/download?format=site`, markdownUrl: `/api/v1/releases/${r.id}/download?format=md`,
     languages: parseJson<{ language: string; translated: number; total: number }[]>(r.languages, []).map(({ language, translated, total }) => ({ language, translated, total })),
@@ -119,6 +122,7 @@ export function changesText(changes: ChapterChange[]) {
 async function buildSite(
   version: string, title: string, notes: string | null, chapters: ExportChapter[], changes: ChapterChange[], createdAt: string,
   translations: Map<string, (ExportChapter | null)[]>, appUrl: string | null = null, media: Map<string, MediaFile> = new Map(),
+  filter: ExportFilter = {}, appendices: Appendices | null = null,
 ) {
   const zip = new JSZip();
   // Bilder (ADR-029) als Dateien unter bilder/ – einmal je Inhalt, von allen Sprachen gemeinsam genutzt
@@ -129,7 +133,7 @@ async function buildSite(
   const assistant = (lang: string) => (appUrl ? ` · <a href="${escapeHtml(`${appUrl.replace(/\/+$/, '')}/assistent?language=${lang}`)}">${escapeHtml(ui(lang).ask)}</a>` : '');
   const langs: SiteLang[] = [{ code: 'de', prefix: '' }, ...[...translations.keys()].map((code) => ({ code, prefix: `${code}/` }))];
   const lines = changesText(changes);
-  const vis = visible(chapters, {});
+  const vis = visible(chapters, filter);
   const files = vis.map((_, i) => `kapitel-${String(i + 1).padStart(2, '0')}.html`);
   const switcher = (current: string, file: string) => assistant(current) + (langs.length < 2 ? '' :
     ` · <nav aria-label="${escapeHtml(ui(current).languages)}" style="display:inline">${langs.map((l) => {
@@ -139,14 +143,20 @@ async function buildSite(
     }).join(' ')}</nav>`);
   for (const l of langs) {
     const u = ui(l.code);
+    const sections = appendices && hasAppendices(appendices) ? appendixHtmlSections(appendices, images(l.prefix)) : [];
     const label = `${u.version} ${version}`;
     const translated = l.code === 'de' ? null : translations.get(l.code)!;
-    const pages = vis.map((ch, i) => ({ ch: translated?.[i] ? visible([translated[i]!], {})[0] : ch, fallback: !!translated && !translated[i] }));
+    const pages = vis.map((ch, i) => ({ ch: translated?.[i] ? (visible([translated[i]!], filter)[0] ?? ch) : ch, fallback: !!translated && !translated[i] }));
     zip.file(`${l.prefix}index.html`, page(title, label, `<h1>${escapeHtml(title)}</h1>
 <p class="meta">${escapeHtml(label)} · ${escapeHtml(u.published)} ${createdAt.slice(0, 10)}</p>
 ${notes && l.code === 'de' ? markdownToHtml(notes) : ''}
 <nav class="toc" aria-label="${escapeHtml(u.toc)}"><h2>${escapeHtml(u.toc)}</h2><ol>${pages.map((p, i) => `<li><a href="${files[i]}">${escapeHtml(p.ch.title)}</a>${p.fallback ? ' <span class="meta">(DE)</span>' : ''}</li>`).join('')}</ol></nav>
-<p><a href="aenderungen.html">${escapeHtml(u.changes)}</a></p>`, l.code, switcher(l.code, 'index.html')));
+<p><a href="aenderungen.html">${escapeHtml(u.changes)}</a></p>${sections.length ? `
+<p lang="de"><a href="verzeichnisse.html">Verzeichnisse</a>: ${sections.map((a) => `<a href="verzeichnisse.html#${a.id}">${escapeHtml(a.title)}</a>`).join(' · ')}</p>` : ''}`, l.code, switcher(l.code, 'index.html')));
+    // Verzeichnisse (ADR-034) nur bei Handbuch-Varianten; Inhalt deutsch
+    if (sections.length) zip.file(`${l.prefix}verzeichnisse.html`, page('Verzeichnisse', label, `<div lang="de"><h1>Verzeichnisse</h1>
+<nav class="toc" aria-label="Verzeichnisse"><ol>${sections.map((a) => `<li><a href="#${a.id}">${escapeHtml(a.title)}</a></li>`).join('')}</ol></nav>
+${sections.map((a) => `<section id="${a.id}"><h2>${escapeHtml(a.title)}</h2>${a.html}</section>`).join('\n')}</div>`, l.code, switcher(l.code, 'verzeichnisse.html')));
     zip.file(`${l.prefix}aenderungen.html`, page(u.changes, label, `<h1>${escapeHtml(u.changes)}</h1>
 ${lines.length ? `<ul lang="de">${lines.map((x) => `<li>${escapeHtml(x)}</li>`).join('')}</ul>` : '<p>–</p>'}`, l.code, switcher(l.code, 'aenderungen.html')));
     pages.forEach((p, i) => {
@@ -158,16 +168,24 @@ ${lines.length ? `<ul lang="de">${lines.map((x) => `<li>${escapeHtml(x)}</li>`).
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
 }
 
-/** Release veröffentlichen: alle Kapitel mit freigegebener Version, Qualitätsgate für den Export muss bestehen. */
-export async function createRelease(ctx: Ctx, input: { version?: string; title?: string; notes?: string }, actor: string) {
+/**
+ * Release veröffentlichen: alle Kapitel mit freigegebener Version, Qualitätsgate für den Export muss bestehen.
+ * Mit `outlineId` (ADR-034) das Handbuch einer Variante: deren freigegebene Kapitel, Inhalte gefiltert nach der Variante,
+ * Verzeichnisse als eigene Seite; Änderungen gegenüber dem letzten Release derselben Gliederung.
+ */
+export async function createRelease(ctx: Ctx, input: { version?: string; title?: string; notes?: string; outlineId?: string }, actor: string) {
   const version = input.version?.trim();
   if (!version || !/^[\w.-]{1,40}$/.test(version)) throw badRequest('version ist Pflicht (Buchstaben, Ziffern, Punkt, Bindestrich; max. 40 Zeichen).');
   const { db } = ctx;
   if (await db.get('SELECT id FROM handbook_releases WHERE project_id = ? AND version = ?', ctx.projectId, version)) throw conflict(`Release ${version} existiert bereits.`);
+  const outline = input.outlineId ? await outlineOf(ctx, input.outlineId) : null;
+  const family = outline ? { sql: 'outline_family_id = ?', params: [outline.family_id] } : { sql: 'outline_family_id IS NULL', params: [] };
+  // Variante: nur Kapitel, die in der gewählten Gliederungsversion vorkommen
+  const inVersion = outline ? { sql: ' AND c.outline_node_key IN (SELECT node_key FROM outline_nodes WHERE outline_id = ? AND level = 1)', params: [outline.id] } : { sql: '', params: [] };
   const rows = await db.all(
     `SELECT c.id AS chapter_id, c.title, c.position, v.id AS version_id FROM chapters c JOIN generated_chapter_versions v ON v.chapter_id = c.id
-     WHERE c.project_id = ? AND v.status = 'approved' ORDER BY c.position, c.title`,
-    ctx.projectId,
+     WHERE c.project_id = ? AND c.${family.sql}${inVersion.sql} AND v.status = 'approved' ORDER BY c.position, c.title`,
+    ctx.projectId, ...family.params, ...inVersion.params,
   );
   if (!rows.length) throw unprocessable('Keine freigegebenen Kapitel – es gibt nichts zu veröffentlichen.');
   const blockers: { chapterId: string; checks: unknown }[] = [];
@@ -186,7 +204,7 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
   }
 
   // Änderungen gegenüber dem Vorgänger-Release (Vergleich ganzer Kapitelversionen, US-019)
-  const prevRow = await db.get('SELECT * FROM handbook_releases WHERE project_id = ? ORDER BY created_at DESC LIMIT 1', ctx.projectId);
+  const prevRow = await db.get(`SELECT * FROM handbook_releases WHERE project_id = ? AND ${family.sql} ORDER BY created_at DESC LIMIT 1`, ctx.projectId, ...family.params);
   const prev = prevRow ? parseJson<ReleaseChapter[]>(prevRow.chapters, []) : [];
   const changes: ChapterChange[] = [];
   for (const c of releaseChapters) {
@@ -203,7 +221,12 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
 
   const id = newId('rel');
   const createdAt = now();
-  const title = input.title?.trim() || 'oneSCM Benutzerhandbuch';
+  const title = input.title?.trim() || (outline?.name as string | undefined) || 'oneSCM Benutzerhandbuch';
+  const filter: ExportFilter = outline ? (() => {
+    const vf = variantFilter(outline);
+    return { roles: vf.roles, divisions: vf.divisions, market: vf.market, blueprint: vf.blueprint, markets: vf.markets };
+  })() : {};
+  const appendices = outline ? await appendicesFor(ctx, outline, visible(chapters, filter)) : null;
   const notes = input.notes?.trim() || null;
   // Freigegebene Übersetzungen genau der veröffentlichten Kapitelversionen (ADR-021)
   const translations = new Map<string, (ExportChapter | null)[]>();
@@ -220,10 +243,10 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
     languages.push({ language: lang, translated, total: list.length, markdownKey: `releases/${id}/handbuch-${lang}.md` });
   }
   const allTexts = [chapters, ...[...translations.values()].map((l) => l.filter((c): c is ExportChapter => !!c))]
-    .flatMap((chs) => visible(chs, {}).flatMap((ch) => ch.sections.flatMap((s) => s.blocks.map((b: any) => b.text as string))));
+    .flatMap((chs) => visible(chs, filter).flatMap((ch) => ch.sections.flatMap((s) => s.blocks.map((b: any) => b.text as string))));
   const media = await loadMedia(ctx, allTexts);
-  const site = await buildSite(version, title, notes, chapters, changes, createdAt, translations, ctx.config.notify.appUrl, media);
-  const md = renderMarkdown(chapters, {}, media).replace(/^# oneSCM Benutzerhandbuch/, `# ${title} – Version ${version}`);
+  const site = await buildSite(version, title, notes, chapters, changes, createdAt, translations, ctx.config.notify.appUrl, media, filter, appendices);
+  const md = renderMarkdown(chapters, filter, media, { title: `${title} – Version ${version}`, appendices });
   const siteKey = `releases/${id}/site.zip`;
   const mdKey = `releases/${id}/handbuch.md`;
   await ctx.store.put(siteKey, site);
@@ -231,16 +254,17 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
   for (const l of languages) {
     // Kapitel ohne freigegebene Übersetzung auf Deutsch (im Markdown gekennzeichnet)
     const chs = translations.get(l.language)!.map((t, i) => t ?? { ...chapters[i], title: `${chapters[i].title} (DE)` });
-    const lmd = renderMarkdown(chs, {}, media).replace(/^# oneSCM Benutzerhandbuch/, `# ${title} – ${LANGUAGES[l.language] ?? l.language} – Version ${version}`);
+    const lmd = renderMarkdown(chs, filter, media, { title: `${title} – ${LANGUAGES[l.language] ?? l.language} – Version ${version}` });
     await ctx.store.put(l.markdownKey, Buffer.from(lmd, 'utf8'));
   }
   await db.tx(async () => {
     await db.run(
-      `INSERT INTO handbook_releases (id, project_id, version, title, notes, chapters, changes, previous_release_id, site_key, markdown_key, created_by, created_at, languages)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO handbook_releases (id, project_id, version, title, notes, chapters, changes, previous_release_id, site_key, markdown_key, created_by, created_at, languages, outline_id, outline_family_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       id, ctx.projectId, version, title, notes, json(releaseChapters), json(changes), prevRow?.id ?? null, siteKey, mdKey, actor, createdAt, json(languages),
+      outline?.id ?? null, outline?.family_id ?? null,
     );
-    await audit(ctx, actor, 'release.published', 'release', id, { version, chapters: releaseChapters.length, changes: changesText(changes), languages: languages.map((l) => l.language) });
+    await audit(ctx, actor, 'release.published', 'release', id, { version, outlineId: outline?.id ?? null, chapters: releaseChapters.length, changes: changesText(changes), languages: languages.map((l) => l.language) });
   });
   return getRelease(ctx, id);
 }

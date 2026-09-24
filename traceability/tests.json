@@ -960,5 +960,43 @@
       "NFR-19",
       "NFR-20"
     ]
+  },
+  {
+    "id": "T-170",
+    "title": "Draft Manual → Kapitel der Variante, Entwürfe, Freigabe, Veröffentlichung und Export je Variante mit Verzeichnissen; Quellenkapitel getrennt",
+    "file": "apps/server/test/stage12.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-21"
+    ]
+  },
+  {
+    "id": "T-171",
+    "title": "Drag & Drop für Schnipsel und Gliederung, Vergleich von Gliederungsversionen, globale Suche",
+    "file": "apps/server/test/stage12.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-22"
+    ]
+  },
+  {
+    "id": "T-172",
+    "title": "Entfernte Quelldateien, bereinigter SVG-Import, Stammdaten aus CSV/Excel, Erinnerung an überfällige Planung",
+    "file": "apps/server/test/stage12.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-23"
+    ]
+  },
+  {
+    "id": "T-222",
+    "title": "UI: Varianten-Handbuch aus dem Draft Manual, Varianten-Export, globale Suche, Darstellung, Gliederungsvergleich, Drag & Drop, Stammdaten-Import",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-21",
+      "NFR-22",
+      "NFR-23"
+    ]
   }
 ]

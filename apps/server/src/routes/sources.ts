@@ -2,7 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
 import { badRequest } from '../problem.js';
-import { createImport, getImport, getRevisionOriginal, getRevisionRaw, listImports, listSources } from '../services/imports.js';
+import { createImport, getImport, restoreDocument, getRevisionOriginal, getRevisionRaw, listImports, listSources } from '../services/imports.js';
 import { getSnippet, patchSnippet, searchSnippets } from '../services/snippets.js';
 import { getMedia, listMedia, storeMedia } from '../services/media.js';
 import { audit, getSettings } from '../context.js';
@@ -10,19 +10,24 @@ import { Problem } from '../problem.js';
 import { num, userOf } from './helpers.js';
 
 export function sourceRoutes(app: FastifyInstance, _ctx: Ctx) {
-  app.post('/imports', async (req, reply) => {
+  app.post<{ Querystring: { snapshot?: string } }>('/imports', async (req, reply) => {
     const user = userOf(req.ctx, req, 'edit');
     if (!req.isMultipart()) throw badRequest('Erwartet multipart/form-data mit Feld „file“.');
     const file = await req.file();
     if (!file) throw badRequest('Feld „file“ fehlt.');
     const data = await file.toBuffer();
-    const result = await createImport(req.ctx, file.filename, data, user.id);
+    // ?snapshot=true: ZIP ist der vollständige Stand – fehlende Dateien werden als entfernt markiert (ADR-036)
+    const result = await createImport(req.ctx, file.filename, data, user.id, { snapshot: req.query.snapshot === 'true' });
     reply.code(202).header('Location', `/api/v1/imports/${result.id}`);
     return result;
   });
   app.get('/imports', async (req) => (userOf(req.ctx, req), listImports(req.ctx)));
   app.get<{ Params: { importId: string } }>('/imports/:importId', async (req) => (userOf(req.ctx, req), getImport(req.ctx, req.params.importId)));
   app.get('/sources', async (req) => (userOf(req.ctx, req), listSources(req.ctx)));
+  app.post<{ Params: { documentId: string } }>('/source-documents/:documentId/restore', async (req) => {
+    const user = userOf(req.ctx, req, 'edit');
+    return restoreDocument(req.ctx, req.params.documentId, user.id);
+  });
   app.get<{ Params: { revisionId: string } }>('/source-revisions/:revisionId/raw', async (req, reply) => {
     userOf(req.ctx, req);
     // Quelltext wird als text/plain ausgeliefert – eingebettetes HTML wird nie ausgeführt.

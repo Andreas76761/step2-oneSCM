@@ -49,6 +49,30 @@
   :root:not([data-theme='light']) .badge { color: var(--text); }
 }
 
+/* Darstellung manuell gewählt (ADR-035): gleiche Werte wie der System-Dunkelmodus */
+:root[data-theme='dark'] {
+  --bg: #0d1320;
+  --surface: #151d2d;
+  --surface-2: #1b2437;
+  --border: #2a3550;
+  --text: #e6ebf5;
+  --muted: #9aa6bd;
+  --primary: #2563eb;
+  --link: #8ab4ff;
+  --sidebar: #0a1222;
+  --ok: #4ade80;
+  --ai: #b79cfb;
+  --ok-bg: #12301f;
+  --warn: #f5a524;
+  --warn-bg: #33260f;
+  --danger: #f87171;
+  --danger-bg: #3a1414;
+  --info-bg: #17284a;
+  --bar: #3987e5;
+  color-scheme: dark;
+}
+:root[data-theme='dark'] .badge { color: var(--text); }
+
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
 h1 { font-size: 22px; margin: 0; }
@@ -380,3 +404,30 @@ ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px
 .faq-entry summary { cursor: pointer; }
 .glossary-entry { margin: 6px 0; }
 .glossary-entry dd { margin: 2px 0 8px 16px; }
+.toc-group { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 14px 0 0; }
+
+/* Globale Suche (ADR-035) */
+.nav-search { margin: 0 0 10px; }
+.nav-search input { width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.08); color: #fff; font: inherit; }
+.nav-search input::placeholder { color: var(--sidebar-ink); opacity: 0.8; }
+.nav-search input:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.sidebar.collapsed .nav-search { display: none; }
+.search-hits { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.search-hits mark { background: var(--warn-bg); color: inherit; padding: 0 1px; border-radius: 2px; }
+.user-box select { margin-bottom: 6px; }
+
+/* Drag & Drop (ADR-035): Ziel hervorheben; Tastatur-Alternativen (↑/↓, Verschieben nach …) bleiben */
+[draggable='true'] { cursor: grab; }
+.drop-target { outline: 2px dashed var(--primary); outline-offset: 2px; background: var(--info-bg); }
+.dragging { opacity: 0.5; }
+
+/* Mobile Ansicht (ADR-035) */
+@media (max-width: 800px) {
+  .btn, select, input:not([type='checkbox']):not([type='radio']) { min-height: 40px; }
+  .row-actions, .filters { flex-wrap: wrap; }
+  .draft-snippet .row-actions select { flex: 1 1 100%; }
+  .table { display: block; overflow-x: auto; }
+  .page-head h1 { font-size: 19px; }
+  .sidebar { padding: 12px 16px; }
+  .ws-left .toc { max-height: 40vh; overflow: auto; }
+}

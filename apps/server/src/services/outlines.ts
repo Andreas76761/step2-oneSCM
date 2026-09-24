@@ -7,6 +7,7 @@ import { countNodes, matchKey, MAX_NODES, numberNodes, outlineToMarkdown, parseO
 import { DIVISION_CODES, ROLE_CODES } from '../domain/reference.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { assertIdsInProject } from './projects.js';
+import { collaborators, systemNotice } from './collaboration.js';
 
 export type MarketScope = 'blueprint' | 'markets';
 export const OUTLINE_STATUS = ['draft', 'active', 'archived'] as const;
@@ -101,12 +102,12 @@ async function insertTree(ctx: Ctx, outlineId: string, tree: OutlineTreeNode[]) 
   let pos = 0;
   for (const c of tree) {
     const id = newId('on');
-    await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description) VALUES (?, ?, NULL, 1, ?, ?, ?)', id, outlineId, (pos += 10), c.title, c.description ?? null);
+    await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description, node_key) VALUES (?, ?, NULL, 1, ?, ?, ?, ?)', id, outlineId, (pos += 10), c.title, c.description ?? null, id);
     const children: { title: string; id: string }[] = [];
     let sub = 0;
     for (const s of c.children ?? []) {
       const sid = newId('on');
-      await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description) VALUES (?, ?, ?, 2, ?, ?, ?)', sid, outlineId, id, (sub += 10), s.title, s.description ?? null);
+      await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description, node_key) VALUES (?, ?, ?, 2, ?, ?, ?, ?)', sid, outlineId, id, (sub += 10), s.title, s.description ?? null, sid);
       children.push({ title: s.title, id: sid });
     }
     idMap.push({ title: c.title, id, children });
@@ -116,7 +117,8 @@ async function insertTree(ctx: Ctx, outlineId: string, tree: OutlineTreeNode[]) 
 
 /** Aktuelle Kapitelstruktur (aus den Quellen) als Ausgangsgliederung */
 async function treeFromChapters(ctx: Ctx): Promise<OutlineTreeNode[]> {
-  const chapters = await ctx.db.all("SELECT id, title FROM chapters WHERE project_id = ? AND key <> '__none__' ORDER BY position, title", ctx.projectId);
+  // nur Kapitel der Quellen, keine Kapitel von Handbuch-Varianten (ADR-034)
+  const chapters = await ctx.db.all("SELECT id, title FROM chapters WHERE project_id = ? AND key <> '__none__' AND outline_family_id IS NULL ORDER BY position, title", ctx.projectId);
   const out: OutlineTreeNode[] = [];
   for (const c of chapters) {
     const subs = await ctx.db.all('SELECT title FROM subchapters WHERE chapter_id = ? ORDER BY position, title', c.id);
@@ -216,7 +218,8 @@ export async function newOutlineVersion(ctx: Ctx, id: string, input: { name?: st
     for (const n of await ctx.db.all('SELECT * FROM outline_nodes WHERE outline_id = ? ORDER BY level, position', id)) {
       const nn = newId('on');
       map.set(n.id, nn);
-      await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description) VALUES (?, ?, ?, ?, ?, ?, ?)', nn, nid, n.parent_id ? map.get(n.parent_id) : null, n.level, n.position, n.title, n.description);
+      // node_key bleibt über Versionen gleich (Kapitel der Variante behalten ihre Historie, ADR-034)
+      await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description, node_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', nn, nid, n.parent_id ? map.get(n.parent_id) : null, n.level, n.position, n.title, n.description, n.node_key ?? n.id);
     }
     for (const a of await ctx.db.all('SELECT * FROM outline_assignments WHERE outline_id = ?', id)) {
       await ctx.db.run('INSERT INTO outline_assignments (outline_id, snippet_id, node_id, position, assigned_by, assigned_at) VALUES (?, ?, ?, ?, ?, ?)', nid, a.snippet_id, map.get(a.node_id), a.position, a.assigned_by, a.assigned_at);
@@ -274,7 +277,7 @@ export async function addNode(ctx: Ctx, outlineId: string, input: { title?: stri
       position = siblings[idx].position + 1;
       for (const s of siblings.slice(idx + 1)) await ctx.db.run('UPDATE outline_nodes SET position = position + 10 WHERE id = ?', s.id);
     }
-    await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description) VALUES (?, ?, ?, ?, ?, ?, ?)', id, outlineId, parentId, parentId ? 2 : 1, position, title, input.description?.trim().slice(0, 1000) || null);
+    await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, description, node_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', id, outlineId, parentId, parentId ? 2 : 1, position, title, input.description?.trim().slice(0, 1000) || null, id);
     await touch(ctx, outlineId, user);
     await audit(ctx, user.id, 'outline_node.created', 'outline_node', id, { outlineId, title, parentId, afterId: input.afterId ?? null });
   });
@@ -286,8 +289,10 @@ async function touch(ctx: Ctx, outlineId: string, user: User) {
 }
 
 /** Titel/Beschreibung ändern oder verschieben (move: up | down; parentId: unter ein anderes Kapitel bzw. null = Kapitel) */
-export async function updateNode(ctx: Ctx, nodeId: string, input: { title?: string; description?: string | null; move?: 'up' | 'down'; parentId?: string | null }, user: User) {
+export async function updateNode(ctx: Ctx, nodeId: string, input: { title?: string; description?: string | null; move?: 'up' | 'down'; parentId?: string | null; beforeId?: string | null }, user: User) {
   const n = await nodeRow(ctx, nodeId);
+  if (input.beforeId !== undefined && typeof input.beforeId !== 'string' && input.beforeId !== null) throw badRequest('beforeId muss eine Kennung oder null sein.');
+  if (input.parentId !== undefined && typeof input.parentId !== 'string' && input.parentId !== null) throw badRequest('parentId muss eine Kennung oder null sein.');
   await ctx.db.tx(async () => {
     if (input.title !== undefined) {
       const title = stripNumber(input.title);
@@ -295,7 +300,23 @@ export async function updateNode(ctx: Ctx, nodeId: string, input: { title?: stri
       await ctx.db.run('UPDATE outline_nodes SET title = ? WHERE id = ?', title, nodeId);
     }
     if (input.description !== undefined) await ctx.db.run('UPDATE outline_nodes SET description = ? WHERE id = ?', input.description?.trim().slice(0, 1000) || null, nodeId);
-    if (input.parentId !== undefined && (input.parentId ?? null) !== (n.parent_id ?? null)) {
+    if (input.beforeId !== undefined) {
+      // Drag & Drop: vor einem Eintrag einordnen (übernimmt dessen Ebene) bzw. mit null ans Ende von parentId
+      const target = input.beforeId ? await nodeRow(ctx, input.beforeId) : null;
+      if (target && (target.outline_id !== n.outline_id || target.id === nodeId)) throw badRequest('beforeId muss ein anderer Eintrag derselben Gliederung sein.');
+      const parentId: string | null = target ? (target.parent_id ?? null) : input.parentId !== undefined ? input.parentId : (n.parent_id ?? null);
+      if (parentId) {
+        const p = await nodeRow(ctx, parentId);
+        if (p.outline_id !== n.outline_id || p.level !== 1 || p.id === nodeId) throw badRequest('Ziel muss ein Kapitel derselben Gliederung sein.');
+        if (await ctx.db.get('SELECT id FROM outline_nodes WHERE parent_id = ?', nodeId)) throw badRequest('Ein Kapitel mit Unterkapiteln kann nicht selbst Unterkapitel werden.');
+      }
+      const siblings = (await ctx.db.all(`SELECT id FROM outline_nodes WHERE outline_id = ? AND ${parentId ? 'parent_id = ?' : 'parent_id IS NULL'} ORDER BY position`, n.outline_id, ...(parentId ? [parentId] : [])))
+        .map((r) => r.id as string).filter((id) => id !== nodeId);
+      const at = target ? siblings.indexOf(target.id) : siblings.length;
+      siblings.splice(at, 0, nodeId);
+      await ctx.db.run('UPDATE outline_nodes SET parent_id = ?, level = ? WHERE id = ?', parentId, parentId ? 2 : 1, nodeId);
+      for (const [i, id] of siblings.entries()) await ctx.db.run('UPDATE outline_nodes SET position = ? WHERE id = ?', (i + 1) * 10, id);
+    } else if (input.parentId !== undefined && (input.parentId ?? null) !== (n.parent_id ?? null)) {
       if (input.parentId) {
         const p = await nodeRow(ctx, input.parentId);
         if (p.outline_id !== n.outline_id || p.level !== 1 || p.id === nodeId) throw badRequest('Ziel muss ein Kapitel derselben Gliederung sein.');
@@ -317,6 +338,7 @@ export async function updateNode(ctx: Ctx, nodeId: string, input: { title?: stri
       outlineId: n.outline_id, from: { title: n.title, parentId: n.parent_id ?? null },
       ...(input.title !== undefined ? { title: stripNumber(input.title) } : {}), ...(input.description !== undefined ? { description: true } : {}),
       ...(input.parentId !== undefined ? { parentId: input.parentId ?? null } : {}), ...(input.move ? { move: input.move } : {}),
+      ...(input.beforeId !== undefined ? { beforeId: input.beforeId } : {}),
     });
   });
   return getOutline(ctx, n.outline_id);
@@ -359,6 +381,7 @@ interface SnippetInfo {
   subchapter: string | null;
   path: string;
   isCurrent: boolean;
+  removed?: boolean;
   evidenceStatus: string;
   roles: string[];
   divisions: string[];
@@ -373,7 +396,7 @@ async function snippetInfos(ctx: Ctx, ids: string[]): Promise<Map<string, Snippe
     if (!part.length) break;
     const marks = part.map(() => '?').join(',');
     const rows = await ctx.db.all(
-      `SELECT s.id, s.seq, s.text, s.kind, s.norm_hash, s.evidence_status, s.market_code, r.is_current, d.path, c.title AS chapter_title, sc.title AS sub_title
+      `SELECT s.id, s.seq, s.text, s.kind, s.norm_hash, s.evidence_status, s.market_code, r.is_current, d.path, d.removed_at, c.title AS chapter_title, sc.title AS sub_title
        FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
        JOIN chapters c ON c.id = s.chapter_id LEFT JOIN subchapters sc ON sc.id = s.subchapter_id WHERE s.id IN (${marks})`, ...part,
     );
@@ -381,7 +404,7 @@ async function snippetInfos(ctx: Ctx, ids: string[]): Promise<Map<string, Snippe
     const divs = await ctx.db.all(`SELECT snippet_id, division_code FROM snippet_divisions WHERE snippet_id IN (${marks})`, ...part);
     for (const r of rows) {
       out.set(r.id, {
-        id: r.id, seq: r.seq, text: r.text, kind: r.kind, chapter: r.chapter_title, subchapter: r.sub_title ?? null, path: r.path, isCurrent: !!r.is_current,
+        id: r.id, seq: r.seq, text: r.text, kind: r.kind, chapter: r.chapter_title, subchapter: r.sub_title ?? null, path: r.path, isCurrent: !!r.is_current, removed: !!r.removed_at,
         evidenceStatus: r.evidence_status, market: r.market_code ?? null, normHash: r.norm_hash,
         roles: roles.filter((x) => x.snippet_id === r.id).map((x) => x.role_code), divisions: divs.filter((x) => x.snippet_id === r.id).map((x) => x.division_code),
       });
@@ -412,7 +435,8 @@ async function findingFlags(ctx: Ctx, ids: string[]): Promise<Map<string, Flag[]
 
 function evidenceFlags(s: SnippetInfo, outline: Row): Flag[] {
   const flags: Flag[] = [];
-  if (!s.isCurrent) flags.push({ type: 'warning', label: 'Veraltet: Die Quelle hat eine neuere Revision.' });
+  if (s.removed) flags.push({ type: 'warning', label: 'Quelle entfernt: Die Datei fehlt im letzten vollständigen Import.' });
+  else if (!s.isCurrent) flags.push({ type: 'warning', label: 'Veraltet: Die Quelle hat eine neuere Revision.' });
   if (s.evidenceStatus === 'unconfirmed' || s.evidenceStatus === 'open_question') flags.push({ type: 'warning', label: s.evidenceStatus === 'open_question' ? 'Offene Frage zur Quelle' : 'Quelle nicht bestätigt' });
   for (const p of variantProblems(s, { roles: parseJson(outline.roles, []), divisions: parseJson(outline.divisions, []), marketScope: outline.market_scope, markets: parseJson(outline.markets, []) })) flags.push({ type: 'warning', label: `Variante: ${p}` });
   return flags;
@@ -485,7 +509,8 @@ export async function outlineCandidates(ctx: Ctx, outlineId: string, q: { q?: st
 }
 
 /** Schnipsel einem Knoten zuordnen (verschiebt bereits zugeordnete) */
-export async function assignSnippets(ctx: Ctx, outlineId: string, input: { nodeId?: string; snippetIds?: string[] }, user: User) {
+/** Schnipsel einem Knoten zuordnen (auch verschieben); `beforeSnippetId`: dort vor diesem Schnipsel einfügen (Drag & Drop) */
+export async function assignSnippets(ctx: Ctx, outlineId: string, input: { nodeId?: string; snippetIds?: string[]; beforeSnippetId?: string | null }, user: User) {
   await outlineRow(ctx, outlineId);
   const ids = [...new Set((input.snippetIds ?? []).map(String))];
   if (!input.nodeId || !ids.length) throw badRequest('nodeId und snippetIds sind Pflicht.');
@@ -493,11 +518,21 @@ export async function assignSnippets(ctx: Ctx, outlineId: string, input: { nodeI
   const node = await nodeRow(ctx, input.nodeId);
   if (node.outline_id !== outlineId) throw badRequest('nodeId gehört nicht zu dieser Gliederung.');
   await assertIdsInProject(ctx, 'snippetId', ids);
+  const before = input.beforeSnippetId ? String(input.beforeSnippetId) : null;
+  if (before && (ids.includes(before) || !(await ctx.db.get('SELECT 1 AS x FROM outline_assignments WHERE outline_id = ? AND node_id = ? AND snippet_id = ?', outlineId, node.id, before)))) {
+    throw badRequest('beforeSnippetId muss ein anderer Schnipsel in diesem Eintrag sein.');
+  }
   await ctx.db.tx(async () => {
     let pos = (await ctx.db.get<{ m: number | null }>('SELECT MAX(position) AS m FROM outline_assignments WHERE node_id = ?', node.id))?.m ?? 0;
     for (const sid of ids) {
       await ctx.db.run('DELETE FROM outline_assignments WHERE outline_id = ? AND snippet_id = ?', outlineId, sid);
       await ctx.db.run('INSERT INTO outline_assignments (outline_id, snippet_id, node_id, position, assigned_by, assigned_at) VALUES (?, ?, ?, ?, ?, ?)', outlineId, sid, node.id, (pos += 10), user.id, now());
+    }
+    if (before) {
+      // Reihenfolge neu: eingefügte Schnipsel direkt vor dem Ziel
+      const rest = (await ctx.db.all('SELECT snippet_id FROM outline_assignments WHERE node_id = ? ORDER BY position', node.id)).map((r) => r.snippet_id as string).filter((x) => !ids.includes(x));
+      const order = rest.flatMap((x) => (x === before ? [...ids, x] : [x]));
+      for (const [i, sid] of order.entries()) await ctx.db.run('UPDATE outline_assignments SET position = ? WHERE outline_id = ? AND snippet_id = ?', (i + 1) * 10, outlineId, sid);
     }
     await touch(ctx, outlineId, user);
     await audit(ctx, user.id, 'outline.snippets_assigned', 'outline', outlineId, { nodeId: node.id, snippets: ids.length });
@@ -627,10 +662,114 @@ export async function setPlanItem(ctx: Ctx, nodeId: string, input: { assignee?: 
   await ctx.db.tx(async () => {
     await ctx.db.run(
       `INSERT INTO plan_items (node_id, outline_id, assignee, due_date, status, note, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT (node_id) DO UPDATE SET assignee = excluded.assignee, due_date = excluded.due_date, status = excluded.status, note = excluded.note, updated_by = excluded.updated_by, updated_at = excluded.updated_at`,
+       ON CONFLICT (node_id) DO UPDATE SET assignee = excluded.assignee, due_date = excluded.due_date, status = excluded.status, note = excluded.note, updated_by = excluded.updated_by, updated_at = excluded.updated_at,
+         reminded_at = CASE WHEN plan_items.due_date IS NOT DISTINCT FROM excluded.due_date AND plan_items.assignee IS NOT DISTINCT FROM excluded.assignee THEN plan_items.reminded_at ELSE NULL END`,
       nodeId, n.outline_id, assignee, dueDate, status, note, user.id, now(),
     );
     await audit(ctx, user.id, 'plan_item.updated', 'outline_node', nodeId, { assignee, dueDate, status });
   });
   return (await outlinePlan(ctx, n.outline_id)).items.find((i) => i.nodeId === nodeId);
+}
+
+// ---------- Versionsvergleich (ADR-035) ----------
+
+type NodeChange = 'added' | 'removed' | 'changed' | 'unchanged';
+
+/**
+ * Zwei Versionen derselben Gliederung vergleichen: Einträge über ihre stabile Kennung (node_key), Änderungen an
+ * Titel, Nummer/Ebene und Zuordnungen sowie an der Variante (Name, Rollen, Sparten, Märkte).
+ */
+export async function compareOutlines(ctx: Ctx, fromId: string, toId: string) {
+  const [a, b] = [await outlineRow(ctx, fromId), await outlineRow(ctx, toId)];
+  if (a.family_id !== b.family_id) throw badRequest('Nur Versionen derselben Gliederung können verglichen werden.');
+  const load = async (id: string) => {
+    const keys = new Map((await ctx.db.all('SELECT id, node_key FROM outline_nodes WHERE outline_id = ?', id)).map((r) => [r.id as string, (r.node_key ?? r.id) as string]));
+    const snippets = new Map<string, string[]>();
+    for (const r of await ctx.db.all('SELECT node_id, snippet_id FROM outline_assignments WHERE outline_id = ? ORDER BY position', id)) {
+      const k = keys.get(r.node_id)!;
+      snippets.set(k, [...(snippets.get(k) ?? []), r.snippet_id as string]);
+    }
+    return { nodes: (await nodesOf(ctx, id)).map((n) => ({ ...n, key: keys.get(n.id)! })), snippets };
+  };
+  const [from, to] = [await load(fromId), await load(toId)];
+  const entries: { nodeKey: string; change: NodeChange; details: string[]; from: { number: string; title: string } | null; to: { number: string; title: string } | null; snippetsAdded: number; snippetsRemoved: number }[] = [];
+  const snippetDiff = (k: string) => {
+    const x = new Set(from.snippets.get(k) ?? []);
+    const y = new Set(to.snippets.get(k) ?? []);
+    return { added: [...y].filter((s) => !x.has(s)).length, removed: [...x].filter((s) => !y.has(s)).length };
+  };
+  const fromByKey = new Map(from.nodes.map((n) => [n.key, n]));
+  const toKeys = new Set(to.nodes.map((n) => n.key));
+  for (const n of to.nodes) {
+    const o = fromByKey.get(n.key);
+    const d = snippetDiff(n.key);
+    if (!o) {
+      entries.push({ nodeKey: n.key, change: 'added', details: [], from: null, to: { number: n.number, title: n.title }, snippetsAdded: d.added, snippetsRemoved: 0 });
+      continue;
+    }
+    const details = [
+      o.title !== n.title ? `umbenannt (vorher „${o.title}“)` : null,
+      o.number !== n.number ? `verschoben (vorher ${o.number})` : null,
+      o.level !== n.level ? (n.level === 1 ? 'zum Kapitel hochgestuft' : 'zum Unterkapitel herabgestuft') : null,
+      d.added || d.removed ? `Zuordnungen: +${d.added} / −${d.removed}` : null,
+    ].filter((x): x is string => !!x);
+    entries.push({ nodeKey: n.key, change: details.length ? 'changed' : 'unchanged', details, from: { number: o.number, title: o.title }, to: { number: n.number, title: n.title }, snippetsAdded: d.added, snippetsRemoved: d.removed });
+  }
+  for (const o of from.nodes) {
+    if (toKeys.has(o.key)) continue;
+    entries.push({ nodeKey: o.key, change: 'removed', details: [], from: { number: o.number, title: o.title }, to: null, snippetsAdded: 0, snippetsRemoved: (from.snippets.get(o.key) ?? []).length });
+  }
+  const variant: string[] = [];
+  if (a.name !== b.name) variant.push(`Name: „${a.name}“ → „${b.name}“`);
+  for (const [field, label] of [['roles', 'Rollen'], ['divisions', 'Sparten'], ['markets', 'Märkte']] as const) {
+    const x = parseJson<string[]>(a[field], []).join(', ');
+    const y = parseJson<string[]>(b[field], []).join(', ');
+    if (x !== y) variant.push(`${label}: ${x || '–'} → ${y || '–'}`);
+  }
+  if (a.market_scope !== b.market_scope) variant.push(`Geltung: ${a.market_scope === 'markets' ? 'Märkte' : 'Blueprint'} → ${b.market_scope === 'markets' ? 'Märkte' : 'Blueprint'}`);
+  const count = (c: NodeChange) => entries.filter((e) => e.change === c).length;
+  return {
+    from: { id: a.id, versionNo: a.version_no }, to: { id: b.id, versionNo: b.version_no },
+    summary: { added: count('added'), removed: count('removed'), changed: count('changed'), unchanged: count('unchanged') },
+    variant, entries,
+  };
+}
+
+// ---------- Erinnerungen an überfällige Planung (ADR-036) ----------
+
+/**
+ * Überfällige Einträge der Redaktionsplanung (Termin vor heute, nicht erledigt) einmal je Termin melden: an die verantwortliche
+ * Person (Kennung oder Name eines Benutzers), sonst an die Administratoren des Projekts. Hinweis im Posteingang, Webhook/E-Mail je Einstellung.
+ */
+export async function remindOverduePlans(ctx: Ctx, forProject: (id: string) => Ctx, today = now().slice(0, 10)) {
+  const rows = await ctx.db.all(
+    `SELECT p.*, n.title, o.project_id, o.name AS outline_name, o.id AS outline_id FROM plan_items p JOIN outline_nodes n ON n.id = p.node_id JOIN outlines o ON o.id = p.outline_id
+     JOIN projects pr ON pr.id = o.project_id
+     WHERE p.due_date IS NOT NULL AND p.due_date < ? AND p.status <> 'done' AND p.reminded_at IS NULL AND pr.archived_at IS NULL ORDER BY o.project_id, p.due_date`,
+    today,
+  );
+  let sent = 0;
+  for (const p of rows) {
+    const pctx = forProject(p.project_id);
+    const people = await collaborators(pctx);
+    const who = p.assignee ? people.filter((u) => u.id.toLowerCase() === String(p.assignee).toLowerCase() || u.name.toLowerCase() === String(p.assignee).toLowerCase()) : [];
+    const to = (who.length ? who : people.filter((u) => u.permissions.includes('admin'))).map((u) => u.id);
+    await pctx.db.tx(async () => {
+      const res = await pctx.db.run('UPDATE plan_items SET reminded_at = ? WHERE node_id = ? AND reminded_at IS NULL', now(), p.node_id);
+      if (!res.changes) return;
+      const due = new Date(`${p.due_date}T00:00:00Z`).toLocaleDateString('de-DE', { timeZone: 'UTC' });
+      const body = `Planung überfällig: „${p.title}“ in „${p.outline_name}“ war fällig am ${due}${p.assignee ? ` (verantwortlich: ${p.assignee})` : ''}.`;
+      if (to.length) await systemNotice(pctx, p.outline_id, body, to, 'plan_overdue', 'outline');
+      await audit(pctx, 'system', 'plan_item.reminded', 'outline_node', p.node_id, { dueDate: p.due_date, recipients: to });
+      sent++;
+    });
+  }
+  ctx.jobs.wake();
+  return sent;
+}
+
+/** Stündliche Prüfung (eine Kette je Installation) */
+export async function ensurePlanReminderJob(ctx: Ctx, next = false) {
+  if (!next && (await ctx.db.get("SELECT id FROM jobs WHERE type = 'plan-reminders' AND status IN ('queued','running')"))) return;
+  await ctx.jobs.enqueue('plan-reminders', {}, 1, next ? 3_600_000 : 90_000);
 }

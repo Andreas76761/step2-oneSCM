@@ -278,7 +278,7 @@ export async function runSync(ctx: Ctx, payload: { connectionId: string; token?:
     } else {
       // Commit gilt erst nach erfolgreichem Import als abgeglichen (finishConnectionImport)
       await ctx.db.run("UPDATE source_connections SET status = 'importing', pending_commit = ? WHERE id = ?", repo.commit, c.id);
-      const imp = await createImport(ctx, `${c.name.replace(/[^\w.-]+/g, '_')}@${repo.commit.slice(0, 7)}.zip`, repo.data, actor);
+      const imp = await createImport(ctx, `${c.name.replace(/[^\w.-]+/g, '_')}@${repo.commit.slice(0, 7)}.zip`, repo.data, actor, { snapshot: true, origin: `connection:${c.id}` });
       await ctx.db.run('UPDATE source_connections SET last_sync_at = ?, last_import_id = ?, last_error = NULL WHERE id = ?', now(), imp.id, c.id);
       await audit(ctx, actor, 'source_connection.synced', 'source_connection', c.id, { commit: repo.commit, importId: imp.id, files: repo.files });
     }

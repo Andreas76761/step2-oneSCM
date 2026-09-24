@@ -64,6 +64,11 @@ const PDF_WIDTH = 499; // A4 abzüglich Seitenränder
 function pdfImage(t: Tokens.Image): PdfNode | null {
   const sha = /^media:([a-f0-9]{64})$/.exec(t.href)?.[1];
   const img = sha ? pdfImages?.get(sha) : undefined;
+  if (img?.mime === 'image/svg+xml') {
+    // bereinigtes SVG (ADR-036) als Vektorgrafik; ohne bekannte Größe auf Satzspiegelbreite begrenzt
+    const w = img.width ? Math.min(PDF_WIDTH, Math.round(img.width * 0.75)) : PDF_WIDTH;
+    return { svg: img.data.toString('utf8'), width: w, margin: [0, 2, 0, 6] } as PdfNode;
+  }
   if (!img || (img.mime !== 'image/png' && img.mime !== 'image/jpeg')) return null;
   const node: Record<string, unknown> = { image: `data:${img.mime};base64,${img.data.toString('base64')}`, margin: [0, 2, 0, 6] };
   // Bildschirmfotos in natürlicher Größe (96 dpi → pt), höchstens Satzspiegelbreite

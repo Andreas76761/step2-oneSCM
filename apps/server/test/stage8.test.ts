@@ -262,7 +262,10 @@ describe('Git-Quellverbindungen (ADR-022)', () => {
       await built.ctx.jobs.idle();
       conn = (await call('GET', `/source-connections/${id}`)).json;
       expect(conn).toMatchObject({ status: 'idle', lastCommit: git('rev-parse', 'HEAD') });
-      expect((await call('GET', `/imports/${conn.lastImportId}`)).json.items.map((i: any) => i.path)).toEqual(['lager.docx']);
+      // Verbindung liefert den vollständigen Stand (ADR-036): Dateien außerhalb des neuen Unterordners gelten als entfernt
+      const synced = (await call('GET', `/imports/${conn.lastImportId}`)).json.items;
+      expect(synced.filter((i: any) => i.status !== 'removed').map((i: any) => i.path)).toEqual(['lager.docx']);
+      expect(synced.filter((i: any) => i.status === 'removed').length).toBeGreaterThan(0);
 
       // Fehlerfälle: fehlender Branch, fehlende Zugangsdaten-Variable
       const broken = (await call('POST', '/source-connections', { name: 'Kaputt', url: repo, branch: 'gibt-es-nicht' })).json;

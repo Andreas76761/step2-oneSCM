@@ -11,7 +11,7 @@ import { normalizedHash, sha256 } from '../domain/similarity.js';
 import { finishConnectionImport } from './connections.js';
 import { storeMedia } from './media.js';
 import { contextsFromFrontMatter } from './contextHelp.js';
-import { badRequest, notFound, Problem } from '../problem.js';
+import { badRequest, conflict, notFound, Problem } from '../problem.js';
 
 interface Entry {
   path: string;
@@ -24,7 +24,11 @@ interface Entry {
 
 const MD_EXT = ['.md', '.markdown'];
 
-export async function createImport(ctx: Ctx, fileName: string, data: Buffer, actor: string) {
+/**
+ * `snapshot` (nur ZIP): die Datei ist der vollständige Stand ihrer Herkunft – Dokumente derselben Herkunft (Upload bzw.
+ * Verbindung), die fehlen, werden als entfernt markiert (ADR-036). `origin`: 'upload' oder 'connection:<id>'.
+ */
+export async function createImport(ctx: Ctx, fileName: string, data: Buffer, actor: string, opts: { snapshot?: boolean; origin?: string } = {}) {
   const settings = (await getSettings(ctx.db)).import;
   const ext = path.extname(fileName).toLowerCase();
   if (!settings.allowedExtensions.includes(ext)) {
@@ -39,10 +43,10 @@ export async function createImport(ctx: Ctx, fileName: string, data: Buffer, act
   // Import, Audit und Job atomar: kein Import ohne Job, kein Job ohne Import (ADR-008)
   await ctx.db.tx(async () => {
     await ctx.db.run(
-      'INSERT INTO imports (id, project_id, file_name, kind, sha256, byte_size, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : CONVERTIBLE[ext] ?? 'md', hash, data.length, 'queued', actor, now(),
+      'INSERT INTO imports (id, project_id, file_name, kind, sha256, byte_size, status, created_by, created_at, origin, snapshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : CONVERTIBLE[ext] ?? 'md', hash, data.length, 'queued', actor, now(), opts.origin ?? 'upload', opts.snapshot && ext === '.zip' ? 1 : 0,
     );
-    await audit(ctx, actor, 'import.created', 'import', id, { fileName, sha256: hash });
+    await audit(ctx, actor, 'import.created', 'import', id, { fileName, sha256: hash, ...(opts.snapshot && ext === '.zip' ? { snapshot: true } : {}) });
     // Persistenter Job: Originaldatei liegt im Object-Store, der Job kennt nur die Import-ID
     await ctx.jobs.enqueue('import', { importId: id });
   });
@@ -104,7 +108,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   const { db } = ctx;
   await db.run("UPDATE imports SET status = 'processing' WHERE id = ?", importId);
   await db.run('DELETE FROM import_items WHERE import_id = ?', importId); // Wiederholung nach Abbruch
-  const stats = { files: 0, imported: 0, identical: 0, failed: 0, skipped: 0, snippets: 0, media: 0 };
+  const stats = { files: 0, imported: 0, identical: 0, failed: 0, skipped: 0, snippets: 0, media: 0, removed: 0 };
   let cache = newCache();
   const items: unknown[][] = [];
   let entries: Entry[];
@@ -124,8 +128,9 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
       const m = await storeMedia(ctx, entry.data!, path.posix.basename(entry.path), importId);
       mediaByPath.set(entry.path, m.sha);
       mediaItems.set(entry.path, { status: 'media', message: `Bild ${m.mime}${m.width ? `, ${m.width}×${m.height}` : ''}`, sha: m.sha });
-    } catch {
-      mediaItems.set(entry.path, { status: 'skipped', message: 'Kein gültiges Bild (PNG, JPEG, GIF, WebP) – übersprungen', sha: null });
+    } catch (e) {
+      const svg = path.extname(entry.path).toLowerCase() === '.svg';
+      mediaItems.set(entry.path, { status: 'skipped', message: svg ? `${(e as Error).message.replace(/^[^:]*: /, '')} – übersprungen` : 'Kein gültiges Bild (PNG, JPEG, GIF, WebP, SVG) – übersprungen', sha: null });
     }
   }
   const images: ImageResolver = { byPath: mediaByPath, importId };
@@ -172,6 +177,14 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
     else stats.skipped++;
     items.push([item.id, importId, item.path, item.sha256, item.status, item.message, item.revisionId, stats.files]);
   }
+  // Vollständiger Stand: fehlende Dokumente derselben Herkunft als entfernt markieren (nicht bei leerem/fehlgeschlagenem Import)
+  const docEntries = entries.filter((e) => !e.media);
+  if (docEntries.length && stats.failed < docEntries.length) {
+    for (const r of await markRemoved(ctx, importId, new Set(docEntries.map((e) => e.path)))) {
+      stats.removed++;
+      items.push([newId('ii'), importId, r.path, null, 'removed', 'Im vollständigen Stand nicht mehr enthalten – als entfernt markiert', null, stats.files + stats.removed]);
+    }
+  }
   await insertMany(ctx, 'import_items (id, import_id, path, sha256, status, message, revision_id, position)', items);
 
   // Bilder zählen nicht als Dokumente: schlagen alle Dokumente fehl, ist der Import fehlgeschlagen
@@ -179,6 +192,50 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   await db.run('UPDATE imports SET status = ?, finished_at = ?, stats = ? WHERE id = ?', status, now(), json(stats), importId);
   await audit(ctx, 'system', 'import.finished', 'import', importId, { status, ...stats });
   await finishConnectionImport(ctx, importId, status, stats.failed ? `${stats.failed} von ${stats.files} Dateien fehlerhaft (Import ${importId})` : null);
+}
+
+/**
+ * Dokumente, die zuletzt aus einem vollständigen Stand derselben Herkunft kamen und jetzt fehlen: entfernt markieren,
+ * keine aktuelle Revision mehr (ADR-036). Einzeln hochgeladene Dateien bleiben unberührt.
+ */
+async function markRemoved(ctx: Ctx, importId: string, seen: Set<string>) {
+  const imp = await ctx.db.get('SELECT origin, snapshot FROM imports WHERE id = ?', importId);
+  if (!imp?.snapshot) return [];
+  const origin = imp.origin ?? 'upload';
+  const docs = await ctx.db.all(
+    `SELECT d.id, d.path, d.removed_in_import FROM source_documents d WHERE d.project_id = ? AND (d.removed_at IS NULL OR d.removed_in_import = ?)
+     AND (SELECT CASE WHEN i.snapshot = 1 THEN COALESCE(i.origin, 'upload') END FROM source_revisions r JOIN imports i ON i.id = r.import_id WHERE r.document_id = d.id ORDER BY r.revision_no DESC LIMIT 1) = ?`,
+    ctx.projectId, importId, origin,
+  );
+  const removed = docs.filter((d) => !seen.has(d.path));
+  if (!removed.length) return [];
+  await ctx.db.tx(async () => {
+    for (const d of removed) {
+      if (d.removed_in_import === importId) continue; // Wiederholung nach Abbruch
+      await ctx.db.run('UPDATE source_documents SET removed_at = ?, removed_in_import = ? WHERE id = ?', now(), importId, d.id);
+      await ctx.db.run('UPDATE source_revisions SET is_current = 0 WHERE document_id = ?', d.id);
+    }
+    await audit(ctx, 'system', 'source.removed', 'import', importId, { documents: removed.map((d) => d.path).slice(0, 100), count: removed.length });
+  });
+  return removed as { id: string; path: string }[];
+}
+
+/** Entfernt markiertes Dokument wiederherstellen: letzte Revision wird wieder aktuell */
+export async function restoreDocument(ctx: Ctx, documentId: string, actor: string) {
+  const d = await ctx.db.get('SELECT * FROM source_documents WHERE id = ? AND project_id = ?', documentId, ctx.projectId);
+  if (!d) throw notFound(`Quelldokument ${documentId}`);
+  if (!d.removed_at) throw conflict('Das Dokument ist nicht als entfernt markiert.');
+  await ctx.db.tx(async () => {
+    await reviveDocument(ctx, d.id);
+    await audit(ctx, actor, 'source.restored', 'source_document', d.id, { path: d.path });
+  });
+  return (await listSources(ctx)).find((x) => x.id === d.id);
+}
+
+async function reviveDocument(ctx: Ctx, documentId: string) {
+  await ctx.db.run('UPDATE source_documents SET removed_at = NULL, removed_in_import = NULL WHERE id = ?', documentId);
+  const latest = await ctx.db.get('SELECT id FROM source_revisions WHERE document_id = ? ORDER BY revision_no DESC LIMIT 1', documentId);
+  if (latest) await ctx.db.run('UPDATE source_revisions SET is_current = 1 WHERE id = ?', latest.id);
 }
 
 interface Original {
@@ -250,6 +307,8 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
 
   return db.tx(async () => {
     let doc = await db.get('SELECT * FROM source_documents WHERE project_id = ? AND path = ?', ctx.projectId, filePath);
+    // wieder aufgetauchte Datei: Entfernt-Markierung aufheben (ADR-036)
+    if (doc?.removed_at) await reviveDocument(ctx, doc.id);
     const latest = doc ? await db.get('SELECT * FROM source_revisions WHERE document_id = ? ORDER BY revision_no DESC LIMIT 1', doc.id) : undefined;
     if (latest && latest.sha256 === hash) {
       // Wiederholter Lauf desselben Imports: Revision stammt aus diesem Import → als importiert melden
@@ -392,6 +451,8 @@ export async function listSources(ctx: Ctx) {
     id: d.id,
     path: d.path,
     fileName: d.file_name,
+    removedAt: d.removed_at ?? null,
+    removedInImport: d.removed_in_import ?? null,
     revisions: (await ctx.db.all(
       `SELECT r.id, r.revision_no AS revisionNo, r.sha256, r.byte_size AS byteSize, r.is_current AS isCurrent, r.imported_at AS importedAt, r.import_id AS importId,
         r.front_matter AS frontMatter, r.source_format AS sourceFormat, (SELECT COUNT(*) FROM text_snippets s WHERE s.revision_id = r.id) AS snippetCount

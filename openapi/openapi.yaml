@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.11.0
+  version: 0.12.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -40,6 +40,7 @@ tags:
   - name: Kontexthilfe
   - name: Stammdaten
   - name: Draft Manual
+  - name: Suche
   - name: System
 components:
   securitySchemes:
@@ -355,6 +356,8 @@ components:
         market: { type: [string, 'null'] }
         release: { type: [string, 'null'] }
         format: { type: string, enum: [md, html, pdf, json], default: md }
+        outlineId: { type: string, description: 'Handbuch-Variante (ADR-034): freigegebene Kapitel dieser Gliederung, Filter aus ihrer Variante' }
+        appendices: { type: boolean, description: 'Verzeichnisse (Abkürzungen, Glossar, Bildverzeichnis, FAQ) anhängen; Standard bei Varianten: true' }
 security:
   - oidcBearer: []
   - demoUser: []
@@ -364,7 +367,9 @@ paths:
       operationId: createImport
       summary: ZIP-, Markdown-, HTML- (Confluence-Export) oder Word-Datei importieren (HTML/Word werden in Markdown umgewandelt, ADR-022)
       tags: [Import]
-      x-requirements: [US-001, US-002, US-003, US-004, NFR-09, NFR-14]
+      x-requirements: [US-001, US-002, US-003, US-004, NFR-09, NFR-14, NFR-23]
+      parameters:
+        - { name: snapshot, in: query, schema: { type: boolean }, description: 'ZIP ist der vollständige Stand – fehlende Dateien derselben Herkunft werden als entfernt markiert (ADR-036)' }
       requestBody:
         required: true
         content:
@@ -405,13 +410,25 @@ paths:
   /sources:
     get:
       operationId: listSources
-      summary: Quelldokumente mit Revisionen
+      summary: Quelldokumente mit Revisionen (removedAt – als entfernt markiert, ADR-036)
       tags: [Import]
       x-requirements: [US-001, US-011]
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Quellen }
+  /source-documents/{documentId}/restore:
+    post:
+      operationId: restoreSourceDocument
+      summary: 'Als entfernt markiertes Quelldokument wiederherstellen (letzte Revision wird wieder aktuell)'
+      tags: [Import]
+      x-requirements: [NFR-23]
+      x-extension: true
+      parameters: [{ name: documentId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Quelldokument' }
+        '409': { description: 'nicht als entfernt markiert' }
   /source-revisions/{revisionId}/raw:
     get:
       operationId: getRevisionRaw
@@ -760,8 +777,10 @@ paths:
       operationId: listChapters
       summary: Kapitel mit Unterkapiteln, Abdeckung, Befund- und Versionsstatus
       tags: [Kapitel]
-      x-requirements: [US-002, US-010, US-013]
+      x-requirements: [US-002, US-010, US-013, NFR-21]
       x-extension: true
+      parameters:
+        - { name: outline, in: query, schema: { type: string }, description: 'ohne: Kapitel der Quellen; Gliederungsfamilie: Kapitel dieser Handbuch-Variante; all: beide (ADR-034)' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Kapitel }
@@ -1439,12 +1458,12 @@ paths:
         '200': { description: OK }
     post:
       operationId: createRelease
-      summary: Handbuch-Version aus allen freigegebenen Kapiteln veröffentlichen (Berechtigung approve)
+      summary: Handbuch-Version aus allen freigegebenen Kapiteln veröffentlichen (Berechtigung approve); mit outlineId das Handbuch einer Variante inkl. Verzeichnissen
       tags: [Veröffentlichung]
-      x-requirements: [NFR-05, US-014, NFR-08]
+      x-requirements: [NFR-05, US-014, NFR-08, NFR-21]
       x-extension: true
       requestBody:
-        content: { application/json: { schema: { type: object, required: [version], properties: { version: { type: string }, title: { type: string }, notes: { type: string } } } } }
+        content: { application/json: { schema: { type: object, required: [version], properties: { version: { type: string }, title: { type: string }, notes: { type: string }, outlineId: { type: string } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Release mit Änderungsliste }
@@ -1944,9 +1963,9 @@ paths:
         '200': { description: 'SHA-256, Format, Größe, Abmessungen, Herkunft' }
     post:
       operationId: uploadMedia
-      summary: 'Bild hochladen (PNG, JPEG, GIF, WebP nach Dateisignatur; kein SVG; Berechtigung edit); Antwort enthält den Markdown-Verweis ![…](media:<sha256>)'
+      summary: 'Bild hochladen (PNG, JPEG, GIF, WebP nach Dateisignatur; SVG wird aus einer Positivliste neu geschrieben, ADR-036; Berechtigung edit); Antwort enthält den Markdown-Verweis ![…](media:<sha256>)'
       tags: [Medien]
-      x-requirements: [NFR-16]
+      x-requirements: [NFR-16, NFR-23]
       x-extension: true
       requestBody:
         content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary } } } } }
@@ -2190,13 +2209,13 @@ paths:
   /outline-nodes/{nodeId}:
     patch:
       operationId: updateOutlineNode
-      summary: 'Eintrag umbenennen, verschieben (move up|down) oder einordnen (parentId; null = Kapitel)'
+      summary: 'Eintrag umbenennen, verschieben (move up|down), einordnen (parentId; null = Kapitel) oder per Drag & Drop vor einen Eintrag setzen (beforeId, übernimmt dessen Ebene)'
       tags: [Stammdaten]
-      x-requirements: [NFR-19]
+      x-requirements: [NFR-19, NFR-22]
       x-extension: true
       parameters: [{ $ref: '#/components/parameters/NodeId' }]
       requestBody:
-        content: { application/json: { schema: { type: object, properties: { title: { type: string }, description: { type: [string, 'null'] }, move: { type: string, enum: [up, down] }, parentId: { type: [string, 'null'] } } } } }
+        content: { application/json: { schema: { type: object, properties: { title: { type: string }, description: { type: [string, 'null'] }, move: { type: string, enum: [up, down] }, parentId: { type: [string, 'null'] }, beforeId: { type: [string, 'null'] } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'OK' }
@@ -2271,13 +2290,13 @@ paths:
   /outlines/{outlineId}/assignments:
     post:
       operationId: assignOutlineSnippets
-      summary: 'Schnipsel einem Eintrag zuordnen (bereits zugeordnete werden verschoben; höchstens 500)'
+      summary: 'Schnipsel einem Eintrag zuordnen (bereits zugeordnete werden verschoben; höchstens 500); beforeSnippetId: davor einfügen (Drag & Drop)'
       tags: [Draft Manual]
-      x-requirements: [NFR-20]
+      x-requirements: [NFR-20, NFR-22]
       x-extension: true
       parameters: [{ $ref: '#/components/parameters/OutlineId' }]
       requestBody:
-        content: { application/json: { schema: { type: object, required: [nodeId, snippetIds], properties: { nodeId: { type: string }, snippetIds: { type: array, items: { type: string } } } } } }
+        content: { application/json: { schema: { type: object, required: [nodeId, snippetIds], properties: { nodeId: { type: string }, snippetIds: { type: array, items: { type: string } }, beforeSnippetId: { type: string } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'OK' }
@@ -2317,6 +2336,88 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ assigned, remaining }' }
+  /outlines/{outlineId}/compare:
+    get:
+      operationId: compareOutlineVersions
+      summary: 'Zwei Versionen derselben Gliederung vergleichen (Einträge über stabile Kennung, Titel, Position, Ebene, Zuordnungen, Variante; ADR-035)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-22]
+      x-extension: true
+      parameters:
+        - { $ref: '#/components/parameters/OutlineId' }
+        - { name: with, in: query, required: true, schema: { type: string }, description: 'Kennung der Vergleichsversion (ältere Seite)' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ from, to, summary, variant, entries }' }
+        '400': { description: 'andere Gliederung oder with fehlt' }
+  /outlines/{outlineId}/chapters:
+    get:
+      operationId: listVariantChapters
+      summary: 'Kapitel der Handbuch-Variante mit Versions- und Freigabestand (ADR-034)'
+      tags: [Draft Manual]
+      x-requirements: [NFR-21]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ outlineId, familyId, name, chapters }' }
+  /outlines/{outlineId}/materialize:
+    post:
+      operationId: materializeVariant
+      summary: 'Kapitel der Variante anlegen bzw. aktualisieren (je Kapitel der Gliederung, fortgeführt über Gliederungsversionen)'
+      tags: [Draft Manual]
+      x-requirements: [NFR-21]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Kapitel der Variante' }
+        '400': { description: 'Gliederung ohne Kapitel' }
+  /outlines/{outlineId}/generate:
+    post:
+      operationId: generateVariant
+      summary: 'Kapitelentwürfe der Variante aus den Zuordnungen erzeugen; danach Werkstatt, Qualitätsgate und Freigabe wie bei Quellenkapiteln'
+      tags: [Draft Manual]
+      x-requirements: [NFR-21]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ outlineId, generated, results: [{ chapterId, title, status: generated|skipped|blocked, versionNo, message }] }' }
+  /search:
+    get:
+      operationId: globalSearch
+      summary: 'Globale Suche über Kapitel, Kapiteltexte, Textschnipsel, Quellen, Gliederungen, Abkürzungen, Glossar und FAQ (ADR-035)'
+      tags: [Suche]
+      x-requirements: [NFR-22]
+      x-extension: true
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 200 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 25, default: 8 }, description: 'Treffer je Bereich' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ query, total, groups: [{ type, label, hits: [{ type, id, title, excerpt, link }] }] }' }
+        '400': { description: 'Suchbegriff zu kurz oder zu lang' }
+  /master-data/import:
+    post:
+      operationId: importMasterData
+      summary: 'Abkürzungen, Glossar oder FAQ aus CSV (; , Tab) oder Excel (.xlsx) importieren – Vorschau oder Übernahme (ADR-036)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-23]
+      x-extension: true
+      parameters:
+        - { name: kind, in: query, required: true, schema: { type: string, enum: [abbreviations, glossary, faq] } }
+        - { name: apply, in: query, schema: { type: boolean, default: false } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { type: object, required: [file], properties: { file: { type: string, format: binary } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ kind, applied, summary: { rows, create, update, unchanged, error }, rows: [{ row, key, action, message }] }' }
+        '400': { description: 'Spalten fehlen, leere Tabelle oder unbekannte Art' }
+        '415': { description: 'nur .csv und .xlsx' }
   /abbreviations:
     get:
       operationId: listAbbreviations

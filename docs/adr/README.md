@@ -35,3 +35,6 @@
 | [ADR-031](ADR-031-release-pipeline.md) | Release-Pipeline: GHCR-Image, SBOM, cosign, Helm-OCI, Release-Notes | akzeptiert, umgesetzt |
 | [ADR-032](ADR-032-stammdaten-gliederungen.md) | Stammdaten und Gliederungen je Variante, einklappbare Navigation | akzeptiert, umgesetzt |
 | [ADR-033](ADR-033-draft-manual.md) | Draft Manual: Zuordnung von Schnipseln, Kennzeichnung von Dopplungen, Lücken, Widersprüchen, Warnungen | akzeptiert, umgesetzt |
+| [ADR-034](ADR-034-handbuch-varianten.md) | Handbuch-Varianten: vom Draft Manual zu Freigabe, Export und Veröffentlichung mit Verzeichnissen | akzeptiert, umgesetzt |
+| [ADR-035](ADR-035-bedienkomfort.md) | Bedienkomfort: Drag & Drop, Gliederungsvergleich, globale Suche, Darstellung, mobile Ansicht | akzeptiert, umgesetzt |
+| [ADR-036](ADR-036-betrieb-pflege.md) | Betrieb & Pflege: entfernte Quelldateien, bereinigtes SVG, Stammdaten-Import, Erinnerungen | akzeptiert, umgesetzt |

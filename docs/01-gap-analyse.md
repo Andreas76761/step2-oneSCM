@@ -161,4 +161,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
-Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL war durch Einzelabfragen langsamer als über SQLite (in Etappe 9 auf das 1,7-Fache von SQLite verringert); Confluence wurde über den HTML-Export angebunden (seit Etappe 10 auch über die Cloud-API); gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten. Etappe 10: Die Release-Pipeline läuft erst mit dem ersten Tag in GitHub (lokal nur Build/Start des Images in der CI geprüft); das Widget zeigt öffentlich nur Release-Stände; SVG-Grafiken werden nicht übernommen. Etappe 11: Gliederungen haben zwei Ebenen (Kapitel, Unterkapitel); das Draft Manual ist ein Arbeitsstand und erzeugt keine Kapitelversionen.
+## 1.14 Stand nach Etappe 12 (24.09.2026)
+
+Umfang vom Auftraggeber am 24.09.2026 festgelegt: Draft Manual → Freigabe, Varianten-Export mit Verzeichnissen, Bedienkomfort, Betrieb & Pflege.
+
+| Punkt | Ergebnis |
+|---|---|
+| Handbuch-Varianten (NFR-21) | ✅ Kapitelversionen aus der Gliederung, Freigabe wie Quellenkapitel, Export und Online-Hilfe je Variante mit Abkürzungen, Glossar, Bildverzeichnis, FAQ ([ADR-034](adr/ADR-034-handbuch-varianten.md)) |
+| Bedienkomfort (NFR-22) | ✅ Drag & Drop, Gliederungsvergleich, globale Suche, Dunkelmodus, mobile Ansicht ([ADR-035](adr/ADR-035-bedienkomfort.md)) |
+| Betrieb & Pflege (NFR-23) | ✅ entfernte Quelldateien, bereinigtes SVG, Stammdaten-Import CSV/Excel, Planungserinnerungen ([ADR-036](adr/ADR-036-betrieb-pflege.md)) |
+
+Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL war durch Einzelabfragen langsamer als über SQLite (in Etappe 9 auf das 1,7-Fache von SQLite verringert); Confluence wurde über den HTML-Export angebunden (seit Etappe 10 auch über die Cloud-API); gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten. Etappe 10: Die Release-Pipeline läuft erst mit dem ersten Tag in GitHub (lokal nur Build/Start des Images in der CI geprüft); das Widget zeigt öffentlich nur Release-Stände; SVG-Grafiken werden nicht übernommen. Etappe 11: Gliederungen haben zwei Ebenen (Kapitel, Unterkapitel). Etappe 12: Die globale Suche ist eine Teilwortsuche ohne Volltextindex; in SQLite unterscheidet sie bei Umlauten Groß-/Kleinschreibung; der Tag `v0.11.0` muss von einer berechtigten Person gesetzt werden (die Sitzung darf nur den Arbeitsbranch pushen).

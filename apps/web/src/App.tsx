@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { currentProjectId, currentUserId, get, setCurrentProjectId, setCurrentUserId } from './api';
 import { initAuth, login, logout, type AuthConfig } from './auth';
 import { AppCtx, type Reference } from './components/ui';
@@ -8,6 +8,7 @@ import { ContradictionsPage } from './pages/Contradictions';
 import { DashboardPage } from './pages/Dashboard';
 import { DuplicatesPage } from './pages/Duplicates';
 import { ExportPage } from './pages/Export';
+import { SearchPage } from './pages/Search';
 import { FilteredViewPage } from './pages/FilteredView';
 import { GeneratorPage } from './pages/Generator';
 import { OptimizationsPage } from './pages/Optimizations';
@@ -69,6 +70,22 @@ const MASTER_DATA = [
 ];
 
 const COLLAPSE_KEY = 'onescm.nav.collapsed';
+const THEME_KEY = 'onescm.theme';
+type Theme = 'system' | 'light' | 'dark';
+const readTheme = (): Theme => {
+  try {
+    const t = localStorage.getItem(THEME_KEY);
+    return t === 'light' || t === 'dark' ? t : 'system';
+  } catch {
+    return 'system';
+  }
+};
+/** Darstellung (ADR-035): System, Hell oder Dunkel – über data-theme am Wurzelelement */
+const applyTheme = (t: Theme) => {
+  if (t === 'system') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = t;
+};
+applyTheme(readTheme());
 const readCollapsed = () => {
   try {
     return localStorage.getItem(COLLAPSE_KEY) === '1';
@@ -123,6 +140,30 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
       return !c;
     });
   };
+  const [theme, setTheme] = useState<Theme>(readTheme);
+  const changeTheme = (t: Theme) => {
+    setTheme(t);
+    applyTheme(t);
+    try {
+      localStorage.setItem(THEME_KEY, t);
+    } catch {
+      /* nur für diese Sitzung */
+    }
+  };
+  const navigate = useNavigate();
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [search, setSearch] = useState('');
+  // Tastenkürzel „/“ fokussiert die Suche (nicht in Eingabefeldern)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement;
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey || t.closest('input, textarea, select, [contenteditable="true"]')) return;
+      e.preventDefault();
+      searchRef.current?.focus();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
   const inMasterData = location.pathname.startsWith('/stammdaten');
   const [masterOpen, setMasterOpen] = useState(inMasterData);
   useEffect(() => {
@@ -201,6 +242,10 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
               {!projects.some((p) => p.id === projectId) && <option value={projectId}>{projectId}</option>}
             </select>
           </div>
+          <form role="search" className="nav-search" onSubmit={(e) => { e.preventDefault(); if (search.trim().length >= 2) navigate(`/suche?q=${encodeURIComponent(search.trim())}`); }}>
+            <label htmlFor="global-search" className="sr-only">Suche im Projekt</label>
+            <input id="global-search" ref={searchRef} type="search" placeholder="Suchen … ( / )" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </form>
           <button className="btn nav-toggle" aria-expanded={navOpen} aria-controls="main-nav" onClick={() => setNavOpen(!navOpen)}>
             {navOpen ? '✕ Menü schließen' : '☰ Menü'}
           </button>
@@ -246,6 +291,12 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
                 <button className="btn small" onClick={() => void logout()}>Abmelden</button>
               </>
             )}
+            <label htmlFor="theme-select">Darstellung</label>
+            <select id="theme-select" value={theme} onChange={(e) => changeTheme(e.target.value as Theme)}>
+              <option value="system">wie System</option>
+              <option value="light">Hell</option>
+              <option value="dark">Dunkel</option>
+            </select>
             <small title="Technische Berechtigungen – getrennt von fachlichen Rollen (ADR-009)">Berechtigungen: {me?.permissions.join(', ') || '–'}</small>
           </div>
         </aside>
@@ -287,6 +338,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/kontexthilfe" element={<ContextHelpAdminPage />} />
             <Route path="/hilfe/:contextKey" element={<ContextHelpPage />} />
             <Route path="/traceability" element={<TraceabilityPage />} />
+            <Route path="/suche" element={<SearchPage />} />
             <Route path="/projekte" element={<ProjectsPage onChanged={reloadProjects} />} />
             <Route path="/einstellungen" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" />} />

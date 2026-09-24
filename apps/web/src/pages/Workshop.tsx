@@ -12,11 +12,27 @@ const REWRITABLE = ['paragraph', 'list', 'note', 'tip', 'warning'];
 
 const KIND_LABEL: Record<string, string> = { paragraph: 'Absatz', list: 'Liste', note: 'ℹ️ Hinweis', tip: '💡 Tipp', warning: '⚠️ Warnung', xref: '↗️ Querverweis', gap: '⚠ Lücke', table: 'Tabelle', code: 'Code' };
 
+/** Kapitel nach Handbuch gruppieren: Quellenkapitel zuerst, danach je Handbuch-Variante (ADR-034) */
+function groupByHandbook(chapters: any[], outlines: any[]) {
+  const name = new Map<string, string>();
+  for (const o of [...outlines].sort((a, b) => (a.status === 'active' ? 1 : 0) - (b.status === 'active' ? 1 : 0))) name.set(o.familyId, o.name);
+  const groups: { key: string; name: string | null; chapters: any[] }[] = [];
+  for (const c of chapters) {
+    const key = c.outlineFamilyId ?? '';
+    let g = groups.find((x) => x.key === key);
+    if (!g) groups.push((g = { key, name: key ? `Variante: ${name.get(key) ?? 'Gliederung'}` : null, chapters: [] }));
+    g.chapters.push(c);
+  }
+  if (groups.length > 1 && !groups[0].key) groups[0].name = 'Quellen';
+  return groups;
+}
+
 export function WorkshopPage() {
   const { chapterId } = useParams();
   const navigate = useNavigate();
   const { notify } = useApp();
-  const chapters = useLoad<any[]>('/chapters');
+  const chapters = useLoad<any[]>('/chapters?outline=all');
+  const outlines = useLoad<any>('/outlines');
   const chapter = chapters.data?.find((c) => c.id === chapterId);
   const [versionId, setVersionId] = useState<string | null>(null);
   const version = useLoad<any>(versionId ? `/chapter-versions/${versionId}` : null, [versionId]);
@@ -60,8 +76,11 @@ export function WorkshopPage() {
     <div className="workshop">
       <aside className="ws-left" aria-label="Inhaltsverzeichnis">
         <h2>Inhaltsverzeichnis</h2>
-        <ul className="toc">
-          {chapters.data?.map((c) => (
+        {groupByHandbook(chapters.data ?? [], outlines.data?.items ?? []).map((g) => (
+        <div key={g.key}>
+        {g.name && <h3 className="toc-group">{g.name}</h3>}
+        <ul className="toc" aria-label={g.name ?? 'Kapitel der Quellen'}>
+          {g.chapters.map((c) => (
             <li key={c.id} className={c.id === chapterId ? 'active' : ''}>
               <button className="btn link" onClick={() => navigate(`/werkstatt/${c.id}`)}>{c.title}</button>
               <div className="small">
@@ -77,6 +96,8 @@ export function WorkshopPage() {
             </li>
           ))}
         </ul>
+        </div>
+        ))}
       </aside>
 
       <section className="ws-main">

@@ -7,7 +7,7 @@ import { SourceViewer } from './Sources';
 export function EvidencePage() {
   const { versionId } = useParams();
   const navigate = useNavigate();
-  const chapters = useLoad<any[]>('/chapters');
+  const chapters = useLoad<any[]>('/chapters?outline=all');
   const withVersion = (chapters.data ?? []).filter((c) => c.versions.length);
   const effectiveId = versionId ?? withVersion[0]?.versions[0]?.id ?? null;
   const ev = useLoad<any>(effectiveId ? `/chapter-versions/${effectiveId}/evidence` : null, [effectiveId]);

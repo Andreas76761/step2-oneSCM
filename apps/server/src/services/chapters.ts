@@ -7,36 +7,48 @@ import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, ROLE
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { assertIdsInProject } from './projects.js';
 import { systemNotice } from './collaboration.js';
+import { snippetScope, variantSnippetRefs } from './variantSnippets.js';
 import { checkDecider, clearWorkflowSql, recordApproval, startWorkflow, workflowState } from './workflow.js';
 
 // ---------- Kapitel ----------
 
-export async function listChapters(ctx: Ctx) {
-  const chapters = await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? ORDER BY position, title', ctx.projectId);
-  return Promise.all(chapters.map((c) => chapterSummary(ctx, c)));
+/** Kapitel aus den Quellen (Standard) oder die Kapitel einer Handbuch-Variante (outline = Gliederungs-ID, ADR-034) */
+/** Standard: Kapitel der Quellen; `outlineFamilyId`: Kapitel einer Handbuch-Variante; `all`: beide (ADR-034) */
+export async function listChapters(ctx: Ctx, opts: { outlineFamilyId?: string; outlineId?: string } = {}) {
+  const chapters = opts.outlineFamilyId === 'all'
+    ? await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? ORDER BY CASE WHEN outline_family_id IS NULL THEN 0 ELSE 1 END, outline_family_id, position, title', ctx.projectId)
+    : opts.outlineFamilyId
+    ? await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id = ? ORDER BY position, title', ctx.projectId, opts.outlineFamilyId)
+    : await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id IS NULL ORDER BY position, title', ctx.projectId);
+  // outlineId: Inhalte der Variantenkapitel an dieser Gliederungsversion messen
+  return Promise.all(chapters.map((c) => chapterSummary(ctx, opts.outlineId && c.outline_family_id ? { ...c, outline_id: opts.outlineId } : c)));
 }
 
 async function chapterSummary(ctx: Ctx, c: Row) {
   const { db } = ctx;
+  const scope = await snippetScope(ctx, c);
   const counts = (await db.get(
     `SELECT COUNT(*) AS total, SUM(CASE WHEN s.evidence_status IN ('source_confirmed','manually_confirmed') THEN 1 ELSE 0 END) AS confirmed
-     FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE s.chapter_id = ? AND r.is_current = 1`, c.id,
+     FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE ${scope.sql} AND r.is_current = 1`, ...scope.params,
   ))!;
   const findings = await chapterFindings(ctx, c.id);
   const versions = await db.all('SELECT id, version_no, status, generated_at, approved_at FROM generated_chapter_versions WHERE chapter_id = ? ORDER BY version_no DESC', c.id);
   const coverage = {
     roles: await db.all(
       `SELECT sr.role_code AS code, COUNT(DISTINCT s.id) AS n FROM snippet_roles sr JOIN text_snippets s ON s.id = sr.snippet_id JOIN source_revisions r ON r.id = s.revision_id
-       WHERE s.chapter_id = ? AND r.is_current = 1 GROUP BY sr.role_code`, c.id),
+       WHERE ${scope.sql} AND r.is_current = 1 GROUP BY sr.role_code`, ...scope.params),
     divisions: await db.all(
       `SELECT sd.division_code AS code, COUNT(DISTINCT s.id) AS n FROM snippet_divisions sd JOIN text_snippets s ON s.id = sd.snippet_id JOIN source_revisions r ON r.id = s.revision_id
-       WHERE s.chapter_id = ? AND r.is_current = 1 GROUP BY sd.division_code`, c.id),
+       WHERE ${scope.sql} AND r.is_current = 1 GROUP BY sd.division_code`, ...scope.params),
   };
   return {
     id: c.id,
     title: c.title,
     position: c.position,
-    subchapters: await db.all('SELECT id, title, position FROM subchapters WHERE chapter_id = ? ORDER BY position', c.id),
+    outlineFamilyId: c.outline_family_id ?? null,
+    subchapters: c.outline_family_id
+      ? (await variantSnippetRefs(ctx, c)).subchapters
+      : await db.all('SELECT id, title, position FROM subchapters WHERE chapter_id = ? ORDER BY position', c.id),
     snippetCount: counts.total ?? 0,
     confirmedSnippetCount: counts.confirmed ?? 0,
     openFindings: findings.filter((f) => f.status === 'open' || f.status === 'deferred').length,
@@ -54,7 +66,19 @@ export async function getChapter(ctx: Ctx, id: string) {
 
 /** Alle Befunde, die ein Kapitel betreffen (direkt oder über eine der beiden Aussagen). */
 async function chapterFindings(ctx: Ctx, chapterId: string) {
-  return ctx.db.all<{ id: string; seq: number; type: string; severity: string; status: string; reason: string }>(
+  type F = { id: string; seq: number; type: string; severity: string; status: string; reason: string };
+  const chapter = await ctx.db.get('SELECT * FROM chapters WHERE id = ?', chapterId);
+  if (chapter?.outline_family_id) {
+    // Handbuch-Variante: Befunde der zugeordneten Schnipsel (ADR-034)
+    const ids = (await variantSnippetRefs(ctx, chapter)).refs.map((r) => r.snippetId);
+    if (!ids.length) return [] as F[];
+    const marks = ids.map(() => '?').join(',');
+    return ctx.db.all<F>(
+      `SELECT DISTINCT f.id, f.seq, f.type, f.severity, f.status, f.reason FROM quality_findings f
+       WHERE f.status <> 'obsolete' AND (f.snippet_a_id IN (${marks}) OR f.snippet_b_id IN (${marks}))`, ...ids, ...ids,
+    );
+  }
+  return ctx.db.all<F>(
     `SELECT DISTINCT f.id, f.seq, f.type, f.severity, f.status, f.reason FROM quality_findings f
      LEFT JOIN text_snippets sa ON sa.id = f.snippet_a_id LEFT JOIN text_snippets sb ON sb.id = f.snippet_b_id
      WHERE f.status <> 'obsolete' AND (f.chapter_id = ? OR sa.chapter_id = ? OR sb.chapter_id = ?)`,
@@ -66,15 +90,31 @@ async function chapterFindings(ctx: Ctx, chapterId: string) {
 
 async function loadGenSnippets(ctx: Ctx, chapterId: string): Promise<GenSnippet[]> {
   const { db } = ctx;
-  const rows = await db.all(
-    `SELECT s.*, sc.title AS subchapter_title, COALESCE(sc.position, 0) AS sub_pos, d.path, r.revision_no
-     FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
-     LEFT JOIN subchapters sc ON sc.id = s.subchapter_id
-     WHERE s.chapter_id = ? AND r.is_current = 1 AND s.excluded_reason IS NULL
-     ORDER BY sub_pos, d.path, s.position`, chapterId,
-  );
+  const chapter = await db.get('SELECT * FROM chapters WHERE id = ?', chapterId);
+  let rows: Row[];
+  const variant = !!chapter?.outline_family_id;
+  if (variant) {
+    // Handbuch-Variante (ADR-034): zugeordnete Schnipsel in Gliederungsreihenfolge, Unterkapitel aus der Gliederung
+    const { refs } = await variantSnippetRefs(ctx, chapter!);
+    const order = new Map(refs.map((r, i) => [r.snippetId, i]));
+    const sub = new Map(refs.map((r) => [r.snippetId, r.subTitle]));
+    rows = refs.length ? await db.all(
+      `SELECT s.*, d.path, r.revision_no FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
+       WHERE s.id IN (${refs.map(() => '?').join(',')}) AND r.is_current = 1 AND s.excluded_reason IS NULL`, ...refs.map((r) => r.snippetId),
+    ) : [];
+    rows = rows.map((r): Row => ({ ...r, subchapter_title: sub.get(r.id) ?? null })).sort((a, b) => order.get(a.id)! - order.get(b.id)!);
+  } else {
+    rows = await db.all(
+      `SELECT s.*, sc.title AS subchapter_title, COALESCE(sc.position, 0) AS sub_pos, d.path, r.revision_no
+       FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
+       LEFT JOIN subchapters sc ON sc.id = s.subchapter_id
+       WHERE s.chapter_id = ? AND r.is_current = 1 AND s.excluded_reason IS NULL
+       ORDER BY sub_pos, d.path, s.position`, chapterId,
+    );
+  }
   return Promise.all(rows.map(async (s, i) => {
-    const topic = await db.get(
+    // Querverweise auf Leitkapitel nur in den Quellkapiteln; die Variante enthält, was ihr zugeordnet ist
+    const topic = variant ? undefined : await db.get(
       `SELECT t.id, t.title, c.title AS lead FROM canonical_topic_members m JOIN canonical_topics t ON t.id = m.topic_id JOIN chapters c ON c.id = t.lead_chapter_id
        WHERE m.snippet_id = ? AND t.lead_chapter_id <> ?`, s.id, chapterId,
     );

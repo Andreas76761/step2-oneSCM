@@ -11,7 +11,7 @@ import { getWorkflow, myPendingApprovals, setWorkflow } from '../services/workfl
 import { userOf } from './helpers.js';
 
 export function chapterRoutes(app: FastifyInstance, _ctx: Ctx) {
-  app.get('/chapters', async (req) => (userOf(req.ctx, req), listChapters(req.ctx)));
+  app.get<{ Querystring: { outline?: string } }>('/chapters', async (req) => (userOf(req.ctx, req), listChapters(req.ctx, { outlineFamilyId: req.query.outline || undefined })));
   app.get<{ Params: { chapterId: string } }>('/chapters/:chapterId', async (req) => (userOf(req.ctx, req), getChapter(req.ctx, req.params.chapterId)));
   app.get<{ Params: { chapterId: string }; Querystring: { from?: string; to?: string } }>('/chapters/:chapterId/compare', async (req) => {
     userOf(req.ctx, req);

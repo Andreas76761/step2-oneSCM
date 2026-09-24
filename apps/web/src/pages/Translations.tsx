@@ -6,7 +6,7 @@ import { Card, Empty, ErrorBox, Md, Page, Status, errorText, useApp, useLoad } f
 /** Mehrsprachigkeit (ADR-020): Übersetzungen freigegebener Kapitel je Zielsprache */
 export function TranslationsPage() {
   const { notify } = useApp();
-  const chapters = useLoad<any[]>('/chapters');
+  const chapters = useLoad<any[]>('/chapters?outline=all');
   const langs = useLoad<any>('/languages');
   const llm = useLoad<any>('/llm/status');
   const me = useLoad<any>('/me');
