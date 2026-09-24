@@ -12,6 +12,7 @@ import { JobQueue } from './jobs.js';
 import { createProvider } from './llm.js';
 import { Problem } from './problem.js';
 import { chapterRoutes } from './routes/chapters.js';
+import { projectRoutes } from './routes/projects.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
 import { rewriteRoutes } from './routes/rewrite.js';
@@ -19,6 +20,7 @@ import { sourceRoutes } from './routes/sources.js';
 import { terminologyRoutes } from './routes/terminology.js';
 import { failAnalysisJob, runAnalysis } from './services/analysis.js';
 import { failImportJob, runImportJob } from './services/imports.js';
+import { assertParamsInProject, resolveProject, withProject } from './services/projects.js';
 import { seedTerminology } from './services/terminology.js';
 import { LocalObjectStore, S3ObjectStore } from './storage.js';
 
@@ -46,8 +48,12 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     projectId: DEFAULT_PROJECT_ID,
     log: (msg, extra) => app.log.info(extra ?? {}, msg),
   };
-  jobs.register('import', (p) => runImportJob(ctx, p), (p, err) => failImportJob(ctx, p, err));
-  jobs.register('analysis', (p) => runAnalysis(ctx, p.runId).then(() => undefined), (p, err) => failAnalysisJob(ctx, p, err));
+  // Jobs laufen im Projekt ihres Imports bzw. Analyselaufs (ADR-014)
+  const jobCtx = async (sql: string, id: string) => withProject(ctx, (await db.get<{ project_id: string }>(sql, id))?.project_id ?? DEFAULT_PROJECT_ID);
+  const importCtx = (p: any) => jobCtx('SELECT project_id FROM imports WHERE id = ?', p.importId);
+  const runCtx = (p: any) => jobCtx('SELECT project_id FROM analysis_runs WHERE id = ?', p.runId);
+  jobs.register('import', async (p) => runImportJob(await importCtx(p), p), async (p, err) => failImportJob(await importCtx(p), p, err));
+  jobs.register('analysis', async (p) => void (await runAnalysis(await runCtx(p), p.runId)), async (p, err) => failAnalysisJob(await runCtx(p), p, err));
   if (options.worker !== false && process.env.JOB_WORKER !== '0') await jobs.start();
 
   await app.register(multipart, { limits: { fileSize: 512 * 1024 * 1024, files: 1 } });
@@ -76,12 +82,28 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
   });
 
   app.decorateRequest('user', null);
+  app.decorateRequest('globalUser', null);
+  app.decorateRequest('ctx', null as unknown as Ctx);
   await app.register(
     async (api) => {
       // Anmeldung für alle API-Endpunkte außer den öffentlichen (ENTSCHEIDUNG E-15)
       api.addHook('onRequest', async (req) => {
-        if (PUBLIC_PATHS.has(req.url.split('?')[0])) return;
-        req.user = await authenticate(ctx, req.headers);
+        req.ctx = ctx;
+        const url = req.url.split('?')[0];
+        if (PUBLIC_PATHS.has(url)) return;
+        const user = await authenticate(ctx, req.headers);
+        req.globalUser = user;
+        req.user = user;
+        // Projektverwaltung arbeitet projektübergreifend mit globalen Berechtigungen
+        if (url === '/api/v1/projects' || url.startsWith('/api/v1/projects/')) return;
+        const header = req.headers['x-project-id'];
+        const scoped = await resolveProject(ctx, user, Array.isArray(header) ? header[0] : header);
+        req.ctx = scoped.ctx;
+        req.user = scoped.user;
+      });
+      // Mandantentrennung: IDs in Pfaden müssen zum Projekt der Anfrage gehören
+      api.addHook('preHandler', async (req) => {
+        await assertParamsInProject(req.ctx, req.params as Record<string, string>);
       });
       api.get('/health', async () => ({ status: 'ok', database: db.dialect, auth: config.authMode, objectStore: ctx.store.kind, llm: ctx.llm?.id ?? 'none' }));
       sourceRoutes(api, ctx);
@@ -90,6 +112,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       miscRoutes(api, ctx);
       terminologyRoutes(api, ctx);
       rewriteRoutes(api, ctx);
+      projectRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

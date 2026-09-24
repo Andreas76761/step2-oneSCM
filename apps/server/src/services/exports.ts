@@ -5,6 +5,7 @@ import { DIVISIONS, ROLES } from '../domain/reference.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { gateForChapter, getChapterVersion } from './chapters.js';
 import { escapeHtml, markdownToHtml, markdownToPdf, renderPdf } from './render.js';
+import { assertIdsInProject } from './projects.js';
 
 export interface ExportFilter {
   roles?: string[];
@@ -186,6 +187,7 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
 export async function createExport(ctx: Ctx, input: ExportInput, actor: string) {
   const format = input.format ?? 'md';
   if (!(EXPORT_FORMATS as readonly string[]).includes(format)) throw badRequest(`format muss eines von ${EXPORT_FORMATS.join(', ')} sein.`);
+  if (input.chapterIds?.length) await assertIdsInProject(ctx, 'chapterId', input.chapterIds);
   const chapterIds = input.chapterIds?.length
     ? input.chapterIds
     : (await ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved'", ctx.projectId)).map((r) => r.chapter_id as string);
@@ -229,7 +231,7 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
     'INSERT INTO exports (id, project_id, params, status, format, storage_key, file_name, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     id, ctx.projectId, json({ ...input, skipped }), 'completed', format, key, fileName, actor, now(),
   );
-  await audit(ctx.db, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped });
+  await audit(ctx, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped });
   return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, downloadUrl: `/api/v1/exports/${id}/download`, preview, byteSize: data.length };
 }
 

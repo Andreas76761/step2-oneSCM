@@ -150,3 +150,29 @@ test('[T-205] KI-Vorschlag in der Kapitelwerkstatt: Satz-Evidenz prüfen und üb
   await purpose.locator('.block-meta').first().click();
   await expect(page.getByRole('heading', { name: 'Satz-Evidenz (KI-umformuliert)' })).toBeVisible();
 });
+
+test('[T-206] Projekte: anlegen, wechseln, Daten getrennt, Mitglied hinzufügen', async ({ page }) => {
+  await page.goto('/projekte');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Projekte');
+  await page.getByLabel('Projektname').fill('E2E-Werkstatthandbuch');
+  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByText('Projekt „E2E-Werkstatthandbuch“ angelegt.')).toBeVisible();
+  const row = page.getByRole('row', { name: /E2E-Werkstatthandbuch/ });
+  await row.getByRole('button', { name: 'Mitglieder' }).click();
+  await page.getByLabel('Benutzerkennung').fill('u-leser');
+  await page.getByRole('checkbox', { name: 'bearbeiten' }).check();
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByRole('cell', { name: /u-leser/ })).toBeVisible();
+
+  // Wechsel über die Projektauswahl: neues Projekt ist leer
+  await page.getByLabel('Projekt', { exact: true }).selectOption({ label: 'E2E-Werkstatthandbuch' });
+  await page.waitForURL((u) => u.pathname === '/');
+  await expect(page.getByLabel('Projekt', { exact: true })).not.toHaveValue('p_default');
+  await page.goto('/quellen');
+  await expect(page.getByText('Noch keine Importe.')).toBeVisible();
+  // zurück ins Standardprojekt
+  await page.getByLabel('Projekt', { exact: true }).selectOption('p_default');
+  await page.waitForURL((u) => u.pathname === '/');
+  await page.goto('/werkstatt');
+  await expect(page.getByRole('button', { name: '4. Vertragsbearbeitung' })).toBeVisible();
+});

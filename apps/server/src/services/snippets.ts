@@ -137,7 +137,7 @@ export async function patchSnippet(ctx: Ctx, id: string, patch: SnippetPatch, ac
     if (patch.note !== undefined) await db.run('UPDATE text_snippets SET note = ? WHERE id = ?', patch.note, id);
     if (patch.market) await db.run('INSERT INTO markets (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', patch.market, patch.market);
     if (patch.release) await db.run('INSERT INTO release_scopes (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', patch.release, patch.release);
-    await audit(db, actor, 'snippet.classified', 'snippet', id, { patch, before: { roles: before.roles, divisions: before.divisions, evidenceStatus: before.evidenceStatus } });
+    await audit(ctx, actor, 'snippet.classified', 'snippet', id, { patch, before: { roles: before.roles, divisions: before.divisions, evidenceStatus: before.evidenceStatus } });
   });
   return getSnippet(ctx, id);
 }

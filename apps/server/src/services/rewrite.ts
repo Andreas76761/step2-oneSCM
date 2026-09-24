@@ -86,7 +86,7 @@ export async function proposeRewrite(ctx: Ctx, blockId: string, input: { instruc
   try {
     response = await provider.complete(prompt);
   } catch (e) {
-    await audit(db, actor, 'rewrite.failed', 'content_block', blockId, { ...requestInfo, error: (e as Error).message });
+    await audit(ctx, actor, 'rewrite.failed', 'content_block', blockId, { ...requestInfo, error: (e as Error).message });
     if (e instanceof LlmError) throw new Problem(502, 'Bad Gateway', `KI-Dienst nicht verfügbar: ${e.message}`);
     throw e;
   }
@@ -97,7 +97,7 @@ export async function proposeRewrite(ctx: Ctx, blockId: string, input: { instruc
     sentences = checkSentences(parseRewriteResponse(response.text), sources, { minSupport: settings.rewrite.minSupport, preferredTerms: terms.map((t) => t.preferred) });
   } catch (e) {
     if (!(e instanceof RewriteParseError)) throw e;
-    await audit(db, actor, 'rewrite.failed', 'content_block', blockId, { ...requestInfo, error: e.message });
+    await audit(ctx, actor, 'rewrite.failed', 'content_block', blockId, { ...requestInfo, error: e.message });
     throw new Problem(502, 'Bad Gateway', `Antwort des KI-Dienstes unbrauchbar: ${e.message}`);
   }
   const valid = sentences.every((s) => s.issues.length === 0);
@@ -109,7 +109,7 @@ export async function proposeRewrite(ctx: Ctx, blockId: string, input: { instruc
       id, blockId, b.versionNo, provider.id, provider.model, promptHash, json(snippetIds), b.text, json(sentences), valid ? 1 : 0,
       response.text.slice(0, 20000), json(response.usage ?? null), valid ? 'proposed' : 'invalid', actor, now(),
     );
-    await audit(db, actor, 'rewrite.proposed', 'content_block', blockId, { ...requestInfo, proposalId: id, valid, sentences: sentences.length, usage: response.usage });
+    await audit(ctx, actor, 'rewrite.proposed', 'content_block', blockId, { ...requestInfo, proposalId: id, valid, sentences: sentences.length, usage: response.usage });
   });
   return withText(ctx, await proposalRow(ctx, id));
 }
@@ -167,7 +167,7 @@ export async function acceptProposal(ctx: Ctx, id: string, input: { reason?: str
       // übrige offene Vorschläge desselben Absatzes sind damit veraltet
       await db.run("UPDATE rewrite_proposals SET status = 'stale', decided_by = 'system', decided_at = ?, decision_reason = ? WHERE block_id = ? AND status = 'proposed' AND id <> ?", now(), 'anderer Vorschlag übernommen', row.id, id);
       await snapshot(ctx, row.id, row.version_no + 1, 'rewritten', actor, `KI-Vorschlag übernommen (${r.provider}/${r.model})${input.reason?.trim() ? `: ${input.reason.trim()}` : ''}`);
-      await audit(db, actor, 'rewrite.accepted', 'content_block', row.id, { proposalId: id, provider: r.provider, model: r.model, reason: input.reason });
+      await audit(ctx, actor, 'rewrite.accepted', 'content_block', row.id, { proposalId: id, provider: r.provider, model: r.model, reason: input.reason });
     });
   } catch (e) {
     if (e !== concurrent) throw e;
@@ -182,7 +182,7 @@ export async function rejectProposal(ctx: Ctx, id: string, input: { reason?: str
   if (!['proposed', 'invalid'].includes(r.status)) throw conflict(`Vorschlag ist bereits ${r.status}.`);
   await ctx.db.tx(async () => {
     await decide(ctx, id, ['proposed', 'invalid'], 'rejected', actor, input.reason?.trim() || null);
-    await audit(ctx.db, actor, 'rewrite.rejected', 'content_block', r.block_id, { proposalId: id, reason: input.reason });
+    await audit(ctx, actor, 'rewrite.rejected', 'content_block', r.block_id, { proposalId: id, reason: input.reason });
   });
   return getProposal(ctx, id);
 }

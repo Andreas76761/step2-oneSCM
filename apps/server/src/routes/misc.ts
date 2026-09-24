@@ -12,24 +12,24 @@ import { optimizationOverview } from '../services/insights.js';
 import { buildMatrix, matrixCsv, matrixMarkdown, matrixXlsx } from '../services/traceability.js';
 import { list, userOf } from './helpers.js';
 
-export function miscRoutes(app: FastifyInstance, ctx: Ctx) {
+export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.post<{ Body: any }>('/exports', async (req, reply) => {
-    const user = userOf(ctx, req, 'read');
+    const user = userOf(req.ctx, req, 'read');
     const b = (req.body ?? {}) as any;
     reply.code(201);
-    return createExport(ctx, { chapterIds: list(b.chapterIds), roles: list(b.roles), divisions: list(b.divisions), market: b.market || null, release: b.release || null, format: b.format }, user.id);
+    return createExport(req.ctx, { chapterIds: list(b.chapterIds), roles: list(b.roles), divisions: list(b.divisions), market: b.market || null, release: b.release || null, format: b.format }, user.id);
   });
-  app.get('/exports', async (req) => (userOf(ctx, req), listExports(ctx)));
+  app.get('/exports', async (req) => (userOf(req.ctx, req), listExports(req.ctx)));
   app.get<{ Params: { exportId: string } }>('/exports/:exportId/download', async (req, reply) => {
-    userOf(ctx, req);
-    const f = await downloadExport(ctx, req.params.exportId);
+    userOf(req.ctx, req);
+    const f = await downloadExport(req.ctx, req.params.exportId);
     reply.header('Content-Type', CONTENT_TYPES[f.format] ?? 'application/octet-stream').header('Content-Disposition', `attachment; filename="${f.fileName}"`);
     return f.data;
   });
 
   app.get<{ Querystring: { format?: string } }>('/traceability', async (req, reply) => {
-    userOf(ctx, req);
-    const m = buildMatrix(ctx);
+    userOf(req.ctx, req);
+    const m = buildMatrix(req.ctx);
     switch (req.query.format ?? 'json') {
       case 'json':
         return m;
@@ -47,9 +47,9 @@ export function miscRoutes(app: FastifyInstance, ctx: Ctx) {
     }
   });
 
-  app.get('/settings', async (req) => (userOf(ctx, req), getSettings(ctx.db)));
+  app.get('/settings', async (req) => (userOf(req.ctx, req), getSettings(req.ctx.db)));
   app.put<{ Body: any }>('/settings', async (req) => {
-    const user = userOf(ctx, req, 'admin');
+    const user = userOf(req.ctx, req, 'admin');
     const body = (req.body ?? {}) as any;
     const a = body.analysis;
     if (a) {
@@ -57,67 +57,70 @@ export function miscRoutes(app: FastifyInstance, ctx: Ctx) {
         if (a[k] !== undefined && (typeof a[k] !== 'number' || a[k] < 0.05 || a[k] > 1)) throw badRequest(`analysis.${k} muss eine Zahl zwischen 0,05 und 1 sein.`);
       }
     }
-    await saveSettings(ctx.db, body);
-    await audit(ctx.db, user.id, 'settings.updated', 'settings', 'project', body);
-    return getSettings(ctx.db);
+    await saveSettings(req.ctx.db, body);
+    await audit(req.ctx.db, user.id, 'settings.updated', 'settings', 'project', body);
+    return getSettings(req.ctx.db);
   });
 
   app.get('/reference', async (req) => {
-    userOf(ctx, req);
+    userOf(req.ctx, req);
     return {
       roles: ROLES, divisions: DIVISIONS, evidenceStatuses: EVIDENCE_STATUSES, findingTypes: FINDING_TYPES, severities: SEVERITIES, decisions: DECISIONS,
       sections: CHAPTER_SECTIONS, blockModes: BLOCK_MODES, permissions: PERMISSIONS, contradictionRules: RULE_LABELS,
-      markets: await ctx.db.all('SELECT code, label FROM markets ORDER BY code'), releases: await ctx.db.all('SELECT code, label FROM release_scopes ORDER BY code'),
+      markets: await req.ctx.db.all('SELECT code, label FROM markets ORDER BY code'), releases: await req.ctx.db.all('SELECT code, label FROM release_scopes ORDER BY code'),
       // Benutzerliste (für die Demo-Auswahl) nur im Demo-Modus
-      users: ctx.config.authMode === 'demo'
-        ? (await ctx.db.all("SELECT id, name, permissions FROM users WHERE id LIKE 'u-%' ORDER BY name")).map((u) => ({ ...u, permissions: parseJson(u.permissions, []) }))
+      users: req.ctx.config.authMode === 'demo'
+        ? (await req.ctx.db.all("SELECT id, name, permissions FROM users WHERE id LIKE 'u-%' ORDER BY name")).map((u) => ({ ...u, permissions: parseJson(u.permissions, []) }))
         : [],
     };
   });
-  app.get('/me', async (req) => userOf(ctx, req));
+  app.get('/me', async (req) => userOf(req.ctx, req));
 
   // Öffentlich: Anmeldekonfiguration für die Web-UI (ENTSCHEIDUNG E-15)
-  app.get('/auth/config', async () =>
-    ctx.config.authMode === 'oidc'
-      ? { mode: 'oidc', issuer: ctx.config.oidc!.issuer, clientId: ctx.config.oidc!.clientId, scope: ctx.config.oidc!.scope, audience: ctx.config.oidc!.audience }
+  app.get('/auth/config', async (req) =>
+    req.ctx.config.authMode === 'oidc'
+      ? { mode: 'oidc', issuer: req.ctx.config.oidc!.issuer, clientId: req.ctx.config.oidc!.clientId, scope: req.ctx.config.oidc!.scope, audience: req.ctx.config.oidc!.audience }
       : { mode: 'demo' },
   );
 
   app.get('/dashboard', async (req) => {
-    userOf(ctx, req);
-    const { db } = ctx;
+    userOf(req.ctx, req);
+    const { db, projectId: pid } = req.ctx;
     const one = async (sql: string, ...p: unknown[]) => (await db.get<{ n: number }>(sql, ...p))?.n ?? 0;
-    const snippets = await one('SELECT COUNT(*) AS n FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1');
-    const byType = await db.all("SELECT type, severity, COUNT(*) AS n FROM quality_findings WHERE status IN ('open','deferred') GROUP BY type, severity");
+    // aktuelle Textabschnitte des Projekts
+    const cur = 'FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id WHERE r.is_current = 1 AND d.project_id = ?';
     return {
-      sources: await one('SELECT COUNT(*) AS n FROM source_documents'),
-      revisions: await one('SELECT COUNT(*) AS n FROM source_revisions'),
-      imports: await one('SELECT COUNT(*) AS n FROM imports'),
-      chapters: await one('SELECT COUNT(*) AS n FROM chapters'),
-      snippets,
-      confirmedSnippets: await one("SELECT COUNT(*) AS n FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1 AND s.evidence_status IN ('source_confirmed','manually_confirmed')"),
-      openFindings: byType,
-      clusters: await one("SELECT COUNT(*) AS n FROM semantic_clusters WHERE status <> 'dissolved'"),
-      canonicalTopics: await one('SELECT COUNT(*) AS n FROM canonical_topics'),
-      versions: await db.all('SELECT status, COUNT(*) AS n FROM generated_chapter_versions GROUP BY status'),
-      roleCoverage: await db.all('SELECT sr.role_code AS code, COUNT(*) AS n FROM snippet_roles sr JOIN text_snippets s ON s.id = sr.snippet_id JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1 GROUP BY sr.role_code'),
-      divisionCoverage: await db.all('SELECT sd.division_code AS code, COUNT(*) AS n FROM snippet_divisions sd JOIN text_snippets s ON s.id = sd.snippet_id JOIN source_revisions r ON r.id = s.revision_id WHERE r.is_current = 1 GROUP BY sd.division_code'),
-      lastAnalysis: (await db.get('SELECT id, status, started_at AS startedAt, finished_at AS finishedAt, stats FROM analysis_runs ORDER BY started_at DESC LIMIT 1')) ?? null,
+      sources: await one('SELECT COUNT(*) AS n FROM source_documents WHERE project_id = ?', pid),
+      revisions: await one('SELECT COUNT(*) AS n FROM source_revisions r JOIN source_documents d ON d.id = r.document_id WHERE d.project_id = ?', pid),
+      imports: await one('SELECT COUNT(*) AS n FROM imports WHERE project_id = ?', pid),
+      chapters: await one('SELECT COUNT(*) AS n FROM chapters WHERE project_id = ?', pid),
+      snippets: await one(`SELECT COUNT(*) AS n ${cur}`, pid),
+      confirmedSnippets: await one(`SELECT COUNT(*) AS n ${cur} AND s.evidence_status IN ('source_confirmed','manually_confirmed')`, pid),
+      openFindings: await db.all("SELECT type, severity, COUNT(*) AS n FROM quality_findings WHERE project_id = ? AND status IN ('open','deferred') GROUP BY type, severity", pid),
+      clusters: await one("SELECT COUNT(*) AS n FROM semantic_clusters WHERE project_id = ? AND status <> 'dissolved'", pid),
+      canonicalTopics: await one('SELECT COUNT(*) AS n FROM canonical_topics WHERE project_id = ?', pid),
+      versions: await db.all('SELECT v.status, COUNT(*) AS n FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? GROUP BY v.status', pid),
+      roleCoverage: await db.all(`SELECT sr.role_code AS code, COUNT(*) AS n FROM snippet_roles sr JOIN text_snippets s ON s.id = sr.snippet_id JOIN source_revisions r ON r.id = s.revision_id
+        JOIN source_documents d ON d.id = r.document_id WHERE r.is_current = 1 AND d.project_id = ? GROUP BY sr.role_code`, pid),
+      divisionCoverage: await db.all(`SELECT sd.division_code AS code, COUNT(*) AS n FROM snippet_divisions sd JOIN text_snippets s ON s.id = sd.snippet_id JOIN source_revisions r ON r.id = s.revision_id
+        JOIN source_documents d ON d.id = r.document_id WHERE r.is_current = 1 AND d.project_id = ? GROUP BY sd.division_code`, pid),
+      lastAnalysis: (await db.get('SELECT id, status, started_at AS startedAt, finished_at AS finishedAt, stats FROM analysis_runs WHERE project_id = ? ORDER BY started_at DESC LIMIT 1', pid)) ?? null,
     };
   });
 
-  app.get('/optimizations', async (req) => (userOf(ctx, req), optimizationOverview(ctx)));
+  app.get('/optimizations', async (req) => (userOf(req.ctx, req), optimizationOverview(req.ctx)));
 
   app.get<{ Querystring: { entityType?: string; entityId?: string; limit?: string } }>('/audit-events', async (req) => {
-    userOf(ctx, req);
+    userOf(req.ctx, req);
     const { entityType, entityId } = req.query;
     const limit = Math.min(Number(req.query.limit ?? 200), 1000);
-    const where: string[] = [];
-    const p: unknown[] = [];
+    // Projektereignisse; systemweite Ereignisse (Einstellungen) nur für die Administration
+    const where: string[] = [req.user?.permissions.includes('admin') ? '(project_id = ? OR project_id IS NULL)' : 'project_id = ?'];
+    const p: unknown[] = [req.ctx.projectId];
     if (entityType) (where.push('entity_type = ?'), p.push(entityType));
     if (entityId) (where.push('entity_id = ?'), p.push(entityId));
-    return (await ctx.db.all(`SELECT * FROM audit_events ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY at DESC LIMIT ?`, ...p, limit)).map((e) => ({
-      id: e.id, at: e.at, actor: e.actor, action: e.action, entityType: e.entity_type, entityId: e.entity_id, details: parseJson(e.details, {}),
+    return (await req.ctx.db.all(`SELECT * FROM audit_events WHERE ${where.join(' AND ')} ORDER BY at DESC LIMIT ?`, ...p, limit)).map((e) => ({
+      id: e.id, at: e.at, projectId: e.project_id ?? null, actor: e.actor, action: e.action, entityType: e.entity_type, entityId: e.entity_id, details: parseJson(e.details, {}),
     }));
   });
 }
