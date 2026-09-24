@@ -7,6 +7,8 @@ import { conflict, notFound, Problem } from '../problem.js';
 import { assertEditable } from './chapters.js';
 import { acceptProposal, isSourceDerived, proposeRewrite, withText } from './rewrite.js';
 
+const isUniqueViolation = (e: any) => e?.code === '23505' || /UNIQUE constraint failed/i.test(String(e?.message));
+
 function batchDto(b: Row) {
   return {
     id: b.id, chapterVersionId: b.chapter_version_id, status: b.status as string, instructions: b.instructions ?? null,
@@ -45,14 +47,20 @@ export async function startBatch(ctx: Ctx, versionId: string, input: { instructi
   const blocks = await eligibleBlocks(ctx, versionId);
   if (!blocks.length) throw new Problem(422, 'Unprocessable Content', 'Keine geeigneten Absätze (mit Quelle, nicht gesperrt, ohne offenen Vorschlag).');
   const id = newId('rwb');
-  await ctx.db.tx(async () => {
-    await ctx.db.run(
-      "INSERT INTO rewrite_batches (id, chapter_version_id, status, instructions, total, created_by, created_at) VALUES (?, ?, 'queued', ?, ?, ?, ?)",
-      id, versionId, input.instructions?.trim().slice(0, 500) || null, blocks.length, actor, now(),
-    );
-    await ctx.jobs.enqueue('rewrite-batch', { batchId: id });
-    await audit(ctx, actor, 'rewrite.batch_started', 'chapter_version', versionId, { batchId: id, blocks: blocks.length, provider: ctx.llm!.id, model: ctx.llm!.model });
-  });
+  try {
+    await ctx.db.tx(async () => {
+      await ctx.db.run(
+        "INSERT INTO rewrite_batches (id, chapter_version_id, status, instructions, total, created_by, created_at) VALUES (?, ?, 'queued', ?, ?, ?, ?)",
+        id, versionId, input.instructions?.trim().slice(0, 500) || null, blocks.length, actor, now(),
+      );
+      await ctx.jobs.enqueue('rewrite-batch', { batchId: id });
+      await audit(ctx, actor, 'rewrite.batch_started', 'chapter_version', versionId, { batchId: id, blocks: blocks.length, provider: ctx.llm!.id, model: ctx.llm!.model });
+    });
+  } catch (e) {
+    // eindeutiger Index uq_rewrite_batches_active: paralleler Start derselben Version
+    if (isUniqueViolation(e)) throw conflict('Für diese Version läuft bereits eine Umformulierung.');
+    throw e;
+  }
   ctx.jobs.wake();
   return batchDto(await batchRow(ctx, id));
 }

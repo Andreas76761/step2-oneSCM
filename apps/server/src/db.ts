@@ -20,8 +20,11 @@ export interface Db {
   all<T = Row>(sql: string, ...params: unknown[]): Promise<T[]>;
   get<T = Row>(sql: string, ...params: unknown[]): Promise<T | undefined>;
   run(sql: string, ...params: unknown[]): Promise<{ changes: number }>;
-  /** Transaktion; verschachtelte Aufrufe laufen in der äußeren Transaktion mit. */
-  tx<T>(fn: () => Promise<T>): Promise<T>;
+  /**
+   * Transaktion; verschachtelte Aufrufe laufen in der äußeren Transaktion mit.
+   * `snapshot`: nur lesend mit einheitlichem Datenstand für alle Abfragen (PostgreSQL: REPEATABLE READ).
+   */
+  tx<T>(fn: () => Promise<T>, opts?: { snapshot?: boolean }): Promise<T>;
   /** Fortlaufende, lesbare Nummer (#34) für Tabellen mit Spalte `seq`. */
   nextSeq(table: 'text_snippets' | 'quality_findings'): Promise<number>;
   /** Führt `fn` außerhalb eines Transaktionskontexts aus (für Timer/Hintergrundarbeit, die sonst die Transaktion erben würde). */
@@ -86,7 +89,8 @@ class SqliteDb implements Db {
     return { changes: this.raw.prepare(sql).run(...params).changes };
   }
 
-  async tx<T>(fn: () => Promise<T>): Promise<T> {
+  // SQLite: BEGIN IMMEDIATE hält die Schreibsperre – alle Abfragen sehen denselben Stand (auch für `snapshot`)
+  async tx<T>(fn: () => Promise<T>, _opts?: { snapshot?: boolean }): Promise<T> {
     if (this.als.getStore()) return fn();
     while (this.lock) await this.lock;
     let release!: () => void;
@@ -174,11 +178,12 @@ class PostgresDb implements Db {
     return { changes: (await this.query(sql, params)).rowCount ?? 0 };
   }
 
-  async tx<T>(fn: () => Promise<T>): Promise<T> {
+  async tx<T>(fn: () => Promise<T>, opts?: { snapshot?: boolean }): Promise<T> {
     if (this.als.getStore()) return fn();
     const client = await this.pool.connect();
     try {
-      await client.query('BEGIN');
+      // READ COMMITTED sieht je Abfrage einen neuen Stand; für konsistente Backups ein fester Snapshot
+      await client.query(opts?.snapshot ? 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY' : 'BEGIN');
       const result = await this.als.run(client, fn);
       await client.query('COMMIT');
       return result;

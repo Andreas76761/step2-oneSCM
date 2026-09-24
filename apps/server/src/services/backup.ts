@@ -53,14 +53,14 @@ export async function createBackup(db: Db, store: ObjectStore, appVersion: strin
     migrations: (await db.all<{ name: string }>('SELECT name FROM schema_migrations ORDER BY name')).map((r) => r.name),
     tables: {}, objects: 0, missingObjects: [],
   };
-  // Konsistenter Stand: alle Tabellen in einer Transaktion lesen
+  // Konsistenter Stand: alle Tabellen aus einem einheitlichen Snapshot lesen (Fremdschlüssel bleiben vollständig)
   await db.tx(async () => {
     for (const t of backupTables()) {
       const rows = await db.all(`SELECT * FROM ${t} ${ROW_ORDER[t] ?? ''}`);
       manifest.tables[t] = rows.length;
       zip.file(`db/${t}.jsonl`, rows.map((r) => JSON.stringify(r)).join('\n'));
     }
-  });
+  }, { snapshot: true });
   for (const key of await objectKeys(db)) {
     try {
       zip.file(`objects/${key}`, await store.get(key));

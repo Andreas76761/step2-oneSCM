@@ -19,5 +19,7 @@ CREATE TABLE rewrite_batches (
   finished_at TEXT
 );
 CREATE INDEX idx_rewrite_batches_version ON rewrite_batches (chapter_version_id, created_at);
+-- höchstens ein aktiver Auftrag je Kapitelversion (atomar, auch bei parallelen Anfragen und mehreren Instanzen)
+CREATE UNIQUE INDEX uq_rewrite_batches_active ON rewrite_batches (chapter_version_id) WHERE status IN ('queued', 'processing');
 
 ALTER TABLE rewrite_proposals ADD COLUMN batch_id TEXT;
