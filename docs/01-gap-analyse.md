@@ -152,4 +152,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: Integrationen & API, Bilder & 
 | Kontexthilfe (NFR-17) | ✅ Kontext-IDs, API, Deep-Links, einbettbares Widget mit Assistent auf Basis des neuesten Releases ([ADR-030](adr/ADR-030-kontexthilfe.md)) |
 | Release-Pipeline (NFR-18) | ✅ Multi-Arch-Image in GHCR, SBOM, Provenienz, cosign keyless, Helm-Chart als OCI-Artefakt, Release-Notes aus dem CHANGELOG ([ADR-031](adr/ADR-031-release-pipeline.md)) |
 
-Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL war durch Einzelabfragen langsamer als über SQLite (in Etappe 9 auf das 1,7-Fache von SQLite verringert); Confluence wurde über den HTML-Export angebunden (seit Etappe 10 auch über die Cloud-API); gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten. Etappe 10: Die Release-Pipeline läuft erst mit dem ersten Tag in GitHub (lokal nur Build/Start des Images in der CI geprüft); das Widget zeigt öffentlich nur Release-Stände; SVG-Grafiken werden nicht übernommen.
+## 1.13 Stand nach Etappe 11 (24.09.2026)
+
+Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit Stammdaten (Inhaltsverzeichnis, Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung), Draft Manual mit Zuordnung und Kennzeichnung. Entscheidungen: Märkte konfigurierbar, Redaktionsplanung, Gliederungen als zusätzliche Sicht, FAQ gepflegt mit Vorschlägen.
+
+| Punkt | Ergebnis |
+|---|---|
+| Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
+| Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
+
+Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL war durch Einzelabfragen langsamer als über SQLite (in Etappe 9 auf das 1,7-Fache von SQLite verringert); Confluence wurde über den HTML-Export angebunden (seit Etappe 10 auch über die Cloud-API); gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten. Etappe 10: Die Release-Pipeline läuft erst mit dem ersten Tag in GitHub (lokal nur Build/Start des Images in der CI geprüft); das Widget zeigt öffentlich nur Release-Stände; SVG-Grafiken werden nicht übernommen. Etappe 11: Gliederungen haben zwei Ebenen (Kapitel, Unterkapitel); das Draft Manual ist ein Arbeitsstand und erzeugt keine Kapitelversionen.

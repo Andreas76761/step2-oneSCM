@@ -29,6 +29,9 @@ const ROW_ORDER: Record<string, string> = {
   // Antworten nach ihrem Ausgangskommentar, Releases nach ihrem Vorgänger (Anlagezeit ist unveränderlich)
   comments: 'ORDER BY created_at, id',
   handbook_releases: 'ORDER BY created_at, id',
+  // Versionen nach ihrer Vorlage, Unterkapitel nach ihrem Kapitel
+  outlines: 'ORDER BY created_at, version_no, id',
+  outline_nodes: 'ORDER BY level, position, id',
 };
 
 async function objectKeys(db: Db): Promise<string[]> {

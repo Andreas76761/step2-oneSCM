@@ -62,7 +62,7 @@ export async function resolveProject(ctx: Ctx, user: User, projectId: string | u
 function dto(p: Row, eff: User | null, counts?: Row) {
   return {
     id: p.id, name: p.name, description: p.description ?? null, visibility: p.visibility as Visibility, createdAt: p.created_at, createdBy: p.created_by ?? null,
-    archivedAt: p.archived_at ?? null, myPermissions: eff?.permissions ?? [], languages: parseJson<string[]>(p.languages, []),
+    archivedAt: p.archived_at ?? null, myPermissions: eff?.permissions ?? [], languages: parseJson<string[]>(p.languages, []), markets: parseJson<string[]>(p.markets, []),
     ...(counts ? { chapters: counts.chapters ?? 0, sources: counts.sources ?? 0 } : {}),
   };
 }
@@ -113,7 +113,7 @@ export async function createProject(ctx: Ctx, input: { name?: string; descriptio
   return dto(p, await effectiveUser(ctx, user, p));
 }
 
-export async function updateProject(ctx: Ctx, id: string, input: { name?: string; description?: string | null; visibility?: string; archived?: boolean; languages?: unknown }, user: User) {
+export async function updateProject(ctx: Ctx, id: string, input: { name?: string; description?: string | null; visibility?: string; archived?: boolean; languages?: unknown; markets?: unknown }, user: User) {
   const p = await projectRow(ctx, id);
   const set: string[] = [];
   const vals: unknown[] = [];
@@ -135,6 +135,12 @@ export async function updateProject(ctx: Ctx, id: string, input: { name?: string
       throw badRequest(`languages muss eine Liste aus ${Object.keys(LANGUAGES).join(', ')} sein.`);
     }
     set.push('languages = ?'), vals.push(json([...new Set(input.languages as string[])]));
+  }
+  if (input.markets !== undefined) {
+    // Märkte für Gliederungsvarianten (ADR-032), z. B. DE, FR, IT, ES, GB, NL
+    const list = Array.isArray(input.markets) ? [...new Set(input.markets.map((m) => String(m).trim().toUpperCase()))] : null;
+    if (!list || list.length > 30 || list.some((m) => !/^[A-Z]{2,3}$/.test(m))) throw badRequest('markets muss eine Liste von Marktcodes (2–3 Großbuchstaben, höchstens 30) sein.');
+    set.push('markets = ?'), vals.push(json(list));
   }
   if (!set.length) throw badRequest('Keine Änderung angegeben.');
   await ctx.db.tx(async () => {
@@ -203,6 +209,10 @@ const OWNER_SQL: Record<string, string> = {
   answerId: 'SELECT project_id FROM assistant_log WHERE id = ?',
   tokenId: 'SELECT project_id FROM api_tokens WHERE id = ?',
   helpContextId: 'SELECT project_id FROM help_contexts WHERE id = ?',
+  outlineId: 'SELECT project_id FROM outlines WHERE id = ?',
+  nodeId: 'SELECT o.project_id FROM outline_nodes n JOIN outlines o ON o.id = n.outline_id WHERE n.id = ?',
+  abbreviationId: 'SELECT project_id FROM abbreviations WHERE id = ?',
+  faqId: 'SELECT project_id FROM faq_entries WHERE id = ?',
   webhookId: 'SELECT project_id FROM webhook_subscriptions WHERE id = ?',
   deliveryId: 'SELECT s.project_id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id WHERE d.id = ?',
   batchId: 'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?',

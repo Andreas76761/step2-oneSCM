@@ -350,5 +350,23 @@
       "docs/adr/ADR-031-release-pipeline.md",
       ".github/workflows/release.yml"
     ]
+  },
+  {
+    "id": "NFR-19",
+    "title": "Stammdaten: einklappbare Navigation, Gliederungen je Rolle/Sparte/Blueprint/Märkte mit Versionen und Upload, Abkürzungen, Glossar, Bildverzeichnis, FAQ, Redaktionsplanung",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-032-stammdaten-gliederungen.md"
+    ]
+  },
+  {
+    "id": "NFR-20",
+    "title": "Draft Manual: Textschnipsel je Kapitel/Unterkapitel einer Gliederung zuordnen, Dopplungen, Lücken, Widersprüche und Warnungen farblich kennzeichnen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-033-draft-manual.md"
+    ]
   }
 ]

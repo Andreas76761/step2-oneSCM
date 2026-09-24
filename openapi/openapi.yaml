@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.10.0
+  version: 0.11.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -38,6 +38,8 @@ tags:
   - name: Integrationen
   - name: Medien
   - name: Kontexthilfe
+  - name: Stammdaten
+  - name: Draft Manual
   - name: System
 components:
   securitySchemes:
@@ -65,6 +67,8 @@ components:
     ConnectionId: { name: connectionId, in: path, required: true, schema: { type: string } }
     WebhookId: { name: webhookId, in: path, required: true, schema: { type: string } }
     HelpContextId: { name: helpContextId, in: path, required: true, schema: { type: string } }
+    OutlineId: { name: outlineId, in: path, required: true, schema: { type: string } }
+    NodeId: { name: nodeId, in: path, required: true, schema: { type: string } }
     ContextKey: { name: contextKey, in: path, required: true, schema: { type: string, pattern: '^[a-z0-9][a-z0-9._:-]{0,79}$' }, description: 'Kontext-ID aus oneSCM, z. B. order.create' }
     HelpRole: { name: role, in: query, schema: { type: string }, description: Rollencode (Inhalte der Rolle und allgemeine Inhalte) }
     HelpDivision: { name: division, in: query, schema: { type: string }, description: Spartencode }
@@ -1262,7 +1266,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/ProjectId' }]
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, properties: { name: { type: string }, description: { type: [string, 'null'] }, visibility: { type: string, enum: [open, restricted] }, archived: { type: boolean }, languages: { type: array, items: { type: string, enum: [en, fr, es, it, nl, pl, cs, pt] }, description: Zielsprachen für Übersetzungen (ADR-020) } } } } }
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, description: { type: [string, 'null'] }, visibility: { type: string, enum: [open, restricted] }, archived: { type: boolean }, languages: { type: array, items: { type: string, enum: [en, fr, es, it, nl, pl, cs, pt] }, description: Zielsprachen für Übersetzungen (ADR-020) }, markets: { type: array, items: { type: string, pattern: '^[A-Z]{2,3}$' }, description: 'Märkte für Gliederungsvarianten (ADR-032), Standard DE, FR, IT, ES, GB, NL' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Projekt, content: { application/json: { schema: { $ref: ''#/components/schemas/Project'' } } }' }
@@ -1963,6 +1967,18 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Bilddaten, content: { image/png: {}, image/jpeg: {}, image/gif: {}, image/webp: {} }' }
         '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: setMediaTitle
+      summary: Bildtitel für das Bildverzeichnis setzen (Berechtigung edit)
+      tags: [Stammdaten]
+      x-requirements: [NFR-19, NFR-16]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { title: { type: [string, 'null'] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
   /help-contexts:
     get:
       operationId: listHelpContexts
@@ -2075,3 +2091,350 @@ paths:
       security: []
       responses:
         '200': { description: 'JavaScript, content: { text/javascript: {} }' }
+  /outlines:
+    get:
+      operationId: listOutlines
+      summary: 'Gliederungen des Projekts mit Variante, Version, Anzahl Einträge/Schnipsel und Projektmärkten (ADR-032)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+    post:
+      operationId: createOutline
+      summary: 'Gliederung anlegen: leer, aus der Kapitelstruktur (fromChapters), aus nodes oder per Upload (content + format markdown|json); Berechtigung edit'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, roles: { type: array, items: { type: string } }, divisions: { type: array, items: { type: string } }, marketScope: { type: string, enum: [blueprint, markets] }, markets: { type: array, items: { type: string } }, fromChapters: { type: boolean }, content: { type: string }, format: { type: string, enum: [markdown, json] }, nodes: { type: array, items: { type: object } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Angelegt' }
+        '400': { description: 'Ungültige Variante oder keine Gliederungseinträge' }
+  /outlines/{outlineId}:
+    get:
+      operationId: getOutline
+      summary: 'Gliederung mit nummerierten Einträgen und Versionen'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+        '404': { description: 'Unbekannt' }
+    patch:
+      operationId: updateOutline
+      summary: 'Name, Variante oder Status ändern (höchstens eine aktive Version je Gliederung)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, description: { type: [string, 'null'] }, roles: { type: array, items: { type: string } }, divisions: { type: array, items: { type: string } }, marketScope: { type: string, enum: [blueprint, markets] }, markets: { type: array, items: { type: string } }, status: { type: string, enum: [draft, active, archived] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+        '400': { description: 'Ungültig' }
+    delete:
+      operationId: deleteOutline
+      summary: 'Version löschen (nicht, wenn weitere Versionen darauf aufbauen)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'Gelöscht' }
+        '409': { description: 'Grundlage weiterer Versionen' }
+  /outlines/{outlineId}/versions:
+    post:
+      operationId: createOutlineVersion
+      summary: 'Als neue Version speichern (Kopie mit Zuordnungen und Planung)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { name: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Neue Version' }
+  /outlines/{outlineId}/export:
+    get:
+      operationId: exportOutline
+      summary: 'Gliederung als Markdown oder JSON (Format für den Upload)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }, { name: format, in: query, schema: { type: string, enum: [md, json] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+  /outlines/{outlineId}/nodes:
+    post:
+      operationId: addOutlineNode
+      summary: 'Kapitel oder Unterkapitel (parentId) hinzufügen, optional nach afterId'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [title], properties: { title: { type: string }, parentId: { type: [string, 'null'] }, afterId: { type: [string, 'null'] }, description: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Hinzugefügt' }
+        '400': { description: 'Ungültig' }
+  /outline-nodes/{nodeId}:
+    patch:
+      operationId: updateOutlineNode
+      summary: 'Eintrag umbenennen, verschieben (move up|down) oder einordnen (parentId; null = Kapitel)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/NodeId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { title: { type: string }, description: { type: [string, 'null'] }, move: { type: string, enum: [up, down] }, parentId: { type: [string, 'null'] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+    delete:
+      operationId: deleteOutlineNode
+      summary: 'Eintrag samt Unterkapiteln löschen; Zuordnungen und Planung entfallen'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/NodeId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+  /outline-nodes/{nodeId}/plan:
+    put:
+      operationId: setPlanItem
+      summary: 'Redaktionsplanung eines Eintrags: Verantwortliche, Termin (JJJJ-MM-TT), Status, Notiz'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/NodeId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { assignee: { type: [string, 'null'] }, dueDate: { type: [string, 'null'], format: date }, status: { type: string, enum: [open, in_progress, review, done] }, note: { type: [string, 'null'] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+        '400': { description: 'Ungültig' }
+  /outlines/{outlineId}/plan:
+    get:
+      operationId: getOutlinePlan
+      summary: 'Redaktionsplan einer Gliederung mit Überfälligkeit und Fortschritt'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+  /outlines/{outlineId}/draft:
+    get:
+      operationId: getDraftManual
+      summary: 'Draft Manual: Einträge mit zugeordneten Schnipseln und Kennzeichnung (duplicate, contradiction, gap, warning) samt Übersicht (ADR-033)'
+      tags: [Draft Manual]
+      x-requirements: [NFR-20]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+  /outlines/{outlineId}/draft/export:
+    get:
+      operationId: exportDraftManual
+      summary: 'Draft Manual als Markdown (Kennzeichnungen als Zitatzeilen; flags=false ohne)'
+      tags: [Draft Manual]
+      x-requirements: [NFR-20]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }, { name: flags, in: query, schema: { type: boolean } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+  /outlines/{outlineId}/candidates:
+    get:
+      operationId: listOutlineCandidates
+      summary: 'Nicht zugeordnete aktuelle Schnipsel (Suche q, chapterId, Seiten; assigned=all für alle) mit Kennzeichnung'
+      tags: [Draft Manual]
+      x-requirements: [NFR-20]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }, { name: q, in: query, schema: { type: string } }, { name: chapterId, in: query, schema: { type: string } }, { name: page, in: query, schema: { type: integer } }, { name: pageSize, in: query, schema: { type: integer, maximum: 200 } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+  /outlines/{outlineId}/assignments:
+    post:
+      operationId: assignOutlineSnippets
+      summary: 'Schnipsel einem Eintrag zuordnen (bereits zugeordnete werden verschoben; höchstens 500)'
+      tags: [Draft Manual]
+      x-requirements: [NFR-20]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [nodeId, snippetIds], properties: { nodeId: { type: string }, snippetIds: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+        '400': { description: 'Ungültig' }
+  /outlines/{outlineId}/assignments/{snippetId}:
+    patch:
+      operationId: moveOutlineAssignment
+      summary: 'Schnipsel innerhalb des Eintrags verschieben'
+      tags: [Draft Manual]
+      x-requirements: [NFR-20]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }, { name: snippetId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [move], properties: { move: { type: string, enum: [up, down] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'Verschoben' }
+    delete:
+      operationId: unassignOutlineSnippet
+      summary: 'Zuordnung lösen'
+      tags: [Draft Manual]
+      x-requirements: [NFR-20]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }, { name: snippetId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'Gelöst' }
+        '404': { description: 'Nicht zugeordnet' }
+  /outlines/{outlineId}/auto-assign:
+    post:
+      operationId: autoAssignOutline
+      summary: 'Automatisch zuordnen über Kapitel-/Unterkapiteltitel der Quellen'
+      tags: [Draft Manual]
+      x-requirements: [NFR-20]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ assigned, remaining }' }
+  /abbreviations:
+    get:
+      operationId: listAbbreviations
+      summary: 'Abkürzungsverzeichnis'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+    post:
+      operationId: createAbbreviation
+      summary: 'Abkürzung erfassen (je Projekt eindeutig; Berechtigung edit)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [abbreviation, expansion], properties: { abbreviation: { type: string }, expansion: { type: string }, description: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Angelegt' }
+        '409': { description: 'Existiert bereits' }
+  /abbreviations/suggestions:
+    get:
+      operationId: listAbbreviationSuggestions
+      summary: 'In aktuellen Schnipseln vorkommende, noch nicht erfasste Abkürzungen'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+  /abbreviations/{abbreviationId}:
+    patch:
+      operationId: updateAbbreviation
+      summary: 'Abkürzung ändern'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ name: abbreviationId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+    delete:
+      operationId: deleteAbbreviation
+      summary: 'Abkürzung löschen'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ name: abbreviationId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'Gelöscht' }
+  /faq:
+    get:
+      operationId: listFaq
+      summary: 'FAQ-Einträge, gefiltert nach role, division, status, language'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ name: role, in: query, schema: { type: string } }, { name: division, in: query, schema: { type: string } }, { name: status, in: query, schema: { type: string, enum: [draft, published] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+    post:
+      operationId: createFaq
+      summary: 'FAQ-Eintrag anlegen (sourceQuestion kennzeichnet einen übernommenen Vorschlag)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [question, answer], properties: { question: { type: string }, answer: { type: string }, roles: { type: array, items: { type: string } }, divisions: { type: array, items: { type: string } }, status: { type: string }, sourceQuestion: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Angelegt' }
+        '400': { description: 'Ungültig' }
+  /faq/suggestions:
+    get:
+      operationId: listFaqSuggestions
+      summary: 'Vorschläge aus dem Handbuch-Assistenten: wiederholte, unbeantwortete oder negativ bewertete Fragen (Berechtigung edit)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19, NFR-13]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+  /faq/{faqId}:
+    patch:
+      operationId: updateFaq
+      summary: 'FAQ-Eintrag ändern oder verschieben (move up|down)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ name: faqId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }
+    delete:
+      operationId: deleteFaq
+      summary: 'FAQ-Eintrag löschen'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19]
+      x-extension: true
+      parameters: [{ name: faqId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'Gelöscht' }
+  /image-index:
+    get:
+      operationId: getImageIndex
+      summary: 'Bildverzeichnis: Abbildungsnummer, Titel, Alternativtexte, Verwendung in Quellen und Kapitelversionen'
+      tags: [Stammdaten]
+      x-requirements: [NFR-19, NFR-16]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'OK' }

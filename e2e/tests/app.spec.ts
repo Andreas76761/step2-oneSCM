@@ -537,3 +537,86 @@ test('[T-220] Kontexthilfe: Front-Matter-Zuordnung, Freischaltung, Deep-Link, Hi
   await page.goto(`${base}/`);
   await page.evaluate(() => localStorage.setItem('onescm.project', 'p_default'));
 });
+
+test('[T-221] Navigation einklappbar, Stammdaten: Inhaltsverzeichnis anlegen, Draft Manual mit Kennzeichnung, Abkürzungen, FAQ, Planung', async ({ page }) => {
+  await page.goto('/');
+  // Navigation einklappen: nur Symbole, Zustand bleibt nach Neuladen
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await page.getByRole('button', { name: 'Navigation einklappen' }).click();
+  await expect(nav.getByText('Dashboard', { exact: true })).toBeHidden();
+  await expect(nav.getByRole('link', { name: 'Dashboard' })).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: 'Navigation ausklappen' }).click();
+  await expect(nav.getByText('Dashboard', { exact: true })).toBeVisible();
+
+  // Stammdaten-Untermenü unten, darunter Einstellungen
+  const group = nav.getByRole('button', { name: 'Stammdaten' });
+  await expect(group).toHaveAttribute('aria-expanded', 'false');
+  await group.click();
+  for (const item of ['Inhaltsverzeichnis', 'Abkürzungen', 'Glossar', 'Bildverzeichnis', 'FAQ', 'Planung']) await expect(nav.getByRole('link', { name: item, exact: true })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Einstellungen' })).toBeVisible();
+
+  // Inhaltsverzeichnis: Gliederung aus der Kapitelstruktur, Variante Dealer/PKW/Blueprint
+  await nav.getByRole('link', { name: 'Inhaltsverzeichnis', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Inhaltsverzeichnis');
+  await page.getByRole('button', { name: 'Gliederung anlegen' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Gliederung anlegen' });
+  await dlg.getByLabel('Name').fill('E2E Händler Pkw');
+  await dlg.getByRole('checkbox', { name: /Dealer/ }).check();
+  await dlg.getByRole('checkbox', { name: /PKW/ }).check();
+  await dlg.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByText(/Gliederung „E2E Händler Pkw“ angelegt/)).toBeVisible();
+  const tree = page.getByRole('list', { name: 'Gliederung' });
+  await expect(tree.getByText('Vertragsbearbeitung')).toBeVisible();
+  await page.getByLabel('Neues Kapitel').fill('E2E-Anhang');
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await expect(tree.getByText('E2E-Anhang')).toBeVisible();
+  await page.getByRole('button', { name: 'Als neue Version speichern' }).click();
+  await expect(page.getByRole('heading', { name: 'E2E Händler Pkw – Version 2' })).toBeVisible();
+
+  // Draft Manual: automatisch zuordnen, Kennzeichnungen sichtbar
+  await page.getByRole('link', { name: 'Im Draft Manual öffnen' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Draft Manual');
+  await page.getByRole('button', { name: 'Automatisch zuordnen' }).click();
+  await expect(page.getByText(/Schnipsel automatisch zugeordnet/)).toBeVisible();
+  const anhang = page.locator('.draft-node', { has: page.getByRole('heading', { name: /E2E-Anhang/ }) });
+  await expect(anhang).toHaveClass(/gap/);
+  await expect(anhang).toContainText('keine Textschnipsel zugeordnet');
+  await expect(page.locator('.draft-snippet .flag').first()).toBeVisible();
+  const legend = page.getByLabel('Legende');
+  for (const l of ['Widerspruch', 'Dopplung', 'Warnung', 'Lücke']) await expect(legend).toContainText(l);
+  // manuell zuordnen aus der Seitenleiste
+  const side = page.locator('.draft-side');
+  // „Ohne Kapitel“ gehört zu keiner Gliederung und bleibt nach der automatischen Zuordnung übrig
+  const target = await side.getByLabel('Ziel').locator('option', { hasText: 'E2E-Anhang' }).getAttribute('value');
+  await side.getByLabel('Ziel').selectOption(target!);
+  await side.locator('.draft-snippet input[type=checkbox]').first().check();
+  await side.getByRole('button', { name: /Zuordnen/ }).click();
+  await expect(page.getByRole('status').filter({ hasText: '1 Schnipsel zugeordnet.' })).toBeVisible();
+  await expect(anhang.locator('.draft-snippet')).toHaveCount(1);
+  await expect(anhang).not.toHaveClass(/gap/);
+
+  // Abkürzungen
+  await nav.getByRole('link', { name: 'Abkürzungen', exact: true }).click();
+  await page.getByLabel('Abkürzung', { exact: true }).fill('E2EX');
+  await page.getByLabel('Bedeutung', { exact: true }).fill('Ende-zu-Ende-Test');
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await expect(page.getByRole('cell', { name: 'Ende-zu-Ende-Test' })).toBeVisible();
+
+  // FAQ
+  await nav.getByRole('link', { name: 'FAQ', exact: true }).click();
+  await page.getByRole('button', { name: 'Frage hinzufügen' }).click();
+  await page.getByLabel('Frage', { exact: true }).fill('Wo finde ich meine Verträge?');
+  await page.getByLabel('Antwort (Markdown)').fill('Unter **Vertragsbearbeitung**.');
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await page.getByText('Wo finde ich meine Verträge?').click();
+  await expect(page.locator('.faq-entry strong', { hasText: 'Vertragsbearbeitung' })).toBeVisible();
+
+  // Planung
+  await nav.getByRole('link', { name: 'Planung', exact: true }).click();
+  await page.getByLabel('Gliederung').selectOption({ label: 'E2E Händler Pkw – V2' });
+  await page.getByLabel('Status von 1', { exact: true }).selectOption('done');
+  await page.getByRole('row', { name: /^1 / }).getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Planung für 1 gespeichert.')).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: 'Fortschritt in Prozent' })).not.toHaveAttribute('value', '0');
+});

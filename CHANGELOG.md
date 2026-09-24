@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.11.0 – Etappe 11 (24.09.2026)
+
+### Hinzugefügt
+- **Navigation:** links einklappbar (nur Symbole, Zustand gemerkt); unten die Gruppe **Stammdaten** mit Untermenü und **Einstellungen**; neues Register **Draft Manual**.
+- **Inhaltsverzeichnis (ADR-032):** Gliederungen je Variante – Rollen (z. B. Dealer, Markt, HQ), Sparten (z. B. Pkw, Van), Blueprint oder ausgewählte Märkte (Märkte je Projekt konfigurierbar, Vorbelegung DE, FR, IT, ES, GB, NL). Anlegen leer, aus der Kapitelstruktur oder per Upload (Markdown/JSON); Kapitel und Unterkapitel hinzufügen, umbenennen, verschieben, einordnen, löschen; als neue Version speichern, aktiv setzen; Export Markdown/JSON.
+- **Draft Manual (ADR-033):** Textschnipsel einer Gliederung je Kapitel/Unterkapitel zuordnen – automatisch über die Titel der Quellen oder manuell – verschieben, umsortieren, lösen; Kennzeichnung von **Widersprüchen** (rot), **Dopplungen** (orange), **Warnungen** (gelb: übrige Befunde, unbestätigte Quelle, veraltete Revision, falsche Variante) und **Lücken** (violett) mit Symbol und Text; Übersicht, Filter, Export Markdown.
+- **Stammdaten:** Abkürzungen (mit Vorschlägen aus den Quellen), Glossar (Begriffe und Definitionen der Terminologie), Bildverzeichnis (Abbildungsnummer, Titel, Alternativtexte, Verwendung), FAQ (je Rolle/Sparte, Vorschläge aus dem Handbuch-Assistenten), Redaktionsplanung je Gliederungseintrag (Verantwortliche, Termin, Status, Überfälligkeit, Fortschritt).
+- Migration `021_master_data.sql`; Tests T-166 … T-169, E2E T-221 (axe auch für Draft Manual und alle Stammdaten-Seiten); Anforderungen NFR-19, NFR-20.
+
+### Geändert
+- Projekte haben eine Marktliste (`PATCH /api/v1/projects/{id}` mit `markets`).
+- „Einstellungen“ steht in der Navigation unten.
+
+### Behoben (Review Etappe 11)
+- Falsch typisierte Varianten (z. B. `"roles": "dealer"` in hochgeladenem JSON) ergeben 400 statt 500; gleichnamige Unterkapitel eines Kapitels gelten bei der automatischen Zuordnung als mehrdeutig; Änderungen an Gliederungseinträgen stehen im Audit.
+
 ## 0.10.0 – Etappe 10 (24.09.2026)
 
 ### Hinzugefügt
