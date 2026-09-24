@@ -395,5 +395,32 @@
     "documentation": [
       "docs/adr/ADR-036-betrieb-pflege.md"
     ]
+  },
+  {
+    "id": "NFR-24",
+    "title": "Varianten synchronisieren: Varianten mit einer Quellgliederung (Blueprint) vergleichen und Schnipsel sowie fehlende Einträge gezielt übernehmen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-037-varianten-synchronisieren.md"
+    ]
+  },
+  {
+    "id": "NFR-25",
+    "title": "Firmen-Layout (Titelseite, Logo, Hausfarbe, Kopf-/Fußzeile) für PDF, HTML und Online-Hilfe; Word-Export mit Formatvorlagen und optionaler Firmenvorlage",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-038-layout-word.md"
+    ]
+  },
+  {
+    "id": "NFR-26",
+    "title": "Volltextsuche mit Suchindex: Relevanz, Filter, Umlaute, Präfixsuche, Hervorhebung, stets aktuell",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-039-volltextsuche.md"
+    ]
   }
 ]

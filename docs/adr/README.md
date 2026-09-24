@@ -38,3 +38,6 @@
 | [ADR-034](ADR-034-handbuch-varianten.md) | Handbuch-Varianten: vom Draft Manual zu Freigabe, Export und Veröffentlichung mit Verzeichnissen | akzeptiert, umgesetzt |
 | [ADR-035](ADR-035-bedienkomfort.md) | Bedienkomfort: Drag & Drop, Gliederungsvergleich, globale Suche, Darstellung, mobile Ansicht | akzeptiert, umgesetzt |
 | [ADR-036](ADR-036-betrieb-pflege.md) | Betrieb & Pflege: entfernte Quelldateien, bereinigtes SVG, Stammdaten-Import, Erinnerungen | akzeptiert, umgesetzt |
+| [ADR-037](ADR-037-varianten-synchronisieren.md) | Varianten synchronisieren: Abgleich mit Blueprint, Schnipsel und fehlende Einträge übernehmen | akzeptiert, umgesetzt |
+| [ADR-038](ADR-038-layout-word.md) | Firmen-Layout für PDF, HTML, Online-Hilfe; Word-Export mit Formatvorlagen | akzeptiert, umgesetzt |
+| [ADR-039](ADR-039-volltextsuche.md) | Volltextsuche mit Suchindex (SQLite FTS5, PostgreSQL tsvector) | akzeptiert, umgesetzt |

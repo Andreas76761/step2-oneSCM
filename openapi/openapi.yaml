@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.12.0
+  version: 0.13.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -355,7 +355,7 @@ components:
         divisions: { type: array, items: { $ref: '#/components/schemas/DivisionCode' } }
         market: { type: [string, 'null'] }
         release: { type: [string, 'null'] }
-        format: { type: string, enum: [md, html, pdf, json], default: md }
+        format: { type: string, enum: [md, html, pdf, docx, json], default: md, description: 'docx: Word mit Formatvorlagen und Firmen-Layout (ADR-038)' }
         outlineId: { type: string, description: 'Handbuch-Variante (ADR-034): freigegebene Kapitel dieser Gliederung, Filter aus ihrer Variante' }
         appendices: { type: boolean, description: 'Verzeichnisse (Abkürzungen, Glossar, Bildverzeichnis, FAQ) anhängen; Standard bei Varianten: true' }
 security:
@@ -2387,17 +2387,102 @@ paths:
   /search:
     get:
       operationId: globalSearch
-      summary: 'Globale Suche über Kapitel, Kapiteltexte, Textschnipsel, Quellen, Gliederungen, Abkürzungen, Glossar und FAQ (ADR-035)'
+      summary: 'Volltextsuche über Kapitel, Kapiteltexte, Textschnipsel, Quellen, Gliederungen, Abkürzungen, Glossar und FAQ – nach Relevanz, Präfix je Wort, alle Wörter (ADR-035, ADR-039)'
       tags: [Suche]
-      x-requirements: [NFR-22]
+      x-requirements: [NFR-22, NFR-26]
       x-extension: true
       parameters:
         - { name: q, in: query, required: true, schema: { type: string, minLength: 2, maxLength: 200 } }
-        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 25, default: 8 }, description: 'Treffer je Bereich' }
+        - { name: types, in: query, schema: { type: string }, description: 'Bereiche, kommagetrennt: chapter, block, snippet, source, outline, abbreviation, term, faq' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 }, description: 'Treffer je Seite' }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ query, total, groups: [{ type, label, hits: [{ type, id, title, excerpt, link }] }] }' }
+        '200': { description: '{ query, total, page, pageSize, facets: [{ type, label, count }], hits: [{ type, label, id, title, link, score, excerpt, excerptParts }], groups }' }
         '400': { description: 'Suchbegriff zu kurz oder zu lang' }
+  /outlines/{outlineId}/sync:
+    get:
+      operationId: outlineSyncPreview
+      summary: 'Abgleich mit einer Quellgliederung (z. B. Blueprint): je Eintrag Schnipsel nur in Quelle/Ziel, fehlende Einträge, Prüfung gegen die Variante (ADR-037)'
+      tags: [Draft Manual]
+      x-requirements: [NFR-24]
+      x-extension: true
+      parameters:
+        - { $ref: '#/components/parameters/OutlineId' }
+        - { name: from, in: query, required: true, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ source, target, summary, entries }' }
+        '400': { description: 'from fehlt oder gleich dem Ziel' }
+    post:
+      operationId: outlineSyncApply
+      summary: 'Ausgewählte Schnipsel übernehmen und fehlende Einträge anlegen (nur ergänzend)'
+      tags: [Draft Manual]
+      x-requirements: [NFR-24]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/OutlineId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [from], properties: { from: { type: string }, add: { type: array, items: { type: object, properties: { sourceNodeId: { type: string }, snippetIds: { type: array, items: { type: string } } } } }, create: { type: array, items: { type: object, properties: { sourceNodeId: { type: string }, snippetIds: { type: array, items: { type: string } } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ added, created, preview }' }
+        '400': { description: 'Auswahl ungültig' }
+  /layout:
+    get:
+      operationId: getLayout
+      summary: 'Firmen-Layout des Projekts (ADR-038)'
+      tags: [Export]
+      x-requirements: [NFR-25]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Layout' }
+    put:
+      operationId: updateLayout
+      summary: 'Firmen-Layout ändern (Administration): Firmenname, Hausfarbe (Kontrast ≥ 4,5 : 1), Logo, Titelseite, Kopf-/Fußzeile, Vertraulichkeitshinweis'
+      tags: [Export]
+      x-requirements: [NFR-25]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { companyName: { type: [string, 'null'] }, primaryColor: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }, logoSha: { type: [string, 'null'] }, cover: { type: boolean }, coverSubtitle: { type: [string, 'null'] }, headerText: { type: [string, 'null'] }, footerText: { type: [string, 'null'] }, confidentiality: { type: [string, 'null'] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Layout' }
+        '400': { description: 'ungültig (Farbe, Kontrast, Logo)' }
+  /layout/docx-template:
+    post:
+      operationId: uploadDocxTemplate
+      summary: 'Word-Vorlage (.dotx/.docx) hochladen – übernommen werden die Formatvorlagen'
+      tags: [Export]
+      x-requirements: [NFR-25]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Layout mit docxTemplate' }
+        '400': { description: 'keine Word-Datei bzw. keine Formatvorlagen' }
+    delete:
+      operationId: deleteDocxTemplate
+      summary: 'Word-Vorlage entfernen'
+      tags: [Export]
+      x-requirements: [NFR-25]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Layout' }
+        '404': { description: 'keine Vorlage' }
+  /search/reindex:
+    post:
+      operationId: rebuildSearchIndex
+      summary: 'Suchindex des Projekts vollständig neu aufbauen (Administration, ADR-039)'
+      tags: [Suche]
+      x-requirements: [NFR-26]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ rebuilt: [Bereiche] }' }
   /master-data/import:
     post:
       operationId: importMasterData

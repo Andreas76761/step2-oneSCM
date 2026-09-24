@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.13.0 – Etappe 13 (24.09.2026)
+
+### Hinzugefügt
+- **Varianten synchronisieren (ADR-037):** Im Draft Manual „Mit anderer Gliederung abgleichen“ – je Eintrag Schnipsel nur in der Quelle (mit Prüfung gegen die Variante), nur im Ziel und fehlende Einträge; ausgewählte Schnipsel übernehmen und fehlende Einträge anlegen, ohne etwas zu löschen.
+- **Firmen-Layout (ADR-038):** Firmenname, Hausfarbe mit Kontrastprüfung, Logo, Titelseite mit Untertitel und Vertraulichkeitshinweis, Kopf- und Fußzeile – für PDF, HTML und Online-Hilfe (Einstellungen › Layout).
+- **Word-Export (ADR-038):** `.docx` mit Formatvorlagen, Inhaltsverzeichnisfeld, Listen, Tabellen, Bildern, Hinweiskästen, Seitenzahlen und Verzeichnissen; optionale Firmenvorlage (.dotx/.docx), deren Formatvorlagen übernommen werden – auch lokalisierte.
+- **Volltextsuche (ADR-039):** Suchindex (SQLite FTS5 bzw. PostgreSQL tsvector mit deutschen Stammformen und unaccent), Relevanz, Präfixsuche je Wort, alle Wörter, Umlaute/Akzente egal, Filter nach Bereich mit Anzahl, Seiten, hervorgehobene Treffer; inkrementell aktuell, nach Importen vorab aufgebaut, Neuaufbau für Administration.
+- Migration `023_layout.sql`; Abhängigkeit `docx` (MIT); Tests T-173 … T-175, E2E T-223 (axe in den neuen Zuständen); Anforderungen NFR-24 … NFR-26.
+
+### Geändert
+- `GET /api/v1/search` liefert Treffer nach Relevanz (`hits`, `facets`, `page`) und akzeptiert `types`; `groups` bleibt für die Gruppenansicht.
+- `POST /api/v1/exports` kennt das Format `docx`.
+
 ## 0.12.0 – Etappe 12 (24.09.2026)
 
 ### Hinzugefügt

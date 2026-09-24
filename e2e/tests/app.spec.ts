@@ -212,12 +212,12 @@ test('[T-210] Semantische Suche auf der Quellenseite', async ({ page }) => {
   // Verfahren der Analyse wird gespeichert (und wieder zurückgesetzt)
   await page.goto('/einstellungen');
   await page.getByLabel('Verfahren (ADR-017)').selectOption('hybrid');
-  await page.getByRole('button', { name: 'Speichern' }).click();
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
   await page.reload();
   await expect(page.getByLabel('Verfahren (ADR-017)')).toHaveValue('hybrid');
   await page.getByLabel('Verfahren (ADR-017)').selectOption('tfidf');
-  await page.getByRole('button', { name: 'Speichern' }).click();
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
 });
 
@@ -653,7 +653,7 @@ test('[T-222] Varianten-Handbuch aus dem Draft Manual, Varianten-Export, Suche, 
   await page.keyboard.type('Vertrag');
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Suche');
-  await expect(page.getByRole('status').filter({ hasText: /Treffer in/ })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: /nach Relevanz sortiert/ })).toBeVisible();
   await expect(page.getByRole('link', { name: /Vertragsbearbeitung/ }).first()).toBeVisible();
   await expect(page.locator('.search-hits mark').first()).toBeVisible();
   expect(await axe()).toEqual([]);
@@ -707,4 +707,52 @@ test('[T-222] Varianten-Handbuch aus dem Draft Manual, Varianten-Export, Suche, 
   // Quellen: vollständiger Stand als Option beim Import
   await nav.getByRole('link', { name: 'Quellen' }).click();
   await expect(page.getByLabel(/vollständige Stand/)).not.toBeChecked();
+});
+
+test('[T-223] Varianten abgleichen, Firmen-Layout mit Kontrastprüfung, Word-Export, Volltextsuche mit Filter', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+  // Markt-Variante mit einem Kapitel der Blueprint-Gliederung, noch ohne Inhalte
+  const fr = await (await request.post('/api/v1/outlines', { headers: h, data: { name: 'E2E Markt FR', marketScope: 'markets', markets: ['FR'], nodes: [{ title: 'Vertragsbearbeitung' }] } })).json();
+
+  // Varianten abgleichen: übernehmbare Schnipsel und fehlende Einträge aus der Blueprint-Gliederung
+  await page.goto(`/draft-manual/${fr.id}`);
+  await page.getByRole('button', { name: 'Mit anderer Gliederung abgleichen' }).click();
+  await page.getByLabel('Übernehmen aus').selectOption({ label: 'E2E Händler Pkw – V2' });
+  await expect(page.getByRole('status').filter({ hasText: /fehlen im Ziel/ })).toBeVisible();
+  await expect(page.getByText('fehlt im Ziel – anlegen').first()).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: /Auswahl übernehmen/ }).click();
+  await expect(page.getByText(/Schnipsel übernommen, \d+ Einträge angelegt/)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /E2E-Anhang/ }).first()).toBeVisible();
+
+  // Firmen-Layout: zu helle Hausfarbe wird abgelehnt, gültige gespeichert
+  await page.goto('/einstellungen');
+  await page.getByLabel('Firmenname', { exact: true }).fill('E2E Muster AG');
+  await page.getByLabel('Hausfarbe als Farbwert').fill('#ffdd00');
+  await expect(page.getByRole('status').filter({ hasText: /zu hell/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Layout speichern' })).toBeDisabled();
+  await page.getByLabel('Hausfarbe als Farbwert').fill('#0b5394');
+  await page.getByLabel(/Titelseite mit Logo/).check();
+  await page.getByRole('textbox', { name: 'Vertraulichkeitshinweis' }).fill('VERTRAULICH');
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Layout speichern' }).click();
+  await expect(page.getByText('Layout gespeichert.')).toBeVisible();
+
+  // Word-Export
+  await page.goto('/export');
+  await page.getByLabel('Format').selectOption('docx');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByText(/Word-Dokument erstellt/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /\.docx herunterladen/ })).toBeVisible();
+
+  // Volltextsuche: Wortanfang, Filter nach Bereich
+  await page.goto('/suche?q=Vertragsbearb');
+  await expect(page.getByRole('status').filter({ hasText: /nach Relevanz sortiert/ })).toBeVisible();
+  await page.getByRole('group', { name: 'Bereich filtern' }).getByRole('button', { name: /^Kapitel \(/ }).click();
+  await expect(page.getByRole('group', { name: 'Bereich filtern' }).getByRole('button', { name: /^Kapitel \(/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.search-hits li .tag').first()).toHaveText('Kapitel');
+  expect(await axe()).toEqual([]);
 });

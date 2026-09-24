@@ -46,6 +46,8 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`,
 | – | `outlines`, `outline_nodes` | Gliederungen je Variante (Rollen, Sparten, Blueprint/Märkte), Versionen über `family_id`/`version_no`, Kapitel und Unterkapitel (ADR-032); `projects.markets` |
 | – | `outline_assignments` | Zuordnung Textschnipsel → Gliederungseintrag mit Reihenfolge (Draft Manual, ADR-033) |
 | – | `plan_items` | Redaktionsplanung je Gliederungseintrag: Verantwortliche, Termin, Status, Notiz; `reminded_at` für die einmalige Erinnerung je Termin (ADR-036) |
+| – | Migration `023_layout` | `projects.layout` (JSON): Firmen-Layout und Word-Vorlage (Object-Store-Schlüssel) (ADR-038) |
+| – | `search_fts` bzw. `search_docs`, `search_index_state` | Volltextindex je Projekt und Bereich, zur Laufzeit angelegt, nicht im Backup (ADR-039) |
 | – | Migration `022_variants` | `chapters.outline_family_id`/`outline_node_key` (Kapitel einer Handbuch-Variante), `outline_nodes.node_key` (stabil über Versionen), `handbook_releases.outline_id`/`outline_family_id` (ADR-034); `source_documents.removed_at`/`removed_in_import`, `imports.origin`/`snapshot` (vollständiger Stand, ADR-036) |
 | – | `abbreviations`, `faq_entries` | Abkürzungsverzeichnis; FAQ mit Rollen/Sparten, Status, Herkunft (manuell/Assistent); `media_assets.title` für das Bildverzeichnis |
 | – | `help_contexts` | Kontext-ID → Kapitel/Abschnitt, Herkunft manuell/Front-Matter (ADR-030); `projects.help_public` schaltet die öffentliche Einbettung frei |
