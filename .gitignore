@@ -1,0 +1,10 @@
+node_modules/
+dist/
+data/
+*.db
+*.db-*
+test-results/
+playwright-report/
+coverage/
+.env
+e2e/.e2e-data/

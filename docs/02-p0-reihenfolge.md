@@ -1,0 +1,28 @@
+# 2. Priorisierte Reihenfolge der P0-Stories
+
+Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschnitt 3). Eine Story kann erst „fertig“ (DoD, Abschnitt 18) sein, wenn ihre Vorgänger stehen.
+
+| Rang | Story | Begründung / Abhängigkeit | Etappe |
+|---:|---|---|---|
+| 1 | **US-020 Traceability** (Gerüst) | muss von Anfang an mitlaufen, sonst ist DoD „Traceability vollständig“ nicht prüfbar | 1 |
+| 2 | **US-001 Quellen importieren** | Eingang aller Daten; Revisionen sind Basis für Unveränderlichkeit | 1 |
+| 3 | **US-002 Struktur extrahieren** | liefert Kapitel/Unterkapitel/Snippets | 1 |
+| 4 | **US-004 Sparten klassifizieren** | unabhängig von Rollen, benötigt nur Snippets | 1 |
+| 5 | **US-003 Rollen klassifizieren** | wie US-004; zusätzlich Trennung Rolle ↔ Berechtigung | 1 |
+| 6 | **US-010 Rollen-/Spartenhinweise darstellen** | Referenzdaten (Icons) werden ab UI-Beginn benötigt | 1 |
+| 7 | **US-005 Semantisch clustern** | benötigt klassifizierte Snippets | 1 |
+| 8 | **US-006 Globale Dopplungen** | baut auf Ähnlichkeitsverfahren aus US-005 auf | 1 |
+| 9 | **US-007 Widersprüche klären** | baut auf Kandidatenpaaren aus US-005 auf; Blocker steuern US-008/012 | 1 |
+| 10 | **US-008 Kapitel generieren** | benötigt bestätigte Snippets, Canonical Topics, blockerfreie Kapitel | 1 |
+| 11 | **US-009 Manuell bearbeiten** | benötigt generierte Content Blocks | 1 |
+| 12 | **US-012 Qualitätsgate** | prüft Ergebnis aus US-007/008/009; Voraussetzung für Freigabe und Export | 1 |
+| 13 | **US-020 Traceability** (Vervollständigung, Export) | Abschluss jeder Etappe | 1 |
+
+## Etappenplan
+
+| Etappe | Inhalt | Abnahme |
+|---|---|---|
+| **1 (dieser Commit)** | alle P0-Stories in erster, lauffähiger Ausprägung auf SQLite, Demo-Daten, Unit-/API-/E2E-Tests, CI, Doku | Tests grün, Traceability-Matrix vollständig, offene Entscheidungen sichtbar |
+| 2 | Klärung der P0-Entscheidungen (docs/04) und Umsetzung der Ergebnisse; PostgreSQL-Adapter; echte Authentifizierung (OIDC) | Fachliche Abnahme der Entscheidungen |
+| 3 | P1: Freigabeworkflow mit Vier-Augen-Prinzip, Terminologieverwaltung, Evidenzansicht, gefilterter Export HTML/PDF, Optimierungsdashboard-Ausbau | |
+| 4 | P2: Vergleich ganzer Kapitelversionen; optional LLM-Umformulierung (ADR-007) mit Quellenbindung je Satz | |
