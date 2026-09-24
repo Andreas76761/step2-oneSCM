@@ -533,7 +533,12 @@ export async function approveVersion(ctx: Ctx, versionId: string, input: { comme
   }
   if (!gate.passed) throw conflict('Qualitätsgate nicht bestanden – Freigabe nicht möglich.', { gate });
   await db.tx(async () => {
-    const { final } = await recordApproval(ctx, v, actor, stage, index, wf, (key, fin) => insertApproval('approved', key, fin).then(() => undefined));
+    // gleichzeitige Zustimmungen serialisieren: Version sperren, Stand und Zuständigkeit erneut lesen (ADR-025)
+    if (db.dialect === 'postgres') await db.get('SELECT id FROM generated_chapter_versions WHERE id = ? FOR UPDATE', versionId);
+    const cur = await versionRow(ctx, versionId);
+    if (cur.status !== 'in_review') throw conflict('Kapitelversion wurde zwischenzeitlich entschieden.');
+    const now2 = await checkDecider(ctx, cur, actor);
+    const { final } = await recordApproval(ctx, cur, actor, now2.stage, now2.index, now2.wf, (key, fin) => insertApproval('approved', key, fin).then(() => undefined));
     if (!final) return;
     await transition(ctx, versionId, 'in_review', `status = 'approved', approved_at = ?, ${clearWorkflowSql().replace('workflow = NULL, ', '')}`, now());
     await db.run("UPDATE generated_chapter_versions SET status = 'superseded' WHERE chapter_id = ? AND status = 'approved' AND id <> ?", v.chapter_id, versionId);

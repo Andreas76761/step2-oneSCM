@@ -119,7 +119,9 @@ export async function ask(ctx: Ctx, input: AskInput, user: User) {
     throw unprocessable('Die Frage enthält mögliche personenbezogene Daten und wird nicht an externe Dienste übertragen.');
   }
 
-  const all = await approvedPassages(ctx, { language, role: input.role, division: input.division });
+  // Passagen mit personenbezogenen Mustern nie an externe Dienste (wie beim semantischen Index, ADR-017)
+  const sensitive = (p: HandbookPassage) => detectPrivacy(p.text).length > 0;
+  const all = (await approvedPassages(ctx, { language, role: input.role, division: input.division })).filter((p) => !(ctx.embeddings.external && sensitive(p)));
   let ranked: (HandbookPassage & { score: number })[] = [];
   if (all.length) {
     const [qv, ...pv] = await embedTexts(ctx, [question, ...all.map((p) => `${p.chapter} – ${p.sectionTitle}: ${p.text}`)]);
@@ -135,13 +137,14 @@ export async function ask(ctx: Ctx, input: AskInput, user: User) {
   let sentences: { text: string; sources: string[] }[] = [];
   let dropped = 0;
   let notice: string | null = null;
-  if (passages.length && ctx.llm) {
-    const prompt = buildAssistantPrompt(question, passages, language);
+  const forLlm = ctx.llm?.external ? passages.filter((_, i) => !sensitive(ranked[i])) : passages;
+  if (forLlm.length && ctx.llm) {
+    const prompt = buildAssistantPrompt(question, forLlm, language);
     try {
       const res = await ctx.llm.complete(prompt);
       const parsed = parseAssistantResponse(res.text);
       // jeder Satz muss durch die zitierten Passagen gedeckt sein (dieselbe Prüfung wie bei der KI-Umformulierung)
-      const checked = checkSentences(parsed, passages.map((p) => ({ label: p.label, snippetId: p.label, seq: 0, text: p.text })), { minSupport: (await getSettings(ctx.db)).rewrite.minSupport });
+      const checked = checkSentences(parsed, forLlm.map((p) => ({ label: p.label, snippetId: p.label, seq: 0, text: p.text })), { minSupport: (await getSettings(ctx.db)).rewrite.minSupport });
       sentences = checked.filter((c) => !c.issues.length).map((c) => ({ text: c.text, sources: c.sourceLabels }));
       dropped = checked.length - sentences.length;
       mode = 'llm';

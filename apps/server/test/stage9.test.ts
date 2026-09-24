@@ -31,6 +31,9 @@ describe('Mehrstufige Freigabe (ADR-025)', () => {
       expect((await call('PUT', '/approval-workflow', { stages: [{ name: 'X', approvers: ['u-leser'] }] })).status).toBe(400);
       expect((await call('PUT', '/approval-workflow', { stages: [{ name: 'X', approvers: ['u-freigabe'], minApprovals: 2 }] })).status).toBe(400);
       expect((await call('PUT', '/approval-workflow', { stages: [{ name: 'X', dueDays: 0 }] })).status).toBe(400);
+      // Vier-Augen-Prinzip: dieselbe einzige Person in zwei Stufen ist nicht erfüllbar
+      expect((await call('PUT', '/approval-workflow', { stages: [{ name: 'A', approvers: ['u-freigabe'] }, { name: 'B', approvers: ['u-freigabe'] }] })).status).toBe(400);
+      expect((await call('PUT', '/approval-workflow', { fourEyes: false, stages: [{ name: 'A', approvers: ['u-freigabe'] }, { name: 'B', approvers: ['u-freigabe'] }] })).status).toBe(200);
       const wf = (await call('PUT', '/approval-workflow', { stages })).json;
       expect(wf).toMatchObject({ configured: true, fourEyes: true, stages: [{ key: 'fachprufung', name: 'Fachprüfung' }, { key: 'compliance' }] });
 
@@ -85,6 +88,12 @@ describe('Mehrstufige Freigabe (ADR-025)', () => {
       expect((await call('GET', `/chapter-versions/${v.id}`)).json.workflow.escalatedAt).toBeTruthy();
       // Zurückziehen setzt den Workflow zurück
       expect((await call('POST', `/chapter-versions/${v.id}/withdraw`, { reason: 'x' }, 'u-redaktion')).json).toMatchObject({ status: 'draft', workflow: null });
+      // gleichzeitige Zustimmungen zweier Personen in einer Stufe mit Mindestanzahl 2: Stufe wird abgeschlossen
+      await call('PUT', '/approval-workflow', { stages: [{ name: 'Gemeinsam', approvers: ['u-freigabe', 'u-admin'], minApprovals: 2 }] });
+      await call('POST', `/chapter-versions/${v.id}/submit`, {}, 'u-redaktion');
+      const both = await Promise.all(['u-freigabe', 'u-admin'].map((u) => call('POST', `/chapter-versions/${v.id}/approve`, { comment: 'ok' }, u)));
+      expect(both.map((r) => r.status)).toEqual([200, 200]);
+      expect((await call('GET', `/chapter-versions/${v.id}`)).json.status).toBe('approved');
       // leere Stufenliste: wieder einstufig
       expect((await call('PUT', '/approval-workflow', { stages: [] })).json).toMatchObject({ configured: false });
       const audit = await built.ctx.db.all("SELECT action FROM audit_events WHERE action LIKE 'chapter_version.%' OR action = 'project.approval_workflow'");
@@ -144,6 +153,21 @@ describe('Handbuch-Assistent (ADR-026)', () => {
       // Datenschutz bei externem Dienst
       ctx.llm = { ...ctx.llm, external: true };
       expect((await call('POST', '/assistant/ask', { question: 'Was gilt für max.mustermann@autohaus-muster.de?' })).status).toBe(422);
+      // … auch Passagen mit personenbezogenen Daten gehen nicht an externe Dienste
+      await built.ctx.db.run("UPDATE content_blocks SET text = 'Aufträge legen Sie über das Menü Verkauf an. Rückfragen an max.mustermann@autohaus-muster.de.' WHERE text = 'Aufträge legen Sie über das Menü Verkauf an.'");
+      const sent: string[] = [];
+      ctx.llm = { id: 'openai', model: 'fake', external: true, complete: async (req: any) => (sent.push(req.user), { text: '{"sentences":[]}' }) };
+      r = (await call('POST', '/assistant/ask', { question: 'Wie lege ich Aufträge im Menü Verkauf an?' })).json;
+      expect(sent.join('')).not.toContain('mustermann');
+      const embedded: string[] = [];
+      const localEmb = ctx.embeddings;
+      ctx.embeddings = { ...localEmb, id: 'openai', external: true, embed: (t: string[]) => (embedded.push(...t), localEmb.embed(t)) };
+      ctx.llm = null;
+      r = (await call('POST', '/assistant/ask', { question: 'Wie lege ich Aufträge im Menü Verkauf an?' })).json;
+      expect(embedded.join('')).not.toContain('mustermann');
+      expect(r.sources.every((s: any) => !s.text.includes('mustermann'))).toBe(true);
+      ctx.embeddings = localEmb;
+      await built.ctx.db.run("UPDATE content_blocks SET text = 'Aufträge legen Sie über das Menü Verkauf an.' WHERE text LIKE 'Aufträge legen Sie über das Menü Verkauf an. Rückfragen%'");
       ctx.llm = demo;
 
       // Sprache: freigegebene Übersetzung
@@ -192,6 +216,18 @@ describe('Betrieb über mehrere Instanzen (ADR-027)', () => {
   it('[T-151] Gleichzeitiger Start mehrerer Instanzen (Migrationen gesperrt), Rate-Limits gemeinsam über Instanzen (RATE_LIMIT_STORE=db), je Instanz im Speicher', async () => {
     const database = await freshDatabase(dataDir, 'ratelimit');
     if (TEST_PG) {
+      // Verbindungspool mit nur einer Verbindung: Migrationen dürfen nicht auf eine zweite Verbindung warten
+      process.env.DB_POOL_SIZE = '1';
+      try {
+        const single = await Promise.race([
+          buildApp({ dataDir, database, logger: false, webDist: null, authMode: 'demo' }, { worker: false }),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Start mit DB_POOL_SIZE=1 hängt')), 15_000)),
+        ]);
+        await single.app.close();
+      } finally {
+        delete process.env.DB_POOL_SIZE;
+      }
+      await freshDatabase(dataDir, 'ratelimit');
       // zwei Replikate starten gleichzeitig auf leerer Datenbank: Migrationen laufen genau einmal
       const [x, y] = await Promise.all([0, 1].map(() => buildApp({ dataDir, database, logger: false, webDist: null, authMode: 'demo' }, { worker: false })));
       const applied = await x.ctx.db.all<{ name: string }>('SELECT name FROM schema_migrations');

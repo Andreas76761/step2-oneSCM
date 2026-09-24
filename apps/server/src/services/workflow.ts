@@ -58,12 +58,39 @@ export async function setWorkflow(ctx: Ctx, input: { stages?: Partial<Stage>[]; 
     if (dueDays !== null && (!Number.isInteger(dueDays) || dueDays < 1 || dueDays > 90)) throw badRequest(`Stufe „${name}“: Frist 1 … 90 Tage oder leer.`);
     return { key, name, approvers, minApprovals, dueDays };
   });
-  const wf = stages.length ? { stages, fourEyes: input.fourEyes ?? true } : {};
+  const fourEyes = input.fourEyes ?? true;
+  if (fourEyes && stages.length > 1) {
+    // niemand stimmt in zwei Stufen zu: je Stufe minApprovals verschiedene Personen, stufenübergreifend disjunkt
+    const pools = stages.map((s) => (s.approvers.length ? s.approvers : [...approversOk]));
+    if (!disjointAssignment(pools, stages.map((s) => s.minApprovals))) {
+      throw badRequest('Mit Vier-Augen-Prinzip nicht erfüllbar: Die Stufen benötigen zusammen mehr verschiedene zuständige Personen, als zur Verfügung stehen (niemand darf in zwei Stufen zustimmen).');
+    }
+  }
+  const wf = stages.length ? { stages, fourEyes } : {};
   await ctx.db.tx(async () => {
     await ctx.db.run('UPDATE projects SET approval_workflow = ? WHERE id = ?', json(wf), ctx.projectId);
     await audit(ctx, actor, 'project.approval_workflow', 'project', ctx.projectId, wf);
   });
   return getWorkflow(ctx);
+}
+
+/** Bipartites Matching: Stufe i braucht need[i] verschiedene Personen aus pools[i], keine Person doppelt */
+export function disjointAssignment(pools: string[][], need: number[]) {
+  const slots = pools.flatMap((pool, i) => Array.from({ length: need[i] }, () => pool));
+  const owner = new Map<string, number>();
+  const tryAssign = (slot: number, seen: Set<string>): boolean => {
+    for (const person of slots[slot]) {
+      if (seen.has(person)) continue;
+      seen.add(person);
+      const holder = owner.get(person);
+      if (holder === undefined || tryAssign(holder, seen)) {
+        owner.set(person, slot);
+        return true;
+      }
+    }
+    return false;
+  };
+  return slots.every((_, slot) => tryAssign(slot, new Set()));
 }
 
 /** Workflow einer eingereichten Version (Schnappschuss; ältere Einreichungen ohne Schnappschuss: Standard) */
