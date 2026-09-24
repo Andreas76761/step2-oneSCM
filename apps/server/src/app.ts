@@ -27,6 +27,7 @@ import { failSync, runSync } from './services/connections.js';
 import { connectionRoutes } from './routes/connections.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { ensureDailyJob, runDailySnapshots } from './services/analytics.js';
+import { ensureEscalationJob, escalateOverdue } from './services/workflow.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
 import { rewriteRoutes } from './routes/rewrite.js';
@@ -113,8 +114,13 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     await runSync(c, p);
   }, async (p, err) => failSync(await connectionCtx(p), p, err));
   jobs.register('kpi-daily', async () => runDailySnapshots(ctx, (id) => withProject(ctx, id)));
+  jobs.register('approval-escalation', async () => {
+    await escalateOverdue(ctx, (id) => withProject(ctx, id));
+    await ensureEscalationJob(ctx, true);
+  });
   if (options.worker !== false && process.env.JOB_WORKER !== '0') {
     await ensureDailyJob(ctx);
+    await ensureEscalationJob(ctx);
     await jobs.start();
   }
 

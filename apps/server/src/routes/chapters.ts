@@ -7,6 +7,7 @@ import {
 import { compareVersions } from '../services/compare.js';
 import { evidenceForVersion } from '../services/insights.js';
 import { unprocessable } from '../problem.js';
+import { getWorkflow, myPendingApprovals, setWorkflow } from '../services/workflow.js';
 import { userOf } from './helpers.js';
 
 export function chapterRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -45,6 +46,16 @@ export function chapterRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.post<{ Params: { versionId: string }; Body: any }>('/chapter-versions/:versionId/withdraw', async (req) => {
     const user = userOf(req.ctx, req, 'edit');
     return withdrawVersion(req.ctx, req.params.versionId, (req.body ?? {}) as any, user.id);
+  });
+  // Mehrstufige Freigabe (ADR-025)
+  app.get('/approval-workflow', async (req) => (userOf(req.ctx, req), getWorkflow(req.ctx)));
+  app.put<{ Body: any }>('/approval-workflow', async (req) => {
+    const user = userOf(req.ctx, req, 'admin');
+    return setWorkflow(req.ctx, (req.body ?? {}) as any, user.id);
+  });
+  app.get('/approvals/pending', async (req) => {
+    const user = userOf(req.ctx, req);
+    return user.permissions.includes('approve') ? myPendingApprovals(req.ctx, user.id) : [];
   });
   app.post<{ Params: { versionId: string }; Body: any }>('/chapter-versions/:versionId/approve', async (req) => {
     const user = userOf(req.ctx, req, 'approve');

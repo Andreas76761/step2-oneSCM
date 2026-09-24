@@ -295,3 +295,9 @@ label.inline { display: inline-flex; align-items: center; gap: 6px; }
 .chart svg { width: 100%; height: auto; display: block; }
 .chart .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; margin-top: 6px; }
 .chart .legend i { display: inline-block; width: 12px; height: 3px; vertical-align: middle; }
+
+/* Freigabestufen (ADR-025) */
+ol.stages { padding-left: 20px; }
+ol.stages li { margin: 4px 0; }
+ol.stages li.stage-done { color: var(--ok, inherit); }
+ol.stages li.stage-active strong { text-decoration: underline; }

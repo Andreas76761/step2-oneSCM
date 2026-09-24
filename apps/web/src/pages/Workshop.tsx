@@ -561,9 +561,26 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
       {version.status === 'draft' && (
         <>
           <h3>Zur Freigabe einreichen</h3>
-          <p className="small muted">Nach dem Einreichen ist die Version bis zur Entscheidung gesperrt (Entscheidung E-12: einstufige Freigabe).</p>
+          <p className="small muted">Nach dem Einreichen ist die Version bis zur Entscheidung gesperrt (Freigabestufen des Projekts siehe Seite „Freigabe“).</p>
           <label className="block">Hinweis an die Freigabe (optional) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
           <button className="btn primary" disabled={!gate.data?.passed} onClick={() => act('submit', { comment }, 'Zur Freigabe eingereicht.')}>Zur Freigabe einreichen</button>
+        </>
+      )}
+      {version.workflow && (
+        <>
+          <h3>Freigabestufen{version.workflow.fourEyes && <span className="tag">Vier-Augen-Prinzip</span>}</h3>
+          <ol className="stages">
+            {version.workflow.stages.map((st: any) => (
+              <li key={st.key} className={`stage-${st.status}`} aria-current={st.status === 'active' ? 'step' : undefined}>
+                <strong>{st.name}</strong> – {st.status === 'done' ? 'abgeschlossen' : st.status === 'active' ? 'aktuell' : 'ausstehend'}
+                {' '}· {st.votes.length}/{st.minApprovals} Zustimmung(en){st.approvers.length ? ` · zuständig: ${st.approvers.join(', ')}` : ''}
+                {st.votes.length > 0 && <span className="small"> ({st.votes.map((x: any) => x.approver).join(', ')})</span>}
+                {st.status === 'active' && version.workflow.dueAt && (
+                  <span className={version.workflow.overdue ? 'tag sev-blocker' : 'small'}> Frist {new Date(version.workflow.dueAt).toLocaleDateString('de-DE')}{version.workflow.overdue ? ' – überfällig' : ''}</span>
+                )}
+              </li>
+            ))}
+          </ol>
         </>
       )}
       {version.status === 'in_review' && (
@@ -571,7 +588,7 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
           <h3>Fachliche Entscheidung</h3>
           <label className="block">Kommentar (Pflicht) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
           <div className="row-actions">
-            <button className="btn primary" disabled={!gate.data?.passed || !comment.trim()} onClick={() => act('approve', { comment, decision: 'approved' }, 'Kapitelversion freigegeben.')}>Freigeben</button>
+            <button className="btn primary" disabled={!gate.data?.passed || !comment.trim()} onClick={() => act('approve', { comment, decision: 'approved' }, version.workflow?.stages.length > 1 ? 'Zustimmung gespeichert.' : 'Kapitelversion freigegeben.')}>{version.workflow?.stages.length > 1 ? `Zustimmen (${version.workflow.stages[version.workflow.currentStage]?.name})` : 'Freigeben'}</button>
             <button className="btn" disabled={!comment.trim()} onClick={() => act('approve', { comment, decision: 'rejected' }, 'Abgelehnt – Version ist wieder ein bearbeitbarer Entwurf.')}>Ablehnen</button>
             <button className="btn ghost" onClick={() => act('withdraw', { reason: comment }, 'Einreichung zurückgezogen.')}>Einreichung zurückziehen</button>
           </div>
@@ -580,7 +597,7 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
       <h3>Freigabeprotokoll</h3>
       {!version.approvals.length ? <p className="small muted">Noch keine Entscheidung.</p> : (
         <ul className="small">
-          {version.approvals.map((a: any) => <li key={a.id}><Status s={a.decision} /> {a.approver} · {new Date(a.createdAt).toLocaleString('de-DE')} — {a.comment}</li>)}
+          {version.approvals.map((a: any) => <li key={a.id}><Status s={a.decision} /> {a.approver}{a.stage && a.stage !== 'freigabe' ? ` (${a.stage})` : ''} · {new Date(a.createdAt).toLocaleString('de-DE')} — {a.comment}</li>)}
         </ul>
       )}
     </div>

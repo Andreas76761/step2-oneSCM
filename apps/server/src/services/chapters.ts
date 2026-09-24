@@ -6,6 +6,8 @@ import { generateChapter, GENERATOR_ID, type GenSnippet } from '../domain/genera
 import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, ROLE_CODES, SECTION_CODES } from '../domain/reference.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { assertIdsInProject } from './projects.js';
+import { systemNotice } from './collaboration.js';
+import { checkDecider, clearWorkflowSql, recordApproval, startWorkflow, workflowState } from './workflow.js';
 
 // ---------- Kapitel ----------
 
@@ -266,13 +268,14 @@ export async function getChapterVersion(ctx: Ctx, versionId: string) {
   const v = await ctx.db.get('SELECT * FROM generated_chapter_versions WHERE id = ?', versionId);
   if (!v) throw notFound(`Kapitelversion ${versionId}`);
   const blocks = await activeBlocks(ctx, versionId);
-  const approvals = await ctx.db.all('SELECT id, approver, decision, comment, gate_result, created_at FROM approvals WHERE chapter_version_id = ? ORDER BY created_at', versionId);
+  const approvals = await ctx.db.all('SELECT id, approver, decision, comment, gate_result, created_at, stage, final FROM approvals WHERE chapter_version_id = ? ORDER BY created_at', versionId);
   return {
     id: v.id, chapterId: v.chapter_id, versionNo: v.version_no, status: v.status, title: v.title, basedOnVersionId: v.based_on_version_id,
     generator: v.generator, generatedBy: v.generated_by, generatedAt: v.generated_at, approvedAt: v.approved_at,
     submittedBy: v.submitted_by, submittedAt: v.submitted_at, submitComment: v.submit_comment,
     sections: CHAPTER_SECTIONS.map((s) => ({ code: s.code, title: s.title, blocks: blocks.filter((b) => b.section === s.code) })),
-    approvals: approvals.map((a) => ({ id: a.id, approver: a.approver, decision: a.decision, comment: a.comment, gateResult: parseJson(a.gate_result, {}), createdAt: a.created_at })),
+    approvals: approvals.map((a) => ({ id: a.id, approver: a.approver, decision: a.decision, comment: a.comment, gateResult: parseJson(a.gate_result, {}), createdAt: a.created_at, stage: a.stage ?? null, final: a.final !== 0 })),
+    workflow: await workflowState(ctx, v),
     deletedBlocks: await ctx.db.all('SELECT id, section_code AS section, text, deleted_at AS deletedAt FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NOT NULL', versionId),
   };
 }
@@ -456,7 +459,7 @@ export async function versionGate(ctx: Ctx, versionId: string) {
   return gateForChapter(ctx, v.chapter_id, 'approve', versionId);
 }
 
-// Freigabeworkflow (US-016, ENTSCHEIDUNG E-12: einstufig, keine Ausnahmen):
+// Freigabeworkflow (US-016; E-12 einstufig als Standard, mehrstufig je Projekt nach ADR-025):
 // draft --submit--> in_review --approve--> approved
 //                   in_review --reject/withdraw--> draft (wieder bearbeitbar)
 
@@ -482,6 +485,7 @@ export async function submitVersion(ctx: Ctx, versionId: string, input: { commen
   if (!gate.passed) throw conflict('Qualitätsgate nicht bestanden – Einreichen nicht möglich.', { gate });
   await ctx.db.tx(async () => {
     await transition(ctx, versionId, 'draft', "status = 'in_review', submitted_by = ?, submitted_at = ?, submit_comment = ?", actor, now(), input.comment?.trim() || null);
+    await startWorkflow(ctx, { ...v, submitted_by: actor }, actor);
     await audit(ctx, actor, 'chapter_version.submitted', 'chapter_version', versionId, { comment: input.comment, gate });
   });
   return getChapterVersion(ctx, versionId);
@@ -492,7 +496,7 @@ export async function withdrawVersion(ctx: Ctx, versionId: string, input: { reas
   const v = await versionRow(ctx, versionId);
   if (v.status !== 'in_review') throw conflict(`Kapitelversion ist ${STATUS_LABEL[v.status] ?? v.status}.`);
   await ctx.db.tx(async () => {
-    await transition(ctx, versionId, 'in_review', "status = 'draft', submitted_by = NULL, submitted_at = NULL, submit_comment = NULL");
+    await transition(ctx, versionId, 'in_review', `status = 'draft', submitted_by = NULL, submitted_at = NULL, submit_comment = NULL, ${clearWorkflowSql()}`);
     await audit(ctx, actor, 'chapter_version.withdrawn', 'chapter_version', versionId, { reason: input.reason });
   });
   return getChapterVersion(ctx, versionId);
@@ -507,26 +511,38 @@ export async function approveVersion(ctx: Ctx, versionId: string, input: { comme
   if (!input.comment?.trim()) throw unprocessable('Die fachliche Entscheidung benötigt einen Kommentar.');
   const decision = input.decision ?? 'approved';
   if (!['approved', 'rejected'].includes(decision)) throw badRequest('decision muss approved oder rejected sein.');
+  // Stufe, Zuständigkeit und Vier-Augen-Prinzip (ADR-025); ohne eigenen Workflow einstufig wie bisher (E-12)
+  const { wf, stage, index } = await checkDecider(ctx, v, actor);
   const gate = await versionGate(ctx, versionId);
   const { db } = ctx;
+  const insertApproval = (d: string, stageKey: string, final: boolean) => db.run(
+    'INSERT INTO approvals (id, chapter_version_id, approver, decision, comment, gate_result, created_at, stage, final) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    newId('ap'), versionId, actor, d, input.comment.trim(), json(gate), now(), stageKey, final ? 1 : 0,
+  );
   if (decision === 'rejected') {
     await db.tx(async () => {
-      await transition(ctx, versionId, 'in_review', "status = 'draft'");
-      await db.run('INSERT INTO approvals (id, chapter_version_id, approver, decision, comment, gate_result, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)', newId('ap'), versionId, actor, 'rejected', input.comment.trim(), json(gate), now());
-      await audit(ctx, actor, 'chapter_version.rejected', 'chapter_version', versionId, { comment: input.comment });
+      await transition(ctx, versionId, 'in_review', `status = 'draft', ${clearWorkflowSql()}`);
+      await insertApproval('rejected', stage.key, true);
+      await audit(ctx, actor, 'chapter_version.rejected', 'chapter_version', versionId, { comment: input.comment, stage: stage.key });
+      if (v.submitted_by && v.submitted_by !== actor) {
+        await systemNotice(ctx, v.chapter_id, `Abgelehnt in Freigabestufe „${stage.name}“ (${actor}): ${input.comment.trim()}`, [v.submitted_by], 'approval');
+      }
     });
+    ctx.jobs.wake();
     return getChapterVersion(ctx, versionId);
   }
   if (!gate.passed) throw conflict('Qualitätsgate nicht bestanden – Freigabe nicht möglich.', { gate });
   await db.tx(async () => {
-    await transition(ctx, versionId, 'in_review', "status = 'approved', approved_at = ?", now());
+    const { final } = await recordApproval(ctx, v, actor, stage, index, wf, (key, fin) => insertApproval('approved', key, fin).then(() => undefined));
+    if (!final) return;
+    await transition(ctx, versionId, 'in_review', `status = 'approved', approved_at = ?, ${clearWorkflowSql().replace('workflow = NULL, ', '')}`, now());
     await db.run("UPDATE generated_chapter_versions SET status = 'superseded' WHERE chapter_id = ? AND status = 'approved' AND id <> ?", v.chapter_id, versionId);
     for (const b of await db.all('SELECT id, version_no FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NULL', versionId)) {
       await db.run("UPDATE content_blocks SET mode = 'approved', version_no = ?, updated_at = ? WHERE id = ?", b.version_no + 1, now(), b.id);
       await snapshot(ctx, b.id, b.version_no + 1, 'approved', actor, input.comment.trim());
     }
-    await db.run('INSERT INTO approvals (id, chapter_version_id, approver, decision, comment, gate_result, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)', newId('ap'), versionId, actor, 'approved', input.comment.trim(), json(gate), now());
-    await audit(ctx, actor, 'chapter_version.approved', 'chapter_version', versionId, { comment: input.comment, gate });
+    await audit(ctx, actor, 'chapter_version.approved', 'chapter_version', versionId, { comment: input.comment, gate, stage: stage.key });
   });
+  ctx.jobs.wake();
   return getChapterVersion(ctx, versionId);
 }
