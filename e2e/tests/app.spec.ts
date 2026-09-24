@@ -364,3 +364,23 @@ test('[T-216] Mehrstufige Freigabe: Workflow festlegen, Zustimmung je Stufe, off
   // wieder einstufig für die übrigen Tests
   expect((await request.put('/api/v1/approval-workflow', { headers: h, data: { stages: [] } })).ok()).toBe(true);
 });
+
+test('[T-217] Handbuch-Assistent: Frage mit Quellenangabe, Bewertung, Wissenslücken', async ({ page }) => {
+  await page.goto('/assistent');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Assistent');
+  await page.getByLabel('Ihre Frage').fill('Ist eine Zurückweisung ohne Kommentar möglich?');
+  await page.getByRole('button', { name: 'Fragen' }).click();
+  const answer = page.locator('.card', { hasText: 'Antwort' });
+  await expect(answer.getByText(/Zurückweisung ohne Kommentar ist nicht möglich/).first()).toBeVisible();
+  await expect(answer.getByRole('link', { name: 'Quelle 1' })).toBeVisible();
+  await expect(answer.locator('ol.sources')).toContainText('5. MO-Check');
+  await answer.getByRole('button', { name: '👎 Nein' }).click();
+  await expect(page.getByText('Danke für die Bewertung.')).toBeVisible();
+  // Frage ohne Aussage im Handbuch → Wissenslücke
+  await page.getByLabel('Ihre Frage').fill('Wie konfiguriere ich den Quantencomputer?');
+  await page.getByRole('button', { name: 'Fragen' }).click();
+  await expect(page.getByText('Das freigegebene Handbuch enthält dazu keine Aussage.')).toBeVisible();
+  const gaps = page.locator('.card', { hasText: 'Wissenslücken' });
+  await expect(gaps.getByRole('cell', { name: 'Wie konfiguriere ich den Quantencomputer?' })).toBeVisible();
+  await expect(gaps.getByRole('cell', { name: /Zurückweisung ohne Kommentar/ })).toBeVisible();
+});

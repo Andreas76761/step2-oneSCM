@@ -26,6 +26,7 @@ import { runIndexJob } from './services/semantic.js';
 import { failSync, runSync } from './services/connections.js';
 import { connectionRoutes } from './routes/connections.js';
 import { analyticsRoutes } from './routes/analytics.js';
+import { assistantRoutes } from './routes/assistant.js';
 import { ensureDailyJob, runDailySnapshots } from './services/analytics.js';
 import { ensureEscalationJob, escalateOverdue } from './services/workflow.js';
 import { miscRoutes } from './routes/misc.js';
@@ -206,6 +207,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       releaseRoutes(api, ctx);
       connectionRoutes(api, ctx);
       analyticsRoutes(api, ctx);
+      assistantRoutes(api, ctx);
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
     },

@@ -301,3 +301,7 @@ ol.stages { padding-left: 20px; }
 ol.stages li { margin: 4px 0; }
 ol.stages li.stage-done { color: var(--ok, inherit); }
 ol.stages li.stage-active strong { text-decoration: underline; }
+
+/* Handbuch-Assistent (ADR-026) */
+.answer p { margin: 6px 0; }
+ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px solid var(--border, #ccc); }

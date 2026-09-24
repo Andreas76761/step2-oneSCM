@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { freshDatabase, tempDir } from './helpers.js';
-import { client, FM, importFile } from './api-helpers.js';
+import { approveChapter, client, FM, importFile } from './api-helpers.js';
 
 describe('Mehrstufige Freigabe (ADR-025)', () => {
   const dataDir = tempDir();
@@ -89,6 +89,96 @@ describe('Mehrstufige Freigabe (ADR-025)', () => {
       expect((await call('PUT', '/approval-workflow', { stages: [] })).json).toMatchObject({ configured: false });
       const audit = await built.ctx.db.all("SELECT action FROM audit_events WHERE action LIKE 'chapter_version.%' OR action = 'project.approval_workflow'");
       expect(audit.map((a: any) => a.action)).toEqual(expect.arrayContaining(['project.approval_workflow', 'chapter_version.stage_completed', 'chapter_version.escalated']));
+    } finally {
+      await built.app.close();
+    }
+  });
+});
+
+describe('Handbuch-Assistent (ADR-026)', () => {
+  const dataDir = tempDir();
+  afterAll(() => fs.rmSync(dataDir, { recursive: true, force: true }));
+
+  it('[T-150] Antworten nur aus freigegebenen Absätzen mit Quellen je Satz, Rolle/Sprache, Prüfung der KI-Antwort, Bewertung und Wissenslücken', async () => {
+    const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'assistant'), logger: false, webDist: null, authMode: 'demo', llm: { provider: 'demo', model: 'demo-extractive' } });
+    const call = client(built);
+    const ctx = built.ctx as any;
+    const demo = ctx.llm;
+    try {
+      await importFile(built, 'a.md', `${FM}# 1. Anmeldung\n\n## 1.1 Zweck\n\nMit der Anmeldung öffnen Sie oneSCM im Browser. Das Kennwort muss 12 Zeichen haben.\n\n# 2. Aufträge\n\n## 2.1 Zweck\n\nAufträge legen Sie über das Menü Verkauf an.\n`);
+      await importFile(built, 'h.md', `---\nroles: [dealer]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# 3. Händlerbonus\n\n## 3.1 Zweck\n\nDer Händlerbonus wird quartalsweise berechnet.\n`);
+      await importFile(built, 'e.md', `${FM}# 4. Entwurf\n\n## 4.1 Zweck\n\nDer Geheimtext steht nur im Entwurf.\n`);
+      const chapters = (await call('GET', '/chapters')).json;
+      const byTitle = (t: string) => chapters.find((c: any) => c.title === t);
+      for (const t of ['1. Anmeldung', '2. Aufträge', '3. Händlerbonus']) await approveChapter(call, byTitle(t).id);
+      await call('POST', `/chapters/${byTitle('4. Entwurf').id}/generate`, {}, 'u-redaktion'); // nicht freigegeben
+
+      // ohne KI: extraktive Antwort mit Quelle
+      ctx.llm = null;
+      let r = (await call('POST', '/assistant/ask', { question: 'Wie viele Zeichen muss das Kennwort haben?' }, 'u-leser')).json;
+      expect(r).toMatchObject({ mode: 'extractive', notice: null });
+      expect(r.answer[0]).toEqual({ text: 'Das Kennwort muss 12 Zeichen haben.', sources: [1] });
+      expect(r.sources[0]).toMatchObject({ n: 1, chapter: '1. Anmeldung', section: 'purpose', sectionTitle: 'Zweck', link: `/werkstatt/${byTitle('1. Anmeldung').id}` });
+      // nicht freigegebene Inhalte sind nie Grundlage
+      r = (await call('POST', '/assistant/ask', { question: 'Wo steht der Geheimtext?' })).json;
+      expect(r).toMatchObject({ mode: 'none', answer: [], sources: [], notice: 'Das freigegebene Handbuch enthält dazu keine Aussage.' });
+      // Rolle: Händlerbonus nur für Händler
+      expect((await call('POST', '/assistant/ask', { question: 'Wie wird der Händlerbonus berechnet?', role: 'dealer' })).json.answer[0].text).toContain('quartalsweise');
+      expect((await call('POST', '/assistant/ask', { question: 'Wie wird der Händlerbonus berechnet?', role: 'hq' })).json.answer.some((s: any) => s.text.includes('quartalsweise'))).toBe(false);
+
+      // mit KI (Demo): Antwort mit Quellen je Satz
+      ctx.llm = demo;
+      r = (await call('POST', '/assistant/ask', { question: 'Wie lege ich Aufträge an?' })).json;
+      expect(r.mode).toBe('llm');
+      expect(r.answer[0]).toEqual({ text: 'Aufträge legen Sie über das Menü Verkauf an.', sources: [1] });
+      // KI-Antwort ohne Beleg wird verworfen → Handbuchstellen
+      ctx.llm = { id: 'openai', model: 'fake', external: false, complete: async () => ({ text: JSON.stringify({ sentences: [{ text: 'Drücken Sie 42-mal F5.', sources: ['P1'] }, { text: 'Rufen Sie den Support an.', sources: ['P9'] }] }) }) };
+      r = (await call('POST', '/assistant/ask', { question: 'Wie lege ich Aufträge an?' })).json;
+      expect(r).toMatchObject({ mode: 'extractive', dropped: 2 });
+      expect(r.notice).toContain('nicht durch das Handbuch belegt');
+      expect(r.answer[0].text).toContain('Menü Verkauf');
+      // KI: keine Aussage im Handbuch
+      ctx.llm = { id: 'openai', model: 'fake', external: false, complete: async () => ({ text: '{"sentences":[]}' }) };
+      r = (await call('POST', '/assistant/ask', { question: 'Wie lege ich Aufträge an?' })).json;
+      expect(r).toMatchObject({ mode: 'llm', answer: [], notice: 'Das freigegebene Handbuch enthält dazu keine eindeutige Aussage.' });
+      // Datenschutz bei externem Dienst
+      ctx.llm = { ...ctx.llm, external: true };
+      expect((await call('POST', '/assistant/ask', { question: 'Was gilt für max.mustermann@autohaus-muster.de?' })).status).toBe(422);
+      ctx.llm = demo;
+
+      // Sprache: freigegebene Übersetzung
+      await call('PATCH', '/projects/p_default', { languages: ['en'] });
+      const tr = (await call('POST', '/translations', { chapterId: byTitle('2. Aufträge').id, language: 'en' }, 'u-redaktion')).json;
+      await call('POST', `/translations/${tr.id}/machine`, {}, 'u-redaktion');
+      await built.ctx.jobs.idle();
+      expect((await call('POST', `/translations/${tr.id}/approve`, { comment: 'ok' }, 'u-freigabe')).status).toBe(200);
+      r = (await call('POST', '/assistant/ask', { question: 'Menü Verkauf', language: 'en' })).json;
+      expect(r.answer[0].text).toContain('[EN]');
+      expect(r.sources.every((s: any) => s.chapter !== '1. Anmeldung')).toBe(true); // nicht übersetzte Kapitel fehlen
+
+      // Validierung
+      expect((await call('POST', '/assistant/ask', { question: 'x' })).status).toBe(400);
+      expect((await call('POST', '/assistant/ask', { question: 'Wie?', language: 'fr' })).status).toBe(400);
+      expect((await call('POST', '/assistant/ask', { question: 'Wie?', role: 'chef' })).status).toBe(400);
+
+      // Bewertung und Wissenslücken
+      const asked = (await call('POST', '/assistant/ask', { question: 'Wie lege ich Aufträge an?' }, 'u-redaktion')).json;
+      expect((await call('POST', `/assistant/answers/${asked.id}/feedback`, { helpful: false }, 'u-admin')).status).toBe(400);
+      expect((await call('POST', `/assistant/answers/${asked.id}/feedback`, { helpful: false, comment: 'zu knapp' }, 'u-redaktion')).json).toEqual({ id: asked.id, rating: -1 });
+      expect((await call('GET', '/assistant/open-questions', undefined, 'u-leser')).status).toBe(403);
+      const open = (await call('GET', '/assistant/open-questions', undefined, 'u-redaktion')).json;
+      expect(open.items.map((i: any) => i.question)).toEqual(expect.arrayContaining(['Wo steht der Geheimtext?', 'Wie lege ich Aufträge an?']));
+      expect(open.stats.unhelpful).toBe(1);
+      const other = (await call('POST', '/projects', { name: 'Anderes' })).json;
+      expect((await call('POST', `/assistant/answers/${asked.id}/feedback`, { helpful: true }, 'u-admin', other.id)).status).toBe(404);
+      expect((await call('POST', '/assistant/ask', { question: 'Wie lege ich Aufträge an?' }, 'u-admin', other.id)).json.answer).toEqual([]);
+      // Online-Hilfe verlinkt den Assistenten (ohne Skripte), wenn APP_URL gesetzt ist
+      ctx.config.notify.appUrl = 'https://handbuch.example.org/';
+      const rel = (await call('POST', '/releases', { version: '2026.11' }, 'u-freigabe')).json;
+      const JSZip = (await import('jszip')).default;
+      const zip = await JSZip.loadAsync((await call('GET', `/releases/${rel.id}/download?format=site`)).raw);
+      expect(await zip.file('index.html')!.async('string')).toContain('<a href="https://handbuch.example.org/assistent?language=de">Frage an den Handbuch-Assistenten</a>');
+      expect(await zip.file('en/index.html')!.async('string')).toContain('assistent?language=en">Ask the manual assistant</a>');
     } finally {
       await built.app.close();
     }

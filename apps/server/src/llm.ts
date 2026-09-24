@@ -1,6 +1,7 @@
 // Anbindung von KI-Diensten für die Umformulierung (ADR-013, ENTSCHEIDUNG E-16).
 // Adapter: Anthropic Claude (Messages API), OpenAI-kompatible Chat-API (OpenAI, Azure, vLLM, Ollama …) und ein
 // Demo-Anbieter ohne Netzwerkzugriff (nur für Demo und Tests). Standard: keine Anbindung.
+import { extractiveAnswer } from './domain/assistant.js';
 import { extractPromptData } from './domain/rewrite.js';
 
 export type LlmProviderId = 'anthropic' | 'openai' | 'demo';
@@ -124,6 +125,12 @@ export class DemoProvider implements LlmProvider {
   async complete(req: LlmRequest): Promise<LlmResponse> {
     const data = extractPromptData(req.user);
     if (!data) throw new LlmError('Demo-Anbieter: Eingabedaten nicht gefunden.');
+    // Handbuch-Assistent (ADR-026): extraktive Antwort aus den mitgegebenen Passagen
+    const qa = data as unknown as { question?: string; passages?: { id: string; text: string; chapter: string; section: string }[] };
+    if (qa.question && qa.passages) {
+      const sentences = extractiveAnswer(qa.question, qa.passages.map((p) => ({ label: p.id, text: p.text, chapter: p.chapter, section: p.section })));
+      return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
+    }
     // Übersetzung (ADR-020): kennzeichnet den Text mit der Zielsprache statt wirklich zu übersetzen
     const tr = data as unknown as { targetLanguage?: string; sentences: { n: number; text: string }[] };
     if (tr.targetLanguage) {

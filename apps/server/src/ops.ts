@@ -37,6 +37,7 @@ const EXPENSIVE: [string, RegExp][] = [
   ['POST', /^\/api\/v1\/quality\/analysis$/],
   ['POST', /^\/api\/v1\/exports$/],
   ['GET', /^\/api\/v1\/analytics\/report$/],
+  ['POST', /^\/api\/v1\/assistant\/ask$/],
   ['POST', /^\/api\/v1\/content-blocks\/[^/]+\/rewrite-proposals$/],
   ['POST', /^\/api\/v1\/chapter-versions\/[^/]+\/rewrite-jobs$/],
   ['POST', /^\/api\/v1\/semantic-index$/],
