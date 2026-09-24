@@ -108,7 +108,7 @@ jobs:
         run: |
           image="${{ needs.verify.outputs.image }}@${{ steps.build.outputs.digest }}"
           docker run -d --name smoke -p 3000:3000 "$image"
-          for i in $(seq 1 30); do curl -sf http://localhost:3000/api/v1/health/ready > /dev/null && break; sleep 2; done
+          for _ in $(seq 1 30); do curl -sf http://localhost:3000/api/v1/health/ready > /dev/null && break; sleep 2; done
           curl -sf http://localhost:3000/api/v1/health | tee /tmp/health.json
           grep -q '"version":"${{ needs.verify.outputs.version }}"' /tmp/health.json
           docker rm -f smoke

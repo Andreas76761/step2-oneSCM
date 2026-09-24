@@ -42,7 +42,7 @@ jobs:
         run: |
           python3 -m venv /tmp/moto && /tmp/moto/bin/pip install -q 'moto[server]'
           nohup /tmp/moto/bin/moto_server -p 9000 > /tmp/moto.log 2>&1 &
-          for i in $(seq 1 30); do curl -sf http://localhost:9000/moto-api/ > /dev/null && break; sleep 1; done
+          for _ in $(seq 1 30); do curl -sf http://localhost:9000/moto-api/ > /dev/null && break; sleep 1; done
       - name: Unit- und API-Tests (PostgreSQL + moto-S3)
         run: npm test
         env:
@@ -99,9 +99,9 @@ jobs:
           ./actionlint -color
       - name: Container-Image bauen und starten (Smoke-Test)
         run: |
-          docker build --build-arg APP_VERSION=ci-${GITHUB_SHA::7} -t onescm:ci .
+          docker build --build-arg "APP_VERSION=ci-${GITHUB_SHA::7}" -t onescm:ci .
           docker run -d --name smoke -p 3000:3000 onescm:ci
-          for i in $(seq 1 30); do curl -sf http://localhost:3000/api/v1/health/ready > /dev/null && break; sleep 2; done
+          for _ in $(seq 1 30); do curl -sf http://localhost:3000/api/v1/health/ready > /dev/null && break; sleep 2; done
           curl -sf http://localhost:3000/api/v1/health | tee /tmp/health.json
           grep -q "\"version\":\"ci-${GITHUB_SHA::7}\"" /tmp/health.json
           curl -sf http://localhost:3000/help/widget.js | grep -q OneScmHelp
