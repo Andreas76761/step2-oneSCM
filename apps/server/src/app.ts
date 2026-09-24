@@ -10,10 +10,14 @@ import { DEFAULT_PROJECT_ID, seedReferenceData, type Ctx } from './context.js';
 import { openDb } from './db.js';
 import { JobQueue } from './jobs.js';
 import { createProvider } from './llm.js';
+import { createEmbeddingProvider } from './embeddings.js';
 import { readiness, registerOps, requestId } from './ops.js';
 import { Problem } from './problem.js';
 import { chapterRoutes } from './routes/chapters.js';
 import { projectRoutes } from './routes/projects.js';
+import { semanticRoutes } from './routes/semantic.js';
+import { releaseRoutes } from './routes/releases.js';
+import { runIndexJob } from './services/semantic.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
 import { rewriteRoutes } from './routes/rewrite.js';
@@ -52,6 +56,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     jobs,
     config,
     llm: createProvider(config.llm),
+    embeddings: createEmbeddingProvider(config.embeddings),
     projectId: DEFAULT_PROJECT_ID,
     log: (msg, extra) => app.log.info(extra ?? {}, msg),
   };
@@ -75,6 +80,10 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
   const batchCtx = (p: any) => jobCtx(
     'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?', p.batchId,
   );
+  jobs.register('semantic-index', async (p) => {
+    const c = withProject(ctx, p.projectId);
+    if (!(await archived(c))) await runIndexJob(c);
+  });
   jobs.register('rewrite-batch', async (p) => {
     const c = await batchCtx(p);
     if (await archived(c)) return failBatch(c, p.batchId, ARCHIVED);
@@ -160,6 +169,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       terminologyRoutes(api, ctx);
       rewriteRoutes(api, ctx);
       projectRoutes(api, ctx);
+      semanticRoutes(api, ctx);
+      releaseRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

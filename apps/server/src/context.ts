@@ -5,6 +5,7 @@ import { json, newId, now, parseJson, type Db } from './db.js';
 import { DEMO_USERS, DIVISIONS, ROLES, type Permission } from './domain/reference.js';
 import type { JobQueue } from './jobs.js';
 import type { LlmProvider } from './llm.js';
+import type { EmbeddingProvider } from './embeddings.js';
 import { forbidden } from './problem.js';
 import type { ObjectStore } from './storage.js';
 
@@ -17,6 +18,8 @@ export interface Ctx {
   config: AppConfig;
   /** KI-Dienst für Umformulierungsvorschläge; null = ausgeschaltet */
   llm: LlmProvider | null;
+  /** Embedding-Anbieter (ADR-017) */
+  embeddings: EmbeddingProvider;
   projectId: string;
   log: (msg: string, extra?: unknown) => void;
 }
