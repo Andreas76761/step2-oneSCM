@@ -9,6 +9,7 @@ import { clusterPairs, TfidfEngine, type SimilarityPair } from '../domain/simila
 import { badRequest, notFound, unprocessable } from '../problem.js';
 import { listTerms } from './terminology.js';
 import { assertIdsInProject } from './projects.js';
+import { embeddingPairs } from './semantic.js';
 
 interface NewFinding {
   type: string;
@@ -91,8 +92,24 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
   const engine = new TfidfEngine();
   const minScore = Math.min(settings.clusterThreshold, settings.contradictionThreshold, settings.duplicateThreshold);
   let pairs: SimilarityPair[] = engine.pairs(snippets.map((s) => ({ id: s.id, text: s.text })), minScore);
+  let method = `${engine.method}-${engine.version}`;
+  let embeddingStats: Record<string, unknown> | null = null;
+  // ADR-017: hybride Analyse ergänzt TF-IDF um Embedding-Paare (Standard bleibt TF-IDF, ENTSCHEIDUNG E-05)
+  if (all.semantic.analysisMethod === 'hybrid') {
+    const emb = await embeddingPairs(ctx, snippets.map((s) => ({ id: s.id, text: s.text })), all.semantic.embeddingThreshold, all.semantic.maxPairDocs);
+    const merged = new Map(pairs.map((p) => [[p.a, p.b].sort().join('|'), p]));
+    let added = 0;
+    for (const p of emb.pairs) {
+      const key = [p.a, p.b].sort().join('|');
+      const existing = merged.get(key);
+      if (!existing) (merged.set(key, p), added++);
+      else if (p.score > existing.score) merged.set(key, { ...existing, score: p.score });
+    }
+    pairs = [...merged.values()];
+    method = `hybrid(${method}+${emb.model})`;
+    embeddingStats = { model: emb.model, pairs: emb.pairs.length, added, skipped: emb.skipped };
+  }
   if (!settings.crossChapter) pairs = pairs.filter((p) => byId.get(p.a)!.chapter_id === byId.get(p.b)!.chapter_id);
-  const method = `${engine.method}-${engine.version}`;
 
   const stmt = (s: Row): Statement => ({
     id: s.id, text: s.text, roles: rolesOf.get(s.id) ?? [], divisions: divsOf.get(s.id) ?? [], market: s.market_code, release: s.release_code,
@@ -156,7 +173,7 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
   }
 
   // Persistieren: bestehende Befunde (inkl. Entscheidungen) bleiben erhalten.
-  const stats = { snippets: snippets.length, pairs: pairs.length, created: 0, kept: 0, obsolete: 0, clusters: 0 };
+  const stats = { snippets: snippets.length, pairs: pairs.length, created: 0, kept: 0, obsolete: 0, clusters: 0, method, embedding: embeddingStats };
   await db.tx(async () => {
     const seen = new Set<string>();
     for (const f of found) {

@@ -57,6 +57,9 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
         if (a[k] !== undefined && (typeof a[k] !== 'number' || a[k] < 0.05 || a[k] > 1)) throw badRequest(`analysis.${k} muss eine Zahl zwischen 0,05 und 1 sein.`);
       }
     }
+    const sem = body.semantic;
+    if (sem?.analysisMethod !== undefined && !['tfidf', 'hybrid'].includes(sem.analysisMethod)) throw badRequest('semantic.analysisMethod muss tfidf oder hybrid sein.');
+    if (sem?.embeddingThreshold !== undefined && (typeof sem.embeddingThreshold !== 'number' || sem.embeddingThreshold < 0.3 || sem.embeddingThreshold > 1)) throw badRequest('semantic.embeddingThreshold muss zwischen 0,3 und 1 liegen.');
     const mins = body.rewrite?.minSupport;
     if (mins !== undefined && (typeof mins !== 'number' || mins < 0.1 || mins > 1)) throw badRequest('rewrite.minSupport muss eine Zahl zwischen 0,1 und 1 sein.');
     await saveSettings(req.ctx.db, body);

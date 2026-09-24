@@ -19,7 +19,7 @@ test('[T-201] Navigation, Import einer MD-Datei und Quellenliste', async ({ page
   });
   await expect(page.getByRole('status')).toContainText('Import abgeschlossen');
   await expect(page.getByRole('cell', { name: 'e2e_hinweis.md' })).toBeVisible();
-  await page.getByLabel('Suche').fill('E2E-Test');
+  await page.getByLabel('Suche', { exact: true }).fill('E2E-Test');
   await expect(page.getByRole('cell', { name: /im E2E-Test für alle Sparten/ })).toBeVisible();
   // Sparten-Icon + Label werden gemeinsam dargestellt (US-010)
   await expect(page.locator('tr', { hasText: 'im E2E-Test' }).locator('.badge', { hasText: 'Alle' })).toContainText('🔄');
@@ -194,4 +194,16 @@ test('[T-207] Ganzes Kapitel umformulieren: Fortschritt, Sammelprüfung, alle g�
 
   await page.goto('/einstellungen');
   await expect(page.getByRole('cell', { name: 'demo/demo-extractive' })).toBeVisible();
+});
+
+test('[T-210] Semantische Suche auf der Quellenseite', async ({ page }) => {
+  await page.goto('/quellen');
+  const search = page.getByRole('search', { name: 'Semantische Suche' });
+  await search.getByLabel('Semantische Suchanfrage').fill('Vertrag zur Prüfung senden');
+  await search.getByRole('button', { name: 'Suchen' }).click();
+  await expect(page.getByText(/\d+ Treffer · Modell local-hash-384 \(lokal\)/)).toBeVisible();
+  const first = page.locator('.semantic-hits li').first();
+  await expect(first).toContainText('Ähnlichkeit');
+  await first.getByRole('button').click();
+  await expect(page.getByRole('dialog')).toBeVisible();
 });

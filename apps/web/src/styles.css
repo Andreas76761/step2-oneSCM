@@ -208,6 +208,8 @@ dl.meta dd { margin: 0; }
 .batch-status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 6px 0 10px; }
 .batch-status progress { width: 220px; }
 .batch-list { list-style: none; padding: 0; margin: 0; }
+.semantic-hits { padding-left: 1.2rem; margin: 6px 0 0; }
+.semantic-hits li { margin-bottom: 8px; }
 .batch-list > li { border-top: 1px solid var(--border); padding: 10px 0; }
 .block.kind-gap { border-style: dashed; color: var(--muted); }
 .block.kind-warning { background: var(--danger-bg); }
