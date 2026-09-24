@@ -51,6 +51,16 @@ export interface AppConfig {
   notify: NotifyConfig;
   /** Git-Quellverbindungen (ADR-022) */
   git: GitConfig;
+  /** Vektorindex der semantischen Suche (ADR-024) */
+  vectorIndex: EngineSetting;
+}
+
+export type EngineSetting = 'auto' | 'exact' | 'hnsw' | 'pgvector';
+
+export function vectorIndexFromEnv(): EngineSetting {
+  const v = (process.env.VECTOR_INDEX ?? 'auto').toLowerCase();
+  if (!['auto', 'exact', 'hnsw', 'pgvector'].includes(v)) throw new Error(`VECTOR_INDEX „${v}“ unbekannt (auto, exact, hnsw, pgvector).`);
+  return v as EngineSetting;
 }
 
 export interface GitConfig {
@@ -152,6 +162,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     ops: { ...opsFromEnv(), ...overrides.ops },
     embeddings: overrides.embeddings ?? embeddingsFromEnv(),
     notify: { ...notifyFromEnv(), ...overrides.notify },
+    vectorIndex: overrides.vectorIndex ?? vectorIndexFromEnv(),
     git: { allowFile: process.env.GIT_ALLOW_FILE === '1', timeoutMs: Number(process.env.GIT_TIMEOUT_MS ?? 120_000), ...overrides.git },
   };
 }
@@ -178,6 +189,6 @@ export const DEFAULT_SETTINGS = {
   // ENTSCHEIDUNG(E-16): Mindestabdeckung der Inhaltswörter eines umformulierten Satzes durch seine Quellen
   rewrite: { minSupport: 0.5 },
   // ADR-017: semantische Suche und optionale hybride Analyse (TF-IDF bleibt Standard, ENTSCHEIDUNG E-05)
-  semantic: { analysisMethod: 'tfidf' as 'tfidf' | 'hybrid', embeddingThreshold: 0.85, maxPairDocs: 8000 },
+  semantic: { analysisMethod: 'tfidf' as 'tfidf' | 'hybrid', embeddingThreshold: 0.85, maxPairDocs: 8000, annThreshold: 20000, annEfSearch: 800 },
 };
 export type Settings = typeof DEFAULT_SETTINGS;

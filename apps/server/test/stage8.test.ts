@@ -387,3 +387,132 @@ describe('Analytik und Berichte (ADR-023)', () => {
     }
   });
 });
+
+describe('Skalierung der semantischen Suche (ADR-024)', () => {
+  const dataDir = tempDir();
+  afterAll(() => fs.rmSync(dataDir, { recursive: true, force: true }));
+
+  it('[T-146] HNSW-Graph: Trefferquote gegenüber exakter Suche, Filter, exakte Suche im Vektorspeicher, kNN-Paare', async () => {
+    const { Hnsw, VectorStore } = await import('../src/domain/hnsw.js');
+    const { knnPairs } = await import('../src/services/vectorIndex.js');
+    let seed = 11;
+    const r = () => ((seed = (seed * 1103515245 + 12345) % 2 ** 31), seed / 2 ** 31 - 0.5);
+    const norm = (v: Float32Array) => {
+      const n = Math.hypot(...v);
+      return v.map((x) => x / n);
+    };
+    const D = 32;
+    const store = new VectorStore(D, 16);
+    for (let i = 0; i < 3000; i++) store.push(norm(Float32Array.from({ length: D }, r)));
+    const h = new Hnsw(store, { M: 12, efConstruction: 64 });
+    while (h.size < store.count) h.insertNext();
+    let recall = 0;
+    for (let t = 0; t < 30; t++) {
+      const q = norm(Float32Array.from({ length: D }, r));
+      const exact = store.exact(q, 10);
+      expect(exact.map((e) => e.score)).toEqual([...exact.map((e) => e.score)].sort((a, b) => b - a));
+      const approx = h.search(q, 10);
+      recall += approx.filter((a) => exact.some((e) => e.id === a.id)).length / 10;
+      // Filter: nur gerade IDs
+      expect(h.search(q, 10, 200, (id) => id % 2 === 0).every((n) => n.id % 2 === 0)).toBe(true);
+      expect(store.exact(q, 5, (id) => id < 100).every((n) => n.id < 100)).toBe(true);
+    }
+    expect(recall / 30).toBeGreaterThanOrEqual(0.9);
+    // viele identische Vektoren (Textbausteine): ein Graphknoten mit Aliasen, Suche bleibt vollständig
+    const dupStore = new VectorStore(D, 16);
+    const bases = Array.from({ length: 40 }, () => norm(Float32Array.from({ length: D }, r)));
+    for (let i = 0; i < 2000; i++) dupStore.push(bases[i % 40]);
+    const dh = new Hnsw(dupStore);
+    while (dh.size < dupStore.count) dh.insertNext();
+    const top = dh.search(bases[3], 60, 100);
+    expect(top.slice(0, 50).every((n) => n.id % 40 === 3)).toBe(true); // alle 50 Kopien zuerst
+    expect(dh.search(bases[3], 5, 100, (id) => id >= 1000).every((n) => n.id % 40 === 3 && n.id >= 1000)).toBe(true);
+    // kNN-Paare: Beinahe-Duplikate werden gefunden
+    const base = Array.from({ length: 500 }, () => norm(Float32Array.from({ length: D }, r)));
+    const dup = norm(base[7].map((x) => x + 0.001));
+    const pairs = knnPairs([...base, dup], 5, 0.99);
+    expect(pairs).toEqual([[7, 500, expect.any(Number)]]);
+    expect(() => new VectorStore(4).push(new Float32Array(3))).toThrow();
+  });
+
+  it('[T-147] Suchmaschinen exact, hnsw und (falls verfügbar) pgvector liefern dieselben Treffer; Aktualisierung bei neuer Revision, Kapitelfilter, Status', async () => {
+    const corpus = Array.from({ length: 40 }, (_, i) => `## ${i + 1}.1 Abschnitt\n\nThema ${i}: ${['Rechnung', 'Lieferung', 'Garantie', 'Leasing', 'Zulassung'][i % 5]} Nummer ${i} wird ${['geprüft', 'erfasst', 'storniert', 'freigegeben'][i % 4]} im Bereich ${i}.\n`);
+    const md = `${FM}# 1. Handbuch\n\n${corpus.join('\n')}\n# 2. Werkstatt\n\n## 2.1 Zweck\n\nDie Werkstatt repariert Fahrzeuge und bestellt Ersatzteile.\n`;
+    const results: Record<string, any> = {};
+    const { TEST_PG } = await import('./helpers.js');
+    const { pgvectorAvailable, awaitHnsw } = await import('../src/services/vectorIndex.js');
+    for (const engine of ['exact', 'hnsw', 'pgvector'] as const) {
+      const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, `vec-${engine}`), logger: false, webDist: null, authMode: 'demo', vectorIndex: engine });
+      const call = client(built);
+      try {
+        if (engine === 'pgvector' && !(TEST_PG && (await pgvectorAvailable(built.ctx.db)))) continue;
+        await importFile(built, 'h.md', md);
+        const q = encodeURIComponent('Werkstatt repariert Fahrzeuge');
+        let res = (await call('GET', `/search/semantic?q=${q}&limit=5`)).json;
+        if (engine === 'hnsw') {
+          await awaitHnsw(built.ctx);
+          res = (await call('GET', `/search/semantic?q=${q}&limit=5`)).json;
+        }
+        expect(res.engine).toBe(engine);
+        expect(res.approximate).toBe(engine !== 'exact');
+        expect(res.indexed).toBe(41);
+        expect(res.hits[0].text).toContain('Werkstatt repariert');
+        results[engine] = res.hits.map((h: any) => h.text);
+        // Kapitelfilter
+        const ch = (await call('GET', '/chapters')).json.find((c: any) => c.title === '1. Handbuch');
+        const filtered = (await call('GET', `/search/semantic?q=${q}&chapterId=${ch.id}&limit=50&minScore=-1`)).json;
+        expect(filtered.hits.length).toBe(40);
+        expect(filtered.hits.every((h: any) => h.chapterId === ch.id)).toBe(true);
+        // neue Revision: alter Abschnitt verschwindet, neuer wird gefunden
+        await importFile(built, 'h.md', md.replace('Die Werkstatt repariert Fahrzeuge und bestellt Ersatzteile.', 'Das Autohaus verkauft Neuwagen an Privatkunden.'));
+        const after = (await call('GET', `/search/semantic?q=${encodeURIComponent('Autohaus verkauft Neuwagen')}&limit=3`)).json;
+        expect(after.hits[0].text).toContain('Autohaus verkauft');
+        const old = (await call('GET', `/search/semantic?q=${q}&limit=50&minScore=-1`)).json;
+        expect(old.hits.some((h: any) => h.text.includes('Werkstatt repariert'))).toBe(false);
+        expect(old.indexed).toBe(41);
+        const status = (await call('GET', '/semantic-index')).json;
+        expect(status).toMatchObject({ snippets: 41, indexed: 41, index: { setting: engine, engine, vectors: 41 } });
+        // anderes Projekt sieht nichts
+        const other = (await call('POST', '/projects', { name: `Leer ${engine}` })).json;
+        expect((await call('GET', `/search/semantic?q=${q}`, undefined, 'u-admin', other.id)).json.hits).toEqual([]);
+      } finally {
+        await built.app.close();
+      }
+    }
+    // auto mit lokalem Hash-Modell: immer exakt (Näherung nur für semantische Modelle ab annThreshold)
+    const auto = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'vec-auto'), logger: false, webDist: null, authMode: 'demo', vectorIndex: 'auto' });
+    try {
+      await importFile(auto, 'h.md', md);
+      await client(auto)('PUT', '/settings', { semantic: { annThreshold: 10 } });
+      const r = (await client(auto)('GET', `/search/semantic?q=${encodeURIComponent('Werkstatt repariert Fahrzeuge')}`)).json;
+      expect(r.approximate).toBe(false);
+      expect(r.engine).toBe(TEST_PG && (await pgvectorAvailable(auto.ctx.db)) ? 'pgvector' : 'exact');
+      expect(r.hits[0].text).toContain('Werkstatt repariert');
+    } finally {
+      await auto.app.close();
+    }
+    expect(results.hnsw).toEqual(results.exact);
+    if (results.pgvector) expect(results.pgvector).toEqual(results.exact);
+  });
+
+  it('[T-148] Hybride Analyse großer Bestände: kNN über HNSW statt n²-Vergleich', async () => {
+    const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'knn'), logger: false, webDist: null, authMode: 'demo' });
+    try {
+      const { embeddingPairs } = await import('../src/services/semantic.js');
+      const paras = Array.from({ length: 30 }, (_, i) => `Eintrag ${i} über ${['Rechnung', 'Lager', 'Kasse'][i % 3]} ${i * 7}.`);
+      await importFile(built, 'k.md', `${FM}# 1. K\n\n## 1.1 A\n\n${paras.join('\n\n')}\n\n## 1.2 B\n\n${paras[4]}\n`);
+      const docs = await built.ctx.db.all<{ id: string; text: string }>('SELECT id, text FROM text_snippets ORDER BY seq');
+      expect(docs).toHaveLength(31);
+      const dupIds = docs.filter((d) => d.text === paras[4]).map((d) => d.id).sort();
+      const full = await embeddingPairs(built.ctx, docs, 0.95, 1000);
+      const approx = await embeddingPairs(built.ctx, docs, 0.95, 10);
+      expect(full.approximate).toBe(false);
+      expect(approx.approximate).toBe(true);
+      const key = (ps: { a: string; b: string }[]) => ps.map((p) => `${p.a}|${p.b}`).sort();
+      expect(key(approx.pairs)).toEqual(key(full.pairs));
+      expect(full.pairs.map((p) => [p.a, p.b])).toContainEqual(dupIds);
+    } finally {
+      await built.app.close();
+    }
+  });
+});

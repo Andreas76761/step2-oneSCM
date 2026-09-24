@@ -72,9 +72,10 @@ export async function runDailySnapshots(ctx: Ctx, forProject: (id: string) => Ct
 
 export async function ensureDailyJob(ctx: Ctx, next = false) {
   if (!next && (await ctx.db.get("SELECT id FROM jobs WHERE type = 'kpi-daily' AND status IN ('queued','running')"))) return;
+  // nächster Lauf 00:05 UTC; der aktuelle Tageswert entsteht zusätzlich bei jedem Aufruf der Analytik
   const t = new Date();
-  const tomorrow = Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate() + 1, 0, 5); // 00:05 UTC
-  await ctx.jobs.enqueue('kpi-daily', {}, 1, next ? tomorrow - Date.now() : 0);
+  const at = Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate() + 1, 0, 5);
+  await ctx.jobs.enqueue('kpi-daily', {}, 1, at - Date.now());
 }
 
 function range(from?: string, to?: string) {

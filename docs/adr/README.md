@@ -22,3 +22,7 @@
 | [ADR-018](ADR-018-releases.md) | Handbuch-Releases und statische Online-Hilfe | akzeptiert, umgesetzt |
 | [ADR-019](ADR-019-kollaboration.md) | Kollaboration: Kommentare, Aufgaben, Benachrichtigungen | akzeptiert, umgesetzt |
 | [ADR-020](ADR-020-mehrsprachigkeit.md) | Mehrsprachigkeit mit Satz-Zuordnung und Freigabe je Sprache | akzeptiert, umgesetzt |
+| [ADR-021](ADR-021-mehrsprachige-releases.md) | Mehrsprachige Releases mit Sprachumschalter und Rückfall auf Deutsch | akzeptiert, umgesetzt |
+| [ADR-022](ADR-022-fremdsysteme.md) | Import aus Confluence-/HTML-Export, Word und Git-Repositories | akzeptiert, umgesetzt |
+| [ADR-023](ADR-023-analytik.md) | Analytik: Kennzahlen-Zeitreihen, Freigabedauer, Projektbericht, BI-Export | akzeptiert, umgesetzt |
+| [ADR-024](ADR-024-vektorindex.md) | Vektorindex: exakt, HNSW im Speicher oder pgvector | akzeptiert, umgesetzt |

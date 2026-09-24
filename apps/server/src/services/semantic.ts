@@ -6,6 +6,33 @@ import { sha256, tokenize, type SimilarityPair } from '../domain/similarity.js';
 import { decodeVector, dot, encodeVector } from '../embeddings.js';
 import { LlmError } from '../llm.js';
 import { badRequest, Problem } from '../problem.js';
+import type { Db } from '../db.js';
+import { changeKey, knnPairs, searchVectors, vectorIndexStatus } from './vectorIndex.js';
+
+/** Letzter Änderungsschlüssel ohne fehlende Vektoren je Projekt und Modell */
+const complete = new WeakMap<Db, Map<string, string>>();
+
+/** Obergrenze für die Berechnung fehlender Vektoren während einer Suche; darüber übernimmt der Index-Job */
+const SYNC_EMBED_LIMIT = 2000;
+
+/** Aktuelle Abschnitte ohne (passenden) Vektor des Modells */
+async function missingEmbeddings(ctx: Ctx, limit: number) {
+  return ctx.db.all<{ id: string; text: string }>(
+    `SELECT s.id, s.text FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
+     LEFT JOIN snippet_embeddings e ON e.snippet_id = s.id AND e.model = ?
+     WHERE d.project_id = ? AND r.is_current = 1 AND s.excluded_reason IS NULL AND s.kind <> 'code' AND (e.snippet_id IS NULL OR e.text_hash <> s.text_hash)
+     ORDER BY s.seq LIMIT ${Math.trunc(limit)}`,
+    ctx.embeddings.model, ctx.projectId,
+  );
+}
+
+/** Abschnitte mit offenem Datenschutzbefund (externer Dienst): nie als Treffer liefern */
+async function openPrivacyFindings(ctx: Ctx) {
+  if (!ctx.embeddings.external) return new Set<string>();
+  return new Set((await ctx.db.all<{ id: string }>(
+    "SELECT snippet_a_id AS id FROM quality_findings WHERE project_id = ? AND type = 'privacy' AND snippet_a_id IS NOT NULL AND status IN ('open','deferred')", ctx.projectId,
+  )).map((r) => r.id));
+}
 
 interface SnippetRow {
   id: string;
@@ -93,8 +120,27 @@ export async function semanticSearch(ctx: Ctx, input: { q?: string; limit?: numb
   if (!q) throw badRequest('Suchtext (q) fehlt.');
   if (q.length > 1000) throw badRequest('Suchtext ist zu lang (max. 1000 Zeichen).');
   const limit = Math.min(Math.max(Number(input.limit ?? 20), 1), 100);
-  const snippets = await currentSnippets(ctx, input.chapterId);
-  const { vectors, computed, excluded } = await ensureEmbeddings(ctx, snippets);
+  // fehlende Vektoren: wenige sofort berechnen, viele im Hintergrund (Suche läuft über den vorhandenen Bestand)
+  let done = complete.get(ctx.db);
+  if (!done) complete.set(ctx.db, (done = new Map()));
+  const cacheKey = `${ctx.projectId}|${ctx.embeddings.model}`;
+  let change = await changeKey(ctx);
+  const missing = done.get(cacheKey) === change ? [] : await missingEmbeddings(ctx, SYNC_EMBED_LIMIT + 1);
+  let computed = 0;
+  let excluded = 0;
+  let pending = 0;
+  if (missing.length > SYNC_EMBED_LIMIT) {
+    pending = missing.length;
+    if (!(await ctx.db.get("SELECT id FROM jobs WHERE type = 'semantic-index' AND status IN ('queued','running')"))) {
+      await ctx.jobs.enqueue('semantic-index', { projectId: ctx.projectId, id: newId('idx') });
+      ctx.jobs.wake();
+    }
+  } else if (missing.length) {
+    ({ computed, excluded } = await ensureEmbeddings(ctx, missing));
+    change = await changeKey(ctx);
+  }
+  // vollständig (bis auf dauerhaft ausgeschlossene Abschnitte): bis zur nächsten Änderung nicht erneut prüfen
+  if (!pending && computed + excluded === missing.length) done.set(cacheKey, change);
   let query: Float32Array;
   try {
     [query] = await ctx.embeddings.embed([q]);
@@ -102,32 +148,41 @@ export async function semanticSearch(ctx: Ctx, input: { q?: string; limit?: numb
     if (e instanceof LlmError) throw new Problem(502, 'Bad Gateway', e.message);
     throw e;
   }
+  const chapterIds = input.chapterId
+    ? new Set((await ctx.db.all<{ id: string }>('SELECT id FROM text_snippets WHERE chapter_id = ?', input.chapterId)).map((s) => s.id))
+    : undefined;
+  const found = await searchVectors(ctx, query, limit, { chapterId: input.chapterId, chapterIds, blocked: await openPrivacyFindings(ctx), change });
   const minScore = input.minScore ?? 0.15;
+  const hitIds = found.hits.filter((h) => h.score >= minScore);
+  const rows = hitIds.length ? await ctx.db.all<SnippetRow>(
+    `SELECT s.id, s.seq, s.text, s.chapter_id, c.title AS chapter_title, d.path, s.evidence_status
+     FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id LEFT JOIN chapters c ON c.id = s.chapter_id
+     WHERE s.id IN (${hitIds.map(() => '?').join(',')})`, ...hitIds.map((h) => h.snippetId),
+  ) : [];
+  const byId = new Map(rows.map((r) => [r.id, r]));
   const qTerms = new Set(tokenize(q));
-  const hits = snippets
-    .filter((s) => vectors.has(s.id))
-    .map((s) => ({ s, score: dot(query, vectors.get(s.id)!) }))
-    .filter((h) => h.score >= minScore)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, limit)
-    .map(({ s, score }) => ({
+  const hits = hitIds.filter((h) => byId.has(h.snippetId)).map(({ snippetId, score }) => {
+    const s = byId.get(snippetId)!;
+    return {
       snippetId: s.id, seq: s.seq, text: s.text, chapterId: s.chapter_id, chapterTitle: s.chapter_title, path: s.path, evidenceStatus: s.evidence_status,
       score: Math.round(score * 1000) / 1000,
       matchedTerms: [...new Set(tokenize(s.text))].filter((t) => qTerms.has(t)),
-    }));
-  return { query: q, model: ctx.embeddings.model, provider: ctx.embeddings.id, external: ctx.embeddings.external, indexed: vectors.size, computed, excluded, hits };
+    };
+  });
+  return {
+    query: q, model: ctx.embeddings.model, provider: ctx.embeddings.id, external: ctx.embeddings.external, engine: found.engine, approximate: found.approximate,
+    indexed: found.indexed, computed, excluded, pending, hits,
+  };
 }
 
 export async function indexStatus(ctx: Ctx) {
-  const snippets = await currentSnippets(ctx);
-  const rows = await ctx.db.all<{ snippet_id: string; text_hash: string }>(
-    `SELECT e.snippet_id, e.text_hash FROM snippet_embeddings e JOIN text_snippets s ON s.id = e.snippet_id JOIN source_revisions r ON r.id = s.revision_id
-     JOIN source_documents d ON d.id = r.document_id WHERE d.project_id = ? AND e.model = ?`,
-    ctx.projectId, ctx.embeddings.model,
-  );
-  const hashes = new Map(rows.map((r) => [r.snippet_id, r.text_hash]));
-  const current = snippets.filter((s) => hashes.get(s.id) === sha256(s.text)).length;
-  return { provider: ctx.embeddings.id, model: ctx.embeddings.model, external: ctx.embeddings.external, snippets: snippets.length, indexed: current, excluded: (await privacyBlocked(ctx, snippets)).size };
+  const n = async (sql: string, ...p: unknown[]) => Number((await ctx.db.get<{ n: number }>(sql, ...p))?.n ?? 0);
+  const cur = `FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
+    WHERE d.project_id = ? AND r.is_current = 1 AND s.excluded_reason IS NULL AND s.kind <> 'code'`;
+  const snippets = await n(`SELECT COUNT(*) AS n ${cur}`, ctx.projectId);
+  const indexed = await n(`SELECT COUNT(*) AS n ${cur} AND EXISTS (SELECT 1 FROM snippet_embeddings e WHERE e.snippet_id = s.id AND e.model = ? AND e.text_hash = s.text_hash)`, ctx.projectId, ctx.embeddings.model);
+  const excluded = ctx.embeddings.external && snippets - indexed <= SYNC_EMBED_LIMIT ? (await privacyBlocked(ctx, await missingEmbeddings(ctx, SYNC_EMBED_LIMIT))).size : 0;
+  return { provider: ctx.embeddings.id, model: ctx.embeddings.model, external: ctx.embeddings.external, snippets, indexed, excluded, index: await vectorIndexStatus(ctx) };
 }
 
 /** Index im Hintergrund aufbauen (große Bestände, externer Dienst) */
@@ -142,7 +197,15 @@ export async function startIndexJob(ctx: Ctx, actor: string) {
 }
 
 export async function runIndexJob(ctx: Ctx) {
-  await ensureEmbeddings(ctx, await currentSnippets(ctx));
+  // in Portionen: Speicherbedarf und Anfragegröße an den Embedding-Dienst begrenzt
+  let skip = new Set<string>();
+  for (;;) {
+    const batch = (await missingEmbeddings(ctx, 1000 + skip.size)).filter((s) => !skip.has(s.id));
+    if (!batch.length) break;
+    await ensureEmbeddings(ctx, batch);
+    // durch Datenschutz ausgeschlossene Abschnitte bleiben ohne Vektor – nicht erneut anfassen
+    skip = new Set([...skip, ...(await privacyBlocked(ctx, batch))]);
+  }
 }
 
 /**
@@ -150,21 +213,29 @@ export async function runIndexJob(ctx: Ctx) {
  * Ergänzt die TF-IDF-Paare – erkennt z. B. Umschreibungen ohne gemeinsame Begriffe (mit einem semantischen Modell).
  */
 export async function embeddingPairs(ctx: Ctx, snippets: { id: string; text: string }[], threshold: number, maxDocs: number) {
-  if (snippets.length > maxDocs) return { pairs: [] as SimilarityPair[], skipped: true, model: ctx.embeddings.model };
   const { vectors } = await ensureEmbeddings(ctx, snippets);
   const docs = snippets.filter((s) => vectors.has(s.id));
   const vecs = docs.map((d) => vectors.get(d.id)!);
-  const terms = docs.map((d) => new Set(tokenize(d.text)));
+  const terms = new Map<number, Set<string>>();
+  const termsOf = (i: number) => terms.get(i) ?? terms.set(i, new Set(tokenize(docs[i].text))).get(i)!;
   const pairs: SimilarityPair[] = [];
-  for (let i = 0; i < docs.length; i++) {
-    for (let j = i + 1; j < docs.length; j++) {
-      const score = dot(vecs[i], vecs[j]);
-      if (score < threshold) continue;
-      const [a, b] = docs[i].id < docs[j].id ? [i, j] : [j, i];
-      pairs.push({ a: docs[a].id, b: docs[b].id, score: Math.min(1, Math.round(score * 1000) / 1000), sharedTerms: [...terms[i]].filter((t) => terms[j].has(t)).slice(0, 6) });
+  const push = (i: number, j: number, score: number) => {
+    const [a, b] = docs[i].id < docs[j].id ? [i, j] : [j, i];
+    pairs.push({ a: docs[a].id, b: docs[b].id, score: Math.min(1, Math.round(score * 1000) / 1000), sharedTerms: [...termsOf(i)].filter((t) => termsOf(j).has(t)).slice(0, 6) });
+  };
+  if (docs.length <= maxDocs) {
+    // vollständiger Vergleich
+    for (let i = 0; i < docs.length; i++) {
+      for (let j = i + 1; j < docs.length; j++) {
+        const score = dot(vecs[i], vecs[j]);
+        if (score >= threshold) push(i, j, score);
+      }
     }
+    return { pairs, skipped: false, approximate: false, model: ctx.embeddings.model };
   }
-  return { pairs, skipped: false, model: ctx.embeddings.model };
+  // große Bestände (ADR-024): je Abschnitt die 10 nächsten Nachbarn über HNSW statt n² Vergleiche
+  for (const [i, j, score] of knnPairs(vecs, 10, threshold)) push(i, j, score);
+  return { pairs, skipped: false, approximate: true, model: ctx.embeddings.model };
 }
 
 export async function semanticSettings(ctx: Ctx) {

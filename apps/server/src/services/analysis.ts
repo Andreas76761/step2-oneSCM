@@ -107,7 +107,7 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
     }
     pairs = [...merged.values()];
     method = `hybrid(${method}+${emb.model})`;
-    embeddingStats = { model: emb.model, pairs: emb.pairs.length, added, skipped: emb.skipped };
+    embeddingStats = { model: emb.model, pairs: emb.pairs.length, added, skipped: emb.skipped, approximate: emb.approximate };
   }
   if (!settings.crossChapter) pairs = pairs.filter((p) => byId.get(p.a)!.chapter_id === byId.get(p.b)!.chapter_id);
 

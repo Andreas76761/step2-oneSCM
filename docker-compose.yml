@@ -1,7 +1,7 @@
 # Produktionsnahes Setup: App + PostgreSQL. Für OIDC AUTH_MODE=oidc und OIDC_* setzen (siehe README).
 services:
   db:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_DB: onescm
       POSTGRES_USER: onescm

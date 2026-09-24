@@ -52,6 +52,9 @@ export function SettingsPage() {
               <input type="number" step="0.01" min="0.3" max="1" value={draft.semantic.embeddingThreshold} onChange={(e) => setDraft({ ...draft, semantic: { ...draft.semantic, embeddingThreshold: Number(e.target.value) } })} />
             </label>
           )}
+          <label className="block">Näherungssuche (HNSW) ab Anzahl Textabschnitten (ADR-024)
+            <input type="number" step="1000" min="0" value={draft.semantic.annThreshold ?? 20000} onChange={(e) => setDraft({ ...draft, semantic: { ...draft.semantic, annThreshold: Number(e.target.value) } })} />
+          </label>
         </Card>
         <Card title="Schweregrad je Widerspruchsregel (Blockerdefinition)">
           <table className="table compact">

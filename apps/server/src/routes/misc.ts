@@ -63,6 +63,8 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
     const sem = body.semantic;
     if (sem?.analysisMethod !== undefined && !['tfidf', 'hybrid'].includes(sem.analysisMethod)) throw badRequest('semantic.analysisMethod muss tfidf oder hybrid sein.');
     if (sem?.embeddingThreshold !== undefined && (typeof sem.embeddingThreshold !== 'number' || sem.embeddingThreshold < 0.3 || sem.embeddingThreshold > 1)) throw badRequest('semantic.embeddingThreshold muss zwischen 0,3 und 1 liegen.');
+    if (sem?.annThreshold !== undefined && (!Number.isInteger(sem.annThreshold) || sem.annThreshold < 0)) throw badRequest('semantic.annThreshold muss eine ganze Zahl ≥ 0 sein.');
+    if (sem?.annEfSearch !== undefined && (!Number.isInteger(sem.annEfSearch) || sem.annEfSearch < 10 || sem.annEfSearch > 5000)) throw badRequest('semantic.annEfSearch muss zwischen 10 und 5000 liegen.');
     const mins = body.rewrite?.minSupport;
     if (mins !== undefined && (typeof mins !== 'number' || mins < 0.1 || mins > 1)) throw badRequest('rewrite.minSupport muss eine Zahl zwischen 0,1 und 1 sein.');
     await saveSettings(req.ctx.db, body);

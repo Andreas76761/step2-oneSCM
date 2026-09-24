@@ -120,4 +120,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: semantische Suche, Veröffentl
 | Kollaboration (NFR-06) | ✅ Diskussionen, @Erwähnungen, Aufgaben, Benachrichtigungen In-App/Webhook/E-Mail ([ADR-019](adr/ADR-019-kollaboration.md)) |
 | Mehrsprachigkeit (NFR-07) | ✅ Übersetzung freigegebener Kapitel mit Satz-Zuordnung, Prüfung und Freigabe je Sprache ([ADR-020](adr/ADR-020-mehrsprachigkeit.md)) |
 
-Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016).
+## 1.10 Stand nach Etappe 8 (24.09.2026)
+
+Umfang vom Auftraggeber am 24.09.2026 festgelegt: mehrsprachige Releases, Import aus Fremdsystemen, Analytik & Berichte, Skalierung.
+
+| Punkt | Ergebnis |
+|---|---|
+| Mehrsprachige Releases (NFR-08) | ✅ Online-Hilfe und Markdown je Sprache, Sprachumschalter, Rückfall auf Deutsch, Übersetzungsstand im Dashboard ([ADR-021](adr/ADR-021-mehrsprachige-releases.md)) |
+| Fremdsysteme (NFR-09) | ✅ Confluence-/HTML-Export und Word in Markdown umgewandelt, Original erhalten; Git-Repositories mit periodischem Abgleich ([ADR-022](adr/ADR-022-fremdsysteme.md)) |
+| Analytik (NFR-10) | ✅ Kennzahlen-Zeitreihen, Freigabedauer, Projektbericht (PDF), BI-Export CSV/JSON ([ADR-023](adr/ADR-023-analytik.md)) |
+| Skalierung (NFR-11) | ✅ Vektorindex exakt/HNSW/pgvector, kNN für die hybride Analyse großer Bestände, Lasttest mit 50 000 Textabschnitten ([ADR-024](adr/ADR-024-vektorindex.md), [Lasttest](lasttest-semantik.md)) |
+
+Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL ist bei sehr großen ZIPs durch Einzelabfragen langsamer als über SQLite (Lasttest); Confluence wird über den HTML-Export angebunden, nicht über die Cloud-API; gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten.

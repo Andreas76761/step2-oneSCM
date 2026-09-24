@@ -18,7 +18,7 @@ export default defineConfig({
   },
   webServer: {
     // Frische Demo-Datenbank, danach gebauten Server (inkl. Web-UI) starten
-    command: `rm -rf ${DATA} && DATA_DIR=${DATA} npx tsx ../apps/server/scripts/seed-demo.ts && DATA_DIR=${DATA} PORT=${PORT} LOG=0 LLM_PROVIDER=demo node ../apps/server/dist/index.js`,
+    command: `rm -rf ${DATA} && DATA_DIR=${DATA} npx tsx ../apps/server/scripts/seed-demo.ts && DATA_DIR=${DATA} PORT=${PORT} LOG=0 LLM_PROVIDER=demo GIT_ALLOW_FILE=1 node ../apps/server/dist/index.js`,
     url: `http://localhost:${PORT}/api/v1/health`,
     reuseExistingServer: false,
     timeout: 120_000,

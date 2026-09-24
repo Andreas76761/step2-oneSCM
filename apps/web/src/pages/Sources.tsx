@@ -5,6 +5,8 @@ import {
   activatable,
 } from '../components/ui';
 
+const ENGINE_LABEL: Record<string, string> = { exact: 'exakte Suche', hnsw: 'HNSW-Näherung', pgvector: 'pgvector' };
+
 export function SourcesPage() {
   const { notify } = useApp();
   const imports = useLoad<any[]>('/imports');
@@ -339,7 +341,8 @@ function SemanticSearch({ chapters, onOpen }: { chapters: any[]; onOpen: (id: st
       {result && (
         <>
           <p className="small muted">
-            {result.hits.length} Treffer · Modell {result.model}{result.external ? ' (externer Dienst)' : ' (lokal)'} · {result.indexed} Abschnitte im Index
+            {result.hits.length} Treffer · Modell {result.model}{result.external ? ' (externer Dienst)' : ' (lokal)'} · {result.indexed} Abschnitte im Index ({ENGINE_LABEL[result.engine] ?? result.engine})
+            {result.pending > 0 && <> · {result.pending} Abschnitte werden noch indiziert</>}
             {result.excluded > 0 && <> · {result.excluded} wegen Datenschutz nicht übertragen</>}
           </p>
           {!result.hits.length ? <Empty>Keine ähnlichen Textabschnitte gefunden.</Empty> : (
