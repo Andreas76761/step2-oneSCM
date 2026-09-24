@@ -99,6 +99,8 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   await db.run("UPDATE imports SET status = 'processing' WHERE id = ?", importId);
   await db.run('DELETE FROM import_items WHERE import_id = ?', importId); // Wiederholung nach Abbruch
   const stats = { files: 0, imported: 0, identical: 0, failed: 0, skipped: 0, snippets: 0 };
+  let cache = newCache();
+  const items: unknown[][] = [];
   let entries: Entry[];
   try {
     entries = await readEntries(ctx, fileName, data);
@@ -123,7 +125,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
           item.status = 'skipped';
           item.message = converted.skip;
         } else {
-          const res = await storeRevision(ctx, importId, entry.path, converted.markdown, converted.original);
+          const res = await storeRevision(ctx, importId, entry.path, converted.markdown, converted.original, cache);
           const warning = [res.warning, ...converted.warnings].filter(Boolean).join('; ');
           item.status = res.identical ? 'identical' : 'imported';
           item.revisionId = res.revisionId;
@@ -132,6 +134,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
         }
       }
     } catch (e) {
+      cache = newCache();
       item.status = 'failed';
       const msg = (e as Error).message;
       item.message = msg.includes('encoded data was not valid') ? 'Keine gültige UTF-8-Datei' : msg;
@@ -140,11 +143,9 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
     else if (item.status === 'identical') stats.identical++;
     else if (item.status === 'failed') stats.failed++;
     else stats.skipped++;
-    await db.run(
-      'INSERT INTO import_items (id, import_id, path, sha256, status, message, revision_id, position) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      item.id, importId, item.path, item.sha256, item.status, item.message, item.revisionId, stats.files,
-    );
+    items.push([item.id, importId, item.path, item.sha256, item.status, item.message, item.revisionId, stats.files]);
   }
+  await insertMany(ctx, 'import_items (id, import_id, path, sha256, status, message, revision_id, position)', items);
 
   const status = stats.failed === 0 ? 'completed' : stats.failed === stats.files ? 'failed' : 'completed_with_errors';
   await db.run('UPDATE imports SET status = ?, finished_at = ?, stats = ? WHERE id = ?', status, now(), json(stats), importId);
@@ -184,7 +185,14 @@ function decodeHtml(data: Buffer) {
   return decoder.decode(data);
 }
 
-async function storeRevision(ctx: Ctx, importId: string, filePath: string, data: Buffer, original?: Original) {
+/** Kapitel/Unterkapitel eines Imports (über alle Dateien); nach einem Fehler verworfen, da die Transaktion zurückgerollt wurde */
+interface StructureCache {
+  chapters: Map<string, Promise<Row>>;
+  subs: Map<string, Promise<Row>>;
+}
+const newCache = (): StructureCache => ({ chapters: new Map(), subs: new Map() });
+
+async function storeRevision(ctx: Ctx, importId: string, filePath: string, data: Buffer, original?: Original, cache: StructureCache = newCache()) {
   const { db } = ctx;
   const text = decoder.decode(data);
   const hash = sha256(data);
@@ -219,32 +227,66 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
       revisionId, doc.id, importId, revisionNo, hash, `sources/${hash}`, data.length, json(parsed.frontMatter), now(), original?.format ?? 'markdown', originalKey,
     );
 
+    // Kapitel/Unterkapitel zwischenspeichern (statt einer Abfrage je Absatz)
+    const { chapters, subs } = cache;
+    const chapterFor = (title: string | null) => {
+      const k = title ?? '';
+      if (!chapters.has(k)) chapters.set(k, ensureChapter(ctx, title));
+      return chapters.get(k)!;
+    };
+    const subFor = async (chapterTitle: string | null, title: string) => {
+      const ch = await chapterFor(chapterTitle);
+      const k = `${ch.id}|${title}`;
+      if (!subs.has(k)) subs.set(k, ensureSubchapter(ctx, ch.id, title));
+      return subs.get(k)!;
+    };
     // Unterkapitel auch für leere Überschriften anlegen (Lückenerkennung)
     for (const h of parsed.headings) {
-      if (h.level === 1) await ensureChapter(ctx, h.title);
-      if (h.level === 2) await ensureSubchapter(ctx, (await ensureChapter(ctx, h.chapterTitle)).id, h.title);
+      if (h.level === 1) await chapterFor(h.title);
+      if (h.level === 2) await subFor(h.chapterTitle, h.title);
     }
 
+    // Sammel-INSERTs (Etappe 9): eine fortlaufende Nummer je Revision reservieren, Zeilen blockweise schreiben
+    const snippetRows: unknown[][] = [];
+    const roleRows: unknown[][] = [];
+    const divisionRows: unknown[][] = [];
+    const markets = new Set<string>();
+    const releases = new Set<string>();
+    let seq = parsed.blocks.length ? await db.nextSeq('text_snippets') : 0;
+    const created = now();
     for (const b of parsed.blocks) {
-      const chapter = await ensureChapter(ctx, b.chapterTitle);
-      const sub = b.subchapterTitle ? await ensureSubchapter(ctx, chapter.id, b.subchapterTitle) : null;
+      const chapter = await chapterFor(b.chapterTitle);
+      const sub = b.subchapterTitle ? await subFor(b.chapterTitle, b.subchapterTitle) : null;
       const cls = classifySnippet({ text: b.text, headings: [b.chapterTitle ?? '', b.subchapterTitle ?? '', ...b.headingPath], path: filePath, frontMatter: parsed.frontMatter });
       const snippetId = newId('sn');
-      await db.run(
-        `INSERT INTO text_snippets (id, seq, revision_id, chapter_id, subchapter_id, heading_path, position, line_start, line_end, kind, text, text_hash, norm_hash,
-          evidence_status, market_code, release_code, scope_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        snippetId, await db.nextSeq('text_snippets'), revisionId, chapter.id, sub?.id ?? null, json(b.headingPath), b.position, b.lineStart, b.lineEnd, b.kind, b.text,
+      snippetRows.push([
+        snippetId, seq++, revisionId, chapter.id, sub?.id ?? null, json(b.headingPath), b.position, b.lineStart, b.lineEnd, b.kind, b.text,
         sha256(b.text), normalizedHash(b.text), cls.evidenceStatus, cls.market?.code ?? null, cls.release?.code ?? null,
-        (cls.market?.status ?? 'confirmed') === 'confirmed' && (cls.release?.status ?? 'confirmed') === 'confirmed' ? 'confirmed' : 'unconfirmed', now(),
-      );
-      for (const r of cls.roles) await db.run('INSERT INTO snippet_roles VALUES (?, ?, ?, ?, ?, ?, ?)', snippetId, r.code, r.score, r.method, r.modelVersion, r.evidenceStatus, r.evidence);
-      for (const d of cls.divisions) await db.run('INSERT INTO snippet_divisions VALUES (?, ?, ?, ?, ?, ?, ?)', snippetId, d.code, d.score, d.method, d.modelVersion, d.evidenceStatus, d.evidence);
-      if (cls.market) await db.run('INSERT INTO markets (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', cls.market.code, cls.market.code);
-      if (cls.release) await db.run('INSERT INTO release_scopes (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', cls.release.code, cls.release.code);
+        (cls.market?.status ?? 'confirmed') === 'confirmed' && (cls.release?.status ?? 'confirmed') === 'confirmed' ? 'confirmed' : 'unconfirmed', created,
+      ]);
+      for (const r of cls.roles) roleRows.push([snippetId, r.code, r.score, r.method, r.modelVersion, r.evidenceStatus, r.evidence]);
+      for (const d of cls.divisions) divisionRows.push([snippetId, d.code, d.score, d.method, d.modelVersion, d.evidenceStatus, d.evidence]);
+      if (cls.market) markets.add(cls.market.code);
+      if (cls.release) releases.add(cls.release.code);
       snippetCount++;
     }
+    await insertMany(ctx, `text_snippets (id, seq, revision_id, chapter_id, subchapter_id, heading_path, position, line_start, line_end, kind, text, text_hash, norm_hash,
+      evidence_status, market_code, release_code, scope_status, created_at)`, snippetRows);
+    await insertMany(ctx, 'snippet_roles', roleRows);
+    await insertMany(ctx, 'snippet_divisions', divisionRows);
+    for (const m of markets) await db.run('INSERT INTO markets (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', m, m);
+    for (const r of releases) await db.run('INSERT INTO release_scopes (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', r, r);
     return { identical: false, revisionId, revisionNo, snippets: snippetCount, warning };
   });
+}
+
+/** Mehrzeiliges INSERT in Blöcken (Parametergrenzen: SQLite 32 766, PostgreSQL 65 535) */
+async function insertMany(ctx: Ctx, target: string, rows: unknown[][], chunk = 200) {
+  for (let i = 0; i < rows.length; i += chunk) {
+    const part = rows.slice(i, i + chunk);
+    const marks = `(${part[0].map(() => '?').join(', ')})`;
+    await ctx.db.run(`INSERT INTO ${target} VALUES ${part.map(() => marks).join(', ')}`, ...part.flat());
+  }
 }
 
 /** Nummerierte Überschriften („3.“, „3.2“) werden nach ihrer Nummer sortiert, sonst nach Reihenfolge des Auftretens. */

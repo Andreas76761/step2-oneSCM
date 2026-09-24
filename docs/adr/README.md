@@ -26,3 +26,6 @@
 | [ADR-022](ADR-022-fremdsysteme.md) | Import aus Confluence-/HTML-Export, Word und Git-Repositories | akzeptiert, umgesetzt |
 | [ADR-023](ADR-023-analytik.md) | Analytik: Kennzahlen-Zeitreihen, Freigabedauer, Projektbericht, BI-Export | akzeptiert, umgesetzt |
 | [ADR-024](ADR-024-vektorindex.md) | Vektorindex: exakt, HNSW im Speicher oder pgvector | akzeptiert, umgesetzt |
+| [ADR-025](ADR-025-mehrstufige-freigabe.md) | Mehrstufige Freigabe mit Vier-Augen-Prinzip, Fristen und Eskalation | akzeptiert, umgesetzt |
+| [ADR-026](ADR-026-assistent.md) | Handbuch-Assistent: Antworten nur aus freigegebenen Absätzen mit Quellen | akzeptiert, umgesetzt |
+| [ADR-027](ADR-027-betrieb-skalierung.md) | Betrieb & Performance: Import, Helm, OpenTelemetry, verteilte Rate-Limits | akzeptiert, umgesetzt |

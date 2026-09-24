@@ -40,6 +40,7 @@ import { failBatch, runBatch } from './services/rewriteBatch.js';
 import { assertParamsInProject, resolveProject, withProject } from './services/projects.js';
 import { seedTerminology } from './services/terminology.js';
 import { createObjectStore } from './storage.js';
+import { initTracing, registerTracing, traceDb, traceEmbeddings, traceLlm } from './tracing.js';
 
 /** Öffentliche Endpunkte ohne Anmeldung */
 const PUBLIC_PATHS = new Set(['/api/v1/health', '/api/v1/health/live', '/api/v1/health/ready', '/api/v1/auth/config']);
@@ -51,13 +52,14 @@ export interface BuildOptions {
 
 export async function buildApp(overrides: Partial<AppConfig> = {}, options: BuildOptions = {}) {
   const config = loadConfig(overrides);
+  initTracing(config.tracing);
   const app = Fastify({
     logger: config.logger ? { level: process.env.LOG_LEVEL ?? 'info' } : false,
     bodyLimit: 5 * 1024 * 1024,
     genReqId: requestId,
     trustProxy: process.env.TRUST_PROXY === '1',
   });
-  const db = await openDb(config.database);
+  const db = traceDb(await openDb(config.database));
   await seedReferenceData(db, config.authMode);
   await seedTerminology(db, DEFAULT_PROJECT_ID);
   const jobs = new JobQueue(db, { onError: (type, err) => app.log.error({ err }, `Job ${type} fehlgeschlagen`) });
@@ -66,8 +68,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     store: createObjectStore(config.objectStore, config.dataDir),
     jobs,
     config,
-    llm: createProvider(config.llm),
-    embeddings: createEmbeddingProvider(config.embeddings),
+    llm: traceLlm(createProvider(config.llm)),
+    embeddings: traceEmbeddings(createEmbeddingProvider(config.embeddings)),
     notifier: new Notifier(config.notify),
     projectId: DEFAULT_PROJECT_ID,
     log: (msg, extra) => app.log.info(extra ?? {}, msg),
@@ -114,11 +116,11 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     if (await archived(c)) return failSync(c, p, ARCHIVED);
     await runSync(c, p);
   }, async (p, err) => failSync(await connectionCtx(p), p, err));
-  jobs.register('kpi-daily', async () => runDailySnapshots(ctx, (id) => withProject(ctx, id)));
+  jobs.register('kpi-daily', async () => runDailySnapshots(ctx, (id) => withProject(ctx, id)), undefined, { background: true });
   jobs.register('approval-escalation', async () => {
     await escalateOverdue(ctx, (id) => withProject(ctx, id));
     await ensureEscalationJob(ctx, true);
-  });
+  }, undefined, { background: true });
   if (options.worker !== false && process.env.JOB_WORKER !== '0') {
     await ensureDailyJob(ctx);
     await ensureEscalationJob(ctx);
@@ -149,6 +151,9 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     reply.header('Content-Security-Policy', `default-src 'self'; connect-src 'self'${idp}; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-ancestors 'none'`);
     return payload;
   });
+
+  // Tracing (ADR-027): Serverspans mit Kontext des Aufrufers (W3C traceparent)
+  registerTracing(app);
 
   // Betrieb: Request-ID in der Antwort, Metriken, Rate-Limiting (ADR-015)
   app.addHook('onRequest', async (req, reply) => {

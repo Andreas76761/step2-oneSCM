@@ -21,6 +21,8 @@ export function TraceabilityPage() {
             {m.data.issues.length ? <ul>{m.data.issues.map((i: string) => <li key={i} className="fail">⚠ {i}</li>)}</ul> : <p className="ok">✔ Jede P0-Story hat mindestens einen Test und eine API-Operation; jede Operation referenziert eine Story.</p>}
           </Card>
           <Card title="Matrix">
+            {/* breite Tabelle: scrollbarer Bereich per Tastatur erreichbar (WCAG 2.1.1) */}
+            <div className="table-wrap" tabIndex={0} role="region" aria-label="Traceability-Matrix">
             <table className="table">
               <thead><tr><th>Story</th><th>Titel</th><th>Prio</th><th>ID</th><th>API-Operationen</th><th>Tests</th><th>Dokumentation</th><th>Status</th></tr></thead>
               <tbody>
@@ -38,6 +40,7 @@ export function TraceabilityPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </Card>
           <Card title={`Tests (${m.data.tests.length})`}>
             <table className="table compact">

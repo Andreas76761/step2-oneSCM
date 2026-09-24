@@ -131,4 +131,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: mehrsprachige Releases, Import
 | Analytik (NFR-10) | ✅ Kennzahlen-Zeitreihen, Freigabedauer, Projektbericht (PDF), BI-Export CSV/JSON ([ADR-023](adr/ADR-023-analytik.md)) |
 | Skalierung (NFR-11) | ✅ Vektorindex exakt/HNSW/pgvector, kNN für die hybride Analyse großer Bestände, Lasttest mit 50 000 Textabschnitten ([ADR-024](adr/ADR-024-vektorindex.md), [Lasttest](lasttest-semantik.md)) |
 
-Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL ist bei sehr großen ZIPs durch Einzelabfragen langsamer als über SQLite (Lasttest); Confluence wird über den HTML-Export angebunden, nicht über die Cloud-API; gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten.
+## 1.11 Stand nach Etappe 9 (24.09.2026)
+
+Umfang vom Auftraggeber am 24.09.2026 festgelegt: Handbuch-Assistent, mehrstufige Freigabe, Betrieb & Performance.
+
+| Punkt | Ergebnis |
+|---|---|
+| Mehrstufige Freigabe (NFR-12) | ✅ Stufen, Zuständige, Mindestanzahl, Frist/Eskalation, Vier-Augen-Prinzip ([ADR-025](adr/ADR-025-mehrstufige-freigabe.md)) |
+| Handbuch-Assistent (NFR-13) | ✅ Antworten nur aus freigegebenen Absätzen mit Quellen je Satz, Wissenslücken ([ADR-026](adr/ADR-026-assistent.md)) |
+| Betrieb & Performance (NFR-14) | ✅ Import PostgreSQL 3,9×, Helm-Chart, OpenTelemetry, verteilte Rate-Limits, gesperrte Migrationen ([ADR-027](adr/ADR-027-betrieb-skalierung.md)) |
+
+Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL war durch Einzelabfragen langsamer als über SQLite (in Etappe 9 auf das 1,7-Fache von SQLite verringert); Confluence wird über den HTML-Export angebunden, nicht über die Cloud-API; gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten.

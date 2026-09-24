@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
-import { freshDatabase, tempDir } from './helpers.js';
+import { freshDatabase, tempDir, TEST_PG } from './helpers.js';
 import { approveChapter, client, FM, importFile } from './api-helpers.js';
 
 describe('Mehrstufige Freigabe (ADR-025)', () => {
@@ -183,4 +183,46 @@ describe('Handbuch-Assistent (ADR-026)', () => {
       await built.app.close();
     }
   });
+});
+
+describe('Betrieb über mehrere Instanzen (ADR-027)', () => {
+  const dataDir = tempDir();
+  afterAll(() => fs.rmSync(dataDir, { recursive: true, force: true }));
+
+  it('[T-151] Gleichzeitiger Start mehrerer Instanzen (Migrationen gesperrt), Rate-Limits gemeinsam über Instanzen (RATE_LIMIT_STORE=db), je Instanz im Speicher', async () => {
+    const database = await freshDatabase(dataDir, 'ratelimit');
+    if (TEST_PG) {
+      // zwei Replikate starten gleichzeitig auf leerer Datenbank: Migrationen laufen genau einmal
+      const [x, y] = await Promise.all([0, 1].map(() => buildApp({ dataDir, database, logger: false, webDist: null, authMode: 'demo' }, { worker: false })));
+      const applied = await x.ctx.db.all<{ name: string }>('SELECT name FROM schema_migrations');
+      expect(new Set(applied.map((r) => r.name)).size).toBe(applied.length);
+      await x.app.close();
+      await y.app.close();
+    }
+    const ops = (store: 'db' | 'memory') => ({ metricsToken: null, rateLimitMax: 3, rateLimitExpensiveMax: 1, rateLimitStore: store });
+    for (const store of ['db', 'memory'] as const) {
+      if (store === 'memory') await closeAll();
+      const a = await buildApp({ dataDir, database, logger: false, webDist: null, authMode: 'demo', ops: ops(store) });
+      const b = await buildApp({ dataDir, database, logger: false, webDist: null, authMode: 'demo', ops: ops(store) }, { worker: false });
+      open.push(a, b);
+      const user = `u-${store}`; // eigener Schlüssel je Durchlauf
+      await a.ctx.db.run("INSERT INTO users (id, name, permissions) VALUES (?, ?, '[\"read\"]') ON CONFLICT (id) DO NOTHING", user, user);
+      const get = (x: typeof a) => x.app.inject({ method: 'GET', url: '/api/v1/me', headers: { 'x-user-id': user } });
+      const codes = [(await get(a)).statusCode, (await get(a)).statusCode, (await get(b)).statusCode, (await get(b)).statusCode];
+      if (store === 'db') {
+        expect(codes).toEqual([200, 200, 200, 429]); // vierte Anfrage über beide Instanzen hinweg
+        const limited = await get(a);
+        expect(limited.statusCode).toBe(429);
+        expect(Number(limited.headers['retry-after'])).toBeGreaterThan(0);
+        expect(Number((await a.ctx.db.get<{ count: number }>('SELECT count FROM rate_limits WHERE key = ?', `n:${user}`))!.count)).toBe(5);
+      } else {
+        expect(codes).toEqual([200, 200, 200, 200]); // Zähler je Instanz
+      }
+    }
+    await closeAll();
+  });
+  const open: Awaited<ReturnType<typeof buildApp>>[] = [];
+  async function closeAll() {
+    while (open.length) await open.pop()!.app.close();
+  }
 });

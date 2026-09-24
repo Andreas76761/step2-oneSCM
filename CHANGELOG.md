@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.9.0 – Etappe 9 (24.09.2026)
+
+### Hinzugefügt
+- **Mehrstufige Freigabe (ADR-025):** Workflow je Projekt mit bis zu 6 Stufen (Zuständige, Mindestanzahl Zustimmungen, Frist), Vier-Augen-Prinzip, Schnappschuss je Einreichung, Hinweise über die Diskussion, stündliche Eskalation überfälliger Stufen, „Meine offenen Entscheidungen“; Standard bleibt einstufig (E-12). Migration `015_approval_workflow.sql`.
+- **Handbuch-Assistent (ADR-026):** Fragen an das freigegebene Handbuch (Sprache, Rolle, Sparte), hybride Suche, KI-Antwort mit geprüften Quellen je Satz oder extraktive Antwort ohne KI, Bewertung und Wissenslücken; Seite „Assistent“, Link aus der Online-Hilfe. Migration `016_assistant.sql`.
+- **Betrieb & Performance (ADR-027):** Import auf PostgreSQL 3,9-mal schneller (Sammel-INSERTs, Strukturcache), Migrationen unter Sperre bei gleichzeitigem Start, Rate-Limits über Instanzen (`RATE_LIMIT_STORE=db`, Migration `017_rate_limits.sql`), OpenTelemetry-Tracing (HTTP, Datenbank, Jobs, KI), Helm-Chart `deploy/helm/onescm` mit CI-Prüfung.
+- Tests T-149 … T-152, E2E T-216, T-217 (axe auch für „Assistent“); Anforderungen NFR-12 … NFR-14.
+
+### Geändert
+- Ablehnungen benachrichtigen die einreichende Person.
+- Die Analytik zählt nur abschließende Freigabeentscheidungen.
+- `jobs.idle()` wartet nicht auf periodische Hintergrundketten.
+
+### Behoben (Review Etappe 8)
+- Git-Abgleich übernimmt den Commit erst nach erfolgreichem Import; geänderte Quelle gleicht neu ab; ungültiges `limit` der semantischen Suche → 400; Erstfreigabequote berücksichtigt frühere Ablehnungen; pgvector-Index erst ab `annThreshold`.
+
 ## 0.8.0 – Etappe 8 (24.09.2026)
 
 ### Hinzugefügt

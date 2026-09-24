@@ -156,8 +156,16 @@ class PostgresDb implements Db {
     this.pool = new pg.Pool({ connectionString, max: Number(process.env.DB_POOL_SIZE ?? 10) });
   }
 
-  init() {
-    return migrate(this, async (sql) => void (await this.client().query(sql)), translateMigration);
+  /** Migrationen unter einer Sitzungssperre: gleichzeitig startende Instanzen (z. B. Kubernetes-Replikate) warten aufeinander */
+  async init() {
+    const lock = await this.pool.connect();
+    try {
+      await lock.query("SELECT pg_advisory_lock(hashtext('onescm-migrate'))");
+      await migrate(this, async (sql) => void (await this.client().query(sql)), translateMigration);
+    } finally {
+      await lock.query("SELECT pg_advisory_unlock(hashtext('onescm-migrate'))").catch(() => undefined);
+      lock.release();
+    }
   }
 
   private client(): pg.Pool | pg.PoolClient {

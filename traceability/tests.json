@@ -700,5 +700,61 @@
     "requirements": [
       "NFR-10"
     ]
+  },
+  {
+    "id": "T-149",
+    "title": "Mehrstufige Freigabe: Zuständigkeit, Vier-Augen-Prinzip, Schnappschuss, Ablehnung, Frist, Eskalation, offene Entscheidungen",
+    "file": "apps/server/test/stage9.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-12",
+      "US-016"
+    ]
+  },
+  {
+    "id": "T-150",
+    "title": "Handbuch-Assistent: nur freigegebene Absätze, Quellen je Satz, Rolle/Sprache, Prüfung der KI-Antwort, Bewertung",
+    "file": "apps/server/test/stage9.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-13"
+    ]
+  },
+  {
+    "id": "T-151",
+    "title": "Mehrere Instanzen: gesperrte Migrationen, gemeinsame Rate-Limits",
+    "file": "apps/server/test/stage9.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-14"
+    ]
+  },
+  {
+    "id": "T-152",
+    "title": "OpenTelemetry: Serverspan mit Kontext des Aufrufers, Datenbank-, Job- und KI-Spans",
+    "file": "apps/server/test/tracing.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-14"
+    ]
+  },
+  {
+    "id": "T-216",
+    "title": "UI: mehrstufige Freigabe mit Workflow-Editor und offenen Entscheidungen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-12",
+      "US-016"
+    ]
+  },
+  {
+    "id": "T-217",
+    "title": "UI: Handbuch-Assistent mit Quellen, Bewertung und Wissenslücken",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-13"
+    ]
   }
 ]

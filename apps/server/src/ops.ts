@@ -13,6 +13,8 @@ export interface OpsConfig {
   rateLimitMax: number;
   /** Anfragen je Minute für aufwendige Aktionen (Import, Analyse, Export, KI) */
   rateLimitExpensiveMax: number;
+  /** memory: je Instanz; db: gemeinsam über alle Instanzen derselben Datenbank (ADR-027) */
+  rateLimitStore: 'memory' | 'db';
 }
 
 export function opsFromEnv(): OpsConfig {
@@ -20,6 +22,7 @@ export function opsFromEnv(): OpsConfig {
     metricsToken: process.env.METRICS_TOKEN || null,
     rateLimitMax: Number(process.env.RATE_LIMIT_MAX ?? 1200),
     rateLimitExpensiveMax: Number(process.env.RATE_LIMIT_EXPENSIVE_MAX ?? 60),
+    rateLimitStore: process.env.RATE_LIMIT_STORE === 'db' ? 'db' : 'memory',
   };
 }
 
@@ -91,6 +94,7 @@ export async function registerOps(app: FastifyInstance, ctx: Ctx, ops: OpsConfig
   if (ops.rateLimitMax > 0) {
     await app.register(rateLimit, {
       global: true,
+      ...(ops.rateLimitStore === 'db' ? { store: dbRateLimitStore(ctx.db) as any, skipOnError: true } : {}),
       hook: 'preHandler', // nach der Anmeldung: Limit je Benutzer statt je IP
       timeWindow: 60_000,
       max: (req) => (isExpensive(req) ? ops.rateLimitExpensiveMax : ops.rateLimitMax),
@@ -116,6 +120,42 @@ export async function registerOps(app: FastifyInstance, ctx: Ctx, ops: OpsConfig
   });
 
   return { registry };
+}
+
+type StoreCallback = (err: Error | null, res?: { current: number; ttl: number }) => void;
+
+/**
+ * Rate-Limit-Speicher in der Datenbank (ADR-027): festes Zeitfenster, atomares Hochzählen per UPSERT … RETURNING,
+ * damit alle Instanzen dieselben Zähler sehen. Abgelaufene Fenster werden gelegentlich gelöscht.
+ */
+export function dbRateLimitStore(db: Ctx['db']) {
+  return class DbStore {
+    incr(key: string, cb: StoreCallback, timeWindow: number) {
+      const windowNo = Math.floor(Date.now() / timeWindow);
+      db.outside(() => db.get<{ count: number; window_no: number }>(
+        `INSERT INTO rate_limits (key, window_no, count) VALUES (?, ?, 1)
+         ON CONFLICT (key) DO UPDATE SET count = CASE WHEN rate_limits.window_no = excluded.window_no THEN rate_limits.count + 1 ELSE 1 END, window_no = excluded.window_no
+         RETURNING count, window_no`,
+        key, windowNo,
+      ))
+        .then(async (r) => {
+          if (Math.random() < 0.01) await db.run('DELETE FROM rate_limits WHERE window_no < ?', windowNo - 1);
+          cb(null, { current: Number(r!.count), ttl: (windowNo + 1) * timeWindow - Date.now() });
+        })
+        .catch((e) => cb(e as Error));
+    }
+
+    read(key: string, cb: StoreCallback, timeWindow: number) {
+      const windowNo = Math.floor(Date.now() / timeWindow);
+      db.outside(() => db.get<{ count: number; window_no: number }>('SELECT count, window_no FROM rate_limits WHERE key = ?', key))
+        .then((r) => cb(null, r && Number(r.window_no) === windowNo ? { current: Number(r.count), ttl: (windowNo + 1) * timeWindow - Date.now() } : { current: 0, ttl: 0 }))
+        .catch((e) => cb(e as Error));
+    }
+
+    child() {
+      return new DbStore();
+    }
+  };
 }
 
 /** Readiness: Datenbank erreichbar, Object-Store erreichbar, Jobqueue läuft (falls Worker). */

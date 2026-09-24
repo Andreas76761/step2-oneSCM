@@ -1,0 +1,90 @@
+# oneSCM Handbook Studio (ADR-027). Mehrinstanzbetrieb setzt PostgreSQL und einen S3-kompatiblen Object-Store voraus.
+
+image:
+  repository: ghcr.io/andreas76761/onescm-handbook-studio
+  tag: ""                # Standard: appVersion des Charts
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+# Geheimnisse (Pflicht): vorhandenes Secret mit u. a. DATABASE_URL, optional METRICS_TOKEN, LLM_API_KEY,
+# EMBEDDINGS_API_KEY, AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY, SMTP_URL, NOTIFY_WEBHOOK_URL, GIT_CREDENTIAL_*
+existingSecret: onescm-secrets
+
+# Nicht geheime Einstellungen (Umgebungsvariablen, siehe README „Betrieb“)
+env:
+  AUTH_MODE: oidc
+  OBJECT_STORE: s3
+  RATE_LIMIT_STORE: db          # Rate-Limits gemeinsam über alle Replikate
+  VECTOR_INDEX: auto
+  LOG_LEVEL: info
+  TRUST_PROXY: "1"
+extraEnv: {}                    # z. B. OIDC_ISSUER, OIDC_CLIENT_ID, OIDC_AUDIENCE, S3_BUCKET, S3_ENDPOINT, APP_URL, LLM_PROVIDER
+
+# API-Replikate ohne Hintergrund-Worker (JOB_WORKER=0)
+api:
+  replicaCount: 2
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { memory: 1536Mi }
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+# Worker für Import, Analyse, KI, Git-Abgleich, Benachrichtigungen, Eskalation (Jobs verteilt per FOR UPDATE SKIP LOCKED)
+worker:
+  enabled: true
+  replicaCount: 1
+  resources:
+    requests: { cpu: 500m, memory: 768Mi }
+    limits: { memory: 2Gi }
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: handbuch.example.org
+  tls:
+    enabled: false
+    secretName: onescm-tls
+
+# OpenTelemetry (ADR-027): Traces per OTLP/HTTP, z. B. an einen Collector
+tracing:
+  enabled: false
+  endpoint: http://otel-collector.observability:4318
+  serviceName: onescm-handbook-studio
+
+metrics:
+  serviceMonitor:
+    enabled: false             # Prometheus Operator; /metrics verlangt METRICS_TOKEN (aus dem Secret)
+    interval: 30s
+
+serviceAccount:
+  create: true
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile: { type: RuntimeDefault }
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities: { drop: [ALL] }
+
+# Schreibbare Verzeichnisse bei schreibgeschütztem Dateisystem: /tmp (Git-Klone, Uploads) und /data
+tmpSizeLimit: 2Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
