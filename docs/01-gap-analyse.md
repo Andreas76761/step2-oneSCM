@@ -97,3 +97,16 @@ Damit sind alle User Stories US-001 … US-020 umgesetzt. Offen ist nur die opti
 | Datenschutz (§13) | ✅ keine Übertragung bei offenen Datenschutzbefunden oder neuen personenbezogenen Daten; Rückfrage vor Übertragung an externe Dienste |
 
 Offene Punkte aus dem Auftrag bestehen nicht mehr.
+
+## 1.8 Stand nach Etappe 6 (24.09.2026)
+
+Umfang vom Auftraggeber am 24.09.2026 festgelegt: Betrieb & Härtung, KI-Umformulierung ganzer Kapitel, Barrierefreiheit & UX, Mandanten/Projekte.
+
+| Punkt | Ergebnis |
+|---|---|
+| Mandanten/Projekte (NFR-01) | ✅ mehrere Projekte, Mitgliedschaften, Mandantentrennung in Pfaden, Nutzdaten, Listen, Audit und Jobs ([ADR-014](adr/ADR-014-mandanten.md)) |
+| Betrieb (NFR-02) | ✅ Liveness/Readiness, Request-ID, Metriken, Rate-Limiting, Backup/Restore (auch SQLite → PostgreSQL), Lasttest, Abhängigkeitsprüfung ([ADR-015](adr/ADR-015-betrieb.md)) |
+| KI ganzer Kapitel (US-008/US-009) | ✅ Hintergrundjob mit Fortschritt, Abbruch und Fortsetzen; Sammelprüfung und Sammelübernahme; Nutzung/Kosten |
+| Barrierefreiheit (NFR-03, §15) | ✅ WCAG 2.2 AA automatisch geprüft (hell/dunkel), Tastatur und Fokus, schmale Bildschirme ([ADR-016](adr/ADR-016-barrierefreiheit.md)) |
+
+Bekannte Grenzen: Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016).

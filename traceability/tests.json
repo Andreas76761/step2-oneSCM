@@ -441,5 +441,90 @@
     "requirements": [
       "US-009"
     ]
+  },
+  {
+    "id": "T-132",
+    "title": "Projekte: Anlegen, Datentrennung, Jobs je Projekt, fremde IDs in Pfaden und Nutzdaten, Audit je Projekt",
+    "file": "apps/server/test/stage6.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-01",
+      "US-001",
+      "US-020"
+    ]
+  },
+  {
+    "id": "T-133",
+    "title": "Projekte: Sichtbarkeit, Mitgliedschaften mit Berechtigungen je Projekt, Archivierung",
+    "file": "apps/server/test/stage6.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-01"
+    ]
+  },
+  {
+    "id": "T-134",
+    "title": "Betrieb: Liveness/Readiness, Request-ID, geschützte Metriken, Rate-Limits je Benutzer",
+    "file": "apps/server/test/stage6.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-02"
+    ]
+  },
+  {
+    "id": "T-135",
+    "title": "Backup und Wiederherstellung (portabel, SQLite → PostgreSQL) inkl. Objekten",
+    "file": "apps/server/test/stage6.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-02"
+    ]
+  },
+  {
+    "id": "T-136",
+    "title": "KI-Umformulierung ganzer Kapitel: Hintergrundjob, Sammelprüfung, Sammelübernahme, Abbruch, Fortsetzen, Nutzung",
+    "file": "apps/server/test/stage6.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-008",
+      "US-009"
+    ]
+  },
+  {
+    "id": "T-206",
+    "title": "UI: Projekte anlegen, wechseln, Mitglieder",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-01"
+    ]
+  },
+  {
+    "id": "T-207",
+    "title": "UI: ganzes Kapitel umformulieren, Sammelprüfung, KI-Nutzung",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "US-009"
+    ]
+  },
+  {
+    "id": "T-208",
+    "title": "UI: WCAG 2.2 AA (axe) aller Hauptseiten und Interaktionszustände, hell und dunkel",
+    "file": "e2e/tests/a11y.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03",
+      "US-010"
+    ]
+  },
+  {
+    "id": "T-209",
+    "title": "UI: Tastaturbedienung, Fokusführung, schmale Bildschirme",
+    "file": "e2e/tests/a11y.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.5.0
+  version: 0.6.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -10,6 +10,10 @@ info:
     Authentifizierung (ENTSCHEIDUNG E-15), je nach Betriebsart (`GET /auth/config`):
     - `oidc`: `Authorization: Bearer <JWT>` eines OpenID-Connect-Providers; technische Berechtigungen aus einem Gruppen-/Rollen-Claim.
     - `demo`: Header `X-User-Id` mit einem Demo-Benutzer; ohne Header nur Lesezugriff. Nur für Entwicklung und Demo.
+    Projekt (ADR-014): Header `X-Project-Id` wählt das Projekt aller projektbezogenen Endpunkte (Standard `p_default`);
+    IDs anderer Projekte werden wie nicht vorhandene behandelt (404). Ausnahmen: `/projects…` und die Health-Checks.
+    Betrieb (ADR-015): jede Antwort trägt `X-Request-Id`; Rate-Limits je Benutzer und Minute (429 mit `Retry-After`);
+    Prometheus-Metriken unter `/metrics` (außerhalb von `/api/v1`, Bearer `METRICS_TOKEN` oder Berechtigung admin).
 servers:
   - url: /api/v1
 tags:
@@ -22,6 +26,7 @@ tags:
   - name: Export
   - name: Traceability
   - name: KI-Umformulierung
+  - name: Projekte
   - name: System
 components:
   securitySchemes:
@@ -43,7 +48,15 @@ components:
     BlockId: { name: blockId, in: path, required: true, schema: { type: string } }
     ClusterId: { name: clusterId, in: path, required: true, schema: { type: string } }
     ProposalId: { name: proposalId, in: path, required: true, schema: { type: string } }
+    BatchId: { name: batchId, in: path, required: true, schema: { type: string } }
+    ProjectId: { name: projectId, in: path, required: true, schema: { type: string } }
+    UserId: { name: userId, in: path, required: true, schema: { type: string }, description: Demo-Benutzer oder OIDC-Identität (oidc:<sub>) }
   responses:
+    TooManyRequests:
+      description: Rate-Limit je Benutzer und Minute überschritten (ADR-015); Header Retry-After
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
     Unauthorized:
       description: Nicht angemeldet oder Token ungültig
       headers:
@@ -57,6 +70,43 @@ components:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
   schemas:
+    Project:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: [string, 'null'] }
+        visibility: { type: string, enum: [open, restricted] }
+        archivedAt: { type: [string, 'null'] }
+        myPermissions: { type: array, items: { type: string } }
+        chapters: { type: integer }
+        sources: { type: integer }
+    ProjectMember:
+      type: object
+      properties:
+        userId: { type: string }
+        name: { type: [string, 'null'] }
+        permissions: { type: array, items: { type: string, enum: [read, edit, decide, approve, admin] } }
+        addedBy: { type: string }
+        addedAt: { type: string }
+    RewriteBatch:
+      type: object
+      description: KI-Umformulierung eines ganzen Kapitels als Hintergrundjob
+      properties:
+        id: { type: string }
+        chapterVersionId: { type: string }
+        status: { type: string, enum: [queued, processing, completed, cancelled, failed] }
+        instructions: { type: [string, 'null'] }
+        total: { type: integer }
+        done: { type: integer }
+        valid: { type: integer }
+        invalid: { type: integer }
+        skipped: { type: integer }
+        failed: { type: integer }
+        inputTokens: { type: integer }
+        outputTokens: { type: integer }
+        cancelRequested: { type: boolean }
+        error: { type: [string, 'null'] }
     RewriteProposal:
       type: object
       description: KI-Umformulierungsvorschlag mit Prüfergebnis je Satz (ADR-013, Entscheidung E-16)
@@ -935,6 +985,188 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Vorschlag, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteProposal' } } } }
         '409': { $ref: '#/components/responses/Problem' }
+  /health/live:
+    get:
+      operationId: getLiveness
+      summary: Liveness – Prozess antwortet (ohne Anmeldung)
+      tags: [System]
+      security: []
+      x-requirements: [NFR-02]
+      x-extension: true
+      responses:
+        '200': { description: ok }
+  /health/ready:
+    get:
+      operationId: getReadiness
+      summary: Readiness – Datenbank, Object-Store und Jobqueue erreichbar (ohne Anmeldung)
+      tags: [System]
+      security: []
+      x-requirements: [NFR-02]
+      x-extension: true
+      responses:
+        '200': { description: bereit, content: { application/json: { schema: { type: object, properties: { ready: { type: boolean }, checks: { type: object } } } } } }
+        '503': { description: nicht bereit }
+  /projects:
+    get:
+      operationId: listProjects
+      summary: Zugängliche Projekte mit wirksamen Berechtigungen (Header X-Project-Id wählt das Projekt aller übrigen Endpunkte)
+      tags: [Projekte]
+      x-requirements: [NFR-01]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Projekte, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Project' } } } } }
+    post:
+      operationId: createProject
+      summary: Projekt anlegen (globale Berechtigung admin; Standard-Sichtbarkeit restricted)
+      tags: [Projekte]
+      x-requirements: [NFR-01]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [name], properties: { name: { type: string }, description: { type: string }, visibility: { type: string, enum: [open, restricted] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Projekt, content: { application/json: { schema: { $ref: '#/components/schemas/Project' } } } }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /projects/{projectId}:
+    patch:
+      operationId: updateProject
+      summary: Name, Beschreibung, Sichtbarkeit oder Archivierung ändern (admin)
+      tags: [Projekte]
+      x-requirements: [NFR-01]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ProjectId' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, description: { type: [string, 'null'] }, visibility: { type: string, enum: [open, restricted] }, archived: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Projekt, content: { application/json: { schema: { $ref: '#/components/schemas/Project' } } } }
+        '409': { $ref: '#/components/responses/Problem' }
+  /projects/{projectId}/members:
+    get:
+      operationId: listProjectMembers
+      summary: Mitglieder eines Projekts (admin)
+      tags: [Projekte]
+      x-requirements: [NFR-01]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ProjectId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Mitglieder, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProjectMember' } } } } }
+  /projects/{projectId}/members/{userId}:
+    put:
+      operationId: setProjectMember
+      summary: Mitgliedschaft anlegen oder Berechtigungen ändern (admin)
+      tags: [Projekte]
+      x-requirements: [NFR-01]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ProjectId' }, { $ref: '#/components/parameters/UserId' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [permissions], properties: { permissions: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Mitglieder, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProjectMember' } } } } }
+        '400': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: removeProjectMember
+      summary: Mitgliedschaft entfernen (admin)
+      tags: [Projekte]
+      x-requirements: [NFR-01]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ProjectId' }, { $ref: '#/components/parameters/UserId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: entfernt }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/rewrite-jobs:
+    post:
+      operationId: startChapterRewrite
+      summary: Alle geeigneten Absätze einer Entwurfsversion im Hintergrund umformulieren lassen
+      tags: [KI-Umformulierung]
+      x-requirements: [US-008, US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { instructions: { type: string, maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '202': { description: Auftrag angenommen, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteBatch' } } } }
+        '409': { description: Version nicht bearbeitbar oder Auftrag läuft bereits, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '422': { description: Keine geeigneten Absätze, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { description: KI-Umformulierung nicht eingerichtet, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    get:
+      operationId: listChapterRewrites
+      summary: Umformulierungsaufträge einer Kapitelversion (neueste zuerst)
+      tags: [KI-Umformulierung]
+      x-requirements: [US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Aufträge, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/RewriteBatch' } } } } }
+  /rewrite-jobs/{batchId}:
+    get:
+      operationId: getChapterRewrite
+      summary: Fortschritt eines Umformulierungsauftrags
+      tags: [KI-Umformulierung]
+      x-requirements: [US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/BatchId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Auftrag, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteBatch' } } } }
+  /rewrite-jobs/{batchId}/cancel:
+    post:
+      operationId: cancelChapterRewrite
+      summary: Auftrag abbrechen (wirkt vor dem nächsten Absatz)
+      tags: [KI-Umformulierung]
+      x-requirements: [US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/BatchId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Auftrag, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteBatch' } } } }
+        '409': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/rewrite-proposals:
+    get:
+      operationId: listVersionRewriteProposals
+      summary: Sammelprüfung – Vorschläge einer Kapitelversion (Standard status=proposed,invalid)
+      tags: [KI-Umformulierung]
+      x-requirements: [US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/VersionId' }, { name: status, in: query, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Vorschläge mit Abschnitt und Blocktyp, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/RewriteProposal' } } } } }
+  /chapter-versions/{versionId}/rewrite-proposals/accept-valid:
+    post:
+      operationId: acceptValidRewriteProposals
+      summary: Alle (bzw. ausgewählte) gültigen offenen Vorschläge übernehmen
+      tags: [KI-Umformulierung]
+      x-requirements: [US-008, US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { proposalIds: { type: array, items: { type: string } }, reason: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Ergebnis, content: { application/json: { schema: { type: object, properties: { accepted: { type: array, items: { type: string } }, errors: { type: array, items: { type: object } } } } } } }
+  /llm/usage:
+    get:
+      operationId: getLlmUsage
+      summary: KI-Nutzung im Projekt je Anbieter/Modell (Anfragen, Übernahmen, Tokens, geschätzte Kosten)
+      tags: [KI-Umformulierung]
+      x-requirements: [US-009, NFR-02]
+      x-extension: true
+      parameters: [{ name: from, in: query, schema: { type: string, format: date-time } }, { name: to, in: query, schema: { type: string, format: date-time } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Nutzung }
   /exports:
     post:
       operationId: createExport

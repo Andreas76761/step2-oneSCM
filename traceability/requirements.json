@@ -1,22 +1,216 @@
 [
-  { "id": "US-001", "title": "Quellen importieren", "priority": "P0", "idStatus": "masterprompt", "documentation": ["README.md#import", "docs/05-datenmodell.md", "docs/adr/ADR-004-unveraenderlichkeit.md"] },
-  { "id": "US-002", "title": "Struktur extrahieren", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/adr/ADR-005-markdown-parser.md"] },
-  { "id": "US-003", "title": "Rollen klassifizieren", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/adr/ADR-009-berechtigungen.md", "docs/04-offene-entscheidungen.md#E-03"] },
-  { "id": "US-004", "title": "Sparten klassifizieren", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/04-offene-entscheidungen.md#E-04"] },
-  { "id": "US-005", "title": "Semantisch clustern", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/adr/ADR-006-aehnlichkeit.md"] },
-  { "id": "US-006", "title": "Globale Dopplungen erkennen", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/adr/ADR-006-aehnlichkeit.md", "docs/adr/ADR-007-extraktiver-generator.md"] },
-  { "id": "US-007", "title": "Widersprüche klären", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/04-offene-entscheidungen.md#E-07"] },
-  { "id": "US-008", "title": "Kapitel generieren", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/adr/ADR-007-extraktiver-generator.md"] },
-  { "id": "US-009", "title": "Manuell bearbeiten", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/adr/ADR-004-unveraenderlichkeit.md"] },
-  { "id": "US-010", "title": "Rollen- und Spartenhinweise darstellen", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/04-offene-entscheidungen.md#E-11"] },
-  { "id": "US-011", "title": "Evidenz- und Quellenansicht", "priority": "P1", "idStatus": "decided", "documentation": ["docs/04-offene-entscheidungen.md#E-14"] },
-  { "id": "US-012", "title": "Qualitätsgate", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/04-offene-entscheidungen.md#E-12"] },
-  { "id": "US-013", "title": "Optimierungsdashboard", "priority": "P1", "idStatus": "decided", "documentation": ["docs/04-offene-entscheidungen.md#E-14"] },
-  { "id": "US-014", "title": "Rollen-/sparten-/markt-/releasegefilterter Export", "priority": "P1", "idStatus": "decided", "documentation": ["docs/04-offene-entscheidungen.md#W-04"] },
-  { "id": "US-015", "title": "Terminologieverwaltung", "priority": "P1", "idStatus": "decided", "documentation": ["docs/04-offene-entscheidungen.md#E-14"] },
-  { "id": "US-016", "title": "Freigabeworkflow", "priority": "P1", "idStatus": "decided", "documentation": ["docs/04-offene-entscheidungen.md#W-02"] },
-  { "id": "US-017", "title": "Kombinierte Suche und Filter", "priority": "P1", "idStatus": "decided", "documentation": ["docs/04-offene-entscheidungen.md#W-04"] },
-  { "id": "US-018", "title": "Datenschutzprüfung", "priority": "P1", "idStatus": "decided", "documentation": ["docs/04-offene-entscheidungen.md#W-01"] },
-  { "id": "US-019", "title": "Versionsvergleich", "priority": "P2", "idStatus": "decided", "documentation": ["docs/04-offene-entscheidungen.md#W-03"] },
-  { "id": "US-020", "title": "Traceability", "priority": "P0", "idStatus": "masterprompt", "documentation": ["docs/adr/ADR-010-traceability.md", "docs/traceability.md"] }
+  {
+    "id": "US-001",
+    "title": "Quellen importieren",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "README.md#import",
+      "docs/05-datenmodell.md",
+      "docs/adr/ADR-004-unveraenderlichkeit.md"
+    ]
+  },
+  {
+    "id": "US-002",
+    "title": "Struktur extrahieren",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/adr/ADR-005-markdown-parser.md"
+    ]
+  },
+  {
+    "id": "US-003",
+    "title": "Rollen klassifizieren",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/adr/ADR-009-berechtigungen.md",
+      "docs/04-offene-entscheidungen.md#E-03"
+    ]
+  },
+  {
+    "id": "US-004",
+    "title": "Sparten klassifizieren",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#E-04"
+    ]
+  },
+  {
+    "id": "US-005",
+    "title": "Semantisch clustern",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/adr/ADR-006-aehnlichkeit.md"
+    ]
+  },
+  {
+    "id": "US-006",
+    "title": "Globale Dopplungen erkennen",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/adr/ADR-006-aehnlichkeit.md",
+      "docs/adr/ADR-007-extraktiver-generator.md"
+    ]
+  },
+  {
+    "id": "US-007",
+    "title": "Widersprüche klären",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#E-07"
+    ]
+  },
+  {
+    "id": "US-008",
+    "title": "Kapitel generieren",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/adr/ADR-007-extraktiver-generator.md"
+    ]
+  },
+  {
+    "id": "US-009",
+    "title": "Manuell bearbeiten",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/adr/ADR-004-unveraenderlichkeit.md"
+    ]
+  },
+  {
+    "id": "US-010",
+    "title": "Rollen- und Spartenhinweise darstellen",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#E-11"
+    ]
+  },
+  {
+    "id": "US-011",
+    "title": "Evidenz- und Quellenansicht",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#E-14"
+    ]
+  },
+  {
+    "id": "US-012",
+    "title": "Qualitätsgate",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#E-12"
+    ]
+  },
+  {
+    "id": "US-013",
+    "title": "Optimierungsdashboard",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#E-14"
+    ]
+  },
+  {
+    "id": "US-014",
+    "title": "Rollen-/sparten-/markt-/releasegefilterter Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#W-04"
+    ]
+  },
+  {
+    "id": "US-015",
+    "title": "Terminologieverwaltung",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#E-14"
+    ]
+  },
+  {
+    "id": "US-016",
+    "title": "Freigabeworkflow",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#W-02"
+    ]
+  },
+  {
+    "id": "US-017",
+    "title": "Kombinierte Suche und Filter",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#W-04"
+    ]
+  },
+  {
+    "id": "US-018",
+    "title": "Datenschutzprüfung",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#W-01"
+    ]
+  },
+  {
+    "id": "US-019",
+    "title": "Versionsvergleich",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/04-offene-entscheidungen.md#W-03"
+    ]
+  },
+  {
+    "id": "US-020",
+    "title": "Traceability",
+    "priority": "P0",
+    "idStatus": "masterprompt",
+    "documentation": [
+      "docs/adr/ADR-010-traceability.md",
+      "docs/traceability.md"
+    ]
+  },
+  {
+    "id": "NFR-01",
+    "title": "Mandantenfähigkeit: mehrere Projekte, Mitgliedschaften, Mandantentrennung",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-014-mandanten.md",
+      "docs/05-datenmodell.md"
+    ]
+  },
+  {
+    "id": "NFR-02",
+    "title": "Betrieb: Health-Checks, Metriken, Rate-Limiting, Backup/Restore, Lasttest",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-015-betrieb.md",
+      "README.md#betrieb"
+    ]
+  },
+  {
+    "id": "NFR-03",
+    "title": "Barrierefreiheit (WCAG 2.2 AA) und responsive Oberfläche",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-016-barrierefreiheit.md"
+    ]
+  }
 ]

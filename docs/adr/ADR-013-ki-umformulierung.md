@@ -32,3 +32,8 @@ Entscheidung E-16 (Auftraggeber, 24.09.2026):
 ## Alternativen
 - Freie Umformulierung ganzer Kapitel: höheres Risiko erfundener Inhalte, Evidenz nicht mehr je Satz prüfbar.
 - Selbst betriebenes Modell only: datenschutzfreundlicher, aber vom Auftraggeber nicht gefordert; über den OpenAI-kompatiblen Adapter weiterhin möglich.
+
+## Nachtrag Etappe 6: ganze Kapitel
+- `POST /chapter-versions/{id}/rewrite-jobs` legt einen Auftrag (`rewrite_batches`) an; ein Hintergrundjob fordert nacheinander Vorschläge für alle geeigneten Absätze an (umformulierbarer Typ, mit Quelle, nicht gesperrt, ohne offenen Vorschlag und **selbst durch die Quellen gedeckt** – vom Generator erzeugte Rollen- oder Statushinweise werden nicht übertragen). Fortschritt, Tokens, Abbruch (vor dem nächsten Absatz) und Fortsetzen nach Neustart (über `batch_id`) sind eingebaut; je Version läuft höchstens ein Auftrag.
+- Sammelprüfung (`GET /chapter-versions/{id}/rewrite-proposals`) und Sammelübernahme gültiger Vorschläge (`…/accept-valid`); jede Übernahme läuft einzeln durch dieselben Prüfungen wie in Etappe 5.
+- `GET /llm/usage`: Anfragen, Übernahmen, Tokens und – mit `LLM_PRICE_*` – geschätzte Kosten je Anbieter/Modell im Projekt.

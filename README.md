@@ -3,7 +3,7 @@
 Revisionssichere Webapp, die aus vielen Markdown-Texten ein konsistentes, rollen- und spartenspezifisches oneSCM-Benutzerhandbuch erzeugt.
 Grundlage ist das Projektpaket in [`reference/`](reference/) (Masterprompt v1.0 und Referenz-UI).
 
-> **Status: Etappe 5 (v0.5.0).** Alle P0-, P1- und P2-Stories (US-001 … US-020) sind umgesetzt, dazu die optionale KI-Umformulierung mit Quellenbindung je Satz (E-16, ADR-013). Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
+> **Status: Etappe 6 (v0.6.0).** Alle P0-, P1- und P2-Stories (US-001 … US-020) sind umgesetzt, dazu die KI-Umformulierung mit Quellenbindung je Satz (E-16, ADR-013) – auch für ganze Kapitel –, mehrere Projekte (ADR-014), Betriebsfunktionen (ADR-015) und Barrierefreiheit nach WCAG 2.2 AA (ADR-016). Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
 
 ## Dokumentation
 
@@ -56,11 +56,12 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
 
 ## Arbeitsablauf in der App
 
+0. **Projekt wählen** (Seitenleiste): Jedes Projekt ist ein eigenes Handbuch mit eigenen Quellen, Befunden, Kapiteln, Freigaben und Audit. Projekte und Mitglieder verwaltet die Administration unter **Projekte** (ADR-014).
 1. **Quellen:** ZIP- oder MD-Datei importieren. Textabschnitte suchen und filtern, Rollen/Sparten/Markt/Release bestätigen.
 2. **Dashboard → Analyse starten:** erzeugt Cluster, Dopplungen, Widersprüche, Lücken sowie Datenschutz-, Terminologie- und Lesbarkeitsbefunde.
 3. **Widersprüche / Dopplungen / Textcluster:** Befunde mit Begründung entscheiden und Canonical Topics festlegen. Offene Blocker sperren Generierung, Freigabe und Export.
 4. **Kapitelgenerator:** Entwurf ausschließlich aus bestätigten Quellen erzeugen (`source_confirmed` / `manually_confirmed`).
-5. **Kapitelwerkstatt:** Absätze bearbeiten, verschieben, löschen, sperren, klassifizieren, kommentieren, einzelne Absatzversionen wiederherstellen. **Versionen vergleichen** zeigt die Unterschiede zweier ganzer Kapitelversionen. Mit eingerichtetem KI-Dienst (`LLM_PROVIDER`) liefert **✨ KI-Vorschlag** eine Umformulierung, in der jeder Satz seine Quellen nennt; nur geprüfte Vorschläge lassen sich übernehmen (ADR-013).
+5. **Kapitelwerkstatt:** Absätze bearbeiten, verschieben, löschen, sperren, klassifizieren, kommentieren, einzelne Absatzversionen wiederherstellen. **Versionen vergleichen** zeigt die Unterschiede zweier ganzer Kapitelversionen. Mit eingerichtetem KI-Dienst (`LLM_PROVIDER`) liefert **✨ KI-Vorschlag** eine Umformulierung, in der jeder Satz seine Quellen nennt; nur geprüfte Vorschläge lassen sich übernehmen (ADR-013). **✨ Kapitel umformulieren** fordert Vorschläge für alle geeigneten Absätze im Hintergrund an; die Sammelprüfung zeigt sie gemeinsam, gültige lassen sich einzeln oder gesammelt übernehmen. Nutzung und Tokens stehen unter **Einstellungen**.
 6. **Evidenz:** je Absatz prüfen, auf welcher Quelle er beruht und ob sie aktuell und bestätigt ist.
 7. **Freigabe:** Redaktion reicht ein (Qualitätsgate muss bestanden sein), die Freigabe entscheidet: freigeben oder ablehnen. Alles wird protokolliert.
 8. **Export / Rollen- und Spartenansichten:** gefiltert als Markdown, HTML, PDF oder JSON. Enthalten sind allgemeine Inhalte plus die passenden spezifischen.
@@ -125,9 +126,26 @@ Jeder Test trägt eine ID (`[T-xxx]`), die in [`traceability/tests.json`](tracea
 | `JOB_LEASE_MS` | 600000 | nach dieser Zeit gelten laufende Jobs abgestürzter Instanzen als verwaist und werden wiederholt |
 | `UPLOAD_MAX_BYTES` | 50 MB | maximale Uploadgröße |
 | `ZIP_MAX_FILES` | 5000 | maximale Dateien je ZIP |
-| `LOG` | `1` | `0` schaltet das Request-Logging ab |
+| `LOG` / `LOG_LEVEL` | `1` / `info` | `0` schaltet das Logging ab; Logs sind JSON mit Request-ID, Benutzer und Projekt |
+| `TRUST_PROXY` | – | `1` hinter einem Reverse Proxy (Client-IP aus `X-Forwarded-For`) |
+| `METRICS_TOKEN` | – | Bearer-Token für `/metrics` (Prometheus); ohne Token nur mit Berechtigung `admin` |
+| `RATE_LIMIT_MAX` / `RATE_LIMIT_EXPENSIVE_MAX` | `1200` / `60` | Anfragen je Benutzer und Minute; aufwendig = Import, Analyse, Export, KI; `0` schaltet ab |
+| `LLM_PRICE_INPUT_PER_MTOK` / `LLM_PRICE_OUTPUT_PER_MTOK` / `LLM_PRICE_CURRENCY` | – / – / `USD` | optionale Preise je 1 Mio. Tokens für die Kostenschätzung der KI-Nutzung |
 
 Mehrere Instanzen sind mit PostgreSQL und `OBJECT_STORE=s3` möglich: Jobs werden per `FOR UPDATE SKIP LOCKED` verteilt, Dateien liegen im gemeinsamen Bucket (ADR-008).
+
+**Überwachung (ADR-015):** `GET /api/v1/health/live` (Liveness) und `GET /api/v1/health/ready` (Datenbank, Object-Store, Jobqueue) ohne Anmeldung; Prometheus-Metriken unter `/metrics`. Jede Antwort trägt `X-Request-Id`.
+
+**Backup und Wiederherstellung (ADR-015):** mit derselben Konfiguration wie der Server
+
+```bash
+npm run backup -- --out backup.zip             # im Container: node apps/server/dist/cli.js backup --out /data/backup.zip
+npm run restore -- --in backup.zip [--force]   # --force ersetzt vorhandene Daten
+```
+
+Das Backup ist dialektunabhängig (Tabellen als JSON-Zeilen plus Objekte) – damit lässt sich auch von SQLite nach PostgreSQL umziehen: Backup mit SQLite-Konfiguration erstellen, Restore mit `DATABASE_URL` einspielen.
+
+**Lasttest:** `npm run perf -w apps/server -- 2000` (Messwerte in ADR-015).
 
 Sicherheit: Markdown/HTML aus Quellen wird nie ausgeführt (eigener Parser, `react-markdown` ohne Raw-HTML, Rohtext als `text/plain` + `nosniff`). Dazu eine restriktive CSP, Datenschutzblocker vor Export und ein Auditprotokoll (`GET /api/v1/audit-events`).
 
