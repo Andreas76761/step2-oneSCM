@@ -49,6 +49,14 @@ export interface AppConfig {
   embeddings: EmbeddingConfig;
   /** Benachrichtigungen per Webhook/E-Mail (ADR-019) */
   notify: NotifyConfig;
+  /** Git-Quellverbindungen (ADR-022) */
+  git: GitConfig;
+}
+
+export interface GitConfig {
+  /** lokale Repositories (file://, absolute Pfade) zulassen – nur für Tests und abgeschottete Umgebungen */
+  allowFile: boolean;
+  timeoutMs: number;
 }
 
 export type ObjectStoreConfig =
@@ -144,6 +152,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     ops: { ...opsFromEnv(), ...overrides.ops },
     embeddings: overrides.embeddings ?? embeddingsFromEnv(),
     notify: { ...notifyFromEnv(), ...overrides.notify },
+    git: { allowFile: process.env.GIT_ALLOW_FILE === '1', timeoutMs: Number(process.env.GIT_TIMEOUT_MS ?? 120_000), ...overrides.git },
   };
 }
 
@@ -151,7 +160,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
 export const DEFAULT_SETTINGS = {
   // ENTSCHEIDUNG(E-01)
   import: {
-    allowedExtensions: ['.md', '.markdown', '.zip'],
+    allowedExtensions: ['.md', '.markdown', '.zip', '.html', '.htm', '.docx'],
     maxUploadBytes: Number(process.env.UPLOAD_MAX_BYTES ?? 50 * 1024 * 1024),
     maxZipFiles: Number(process.env.ZIP_MAX_FILES ?? 5000),
     maxEntryBytes: 20 * 1024 * 1024,

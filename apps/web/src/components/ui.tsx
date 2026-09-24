@@ -119,7 +119,7 @@ const STATUS_LABEL: Record<string, string> = {
   open: 'offen', deferred: 'zurückgestellt', resolved: 'entschieden', ignored: 'ignoriert', obsolete: 'obsolet',
   draft: 'Entwurf', in_review: '⏳ eingereicht', rejected: 'abgelehnt', approved: 'freigegeben', superseded: 'ersetzt', proposed: 'Vorschlag', confirmed: 'bestätigt', dissolved: 'aufgelöst',
   generated: 'generiert', manually_edited: 'manuell bearbeitet', ai_rewritten: '✨ KI-umformuliert', invalid: 'ungültig', accepted: 'übernommen', stale: 'veraltet', locked: '🔒 gesperrt', needs_regeneration: '⟳ prüfen', queued: 'wartet', processing: 'läuft',
-  completed: 'abgeschlossen', completed_with_errors: 'mit Fehlern', cancelled: 'abgebrochen', failed: 'fehlgeschlagen', imported: 'importiert', identical: 'identisch', skipped: 'übersprungen',
+  completed: 'abgeschlossen', completed_with_errors: 'mit Fehlern', cancelled: 'abgebrochen', failed: 'fehlgeschlagen', imported: 'importiert', identical: 'identisch', skipped: 'übersprungen', idle: 'aktuell', syncing: 'gleicht ab',
   source_confirmed: 'Quelle bestätigt', manually_confirmed: 'manuell bestätigt', unconfirmed: 'unbestätigt', open_question: 'offene Frage', general: 'allgemein',
 };
 export const statusLabel = (s: string) => STATUS_LABEL[s] ?? s;

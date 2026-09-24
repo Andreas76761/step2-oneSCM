@@ -51,11 +51,11 @@ export class JobQueue {
    * Job anlegen. Innerhalb einer Transaktion wird er erst mit deren Commit sichtbar;
    * der Aufrufer ruft danach `wake()` auf (siehe createImport/startAnalysis).
    */
-  async enqueue(type: string, payload: unknown, maxAttempts = 3) {
+  async enqueue(type: string, payload: unknown, maxAttempts = 3, delayMs = 0) {
     const id = newId('job');
     await this.db.run(
       "INSERT INTO jobs (id, type, payload, status, max_attempts, run_after, created_at) VALUES (?, ?, ?, 'queued', ?, ?, ?)",
-      id, type, json(payload), maxAttempts, now(), now(),
+      id, type, json(payload), maxAttempts, delayMs > 0 ? new Date(Date.now() + delayMs).toISOString() : now(), now(),
     );
     this.wake();
     return id;
@@ -195,7 +195,8 @@ export class JobQueue {
     const until = Date.now() + timeoutMs;
     for (;;) {
       await this.active;
-      const open = await this.db.get<{ n: number }>("SELECT COUNT(*) AS n FROM jobs WHERE status IN ('queued', 'running')");
+      // geplante Jobs jenseits der Wartezeit (z. B. periodische Synchronisierung) zählen nicht
+      const open = await this.db.get<{ n: number }>("SELECT COUNT(*) AS n FROM jobs WHERE status = 'running' OR (status = 'queued' AND run_after <= ?)", new Date(until).toISOString());
       if (!open?.n && !this.active) return;
       if (Date.now() > until) throw new Error('Zeitüberschreitung beim Warten auf Jobs');
       this.wake();

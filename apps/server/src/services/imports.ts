@@ -4,6 +4,7 @@ import path from 'node:path';
 import { audit, getSettings, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { classifySnippet } from '../domain/classify.js';
+import { CONVERTIBLE, docxToMarkdown, htmlToMarkdown } from '../domain/convert.js';
 import { chapterOf, headingKey, parseMarkdown } from '../domain/markdown.js';
 import { normalizedHash, sha256 } from '../domain/similarity.js';
 import { badRequest, notFound, Problem } from '../problem.js';
@@ -33,7 +34,7 @@ export async function createImport(ctx: Ctx, fileName: string, data: Buffer, act
   await ctx.db.tx(async () => {
     await ctx.db.run(
       'INSERT INTO imports (id, project_id, file_name, kind, sha256, byte_size, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : 'md', hash, data.length, 'queued', actor, now(),
+      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : CONVERTIBLE[ext] ?? 'md', hash, data.length, 'queued', actor, now(),
     );
     await audit(ctx, actor, 'import.created', 'import', id, { fileName, sha256: hash });
     // Persistenter Job: Originaldatei liegt im Object-Store, der Job kennt nur die Import-ID
@@ -67,8 +68,9 @@ async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<En
   for (const f of files) {
     const p = f.name.replace(/\\/g, '/').replace(/^\/+/, '');
     if (p.startsWith('__MACOSX/') || path.basename(p).startsWith('.')) continue;
-    if (!MD_EXT.includes(path.extname(p).toLowerCase())) {
-      out.push({ path: p, skipped: 'Kein Markdown – übersprungen' });
+    const ext = path.extname(p).toLowerCase();
+    if (!MD_EXT.includes(ext) && !(CONVERTIBLE[ext] && settings.allowedExtensions.includes(ext))) {
+      out.push({ path: p, skipped: 'Kein unterstütztes Format – übersprungen' });
       continue;
     }
     // Schutz vor Zip-Bomben: deklarierte Größe prüfen, dann tatsächliche Größe
@@ -113,12 +115,18 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
       } else if (entry.error) {
         throw new Error(entry.error);
       } else {
-        const text = decoder.decode(entry.data!);
-        const res = await storeRevision(ctx, importId, entry.path, entry.data!, text);
-        item.status = res.identical ? 'identical' : 'imported';
-        item.revisionId = res.revisionId;
-        item.message = res.identical ? `Identisch mit Revision ${res.revisionNo}` : `Revision ${res.revisionNo}, ${res.snippets} Textabschnitte${res.warning ? ` – ${res.warning}` : ''}`;
-        stats.snippets += res.snippets;
+        const converted = await convertEntry(ctx, entry.path, entry.data!);
+        if (converted.skip) {
+          item.status = 'skipped';
+          item.message = converted.skip;
+        } else {
+          const res = await storeRevision(ctx, importId, entry.path, converted.markdown, converted.original);
+          const warning = [res.warning, ...converted.warnings].filter(Boolean).join('; ');
+          item.status = res.identical ? 'identical' : 'imported';
+          item.revisionId = res.revisionId;
+          item.message = res.identical ? `Identisch mit Revision ${res.revisionNo}` : `Revision ${res.revisionNo}, ${res.snippets} Textabschnitte${warning ? ` – ${warning}` : ''}`;
+          stats.snippets += res.snippets;
+        }
       }
     } catch (e) {
       item.status = 'failed';
@@ -140,10 +148,45 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   await audit(ctx, 'system', 'import.finished', 'import', importId, { status, ...stats });
 }
 
-async function storeRevision(ctx: Ctx, importId: string, filePath: string, data: Buffer, text: string) {
+interface Original {
+  format: 'html' | 'docx';
+  data: Buffer;
+}
+
+/** Markdown direkt übernehmen, HTML/Word umwandeln (ADR-022). Die Originaldatei wird zusätzlich aufbewahrt. */
+async function convertEntry(ctx: Ctx, filePath: string, data: Buffer): Promise<{ markdown: Buffer; original?: Original; warnings: string[]; skip?: string }> {
+  const format = CONVERTIBLE[path.extname(filePath).toLowerCase()];
+  if (!format) {
+    decoder.decode(data); // nur gültiges UTF-8
+    return { markdown: data, warnings: [] };
+  }
+  const title = path.basename(filePath, path.extname(filePath));
+  const settings = (await getSettings(ctx.db)).import;
+  const res = format === 'html' ? htmlToMarkdown(decodeHtml(data), title) : await docxToMarkdown(data, title, settings.maxEntryBytes * 5);
+  return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.warnings, skip: res.skip };
+}
+
+/** HTML-Zeichensatz: UTF-8 (Standard), sonst laut meta charset (Windows-1252/ISO-8859-1 älterer Exporte) */
+function decodeHtml(data: Buffer) {
+  const head = data.subarray(0, 2048).toString('latin1');
+  const charset = /charset=["']?([\w-]+)/i.exec(head)?.[1]?.toLowerCase();
+  if (charset && charset !== 'utf-8' && charset !== 'utf8') {
+    try {
+      return new TextDecoder(charset).decode(data);
+    } catch {
+      /* unbekannter Zeichensatz: UTF-8 versuchen */
+    }
+  }
+  return decoder.decode(data);
+}
+
+async function storeRevision(ctx: Ctx, importId: string, filePath: string, data: Buffer, original?: Original) {
   const { db } = ctx;
+  const text = decoder.decode(data);
   const hash = sha256(data);
   await ctx.store.put(`sources/${hash}`, data);
+  const originalKey = original ? `originals/${sha256(original.data)}` : null;
+  if (original) await ctx.store.put(originalKey!, original.data);
   const parsed = parseMarkdown(text);
   const warning = parsed.frontMatterError ? `Front-Matter ungültig: ${parsed.frontMatterError}` : undefined;
 
@@ -168,8 +211,8 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
     }
     await db.run('UPDATE source_revisions SET is_current = 0 WHERE document_id = ?', doc.id);
     await db.run(
-      'INSERT INTO source_revisions (id, document_id, import_id, revision_no, sha256, storage_key, byte_size, front_matter, is_current, imported_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)',
-      revisionId, doc.id, importId, revisionNo, hash, `sources/${hash}`, data.length, json(parsed.frontMatter), now(),
+      'INSERT INTO source_revisions (id, document_id, import_id, revision_no, sha256, storage_key, byte_size, front_matter, is_current, imported_at, source_format, original_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)',
+      revisionId, doc.id, importId, revisionNo, hash, `sources/${hash}`, data.length, json(parsed.frontMatter), now(), original?.format ?? 'markdown', originalKey,
     );
 
     // Unterkapitel auch für leere Überschriften anlegen (Lückenerkennung)
@@ -254,7 +297,7 @@ export async function listSources(ctx: Ctx) {
     fileName: d.file_name,
     revisions: (await ctx.db.all(
       `SELECT r.id, r.revision_no AS revisionNo, r.sha256, r.byte_size AS byteSize, r.is_current AS isCurrent, r.imported_at AS importedAt, r.import_id AS importId,
-        r.front_matter AS frontMatter, (SELECT COUNT(*) FROM text_snippets s WHERE s.revision_id = r.id) AS snippetCount
+        r.front_matter AS frontMatter, r.source_format AS sourceFormat, (SELECT COUNT(*) FROM text_snippets s WHERE s.revision_id = r.id) AS snippetCount
        FROM source_revisions r WHERE r.document_id = ? ORDER BY r.revision_no DESC`, d.id,
     )).map((r) => ({ ...r, isCurrent: !!r.isCurrent, frontMatter: parseJson(r.frontMatter, {}) })),
   })));
@@ -264,4 +307,17 @@ export async function getRevisionRaw(ctx: Ctx, revisionId: string) {
   const r = await ctx.db.get('SELECT storage_key FROM source_revisions WHERE id = ?', revisionId);
   if (!r) throw notFound(`Revision ${revisionId}`);
   return (await ctx.store.get(r.storage_key)).toString('utf8');
+}
+
+const ORIGINAL_TYPES: Record<string, string> = {
+  html: 'text/plain; charset=utf-8', // nie als HTML ausliefern (keine Skriptausführung)
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+};
+
+/** Originaldatei einer umgewandelten Revision (HTML, Word) */
+export async function getRevisionOriginal(ctx: Ctx, revisionId: string) {
+  const r = await ctx.db.get('SELECT r.original_key, r.source_format, d.file_name FROM source_revisions r JOIN source_documents d ON d.id = r.document_id WHERE r.id = ?', revisionId);
+  if (!r) throw notFound(`Revision ${revisionId}`);
+  if (!r.original_key) throw notFound(`Originaldatei zu Revision ${revisionId} (Markdown-Quelle)`);
+  return { data: await ctx.store.get(r.original_key), fileName: r.file_name as string, contentType: ORIGINAL_TYPES[r.source_format] ?? 'application/octet-stream' };
 }

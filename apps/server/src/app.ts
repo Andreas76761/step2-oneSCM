@@ -23,6 +23,8 @@ import { translationRoutes } from './routes/translations.js';
 import { failMachineTranslation, runMachineTranslation } from './services/translations.js';
 import { deliverNotification } from './services/collaboration.js';
 import { runIndexJob } from './services/semantic.js';
+import { failSync, runSync } from './services/connections.js';
+import { connectionRoutes } from './routes/connections.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
 import { rewriteRoutes } from './routes/rewrite.js';
@@ -102,6 +104,12 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     if (await archived(c)) return failBatch(c, p.batchId, ARCHIVED);
     await runBatch(c, p.batchId);
   }, async (p, err) => failBatch(await batchCtx(p), p.batchId, err));
+  const connectionCtx = (p: any) => jobCtx('SELECT project_id FROM source_connections WHERE id = ?', p.connectionId);
+  jobs.register('source-sync', async (p) => {
+    const c = await connectionCtx(p);
+    if (await archived(c)) return failSync(c, p, ARCHIVED);
+    await runSync(c, p);
+  }, async (p, err) => failSync(await connectionCtx(p), p, err));
   if (options.worker !== false && process.env.JOB_WORKER !== '0') await jobs.start();
 
   await app.register(multipart, { limits: { fileSize: 512 * 1024 * 1024, files: 1 } });
@@ -184,6 +192,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       projectRoutes(api, ctx);
       semanticRoutes(api, ctx);
       releaseRoutes(api, ctx);
+      connectionRoutes(api, ctx);
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
     },

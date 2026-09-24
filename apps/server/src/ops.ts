@@ -33,6 +33,7 @@ export function requestId(req: { headers: Record<string, string | string[] | und
 /** Aufwendige Aktionen mit eigenem, engerem Limit */
 const EXPENSIVE: [string, RegExp][] = [
   ['POST', /^\/api\/v1\/imports$/],
+  ['POST', /^\/api\/v1\/source-connections(\/[^/]+\/sync)?$/],
   ['POST', /^\/api\/v1\/quality\/analysis$/],
   ['POST', /^\/api\/v1\/exports$/],
   ['POST', /^\/api\/v1\/content-blocks\/[^/]+\/rewrite-proposals$/],
