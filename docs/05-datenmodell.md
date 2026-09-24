@@ -1,6 +1,6 @@
 # 5. Datenmodell
 
-Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`, `003_workflow_terminology.sql`, `004_rewrite.sql`, `005_projects.sql`, `006_rewrite_batches.sql` (dialektneutral für SQLite und PostgreSQL, ADR-003).
+Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`, `003_workflow_terminology.sql`, `004_rewrite.sql`, `005_projects.sql`, `006_rewrite_batches.sql`, `007_embeddings.sql`, `008_releases.sql`, `009_collaboration.sql`, `010_translations.sql` (dialektneutral für SQLite und PostgreSQL, ADR-003).
 
 ## Entitäten aus Masterprompt §9 → Tabellen
 
@@ -26,6 +26,10 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`,
 | ContentBlock | `content_blocks` | `lineage_id` verbindet Blöcke über Kapitelversionen, Modus, Soft-Delete; `sentence_sources` = Satz-Evidenz KI-umformulierter Absätze (JSON) |
 | – | `content_block_roles`, `content_block_divisions`, `content_block_sources` | m:n Rollen, Sparten und **Quellenbeziehung je Absatz** |
 | ContentBlockVersion | `content_block_versions` | append-only Snapshot je Änderung (Vergleich/Wiederherstellung) |
+| – | `snippet_embeddings` | Vektor je Textabschnitt und Modell (Base64, normalisiert), Text-Hash für inkrementelle Aktualisierung (ADR-017) |
+| – | `handbook_releases` | Handbuch-Version: Kapitel-Snapshot, Änderungen zur Vorversion, Online-Hilfe und Markdown im Object-Store (ADR-018) |
+| – | `comments`, `notifications` | Diskussionen/Aufgaben an Absatz-Lineage, Befund oder Kapitel; Benachrichtigungen mit Zustellstatus je Kanal (ADR-019) |
+| – | `translations`, `translation_blocks` | Übersetzung einer freigegebenen Kapitelversion je Sprache; Absätze mit Satz-Zuordnung, Prüfbefunden, Modus (ADR-020) |
 | – | `rewrite_batches` | KI-Umformulierung ganzer Kapitel: Status, Fortschritt (gültig/ungültig/übersprungen/Fehler), Tokens, Abbruch; Vorschläge verweisen über `batch_id` darauf |
 | – | `rewrite_proposals` | KI-Umformulierungsvorschläge: Blockversion, Anbieter, Modell, Prompt-Hash, übertragene Textabschnitte, Sätze mit Prüfergebnis, Status `proposed`/`invalid`/`accepted`/`rejected`/`stale` (ADR-013) |
 | – | `terminology_terms` | Terminologie: bevorzugter Begriff, zu vermeidende Varianten (JSON), Definition, `active`/`retired` (US-015) |

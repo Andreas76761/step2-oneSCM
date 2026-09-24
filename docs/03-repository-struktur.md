@@ -33,6 +33,8 @@
 │   │   ├── llm.ts                 KI-Anbieter: Anthropic, OpenAI-kompatibel, Demo (ADR-013)
 │   │   ├── ops.ts                 Betrieb: Request-ID, Readiness, Metriken, Rate-Limiting (ADR-015)
 │   │   ├── cli.ts                 Betriebswerkzeuge: backup / restore
+│   │   ├── embeddings.ts          Embedding-Anbieter: lokal, OpenAI-kompatibel (ADR-017)
+│   │   ├── notify.ts              Benachrichtigungskanäle Webhook/E-Mail (ADR-019)
 │   │   ├── domain/                reine Fachlogik, ohne I/O (unit-testbar)
 │   │   │   ├── reference.ts       Rollen, Sparten, Icons, Evidenzstatus
 │   │   │   ├── markdown.ts        Struktur-Extraktion
@@ -42,8 +44,9 @@
 │   │   │   ├── privacy.ts         Datenschutzmuster
 │   │   │   ├── generator.ts       Kapitelstruktur (extraktiv)
 │   │   │   ├── rewrite.ts         KI-Umformulierung: Anfrage, Antwort, Satzprüfung
+│   │   │   ├── translate.ts       Übersetzung: Satzzerlegung, Anfrage, Prüfung (ADR-020)
 │   │   │   └── gate.ts            Qualitätsgate
-│   │   ├── services/              Anwendungslogik mit DB (u. a. insights: Evidenz/Optimierung, render: HTML/PDF, terminology, compare: Versionsvergleich, rewrite/rewriteBatch: KI-Vorschläge und Kapitel-Aufträge, projects: Mandanten, backup)
+│   │   ├── services/              Anwendungslogik mit DB (u. a. insights: Evidenz/Optimierung, render: HTML/PDF, terminology, compare: Versionsvergleich, rewrite/rewriteBatch: KI-Vorschläge und Kapitel-Aufträge, projects: Mandanten, backup, semantic: Suche/Index, releases, collaboration, translations)
 │   │   └── routes/                HTTP-Routen je Ressource
 │   └── test/                      Vitest Unit- und API-Tests (SQLite; PostgreSQL mit TEST_DATABASE_URL)
 ├── apps/web/                      React + TypeScript (Vite)

@@ -18,3 +18,7 @@
 | [ADR-014](ADR-014-mandanten.md) | Mandanten/Projekte mit Mitgliedschaften und Mandantentrennung | akzeptiert, umgesetzt |
 | [ADR-015](ADR-015-betrieb.md) | Betrieb: Health, Metriken, Rate-Limiting, Backup/Restore, Lasttest | akzeptiert, umgesetzt |
 | [ADR-016](ADR-016-barrierefreiheit.md) | Barrierefreiheit (WCAG 2.2 AA) und responsive Oberfläche | akzeptiert, umgesetzt |
+| [ADR-017](ADR-017-semantische-suche.md) | Semantische Suche und hybride Analyse mit Embeddings | akzeptiert, umgesetzt |
+| [ADR-018](ADR-018-releases.md) | Handbuch-Releases und statische Online-Hilfe | akzeptiert, umgesetzt |
+| [ADR-019](ADR-019-kollaboration.md) | Kollaboration: Kommentare, Aufgaben, Benachrichtigungen | akzeptiert, umgesetzt |
+| [ADR-020](ADR-020-mehrsprachigkeit.md) | Mehrsprachigkeit mit Satz-Zuordnung und Freigabe je Sprache | akzeptiert, umgesetzt |

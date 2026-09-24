@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.6.0
+  version: 0.7.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -27,6 +27,10 @@ tags:
   - name: Traceability
   - name: KI-Umformulierung
   - name: Projekte
+  - name: Suche
+  - name: Veröffentlichung
+  - name: Kollaboration
+  - name: Übersetzung
   - name: System
 components:
   securitySchemes:
@@ -50,6 +54,10 @@ components:
     ProposalId: { name: proposalId, in: path, required: true, schema: { type: string } }
     BatchId: { name: batchId, in: path, required: true, schema: { type: string } }
     ProjectId: { name: projectId, in: path, required: true, schema: { type: string } }
+    ReleaseId: { name: releaseId, in: path, required: true, schema: { type: string } }
+    CommentId: { name: commentId, in: path, required: true, schema: { type: string } }
+    TranslationId: { name: translationId, in: path, required: true, schema: { type: string } }
+    TranslationBlockId: { name: translationBlockId, in: path, required: true, schema: { type: string } }
     UserId: { name: userId, in: path, required: true, schema: { type: string }, description: Demo-Benutzer oder OIDC-Identität (oidc:<sub>) }
   responses:
     TooManyRequests:
@@ -362,7 +370,7 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Liste, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Import' } } } } }
+        '200': { description: 'Liste, content: { application/json: { schema: { type: array, items: { $ref: ''#/components/schemas/Import'' } } } }' }
   /imports/{importId}:
     get:
       operationId: getImport
@@ -372,7 +380,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/ImportId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Import, content: { application/json: { schema: { $ref: '#/components/schemas/Import' } } } }
+        '200': { description: 'Import, content: { application/json: { schema: { $ref: ''#/components/schemas/Import'' } } }' }
         '404': { $ref: '#/components/responses/Problem' }
   /sources:
     get:
@@ -394,7 +402,7 @@ paths:
       parameters: [{ name: revisionId, in: path, required: true, schema: { type: string } }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Rohtext, content: { text/plain: { schema: { type: string } } } }
+        '200': { description: 'Rohtext, content: { text/plain: { schema: { type: string } } }' }
         '404': { $ref: '#/components/responses/Problem' }
   /snippets:
     get:
@@ -438,7 +446,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/SnippetId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Textabschnitt, content: { application/json: { schema: { $ref: '#/components/schemas/Snippet' } } } }
+        '200': { description: 'Textabschnitt, content: { application/json: { schema: { $ref: ''#/components/schemas/Snippet'' } } }' }
         '404': { $ref: '#/components/responses/Problem' }
     patch:
       operationId: patchSnippet
@@ -449,7 +457,7 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SnippetPatch' } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Aktualisiert, content: { application/json: { schema: { $ref: '#/components/schemas/Snippet' } } } }
+        '200': { description: 'Aktualisiert, content: { application/json: { schema: { $ref: ''#/components/schemas/Snippet'' } } }' }
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
@@ -489,7 +497,7 @@ paths:
         - { name: minScore, in: query, schema: { type: number } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Befunde, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Finding' } } } } }
+        '200': { description: 'Befunde, content: { application/json: { schema: { type: array, items: { $ref: ''#/components/schemas/Finding'' } } } }' }
   /quality/findings/{findingId}:
     get:
       operationId: getFinding
@@ -500,7 +508,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/FindingId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Befund, content: { application/json: { schema: { $ref: '#/components/schemas/Finding' } } } }
+        '200': { description: 'Befund, content: { application/json: { schema: { $ref: ''#/components/schemas/Finding'' } } }' }
         '404': { $ref: '#/components/responses/Problem' }
   /quality/findings/{findingId}/decision:
     post:
@@ -512,7 +520,7 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Decision' } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Entschieden, content: { application/json: { schema: { $ref: '#/components/schemas/Finding' } } } }
+        '200': { description: 'Entschieden, content: { application/json: { schema: { $ref: ''#/components/schemas/Finding'' } } }' }
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
@@ -647,7 +655,7 @@ paths:
                 properties:
                   from: { type: object }
                   to: { type: object }
-                  summary: { type: object, properties: { added: { type: integer }, removed: { type: integer }, changed: { type: integer }, moved: { type: integer }, unchanged: { type: integer } } }
+                  summary: '{ type: object, properties: { added: { type: integer }, removed: { type: integer }, changed: { type: integer }, moved: { type: integer }, unchanged: { type: integer } } }'
                   entries:
                     type: array
                     items:
@@ -680,8 +688,8 @@ paths:
       parameters: [{ $ref: '#/components/parameters/ChapterId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '201': { description: Neue Kapitelversion, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
-        '409': { description: Blockiert durch offene Blocker-Befunde, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '201': { description: 'Neue Kapitelversion, content: { application/json: { schema: { $ref: ''#/components/schemas/ChapterVersion'' } } }' }
+        '409': { description: 'Blockiert durch offene Blocker-Befunde, content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
         '422': { $ref: '#/components/responses/Problem' }
   /chapter-versions/{versionId}:
     get:
@@ -692,7 +700,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/VersionId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Kapitelversion, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
+        '200': { description: 'Kapitelversion, content: { application/json: { schema: { $ref: ''#/components/schemas/ChapterVersion'' } } }' }
         '404': { $ref: '#/components/responses/Problem' }
   /chapter-versions/{versionId}/gate:
     get:
@@ -704,7 +712,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/VersionId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Gate-Ergebnis, content: { application/json: { schema: { $ref: '#/components/schemas/GateResult' } } } }
+        '200': { description: 'Gate-Ergebnis, content: { application/json: { schema: { $ref: ''#/components/schemas/GateResult'' } } }' }
   /chapter-versions/{versionId}/content-blocks:
     post:
       operationId: createContentBlock
@@ -716,7 +724,7 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/BlockPatch' } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '201': { description: Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
+        '201': { description: 'Block, content: { application/json: { schema: { $ref: ''#/components/schemas/ContentBlock'' } } }' }
         '409': { $ref: '#/components/responses/Problem' }
   /chapter-versions/{versionId}/approve:
     post:
@@ -737,9 +745,9 @@ paths:
                 decision: { type: string, enum: [approved, rejected], default: approved }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Freigegeben, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
+        '200': { description: 'Freigegeben, content: { application/json: { schema: { $ref: ''#/components/schemas/ChapterVersion'' } } }' }
         '403': { $ref: '#/components/responses/Problem' }
-        '409': { description: Gate nicht bestanden oder Version nicht im Entwurf, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '409': { description: 'Gate nicht bestanden oder Version nicht im Entwurf, content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
   /chapter-versions/{versionId}/submit:
     post:
       operationId: submitChapterVersion
@@ -752,9 +760,9 @@ paths:
         content: { application/json: { schema: { type: object, properties: { comment: { type: string } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Eingereicht, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
+        '200': { description: 'Eingereicht, content: { application/json: { schema: { $ref: ''#/components/schemas/ChapterVersion'' } } }' }
         '403': { $ref: '#/components/responses/Problem' }
-        '409': { description: Gate nicht bestanden oder falscher Status, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '409': { description: 'Gate nicht bestanden oder falscher Status, content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
   /chapter-versions/{versionId}/withdraw:
     post:
       operationId: withdrawChapterVersion
@@ -857,7 +865,7 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/BlockPatch' } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
+        '200': { description: 'Block, content: { application/json: { schema: { $ref: ''#/components/schemas/ContentBlock'' } } }' }
         '409': { $ref: '#/components/responses/Problem' }
     delete:
       operationId: deleteContentBlock
@@ -895,7 +903,7 @@ paths:
         content: { application/json: { schema: { type: object, required: [versionNo], properties: { versionNo: { type: integer } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
+        '200': { description: 'Block, content: { application/json: { schema: { $ref: ''#/components/schemas/ContentBlock'' } } }' }
   /llm/status:
     get:
       operationId: getLlmStatus
@@ -929,12 +937,12 @@ paths:
         content: { application/json: { schema: { type: object, properties: { instructions: { type: string, maxLength: 500, description: Hinweis der Redaktion, z. B. „kürzer“ } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '201': { description: Vorschlag (status proposed oder invalid), content: { application/json: { schema: { $ref: '#/components/schemas/RewriteProposal' } } } }
+        '201': { description: 'Vorschlag (status proposed oder invalid), content: { application/json: { schema: { $ref: ''#/components/schemas/RewriteProposal'' } } }' }
         '403': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
         '422': { description: 'Nicht umformulierbar: ohne Quelle, Lücke/Querverweis, Datenschutzbefund oder personenbezogene Daten', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
-        '502': { description: KI-Dienst nicht erreichbar oder Antwort unbrauchbar, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
-        '503': { description: KI-Umformulierung nicht eingerichtet, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '502': { description: 'KI-Dienst nicht erreichbar oder Antwort unbrauchbar, content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
+        '503': { description: 'KI-Umformulierung nicht eingerichtet, content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
     get:
       operationId: listRewriteProposals
       summary: Umformulierungsvorschläge eines Absatzes (neueste zuerst)
@@ -944,7 +952,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/BlockId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Vorschläge, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/RewriteProposal' } } } } }
+        '200': { description: 'Vorschläge, content: { application/json: { schema: { type: array, items: { $ref: ''#/components/schemas/RewriteProposal'' } } } }' }
   /rewrite-proposals/{proposalId}:
     get:
       operationId: getRewriteProposal
@@ -955,7 +963,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/ProposalId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Vorschlag, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteProposal' } } } }
+        '200': { description: 'Vorschlag, content: { application/json: { schema: { $ref: ''#/components/schemas/RewriteProposal'' } } }' }
         '404': { $ref: '#/components/responses/Problem' }
   /rewrite-proposals/{proposalId}/accept:
     post:
@@ -969,7 +977,7 @@ paths:
         content: { application/json: { schema: { type: object, properties: { reason: { type: string } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Aktualisierter Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
+        '200': { description: 'Aktualisierter Block, content: { application/json: { schema: { $ref: ''#/components/schemas/ContentBlock'' } } }' }
         '409': { description: 'Ungültig, veraltet, bereits entschieden oder Block gesperrt', content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
   /rewrite-proposals/{proposalId}/reject:
     post:
@@ -983,7 +991,7 @@ paths:
         content: { application/json: { schema: { type: object, properties: { reason: { type: string } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Vorschlag, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteProposal' } } } }
+        '200': { description: 'Vorschlag, content: { application/json: { schema: { $ref: ''#/components/schemas/RewriteProposal'' } } }' }
         '409': { $ref: '#/components/responses/Problem' }
   /health/live:
     get:
@@ -1004,7 +1012,7 @@ paths:
       x-requirements: [NFR-02]
       x-extension: true
       responses:
-        '200': { description: bereit, content: { application/json: { schema: { type: object, properties: { ready: { type: boolean }, checks: { type: object } } } } } }
+        '200': { description: 'bereit, content: { application/json: { schema: { type: object, properties: { ready: { type: boolean }, checks: { type: object } } } } }' }
         '503': { description: nicht bereit }
   /projects:
     get:
@@ -1015,7 +1023,7 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Projekte, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Project' } } } } }
+        '200': { description: 'Projekte, content: { application/json: { schema: { type: array, items: { $ref: ''#/components/schemas/Project'' } } } }' }
     post:
       operationId: createProject
       summary: Projekt anlegen (globale Berechtigung admin; Standard-Sichtbarkeit restricted)
@@ -1027,7 +1035,7 @@ paths:
         content: { application/json: { schema: { type: object, required: [name], properties: { name: { type: string }, description: { type: string }, visibility: { type: string, enum: [open, restricted] } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '201': { description: Projekt, content: { application/json: { schema: { $ref: '#/components/schemas/Project' } } } }
+        '201': { description: 'Projekt, content: { application/json: { schema: { $ref: ''#/components/schemas/Project'' } } }' }
         '403': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
   /projects/{projectId}:
@@ -1040,10 +1048,10 @@ paths:
       parameters: [{ $ref: '#/components/parameters/ProjectId' }]
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, properties: { name: { type: string }, description: { type: [string, 'null'] }, visibility: { type: string, enum: [open, restricted] }, archived: { type: boolean } } } } }
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, description: { type: [string, 'null'] }, visibility: { type: string, enum: [open, restricted] }, archived: { type: boolean }, languages: { type: array, items: { type: string, enum: [en, fr, es, it, nl, pl, cs, pt] }, description: Zielsprachen für Übersetzungen (ADR-020) } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Projekt, content: { application/json: { schema: { $ref: '#/components/schemas/Project' } } } }
+        '200': { description: 'Projekt, content: { application/json: { schema: { $ref: ''#/components/schemas/Project'' } } }' }
         '409': { $ref: '#/components/responses/Problem' }
   /projects/{projectId}/members:
     get:
@@ -1055,7 +1063,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/ProjectId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Mitglieder, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProjectMember' } } } } }
+        '200': { description: 'Mitglieder, content: { application/json: { schema: { type: array, items: { $ref: ''#/components/schemas/ProjectMember'' } } } }' }
   /projects/{projectId}/members/{userId}:
     put:
       operationId: setProjectMember
@@ -1069,7 +1077,7 @@ paths:
         content: { application/json: { schema: { type: object, required: [permissions], properties: { permissions: { type: array, items: { type: string } } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Mitglieder, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProjectMember' } } } } }
+        '200': { description: 'Mitglieder, content: { application/json: { schema: { type: array, items: { $ref: ''#/components/schemas/ProjectMember'' } } } }' }
         '400': { $ref: '#/components/responses/Problem' }
     delete:
       operationId: removeProjectMember
@@ -1094,11 +1102,11 @@ paths:
         content: { application/json: { schema: { type: object, properties: { instructions: { type: string, maxLength: 500 } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '202': { description: Auftrag angenommen, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteBatch' } } } }
-        '409': { description: Version nicht bearbeitbar oder Auftrag läuft bereits, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
-        '422': { description: Keine geeigneten Absätze, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '202': { description: 'Auftrag angenommen, content: { application/json: { schema: { $ref: ''#/components/schemas/RewriteBatch'' } } }' }
+        '409': { description: 'Version nicht bearbeitbar oder Auftrag läuft bereits, content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
+        '422': { description: 'Keine geeigneten Absätze, content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
-        '503': { description: KI-Umformulierung nicht eingerichtet, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '503': { description: 'KI-Umformulierung nicht eingerichtet, content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
     get:
       operationId: listChapterRewrites
       summary: Umformulierungsaufträge einer Kapitelversion (neueste zuerst)
@@ -1108,7 +1116,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/VersionId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Aufträge, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/RewriteBatch' } } } } }
+        '200': { description: 'Aufträge, content: { application/json: { schema: { type: array, items: { $ref: ''#/components/schemas/RewriteBatch'' } } } }' }
   /rewrite-jobs/{batchId}:
     get:
       operationId: getChapterRewrite
@@ -1119,7 +1127,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/BatchId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Auftrag, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteBatch' } } } }
+        '200': { description: 'Auftrag, content: { application/json: { schema: { $ref: ''#/components/schemas/RewriteBatch'' } } }' }
   /rewrite-jobs/{batchId}/cancel:
     post:
       operationId: cancelChapterRewrite
@@ -1130,7 +1138,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/BatchId' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Auftrag, content: { application/json: { schema: { $ref: '#/components/schemas/RewriteBatch' } } } }
+        '200': { description: 'Auftrag, content: { application/json: { schema: { $ref: ''#/components/schemas/RewriteBatch'' } } }' }
         '409': { $ref: '#/components/responses/Problem' }
   /chapter-versions/{versionId}/rewrite-proposals:
     get:
@@ -1142,7 +1150,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/VersionId' }, { name: status, in: query, schema: { type: string } }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Vorschläge mit Abschnitt und Blocktyp, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/RewriteProposal' } } } } }
+        '200': { description: 'Vorschläge mit Abschnitt und Blocktyp, content: { application/json: { schema: { type: array, items: { $ref: ''#/components/schemas/RewriteProposal'' } } } }' }
   /chapter-versions/{versionId}/rewrite-proposals/accept-valid:
     post:
       operationId: acceptValidRewriteProposals
@@ -1155,7 +1163,7 @@ paths:
         content: { application/json: { schema: { type: object, properties: { proposalIds: { type: array, items: { type: string } }, reason: { type: string } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: Ergebnis, content: { application/json: { schema: { type: object, properties: { accepted: { type: array, items: { type: string } }, errors: { type: array, items: { type: object } } } } } } }
+        '200': { description: 'Ergebnis, content: { application/json: { schema: { type: object, properties: { accepted: { type: array, items: { type: string } }, errors: { type: array, items: { type: object } } } } } }' }
   /llm/usage:
     get:
       operationId: getLlmUsage
@@ -1167,6 +1175,277 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Nutzung }
+  /search/semantic:
+    get:
+      operationId: semanticSearch
+      summary: Semantische Suche über aktuelle Textabschnitte des Projekts (Embeddings, ADR-017)
+      tags: [Suche]
+      x-requirements: [NFR-04, US-017]
+      x-extension: true
+      parameters: [{ name: q, in: query, schema: { type: string } }, { name: limit, in: query, schema: { type: integer } }, { name: chapterId, in: query, schema: { type: string } }, { name: minScore, in: query, schema: { type: number } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Treffer mit Ähnlichkeit }
+        '400': { description: Suchtext fehlt }
+        '429': { description: Rate-Limit }
+        '502': { description: Embedding-Dienst nicht erreichbar }
+  /semantic-index:
+    get:
+      operationId: getSemanticIndex
+      summary: Stand des Embedding-Index (Modell, indizierte und ausgeschlossene Abschnitte)
+      tags: [Suche]
+      x-requirements: [NFR-04]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+    post:
+      operationId: buildSemanticIndex
+      summary: Embedding-Index im Hintergrund aufbauen
+      tags: [Suche]
+      x-requirements: [NFR-04]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '202': { description: Auftrag angenommen }
+        '403': { description: Berechtigung edit fehlt }
+  /releases:
+    get:
+      operationId: listReleases
+      summary: Veröffentlichte Handbuch-Versionen (ADR-018)
+      tags: [Veröffentlichung]
+      x-requirements: [NFR-05]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+    post:
+      operationId: createRelease
+      summary: Handbuch-Version aus allen freigegebenen Kapiteln veröffentlichen (Berechtigung approve)
+      tags: [Veröffentlichung]
+      x-requirements: [NFR-05, US-014]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [version], properties: { version: { type: string }, title: { type: string }, notes: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Release mit Änderungsliste }
+        '409': { description: Version existiert oder Blocker offen }
+        '422': { description: keine freigegebenen Kapitel }
+  /releases/{releaseId}:
+    get:
+      operationId: getRelease
+      summary: Release mit Kapiteln und Änderungen gegenüber dem Vorgänger
+      tags: [Veröffentlichung]
+      x-requirements: [NFR-05]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ReleaseId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+  /releases/{releaseId}/download:
+    get:
+      operationId: downloadRelease
+      summary: Statische Online-Hilfe (ZIP, ohne Skripte) oder Markdown
+      tags: [Veröffentlichung]
+      x-requirements: [NFR-05, US-014]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ReleaseId' }, { name: format, in: query, schema: { type: string, enum: [site, md] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+  /collaborators:
+    get:
+      operationId: listCollaborators
+      summary: Personen mit Zugriff auf das Projekt (Erwähnungen, Zuweisungen)
+      tags: [Kollaboration]
+      x-requirements: [NFR-06]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+  /comments:
+    get:
+      operationId: listComments
+      summary: Diskussion zu einem Absatz (Lineage), Befund oder Kapitel
+      tags: [Kollaboration]
+      x-requirements: [NFR-06, US-009]
+      x-extension: true
+      parameters: [{ name: entityType, in: query, required: true, schema: { type: string, enum: [block, finding, chapter] } }, { name: entityId, in: query, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+    post:
+      operationId: createComment
+      summary: 'Kommentar, Antwort oder Aufgabe mit @Erwähnung anlegen (Aufgaben: Berechtigung edit)'
+      tags: [Kollaboration]
+      x-requirements: [NFR-06, US-009]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [entityType, entityId, body], properties: { entityType: { type: string, enum: [block, finding, chapter] }, entityId: { type: string }, body: { type: string, maxLength: 5000 }, parentId: { type: string }, kind: { type: string, enum: [comment, task] }, assignee: { type: string }, dueDate: { type: string, format: date } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Kommentar }
+        '400': { description: ungültig }
+        '403': { description: Berechtigung fehlt }
+  /comments/{commentId}:
+    patch:
+      operationId: updateComment
+      summary: Text (verfassende Person), Status oder Zuständigkeit einer Aufgabe ändern
+      tags: [Kollaboration]
+      x-requirements: [NFR-06]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/CommentId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { body: { type: string }, status: { type: string, enum: [open, done] }, assignee: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Kommentar }
+        '403': { description: nicht berechtigt }
+  /tasks:
+    get:
+      operationId: listTasks
+      summary: Aufgaben im Projekt (z. B. assignee=me, status=open)
+      tags: [Kollaboration]
+      x-requirements: [NFR-06]
+      x-extension: true
+      parameters: [{ name: assignee, in: query, schema: { type: string } }, { name: status, in: query, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+  /notifications:
+    get:
+      operationId: listNotifications
+      summary: Eigene Benachrichtigungen im Projekt (Erwähnung, Zuweisung, Antwort, erledigt)
+      tags: [Kollaboration]
+      x-requirements: [NFR-06]
+      x-extension: true
+      parameters: [{ name: unread, in: query, schema: { type: boolean } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+  /notifications/read:
+    post:
+      operationId: markNotificationsRead
+      summary: 'Benachrichtigungen als gelesen markieren (ohne ids: alle)'
+      tags: [Kollaboration]
+      x-requirements: [NFR-06]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { ids: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+  /languages:
+    get:
+      operationId: listLanguages
+      summary: Unterstützte Zielsprachen, Zielsprachen des Projekts, Prüfbefunde
+      tags: [Übersetzung]
+      x-requirements: [NFR-07]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+  /translations:
+    get:
+      operationId: listTranslations
+      summary: Übersetzungen (optional je Kapitel) mit Fortschritt und Kennzeichen „veraltet“
+      tags: [Übersetzung]
+      x-requirements: [NFR-07]
+      x-extension: true
+      parameters: [{ name: chapterId, in: query, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+    post:
+      operationId: createTranslation
+      summary: Übersetzung der aktuell freigegebenen deutschen Kapitelversion anlegen
+      tags: [Übersetzung]
+      x-requirements: [NFR-07]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [chapterId, language], properties: { chapterId: { type: string }, language: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Übersetzung }
+        '409': { description: existiert bereits }
+        '422': { description: keine Zielsprache oder keine Freigabe }
+  /translations/{translationId}:
+    get:
+      operationId: getTranslation
+      summary: Übersetzung mit deutschen und übersetzten Absätzen je Abschnitt
+      tags: [Übersetzung]
+      x-requirements: [NFR-07]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/TranslationId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+    patch:
+      operationId: setTranslationTitle
+      summary: Übersetzten Kapiteltitel setzen
+      tags: [Übersetzung]
+      x-requirements: [NFR-07]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/TranslationId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [title], properties: { title: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+  /translations/{translationId}/machine:
+    post:
+      operationId: machineTranslate
+      summary: Unübersetzte Absätze per KI übersetzen (Hintergrundjob, Satz-Zuordnung zur Quelle)
+      tags: [Übersetzung]
+      x-requirements: [NFR-07]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/TranslationId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '202': { description: Auftrag angenommen }
+        '409': { description: läuft bereits oder freigegeben }
+        '429': { description: Rate-Limit }
+        '503': { description: KI-Dienst nicht eingerichtet }
+  /translation-blocks/{translationBlockId}:
+    patch:
+      operationId: editTranslationBlock
+      summary: Absatz manuell übersetzen oder nachbearbeiten (erneute Prüfung)
+      tags: [Übersetzung]
+      x-requirements: [NFR-07]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/TranslationBlockId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Absatz }
+        '409': { description: Übersetzung freigegeben }
+  /translations/{translationId}/approve:
+    post:
+      operationId: approveTranslation
+      summary: Übersetzung freigeben (Berechtigung approve; vollständig, ohne Befunde, Titel, aktuelle Quelle)
+      tags: [Übersetzung]
+      x-requirements: [NFR-07, US-016]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/TranslationId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [comment], properties: { comment: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Übersetzung }
+        '409': { description: Voraussetzungen fehlen }
+  /translations/{translationId}/export:
+    get:
+      operationId: exportTranslation
+      summary: Übersetzung als Markdown oder HTML exportieren
+      tags: [Übersetzung]
+      x-requirements: [NFR-07, US-014]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/TranslationId' }, { name: format, in: query, schema: { type: string, enum: [md, html] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
   /exports:
     post:
       operationId: createExport
@@ -1177,7 +1456,7 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Export erstellt }
-        '409': { description: Blockiert (offene Blocker-/Datenschutzbefunde), content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '409': { description: 'Blockiert (offene Blocker-/Datenschutzbefunde), content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
     get:
       operationId: listExports
       summary: Exporte auflisten

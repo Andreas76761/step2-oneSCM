@@ -48,4 +48,5 @@
 |---|---|---|---|
 | 24.09.2026 | Auftraggeber (Andreas) | E-01 … E-15, W-01 … W-09 | Übernahme aller vorläufigen Annahmen aus Etappe 1 ohne Änderung; E-15 um die in Etappe 2 umgesetzte OIDC-Anbindung konkretisiert |
 | 24.09.2026 | Auftraggeber (Andreas) | E-16 | Cloud-KI erlaubt (Aktivierung per Konfiguration), Anthropic + OpenAI-kompatibel, Evidenz je Satz + Übernahme durch die Redaktion |
+| 24.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 7 | Semantische Suche/Embeddings, Veröffentlichung & Versionierung, Kollaboration, Mehrsprachigkeit (ADR-017 … ADR-020); TF-IDF bleibt Standard der Analyse (E-05) |
 | 24.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 6 | Betrieb & Härtung, KI-Umformulierung ganzer Kapitel, Barrierefreiheit & UX, Mandanten/Projekte (ADR-014 … ADR-016) |
