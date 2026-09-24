@@ -3,6 +3,7 @@
 import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import fs from 'node:fs';
 import path from 'node:path';
+import type { ObjectStoreConfig } from './config.js';
 
 export interface ObjectStore {
   readonly kind: 'local' | 's3';
@@ -124,4 +125,9 @@ export class S3ObjectStore implements ObjectStore {
       throw e;
     }
   }
+}
+
+/** Object-Store laut Konfiguration: S3-kompatibel oder lokales Verzeichnis `<dataDir>/objects` */
+export function createObjectStore(cfg: ObjectStoreConfig, dataDir: string): ObjectStore {
+  return cfg.kind === 's3' ? new S3ObjectStore(cfg) : new LocalObjectStore(path.join(dataDir, 'objects'));
 }

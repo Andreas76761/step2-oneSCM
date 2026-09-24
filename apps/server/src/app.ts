@@ -10,8 +10,10 @@ import { DEFAULT_PROJECT_ID, seedReferenceData, type Ctx } from './context.js';
 import { openDb } from './db.js';
 import { JobQueue } from './jobs.js';
 import { createProvider } from './llm.js';
+import { readiness, registerOps, requestId } from './ops.js';
 import { Problem } from './problem.js';
 import { chapterRoutes } from './routes/chapters.js';
+import { projectRoutes } from './routes/projects.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
 import { rewriteRoutes } from './routes/rewrite.js';
@@ -19,11 +21,13 @@ import { sourceRoutes } from './routes/sources.js';
 import { terminologyRoutes } from './routes/terminology.js';
 import { failAnalysisJob, runAnalysis } from './services/analysis.js';
 import { failImportJob, runImportJob } from './services/imports.js';
+import { failBatch, runBatch } from './services/rewriteBatch.js';
+import { assertParamsInProject, resolveProject, withProject } from './services/projects.js';
 import { seedTerminology } from './services/terminology.js';
-import { LocalObjectStore, S3ObjectStore } from './storage.js';
+import { createObjectStore } from './storage.js';
 
 /** Öffentliche Endpunkte ohne Anmeldung */
-const PUBLIC_PATHS = new Set(['/api/v1/health', '/api/v1/auth/config']);
+const PUBLIC_PATHS = new Set(['/api/v1/health', '/api/v1/health/live', '/api/v1/health/ready', '/api/v1/auth/config']);
 
 export interface BuildOptions {
   /** Jobqueue nicht starten (z. B. reine API-Instanz ohne Worker) */
@@ -32,22 +36,50 @@ export interface BuildOptions {
 
 export async function buildApp(overrides: Partial<AppConfig> = {}, options: BuildOptions = {}) {
   const config = loadConfig(overrides);
-  const app = Fastify({ logger: config.logger ? { level: 'info' } : false, bodyLimit: 5 * 1024 * 1024 });
+  const app = Fastify({
+    logger: config.logger ? { level: process.env.LOG_LEVEL ?? 'info' } : false,
+    bodyLimit: 5 * 1024 * 1024,
+    genReqId: requestId,
+    trustProxy: process.env.TRUST_PROXY === '1',
+  });
   const db = await openDb(config.database);
   await seedReferenceData(db, config.authMode);
   await seedTerminology(db, DEFAULT_PROJECT_ID);
   const jobs = new JobQueue(db, { onError: (type, err) => app.log.error({ err }, `Job ${type} fehlgeschlagen`) });
   const ctx: Ctx = {
     db,
-    store: config.objectStore.kind === 's3' ? new S3ObjectStore(config.objectStore) : new LocalObjectStore(path.join(config.dataDir, 'objects')),
+    store: createObjectStore(config.objectStore, config.dataDir),
     jobs,
     config,
     llm: createProvider(config.llm),
     projectId: DEFAULT_PROJECT_ID,
     log: (msg, extra) => app.log.info(extra ?? {}, msg),
   };
-  jobs.register('import', (p) => runImportJob(ctx, p), (p, err) => failImportJob(ctx, p, err));
-  jobs.register('analysis', (p) => runAnalysis(ctx, p.runId).then(() => undefined), (p, err) => failAnalysisJob(ctx, p, err));
+  // Jobs laufen im Projekt ihres Imports bzw. Analyselaufs (ADR-014)
+  const jobCtx = async (sql: string, id: string) => withProject(ctx, (await db.get<{ project_id: string }>(sql, id))?.project_id ?? DEFAULT_PROJECT_ID);
+  const importCtx = (p: any) => jobCtx('SELECT project_id FROM imports WHERE id = ?', p.importId);
+  const runCtx = (p: any) => jobCtx('SELECT project_id FROM analysis_runs WHERE id = ?', p.runId);
+  // Archivierte Projekte sind nur lesbar: noch wartende Jobs werden als fehlgeschlagen beendet statt ausgeführt
+  const ARCHIVED = 'Projekt ist archiviert – Job nicht ausgeführt.';
+  const archived = async (c: Ctx) => !!(await db.get<{ archived_at: string | null }>('SELECT archived_at FROM projects WHERE id = ?', c.projectId))?.archived_at;
+  jobs.register('import', async (p) => {
+    const c = await importCtx(p);
+    if (await archived(c)) return failImportJob(c, p, ARCHIVED);
+    await runImportJob(c, p);
+  }, async (p, err) => failImportJob(await importCtx(p), p, err));
+  jobs.register('analysis', async (p) => {
+    const c = await runCtx(p);
+    if (await archived(c)) return failAnalysisJob(c, p, ARCHIVED);
+    await runAnalysis(c, p.runId);
+  }, async (p, err) => failAnalysisJob(await runCtx(p), p, err));
+  const batchCtx = (p: any) => jobCtx(
+    'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?', p.batchId,
+  );
+  jobs.register('rewrite-batch', async (p) => {
+    const c = await batchCtx(p);
+    if (await archived(c)) return failBatch(c, p.batchId, ARCHIVED);
+    await runBatch(c, p.batchId);
+  }, async (p, err) => failBatch(await batchCtx(p), p.batchId, err));
   if (options.worker !== false && process.env.JOB_WORKER !== '0') await jobs.start();
 
   await app.register(multipart, { limits: { fileSize: 512 * 1024 * 1024, files: 1 } });
@@ -75,21 +107,59 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     return payload;
   });
 
+  // Betrieb: Request-ID in der Antwort, Metriken, Rate-Limiting (ADR-015)
+  app.addHook('onRequest', async (req, reply) => {
+    reply.header('X-Request-Id', req.id);
+  });
+  const workerExpected = options.worker !== false && process.env.JOB_WORKER !== '0';
+  await registerOps(app, ctx, config.ops, async (req) => {
+    try {
+      return (await authenticate(ctx, req.headers)).permissions.includes('admin');
+    } catch {
+      return false;
+    }
+  });
+
   app.decorateRequest('user', null);
+  app.decorateRequest('globalUser', null);
+  app.decorateRequest('ctx', null as unknown as Ctx);
   await app.register(
     async (api) => {
       // Anmeldung für alle API-Endpunkte außer den öffentlichen (ENTSCHEIDUNG E-15)
       api.addHook('onRequest', async (req) => {
-        if (PUBLIC_PATHS.has(req.url.split('?')[0])) return;
-        req.user = await authenticate(ctx, req.headers);
+        req.ctx = ctx;
+        const url = req.url.split('?')[0];
+        if (PUBLIC_PATHS.has(url)) return;
+        const user = await authenticate(ctx, req.headers);
+        req.globalUser = user;
+        req.user = user;
+        // Projektverwaltung arbeitet projektübergreifend mit globalen Berechtigungen
+        if (url === '/api/v1/projects' || url.startsWith('/api/v1/projects/')) return;
+        const header = req.headers['x-project-id'];
+        const scoped = await resolveProject(ctx, user, Array.isArray(header) ? header[0] : header);
+        req.ctx = scoped.ctx;
+        req.user = scoped.user;
+        req.log = req.log.child({ userId: user.id, projectId: scoped.ctx.projectId });
+      });
+      // Mandantentrennung: IDs in Pfaden müssen zum Projekt der Anfrage gehören
+      api.addHook('preHandler', async (req) => {
+        await assertParamsInProject(req.ctx, req.params as Record<string, string>);
       });
       api.get('/health', async () => ({ status: 'ok', database: db.dialect, auth: config.authMode, objectStore: ctx.store.kind, llm: ctx.llm?.id ?? 'none' }));
+      // Liveness: Prozess antwortet; Readiness: Abhängigkeiten erreichbar (für Load Balancer/Kubernetes)
+      api.get('/health/live', async () => ({ status: 'ok' }));
+      api.get('/health/ready', async (_req, reply) => {
+        const r = await readiness(ctx, workerExpected);
+        reply.code(r.ready ? 200 : 503);
+        return r;
+      });
       sourceRoutes(api, ctx);
       qualityRoutes(api, ctx);
       chapterRoutes(api, ctx);
       miscRoutes(api, ctx);
       terminologyRoutes(api, ctx);
       rewriteRoutes(api, ctx);
+      projectRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
-import { currentUserId, get, setCurrentUserId } from './api';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { currentProjectId, currentUserId, get, setCurrentProjectId, setCurrentUserId } from './api';
 import { initAuth, login, logout, type AuthConfig } from './auth';
 import { AppCtx, type Reference } from './components/ui';
 import { ClustersPage } from './pages/Clusters';
@@ -19,6 +19,7 @@ import { WorkshopPage } from './pages/Workshop';
 import { TerminologyPage } from './pages/Terminology';
 import { EvidencePage } from './pages/Evidence';
 import { ComparePage } from './pages/Compare';
+import { ProjectsPage } from './pages/Projects';
 
 // Navigation gemäß Masterprompt §14
 const NAV = [
@@ -37,6 +38,7 @@ const NAV = [
   { to: '/freigabe', label: 'Freigabe', icon: '✅' },
   { to: '/export', label: 'Export', icon: '📤' },
   { to: '/traceability', label: 'Traceability', icon: '🔗' },
+  { to: '/projekte', label: 'Projekte', icon: '🗂️' },
   { to: '/einstellungen', label: 'Einstellungen', icon: '⚙' },
 ];
 
@@ -70,6 +72,35 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   const [me, setMe] = useState<{ id: string; name: string; permissions: string[] } | null>(null);
   const [userId, setUser] = useState(currentUserId());
   const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'error' } | null>(null);
+  const [projects, setProjects] = useState<{ id: string; name: string; archivedAt: string | null }[]>([]);
+  const projectId = currentProjectId();
+  const [navOpen, setNavOpen] = useState(false);
+  const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  const firstRender = useRef(true);
+  // Nach einem Seitenwechsel: Menü schließen und Fokus auf die Seitenüberschrift setzen (WCAG 2.4.3)
+  useEffect(() => {
+    setNavOpen(false);
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const t = setTimeout(() => {
+      const h1 = mainRef.current?.querySelector<HTMLElement>('h1');
+      if (h1) {
+        h1.tabIndex = -1;
+        h1.focus({ preventScroll: false });
+      }
+    }, 50);
+    return () => clearTimeout(t);
+  }, [location.pathname]);
+  const reloadProjects = useCallback(() => {
+    get<any[]>('/projects').then((list) => {
+      setProjects(list);
+      // Gewähltes Projekt nicht (mehr) zugänglich → Standardprojekt
+      if (list.length && !list.some((p) => p.id === currentProjectId())) switchProject(list[0].id);
+    }).catch(() => setProjects([]));
+  }, []);
 
   const reloadRef = useCallback(() => {
     get<Reference>('/reference').then(setRef).catch(() => setRef(null));
@@ -77,7 +108,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   useEffect(reloadRef, [reloadRef]);
   useEffect(() => {
     get('/me').then(setMe).catch(() => setMe(null));
-  }, [userId]);
+    reloadProjects();
+  }, [userId, reloadProjects]);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), toast.kind === 'error' ? 9000 : 3500);
@@ -91,13 +123,24 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
 
   return (
     <AppCtx.Provider value={{ ref, reloadRef, notify: (msg, kind = 'ok') => setToast({ msg, kind }), userId, setUserId }}>
+      <a className="skip-link" href="#main">Zum Inhalt springen</a>
       <div className="shell">
         <aside className="sidebar">
           <div className="brand">
             <strong>oneSCM Handbook Studio</strong>
             <span>v{__APP_VERSION__}</span>
           </div>
-          <nav aria-label="Hauptnavigation">
+          <div className="project-box">
+            <label htmlFor="project-select">Projekt</label>
+            <select id="project-select" value={projectId} onChange={(e) => switchProject(e.target.value)}>
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}{p.archivedAt ? ' (archiviert)' : ''}</option>)}
+              {!projects.some((p) => p.id === projectId) && <option value={projectId}>{projectId}</option>}
+            </select>
+          </div>
+          <button className="btn nav-toggle" aria-expanded={navOpen} aria-controls="main-nav" onClick={() => setNavOpen(!navOpen)}>
+            {navOpen ? '✕ Menü schließen' : '☰ Menü'}
+          </button>
+          <nav id="main-nav" aria-label="Hauptnavigation" className={navOpen ? 'open' : ''}>
             {NAV.map((n) => (
               <NavLink key={n.to} to={n.to} end={n.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
                 <span aria-hidden="true">{n.icon}</span> {n.label}
@@ -124,7 +167,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <small title="Technische Berechtigungen – getrennt von fachlichen Rollen (ADR-009)">Berechtigungen: {me?.permissions.join(', ') || '–'}</small>
           </div>
         </aside>
-        <main className="main" key={userId}>
+        <main className="main" key={userId} id="main" ref={mainRef} tabIndex={-1}>
           <Routes>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/quellen" element={<SourcesPage />} />
@@ -144,6 +187,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/freigabe" element={<ApprovalPage />} />
             <Route path="/export" element={<ExportPage />} />
             <Route path="/traceability" element={<TraceabilityPage />} />
+            <Route path="/projekte" element={<ProjectsPage onChanged={reloadProjects} />} />
             <Route path="/einstellungen" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
@@ -156,4 +200,11 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
       </div>
     </AppCtx.Provider>
   );
+}
+
+/** Projektwechsel: alle geladenen Daten gehören zum bisherigen Projekt – daher neu starten (Dashboard). */
+function switchProject(id: string) {
+  if (id === currentProjectId()) return;
+  setCurrentProjectId(id);
+  window.location.assign('/');
 }

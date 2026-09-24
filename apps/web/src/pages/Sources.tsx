@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, get, patch, qs } from '../api';
 import {
   Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
+  activatable,
 } from '../components/ui';
 
 export function SourcesPage() {
@@ -71,7 +72,7 @@ export function SourcesPage() {
               <thead><tr><th>Datei</th><th>Status</th><th>Importiert</th><th>Identisch</th><th>Fehler</th><th>Zeit</th></tr></thead>
               <tbody>
                 {imports.data.map((i) => (
-                  <tr key={i.id} className="clickable" onClick={() => setOpenImport(i.id)}>
+                  <tr key={i.id} className="clickable" {...activatable(() => setOpenImport(i.id))}>
                     <td>{i.fileName}</td>
                     <td><Status s={i.status} /></td>
                     <td>{i.stats.imported ?? '–'}</td>
@@ -109,7 +110,7 @@ export function SourcesPage() {
           <thead><tr><th>ID</th><th>Textvorschau</th><th>Quelle</th><th>Kapitel / Unterkapitel</th><th>Rollen</th><th>Sparten</th><th>Evidenz</th><th>Befunde</th></tr></thead>
           <tbody>
             {snippets.data?.items.map((s: any) => (
-              <tr key={s.id} className="clickable" onClick={() => setSelected(s)}>
+              <tr key={s.id} className="clickable" {...activatable(() => setSelected(s))}>
                 <td>#{s.seq}</td>
                 <td className="preview">{s.text.slice(0, 140)}{s.text.length > 140 ? '…' : ''}{s.excludedReason && <div className="tag st-ignored" title={s.excludedReason}>ausgeschlossen</div>}</td>
                 <td className="small">{s.source.path}<br />Rev. {s.source.revisionNo}, Z. {s.lineStart}</td>
@@ -210,7 +211,7 @@ export function SourceViewer({ revisionId, lineStart, lineEnd, onClose }: { revi
   }, [revisionId]);
   return (
     <Modal title="Quelle (unveränderter Ursprungstext)" onClose={onClose} wide>
-      <pre className="source">
+      <pre tabIndex={0} aria-label="Quelltext" className="source">
         {(text ?? 'Lade …').split('\n').map((l, i) => (
           <div key={i} className={lineStart && i + 1 >= lineStart && i + 1 <= (lineEnd ?? lineStart) ? 'hl' : ''}>
             <span className="ln">{i + 1}</span>{l}
@@ -250,7 +251,7 @@ function SnippetDialog({ snippet, onClose, onSaved }: { snippet: any; onClose: (
           <h3>Vorschau</h3>
           <Md text={s.text} />
           <h3>Ursprungstext (unveränderlich)</h3>
-          <pre className="source small">{s.text}</pre>
+          <pre tabIndex={0} aria-label="Quelltext" className="source small">{s.text}</pre>
         </div>
         <div>
           <dl className="meta">

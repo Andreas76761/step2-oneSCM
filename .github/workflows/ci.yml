@@ -30,6 +30,8 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
+      - name: Sicherheitsprüfung der Laufzeitabhängigkeiten
+        run: npm audit --omit=dev --audit-level=moderate
       - name: Typecheck
         run: npm run typecheck
       - name: Lint

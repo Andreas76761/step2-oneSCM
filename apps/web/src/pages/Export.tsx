@@ -57,7 +57,7 @@ export function ExportPage() {
               <p><DownloadButton className="btn primary" href={result.downloadUrl} name={result.fileName}>⬇ {result.fileName} herunterladen</DownloadButton></p>
               {result.skipped.map((s: any) => <div key={s.chapterId} className="alert small">{s.reason}</div>)}
               {result.preview === null ? <p className="muted">PDF erstellt ({Math.round(result.byteSize / 1024)} KB) – Vorschau nach dem Herunterladen.</p>
-                : result.format === 'json' ? <pre className="source small">{result.preview}</pre> : <div className="export-preview"><Md text={result.preview} /></div>}
+                : result.format === 'json' ? <pre tabIndex={0} aria-label="Quelltext" className="source small">{result.preview}</pre> : <div className="export-preview" tabIndex={0} role="region" aria-label="Exportvorschau"><Md text={result.preview} /></div>}
             </>
           )}
         </Card>

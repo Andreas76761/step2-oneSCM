@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DEFAULT_RULE_SEVERITY } from './domain/contradictions.js';
 import { DEFAULT_MODELS, type LlmConfig, type LlmProviderId } from './llm.js';
+import { opsFromEnv, type OpsConfig } from './ops.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..', '..');
@@ -40,6 +41,8 @@ export interface AppConfig {
   objectStore: ObjectStoreConfig;
   /** KI-Dienst für Umformulierungsvorschläge (ADR-013); null = ausgeschaltet (Standard) */
   llm: LlmConfig | null;
+  /** Betrieb: Metriken und Rate-Limiting (ADR-015) */
+  ops: OpsConfig;
 }
 
 export type ObjectStoreConfig =
@@ -132,6 +135,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     oidc,
     objectStore: overrides.objectStore ?? objectStoreFromEnv(),
     llm: overrides.llm !== undefined ? overrides.llm : llmFromEnv(),
+    ops: { ...opsFromEnv(), ...overrides.ops },
   };
 }
 

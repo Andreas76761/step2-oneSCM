@@ -150,3 +150,48 @@ test('[T-205] KI-Vorschlag in der Kapitelwerkstatt: Satz-Evidenz prüfen und üb
   await purpose.locator('.block-meta').first().click();
   await expect(page.getByRole('heading', { name: 'Satz-Evidenz (KI-umformuliert)' })).toBeVisible();
 });
+
+test('[T-206] Projekte: anlegen, wechseln, Daten getrennt, Mitglied hinzufügen', async ({ page }) => {
+  await page.goto('/projekte');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Projekte');
+  await page.getByLabel('Projektname').fill('E2E-Werkstatthandbuch');
+  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByText('Projekt „E2E-Werkstatthandbuch“ angelegt.')).toBeVisible();
+  const row = page.getByRole('row', { name: /E2E-Werkstatthandbuch/ });
+  await row.getByRole('button', { name: 'Mitglieder' }).click();
+  await page.getByLabel('Benutzerkennung').fill('u-leser');
+  await page.getByRole('checkbox', { name: 'bearbeiten' }).check();
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByRole('cell', { name: /u-leser/ })).toBeVisible();
+
+  // Wechsel über die Projektauswahl: neues Projekt ist leer
+  await page.getByLabel('Projekt', { exact: true }).selectOption({ label: 'E2E-Werkstatthandbuch' });
+  await page.waitForURL((u) => u.pathname === '/');
+  await expect(page.getByLabel('Projekt', { exact: true })).not.toHaveValue('p_default');
+  await page.goto('/quellen');
+  await expect(page.getByText('Noch keine Importe.')).toBeVisible();
+  // zurück ins Standardprojekt
+  await page.getByLabel('Projekt', { exact: true }).selectOption('p_default');
+  await page.waitForURL((u) => u.pathname === '/');
+  await page.goto('/werkstatt');
+  await expect(page.getByRole('button', { name: '4. Vertragsbearbeitung' })).toBeVisible();
+});
+
+test('[T-207] Ganzes Kapitel umformulieren: Fortschritt, Sammelprüfung, alle gültigen übernehmen; Nutzung in den Einstellungen', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '3. Benutzerverwaltung');
+  await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h });
+
+  await page.goto(`/werkstatt/${ch.id}`);
+  await page.getByRole('button', { name: '✨ Kapitel umformulieren' }).click();
+  const panel = page.getByRole('region', { name: 'KI-Umformulierung des Kapitels' });
+  await panel.getByRole('button', { name: 'Vorschläge für alle Absätze anfordern' }).click();
+  await expect(panel.getByRole('heading', { name: /Sammelprüfung: \d+ offene Vorschläge/ })).toBeVisible();
+  await expect(panel).toContainText('abgeschlossen');
+  await panel.getByRole('button', { name: /Alle gültigen übernehmen/ }).click();
+  await expect(page.getByText(/\d+ Vorschläge übernommen/)).toBeVisible();
+  await expect(page.locator('.tag.st-ai_rewritten').first()).toBeVisible();
+
+  await page.goto('/einstellungen');
+  await expect(page.getByRole('cell', { name: 'demo/demo-extractive' })).toBeVisible();
+});

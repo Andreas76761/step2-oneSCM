@@ -8,6 +8,7 @@ import { DECISION_CODES, DECISIONS, SEVERITIES, type Severity } from '../domain/
 import { clusterPairs, TfidfEngine, type SimilarityPair } from '../domain/similarity.js';
 import { badRequest, notFound, unprocessable } from '../problem.js';
 import { listTerms } from './terminology.js';
+import { assertIdsInProject } from './projects.js';
 
 interface NewFinding {
   type: string;
@@ -33,7 +34,7 @@ export async function startAnalysis(ctx: Ctx, actor: string) {
       "INSERT INTO analysis_runs (id, project_id, status, method, settings, started_at) VALUES (?, ?, 'queued', ?, ?, ?)",
       id, ctx.projectId, 'tfidf-cosine-1.0 + rules-1.0', json(settings), now(),
     );
-    await audit(ctx.db, actor, 'analysis.started', 'analysis_run', id, settings);
+    await audit(ctx, actor, 'analysis.started', 'analysis_run', id, settings);
     await ctx.jobs.enqueue('analysis', { runId: id });
   });
   ctx.jobs.wake();
@@ -209,7 +210,7 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
     }
     await db.run("UPDATE analysis_runs SET status = 'completed', finished_at = ?, stats = ? WHERE id = ?", now(), json(stats), runId);
   });
-  await audit(db, 'system', 'analysis.finished', 'analysis_run', runId, stats);
+  await audit(ctx, 'system', 'analysis.finished', 'analysis_run', runId, stats);
   return stats;
 }
 
@@ -309,7 +310,7 @@ export async function decideFinding(ctx: Ctx, id: string, input: DecisionInput, 
     if (input.decision === 'take_a') await exclude(f.b?.id);
     if (input.decision === 'take_b') await exclude(f.a?.id);
     if (input.decision === 'outdated_source') await exclude(input.outdated === 'a' ? f.a?.id : f.b?.id);
-    await audit(db, actor, 'finding.decided', 'finding', id, { decision: input.decision, reason: input.reason, outdated: input.outdated });
+    await audit(ctx, actor, 'finding.decided', 'finding', id, { decision: input.decision, reason: input.reason, outdated: input.outdated });
   });
   return getFinding(ctx, id);
 }
@@ -339,7 +340,7 @@ async function clusterDto(ctx: Ctx, c: Row) {
 }
 
 async function getCluster(ctx: Ctx, id: string) {
-  const c = await ctx.db.get('SELECT * FROM semantic_clusters WHERE id = ?', id);
+  const c = await ctx.db.get('SELECT * FROM semantic_clusters WHERE id = ? AND project_id = ?', id, ctx.projectId);
   if (!c) throw notFound(`Cluster ${id}`);
   return c;
 }
@@ -348,7 +349,7 @@ export async function updateCluster(ctx: Ctx, id: string, patch: { name?: string
   await getCluster(ctx, id);
   if (patch.status && !['confirmed', 'dissolved', 'proposed'].includes(patch.status)) throw badRequest('Status muss confirmed, proposed oder dissolved sein.');
   await ctx.db.run('UPDATE semantic_clusters SET name = COALESCE(?, name), status = COALESCE(?, status), updated_at = ? WHERE id = ?', patch.name?.trim() || null, patch.status ?? null, now(), id);
-  await audit(ctx.db, actor, 'cluster.updated', 'cluster', id, patch);
+  await audit(ctx, actor, 'cluster.updated', 'cluster', id, patch);
   return clusterDto(ctx, await getCluster(ctx, id));
 }
 
@@ -364,7 +365,7 @@ export async function mergeClusters(ctx: Ctx, id: string, otherIds: string[], ac
     }
     const chapters = (await ctx.db.get<{ n: number }>('SELECT COUNT(DISTINCT s.chapter_id) AS n FROM cluster_members m JOIN text_snippets s ON s.id = m.snippet_id WHERE m.cluster_id = ?', id))!.n;
     await ctx.db.run("UPDATE semantic_clusters SET status = 'confirmed', scope = ?, updated_at = ? WHERE id = ?", chapters > 1 ? 'cross_chapter' : 'intra_chapter', now(), id);
-    await audit(ctx.db, actor, 'cluster.merged', 'cluster', id, { merged: otherIds });
+    await audit(ctx, actor, 'cluster.merged', 'cluster', id, { merged: otherIds });
   });
   return clusterDto(ctx, await getCluster(ctx, id));
 }
@@ -383,7 +384,7 @@ export async function splitCluster(ctx: Ctx, id: string, snippetIds: string[], n
       if (!moved.changes) throw badRequest(`Textabschnitt ${sid} gehört nicht zu Cluster ${id}.`);
     }
     await ctx.db.run("UPDATE semantic_clusters SET status = 'confirmed', updated_at = ? WHERE id = ?", now(), id);
-    await audit(ctx.db, actor, 'cluster.split', 'cluster', id, { newCluster: newIdValue, snippetIds });
+    await audit(ctx, actor, 'cluster.split', 'cluster', id, { newCluster: newIdValue, snippetIds });
   });
   return [await clusterDto(ctx, await getCluster(ctx, id)), await clusterDto(ctx, await getCluster(ctx, newIdValue))];
 }
@@ -400,13 +401,14 @@ export interface CanonicalInput {
 /** Canonical Topic: führendes Kapitel festlegen, andere Kapitel erhalten Querverweise (US-006). */
 export async function createCanonicalTopic(ctx: Ctx, input: CanonicalInput, actor: string) {
   if (!input.title?.trim() || !input.reason?.trim()) throw unprocessable('Titel und Begründung sind Pflicht.');
-  if (!await ctx.db.get('SELECT id FROM chapters WHERE id = ?', input.leadChapterId)) throw notFound(`Kapitel ${input.leadChapterId}`);
+  if (!await ctx.db.get('SELECT id FROM chapters WHERE id = ? AND project_id = ?', input.leadChapterId, ctx.projectId)) throw notFound(`Kapitel ${input.leadChapterId}`);
   let snippetIds = input.snippetIds ?? [];
   if (input.clusterId) {
     await getCluster(ctx, input.clusterId);
     snippetIds = [...new Set([...snippetIds, ...(await ctx.db.all('SELECT snippet_id FROM cluster_members WHERE cluster_id = ?', input.clusterId)).map((r) => r.snippet_id)])];
   }
   if (snippetIds.length < 2) throw unprocessable('Ein Canonical Topic benötigt mindestens zwei Textabschnitte.');
+  await assertIdsInProject(ctx, 'snippetId', input.leadSnippetId ? [...snippetIds, input.leadSnippetId] : snippetIds);
   const id = newId('ct');
   await ctx.db.tx(async () => {
     await ctx.db.run(
@@ -422,7 +424,7 @@ export async function createCanonicalTopic(ctx: Ctx, input: CanonicalInput, acto
        WHERE type = 'duplicate' AND status IN ('open','deferred') AND snippet_a_id IN (${ph}) AND snippet_b_id IN (${ph})`,
       `Canonical Topic „${input.title.trim()}“`, actor, now(), ...snippetIds, ...snippetIds,
     );
-    await audit(ctx.db, actor, 'canonical_topic.created', 'canonical_topic', id, { ...input, snippetIds });
+    await audit(ctx, actor, 'canonical_topic.created', 'canonical_topic', id, { ...input, snippetIds });
   });
   return (await listCanonicalTopics(ctx)).find((t) => t.id === id)!;
 }

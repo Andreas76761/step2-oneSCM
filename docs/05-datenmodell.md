@@ -1,12 +1,13 @@
 # 5. Datenmodell
 
-Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`, `003_workflow_terminology.sql`, `004_rewrite.sql` (dialektneutral für SQLite und PostgreSQL, ADR-003).
+Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`, `003_workflow_terminology.sql`, `004_rewrite.sql`, `005_projects.sql`, `006_rewrite_batches.sql` (dialektneutral für SQLite und PostgreSQL, ADR-003).
 
 ## Entitäten aus Masterprompt §9 → Tabellen
 
 | Entität | Tabelle(n) | Bemerkung |
 |---|---|---|
-| Project | `projects` | Etappe 1: ein Standardprojekt `p_default` |
+| Project | `projects` | Standardprojekt `p_default`; seit Etappe 6 beliebig viele Projekte mit `visibility` (`open`/`restricted`), Beschreibung, Archivierung (ADR-014) |
+| – | `project_members` | Mitgliedschaft je Projekt und Benutzer mit technischen Berechtigungen (ADR-014) |
 | SourceDocument | `source_documents` | eindeutig je Projekt + Pfad |
 | SourceRevision | `source_revisions` | SHA-256, `revision_no`, `is_current`, Front-Matter; Original im Object-Store (`storage_key`) |
 | – | `imports`, `import_items` | Importlauf und Protokoll je Datei (`imported`/`identical`/`failed`/`skipped`), Reihenfolge über `position` |
@@ -25,10 +26,11 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`,
 | ContentBlock | `content_blocks` | `lineage_id` verbindet Blöcke über Kapitelversionen, Modus, Soft-Delete; `sentence_sources` = Satz-Evidenz KI-umformulierter Absätze (JSON) |
 | – | `content_block_roles`, `content_block_divisions`, `content_block_sources` | m:n Rollen, Sparten und **Quellenbeziehung je Absatz** |
 | ContentBlockVersion | `content_block_versions` | append-only Snapshot je Änderung (Vergleich/Wiederherstellung) |
+| – | `rewrite_batches` | KI-Umformulierung ganzer Kapitel: Status, Fortschritt (gültig/ungültig/übersprungen/Fehler), Tokens, Abbruch; Vorschläge verweisen über `batch_id` darauf |
 | – | `rewrite_proposals` | KI-Umformulierungsvorschläge: Blockversion, Anbieter, Modell, Prompt-Hash, übertragene Textabschnitte, Sätze mit Prüfergebnis, Status `proposed`/`invalid`/`accepted`/`rejected`/`stale` (ADR-013) |
 | – | `terminology_terms` | Terminologie: bevorzugter Begriff, zu vermeidende Varianten (JSON), Definition, `active`/`retired` (US-015) |
 | Approval | `approvals` | Freigeber, Entscheidung, Kommentar, Gate-Ergebnis |
-| AuditEvent | `audit_events` | jede Änderung, Entscheidung, Freigabe |
+| AuditEvent | `audit_events` | jede Änderung, Entscheidung, Freigabe; `project_id` (NULL = systemweit) |
 | Requirement / TestCase / ApiOperation / DocumentationItem | `requirements`, `test_cases`, `api_operations`, `documentation_items` (+ Verknüpfungen) | Schema vorhanden; Etappe 1 liest die Quellen direkt aus `traceability/*.json` und OpenAPI (ADR-010) |
 
 ## Zentrale Regeln → Umsetzung

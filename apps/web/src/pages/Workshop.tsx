@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
 import {
   Badge, Diff, DivisionBadges, Empty, ErrorBox, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad,
+  activatable,
 } from '../components/ui';
 import { SourceViewer } from './Sources';
 
@@ -19,6 +20,7 @@ export function WorkshopPage() {
   const [versionId, setVersionId] = useState<string | null>(null);
   const version = useLoad<any>(versionId ? `/chapter-versions/${versionId}` : null, [versionId]);
   const llm = useLoad<any>('/llm/status');
+  const [batchOpen, setBatchOpen] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
   const [tab, setTab] = useState<'sources' | 'findings' | 'history' | 'approval'>('sources');
 
@@ -88,11 +90,13 @@ export function WorkshopPage() {
               </select>
             )}
             {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}
+            {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}>✨ Kapitel umformulieren</button>}
             {chapter && <button className="btn primary" onClick={regenerate}>{chapter.versions.length ? 'Neu generieren' : 'Generieren'}</button>}
           </div>
         </header>
         <ErrorBox error={version.error} />
         {!v && <Empty>Für dieses Kapitel gibt es noch keine generierte Version.</Empty>}
+        {v && llm.data?.enabled && <ChapterRewrite version={v} llm={llm.data} editable={editable} open={batchOpen} onClose={() => setBatchOpen(false)} onChanged={refresh} />}
         {v && !editable && <div className="alert">Version {v.versionNo} ist <strong>{v.status === 'approved' ? 'freigegeben und unveränderlich' : v.status === 'in_review' ? 'zur Freigabe eingereicht' : 'ersetzt'}</strong>. {v.status === 'in_review' ? 'Zum Bearbeiten die Einreichung im Tab „Freigabe“ zurückziehen.' : 'Änderungen erfordern eine neue Version.'}</div>}
         {v?.sections.map((s: any, si: number) => (
           <section key={s.code} className="ws-section">
@@ -169,7 +173,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
   };
 
   return (
-    <article className={`block kind-${b.kind} mode-${b.mode} ${selected ? 'selected' : ''}`} onClick={onSelect} aria-label={`Block ${KIND_LABEL[b.kind] ?? b.kind}`}>
+    <article className={`block kind-${b.kind} mode-${b.mode} ${selected ? 'selected' : ''}`} {...activatable(onSelect)} aria-current={selected ? 'true' : undefined} aria-label={`Block ${KIND_LABEL[b.kind] ?? b.kind}`}>
       <div className="block-meta">
         <span className="tag">{KIND_LABEL[b.kind] ?? b.kind}</span>
         <Status s={b.mode} />
@@ -215,6 +219,106 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
         </div>
       )}
     </article>
+  );
+}
+
+/**
+ * KI-Umformulierung des ganzen Kapitels: Auftrag starten, Fortschritt verfolgen, Vorschläge gesammelt prüfen.
+ * Sichtbar, sobald ein Auftrag läuft, offene Vorschläge vorliegen oder der Auftrag gestartet werden soll.
+ */
+function ChapterRewrite({ version: v, llm, editable, open, onClose, onChanged }: { version: any; llm: any; editable: boolean; open: boolean; onClose: () => void; onChanged: () => void }) {
+  const { notify, ref } = useApp();
+  const batches = useLoad<any[]>(`/chapter-versions/${v.id}/rewrite-jobs`, [v.id]);
+  const proposals = useLoad<any[]>(`/chapter-versions/${v.id}/rewrite-proposals`, [v.id, JSON.stringify(v.sections.map((s: any) => s.blocks.map((b: any) => b.versionNo)))]);
+  const [instructions, setInstructions] = useState('');
+  const latest = batches.data?.[0];
+  const running = latest && ['queued', 'processing'].includes(latest.status);
+  useEffect(() => {
+    if (!running) return;
+    const t = setInterval(() => {
+      batches.reload();
+      proposals.reload();
+    }, 1500);
+    return () => clearInterval(t);
+  }, [running]);
+  useEffect(() => {
+    if (latest && !running) proposals.reload();
+  }, [latest?.status]);
+  const act = async (fn: () => Promise<any>, msg: (r: any) => string) => {
+    try {
+      const r = await fn();
+      notify(msg(r));
+      batches.reload();
+      proposals.reload();
+      onChanged();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const start = () => {
+    if (llm.external && !confirm(`Alle geeigneten Absätze dieses Kapitels und ihre Quelltexte werden an ${llm.provider} (${llm.model}) übertragen. Fortfahren?`)) return;
+    void act(() => post(`/chapter-versions/${v.id}/rewrite-jobs`, { instructions }), (b) => `Umformulierung gestartet: ${b.total} Absätze.`);
+    onClose();
+  };
+  const list = proposals.data ?? [];
+  const valid = list.filter((p) => p.status === 'proposed' && p.valid);
+  if (!open && !running && !list.length) return null;
+  const title = (code: string) => ref?.sections.find((s) => s.code === code)?.title ?? code;
+  return (
+    <section className="card rewrite-batch" aria-label="KI-Umformulierung des Kapitels">
+      <div className="card-head">
+        <h2>✨ KI-Umformulierung des Kapitels</h2>
+        {open && <button className="btn ghost small" onClick={onClose} aria-label="Schließen">✕</button>}
+      </div>
+      {open && !running && editable && (
+        <div className="form-row">
+          <label>Hinweis an die KI (optional) <input value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="z. B. kürzer, einfache Sprache" /></label>
+          <button className="btn primary" onClick={start}>Vorschläge für alle Absätze anfordern</button>
+        </div>
+      )}
+      {latest && (
+        <div className="batch-status">
+          <progress max={latest.total || 1} value={latest.done} aria-label="Fortschritt der Umformulierung" />
+          <span className="small">
+            <Status s={latest.status} /> {latest.done} / {latest.total} Absätze · gültig {latest.valid} · ungültig {latest.invalid}
+            {latest.skipped > 0 && <> · übersprungen {latest.skipped}</>}{latest.failed > 0 && <> · Fehler {latest.failed}</>}
+            {' '}· Tokens {latest.inputTokens + latest.outputTokens}
+          </span>
+          {running && <button className="btn small" onClick={() => act(() => post(`/rewrite-jobs/${latest.id}/cancel`, {}), () => 'Abbruch angefordert.')}>Abbrechen</button>}
+          {latest.error && <span className="small sev-text">{latest.error}</span>}
+        </div>
+      )}
+      {list.length > 0 && (
+        <>
+          <div className="card-head">
+            <h3>Sammelprüfung: {list.length} offene Vorschläge</h3>
+            {editable && valid.length > 0 && (
+              <button className="btn primary small" onClick={() => act(() => post(`/chapter-versions/${v.id}/rewrite-proposals/accept-valid`, {}), (r) => `${r.accepted.length} Vorschläge übernommen${r.errors.length ? `, ${r.errors.length} nicht (veraltet)` : ''}.`)}>
+                Alle gültigen übernehmen ({valid.length})
+              </button>
+            )}
+          </div>
+          <ul className="batch-list">
+            {list.map((p) => (
+              <li key={p.id}>
+                <div className="block-meta">
+                  <strong>{title(p.section)}</strong>
+                  <span className={`tag ${p.valid ? 'st-approved' : 'sev-blocker'}`}>{p.valid ? 'jeder Satz belegt' : 'Satzprüfung nicht bestanden'}</span>
+                </div>
+                <Diff a={p.originalText} b={p.proposedText} />
+                {!p.valid && <ul className="small">{p.sentences.filter((s: any) => s.issues.length).map((s: any, i: number) => <li key={i} className="sev-text">{s.text} – {s.issues.map((x: string) => llm.issueLabels?.[x] ?? x).join(', ')}</li>)}</ul>}
+                {editable && (
+                  <div className="row-actions">
+                    <button className="btn small" disabled={!p.valid || p.status !== 'proposed'} onClick={() => act(() => post(`/rewrite-proposals/${p.id}/accept`, {}), () => 'Vorschlag übernommen.')}>Übernehmen</button>
+                    <button className="btn small" onClick={() => act(() => post(`/rewrite-proposals/${p.id}/reject`, {}), () => 'Vorschlag verworfen.')}>Verwerfen</button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
   );
 }
 
@@ -359,7 +463,7 @@ function SourcesTab({ block }: { block?: any }) {
       {block.sources.map((s: any) => (
         <div key={s.snippetId} className="source-item">
           <div className="small"><strong>#{s.seq}</strong> {s.path} · Rev. {s.revisionNo}{s.isCurrent ? '' : ' (veraltet)'} · Z. {s.lineStart}–{s.lineEnd} · <Status s={s.evidenceStatus} /></div>
-          <pre className="source small">{texts[s.snippetId] ?? '…'}</pre>
+          <pre tabIndex={0} aria-label="Quelltext" className="source small">{texts[s.snippetId] ?? '…'}</pre>
           <button className="btn link small" onClick={() => setViewer(s)}>Quelle öffnen</button>
         </div>
       ))}

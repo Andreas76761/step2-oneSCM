@@ -4,7 +4,12 @@ import type { Permission } from '../domain/reference.js';
 
 declare module 'fastify' {
   interface FastifyRequest {
+    /** wirksamer Benutzer im Projekt der Anfrage */
     user: User | null;
+    /** Benutzer mit globalen Berechtigungen (Projektverwaltung) */
+    globalUser: User | null;
+    /** Anwendungskontext im Projekt der Anfrage (Header X-Project-Id, ADR-014) */
+    ctx: Ctx;
   }
 }
 

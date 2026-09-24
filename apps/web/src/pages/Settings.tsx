@@ -67,7 +67,40 @@ export function SettingsPage() {
           <label className="block">Max. Wörter je Satz <input type="number" value={draft.readability.maxSentenceWords} onChange={(e) => setDraft({ ...draft, readability: { maxSentenceWords: Number(e.target.value) } })} /></label>
           <p className="small muted">Begriffe werden seit Etappe 3 unter <Link to="/terminologie">Terminologie</Link> gepflegt.</p>
         </Card>
+        <Card title="KI-Umformulierung">
+          <label className="block">Mindestabdeckung je Satz durch die zitierten Quellen (0,1–1)
+            <input type="number" step="0.05" min="0.1" max="1" value={draft.rewrite.minSupport} onChange={(e) => setDraft({ ...draft, rewrite: { minSupport: Number(e.target.value) } })} />
+          </label>
+          <LlmUsage />
+        </Card>
       </div>
     </Page>
+  );
+}
+
+/** Nutzung des KI-Dienstes im aktuellen Projekt (Anfragen, Übernahmen, Tokens, geschätzte Kosten) */
+function LlmUsage() {
+  const status = useLoad<any>('/llm/status');
+  const usage = useLoad<any>('/llm/usage');
+  if (!status.data?.enabled) return <p className="small muted">Kein KI-Dienst eingerichtet (LLM_PROVIDER).</p>;
+  const u = usage.data;
+  return (
+    <>
+      <p className="small">Anbieter: <strong>{status.data.provider}</strong> · Modell {status.data.model}{status.data.external ? ' · Daten verlassen die eigene Umgebung' : ''}</p>
+      {!u?.items.length ? <p className="small muted">Noch keine Anfragen in diesem Projekt.</p> : (
+        <table className="table compact">
+          <thead><tr><th>Modell</th><th>Anfragen</th><th>übernommen</th><th>ungültig</th><th>Tokens (ein/aus)</th>{u.pricePerMTok && <th>geschätzt</th>}</tr></thead>
+          <tbody>
+            {u.items.map((i: any) => (
+              <tr key={`${i.provider}/${i.model}`}>
+                <td>{i.provider}/{i.model}</td><td>{i.requests}</td><td>{i.accepted}</td><td>{i.invalid}</td>
+                <td>{i.inputTokens.toLocaleString('de-DE')} / {i.outputTokens.toLocaleString('de-DE')}</td>
+                {u.pricePerMTok && <td>{i.estimatedCost?.toLocaleString('de-DE', { minimumFractionDigits: 2 })} {u.currency}</td>}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </>
   );
 }

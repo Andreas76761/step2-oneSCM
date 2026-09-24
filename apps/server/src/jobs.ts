@@ -62,6 +62,11 @@ export class JobQueue {
   }
 
   /** Startet den Worker. Bei SQLite (eine Instanz) sind alle laufenden Jobs verwaist. */
+  /** Worker aktiv (für die Readiness-Prüfung) */
+  get running() {
+    return !this.stopped;
+  }
+
   async start() {
     this.stopped = false;
     if (this.db.dialect === 'sqlite') await this.reclaim(true);

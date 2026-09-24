@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import Markdown from 'react-markdown';
 import { ApiError, download, get } from '../api';
 
@@ -69,7 +69,7 @@ export function useLoad<T>(path: string | null, deps: unknown[] = []) {
 export function Badge({ item, compact }: { item?: RefItem; compact?: boolean }) {
   if (!item) return null;
   return (
-    <span className="badge" style={{ borderColor: item.color, color: item.color }} title={item.description ?? item.label}>
+    <span className="badge" style={{ '--badge': item.color } as CSSProperties} title={item.description ?? item.label}>
       <span aria-hidden="true">{item.icon}</span> {compact ? <span className="sr-only">{item.label}</span> : item.label}
     </span>
   );
@@ -119,7 +119,7 @@ const STATUS_LABEL: Record<string, string> = {
   open: 'offen', deferred: 'zurückgestellt', resolved: 'entschieden', ignored: 'ignoriert', obsolete: 'obsolet',
   draft: 'Entwurf', in_review: '⏳ eingereicht', rejected: 'abgelehnt', approved: 'freigegeben', superseded: 'ersetzt', proposed: 'Vorschlag', confirmed: 'bestätigt', dissolved: 'aufgelöst',
   generated: 'generiert', manually_edited: 'manuell bearbeitet', ai_rewritten: '✨ KI-umformuliert', invalid: 'ungültig', accepted: 'übernommen', stale: 'veraltet', locked: '🔒 gesperrt', needs_regeneration: '⟳ prüfen', queued: 'wartet', processing: 'läuft',
-  completed: 'abgeschlossen', completed_with_errors: 'mit Fehlern', failed: 'fehlgeschlagen', imported: 'importiert', identical: 'identisch', skipped: 'übersprungen',
+  completed: 'abgeschlossen', completed_with_errors: 'mit Fehlern', cancelled: 'abgebrochen', failed: 'fehlgeschlagen', imported: 'importiert', identical: 'identisch', skipped: 'übersprungen',
   source_confirmed: 'Quelle bestätigt', manually_confirmed: 'manuell bestätigt', unconfirmed: 'unbestätigt', open_question: 'offene Frage', general: 'allgemein',
 };
 export const statusLabel = (s: string) => STATUS_LABEL[s] ?? s;
@@ -130,6 +130,10 @@ export const TYPE_LABEL: Record<string, string> = { gap: 'Lücke', duplicate: 'D
 // ---------- Layout-Bausteine ----------
 
 export function Page({ title, subtitle, actions, children }: { title: string; subtitle?: string; actions?: ReactNode; children: ReactNode }) {
+  // Seitentitel für Browser-Tabs und Screenreader (WCAG 2.4.2)
+  useEffect(() => {
+    document.title = `${title} – oneSCM Handbook Studio`;
+  }, [title]);
   return (
     <div className="page">
       <header className="page-head">
@@ -156,15 +160,32 @@ export const Card = ({ title, children, actions, className }: { title?: ReactNod
   </section>
 );
 
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** Dialog: Fokus beim Öffnen hinein, Tab bleibt im Dialog, beim Schließen zurück zum Auslöser (WCAG 2.4.3). */
 export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const h = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const opener = document.activeElement as HTMLElement | null;
+    ref.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+    const h = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key !== 'Tab' || !ref.current) return;
+      const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      if (!items.length) return;
+      const [first, last] = [items[0], items[items.length - 1]];
+      if (e.shiftKey && document.activeElement === first) (e.preventDefault(), last.focus());
+      else if (!e.shiftKey && document.activeElement === last) (e.preventDefault(), first.focus());
+    };
     window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
+    return () => {
+      window.removeEventListener('keydown', h);
+      opener?.focus?.();
+    };
   }, [onClose]);
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <div className="card-head">
           <h2>{title}</h2>
           <button className="btn ghost" onClick={onClose} aria-label="Schließen">✕</button>
@@ -260,4 +281,18 @@ export function DownloadButton({ href, name, children, className }: { href: stri
       {children}
     </button>
   );
+}
+
+/** Mausklick-Ziel zusätzlich per Tastatur bedienbar machen (Enter/Leertaste, WCAG 2.1.1). */
+export function activatable(fn: () => void) {
+  return {
+    onClick: fn,
+    tabIndex: 0,
+    onKeyDown: (e: ReactKeyboardEvent) => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
+        e.preventDefault();
+        fn();
+      }
+    },
+  };
 }
