@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      UPLOAD_MAX_BYTES: 52428800
+      ZIP_MAX_FILES: 5000
+    volumes:
+      - onescm-data:/data
+volumes:
+  onescm-data:

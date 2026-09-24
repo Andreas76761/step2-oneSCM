@@ -1,0 +1,725 @@
+openapi: 3.1.1
+info:
+  title: oneSCM Handbook Studio API
+  version: 0.1.0
+  description: |
+    Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
+    Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
+    Operationen mit `x-extension: true` ergänzen die verbindliche Operationsliste aus Masterprompt §10 (siehe docs/01-gap-analyse.md, Lücke 10).
+    Fehler werden als `application/problem+json` (RFC 9457) geliefert.
+    Authentifizierung (vorläufig, E-15): Header `X-User-Id` mit einem Demo-Benutzer; ohne Header nur Lesezugriff.
+servers:
+  - url: /api/v1
+tags:
+  - name: Import
+  - name: Snippets
+  - name: Qualität
+  - name: Kapitel
+  - name: Kapitelwerkstatt
+  - name: Freigabe
+  - name: Export
+  - name: Traceability
+  - name: System
+components:
+  securitySchemes:
+    demoUser:
+      type: apiKey
+      in: header
+      name: X-User-Id
+  parameters:
+    ImportId: { name: importId, in: path, required: true, schema: { type: string } }
+    SnippetId: { name: snippetId, in: path, required: true, schema: { type: string } }
+    FindingId: { name: findingId, in: path, required: true, schema: { type: string } }
+    ChapterId: { name: chapterId, in: path, required: true, schema: { type: string } }
+    VersionId: { name: versionId, in: path, required: true, schema: { type: string } }
+    BlockId: { name: blockId, in: path, required: true, schema: { type: string } }
+    ClusterId: { name: clusterId, in: path, required: true, schema: { type: string } }
+  responses:
+    Problem:
+      description: Fehler (RFC 9457)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        gate: { $ref: '#/components/schemas/GateResult' }
+        blockers: { type: array, items: { type: object } }
+    RoleCode: { type: string, enum: [dealer, market, mo, hq, all] }
+    DivisionCode: { type: string, enum: [car, van, truck, bus, all, unconfirmed] }
+    EvidenceStatus: { type: string, enum: [source_confirmed, manually_confirmed, unconfirmed, open_question] }
+    Assignment:
+      type: object
+      properties:
+        code: { type: string }
+        score: { type: number }
+        method: { type: string }
+        modelVersion: { type: string }
+        evidenceStatus: { $ref: '#/components/schemas/EvidenceStatus' }
+        evidence: { type: [string, 'null'] }
+    Import:
+      type: object
+      properties:
+        id: { type: string }
+        fileName: { type: string }
+        kind: { type: string, enum: [zip, md] }
+        sha256: { type: string }
+        byteSize: { type: integer }
+        status: { type: string, enum: [queued, processing, completed, completed_with_errors, failed] }
+        createdAt: { type: string, format: date-time }
+        finishedAt: { type: [string, 'null'], format: date-time }
+        stats: { type: object }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              path: { type: string }
+              sha256: { type: [string, 'null'] }
+              status: { type: string, enum: [imported, identical, failed, skipped] }
+              message: { type: [string, 'null'] }
+              revisionId: { type: [string, 'null'] }
+    Snippet:
+      type: object
+      properties:
+        id: { type: string }
+        seq: { type: integer }
+        text: { type: string, description: Unveränderlicher Ursprungstext }
+        kind: { type: string, enum: [paragraph, list, ordered_list, table, code, quote] }
+        chapter: { type: object, properties: { id: { type: string }, title: { type: string } } }
+        subchapter: { type: [object, 'null'] }
+        headingPath: { type: array, items: { type: string } }
+        lineStart: { type: integer }
+        lineEnd: { type: integer }
+        evidenceStatus: { $ref: '#/components/schemas/EvidenceStatus' }
+        market: { type: [string, 'null'] }
+        release: { type: [string, 'null'] }
+        scopeStatus: { type: string }
+        excludedReason: { type: [string, 'null'] }
+        source: { type: object }
+        roles: { type: array, items: { $ref: '#/components/schemas/Assignment' } }
+        divisions: { type: array, items: { $ref: '#/components/schemas/Assignment' } }
+    SnippetPatch:
+      type: object
+      description: Ändert ausschließlich Klassifikation und Evidenzstatus, nie den Ursprungstext.
+      properties:
+        roles: { type: array, items: { $ref: '#/components/schemas/RoleCode' } }
+        divisions: { type: array, items: { $ref: '#/components/schemas/DivisionCode' } }
+        confirmRoles: { type: boolean }
+        confirmDivisions: { type: boolean }
+        evidenceStatus: { $ref: '#/components/schemas/EvidenceStatus' }
+        market: { type: [string, 'null'] }
+        release: { type: [string, 'null'] }
+        confirmScope: { type: boolean }
+        note: { type: [string, 'null'] }
+    Finding:
+      type: object
+      properties:
+        id: { type: string }
+        seq: { type: integer }
+        type: { type: string, enum: [gap, duplicate, contradiction, terminology, privacy, readability] }
+        subtype: { type: string }
+        severity: { type: string, enum: [blocker, high, medium, low] }
+        status: { type: string, enum: [open, deferred, resolved, ignored, obsolete] }
+        score: { type: [number, 'null'] }
+        method: { type: string }
+        reason: { type: string }
+        details: { type: object }
+        decision: { type: [string, 'null'] }
+        decisionReason: { type: [string, 'null'] }
+        decidedBy: { type: [string, 'null'] }
+        decidedAt: { type: [string, 'null'] }
+        a: { type: [object, 'null'] }
+        b: { type: [object, 'null'] }
+    Decision:
+      type: object
+      required: [decision, reason]
+      properties:
+        decision:
+          type: string
+          enum: [take_a, take_b, conditional, role_difference, division_difference, market_difference, release_difference, outdated_source, ignore, defer]
+        reason: { type: string, minLength: 3 }
+        outdated: { type: string, enum: [a, b] }
+    ContentBlock:
+      type: object
+      properties:
+        id: { type: string }
+        lineageId: { type: string }
+        section: { type: string }
+        position: { type: integer }
+        kind: { type: string, enum: [paragraph, list, note, tip, warning, xref, gap, table, code] }
+        text: { type: string }
+        mode: { type: string, enum: [generated, manually_edited, locked, needs_regeneration, approved] }
+        roles: { type: array, items: { $ref: '#/components/schemas/RoleCode' } }
+        divisions: { type: array, items: { $ref: '#/components/schemas/DivisionCode' } }
+        market: { type: [string, 'null'] }
+        release: { type: [string, 'null'] }
+        scopeStatus: { type: string, enum: [confirmed, general, unconfirmed] }
+        justification: { type: [string, 'null'] }
+        comment: { type: [string, 'null'] }
+        versionNo: { type: integer }
+        sources: { type: array, items: { type: object } }
+    BlockPatch:
+      type: object
+      properties:
+        text: { type: string }
+        section: { type: string }
+        position: { type: integer }
+        kind: { type: string }
+        roles: { type: array, items: { $ref: '#/components/schemas/RoleCode' } }
+        divisions: { type: array, items: { $ref: '#/components/schemas/DivisionCode' } }
+        market: { type: [string, 'null'] }
+        release: { type: [string, 'null'] }
+        scopeStatus: { type: string, enum: [confirmed, general, unconfirmed] }
+        justification: { type: [string, 'null'] }
+        comment: { type: [string, 'null'] }
+        mode: { type: string, enum: [locked, manually_edited] }
+        sourceIds: { type: array, items: { type: string } }
+        reason: { type: string }
+        expectedVersionNo: { type: integer, description: Optimistische Sperre }
+    ChapterVersion:
+      type: object
+      properties:
+        id: { type: string }
+        chapterId: { type: string }
+        versionNo: { type: integer }
+        status: { type: string, enum: [draft, approved, superseded] }
+        sections:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              title: { type: string }
+              blocks: { type: array, items: { $ref: '#/components/schemas/ContentBlock' } }
+        approvals: { type: array, items: { type: object } }
+    GateResult:
+      type: object
+      properties:
+        passed: { type: boolean }
+        checks:
+          type: array
+          items:
+            type: object
+            properties:
+              code: { type: string }
+              label: { type: string }
+              passed: { type: boolean }
+              details: { type: array, items: { type: string } }
+    ExportRequest:
+      type: object
+      properties:
+        chapterIds: { type: array, items: { type: string } }
+        roles: { type: array, items: { $ref: '#/components/schemas/RoleCode' } }
+        divisions: { type: array, items: { $ref: '#/components/schemas/DivisionCode' } }
+        market: { type: [string, 'null'] }
+        release: { type: [string, 'null'] }
+        format: { type: string, enum: [md, json], default: md }
+security:
+  - demoUser: []
+paths:
+  /imports:
+    post:
+      operationId: createImport
+      summary: ZIP- oder Markdown-Datei importieren
+      tags: [Import]
+      x-requirements: [US-001, US-002, US-003, US-004]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '202':
+          description: Import angenommen, Verarbeitung im Hintergrund
+          content: { application/json: { schema: { $ref: '#/components/schemas/Import' } } }
+        '400': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+        '415': { $ref: '#/components/responses/Problem' }
+    get:
+      operationId: listImports
+      summary: Importe auflisten
+      tags: [Import]
+      x-requirements: [US-001]
+      x-extension: true
+      responses:
+        '200': { description: Liste, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Import' } } } } }
+  /imports/{importId}:
+    get:
+      operationId: getImport
+      summary: Importstatus und Protokoll je Datei
+      tags: [Import]
+      x-requirements: [US-001]
+      parameters: [{ $ref: '#/components/parameters/ImportId' }]
+      responses:
+        '200': { description: Import, content: { application/json: { schema: { $ref: '#/components/schemas/Import' } } } }
+        '404': { $ref: '#/components/responses/Problem' }
+  /sources:
+    get:
+      operationId: listSources
+      summary: Quelldokumente mit Revisionen
+      tags: [Import]
+      x-requirements: [US-001, US-011]
+      x-extension: true
+      responses:
+        '200': { description: Quellen }
+  /source-revisions/{revisionId}/raw:
+    get:
+      operationId: getRevisionRaw
+      summary: Unveränderten Ursprungstext einer Revision als text/plain abrufen
+      tags: [Import]
+      x-requirements: [US-001, US-011]
+      x-extension: true
+      parameters: [{ name: revisionId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Rohtext, content: { text/plain: { schema: { type: string } } } }
+        '404': { $ref: '#/components/responses/Problem' }
+  /snippets:
+    get:
+      operationId: listSnippets
+      summary: Textabschnitte suchen und kombiniert filtern
+      tags: [Snippets]
+      x-requirements: [US-002, US-003, US-004, US-010, US-017]
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: chapterId, in: query, schema: { type: string } }
+        - { name: subchapterId, in: query, schema: { type: string } }
+        - { name: role, in: query, schema: { $ref: '#/components/schemas/RoleCode' } }
+        - { name: division, in: query, schema: { $ref: '#/components/schemas/DivisionCode' } }
+        - { name: market, in: query, schema: { type: string } }
+        - { name: release, in: query, schema: { type: string } }
+        - { name: evidenceStatus, in: query, schema: { $ref: '#/components/schemas/EvidenceStatus' } }
+        - { name: findingType, in: query, schema: { type: string } }
+        - { name: includeHistoric, in: query, schema: { type: boolean } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 500 } }
+      responses:
+        '200':
+          description: Seite
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total: { type: integer }
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  items: { type: array, items: { $ref: '#/components/schemas/Snippet' } }
+  /snippets/{snippetId}:
+    get:
+      operationId: getSnippet
+      summary: Einzelnen Textabschnitt mit Quelle und Klassifikation abrufen
+      tags: [Snippets]
+      x-requirements: [US-002, US-011]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/SnippetId' }]
+      responses:
+        '200': { description: Textabschnitt, content: { application/json: { schema: { $ref: '#/components/schemas/Snippet' } } } }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: patchSnippet
+      summary: Rollen, Sparten, Markt, Release und Evidenzstatus bestätigen oder ändern
+      tags: [Snippets]
+      x-requirements: [US-003, US-004]
+      parameters: [{ $ref: '#/components/parameters/SnippetId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SnippetPatch' } } } }
+      responses:
+        '200': { description: Aktualisiert, content: { application/json: { schema: { $ref: '#/components/schemas/Snippet' } } } }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /quality/analysis:
+    post:
+      operationId: startAnalysis
+      summary: Qualitätsanalyse starten (Cluster, Dopplungen, Widersprüche, Lücken, Datenschutz)
+      tags: [Qualität]
+      x-requirements: [US-005, US-006, US-007, US-012]
+      responses:
+        '202': { description: Analyselauf angenommen }
+        '403': { $ref: '#/components/responses/Problem' }
+  /quality/analysis/{runId}:
+    get:
+      operationId: getAnalysisRun
+      summary: Status eines Analyselaufs
+      tags: [Qualität]
+      x-requirements: [US-005]
+      x-extension: true
+      parameters: [{ name: runId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Analyselauf }
+        '404': { $ref: '#/components/responses/Problem' }
+  /quality/findings:
+    get:
+      operationId: listFindings
+      summary: Qualitätsbefunde filtern
+      tags: [Qualität]
+      x-requirements: [US-005, US-006, US-007, US-013]
+      parameters:
+        - { name: type, in: query, schema: { type: string } }
+        - { name: severity, in: query, schema: { type: string } }
+        - { name: status, in: query, schema: { type: string }, description: Kommagetrennt }
+        - { name: chapterId, in: query, schema: { type: string } }
+        - { name: minScore, in: query, schema: { type: number } }
+      responses:
+        '200': { description: Befunde, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Finding' } } } } }
+  /quality/findings/{findingId}:
+    get:
+      operationId: getFinding
+      summary: Einzelnen Befund mit beiden Aussagen abrufen
+      tags: [Qualität]
+      x-requirements: [US-007]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/FindingId' }]
+      responses:
+        '200': { description: Befund, content: { application/json: { schema: { $ref: '#/components/schemas/Finding' } } } }
+        '404': { $ref: '#/components/responses/Problem' }
+  /quality/findings/{findingId}/decision:
+    post:
+      operationId: decideFinding
+      summary: Entscheidung zu einem Befund mit Begründung protokollieren
+      tags: [Qualität]
+      x-requirements: [US-006, US-007]
+      parameters: [{ $ref: '#/components/parameters/FindingId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Decision' } } } }
+      responses:
+        '200': { description: Entschieden, content: { application/json: { schema: { $ref: '#/components/schemas/Finding' } } } }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /clusters:
+    get:
+      operationId: listClusters
+      summary: Semantische Cluster
+      tags: [Qualität]
+      x-requirements: [US-005]
+      x-extension: true
+      parameters: [{ name: status, in: query, schema: { type: string, enum: [proposed, confirmed, dissolved] } }]
+      responses:
+        '200': { description: Cluster }
+  /clusters/{clusterId}:
+    patch:
+      operationId: updateCluster
+      summary: Cluster bestätigen, umbenennen oder auflösen
+      tags: [Qualität]
+      x-requirements: [US-005]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ClusterId' }]
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { name: { type: string }, status: { type: string, enum: [proposed, confirmed, dissolved] } } }
+      responses:
+        '200': { description: Cluster }
+        '404': { $ref: '#/components/responses/Problem' }
+  /clusters/{clusterId}/merge:
+    post:
+      operationId: mergeClusters
+      summary: Cluster zusammenführen
+      tags: [Qualität]
+      x-requirements: [US-005]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ClusterId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { clusterIds: { type: array, items: { type: string } } } } } }
+      responses:
+        '200': { description: Zusammengeführter Cluster }
+  /clusters/{clusterId}/split:
+    post:
+      operationId: splitCluster
+      summary: Textabschnitte in einen neuen Cluster abteilen
+      tags: [Qualität]
+      x-requirements: [US-005]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ClusterId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { snippetIds: { type: array, items: { type: string } }, name: { type: string } } } } }
+      responses:
+        '200': { description: Beide Cluster }
+  /canonical-topics:
+    get:
+      operationId: listCanonicalTopics
+      summary: Canonical Topics
+      tags: [Qualität]
+      x-requirements: [US-006]
+      x-extension: true
+      responses:
+        '200': { description: Liste }
+    post:
+      operationId: createCanonicalTopic
+      summary: Führendes Kapitel für ein Thema festlegen (andere Kapitel erhalten Querverweise)
+      tags: [Qualität]
+      x-requirements: [US-006]
+      x-extension: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, leadChapterId, reason]
+              properties:
+                title: { type: string }
+                clusterId: { type: string }
+                snippetIds: { type: array, items: { type: string } }
+                leadChapterId: { type: string }
+                leadSnippetId: { type: string }
+                reason: { type: string }
+      responses:
+        '201': { description: Angelegt }
+        '422': { $ref: '#/components/responses/Problem' }
+  /chapters:
+    get:
+      operationId: listChapters
+      summary: Kapitel mit Unterkapiteln, Abdeckung, Befund- und Versionsstatus
+      tags: [Kapitel]
+      x-requirements: [US-002, US-010, US-013]
+      x-extension: true
+      responses:
+        '200': { description: Kapitel }
+  /chapters/{chapterId}:
+    get:
+      operationId: getChapter
+      summary: Kapitelübersicht
+      tags: [Kapitel]
+      x-requirements: [US-002]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ChapterId' }]
+      responses:
+        '200': { description: Kapitel }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapters/{chapterId}/versions:
+    get:
+      operationId: listChapterVersions
+      summary: Versionen eines Kapitels
+      tags: [Kapitel]
+      x-requirements: [US-009, US-019]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ChapterId' }]
+      responses:
+        '200': { description: Versionen }
+  /chapters/{chapterId}/generate:
+    post:
+      operationId: generateChapter
+      summary: Kapitelentwurf aus bestätigten Quellen generieren
+      tags: [Kapitel]
+      x-requirements: [US-006, US-008, US-009, US-012]
+      parameters: [{ $ref: '#/components/parameters/ChapterId' }]
+      responses:
+        '201': { description: Neue Kapitelversion, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
+        '409': { description: Blockiert durch offene Blocker-Befunde, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+        '422': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}:
+    get:
+      operationId: getChapterVersion
+      summary: Kapitelversion mit Abschnitten, Blöcken und Quellen
+      tags: [Kapitelwerkstatt]
+      x-requirements: [US-008, US-009, US-010, US-011]
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      responses:
+        '200': { description: Kapitelversion, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/gate:
+    get:
+      operationId: getGate
+      summary: Qualitätsgate für eine Kapitelversion auswerten
+      tags: [Freigabe]
+      x-requirements: [US-012]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      responses:
+        '200': { description: Gate-Ergebnis, content: { application/json: { schema: { $ref: '#/components/schemas/GateResult' } } } }
+  /chapter-versions/{versionId}/content-blocks:
+    post:
+      operationId: createContentBlock
+      summary: Absatz, Hinweis, Tipp oder Warnung hinzufügen
+      tags: [Kapitelwerkstatt]
+      x-requirements: [US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/BlockPatch' } } } }
+      responses:
+        '201': { description: Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
+        '409': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/approve:
+    post:
+      operationId: approveChapterVersion
+      summary: Fachliche Freigabe (nur bei bestandenem Qualitätsgate)
+      tags: [Freigabe]
+      x-requirements: [US-012, US-016]
+      parameters: [{ $ref: '#/components/parameters/VersionId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [comment]
+              properties:
+                comment: { type: string }
+                decision: { type: string, enum: [approved, rejected], default: approved }
+      responses:
+        '200': { description: Freigegeben, content: { application/json: { schema: { $ref: '#/components/schemas/ChapterVersion' } } } }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { description: Gate nicht bestanden oder Version nicht im Entwurf, content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+  /content-blocks/{blockId}:
+    patch:
+      operationId: patchContentBlock
+      summary: Block ändern, verschieben, klassifizieren, sperren oder entsperren (versioniert)
+      tags: [Kapitelwerkstatt]
+      x-requirements: [US-009, US-010]
+      parameters: [{ $ref: '#/components/parameters/BlockId' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/BlockPatch' } } } }
+      responses:
+        '200': { description: Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
+        '409': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteContentBlock
+      summary: Block löschen (Soft-Delete, versioniert, wiederherstellbar)
+      tags: [Kapitelwerkstatt]
+      x-requirements: [US-009]
+      parameters:
+        - { $ref: '#/components/parameters/BlockId' }
+        - { name: reason, in: query, schema: { type: string } }
+      responses:
+        '204': { description: Gelöscht }
+        '409': { $ref: '#/components/responses/Problem' }
+  /content-blocks/{blockId}/versions:
+    get:
+      operationId: listContentBlockVersions
+      summary: Versionshistorie eines Blocks
+      tags: [Kapitelwerkstatt]
+      x-requirements: [US-009, US-019]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/BlockId' }]
+      responses:
+        '200': { description: Versionen }
+  /content-blocks/{blockId}/restore:
+    post:
+      operationId: restoreContentBlock
+      summary: Frühere Blockversion wiederherstellen
+      tags: [Kapitelwerkstatt]
+      x-requirements: [US-009]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/BlockId' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [versionNo], properties: { versionNo: { type: integer } } } } }
+      responses:
+        '200': { description: Block, content: { application/json: { schema: { $ref: '#/components/schemas/ContentBlock' } } } }
+  /exports:
+    post:
+      operationId: createExport
+      summary: Freigegebene Kapitel rollen-/sparten-/markt-/releasegefiltert exportieren
+      tags: [Export]
+      x-requirements: [US-010, US-012, US-014]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExportRequest' } } } }
+      responses:
+        '201': { description: Export erstellt }
+        '409': { description: Blockiert (offene Blocker-/Datenschutzbefunde), content: { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } } }
+    get:
+      operationId: listExports
+      summary: Exporte auflisten
+      tags: [Export]
+      x-requirements: [US-014]
+      x-extension: true
+      responses:
+        '200': { description: Exporte }
+  /exports/{exportId}/download:
+    get:
+      operationId: downloadExport
+      summary: Exportdatei herunterladen
+      tags: [Export]
+      x-requirements: [US-014]
+      x-extension: true
+      parameters: [{ name: exportId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '200': { description: Datei }
+  /traceability:
+    get:
+      operationId: getTraceability
+      summary: Traceability-Matrix als JSON, CSV, Markdown oder Excel
+      tags: [Traceability]
+      x-requirements: [US-020]
+      parameters: [{ name: format, in: query, schema: { type: string, enum: [json, csv, md, xlsx], default: json } }]
+      responses:
+        '200': { description: Matrix }
+  /settings:
+    get:
+      operationId: getSettings
+      summary: Einstellungen (Schwellenwerte, Uploadgrenzen, Terminologie)
+      tags: [System]
+      x-requirements: [US-005, US-001, US-015]
+      x-extension: true
+      responses:
+        '200': { description: Einstellungen }
+    put:
+      operationId: putSettings
+      summary: Einstellungen ändern (Berechtigung admin)
+      tags: [System]
+      x-requirements: [US-005, US-001, US-015]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses:
+        '200': { description: Einstellungen }
+        '403': { $ref: '#/components/responses/Problem' }
+  /reference:
+    get:
+      operationId: getReference
+      summary: Referenzdaten (Rollen, Sparten, Icons, Status, Entscheidungsoptionen)
+      tags: [System]
+      x-requirements: [US-003, US-004, US-010]
+      x-extension: true
+      responses:
+        '200': { description: Referenzdaten }
+  /me:
+    get:
+      operationId: getMe
+      summary: Aktueller Benutzer mit technischen Berechtigungen
+      tags: [System]
+      x-requirements: [US-003]
+      x-extension: true
+      responses:
+        '200': { description: Benutzer }
+  /dashboard:
+    get:
+      operationId: getDashboard
+      summary: Kennzahlen für Dashboard und Optimierungen
+      tags: [System]
+      x-requirements: [US-013]
+      x-extension: true
+      responses:
+        '200': { description: Kennzahlen }
+  /audit-events:
+    get:
+      operationId: listAuditEvents
+      summary: Auditprotokoll
+      tags: [System]
+      x-requirements: [US-007, US-009, US-012]
+      x-extension: true
+      parameters:
+        - { name: entityType, in: query, schema: { type: string } }
+        - { name: entityId, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: Ereignisse }
+  /health:
+    get:
+      operationId: health
+      summary: Lebenszeichen
+      tags: [System]
+      x-requirements: [US-020]
+      x-extension: true
+      security: []
+      responses:
+        '200': { description: OK }

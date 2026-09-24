@@ -1,0 +1,2 @@
+Fiktive Demo-Quellen für oneSCM Handbook Studio. Enthalten keine personenbezogenen Echtdaten.
+Die Dateien lösen bewusst Widersprüche, Dopplungen, Lücken und einen Datenschutzbefund aus.
