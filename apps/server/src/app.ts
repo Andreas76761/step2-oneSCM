@@ -16,6 +16,7 @@ import { Problem } from './problem.js';
 import { chapterRoutes } from './routes/chapters.js';
 import { projectRoutes } from './routes/projects.js';
 import { semanticRoutes } from './routes/semantic.js';
+import { releaseRoutes } from './routes/releases.js';
 import { runIndexJob } from './services/semantic.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
@@ -169,6 +170,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       rewriteRoutes(api, ctx);
       projectRoutes(api, ctx);
       semanticRoutes(api, ctx);
+      releaseRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

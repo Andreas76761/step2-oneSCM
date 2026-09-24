@@ -133,3 +133,72 @@ describe('Semantische Suche und hybride Analyse (ADR-017)', () => {
     }
   });
 });
+
+describe('Handbuch-Releases und Online-Hilfe (ADR-018)', () => {
+  const dataDir = tempDir();
+  afterAll(() => fs.rmSync(dataDir, { recursive: true, force: true }));
+
+  it('[T-139] Release aus freigegebenen Kapiteln, Änderungen zum Vorgänger, statische Online-Hilfe, unveränderlich', async () => {
+    const JSZip = (await import('jszip')).default;
+    const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'releases'), logger: false, webDist: null, authMode: 'demo' });
+    const call = client(built);
+    // Kapitel generieren, Lücken entfernen, einreichen und freigeben
+    const approve = async (chapterId: string, edit?: string) => {
+      const v = (await call('POST', `/chapters/${chapterId}/generate`, {}, 'u-redaktion')).json;
+      const blocks = v.sections.flatMap((s: any) => s.blocks);
+      for (const b of blocks) if (b.kind === 'gap') await call('DELETE', `/content-blocks/${b.id}?reason=entfällt`, undefined, 'u-redaktion');
+      if (edit) await call('PATCH', `/content-blocks/${blocks.find((b: any) => b.section === 'purpose').id}`, { text: edit }, 'u-redaktion');
+      expect((await call('POST', `/chapter-versions/${v.id}/submit`, {}, 'u-redaktion')).status).toBe(200);
+      expect((await call('POST', `/chapter-versions/${v.id}/approve`, { comment: 'ok' }, 'u-freigabe')).status).toBe(200);
+      return v;
+    };
+    try {
+      await importMd(built, 'r.md', `${FM}# 1. Anmeldung\n\n## 1.1 Zweck\n\nDieses Kapitel beschreibt die Anmeldung.\n\n# 2. Aufträge\n\n## 2.1 Zweck\n\nDieses Kapitel beschreibt Aufträge <script>alert(1)</script>.\n`);
+      expect((await call('POST', '/releases', { version: '2026.1' }, 'u-freigabe')).status).toBe(422); // noch nichts freigegeben
+      const [c1, c2] = (await call('GET', '/chapters')).json.filter((c: any) => c.title !== 'Ohne Kapitel');
+      await approve(c1.id);
+      await approve(c2.id);
+
+      expect((await call('POST', '/releases', { version: '2026.1' }, 'u-redaktion')).status).toBe(403);
+      expect((await call('POST', '/releases', { version: 'v 1/..' }, 'u-freigabe')).status).toBe(400);
+      const r1 = await call('POST', '/releases', { version: '2026.1', title: 'Handbuch Händlerportal', notes: 'Erste Ausgabe.' }, 'u-freigabe');
+      expect(r1.status).toBe(201);
+      expect(r1.json.chapters.map((c: any) => c.title)).toEqual(['1. Anmeldung', '2. Aufträge']);
+      expect(r1.json.changes.map((c: any) => c.change)).toEqual(['new', 'new']);
+      expect((await call('POST', '/releases', { version: '2026.1' }, 'u-freigabe')).status).toBe(409);
+
+      // Online-Hilfe: eigenständige Seiten ohne Skripte, Quell-HTML escaped
+      const site = await built.app.inject({ method: 'GET', url: `/api/v1/releases/${r1.json.id}/download?format=site`, headers: { 'x-user-id': 'u-leser' } });
+      expect(site.headers['content-type']).toBe('application/zip');
+      const zip = await JSZip.loadAsync(site.rawPayload);
+      expect(Object.keys(zip.files).sort()).toEqual(['aenderungen.html', 'index.html', 'kapitel-01.html', 'kapitel-02.html']);
+      const index = await zip.file('index.html')!.async('string');
+      expect(index).toContain('Handbuch Händlerportal');
+      expect(index).toContain('Erste Ausgabe.');
+      const k2 = await zip.file('kapitel-02.html')!.async('string');
+      expect(k2).not.toMatch(/<script/i);
+      expect(k2).toContain('&lt;script&gt;');
+      expect(k2).toContain("default-src 'none'");
+      expect((await call('GET', `/releases/${r1.json.id}/download?format=md`)).body).toContain('# Handbuch Händlerportal – Version 2026.1');
+
+      // Neue Freigabe von Kapitel 1 → Release 2026.2 mit Änderungsliste
+      await approve(c1.id, 'Dieses Kapitel erklärt die Anmeldung am Portal.');
+      const r2 = (await call('POST', '/releases', { version: '2026.2' }, 'u-freigabe')).json;
+      expect(r2.previousReleaseId).toBe(r1.json.id);
+      expect(r2.changes).toEqual([
+        expect.objectContaining({ title: '1. Anmeldung', change: 'updated', fromVersionNo: 1, toVersionNo: 2, summary: expect.objectContaining({ changed: 1 }) }),
+        expect.objectContaining({ title: '2. Aufträge', change: 'unchanged' }),
+      ]);
+      const zip2 = await JSZip.loadAsync((await built.app.inject({ method: 'GET', url: `/api/v1/releases/${r2.id}/download`, headers: { 'x-user-id': 'u-leser' } })).rawPayload);
+      expect(await zip2.file('aenderungen.html')!.async('string')).toContain('Geändert: 1. Anmeldung – Version 1 → 2 (1 geändert)');
+      // Release 2026.1 bleibt unverändert
+      expect((await call('GET', `/releases/${r1.json.id}`)).json.chapters[0].versionNo).toBe(1);
+      expect((await call('GET', '/releases')).json.map((r: any) => r.version)).toEqual(['2026.2', '2026.1']);
+      // Mandantentrennung
+      const P = (await call('POST', '/projects', { name: 'Anderes', visibility: 'open' })).json.id;
+      expect((await call('GET', `/releases/${r1.json.id}`, undefined, 'u-admin', P)).status).toBe(404);
+    } finally {
+      await built.app.close();
+    }
+  });
+});

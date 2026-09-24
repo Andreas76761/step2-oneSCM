@@ -207,3 +207,14 @@ test('[T-210] Semantische Suche auf der Quellenseite', async ({ page }) => {
   await first.getByRole('button').click();
   await expect(page.getByRole('dialog')).toBeVisible();
 });
+
+test('[T-211] Handbuch-Version veröffentlichen, Änderungen ansehen, Online-Hilfe herunterladen', async ({ page }) => {
+  await page.goto('/veroeffentlichung');
+  await page.getByLabel('Versionsnummer').fill('2026.9');
+  await page.getByRole('button', { name: 'Veröffentlichen' }).click();
+  await expect(page.getByText(/Version 2026\.9 veröffentlicht \(\d+ Kapitel\)/)).toBeVisible();
+  await expect(page.getByRole('table').getByText('neu').first()).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Online-Hilfe (ZIP)' }).first().click();
+  expect((await download).suggestedFilename()).toBe('onescm-handbuch-2026.9-online-hilfe.zip');
+});

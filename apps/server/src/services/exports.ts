@@ -51,9 +51,9 @@ export function badgeLine(b: Pick<Block, 'roles' | 'divisions' | 'market' | 'rel
 }
 
 const KIND_PREFIX: Record<string, string> = { note: 'ℹ️ **Hinweis:** ', tip: '💡 **Tipp:** ', warning: '⚠️ **Warnung:** ', xref: '↗️ ' };
-const KIND_LABEL: Record<string, string> = { note: 'Hinweis', tip: 'Tipp', warning: 'Warnung', xref: 'Querverweis' };
+export const KIND_LABEL: Record<string, string> = { note: 'Hinweis', tip: 'Tipp', warning: 'Warnung', xref: 'Querverweis' };
 
-type ExportChapter = { title: string; versionNo: number; approvedAt: string | null; sections: { code: string; title: string; blocks: any[] }[] };
+export type ExportChapter = { title: string; versionNo: number; approvedAt: string | null; sections: { code: string; title: string; blocks: any[] }[] };
 
 function filterDescription(f: ExportFilter): string {
   const parts = [
@@ -66,7 +66,7 @@ function filterDescription(f: ExportFilter): string {
 }
 
 /** Kapitel → sichtbare Abschnitte/Blöcke nach Filter (gemeinsam für alle Formate). */
-function visible(chapters: ExportChapter[], f: ExportFilter) {
+export function visible(chapters: ExportChapter[], f: ExportFilter) {
   return chapters.map((ch) => ({
     ...ch,
     sections: ch.sections.map((s) => ({ ...s, blocks: s.blocks.filter((b) => b.kind !== 'gap' && blockMatches(b, f)) })).filter((s) => s.blocks.length),

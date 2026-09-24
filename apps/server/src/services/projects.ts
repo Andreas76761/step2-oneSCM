@@ -178,6 +178,7 @@ const OWNER_SQL: Record<string, string> = {
   runId: 'SELECT project_id FROM analysis_runs WHERE id = ?',
   exportId: 'SELECT project_id FROM exports WHERE id = ?',
   termId: 'SELECT project_id FROM terminology_terms WHERE id = ?',
+  releaseId: 'SELECT project_id FROM handbook_releases WHERE id = ?',
   batchId: 'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?',
 };
 
