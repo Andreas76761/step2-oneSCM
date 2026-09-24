@@ -80,7 +80,8 @@ export function checkTranslation(source: string, text: string | null, sentences?
     const covered = new Set<number>();
     for (const s of sentences) {
       if (!s.sources.length) issues.add('no_sources');
-      for (const i of s.sources) (i < 1 || i > n ? issues.add('unknown_source') : covered.add(i));
+      // nur Sätze mit Text decken deutsche Sätze ab (leere Ausgaben entfallen beim Zusammensetzen)
+      for (const i of s.sources) (i < 1 || i > n ? issues.add('unknown_source') : s.text.trim() && covered.add(i));
     }
     if (covered.size < n) issues.add('uncovered_source');
   }

@@ -206,6 +206,17 @@ test('[T-210] Semantische Suche auf der Quellenseite', async ({ page }) => {
   await expect(first).toContainText('Ähnlichkeit');
   await first.getByRole('button').click();
   await expect(page.getByRole('dialog')).toBeVisible();
+
+  // Verfahren der Analyse wird gespeichert (und wieder zurückgesetzt)
+  await page.goto('/einstellungen');
+  await page.getByLabel('Verfahren (ADR-017)').selectOption('hybrid');
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel('Verfahren (ADR-017)')).toHaveValue('hybrid');
+  await page.getByLabel('Verfahren (ADR-017)').selectOption('tfidf');
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
 });
 
 test('[T-211] Handbuch-Version veröffentlichen, Änderungen ansehen, Online-Hilfe herunterladen', async ({ page }) => {

@@ -14,7 +14,7 @@ export function SettingsPage() {
 
   const save = async () => {
     try {
-      await put('/settings', { analysis: draft.analysis, import: draft.import, readability: draft.readability });
+      await put('/settings', { analysis: draft.analysis, import: draft.import, readability: draft.readability, rewrite: draft.rewrite, semantic: draft.semantic });
       notify('Einstellungen gespeichert.');
       s.reload();
     } catch (e) {

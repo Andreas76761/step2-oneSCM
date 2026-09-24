@@ -197,6 +197,19 @@ describe('Handbuch-Releases und Online-Hilfe (ADR-018)', () => {
       // Mandantentrennung
       const P = (await call('POST', '/projects', { name: 'Anderes', visibility: 'open' })).json.id;
       expect((await call('GET', `/releases/${r1.json.id}`, undefined, 'u-admin', P)).status).toBe(404);
+
+      // Backup enthält die Release-Dateien: nach Wiederherstellung in einen leeren Speicher herunterladbar
+      const { createBackup, restoreBackup } = await import('../src/services/backup.js');
+      const { data } = await createBackup(built.ctx.db, built.ctx.store, '0.7.0');
+      const target = await buildApp({ dataDir: tempDir(), database: await freshDatabase(tempDir(), 'releases-ziel'), logger: false, webDist: null, authMode: 'demo' }, { worker: false });
+      try {
+        await restoreBackup(target.ctx.db, target.ctx.store, data);
+        const site2 = await target.app.inject({ method: 'GET', url: `/api/v1/releases/${r1.json.id}/download?format=site`, headers: { 'x-user-id': 'u-leser' } });
+        expect(site2.statusCode).toBe(200);
+        expect((await target.app.inject({ method: 'GET', url: `/api/v1/releases/${r2.id}/download?format=md`, headers: { 'x-user-id': 'u-leser' } })).statusCode).toBe(200);
+      } finally {
+        await target.app.close();
+      }
     } finally {
       await built.app.close();
     }
@@ -276,6 +289,20 @@ describe('Kollaboration: Kommentare, Aufgaben, Benachrichtigungen (ADR-019)', ()
       expect(thread.map((c: any) => c.body)).toEqual([c1.json.body, 'Screenshots ergänzen', 'Ist erledigt.']);
       expect(thread[2].parentId).toBe(c1.json.id);
 
+      // Ausgangskommentar nach der Antwort ändern (PostgreSQL legt die Zeile dabei physisch neu an) –
+      // das Backup muss Antworten trotzdem nach ihrem Ausgangskommentar einspielen
+      await call('PATCH', `/comments/${c1.json.id}`, { body: `${c1.json.body} (ergänzt)` }, 'u-leser');
+      const { createBackup, restoreBackup } = await import('../src/services/backup.js');
+      const { data } = await createBackup(built.ctx.db, built.ctx.store, '0.7.0');
+      const target = await buildApp({ dataDir: tempDir(), database: await freshDatabase(tempDir(), 'kollab-ziel'), logger: false, webDist: null, authMode: 'demo' }, { worker: false });
+      try {
+        await restoreBackup(target.ctx.db, target.ctx.store, data);
+        const restored = await target.app.inject({ method: 'GET', url: `/api/v1/comments?entityType=block&entityId=${block.lineageId}`, headers: { 'x-user-id': 'u-admin' } });
+        expect(restored.json().map((c: any) => c.parentId)).toEqual([null, null, c1.json.id]);
+      } finally {
+        await target.app.close();
+      }
+
       // Mandantentrennung und Zugriff
       const P = (await call('POST', '/projects', { name: 'Vertraulich' })).json.id;
       expect((await call('GET', `/comments?entityType=block&entityId=${block.lineageId}`, undefined, 'u-admin', P)).status).toBe(404);
@@ -348,6 +375,10 @@ describe('Mehrsprachigkeit (ADR-020)', () => {
       expect(purpose.sentences).toEqual([{ text: 'EN: Dieses Kapitel beschreibt Reklamationen.', sources: [1] }, { text: 'EN: Die Frist beträgt 15 days.', sources: [2] }]);
       const steps = d.sections.find((s: any) => s.code === 'steps').blocks[0];
       expect(steps).toMatchObject({ text: '1. EN: Reklamation öffnen.\n2. EN: Grund erfassen.', issues: [] });
+
+      // Leere übersetzte Sätze decken den deutschen Satz nicht ab
+      const { checkTranslation } = await import('../src/domain/translate.js');
+      expect(checkTranslation('Satz eins. Satz zwei.', 'Sentence one.', [{ text: 'Sentence one.', sources: [1] }, { text: ' ', sources: [2] }])).toEqual(['uncovered_source']);
 
       // Freigabe verlangt geprüfte Übersetzung; Nachbearbeitung behebt den Befund
       expect((await call('POST', `/translations/${tr.id}/approve`, { comment: 'ok' }, 'u-freigabe')).status).toBe(409);
