@@ -136,6 +136,10 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
   const { ref, notify } = useApp();
   const [mode, setMode] = useState<'view' | 'edit' | 'classify'>('view');
   const [proposal, setProposal] = useState<any | null>(null);
+  // Nach Übernahme, Wiederherstellung oder Neuladen den Editor mit dem aktuellen Text füllen
+  useEffect(() => {
+    if (mode !== 'edit') setText(b.text);
+  }, [b.text, b.versionNo, mode]);
   const [busy, setBusy] = useState(false);
   const canRewrite = llm?.enabled && REWRITABLE.includes(b.kind) && b.sources.length > 0;
   const requestRewrite = async () => {

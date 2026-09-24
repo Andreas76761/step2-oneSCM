@@ -218,6 +218,20 @@ describe('KI-Umformulierung: OpenAI-kompatibler Adapter und Satzprüfung (ADR-01
     expect(stale.json.detail).toContain('veraltet');
     expect((await call('GET', `/rewrite-proposals/${p2.id}`)).json.status).toBe('stale');
 
+    // Parallele Änderung zwischen Prüfung und Übernahme: 409 statt Datenbankfehler
+    const p4 = (await call('POST', `/content-blocks/${purpose.id}/rewrite-proposals`)).json;
+    const db = s.built.ctx.db;
+    const tx = db.tx.bind(db);
+    db.tx = (async (fn: () => Promise<unknown>) => {
+      db.tx = tx;
+      await db.run('UPDATE content_blocks SET version_no = version_no + 1 WHERE id = ?', purpose.id);
+      return tx(fn);
+    }) as typeof db.tx;
+    const raced = await call('POST', `/rewrite-proposals/${p4.id}/accept`);
+    expect(raced.status).toBe(409);
+    expect((await call('GET', `/rewrite-proposals/${p4.id}`)).json.status).toBe('stale');
+    expect((await call('GET', `/content-blocks/${purpose.id}/versions`)).json[0].changeType).not.toBe('rewritten');
+
     // Listen bleiben zeilenweise erhalten
     const steps = blocksOf(v).find((b: any) => b.section === 'steps');
     mock.set({ sentences: [{ text: '1. Öffnen Sie das Modul Verkauf.', sources: ['S1'] }, { text: '2. Legen Sie den Auftrag an.', sources: ['S1'] }] });

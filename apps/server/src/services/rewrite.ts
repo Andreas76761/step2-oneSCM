@@ -154,17 +154,26 @@ export async function acceptProposal(ctx: Ctx, id: string, input: { reason?: str
     throw conflict('Vorschlag ist veraltet: Die Quellen des Absatzes haben sich geändert.');
   }
   const text = joinSentences(b.kind, sentences);
-  await db.tx(async () => {
-    await decide(ctx, id, ['proposed'], 'accepted', actor, input.reason?.trim() || null);
-    await db.run(
-      "UPDATE content_blocks SET text = ?, mode = 'ai_rewritten', sentence_sources = ?, version_no = ?, updated_at = ? WHERE id = ?",
-      text, json(sentences.map((s) => ({ text: s.text, sourceIds: s.sourceIds }))), row.version_no + 1, now(), row.id,
-    );
-    // übrige offene Vorschläge desselben Absatzes sind damit veraltet
-    await db.run("UPDATE rewrite_proposals SET status = 'stale', decided_by = 'system', decided_at = ?, decision_reason = ? WHERE block_id = ? AND status = 'proposed' AND id <> ?", now(), 'anderer Vorschlag übernommen', row.id, id);
-    await snapshot(ctx, row.id, row.version_no + 1, 'rewritten', actor, `KI-Vorschlag übernommen (${r.provider}/${r.model})${input.reason?.trim() ? `: ${input.reason.trim()}` : ''}`);
-    await audit(db, actor, 'rewrite.accepted', 'content_block', row.id, { proposalId: id, provider: r.provider, model: r.model, reason: input.reason });
-  });
+  const concurrent = new Error('concurrent');
+  try {
+    await db.tx(async () => {
+      await decide(ctx, id, ['proposed'], 'accepted', actor, input.reason?.trim() || null);
+      // Bedingt auf die geprüfte Blockversion: eine parallele Änderung macht den Vorschlag veraltet
+      const res = await db.run(
+        "UPDATE content_blocks SET text = ?, mode = 'ai_rewritten', sentence_sources = ?, version_no = ?, updated_at = ? WHERE id = ? AND version_no = ? AND deleted_at IS NULL AND mode <> 'locked'",
+        text, json(sentences.map((s) => ({ text: s.text, sourceIds: s.sourceIds }))), row.version_no + 1, now(), row.id, row.version_no,
+      );
+      if (!res.changes) throw concurrent;
+      // übrige offene Vorschläge desselben Absatzes sind damit veraltet
+      await db.run("UPDATE rewrite_proposals SET status = 'stale', decided_by = 'system', decided_at = ?, decision_reason = ? WHERE block_id = ? AND status = 'proposed' AND id <> ?", now(), 'anderer Vorschlag übernommen', row.id, id);
+      await snapshot(ctx, row.id, row.version_no + 1, 'rewritten', actor, `KI-Vorschlag übernommen (${r.provider}/${r.model})${input.reason?.trim() ? `: ${input.reason.trim()}` : ''}`);
+      await audit(db, actor, 'rewrite.accepted', 'content_block', row.id, { proposalId: id, provider: r.provider, model: r.model, reason: input.reason });
+    });
+  } catch (e) {
+    if (e !== concurrent) throw e;
+    await decide(ctx, id, ['proposed'], 'stale', 'system', 'Absatz wurde parallel geändert');
+    throw conflict('Vorschlag ist veraltet: Der Absatz wurde inzwischen geändert. Bitte neu anfordern.');
+  }
   return blockDto(ctx, await blockRow(ctx, row.id));
 }
 
