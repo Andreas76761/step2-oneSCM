@@ -225,3 +225,10 @@ dl.meta dd { margin: 0; }
 .user-box .user-name { color: #fff; }
 
 .section-title { font-size: 16px; margin: 8px 0 12px; }
+
+.cmp { border: 1px solid var(--border); border-left: 4px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.cmp-added { border-left-color: var(--ok); }
+.cmp-removed { border-left-color: var(--danger); opacity: 0.85; }
+.cmp-removed .md { text-decoration: line-through; }
+.cmp-changed { border-left-color: var(--warn); }
+.cmp-moved { border-left-color: var(--primary); }

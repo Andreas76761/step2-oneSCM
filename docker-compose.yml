@@ -26,6 +26,10 @@ services:
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-}
       OIDC_AUDIENCE: ${OIDC_AUDIENCE:-}
       OIDC_PERMISSIONS_CLAIM: ${OIDC_PERMISSIONS_CLAIM:-roles}
+      # Für mehrere Instanzen: OBJECT_STORE=s3 mit S3_BUCKET (und S3_ENDPOINT für MinIO), siehe README
+      OBJECT_STORE: ${OBJECT_STORE:-local}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
       UPLOAD_MAX_BYTES: 52428800
       ZIP_MAX_FILES: 5000
     volumes:

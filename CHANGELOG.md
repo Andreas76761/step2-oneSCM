@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0 – Etappe 4 (24.09.2026)
+
+### Hinzugefügt
+- Versionsvergleich ganzer Kapitelversionen (US-019): `GET /chapters/{id}/compare`, Seite „Versionsvergleich“ mit hinzugefügten, entfernten, geänderten und verschobenen Absätzen, Textdiff und Feldänderungen.
+- S3-kompatibler Object-Store (`OBJECT_STORE=s3`) für den Mehrinstanzbetrieb; unveränderliche Ablage per bedingtem Schreiben (ADR-008).
+- CI prüft den S3-Speicher gegen MinIO, lokal gegen s3rver. `/health` meldet den Speichertyp.
+- Tests T-126, T-127, E2E T-204.
+
+### Behoben
+- Stabile Lineage bei Neugenerierung: Zuordnung über Abschnitt, Blocktyp und Quellen; quellenlose Lückenhinweise und Blöcke mit gleichen Quellen behalten ihre Lineage (Grundlage für Historie und Vergleich).
+
 ## 0.3.0 – Etappe 3 (24.09.2026)
 
 ### Hinzugefügt

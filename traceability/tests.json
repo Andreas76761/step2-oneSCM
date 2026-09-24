@@ -330,6 +330,26 @@
     ]
   },
   {
+    "id": "T-126",
+    "title": "Versionsvergleich: geändert, verschoben, entfernt, hinzugefügt, unverändert; stabile Lineage",
+    "file": "apps/server/test/stage4.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-019",
+      "US-009"
+    ]
+  },
+  {
+    "id": "T-127",
+    "title": "S3-Object-Store: unveränderliche Ablage, Import und Export über S3 (s3rver bzw. MinIO)",
+    "file": "apps/server/test/stage4.test.ts",
+    "level": "api",
+    "requirements": [
+      "US-001",
+      "US-014"
+    ]
+  },
+  {
     "id": "T-201",
     "title": "UI: Navigation, Import einer MD-Datei, Quellenliste",
     "file": "e2e/tests/app.spec.ts",
@@ -361,6 +381,15 @@
       "US-014",
       "US-015",
       "US-016"
+    ]
+  },
+  {
+    "id": "T-204",
+    "title": "UI: Versionsvergleich zweier Kapitelversionen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "US-019"
     ]
   }
 ]

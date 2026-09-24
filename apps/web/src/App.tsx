@@ -18,6 +18,7 @@ import { TraceabilityPage } from './pages/Traceability';
 import { WorkshopPage } from './pages/Workshop';
 import { TerminologyPage } from './pages/Terminology';
 import { EvidencePage } from './pages/Evidence';
+import { ComparePage } from './pages/Compare';
 
 // Navigation gemäß Masterprompt §14
 const NAV = [
@@ -139,6 +140,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/terminologie" element={<TerminologyPage />} />
             <Route path="/evidenz" element={<EvidencePage />} />
             <Route path="/evidenz/:versionId" element={<EvidencePage />} />
+            <Route path="/vergleich/:chapterId" element={<ComparePage />} />
             <Route path="/freigabe" element={<ApprovalPage />} />
             <Route path="/export" element={<ExportPage />} />
             <Route path="/traceability" element={<TraceabilityPage />} />

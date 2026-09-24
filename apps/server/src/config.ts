@@ -35,6 +35,26 @@ export interface AppConfig {
   logger: boolean;
   authMode: 'demo' | 'oidc';
   oidc: OidcConfig | null;
+  /** Ablage der Originaldateien und Exporte (ADR-008) */
+  objectStore: ObjectStoreConfig;
+}
+
+export type ObjectStoreConfig =
+  | { kind: 'local' }
+  | { kind: 's3'; bucket: string; prefix?: string; region?: string; endpoint?: string; forcePathStyle?: boolean };
+
+function objectStoreFromEnv(): ObjectStoreConfig {
+  if ((process.env.OBJECT_STORE ?? 'local') !== 's3') return { kind: 'local' };
+  const bucket = process.env.S3_BUCKET;
+  if (!bucket) throw new Error('OBJECT_STORE=s3 erfordert S3_BUCKET.');
+  return {
+    kind: 's3',
+    bucket,
+    prefix: process.env.S3_PREFIX || undefined,
+    region: process.env.S3_REGION || process.env.AWS_REGION || undefined,
+    endpoint: process.env.S3_ENDPOINT || undefined,
+    forcePathStyle: process.env.S3_FORCE_PATH_STYLE ? process.env.S3_FORCE_PATH_STYLE === 'true' : undefined,
+  };
 }
 
 /** ENTSCHEIDUNG(E-15): Standard-Zuordnung von IdP-Gruppen zu technischen Berechtigungen. */
@@ -87,6 +107,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     logger: overrides.logger ?? process.env.LOG !== '0',
     authMode,
     oidc,
+    objectStore: overrides.objectStore ?? objectStoreFromEnv(),
   };
 }
 

@@ -25,4 +25,5 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **1** ✅ | alle P0-Stories in erster, lauffähiger Ausprägung auf SQLite, Demo-Daten, Unit-/API-/E2E-Tests, CI, Doku | Tests grün, Traceability-Matrix vollständig, offene Entscheidungen sichtbar |
 | **2** ✅ | P0-Entscheidungen übernommen (24.09.2026); PostgreSQL-Adapter; OIDC-Anmeldung; persistente Jobqueue | Tests grün auf SQLite und PostgreSQL, Entscheidungsprotokoll |
 | **3** ✅ | P1: Freigabeworkflow (US-016, gemäß E-12 einstufig), Terminologieverwaltung (US-015), Evidenzansicht (US-011), Export HTML/PDF (US-014), Optimierungsübersicht (US-013) | 34 Server- und 3 E2E-Tests grün auf SQLite und PostgreSQL |
-| 4 | P2: Vergleich ganzer Kapitelversionen (US-019); S3-kompatibler Object-Store für Mehrinstanzbetrieb; optional LLM-Umformulierung (ADR-007) mit Quellenbindung je Satz | |
+| **4** ✅ | P2: Vergleich ganzer Kapitelversionen (US-019); S3-kompatibler Object-Store für Mehrinstanzbetrieb | 36 Server- und 4 E2E-Tests grün auf SQLite und PostgreSQL; S3 gegen s3rver/MinIO |
+| offen | Optional: LLM-gestützte Umformulierung (ADR-007) mit Quellenbindung je Satz – setzt Entscheidung E-16 voraus | |
