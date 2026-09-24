@@ -3,7 +3,7 @@
 Revisionssichere Webapp, die aus vielen Markdown-Texten ein konsistentes, rollen- und spartenspezifisches oneSCM-Benutzerhandbuch erzeugt.
 Grundlage ist das Projektpaket in [`reference/`](reference/) (Masterprompt v1.0 und Referenz-UI).
 
-> **Status: Etappe 9 (v0.9.0).** Alle P0-, P1- und P2-Stories (US-001 … US-020) sind umgesetzt, dazu die KI-Umformulierung mit Quellenbindung je Satz (E-16, ADR-013) – auch für ganze Kapitel –, mehrere Projekte (ADR-014), Betriebsfunktionen (ADR-015), Barrierefreiheit nach WCAG 2.2 AA (ADR-016), semantische Suche (ADR-017), Handbuch-Releases mit Online-Hilfe (ADR-018), Kollaboration (ADR-019), Mehrsprachigkeit (ADR-020) samt mehrsprachiger Releases (ADR-021), Import aus Confluence, Word und Git (ADR-022), Analytik und Berichte (ADR-023) ein skalierbarer Vektorindex mit HNSW bzw. pgvector (ADR-024), mehrstufige Freigabe (ADR-025), ein Handbuch-Assistent mit Quellen je Satz (ADR-026) sowie Kubernetes-Betrieb mit Helm-Chart, OpenTelemetry und verteilten Rate-Limits (ADR-027). Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
+> **Status: Etappe 10 (v0.10.0).** Alle P0-, P1- und P2-Stories (US-001 … US-020) sind umgesetzt, dazu die KI-Umformulierung mit Quellenbindung je Satz (E-16, ADR-013) – auch für ganze Kapitel –, mehrere Projekte (ADR-014), Betriebsfunktionen (ADR-015), Barrierefreiheit nach WCAG 2.2 AA (ADR-016), semantische Suche (ADR-017), Handbuch-Releases mit Online-Hilfe (ADR-018), Kollaboration (ADR-019), Mehrsprachigkeit (ADR-020) samt mehrsprachiger Releases (ADR-021), Import aus Confluence, Word und Git (ADR-022), Analytik und Berichte (ADR-023) ein skalierbarer Vektorindex mit HNSW bzw. pgvector (ADR-024), mehrstufige Freigabe (ADR-025), ein Handbuch-Assistent mit Quellen je Satz (ADR-026), Kubernetes-Betrieb mit Helm-Chart, OpenTelemetry und verteilten Rate-Limits (ADR-027), Integrationen mit API-Tokens, signierten Webhooks und Confluence Cloud (ADR-028), Bilder mit Pflicht-Alternativtext (ADR-029), Kontexthilfe für oneSCM mit einbettbarem Widget (ADR-030) sowie eine Release-Pipeline mit signiertem Container-Image und SBOM (ADR-031). Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
 
 ## Dokumentation
 
@@ -73,11 +73,15 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
 13. **Veröffentlichung (ADR-018, ADR-021):** Den Stand aller freigegebenen Kapitel als Handbuch-Version veröffentlichen – mit Änderungsliste zur Vorversion und statischer Online-Hilfe (ZIP), inklusive freigegebener Übersetzungen mit Sprachumschalter.
 14. **Analytik (ADR-023):** Kennzahlen im Zeitverlauf, Freigabedauer und Erstfreigabequote, Projektbericht als PDF, Export für BI-Werkzeuge (CSV/JSON).
 15. **Assistent (ADR-026):** Fragen an das freigegebene Handbuch – Antworten mit Quellen je Satz, gefiltert nach Sprache, Rolle und Sparte; Wissenslücken für die Redaktion.
+16. **Kontexthilfe (ADR-030):** Kontext-IDs aus oneSCM (z. B. `order.create`) Kapiteln zuordnen; Aufruf per API, Deep-Link `/hilfe/<id>` oder eingebettetem Hilfe-Widget mit Assistent.
+17. **Integrationen (ADR-028):** API-Tokens für Maschinen, Webhooks zu Ereignissen des Projekts mit Zustellprotokoll.
 
 ### Import
 
 - Erlaubt sind `.md`, `.markdown`, `.zip` (E-01) sowie `.html`/`.htm` (Confluence-/HTML-Export) und `.docx` (Word), die in Markdown umgewandelt werden; das Original bleibt abrufbar (ADR-022). Grenzen: `UPLOAD_MAX_BYTES`, `ZIP_MAX_FILES` bzw. **Einstellungen**. Bestehende Installationen mit angepasster Endungsliste ergänzen die neuen Endungen dort.
-- **Git-Quellverbindungen** (Seite „Quellen“, Administration): https-Repository, Branch, Unterordner, Intervall. Unveränderte Commits erzeugen keinen Import. Ein Token wird nie gespeichert, sondern als Umgebungsvariable `GIT_CREDENTIAL_<NAME>` des Servers hinterlegt und in der Verbindung nur mit Namen genannt.
+- **Git-Quellverbindungen** (Seite „Quellen“, Administration): https-Repository, Branch, Unterordner, Intervall. Unveränderte Commits erzeugen keinen Import. Ein Token wird nie gespeichert, sondern als Umgebungsvariable `GIT_CREDENTIAL_<NAME>` des Servers hinterlegt und in der Verbindung nur mit Namen genannt. **Push-Webhook** (ADR-028): Die Verbindung zeigt URL und Geheimnis für GitHub (Secret, `application/json`) bzw. GitLab (Secret Token); ein Push auf den Branch stößt den Abgleich sofort an.
+- **Confluence Cloud** (ADR-028): Verbindungsart „Confluence“ mit Basis-URL (`https://firma.atlassian.net/wiki`) und Bereichsschlüssel; Zugang als `CONFLUENCE_CREDENTIAL_<NAME>=email:api-token`. Seiten und Bildanhänge werden übernommen, unveränderte Stände nicht erneut importiert.
+- **Bilder** (ADR-029): PNG, JPEG, GIF und WebP im ZIP (relativ referenziert, z. B. `![Anmeldemaske](bilder/maske.png)`), in Word, HTML und Confluence werden übernommen und als `media:<sha256>` versioniert abgelegt; in der Werkstatt fügt **🖼️ Bild einfügen** Bilder hinzu. Jedes Bild braucht einen Alternativtext – sonst blockiert das Qualitätsgate (`image_alt`).
 - Optionales Front-Matter je Datei legt Werte als **von der Quelle bestätigt** fest:
 
   ```yaml
@@ -87,6 +91,7 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
   market: DE
   release: "2026.3"
   evidence_status: source_confirmed
+  help_context: [order.create]  # optional: Kontext-IDs für die Kontexthilfe (ADR-030)
   ---
   ```
 
@@ -148,6 +153,32 @@ Jeder Test trägt eine ID (`[T-xxx]`), die in [`traceability/tests.json`](tracea
 | `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_SERVICE_NAME` | – / `onescm-handbook-studio` | OpenTelemetry-Tracing per OTLP/HTTP (ADR-027); ohne Endpunkt aus |
 | `GIT_CREDENTIAL_*` | – | Tokens für Git-Quellverbindungen (ADR-022), in der Verbindung nur per Name referenziert |
 | `GIT_TIMEOUT_MS` / `GIT_ALLOW_FILE` | `120000` / – | Zeitlimit je git-Aufruf; `1` erlaubt lokale Repositories (nur Tests) |
+| `CONFLUENCE_CREDENTIAL_*` | – | Zugang für Confluence-Cloud-Verbindungen (ADR-028): `email:api-token` (Basic) oder persönliches Token (Bearer) |
+| `INTEGRATIONS_ALLOW_INSECURE` | – | `1` erlaubt `http` und interne Ziele für Webhooks und Confluence (nur Tests/abgeschottete Netze; sonst SSRF-Schutz) |
+| `JOB_BACKOFF_MS` | `2000` | Grundabstand der Wiederholungen fehlgeschlagener Jobs (verdoppelt sich je Versuch), z. B. Webhook-Zustellungen |
+| `HELP_EMBED_ORIGINS` | – | Ursprünge, die das Hilfe-Widget einbetten dürfen (ADR-030), z. B. `https://onescm.example.com`; ohne Angabe nur die eigene Anwendung |
+| `APP_VERSION` | Version aus `package.json` | im Container-Image von der Release-Pipeline gesetzt; erscheint in `/api/v1/health` und Traces |
+
+**Integrationen (ADR-028):** API-Tokens (Seite „Integrationen“, Administration) gelten für ein Projekt mit gewählten Rechten: `curl -H "Authorization: Bearer oscm_…" https://handbuch.example.org/api/v1/chapters`. Webhooks senden Ereignisse (z. B. `chapter_version.approved`, `release.published`) als JSON mit `X-Onescm-Event`, `X-Onescm-Delivery`, `X-Onescm-Timestamp` und `X-Onescm-Signature: sha256=<HMAC-SHA256(Geheimnis, "<Zeitstempel>.<Rumpf>")>`; fehlgeschlagene Zustellungen werden bis zu fünfmal wiederholt.
+
+**Kontexthilfe in oneSCM (ADR-030):** Nach Freischaltung unter „Kontexthilfe“ bindet oneSCM das Widget ein – angezeigt wird der Stand des neuesten Releases:
+
+```html
+<script src="https://handbuch.example.org/help/widget.js" data-project="p_default" data-language="de" data-role="dealer" defer></script>
+<button type="button" data-onescm-help="order.create">Hilfe</button>   <!-- Klick oder F1 im Bereich öffnet die Hilfe -->
+```
+
+Server-seitig liefert `GET /api/v1/context-help/order.create?role=dealer&language=en` (API-Token) den freigegebenen Stand samt HTML.
+
+**Releases (ADR-031):** Version setzen, CHANGELOG-Abschnitt schreiben, taggen – die Pipeline baut und veröffentlicht den Rest:
+
+```bash
+npm run release -- bump 0.11.0 && $EDITOR CHANGELOG.md && npm run release -- check
+git commit -am "Release 0.11.0" && git tag v0.11.0 && git push --follow-tags
+docker pull ghcr.io/<owner>/<repo>:0.11.0
+cosign verify ghcr.io/<owner>/<repo>:0.11.0 --certificate-identity-regexp '^https://github.com/<owner>/<repo>/.github/workflows/release.yml@' --certificate-oidc-issuer https://token.actions.githubusercontent.com
+helm install handbuch oci://ghcr.io/<owner>/charts/onescm --version 0.11.0
+```
 
 Mehrere Instanzen sind mit PostgreSQL und `OBJECT_STORE=s3` möglich: Jobs werden per `FOR UPDATE SKIP LOCKED` verteilt, Dateien liegen im gemeinsamen Bucket (ADR-008).
 

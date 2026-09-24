@@ -1,6 +1,7 @@
 // KI-gestützte Umformulierung als Vorschlag (ADR-013, ENTSCHEIDUNG E-16).
 // Ablauf: Vorschlag anfordern → automatische Satzprüfung → Redaktion übernimmt oder verwirft.
 // Übernommene Vorschläge werden als eigener Modus `ai_rewritten` mit Satz-Evidenz gespeichert.
+import { imageRefs } from '../domain/media.js';
 import { audit, getSettings, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
@@ -68,6 +69,7 @@ export async function proposeRewrite(ctx: Ctx, blockId: string, input: { instruc
   if (b.mode === 'locked') throw conflict('Block ist gesperrt.');
   if (!REWRITABLE_KINDS.includes(b.kind)) throw unprocessable(`Blocktyp „${b.kind}“ wird nicht umformuliert.`);
   if (!b.sources.length) throw unprocessable('Absatz ohne Quelle: Umformulierung erfordert Quellen, auf die sich jeder Satz stützt.');
+  if (imageRefs(b.text).length) throw unprocessable('Absätze mit Bildern werden nicht umformuliert (Bildverweise blieben nicht erhalten).');
 
   const { db } = ctx;
   const snippetIds = b.sources.map((s) => s.snippetId);

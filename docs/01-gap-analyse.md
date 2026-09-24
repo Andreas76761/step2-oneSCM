@@ -141,4 +141,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: Handbuch-Assistent, mehrstufig
 | Handbuch-Assistent (NFR-13) | ✅ Antworten nur aus freigegebenen Absätzen mit Quellen je Satz, Wissenslücken ([ADR-026](adr/ADR-026-assistent.md)) |
 | Betrieb & Performance (NFR-14) | ✅ Import PostgreSQL 3,9×, Helm-Chart, OpenTelemetry, verteilte Rate-Limits, gesperrte Migrationen ([ADR-027](adr/ADR-027-betrieb-skalierung.md)) |
 
-Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL war durch Einzelabfragen langsamer als über SQLite (in Etappe 9 auf das 1,7-Fache von SQLite verringert); Confluence wird über den HTML-Export angebunden, nicht über die Cloud-API; gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten.
+## 1.12 Stand nach Etappe 10 (24.09.2026)
+
+Umfang vom Auftraggeber am 24.09.2026 festgelegt: Integrationen & API, Bilder & Medien, Kontexthilfe für oneSCM, Release-Pipeline.
+
+| Punkt | Ergebnis |
+|---|---|
+| Integrationen & API (NFR-15) | ✅ API-Tokens je Projekt mit Scopes, signierte Webhooks mit Wiederholung, Push-Webhooks für Git, Confluence-Cloud-Anbindung ([ADR-028](adr/ADR-028-integrationen.md)) |
+| Bilder & Medien (NFR-16) | ✅ Bilder aus ZIP/Word/HTML/Git/Confluence, inhaltsadressiert versioniert, in Werkstatt, Export, PDF und Online-Hilfe; Alternativtext als Gate-Pflicht ([ADR-029](adr/ADR-029-bilder-medien.md)) |
+| Kontexthilfe (NFR-17) | ✅ Kontext-IDs, API, Deep-Links, einbettbares Widget mit Assistent auf Basis des neuesten Releases ([ADR-030](adr/ADR-030-kontexthilfe.md)) |
+| Release-Pipeline (NFR-18) | ✅ Multi-Arch-Image in GHCR, SBOM, Provenienz, cosign keyless, Helm-Chart als OCI-Artefakt, Release-Notes aus dem CHANGELOG ([ADR-031](adr/ADR-031-release-pipeline.md)) |
+
+Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL war durch Einzelabfragen langsamer als über SQLite (in Etappe 9 auf das 1,7-Fache von SQLite verringert); Confluence wurde über den HTML-Export angebunden (seit Etappe 10 auch über die Cloud-API); gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten. Etappe 10: Die Release-Pipeline läuft erst mit dem ersten Tag in GitHub (lokal nur Build/Start des Images in der CI geprüft); das Widget zeigt öffentlich nur Release-Stände; SVG-Grafiken werden nicht übernommen.

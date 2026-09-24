@@ -739,6 +739,133 @@
     ]
   },
   {
+    "id": "T-153",
+    "title": "API-Tokens: projektgebunden, Scopes, Ablauf, Widerruf, kein Zugriff auf Projektverwaltung",
+    "file": "apps/server/test/stage10.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-15",
+      "US-020"
+    ]
+  },
+  {
+    "id": "T-154",
+    "title": "Ausgehende Webhooks: Signatur, Wiederholung, erneute Zustellung, SSRF-Schutz",
+    "file": "apps/server/test/stage10.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-15"
+    ]
+  },
+  {
+    "id": "T-155",
+    "title": "Push-Webhook: GitHub-Signatur/GitLab-Token, Branch-Filter, Abgleich",
+    "file": "apps/server/test/stage10.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-15",
+      "NFR-09"
+    ]
+  },
+  {
+    "id": "T-156",
+    "title": "Confluence Cloud: Seiten über die REST-API, Paginierung, Anmeldung, unveränderter Stand ohne Import",
+    "file": "apps/server/test/stage10.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-15",
+      "NFR-09"
+    ]
+  },
+  {
+    "id": "T-157",
+    "title": "Bilder: Formaterkennung, Verweise, Umschreiben relativer Pfade, sichere Darstellung (Einheit)",
+    "file": "apps/server/test/media.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-16"
+    ]
+  },
+  {
+    "id": "T-158",
+    "title": "ZIP-Import mit Bildern: Ablage je Projekt, umgeschriebene Verweise, geschützte Auslieferung, Hochladen",
+    "file": "apps/server/test/media.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-16",
+      "US-001"
+    ]
+  },
+  {
+    "id": "T-159",
+    "title": "Alternativtext als Pflicht (Gate image_alt); Bilder in HTML-, Markdown-, PDF-Export, Online-Hilfe und Backup",
+    "file": "apps/server/test/media.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-16",
+      "US-012",
+      "US-014"
+    ]
+  },
+  {
+    "id": "T-160",
+    "title": "Bilder aus Word, eingebettetem HTML und Confluence-Anhängen",
+    "file": "apps/server/test/media.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-16",
+      "NFR-09"
+    ]
+  },
+  {
+    "id": "T-161",
+    "title": "Absätze mit Bildern werden nicht KI-umformuliert",
+    "file": "apps/server/test/media.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-16",
+      "US-008"
+    ]
+  },
+  {
+    "id": "T-162",
+    "title": "Kontext-IDs: Validierung, Berechtigungen, Front-Matter-Zuordnung, Projekttrennung",
+    "file": "apps/server/test/contextHelp.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-17"
+    ]
+  },
+  {
+    "id": "T-163",
+    "title": "Hilfe zu einer Kontext-ID: freigegebene Inhalte nach Rolle, Abschnitt, Sprache mit Rückfall, API-Token",
+    "file": "apps/server/test/contextHelp.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-17",
+      "US-010"
+    ]
+  },
+  {
+    "id": "T-164",
+    "title": "Öffentliches Hilfe-Widget: Freischaltung, nur veröffentlichtes Release, CSP, Assistent",
+    "file": "apps/server/test/contextHelp.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-17",
+      "NFR-13"
+    ]
+  },
+  {
+    "id": "T-165",
+    "title": "Release-Werkzeug: Versionen konsistent, Versionssprung, Release-Notes, Version im Health-Endpunkt",
+    "file": "apps/server/test/release.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-18"
+    ]
+  },
+  {
     "id": "T-216",
     "title": "UI: mehrstufige Freigabe mit Workflow-Editor und offenen Entscheidungen",
     "file": "e2e/tests/app.spec.ts",
@@ -755,6 +882,33 @@
     "level": "e2e",
     "requirements": [
       "NFR-13"
+    ]
+  },
+  {
+    "id": "T-218",
+    "title": "UI: API-Token erstellen und verwenden, Webhook anlegen und testen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-15"
+    ]
+  },
+  {
+    "id": "T-219",
+    "title": "UI: Bilder in der Kapitelwerkstatt anzeigen und mit Pflicht-Alternativtext einfügen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-16"
+    ]
+  },
+  {
+    "id": "T-220",
+    "title": "UI: Kontexthilfe verwalten, Deep-Link, Hilfe-Widget in oneSCM mit Assistent",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-17"
     ]
   }
 ]

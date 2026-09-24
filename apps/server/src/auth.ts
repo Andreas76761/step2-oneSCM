@@ -9,6 +9,7 @@ import { resolveDemoUser, type Ctx, type User } from './context.js';
 import { json } from './db.js';
 import { PERMISSIONS } from './domain/reference.js';
 import { Problem } from './problem.js';
+import { TOKEN_PREFIX, tokenPrincipal } from './services/tokens.js';
 
 export const unauthorized = (detail: string) => new Problem(401, 'Unauthorized', detail);
 
@@ -62,6 +63,13 @@ export async function authenticate(ctx: Ctx, headers: Record<string, string | st
     const v = headers[name];
     return Array.isArray(v) ? v[0] : v;
   };
+  // API-Tokens (ADR-028) in beiden Betriebsarten
+  const bearer = h('authorization');
+  if (bearer?.startsWith(`Bearer ${TOKEN_PREFIX}`)) {
+    const p = await tokenPrincipal(ctx.db, bearer.slice(7).trim());
+    if (!p || 'error' in p) throw unauthorized(p && 'error' in p ? p.error : 'API-Token ungültig.');
+    return p;
+  }
   if (ctx.config.authMode === 'demo') return resolveDemoUser(ctx.db, h('x-user-id'));
 
   const oidc = ctx.config.oidc!;

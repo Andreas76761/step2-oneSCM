@@ -1,3 +1,4 @@
+import { crc32, deflateSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
 
 const NAV = ['Dashboard', 'Quellen', 'Textcluster', 'Widersprüche', 'Dopplungen', 'Kapitelgenerator', 'Kapitelwerkstatt', 'Rollenansichten', 'Spartenansichten', 'Optimierungen', 'Terminologie', 'Evidenz', 'Freigabe', 'Export', 'Traceability', 'Einstellungen'];
@@ -301,6 +302,11 @@ test('[T-214] Import aus Fremdsystemen: HTML-Datei hochladen, Git-Repository ver
   await dialog.getByLabel('Name').fill('Handbuch-Repo');
   await dialog.getByLabel('Repository-URL (https)').fill(repo);
   await dialog.getByRole('button', { name: 'Anlegen und abgleichen' }).click();
+  // Push-Webhook: URL und Geheimnis werden einmalig angezeigt
+  const hook = page.getByRole('dialog', { name: 'Push-Webhook einrichten' });
+  await expect(hook.getByLabel('Geheimnis')).toHaveValue(/^whsec_/);
+  await expect(hook.getByLabel('Payload-URL')).toHaveValue(/\/api\/v1\/hooks\/source-connections\/conn_/);
+  await hook.getByRole('button', { name: 'Eingetragen' }).click();
   await expect(page.getByRole('status')).toContainText('Abgleich „Handbuch-Repo“ abgeschlossen');
   await expect(page.locator('tr', { hasText: 'Handbuch-Repo' }).getByText('aktuell')).toBeVisible();
   await page.getByLabel('Suche', { exact: true }).fill('Git-Repository');
@@ -383,4 +389,151 @@ test('[T-217] Handbuch-Assistent: Frage mit Quellenangabe, Bewertung, Wissenslü
   const gaps = page.locator('.card', { hasText: 'Wissenslücken' });
   await expect(gaps.getByRole('cell', { name: 'Wie konfiguriere ich den Quantencomputer?' })).toBeVisible();
   await expect(gaps.getByRole('cell', { name: /Zurückweisung ohne Kommentar/ })).toBeVisible();
+});
+
+test('[T-218] Integrationen: API-Token erstellen und verwenden, Webhook anlegen und testen', async ({ page, request }) => {
+  await page.goto('/integrationen');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Integrationen');
+  const tokens = page.locator('.card', { hasText: 'API-Tokens' });
+  await tokens.getByLabel('Name').fill('E2E-Bot');
+  await tokens.getByRole('button', { name: 'Token erstellen' }).click();
+  const secret = page.getByRole('dialog', { name: 'API-Token „E2E-Bot“' });
+  const token = (await secret.getByLabel('API-Token „E2E-Bot“').textContent())!.trim();
+  expect(token).toMatch(/^oscm_/);
+  await secret.getByRole('button', { name: 'Gespeichert' }).click();
+  await expect(tokens.getByRole('cell', { name: 'E2E-Bot', exact: true })).toBeVisible();
+  // Token funktioniert ohne Benutzerkopf
+  const res = await request.get('/api/v1/chapters', { headers: { authorization: `Bearer ${token}` } });
+  expect(res.ok()).toBe(true);
+
+  await page.getByRole('button', { name: 'Webhook anlegen' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Webhook anlegen' });
+  await dlg.getByLabel('Ziel-URL (https)').fill('http://127.0.0.1:9/hook');
+  await dlg.getByLabel('import.finished').check();
+  await dlg.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByRole('dialog', { name: 'Webhook-Geheimnis' }).getByLabel('Webhook-Geheimnis')).toContainText('whsec_');
+  await page.getByRole('button', { name: 'Gespeichert' }).click();
+  await page.getByRole('button', { name: 'Testen' }).click();
+  await expect(page.getByText('Testereignis gesendet.')).toBeVisible();
+  await expect(page.locator('.webhook').getByRole('cell', { name: 'ping' })).toBeVisible();
+  // Widerruf
+  page.once('dialog', (d) => void d.accept());
+  await tokens.getByRole('button', { name: 'Token E2E-Bot widerrufen' }).click();
+  await expect(tokens.getByText('widerrufen', { exact: true })).toBeVisible();
+  expect((await request.get('/api/v1/chapters', { headers: { authorization: `Bearer ${token}` } })).status()).toBe(401);
+});
+
+/** Kleines gültiges PNG (einfarbig) */
+function png(w: number, h: number, rgb: [number, number, number]) {
+  const chunk = (type: string, data: Buffer) => {
+    const td = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+    const out = Buffer.alloc(12 + data.length);
+    out.writeUInt32BE(data.length, 0);
+    td.copy(out, 4);
+    out.writeUInt32BE(crc32(td), 8 + data.length);
+    return out;
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(w, 0);
+  ihdr.writeUInt32BE(h, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 2;
+  const row = Buffer.concat([Buffer.from([0]), Buffer.from(Array.from({ length: w }, () => rgb).flat())]);
+  return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', ihdr), chunk('IDAT', deflateSync(Buffer.concat(Array.from({ length: h }, () => row)))), chunk('IEND', Buffer.alloc(0))]);
+}
+
+test('[T-219] Bilder: Anzeige in der Kapitelwerkstatt, Bild mit Pflicht-Alternativtext einfügen', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  const up = await request.post('/api/v1/media', { headers: h, multipart: { file: { name: 'maske.png', mimeType: 'image/png', buffer: png(40, 20, [29, 99, 216]) } } });
+  expect(up.status()).toBe(201);
+  const { sha256 } = await up.json();
+  const md = `---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# 11. E2E-Bilder\n\n## 11.1 Zweck\n\nDie Bildschirmmaske zeigt die Anmeldung.\n\n![Anmeldemaske im Browser](media:${sha256})\n`;
+  expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name: 'e2e_bilder.md', mimeType: 'text/markdown', buffer: Buffer.from(md) } } })).status()).toBe(202);
+  let ch: any;
+  await expect.poll(async () => (ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '11. E2E-Bilder'))).toBeTruthy();
+  expect((await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).ok()).toBe(true);
+
+  await page.goto(`/werkstatt/${ch.id}`);
+  const img = page.getByRole('img', { name: 'Anmeldemaske im Browser' });
+  await expect(img).toBeVisible();
+  await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBe(40);
+
+  // Bild in einen Absatz einfügen: Einfügen erst mit Alternativtext möglich
+  const block = page.getByRole('article').filter({ hasText: 'Die Bildschirmmaske zeigt die Anmeldung.' });
+  await block.getByRole('button', { name: 'Bearbeiten' }).click();
+  await block.getByRole('button', { name: '🖼️ Bild einfügen' }).click();
+  await block.getByLabel('Bilddatei (PNG, JPEG, GIF, WebP)').setInputFiles({ name: 'knopf.png', mimeType: 'image/png', buffer: png(12, 6, [200, 30, 30]) });
+  const insert = block.getByRole('button', { name: 'Einfügen' });
+  await expect(insert).toBeDisabled();
+  await block.getByLabel('Alternativtext (Pflicht)').fill('Knopf „Anmelden“');
+  await insert.click();
+  await expect(block.getByLabel('Text bearbeiten')).toHaveValue(/!\[Knopf „Anmelden“\]\(media:[a-f0-9]{64}\)$/);
+  await block.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByRole('img', { name: 'Knopf „Anmelden“' })).toBeVisible();
+});
+
+test('[T-220] Kontexthilfe: Front-Matter-Zuordnung, Freischaltung, Deep-Link, Hilfe-Widget in oneSCM mit Assistent', async ({ page, request }) => {
+  const admin = { 'X-User-Id': 'u-admin' };
+  const project = await (await request.post('/api/v1/projects', { headers: admin, data: { name: 'E2E-Kontexthilfe', visibility: 'open' } })).json();
+  const as = (user: string) => ({ 'X-User-Id': user, 'X-Project-Id': project.id });
+  const md = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\nhelp_context: order.create\n---\n# 12. Aufträge anlegen\n\n## 12.1 Zweck\n\nAufträge legen Sie im Menü Verkauf an.\n';
+  expect((await request.post('/api/v1/imports', { headers: as('u-admin'), multipart: { file: { name: 'auftraege.md', mimeType: 'text/markdown', buffer: Buffer.from(md) } } })).status()).toBe(202);
+  let ch: any;
+  await expect.poll(async () => (ch = (await (await request.get('/api/v1/chapters', { headers: as('u-admin') })).json()).find((c: any) => c.title === '12. Aufträge anlegen'))).toBeTruthy();
+  const gen = await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: as('u-redaktion') });
+  const v = await gen.json();
+  expect(gen.ok(), JSON.stringify(v)).toBe(true);
+  for (const b of v.sections.flatMap((s: any) => s.blocks)) if (b.kind === 'gap') await request.delete(`/api/v1/content-blocks/${b.id}?reason=entfällt`, { headers: as('u-redaktion') });
+  expect((await request.post(`/api/v1/chapter-versions/${v.id}/submit`, { headers: as('u-redaktion'), data: {} })).ok()).toBe(true);
+  expect((await request.post(`/api/v1/chapter-versions/${v.id}/approve`, { headers: as('u-freigabe'), data: { comment: 'ok' } })).ok()).toBe(true);
+  expect((await request.post('/api/v1/releases', { headers: as('u-freigabe'), data: { version: 'e2e-hilfe' } })).status()).toBe(201);
+
+  // Verwaltung im Projekt
+  await page.goto('/');
+  await page.evaluate((id) => localStorage.setItem('onescm.project', id), project.id);
+  await page.goto('/kontexthilfe');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kontexthilfe');
+  const row = page.getByRole('row', { name: /order\.create/ });
+  await expect(row).toContainText('Front-Matter');
+  await page.getByRole('button', { name: 'Freischalten' }).click();
+  await expect(page.getByText('Öffentliche Einbettung freigeschaltet.')).toBeVisible();
+  await expect(page.getByLabel('Einbettungscode')).toContainText(`data-project="${project.id}"`);
+  // Deep-Link
+  await row.getByRole('link', { name: 'Ansehen' }).click();
+  await expect(page).toHaveURL(/\/hilfe\/order\.create$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('12. Aufträge anlegen');
+  await expect(page.getByText('Aufträge legen Sie im Menü Verkauf an.')).toBeVisible();
+  await page.getByLabel('Rolle').selectOption({ index: 1 });
+  await expect(page).toHaveURL(/\/hilfe\/order\.create\?role=/);
+
+  // Hilfe-Widget auf einer (nachgebildeten) oneSCM-Seite; Einbettung per HELP_EMBED_ORIGINS erlaubt
+  const base = new URL(page.url()).origin;
+  await page.route((u) => u.origin === base && u.pathname.startsWith('/onescm/'), (route) => route.fulfill({
+    contentType: 'text/html',
+    body: `<!doctype html><html lang="de"><head><title>oneSCM</title></head><body><h1>Auftrag anlegen</h1><form data-onescm-help="order.create"><label>Kunde <input id="kunde"></label></form>
+<button type="button" data-onescm-help="order.create">Hilfe</button><script src="${base}/help/widget.js" data-project="${project.id}" data-role="hq"></script></body></html>`,
+  }));
+  await page.goto(`${base}/onescm/auftrag`);
+  await expect.poll(() => page.evaluate(() => typeof (window as any).OneScmHelp)).toBe('object');
+  await page.getByRole('button', { name: 'Hilfe' }).click();
+  const panel = page.getByRole('dialog', { name: 'oneSCM-Hilfe' });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByRole('button', { name: 'Hilfe schließen' })).toBeFocused();
+  const frame = page.frameLocator('#onescm-help-panel iframe');
+  await expect(frame.getByRole('heading', { level: 1 })).toHaveText('12. Aufträge anlegen');
+  await expect(frame.getByText('Version e2e-hilfe')).toBeVisible();
+  await frame.getByLabel('Frage an den Handbuch-Assistenten').fill('Wo lege ich Aufträge an?');
+  await frame.getByRole('button', { name: 'Fragen' }).click();
+  await expect(frame.getByRole('status')).toContainText('Menü Verkauf');
+  await panel.getByRole('button', { name: 'Hilfe schließen' }).click();
+  await expect(panel).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Hilfe' })).toBeFocused();
+  // F1 im Formularbereich öffnet die Hilfe zur Stelle
+  await page.getByLabel('Kunde').focus();
+  await page.keyboard.press('F1');
+  await expect(panel).toBeVisible();
+
+  // zurück ins Standardprojekt (für folgende Tests)
+  await page.goto(`${base}/`);
+  await page.evaluate(() => localStorage.setItem('onescm.project', 'p_default'));
 });

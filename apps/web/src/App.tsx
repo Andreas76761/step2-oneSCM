@@ -25,6 +25,8 @@ import { InboxPage } from './pages/Discussion';
 import { TranslationsPage } from './pages/Translations';
 import { AnalyticsPage } from './pages/Analytics';
 import { AssistantPage } from './pages/Assistant';
+import { IntegrationsPage } from './pages/Integrations';
+import { ContextHelpAdminPage, ContextHelpPage } from './pages/ContextHelp';
 
 // Navigation gemäß Masterprompt §14
 const NAV = [
@@ -45,9 +47,11 @@ const NAV = [
   { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
   { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
   { to: '/assistent', label: 'Assistent', icon: '💬' },
+  { to: '/kontexthilfe', label: 'Kontexthilfe', icon: '❓' },
   { to: '/analytik', label: 'Analytik', icon: '📈' },
   { to: '/traceability', label: 'Traceability', icon: '🔗' },
   { to: '/projekte', label: 'Projekte', icon: '🗂️' },
+  { to: '/integrationen', label: 'Integrationen', icon: '🔌' },
   { to: '/einstellungen', label: 'Einstellungen', icon: '⚙' },
 ];
 
@@ -212,6 +216,9 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/aufgaben" element={<InboxPage onRead={reloadUnread} />} />
             <Route path="/analytik" element={<AnalyticsPage />} />
             <Route path="/assistent" element={<AssistantPage />} />
+            <Route path="/integrationen" element={<IntegrationsPage />} />
+            <Route path="/kontexthilfe" element={<ContextHelpAdminPage />} />
+            <Route path="/hilfe/:contextKey" element={<ContextHelpPage />} />
             <Route path="/traceability" element={<TraceabilityPage />} />
             <Route path="/projekte" element={<ProjectsPage onChanged={reloadProjects} />} />
             <Route path="/einstellungen" element={<SettingsPage />} />

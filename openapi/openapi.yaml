@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.9.0
+  version: 0.10.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -35,6 +35,9 @@ tags:
   - name: Quellverbindungen
   - name: Analytik
   - name: Assistent
+  - name: Integrationen
+  - name: Medien
+  - name: Kontexthilfe
   - name: System
 components:
   securitySchemes:
@@ -60,6 +63,12 @@ components:
     ProjectId: { name: projectId, in: path, required: true, schema: { type: string } }
     ReleaseId: { name: releaseId, in: path, required: true, schema: { type: string } }
     ConnectionId: { name: connectionId, in: path, required: true, schema: { type: string } }
+    WebhookId: { name: webhookId, in: path, required: true, schema: { type: string } }
+    HelpContextId: { name: helpContextId, in: path, required: true, schema: { type: string } }
+    ContextKey: { name: contextKey, in: path, required: true, schema: { type: string, pattern: '^[a-z0-9][a-z0-9._:-]{0,79}$' }, description: 'Kontext-ID aus oneSCM, z. B. order.create' }
+    HelpRole: { name: role, in: query, schema: { type: string }, description: Rollencode (Inhalte der Rolle und allgemeine Inhalte) }
+    HelpDivision: { name: division, in: query, schema: { type: string }, description: Spartencode }
+    HelpLanguage: { name: language, in: query, schema: { type: string }, description: 'Zielsprache des Projekts; ohne freigegebene Übersetzung Rückfall auf Deutsch' }
     From: { name: from, in: query, schema: { type: string, format: date }, description: 'Beginn (JJJJ-MM-TT, Standard: 89 Tage vor Ende)' }
     To: { name: to, in: query, schema: { type: string, format: date }, description: 'Ende (JJJJ-MM-TT, Standard: heute)' }
     CommentId: { name: commentId, in: path, required: true, schema: { type: string } }
@@ -435,12 +444,12 @@ paths:
         '200': { description: OK }
     post:
       operationId: createSourceConnection
-      summary: Git-Repository verbinden und sofort abgleichen (Berechtigung admin; nur https, Token nur über Umgebungsvariable GIT_CREDENTIAL_*)
+      summary: Git-Repository oder Confluence-Cloud-Bereich verbinden und sofort abgleichen (Berechtigung admin; nur https, Zugangsdaten nur über Umgebungsvariablen GIT_CREDENTIAL_* bzw. CONFLUENCE_CREDENTIAL_*). Git-Verbindungen erhalten ein Push-Webhook-Geheimnis (nur in dieser Antwort)
       tags: [Quellverbindungen]
-      x-requirements: [NFR-09]
+      x-requirements: [NFR-09, NFR-15]
       x-extension: true
       requestBody:
-        content: { application/json: { schema: { type: object, required: [name, url], properties: { name: { type: string, maxLength: 120 }, url: { type: string }, branch: { type: [string, 'null'] }, subPath: { type: string }, credentialEnv: { type: [string, 'null'], pattern: '^GIT_CREDENTIAL_[A-Z0-9_]+$' }, intervalMinutes: { type: integer, description: '0 = nur manuell, sonst 5 … 10080' } } } } }
+        content: { application/json: { schema: { type: object, required: [name, url], properties: { kind: { type: string, enum: [git, confluence], default: git }, name: { type: string, maxLength: 120 }, url: { type: string }, branch: { type: [string, 'null'] }, subPath: { type: string }, spaceKey: { type: string, description: 'Confluence-Bereichsschlüssel (Pflicht bei kind=confluence)' }, credentialEnv: { type: [string, 'null'], pattern: '^(GIT|CONFLUENCE)_CREDENTIAL_[A-Z0-9_]+$' }, intervalMinutes: { type: integer, description: '0 = nur manuell, sonst 5 … 10080' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Angelegt, Abgleich eingeplant }
@@ -1788,3 +1797,281 @@ paths:
       security: []
       responses:
         '200': { description: OK }
+  /api-tokens:
+    get:
+      operationId: listApiTokens
+      summary: API-Tokens des Projekts (ohne Klartext; Berechtigung admin, ADR-028)
+      tags: [Integrationen]
+      x-requirements: [NFR-15]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Tokens mit Präfix, Scopes, Ablauf, letzter Nutzung, Widerruf' }
+    post:
+      operationId: createApiToken
+      summary: 'API-Token anlegen: projektgebunden, Scopes höchstens die eigenen Rechte, 1–365 Tage; Klartext (oscm_…) nur in dieser Antwort'
+      tags: [Integrationen]
+      x-requirements: [NFR-15]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [name], properties: { name: { type: string, maxLength: 80 }, scopes: { type: array, items: { type: string, enum: [read, edit, decide, approve, admin] } }, expiresInDays: { type: integer, minimum: 1, maximum: 365 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Angelegt, Feld token enthält den Klartext' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /api-tokens/{tokenId}:
+    delete:
+      operationId: revokeApiToken
+      summary: API-Token widerrufen (sofort wirksam)
+      tags: [Integrationen]
+      x-requirements: [NFR-15]
+      x-extension: true
+      parameters: [{ name: tokenId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Widerrufen }
+        '404': { $ref: '#/components/responses/Problem' }
+  /webhooks:
+    get:
+      operationId: listWebhooks
+      summary: Webhook-Abos mit den letzten Zustellungen und der Liste abonnierbarer Ereignisse (Berechtigung admin)
+      tags: [Integrationen]
+      x-requirements: [NFR-15]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ events, items }' }
+    post:
+      operationId: createWebhook
+      summary: 'Webhook abonnieren (https, kein internes Netz); Signatur X-Onescm-Signature = sha256=HMAC(Geheimnis, Zeitstempel.Rumpf); Geheimnis whsec_… nur in dieser Antwort'
+      tags: [Integrationen]
+      x-requirements: [NFR-15]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [url, events], properties: { url: { type: string, format: uri }, events: { type: array, items: { type: string }, description: 'Ereignisse oder *' }, description: { type: string, maxLength: 200 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Angelegt }
+        '400': { $ref: '#/components/responses/Problem' }
+  /webhooks/{webhookId}:
+    patch:
+      operationId: updateWebhook
+      summary: Webhook ändern (Ziel, Ereignisse, aktiv)
+      tags: [Integrationen]
+      x-requirements: [NFR-15]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/WebhookId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { url: { type: string }, events: { type: array, items: { type: string } }, active: { type: boolean }, description: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteWebhook
+      summary: Webhook entfernen (mit Zustellprotokoll)
+      tags: [Integrationen]
+      x-requirements: [NFR-15]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/WebhookId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: Entfernt }
+  /webhooks/{webhookId}/deliveries:
+    get:
+      operationId: listWebhookDeliveries
+      summary: Zustellprotokoll (Status, Versuche, Antwortcode, Fehler)
+      tags: [Integrationen]
+      x-requirements: [NFR-15]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/WebhookId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+  /webhooks/{webhookId}/ping:
+    post:
+      operationId: pingWebhook
+      summary: Testereignis „ping“ senden
+      tags: [Integrationen]
+      x-requirements: [NFR-15]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/WebhookId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '202': { description: Zustellung eingeplant }
+  /webhook-deliveries/{deliveryId}/redeliver:
+    post:
+      operationId: redeliverWebhook
+      summary: Zustellung erneut anstoßen
+      tags: [Integrationen]
+      x-requirements: [NFR-15]
+      x-extension: true
+      parameters: [{ name: deliveryId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '202': { description: Zustellung eingeplant }
+        '404': { $ref: '#/components/responses/Problem' }
+  /hooks/source-connections/{hookConnectionId}:
+    post:
+      operationId: receivePushWebhook
+      summary: 'Push-Webhook eines Git-Servers (öffentlich): GitHub X-Hub-Signature-256 oder GitLab X-Gitlab-Token; Push auf den verbundenen Branch plant einen Abgleich'
+      tags: [Quellverbindungen]
+      x-requirements: [NFR-15, NFR-09]
+      x-extension: true
+      security: []
+      parameters: [{ name: hookConnectionId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object } } }
+      responses:
+        '200': { description: 'ping beantwortet oder Push auf anderen Branch ignoriert' }
+        '202': { description: Abgleich eingeplant }
+        '401': { description: Unbekannte Verbindung oder falsche Signatur (nicht unterscheidbar) }
+  /media:
+    get:
+      operationId: listMedia
+      summary: Bilder des Projekts (inhaltsadressiert, ADR-029)
+      tags: [Medien]
+      x-requirements: [NFR-16]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'SHA-256, Format, Größe, Abmessungen, Herkunft' }
+    post:
+      operationId: uploadMedia
+      summary: 'Bild hochladen (PNG, JPEG, GIF, WebP nach Dateisignatur; kein SVG; Berechtigung edit); Antwort enthält den Markdown-Verweis ![…](media:<sha256>)'
+      tags: [Medien]
+      x-requirements: [NFR-16]
+      x-extension: true
+      requestBody:
+        content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Abgelegt }
+        '400': { description: Kein unterstütztes Bildformat }
+        '413': { description: Zu groß }
+  /media/{mediaSha}:
+    get:
+      operationId: getMedia
+      summary: Bild ausliefern (nur eigenes Projekt, nosniff, unveränderlich zwischenspeicherbar)
+      tags: [Medien]
+      x-requirements: [NFR-16]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string, pattern: '^[a-f0-9]{64}$' } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Bilddaten, content: { image/png: {}, image/jpeg: {}, image/gif: {}, image/webp: {} }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /help-contexts:
+    get:
+      operationId: listHelpContexts
+      summary: Kontext-IDs des Projekts mit Kapitel, Abschnitt, Herkunft (manuell/Front-Matter) und Einbettungsstatus (ADR-030)
+      tags: [Kontexthilfe]
+      x-requirements: [NFR-17]
+      x-extension: true
+      parameters: [{ name: chapterId, in: query, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ public, embedPath, items }' }
+    post:
+      operationId: createHelpContext
+      summary: Kontext-ID einem Kapitel (optional einem Abschnitt) zuordnen (Berechtigung edit)
+      tags: [Kontexthilfe]
+      x-requirements: [NFR-17]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [key, chapterId], properties: { key: { type: string }, chapterId: { type: string }, section: { type: [string, 'null'] }, description: { type: string, maxLength: 300 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Angelegt }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409': { description: Kontext-ID bereits vergeben }
+  /help-contexts/{helpContextId}:
+    patch:
+      operationId: updateHelpContext
+      summary: Zuordnung ändern (wird damit manuell und bei Importen nicht mehr überschrieben)
+      tags: [Kontexthilfe]
+      x-requirements: [NFR-17]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/HelpContextId' }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { chapterId: { type: string }, section: { type: [string, 'null'] }, description: { type: [string, 'null'] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteHelpContext
+      summary: Zuordnung entfernen
+      tags: [Kontexthilfe]
+      x-requirements: [NFR-17]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/HelpContextId' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: Entfernt }
+  /help-settings:
+    put:
+      operationId: setHelpSettings
+      summary: Öffentliche Einbettung der Kontexthilfe ein-/ausschalten (nur neuestes Release; Berechtigung admin)
+      tags: [Kontexthilfe]
+      x-requirements: [NFR-17]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { public: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+        '403': { $ref: '#/components/responses/Problem' }
+  /context-help/{contextKey}:
+    get:
+      operationId: getContextHelp
+      summary: 'Hilfe zu einer Kontext-ID: freigegebener Stand nach Rolle, Sparte und Sprache (Rückfall Deutsch), Abschnitte und fertiges HTML, Deep-Link – für oneSCM per API-Token'
+      tags: [Kontexthilfe]
+      x-requirements: [NFR-17]
+      x-extension: true
+      parameters: [{ $ref: '#/components/parameters/ContextKey' }, { $ref: '#/components/parameters/HelpRole' }, { $ref: '#/components/parameters/HelpDivision' }, { $ref: '#/components/parameters/HelpLanguage' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'key, title, versionNo, language, fallback, sections, html, deepLink' }
+        '400': { description: Unbekannte Rolle, Sparte oder Sprache }
+        '404': { description: Unbekannte Kontext-ID oder Kapitel nicht freigegeben }
+  /help/embed/{projectId}/{contextKey}:
+    servers: [{ url: / }]
+    get:
+      operationId: getEmbeddedHelp
+      summary: 'Öffentliche Hilfeseite für das Widget (ohne Anmeldung, ohne Skripte; nur bei freigeschalteter Einbettung, Stand des neuesten Releases; frame-ancestors laut HELP_EMBED_ORIGINS)'
+      tags: [Kontexthilfe]
+      x-requirements: [NFR-17]
+      x-extension: true
+      security: []
+      parameters: [{ name: projectId, in: path, required: true, schema: { type: string } }, { $ref: '#/components/parameters/ContextKey' }, { $ref: '#/components/parameters/HelpRole' }, { $ref: '#/components/parameters/HelpDivision' }, { $ref: '#/components/parameters/HelpLanguage' }]
+      responses:
+        '200': { description: 'HTML, content: { text/html: {} }' }
+        '404': { description: Nicht freigeschaltet, unbekannt oder nicht veröffentlicht (nicht unterscheidbar) }
+    post:
+      operationId: askEmbeddedHelp
+      summary: Frage an den Handbuch-Assistenten aus dem Widget (Formular; nur Inhalte des neuesten Releases; Rate-Limit)
+      tags: [Kontexthilfe]
+      x-requirements: [NFR-17, NFR-13]
+      x-extension: true
+      security: []
+      parameters: [{ name: projectId, in: path, required: true, schema: { type: string } }, { $ref: '#/components/parameters/ContextKey' }]
+      requestBody:
+        content: { application/x-www-form-urlencoded: { schema: { type: object, required: [question], properties: { question: { type: string }, role: { type: string }, division: { type: string }, language: { type: string } } } } }
+      responses:
+        '200': { description: 'HTML mit Antwort und Quellen, content: { text/html: {} }' }
+        '404': { description: Nicht freigeschaltet oder unbekannt }
+        '429': { description: Rate-Limit }
+  /help/widget.js:
+    servers: [{ url: / }]
+    get:
+      operationId: getHelpWidget
+      summary: 'Einbettungsskript für oneSCM: Elemente mit data-onescm-help öffnen die Hilfe (Klick/F1), window.OneScmHelp.open(kontext, { role, language })'
+      tags: [Kontexthilfe]
+      x-requirements: [NFR-17]
+      x-extension: true
+      security: []
+      responses:
+        '200': { description: 'JavaScript, content: { text/javascript: {} }' }

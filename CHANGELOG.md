@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.10.0 – Etappe 10 (24.09.2026)
+
+### Hinzugefügt
+- **Integrationen & API (ADR-028):** API-Tokens je Projekt (`Authorization: Bearer oscm_…`, Scopes höchstens die eigenen Rechte, Ablauf, Widerruf), ausgehende Webhooks zu Audit-Ereignissen mit HMAC-Signatur, Zeitstempel, Wiederholung über die Jobqueue, Zustellprotokoll, Test und erneuter Zustellung (SSRF-Schutz); Push-Webhooks für Git-Verbindungen (GitHub/GitLab); Confluence Cloud als Quellverbindung über die REST-API; Seite „Integrationen“. Migration `018_integrations.sql`.
+- **Bilder & Medien (ADR-029):** Bilder (PNG, JPEG, GIF, WebP) aus ZIP, Word, HTML, Git und Confluence werden inhaltsadressiert je Projekt abgelegt und als `media:<sha256>` referenziert; Anzeige in der Werkstatt, **🖼️ Bild einfügen** mit Pflicht-Alternativtext, Gate-Prüfung `image_alt`, Einbettung in HTML-, Markdown- und PDF-Export, Bilddateien in der Online-Hilfe, Medien im Backup. Migration `019_media.sql`.
+- **Kontexthilfe für oneSCM (ADR-030):** Kontext-IDs an Kapiteln/Abschnitten (manuell oder Front-Matter `help_context`), `GET /api/v1/context-help/{key}` nach Rolle, Sparte und Sprache, Deep-Link `/hilfe/{key}`, Seite „Kontexthilfe“, einbettbares Hilfe-Widget (`/help/widget.js`, Klick/F1) mit Assistent auf Basis des neuesten Releases, freischaltbar je Projekt, Einbettung nur für `HELP_EMBED_ORIGINS`. Migration `020_context_help.sql`.
+- **Release-Pipeline (ADR-031):** Tag `vX.Y.Z` baut ein Multi-Arch-Image in GHCR mit SemVer-Tags, SBOM und Provenienz, signiert es keyless mit cosign, veröffentlicht das Helm-Chart als OCI-Artefakt und erstellt das GitHub-Release mit Notes aus diesem CHANGELOG; `npm run release -- check|bump|notes`; Version im Health-Endpunkt; CI prüft Versionen, Workflows (actionlint) und das Image.
+- Tests T-153 … T-165, E2E T-218 … T-220 (axe auch für „Integrationen“ und „Kontexthilfe“); Anforderungen NFR-15 … NFR-18.
+
+### Geändert
+- Git-Verbindungen übernehmen Bilddateien; ein Import gilt als fehlgeschlagen, wenn alle Dokumente (ohne Bilder) fehlschlagen.
+- CSP der Anwendung erlaubt `blob:`-Bilder (angemeldet geladene Medien); Routen mit eigener CSP (Medien, eingebettete Hilfe) behalten diese.
+- Absätze mit Bildern werden nicht KI-umformuliert; maschinelle Übersetzungen behalten Bildverweise.
+- Traceability berücksichtigt pfadeigene `servers` der OpenAPI (öffentliche Pfade unter `/help`).
+
+### Behoben
+- Review: SSRF-Schutz erkennt IPv4-abgebildete IPv6-Adressen, den ganzen Link-Local-Bereich `fe80::/10` und weitere nicht öffentliche Bereiche (`net.BlockList`); GitHub-Push-Webhooks mit `application/x-www-form-urlencoded` werden verarbeitet; der Assistent im Hilfe-Widget antwortet ohne freigegebene Übersetzung aus der angezeigten deutschen Fassung.
+- Container-Image enthielt nicht hochgezogene Laufzeitabhängigkeiten aus `apps/server/node_modules` nicht (z. B. `@fastify/static`) und startete nicht; der neue Smoke-Test in der CI deckt das künftig auf.
+
 ## 0.9.0 – Etappe 9 (24.09.2026)
 
 ### Hinzugefügt

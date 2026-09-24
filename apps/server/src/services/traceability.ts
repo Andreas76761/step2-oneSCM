@@ -31,7 +31,7 @@ export function loadTraceSources(ctx: Pick<Ctx, 'config'>) {
     for (const method of ['get', 'post', 'put', 'patch', 'delete']) {
       const op = item[method];
       if (!op) continue;
-      ops.push({ id: op.operationId, method: method.toUpperCase(), path: `${spec.servers?.[0]?.url ?? ''}${p}`, summary: op.summary ?? '', requirements: op['x-requirements'] ?? [], extension: !!op['x-extension'] });
+      ops.push({ id: op.operationId, method: method.toUpperCase(), path: `${(item.servers ?? spec.servers)?.[0]?.url?.replace(/\/$/, '') ?? ''}${p}`, summary: op.summary ?? '', requirements: op['x-requirements'] ?? [], extension: !!op['x-extension'] });
     }
   }
   const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'));

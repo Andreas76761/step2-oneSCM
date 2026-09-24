@@ -7,7 +7,9 @@ import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { gateForChapter, getChapterVersion } from './chapters.js';
 import { compareVersions } from './compare.js';
 import { badgeLine, KIND_LABEL, renderMarkdown, visible, type ExportChapter } from './exports.js';
-import { escapeHtml, markdownToHtml } from './render.js';
+import { escapeHtml, markdownToHtml, type ImageSource } from './render.js';
+import { inlineMedia, loadMedia, type MediaFile } from './media.js';
+import { MIME_EXT } from '../domain/media.js';
 import { projectLanguages, translatedChapter } from './translations.js';
 import { LANGUAGES } from '../domain/translate.js';
 
@@ -50,7 +52,7 @@ export async function getRelease(ctx: Ctx, id: string) {
 
 const PAGE_CSS = `body{font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#0f172a;margin:0}
 header{background:#0f1f3d;color:#fff;padding:14px 20px}header a{color:#fff}main{max-width:860px;margin:0 auto;padding:20px}
-nav.toc ol{padding-left:1.2rem}h2{border-bottom:2px solid #1d63d8;padding-bottom:4px}.meta{color:#5b6474;font-size:13px}
+nav.toc ol{padding-left:1.2rem}img{max-width:100%;height:auto;border:1px solid #e2e8f0}h2{border-bottom:2px solid #1d63d8;padding-bottom:4px}.meta{color:#5b6474;font-size:13px}
 .badges{font-size:12px;color:#334155;margin:0 0 4px}.block{margin:6px 0 10px}.kind-note,.kind-tip{background:#eaf1fd;border-left:4px solid #1d63d8;padding:6px 10px}
 .kind-warning{background:#fdecec;border-left:4px solid #b91c1c;padding:6px 10px}.label{font-weight:600;margin:0 0 2px}
 table{border-collapse:collapse}td,th{border:1px solid #cbd5e1;padding:4px 8px}pre{background:#f3f4f6;padding:8px;white-space:pre-wrap}
@@ -76,7 +78,7 @@ function page(title: string, releaseLabel: string, body: string, lang = 'de', sw
   // Eigenständig und ohne Skripte (ADR-012): eigene CSP, keine externen Ressourcen
   return `<!doctype html>
 <html lang="${lang}"><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)} – ${escapeHtml(releaseLabel)}</title><style>${PAGE_CSS}</style></head>
 <body><a href="#inhalt" style="position:absolute;left:-999px">${escapeHtml(ui(lang).skip)}</a>
@@ -84,7 +86,7 @@ function page(title: string, releaseLabel: string, body: string, lang = 'de', sw
 <main id="inhalt">${body}</main></body></html>`;
 }
 
-function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false) {
+function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false, images?: ImageSource) {
   const out: string[] = [`<h1>${escapeHtml(ch.title)}</h1>`, `<p class="meta">${escapeHtml(ui(lang).approved)} ${ch.versionNo}${ch.approvedAt ? ` · ${ch.approvedAt.slice(0, 10)}` : ''}</p>`];
   if (fallback) out.push(`<p class="meta" lang="${lang}"><strong>${escapeHtml(ui(lang).fallback)}</strong></p>`);
   for (const s of ch.sections) {
@@ -94,7 +96,7 @@ function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false) {
       out.push(`<div class="block kind-${escapeHtml(b.kind)}">`);
       if (badges) out.push(`<p class="badges">${escapeHtml(badges)}</p>`);
       if (KIND_LABEL[b.kind] && b.kind !== 'xref') out.push(`<p class="label">${KIND_LABEL[b.kind]}</p>`);
-      out.push(markdownToHtml(b.text), '</div>');
+      out.push(markdownToHtml(b.text, images), '</div>');
     }
   }
   return out.join('\n');
@@ -116,9 +118,13 @@ export function changesText(changes: ChapterChange[]) {
  */
 async function buildSite(
   version: string, title: string, notes: string | null, chapters: ExportChapter[], changes: ChapterChange[], createdAt: string,
-  translations: Map<string, (ExportChapter | null)[]>, appUrl: string | null = null,
+  translations: Map<string, (ExportChapter | null)[]>, appUrl: string | null = null, media: Map<string, MediaFile> = new Map(),
 ) {
   const zip = new JSZip();
+  // Bilder (ADR-029) als Dateien unter bilder/ – einmal je Inhalt, von allen Sprachen gemeinsam genutzt
+  const imageFile = (sha: string) => `bilder/${sha}.${MIME_EXT[media.get(sha)!.mime] ?? 'bin'}`;
+  for (const sha of media.keys()) zip.file(imageFile(sha), media.get(sha)!.data);
+  const images = (prefix: string): ImageSource => (sha) => (media.has(sha) ? `${prefix ? '../' : ''}${imageFile(sha)}` : null);
   // Handbuch-Assistent (ADR-026): Online-Hilfe bleibt ohne Skripte, verlinkt aber auf den Assistenten der Anwendung
   const assistant = (lang: string) => (appUrl ? ` · <a href="${escapeHtml(`${appUrl.replace(/\/+$/, '')}/assistent?language=${lang}`)}">${escapeHtml(ui(lang).ask)}</a>` : '');
   const langs: SiteLang[] = [{ code: 'de', prefix: '' }, ...[...translations.keys()].map((code) => ({ code, prefix: `${code}/` }))];
@@ -146,7 +152,7 @@ ${lines.length ? `<ul lang="de">${lines.map((x) => `<li>${escapeHtml(x)}</li>`).
     pages.forEach((p, i) => {
       const prev = i > 0 ? `<a href="${files[i - 1]}">← ${escapeHtml(pages[i - 1].ch.title)}</a>` : '<span></span>';
       const next = i < pages.length - 1 ? `<a href="${files[i + 1]}">${escapeHtml(pages[i + 1].ch.title)} →</a>` : '<span></span>';
-      zip.file(`${l.prefix}${files[i]}`, page(p.ch.title, label, `<div${p.fallback ? ' lang="de"' : ''}>${chapterHtml(p.ch, l.code, p.fallback)}</div><nav class="pager" aria-label="${escapeHtml(u.pager)}">${prev}${next}</nav>`, l.code, switcher(l.code, files[i])));
+      zip.file(`${l.prefix}${files[i]}`, page(p.ch.title, label, `<div${p.fallback ? ' lang="de"' : ''}>${chapterHtml(p.ch, l.code, p.fallback, images(l.prefix))}</div><nav class="pager" aria-label="${escapeHtml(u.pager)}">${prev}${next}</nav>`, l.code, switcher(l.code, files[i])));
     });
   }
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
@@ -213,8 +219,11 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
     translations.set(lang, list);
     languages.push({ language: lang, translated, total: list.length, markdownKey: `releases/${id}/handbuch-${lang}.md` });
   }
-  const site = await buildSite(version, title, notes, chapters, changes, createdAt, translations, ctx.config.notify.appUrl);
-  const md = renderMarkdown(chapters, {}).replace(/^# oneSCM Benutzerhandbuch/, `# ${title} – Version ${version}`);
+  const allTexts = [chapters, ...[...translations.values()].map((l) => l.filter((c): c is ExportChapter => !!c))]
+    .flatMap((chs) => visible(chs, {}).flatMap((ch) => ch.sections.flatMap((s) => s.blocks.map((b: any) => b.text as string))));
+  const media = await loadMedia(ctx, allTexts);
+  const site = await buildSite(version, title, notes, chapters, changes, createdAt, translations, ctx.config.notify.appUrl, media);
+  const md = renderMarkdown(chapters, {}, media).replace(/^# oneSCM Benutzerhandbuch/, `# ${title} – Version ${version}`);
   const siteKey = `releases/${id}/site.zip`;
   const mdKey = `releases/${id}/handbuch.md`;
   await ctx.store.put(siteKey, site);
@@ -222,7 +231,7 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
   for (const l of languages) {
     // Kapitel ohne freigegebene Übersetzung auf Deutsch (im Markdown gekennzeichnet)
     const chs = translations.get(l.language)!.map((t, i) => t ?? { ...chapters[i], title: `${chapters[i].title} (DE)` });
-    const lmd = renderMarkdown(chs, {}).replace(/^# oneSCM Benutzerhandbuch/, `# ${title} – ${LANGUAGES[l.language] ?? l.language} – Version ${version}`);
+    const lmd = renderMarkdown(chs, {}, media).replace(/^# oneSCM Benutzerhandbuch/, `# ${title} – ${LANGUAGES[l.language] ?? l.language} – Version ${version}`);
     await ctx.store.put(l.markdownKey, Buffer.from(lmd, 'utf8'));
   }
   await db.tx(async () => {

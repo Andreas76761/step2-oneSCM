@@ -27,6 +27,10 @@ import { failSync, runSync } from './services/connections.js';
 import { connectionRoutes } from './routes/connections.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { assistantRoutes } from './routes/assistant.js';
+import { integrationRoutes } from './routes/integrations.js';
+import { contextHelpRoutes, publicHelpRoutes } from './routes/contextHelp.js';
+import { APP_VERSION } from './version.js';
+import { deliverWebhook, failWebhookDelivery } from './services/webhooks.js';
 import { ensureDailyJob, runDailySnapshots } from './services/analytics.js';
 import { ensureEscalationJob, escalateOverdue } from './services/workflow.js';
 import { miscRoutes } from './routes/misc.js';
@@ -116,6 +120,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     if (await archived(c)) return failSync(c, p, ARCHIVED);
     await runSync(c, p);
   }, async (p, err) => failSync(await connectionCtx(p), p, err));
+  const deliveryCtx = (p: any) => jobCtx('SELECT s.project_id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id WHERE d.id = ?', p.deliveryId);
+  jobs.register('webhook-deliver', async (p) => deliverWebhook(await deliveryCtx(p), p), async (p, err) => failWebhookDelivery(await deliveryCtx(p), p, err));
   jobs.register('kpi-daily', async () => runDailySnapshots(ctx, (id) => withProject(ctx, id)), undefined, { background: true });
   jobs.register('approval-escalation', async () => {
     await escalateOverdue(ctx, (id) => withProject(ctx, id));
@@ -148,7 +154,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('Referrer-Policy', 'no-referrer');
     const idp = config.oidc ? ` ${new URL(config.oidc.issuer).origin}` : '';
-    reply.header('Content-Security-Policy', `default-src 'self'; connect-src 'self'${idp}; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-ancestors 'none'`);
+    // Routen mit eigener Richtlinie (Medien, eingebettete Kontexthilfe) behalten diese
+    if (!reply.hasHeader('Content-Security-Policy')) reply.header('Content-Security-Policy', `default-src 'self'; connect-src 'self'${idp}; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-ancestors 'none'`);
     return payload;
   });
 
@@ -177,12 +184,16 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       api.addHook('onRequest', async (req) => {
         req.ctx = ctx;
         const url = req.url.split('?')[0];
-        if (PUBLIC_PATHS.has(url)) return;
+        // öffentlich: Health, Anmeldekonfiguration, eingehende Webhooks (eigene Signaturprüfung, ADR-028)
+        if (PUBLIC_PATHS.has(url) || url.startsWith('/api/v1/hooks/')) return;
         const user = await authenticate(ctx, req.headers);
         req.globalUser = user;
         req.user = user;
-        // Projektverwaltung arbeitet projektübergreifend mit globalen Berechtigungen
-        if (url === '/api/v1/projects' || url.startsWith('/api/v1/projects/')) return;
+        // Projektverwaltung arbeitet projektübergreifend mit globalen Berechtigungen – nicht für API-Tokens
+        if (url === '/api/v1/projects' || url.startsWith('/api/v1/projects/')) {
+          if (user.token) throw new Problem(403, 'Forbidden', 'API-Tokens haben keinen Zugriff auf die Projektverwaltung.');
+          return;
+        }
         const header = req.headers['x-project-id'];
         const scoped = await resolveProject(ctx, user, Array.isArray(header) ? header[0] : header);
         req.ctx = scoped.ctx;
@@ -193,7 +204,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       api.addHook('preHandler', async (req) => {
         await assertParamsInProject(req.ctx, req.params as Record<string, string>);
       });
-      api.get('/health', async () => ({ status: 'ok', database: db.dialect, auth: config.authMode, objectStore: ctx.store.kind, llm: ctx.llm?.id ?? 'none' }));
+      api.get('/health', async () => ({ status: 'ok', version: APP_VERSION, database: db.dialect, auth: config.authMode, objectStore: ctx.store.kind, llm: ctx.llm?.id ?? 'none' }));
       // Liveness: Prozess antwortet; Readiness: Abhängigkeiten erreichbar (für Load Balancer/Kubernetes)
       api.get('/health/live', async () => ({ status: 'ok' }));
       api.get('/health/ready', async (_req, reply) => {
@@ -213,11 +224,16 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       connectionRoutes(api, ctx);
       analyticsRoutes(api, ctx);
       assistantRoutes(api, ctx);
+      integrationRoutes(api, ctx);
+      contextHelpRoutes(api, ctx);
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );
+
+  // Öffentliche Kontexthilfe (Widget, Einbettung) – eigene Freischaltung je Projekt (ADR-030)
+  await publicHelpRoutes(app, ctx, config.help.embedOrigins);
 
   app.get('/openapi.yaml', async (_req, reply) => reply.type('application/yaml').send(fs.readFileSync(config.openapiPath, 'utf8')));
 

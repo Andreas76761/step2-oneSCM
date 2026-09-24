@@ -1,4 +1,5 @@
 // Qualitätsgate (US-012). ENTSCHEIDUNG(E-12): keine Ausnahmen, einstufige Freigabe.
+import { imagesWithoutAlt } from './media.js';
 import { sentenceEvidenceProblems } from './rewrite.js';
 
 export interface GateBlock {
@@ -78,6 +79,14 @@ export function evaluateGate(blocks: GateBlock[], findings: GateFinding[], opts:
       label: 'KI-umformulierte Absätze: jeder Satz mit Quelle des Absatzes belegt',
       passed: sentenceIssues.length === 0,
       details: sentenceIssues.map((x) => `Block ${x.b.id} (${x.b.section}): ${x.problems.join('; ')}`),
+    });
+    // Barrierefreiheit (ADR-029): jedes Bild braucht einen Alternativtext
+    const noAlt = blocks.map((b) => ({ b, n: imagesWithoutAlt(b.text ?? '').length })).filter((x) => x.n);
+    checks.push({
+      code: 'image_alt',
+      label: 'Jedes Bild besitzt einen Alternativtext',
+      passed: noAlt.length === 0,
+      details: noAlt.map((x) => `Block ${x.b.id} (${x.b.section}): ${x.n} Bild${x.n > 1 ? 'er' : ''} ohne Alternativtext`),
     });
     const stale = blocks.filter((b) => b.mode === 'needs_regeneration');
     checks.push({

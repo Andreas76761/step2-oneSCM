@@ -38,6 +38,7 @@ async function objectKeys(db: Db): Promise<string[]> {
     if (r.o) keys.add(r.o);
   }
   for (const r of await db.all<{ k: string }>('SELECT storage_key AS k FROM exports WHERE storage_key IS NOT NULL')) keys.add(r.k);
+  for (const r of await db.all<{ k: string }>('SELECT DISTINCT storage_key AS k FROM media_assets')) keys.add(r.k);
   for (const r of await db.all<{ sha256: string }>('SELECT DISTINCT sha256 FROM imports')) keys.add(`uploads/${r.sha256}`);
   for (const r of await db.all<{ s: string; m: string; l: string }>('SELECT site_key AS s, markdown_key AS m, languages AS l FROM handbook_releases')) {
     keys.add(r.s);

@@ -5,7 +5,7 @@ import { currentProjectId, post } from '../api';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 import { RefSelect } from './Sources';
 
-const LANG_NAMES: Record<string, string> = { de: 'Deutsch', en: 'Englisch', fr: 'Französisch', es: 'Spanisch', it: 'Italienisch', nl: 'Niederländisch', pl: 'Polnisch', cs: 'Tschechisch', pt: 'Portugiesisch' };
+export const LANG_NAMES: Record<string, string> = { de: 'Deutsch', en: 'Englisch', fr: 'Französisch', es: 'Spanisch', it: 'Italienisch', nl: 'Niederländisch', pl: 'Polnisch', cs: 'Tschechisch', pt: 'Portugiesisch' };
 
 export function AssistantPage() {
   const { notify } = useApp();

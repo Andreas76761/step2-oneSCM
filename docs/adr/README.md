@@ -29,3 +29,7 @@
 | [ADR-025](ADR-025-mehrstufige-freigabe.md) | Mehrstufige Freigabe mit Vier-Augen-Prinzip, Fristen und Eskalation | akzeptiert, umgesetzt |
 | [ADR-026](ADR-026-assistent.md) | Handbuch-Assistent: Antworten nur aus freigegebenen Absätzen mit Quellen | akzeptiert, umgesetzt |
 | [ADR-027](ADR-027-betrieb-skalierung.md) | Betrieb & Performance: Import, Helm, OpenTelemetry, verteilte Rate-Limits | akzeptiert, umgesetzt |
+| [ADR-028](ADR-028-integrationen.md) | Integrationen & API: API-Tokens, signierte Webhooks, Push-Webhooks, Confluence Cloud | akzeptiert, umgesetzt |
+| [ADR-029](ADR-029-bilder-medien.md) | Bilder & Medien: inhaltsadressiert, Alternativtext als Pflicht, in allen Ausgaben | akzeptiert, umgesetzt |
+| [ADR-030](ADR-030-kontexthilfe.md) | Kontexthilfe für oneSCM: Kontext-IDs, Deep-Links, Hilfe-Widget | akzeptiert, umgesetzt |
+| [ADR-031](ADR-031-release-pipeline.md) | Release-Pipeline: GHCR-Image, SBOM, cosign, Helm-OCI, Release-Notes | akzeptiert, umgesetzt |

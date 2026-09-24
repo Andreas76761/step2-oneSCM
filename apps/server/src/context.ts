@@ -31,6 +31,8 @@ export interface User {
   id: string;
   name: string;
   permissions: string[];
+  /** API-Token (ADR-028): gebunden an ein Projekt, wirksame Berechtigungen = Scopes */
+  token?: { id: string; projectId: string; scopes: string[] };
 }
 
 export async function seedReferenceData(db: Db, authMode: AppConfig['authMode']) {
@@ -92,10 +94,30 @@ export function requirePermission(user: User, perm: Permission) {
 }
 
 /** Audit-Eintrag; mit Kontext im Projekt, mit reiner Datenbank systemweit (z. B. Einstellungen, Projektverwaltung). */
+/** Audit-Aktionen, die als Ereignis an abonnierte Webhooks gehen (ADR-028) */
+export const WEBHOOK_EVENTS = [
+  'import.finished', 'import.failed', 'analysis.finished', 'chapter.generated', 'chapter_version.submitted', 'chapter_version.approved',
+  'chapter_version.rejected', 'chapter_version.stage_completed', 'chapter_version.escalated', 'release.published', 'translation.approved',
+  'source_connection.synced', 'source_connection.failed', 'finding.decided',
+] as const;
+
 export async function audit(scope: Pick<Ctx, 'db' | 'projectId'> | Db, actor: string, action: string, entityType: string, entityId: string, details: unknown = {}) {
   const [db, projectId] = 'projectId' in scope ? [scope.db, scope.projectId] : [scope, null];
+  const at = now();
   await db.run(
     'INSERT INTO audit_events (id, at, actor, action, entity_type, entity_id, details, project_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    newId('ae'), now(), actor, action, entityType, entityId, json(details), projectId,
+    newId('ae'), at, actor, action, entityType, entityId, json(details), projectId,
   );
+  // Webhooks: Zustellungen in derselben Transaktion anlegen (kein Ereignis ohne Fachänderung und umgekehrt)
+  if (projectId && 'jobs' in scope && (WEBHOOK_EVENTS as readonly string[]).includes(action)) {
+    const subs = await db.all<{ id: string; events: string }>('SELECT id, events FROM webhook_subscriptions WHERE project_id = ? AND active = 1', projectId);
+    for (const sub of subs) {
+      const events = parseJson<string[]>(sub.events, []);
+      if (!events.includes('*') && !events.includes(action)) continue;
+      const id = newId('whd');
+      const payload = { id, event: action, occurredAt: at, projectId, actor, entity: { type: entityType, id: entityId }, data: details };
+      await db.run("INSERT INTO webhook_deliveries (id, subscription_id, event, payload, status, created_at) VALUES (?, ?, ?, ?, 'pending', ?)", id, sub.id, action, json(payload), at);
+      await (scope as Ctx).jobs.enqueue('webhook-deliver', { deliveryId: id }, 5);
+    }
+  }
 }

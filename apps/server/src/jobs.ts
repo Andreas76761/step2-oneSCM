@@ -41,7 +41,7 @@ export class JobQueue {
   constructor(private readonly db: Db, private readonly opts: JobQueueOptions = {}) {
     this.pollMs = opts.pollMs ?? 500;
     this.leaseMs = opts.leaseMs ?? Number(process.env.JOB_LEASE_MS ?? 10 * 60 * 1000);
-    this.backoffMs = opts.backoffMs ?? 2000;
+    this.backoffMs = opts.backoffMs ?? Number(process.env.JOB_BACKOFF_MS ?? 2000);
   }
 
   /** Periodische Hintergrundketten (z. B. Tages-Snapshots, Eskalation): `idle()` wartet nicht auf sie */
