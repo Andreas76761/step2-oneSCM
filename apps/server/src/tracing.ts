@@ -11,6 +11,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Db } from './db.js';
 import type { EmbeddingProvider } from './embeddings.js';
 import type { LlmProvider } from './llm.js';
+import { APP_VERSION } from './version.js';
 
 export interface TracingConfig {
   /** otlp: Export per OTLP/HTTP (Endpunkt aus den Standard-Umgebungsvariablen); none: aus */
@@ -29,7 +30,7 @@ let provider: NodeTracerProvider | null = null;
 export function initTracing(cfg: TracingConfig, exporter?: SpanExporter) {
   if (provider || (cfg.exporter === 'none' && !exporter)) return provider;
   provider = new NodeTracerProvider({
-    resource: resourceFromAttributes({ 'service.name': cfg.serviceName, 'service.version': process.env.npm_package_version ?? '0.9.0' }),
+    resource: resourceFromAttributes({ 'service.name': cfg.serviceName, 'service.version': APP_VERSION }),
     spanProcessors: [exporter ? new SimpleSpanProcessor(exporter) : new BatchSpanProcessor(new OTLPTraceExporter())],
   });
   provider.register({ propagator: new W3CTraceContextPropagator() });

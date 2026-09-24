@@ -1,6 +1,7 @@
 // Betriebswerkzeuge (ADR-015). Nutzt dieselbe Konfiguration wie der Server (DATABASE_URL, OBJECT_STORE, S3_* …).
 //   node dist/cli.js backup  --out backup.zip
 //   node dist/cli.js restore --in backup.zip [--force]
+import { APP_VERSION } from './version.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { loadConfig } from './config.js';
@@ -25,7 +26,7 @@ const store = createObjectStore(config.objectStore, config.dataDir);
 try {
   if (cmd === 'backup') {
     const out = arg('out') ?? usage();
-    const { data, manifest } = await createBackup(db, store, process.env.npm_package_version ?? 'unbekannt');
+    const { data, manifest } = await createBackup(db, store, APP_VERSION);
     fs.writeFileSync(out!, data);
     const rows = Object.values(manifest.tables).reduce((a, b) => a + b, 0);
     console.log(`Backup ${out}: ${rows} Datensätze in ${Object.keys(manifest.tables).length} Tabellen, ${manifest.objects} Objekte (${(data.length / 1024).toFixed(0)} KB, Quelle ${manifest.sourceDialect}).`);

@@ -1,0 +1,211 @@
+name: Release
+
+# Release-Pipeline (ADR-031): Tag vX.Y.Z → Prüfung → Container-Image in GHCR (SBOM, Provenienz,
+# cosign-Signatur ohne Schlüssel) → Helm-Chart als OCI-Artefakt → GitHub-Release mit Notes aus CHANGELOG.md.
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Vorhandener Tag, der (erneut) veröffentlicht werden soll, z. B. v0.10.0
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  REGISTRY: ghcr.io
+
+jobs:
+  verify:
+    name: Version und Tests prüfen
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      prerelease: ${{ steps.v.outputs.prerelease }}
+      image: ${{ steps.v.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Version, Tag und CHANGELOG konsistent
+        run: npm run -s release -- check --tag "$TAG"
+      - id: v
+        name: Kennwerte
+        run: |
+          version="${TAG#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then echo "prerelease=true" >> "$GITHUB_OUTPUT"; else echo "prerelease=false" >> "$GITHUB_OUTPUT"; fi
+          echo "image=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Unit- und API-Tests (SQLite)
+        run: npm test
+
+  image:
+    name: Container-Image bauen, signieren, SBOM
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write          # cosign keyless (Sigstore/Fulcio über GitHub-OIDC)
+      attestations: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ needs.verify.outputs.image }}
+          # 1.2.3 → 1.2.3, 1.2, 1 und latest; Vorabversionen (1.2.3-rc.1) nur mit ihrem eigenen Tag
+          tags: |
+            type=semver,pattern={{version}},value=${{ env.TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.TAG }}
+            type=semver,pattern={{major}},value=${{ env.TAG }},enable=${{ !startsWith(needs.verify.outputs.version, '0.') }}
+            type=raw,value=latest,enable=${{ needs.verify.outputs.prerelease == 'false' }}
+            type=sha,format=long
+          labels: |
+            org.opencontainers.image.title=oneSCM Handbook Studio
+            org.opencontainers.image.description=Revisionssichere Benutzerhandbücher aus Markdown-Quellen (API, Web-UI, Worker)
+            org.opencontainers.image.licenses=UNLICENSED
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: APP_VERSION=${{ needs.verify.outputs.version }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # BuildKit-Attestierungen: SBOM (SPDX) und SLSA-Provenienz direkt am Image
+          sbom: true
+          provenance: mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke-Test des veröffentlichten Images
+        run: |
+          image="${{ needs.verify.outputs.image }}@${{ steps.build.outputs.digest }}"
+          docker run -d --name smoke -p 3000:3000 "$image"
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/api/v1/health/ready > /dev/null && break; sleep 2; done
+          curl -sf http://localhost:3000/api/v1/health | tee /tmp/health.json
+          grep -q '"version":"${{ needs.verify.outputs.version }}"' /tmp/health.json
+          docker rm -f smoke
+      - name: SBOM als Datei (SPDX-JSON, für das Release)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ needs.verify.outputs.image }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: onescm-${{ needs.verify.outputs.version }}.sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - uses: sigstore/cosign-installer@v3
+      - name: Image signieren und SBOM attestieren (keyless)
+        env:
+          IMAGE: ${{ needs.verify.outputs.image }}@${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "$IMAGE"
+          cosign attest --yes --type spdxjson --predicate "onescm-${{ needs.verify.outputs.version }}.sbom.spdx.json" "$IMAGE"
+      - name: GitHub-Attestierung der Build-Provenienz
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ needs.verify.outputs.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: onescm-${{ needs.verify.outputs.version }}.sbom.spdx.json
+
+  chart:
+    name: Helm-Chart veröffentlichen
+    needs: [verify, image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.18.4
+      - name: Paketieren (Image-Tag = Version) und als OCI-Artefakt in GHCR ablegen
+        run: |
+          helm lint --strict deploy/helm/onescm
+          helm package deploy/helm/onescm --version "${{ needs.verify.outputs.version }}" --app-version "${{ needs.verify.outputs.version }}" -d dist
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login "$REGISTRY" -u "${{ github.actor }}" --password-stdin
+          helm push "dist/onescm-${{ needs.verify.outputs.version }}.tgz" "oci://${REGISTRY}/${GITHUB_REPOSITORY_OWNER,,}/charts"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chart
+          path: dist/*.tgz
+
+  release:
+    name: GitHub-Release
+    needs: [verify, image, chart]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Release-Notes aus CHANGELOG.md
+        run: |
+          {
+            npm run -s release -- notes "$TAG"
+            echo
+            echo "### Container-Image"
+            echo '```'
+            echo "docker pull ${{ needs.verify.outputs.image }}:${{ needs.verify.outputs.version }}"
+            echo "cosign verify ${{ needs.verify.outputs.image }}@${{ needs.image.outputs.digest }} \\"
+            echo "  --certificate-identity-regexp '^https://github.com/${{ github.repository }}/.github/workflows/release.yml@' \\"
+            echo "  --certificate-oidc-issuer https://token.actions.githubusercontent.com"
+            echo '```'
+            echo "Digest: \`${{ needs.image.outputs.digest }}\` · Helm: \`oci://${REGISTRY}/${GITHUB_REPOSITORY_OWNER,,}/charts/onescm --version ${{ needs.verify.outputs.version }}\`"
+          } > notes.md
+          cat notes.md
+      - name: Release anlegen oder aktualisieren
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          flags=(--title "oneSCM Handbook Studio ${{ needs.verify.outputs.version }}" --notes-file notes.md)
+          [ "${{ needs.verify.outputs.prerelease }}" = "true" ] && flags+=(--prerelease)
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release edit "$TAG" "${flags[@]}"
+            gh release upload "$TAG" assets/* --clobber
+          else
+            gh release create "$TAG" "${flags[@]}" --verify-tag assets/*
+          fi

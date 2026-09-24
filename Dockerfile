@@ -11,7 +11,9 @@ COPY . .
 RUN npm run build && npm prune --omit=dev --workspace apps/server --workspace apps/web
 
 FROM node:22-bookworm-slim
-ENV NODE_ENV=production PORT=3000 DATA_DIR=/data
+# Version aus der Release-Pipeline (ADR-031); ohne Angabe gilt die Version aus package.json
+ARG APP_VERSION=""
+ENV NODE_ENV=production PORT=3000 DATA_DIR=/data APP_VERSION=${APP_VERSION}
 # git für Quellverbindungen (ADR-022)
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app

@@ -29,6 +29,7 @@ import { analyticsRoutes } from './routes/analytics.js';
 import { assistantRoutes } from './routes/assistant.js';
 import { integrationRoutes } from './routes/integrations.js';
 import { contextHelpRoutes, publicHelpRoutes } from './routes/contextHelp.js';
+import { APP_VERSION } from './version.js';
 import { deliverWebhook, failWebhookDelivery } from './services/webhooks.js';
 import { ensureDailyJob, runDailySnapshots } from './services/analytics.js';
 import { ensureEscalationJob, escalateOverdue } from './services/workflow.js';
@@ -203,7 +204,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       api.addHook('preHandler', async (req) => {
         await assertParamsInProject(req.ctx, req.params as Record<string, string>);
       });
-      api.get('/health', async () => ({ status: 'ok', database: db.dialect, auth: config.authMode, objectStore: ctx.store.kind, llm: ctx.llm?.id ?? 'none' }));
+      api.get('/health', async () => ({ status: 'ok', version: APP_VERSION, database: db.dialect, auth: config.authMode, objectStore: ctx.store.kind, llm: ctx.llm?.id ?? 'none' }));
       // Liveness: Prozess antwortet; Readiness: Abhängigkeiten erreichbar (für Load Balancer/Kubernetes)
       api.get('/health/live', async () => ({ status: 'ok' }));
       api.get('/health/ready', async (_req, reply) => {
