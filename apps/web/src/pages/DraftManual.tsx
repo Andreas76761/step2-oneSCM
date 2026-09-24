@@ -104,6 +104,91 @@ function Candidates({ outline, nodes, canEdit, onAssigned }: { outline: any; nod
   );
 }
 
+/** Varianten synchronisieren (ADR-037): Schnipsel und fehlende Einträge aus einer anderen Gliederung übernehmen */
+function SyncCard({ outline, outlines, canEdit, onApplied }: { outline: any; outlines: any[]; canEdit: boolean; onApplied: () => void }) {
+  const { notify } = useApp();
+  const [open, setOpen] = useState(false);
+  const [from, setFrom] = useState('');
+  const pv = useLoad<any>(open && from ? `/outlines/${outline.id}/sync?from=${encodeURIComponent(from)}` : null, [open, from, outline.id, outline.updatedAt]);
+  const [picked, setPicked] = useState<Record<string, boolean>>({});
+  const [createNodes, setCreateNodes] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    // Vorauswahl: passende Schnipsel und alle fehlenden Einträge
+    const p: Record<string, boolean> = {};
+    const c: Record<string, boolean> = {};
+    for (const e of pv.data?.entries ?? []) {
+      for (const x of e.onlySource) if (!x.elsewhere) p[`${e.sourceNodeId}|${x.id}`] = x.fits;
+      if (!e.target) c[e.sourceNodeId] = true;
+    }
+    setPicked(p);
+    setCreateNodes(c);
+  }, [pv.data]);
+  useEffect(() => setFrom(''), [outline.id]);
+  const entries: any[] = (pv.data?.entries ?? []).filter((e: any) => !e.target || e.onlySource.length || e.onlyTarget.length);
+  const ids = (e: any) => e.onlySource.filter((x: any) => !x.elsewhere && picked[`${e.sourceNodeId}|${x.id}`]).map((x: any) => x.id);
+  const apply = async () => {
+    const add = entries.filter((e) => e.target && ids(e).length).map((e) => ({ sourceNodeId: e.sourceNodeId, snippetIds: ids(e) }));
+    const create = entries.filter((e) => !e.target && createNodes[e.sourceNodeId]).map((e) => ({ sourceNodeId: e.sourceNodeId, snippetIds: ids(e) }));
+    try {
+      const r = await post<any>(`/outlines/${outline.id}/sync`, { from, add, create });
+      notify(`${r.added} Schnipsel übernommen, ${r.created} Einträge angelegt.`);
+      pv.reload();
+      onApplied();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const selected = entries.reduce((a, e) => a + ids(e).length, 0) + entries.filter((e) => !e.target && createNodes[e.sourceNodeId]).length;
+  if (!open) return <div className="filters"><button className="btn" onClick={() => setOpen(true)}>Mit anderer Gliederung abgleichen</button></div>;
+  return (
+    <Card title="Varianten abgleichen">
+      <div className="filters">
+        <label className="inline">Übernehmen aus
+          <select value={from} onChange={(e) => setFrom(e.target.value)}>
+            <option value="">– Gliederung wählen –</option>
+            {outlines.filter((o) => o.id !== outline.id).map((o) => <option key={o.id} value={o.id}>{o.name} – V{o.versionNo}</option>)}
+          </select>
+        </label>
+        <button className="btn ghost" onClick={() => setOpen(false)}>Schließen</button>
+      </div>
+      <ErrorBox error={pv.error} />
+      {pv.data && (
+        <>
+          <p className="small" role="status">
+            {pv.data.summary.matched} Einträge zugeordnet · {pv.data.summary.missing} fehlen im Ziel · {pv.data.summary.offered} Schnipsel übernehmbar, davon {pv.data.summary.fitting} passend zur Variante · {pv.data.summary.onlyTarget} nur im Ziel
+          </p>
+          {!entries.length && <Empty>Keine Unterschiede.</Empty>}
+          <div className="sync-list">
+            {entries.map((e) => (
+              <section key={e.sourceNodeId} className="sync-entry" aria-label={`${e.number} ${e.title}`}>
+                <div className="sync-head">
+                  {e.target ? <strong>{e.number} {e.title} → {e.target.number} {e.target.title}</strong> : (
+                    <label className="inline"><input type="checkbox" disabled={!canEdit} checked={!!createNodes[e.sourceNodeId]} onChange={(ev) => setCreateNodes({ ...createNodes, [e.sourceNodeId]: ev.target.checked })} /> <strong>{e.number} {e.title}</strong> <span className="tag st-approved">fehlt im Ziel – anlegen</span></label>
+                  )}
+                </div>
+                {e.onlySource.map((x: any) => (
+                  <label key={x.id} className="sync-snippet">
+                    <input type="checkbox" disabled={!canEdit || !!x.elsewhere || (!e.target && !createNodes[e.sourceNodeId])} checked={!!picked[`${e.sourceNodeId}|${x.id}`]}
+                      onChange={(ev) => setPicked({ ...picked, [`${e.sourceNodeId}|${x.id}`]: ev.target.checked })} />
+                    <span>
+                      <span className="small muted">#{x.seq} · {x.path}{x.elsewhere ? ` · im Ziel bereits unter ${x.elsewhere}` : ''}</span><br />
+                      {x.text}
+                      {x.problems.map((pr: string) => <span key={pr} className="flag flag-warning"><span aria-hidden="true">⚠</span> {pr}</span>)}
+                      {!x.isCurrent && <span className="flag flag-warning"><span aria-hidden="true">⚠</span> veraltet</span>}
+                    </span>
+                  </label>
+                ))}
+                {e.onlyTarget.length > 0 && <p className="small muted">{e.onlyTarget.length} Schnipsel nur im Ziel (bleiben erhalten)</p>}
+              </section>
+            ))}
+          </div>
+          {canEdit && entries.length > 0 && <button className="btn primary" disabled={!selected} onClick={apply}>Auswahl übernehmen ({selected})</button>}
+        </>
+      )}
+    </Card>
+  );
+}
+
 const RESULT: Record<string, string> = { generated: 'Entwurf erzeugt', skipped: 'übersprungen', blocked: 'blockiert' };
 
 /** Handbuch-Variante (ADR-034): aus dem Draft Manual Kapitelentwürfe erzeugen, die über Werkstatt und Freigabe laufen */
@@ -230,6 +315,7 @@ export function DraftManualPage() {
             </div>
           </Card>
           <VariantCard outlineId={d.outline.id} canEdit={canEdit} />
+          <SyncCard outline={d.outline} outlines={list.data?.items ?? []} canEdit={canEdit} onApplied={draft.reload} />
           <div className="draft-layout">
             <div>
               {!nodes.length && <Empty>Die Gliederung hat noch keine Einträge.</Empty>}
