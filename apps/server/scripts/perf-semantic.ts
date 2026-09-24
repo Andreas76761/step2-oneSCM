@@ -82,7 +82,6 @@ async function measure(label: string, setting: Setting, expect: string) {
 
 const results = [await measure('exakt (Speicher)', 'exact', 'exact exakt'), await measure('HNSW (Speicher)', 'hnsw', 'hnsw')];
 if (await pgvectorAvailable(ctx.db)) {
-  results.push(await measure('pgvector exakt (auto, lokales Modell)', 'auto', 'pgvector exakt'));
   results.push(await measure('pgvector HNSW-Index', 'pgvector', 'pgvector'));
 }
 // Trefferquote: Anteil der Treffer, deren Ähnlichkeit mindestens die zehntbeste der exakten Suche erreicht (Gleichstände zählen)

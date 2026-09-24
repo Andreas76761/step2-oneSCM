@@ -258,20 +258,21 @@ export interface VectorHit {
 }
 
 /**
- * Verfahren wählen. `auto` sucht nur bei einem semantischen (externen) Embedding-Modell ab `annThreshold` Abschnitten
- * näherungsweise: Die lokalen Hash-Vektoren sind nahezu gleichverteilt, dort erreicht die Graphsuche keine brauchbare
- * Trefferquote (Lasttest), die exakte Suche bleibt bei 50 000 Abschnitten im Bereich von 40 ms.
+ * Verfahren wählen. Näherungsweise gesucht wird nur ab `annThreshold` Abschnitten – darunter ist die exakte Suche im
+ * Speicher schnell genug, und Graphindizes übersehen in kleinen Beständen einzelne Ausreißer (pgvector 0.8, Test T-147).
+ * `auto` nähert zudem nur bei einem semantischen (externen) Modell: Die lokalen Hash-Vektoren sind nahezu gleichverteilt.
+ * Ohne Näherung sucht der Speicherindex (exakt in pgvector ohne Index war im Lasttest 6-mal langsamer).
  */
 async function chooseEngine(ctx: Ctx, count: number): Promise<{ engine: Engine; approximate: boolean }> {
   const setting = ctx.config.vectorIndex;
-  const pg = (setting === 'pgvector' || setting === 'auto') && (await pgvectorAvailable(ctx.db));
-  if (setting === 'pgvector' && !pg) ctx.log?.('pgvector nicht verfügbar – Rückfall auf Speicherindex');
-  if (setting === 'exact') return { engine: 'exact', approximate: false };
+  const exact = { engine: 'exact' as Engine, approximate: false };
+  if (setting === 'exact') return exact;
+  const big = count >= (await getSettings(ctx.db)).semantic.annThreshold;
+  if (!big || (setting === 'auto' && !ctx.embeddings.external)) return exact;
   if (setting === 'hnsw') return { engine: 'hnsw', approximate: true };
-  if (setting === 'pgvector' && pg) return { engine: 'pgvector', approximate: true };
-  const approximate = setting !== 'pgvector' && ctx.embeddings.external && count >= (await getSettings(ctx.db)).semantic.annThreshold;
-  if (pg) return { engine: 'pgvector', approximate };
-  return { engine: approximate || setting === 'pgvector' ? 'hnsw' : 'exact', approximate: approximate || setting === 'pgvector' };
+  if (await pgvectorAvailable(ctx.db)) return { engine: 'pgvector', approximate: true };
+  if (setting === 'pgvector') ctx.log?.('pgvector nicht verfügbar – Rückfall auf HNSW im Speicher');
+  return { engine: 'hnsw', approximate: true };
 }
 
 /** k ähnlichste aktuelle Abschnitte des Projekts */

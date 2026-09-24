@@ -142,7 +142,7 @@ Jeder Test trägt eine ID (`[T-xxx]`), die in [`traceability/tests.json`](tracea
 | `NOTIFY_WEBHOOK_URL` | – | Benachrichtigungen per Webhook (ADR-019), JSON mit `text` |
 | `SMTP_URL` / `MAIL_FROM` | – / `noreply@example.com` | Benachrichtigungen per E-Mail (`smtp://user:pass@host:587`) |
 | `APP_URL` | – | Basis-URL der Web-UI für Links in Benachrichtigungen |
-| `VECTOR_INDEX` | `auto` | Suchverfahren der semantischen Suche (ADR-024): `auto` (pgvector, falls verfügbar, sonst HNSW ab `semantic.annThreshold` Abschnitten, sonst exakt), `exact`, `hnsw`, `pgvector` |
+| `VECTOR_INDEX` | `auto` | Suchverfahren der semantischen Suche (ADR-024): `auto` (exakt im Speicher; bei einem semantischen Embedding-Modell ab `semantic.annThreshold` Abschnitten näherungsweise über pgvector, falls verfügbar, sonst HNSW), `exact`, `hnsw`, `pgvector` |
 | `GIT_CREDENTIAL_*` | – | Tokens für Git-Quellverbindungen (ADR-022), in der Verbindung nur per Name referenziert |
 | `GIT_TIMEOUT_MS` / `GIT_ALLOW_FILE` | `120000` / – | Zeitlimit je git-Aufruf; `1` erlaubt lokale Repositories (nur Tests) |
 

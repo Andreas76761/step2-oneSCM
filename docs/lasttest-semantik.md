@@ -34,7 +34,35 @@ Zusätzlich ein reiner Indexvergleich mit **gruppierten Vektoren** (1 000 Themen
 
 Speicher (RSS) 534 MB
 
-## PostgreSQL mit pgvector
+## PostgreSQL 16 mit pgvector 0.6
 
-Messung läuft – Ergebnisse folgen.
+- Import (2000 Dateien, ZIP 3.7 MB): 75.7 s, 50000 Textabschnitte
+- Vektoren berechnen und speichern: 18.0 s
+
+**Suche über die API-Schicht** (lokales Hash-Modell, 50 Anfragen, je 10 Treffer)
+
+| Verfahren | erste Suche (inkl. Laden/Synchronisieren) | Vorbereitung | Antwortzeit p50 | p95 | Recall@10 |
+|---|---|---|---|---|---|
+| exakt (Speicher) | 2395 ms | – | 44.3 ms | 55.8 ms | 1.000 |
+| HNSW (Speicher) | 98 ms | HNSW-Aufbau 102.9 s | 20.0 ms | 22.3 ms | 0.996 |
+| pgvector exakt (auto, lokales Modell) | 35842 ms | – | 275.6 ms | 326.5 ms | 1.000 |
+| pgvector HNSW-Index | 61 ms | – | 28.5 ms | 35.8 ms | 1.000 |
+
+**Reiner Indexvergleich mit gruppierten Vektoren** (50000 Vektoren, 384 Dimensionen, 1000 Themen – Verteilung wie bei semantischen Modellen; 100 Anfragen)
+
+| Verfahren | Aufbau | Antwortzeit je Anfrage | Recall@10 |
+|---|---|---|---|
+| exakt | – | 36.2 ms | 1.000 |
+| HNSW (M=12, efConstruction=64, ef=100) | 90.4 s | 1.83 ms | 1.000 |
+| HNSW (M=12, efConstruction=64, ef=400) | 90.4 s | 7.56 ms | 1.000 |
+| HNSW (M=12, efConstruction=64, ef=800) | 90.4 s | 14.09 ms | 1.000 |
+
+Speicher (RSS) 459 MB
+
+## Folgerungen
+
+- Exakt im Speicher bleibt bis 50 000 Abschnitte unter 50 ms – Standard für das lokale Modell und für kleine Bestände.
+- Die exakte Suche in pgvector ohne Index ist rund 6-mal langsamer als im Speicher; ohne Näherung sucht der Server deshalb immer im Speicher.
+- Näherung (HNSW im Speicher oder pgvector-Index) lohnt bei semantischen Modellen: gruppierte Vektoren erreichen Recall 1,0 schon mit Suchliste 100 in rund 2 ms.
+- Der Import über PostgreSQL ist rund 3,6-mal langsamer als über SQLite (Einzelabfragen je Abschnitt) – ein Ansatzpunkt für eine spätere Etappe.
 

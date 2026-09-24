@@ -441,12 +441,13 @@ describe('Skalierung der semantischen Suche (ADR-024)', () => {
     const results: Record<string, any> = {};
     const { TEST_PG } = await import('./helpers.js');
     const { pgvectorAvailable, awaitHnsw } = await import('../src/services/vectorIndex.js');
-    for (const engine of ['exact', 'hnsw', 'pgvector'] as const) {
+    for (const engine of ['exact', 'hnsw'] as const) {
       const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, `vec-${engine}`), logger: false, webDist: null, authMode: 'demo', vectorIndex: engine });
       const call = client(built);
       try {
-        if (engine === 'pgvector' && !(TEST_PG && (await pgvectorAvailable(built.ctx.db)))) continue;
         await importFile(built, 'h.md', md);
+        // Näherung erst ab annThreshold Abschnitten – für den Test herabgesetzt
+        await call('PUT', '/settings', { semantic: { annThreshold: 10 } });
         const q = encodeURIComponent('Werkstatt repariert Fahrzeuge');
         let res = (await call('GET', `/search/semantic?q=${q}&limit=5`)).json;
         if (engine === 'hnsw') {
@@ -479,20 +480,46 @@ describe('Skalierung der semantischen Suche (ADR-024)', () => {
         await built.app.close();
       }
     }
-    // auto mit lokalem Hash-Modell: immer exakt (Näherung nur für semantische Modelle ab annThreshold)
+    expect(results.hnsw).toEqual(results.exact);
+
+    // pgvector (nur PostgreSQL mit Erweiterung): Index ab annThreshold, exakte SQL-Suche mit Kapitelfilter, Nachziehen neuer Vektoren
+    const pgApp = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'vec-pg'), logger: false, webDist: null, authMode: 'demo', vectorIndex: 'pgvector' });
+    try {
+      if (TEST_PG && (await pgvectorAvailable(pgApp.ctx.db))) {
+        const call = client(pgApp);
+        await importFile(pgApp, 'h.md', md);
+        const q = encodeURIComponent('Werkstatt repariert Fahrzeuge');
+        // unter annThreshold: exakt im Speicher
+        expect((await call('GET', `/search/semantic?q=${q}&limit=5`)).json).toMatchObject({ engine: 'exact', approximate: false });
+        await call('PUT', '/settings', { semantic: { annThreshold: 10 } });
+        const res = (await call('GET', `/search/semantic?q=${q}&limit=5&minScore=-1`)).json;
+        expect(res).toMatchObject({ engine: 'pgvector', approximate: true, indexed: 41 });
+        expect(res.hits).toHaveLength(5); // Näherung: Rangfolge nicht garantiert (kleiner Bestand)
+        expect(Number((await pgApp.ctx.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM snippet_vectors'))!.n)).toBe(41);
+        expect(await pgApp.ctx.db.get("SELECT indexname FROM pg_indexes WHERE indexname = 'idx_snippet_vectors_hnsw_384'")).toBeTruthy();
+        const ch2 = (await call('GET', '/chapters')).json.find((c: any) => c.title === '2. Werkstatt');
+        const inChapter = (await call('GET', `/search/semantic?q=${q}&chapterId=${ch2.id}`)).json;
+        expect(inChapter.hits.map((h: any) => h.text)).toEqual(['Die Werkstatt repariert Fahrzeuge und bestellt Ersatzteile.']);
+        await importFile(pgApp, 'h.md', md.replace('Die Werkstatt repariert Fahrzeuge und bestellt Ersatzteile.', 'Das Autohaus verkauft Neuwagen an Privatkunden.'));
+        const after = (await call('GET', `/search/semantic?q=${encodeURIComponent('Autohaus verkauft Neuwagen')}&chapterId=${ch2.id}`)).json;
+        expect(after.hits[0].text).toContain('Autohaus verkauft');
+        expect(Number((await pgApp.ctx.db.get<{ n: number }>('SELECT COUNT(*) AS n FROM snippet_vectors'))!.n)).toBe(82); // neue Revision = neue Abschnitte; alte Zeilen filtert der Join
+      }
+    } finally {
+      await pgApp.app.close();
+    }
+
+    // auto mit lokalem Hash-Modell: immer exakt im Speicher (Näherung nur für semantische Modelle ab annThreshold)
     const auto = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'vec-auto'), logger: false, webDist: null, authMode: 'demo', vectorIndex: 'auto' });
     try {
       await importFile(auto, 'h.md', md);
       await client(auto)('PUT', '/settings', { semantic: { annThreshold: 10 } });
       const r = (await client(auto)('GET', `/search/semantic?q=${encodeURIComponent('Werkstatt repariert Fahrzeuge')}`)).json;
-      expect(r.approximate).toBe(false);
-      expect(r.engine).toBe(TEST_PG && (await pgvectorAvailable(auto.ctx.db)) ? 'pgvector' : 'exact');
+      expect(r).toMatchObject({ engine: 'exact', approximate: false });
       expect(r.hits[0].text).toContain('Werkstatt repariert');
     } finally {
       await auto.app.close();
     }
-    expect(results.hnsw).toEqual(results.exact);
-    if (results.pgvector) expect(results.pgvector).toEqual(results.exact);
   });
 
   it('[T-148] Hybride Analyse großer Bestände: kNN über HNSW statt n²-Vergleich', async () => {

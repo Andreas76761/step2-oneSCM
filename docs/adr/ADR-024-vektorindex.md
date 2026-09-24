@@ -10,7 +10,8 @@ Bis Etappe 7 las jede semantische Suche alle aktuellen Abschnitte samt Text und 
   - `exact` – Vektoren des Projekts als zusammenhängender `Float32Array` im Speicher, vollständiger Durchlauf mit Top-k-Auswahl.
   - `hnsw` – zusätzlich ein HNSW-Graph (eigene Implementierung ohne Abhängigkeiten, `domain/hnsw.ts`, M = 12, efConstruction = 64), im Hintergrund in kurzen Abschnitten aufgebaut; bis er vollständig ist, antwortet die exakte Suche. Identische Vektoren (Textbausteine) werden ein Graphknoten mit Aliasen – ohne das entstehen Plateaus, auf denen die Graphsuche hängen bleibt.
   - `pgvector` – PostgreSQL mit Erweiterung `vector`: Tabelle `snippet_vectors` und HNSW-Ausdrucksindex je Dimension (`(embedding::vector(d)) vector_ip_ops`), zur Laufzeit angelegt und aus `snippet_embeddings` nachgezogen. Kein Speicherbedarf je Instanz, geeignet für mehrere Instanzen. Filter (Projekt, aktueller Stand) greifen auf überabgefragte Kandidaten (`hnsw.ef_search`); liefert die Näherung zu wenig, wird exakt in SQL gesucht.
-  - `auto` (Standard) – pgvector, wenn verfügbar, sonst Speicherindex. **Näherungsweise** (HNSW-Graph bzw. -Index) nur bei einem semantischen (externen) Embedding-Modell ab `semantic.annThreshold` Abschnitten (Standard 20 000); mit dem lokalen Hash-Modell immer exakt.
+  - `auto` (Standard) – **näherungsweise** nur bei einem semantischen (externen) Embedding-Modell ab `semantic.annThreshold` Abschnitten (Standard 20 000): pgvector, wenn verfügbar, sonst HNSW im Speicher. Sonst – und mit dem lokalen Hash-Modell immer – exakt im Speicher.
+  - Auch bei `hnsw`/`pgvector` wird erst ab `annThreshold` genähert: Kleine Bestände sind exakt schneller, und Graphindizes übersehen dort einzelne Ausreißer (pgvector 0.8.1 fand in T-147 den besten von 41 Treffern nicht).
 - **Suchliste** `semantic.annEfSearch` (Standard 200) für Graph und pgvector; für nahezu gleichverteilte Vektoren (lokales Hash-Modell mit `VECTOR_INDEX=hnsw`) 800 wählen.
 - **Änderungserkennung ohne Vollabfragen:** Ein Schlüssel aus indizierten Maxima (neueste Vektoren, Revisionen, Befundentscheidungen) entscheidet, ob Signatur und fehlende Vektoren neu geprüft werden. Im Normalfall kostet eine Suche nur Anfragevektor, Indexsuche und das Laden der Treffer.
 - **Fehlende Vektoren:** bis 2 000 während der Suche, darüber im Index-Job (Antwort meldet `pending`).
@@ -29,7 +30,7 @@ Kurzfassung (50 000 Abschnitte, SQLite, Details im Lasttest):
 | exakt, gruppierte Vektoren | 39 ms | 1,000 |
 | HNSW, gruppierte Vektoren, ef = 100 | 2 ms | 1,000 |
 
-Der HNSW-Aufbau für 50 000 Vektoren dauert 90–100 s im Hintergrund. Vor Einführung der Duplikat-Aliase erreichte der Graph auf Daten mit vielen identischen Vektoren nur einen Recall von 0,44 (pgvector 1,0).
+Auf PostgreSQL: pgvector-HNSW-Index 29 ms (Recall 1,0); exakte Suche in pgvector ohne Index 276 ms – deshalb sucht `auto` ohne Näherung im Speicher (44 ms). Der HNSW-Aufbau im Speicher für 50 000 Vektoren dauert 90–100 s im Hintergrund. Vor Einführung der Duplikat-Aliase erreichte der Graph auf Daten mit vielen identischen Vektoren nur einen Recall von 0,44 (pgvector 1,0).
 
 ## Konsequenzen
 - CI und docker-compose nutzen `pgvector/pgvector:pg16`; ohne Erweiterung oder ohne Recht, sie anzulegen, fällt der Server auf den Speicherindex zurück.
