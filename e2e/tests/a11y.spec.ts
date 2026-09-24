@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 
 // WCAG 2.2 AA (ADR-016): automatische Prüfung der Hauptseiten
 const PAGES = ['/', '/quellen', '/cluster', '/widersprueche', '/dopplungen', '/generator', '/werkstatt', '/rollen', '/sparten', '/optimierungen',
-  '/terminologie', '/evidenz', '/freigabe', '/export', '/traceability', '/projekte', '/einstellungen', '/veroeffentlichung', '/aufgaben', '/uebersetzungen', '/analytik'];
+  '/terminologie', '/evidenz', '/freigabe', '/export', '/traceability', '/projekte', '/einstellungen', '/veroeffentlichung', '/aufgaben', '/uebersetzungen', '/analytik', '/assistent'];
 
 for (const path of PAGES) {
   test(`[T-208] WCAG 2.2 AA ohne Verstöße: ${path}`, async ({ page }) => {

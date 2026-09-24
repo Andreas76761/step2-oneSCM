@@ -1,0 +1,10 @@
+oneSCM Handbook Studio {{ .Chart.AppVersion }} ist installiert.
+
+- API: {{ .Values.api.replicaCount }} Replikat(e) ohne Worker, Worker: {{ if .Values.worker.enabled }}{{ .Values.worker.replicaCount }}{{ else }}aus{{ end }}
+- Secret „{{ .Values.existingSecret }}“ muss DATABASE_URL (PostgreSQL) enthalten; OBJECT_STORE={{ .Values.env.OBJECT_STORE }}.
+- Migrationen laufen beim Start (gesperrt, auch bei mehreren Replikaten).
+{{- if .Values.ingress.enabled }}
+- Aufruf: http{{ if .Values.ingress.tls.enabled }}s{{ end }}://{{ .Values.ingress.host }}/
+{{- else }}
+- Aufruf: kubectl port-forward svc/{{ include "onescm.fullname" . }} 8080:{{ .Values.service.port }} → http://localhost:8080/
+{{- end }}

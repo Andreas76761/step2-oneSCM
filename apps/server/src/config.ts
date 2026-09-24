@@ -7,6 +7,7 @@ import { DEFAULT_MODELS, type LlmConfig, type LlmProviderId } from './llm.js';
 import { opsFromEnv, type OpsConfig } from './ops.js';
 import { embeddingsFromEnv, type EmbeddingConfig } from './embeddings.js';
 import { notifyFromEnv, type NotifyConfig } from './notify.js';
+import { tracingFromEnv, type TracingConfig } from './tracing.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = path.resolve(here, '..', '..', '..');
@@ -53,6 +54,8 @@ export interface AppConfig {
   git: GitConfig;
   /** Vektorindex der semantischen Suche (ADR-024) */
   vectorIndex: EngineSetting;
+  /** OpenTelemetry-Tracing (ADR-027) */
+  tracing: TracingConfig;
 }
 
 export type EngineSetting = 'auto' | 'exact' | 'hnsw' | 'pgvector';
@@ -163,6 +166,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     embeddings: overrides.embeddings ?? embeddingsFromEnv(),
     notify: { ...notifyFromEnv(), ...overrides.notify },
     vectorIndex: overrides.vectorIndex ?? vectorIndexFromEnv(),
+    tracing: overrides.tracing ?? tracingFromEnv(),
     git: { allowFile: process.env.GIT_ALLOW_FILE === '1', timeoutMs: Number(process.env.GIT_TIMEOUT_MS ?? 120_000), ...overrides.git },
   };
 }

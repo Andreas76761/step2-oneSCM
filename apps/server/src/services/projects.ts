@@ -191,6 +191,7 @@ const OWNER_SQL: Record<string, string> = {
   translationBlockId: 'SELECT t.project_id FROM translation_blocks b JOIN translations t ON t.id = b.translation_id WHERE b.id = ?',
   releaseId: 'SELECT project_id FROM handbook_releases WHERE id = ?',
   connectionId: 'SELECT project_id FROM source_connections WHERE id = ?',
+  answerId: 'SELECT project_id FROM assistant_log WHERE id = ?',
   batchId: 'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?',
 };
 

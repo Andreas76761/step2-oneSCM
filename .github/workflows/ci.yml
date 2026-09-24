@@ -65,3 +65,18 @@ jobs:
         with:
           name: playwright-${{ matrix.node }}
           path: e2e/test-results
+
+  helm:
+    name: Helm-Chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.18.4
+      - name: Chart prüfen und mit mehreren Wertesätzen rendern
+        run: |
+          helm lint --strict deploy/helm/onescm
+          helm template t deploy/helm/onescm --kube-version 1.30 > /tmp/default.yaml
+          helm template t deploy/helm/onescm --kube-version 1.30 --set ingress.enabled=true,ingress.tls.enabled=true,api.autoscaling.enabled=true,tracing.enabled=true,metrics.serviceMonitor.enabled=true,worker.enabled=false,extraEnv.OIDC_ISSUER=https://idp.example.org > /tmp/full.yaml
+          python3 -c "import sys, yaml; [print(f, len([d for d in yaml.safe_load_all(open(f)) if d])) for f in sys.argv[1:]]" /tmp/default.yaml /tmp/full.yaml

@@ -36,7 +36,10 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`,
 | – | `rewrite_batches` | KI-Umformulierung ganzer Kapitel: Status, Fortschritt (gültig/ungültig/übersprungen/Fehler), Tokens, Abbruch; Vorschläge verweisen über `batch_id` darauf |
 | – | `rewrite_proposals` | KI-Umformulierungsvorschläge: Blockversion, Anbieter, Modell, Prompt-Hash, übertragene Textabschnitte, Sätze mit Prüfergebnis, Status `proposed`/`invalid`/`accepted`/`rejected`/`stale` (ADR-013) |
 | – | `terminology_terms` | Terminologie: bevorzugter Begriff, zu vermeidende Varianten (JSON), Definition, `active`/`retired` (US-015) |
-| Approval | `approvals` | Freigeber, Entscheidung, Kommentar, Gate-Ergebnis |
+| Approval | `approvals` | Freigeber, Entscheidung, Kommentar, Gate-Ergebnis; `stage` und `final` bei mehrstufiger Freigabe (ADR-025) |
+| – | `projects.approval_workflow`, `generated_chapter_versions.workflow/current_stage/stage_*` | Freigabeworkflow je Projekt und Schnappschuss/Stand je Einreichung (ADR-025) |
+| – | `passage_embeddings`, `assistant_log` | Vektoren freigegebener Passagen je Text-Hash; Fragen, Antworten, Quellen, Bewertungen (ADR-026) |
+| – | `rate_limits` | Zähler je Schlüssel und Zeitfenster bei `RATE_LIMIT_STORE=db` (ADR-027) |
 | AuditEvent | `audit_events` | jede Änderung, Entscheidung, Freigabe; `project_id` (NULL = systemweit) |
 | Requirement / TestCase / ApiOperation / DocumentationItem | `requirements`, `test_cases`, `api_operations`, `documentation_items` (+ Verknüpfungen) | Schema vorhanden; Etappe 1 liest die Quellen direkt aus `traceability/*.json` und OpenAPI (ADR-010) |
 

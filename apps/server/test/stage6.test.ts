@@ -166,7 +166,7 @@ describe('Betrieb: Health, Metriken, Request-ID, Rate-Limiting (ADR-015)', () =>
   beforeAll(async () => {
     built = await buildApp({
       dataDir, database: await freshDatabase(dataDir, 'betrieb'), logger: false, webDist: null, authMode: 'demo',
-      ops: { metricsToken: 'geheim-123', rateLimitMax: 25, rateLimitExpensiveMax: 2 },
+      ops: { metricsToken: 'geheim-123', rateLimitMax: 25, rateLimitExpensiveMax: 2, rateLimitStore: 'memory' },
     });
   });
   afterAll(async () => {

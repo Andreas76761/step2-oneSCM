@@ -8,6 +8,7 @@
 ├── Dockerfile / docker-compose.yml
 ├── .github/workflows/ci.yml       Node 20 + 22: Typecheck, Unit/API-Tests, Build, E2E
 ├── reference/                     unverändertes Projektpaket (Masterprompt, Referenz-UI)
+├── deploy/helm/onescm/       Helm-Chart (ADR-027)
 ├── docs/
 │   ├── 01-gap-analyse.md
 │   ├── 02-p0-reihenfolge.md
@@ -46,7 +47,7 @@
 │   │   │   ├── rewrite.ts         KI-Umformulierung: Anfrage, Antwort, Satzprüfung
 │   │   │   ├── translate.ts       Übersetzung: Satzzerlegung, Anfrage, Prüfung (ADR-020)
 │   │   │   └── gate.ts            Qualitätsgate
-│   │   ├── services/              Anwendungslogik mit DB (u. a. insights: Evidenz/Optimierung, render: HTML/PDF, terminology, compare: Versionsvergleich, rewrite/rewriteBatch: KI-Vorschläge und Kapitel-Aufträge, projects: Mandanten, backup, semantic: Suche/Index, vectorIndex: exakt/HNSW/pgvector, releases, collaboration, translations, connections: Git-Quellen, analytics: Kennzahlen/Bericht/BI-Export)
+│   │   ├── services/              Anwendungslogik mit DB (u. a. insights: Evidenz/Optimierung, render: HTML/PDF, terminology, compare: Versionsvergleich, rewrite/rewriteBatch: KI-Vorschläge und Kapitel-Aufträge, projects: Mandanten, backup, semantic: Suche/Index, vectorIndex: exakt/HNSW/pgvector, releases, collaboration, translations, connections: Git-Quellen, analytics: Kennzahlen/Bericht/BI-Export, workflow: mehrstufige Freigabe, assistant: Handbuch-Assistent)
 │   │   └── routes/                HTTP-Routen je Ressource
 │   └── test/                      Vitest Unit- und API-Tests (SQLite; PostgreSQL mit TEST_DATABASE_URL)
 ├── apps/web/                      React + TypeScript (Vite)

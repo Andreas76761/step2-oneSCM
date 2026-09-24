@@ -36,13 +36,23 @@ function migrationFiles() {
   return fs.readdirSync(MIGRATIONS_DIR).filter((f) => f.endsWith('.sql')).sort();
 }
 
-async function migrate(db: Db, exec: (sql: string) => Promise<void>, translate: (sql: string) => string = (s) => s) {
-  await exec('CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)');
+async function migrate(db: Db, exec: (sql: string) => Promise<void>, translate: (sql: string) => string = (s) => s, lockSql?: string) {
+  // lockSql (PostgreSQL): transaktionsgebundene Sperre – gleichzeitig startende Instanzen warten aufeinander,
+  // ohne eine zweite Verbindung zu belegen (auch mit DB_POOL_SIZE=1)
+  await db.tx(async () => {
+    if (lockSql) await exec(lockSql);
+    await exec('CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)');
+  });
   const applied = new Set((await db.all<{ name: string }>('SELECT name FROM schema_migrations')).map((r) => r.name));
   for (const file of migrationFiles()) {
     if (applied.has(file)) continue;
     const sql = translate(fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8'));
     await db.tx(async () => {
+      if (lockSql) {
+        await exec(lockSql);
+        // während des Wartens von einer anderen Instanz ausgeführt?
+        if (await db.get('SELECT name FROM schema_migrations WHERE name = ?', file)) return;
+      }
       await exec(sql);
       await db.run('INSERT INTO schema_migrations (name, applied_at) VALUES (?, ?)', file, now());
     });
@@ -156,8 +166,9 @@ class PostgresDb implements Db {
     this.pool = new pg.Pool({ connectionString, max: Number(process.env.DB_POOL_SIZE ?? 10) });
   }
 
+  /** Migrationen unter einer transaktionsgebundenen Sperre (gleichzeitig startende Replikate, ADR-027) */
   init() {
-    return migrate(this, async (sql) => void (await this.client().query(sql)), translateMigration);
+    return migrate(this, async (sql) => void (await this.client().query(sql)), translateMigration, "SELECT pg_advisory_xact_lock(hashtext('onescm-migrate'))");
   }
 
   private client(): pg.Pool | pg.PoolClient {

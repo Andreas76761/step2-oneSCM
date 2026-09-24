@@ -1,0 +1,20 @@
+{{- if .Values.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "onescm.fullname" . }}
+  labels:
+    {{- include "onescm.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "onescm.labels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+      authorization:
+        credentials:
+          name: {{ .Values.existingSecret }}
+          key: METRICS_TOKEN
+{{- end }}

@@ -58,11 +58,11 @@ a{color:#1d63d8}.pager{display:flex;justify-content:space-between;margin-top:30p
 
 /** Oberflächentexte der Online-Hilfe je Sprache (sonst Englisch) */
 const UI: Record<string, Record<string, string>> = {
-  de: { home: 'oneSCM Benutzerhandbuch', skip: 'Zum Inhalt springen', toc: 'Inhalt', changes: 'Änderungen in dieser Version', published: 'veröffentlicht am', version: 'Version', approved: 'Freigegebene Version', fallback: '', languages: 'Sprache', pager: 'Kapitel blättern' },
-  en: { home: 'oneSCM user manual', skip: 'Skip to content', toc: 'Contents', changes: 'Changes in this version', published: 'published on', version: 'Version', approved: 'Approved version', fallback: 'Not yet translated – German version shown.', languages: 'Language', pager: 'Browse chapters' },
-  fr: { home: 'Manuel utilisateur oneSCM', skip: 'Aller au contenu', toc: 'Sommaire', changes: 'Modifications de cette version', published: 'publié le', version: 'Version', approved: 'Version approuvée', fallback: 'Pas encore traduit – version allemande affichée.', languages: 'Langue', pager: 'Parcourir les chapitres' },
-  es: { home: 'Manual de usuario oneSCM', skip: 'Ir al contenido', toc: 'Índice', changes: 'Cambios en esta versión', published: 'publicado el', version: 'Versión', approved: 'Versión aprobada', fallback: 'Aún no traducido: se muestra la versión alemana.', languages: 'Idioma', pager: 'Recorrer capítulos' },
-  it: { home: 'Manuale utente oneSCM', skip: 'Vai al contenuto', toc: 'Indice', changes: 'Modifiche in questa versione', published: 'pubblicato il', version: 'Versione', approved: 'Versione approvata', fallback: 'Non ancora tradotto: viene mostrata la versione tedesca.', languages: 'Lingua', pager: 'Sfoglia i capitoli' },
+  de: { ask: 'Frage an den Handbuch-Assistenten', home: 'oneSCM Benutzerhandbuch', skip: 'Zum Inhalt springen', toc: 'Inhalt', changes: 'Änderungen in dieser Version', published: 'veröffentlicht am', version: 'Version', approved: 'Freigegebene Version', fallback: '', languages: 'Sprache', pager: 'Kapitel blättern' },
+  en: { ask: 'Ask the manual assistant', home: 'oneSCM user manual', skip: 'Skip to content', toc: 'Contents', changes: 'Changes in this version', published: 'published on', version: 'Version', approved: 'Approved version', fallback: 'Not yet translated – German version shown.', languages: 'Language', pager: 'Browse chapters' },
+  fr: { ask: 'Poser une question à l’assistant', home: 'Manuel utilisateur oneSCM', skip: 'Aller au contenu', toc: 'Sommaire', changes: 'Modifications de cette version', published: 'publié le', version: 'Version', approved: 'Version approuvée', fallback: 'Pas encore traduit – version allemande affichée.', languages: 'Langue', pager: 'Parcourir les chapitres' },
+  es: { ask: 'Preguntar al asistente', home: 'Manual de usuario oneSCM', skip: 'Ir al contenido', toc: 'Índice', changes: 'Cambios en esta versión', published: 'publicado el', version: 'Versión', approved: 'Versión aprobada', fallback: 'Aún no traducido: se muestra la versión alemana.', languages: 'Idioma', pager: 'Recorrer capítulos' },
+  it: { ask: 'Chiedi all’assistente', home: 'Manuale utente oneSCM', skip: 'Vai al contenuto', toc: 'Indice', changes: 'Modifiche in questa versione', published: 'pubblicato il', version: 'Versione', approved: 'Versione approvata', fallback: 'Non ancora tradotto: viene mostrata la versione tedesca.', languages: 'Lingua', pager: 'Sfoglia i capitoli' },
 };
 const ui = (lang: string) => UI[lang] ?? UI.en;
 
@@ -116,19 +116,21 @@ export function changesText(changes: ChapterChange[]) {
  */
 async function buildSite(
   version: string, title: string, notes: string | null, chapters: ExportChapter[], changes: ChapterChange[], createdAt: string,
-  translations: Map<string, (ExportChapter | null)[]>,
+  translations: Map<string, (ExportChapter | null)[]>, appUrl: string | null = null,
 ) {
   const zip = new JSZip();
+  // Handbuch-Assistent (ADR-026): Online-Hilfe bleibt ohne Skripte, verlinkt aber auf den Assistenten der Anwendung
+  const assistant = (lang: string) => (appUrl ? ` · <a href="${escapeHtml(`${appUrl.replace(/\/+$/, '')}/assistent?language=${lang}`)}">${escapeHtml(ui(lang).ask)}</a>` : '');
   const langs: SiteLang[] = [{ code: 'de', prefix: '' }, ...[...translations.keys()].map((code) => ({ code, prefix: `${code}/` }))];
   const lines = changesText(changes);
   const vis = visible(chapters, {});
   const files = vis.map((_, i) => `kapitel-${String(i + 1).padStart(2, '0')}.html`);
-  const switcher = (current: string, file: string) => langs.length < 2 ? '' :
+  const switcher = (current: string, file: string) => assistant(current) + (langs.length < 2 ? '' :
     ` · <nav aria-label="${escapeHtml(ui(current).languages)}" style="display:inline">${langs.map((l) => {
       const up = current === 'de' ? '' : '../';
       const href = `${up}${l.prefix}${file}`;
       return l.code === current ? `<strong lang="${l.code}">${l.code.toUpperCase()}</strong>` : `<a href="${href}" lang="${l.code}" hreflang="${l.code}">${l.code.toUpperCase()}</a>`;
-    }).join(' ')}</nav>`;
+    }).join(' ')}</nav>`);
   for (const l of langs) {
     const u = ui(l.code);
     const label = `${u.version} ${version}`;
@@ -211,7 +213,7 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
     translations.set(lang, list);
     languages.push({ language: lang, translated, total: list.length, markdownKey: `releases/${id}/handbuch-${lang}.md` });
   }
-  const site = await buildSite(version, title, notes, chapters, changes, createdAt, translations);
+  const site = await buildSite(version, title, notes, chapters, changes, createdAt, translations, ctx.config.notify.appUrl);
   const md = renderMarkdown(chapters, {}).replace(/^# oneSCM Benutzerhandbuch/, `# ${title} – Version ${version}`);
   const siteKey = `releases/${id}/site.zip`;
   const mdKey = `releases/${id}/handbuch.md`;

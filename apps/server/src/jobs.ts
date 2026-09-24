@@ -2,6 +2,7 @@
 // Mehrere Instanzen sind mit PostgreSQL möglich (FOR UPDATE SKIP LOCKED). Laufende Jobs verlängern
 // ihre Lease per Heartbeat; Jobs abgestürzter Instanzen werden bei jedem Polling nach Ablauf der
 // Lease zurückgeholt. Handler müssen idempotent sein.
+import { withSpan } from './tracing.js';
 import { randomUUID } from 'node:crypto';
 import { json, newId, now, parseJson, type Db } from './db.js';
 
@@ -43,8 +44,12 @@ export class JobQueue {
     this.backoffMs = opts.backoffMs ?? 2000;
   }
 
-  register(type: string, run: JobHandler, failed?: JobFailedHandler) {
+  /** Periodische Hintergrundketten (z. B. Tages-Snapshots, Eskalation): `idle()` wartet nicht auf sie */
+  private readonly background = new Set<string>();
+
+  register(type: string, run: JobHandler, failed?: JobFailedHandler, opts: { background?: boolean } = {}) {
     this.handlers.set(type, { run, failed });
+    if (opts.background) this.background.add(type);
   }
 
   /**
@@ -155,7 +160,7 @@ export class JobQueue {
     heartbeat.unref();
     try {
       if (!handler) throw new Error(`Kein Handler für Jobtyp „${job.type}“`);
-      await handler.run(payload, { id: job.id, attempt: job.attempts });
+      await withSpan(`job ${job.type}`, { 'job.id': job.id, 'job.type': job.type, 'job.attempt': job.attempts }, () => handler.run(payload, { id: job.id, attempt: job.attempts }));
       await this.db.run("UPDATE jobs SET status = 'completed', finished_at = ?, error = NULL WHERE id = ? AND locked_by = ?", now(), job.id, this.workerId);
     } catch (err) {
       const msg = (err as Error)?.message ?? String(err);
@@ -196,7 +201,11 @@ export class JobQueue {
     for (;;) {
       await this.active;
       // geplante Jobs jenseits der Wartezeit (z. B. periodische Synchronisierung) zählen nicht
-      const open = await this.db.get<{ n: number }>("SELECT COUNT(*) AS n FROM jobs WHERE status = 'running' OR (status = 'queued' AND run_after <= ?)", new Date(until).toISOString());
+      const bg = [...this.background];
+      const skip = bg.length ? ` AND type NOT IN (${bg.map(() => '?').join(',')})` : '';
+      const open = await this.db.get<{ n: number }>(
+        `SELECT COUNT(*) AS n FROM jobs WHERE (status = 'running' OR (status = 'queued' AND run_after <= ?))${skip}`, new Date(until).toISOString(), ...bg,
+      );
       if (!open?.n && !this.active) return;
       if (Date.now() > until) throw new Error('Zeitüberschreitung beim Warten auf Jobs');
       this.wake();

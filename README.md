@@ -3,7 +3,7 @@
 Revisionssichere Webapp, die aus vielen Markdown-Texten ein konsistentes, rollen- und spartenspezifisches oneSCM-Benutzerhandbuch erzeugt.
 Grundlage ist das Projektpaket in [`reference/`](reference/) (Masterprompt v1.0 und Referenz-UI).
 
-> **Status: Etappe 8 (v0.8.0).** Alle P0-, P1- und P2-Stories (US-001 … US-020) sind umgesetzt, dazu die KI-Umformulierung mit Quellenbindung je Satz (E-16, ADR-013) – auch für ganze Kapitel –, mehrere Projekte (ADR-014), Betriebsfunktionen (ADR-015), Barrierefreiheit nach WCAG 2.2 AA (ADR-016), semantische Suche (ADR-017), Handbuch-Releases mit Online-Hilfe (ADR-018), Kollaboration (ADR-019), Mehrsprachigkeit (ADR-020) samt mehrsprachiger Releases (ADR-021), Import aus Confluence, Word und Git (ADR-022), Analytik und Berichte (ADR-023) sowie ein skalierbarer Vektorindex mit HNSW bzw. pgvector (ADR-024). Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
+> **Status: Etappe 9 (v0.9.0).** Alle P0-, P1- und P2-Stories (US-001 … US-020) sind umgesetzt, dazu die KI-Umformulierung mit Quellenbindung je Satz (E-16, ADR-013) – auch für ganze Kapitel –, mehrere Projekte (ADR-014), Betriebsfunktionen (ADR-015), Barrierefreiheit nach WCAG 2.2 AA (ADR-016), semantische Suche (ADR-017), Handbuch-Releases mit Online-Hilfe (ADR-018), Kollaboration (ADR-019), Mehrsprachigkeit (ADR-020) samt mehrsprachiger Releases (ADR-021), Import aus Confluence, Word und Git (ADR-022), Analytik und Berichte (ADR-023) ein skalierbarer Vektorindex mit HNSW bzw. pgvector (ADR-024), mehrstufige Freigabe (ADR-025), ein Handbuch-Assistent mit Quellen je Satz (ADR-026) sowie Kubernetes-Betrieb mit Helm-Chart, OpenTelemetry und verteilten Rate-Limits (ADR-027). Die P0-Entscheidungen wurden am 24.09.2026 festgelegt ([docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md)); im Code sind sie mit `ENTSCHEIDUNG(E-xx)` markiert. Für den Produktivbetrieb gibt es PostgreSQL, eine OIDC-Anmeldung und eine persistente Jobqueue.
 
 ## Dokumentation
 
@@ -64,7 +64,7 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
 4. **Kapitelgenerator:** Entwurf ausschließlich aus bestätigten Quellen erzeugen (`source_confirmed` / `manually_confirmed`).
 5. **Kapitelwerkstatt:** Absätze bearbeiten, verschieben, löschen, sperren, klassifizieren, kommentieren, einzelne Absatzversionen wiederherstellen. **Versionen vergleichen** zeigt die Unterschiede zweier ganzer Kapitelversionen. Mit eingerichtetem KI-Dienst (`LLM_PROVIDER`) liefert **✨ KI-Vorschlag** eine Umformulierung, in der jeder Satz seine Quellen nennt; nur geprüfte Vorschläge lassen sich übernehmen (ADR-013). **✨ Kapitel umformulieren** fordert Vorschläge für alle geeigneten Absätze im Hintergrund an; die Sammelprüfung zeigt sie gemeinsam, gültige lassen sich einzeln oder gesammelt übernehmen. Nutzung und Tokens stehen unter **Einstellungen**.
 6. **Evidenz:** je Absatz prüfen, auf welcher Quelle er beruht und ob sie aktuell und bestätigt ist.
-7. **Freigabe:** Redaktion reicht ein (Qualitätsgate muss bestanden sein), die Freigabe entscheidet: freigeben oder ablehnen. Alles wird protokolliert.
+7. **Freigabe:** Redaktion reicht ein (Qualitätsgate muss bestanden sein), die Freigabe entscheidet: freigeben oder ablehnen. Optional mehrere Stufen mit Zuständigen, Mindestanzahl, Frist und Vier-Augen-Prinzip (ADR-025); „Meine offenen Entscheidungen“ zeigt, was ansteht. Alles wird protokolliert.
 8. **Export / Rollen- und Spartenansichten:** gefiltert als Markdown, HTML, PDF oder JSON. Enthalten sind allgemeine Inhalte plus die passenden spezifischen.
 9. **Terminologie / Optimierungen:** Begriffe pflegen; Kennzahlen und priorisierte Empfehlungen je Kapitel.
 10. **Traceability:** Matrix als Excel, CSV oder Markdown.
@@ -72,6 +72,7 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
 12. **Übersetzungen (ADR-020):** Freigegebene Kapitel in die Zielsprachen des Projekts übersetzen (KI mit Satz-Zuordnung oder manuell), prüfen, je Sprache freigeben und exportieren.
 13. **Veröffentlichung (ADR-018, ADR-021):** Den Stand aller freigegebenen Kapitel als Handbuch-Version veröffentlichen – mit Änderungsliste zur Vorversion und statischer Online-Hilfe (ZIP), inklusive freigegebener Übersetzungen mit Sprachumschalter.
 14. **Analytik (ADR-023):** Kennzahlen im Zeitverlauf, Freigabedauer und Erstfreigabequote, Projektbericht als PDF, Export für BI-Werkzeuge (CSV/JSON).
+15. **Assistent (ADR-026):** Fragen an das freigegebene Handbuch – Antworten mit Quellen je Satz, gefiltert nach Sprache, Rolle und Sparte; Wissenslücken für die Redaktion.
 
 ### Import
 
@@ -143,10 +144,21 @@ Jeder Test trägt eine ID (`[T-xxx]`), die in [`traceability/tests.json`](tracea
 | `SMTP_URL` / `MAIL_FROM` | – / `noreply@example.com` | Benachrichtigungen per E-Mail (`smtp://user:pass@host:587`) |
 | `APP_URL` | – | Basis-URL der Web-UI für Links in Benachrichtigungen |
 | `VECTOR_INDEX` | `auto` | Suchverfahren der semantischen Suche (ADR-024): `auto` (exakt im Speicher; bei einem semantischen Embedding-Modell ab `semantic.annThreshold` Abschnitten näherungsweise über pgvector, falls verfügbar, sonst HNSW), `exact`, `hnsw`, `pgvector` |
+| `RATE_LIMIT_STORE` | `memory` | `db`: Rate-Limits gemeinsam über alle Instanzen derselben Datenbank (ADR-027) |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` / `OTEL_SERVICE_NAME` | – / `onescm-handbook-studio` | OpenTelemetry-Tracing per OTLP/HTTP (ADR-027); ohne Endpunkt aus |
 | `GIT_CREDENTIAL_*` | – | Tokens für Git-Quellverbindungen (ADR-022), in der Verbindung nur per Name referenziert |
 | `GIT_TIMEOUT_MS` / `GIT_ALLOW_FILE` | `120000` / – | Zeitlimit je git-Aufruf; `1` erlaubt lokale Repositories (nur Tests) |
 
 Mehrere Instanzen sind mit PostgreSQL und `OBJECT_STORE=s3` möglich: Jobs werden per `FOR UPDATE SKIP LOCKED` verteilt, Dateien liegen im gemeinsamen Bucket (ADR-008).
+
+**Kubernetes (ADR-027):** Helm-Chart unter [`deploy/helm/onescm`](deploy/helm/onescm/values.yaml) mit getrennten Deployments für API und Worker, Probes, HPA, PodDisruptionBudget, Ingress und ServiceMonitor:
+
+```bash
+kubectl create secret generic onescm-secrets --from-literal=DATABASE_URL=postgres://… --from-literal=METRICS_TOKEN=…
+helm install handbuch deploy/helm/onescm --set image.repository=registry.example.org/onescm --set extraEnv.S3_BUCKET=onescm --set extraEnv.OIDC_ISSUER=https://idp.example.org
+```
+
+Mehrere Replikate starten gefahrlos gleichzeitig (Migrationen unter PostgreSQL-Sperre).
 
 **Überwachung (ADR-015):** `GET /api/v1/health/live` (Liveness) und `GET /api/v1/health/ready` (Datenbank, Object-Store, Jobqueue) ohne Anmeldung; Prometheus-Metriken unter `/metrics`. Jede Antwort trägt `X-Request-Id`.
 

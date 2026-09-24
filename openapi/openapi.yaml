@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.8.0
+  version: 0.9.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -12,7 +12,8 @@ info:
     - `demo`: Header `X-User-Id` mit einem Demo-Benutzer; ohne Header nur Lesezugriff. Nur für Entwicklung und Demo.
     Projekt (ADR-014): Header `X-Project-Id` wählt das Projekt aller projektbezogenen Endpunkte (Standard `p_default`);
     IDs anderer Projekte werden wie nicht vorhandene behandelt (404). Ausnahmen: `/projects…` und die Health-Checks.
-    Betrieb (ADR-015): jede Antwort trägt `X-Request-Id`; Rate-Limits je Benutzer und Minute (429 mit `Retry-After`);
+    Betrieb (ADR-015, ADR-027): jede Antwort trägt `X-Request-Id` (bei aktivem Tracing zusätzlich `X-Trace-Id`, W3C `traceparent` wird übernommen);
+    Rate-Limits je Benutzer und Minute (429 mit `Retry-After`), mit `RATE_LIMIT_STORE=db` gemeinsam über alle Instanzen;
     Prometheus-Metriken unter `/metrics` (außerhalb von `/api/v1`, Bearer `METRICS_TOKEN` oder Berechtigung admin).
 servers:
   - url: /api/v1
@@ -33,6 +34,7 @@ tags:
   - name: Übersetzung
   - name: Quellverbindungen
   - name: Analytik
+  - name: Assistent
   - name: System
 components:
   securitySchemes:
@@ -349,7 +351,7 @@ paths:
       operationId: createImport
       summary: ZIP-, Markdown-, HTML- (Confluence-Export) oder Word-Datei importieren (HTML/Word werden in Markdown umgewandelt, ADR-022)
       tags: [Import]
-      x-requirements: [US-001, US-002, US-003, US-004, NFR-09]
+      x-requirements: [US-001, US-002, US-003, US-004, NFR-09, NFR-14]
       requestBody:
         required: true
         content:
@@ -855,12 +857,86 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: 'Block, content: { application/json: { schema: { $ref: ''#/components/schemas/ContentBlock'' } } }' }
         '409': { $ref: '#/components/responses/Problem' }
+  /approval-workflow:
+    get:
+      operationId: getApprovalWorkflow
+      summary: Freigabeworkflow des Projekts (Stufen, Zuständige, Mindestanzahl, Frist, Vier-Augen-Prinzip); ohne Festlegung einstufig
+      tags: [Freigabe]
+      x-requirements: [NFR-12, US-016]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+    put:
+      operationId: setApprovalWorkflow
+      summary: Freigabeworkflow festlegen (Berechtigung admin); leere Stufenliste stellt die einstufige Freigabe wieder her; gilt für neue Einreichungen
+      tags: [Freigabe]
+      x-requirements: [NFR-12, US-016]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { fourEyes: { type: boolean }, stages: { type: array, maxItems: 6, items: { type: object, required: [name], properties: { name: { type: string }, approvers: { type: array, items: { type: string } }, minApprovals: { type: integer, minimum: 1 }, dueDays: { type: [integer, 'null'], minimum: 1, maximum: 90 } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /approvals/pending:
+    get:
+      operationId: listMyPendingApprovals
+      summary: Offene Entscheidungen der angemeldeten Person (aktuelle Stufe, zuständig, nicht eigene Einreichung)
+      tags: [Freigabe]
+      x-requirements: [NFR-12, US-016]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+  /assistant/ask:
+    post:
+      operationId: askAssistant
+      summary: Frage an das freigegebene Handbuch; Antwort mit Quellen je Satz (KI geprüft oder extraktiv), Filter Sprache/Rolle/Sparte (ADR-026)
+      tags: [Assistent]
+      x-requirements: [NFR-13, US-017]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, language: { type: string }, role: { type: string }, division: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Antwort, Quellen, Modus (llm, extractive, none), Hinweis' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '422': { description: Personenbezogene Daten in der Frage bei externem Dienst }
+        '429': { description: Rate-Limit }
+  /assistant/answers/{answerId}/feedback:
+    post:
+      operationId: rateAssistantAnswer
+      summary: Antwort bewerten (nur die fragende Person)
+      tags: [Assistent]
+      x-requirements: [NFR-13]
+      x-extension: true
+      parameters: [{ name: answerId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [helpful], properties: { helpful: { type: boolean }, comment: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
+        '404': { $ref: '#/components/responses/Problem' }
+  /assistant/open-questions:
+    get:
+      operationId: listAssistantOpenQuestions
+      summary: Wissenslücken – Fragen ohne Antwort oder mit negativer Bewertung, Kennzahlen (Berechtigung edit)
+      tags: [Assistent]
+      x-requirements: [NFR-13]
+      x-extension: true
+      parameters: [{ name: limit, in: query, schema: { type: integer } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: OK }
   /chapter-versions/{versionId}/approve:
     post:
       operationId: approveChapterVersion
-      summary: Fachliche Entscheidung über eine eingereichte Version – freigeben oder ablehnen (zurück in den Entwurf)
+      summary: 'Fachliche Entscheidung in der aktuellen Freigabestufe: zustimmen (letzte Stufe: freigegeben) oder ablehnen (zurück in den Entwurf); Zuständigkeit und Vier-Augen-Prinzip (ADR-025)'
       tags: [Freigabe]
-      x-requirements: [US-012, US-016]
+      x-requirements: [US-012, US-016, NFR-12]
       parameters: [{ $ref: '#/components/parameters/VersionId' }]
       requestBody:
         required: true
@@ -1138,7 +1214,7 @@ paths:
       summary: Readiness – Datenbank, Object-Store und Jobqueue erreichbar (ohne Anmeldung)
       tags: [System]
       security: []
-      x-requirements: [NFR-02]
+      x-requirements: [NFR-02, NFR-14]
       x-extension: true
       responses:
         '200': { description: 'bereit, content: { application/json: { schema: { type: object, properties: { ready: { type: boolean }, checks: { type: object } } } } }' }

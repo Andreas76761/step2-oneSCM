@@ -1,0 +1,22 @@
+{{- if .Values.worker.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "onescm.fullname" . }}-worker
+  labels:
+    {{- include "onescm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "onescm.selector" (dict "root" . "component" "worker") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "onescm.selector" (dict "root" . "component" "worker") | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+    spec:
+      {{- include "onescm.pod" (dict "root" . "component" "worker" "worker" true "resources" .Values.worker.resources) | nindent 6 }}
+{{- end }}

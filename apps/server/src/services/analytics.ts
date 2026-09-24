@@ -117,7 +117,7 @@ export async function flowSeries(ctx: Ctx, from?: string, to?: string) {
   const opened = await count('SELECT SUBSTR(created_at, 1, 10) AS d, COUNT(*) AS n FROM quality_findings WHERE project_id = ? AND created_at >= ? AND created_at < ? GROUP BY SUBSTR(created_at, 1, 10)');
   const closed = await count("SELECT SUBSTR(decided_at, 1, 10) AS d, COUNT(*) AS n FROM quality_findings WHERE project_id = ? AND decided_at >= ? AND decided_at < ? AND status IN ('resolved','ignored') GROUP BY SUBSTR(decided_at, 1, 10)");
   const decisions = (decision: string) => count(`SELECT SUBSTR(a.created_at, 1, 10) AS d, COUNT(*) AS n FROM approvals a JOIN generated_chapter_versions v ON v.id = a.chapter_version_id
-    JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND a.created_at >= ? AND a.created_at < ? AND a.decision = '${decision}' GROUP BY SUBSTR(a.created_at, 1, 10)`);
+    JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND a.final = 1 AND a.created_at >= ? AND a.created_at < ? AND a.decision = '${decision}' GROUP BY SUBSTR(a.created_at, 1, 10)`);
   const approvals = await decisions('approved');
   const rejections = await decisions('rejected');
   const imports = await count('SELECT SUBSTR(created_at, 1, 10) AS d, COUNT(*) AS n FROM imports WHERE project_id = ? AND created_at >= ? AND created_at < ? GROUP BY SUBSTR(created_at, 1, 10)');
@@ -144,7 +144,7 @@ export async function approvalDecisions(ctx: Ctx, from?: string, to?: string) {
        (SELECT MAX(e.at) FROM audit_events e WHERE e.entity_type = 'chapter_version' AND e.entity_id = a.chapter_version_id
           AND e.action = 'chapter_version.submitted' AND e.at <= a.created_at) AS submitted_at
      FROM approvals a JOIN generated_chapter_versions v ON v.id = a.chapter_version_id JOIN chapters c ON c.id = v.chapter_id
-     WHERE c.project_id = ? AND a.created_at >= ? AND a.created_at < ? ORDER BY a.created_at`,
+     WHERE c.project_id = ? AND a.final = 1 AND a.created_at >= ? AND a.created_at < ? ORDER BY a.created_at`,
     ctx.projectId, `${start}T00:00:00`, `${end}T99`,
   );
   return rows.map((r) => ({

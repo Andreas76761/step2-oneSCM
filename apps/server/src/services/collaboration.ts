@@ -203,3 +203,20 @@ export async function deliverNotification(ctx: Ctx, notificationId: string) {
   if (!delivered.webhook && (await ctx.notifier.webhook(msg))) (delivered.webhook = now(), await save());
   if (!delivered.email && (await ctx.notifier.email(msg))) (delivered.email = now(), await save());
 }
+
+/**
+ * Systemhinweis in der Kapitel-Diskussion (z. B. Freigabeworkflow, ADR-025): Kommentar von „system“ und Benachrichtigung
+ * der Empfänger über alle Kanäle. Läuft in der Transaktion des Aufrufers.
+ */
+export async function systemNotice(ctx: Ctx, chapterId: string, body: string, recipients: string[], type: string) {
+  const info = await entityInfo(ctx, 'chapter', chapterId);
+  const id = newId('cm');
+  const to = [...new Set(recipients)];
+  await ctx.db.run(
+    `INSERT INTO comments (id, project_id, entity_type, entity_id, parent_id, kind, body, mentions, assignee, due_date, status, author, created_at, updated_at)
+     VALUES (?, ?, 'chapter', ?, NULL, 'comment', ?, ?, NULL, NULL, 'open', 'system', ?, ?)`,
+    id, ctx.projectId, chapterId, body, json(to), now(), now(),
+  );
+  await notify(ctx, to, type, id, body, info.link);
+  return id;
+}

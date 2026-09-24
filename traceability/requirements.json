@@ -285,5 +285,33 @@
       "docs/adr/ADR-024-vektorindex.md",
       "docs/lasttest-semantik.md"
     ]
+  },
+  {
+    "id": "NFR-12",
+    "title": "Mehrstufige Freigabe: Stufen mit Zuständigkeit, Mindestanzahl, Frist und Eskalation, Vier-Augen-Prinzip",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-025-mehrstufige-freigabe.md"
+    ]
+  },
+  {
+    "id": "NFR-13",
+    "title": "Handbuch-Assistent: Antworten nur aus freigegebenen Absätzen mit Quellen je Satz, Wissenslücken",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-026-assistent.md"
+    ]
+  },
+  {
+    "id": "NFR-14",
+    "title": "Betrieb & Performance: schneller Import auf PostgreSQL, Helm-Chart, OpenTelemetry, Rate-Limits über Instanzen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-027-betrieb-skalierung.md",
+      "deploy/helm/onescm/values.yaml"
+    ]
   }
 ]

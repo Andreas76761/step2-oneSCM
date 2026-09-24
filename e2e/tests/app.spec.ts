@@ -81,15 +81,16 @@ test('[T-203] Freigabeworkflow in der UI: einreichen, freigeben; Terminologie pf
   }
 
   await page.goto('/freigabe');
-  await page.locator('tr', { hasText: '5. MO-Check' }).click();
+  const versions = page.locator('.card', { hasText: 'Kapitelversionen' });
+  await versions.locator('tr', { hasText: '5. MO-Check' }).click();
   await page.getByLabel('Hinweis an die Freigabe (optional)').fill('Bitte fachlich prüfen');
   await page.getByRole('button', { name: 'Zur Freigabe einreichen' }).click();
   await expect(page.getByRole('status')).toContainText('Zur Freigabe eingereicht');
-  await expect(page.locator('tr', { hasText: '5. MO-Check' })).toContainText('eingereicht');
+  await expect(versions.locator('tr', { hasText: '5. MO-Check' })).toContainText('eingereicht');
   await page.getByLabel('Kommentar (Pflicht)').fill('Fachlich geprüft');
   await page.getByRole('button', { name: 'Freigeben', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('freigegeben');
-  await expect(page.locator('tr', { hasText: '5. MO-Check' })).toContainText('freigegeben');
+  await expect(versions.locator('tr', { hasText: '5. MO-Check' })).toContainText('freigegeben');
 
   // Evidenzansicht der freigegebenen Version
   await page.getByRole('link', { name: 'Evidenz je Absatz ansehen →' }).click();
@@ -320,4 +321,66 @@ test('[T-215] Analytik: Kennzahlen, Diagramme, Projektbericht und BI-Export', as
   expect((await download).suggestedFilename()).toBe('chapters.csv');
   await page.getByLabel('Zeitraum').selectOption('30');
   await expect(page.getByRole('img', { name: /Qualität in Prozent/ })).toBeVisible();
+});
+
+test('[T-216] Mehrstufige Freigabe: Workflow festlegen, Zustimmung je Stufe, offene Entscheidungen', async ({ page, request }) => {
+  const h = { 'X-User-Id': 'u-admin' };
+  const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '3. Benutzerverwaltung');
+  const v = await (await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: { 'X-User-Id': 'u-redaktion' } })).json();
+  for (const b of v.sections.flatMap((s: any) => s.blocks)) if (b.kind === 'gap') await request.delete(`/api/v1/content-blocks/${b.id}?reason=entfällt`, { headers: { 'X-User-Id': 'u-redaktion' } });
+  await page.goto('/freigabe');
+  // Workflow in der UI: zwei Stufen, Stufe 1 nur u-freigabe
+  const editor = page.locator('.card', { hasText: 'Freigabeworkflow des Projekts' });
+  await editor.getByRole('button', { name: '+ Stufe' }).click();
+  await editor.getByLabel('Name der Stufe 1').fill('Fachprüfung');
+  await editor.getByLabel('Zuständige der Stufe 1').selectOption(['u-freigabe']);
+  await editor.getByRole('button', { name: '+ Stufe' }).click();
+  await editor.getByLabel('Name der Stufe 2').fill('Compliance');
+  await editor.getByRole('button', { name: 'Workflow speichern' }).click();
+  await expect(page.getByText('Freigabeworkflow gespeichert – gilt für neue Einreichungen.')).toBeVisible();
+  const submitted = await request.post(`/api/v1/chapter-versions/${v.id}/submit`, { headers: { 'X-User-Id': 'u-redaktion' }, data: {} });
+  expect(submitted.ok()).toBe(true);
+
+  // Stufe 1 als Freigabe
+  await page.getByLabel('Demo-Benutzer').selectOption('u-freigabe');
+  await page.goto('/freigabe');
+  const mine = page.locator('.card', { hasText: 'Meine offenen Entscheidungen' });
+  await mine.getByRole('row', { name: /Benutzerverwaltung/ }).click();
+  await expect(page.getByText('Fachprüfung – aktuell')).toBeVisible();
+  await page.getByLabel('Kommentar (Pflicht)').fill('Fachlich geprüft');
+  await page.getByRole('button', { name: 'Zustimmen (Fachprüfung)' }).click();
+  await expect(page.getByText('Zustimmung gespeichert.')).toBeVisible();
+  await expect(page.getByText('Compliance – aktuell')).toBeVisible();
+
+  // Stufe 2 als Administration
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.goto('/freigabe');
+  await page.locator('.card', { hasText: 'Meine offenen Entscheidungen' }).getByRole('row', { name: /Benutzerverwaltung/ }).click();
+  await page.getByLabel('Kommentar (Pflicht)').fill('Compliance ok');
+  await page.getByRole('button', { name: 'Zustimmen (Compliance)' }).click();
+  await expect(page.getByText('Zustimmung gespeichert.')).toBeVisible();
+  await expect(page.getByText('Fachprüfung – abgeschlossen')).toBeVisible();
+  await expect(page.getByText('Compliance – abgeschlossen')).toBeVisible();
+  // wieder einstufig für die übrigen Tests
+  expect((await request.put('/api/v1/approval-workflow', { headers: h, data: { stages: [] } })).ok()).toBe(true);
+});
+
+test('[T-217] Handbuch-Assistent: Frage mit Quellenangabe, Bewertung, Wissenslücken', async ({ page }) => {
+  await page.goto('/assistent');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Assistent');
+  await page.getByLabel('Ihre Frage').fill('Ist eine Zurückweisung ohne Kommentar möglich?');
+  await page.getByRole('button', { name: 'Fragen' }).click();
+  const answer = page.locator('.card', { hasText: 'Antwort' });
+  await expect(answer.getByText(/Zurückweisung ohne Kommentar ist nicht möglich/).first()).toBeVisible();
+  await expect(answer.getByRole('link', { name: 'Quelle 1' })).toBeVisible();
+  await expect(answer.locator('ol.sources')).toContainText('5. MO-Check');
+  await answer.getByRole('button', { name: '👎 Nein' }).click();
+  await expect(page.getByText('Danke für die Bewertung.')).toBeVisible();
+  // Frage ohne Aussage im Handbuch → Wissenslücke
+  await page.getByLabel('Ihre Frage').fill('Wie konfiguriere ich den Quantencomputer?');
+  await page.getByRole('button', { name: 'Fragen' }).click();
+  await expect(page.getByText('Das freigegebene Handbuch enthält dazu keine Aussage.')).toBeVisible();
+  const gaps = page.locator('.card', { hasText: 'Wissenslücken' });
+  await expect(gaps.getByRole('cell', { name: 'Wie konfiguriere ich den Quantencomputer?' })).toBeVisible();
+  await expect(gaps.getByRole('cell', { name: /Zurückweisung ohne Kommentar/ })).toBeVisible();
 });
