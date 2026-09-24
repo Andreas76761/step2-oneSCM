@@ -10,6 +10,7 @@ import { MEDIA_EXT, resolveRelative, rewriteImages } from '../domain/media.js';
 import { normalizedHash, sha256 } from '../domain/similarity.js';
 import { finishConnectionImport } from './connections.js';
 import { storeMedia } from './media.js';
+import { contextsFromFrontMatter } from './contextHelp.js';
 import { badRequest, notFound, Problem } from '../problem.js';
 
 interface Entry {
@@ -289,6 +290,11 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
     for (const h of parsed.headings) {
       if (h.level === 1) await chapterFor(h.title);
       if (h.level === 2) await subFor(h.chapterTitle, h.title);
+    }
+    // Kontext-IDs für die Kontexthilfe aus dem Front-Matter (ADR-030) → erstes Kapitel der Datei
+    const firstChapter = parsed.headings.find((h) => h.level === 1);
+    if (firstChapter && (parsed.frontMatter.help_context || parsed.frontMatter.help_contexts)) {
+      await contextsFromFrontMatter(ctx, parsed.frontMatter, (await chapterFor(firstChapter.title)).id, 'system');
     }
 
     // Sammel-INSERTs (Etappe 9): eine fortlaufende Nummer je Revision reservieren, Zeilen blockweise schreiben

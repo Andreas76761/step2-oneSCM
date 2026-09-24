@@ -471,3 +471,69 @@ test('[T-219] Bilder: Anzeige in der Kapitelwerkstatt, Bild mit Pflicht-Alternat
   await block.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('img', { name: 'Knopf „Anmelden“' })).toBeVisible();
 });
+
+test('[T-220] Kontexthilfe: Front-Matter-Zuordnung, Freischaltung, Deep-Link, Hilfe-Widget in oneSCM mit Assistent', async ({ page, request }) => {
+  const admin = { 'X-User-Id': 'u-admin' };
+  const project = await (await request.post('/api/v1/projects', { headers: admin, data: { name: 'E2E-Kontexthilfe', visibility: 'open' } })).json();
+  const as = (user: string) => ({ 'X-User-Id': user, 'X-Project-Id': project.id });
+  const md = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\nhelp_context: order.create\n---\n# 12. Aufträge anlegen\n\n## 12.1 Zweck\n\nAufträge legen Sie im Menü Verkauf an.\n';
+  expect((await request.post('/api/v1/imports', { headers: as('u-admin'), multipart: { file: { name: 'auftraege.md', mimeType: 'text/markdown', buffer: Buffer.from(md) } } })).status()).toBe(202);
+  let ch: any;
+  await expect.poll(async () => (ch = (await (await request.get('/api/v1/chapters', { headers: as('u-admin') })).json()).find((c: any) => c.title === '12. Aufträge anlegen'))).toBeTruthy();
+  const gen = await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: as('u-redaktion') });
+  const v = await gen.json();
+  expect(gen.ok(), JSON.stringify(v)).toBe(true);
+  for (const b of v.sections.flatMap((s: any) => s.blocks)) if (b.kind === 'gap') await request.delete(`/api/v1/content-blocks/${b.id}?reason=entfällt`, { headers: as('u-redaktion') });
+  expect((await request.post(`/api/v1/chapter-versions/${v.id}/submit`, { headers: as('u-redaktion'), data: {} })).ok()).toBe(true);
+  expect((await request.post(`/api/v1/chapter-versions/${v.id}/approve`, { headers: as('u-freigabe'), data: { comment: 'ok' } })).ok()).toBe(true);
+  expect((await request.post('/api/v1/releases', { headers: as('u-freigabe'), data: { version: 'e2e-hilfe' } })).status()).toBe(201);
+
+  // Verwaltung im Projekt
+  await page.goto('/');
+  await page.evaluate((id) => localStorage.setItem('onescm.project', id), project.id);
+  await page.goto('/kontexthilfe');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kontexthilfe');
+  const row = page.getByRole('row', { name: /order\.create/ });
+  await expect(row).toContainText('Front-Matter');
+  await page.getByRole('button', { name: 'Freischalten' }).click();
+  await expect(page.getByText('Öffentliche Einbettung freigeschaltet.')).toBeVisible();
+  await expect(page.getByLabel('Einbettungscode')).toContainText(`data-project="${project.id}"`);
+  // Deep-Link
+  await row.getByRole('link', { name: 'Ansehen' }).click();
+  await expect(page).toHaveURL(/\/hilfe\/order\.create$/);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('12. Aufträge anlegen');
+  await expect(page.getByText('Aufträge legen Sie im Menü Verkauf an.')).toBeVisible();
+  await page.getByLabel('Rolle').selectOption({ index: 1 });
+  await expect(page).toHaveURL(/\/hilfe\/order\.create\?role=/);
+
+  // Hilfe-Widget auf einer (nachgebildeten) oneSCM-Seite; Einbettung per HELP_EMBED_ORIGINS erlaubt
+  const base = new URL(page.url()).origin;
+  await page.route((u) => u.origin === base && u.pathname.startsWith('/onescm/'), (route) => route.fulfill({
+    contentType: 'text/html',
+    body: `<!doctype html><html lang="de"><head><title>oneSCM</title></head><body><h1>Auftrag anlegen</h1><form data-onescm-help="order.create"><label>Kunde <input id="kunde"></label></form>
+<button type="button" data-onescm-help="order.create">Hilfe</button><script src="${base}/help/widget.js" data-project="${project.id}" data-role="hq"></script></body></html>`,
+  }));
+  await page.goto(`${base}/onescm/auftrag`);
+  await expect.poll(() => page.evaluate(() => typeof (window as any).OneScmHelp)).toBe('object');
+  await page.getByRole('button', { name: 'Hilfe' }).click();
+  const panel = page.getByRole('dialog', { name: 'oneSCM-Hilfe' });
+  await expect(panel).toBeVisible();
+  await expect(panel.getByRole('button', { name: 'Hilfe schließen' })).toBeFocused();
+  const frame = page.frameLocator('#onescm-help-panel iframe');
+  await expect(frame.getByRole('heading', { level: 1 })).toHaveText('12. Aufträge anlegen');
+  await expect(frame.getByText('Version e2e-hilfe')).toBeVisible();
+  await frame.getByLabel('Frage an den Handbuch-Assistenten').fill('Wo lege ich Aufträge an?');
+  await frame.getByRole('button', { name: 'Fragen' }).click();
+  await expect(frame.getByRole('status')).toContainText('Menü Verkauf');
+  await panel.getByRole('button', { name: 'Hilfe schließen' }).click();
+  await expect(panel).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Hilfe' })).toBeFocused();
+  // F1 im Formularbereich öffnet die Hilfe zur Stelle
+  await page.getByLabel('Kunde').focus();
+  await page.keyboard.press('F1');
+  await expect(panel).toBeVisible();
+
+  // zurück ins Standardprojekt (für folgende Tests)
+  await page.goto(`${base}/`);
+  await page.evaluate(() => localStorage.setItem('onescm.project', 'p_default'));
+});

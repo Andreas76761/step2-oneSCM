@@ -28,6 +28,7 @@ import { connectionRoutes } from './routes/connections.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { assistantRoutes } from './routes/assistant.js';
 import { integrationRoutes } from './routes/integrations.js';
+import { contextHelpRoutes, publicHelpRoutes } from './routes/contextHelp.js';
 import { deliverWebhook, failWebhookDelivery } from './services/webhooks.js';
 import { ensureDailyJob, runDailySnapshots } from './services/analytics.js';
 import { ensureEscalationJob, escalateOverdue } from './services/workflow.js';
@@ -152,7 +153,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     reply.header('X-Content-Type-Options', 'nosniff');
     reply.header('Referrer-Policy', 'no-referrer');
     const idp = config.oidc ? ` ${new URL(config.oidc.issuer).origin}` : '';
-    reply.header('Content-Security-Policy', `default-src 'self'; connect-src 'self'${idp}; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-ancestors 'none'`);
+    // Routen mit eigener Richtlinie (Medien, eingebettete Kontexthilfe) behalten diese
+    if (!reply.hasHeader('Content-Security-Policy')) reply.header('Content-Security-Policy', `default-src 'self'; connect-src 'self'${idp}; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; object-src 'none'; frame-ancestors 'none'`);
     return payload;
   });
 
@@ -222,11 +224,15 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       analyticsRoutes(api, ctx);
       assistantRoutes(api, ctx);
       integrationRoutes(api, ctx);
+      contextHelpRoutes(api, ctx);
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );
+
+  // Öffentliche Kontexthilfe (Widget, Einbettung) – eigene Freischaltung je Projekt (ADR-030)
+  await publicHelpRoutes(app, ctx, config.help.embedOrigins);
 
   app.get('/openapi.yaml', async (_req, reply) => reply.type('application/yaml').send(fs.readFileSync(config.openapiPath, 'utf8')));
 

@@ -202,6 +202,7 @@ const OWNER_SQL: Record<string, string> = {
   connectionId: 'SELECT project_id FROM source_connections WHERE id = ?',
   answerId: 'SELECT project_id FROM assistant_log WHERE id = ?',
   tokenId: 'SELECT project_id FROM api_tokens WHERE id = ?',
+  helpContextId: 'SELECT project_id FROM help_contexts WHERE id = ?',
   webhookId: 'SELECT project_id FROM webhook_subscriptions WHERE id = ?',
   deliveryId: 'SELECT s.project_id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id WHERE d.id = ?',
   batchId: 'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?',

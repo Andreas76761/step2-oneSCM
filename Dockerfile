@@ -20,6 +20,7 @@ COPY --from=build /app/package.json ./
 COPY --from=build /app/apps/server/package.json apps/server/
 COPY --from=build /app/apps/server/dist apps/server/dist
 COPY --from=build /app/apps/server/migrations apps/server/migrations
+COPY --from=build /app/apps/server/assets apps/server/assets
 COPY --from=build /app/apps/web/dist apps/web/dist
 COPY --from=build /app/openapi openapi
 COPY --from=build /app/traceability traceability

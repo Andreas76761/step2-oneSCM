@@ -58,6 +58,8 @@ export interface AppConfig {
   tracing: TracingConfig;
   /** Integrationen (ADR-028): http und interne Ziele nur für Tests/abgeschottete Netze */
   integrations: { allowInsecure: boolean };
+  /** Kontexthilfe (ADR-030): Ursprünge, die die öffentliche Hilfe einbetten dürfen (frame-ancestors) */
+  help: { embedOrigins: string[] };
 }
 
 export type EngineSetting = 'auto' | 'exact' | 'hnsw' | 'pgvector';
@@ -170,6 +172,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     vectorIndex: overrides.vectorIndex ?? vectorIndexFromEnv(),
     tracing: overrides.tracing ?? tracingFromEnv(),
     integrations: { allowInsecure: process.env.INTEGRATIONS_ALLOW_INSECURE === '1', ...overrides.integrations },
+    help: { embedOrigins: parseOrigins(process.env.HELP_EMBED_ORIGINS), ...overrides.help },
     git: { allowFile: process.env.GIT_ALLOW_FILE === '1', timeoutMs: Number(process.env.GIT_TIMEOUT_MS ?? 120_000), ...overrides.git },
   };
 }
@@ -199,3 +202,17 @@ export const DEFAULT_SETTINGS = {
   semantic: { analysisMethod: 'tfidf' as 'tfidf' | 'hybrid', embeddingThreshold: 0.85, maxPairDocs: 8000, annThreshold: 20000, annEfSearch: 200 },
 };
 export type Settings = typeof DEFAULT_SETTINGS;
+
+/** HELP_EMBED_ORIGINS: durch Leerzeichen oder Komma getrennte Ursprünge (https://onescm.example.com) */
+export function parseOrigins(raw: string | undefined): string[] {
+  return (raw ?? '').split(/[\s,]+/).filter(Boolean).map((o) => {
+    let u: URL;
+    try {
+      u = new URL(o);
+    } catch {
+      throw new Error(`HELP_EMBED_ORIGINS: ungültiger Ursprung „${o}“`);
+    }
+    if (!/^https?:$/.test(u.protocol) || u.pathname !== '/' || u.search || u.username) throw new Error(`HELP_EMBED_ORIGINS: nur Ursprünge wie https://host[:port] („${o}“)`);
+    return u.origin;
+  });
+}

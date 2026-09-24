@@ -23,13 +23,22 @@ interface HandbookPassage {
 }
 
 /** Absätze der freigegebenen Kapitelstände (Sprache, Rolle, Sparte gefiltert) */
-async function approvedPassages(ctx: Ctx, opts: { language: string; role?: string; division?: string }): Promise<HandbookPassage[]> {
+async function approvedPassages(ctx: Ctx, opts: { language: string; role?: string; division?: string; versionIds?: string[] }): Promise<HandbookPassage[]> {
   const { db } = ctx;
-  const versions = await db.all(
-    `SELECT v.id, v.chapter_id, v.version_no, c.title FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id
-     WHERE c.project_id = ? AND v.status = 'approved' ORDER BY c.position, c.title`,
-    ctx.projectId,
-  );
+  // versionIds: fester Stand (z. B. veröffentlichtes Release der Kontexthilfe, ADR-030) statt der aktuell freigegebenen Versionen
+  const versions = opts.versionIds
+    ? opts.versionIds.length
+      ? await db.all(
+        `SELECT v.id, v.chapter_id, v.version_no, c.title FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id
+         WHERE c.project_id = ? AND v.id IN (${opts.versionIds.map(() => '?').join(',')}) ORDER BY c.position, c.title`,
+        ctx.projectId, ...opts.versionIds,
+      )
+      : []
+    : await db.all(
+      `SELECT v.id, v.chapter_id, v.version_no, c.title FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id
+       WHERE c.project_id = ? AND v.status = 'approved' ORDER BY c.position, c.title`,
+      ctx.projectId,
+    );
   const sectionTitle = new Map(CHAPTER_SECTIONS.map((s) => [s.code as string, s.title as string]));
   const out: HandbookPassage[] = [];
   for (const v of versions) {
@@ -106,7 +115,7 @@ export interface AskInput {
 
 const MAX_PASSAGES = 6;
 
-export async function ask(ctx: Ctx, input: AskInput, user: User) {
+export async function ask(ctx: Ctx, input: AskInput, user: User, opts: { versionIds?: string[] } = {}) {
   const question = input.question?.trim() ?? '';
   if (question.length < 3 || question.length > 500) throw badRequest('Frage mit 3 bis 500 Zeichen erforderlich.');
   const project = await ctx.db.get<{ languages: string }>('SELECT languages FROM projects WHERE id = ?', ctx.projectId);
@@ -121,7 +130,7 @@ export async function ask(ctx: Ctx, input: AskInput, user: User) {
 
   // Passagen mit personenbezogenen Mustern nie an externe Dienste (wie beim semantischen Index, ADR-017)
   const sensitive = (p: HandbookPassage) => detectPrivacy(p.text).length > 0;
-  const all = (await approvedPassages(ctx, { language, role: input.role, division: input.division })).filter((p) => !(ctx.embeddings.external && sensitive(p)));
+  const all = (await approvedPassages(ctx, { language, role: input.role, division: input.division, versionIds: opts.versionIds })).filter((p) => !(ctx.embeddings.external && sensitive(p)));
   let ranked: (HandbookPassage & { score: number })[] = [];
   if (all.length) {
     const [qv, ...pv] = await embedTexts(ctx, [question, ...all.map((p) => `${p.chapter} – ${p.sectionTitle}: ${p.text}`)]);
