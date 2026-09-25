@@ -20,6 +20,7 @@ describe('Etappe 14', () => {
     // Einheit: Sätze mit Positionen, Abkürzungen trennen nicht
     const text = 'Die Daten wurden gespeichert.Man muss eigentlich den den Vertrag prüfen ,dann wird der Status angezeigt werden!! die Maske war leer z.B. bei neuen Aufträgen';
     expect(segmentSentences('Z. B. im Menü. Danach speichern Sie.').map((s) => s.text)).toEqual(['Z. B. im Menü.', 'Danach speichern Sie.']);
+    expect(segmentSentences('Text.\n\n![Maske](media:abc)\n').map((x) => x.text)).toEqual(['Text.']);
     expect(segmentSentences('Öffnen Sie Menü A > B. Klicken Sie auf OK. Ggf. prüfen Sie z. B. den Status.').map((s) => s.text)).toEqual(['Öffnen Sie Menü A > B.', 'Klicken Sie auf OK.', 'Ggf. prüfen Sie z. B. den Status.']);
     const a = analyzeStyle(text, { terms: [{ preferred: 'Auftrag', avoid: ['Order'] }] });
     const rules = a.sentences.flatMap((s) => s.issues.map((i) => i.rule));

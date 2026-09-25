@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, del, mediaUrl, patch, post, put } from '../api';
 import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { createRenditionFor } from '../images';
 
 function useCanEdit() {
   const me = useLoad<any>('/me');
@@ -230,8 +231,14 @@ export function ImageIndexPage() {
   const canEdit = useCanEdit();
   const run = useRun(idx.reload);
   const [titles, setTitles] = useState<Record<string, string>>({});
+  // SVG-Bilder ohne PNG-Fassung erscheinen in Word nur als Alternativtext (ADR-042)
+  const missingPng = (idx.data ?? []).filter((m) => m.mime === 'image/svg+xml' && !m.pngSha);
+  const renderAll = () => run(async () => {
+    for (const m of missingPng) await createRenditionFor(m.sha256);
+  }, `${missingPng.length} PNG-Fassung(en) für Word erzeugt.`);
   return (
-    <Page title="Bildverzeichnis" subtitle="Alle Bilder mit Nummer, Titel, Alternativtext und Verwendung">
+    <Page title="Bildverzeichnis" subtitle="Alle Bilder mit Nummer, Titel, Alternativtext und Verwendung"
+      actions={canEdit && missingPng.length > 0 && <button className="btn" onClick={renderAll}>PNG für Word erzeugen ({missingPng.length})</button>}>
       <ErrorBox error={idx.error} />
       {idx.data && !idx.data.length && <Empty>Noch keine Bilder. Bilder kommen über Importe (ZIP, Word, Confluence) oder „Bild einfügen“ in der Werkstatt.</Empty>}
       {idx.data && idx.data.length > 0 && (
@@ -257,7 +264,11 @@ export function ImageIndexPage() {
                     {m.usedIn.sources.map((s: any) => <div key={s.seq}>Quelle #{s.seq} ({s.chapter})</div>)}
                     {!m.usedIn.chapters.length && !m.usedIn.sources.length && <span className="muted">nicht verwendet</span>}
                   </td>
-                  <td className="small">{m.originalName ?? '–'}<br />{m.mime}{m.width ? `, ${m.width}×${m.height}` : ''}, {Math.round(m.byteSize / 1024)} KB</td>
+                  <td className="small">{m.originalName ?? '–'}<br />{m.mime}{m.width ? `, ${m.width}×${m.height}` : ''}, {Math.round(m.byteSize / 1024)} KB
+                    {m.mime === 'image/svg+xml' && (m.pngSha
+                      ? <div>✓ PNG für Word</div>
+                      : <div><span className="muted">ohne PNG für Word</span>{canEdit && <> <button className="btn small" onClick={() => run(() => createRenditionFor(m.sha256), 'PNG-Fassung erzeugt.')}>PNG erzeugen</button></>}</div>)}
+                  </td>
                 </tr>
               ))}
             </tbody>

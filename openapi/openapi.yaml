@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.14.0
+  version: 0.15.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -2562,9 +2562,10 @@ paths:
                 kinds: { type: array, items: { type: string, enum: [ascii, clickpath, process, infographic] } }
                 useAi: { type: boolean, default: false }
                 structure: { type: object, description: '{ title, steps: [string | { label, decision?, yes?, no? }], clicks: [string], facts: [{ label, value }] }' }
+                options: { type: object, description: '{ color: #rrggbb, shape: rounded|square|pill, textSize: normal|large, perRow: 2–6 } (ADR-042)' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ structure, method: rules|ai|edited, provider, aiAvailable, images: [{ kind, label, title, svg, ascii, warnings }] }' }
+        '200': { description: '{ structure, options, method: rules|ai|edited, provider, aiAvailable, images: [{ kind, label, title, svg, ascii, warnings }] }' }
         '400': { $ref: '#/components/responses/Problem' }
         '422': { description: 'Übertragung an externen KI-Dienst gesperrt (personenbezogene Daten)' }
         '502': { description: 'KI-Dienst nicht verfügbar oder Antwort unbrauchbar' }
@@ -2582,6 +2583,92 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ sha256, mime, width, height, title, url, markdown }' }
         '400': { $ref: '#/components/responses/Problem' }
+  /style/chapters:
+    get:
+      operationId: listChapterStyle
+      summary: 'Stilwert je Kapitel (neueste Version), schlechteste zuerst, mit Durchschnitt (ADR-043)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-30]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ average, chapters: [{ chapterId, title, variant, versionId, versionNo, status, blocks, sentences, problemSentences, fixable, score }] }' }
+  /style/chapter-versions/{versionId}/autofix:
+    post:
+      operationId: autofixChapterVersion
+      summary: 'Stapelkorrektur eines Kapitelentwurfs: Vorschau je Absatz; mit apply die gewählten Absätze speichern (Berechtigung edit, ADR-043)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-30]
+      x-extension: true
+      parameters:
+        - { name: versionId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                apply: { type: boolean, default: false }
+                blocks: { type: array, items: { type: object, required: [id, versionNo], properties: { id: { type: string }, versionNo: { type: integer } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Vorschau { version, blocks: [{ id, section, versionNo, locked, before, after, applied }] } bzw. { saved: [id], skipped: [{ id, reason }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /diagram-templates:
+    get:
+      operationId: listDiagramTemplates
+      summary: 'Diagramm-Vorlagen des Projekts (ADR-042)'
+      tags: [Bilder]
+      x-requirements: [NFR-29]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, name, kinds, structure, options, createdBy, createdAt }]' }
+    post:
+      operationId: createDiagramTemplate
+      summary: 'Struktur, Bildarten und Darstellung als Vorlage speichern (Berechtigung edit, ADR-042)'
+      tags: [Bilder]
+      x-requirements: [NFR-29]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [name, structure], properties: { name: { type: string, maxLength: 120 }, kinds: { type: array, items: { type: string } }, structure: { type: object }, options: { type: object } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Vorlage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'Name existiert bereits' }
+  /diagram-templates/{templateId}:
+    delete:
+      operationId: deleteDiagramTemplate
+      summary: 'Diagramm-Vorlage löschen (Berechtigung edit, ADR-042)'
+      tags: [Bilder]
+      x-requirements: [NFR-29]
+      x-extension: true
+      parameters:
+        - { name: templateId, in: path, required: true, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'Gelöscht' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /media/{mediaSha}/rendition:
+    put:
+      operationId: setMediaRendition
+      summary: 'PNG-Fassung (im Browser gerastert) zu einem SVG-Bild hinterlegen – für den Word-Export (Berechtigung edit, ADR-042)'
+      tags: [Medien]
+      x-requirements: [NFR-29]
+      x-extension: true
+      parameters:
+        - { name: mediaSha, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [png], properties: { png: { type: string, description: 'PNG als Base64 oder data:image/png;base64,…' } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ sha256, pngSha, width, height }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /master-data/import:
     post:
       operationId: importMasterData

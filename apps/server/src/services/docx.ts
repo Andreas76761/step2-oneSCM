@@ -28,11 +28,16 @@ function image(t: Tokens.Image, c: Ctx): ParagraphChild {
   const sha = /^media:([a-f0-9]{64})$/.exec(t.href)?.[1];
   const m = sha ? c.media.get(sha) : undefined;
   const type = m ? IMG_TYPES[m.mime] : undefined;
-  if (!m || !type) return new TextRun({ text: `[Bild: ${t.text || 'ohne Alternativtext'}]`, italics: true });
-  const w = m.width ?? MAX_WIDTH;
-  const h = m.height ?? Math.round(w * 0.6);
+  // SVG mit PNG-Fassung (ADR-042): Word zeigt das SVG, ältere Programme die PNG-Ersatzdarstellung
+  const svgFallback = m?.mime === 'image/svg+xml' && m.fallback?.mime === 'image/png' ? m.fallback : null;
+  if (!m || (!type && !svgFallback)) return new TextRun({ text: `[Bild: ${t.text || 'ohne Alternativtext'}]`, italics: true });
+  const w = m.width ?? svgFallback?.width ?? MAX_WIDTH;
+  const h = m.height ?? svgFallback?.height ?? Math.round(w * 0.6);
   const scale = Math.min(1, MAX_WIDTH / w);
-  return new ImageRun({ type, data: m.data, transformation: { width: Math.round(w * scale), height: Math.round(h * scale) }, altText: { name: t.text || 'Bild', description: t.text || '', title: t.text || '' } });
+  const transformation = { width: Math.round(w * scale), height: Math.round(h * scale) };
+  const altText = { name: t.text || 'Bild', description: t.text || '', title: t.text || '' };
+  if (svgFallback) return new ImageRun({ type: 'svg', data: m.data, fallback: { type: 'png', data: svgFallback.data }, transformation, altText });
+  return new ImageRun({ type: type!, data: m.data, transformation, altText });
 }
 
 function inline(tokens: Token[] | undefined, c: Ctx, style: { bold?: boolean; italics?: boolean } = {}): ParagraphChild[] {

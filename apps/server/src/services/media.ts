@@ -1,5 +1,5 @@
 // Bilder & Medien (ADR-029): inhaltsadressierte Ablage je Projekt, Auslieferung und Einbettung in Exporte.
-import type { Ctx } from '../context.js';
+import { audit, type Ctx } from '../context.js';
 import { newId, now } from '../db.js';
 import { imageRefs, mediaShas, sniffImage } from '../domain/media.js';
 import { looksLikeSvg, sanitizeSvg, SvgRejected } from '../domain/svg.js';
@@ -12,6 +12,8 @@ export interface MediaFile {
   data: Buffer;
   width: number | null;
   height: number | null;
+  /** PNG-Fassung eines SVG-Bildes (für Word, ADR-042) */
+  fallback?: MediaFile | null;
 }
 
 /** Bild ablegen (idempotent). Rasterbilder mit gültiger Signatur; SVG wird bereinigt neu geschrieben (ADR-036). */
@@ -43,7 +45,27 @@ export async function getMedia(ctx: Ctx, sha: string): Promise<MediaFile> {
   if (!/^[a-f0-9]{64}$/.test(sha)) throw notFound(`Bild ${sha}`);
   const r = await ctx.db.get('SELECT * FROM media_assets WHERE project_id = ? AND sha256 = ?', ctx.projectId, sha);
   if (!r) throw notFound(`Bild ${sha}`);
-  return { sha, mime: r.mime, data: await ctx.store.get(r.storage_key), width: r.width ?? null, height: r.height ?? null };
+  const m: MediaFile = { sha, mime: r.mime, data: await ctx.store.get(r.storage_key), width: r.width ?? null, height: r.height ?? null };
+  if (r.png_sha) m.fallback = await getMedia(ctx, r.png_sha).catch(() => null);
+  return m;
+}
+
+/**
+ * PNG-Fassung zu einem SVG-Bild hinterlegen (ADR-042). Das PNG wird im Browser aus dem bereinigten SVG gerastert,
+ * damit der Server ohne native Grafikbibliothek auskommt; Word zeigt das SVG und nutzt das PNG als Ersatzdarstellung.
+ */
+export async function setRendition(ctx: Ctx, sha: string, pngBase64: unknown, actor: string) {
+  if (!/^[a-f0-9]{64}$/.test(sha)) throw notFound(`Bild ${sha}`);
+  const r = await ctx.db.get('SELECT id, mime FROM media_assets WHERE project_id = ? AND sha256 = ?', ctx.projectId, sha);
+  if (!r) throw notFound(`Bild ${sha}`);
+  if (r.mime !== 'image/svg+xml') throw badRequest('Eine PNG-Fassung gibt es nur für SVG-Bilder.');
+  if (typeof pngBase64 !== 'string' || !pngBase64) throw badRequest('png (Base64) ist Pflicht.');
+  const data = Buffer.from(pngBase64.replace(/^data:image\/png;base64,/, ''), 'base64');
+  if (sniffImage(data)?.mime !== 'image/png') throw badRequest('png ist kein gültiges PNG-Bild.');
+  const png = await storeMedia(ctx, data, `${sha.slice(0, 12)}.png`);
+  await ctx.db.run('UPDATE media_assets SET png_sha = ? WHERE id = ?', png.sha, r.id);
+  await audit(ctx, actor, 'media.rendition_set', 'media', sha, { pngSha: png.sha, width: png.width, height: png.height });
+  return { sha256: sha, pngSha: png.sha, width: png.width, height: png.height };
 }
 
 /** Bilder, auf die die Texte verweisen (nur aus dem eigenen Projekt; unbekannte werden ausgelassen) */
@@ -71,6 +93,6 @@ export async function listMedia(ctx: Ctx) {
   const rows = await ctx.db.all('SELECT * FROM media_assets WHERE project_id = ? ORDER BY created_at DESC LIMIT 500', ctx.projectId);
   return rows.map((r) => ({
     sha256: r.sha256, mime: r.mime, byteSize: r.byte_size, width: r.width ?? null, height: r.height ?? null,
-    originalName: r.original_name ?? null, importId: r.import_id ?? null, createdAt: r.created_at, url: `/api/v1/media/${r.sha256}`,
+    originalName: r.original_name ?? null, importId: r.import_id ?? null, createdAt: r.created_at, url: `/api/v1/media/${r.sha256}`, pngSha: r.png_sha ?? null,
   }));
 }

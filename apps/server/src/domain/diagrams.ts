@@ -200,7 +200,38 @@ export function wrap(text: string, maxChars: number, maxLines = 3): string[] {
   return lines;
 }
 
-function textLines(lines: string[], x: number, cy: number, size: number, attrs = '') {
+// ---------- Darstellungsoptionen (ADR-042) ----------
+
+export interface DiagramOptions {
+  /** Hauptfarbe (#rrggbb); Standard: Hausfarbe des Firmen-Layouts */
+  color?: string;
+  /** Form der Kästen */
+  shape?: 'rounded' | 'square' | 'pill';
+  /** Schriftgröße */
+  textSize?: 'normal' | 'large';
+  /** Stationen je Zeile in der Klickstrecke (2–6) */
+  perRow?: number;
+}
+export const SHAPES = ['rounded', 'square', 'pill'] as const;
+
+// gilt während eines Zeichenvorgangs (synchron, daher ohne Wettlauf)
+let STYLE: { shape: NonNullable<DiagramOptions['shape']>; scale: number; perRow: number } = { shape: 'rounded', scale: 1, perRow: 4 };
+/** Eckenradius je Form: eckig 0, Pille halbe Höhe, sonst Standardradius */
+const rx = (h: number, normal: number) => (STYLE.shape === 'square' ? 0 : STYLE.shape === 'pill' ? Math.round(h / 2) : normal);
+const fs = (size: number) => Math.round(size * STYLE.scale * 10) / 10;
+
+/** Optionen prüfen und mit Standardwerten auffüllen */
+export function normalizeOptions(input: unknown, defaultColor: string): Required<DiagramOptions> {
+  const o = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+  const color = typeof o.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(o.color) ? o.color.toLowerCase() : defaultColor;
+  const shape = (SHAPES as readonly unknown[]).includes(o.shape) ? (o.shape as DiagramOptions['shape'])! : 'rounded';
+  const textSize = o.textSize === 'large' ? 'large' : 'normal';
+  const perRow = Math.min(6, Math.max(2, Math.round(Number(o.perRow) || 4)));
+  return { color, shape, textSize, perRow };
+}
+
+function textLines(lines: string[], x: number, cy: number, size0: number, attrs = '') {
+  const size = fs(size0);
   const lh = size * 1.25;
   const y0 = cy - ((lines.length - 1) * lh) / 2;
   return lines.map((l, i) => `<text x="${x}" y="${(y0 + i * lh).toFixed(1)}" font-size="${size}" text-anchor="middle" dominant-baseline="middle"${attrs}>${xml(l)}</text>`).join('');
@@ -271,7 +302,7 @@ export function asciiSvg(ascii: string, title: string) {
 /** Klickstrecke: nummerierte Stationen von links nach rechts (Umbruch nach 4) */
 export function renderClickPath(s: DiagramStructure, color: string) {
   const items = s.clicks.length ? s.clicks : s.steps.filter((x) => !x.decision).map((x) => x.label);
-  const per = 4;
+  const per = STYLE.perRow;
   const bw = 170;
   const bh = 70;
   const gap = 46;
@@ -284,9 +315,9 @@ export function renderClickPath(s: DiagramStructure, color: string) {
     const c = i % per;
     const x = 20 + c * (bw + gap);
     const y = 60 + r * (bh + 50);
-    body += `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="10" fill="${tint(color)}" stroke="${color}" stroke-width="2"/>`;
+    body += `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" rx="${rx(bh, 10)}" fill="${tint(color)}" stroke="${color}" stroke-width="2"/>`;
     body += `<circle cx="${x + 18}" cy="${y + 18}" r="13" fill="${color}"/>${textLines([String(i + 1)], x + 18, y + 18, 13, ' font-weight="700" fill="#ffffff"')}`;
-    body += textLines(wrap(label, 18, 2), x + bw / 2 + 10, y + bh / 2 + 4, 14, ' fill="#111827"');
+    body += textLines(wrap(label, Math.round(18 / STYLE.scale), 2), x + bw / 2 + 10, y + bh / 2 + 4, 14, ' fill="#111827"');
     if (i < items.length - 1) {
       if (c < per - 1) body += `<line x1="${x + bw + 4}" y1="${y + bh / 2}" x2="${x + bw + gap - 6}" y2="${y + bh / 2}" stroke="${color}" stroke-width="2.5" marker-end="url(#arrow)"/>`;
       else {
@@ -314,9 +345,9 @@ export function renderProcess(s: DiagramStructure, color: string) {
     return s1;
   };
   const stepBox = (label: string, x = cx, fill = tint(color)) => {
-    const lines = wrap(label, 34, 3);
-    const hh = 22 + lines.length * 18;
-    const r = `<rect x="${x - bw / 2}" y="${y}" width="${bw}" height="${hh}" rx="6" fill="${fill}" stroke="${color}" stroke-width="2"/>${textLines(lines, x, y + hh / 2, 14, ' fill="#111827"')}`;
+    const lines = wrap(label, Math.round(34 / STYLE.scale), 3);
+    const hh = Math.round(22 + lines.length * 18 * STYLE.scale);
+    const r = `<rect x="${x - bw / 2}" y="${y}" width="${bw}" height="${hh}" rx="${rx(hh, 6)}" fill="${fill}" stroke="${color}" stroke-width="2"/>${textLines(lines, x, y + hh / 2, 14, ' fill="#111827"')}`;
     return { svg: r, h: hh };
   };
   body += terminal('Start');
@@ -334,9 +365,9 @@ export function renderProcess(s: DiagramStructure, color: string) {
         const nx = cx + dw / 2 + 60 + 90;
         body += `<line x1="${cx + dw / 2}" y1="${mid}" x2="${nx - 94}" y2="${mid}" stroke="#b45309" stroke-width="2" marker-end="url(#arrow)"/>`;
         body += textLines(['Nein'], cx + dw / 2 + 24, mid - 10, 12, ' font-weight="700" fill="#92400e"');
-        const lines2 = wrap(st.no, 20, 3);
-        const nh = 22 + lines2.length * 18;
-        body += `<rect x="${nx - 90}" y="${mid - nh / 2}" width="180" height="${nh}" rx="6" fill="#ffffff" stroke="#b45309" stroke-width="2" stroke-dasharray="5 3"/>${textLines(lines2, nx, mid, 13, ' fill="#111827"')}`;
+        const lines2 = wrap(st.no, Math.round(20 / STYLE.scale), 3);
+        const nh = Math.round(22 + lines2.length * 18 * STYLE.scale);
+        body += `<rect x="${nx - 90}" y="${mid - nh / 2}" width="180" height="${nh}" rx="${rx(nh, 6)}" fill="#ffffff" stroke="#b45309" stroke-width="2" stroke-dasharray="5 3"/>${textLines(lines2, nx, mid, 13, ' fill="#111827"')}`;
       }
       y += dh;
       body += textLines(['Ja'], cx + 18, y + 12, 12, ' font-weight="700" fill="#166534"');
@@ -371,7 +402,7 @@ export function renderInfographic(s: DiagramStructure, color: string) {
     const c = i % cols;
     const x = 20 + c * (cw + 16);
     const yy = y + r * 126;
-    body += `<rect x="${x}" y="${yy}" width="${cw}" height="110" rx="12" fill="${tint(color)}" stroke="${color}" stroke-width="1.5"/>`;
+    body += `<rect x="${x}" y="${yy}" width="${cw}" height="110" rx="${STYLE.shape === 'pill' ? 24 : rx(110, 12)}" fill="${tint(color)}" stroke="${color}" stroke-width="1.5"/>`;
     body += textLines([f.value], x + cw / 2, yy + 36, 28, ` font-weight="700" fill="${color}"`);
     body += textLines(wrap(f.label, Math.floor(cw / 7.5), 2), x + cw / 2, yy + 80, 13, ' fill="#1f2937"');
   });
@@ -384,7 +415,7 @@ export function renderInfographic(s: DiagramStructure, color: string) {
       const lines = wrap(st.decision ? `${st.label}${st.yes ? ` Ja: ${st.yes}` : ''}${st.no ? ` Nein: ${st.no}` : ''}` : st.label, 78, 2);
       const hh = Math.max(44, 16 + lines.length * 18);
       body += `<circle cx="42" cy="${y + hh / 2}" r="16" fill="${st.decision ? '#b45309' : color}"/>${textLines([st.decision ? '?' : String(i + 1)], 42, y + hh / 2, 14, ' font-weight="700" fill="#ffffff"')}`;
-      body += lines.map((l, j) => `<text x="70" y="${(y + hh / 2 - ((lines.length - 1) * 18) / 2 + j * 18).toFixed(1)}" font-size="14" dominant-baseline="middle" fill="#1f2937">${xml(l)}</text>`).join('');
+      body += lines.map((l, j) => `<text x="70" y="${(y + hh / 2 - ((lines.length - 1) * 18) / 2 + j * 18).toFixed(1)}" font-size="${fs(14)}" dominant-baseline="middle" fill="#1f2937">${xml(l)}</text>`).join('');
       if (i < steps.length - 1) body += `<line x1="42" y1="${y + hh / 2 + 16}" x2="42" y2="${y + hh + 6 + 8}" stroke="${tint(color, 0.5)}" stroke-width="3"/>`;
       y += hh + 8;
     });
@@ -399,7 +430,17 @@ export function renderInfographic(s: DiagramStructure, color: string) {
 export interface RenderedDiagram { kind: DiagramKind; label: string; title: string; svg: string; ascii: string | null; warnings: string[] }
 
 /** Gewünschte Bildarten zeichnen; Hinweise, wenn die Struktur für eine Art zu dünn ist */
-export function renderDiagrams(s: DiagramStructure, kinds: readonly DiagramKind[], color: string): RenderedDiagram[] {
+export function renderDiagrams(s: DiagramStructure, kinds: readonly DiagramKind[], colorOrOptions: string | DiagramOptions): RenderedDiagram[] {
+  const o = normalizeOptions(typeof colorOrOptions === 'string' ? { color: colorOrOptions } : colorOrOptions, '#1d63d8');
+  STYLE = { shape: o.shape, scale: o.textSize === 'large' ? 1.15 : 1, perRow: o.perRow };
+  try {
+    return renderAll(s, kinds, o.color);
+  } finally {
+    STYLE = { shape: 'rounded', scale: 1, perRow: 4 };
+  }
+}
+
+function renderAll(s: DiagramStructure, kinds: readonly DiagramKind[], color: string): RenderedDiagram[] {
   return kinds.map((kind) => {
     const warnings: string[] = [];
     const title = `${KIND_LABEL[kind]}: ${s.title}`;

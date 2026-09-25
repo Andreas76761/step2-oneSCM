@@ -5,10 +5,10 @@ import { Link } from 'react-router-dom';
 import { patch, post, qs } from '../api';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
-interface Fix { start: number; end: number; replacement: string; label: string }
-interface Issue { rule: string; severity: 'warning' | 'info'; message: string; start: number; end: number; fix?: Fix }
-interface Sentence { start: number; end: number; text: string; issues: Issue[] }
-interface Analysis { sentences: Sentence[]; score: number; rules: { rule: string; label: string; count: number }[]; problemSentences: number; fixable: number }
+export interface Fix { start: number; end: number; replacement: string; label: string }
+export interface Issue { rule: string; severity: 'warning' | 'info'; message: string; start: number; end: number; fix?: Fix }
+export interface Sentence { start: number; end: number; text: string; issues: Issue[] }
+export interface Analysis { sentences: Sentence[]; score: number; rules: { rule: string; label: string; count: number }[]; problemSentences: number; fixable: number }
 
 /** Korrekturen von hinten nach vorn anwenden, überlappende auslassen (wie im Server) */
 export function applyFixes(text: string, fixes: Fix[]) {
@@ -46,7 +46,7 @@ export function applyToDraft(draft: string, original: string, fix: Fix): string 
 
 const scoreClass = (s: number) => (s >= 80 ? 'st-approved' : s >= 50 ? 'st-in_review' : 'st-failed');
 
-function Summary({ a }: { a: Analysis }) {
+export function Summary({ a }: { a: Analysis }) {
   return (
     <p className="small" role="status">
       <span className={`tag ${scoreClass(a.score)}`}>Stilwert {a.score}/100</span> · {a.problemSentences} Sätze mit Problemen · {a.fixable} automatisch korrigierbar
@@ -56,7 +56,7 @@ function Summary({ a }: { a: Analysis }) {
 }
 
 /** Text mit markierten Sätzen: gelb = Problem (Warnung), unterstrichen = Hinweis; Klick öffnet die Bearbeitung */
-function MarkedText({ text, a, selected, onSelect }: { text: string; a: Analysis; selected?: number | null; onSelect?: (i: number) => void }) {
+export function MarkedText({ text, a, selected, onSelect }: { text: string; a: Analysis; selected?: number | null; onSelect?: (i: number) => void }) {
   const parts: ReactNode[] = [];
   let pos = 0;
   a.sentences.forEach((s, i) => {
@@ -74,7 +74,7 @@ function MarkedText({ text, a, selected, onSelect }: { text: string; a: Analysis
 }
 
 /** Bearbeitung eines Satzes: Hinweise mit Einzelkorrektur, freie Bearbeitung */
-function SentenceEditor({ s, onApply, onClose }: { s: Sentence; onApply: (replacement: string) => void; onClose: () => void }) {
+export function SentenceEditor({ s, onApply, onClose }: { s: Sentence; onApply: (replacement: string) => void; onClose: () => void }) {
   const [draft, setDraft] = useState(s.text);
   useEffect(() => setDraft(s.text), [s.start, s.text]);
   // Korrekturen relativ zum Satz

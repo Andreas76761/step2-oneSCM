@@ -1,8 +1,8 @@
 // Schreibstil (ADR-040) und Bilder aus Text (ADR-041)
 import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
-import { generateDiagrams, saveDiagram } from '../services/diagrams.js';
-import { checkChapterVersion, checkSnippets, checkText, rewriteText } from '../services/style.js';
+import { deleteDiagramTemplate, generateDiagrams, listDiagramTemplates, saveDiagram, saveDiagramTemplate } from '../services/diagrams.js';
+import { autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, rewriteText } from '../services/style.js';
 import { userOf } from './helpers.js';
 
 export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -19,4 +19,19 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
     return generateDiagrams(req.ctx, req.body ?? {}, user.id);
   });
   app.post<{ Body: any }>('/diagrams/save', async (req) => saveDiagram(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.get('/style/chapters', async (req) => (userOf(req.ctx, req), chapterStyleSummary(req.ctx)));
+  // Vorschau: Leserecht; Übernehmen (apply) nur mit Bearbeitungsrecht
+  app.post<{ Params: { versionId: string }; Body: any }>('/style/chapter-versions/:versionId/autofix', async (req) => {
+    const user = userOf(req.ctx, req, (req.body as { apply?: unknown } | undefined)?.apply === true ? 'edit' : 'read');
+    return autofixChapterVersion(req.ctx, req.params.versionId, req.body ?? {}, user.id);
+  });
+  app.get('/diagram-templates', async (req) => (userOf(req.ctx, req), listDiagramTemplates(req.ctx)));
+  app.post<{ Body: any }>('/diagram-templates', async (req, reply) => {
+    const t = await saveDiagramTemplate(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit'));
+    return reply.code(201).send(t);
+  });
+  app.delete<{ Params: { templateId: string } }>('/diagram-templates/:templateId', async (req, reply) => {
+    await deleteDiagramTemplate(req.ctx, req.params.templateId, userOf(req.ctx, req, 'edit'));
+    return reply.code(204).send();
+  });
 }

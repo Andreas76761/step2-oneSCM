@@ -43,6 +43,8 @@ export function segmentSentences(text: string): { start: number; end: number; te
   for (const line of text.matchAll(lines)) {
     const base = line.index!;
     const l = line[0];
+    // Bildzeilen (![Alt](media:…)) sind keine Sätze
+    if (/^\s*(?:!\[[^\]]*\]\([^)]*\)\s*)+$/.test(l)) continue;
     // Satzende: . ! ? … gefolgt von Leerraum und Großbuchstabe/Ziffer/Anführung; Abkürzungen wie „z. B.“ nicht trennen
     const re = /[.!?…]+(?=\s+[\p{L}\d„"(])/gu;
     let from = 0;
