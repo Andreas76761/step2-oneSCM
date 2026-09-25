@@ -17,19 +17,35 @@ export interface SavedShot { sha256: string; markdown: string; legend: string; t
 
 const clamp = (v: number) => Math.min(100, Math.max(0, Math.round(v * 10) / 10));
 
-/** Bereich verpixeln: verkleinert und ohne Glättung wieder vergrößert (Inhalt ist danach nicht mehr lesbar) */
-function pixelate(g: CanvasRenderingContext2D, x: number, y: number, rw: number, rh: number, block: number) {
+/** Bereich verpixeln: je Block der Farbmittelwert (Inhalt ist danach nicht mehr lesbar) */
+function pixelate(g: CanvasRenderingContext2D, x0: number, y0: number, rw0: number, rh0: number, block: number) {
+  const x = Math.max(0, Math.floor(x0));
+  const y = Math.max(0, Math.floor(y0));
+  const rw = Math.min(g.canvas.width - x, Math.ceil(rw0));
+  const rh = Math.min(g.canvas.height - y, Math.ceil(rh0));
   if (rw < 1 || rh < 1) return;
-  const small = document.createElement('canvas');
-  small.width = Math.max(1, Math.ceil(rw / block));
-  small.height = Math.max(1, Math.ceil(rh / block));
-  const sg = small.getContext('2d');
-  if (!sg) return;
-  sg.drawImage(g.canvas, x, y, rw, rh, 0, 0, small.width, small.height);
-  g.save();
-  g.imageSmoothingEnabled = false;
-  g.drawImage(small, 0, 0, small.width, small.height, x, y, rw, rh);
-  g.restore();
+  const img = g.getImageData(x, y, rw, rh);
+  const d = img.data;
+  for (let by = 0; by < rh; by += block) {
+    for (let bx = 0; bx < rw; bx += block) {
+      const bw = Math.min(block, rw - bx);
+      const bh = Math.min(block, rh - by);
+      let r = 0;
+      let gg = 0;
+      let b = 0;
+      for (let yy = by; yy < by + bh; yy++) {
+        for (let xx = bx; xx < bx + bw; xx++) {
+          const k = (yy * rw + xx) * 4;
+          r += d[k];
+          gg += d[k + 1];
+          b += d[k + 2];
+        }
+      }
+      const n = bw * bh;
+      g.fillStyle = `rgb(${Math.round(r / n)},${Math.round(gg / n)},${Math.round(b / n)})`;
+      g.fillRect(x + bx, y + by, bw, bh);
+    }
+  }
 }
 
 /** Markierungen auf das Bild zeichnen (Koordinaten in Prozent der Bildgröße); Reihenfolge: Unschärfe, Rahmen, Pfeile, Text, Nummern */
@@ -42,7 +58,7 @@ function draw(canvas: HTMLCanvasElement, img: HTMLImageElement, sh: Shapes, colo
   canvas.height = h;
   g.drawImage(img, 0, 0);
   const px = (f: Frame) => [(f.x / 100) * w, (f.y / 100) * h, (f.w / 100) * w, (f.h / 100) * h] as const;
-  const block = Math.max(8, Math.round(Math.min(w, h) / 50));
+  const block = Math.max(12, Math.round(Math.min(w, h) / 25));
   for (const b of sh.blurs) pixelate(g, ...px(b), block);
   const unit = Math.max(2, Math.round(Math.max(w, h) / 400));
   const r = Math.max(12, Math.round(Math.min(w, h) / 30));
