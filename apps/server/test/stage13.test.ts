@@ -80,6 +80,18 @@ describe('Etappe 13', () => {
       const empty = (await call('POST', '/outlines', { name: 'Leer', nodes: [{ title: 'Anderes' }] })).json;
       expect((await call('POST', `/outlines/${empty.id}/sync`, { from: blueprint.id, create: [{ sourceNodeId: entry('Schritte').sourceNodeId }] })).status).toBe(400);
       expect((await built.ctx.db.get("SELECT details FROM audit_events WHERE action = 'outline.synced'"))!.details).toContain('"created":2');
+      // gleiche Gliederungsfamilie: angelegte Einträge behalten die stabile Kennung der Quelle (kein erneutes „fehlt“, keine Dubletten)
+      const bpV2 = (await call('POST', `/outlines/${blueprint.id}/versions`, {})).json;
+      await call('DELETE', `/outline-nodes/${bpV2.nodes.find((x: any) => x.title === 'Aufträge').id}`);
+      const pv2 = (await call('GET', `/outlines/${bpV2.id}/sync?from=${blueprint.id}`)).json;
+      expect(pv2.sameFamily).toBe(true);
+      const auftraege = pv2.entries.find((e: any) => e.title === 'Aufträge');
+      expect(auftraege.target).toBeNull();
+      const res2 = (await call('POST', `/outlines/${bpV2.id}/sync`, { from: blueprint.id, create: [{ sourceNodeId: auftraege.sourceNodeId }] })).json;
+      expect(res2.preview.summary.missing).toBe(0);
+      expect(res2.preview.entries.find((e: any) => e.title === 'Aufträge').target).not.toBeNull();
+      const keys = await built.ctx.db.all('SELECT outline_id, node_key FROM outline_nodes WHERE title = ? AND outline_id IN (?, ?)', 'Aufträge', blueprint.id, bpV2.id);
+      expect(new Set(keys.map((k) => k.node_key)).size).toBe(1);
     } finally {
       await built.app.close();
     }
@@ -215,6 +227,11 @@ describe('Etappe 13', () => {
       expect((await s('Identitätssystem')).total).toBe(1);
       await call('DELETE', `/abbreviations/${abk.id}`);
       expect((await s('Identitätssystem')).total).toBe(0);
+      // Umbenennung eines Kapitels mit gleich langem Titel wird erkannt (Kapitel und Kapiteltexte)
+      await s('Anmeldung');
+      await built.ctx.db.run("UPDATE chapters SET title = '1. Abmeldung' WHERE title = '1. Anmeldung'");
+      expect((await s('Abmeldung', '&types=chapter')).total).toBe(1);
+      expect((await s('Anmeldung', '&types=chapter')).total).toBe(0);
       // Projekttrennung
       const other = (await call('POST', '/projects', { name: 'Anderes Projekt' })).json;
       expect((await call('GET', '/search?q=Frankreich', undefined, 'u-admin', other.id)).json.total).toBe(0);

@@ -77,7 +77,7 @@ export async function syncPreview(ctx: Ctx, targetId: string, sourceId: string) 
     const src = s.assigned.get(n.id) ?? [];
     const tgt = targetNodeId ? t.assigned.get(targetNodeId) ?? [] : [];
     return {
-      sourceNodeId: n.id, number: n.number, title: n.title, level: n.level,
+      sourceNodeId: n.id, nodeKey: n.nodeKey, number: n.number, title: n.title, level: n.level,
       target: targetNodeId ? { nodeId: targetNodeId, number: tNode.get(targetNodeId)!.number, title: tNode.get(targetNodeId)!.title } : null,
       onlySource: src.filter((id) => !tgt.includes(id)).map(snippet),
       onlyTarget: tgt.filter((id) => !src.includes(id)).map(snippet),
@@ -86,6 +86,7 @@ export async function syncPreview(ctx: Ctx, targetId: string, sourceId: string) 
   });
   const offered = entries.flatMap((e) => e.onlySource.filter((x) => !x.elsewhere));
   return {
+    sameFamily: source.family_id === target.family_id,
     source: { id: source.id, name: source.name, versionNo: source.version_no },
     target: { id: target.id, name: target.name, versionNo: target.version_no },
     summary: {
@@ -153,7 +154,8 @@ export async function applySync(
       }
       const pos = ((await ctx.db.get<{ m: number | null }>(`SELECT MAX(position) AS m FROM outline_nodes WHERE outline_id = ? AND ${parentId ? 'parent_id = ?' : 'parent_id IS NULL'}`, targetId, ...(parentId ? [parentId] : [])))?.m ?? 0) + 10;
       const id = newId('on');
-      await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, node_key) VALUES (?, ?, ?, ?, ?, ?, ?)', id, targetId, parentId, e.level, pos, e.title, id);
+      // gleiche Gliederungsfamilie: stabile Kennung der Quelle übernehmen (Abgleich und Variantenkapitel erkennen den Eintrag wieder)
+      await ctx.db.run('INSERT INTO outline_nodes (id, outline_id, parent_id, level, position, title, node_key) VALUES (?, ?, ?, ?, ?, ?, ?)', id, targetId, parentId, e.level, pos, e.title, preview.sameFamily ? e.nodeKey : id);
       created.set(e.sourceNodeId, id);
       result.created++;
       await assign(id, pick(e, c.snippetIds));

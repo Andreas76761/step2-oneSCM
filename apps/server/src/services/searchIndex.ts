@@ -3,6 +3,7 @@
 // vor jeder Suche wird nur neu aufgebaut, was sich seit dem letzten Aufbau geändert hat.
 import type { Ctx } from '../context.js';
 import type { Db } from '../db.js';
+import { sha256 } from '../domain/similarity.js';
 
 export const INDEX_TYPES = ['chapter', 'block', 'snippet', 'source', 'outline', 'abbreviation', 'term', 'faq'] as const;
 export type IndexType = (typeof INDEX_TYPES)[number];
@@ -23,6 +24,17 @@ const FINGERPRINT: Record<string, string> = {
   term: 'SELECT COUNT(*) AS n, MAX(updated_at) AS m FROM terminology_terms WHERE project_id = ?',
   faq: 'SELECT COUNT(*) AS n, MAX(updated_at) AS m FROM faq_entries WHERE project_id = ?',
 };
+
+/**
+ * Kapiteltitel stecken im Index der Kapitel und der Kapiteltexte – daher fließt ein Hash aller Titel in beide Fingerabdrücke
+ * ein (eine Umbenennung mit gleicher Länge wäre sonst unsichtbar).
+ */
+async function fingerprint(ctx: Ctx, area: string) {
+  const base = JSON.stringify(await ctx.db.get(FINGERPRINT[area], ctx.projectId));
+  if (area !== 'chapter' && area !== 'block') return base;
+  const titles = (await ctx.db.all('SELECT id, title FROM chapters WHERE project_id = ? ORDER BY id', ctx.projectId)).map((r) => `${r.id}\u0000${r.title}`).join('\u0001');
+  return `${base}|${sha256(titles)}`;
+}
 
 interface Doc { type: IndexType; refId: string; title: string; body: string; link: string }
 
@@ -126,7 +138,7 @@ export function refreshSearchIndex(ctx: Ctx, force = false): Promise<{ rebuilt: 
       const state = new Map((await ctx.db.all('SELECT area, fingerprint FROM search_index_state WHERE project_id = ?', ctx.projectId)).map((r) => [r.area as string, r.fingerprint as string]));
       const rebuilt: string[] = [];
       for (const [area, types] of Object.entries(AREAS)) {
-        const fp = JSON.stringify(await ctx.db.get(FINGERPRINT[area], ctx.projectId));
+        const fp = await fingerprint(ctx, area);
         if (!force && state.get(area) === fp) continue;
         const docs = (await Promise.all(types.map((t) => docsFor(ctx, t)))).flat();
         await ctx.db.tx(async () => {
