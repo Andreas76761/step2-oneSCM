@@ -198,7 +198,8 @@ describe('Etappe 12: Handbuch-Varianten aus dem Draft Manual (ADR-034)', () => {
       await call('POST', '/abbreviations', { abbreviation: 'DMS', expansion: 'Dealer-Management-System für die Anmeldung' });
       await call('POST', '/faq', { question: 'Wie funktioniert die Anmeldung?', answer: 'Mit dem DMS-Konto.' });
       const r = (await call('GET', '/search?q=anmeldung', undefined, 'u-leser')).json;
-      expect(r.groups.map((g: any) => g.type)).toEqual(['chapter', 'snippet', 'outline', 'abbreviation', 'faq']);
+      // PostgreSQL findet über Stammformen zusätzlich z. B. den Glossarbegriff „anmelden“ (ADR-039)
+      expect(r.groups.map((g: any) => g.type)).toEqual(expect.arrayContaining(['chapter', 'snippet', 'outline', 'abbreviation', 'faq']));
       expect((await call('GET', '/search?q=a.md')).json.groups.find((g: any) => g.type === 'source').hits[0]).toMatchObject({ title: 'a.md', link: '/quellen?q=a.md' });
       expect(r.groups[0].hits[0]).toMatchObject({ title: '1. Anmeldung', link: expect.stringMatching(/^\/werkstatt\//) });
       expect(r.groups.find((g: any) => g.type === 'outline').hits.map((h: any) => h.title)).toEqual(['Händler Pkw – V2']);

@@ -998,5 +998,43 @@
       "NFR-22",
       "NFR-23"
     ]
+  },
+  {
+    "id": "T-173",
+    "title": "Varianten synchronisieren: Vergleich Blueprint → Markt-Variante, Schnipsel und fehlende Einträge übernehmen, Variantenprüfung",
+    "file": "apps/server/test/stage13.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-24"
+    ]
+  },
+  {
+    "id": "T-174",
+    "title": "Firmen-Layout für PDF, HTML, Online-Hilfe; Word-Export mit Formatvorlagen und Firmenvorlage",
+    "file": "apps/server/test/stage13.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-25"
+    ]
+  },
+  {
+    "id": "T-175",
+    "title": "Volltextsuche: Umlaute, Präfix, alle Wörter, Relevanz, Filter, Seiten, Hervorhebung, Aktualität, Projekttrennung",
+    "file": "apps/server/test/stage13.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-26"
+    ]
+  },
+  {
+    "id": "T-223",
+    "title": "UI: Varianten abgleichen, Firmen-Layout mit Kontrastprüfung, Word-Export, Volltextsuche mit Filter",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-24",
+      "NFR-25",
+      "NFR-26"
+    ]
   }
 ]

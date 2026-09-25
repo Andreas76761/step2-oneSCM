@@ -48,6 +48,11 @@ async function objectKeys(db: Db): Promise<string[]> {
     keys.add(r.m);
     for (const x of JSON.parse(r.l || '[]') as { markdownKey: string }[]) keys.add(x.markdownKey);
   }
+  // Word-Vorlagen des Firmen-Layouts (ADR-038)
+  for (const r of await db.all<{ l: string | null }>('SELECT layout AS l FROM projects WHERE layout IS NOT NULL')) {
+    const key = (JSON.parse(r.l || '{}') as { docxTemplate?: { key?: string } | null }).docxTemplate?.key;
+    if (key) keys.add(key);
+  }
   return [...keys].sort();
 }
 

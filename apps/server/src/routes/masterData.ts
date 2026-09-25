@@ -10,6 +10,7 @@ import {
   moveAssignment, newOutlineVersion, outlineCandidates, outlinePlan, setPlanItem, unassignSnippet, updateNode, updateOutline,
 } from '../services/outlines.js';
 import { generateVariant, materializeVariant, variantChapters } from '../services/variants.js';
+import { applySync, syncPreview } from '../services/variantSync.js';
 import { badRequest, Problem } from '../problem.js';
 import { importMasterData } from '../services/masterDataImport.js';
 import { getSettings } from '../context.js';
@@ -80,6 +81,10 @@ export function masterDataRoutes(app: FastifyInstance, _ctx: Ctx) {
     reply.code(204);
   });
   app.post<P<'outlineId'>>('/outlines/:outlineId/auto-assign', async (req) => autoAssign(req.ctx, req.params.outlineId, userOf(req.ctx, req, 'edit')));
+
+  // Varianten synchronisieren (ADR-037): ?from=<Quellgliederung>
+  app.get<P<'outlineId'> & { Querystring: { from?: string } }>('/outlines/:outlineId/sync', async (req) => (userOf(req.ctx, req), syncPreview(req.ctx, req.params.outlineId, req.query.from ?? '')));
+  app.post<P<'outlineId'> & { Body: any }>('/outlines/:outlineId/sync', async (req) => applySync(req.ctx, req.params.outlineId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
 
   // Handbuch-Variante (ADR-034): Kapitel der Gliederung anlegen, Entwürfe erzeugen, Stand der Freigabe
   app.get<P<'outlineId'>>('/outlines/:outlineId/chapters', async (req) => (userOf(req.ctx, req), variantChapters(req.ctx, req.params.outlineId)));

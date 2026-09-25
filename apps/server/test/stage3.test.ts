@@ -233,6 +233,6 @@ describe('Export HTML und PDF (US-014)', () => {
     expect(pdfFile.raw.length).toBeGreaterThan(2000);
     expect(pdfFile.headers['content-disposition']).toMatch(/\.pdf"$/);
 
-    expect((await call('POST', '/exports', { format: 'docx' })).status).toBe(400);
+    expect((await call('POST', '/exports', { format: 'rtf' })).status).toBe(400); // docx ist seit ADR-038 ein Exportformat
   });
 });

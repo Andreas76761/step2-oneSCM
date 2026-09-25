@@ -12,6 +12,7 @@ import { finishConnectionImport } from './connections.js';
 import { storeMedia } from './media.js';
 import { contextsFromFrontMatter } from './contextHelp.js';
 import { badRequest, conflict, notFound, Problem } from '../problem.js';
+import { refreshSearchIndex } from './searchIndex.js';
 
 interface Entry {
   path: string;
@@ -60,6 +61,8 @@ export async function runImportJob(ctx: Ctx, payload: { importId: string }) {
   if (!imp) throw new Error(`Import ${payload.importId} existiert nicht`);
   const data = await ctx.store.get(`uploads/${imp.sha256}`);
   await processImport(ctx, payload.importId, imp.file_name, data);
+  // Suchindex gleich mitziehen, damit die erste Suche danach nicht warten muss (ADR-039); Fehler hier beeinträchtigen den Import nicht
+  await refreshSearchIndex(ctx).catch(() => undefined);
 }
 
 /** Job endgültig fehlgeschlagen (nach allen Wiederholungen). */

@@ -128,3 +128,45 @@ export function variantProblems(
   }
   return problems;
 }
+
+export interface MatchableNode {
+  id: string;
+  parentId: string | null;
+  level: number;
+  title: string;
+  nodeKey: string;
+}
+
+/**
+ * Einträge zweier Gliederungen einander zuordnen (ADR-037): innerhalb derselben Gliederungsfamilie über die stabile
+ * Kennung, sonst über den Titel (Nummern und Schreibweise ignoriert) – Unterkapitel nur unter dem zugeordneten Kapitel.
+ * Mehrdeutige Titel werden nicht zugeordnet. Ergebnis: Quell-ID → Ziel-ID.
+ */
+export function matchNodes(source: MatchableNode[], target: MatchableNode[], sameFamily: boolean): Map<string, string> {
+  const out = new Map<string, string>();
+  if (sameFamily) {
+    const byKey = new Map(target.map((t) => [t.nodeKey, t.id]));
+    for (const s of source) if (byKey.has(s.nodeKey)) out.set(s.id, byKey.get(s.nodeKey)!);
+    return out;
+  }
+  const unique = <T>(list: T[], key: (x: T) => string) => {
+    const m = new Map<string, T | null>();
+    for (const x of list) m.set(key(x), m.has(key(x)) ? null : x);
+    return m;
+  };
+  const top = unique(target.filter((t) => t.level === 1), (t) => matchKey(t.title));
+  const srcTop = unique(source.filter((s) => s.level === 1), (s) => matchKey(s.title));
+  for (const s of source.filter((x) => x.level === 1)) {
+    const t = top.get(matchKey(s.title));
+    if (t && srcTop.get(matchKey(s.title))) out.set(s.id, t.id);
+  }
+  const subs = unique(target.filter((t) => t.level === 2), (t) => `${t.parentId}|${matchKey(t.title)}`);
+  const srcSubs = unique(source.filter((s) => s.level === 2), (s) => `${s.parentId}|${matchKey(s.title)}`);
+  for (const s of source.filter((x) => x.level === 2)) {
+    const parent = s.parentId ? out.get(s.parentId) : undefined;
+    if (!parent || !srcSubs.get(`${s.parentId}|${matchKey(s.title)}`)) continue;
+    const t = subs.get(`${parent}|${matchKey(s.title)}`);
+    if (t) out.set(s.id, t.id);
+  }
+  return out;
+}
