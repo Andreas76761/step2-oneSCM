@@ -774,8 +774,12 @@ test('[T-224] Schreibstil: gelb markierte Sätze bearbeiten, korrigieren, Präse
   expect(await axe()).toEqual([]);
   // gelb markierten Satz anklicken und einzeln korrigieren
   await page.locator('.style-sentence.warn').first().click();
-  await page.getByRole('button', { name: 'Alle Korrekturen im Satz' }).click();
-  await expect(page.getByRole('textbox', { name: 'Satz' })).toHaveValue('Die Daten werden gespeichert.');
+  // Einzelkorrekturen sammeln sich im Entwurf (auch nach manueller Änderung)
+  await page.getByRole('button', { name: '„werden“ (Präsens)' }).click();
+  await page.getByRole('textbox', { name: 'Satz' }).fill('Die Daten werden eigentlich sicher gespeichert.');
+  await page.getByRole('button', { name: 'streichen' }).click();
+  await expect(page.getByRole('textbox', { name: 'Satz' })).toHaveValue('Die Daten werden sicher gespeichert.');
+  await page.getByRole('textbox', { name: 'Satz' }).fill('Die Daten werden gespeichert.');
   await page.getByRole('button', { name: 'Übernehmen', exact: true }).click();
   await expect(page.locator('.style-sentence.warn')).toHaveCount(1);
   // ins Präsens umwandeln (Demo-KI) und Vorschlag übernehmen
@@ -784,6 +788,12 @@ test('[T-224] Schreibstil: gelb markierte Sätze bearbeiten, korrigieren, Präse
   await page.getByRole('button', { name: 'Vorschlag übernehmen' }).click();
   await expect(page.getByRole('textbox', { name: 'Text' })).toHaveValue('Die Daten werden gespeichert. Klicken Sie auf Speichern. Die Liste wird angezeigt.');
   await expect(page.locator('.style-sentence.warn')).toHaveCount(0);
+  // Automatisch korrigieren wiederholt, bis nichts mehr greift (Tippfehler → Füllwort → gestrichen)
+  await page.getByRole('textbox', { name: 'Text' }).fill('Die Liste wurde eigendlich angezeigt.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await page.getByRole('button', { name: /Automatisch korrigieren/ }).click();
+  await expect(page.getByRole('textbox', { name: 'Text' })).toHaveValue('Die Liste wird angezeigt.');
+  await expect(page.getByRole('button', { name: /Automatisch korrigieren/ })).toBeDisabled();
   // Textschnipsel der Quellen (nur prüfen)
   await page.getByRole('tab', { name: 'Textschnipsel' }).click();
   await page.getByLabel('Kapitel der Quellen').selectOption({ index: 1 });

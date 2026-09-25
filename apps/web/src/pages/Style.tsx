@@ -1,6 +1,6 @@
 // Schreibstil (ADR-040): Text prüfen, problematische Sätze gelb markieren und bearbeiten, automatisch korrigieren,
 // professionell bzw. ins Präsens umformulieren – für freien Text, Kapitelabsätze (übernehmen) und Textschnipsel (nur prüfen).
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { patch, post, qs } from '../api';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
@@ -20,6 +20,28 @@ export function applyFixes(text: string, fixes: Fix[]) {
     limit = f.start;
   }
   return out;
+}
+
+/**
+ * Korrektur des Originalsatzes auf den aktuellen (evtl. schon geänderten) Entwurf übertragen: Die Stelle wird über den
+ * Originaltext samt vorangehendem Kontext gesucht (nächstgelegene Fundstelle); fehlt sie, bleibt der Entwurf unverändert.
+ */
+export function applyToDraft(draft: string, original: string, fix: Fix): string {
+  if (draft === original) return applyFixes(draft, [fix]);
+  const orig = original.slice(fix.start, fix.end);
+  // mit möglichst viel Kontext suchen; Kontext kann durch frühere Korrekturen verändert sein, daher schrittweise kürzen
+  for (let ctx = Math.min(12, fix.start); ctx >= (orig ? 0 : 1); ctx--) {
+    const needle = original.slice(fix.start - ctx, fix.end);
+    let best = -1;
+    for (let i = draft.indexOf(needle); i >= 0; i = draft.indexOf(needle, i + 1)) {
+      if (best < 0 || Math.abs(i + ctx - fix.start) < Math.abs(best + ctx - fix.start)) best = i;
+    }
+    if (best >= 0) {
+      const at = best + ctx;
+      return draft.slice(0, at) + fix.replacement + draft.slice(at + orig.length);
+    }
+  }
+  return draft;
 }
 
 const scoreClass = (s: number) => (s >= 80 ? 'st-approved' : s >= 50 ? 'st-in_review' : 'st-failed');
@@ -63,13 +85,14 @@ function SentenceEditor({ s, onApply, onClose }: { s: Sentence; onApply: (replac
         {s.issues.map((i, n) => (
           <li key={n} className={i.severity}>
             <span className="tag">{i.severity === 'warning' ? '⚠ Problem' : 'ℹ Hinweis'}</span> {i.message}
-            {i.fix && <button className="btn small" onClick={() => setDraft(applyFixes(s.text, [rel(i.fix!)]))}>{i.fix.label || 'korrigieren'}</button>}
+            {i.fix && <button className="btn small" onClick={() => setDraft((d) => applyToDraft(d, s.text, rel(i.fix!)))}>{i.fix.label || 'korrigieren'}</button>}
           </li>
         ))}
       </ul>
       <label className="block">Satz <textarea rows={3} value={draft} onChange={(e) => setDraft(e.target.value)} /></label>
       <div className="filters">
-        <button className="btn" onClick={() => setDraft(applyFixes(s.text, s.issues.filter((i) => i.fix).map((i) => rel(i.fix!))))}>Alle Korrekturen im Satz</button>
+        <button className="btn" onClick={() => setDraft((d) => s.issues.filter((i) => i.fix).map((i) => rel(i.fix!)).sort((x, y) => y.start - x.start || y.end - x.end)
+          .reduce((acc, f, n, all) => (n > 0 && f.end > all[n - 1].start ? acc : applyToDraft(acc, s.text, f)), d))}>Alle Korrekturen im Satz</button>
         <button className="btn primary" onClick={() => onApply(draft)}>Übernehmen</button>
         <button className="btn ghost" onClick={onClose}>Schließen</button>
       </div>
@@ -85,7 +108,14 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite }: { initial: stri
   const [sel, setSel] = useState<number | null>(null);
   const [proposal, setProposal] = useState<any | null>(null);
   const [busy, setBusy] = useState(false);
+  // aktueller Text für Antworten, die nach einer Änderung eintreffen
+  const textRef = useRef(text);
+  textRef.current = text;
   useEffect(() => setText(initial), [initial]);
+  // Ein Vorschlag gilt nur für den Text, aus dem er entstand
+  useEffect(() => {
+    if (proposal && proposal.source !== text) setProposal(null);
+  }, [text, proposal]);
   const check = async (t = text) => {
     if (!t.trim()) return;
     try {
@@ -100,17 +130,38 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite }: { initial: stri
     if (initial.trim()) void check(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial]);
+  // Wiederholen, bis keine Korrektur mehr greift (eine Korrektur kann die nächste sichtbar machen, wie serverseitig autoFix)
   const autoFix = async () => {
     if (!a) return;
-    const fixed = applyFixes(text, a.sentences.flatMap((s) => s.issues).filter((i) => i.fix).map((i) => i.fix!));
-    setText(fixed);
-    await check(fixed);
-    notify(`${a.fixable} Korrekturen angewendet.`);
+    setBusy(true);
+    let cur = text;
+    let analysis: Analysis = a;
+    let applied = 0;
+    try {
+      for (let round = 0; round < 5 && analysis.fixable > 0; round++) {
+        const next = applyFixes(cur, analysis.sentences.flatMap((s) => s.issues).filter((i) => i.fix).map((i) => i.fix!));
+        if (next === cur) break;
+        applied += analysis.fixable;
+        cur = next;
+        analysis = await post<Analysis>('/style/check', { text: cur });
+      }
+      setText(cur);
+      setA(analysis);
+      setSel(null);
+      notify(`${applied} Korrekturen angewendet.`);
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
   };
   const rewrite = async (mode: 'professional' | 'present') => {
     setBusy(true);
     try {
-      setProposal(await post<any>('/style/rewrite', { text, mode }));
+      const source = text;
+      const r = await post<any>('/style/rewrite', { text: source, mode });
+      if (textRef.current === source) setProposal({ ...r, source });
+      else notify('Der Text wurde inzwischen geändert – Vorschlag verworfen. Bitte erneut umformulieren.', 'error');
     } catch (e) {
       notify(errorText(e), 'error');
     } finally {
@@ -131,7 +182,7 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite }: { initial: stri
       </label>
       <div className="filters">
         <button className="btn primary" disabled={!text.trim()} onClick={() => check()}>Prüfen</button>
-        <button className="btn" disabled={!a?.fixable} onClick={autoFix}>Automatisch korrigieren{a?.fixable ? ` (${a.fixable})` : ''}</button>
+        <button className="btn" disabled={busy || !a?.fixable} onClick={autoFix}>Automatisch korrigieren{a?.fixable ? ` (${a.fixable})` : ''}</button>
         {canRewrite && <button className="btn" disabled={busy || !text.trim()} onClick={() => rewrite('professional')}>Professionell umformulieren</button>}
         {canRewrite && <button className="btn" disabled={busy || !text.trim()} onClick={() => rewrite('present')}>In Präsens umwandeln</button>}
         <button className="btn ghost" disabled={!text.trim()} onClick={() => navigator.clipboard?.writeText(text).then(() => notify('Text kopiert.'))}>Kopieren</button>
