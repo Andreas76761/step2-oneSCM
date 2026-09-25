@@ -40,12 +40,14 @@ function units(text: string): { title: string | null; items: string[] } {
     // Fließtext in Sätze zerlegen (Abkürzungen wie „z. B.“ trennen nicht)
     const parts = clean(line).split(/(?<=[.!?])\s+(?=[\p{Lu}\d„"])/u);
     let buf = '';
-    for (const p of parts) {
+    parts.forEach((p, i) => {
       buf = buf ? `${buf} ${p}` : p;
-      if (/(?:^|\s)(?:\p{L}|z|ca|ggf|bzw|bzgl|Nr|vgl|inkl|evtl|usw|etc)\.$/iu.test(buf)) continue;
+      const abbr = /(?:^|\s)(?:\p{L}\.\s?\p{Lu}|\p{Ll}|[Cc]a|[Gg]gf|[Bb]zw|[Bb]zgl|Nr|[Vv]gl|[Ii]nkl|[Ee]vtl|usw|etc)\.$/u.test(buf)
+        || (/(?:^|\s)\p{Lu}\.$/u.test(buf) && /^\p{L}\./u.test(parts[i + 1] ?? ''));
+      if (abbr) return;
       items.push(buf);
       buf = '';
-    }
+    });
     if (buf) items.push(buf);
   }
   return { title, items };

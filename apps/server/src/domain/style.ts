@@ -48,9 +48,13 @@ export function segmentSentences(text: string): { start: number; end: number; te
     let from = 0;
     for (const m of l.matchAll(re)) {
       const endIdx = m.index! + m[0].length;
-      const before = l.slice(Math.max(0, m.index! - 4), m.index! + 1);
-      // Abkürzungen (einzelne Buchstaben wie „z. B.“, „ca.“, „Nr.“) und Aufzählungsnummern („1.“) beenden keinen Satz
-      if (/(?:(?<![\p{L}])\p{L}|(?<![\p{L}])(?:ca|ggf|bzw|bzgl|Nr|vgl|inkl|evtl|usw|etc))\.$/iu.test(before) || /(?<!\d)\d{1,2}\.$/.test(l.slice(Math.max(0, m.index! - 3), endIdx))) continue;
+      const before = l.slice(Math.max(0, m.index! - 6), m.index! + 1);
+      const after = l.slice(endIdx, endIdx + 4);
+      // Abkürzungen („z. B.“, „Z. B.“, „ca.“, „Nr.“) und Aufzählungsnummern („1.“) beenden keinen Satz;
+      // ein einzelner Großbuchstabe („Menü A > B.“) nur, wenn er Teil einer Abkürzung aus Einzelbuchstaben ist
+      const abbr = /(?<![\p{L}])(?:\p{Ll}|ca|ggf|bzw|bzgl|nr|vgl|inkl|evtl|usw|etc)\.$/iu.test(before) && !/(?<![\p{L}])\p{Lu}\.$/u.test(before)
+        || /(?<![\p{L}])\p{Lu}\.$/u.test(before) && (/^\s?\p{L}\./u.test(after) || /(?<![\p{L}])\p{L}\.\s?\p{Lu}\.$/u.test(before));
+      if (abbr || /(?<!\d)\d{1,2}\.$/.test(l.slice(Math.max(0, m.index! - 3), endIdx))) continue;
       push(from, endIdx);
       from = endIdx;
     }

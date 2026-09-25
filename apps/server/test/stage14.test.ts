@@ -20,6 +20,7 @@ describe('Etappe 14', () => {
     // Einheit: Sätze mit Positionen, Abkürzungen trennen nicht
     const text = 'Die Daten wurden gespeichert.Man muss eigentlich den den Vertrag prüfen ,dann wird der Status angezeigt werden!! die Maske war leer z.B. bei neuen Aufträgen';
     expect(segmentSentences('Z. B. im Menü. Danach speichern Sie.').map((s) => s.text)).toEqual(['Z. B. im Menü.', 'Danach speichern Sie.']);
+    expect(segmentSentences('Öffnen Sie Menü A > B. Klicken Sie auf OK. Ggf. prüfen Sie z. B. den Status.').map((s) => s.text)).toEqual(['Öffnen Sie Menü A > B.', 'Klicken Sie auf OK.', 'Ggf. prüfen Sie z. B. den Status.']);
     const a = analyzeStyle(text, { terms: [{ preferred: 'Auftrag', avoid: ['Order'] }] });
     const rules = a.sentences.flatMap((s) => s.issues.map((i) => i.rule));
     expect(rules).toEqual(expect.arrayContaining(['past', 'filler', 'double_word', 'punctuation', 'future', 'capitalization', 'abbreviation', 'impersonal']));
@@ -98,6 +99,9 @@ describe('Etappe 14', () => {
     expect(s.steps[2]).toEqual({ label: 'Ist der Kunde gesperrt?', decision: true, yes: 'Informieren Sie die Buchhaltung', no: 'Erfassen Sie die Positionen' });
     expect(s.facts).toEqual([{ label: 'Lieferfrist', value: '14 Tage' }, { label: 'Mindestbestellwert', value: '50 Euro' }]);
     expect(question('die Menge größer als null ist')).toBe('Ist die Menge größer als null?');
+    expect(parseStructure('Öffnen Sie **A > B**. Klicken Sie auf **Speichern**.').steps.map((x) => x.label)).toEqual(['Öffnen Sie A > B', 'Klicken Sie auf Speichern']);
+    expect(parseStructure('Setzen Sie z. B. einen Filter. Ggf. drucken Sie die Liste. Z. B. im Menü A. Danach speichern.').steps.map((x) => x.label))
+      .toEqual(['Setzen Sie z. B. einen Filter', 'Ggf. drucken Sie die Liste', 'Z. B. im Menü A', 'Danach speichern']);
     expect(parseStructure('1. Menü öffnen\n2. Z. B. Filter setzen\n3. Liste drucken').steps.map((x) => x.label)).toEqual(['Menü öffnen', 'Z. B. Filter setzen', 'Liste drucken']);
     // Zeichnen: alle Bildarten, SVGs überstehen die Bereinigung unverändert im Umfang, Texte sind maskiert
     const imgs = renderDiagrams({ ...s, title: 'A & B <x>' }, DIAGRAM_KINDS, '#1d63d8');
