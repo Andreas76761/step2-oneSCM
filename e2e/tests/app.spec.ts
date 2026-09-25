@@ -875,6 +875,9 @@ test('[T-225] Werkstatt: Stil anzeigen und korrigieren, Stapelkorrektur, Bild au
   await imgDlg.getByRole('button', { name: 'Ausgewählte speichern (1)' }).click();
   await expect(page.getByText('1 Bild(er) in den Absatz eingefügt.')).toBeVisible();
   await expect(page.getByRole('img', { name: /^Klickstrecke: / })).toBeVisible();
+  // im Stilmodus: Bild genau einmal, kein Bild-Markdown als Text
+  await expect(page.getByRole('img', { name: /^Klickstrecke: / })).toHaveCount(1);
+  await expect(page.getByRole('article').filter({ hasText: 'Klicken Sie auf Speichern' })).not.toContainText('](media:');
   const idx = await (await request.get('/api/v1/image-index', { headers: h })).json();
   const svgItem = idx.find((i: any) => i.title?.startsWith('Klickstrecke: ') && i.usedIn.chapters.some((c: any) => c.chapterId === ch.id));
   expect(svgItem).toMatchObject({ mime: 'image/svg+xml', pngSha: expect.stringMatching(/^[a-f0-9]{64}$/) });

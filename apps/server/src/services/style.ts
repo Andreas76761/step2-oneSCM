@@ -185,8 +185,14 @@ export async function autofixChapterVersion(ctx: Ctx, versionId: string, input: 
     else if (p.locked) skipped.push({ id, reason: 'gesperrt' });
     else if (p.versionNo !== versionNo) skipped.push({ id, reason: `zwischenzeitlich geändert (Version ${p.versionNo})` });
     else {
-      await patchBlock(ctx, id, { text: p.after, expectedVersionNo: versionNo, reason: 'Stapelkorrektur Schreibstil' }, actor);
-      saved.push(id);
+      // Zwischen Vorschau-Berechnung und Speichern geändert oder gesperrt: überspringen statt die Stapelkorrektur abzubrechen
+      try {
+        await patchBlock(ctx, id, { text: p.after, expectedVersionNo: versionNo, reason: 'Stapelkorrektur Schreibstil' }, actor);
+        saved.push(id);
+      } catch (e) {
+        if (!(e instanceof Problem) || e.status !== 409) throw e;
+        skipped.push({ id, reason: e.detail ?? 'Konflikt' });
+      }
     }
   }
   await audit(ctx, actor, 'style.batch_fixed', 'chapter_version', v.id, { saved: saved.length, skipped: skipped.length });

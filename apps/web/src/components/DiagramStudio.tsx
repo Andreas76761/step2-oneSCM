@@ -55,6 +55,11 @@ function StructureEditor({ s, o, onChange, onOptions, onApply, busy }: {
   s: Structure; o: Options; onChange: (s: Structure) => void; onOptions: (o: Options) => void; onApply: () => void; busy: boolean;
 }) {
   const [facts, setFacts] = useState(factsToText(s.facts));
+  // Kennzahlen neu übernehmen, wenn die Struktur von außen wechselt (z. B. Vorlage geladen)
+  useEffect(() => {
+    if (JSON.stringify(textToFacts(facts)) !== JSON.stringify(s.facts)) setFacts(factsToText(s.facts));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.facts]);
   const setStep = (i: number, patch: Partial<Step>) => onChange({ ...s, steps: s.steps.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
   return (
     <details className="card">
@@ -233,6 +238,7 @@ export function DiagramStudio({ initialText = '', canEdit, onSaved, showSample =
         </div>
         <Templates canEdit={canEdit} current={draft && opts ? { structure: draft, options: opts, kinds } : null} onLoad={(t) => {
           setKinds(t.kinds);
+          setEditorKey((k) => k + 1);
           void generate({ structure: t.structure, options: t.options, kinds: t.kinds });
         }} />
       </Card>

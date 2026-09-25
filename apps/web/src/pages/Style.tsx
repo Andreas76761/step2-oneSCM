@@ -55,21 +55,25 @@ export function Summary({ a }: { a: Analysis }) {
   );
 }
 
-/** Text mit markierten Sätzen: gelb = Problem (Warnung), unterstrichen = Hinweis; Klick öffnet die Bearbeitung */
-export function MarkedText({ text, a, selected, onSelect }: { text: string; a: Analysis; selected?: number | null; onSelect?: (i: number) => void }) {
+const IMAGE_MD = /!\[[^\]]*\]\([^)]*\)/g;
+
+/** Text mit markierten Sätzen: gelb = Problem (Warnung), unterstrichen = Hinweis; Klick öffnet die Bearbeitung.
+ * `hideImages`: Bild-Markdown ausblenden (Bilder zeigt der Aufrufer selbst an, z. B. in der Werkstatt). */
+export function MarkedText({ text, a, selected, onSelect, hideImages }: { text: string; a: Analysis; selected?: number | null; onSelect?: (i: number) => void; hideImages?: boolean }) {
+  const show = (t: string) => (hideImages ? t.replace(IMAGE_MD, '').replace(/\n{3,}/g, '\n\n') : t);
   const parts: ReactNode[] = [];
   let pos = 0;
   a.sentences.forEach((s, i) => {
-    if (s.start > pos) parts.push(<span key={`t${i}`}>{text.slice(pos, s.start)}</span>);
+    if (s.start > pos) parts.push(<span key={`t${i}`}>{show(text.slice(pos, s.start))}</span>);
     const warn = s.issues.some((x) => x.severity === 'warning');
     const cls = `style-sentence${warn ? ' warn' : s.issues.length ? ' info' : ''}${selected === i ? ' selected' : ''}`;
     const title = s.issues.map((x) => x.message).join('\n');
     parts.push(s.issues.length && onSelect
-      ? <button key={`s${i}`} type="button" className={cls} title={title} aria-label={`${text.slice(s.start, s.end)} – ${s.issues.length} Hinweis(e), bearbeiten`} onClick={() => onSelect(i)}>{text.slice(s.start, s.end)}</button>
-      : <span key={`s${i}`} className={cls} title={title || undefined}>{text.slice(s.start, s.end)}</span>);
+      ? <button key={`s${i}`} type="button" className={cls} title={title} aria-label={`${text.slice(s.start, s.end)} – ${s.issues.length} Hinweis(e), bearbeiten`} onClick={() => onSelect(i)}>{show(text.slice(s.start, s.end))}</button>
+      : <span key={`s${i}`} className={cls} title={title || undefined}>{show(text.slice(s.start, s.end))}</span>);
     pos = s.end;
   });
-  if (pos < text.length) parts.push(<span key="end">{text.slice(pos)}</span>);
+  if (pos < text.length) parts.push(<span key="end">{show(text.slice(pos))}</span>);
   return <div className="style-text" role="group" aria-label="Geprüfter Text">{parts}</div>;
 }
 

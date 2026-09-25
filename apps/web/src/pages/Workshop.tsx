@@ -243,7 +243,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
       ) : style && style.sentences.some((x) => x.issues.length) ? (
         // Schreibstil (ADR-043): gelb markierte Sätze direkt im Absatz bearbeiten
         <div className="block-style" onClick={(e) => e.stopPropagation()}>
-          <MarkedText text={b.text} a={style} selected={styleSel} onSelect={editable && !locked ? setStyleSel : undefined} />
+          <MarkedText text={b.text} a={style} hideImages selected={styleSel} onSelect={editable && !locked ? setStyleSel : undefined} />
           {/* Bilder des Absatzes bleiben im Stilmodus sichtbar */}
           {[...b.text.matchAll(/!\[[^\]]*\]\([^)]*\)/g)].map((m, i) => <Md key={i} text={m[0]} />)}
           {styleSel !== null && style.sentences[styleSel] && (
