@@ -102,7 +102,7 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
       markets: await req.ctx.db.all('SELECT code, label FROM markets ORDER BY code'), releases: await req.ctx.db.all('SELECT code, label FROM release_scopes ORDER BY code'),
       // Benutzerliste (für die Demo-Auswahl) nur im Demo-Modus
       users: req.ctx.config.authMode === 'demo'
-        ? (await req.ctx.db.all("SELECT id, name, permissions FROM users WHERE id LIKE 'u-%' ORDER BY name")).map((u) => ({ ...u, permissions: parseJson(u.permissions, []) }))
+        ? (await req.ctx.db.all("SELECT id, name, permissions FROM users WHERE id LIKE 'u-%' AND disabled_at IS NULL ORDER BY name")).map((u) => ({ ...u, permissions: parseJson(u.permissions, []) }))
         : [],
     };
   });

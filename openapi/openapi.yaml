@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.15.0
+  version: 0.16.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -2668,6 +2668,108 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ sha256, pngSha, width, height }' }
         '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /style/rules:
+    get:
+      operationId: getStyleRules
+      summary: 'Eigene Stilregeln des Projekts (ADR-044)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-31]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ disabled: [Regel], phrases: [{ avoid, use, note }], address: sie|du|null, maxSentenceWords }' }
+    put:
+      operationId: updateStyleRules
+      summary: 'Eigene Stilregeln ändern (Berechtigung admin, ADR-044)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-31]
+      x-extension: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                disabled: { type: array, items: { type: string } }
+                phrases: { type: array, maxItems: 300, items: { type: object, required: [avoid], properties: { avoid: { type: string }, use: { type: [string, 'null'] }, note: { type: [string, 'null'] } } } }
+                address: { type: [string, 'null'], enum: [sie, du, null] }
+                maxSentenceWords: { type: [integer, 'null'], minimum: 8, maximum: 60 }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Stilregeln' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /style/chapter-versions/{versionId}/apply:
+    post:
+      operationId: applyChapterTexts
+      summary: 'Geprüfte Umformulierungen (KI-Stapel) übernehmen, Versionsprüfung je Absatz (Berechtigung edit, ADR-044)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-31]
+      x-extension: true
+      parameters:
+        - { name: versionId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [blocks], properties: { reason: { type: string }, blocks: { type: array, maxItems: 200, items: { type: object, required: [id, versionNo, text], properties: { id: { type: string }, versionNo: { type: integer }, text: { type: string } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ saved: [id], skipped: [{ id, reason }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /users:
+    get:
+      operationId: listUsers
+      summary: 'Alle Benutzer mit Herkunft, Status, letzter Aktivität (Berechtigung admin, ADR-045)'
+      tags: [Projekte]
+      x-requirements: [NFR-32]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, name, email, permissions, origin, disabled, disabledAt, disabledBy, createdAt, createdBy, lastActivity, projects }]' }
+    post:
+      operationId: createUser
+      summary: 'Benutzer anlegen: lokal (u-…) oder OIDC vorab (oidc:<Subject>) (Berechtigung admin, ADR-045)'
+      tags: [Projekte]
+      x-requirements: [NFR-32]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [id, name], properties: { id: { type: string }, name: { type: string }, email: { type: [string, 'null'] }, permissions: { type: array, items: { type: string, enum: [read, edit, decide, approve, admin] } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Benutzer' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'Existiert bereits' }
+  /users/{userId}:
+    patch:
+      operationId: updateUser
+      summary: 'Name, E-Mail, Berechtigungen (nur lokal) ändern, sperren/entsperren – nicht sich selbst, nicht den letzten Administrator (ADR-045)'
+      tags: [Projekte]
+      x-requirements: [NFR-32]
+      x-extension: true
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, email: { type: [string, 'null'] }, permissions: { type: array, items: { type: string } }, disabled: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Benutzer' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'Selbstaussperrung oder letzter Administrator' }
+  /users/{userId}/projects:
+    get:
+      operationId: listUserProjects
+      summary: 'Projektzugriffe eines Benutzers: Mitgliedschaft und wirksame Berechtigungen je Projekt (Berechtigung admin, ADR-045)'
+      tags: [Projekte]
+      x-requirements: [NFR-32]
+      x-extension: true
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ projectId, name, visibility, archived, member, effective }]' }
         '404': { $ref: '#/components/responses/Problem' }
   /master-data/import:
     post:

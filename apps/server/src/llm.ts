@@ -4,7 +4,7 @@
 import { extractiveAnswer } from './domain/assistant.js';
 import { extractPromptData } from './domain/rewrite.js';
 import { parseStructure } from './domain/diagrams.js';
-import { autoFix, PRESENT_RULES } from './domain/style.js';
+import { autoFix, PRESENT_RULES, type StylePhrase } from './domain/style.js';
 
 export type LlmProviderId = 'anthropic' | 'openai' | 'demo';
 
@@ -134,9 +134,9 @@ export class DemoProvider implements LlmProvider {
       return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
     }
     // Schreibstil (ADR-040): automatische Regelkorrekturen statt echter Umformulierung
-    const st = data as unknown as { task?: string; mode?: string; text?: string; terminology?: { preferred: string; avoid: string[] }[] };
+    const st = data as unknown as { task?: string; mode?: string; text?: string; terminology?: { preferred: string; avoid: string[] }[]; phrases?: StylePhrase[] };
     if (st.task === 'style' && typeof st.text === 'string') {
-      const fixed = autoFix(st.text, st.mode === 'present' ? { rules: PRESENT_RULES } : { terms: st.terminology ?? [] }).text;
+      const fixed = autoFix(st.text, st.mode === 'present' ? { rules: PRESENT_RULES } : { terms: st.terminology ?? [], phrases: st.phrases ?? [] }).text;
       return { text: JSON.stringify({ text: fixed }), usage: { inputTokens: 0, outputTokens: 0 } };
     }
     // Bilder aus Text (ADR-041): regelbasierte Struktur statt echter Analyse

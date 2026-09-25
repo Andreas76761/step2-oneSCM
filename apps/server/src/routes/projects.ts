@@ -2,6 +2,7 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { requirePermission, type Ctx, type User } from '../context.js';
 import { createProject, listMembers, listProjects, removeMember, setMember, updateProject } from '../services/projects.js';
+import { createUser, listUsers, updateUser, userProjects } from '../services/users.js';
 
 function globalUser(req: FastifyRequest, perm?: 'admin'): User {
   const user = req.globalUser;
@@ -25,4 +26,10 @@ export function projectRoutes(app: FastifyInstance, ctx: Ctx) {
     await removeMember(ctx, req.params.projectId, req.params.userId, globalUser(req, 'admin'));
     reply.code(204);
   });
+
+  // Benutzerverwaltung (ADR-045): projektübergreifend, nur Administration
+  app.get('/users', async (req) => (globalUser(req, 'admin'), listUsers(ctx)));
+  app.post<{ Body: any }>('/users', async (req, reply) => reply.code(201).send(await createUser(ctx, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin'))));
+  app.patch<{ Params: { userId: string }; Body: any }>('/users/:userId', async (req) => updateUser(ctx, req.params.userId, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin')));
+  app.get<{ Params: { userId: string } }>('/users/:userId/projects', async (req) => (globalUser(req, 'admin'), userProjects(ctx, req.params.userId)));
 }

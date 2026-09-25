@@ -45,3 +45,6 @@
 | [ADR-041](ADR-041-bilder-aus-text.md) | Bilder aus Text: ASCII-Bild, Klickstrecke, Prozessbild, Infografik | akzeptiert, umgesetzt |
 | [ADR-042](ADR-042-bilder-word-werkstatt.md) | Bilder in Word und Werkstatt, Screenshots markieren, Diagramme nachbearbeiten und als Vorlage speichern | akzeptiert, umgesetzt |
 | [ADR-043](ADR-043-schreibstil-werkstatt.md) | Schreibstil in der Werkstatt, Stilwert je Kapitel, Stapelkorrektur | akzeptiert, umgesetzt |
+| [ADR-044](ADR-044-stilregeln-ki-stapel.md) | Eigene Stilregeln je Projekt, KI-Stapelumformulierung, Suchgewichtung | akzeptiert, umgesetzt |
+| [ADR-045](ADR-045-benutzerverwaltung.md) | Benutzerverwaltung: anlegen, sperren, Projektzugriffe | akzeptiert, umgesetzt |
+| [ADR-046](ADR-046-screenshot-editor.md) | Screenshot-Editor: Pfeile, Textfelder, Unschärfe | akzeptiert, umgesetzt |

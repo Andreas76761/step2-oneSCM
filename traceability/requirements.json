@@ -458,5 +458,32 @@
     "documentation": [
       "docs/adr/ADR-043-schreibstil-werkstatt.md"
     ]
+  },
+  {
+    "id": "NFR-31",
+    "title": "Eigene Stilregeln je Projekt (Formulierungen, Anrede, Satzlänge, Regeln an/aus) in allen Stilfunktionen; KI-Stapelumformulierung eines Kapitels mit Vorschau; Suche: Kapitel vor Pfadtreffern",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-044-stilregeln-ki-stapel.md"
+    ]
+  },
+  {
+    "id": "NFR-32",
+    "title": "Benutzerverwaltung: Benutzer anlegen, bearbeiten, sperren (inkl. API-Tokens), Projektzugriffe je Benutzer, Schutz vor Aussperren",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-045-benutzerverwaltung.md"
+    ]
+  },
+  {
+    "id": "NFR-33",
+    "title": "Screenshot-Editor: Pfeile, Textfelder und unkenntlich gemachte (verpixelte) Bereiche",
+    "priority": "P3",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-046-screenshot-editor.md"
+    ]
   }
 ]

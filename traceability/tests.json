@@ -1092,5 +1092,43 @@
       "NFR-29",
       "NFR-30"
     ]
+  },
+  {
+    "id": "T-180",
+    "title": "Eigene Stilregeln: Formulierungen mit Ersatz, Anrede, Regeln ausschalten, Satzlänge – in Prüfung, Korrektur und KI-Umformulierung",
+    "file": "apps/server/test/stage16.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-31"
+    ]
+  },
+  {
+    "id": "T-181",
+    "title": "Benutzerverwaltung: anlegen, ändern, sperren, Schutz vor Aussperren, Projektzugriffe, gesperrte Tokens",
+    "file": "apps/server/test/stage16.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-32"
+    ]
+  },
+  {
+    "id": "T-182",
+    "title": "KI-Stapelumformulierung übernehmen mit Versionsprüfung; Suche: Kapitel vor Pfadtreffern",
+    "file": "apps/server/test/stage16.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-31"
+    ]
+  },
+  {
+    "id": "T-226",
+    "title": "UI: eigene Stilregeln, Benutzerverwaltung, KI-Stapelumformulierung, Screenshot mit Pfeil/Text/Unschärfe, Suche Kapitel zuerst",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-31",
+      "NFR-32",
+      "NFR-33"
+    ]
   }
 ]

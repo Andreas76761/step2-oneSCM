@@ -198,8 +198,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
         req.globalUser = user;
         req.user = user;
         // Projektverwaltung arbeitet projektübergreifend mit globalen Berechtigungen – nicht für API-Tokens
-        if (url === '/api/v1/projects' || url.startsWith('/api/v1/projects/')) {
-          if (user.token) throw new Problem(403, 'Forbidden', 'API-Tokens haben keinen Zugriff auf die Projektverwaltung.');
+        if (url === '/api/v1/projects' || url.startsWith('/api/v1/projects/') || url === '/api/v1/users' || url.startsWith('/api/v1/users/')) {
+          if (user.token) throw new Problem(403, 'Forbidden', 'API-Tokens haben keinen Zugriff auf die Projekt- und Benutzerverwaltung.');
           return;
         }
         const header = req.headers['x-project-id'];
