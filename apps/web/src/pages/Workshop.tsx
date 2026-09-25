@@ -3,8 +3,10 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
 import {
   Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad,
-  activatable,
+  Modal, activatable,
 } from '../components/ui';
+import { DiagramStudio } from '../components/DiagramStudio';
+import { MarkedText, SentenceEditor, type Analysis } from './Style';
 import { SourceViewer } from './Sources';
 import { DiscussionPanel } from './Discussion';
 
@@ -41,6 +43,8 @@ export function WorkshopPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [tab, setTab] = useState<'sources' | 'discussion' | 'findings' | 'history' | 'approval'>('sources');
   const me = useLoad<any>('/me');
+  const [styleOn, setStyleOn] = useState(false);
+  const [batchStyleOpen, setBatchStyleOpen] = useState(false);
 
   useEffect(() => {
     if (!chapterId && chapters.data?.length) {
@@ -54,6 +58,8 @@ export function WorkshopPage() {
   }, [chapter?.id, chapter?.versions[0]?.id]);
 
   const v = version.data;
+  const styleData = useLoad<any>(styleOn && v ? `/style/chapter-versions/${v.id}` : null, [styleOn, v?.id, v && JSON.stringify(v.sections.flatMap((s: any) => s.blocks.map((b: any) => b.versionNo)))]);
+  const styleOf = (id: string): Analysis | null => styleData.data?.blocks.find((x: any) => x.id === id)?.analysis ?? null;
   const editable = v?.status === 'draft';
   const allBlocks: any[] = v ? v.sections.flatMap((s: any) => s.blocks) : [];
   const selectedBlock = allBlocks.find((b) => b.id === selected);
@@ -113,12 +119,20 @@ export function WorkshopPage() {
               </select>
             )}
             {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}
+            {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}>🖋️ Stil anzeigen</button>}
+            {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}>🖋️ Stil korrigieren</button>}
             {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}>✨ Kapitel umformulieren</button>}
             {chapter && <button className="btn primary" onClick={regenerate}>{chapter.versions.length ? 'Neu generieren' : 'Generieren'}</button>}
           </div>
         </header>
         <ErrorBox error={version.error} />
         {!v && <Empty>Für dieses Kapitel gibt es noch keine generierte Version.</Empty>}
+        {styleOn && styleData.data && (
+          <p className="small" role="status">
+            Schreibstil: {styleData.data.summary.withProblems} von {styleData.data.summary.blocks} Absätzen mit Problemen – gelb markierte Sätze {editable ? 'anklicken und korrigieren' : 'sind im Entwurf bearbeitbar'} · <Link to="/schreibstil">Schreibstil-Seite</Link>
+          </p>
+        )}
+        {batchStyleOpen && v && <StyleBatch versionId={v.id} onClose={() => setBatchStyleOpen(false)} onChanged={refresh} />}
         {v && llm.data?.enabled && <ChapterRewrite version={v} llm={llm.data} editable={editable} open={batchOpen} onClose={() => setBatchOpen(false)} onChanged={refresh} />}
         {v && !editable && <div className="alert">Version {v.versionNo} ist <strong>{v.status === 'approved' ? 'freigegeben und unveränderlich' : v.status === 'in_review' ? 'zur Freigabe eingereicht' : 'ersetzt'}</strong>. {v.status === 'in_review' ? 'Zum Bearbeiten die Einreichung im Tab „Freigabe“ zurückziehen.' : 'Änderungen erfordern eine neue Version.'}</div>}
         {v?.sections.map((s: any, si: number) => (
@@ -135,6 +149,7 @@ export function WorkshopPage() {
                 next={s.blocks[bi + 1]}
                 llm={llm.data}
                 onChanged={refresh}
+                style={styleOn ? styleOf(b.id) : null}
               />
             ))}
             {editable && <AddBlock versionId={v.id} section={s.code} onAdded={refresh} />}
@@ -162,8 +177,13 @@ export function WorkshopPage() {
   );
 }
 
-function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, onChanged }: { block: any; editable: boolean; selected: boolean; onSelect: () => void; prev?: any; next?: any; llm?: any; onChanged: () => void }) {
+function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, onChanged, style }: {
+  block: any; editable: boolean; selected: boolean; onSelect: () => void; prev?: any; next?: any; llm?: any; onChanged: () => void; style?: Analysis | null;
+}) {
   const { ref, notify } = useApp();
+  const [styleSel, setStyleSel] = useState<number | null>(null);
+  const [imageOpen, setImageOpen] = useState(false);
+  useEffect(() => setStyleSel(null), [b.versionNo]);
   const [mode, setMode] = useState<'view' | 'edit' | 'classify'>('view');
   const [proposal, setProposal] = useState<any | null>(null);
   // Nach Übernahme, Wiederherstellung oder Neuladen den Editor mit dem aktuellen Text füllen
@@ -220,6 +240,19 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
             <button className="btn small" onClick={() => (setMode('view'), setText(b.text))}>Abbrechen</button>
           </div>
         </div>
+      ) : style && style.sentences.some((x) => x.issues.length) ? (
+        // Schreibstil (ADR-043): gelb markierte Sätze direkt im Absatz bearbeiten
+        <div className="block-style" onClick={(e) => e.stopPropagation()}>
+          <MarkedText text={b.text} a={style} hideImages selected={styleSel} onSelect={editable && !locked ? setStyleSel : undefined} />
+          {/* Bilder des Absatzes bleiben im Stilmodus sichtbar */}
+          {[...b.text.matchAll(/!\[[^\]]*\]\([^)]*\)/g)].map((m, i) => <Md key={i} text={m[0]} />)}
+          {styleSel !== null && style.sentences[styleSel] && (
+            <SentenceEditor s={style.sentences[styleSel]} onClose={() => setStyleSel(null)} onApply={(r) => {
+              const st = style.sentences[styleSel];
+              void run(() => patch(`/content-blocks/${b.id}`, { text: b.text.slice(0, st.start) + r + b.text.slice(st.end), expectedVersionNo: b.versionNo, reason: 'Schreibstil' }), 'Satz korrigiert.');
+            }} />
+          )}
+        </div>
       ) : (
         <Md text={b.text} />
       )}
@@ -227,10 +260,22 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
       {b.justification && <p className="small muted">Begründung: {b.justification}</p>}
       {b.comment && <p className="small comment">💬 {b.comment}</p>}
       {mode === 'classify' && <ClassifyForm block={b} onDone={() => (setMode('view'), onChanged())} />}
+      {imageOpen && (
+        // Bild aus diesem Absatz (ADR-042): gespeicherte Bilder werden an den Absatz angehängt
+        <div onClick={(e) => e.stopPropagation()}>
+          <Modal title="Bild aus diesem Absatz erzeugen" wide onClose={() => setImageOpen(false)}>
+            <DiagramStudio initialText={b.text} canEdit={editable} showSample={false} onSaved={(saved) => {
+              setImageOpen(false);
+              void run(() => patch(`/content-blocks/${b.id}`, { text: `${b.text.trimEnd()}\n\n${saved.map((x) => x.markdown).join('\n\n')}`, expectedVersionNo: b.versionNo, reason: 'Bild eingefügt' }), `${saved.length} Bild(er) in den Absatz eingefügt.`);
+            }} />
+          </Modal>
+        </div>
+      )}
       {editable && mode === 'view' && (
         <div className="row-actions" onClick={(e) => e.stopPropagation()}>
           {!locked && <button className="btn small" onClick={() => setMode('edit')}>Bearbeiten</button>}
           {!locked && <button className="btn small" onClick={() => setMode('classify')}>Zuordnen</button>}
+          {!locked && <button className="btn small" onClick={() => setImageOpen(true)}>🎨 Bild erzeugen</button>}
           {!locked && canRewrite && !proposal && <button className="btn small" disabled={busy} onClick={requestRewrite}>{busy ? 'KI formuliert …' : '✨ KI-Vorschlag'}</button>}
           {!locked && prev && <button className="btn small" aria-label="nach oben" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { position: prev.position - 5 }), 'Verschoben.')}>↑</button>}
           {!locked && next && <button className="btn small" aria-label="nach unten" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { position: next.position + 5 }), 'Verschoben.')}>↓</button>}
@@ -246,6 +291,63 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
         </div>
       )}
     </article>
+  );
+}
+
+/** Stapelkorrektur Schreibstil (ADR-043): Vorschau je Absatz, Auswahl, Übernahme mit Versionsprüfung */
+function StyleBatch({ versionId, onClose, onChanged }: { versionId: string; onClose: () => void; onChanged: () => void }) {
+  const { notify } = useApp();
+  const [data, setData] = useState<any | null>(null);
+  const [chosen, setChosen] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const load = async () => {
+    try {
+      const r = await post<any>(`/style/chapter-versions/${versionId}/autofix`, {});
+      setData(r);
+      setChosen(r.blocks.filter((b: any) => !b.locked).map((b: any) => b.id));
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [versionId]);
+  const apply = async () => {
+    setBusy(true);
+    try {
+      const r = await post<any>(`/style/chapter-versions/${versionId}/autofix`, { apply: true, blocks: data.blocks.filter((b: any) => chosen.includes(b.id)).map((b: any) => ({ id: b.id, versionNo: b.versionNo })) });
+      notify(`${r.saved.length} Absatz/Absätze korrigiert${r.skipped.length ? `, ${r.skipped.length} übersprungen (${r.skipped.map((x: any) => x.reason).join('; ')})` : ''}.`);
+      onChanged();
+      onClose();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal title="Schreibstil: Kapitel automatisch korrigieren" wide onClose={onClose}>
+      {!data && <p className="small">Vorschau wird berechnet …</p>}
+      {data && !data.blocks.length && <Empty>Keine automatischen Korrekturen nötig.</Empty>}
+      {data && data.blocks.length > 0 && (
+        <>
+          <p className="small" role="status">{data.blocks.length} Absätze mit automatischen Korrekturen · {chosen.length} ausgewählt</p>
+          <ul className="plain style-batch">
+            {data.blocks.map((b: any) => (
+              <li key={b.id}>
+                <label className="inline"><input type="checkbox" disabled={b.locked} checked={chosen.includes(b.id)} onChange={() => setChosen(chosen.includes(b.id) ? chosen.filter((x) => x !== b.id) : [...chosen, b.id])} /> {b.section} · {b.applied} Korrektur(en){b.locked ? ' · gesperrt' : ''}</label>
+                <Diff a={b.before} b={b.after} />
+              </li>
+            ))}
+          </ul>
+          <div className="row-actions">
+            <button className="btn primary" disabled={busy || !chosen.length} onClick={apply}>Auswahl übernehmen ({chosen.length})</button>
+            <button className="btn" onClick={onClose}>Abbrechen</button>
+          </div>
+        </>
+      )}
+    </Modal>
   );
 }
 

@@ -192,6 +192,8 @@ export async function faqSuggestions(ctx: Ctx, limit = 20) {
 /** Bilder mit Titel, Alternativtexten und Verwendung (Quellen, Kapitelversionen) */
 export async function imageIndex(ctx: Ctx) {
   const assets = await ctx.db.all('SELECT * FROM media_assets WHERE project_id = ? ORDER BY created_at', ctx.projectId);
+  // PNG-Fassungen von SVG-Bildern (ADR-042) erscheinen nur, wenn sie selbst verwendet werden
+  const renditions = new Set(assets.map((a) => a.png_sha).filter(Boolean));
   const out = [];
   let n = 0;
   for (const a of assets) {
@@ -206,9 +208,10 @@ export async function imageIndex(ctx: Ctx) {
     );
     const alts = [...new Set([...snippets, ...blocks].flatMap((x) => imageRefs(String(x.text)).filter((r) => r.sha === a.sha256).map((r) => r.alt)))];
     const used = snippets.length + blocks.length > 0;
+    if (!used && renditions.has(a.sha256)) continue;
     out.push({
       number: used ? ++n : null, sha256: a.sha256, title: a.title ?? null, originalName: a.original_name ?? null, mime: a.mime, width: a.width ?? null, height: a.height ?? null,
-      byteSize: a.byte_size, createdAt: a.created_at, url: `/api/v1/media/${a.sha256}`, altTexts: alts, missingAlt: alts.includes(''),
+      byteSize: a.byte_size, createdAt: a.created_at, url: `/api/v1/media/${a.sha256}`, pngSha: a.png_sha ?? null, altTexts: alts, missingAlt: alts.includes(''),
       usedIn: {
         sources: snippets.map((s) => ({ seq: s.seq, chapter: s.chapter })),
         chapters: [...new Map(blocks.map((b) => [`${b.chapter_id}|${b.version_no}`, { chapterId: b.chapter_id, chapter: b.chapter, versionNo: b.version_no, status: b.status }])).values()],

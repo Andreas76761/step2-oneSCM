@@ -1064,5 +1064,33 @@
       "NFR-27",
       "NFR-28"
     ]
+  },
+  {
+    "id": "T-178",
+    "title": "Bilder: Darstellungsoptionen, Vorlagen, PNG-Fassung für Word, Bild im Kapitel und Word-Export mit SVG und PNG-Ersatz",
+    "file": "apps/server/test/stage15.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-29"
+    ]
+  },
+  {
+    "id": "T-179",
+    "title": "Schreibstil in der Werkstatt: Stilwert je Kapitel, Stapelkorrektur mit Vorschau, Versionsprüfung, gesperrte Absätze",
+    "file": "apps/server/test/stage15.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-30"
+    ]
+  },
+  {
+    "id": "T-225",
+    "title": "UI: Stil in der Werkstatt anzeigen und korrigieren, Stapelkorrektur, Bild aus Absatz mit PNG für Word, Diagramm nachbearbeiten, Vorlage, Screenshot markieren",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-29",
+      "NFR-30"
+    ]
   }
 ]

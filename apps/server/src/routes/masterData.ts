@@ -13,6 +13,7 @@ import { generateVariant, materializeVariant, variantChapters } from '../service
 import { applySync, syncPreview } from '../services/variantSync.js';
 import { badRequest, Problem } from '../problem.js';
 import { importMasterData } from '../services/masterDataImport.js';
+import { setRendition } from '../services/media.js';
 import { getSettings } from '../context.js';
 import { num, userOf } from './helpers.js';
 
@@ -137,5 +138,6 @@ export function masterDataRoutes(app: FastifyInstance, _ctx: Ctx) {
 
   // Bildverzeichnis
   app.get('/image-index', async (req) => (userOf(req.ctx, req), imageIndex(req.ctx)));
+  app.put<P<'mediaSha'> & { Body: { png?: unknown } }>('/media/:mediaSha/rendition', async (req) => setRendition(req.ctx, req.params.mediaSha, req.body?.png, userOf(req.ctx, req, 'edit').id));
   app.patch<P<'mediaSha'> & { Body: { title?: string | null } }>('/media/:mediaSha', async (req) => setMediaTitle(req.ctx, req.params.mediaSha, req.body?.title ?? null, userOf(req.ctx, req, 'edit')));
 }

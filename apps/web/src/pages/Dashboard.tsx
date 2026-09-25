@@ -6,6 +6,7 @@ export function DashboardPage() {
   const { ref, notify } = useApp();
   const dash = useLoad<any>('/dashboard');
   const chapters = useLoad<any[]>('/chapters');
+  const style = useLoad<any>('/style/chapters');
   const d = dash.data;
 
   const count = (type?: string, severity?: string) =>
@@ -55,6 +56,26 @@ export function DashboardPage() {
           <BarList label="Spartenabdeckung" rows={(ref?.divisions ?? []).map((r) => ({ key: r.code, label: <Badge item={r} />, value: d?.divisionCoverage.find((x: any) => x.code === r.code)?.n ?? 0 }))} />
         </Card>
       </div>
+      {style.data?.chapters.length > 0 && (
+        <Card title="Schreibstil je Kapitel" actions={<Link className="small" to="/schreibstil">Schreibstil →</Link>}>
+          <p className="small">Durchschnittlicher Stilwert: <strong>{style.data.average ?? '–'}/100</strong> · niedrigste Werte zuerst</p>
+          <table className="table compact">
+            <thead><tr><th>Kapitel</th><th>Stilwert</th><th>Sätze mit Problemen</th><th>automatisch korrigierbar</th><th>Version</th><th /></tr></thead>
+            <tbody>
+              {style.data.chapters.slice(0, 8).map((c: any) => (
+                <tr key={c.chapterId}>
+                  <td>{c.title}{c.variant && <span className="small muted"> (Variante)</span>}</td>
+                  <td><span className={`tag ${c.score >= 80 ? 'st-approved' : c.score >= 50 ? 'st-in_review' : 'st-failed'}`}>{c.score}</span></td>
+                  <td>{c.problemSentences}</td>
+                  <td>{c.fixable}</td>
+                  <td>V{c.versionNo} <Status s={c.status} /></td>
+                  <td><Link to={`/werkstatt/${c.chapterId}`} aria-label={`${c.title} in der Werkstatt öffnen`}>Werkstatt →</Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
       {d?.translations?.length > 0 && (
         <Card title="Übersetzungsstand" actions={<Link className="small" to="/uebersetzungen">Übersetzungen →</Link>}>
           <table className="table compact">

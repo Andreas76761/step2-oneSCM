@@ -7,7 +7,7 @@ import { sha256 } from '../domain/similarity.js';
 import { analyzeStyle, autoFix, PRESENT_RULES, RULE_LABEL, type StyleRule } from '../domain/style.js';
 import { LlmError } from '../llm.js';
 import { badRequest, Problem, unprocessable } from '../problem.js';
-import { getChapterVersion } from './chapters.js';
+import { getChapterVersion, patchBlock } from './chapters.js';
 import { assertIdsInProject } from './projects.js';
 
 export const MAX_TEXT = 20_000;
@@ -127,4 +127,74 @@ export async function checkSnippets(ctx: Ctx, q: { chapterId?: string; page?: nu
   const pageSize = Math.min(Math.max(q.pageSize ?? 25, 1), 100);
   const page = Math.max(q.page ?? 1, 1);
   return { total: list.length, checked: all.length, page, pageSize, items: list.slice((page - 1) * pageSize, page * pageSize) };
+}
+
+/** Stilwert je Kapitel (neueste Version) für Dashboard und Werkstatt (ADR-043); schlechteste zuerst */
+export async function chapterStyleSummary(ctx: Ctx) {
+  const opts = await options(ctx);
+  const versions = await ctx.db.all(
+    `SELECT c.id AS chapter_id, c.title, c.outline_family_id, v.id AS version_id, v.version_no, v.status FROM chapters c
+     JOIN generated_chapter_versions v ON v.chapter_id = c.id
+     WHERE c.project_id = ? AND v.version_no = (SELECT MAX(x.version_no) FROM generated_chapter_versions x WHERE x.chapter_id = c.id)`, ctx.projectId,
+  );
+  const out = [];
+  for (const v of versions) {
+    const blocks = await ctx.db.all("SELECT text FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NULL AND kind NOT IN ('gap', 'xref')", v.version_id);
+    let sentences = 0;
+    let weighted = 0;
+    let problems = 0;
+    let fixable = 0;
+    for (const b of blocks) {
+      const a = withLabels(analyzeStyle(b.text, opts));
+      sentences += a.sentences.length;
+      weighted += a.score * a.sentences.length;
+      problems += a.problemSentences;
+      fixable += a.fixable;
+    }
+    out.push({
+      chapterId: v.chapter_id as string, title: v.title as string, variant: !!v.outline_family_id, versionId: v.version_id as string, versionNo: v.version_no as number,
+      status: v.status as string, blocks: blocks.length, sentences, problemSentences: problems, fixable, score: sentences ? Math.round(weighted / sentences) : 100,
+    });
+  }
+  out.sort((a, b) => a.score - b.score || b.problemSentences - a.problemSentences || a.title.localeCompare(b.title));
+  const all = out.reduce((n, c) => n + c.sentences, 0);
+  return { chapters: out, average: all ? Math.round(out.reduce((n, c) => n + c.score * c.sentences, 0) / all) : null };
+}
+
+/**
+ * Stapelkorrektur eines Kapitelentwurfs (ADR-043): ohne `apply` Vorschau je Absatz (vorher/nachher, Anzahl Korrekturen);
+ * mit `apply` werden die gewählten Absätze über die normale Absatzbearbeitung gespeichert – nur, wenn ihre Version noch der
+ * Vorschau entspricht; gesperrte oder zwischenzeitlich geänderte Absätze werden übersprungen und gemeldet.
+ */
+export async function autofixChapterVersion(ctx: Ctx, versionId: string, input: { apply?: unknown; blocks?: unknown }, actor: string) {
+  const v = await getChapterVersion(ctx, versionId);
+  const opts = await options(ctx);
+  const preview = v.sections.flatMap((s) => s.blocks.filter((b: any) => b.kind !== 'gap' && b.kind !== 'xref').flatMap((b: any) => {
+    const r = autoFix(b.text, opts);
+    return r.text !== b.text ? [{ id: b.id as string, section: s.title, versionNo: b.versionNo as number, locked: b.mode === 'locked', before: b.text as string, after: r.text, applied: r.applied }] : [];
+  }));
+  if (input.apply !== true) return { version: { id: v.id, versionNo: v.versionNo, status: v.status, editable: v.status === 'draft' }, blocks: preview };
+  if (v.status !== 'draft') throw badRequest('Nur Entwürfe lassen sich korrigieren.');
+  if (!Array.isArray(input.blocks) || !input.blocks.length) throw badRequest('blocks (id, versionNo) ist Pflicht.');
+  const wanted = new Map((input.blocks as { id?: unknown; versionNo?: unknown }[]).map((b) => [String(b?.id), Number(b?.versionNo)]));
+  const saved: string[] = [];
+  const skipped: { id: string; reason: string }[] = [];
+  for (const [id, versionNo] of wanted) {
+    const p = preview.find((b) => b.id === id);
+    if (!p) skipped.push({ id, reason: 'keine Korrektur (mehr) nötig oder nicht in dieser Version' });
+    else if (p.locked) skipped.push({ id, reason: 'gesperrt' });
+    else if (p.versionNo !== versionNo) skipped.push({ id, reason: `zwischenzeitlich geändert (Version ${p.versionNo})` });
+    else {
+      // Zwischen Vorschau-Berechnung und Speichern geändert oder gesperrt: überspringen statt die Stapelkorrektur abzubrechen
+      try {
+        await patchBlock(ctx, id, { text: p.after, expectedVersionNo: versionNo, reason: 'Stapelkorrektur Schreibstil' }, actor);
+        saved.push(id);
+      } catch (e) {
+        if (!(e instanceof Problem) || e.status !== 409) throw e;
+        skipped.push({ id, reason: e.detail ?? 'Konflikt' });
+      }
+    }
+  }
+  await audit(ctx, actor, 'style.batch_fixed', 'chapter_version', v.id, { saved: saved.length, skipped: skipped.length });
+  return { saved, skipped };
 }

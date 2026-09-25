@@ -825,3 +825,103 @@ test('[T-224] Schreibstil: gelb markierte Sätze bearbeiten, korrigieren, Präse
   await page.goto('/stammdaten/bildverzeichnis');
   await expect(page.getByText('Prozessbild: Auftrag erfassen').or(page.locator('input[value="Prozessbild: Auftrag erfassen"]')).first()).toBeVisible();
 });
+
+test('[T-225] Werkstatt: Stil anzeigen und korrigieren, Stapelkorrektur, Bild aus Absatz mit PNG für Word; Diagramm nachbearbeiten, Vorlage, Screenshot markieren', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+  const md = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# 12. E2E-Stil\n\n## 12.1 Zweck\n\nDie Auftragsdaten wurden eigentlich gespeichert.\n\nDie Liste war leer.\n\nÖffnen Sie **Verkauf > Aufträge**. Klicken Sie auf **Speichern**.\n';
+  expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name: 'e2e_stil.md', mimeType: 'text/markdown', buffer: Buffer.from(md) } } })).status()).toBe(202);
+  let ch: any;
+  await expect.poll(async () => (ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '12. E2E-Stil'))).toBeTruthy();
+  expect((await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).ok()).toBe(true);
+
+  // Dashboard: Stilwert je Kapitel
+  await page.goto('/');
+  const styleCard = page.locator('.card', { has: page.getByRole('heading', { name: 'Schreibstil je Kapitel' }) });
+  await expect(styleCard.getByRole('row', { name: /12\. E2E-Stil/ })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Werkstatt: Stil anzeigen, gelben Satz direkt korrigieren
+  await page.goto(`/werkstatt/${ch.id}`);
+  await page.getByRole('button', { name: '🖋️ Stil anzeigen' }).click();
+  await expect(page.getByRole('status').filter({ hasText: /Schreibstil: \d+ von \d+ Absätzen mit Problemen/ })).toBeVisible();
+  const first = page.getByRole('article').filter({ hasText: 'Die Auftragsdaten wurden eigentlich gespeichert.' });
+  await first.locator('.style-sentence.warn').click();
+  await first.getByRole('button', { name: 'Alle Korrekturen im Satz' }).click();
+  expect(await axe()).toEqual([]);
+  await first.getByRole('button', { name: 'Übernehmen', exact: true }).click();
+  await expect(page.getByText('Satz korrigiert.')).toBeVisible();
+  await expect(page.getByRole('article').filter({ hasText: 'Die Auftragsdaten werden gespeichert.' })).toBeVisible();
+
+  // Stapelkorrektur mit Vorschau
+  await page.getByRole('button', { name: '🖋️ Stil korrigieren' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Schreibstil: Kapitel automatisch korrigieren' });
+  await expect(dlg.getByRole('status')).toContainText('1 Absätze mit automatischen Korrekturen');
+  expect(await axe()).toEqual([]);
+  await dlg.getByRole('button', { name: 'Auswahl übernehmen (1)' }).click();
+  await expect(page.getByText('1 Absatz/Absätze korrigiert.')).toBeVisible();
+  await expect(page.getByRole('article').filter({ hasText: 'Die Liste ist leer.' })).toBeVisible();
+
+  // Bild aus diesem Absatz: Klickstrecke erzeugen, speichern, einfügen; PNG-Fassung für Word
+  const clickBlock = page.getByRole('article').filter({ hasText: 'Klicken Sie auf Speichern' });
+  await clickBlock.getByRole('button', { name: '🎨 Bild erzeugen' }).click();
+  const imgDlg = page.getByRole('dialog', { name: 'Bild aus diesem Absatz erzeugen' });
+  await expect(imgDlg.getByRole('textbox', { name: 'Textstelle' })).toHaveValue(/Öffnen Sie \*\*Verkauf > Aufträge\*\*/);
+  await imgDlg.getByRole('button', { name: 'Bilder erzeugen' }).click();
+  await imgDlg.getByRole('checkbox', { name: 'Klickstrecke auswählen' }).check();
+  expect(await axe()).toEqual([]);
+  await imgDlg.getByRole('button', { name: 'Ausgewählte speichern (1)' }).click();
+  await expect(page.getByText('1 Bild(er) in den Absatz eingefügt.')).toBeVisible();
+  await expect(page.getByRole('img', { name: /^Klickstrecke: / })).toBeVisible();
+  // im Stilmodus: Bild genau einmal, kein Bild-Markdown als Text
+  await expect(page.getByRole('img', { name: /^Klickstrecke: / })).toHaveCount(1);
+  await expect(page.getByRole('article').filter({ hasText: 'Klicken Sie auf Speichern' })).not.toContainText('](media:');
+  const idx = await (await request.get('/api/v1/image-index', { headers: h })).json();
+  const svgItem = idx.find((i: any) => i.title?.startsWith('Klickstrecke: ') && i.usedIn.chapters.some((c: any) => c.chapterId === ch.id));
+  expect(svgItem).toMatchObject({ mime: 'image/svg+xml', pngSha: expect.stringMatching(/^[a-f0-9]{64}$/) });
+
+  // Bilder: Diagramm nachbearbeiten (Reihenfolge, Form), als Vorlage speichern und laden
+  await page.goto('/bilder');
+  await page.getByRole('button', { name: 'Beispiel einfügen' }).click();
+  await page.getByRole('button', { name: 'Bilder erzeugen' }).click();
+  await page.getByText(/Erkannte Struktur bearbeiten/).click();
+  await expect(page.getByRole('textbox', { name: 'Schritt 1', exact: true })).toHaveValue(/^Öffnen Sie/);
+  await page.getByRole('button', { name: 'Schritt 1 nach unten' }).click();
+  await expect(page.getByRole('textbox', { name: 'Schritt 2', exact: true })).toHaveValue(/^Öffnen Sie/);
+  await page.getByRole('combobox', { name: 'Form', exact: true }).selectOption('square');
+  await page.getByRole('button', { name: 'Neu zeichnen' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'manuell bearbeitet' })).toBeVisible();
+  await expect.poll(async () => decodeURIComponent((await page.locator('.diagram-card img').nth(2).getAttribute('src')) ?? '')).toContain('rx="0"');
+  await page.getByRole('textbox', { name: 'Name der Vorlage' }).fill('E2E Vorlage');
+  await page.getByRole('button', { name: 'Als Vorlage speichern' }).click();
+  await expect(page.getByText('Vorlage „E2E Vorlage“ gespeichert.')).toBeVisible();
+  await page.getByRole('combobox', { name: 'Vorlage', exact: true }).selectOption({ label: 'E2E Vorlage' });
+  await page.getByRole('button', { name: 'Vorlage laden' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'manuell bearbeitet' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Screenshot markieren: Nummern setzen, Rahmen ziehen, Legende, speichern
+  await page.getByRole('tab', { name: 'Screenshot markieren' }).click();
+  await page.getByTestId('screenshot-input').setInputFiles({ name: 'maske.png', mimeType: 'image/png', buffer: png(400, 200, [240, 240, 240]) });
+  const canvas = page.getByTestId('screenshot-canvas');
+  await expect(canvas).toBeVisible();
+  await canvas.click({ position: { x: 40, y: 30 } });
+  await canvas.click({ position: { x: 120, y: 60 } });
+  await page.getByRole('button', { name: '▭ Rahmen ziehen' }).click();
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + 150, box.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 250, box.y + 80, { steps: 4 });
+  await page.mouse.up();
+  await expect(canvas).toHaveAttribute('aria-label', 'Screenshot mit 2 Nummern und 1 Rahmen');
+  await page.getByLabel('Nummer 1 Beschreibung').fill('Menü Verkauf öffnen');
+  await page.getByRole('button', { name: '+ Nummer in Bildmitte' }).click();
+  await expect(page.getByLabel('Nummer 3 X in Prozent')).toHaveValue('50');
+  await page.getByLabel('Alternativtext (Pflicht)').fill('Maske mit markierten Klickpunkten');
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Screenshot speichern' }).click();
+  await expect(page.getByText('Screenshot gespeichert.')).toBeVisible();
+  await expect(page.locator('code', { hasText: /^!\[Maske mit markierten Klickpunkten\]\(media:[a-f0-9]{64}\)$/ })).toBeVisible();
+});

@@ -1,11 +1,12 @@
 // Bilder aus Text (ADR-041): Struktur regelbasiert oder über den KI-Dienst erkennen, Bildarten zeichnen (Farbe aus dem
 // Projekt-Layout) und ausgewählte Bilder als bereinigtes SVG in der Bildablage speichern (mit Titel fürs Bildverzeichnis).
 import { audit, type Ctx, type User } from '../context.js';
-import { DIAGRAM_KINDS, normalizeStructure, parseStructure, renderDiagrams, type DiagramKind, type DiagramStructure } from '../domain/diagrams.js';
+import { json, newId, now, parseJson } from '../db.js';
+import { DIAGRAM_KINDS, normalizeOptions, normalizeStructure, parseStructure, renderDiagrams, type DiagramKind, type DiagramStructure } from '../domain/diagrams.js';
 import { detectPrivacy } from '../domain/privacy.js';
 import { sha256 } from '../domain/similarity.js';
 import { LlmError } from '../llm.js';
-import { badRequest, Problem, unprocessable } from '../problem.js';
+import { badRequest, conflict, notFound, Problem, unprocessable } from '../problem.js';
 import { getLayout } from './layout.js';
 import { storeMedia } from './media.js';
 
@@ -29,7 +30,7 @@ function kindsOf(v: unknown): DiagramKind[] {
  * Bilder erzeugen. `structure` (vom Client bearbeitet) hat Vorrang vor der Erkennung; `useAi` nutzt den KI-Dienst,
  * sonst bzw. ohne KI-Dienst die Regeln. Speichert nichts.
  */
-export async function generateDiagrams(ctx: Ctx, input: { text?: unknown; kinds?: unknown; useAi?: unknown; structure?: unknown }, actor: string) {
+export async function generateDiagrams(ctx: Ctx, input: { text?: unknown; kinds?: unknown; useAi?: unknown; structure?: unknown; options?: unknown }, actor: string) {
   const kinds = kindsOf(input.kinds);
   let structure: DiagramStructure | null = null;
   let method: 'rules' | 'ai' | 'edited' = 'rules';
@@ -65,8 +66,8 @@ export async function generateDiagrams(ctx: Ctx, input: { text?: unknown; kinds?
       await audit(ctx, actor, 'diagram.structured', 'project', ctx.projectId, { ...provider, textHash: sha256(text), chars: text.length });
     } else structure = parseStructure(text);
   }
-  const color = (await getLayout(ctx)).primaryColor;
-  return { structure, method, provider, aiAvailable: !!ctx.llm, images: renderDiagrams(structure, kinds, color) };
+  const options = normalizeOptions(input.options, (await getLayout(ctx)).primaryColor);
+  return { structure, options, method, provider, aiAvailable: !!ctx.llm, images: renderDiagrams(structure, kinds, options) };
 }
 
 /** Ausgewähltes Bild speichern: SVG wird bereinigt abgelegt, Titel fürs Bildverzeichnis, Markdown zum Einfügen */
@@ -83,4 +84,42 @@ export async function saveDiagram(ctx: Ctx, input: { svg?: unknown; title?: unkn
     await audit(ctx, user.id, 'diagram.saved', 'media', m.sha, { kind, title });
   });
   return { sha256: m.sha, mime: m.mime, width: m.width, height: m.height, title, url: `/api/v1/media/${m.sha}`, markdown: `![${alt}](media:${m.sha})` };
+}
+
+// ---------- Vorlagen (ADR-042) ----------
+
+const template = (r: any) => ({
+  id: r.id as string, name: r.name as string, kinds: parseJson<string[]>(r.kinds, []), structure: parseJson(r.structure, null), options: parseJson(r.options, {}),
+  createdBy: r.created_by as string, createdAt: r.created_at as string,
+});
+
+export async function listDiagramTemplates(ctx: Ctx) {
+  return (await ctx.db.all('SELECT * FROM diagram_templates WHERE project_id = ? ORDER BY name', ctx.projectId)).map(template);
+}
+
+/** Struktur, Bildarten und Darstellung als benannte Vorlage speichern (gleicher Name ersetzt die Vorlage nicht, sondern wird abgelehnt) */
+export async function saveDiagramTemplate(ctx: Ctx, input: { name?: unknown; kinds?: unknown; structure?: unknown; options?: unknown }, user: User) {
+  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 120) : '';
+  if (!name) throw badRequest('name ist Pflicht.');
+  const structure = normalizeStructure(input.structure);
+  if (!structure) throw badRequest('structure enthält keine Schritte, Klicks oder Kennzahlen.');
+  const kinds = kindsOf(input.kinds);
+  const options = normalizeOptions(input.options, (await getLayout(ctx)).primaryColor);
+  if (await ctx.db.get('SELECT 1 FROM diagram_templates WHERE project_id = ? AND name = ?', ctx.projectId, name)) throw conflict(`Vorlage „${name}“ existiert bereits.`);
+  const id = newId('dtp');
+  await ctx.db.tx(async () => {
+    await ctx.db.run('INSERT INTO diagram_templates (id, project_id, name, kinds, structure, options, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      id, ctx.projectId, name, json(kinds), json(structure), json(options), user.id, now());
+    await audit(ctx, user.id, 'diagram.template_saved', 'diagram_template', id, { name });
+  });
+  return template(await ctx.db.get('SELECT * FROM diagram_templates WHERE id = ?', id));
+}
+
+export async function deleteDiagramTemplate(ctx: Ctx, id: string, user: User) {
+  const r = await ctx.db.get('SELECT id, name FROM diagram_templates WHERE id = ? AND project_id = ?', id, ctx.projectId);
+  if (!r) throw notFound(`Vorlage ${id}`);
+  await ctx.db.tx(async () => {
+    await ctx.db.run('DELETE FROM diagram_templates WHERE id = ?', id);
+    await audit(ctx, user.id, 'diagram.template_deleted', 'diagram_template', id, { name: r.name });
+  });
 }

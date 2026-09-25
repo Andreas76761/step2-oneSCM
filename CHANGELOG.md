@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.15.0 – Etappe 15 (25.09.2026)
+
+### Hinzugefügt
+- **Bilder in Word (ADR-042):** SVG-Bilder erhalten eine im Browser erzeugte PNG-Fassung; der Word-Export bettet SVG mit PNG-Ersatz ein statt nur den Alternativtext. Im Bildverzeichnis lassen sich fehlende PNG-Fassungen nachholen.
+- **Bild aus Absatz (ADR-042):** In der Kapitelwerkstatt „🎨 Bild erzeugen“ – Diagramm aus dem Absatztext erzeugen, auswählen und direkt an den Absatz anhängen.
+- **Diagramme nachbearbeiten (ADR-042):** Schritte sortieren, bearbeiten, Entscheidungen mit Ja/Nein; Farbe, Form, Schriftgröße, Stationen je Zeile; Vorlagen speichern, laden, löschen.
+- **Screenshots markieren (ADR-042):** Bildschirmfoto laden, nummerierte Klickpunkte und Rahmen einzeichnen, Legende pflegen, als PNG speichern.
+- **Schreibstil in der Werkstatt (ADR-043):** „🖋️ Stil anzeigen“ markiert problematische Sätze gelb direkt im Kapitel und korrigiert sie per Klick; „🖋️ Stil korrigieren“ als Stapelkorrektur mit Vorschau; Stilwert je Kapitel im Dashboard.
+- Migration `024_images_style.sql`; Tests T-178, T-179, E2E T-225 (axe); Anforderungen NFR-29, NFR-30.
+
+### Geändert
+- `POST /api/v1/diagrams/generate` akzeptiert `options` (color, shape, textSize, perRow) und liefert sie zurück.
+- Bildzeilen (`![…](media:…)`) werden bei der Stilprüfung nicht mehr als Sätze gewertet.
+
 ## 0.14.0 – Etappe 14 (25.09.2026)
 
 ### Hinzugefügt
