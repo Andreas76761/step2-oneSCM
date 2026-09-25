@@ -9,6 +9,8 @@ import { DashboardPage } from './pages/Dashboard';
 import { DuplicatesPage } from './pages/Duplicates';
 import { ExportPage } from './pages/Export';
 import { SearchPage } from './pages/Search';
+import { StylePage } from './pages/Style';
+import { DiagramsPage } from './pages/Diagrams';
 import { FilteredViewPage } from './pages/FilteredView';
 import { GeneratorPage } from './pages/Generator';
 import { OptimizationsPage } from './pages/Optimizations';
@@ -42,6 +44,8 @@ const NAV = [
   { to: '/generator', label: 'Kapitelgenerator', icon: '⚙️' },
   { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: '✏️' },
   { to: '/draft-manual', label: 'Draft Manual', icon: '📝' },
+  { to: '/schreibstil', label: 'Schreibstil', icon: '🖋️' },
+  { to: '/bilder', label: 'Bilder', icon: '🎨' },
   { to: '/rollen', label: 'Rollenansichten', icon: '👥' },
   { to: '/sparten', label: 'Spartenansichten', icon: '🚘' },
   { to: '/optimierungen', label: 'Optimierungen', icon: '✨' },
@@ -339,6 +343,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/hilfe/:contextKey" element={<ContextHelpPage />} />
             <Route path="/traceability" element={<TraceabilityPage />} />
             <Route path="/suche" element={<SearchPage />} />
+            <Route path="/schreibstil" element={<StylePage />} />
+            <Route path="/bilder" element={<DiagramsPage />} />
             <Route path="/projekte" element={<ProjectsPage onChanged={reloadProjects} />} />
             <Route path="/einstellungen" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" />} />

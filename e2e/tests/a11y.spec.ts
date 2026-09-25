@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 
 // WCAG 2.2 AA (ADR-016): automatische Prüfung der Hauptseiten
 const PAGES = ['/', '/quellen', '/cluster', '/widersprueche', '/dopplungen', '/generator', '/werkstatt', '/rollen', '/sparten', '/optimierungen',
-  '/terminologie', '/evidenz', '/freigabe', '/export', '/traceability', '/projekte', '/einstellungen', '/veroeffentlichung', '/aufgaben', '/uebersetzungen', '/analytik', '/assistent', '/integrationen', '/kontexthilfe', '/draft-manual', '/stammdaten/inhaltsverzeichnis', '/stammdaten/abkuerzungen', '/stammdaten/glossar', '/stammdaten/bildverzeichnis', '/stammdaten/faq', '/stammdaten/planung', '/suche?q=Vertrag'];
+  '/terminologie', '/evidenz', '/freigabe', '/export', '/traceability', '/projekte', '/einstellungen', '/veroeffentlichung', '/aufgaben', '/uebersetzungen', '/analytik', '/assistent', '/integrationen', '/kontexthilfe', '/draft-manual', '/stammdaten/inhaltsverzeichnis', '/stammdaten/abkuerzungen', '/stammdaten/glossar', '/stammdaten/bildverzeichnis', '/stammdaten/faq', '/stammdaten/planung', '/suche?q=Vertrag', '/schreibstil', '/bilder'];
 
 for (const path of PAGES) {
   test(`[T-208] WCAG 2.2 AA ohne Verstöße: ${path}`, async ({ page }) => {

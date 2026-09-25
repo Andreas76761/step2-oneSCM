@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.13.0
+  version: 0.14.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -41,6 +41,8 @@ tags:
   - name: Stammdaten
   - name: Draft Manual
   - name: Suche
+  - name: Schreibstil
+  - name: Bilder
   - name: System
 components:
   securitySchemes:
@@ -2483,6 +2485,103 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ rebuilt: [Bereiche] }' }
+  /style/check:
+    post:
+      operationId: checkStyle
+      summary: 'Text auf Stil, Grammatik und Zeitform prüfen – Sätze mit Position, Hinweisen und Korrekturvorschlägen (ADR-040)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-27]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ text, sentences: [{ start, end, text, issues: [{ rule, severity, message, start, end, fix? }] }], counts, score, rules, problemSentences, fixable }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /style/rewrite:
+    post:
+      operationId: rewriteStyle
+      summary: 'Text professionell umformulieren bzw. ins Präsens setzen (KI-Dienst, sonst Regelkorrekturen); speichert nichts (Berechtigung edit, ADR-040)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-27]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 }, mode: { type: string, enum: [professional, present, rules], default: professional } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ text, method: ai|rules, mode, provider, lostNumbers, analysis }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '422': { description: 'Übertragung an externen KI-Dienst gesperrt (personenbezogene Daten)' }
+        '502': { description: 'KI-Dienst nicht verfügbar oder Antwort unbrauchbar' }
+  /style/chapter-versions/{versionId}:
+    get:
+      operationId: checkChapterVersionStyle
+      summary: 'Absätze einer Kapitelversion prüfen; editable nur im Entwurf (ADR-040)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-27]
+      x-extension: true
+      parameters:
+        - { name: versionId, in: path, required: true, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ version: { id, chapterId, versionNo, status, title, editable }, summary, blocks: [{ id, section, kind, versionNo, text, analysis }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /style/snippets:
+    get:
+      operationId: checkSnippetStyle
+      summary: 'Aktuelle Textschnipsel eines Kapitels prüfen (nur lesen, ADR-040)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-27]
+      x-extension: true
+      parameters:
+        - { name: chapterId, in: query, required: true, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 100 } }
+        - { name: all, in: query, schema: { type: boolean, default: false }, description: 'auch Schnipsel ohne Hinweise' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, checked, page, pageSize, items: [{ id, seq, path, text, analysis }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /diagrams/generate:
+    post:
+      operationId: generateDiagrams
+      summary: 'Aus Text ASCII-Bild, Klickstrecke, Prozessbild und Infografik (SVG) erzeugen; Struktur per Regeln, KI (useAi, Berechtigung edit) oder bearbeitet (structure); speichert nichts (ADR-041)'
+      tags: [Bilder]
+      x-requirements: [NFR-28]
+      x-extension: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text: { type: string, maxLength: 8000 }
+                kinds: { type: array, items: { type: string, enum: [ascii, clickpath, process, infographic] } }
+                useAi: { type: boolean, default: false }
+                structure: { type: object, description: '{ title, steps: [string | { label, decision?, yes?, no? }], clicks: [string], facts: [{ label, value }] }' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ structure, method: rules|ai|edited, provider, aiAvailable, images: [{ kind, label, title, svg, ascii, warnings }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '422': { description: 'Übertragung an externen KI-Dienst gesperrt (personenbezogene Daten)' }
+        '502': { description: 'KI-Dienst nicht verfügbar oder Antwort unbrauchbar' }
+  /diagrams/save:
+    post:
+      operationId: saveDiagram
+      summary: 'Ausgewähltes Bild als bereinigtes SVG in der Bildablage speichern, mit Titel fürs Bildverzeichnis (Berechtigung edit, ADR-041)'
+      tags: [Bilder]
+      x-requirements: [NFR-28]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [svg, alt], properties: { svg: { type: string }, alt: { type: string, maxLength: 200 }, title: { type: string, maxLength: 300 }, kind: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ sha256, mime, width, height, title, url, markdown }' }
+        '400': { $ref: '#/components/responses/Problem' }
   /master-data/import:
     post:
       operationId: importMasterData

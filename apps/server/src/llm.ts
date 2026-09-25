@@ -3,6 +3,8 @@
 // Demo-Anbieter ohne Netzwerkzugriff (nur für Demo und Tests). Standard: keine Anbindung.
 import { extractiveAnswer } from './domain/assistant.js';
 import { extractPromptData } from './domain/rewrite.js';
+import { parseStructure } from './domain/diagrams.js';
+import { autoFix, PRESENT_RULES } from './domain/style.js';
 
 export type LlmProviderId = 'anthropic' | 'openai' | 'demo';
 
@@ -130,6 +132,16 @@ export class DemoProvider implements LlmProvider {
     if (qa.question && qa.passages) {
       const sentences = extractiveAnswer(qa.question, qa.passages.map((p) => ({ label: p.id, text: p.text, chapter: p.chapter, section: p.section })));
       return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
+    }
+    // Schreibstil (ADR-040): automatische Regelkorrekturen statt echter Umformulierung
+    const st = data as unknown as { task?: string; mode?: string; text?: string; terminology?: { preferred: string; avoid: string[] }[] };
+    if (st.task === 'style' && typeof st.text === 'string') {
+      const fixed = autoFix(st.text, st.mode === 'present' ? { rules: PRESENT_RULES } : { terms: st.terminology ?? [] }).text;
+      return { text: JSON.stringify({ text: fixed }), usage: { inputTokens: 0, outputTokens: 0 } };
+    }
+    // Bilder aus Text (ADR-041): regelbasierte Struktur statt echter Analyse
+    if (st.task === 'diagram' && typeof st.text === 'string') {
+      return { text: JSON.stringify(parseStructure(st.text)), usage: { inputTokens: 0, outputTokens: 0 } };
     }
     // Übersetzung (ADR-020): kennzeichnet den Text mit der Zielsprache statt wirklich zu übersetzen
     const tr = data as unknown as { targetLanguage?: string; sentences: { n: number; text: string }[] };

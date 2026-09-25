@@ -756,3 +756,62 @@ test('[T-223] Varianten abgleichen, Firmen-Layout mit Kontrastprüfung, Word-Exp
   await expect(page.locator('.search-hits li .tag').first()).toHaveText('Kapitel');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-224] Schreibstil: gelb markierte Sätze bearbeiten, korrigieren, Präsens; Bilder aus Text erzeugen, auswählen und speichern', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // Schreibstil: freies Textfeld
+  await page.goto('/');
+  await nav.getByRole('link', { name: 'Schreibstil' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Schreibstil');
+  await page.getByRole('textbox', { name: 'Text' }).fill('Die Daten wurden eigentlich gespeichert. Klicken Sie auf Speichern. Die Liste wird angezeigt werden.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.locator('.style-sentence.warn')).toHaveCount(2);
+  await expect(page.locator('.style-sentence.warn').first()).toHaveCSS('background-color', 'rgb(255, 243, 176)');
+  expect(await axe()).toEqual([]);
+  // gelb markierten Satz anklicken und einzeln korrigieren
+  await page.locator('.style-sentence.warn').first().click();
+  await page.getByRole('button', { name: 'Alle Korrekturen im Satz' }).click();
+  await expect(page.getByRole('textbox', { name: 'Satz' })).toHaveValue('Die Daten werden gespeichert.');
+  await page.getByRole('button', { name: 'Übernehmen', exact: true }).click();
+  await expect(page.locator('.style-sentence.warn')).toHaveCount(1);
+  // ins Präsens umwandeln (Demo-KI) und Vorschlag übernehmen
+  await page.getByRole('button', { name: 'In Präsens umwandeln' }).click();
+  await expect(page.getByRole('heading', { name: 'Nachher' })).toBeVisible();
+  await page.getByRole('button', { name: 'Vorschlag übernehmen' }).click();
+  await expect(page.getByRole('textbox', { name: 'Text' })).toHaveValue('Die Daten werden gespeichert. Klicken Sie auf Speichern. Die Liste wird angezeigt.');
+  await expect(page.locator('.style-sentence.warn')).toHaveCount(0);
+  // Textschnipsel der Quellen (nur prüfen)
+  await page.getByRole('tab', { name: 'Textschnipsel' }).click();
+  await page.getByLabel('Kapitel der Quellen').selectOption({ index: 1 });
+  await expect(page.getByRole('status').filter({ hasText: /Textschnipseln mit Hinweisen/ })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Bilder aus Text
+  await nav.getByRole('link', { name: 'Bilder' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Bilder');
+  await page.getByRole('button', { name: 'Beispiel einfügen' }).click();
+  await page.getByRole('button', { name: 'Bilder erzeugen' }).click();
+  await expect(page.getByRole('status').filter({ hasText: '4 Bild(er) erzeugt' })).toBeVisible();
+  await expect(page.locator('.diagram-card img')).toHaveCount(4);
+  await expect(page.locator('.diagram-card').first().getByText('ASCII-Text')).toBeVisible();
+  expect(await axe()).toEqual([]);
+  // Struktur bearbeiten und neu zeichnen
+  await page.getByText(/Erkannte Struktur bearbeiten/).click();
+  await page.getByRole('textbox', { name: 'Titel', exact: true }).fill('Auftrag erfassen');
+  await page.getByRole('button', { name: 'Neu zeichnen' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'manuell bearbeitet' })).toBeVisible();
+  await expect(page.locator('.diagram-card img').first()).toHaveAttribute('alt', /Auftrag erfassen/);
+  // Prozessbild und Klickstrecke auswählen und speichern
+  await page.getByRole('checkbox', { name: 'Prozessbild auswählen' }).check();
+  await page.getByRole('checkbox', { name: 'Klickstrecke auswählen' }).check();
+  await page.getByRole('button', { name: 'Ausgewählte speichern (2)' }).click();
+  await expect(page.getByText('2 Bild(er) gespeichert.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Gespeicherte Bilder' })).toBeVisible();
+  await expect(page.locator('code', { hasText: /^!\[Prozessbild: Auftrag erfassen\]\(media:[a-f0-9]{64}\)$/ })).toBeVisible();
+  await page.goto('/stammdaten/bildverzeichnis');
+  await expect(page.getByText('Prozessbild: Auftrag erfassen').or(page.locator('input[value="Prozessbild: Auftrag erfassen"]')).first()).toBeVisible();
+});
