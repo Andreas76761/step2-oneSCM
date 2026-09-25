@@ -161,6 +161,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.16 Stand nach Etappe 14 (25.09.2026)
+
+Umfang vom Auftraggeber am 25.09.2026 festgelegt: Navigationspunkte „Schreibstil“ (Regeln + KI; Textfeld, Kapitel, Textschnipsel) und „Bilder“ (Regeln + KI).
+
+| Punkt | Ergebnis |
+|---|---|
+| Schreibstil (NFR-27) | ✅ Regelprüfung mit Fundstellen, gelb markierte Sätze zum Bearbeiten, automatische Korrekturen, professionell umformulieren und Präsens über KI ([ADR-040](adr/ADR-040-schreibstil.md)) |
+| Bilder aus Text (NFR-28) | ✅ ASCII-Bild, Klickstrecke, Prozessbild, Infografik; Struktur bearbeitbar; auswählen und speichern ([ADR-041](adr/ADR-041-bilder-aus-text.md)) |
+
 ## 1.15 Stand nach Etappe 13 (24.09.2026)
 
 Umfang vom Auftraggeber am 24.09.2026 festgelegt: Varianten synchronisieren, Layout & Word-Export (mit Formatvorlagen), Volltextsuche.
@@ -181,4 +190,4 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: Draft Manual → Freigabe, Var
 | Bedienkomfort (NFR-22) | ✅ Drag & Drop, Gliederungsvergleich, globale Suche, Dunkelmodus, mobile Ansicht ([ADR-035](adr/ADR-035-bedienkomfort.md)) |
 | Betrieb & Pflege (NFR-23) | ✅ entfernte Quelldateien, bereinigtes SVG, Stammdaten-Import CSV/Excel, Planungserinnerungen ([ADR-036](adr/ADR-036-betrieb-pflege.md)) |
 
-Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL war durch Einzelabfragen langsamer als über SQLite (in Etappe 9 auf das 1,7-Fache von SQLite verringert); Confluence wurde über den HTML-Export angebunden (seit Etappe 10 auch über die Cloud-API); gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten. Etappe 10: Die Release-Pipeline läuft erst mit dem ersten Tag in GitHub (lokal nur Build/Start des Images in der CI geprüft); das Widget zeigt öffentlich nur Release-Stände; SVG-Grafiken werden nicht übernommen. Etappe 11: Gliederungen haben zwei Ebenen (Kapitel, Unterkapitel). Etappe 12: Der Tag `v0.11.0` muss von einer berechtigten Person gesetzt werden (die Sitzung darf nur den Arbeitsbranch pushen). Etappe 13: Aus Word-Vorlagen werden nur Formatvorlagen übernommen (keine Kopf-/Fußzeilen der Vorlage); SVG/WebP erscheinen in Word als Alternativtext; der Variantenabgleich erkennt umbenannte Einträge verschiedener Gliederungen nicht.
+Bekannte Grenzen (Etappe 6): Rate-Limits gelten je Instanz; die Qualitätsanalyse wächst bei sehr großen Beständen stärker als linear (ADR-015); eine manuelle Screenreader-Prüfung steht aus (ADR-016). Etappe 8: Import über PostgreSQL war durch Einzelabfragen langsamer als über SQLite (in Etappe 9 auf das 1,7-Fache von SQLite verringert); Confluence wurde über den HTML-Export angebunden (seit Etappe 10 auch über die Cloud-API); gelöschte Dateien eines Git-Repositories bleiben als Quelle erhalten. Etappe 10: Die Release-Pipeline läuft erst mit dem ersten Tag in GitHub (lokal nur Build/Start des Images in der CI geprüft); das Widget zeigt öffentlich nur Release-Stände; SVG-Grafiken werden nicht übernommen. Etappe 11: Gliederungen haben zwei Ebenen (Kapitel, Unterkapitel). Etappe 12: Der Tag `v0.11.0` muss von einer berechtigten Person gesetzt werden (die Sitzung darf nur den Arbeitsbranch pushen). Etappe 13: Aus Word-Vorlagen werden nur Formatvorlagen übernommen (keine Kopf-/Fußzeilen der Vorlage); SVG/WebP erscheinen in Word als Alternativtext; der Variantenabgleich erkennt umbenannte Einträge verschiedener Gliederungen nicht. Etappe 14: Die Stilregeln sind heuristisch (Passiv wird erkannt, nicht automatisch aktiviert); die Bilderkennung ist regelbasiert für typische Handbuchtexte; erzeugte SVG-Bilder erscheinen in Word als Alternativtext.

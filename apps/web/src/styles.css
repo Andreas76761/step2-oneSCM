@@ -439,3 +439,27 @@ ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px
 .sync-snippet { display: flex; gap: 8px; align-items: flex-start; padding: 4px 0; border-top: 1px dashed var(--border); }
 .sync-snippet .flag { margin-left: 6px; }
 .error-text { color: var(--danger); font-weight: 600; }
+
+/* Schreibstil (ADR-040): gelb = Problem, gepunktet unterstrichen = Hinweis */
+.style-text { white-space: pre-wrap; line-height: 1.8; }
+.style-sentence { font: inherit; color: inherit; background: none; border: 0; padding: 0; text-align: left; }
+button.style-sentence { cursor: pointer; }
+.style-sentence.warn { background: #fff3b0; color: #1f2937; border-radius: 3px; box-shadow: 0 0 0 1px #e0c200 inset; }
+.style-sentence.info { text-decoration: underline dotted var(--warn); text-underline-offset: 3px; }
+.style-sentence.selected { outline: 2px solid var(--primary); outline-offset: 1px; }
+button.style-sentence:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.style-issues { list-style: none; padding: 0; margin: 0 0 10px; display: flex; flex-direction: column; gap: 6px; }
+.style-issues li { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.style-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
+.style-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 1000px) { .style-layout, .style-compare { grid-template-columns: 1fr; } }
+
+/* Bilder aus Text (ADR-041) */
+.diagram-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; margin: 10px 0; }
+.diagram-card.selected { outline: 3px solid var(--primary); outline-offset: -1px; }
+.diagram-preview { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 6px; overflow: auto; max-height: 520px; }
+.diagram-preview img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.diagram-ascii { font-family: Consolas, 'Courier New', monospace; font-size: 12px; line-height: 1.3; overflow: auto; max-height: 320px; background: #f6f8fa; color: #1f2937; padding: 8px; border-radius: 6px; }
+ul.plain { list-style: none; padding-left: 0; }
+ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .diagram-grid { grid-template-columns: 1fr; } }

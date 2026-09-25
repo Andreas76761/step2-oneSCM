@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.14.0 – Etappe 14 (25.09.2026)
+
+### Hinzugefügt
+- **Schreibstil (ADR-040):** neuer Navigationspunkt – Texte aus Textfeld, Kapitelentwürfen oder Textschnipseln prüfen (Präsens, Passiv, „man“, Füllwörter, Wortdopplungen, Zeichensetzung, Groß-/Kleinschreibung, Umgangssprache, Rechtschreibung, Abkürzungen, lange Sätze, Terminologie); problematische Sätze gelb markiert und per Klick bearbeitbar; automatisch korrigieren; professionell umformulieren bzw. ins Präsens umwandeln über den KI-Dienst (ohne KI mit Regelkorrekturen); Kapitelabsätze im Entwurf direkt speichern.
+- **Bilder aus Text (ADR-041):** neuer Navigationspunkt – aus einer Textstelle ASCII-Bild, Klickstrecke, Prozessbild und Infografik (SVG in der Hausfarbe) erzeugen; Struktur per Regeln oder KI erkennen und bearbeiten; Bilder auswählen und mit Alternativtext speichern (Bildverzeichnis, „Bild einfügen“, Exporte), SVG herunterladen, ASCII kopieren.
+- Tests T-176, T-177, E2E T-224 (axe auf /schreibstil und /bilder); Anforderungen NFR-27, NFR-28.
+
 ## 0.13.0 – Etappe 13 (24.09.2026)
 
 ### Hinzugefügt

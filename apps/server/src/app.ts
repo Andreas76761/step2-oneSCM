@@ -30,6 +30,7 @@ import { assistantRoutes } from './routes/assistant.js';
 import { integrationRoutes } from './routes/integrations.js';
 import { contextHelpRoutes, publicHelpRoutes } from './routes/contextHelp.js';
 import { masterDataRoutes } from './routes/masterData.js';
+import { styleRoutes } from './routes/style.js';
 import { APP_VERSION } from './version.js';
 import { deliverWebhook, failWebhookDelivery } from './services/webhooks.js';
 import { ensureDailyJob, runDailySnapshots } from './services/analytics.js';
@@ -234,6 +235,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       integrationRoutes(api, ctx);
       contextHelpRoutes(api, ctx);
       masterDataRoutes(api, ctx);
+      styleRoutes(api, ctx);
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
     },

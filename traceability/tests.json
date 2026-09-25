@@ -1036,5 +1036,33 @@
       "NFR-25",
       "NFR-26"
     ]
+  },
+  {
+    "id": "T-176",
+    "title": "Schreibstil: Regelprüfung mit Fundstellen, automatische Korrekturen, Präsens, KI-Umformulierung, Kapitel und Textschnipsel",
+    "file": "apps/server/test/stage14.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-27"
+    ]
+  },
+  {
+    "id": "T-177",
+    "title": "Bilder aus Text: Struktur, ASCII-Bild, Klickstrecke, Prozessbild, Infografik, KI-Struktur, Speichern im Bildverzeichnis",
+    "file": "apps/server/test/stage14.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-28"
+    ]
+  },
+  {
+    "id": "T-224",
+    "title": "UI: Schreibstil mit gelb markierten Sätzen, Korrektur und Präsens; Bilder aus Text erzeugen, bearbeiten, auswählen und speichern",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-27",
+      "NFR-28"
+    ]
   }
 ]
