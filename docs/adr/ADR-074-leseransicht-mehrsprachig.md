@@ -10,7 +10,7 @@ Seit Etappe 24 erscheinen Kapitel in der gewählten Sprache, die Beschriftungen 
 - **Was Leser sehen, folgt der Lesesprache:** Inhaltsverzeichnis, Suche, Lesezeichen/Verlauf, Hinweise „neu/geändert“, Rückfall-Hinweis, Schritte-Zähler, Rückmeldung, „Siehe auch“ und FAQ, Notiz. Bedienelemente der Redaktion („Verweise bearbeiten“, „Entwürfe einblenden“) und die App-Navigation bleiben deutsch. Jeder Bereich trägt das passende `lang`-Attribut (WCAG 3.1.2).
 - **Hinweis-Beschriftungen im Kapiteltext** („Tipp:“, „Achtung:“) folgen der Sprache des *gezeigten Textes* – bei deutschem Rückfall also deutsch, passend zu den Abschnittstiteln.
 - **Druck:** Deckblatt (Benutzerhandbuch, Stand, Kapitel, Veröffentlicht), Inhaltsverzeichnis, „Siehe auch: Kapitel 4 „…““ mit landesüblichen Anführungszeichen, FAQ- und Glossar-Anhang, Rückfall-Hinweis, Kopfzeile („für Rolle“) und **„Seite X von Y“** in der Druck-Sprache; Datumsformat der Sprache.
-- **Online-Hilfe:** Beschriftungen gab es in fünf Sprachen; für die übrigen Projektsprachen jetzt englisch statt deutsch.
+- **Online-Hilfe:** Beschriftungen gab es in fünf Sprachen; für die übrigen Projektsprachen jetzt englisch statt deutsch. Die angefragte *Inhaltssprache* bleibt davon getrennt und in Assistent, Rückmeldung und „Siehe auch“-Links erhalten (z. B. `language=nl`).
 
 ## Konsequenzen
 - Neue Beschriftungen der Leseransicht werden im Wörterbuch für alle fünf Sprachen ergänzt (TypeScript erzwingt vollständige Einträge).

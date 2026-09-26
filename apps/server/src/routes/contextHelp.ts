@@ -44,6 +44,11 @@ const LABELS: Record<string, Record<string, string>> = {
   it: { see: 'Vedi anche', faq: 'Domande frequenti', fb: 'È stato utile?', yes: 'Sì', no: 'No', comment: 'Cosa manca? (facoltativo)', thanks: 'Grazie per il riscontro.', limit: 'Troppi riscontri: riprovare più tardi.', help: 'Guida oneSCM', ask: 'Chiedi all’assistente', send: 'Chiedi', sources: 'Fonti', open: 'Apri nel manuale', fallback: 'Non ancora tradotto: viene mostrata la versione tedesca.', none: 'Non c’è ancora una guida pubblicata per questa schermata.', version: 'Versione' },
 };
 const label = (lang: string) => LABELS[lang] ?? LABELS.de;
+/** Inhaltssprache wie angefragt (bleibt in Formularen und Links erhalten); Beschriftungen in fünf Sprachen, übrige englisch (ADR-074) */
+function embedLanguages(requested: string) {
+  const lang = /^[a-z]{2}$/.test(requested) ? requested : 'de';
+  return { lang, ui: LABELS[lang] ? lang : lang === 'de' ? 'de' : 'en' };
+}
 /** anonyme Rückmeldungen je Stunde und Adresse (ADR-061) */
 const FEEDBACK_MAX = Number(process.env.HELP_FEEDBACK_MAX ?? 10);
 
@@ -59,7 +64,10 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #f59e
 details{border:1px solid #cbd5e1;border-radius:6px;padding:4px 8px;margin:4px 0}summary{cursor:pointer;font-weight:600;min-height:24px}.see ul{margin:4px 0;padding-left:20px}.see li{min-height:24px}`;
 
 interface EmbedState {
+  /** angefragte Inhaltssprache – bleibt in Formularen und Links erhalten */
   lang: string;
+  /** Sprache der Beschriftungen (fünf Sprachen, übrige englisch, ADR-074) */
+  ui: string;
   help: ResolvedHelp | null;
   question?: string;
   answer?: Awaited<ReturnType<typeof ask>>;
@@ -76,7 +84,7 @@ interface EmbedState {
 function seeAlso(s: EmbedState) {
   const h = s.help;
   if (!h || (!h.related.length && !h.faq.length)) return '';
-  const l = label(s.lang);
+  const l = label(s.ui);
   const q = new URLSearchParams(Object.entries({ role: s.role, division: s.division, language: s.lang === 'de' ? undefined : s.lang }).filter(([, v]) => v) as [string, string][]);
   const base = s.action.replace(/\/[^/]*$/, '');
   const link = (r: { title: string; contextKey: string | null }) => (r.contextKey
@@ -86,7 +94,7 @@ ${h.faq.length ? `<section aria-labelledby="faq-h"><h2 id="faq-h">${escapeHtml(l
 }
 
 function embedPage(s: EmbedState) {
-  const l = label(s.lang);
+  const l = label(s.ui);
   const h = s.help;
   const hidden = (n: string, v?: string) => (v ? `<input type="hidden" name="${n}" value="${escapeHtml(v)}">` : '');
   const answer = s.answer
@@ -99,12 +107,12 @@ function embedPage(s: EmbedState) {
   const body = h
     ? `<h1>${escapeHtml(h.title)}</h1>
 <p class="meta">${escapeHtml(l.version)} ${escapeHtml(h.release?.version ?? String(h.versionNo))}${deep}</p>
-${h.fallback ? `<p class="meta" lang="${escapeHtml(s.lang)}"><strong>${escapeHtml(l.fallback)}</strong></p>` : ''}
-<div${h.fallback ? ' lang="de"' : ''}>${h.html}</div>
+${h.fallback ? `<p class="meta"><strong>${escapeHtml(l.fallback)}</strong></p>` : ''}
+<div lang="${escapeHtml(h.fallback ? 'de' : h.language)}">${h.html}</div>
 ${seeAlso(s)}`
     : `<h1>${escapeHtml(l.help)}</h1><p>${escapeHtml(l.none)}</p>`;
   return `<!doctype html>
-<html lang="${escapeHtml(s.lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="${escapeHtml(s.ui)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(h?.title ?? l.help)}</title><style>${EMBED_CSS}</style></head>
 <body><main>${body}
 ${h ? `<form method="post" action="${escapeHtml(s.action)}">
@@ -157,8 +165,7 @@ export async function publicHelpRoutes(app: FastifyInstance, base: Ctx, embedOri
       reply.header('Content-Security-Policy', csp).header('Content-Type', 'text/html; charset=utf-8').header('Cache-Control', 'no-store');
       const project = /^[\w-]{1,80}$/.test(projectId) ? await base.db.get('SELECT id, help_public, archived_at FROM projects WHERE id = ?', projectId) : undefined;
       const ctx = project?.help_public ? withProject(base, project.id) : null;
-      // Beschriftungen: fünf Sprachen vollständig, übrige Projektsprachen englisch (wie die Leseransicht, ADR-074)
-      const state: EmbedState = { lang: LABELS[lang] ? lang : /^[a-z]{2}$/.test(lang) && lang !== 'de' ? 'en' : 'de', help: null, action: `/help/embed/${encodeURIComponent(projectId)}/${encodeURIComponent(contextKey)}`, role, division, appUrl: base.config.notify.appUrl };
+      const state: EmbedState = { ...embedLanguages(lang), help: null, action: `/help/embed/${encodeURIComponent(projectId)}/${encodeURIComponent(contextKey)}`, role, division, appUrl: base.config.notify.appUrl };
       // nicht freigeschaltet und unbekannt sind nicht unterscheidbar
       if (!ctx) return reply.code(404).send(embedPage(state));
       try {
@@ -194,7 +201,7 @@ export async function publicHelpRoutes(app: FastifyInstance, base: Ctx, embedOri
       reply.header('Content-Security-Policy', csp).header('Content-Type', 'text/html; charset=utf-8').header('Cache-Control', 'no-store');
       const project = /^[\w-]{1,80}$/.test(projectId) ? await base.db.get('SELECT id, help_public FROM projects WHERE id = ?', projectId) : undefined;
       const ctx = project?.help_public ? withProject(base, project.id) : null;
-      const state: EmbedState = { lang: LABELS[lang] ? lang : 'de', help: null, action: `/help/embed/${encodeURIComponent(projectId)}/${encodeURIComponent(contextKey)}`, role, division, appUrl: base.config.notify.appUrl };
+      const state: EmbedState = { ...embedLanguages(lang), help: null, action: `/help/embed/${encodeURIComponent(projectId)}/${encodeURIComponent(contextKey)}`, role, division, appUrl: base.config.notify.appUrl };
       if (!ctx) return reply.code(404).send(embedPage(state));
       try {
         state.help = await resolveHelp(ctx, contextKey, { role, division, language: lang }, 'release');

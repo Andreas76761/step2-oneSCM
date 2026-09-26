@@ -37,8 +37,14 @@ export async function requestTranslation(ctx: Ctx, input: { chapterId?: unknown;
     count = Number((await ctx.db.get('SELECT COUNT(*) AS n FROM translation_requests WHERE project_id = ? AND chapter_id = ? AND language = ?', ctx.projectId, chapterId, language))?.n ?? 0);
     if (!fresh.changes) return;
     await audit(ctx, user.id, 'translation.requested', 'chapter', chapterId, { language, count });
-    // erster Wunsch: Hinweis im Kapitel an Autorin/Autor und Einreichende der neuesten Fassung (wie Leser-Rückmeldungen)
-    if (count === 1) {
+    // erster Wunsch: Hinweis im Kapitel an Autorin/Autor und Einreichende der neuesten Fassung (wie Leser-Rückmeldungen).
+    // „Erster“ entscheidet das Einfügen der Hinweis-Zeile je Kapitel und Sprache – nicht die Zählung, die bei gleichzeitigen
+    // Wünschen verschiedener Personen in beiden Transaktionen 1 ergeben kann
+    const first = await ctx.db.run(
+      'INSERT INTO translation_request_notices (project_id, chapter_id, language, created_at) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING',
+      ctx.projectId, chapterId, language, now(),
+    );
+    if (first.changes) {
       const v = await ctx.db.get('SELECT generated_by, submitted_by FROM generated_chapter_versions WHERE chapter_id = ? ORDER BY version_no DESC LIMIT 1', chapterId);
       const to = [v?.generated_by, v?.submitted_by].filter((x): x is string => typeof x === 'string' && x !== 'system' && x !== user.id);
       const name = LANGUAGES[language] ?? language;

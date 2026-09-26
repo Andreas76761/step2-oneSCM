@@ -1429,7 +1429,7 @@
   },
   {
     "id": "T-206",
-    "title": "Online-Hilfe: Beschriftungen in der Sprache, übrige Projektsprachen englisch",
+    "title": "Online-Hilfe: Beschriftungen in der Sprache, übrige Projektsprachen englisch; angefragte Inhaltssprache bleibt in Formularen erhalten",
     "file": "apps/server/test/stage25.test.ts",
     "level": "api",
     "requirements": [

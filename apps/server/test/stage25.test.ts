@@ -46,15 +46,18 @@ describe('Etappe 25', () => {
       // dieselbe Person erneut: zählt einmal; weitere Personen zählen
       expect((await call('POST', '/reader/translation-requests', { chapterId: a.chapterId, language: 'en' }, 'u-leser')).json.count).toBe(1);
       expect((await call('POST', '/reader/translation-requests', { chapterId: a.chapterId, language: 'en' }, 'u-fachpruefung')).json.count).toBe(2);
-      await call('POST', '/reader/translation-requests', { chapterId: b.chapterId, language: 'fr' }, 'u-leser');
+      // gleichzeitige erste Wünsche verschiedener Personen: genau ein Hinweis an die Redaktion
+      await Promise.all(['u-leser', 'u-fachpruefung', 'u-admin'].map((u) => call('POST', '/reader/translation-requests', { chapterId: b.chapterId, language: 'fr' }, u)));
+      const noticesB = (await call('GET', '/notifications', undefined, 'u-redaktion')).json;
+      expect((noticesB.items ?? noticesB).filter((n: any) => n.type === 'translation_request' && n.text.includes('Auftrag anlegen'))).toHaveLength(1);
       // eigene Wünsche in /reader/me
       expect((await call('GET', '/reader/me', undefined, 'u-leser')).json.translationRequests).toEqual(expect.arrayContaining([{ chapterId: a.chapterId, language: 'en' }, { chapterId: b.chapterId, language: 'fr' }]));
       // Übersicht: meistgewünschte zuerst
       const list = (await call('GET', '/translation-requests')).json;
-      expect(list.map((r: any) => [r.title, r.language, r.count, r.state])).toEqual([['Lieferschein drucken', 'en', 2, 'missing'], ['Auftrag anlegen', 'fr', 1, 'missing']]);
+      expect(list.map((r: any) => [r.title, r.language, r.count, r.state])).toEqual([['Auftrag anlegen', 'fr', 3, 'missing'], ['Lieferschein drucken', 'en', 2, 'missing']]);
       // Übersetzung in Arbeit, dann freigegeben: Wunsch erledigt, Anfragende benachrichtigt
       const trId = await translate(call, a.chapterId, 'en', 'Print delivery note');
-      expect((await call('GET', '/translation-requests')).json[0]).toMatchObject({ chapterId: a.chapterId, state: 'in_progress' });
+      expect((await call('GET', '/translation-requests')).json.find((r: any) => r.chapterId === a.chapterId)).toMatchObject({ state: 'in_progress' });
       expect((await call('POST', `/translations/${trId}/approve`, { comment: 'ok' }, 'u-freigabe')).status).toBe(200);
       expect((await call('GET', '/translation-requests')).json.map((r: any) => r.chapterId)).toEqual([b.chapterId]);
       expect((await call('GET', '/translation-requests?all=true')).json.find((r: any) => r.chapterId === a.chapterId).state).toBe('done');
@@ -87,6 +90,15 @@ describe('Etappe 25', () => {
       const nl = await page('nl');
       expect(nl).toContain('Was this helpful?');
       expect(nl).toContain('Not yet translated – German version shown.');
+      expect(nl).toContain('<html lang="en">');
+      expect(nl).toContain('<div lang="de">');
+      // die angefragte Inhaltssprache bleibt in Formularen (Assistent, Rückmeldung) erhalten – nicht die Beschriftungssprache
+      expect(nl.match(/<input type="hidden" name="language" value="nl">/g)).toHaveLength(2);
+      expect(nl).not.toContain('name="language" value="en"');
+      // Rückmeldung aus der niederländischen Hilfe: Seite bleibt niederländisch angefragt
+      const fb = await built.app.inject({ method: 'POST', url: '/help/embed/p_default/ls.print/feedback', payload: 'helpful=1&language=nl', headers: { 'content-type': 'application/x-www-form-urlencoded' } });
+      expect(fb.body).toContain('Thank you for your feedback.');
+      expect(fb.body).toContain('name="language" value="nl"');
     } finally {
       await built.app.close();
     }
