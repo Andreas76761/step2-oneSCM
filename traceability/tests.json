@@ -1313,5 +1313,43 @@
       "NFR-50",
       "NFR-51"
     ]
+  },
+  {
+    "id": "T-197",
+    "title": "Kapitelvorlagen duplizieren (auch mitgelieferte), exportieren und in ein anderes Projekt importieren",
+    "file": "apps/server/test/stage22.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-54"
+    ]
+  },
+  {
+    "id": "T-198",
+    "title": "Leseransicht: Suche über freigegebene Kapitel (optional Entwürfe) mit Ausschnitt; Glossar aus Terminologie und Abkürzungen",
+    "file": "apps/server/test/stage22.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-53"
+    ]
+  },
+  {
+    "id": "T-232",
+    "title": "Leseransicht: Suche mit Hervorhebung, Glossar-Erklärungen; Druck je Rolle im Firmen-Layout mit Glossar; Vorlagen kopieren, exportieren, importieren (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-52",
+      "NFR-53",
+      "NFR-54"
+    ]
+  },
+  {
+    "id": "T-199",
+    "title": "Schnelles Laden: vorkomprimierte Dateien je Accept-Encoding, Assets ein Jahr gecacht, index.html immer geprüft",
+    "file": "apps/server/test/stage22.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-55"
+    ]
   }
 ]

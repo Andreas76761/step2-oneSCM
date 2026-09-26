@@ -1,5 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
-import Markdown, { defaultUrlTransform } from 'react-markdown';
+import { Suspense, createContext, lazy, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { ApiError, download, get, mediaUrl, post } from '../api';
 
 // ---------- Referenzdaten & Benachrichtigungen ----------
@@ -45,16 +44,22 @@ export function useLoad<T>(path: string | null, deps: unknown[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // nur die Antwort der jüngsten Anfrage übernehmen: wechselt der Pfad (z. B. andere Variante), darf eine spät
+  // eintreffende ältere Antwort den neuen Stand nicht überschreiben
+  const latest = useRef(0);
   const load = useCallback(async () => {
     if (!path) return;
+    const id = ++latest.current;
     setLoading(true);
     try {
-      setData(await get<T>(path));
+      const result = await get<T>(path);
+      if (id !== latest.current) return;
+      setData(result);
       setError(null);
     } catch (e) {
-      setError(errorText(e));
+      if (id === latest.current) setError(errorText(e));
     } finally {
-      setLoading(false);
+      if (id === latest.current) setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, ...deps]);
@@ -196,24 +201,6 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
   );
 }
 
-/** Bild aus der Medienablage; externe Bilder werden nicht geladen (nur Alternativtext, wie im Export) */
-function MdImage({ src, alt }: { src?: string; alt?: string }) {
-  const sha = /^media:([a-f0-9]{64})$/.exec(src ?? '')?.[1];
-  const [url, setUrl] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    if (!sha) return;
-    let alive = true;
-    mediaUrl(sha).then((u) => alive && setUrl(u), () => alive && setFailed(true));
-    return () => {
-      alive = false;
-    };
-  }, [sha]);
-  if (!alt) return <span className="md-img-missing-alt" role="img" aria-label="Bild ohne Alternativtext">⚠️ Bild ohne Alternativtext</span>;
-  if (!sha || failed) return <span className="md-img-alt">[Bild: {alt}]</span>;
-  return url ? <img className="md-img" src={url} alt={alt} loading="lazy" /> : <span className="md-img-alt" aria-busy="true">[Bild: {alt}]</span>;
-}
-
 /** Bild hochladen und als Markdown-Verweis einfügen; Alternativtext ist Pflicht (Barrierefreiheit, ADR-029) */
 export function ImageInsert({ onInsert }: { onInsert: (markdown: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -254,12 +241,15 @@ export function ImageInsert({ onInsert }: { onInsert: (markdown: string) => void
   );
 }
 
-/** Markdown-Vorschau ohne HTML-Ausführung (kein rehype-raw, §13). */
-export const Md = ({ text }: { text: string }) => (
-  <div className="md">
-    <Markdown skipHtml urlTransform={(url) => (url.startsWith('media:') ? url : defaultUrlTransform(url))} components={{ img: ({ src, alt }) => <MdImage src={typeof src === 'string' ? src : undefined} alt={alt} /> }}>{text}</Markdown>
-  </div>
-);
+/** Markdown-Vorschau ohne HTML-Ausführung (kein rehype-raw, §13) – Renderer wird nachgeladen (Code-Splitting) */
+let markdownModule: Promise<typeof import('./Markdown')> | null = null;
+/** Renderer laden (einmal); die Druckansicht wartet darauf, bevor sie das Drucken freigibt */
+export const preloadMarkdown = () => (markdownModule ??= import('./Markdown'));
+const MarkdownView = lazy(preloadMarkdown);
+export function Md({ text }: { text: string }) {
+  // bis der Renderer geladen ist: Text unformatiert, damit nichts springt oder fehlt
+  return <Suspense fallback={<div className="md md-pending">{text}</div>}><MarkdownView text={text} /></Suspense>;
+}
 
 export const ErrorBox = ({ error }: { error: string | null }) => (error ? <div className="alert error" role="alert">{error}</div> : null);
 export const Empty = ({ children }: { children: ReactNode }) => <div className="empty">{children}</div>;

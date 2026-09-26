@@ -1,9 +1,11 @@
 // Leseransicht (ADR-054): das Handbuch so lesen, wie Endnutzer es sehen – Inhaltsverzeichnis, Schritte zum Abhaken,
 // Hinweise hervorgehoben – und je Kapitel „War das hilfreich?“ beantworten.
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { api, currentProjectId, post } from '../api';
-import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { api, currentProjectId, get, mediaUrl, post } from '../api';
+import { GlossText, GlossaryProvider, type GlossaryEntry } from '../components/Glossary';
+import { Card, Empty, ErrorBox, Md, Page, errorText, preloadMarkdown, useApp, useLoad } from '../components/ui';
+import { matches } from './FilteredView';
 
 const CALLOUT: Record<string, { icon: string; label: string }> = {
   tip: { icon: '💡', label: 'Tipp' },
@@ -13,11 +15,11 @@ const CALLOUT: Record<string, { icon: string; label: string }> = {
 // Verwaltungsabschnitt und Lückenhinweise gehören nicht in die Leseransicht
 const HIDDEN_SECTIONS = new Set(['status']);
 
-/** **fett** und `Code` innerhalb einer Zeile */
-function inline(t: string): ReactNode[] {
+/** **fett** und `Code` innerhalb einer Zeile; Glossarbegriffe (ADR-066) beim ersten Vorkommen in `seen` markiert */
+function inline(t: string, seen: Set<string>): ReactNode[] {
   return t.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) =>
-    part.startsWith('**') && part.endsWith('**') ? <strong key={i}>{part.slice(2, -2)}</strong>
-      : part.startsWith('`') && part.endsWith('`') ? <code key={i}>{part.slice(1, -1)}</code> : part);
+    part.startsWith('**') && part.endsWith('**') ? <strong key={i}><GlossText text={part.slice(2, -2)} seen={seen} /></strong>
+      : part.startsWith('`') && part.endsWith('`') ? <code key={i}>{part.slice(1, -1)}</code> : <GlossText key={i} text={part} seen={seen} />);
 }
 
 const storeKey = (versionId: string) => `onescm.reader.done.${versionId}`;
@@ -52,13 +54,14 @@ function StepList({ versionId, blockId, text }: { versionId: string; blockId: st
     }
   };
   if (!items.length) return <Md text={text} />;
+  const seen = new Set<string>();
   return (
     <>
-      {intro.length > 0 && <p>{inline(intro.join(' '))}</p>}
+      {intro.length > 0 && <p>{inline(intro.join(' '), seen)}</p>}
       <ol className="reader-steps">
         {items.map((t, i) => (
           <li key={i} className={done.includes(i) ? 'done' : ''}>
-            <label><input type="checkbox" checked={done.includes(i)} onChange={() => toggle(i)} /> <span>{inline(t)}</span></label>
+            <label><input type="checkbox" checked={done.includes(i)} onChange={() => toggle(i)} /> <span>{inline(t, seen)}</span></label>
           </li>
         ))}
       </ol>
@@ -107,14 +110,21 @@ function Feedback({ chapterId, versionId }: { chapterId: string; versionId: stri
   );
 }
 
+/** Sichtbare Abschnitte: ohne Verwaltung und Lücken; mit Rolle nur allgemeine und passende Inhalte (wie Rollenansichten) */
+export function readerSections(version: any, role?: string) {
+  return version.sections.filter((s: any) => !HIDDEN_SECTIONS.has(s.code))
+    .map((s: any) => ({ ...s, blocks: s.blocks.filter((b: any) => b.kind !== 'gap' && (!role || matches(b, [role], []))) }))
+    .filter((s: any) => s.blocks.length);
+}
+
 /** Kapitelinhalt in Lesedarstellung (Leseransicht und Druckansicht) */
-export function ChapterContent({ version }: { version: any }) {
+export function ChapterContent({ version, role }: { version: any; role?: string }) {
   return (
     <>
-      {version.sections.filter((s: any) => !HIDDEN_SECTIONS.has(s.code) && s.blocks.some((b: any) => b.kind !== 'gap')).map((s: any) => (
+      {readerSections(version, role).map((s: any) => (
         <section key={s.code} className="reader-section">
           <h3>{s.title}</h3>
-          {s.blocks.filter((b: any) => b.kind !== 'gap').map((b: any) => {
+          {s.blocks.map((b: any) => {
             if (CALLOUT[b.kind]) return <div key={b.id} className={`callout ${b.kind}`}><strong><span aria-hidden="true">{CALLOUT[b.kind].icon}</span> {CALLOUT[b.kind].label}:</strong> <Md text={b.text} /></div>;
             if (s.code === 'steps' && b.kind === 'list') return <StepList key={b.id} versionId={version.id} blockId={b.id} text={b.text} />;
             return <Md key={b.id} text={b.text} />;
@@ -125,59 +135,167 @@ export function ChapterContent({ version }: { version: any }) {
   );
 }
 
+/** Glossar für Leseransicht und Druck (Terminologie mit Definition und Abkürzungen) */
+export const useReaderGlossary = () => useLoad<GlossaryEntry[]>('/reader/glossary');
+
+const HIGHLIGHT = 'reader-search';
+/**
+ * Suchwörter im Kapitel hervorheben (CSS Custom Highlight API, ADR-066): keine DOM-Änderung, daher unabhängig von React;
+ * Browser ohne Unterstützung zeigen das Kapitel ohne Markierung. Liefert die Zahl der Treffer.
+ */
+function useHighlight(root: React.RefObject<HTMLElement | null>, words: string[], key: string) {
+  const [count, setCount] = useState(0);
+  useLayoutEffect(() => {
+    const reg = (window as any).CSS?.highlights;
+    const HighlightCtor = (window as any).Highlight;
+    if (!root.current || !words.length) {
+      reg?.delete(HIGHLIGHT);
+      setCount(0);
+      return;
+    }
+    const ranges: Range[] = [];
+    const walker = document.createTreeWalker(root.current, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      if ((n.parentElement?.closest('.reader-feedback, .no-print, [role="tooltip"]'))) continue;
+      const text = (n.nodeValue ?? '').toLocaleLowerCase('de');
+      for (const w of words) {
+        for (let i = text.indexOf(w); i >= 0; i = text.indexOf(w, i + w.length)) {
+          const r = document.createRange();
+          r.setStart(n, i);
+          r.setEnd(n, i + w.length);
+          ranges.push(r);
+        }
+      }
+    }
+    setCount(ranges.length);
+    if (reg && HighlightCtor) reg.set(HIGHLIGHT, new HighlightCtor(...ranges));
+    ranges[0]?.startContainer.parentElement?.scrollIntoView({ block: 'center' });
+    return () => reg?.delete(HIGHLIGHT);
+  }, [root, words.join(' '), key]);
+  return count;
+}
+
+/** Ausschnitt mit markierten Suchwörtern */
+function Marked({ text, words }: { text: string; words: string[] }) {
+  if (!words.length) return <>{text}</>;
+  const re = new RegExp(`(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+  return <>{text.split(re).map((p, i) => (i % 2 ? <mark key={i}>{p}</mark> : p))}</>;
+}
+
 export function ReaderPage() {
   const { chapterId } = useParams();
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const chapters = useLoad<any[]>('/chapters');
+  const glossary = useReaderGlossary();
   const [drafts, setDrafts] = useState(false);
-  const [filter, setFilter] = useState('');
+  const [query, setQuery] = useState(params.get('q') ?? '');
+  const [search, setSearch] = useState<{ q: string; words: string[]; total: number; results: any[] } | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const article = useRef<HTMLElement>(null);
+  // Suche beim Tippen (ab zwei Zeichen, kurz verzögert); Treffer ersetzen das Inhaltsverzeichnis
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setSearch(null);
+      setSearchError(null);
+      return;
+    }
+    let alive = true;
+    const t = setTimeout(() => {
+      get<any>(`/reader/search?q=${encodeURIComponent(q)}${drafts ? '&drafts=true' : ''}`)
+        .then((r) => alive && (setSearch(r), setSearchError(null)), (e) => alive && setSearchError(errorText(e)));
+    }, 250);
+    return () => {
+      alive = false;
+      clearTimeout(t);
+    };
+  }, [query, drafts]);
   // je Kapitel die anzuzeigende Version: freigegeben, sonst (mit „Entwürfe einblenden“) die neueste
   const list = useMemo(() => (chapters.data ?? []).map((c) => {
     // „Entwürfe einblenden“: jeweils die neueste Version (Vorschau); sonst die freigegebene
     const shown = drafts ? c.versions[0] : c.versions.find((v: any) => v.status === 'approved');
     return shown ? { id: c.id as string, title: c.title as string, version: shown, draft: shown.status !== 'approved' } : null;
   }).filter((x): x is NonNullable<typeof x> => !!x), [chapters.data, drafts]);
-  const visible = list.filter((c) => c.title.toLowerCase().includes(filter.trim().toLowerCase()));
   const current = list.find((c) => c.id === chapterId) ?? null;
   const version = useLoad<any>(current ? `/chapter-versions/${current.version.id}` : null, [current?.version.id]);
   const idx = current ? list.indexOf(current) : -1;
+  // Hervorhebung: Suchwörter aus dem Link (?q=) – bleiben beim Blättern erhalten, bis sie entfernt werden
+  const marked = useMemo(() => [...new Set((params.get('q') ?? '').toLocaleLowerCase('de').split(/\s+/).filter((w) => w.length >= 2))], [params]);
+  const hits = useHighlight(article, version.data ? marked : [], `${version.data?.id ?? ''}.${glossary.data?.length ?? 0}`);
+  const withQ = (id: string) => `/lesen/${id}${params.get('q') ? `?q=${encodeURIComponent(params.get('q')!)}` : ''}`;
   return (
+    <GlossaryProvider entries={glossary.data}>
     <Page title="Leseransicht" subtitle="Das Handbuch so lesen, wie Ihre Leserinnen und Leser es sehen"
       actions={<span className="no-print row-actions">
         {current && <button className="btn" onClick={() => window.print()}>🖨️ Kapitel drucken</button>}
-        <Link className="btn" to={`/lesen/druck${drafts ? '?entwuerfe=1' : ''}`}>📄 Ganzes Handbuch drucken</Link>
+        <Link className="btn" to={`/lesen/druck${drafts ? '?entwuerfe=1' : ''}`}>📄 Handbuch drucken</Link>
       </span>}>
       <ErrorBox error={chapters.error} />
       <div className="reader">
         <nav className="reader-toc card no-print" aria-label="Inhaltsverzeichnis">
-          <h2>Inhalt</h2>
-          <label className="block">Kapitel filtern <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="z. B. Vertrag" /></label>
+          <div role="search" className="reader-search">
+            <label className="reader-search-label" htmlFor="reader-q">Im Handbuch suchen</label>
+            <div className="reader-search-row">
+              <input id="reader-q" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="z. B. Lieferschein drucken"
+                aria-describedby="reader-q-status" autoComplete="off" />
+              {query && <button type="button" className="btn small ghost" onClick={() => setQuery('')} aria-label="Suche leeren">✕</button>}
+            </div>
+            <p id="reader-q-status" className="small muted" aria-live="polite">
+              {searchError ?? (search ? (search.total ? `${search.total} Kapitel gefunden` : `Nichts gefunden zu „${search.q}“ – anderes Wort versuchen`) : '')}
+            </p>
+          </div>
           <label className="inline small"><input type="checkbox" checked={drafts} onChange={(e) => setDrafts(e.target.checked)} /> Entwürfe einblenden</label>
-          {chapters.data && !list.length && <p className="small muted">Noch keine freigegebenen Kapitel. {drafts ? '' : 'Blenden Sie Entwürfe ein, um sie vorab zu lesen.'}</p>}
-          <ol className="plain">
-            {visible.map((c) => (
-              <li key={c.id}>
-                <Link to={`/lesen/${c.id}`} aria-current={c.id === chapterId ? 'page' : undefined} className={c.id === chapterId ? 'active' : ''}>{c.title}</Link>
-                {c.draft && <span className="tag small">Entwurf</span>}
-              </li>
-            ))}
-          </ol>
-        </nav>
-        <article className="reader-body card" aria-label={current?.title ?? 'Kapitel'}>
-          {!current ? <Empty>Wählen Sie links ein Kapitel.</Empty> : !version.data ? <ErrorBox error={version.error} /> : (
+          {search ? (
+            <ol className="plain reader-results" aria-label="Suchergebnisse">
+              {search.results.map((r) => (
+                <li key={r.chapterId}>
+                  <Link to={`/lesen/${r.chapterId}?q=${encodeURIComponent(search.q)}`} aria-current={r.chapterId === chapterId ? 'page' : undefined} className={r.chapterId === chapterId ? 'active' : ''}>
+                    <Marked text={r.title} words={search.words} />
+                  </Link>
+                  {r.draft && <span className="tag small">Entwurf</span>}
+                  {r.snippet && <p className="small muted"><Marked text={r.snippet} words={search.words} /></p>}
+                </li>
+              ))}
+            </ol>
+          ) : (
             <>
+              <h2>Inhalt</h2>
+              {chapters.data && !list.length && <p className="small muted">Noch keine freigegebenen Kapitel. {drafts ? '' : 'Blenden Sie Entwürfe ein, um sie vorab zu lesen.'}</p>}
+              <ol className="plain">
+                {list.map((c) => (
+                  <li key={c.id}>
+                    <Link to={withQ(c.id)} aria-current={c.id === chapterId ? 'page' : undefined} className={c.id === chapterId ? 'active' : ''}>{c.title}</Link>
+                    {c.draft && <span className="tag small">Entwurf</span>}
+                  </li>
+                ))}
+              </ol>
+            </>
+          )}
+          {glossary.data && glossary.data.length > 0 && <p className="small muted">Unterstrichene Begriffe erklären sich per Klick oder Maus.</p>}
+        </nav>
+        <article ref={article} className="reader-body card" aria-label={current?.title ?? 'Kapitel'}>
+          {!current ? <Empty>Wählen Sie links ein Kapitel{search ? ' aus den Suchergebnissen' : ''}.</Empty> : !version.data ? <ErrorBox error={version.error} /> : (
+            <>
+              {marked.length > 0 && (
+                <p className="reader-marked no-print" role="status">
+                  {hits ? `${hits} Treffer für „${params.get('q')}“ markiert.` : `„${params.get('q')}“ kommt in diesem Kapitel nicht vor.`}{' '}
+                  <button type="button" className="btn small ghost" onClick={() => { params.delete('q'); setParams(params); }}>Markierung entfernen</button>
+                </p>
+              )}
               <h2 className="reader-title">{current.title}{current.draft && <span className="tag small">Entwurf – noch nicht freigegeben</span>}</h2>
               <ChapterContent version={version.data} />
               <Feedback chapterId={current.id} versionId={version.data.id} />
               <div className="row-actions reader-nav no-print">
-                {idx > 0 && <button className="btn" onClick={() => navigate(`/lesen/${list[idx - 1].id}`)}>← {list[idx - 1].title}</button>}
-                {idx >= 0 && idx < list.length - 1 && <button className="btn" onClick={() => navigate(`/lesen/${list[idx + 1].id}`)}>{list[idx + 1].title} →</button>}
+                {idx > 0 && <button className="btn" onClick={() => navigate(withQ(list[idx - 1].id))}>← {list[idx - 1].title}</button>}
+                {idx >= 0 && idx < list.length - 1 && <button className="btn" onClick={() => navigate(withQ(list[idx + 1].id))}>{list[idx + 1].title} →</button>}
               </div>
             </>
           )}
         </article>
       </div>
     </Page>
+    </GlossaryProvider>
   );
 }
 
@@ -220,69 +338,167 @@ function DoneButton({ id, title, onDone }: { id: string; title: string; onDone: 
   );
 }
 
-/** Druckansicht (ADR-060): ganzes Handbuch mit Inhaltsverzeichnis, je Kapitel neue Seite – über den Browser als PDF speichern */
+/** „3. Titel“ – Titel, die schon mit einer Nummer beginnen (z. B. „4. Vertragsbearbeitung“), bleiben unverändert */
+const numbered = (n: number, title: string) => (/^\d+(\.\d+)*\.?\s/.test(title) ? title : `${n}. ${title}`);
+
+/** Firmenlogo aus der Medienablage (Layout, ADR-038) */
+function Logo({ sha, alt, onDone }: { sha: string; alt: string; onDone: () => void }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    // fehlt das Bild, wird ohne Logo gedruckt – aber erst, wenn das feststeht
+    mediaUrl(sha).then((u) => alive && setUrl(u), () => alive && onDone());
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sha]);
+  return url ? <img className="print-cover-logo" src={url} alt={alt} onLoad={onDone} onError={onDone} /> : null;
+}
+
+/**
+ * Druckansicht (ADR-060, ADR-063, ADR-065): ganzes Handbuch oder eine Handbuch-Variante, optional nur für eine Rolle –
+ * Deckblatt im Firmen-Layout, Inhaltsverzeichnis, je Kapitel neue Seite, Glossar der vorkommenden Begriffe; PDF über den Browser.
+ */
 export function PrintPage() {
-  const drafts = new URLSearchParams(window.location.search).has('entwuerfe');
-  const chapters = useLoad<any[]>('/chapters');
+  const [params, setParams] = useSearchParams();
+  const drafts = params.has('entwuerfe');
+  const outlineId = params.get('variante') ?? '';
+  const role = params.get('rolle') ?? '';
+  const { ref } = useApp();
+  const outlines = useLoad<any>('/outlines');
+  const variants = (outlines.data?.items ?? []).filter((o: any) => o.latest);
+  const chapters = useLoad<any>(outlineId ? `/outlines/${outlineId}/chapters` : '/chapters', [outlineId]);
+  const glossary = useReaderGlossary();
+  const layout = useLoad<any>('/layout');
   const [versions, setVersions] = useState<any[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const setParam = (k: string, v: string) => {
+    if (v) params.set(k, v);
+    else params.delete(k);
+    setParams(params, { replace: true });
+  };
   useEffect(() => {
-    if (!chapters.data) return;
-    const shown = chapters.data.map((c) => (drafts ? c.versions[0] : c.versions.find((v: any) => v.status === 'approved'))).filter(Boolean);
-    Promise.all(shown.map((v: any) => api<any>('GET', `/chapter-versions/${v.id}`))).then(setVersions).catch((e) => setError(errorText(e)));
-  }, [chapters.data, drafts]);
+    const list: any[] | undefined = outlineId ? chapters.data?.chapters : chapters.data;
+    if (!list) return;
+    setVersions(null);
+    // Antworten einer inzwischen abgewählten Variante/Einstellung verwerfen – sonst stünde das falsche Handbuch unter dem Titel
+    let current = true;
+    const shown = list.map((c) => (drafts ? c.versions[0] : c.versions.find((v: any) => v.status === 'approved'))).filter(Boolean);
+    Promise.all(shown.map((v: any) => api<any>('GET', `/chapter-versions/${v.id}`)))
+      .then((v) => current && setVersions(v), (e) => current && setError(errorText(e)));
+    return () => {
+      current = false;
+    };
+  }, [chapters.data, drafts, outlineId]);
+  // mit Rolle: Kapitel ohne passenden Inhalt entfallen
+  const printed = (versions ?? []).filter((v) => readerSections(v, role || undefined).length);
   const date = new Date().toLocaleDateString('de-DE');
   const projects = useLoad<any[]>('/projects');
   const releases = useLoad<any[]>('/releases');
   const project = projects.data?.find((p) => p.id === currentProjectId()) ?? projects.data?.[0];
   const release = releases.data?.[0];
-  // Deckblatt (ADR-063): Titel, Stand und Version – bei Entwürfen immer „Arbeitsstand“, da nicht veröffentlicht
-  const edition = !drafts && release ? `Version ${release.version}` : 'Arbeitsstand';
-  const bookTitle = project?.name ?? 'Benutzerhandbuch';
-  // Drucken erst, wenn Kapitel UND Deckblattangaben geladen sind – sonst entstünde ein PDF mit Ersatztitel/„Arbeitsstand“
-  const ready = !!versions && !!projects.data && !!releases.data;
+  const lay = layout.data;
+  const variant = variants.find((o: any) => o.id === outlineId);
+  const roleLabel = role ? ref?.roles.find((r) => r.code === role)?.label ?? role : '';
+  // Deckblatt (ADR-063): Titel, Stand und Version – bei Entwürfen und Varianten „Arbeitsstand“ (Releases gelten dem Standardhandbuch)
+  const edition = !drafts && !outlineId && release ? `Version ${release.version}` : 'Arbeitsstand';
+  const bookTitle = variant?.name ?? project?.name ?? 'Benutzerhandbuch';
+  // Drucken erst, wenn Kapitel, Deckblattangaben, Markdown-Renderer und Logo bereit sind – sonst entstünde ein PDF mit
+  // Ersatzangaben, unformatiertem Text oder ohne Logo
+  const [markdownReady, setMarkdownReady] = useState(false);
+  const [logoDone, setLogoDone] = useState(false);
   useEffect(() => {
-    // Kopfzeile der gedruckten Seiten: @page-Randboxen erben keine Variablen, daher als eigener Stilblock
+    preloadMarkdown().then(() => setMarkdownReady(true), () => setMarkdownReady(true));
+  }, []);
+  useEffect(() => setLogoDone(false), [layout.data?.logoSha]);
+  const ready = !!versions && !!projects.data && !!releases.data && !!layout.data && !!outlines.data && markdownReady && (!layout.data?.logoSha || logoDone);
+  const print = async () => {
+    // letzte Absicherung: warten, bis kein Text mehr auf den Renderer wartet (höchstens 3 s)
+    for (let i = 0; i < 60 && document.querySelector('.print-book .md-pending'); i++) await new Promise((r) => setTimeout(r, 50));
+    window.print();
+  };
+  const header = [lay?.headerText || [lay?.companyName, bookTitle].filter(Boolean).join(' · '), edition, roleLabel && `für ${roleLabel}`].filter(Boolean).join(' · ');
+  useEffect(() => {
+    // Kopf-/Fußzeile der gedruckten Seiten: @page-Randboxen erben keine Variablen, daher als eigener Stilblock
+    // Deckblatt ohne Kopfzeile: die :first-Regel muss nach der allgemeinen stehen, sonst gewinnt Chrome die spätere
     const style = document.createElement('style');
     style.dataset.printHeader = '';
-    // Deckblatt ohne Kopfzeile: die :first-Regel muss nach der allgemeinen stehen, sonst gewinnt Chrome die spätere
-    style.textContent = `@page { @top-center { content: ${JSON.stringify(`${bookTitle} · ${edition}`)}; } } @page :first { @top-center { content: none; } }`;
+    const footer = lay?.footerText ? ` @bottom-left { content: ${JSON.stringify(lay.footerText)}; font-size: 9pt; color: #555; }` : '';
+    style.textContent = `@page { @top-center { content: ${JSON.stringify(header)}; }${footer} } @page :first { @top-center { content: none; } @bottom-left { content: none; } }`;
     document.head.appendChild(style);
     return () => style.remove();
-  }, [bookTitle, edition]);
+  }, [header, lay?.footerText]);
+  // Glossar-Anhang: nur Begriffe, die im gedruckten Text vorkommen
+  const usedGlossary = useMemo(() => {
+    if (!glossary.data?.length || !printed.length) return [];
+    const text = printed.flatMap((v) => readerSections(v, role || undefined).flatMap((s: any) => s.blocks.map((b: any) => b.text))).join('\n');
+    return glossary.data.filter((g) => new RegExp(`(?<![\\p{L}\\p{N}])${g.term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}])`, g.kind === 'abbreviation' ? 'u' : 'iu').test(text))
+      .sort((a, b) => a.term.localeCompare(b.term, 'de'));
+  }, [glossary.data, printed, role]);
+  const accent = lay?.primaryColor ?? undefined;
   return (
-    <Page title="Handbuch drucken" subtitle={`${drafts ? 'Freigegebene Kapitel und Entwürfe' : 'Freigegebene Kapitel'} · Stand ${date}`}
+    <GlossaryProvider entries={glossary.data}>
+    <Page title="Handbuch drucken" subtitle={`${variant ? `Variante „${variant.name}“` : 'Standardhandbuch'}${roleLabel ? ` für ${roleLabel}` : ''} · ${drafts ? 'freigegebene Kapitel und Entwürfe' : 'freigegebene Kapitel'} · Stand ${date}`}
       actions={<span className="no-print row-actions">
         <Link className="btn" to="/lesen">← Leseransicht</Link>
-        <button className="btn primary" disabled={!ready} onClick={() => window.print()}>🖨️ Drucken / als PDF speichern</button>
+        <button className="btn primary" disabled={!ready} onClick={() => void print()}>🖨️ Drucken / als PDF speichern</button>
       </span>}>
-      <ErrorBox error={error ?? chapters.error ?? projects.error ?? releases.error} />
-      <p className="small muted no-print">Tipp: Im Druckdialog „Als PDF speichern“ wählen. Das Handbuch beginnt mit einem Deckblatt; jedes Kapitel beginnt auf einer neuen Seite, unten steht „Seite X von Y“. Schritte erscheinen mit Kästchen zum Abhaken.</p>
-      {!versions ? <p className="muted">Lade …</p> : !versions.length ? <Empty>Noch keine freigegebenen Kapitel.</Empty> : (
-        <div className="print-book">
+      <ErrorBox error={error ?? chapters.error ?? projects.error ?? releases.error ?? layout.error} />
+      <div className="filters no-print" role="group" aria-label="Was drucken?">
+        <label className="inline">Handbuch
+          <select value={outlineId} onChange={(e) => setParam('variante', e.target.value)}>
+            <option value="">Standardhandbuch (alle Kapitel)</option>
+            {variants.map((o: any) => <option key={o.id} value={o.id}>Variante: {o.name}</option>)}
+          </select>
+        </label>
+        <label className="inline">Für Rolle
+          <select value={role} onChange={(e) => setParam('rolle', e.target.value)}>
+            <option value="">alle Rollen</option>
+            {(ref?.roles ?? []).filter((r) => r.code !== 'all').map((r) => <option key={r.code} value={r.code}>{r.label}</option>)}
+          </select>
+        </label>
+        <label className="inline"><input type="checkbox" checked={drafts} onChange={(e) => setParam('entwuerfe', e.target.checked ? '1' : '')} /> Entwürfe mitdrucken</label>
+      </div>
+      <p className="small muted no-print">Tipp: Im Druckdialog „Als PDF speichern“ wählen. Das Handbuch beginnt mit einem Deckblatt{lay?.companyName || lay?.logoSha ? ' im Firmen-Layout' : ''}; jedes Kapitel beginnt auf einer neuen Seite, unten steht „Seite X von Y“. Mit einer Rolle erscheinen nur allgemeine und für diese Rolle bestimmte Inhalte.</p>
+      {!versions ? <p className="muted">Lade …</p> : !printed.length ? <Empty>{versions.length && role ? `Keine Inhalte für die Rolle „${roleLabel}“.` : 'Noch keine freigegebenen Kapitel.'}</Empty> : (
+        <div className="print-book" style={accent ? ({ '--print-accent': accent } as React.CSSProperties) : undefined}>
           <section className="print-cover" aria-label="Deckblatt">
-            <p className="print-cover-kicker">Benutzerhandbuch</p>
+            {lay?.logoSha && <Logo sha={lay.logoSha} alt={`Logo ${lay.companyName ?? ''}`.trim()} onDone={() => setLogoDone(true)} />}
+            <p className="print-cover-kicker">{lay?.companyName ? `${lay.companyName} · ` : ''}Benutzerhandbuch</p>
             <h2 className="print-cover-title">{bookTitle}</h2>
-            <p className="print-cover-edition">{edition}</p>
+            {lay?.coverSubtitle && <p className="print-cover-subtitle">{lay.coverSubtitle}</p>}
+            <p className="print-cover-edition">{edition}{roleLabel && ` · für ${roleLabel}`}</p>
             <dl className="print-cover-meta">
               <div><dt>Stand</dt><dd>{date}</dd></div>
-              <div><dt>Kapitel</dt><dd>{versions.length}</dd></div>
-              {!drafts && release && <div><dt>Veröffentlicht</dt><dd>{new Date(release.createdAt).toLocaleDateString('de-DE')}</dd></div>}
+              <div><dt>Kapitel</dt><dd>{printed.length}</dd></div>
+              {edition !== 'Arbeitsstand' && release && <div><dt>Veröffentlicht</dt><dd>{new Date(release.createdAt).toLocaleDateString('de-DE')}</dd></div>}
               {drafts && <div><dt>Hinweis</dt><dd>enthält nicht freigegebene Entwürfe</dd></div>}
             </dl>
+            {lay?.confidentiality && <p className="print-cover-confidential">{lay.confidentiality}</p>}
           </section>
           <nav className="print-toc" aria-label="Inhaltsverzeichnis des Handbuchs">
             <h2>Inhalt</h2>
-            <ol>{versions.map((v, n) => <li key={v.id}><a href={`#k-${v.id}`}>{n + 1}. {v.title}</a>{v.status !== 'approved' && ' (Entwurf)'}</li>)}</ol>
+            <ol>
+              {printed.map((v, n) => <li key={v.id}><a href={`#k-${v.id}`}>{numbered(n + 1, v.title)}</a>{v.status !== 'approved' && ' (Entwurf)'}</li>)}
+              {usedGlossary.length > 0 && <li><a href="#glossar">Glossar</a></li>}
+            </ol>
           </nav>
-          {versions.map((v, n) => (
+          {printed.map((v, n) => (
             <article key={v.id} id={`k-${v.id}`} className="print-chapter reader-body" aria-label={v.title}>
-              <h2 className="reader-title">{n + 1}. {v.title}{v.status !== 'approved' && <span className="tag small">Entwurf</span>}</h2>
-              <ChapterContent version={v} />
+              <h2 className="reader-title">{numbered(n + 1, v.title)}{v.status !== 'approved' && <span className="tag small">Entwurf</span>}</h2>
+              <ChapterContent version={v} role={role || undefined} />
             </article>
           ))}
+          {usedGlossary.length > 0 && (
+            <section id="glossar" className="print-chapter print-glossary" aria-labelledby="glossar-h">
+              <h2 id="glossar-h" className="reader-title">Glossar</h2>
+              <dl>{usedGlossary.map((g) => <div key={g.term}><dt>{g.term}</dt><dd>{g.text}</dd></div>)}</dl>
+            </section>
+          )}
         </div>
       )}
     </Page>
+    </GlossaryProvider>
   );
 }

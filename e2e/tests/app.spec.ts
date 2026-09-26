@@ -1377,7 +1377,9 @@ test('[T-231] Vorlage vollständig bearbeiten, Druck mit Deckblatt und Seitenzah
   await expect(cover).toContainText('Benutzerhandbuch');
   await expect(cover).toContainText('Arbeitsstand');
   await expect(cover).toContainText('enthält nicht freigegebene Entwürfe');
-  await expect(page.getByRole('navigation', { name: 'Inhaltsverzeichnis des Handbuchs' }).getByRole('link').first()).toHaveText(/^1\. /);
+  // jedes Kapitel nummeriert; schon nummerierte Titel („4. Vertragsbearbeitung“) ohne zweite Nummer
+  const tocLinks = await page.getByRole('navigation', { name: 'Inhaltsverzeichnis des Handbuchs' }).getByRole('link').allTextContents();
+  expect(tocLinks.filter((t) => t !== 'Glossar').every((t) => /^\d+\. \S/.test(t) && !/^\d+\. \d+\./.test(t))).toBe(true);
   expect(await page.locator('style[data-print-header]').textContent()).toContain('Arbeitsstand');
   expect(await axe()).toEqual([]);
   await page.emulateMedia({ media: 'print' });
@@ -1399,4 +1401,91 @@ test('[T-231] Vorlage vollständig bearbeiten, Druck mit Deckblatt und Seitenzah
   await expect(page.getByText(/^Übersicht an \d+ Person/)).toBeVisible();
   await expect(digest).toContainText('Zuletzt gesendet: ');
   await digest.getByLabel('Senden am').selectOption({ label: 'Montag' });
+});
+
+test('[T-232] Leseransicht: Suche mit Hervorhebung, Glossar-Erklärungen; Druck je Rolle im Firmen-Layout mit Glossar; Vorlagen kopieren, exportieren, importieren', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const c = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: {
+    title: 'E2E Lieferschein', purpose: 'Mit dieser Anleitung drucken Sie einen Lieferschein.', steps: ['Öffnen Sie **Lager › Lieferscheine**', 'Klicken Sie auf **Drucken**'],
+    result: 'Der Lieferschein ist gedruckt.', hints: ['Den Druckerschacht stellen Sie im DMS ein.'],
+  } })).json();
+  expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/submit`, { headers: red, data: {} })).ok()).toBe(true);
+  expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+  const adm = { 'X-User-Id': 'u-admin' };
+  const term0 = await request.post('/api/v1/terminology', { headers: adm, data: { preferred: 'Lieferschein', definition: 'Beleg, der eine Warensendung begleitet.' } });
+  expect(term0.status(), await term0.text()).toBe(201);
+  expect((await request.post('/api/v1/abbreviations', { headers: red, data: { abbreviation: 'DMS', expansion: 'Dealer-Management-System' } })).status()).toBe(201);
+
+  // Suche: Treffer mit Ausschnitt, Kapitel öffnet mit markierten Wörtern
+  await page.goto('/lesen');
+  await page.getByRole('searchbox', { name: 'Im Handbuch suchen' }).fill('Druckerschacht');
+  const results = page.getByRole('list', { name: 'Suchergebnisse' });
+  await expect(results.getByRole('link', { name: 'E2E Lieferschein' })).toBeVisible();
+  await expect(results.locator('mark').first()).toHaveText(/Druckerschacht/i);
+  await expect(page.locator('#reader-q-status')).toHaveText('1 Kapitel gefunden');
+  await results.getByRole('link', { name: 'E2E Lieferschein' }).click();
+  await expect(page).toHaveURL(/\?q=Druckerschacht/);
+  const article = page.getByRole('article', { name: 'E2E Lieferschein' });
+  await expect(article.getByRole('status')).toHaveText(/1 Treffer für „Druckerschacht“ markiert\./);
+  expect(await page.evaluate(() => (CSS as any).highlights?.has('reader-search'))).toBe(true);
+  expect(await axe()).toEqual([]);
+  await article.getByRole('button', { name: 'Markierung entfernen' }).click();
+  await expect(page).not.toHaveURL(/\?q=/);
+
+  // Glossar: Begriff und Abkürzung erklären sich per Klick, Esc schließt; Schritt-Kästchen behalten ihren Namen
+  const term = article.getByRole('button', { name: 'Lieferschein', exact: true }).first();
+  await term.click();
+  await expect(page.getByRole('tooltip')).toHaveText('Lieferschein: Beleg, der eine Warensendung begleitet.');
+  await expect(term).toHaveAttribute('aria-expanded', 'true');
+  expect(await axe()).toEqual([]);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('tooltip')).toHaveCount(0);
+  await article.getByRole('button', { name: 'DMS', exact: true }).hover();
+  await expect(page.getByRole('tooltip')).toHaveText('DMS = Dealer-Management-System');
+  await expect(article.getByRole('checkbox', { name: /Öffnen Sie Lager › Lieferscheine/ })).toBeVisible();
+
+  // Druck für eine Rolle im Firmen-Layout: Deckblatt mit Firma und Vertraulichkeit, Glossar-Anhang
+  expect((await request.put('/api/v1/layout', { headers: adm, data: { companyName: 'Muster AG', confidentiality: 'VERTRAULICH', footerText: 'Nur intern' } })).ok()).toBe(true);
+  await page.goto('/lesen/druck');
+  await page.getByLabel('Für Rolle').selectOption({ label: 'Dealer' });
+  await expect(page).toHaveURL(/rolle=dealer/);
+  const cover = page.getByRole('region', { name: 'Deckblatt' });
+  await expect(cover).toContainText('Muster AG · Benutzerhandbuch');
+  await expect(cover).toContainText('für Dealer');
+  await expect(cover).toContainText('VERTRAULICH');
+  await expect(page.getByRole('group', { name: 'Was drucken?' }).getByRole('combobox').first()).toHaveValue('');
+  const glossary = page.getByRole('region', { name: 'Glossar' });
+  await expect(glossary).toContainText('Beleg, der eine Warensendung begleitet.');
+  await expect(glossary).toContainText('Dealer-Management-System');
+  const header = await page.locator('style[data-print-header]').textContent();
+  expect(header).toContain('für Dealer');
+  expect(header).toContain('Nur intern');
+  expect(await axe()).toEqual([]);
+  await request.put('/api/v1/layout', { headers: adm, data: { companyName: null, confidentiality: null, footerText: null } });
+
+  // Vorlagen: mitgelieferte kopieren, duplizieren, exportieren, wieder importieren
+  await page.goto('/kapitel-assistent');
+  const own = page.locator('.card', { has: page.getByRole('heading', { name: 'Eigene Vorlagen' }) });
+  const copied = 'Suchen und filtern';
+  await own.getByLabel('Vorlage kopieren').selectOption({ label: copied });
+  await own.getByRole('button', { name: 'Als eigene Vorlage kopieren' }).click();
+  await expect(page.getByText(new RegExp(`^Kopie „${copied} \\(Kopie\\)( \\(\\d+\\))?“ angelegt – jetzt anpassen\\.$`))).toBeVisible();
+  const name = (await own.locator('.own-templates li strong').filter({ hasText: copied }).first().textContent())!;
+  await own.getByRole('button', { name: `Vorlage „${name}“ duplizieren` }).click();
+  await expect(own.locator('.own-templates li strong').getByText(`${name} (Kopie)`, { exact: true })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  const dl = page.waitForEvent('download');
+  await own.getByRole('button', { name: `Vorlage „${name} (Kopie)“ exportieren` }).click();
+  const file = await (await dl).path();
+  const fs = await import('node:fs');
+  const data = JSON.parse(fs.readFileSync(file!, 'utf8'));
+  expect(data).toMatchObject({ format: 'onescm-chapter-templates', templates: [{ name: `${name} (Kopie)` }] });
+  await own.locator('input[type=file]').setInputFiles({ name: 'vorlage.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(data)) });
+  await expect(page.getByText('1 Vorlage importiert (1 umbenannt, da der Name schon vergeben war).')).toBeVisible();
+  await expect(own.locator('.own-templates li strong').getByText(`${name} (Kopie) (2)`, { exact: true })).toBeVisible();
+  await own.locator('input[type=file]').setInputFiles({ name: 'kaputt.json', mimeType: 'application/json', buffer: Buffer.from('kein json') });
+  await expect(page.getByText('Die Datei ist kein gültiges JSON – bitte eine exportierte Vorlagendatei wählen.')).toBeVisible();
 });

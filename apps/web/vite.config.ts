@@ -8,5 +8,10 @@ export default defineConfig({
   plugins: [react()],
   define: { __APP_VERSION__: JSON.stringify(version) },
   server: { port: 5173, proxy: { '/api': 'http://localhost:3000', '/openapi.yaml': 'http://localhost:3000' } },
-  build: { outDir: 'dist', chunkSizeWarningLimit: 1200 },
+  build: {
+    outDir: 'dist',
+    chunkSizeWarningLimit: 600,
+    // React und Router ändern sich selten: eigener Chunk bleibt über App-Updates im Browser-Cache
+    rollupOptions: { output: { manualChunks: { vendor: ['react', 'react-dom', 'react-dom/client', 'react-router-dom'] } } },
+  },
 });

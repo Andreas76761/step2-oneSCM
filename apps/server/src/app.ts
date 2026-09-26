@@ -258,7 +258,16 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
 
   const notFound = (url: string) => JSON.stringify(new Problem(404, 'Not Found', `Pfad ${url} existiert nicht.`).toJSON());
   if (config.webDist && fs.existsSync(path.join(config.webDist, 'index.html'))) {
-    await app.register(fastifyStatic, { root: config.webDist, wildcard: false });
+    await app.register(fastifyStatic, {
+      root: config.webDist,
+      wildcard: false,
+      // Brotli/gzip-Fassungen aus dem Build (apps/web/scripts/compress.mjs) je nach Accept-Encoding
+      preCompressed: true,
+      // Dateien mit Hash im Namen (assets/) ändern sich nie → ein Jahr cachen; index.html immer neu prüfen
+      setHeaders: (reply, file) => {
+        reply.header('Cache-Control', /[\\/]assets[\\/]/.test(file) ? 'public, max-age=31536000, immutable' : 'no-cache');
+      },
+    });
     app.setNotFoundHandler((req, reply) => {
       if (req.url.startsWith('/api/')) reply.code(404).type('application/problem+json').send(notFound(req.url));
       else reply.sendFile('index.html');

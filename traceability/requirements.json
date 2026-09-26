@@ -647,5 +647,41 @@
     "documentation": [
       "docs/adr/ADR-064-wochenuebersicht.md"
     ]
+  },
+  {
+    "id": "NFR-52",
+    "title": "Handbuch je Variante oder Rolle drucken, im Firmen-Layout mit Glossar-Anhang",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-065-druck-variante-rolle.md"
+    ]
+  },
+  {
+    "id": "NFR-53",
+    "title": "Suche mit Hervorhebung und Glossar-Erklärungen in der Leseransicht",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-066-suche-glossar-lesen.md"
+    ]
+  },
+  {
+    "id": "NFR-54",
+    "title": "Kapitelvorlagen duplizieren sowie zwischen Projekten exportieren und importieren",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-067-vorlagen-teilen.md"
+    ]
+  },
+  {
+    "id": "NFR-55",
+    "title": "Schnelles Laden der Oberfläche: Code-Splitting, vorkomprimierte Dateien, langes Caching unveränderlicher Dateien",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-068-schnelles-laden.md"
+    ]
   }
 ]

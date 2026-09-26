@@ -50,6 +50,7 @@
 | 24.09.2026 | Auftraggeber (Andreas) | E-16 | Cloud-KI erlaubt (Aktivierung per Konfiguration), Anthropic + OpenAI-kompatibel, Evidenz je Satz + Übernahme durch die Redaktion |
 | 24.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 11 | Stammdaten und Draft Manual (ADR-032, ADR-033): Märkte konfigurierbar (Vorbelegung DE, FR, IT, ES, GB, NL), Planung = Redaktionsplanung je Kapitel, Gliederungen als zusätzliche Sicht neben der Kapitelstruktur, FAQ gepflegt mit Vorschlägen aus dem Assistenten |
 | 24.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 12 | Alle vier Themen: Draft Manual → Freigabe und Veröffentlichung je Variante (ADR-034), Varianten-Export mit Verzeichnissen, Bedienkomfort (ADR-035), Betrieb & Pflege inkl. erstem Release v0.11.0 und aktualisiertem Windows-Paket (ADR-036) |
+| 26.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 22 | Druck je Variante/Rolle, Suche & Glossar im Lesen, Vorlagen duplizieren & teilen (ADR-065 … ADR-067); Wochenübersicht per E-Mail zurückgestellt |
 | 26.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 21 | Vorlagen bearbeiten, Druck mit Deckblatt, wöchentliche Übersicht (ADR-062 … ADR-064) |
 | 26.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 20 | Rückmeldungen auswerten, eigene Kapitelvorlagen, Druck-/PDF-Ansicht, Rückmeldungen in der Online-Hilfe (ADR-058 … ADR-061) |
 | 26.09.2026 | Auftraggeber (Andreas) | Umfang Etappe 19 | Leseransicht & Rückmeldungen, Kapitelvorlagen im Assistenten, Einführung beim ersten Start, Anleitungs-Check vor der Freigabe (ADR-054 … ADR-057) |

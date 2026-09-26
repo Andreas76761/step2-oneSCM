@@ -1,6 +1,7 @@
 // Anmeldung der Web-UI (ENTSCHEIDUNG E-15).
 // demo: Demo-Benutzer über Header X-User-Id · oidc: Authorization Code Flow mit PKCE (oidc-client-ts)
-import { UserManager, WebStorageStateStore, type User as OidcUser } from 'oidc-client-ts';
+// oidc-client-ts wird nur im OIDC-Modus nachgeladen (Demo-Betrieb lädt die Bibliothek nie)
+import type { UserManager, User as OidcUser } from 'oidc-client-ts';
 
 export interface AuthConfig {
   mode: 'demo' | 'oidc';
@@ -19,6 +20,7 @@ export const authMode = () => config.mode;
 export async function initAuth(): Promise<{ config: AuthConfig; user: OidcUser | null }> {
   config = await (await fetch('/api/v1/auth/config')).json();
   if (config.mode !== 'oidc') return { config, user: null };
+  const { UserManager, WebStorageStateStore } = await import('oidc-client-ts');
   manager = new UserManager({
     authority: config.issuer!,
     client_id: config.clientId!,

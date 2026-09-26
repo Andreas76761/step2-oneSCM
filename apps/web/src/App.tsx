@@ -1,45 +1,53 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { currentProjectId, currentUserId, get, setCurrentProjectId, setCurrentUserId } from './api';
 import { initAuth, login, logout, type AuthConfig } from './auth';
 import { AppCtx, type Reference } from './components/ui';
-import { ClustersPage } from './pages/Clusters';
-import { ContradictionsPage } from './pages/Contradictions';
-import { DashboardPage } from './pages/Dashboard';
-import { DuplicatesPage } from './pages/Duplicates';
-import { ExportPage } from './pages/Export';
-import { SearchPage } from './pages/Search';
-import { StylePage } from './pages/Style';
-import { DiagramsPage } from './pages/Diagrams';
-import { FilteredViewPage } from './pages/FilteredView';
-import { GeneratorPage } from './pages/Generator';
-import { OptimizationsPage } from './pages/Optimizations';
-import { ApprovalPage } from './pages/Approval';
-import { SettingsPage } from './pages/Settings';
-import { SourcesPage } from './pages/Sources';
-import { TraceabilityPage } from './pages/Traceability';
-import { WorkshopPage } from './pages/Workshop';
-import { TerminologyPage } from './pages/Terminology';
-import { EvidencePage } from './pages/Evidence';
-import { ComparePage } from './pages/Compare';
-import { ProjectsPage } from './pages/Projects';
-import { UsersPage } from './pages/Users';
-import { ReleasesPage } from './pages/Releases';
-import { InboxPage } from './pages/Discussion';
-import { TranslationsPage } from './pages/Translations';
-import { AnalyticsPage } from './pages/Analytics';
-import { AssistantPage } from './pages/Assistant';
-import { IntegrationsPage } from './pages/Integrations';
-import { ContextHelpAdminPage, ContextHelpPage } from './pages/ContextHelp';
-import { OutlinesPage } from './pages/Outlines';
-import { DraftManualPage } from './pages/DraftManual';
-import { AbbreviationsPage, FaqPage, GlossaryPage, ImageIndexPage, PlanningPage } from './pages/MasterData';
-import { StartPage } from './pages/Start';
-import { GuidancePage } from './pages/Guidance';
-import { ChapterAssistantPage } from './pages/ChapterAssistant';
-import { PrintPage, ReaderPage } from './pages/Reader';
-import { FeedbackPage } from './pages/Feedback';
 import { Tour, tourDone } from './components/Tour';
+
+const StartPage = lazy(() => import('./pages/Start').then((m) => ({ default: m.StartPage })));
+// Seiten werden erst beim Aufruf geladen (Code-Splitting): kleineres Startpaket, schnellerer erster Aufbau
+const ClustersPage = lazy(() => import('./pages/Clusters').then((m) => ({ default: m.ClustersPage })));
+const ContradictionsPage = lazy(() => import('./pages/Contradictions').then((m) => ({ default: m.ContradictionsPage })));
+const DashboardPage = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.DashboardPage })));
+const DuplicatesPage = lazy(() => import('./pages/Duplicates').then((m) => ({ default: m.DuplicatesPage })));
+const ExportPage = lazy(() => import('./pages/Export').then((m) => ({ default: m.ExportPage })));
+const SearchPage = lazy(() => import('./pages/Search').then((m) => ({ default: m.SearchPage })));
+const StylePage = lazy(() => import('./pages/Style').then((m) => ({ default: m.StylePage })));
+const DiagramsPage = lazy(() => import('./pages/Diagrams').then((m) => ({ default: m.DiagramsPage })));
+const FilteredViewPage = lazy(() => import('./pages/FilteredView').then((m) => ({ default: m.FilteredViewPage })));
+const GeneratorPage = lazy(() => import('./pages/Generator').then((m) => ({ default: m.GeneratorPage })));
+const OptimizationsPage = lazy(() => import('./pages/Optimizations').then((m) => ({ default: m.OptimizationsPage })));
+const ApprovalPage = lazy(() => import('./pages/Approval').then((m) => ({ default: m.ApprovalPage })));
+const SettingsPage = lazy(() => import('./pages/Settings').then((m) => ({ default: m.SettingsPage })));
+const SourcesPage = lazy(() => import('./pages/Sources').then((m) => ({ default: m.SourcesPage })));
+const TraceabilityPage = lazy(() => import('./pages/Traceability').then((m) => ({ default: m.TraceabilityPage })));
+const WorkshopPage = lazy(() => import('./pages/Workshop').then((m) => ({ default: m.WorkshopPage })));
+const TerminologyPage = lazy(() => import('./pages/Terminology').then((m) => ({ default: m.TerminologyPage })));
+const EvidencePage = lazy(() => import('./pages/Evidence').then((m) => ({ default: m.EvidencePage })));
+const ComparePage = lazy(() => import('./pages/Compare').then((m) => ({ default: m.ComparePage })));
+const ProjectsPage = lazy(() => import('./pages/Projects').then((m) => ({ default: m.ProjectsPage })));
+const UsersPage = lazy(() => import('./pages/Users').then((m) => ({ default: m.UsersPage })));
+const ReleasesPage = lazy(() => import('./pages/Releases').then((m) => ({ default: m.ReleasesPage })));
+const InboxPage = lazy(() => import('./pages/Discussion').then((m) => ({ default: m.InboxPage })));
+const TranslationsPage = lazy(() => import('./pages/Translations').then((m) => ({ default: m.TranslationsPage })));
+const AnalyticsPage = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.AnalyticsPage })));
+const AssistantPage = lazy(() => import('./pages/Assistant').then((m) => ({ default: m.AssistantPage })));
+const IntegrationsPage = lazy(() => import('./pages/Integrations').then((m) => ({ default: m.IntegrationsPage })));
+const ContextHelpAdminPage = lazy(() => import('./pages/ContextHelp').then((m) => ({ default: m.ContextHelpAdminPage })));
+const ContextHelpPage = lazy(() => import('./pages/ContextHelp').then((m) => ({ default: m.ContextHelpPage })));
+const OutlinesPage = lazy(() => import('./pages/Outlines').then((m) => ({ default: m.OutlinesPage })));
+const DraftManualPage = lazy(() => import('./pages/DraftManual').then((m) => ({ default: m.DraftManualPage })));
+const AbbreviationsPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.AbbreviationsPage })));
+const FaqPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.FaqPage })));
+const GlossaryPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.GlossaryPage })));
+const ImageIndexPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.ImageIndexPage })));
+const PlanningPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.PlanningPage })));
+const GuidancePage = lazy(() => import('./pages/Guidance').then((m) => ({ default: m.GuidancePage })));
+const ChapterAssistantPage = lazy(() => import('./pages/ChapterAssistant').then((m) => ({ default: m.ChapterAssistantPage })));
+const PrintPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.PrintPage })));
+const ReaderPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderPage })));
+const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
 type NavItem = { to: string; label: string; icon: string };
@@ -357,6 +365,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
           </div>
         </aside>
         <main className="main" key={userId} id="main" ref={mainRef} tabIndex={-1}>
+          <Suspense fallback={<p className="muted page-loading" role="status">Lade …</p>}>
           <Routes>
             <Route path="/" element={<StartPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
@@ -410,6 +419,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/einstellungen" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
+          </Suspense>
         </main>
         {tourOpen && <Tour onClose={() => setTourOpen(false)} />}
         {toast && (

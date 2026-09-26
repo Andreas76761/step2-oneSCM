@@ -635,3 +635,37 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .template-editor label .small, .template-editor input, .template-editor textarea { font-weight: 400; }
 .digest-preview { border-left: 4px solid var(--link); padding: 4px 14px; margin-top: 12px; }
 .digest-preview h3 { margin: 4px 0 8px; font-size: 16px; }
+
+/* ---------- Etappe 22: Suche und Glossar beim Lesen, Druck je Variante/Rolle ---------- */
+.reader-search-label { display: block; font-weight: 600; margin-bottom: 4px; }
+#reader-q::-webkit-search-cancel-button { display: none; }
+.reader-search-row { display: flex; gap: 6px; align-items: center; }
+.reader-search-row input { flex: 1; min-width: 0; }
+.reader-results li { margin-bottom: 10px; }
+.reader-results li p { margin: 2px 0 0; }
+.reader-results mark, .reader-marked mark { background: #ffe066; color: #000; padding: 0 1px; border-radius: 2px; }
+.reader-marked { background: var(--info-bg); border-radius: 8px; padding: 6px 10px; }
+::highlight(reader-search) { background-color: #ffe066; color: #000; }
+.gloss { position: relative; display: inline; }
+.gloss-term { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+.gloss-term:hover, .gloss-term[aria-expanded="true"] { color: var(--link); }
+.gloss-term:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 2px; }
+.gloss-tip { position: absolute; left: 0; top: calc(100% + 4px); z-index: 30; width: max-content; max-width: min(320px, 80vw); background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); padding: 8px 10px; font-size: 14px; font-weight: 400; line-height: 1.4; white-space: normal; }
+.print-cover-logo { max-height: 64px; max-width: 240px; object-fit: contain; display: block; margin-bottom: 16px; }
+.print-cover-subtitle { font-size: 16px; margin: 0 0 8px; }
+.print-cover-confidential { margin: 20px 0 0; font-weight: 700; letter-spacing: .04em; }
+.print-book .print-cover { border-top: 6px solid var(--print-accent, var(--border)); }
+.print-glossary dl { display: grid; gap: 8px; margin: 0; }
+.print-glossary dt { font-weight: 700; }
+.print-glossary dd { margin: 0 0 0 16px; }
+@media print {
+  .gloss-term { text-decoration: none; cursor: auto; }
+  .gloss-tip { display: none !important; }
+  .print-book .print-cover { border-top: 8pt solid var(--print-accent, #000); }
+  .print-cover-title, .print-chapter .reader-title { color: var(--print-accent, #000); }
+  .print-cover-logo { max-height: 30mm; max-width: 80mm; }
+}
+.file-btn { cursor: pointer; position: relative; }
+.file-btn:focus-within { outline: 2px solid var(--link); outline-offset: 2px; }
+.template-tools { margin-bottom: 10px; align-items: center; }

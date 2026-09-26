@@ -2,7 +2,7 @@
 // mit Vorschlägen aus den Quellen statt eines leeren Editors.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, get, post } from '../api';
+import { api, download, get, post } from '../api';
 import { Card, Empty, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
 import { scoreLabel } from './Guidance';
 
@@ -259,27 +259,57 @@ export function ChapterAssistantPage() {
           )}
         </div>
       </div>
-      {step === 0 && canEdit && <OwnTemplates templates={(templates.data ?? []).filter((t) => !t.builtin)} onChanged={templates.reload} />}
+      {step === 0 && canEdit && <OwnTemplates templates={(templates.data ?? []).filter((t) => !t.builtin)} builtins={(templates.data ?? []).filter((t) => t.builtin)} onChanged={templates.reload} />}
     </Page>
   );
 }
 
-/** Eigene Vorlagen bearbeiten und löschen (ADR-059, ADR-062); neue entstehen in der Werkstatt über „Als Vorlage“ */
-function OwnTemplates({ templates, onChanged }: { templates: any[]; onChanged: () => void }) {
+/** Eigene Vorlagen bearbeiten, kopieren, austauschen und löschen (ADR-059, ADR-062, ADR-067); neue entstehen in der Werkstatt über „Als Vorlage“ */
+function OwnTemplates({ templates, builtins, onChanged }: { templates: any[]; builtins: any[]; onChanged: () => void }) {
   const { notify } = useApp();
   const [editing, setEditing] = useState<any | null>(null);
-  const remove = async (t: any) => {
+  const [copyFrom, setCopyFrom] = useState('');
+  const run = async (fn: () => Promise<unknown>, msg: (r: any) => string) => {
     try {
-      await api('DELETE', `/chapter-templates/${t.id}`);
-      notify(`Vorlage „${t.name}“ gelöscht.`);
+      const r = await fn();
+      notify(msg(r));
       onChanged();
+      return r;
     } catch (e) {
       notify(errorText(e), 'error');
     }
   };
+  const duplicate = (id: string) => run(() => post<any>('/chapter-templates/duplicate', { id }), (r) => `Kopie „${r.name}“ angelegt – jetzt anpassen.`);
+  const importFile = async (file: File) => {
+    let data: unknown;
+    try {
+      data = JSON.parse(await file.text());
+    } catch {
+      notify('Die Datei ist kein gültiges JSON – bitte eine exportierte Vorlagendatei wählen.', 'error');
+      return;
+    }
+    await run(() => post<any>('/chapter-templates/import', data), (r) => {
+      const renamed = r.templates.filter((t: any) => t.renamedFrom).length;
+      return `${r.imported} Vorlage${r.imported === 1 ? '' : 'n'} importiert${renamed ? ` (${renamed} umbenannt, da der Name schon vergeben war)` : ''}.`;
+    });
+  };
   return (
     <Card title="Eigene Vorlagen">
-      {!templates.length ? <p className="small muted">Noch keine eigenen Vorlagen. In der Kapitelwerkstatt macht „💾 Als Vorlage“ aus einem gelungenen Kapitel eine Vorlage für dieses Projekt.</p> : (
+      <div className="row-actions template-tools">
+        <label className="inline">Vorlage kopieren
+          <select value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)}>
+            <option value="">– wählen –</option>
+            <optgroup label="Mitgeliefert">{builtins.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</optgroup>
+            {templates.length > 0 && <optgroup label="Eigene">{templates.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</optgroup>}
+          </select>
+        </label>
+        <button className="btn small" disabled={!copyFrom} onClick={async () => { const id = copyFrom; setCopyFrom(''); await duplicate(id); }}>Als eigene Vorlage kopieren</button>
+        <button className="btn small" disabled={!templates.length} onClick={() => download('/api/v1/chapter-templates/export', 'kapitelvorlagen.json').catch((e) => notify(errorText(e), 'error'))}>📤 Alle exportieren</button>
+        <label className="btn small file-btn">📥 Importieren
+          <input type="file" accept=".json,application/json" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void importFile(f); }} />
+        </label>
+      </div>
+      {!templates.length ? <p className="small muted">Noch keine eigenen Vorlagen. In der Kapitelwerkstatt macht „💾 Als Vorlage“ aus einem gelungenen Kapitel eine Vorlage; oder kopieren Sie oben eine mitgelieferte Vorlage und passen sie an. Vorlagen aus anderen Projekten übernehmen Sie per Export und Import.</p> : (
         <ul className="plain own-templates">
           {templates.map((t) => (
             <li key={t.id}>
@@ -287,7 +317,9 @@ function OwnTemplates({ templates, onChanged }: { templates: any[]; onChanged: (
               <span className="small muted">{t.steps.length} Schritte{t.description ? ` · ${t.description}` : ''}</span>
               <span className="row-actions">
                 <button className="btn small" onClick={() => setEditing(t)} aria-label={`Vorlage „${t.name}“ bearbeiten`}>✏️ Bearbeiten</button>
-                <button className="btn small danger" onClick={() => remove(t)} aria-label={`Vorlage „${t.name}“ löschen`}>Löschen</button>
+                <button className="btn small" onClick={() => duplicate(t.id)} aria-label={`Vorlage „${t.name}“ duplizieren`}>Duplizieren</button>
+                <button className="btn small" onClick={() => download(`/api/v1/chapter-templates/export?ids=${t.id}`, 'kapitelvorlage.json').catch((e) => notify(errorText(e), 'error'))} aria-label={`Vorlage „${t.name}“ exportieren`}>📤</button>
+                <button className="btn small danger" onClick={() => run(() => api('DELETE', `/chapter-templates/${t.id}`), () => `Vorlage „${t.name}“ gelöscht.`)} aria-label={`Vorlage „${t.name}“ löschen`}>Löschen</button>
               </span>
             </li>
           ))}
