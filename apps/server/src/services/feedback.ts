@@ -2,7 +2,7 @@
 // als Aufgabe. Eine Stimme je Person und Kapitelversion (erneutes Abstimmen ersetzt die offene Rückmeldung).
 import { audit, type Ctx, type User } from '../context.js';
 import { newId, now, type Row } from '../db.js';
-import { badRequest, notFound } from '../problem.js';
+import { badRequest, conflict, notFound } from '../problem.js';
 import { createComment, systemNotice } from './collaboration.js';
 
 const dto = (r: Row) => ({
@@ -91,16 +91,25 @@ export async function feedbackInsights(ctx: Ctx, q: { days?: number }) {
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
   const d30 = new Date(Date.now() - 30 * 86_400_000).toISOString();
   const d60 = new Date(Date.now() - 60 * 86_400_000).toISOString();
-  const rows = await ctx.db.all('SELECT f.*, c.title FROM chapter_feedback f LEFT JOIN chapters c ON c.id = f.chapter_id WHERE f.project_id = ? AND f.created_at >= ? ORDER BY f.created_at DESC', ctx.projectId, since);
+  // für die Entwicklung immer mindestens 60 Tage laden; Summen, Begriffe und Kommentare nur für den gewählten Zeitraum
+  const loadSince = since < d60 ? since : d60;
+  const all = await ctx.db.all('SELECT f.*, c.title FROM chapter_feedback f LEFT JOIN chapters c ON c.id = f.chapter_id WHERE f.project_id = ? AND f.created_at >= ? ORDER BY f.created_at DESC', ctx.projectId, loadSince);
+  const rows = all.filter((r) => r.created_at >= since);
   const by = new Map<string, { chapterId: string; title: string; helpful: number; notHelpful: number; open: number; online: number; recentNo: number; recentTotal: number; prevNo: number; prevTotal: number }>();
+  const entry = (r: any) => by.get(r.chapter_id) ?? { chapterId: r.chapter_id, title: r.title ?? r.chapter_id, helpful: 0, notHelpful: 0, open: 0, online: 0, recentNo: 0, recentTotal: 0, prevNo: 0, prevTotal: 0 };
   for (const r of rows) {
-    const e = by.get(r.chapter_id) ?? { chapterId: r.chapter_id, title: r.title ?? r.chapter_id, helpful: 0, notHelpful: 0, open: 0, online: 0, recentNo: 0, recentTotal: 0, prevNo: 0, prevTotal: 0 };
+    const e = entry(r);
     if (r.helpful) e.helpful++; else e.notHelpful++;
     if (r.status === 'open' && (!r.helpful || r.comment)) e.open++;
     if (r.source === 'online-help') e.online++;
+    by.set(r.chapter_id, e);
+  }
+  // Entwicklung: letzte 30 Tage gegenüber den 30 Tagen davor – unabhängig vom gewählten Zeitraum, nur für Kapitel im Zeitraum
+  for (const r of all) {
+    const e = by.get(r.chapter_id);
+    if (!e) continue;
     if (r.created_at >= d30) (e.recentTotal++, !r.helpful && e.recentNo++);
     else if (r.created_at >= d60) (e.prevTotal++, !r.helpful && e.prevNo++);
-    by.set(r.chapter_id, e);
   }
   const share = (no: number, total: number) => (total ? Math.round((no / total) * 100) : null);
   const chapters = [...by.values()].map((e) => {
@@ -136,6 +145,8 @@ export async function feedbackInsights(ctx: Ctx, q: { days?: number }) {
 export async function feedbackToTask(ctx: Ctx, id: string, input: { assignee?: unknown; dueDate?: unknown }, user: User) {
   const r = await ctx.db.get('SELECT f.*, c.title FROM chapter_feedback f LEFT JOIN chapters c ON c.id = f.chapter_id WHERE f.id = ? AND f.project_id = ?', id, ctx.projectId);
   if (!r) throw notFound(`Rückmeldung ${id}`);
+  // nur offene Rückmeldungen – wiederholte Aufrufe (z. B. nach verlorener Antwort) erzeugen keine zweite Aufgabe
+  if (r.status !== 'open') throw conflict('Die Rückmeldung ist bereits erledigt.');
   const assignee = typeof input.assignee === 'string' && input.assignee ? input.assignee : user.id;
   const body = `Leser-Rückmeldung (${r.helpful ? 'hilfreich' : 'nicht hilfreich'}${r.source === 'online-help' ? ', Online-Hilfe' : ''}): ${r.comment ? `„${r.comment}“` : 'ohne Kommentar'} – bitte das Kapitel prüfen und verbessern.`;
   const task = await createComment(ctx, { entityType: 'chapter', entityId: r.chapter_id, body, kind: 'task', assignee, dueDate: typeof input.dueDate === 'string' ? input.dueDate : undefined }, user);

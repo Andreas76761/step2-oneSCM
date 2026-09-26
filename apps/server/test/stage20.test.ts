@@ -46,6 +46,10 @@ describe('Etappe 20', () => {
       expect(r.json.task.body).toContain('Lieferantennummer');
       expect(r.json.feedback).toMatchObject({ status: 'done', handledBy: 'u-fachpruefung' });
       expect((await call('GET', '/feedback/insights')).json.chapters[0].open).toBe(1);
+      // kein zweites Mal
+      expect((await call('POST', `/feedback/${fb.id}/task`, { assignee: 'u-redaktion' }, 'u-fachpruefung')).status).toBe(409);
+      // 30-Tage-Ansicht: Entwicklung berücksichtigt die 30 Tage davor
+      expect((await call('GET', '/feedback/insights?days=30')).json.chapters.find((x: any) => x.chapterId === a.chapterId)).toMatchObject({ total: 3, trend: 67 });
     } finally {
       await built.app.close();
     }
@@ -65,6 +69,9 @@ describe('Etappe 20', () => {
         steps: ['Öffnen Sie **Einkauf > Aufträge**.', 'Klicken Sie auf **Neu**.'], result: 'Der Auftrag ist gespeichert.', hints: ['Pflichtfelder sind markiert.'], sourceVersionId: a.versionId,
       });
       expect((await call('POST', '/chapter-templates', { name: 'bestellung', steps: ['X'] }, 'u-redaktion')).status).toBe(409);
+      // Quelle aus einem anderen Projekt ist nicht erlaubt
+      const other0 = (await call('POST', '/projects', { name: 'Fremd' })).json;
+      expect((await call('POST', '/chapter-templates', { name: 'Fremdkopie', fromVersionId: a.versionId }, 'u-admin', other0.id)).status).toBe(400);
       expect((await call('POST', '/chapter-templates', { name: 'Leer', steps: [] }, 'u-redaktion')).status).toBe(400);
       const list = (await call('GET', '/chapter-assistant/templates', undefined, 'u-leser')).json;
       expect(list.filter((x: any) => x.builtin)).toHaveLength(6);

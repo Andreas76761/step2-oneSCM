@@ -5,6 +5,7 @@ import { json, newId, now, parseJson, type Row } from '../db.js';
 import { CHAPTER_TEMPLATES } from '../domain/chapterTemplates.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { getChapterVersion } from './chapters.js';
+import { assertIdsInProject } from './projects.js';
 
 const dto = (r: Row) => ({
   id: r.id as string, name: r.name as string, description: (r.description as string | null) ?? '', titleHint: (r.title_hint as string | null) ?? '',
@@ -49,6 +50,8 @@ export async function createChapterTemplate(ctx: Ctx, input: Record<string, unkn
   let fields: { purpose: string; prerequisites: string[]; steps: string[]; result: string; hints: string[] };
   let sourceVersionId: string | null = null;
   if (typeof input.fromVersionId === 'string') {
+    // Quelle muss zum Projekt gehören (Mandantentrennung; IDs im Body prüft kein Pfad-Hook)
+    await assertIdsInProject(ctx, 'versionId', [input.fromVersionId]);
     const f = await fromVersion(ctx, input.fromVersionId);
     if (!f.steps.length) throw badRequest('Das Kapitel enthält keine Schritte – als Vorlage ungeeignet.');
     fields = f;
