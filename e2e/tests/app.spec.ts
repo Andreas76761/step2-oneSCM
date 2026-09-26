@@ -1539,7 +1539,13 @@ test('[T-233] Siehe auch und häufige Fragen unter dem Kapitel, Verweise pflegen
   await expect(page.getByRole('note')).toContainText(/neu für Sie oder wurden? seit Ihrem letzten Lesen geändert/);
   await expect(toc.locator('li', { hasText: 'E2E Rechnung korrigieren' }).getByText('Neu')).toBeVisible();
   expect(await axe()).toEqual([]);
-  await article.getByRole('button', { name: '★ Gemerkt' }).click();
+  // das neue Kapitel öffnen: Hinweis nennt es, Markierung im Inhalt entfällt, keine weiteren gezählt
+  await toc.getByRole('link', { name: 'E2E Rechnung korrigieren' }).click();
+  await expect(page.getByRole('note')).toHaveText('Dieses Kapitel ist neu für Sie.');
+  await expect(toc.locator('li', { hasText: 'E2E Rechnung korrigieren' }).getByText('Neu')).toHaveCount(0);
+  await toc.getByRole('link', { name: 'E2E Rechnung drucken' }).last().click();
+  await expect(page.getByRole('note')).toHaveCount(0);
+  await page.getByRole('article', { name: 'E2E Rechnung drucken' }).getByRole('button', { name: '★ Gemerkt' }).click();
   await expect(toc.getByRole('heading', { name: '★ Lesezeichen' })).toHaveCount(0);
 
   // FAQ-Seite

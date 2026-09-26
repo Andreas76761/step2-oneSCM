@@ -101,10 +101,10 @@ export async function readerRelated(ctx: Ctx, chapterId: string, drafts: boolean
   const manualIds = links.filter((l) => l.kind === 'manual').map((l) => l.target_chapter_id as string);
   const hiddenIds = new Set(links.filter((l) => l.kind === 'hidden').map((l) => l.target_chapter_id as string));
   // nur Kapitel, die die Leserin auch öffnen kann (gezeigte Fassung vorhanden)
-  const manual = manualIds.filter((id) => shown.has(id)).map((id) => ({ chapterId: id, title: titleOf(id) }));
+  const manual = manualIds.filter((id) => shown.has(id)).slice(0, MAX_RELATED).map((id) => ({ chapterId: id, title: titleOf(id) }));
   const faqRows = (await ctx.db.all("SELECT id, question, answer FROM faq_entries WHERE project_id = ? AND status = 'published' AND language = 'de' ORDER BY position", ctx.projectId));
   const current = shown.get(chapterId);
-  if (!current) return { manual, automatic: [], hidden: links.filter((l) => l.kind === 'hidden').map((l) => ({ chapterId: l.target_chapter_id as string, title: String(l.title) })), faq: [] };
+  if (!current) return { chapterId, manual, automatic: [], hidden: links.filter((l) => l.kind === 'hidden').map((l) => ({ chapterId: l.target_chapter_id as string, title: String(l.title) })), faq: [] };
   const docs = new Map<string, Vec>([...shown].map(([id, v]) => [id, tf([[String(v.title), 3], ...(blocksOf.get(v.id as string) ?? []).map((t): [string, number] => [t, 1])])]));
   const faqDocs = faqRows.map((f) => ({ f, vec: tf([[String(f.question), 2], [String(f.answer), 1]]) }));
   // Seltenheit eines Wortes über Kapitel und FAQ: häufige Wörter tragen wenig zur Ähnlichkeit bei
@@ -118,7 +118,7 @@ export async function readerRelated(ctx: Ctx, chapterId: string, drafts: boolean
     .filter((r) => r.score >= MIN_RELATED).sort((a, b) => b.score - a.score).slice(0, Math.max(0, MAX_RELATED - manual.length));
   const faq = faqDocs.map(({ f, vec }) => ({ id: f.id as string, question: String(f.question), answer: String(f.answer), score: Math.round(cosine(me, vec, idf) * 100) / 100 }))
     .filter((f) => f.score >= MIN_FAQ).sort((a, b) => b.score - a.score).slice(0, 3);
-  return { manual, automatic, hidden: links.filter((l) => l.kind === 'hidden').map((l) => ({ chapterId: l.target_chapter_id as string, title: String(l.title) })), faq };
+  return { chapterId, manual, automatic, hidden: links.filter((l) => l.kind === 'hidden').map((l) => ({ chapterId: l.target_chapter_id as string, title: String(l.title) })), faq };
 }
 
 /** Verweise pflegen (Bearbeitungsrecht): Liste manueller Verweise in Reihenfolge und ausgeblendeter Vorschläge – ersetzt beide */
@@ -130,6 +130,7 @@ export async function setChapterLinks(ctx: Ctx, chapterId: string, input: { manu
     return [...new Set(v as string[])];
   };
   const manual = list(input.manual, 'manual');
+  if (manual.length > MAX_RELATED) throw badRequest(`manual: höchstens ${MAX_RELATED} Verweise („Siehe auch“ zeigt insgesamt höchstens ${MAX_RELATED}).`);
   const hidden = list(input.hidden, 'hidden');
   if ([...manual, ...hidden].includes(chapterId)) throw badRequest('Ein Kapitel kann nicht auf sich selbst verweisen.');
   if (manual.some((id) => hidden.includes(id))) throw badRequest('Ein Kapitel kann nicht zugleich Verweis und ausgeblendet sein.');

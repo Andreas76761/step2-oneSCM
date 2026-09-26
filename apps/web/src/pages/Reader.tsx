@@ -188,16 +188,25 @@ function Related({ chapterId, drafts, canEdit, chapters, withQ }: { chapterId: s
   const rel = useLoad<any>(`/reader/related/${chapterId}${drafts ? '?drafts=true' : ''}`, [chapterId, drafts]);
   const [editing, setEditing] = useState(false);
   const [add, setAdd] = useState('');
-  const d = rel.data;
+  const [busy, setBusy] = useState(false);
+  useEffect(() => setEditing(false), [chapterId]);
+  // Daten des vorigen Kapitels (während das neue lädt) nie anzeigen oder als Grundlage zum Speichern nehmen
+  const d = rel.data?.chapterId === chapterId ? rel.data : null;
   if (!d) return null;
   const links = [...d.manual, ...d.automatic];
+  // jede Änderung ersetzt beide Listen: nacheinander speichern und erst nach dem Neuladen die nächste zulassen,
+  // sonst würde eine zweite schnelle Änderung auf dem alten Stand aufsetzen und die erste zurücknehmen
   const save = async (manual: string[], hidden: string[], msg: string) => {
+    if (busy) return;
+    setBusy(true);
     try {
       await api('PUT', `/chapters/${chapterId}/related`, { manual, hidden });
+      await rel.reload();
       notify(msg);
-      rel.reload();
     } catch (e) {
       notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
     }
   };
   const manualIds = d.manual.map((m: any) => m.chapterId);
@@ -213,8 +222,8 @@ function Related({ chapterId, drafts, canEdit, chapters, withQ }: { chapterId: s
               {links.map((l: any) => (
                 <li key={l.chapterId}>
                   <Link to={withQ(l.chapterId)}>{l.title}</Link>
-                  {editing && manualIds.includes(l.chapterId) && <button type="button" className="btn small ghost" aria-label={`Verweis auf „${l.title}“ entfernen`} onClick={() => save(manualIds.filter((x: string) => x !== l.chapterId), hiddenIds, 'Verweis entfernt.')}>✕</button>}
-                  {editing && !manualIds.includes(l.chapterId) && <button type="button" className="btn small ghost" aria-label={`Vorschlag „${l.title}“ ausblenden`} onClick={() => save(manualIds, [...hiddenIds, l.chapterId], 'Vorschlag ausgeblendet.')}>Ausblenden</button>}
+                  {editing && manualIds.includes(l.chapterId) && <button type="button" className="btn small ghost" disabled={busy} aria-label={`Verweis auf „${l.title}“ entfernen`} onClick={() => save(manualIds.filter((x: string) => x !== l.chapterId), hiddenIds, 'Verweis entfernt.')}>✕</button>}
+                  {editing && !manualIds.includes(l.chapterId) && <button type="button" className="btn small ghost" disabled={busy} aria-label={`Vorschlag „${l.title}“ ausblenden`} onClick={() => save(manualIds, [...hiddenIds, l.chapterId], 'Vorschlag ausgeblendet.')}>Ausblenden</button>}
                 </li>
               ))}
             </ul>
@@ -228,10 +237,11 @@ function Related({ chapterId, drafts, canEdit, chapters, withQ }: { chapterId: s
                   {chapters.filter((c) => c.id !== chapterId && !manualIds.includes(c.id)).map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
               </label>
-              <button type="button" className="btn small" disabled={!add} onClick={async () => { const id = add; setAdd(''); await save([...manualIds, id], hiddenIds.filter((x: string) => x !== id), 'Verweis hinzugefügt.'); }}>Hinzufügen</button>
+              <button type="button" className="btn small" disabled={!add || busy || manualIds.length >= 5} onClick={async () => { const id = add; setAdd(''); await save([...manualIds, id], hiddenIds.filter((x: string) => x !== id), 'Verweis hinzugefügt.'); }}>Hinzufügen</button>
+              {manualIds.length >= 5 && <span className="small muted">Höchstens 5 Verweise.</span>}
               {d.hidden.length > 0 && (
                 <p className="small">Ausgeblendet: {d.hidden.map((h: any) => (
-                  <button key={h.chapterId} type="button" className="btn small ghost" aria-label={`„${h.title}“ wieder vorschlagen`} onClick={() => save(manualIds, hiddenIds.filter((x: string) => x !== h.chapterId), 'Vorschlag wieder sichtbar.')}>{h.title} ↺</button>
+                  <button key={h.chapterId} type="button" className="btn small ghost" disabled={busy} aria-label={`„${h.title}“ wieder vorschlagen`} onClick={() => save(manualIds, hiddenIds.filter((x: string) => x !== h.chapterId), 'Vorschlag wieder sichtbar.')}>{h.title} ↺</button>
                 ))}</p>
               )}
               <button type="button" className="btn small primary" onClick={() => setEditing(false)}>Fertig</button>
@@ -320,16 +330,18 @@ export function ReaderPage() {
   const me = useLoad<any>('/me');
   const canEdit = !!me.data?.permissions?.some((p: string) => p === 'edit' || p === 'admin');
   const updates: Record<string, 'changed' | 'new'> = mine.data?.updates ?? {};
-  const [initialUpdates, setInitialUpdates] = useState<number | null>(null);
-  useEffect(() => {
-    if (mine.data && initialUpdates === null) setInitialUpdates(Object.keys(mine.data.updates).length);
-  }, [mine.data, initialUpdates]);
+  // Stand des geöffneten Kapitels vor dem Speichern des Besuchs (danach entfällt seine Markierung)
+  const [openedAs, setOpenedAs] = useState<{ chapterId: string; kind: 'changed' | 'new' } | null>(null);
   useEffect(() => {
     // Besuch merken, sobald das Kapitel angezeigt wird; danach Hinweise „neu/geändert“ aktualisieren
     if (!current || !version.data) return;
+    const kind = mine.data?.updates?.[current.id];
+    setOpenedAs(kind ? { chapterId: current.id, kind } : null);
     post('/reader/visits', { chapterId: current.id, versionId: version.data.id }).then(() => mine.reload(), () => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version.data?.id]);
+  // übrige markierte Kapitel – live gezählt, sinkt mit jedem gelesenen
+  const otherUpdates = Object.keys(updates).filter((id) => id !== current?.id).length;
   const bookmarked = !!mine.data?.bookmarks.some((b: any) => b.chapterId === current?.id);
   const idx = current ? list.indexOf(current) : -1;
   // Hervorhebung: Suchwörter aus dem Link (?q=) – bleiben beim Blättern erhalten, bis sie entfernt werden
@@ -409,9 +421,10 @@ export function ReaderPage() {
                   <button type="button" className="btn small ghost" onClick={() => { params.delete('q'); setParams(params); }}>Markierung entfernen</button>
                 </p>
               )}
-              {initialUpdates !== null && initialUpdates > 0 && (
+              {(otherUpdates > 0 || openedAs?.chapterId === current.id) && (
                 <p className="reader-updates no-print" role="note">
-                  {initialUpdates === 1 ? '1 Kapitel ist neu für Sie oder wurde' : `${initialUpdates} Kapitel sind neu für Sie oder wurden`} seit Ihrem letzten Lesen geändert – im Inhalt markiert.
+                  {openedAs?.chapterId === current.id && (openedAs.kind === 'new' ? 'Dieses Kapitel ist neu für Sie. ' : 'Dieses Kapitel wurde seit Ihrem letzten Lesen geändert. ')}
+                  {otherUpdates > 0 && `${otherUpdates === 1 ? '1 weiteres Kapitel ist neu für Sie oder wurde' : `${otherUpdates} weitere Kapitel sind neu für Sie oder wurden`} seit Ihrem letzten Lesen geändert – im Inhalt markiert.`}
                 </p>
               )}
               <div className="reader-title-row">

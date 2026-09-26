@@ -44,6 +44,10 @@ describe('Etappe 23', () => {
       expect((await call('PUT', `/chapters/${a.chapterId}/related`, { manual: [a.chapterId] }, 'u-redaktion')).status).toBe(400);
       expect((await call('PUT', `/chapters/${a.chapterId}/related`, { manual: [c.chapterId], hidden: [c.chapterId] }, 'u-redaktion')).status).toBe(400);
       expect((await call('PUT', `/chapters/${a.chapterId}/related`, { manual: ['ch_gibt-es-nicht'] }, 'u-redaktion')).status).toBe(400);
+      // höchstens fünf manuelle Verweise (Gesamtgrenze von „Siehe auch“)
+      const six = (await call('PUT', `/chapters/${a.chapterId}/related`, { manual: [b.chapterId, c.chapterId, d.chapterId, 'x1', 'x2', 'x3'] }, 'u-redaktion'));
+      expect(six.status).toBe(400);
+      expect(six.json.detail).toContain('höchstens 5');
       expect((await call('PUT', `/chapters/${a.chapterId}/related`, { manual: [c.chapterId], hidden: [b.chapterId] }, 'u-redaktion')).json).toEqual({ manual: [c.chapterId], hidden: [b.chapterId] });
       const r2 = (await call('GET', `/reader/related/${a.chapterId}`)).json;
       expect(r2.manual).toEqual([{ chapterId: c.chapterId, title: 'Kunde anlegen' }]);
