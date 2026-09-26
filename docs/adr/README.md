@@ -72,3 +72,6 @@
 | [ADR-068](ADR-068-schnelles-laden.md) | Schnelles Laden: Code-Splitting, vorkomprimierte Dateien, Caching | akzeptiert, umgesetzt |
 | [ADR-069](ADR-069-siehe-auch-faq.md) | „Siehe auch“ und passende häufige Fragen | akzeptiert, umgesetzt |
 | [ADR-070](ADR-070-lesezeichen-verlauf.md) | Lesezeichen und Verlauf in der Leseransicht | akzeptiert, umgesetzt |
+| [ADR-071](ADR-071-sprachen-beim-lesen.md) | Sprachen beim Lesen | akzeptiert, umgesetzt |
+| [ADR-072](ADR-072-siehe-auch-druck-hilfe.md) | „Siehe auch“ und FAQ im Druck und in der Online-Hilfe | akzeptiert, umgesetzt |
+| [ADR-073](ADR-073-lesezeichen-notizen.md) | Lesezeichen mit eigenen Notizen | akzeptiert, umgesetzt |

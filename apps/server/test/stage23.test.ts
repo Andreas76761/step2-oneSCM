@@ -72,7 +72,7 @@ describe('Etappe 23', () => {
       const b = await mk('Auftrag prüfen', 'Mit dieser Anleitung prüfen Sie einen Auftrag.', ['Öffnen Sie **Aufträge**', 'Wählen Sie den Auftrag']);
       expect((await call('GET', '/reader/me', undefined, 'u-leser')).json).toEqual({ bookmarks: [], recent: [], updates: {}, lastVisitAt: null });
       // merken (idempotent), nur je Person
-      expect((await call('PUT', `/reader/bookmarks/${a.chapterId}`, undefined, 'u-leser')).json).toEqual({ chapterId: a.chapterId, bookmarked: true });
+      expect((await call('PUT', `/reader/bookmarks/${a.chapterId}`, undefined, 'u-leser')).json).toEqual({ chapterId: a.chapterId, bookmarked: true, note: null });
       await call('PUT', `/reader/bookmarks/${a.chapterId}`, undefined, 'u-leser');
       expect((await call('GET', '/reader/me', undefined, 'u-leser')).json.bookmarks).toEqual([expect.objectContaining({ chapterId: a.chapterId, title: 'Auftrag anlegen' })]);
       expect((await call('GET', '/reader/me', undefined, 'u-redaktion')).json.bookmarks).toEqual([]);

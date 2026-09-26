@@ -701,5 +701,32 @@
     "documentation": [
       "docs/adr/ADR-070-lesezeichen-verlauf.md"
     ]
+  },
+  {
+    "id": "NFR-58",
+    "title": "Leseransicht in den Projektsprachen: freigegebene Übersetzungen, deutscher Rückfall mit Hinweis, übersetzte Titel, Suche, FAQ und Glossar",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-071-sprachen-beim-lesen.md"
+    ]
+  },
+  {
+    "id": "NFR-59",
+    "title": "„Siehe auch“ und passende FAQ im gedruckten Handbuch (mit Kapitelnummern, FAQ-Anhang, je Sprache) und in der Online-Hilfe",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-072-siehe-auch-druck-hilfe.md"
+    ]
+  },
+  {
+    "id": "NFR-60",
+    "title": "Private Notizen zu Lesezeichen mit Übersicht, Filter und CSV-Export",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-073-lesezeichen-notizen.md"
+    ]
   }
 ]

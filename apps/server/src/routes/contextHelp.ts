@@ -37,11 +37,11 @@ export function contextHelpRoutes(app: FastifyInstance, _ctx: Ctx) {
 // ------------------------------------------------------------------ öffentliche Einbettung
 
 const LABELS: Record<string, Record<string, string>> = {
-  de: { fb: 'War das hilfreich?', yes: 'Ja', no: 'Nein', comment: 'Was fehlt? (optional)', thanks: 'Danke für Ihre Rückmeldung.', limit: 'Zu viele Rückmeldungen – bitte später erneut versuchen.', help: 'oneSCM-Hilfe', ask: 'Frage an den Handbuch-Assistenten', send: 'Fragen', sources: 'Quellen', open: 'Im Handbuch öffnen', fallback: 'Noch nicht übersetzt – deutsche Fassung.', none: 'Zu dieser Stelle gibt es noch keine veröffentlichte Hilfe.', version: 'Version' },
-  en: { fb: 'Was this helpful?', yes: 'Yes', no: 'No', comment: 'What is missing? (optional)', thanks: 'Thank you for your feedback.', limit: 'Too much feedback – please try again later.', help: 'oneSCM help', ask: 'Ask the manual assistant', send: 'Ask', sources: 'Sources', open: 'Open in manual', fallback: 'Not yet translated – German version shown.', none: 'No published help for this screen yet.', version: 'Version' },
-  fr: { fb: 'Cette aide vous a-t-elle été utile ?', yes: 'Oui', no: 'Non', comment: 'Que manque-t-il ? (facultatif)', thanks: 'Merci pour votre retour.', limit: 'Trop de retours – veuillez réessayer plus tard.', help: 'Aide oneSCM', ask: 'Poser une question à l’assistant', send: 'Demander', sources: 'Sources', open: 'Ouvrir dans le manuel', fallback: 'Pas encore traduit – version allemande affichée.', none: 'Pas encore d’aide publiée pour cet écran.', version: 'Version' },
-  es: { fb: '¿Le ha resultado útil?', yes: 'Sí', no: 'No', comment: '¿Qué falta? (opcional)', thanks: 'Gracias por su opinión.', limit: 'Demasiadas respuestas: inténtelo más tarde.', help: 'Ayuda de oneSCM', ask: 'Preguntar al asistente', send: 'Preguntar', sources: 'Fuentes', open: 'Abrir en el manual', fallback: 'Aún no traducido: se muestra la versión alemana.', none: 'Aún no hay ayuda publicada para esta pantalla.', version: 'Versión' },
-  it: { fb: 'È stato utile?', yes: 'Sì', no: 'No', comment: 'Cosa manca? (facoltativo)', thanks: 'Grazie per il riscontro.', limit: 'Troppi riscontri: riprovare più tardi.', help: 'Guida oneSCM', ask: 'Chiedi all’assistente', send: 'Chiedi', sources: 'Fonti', open: 'Apri nel manuale', fallback: 'Non ancora tradotto: viene mostrata la versione tedesca.', none: 'Non c’è ancora una guida pubblicata per questa schermata.', version: 'Versione' },
+  de: { see: 'Siehe auch', faq: 'Häufige Fragen', fb: 'War das hilfreich?', yes: 'Ja', no: 'Nein', comment: 'Was fehlt? (optional)', thanks: 'Danke für Ihre Rückmeldung.', limit: 'Zu viele Rückmeldungen – bitte später erneut versuchen.', help: 'oneSCM-Hilfe', ask: 'Frage an den Handbuch-Assistenten', send: 'Fragen', sources: 'Quellen', open: 'Im Handbuch öffnen', fallback: 'Noch nicht übersetzt – deutsche Fassung.', none: 'Zu dieser Stelle gibt es noch keine veröffentlichte Hilfe.', version: 'Version' },
+  en: { see: 'See also', faq: 'Frequently asked questions', fb: 'Was this helpful?', yes: 'Yes', no: 'No', comment: 'What is missing? (optional)', thanks: 'Thank you for your feedback.', limit: 'Too much feedback – please try again later.', help: 'oneSCM help', ask: 'Ask the manual assistant', send: 'Ask', sources: 'Sources', open: 'Open in manual', fallback: 'Not yet translated – German version shown.', none: 'No published help for this screen yet.', version: 'Version' },
+  fr: { see: 'Voir aussi', faq: 'Questions fréquentes', fb: 'Cette aide vous a-t-elle été utile ?', yes: 'Oui', no: 'Non', comment: 'Que manque-t-il ? (facultatif)', thanks: 'Merci pour votre retour.', limit: 'Trop de retours – veuillez réessayer plus tard.', help: 'Aide oneSCM', ask: 'Poser une question à l’assistant', send: 'Demander', sources: 'Sources', open: 'Ouvrir dans le manuel', fallback: 'Pas encore traduit – version allemande affichée.', none: 'Pas encore d’aide publiée pour cet écran.', version: 'Version' },
+  es: { see: 'Véase también', faq: 'Preguntas frecuentes', fb: '¿Le ha resultado útil?', yes: 'Sí', no: 'No', comment: '¿Qué falta? (opcional)', thanks: 'Gracias por su opinión.', limit: 'Demasiadas respuestas: inténtelo más tarde.', help: 'Ayuda de oneSCM', ask: 'Preguntar al asistente', send: 'Preguntar', sources: 'Fuentes', open: 'Abrir en el manual', fallback: 'Aún no traducido: se muestra la versión alemana.', none: 'Aún no hay ayuda publicada para esta pantalla.', version: 'Versión' },
+  it: { see: 'Vedi anche', faq: 'Domande frequenti', fb: 'È stato utile?', yes: 'Sì', no: 'No', comment: 'Cosa manca? (facoltativo)', thanks: 'Grazie per il riscontro.', limit: 'Troppi riscontri: riprovare più tardi.', help: 'Guida oneSCM', ask: 'Chiedi all’assistente', send: 'Chiedi', sources: 'Fonti', open: 'Apri nel manuale', fallback: 'Non ancora tradotto: viene mostrata la versione tedesca.', none: 'Non c’è ancora una guida pubblicata per questa schermata.', version: 'Versione' },
 };
 const label = (lang: string) => LABELS[lang] ?? LABELS.de;
 /** anonyme Rückmeldungen je Stunde und Adresse (ADR-061) */
@@ -55,7 +55,8 @@ form{margin-top:16px;border-top:1px solid #cbd5e1;padding-top:10px}label{display
 input[type=text]{width:100%;box-sizing:border-box;padding:6px;border:1px solid #64748b;border-radius:4px;font:inherit}
 button{margin-top:6px;padding:6px 12px;border:0;border-radius:4px;background:#1d4ed8;color:#fff;font:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
-.answer{background:#f1f5f9;border-radius:6px;padding:8px 10px;margin-top:10px}fieldset{border:1px solid #cbd5e1;border-radius:6px;margin:0;padding:8px 10px}legend{font-weight:600}.hp{position:absolute;left:-9999px;width:1px;height:1px}.answer sup{color:#1d4ed8}a{color:#1d4ed8}`;
+.answer{background:#f1f5f9;border-radius:6px;padding:8px 10px;margin-top:10px}fieldset{border:1px solid #cbd5e1;border-radius:6px;margin:0;padding:8px 10px}legend{font-weight:600}.hp{position:absolute;left:-9999px;width:1px;height:1px}.answer sup{color:#1d4ed8}a{color:#1d4ed8}
+details{border:1px solid #cbd5e1;border-radius:6px;padding:4px 8px;margin:4px 0}summary{cursor:pointer;font-weight:600;min-height:24px}.see ul{margin:4px 0;padding-left:20px}.see li{min-height:24px}`;
 
 interface EmbedState {
   lang: string;
@@ -69,6 +70,19 @@ interface EmbedState {
   appUrl: string | null;
   /** Rückmeldung (ADR-061): gesendet bzw. abgelehnt */
   feedback?: 'sent' | 'limited';
+}
+
+/** „Siehe auch“ und passende FAQ (ADR-072): Verweise auf das Hilfethema des Zielkapitels, sonst nur der Titel */
+function seeAlso(s: EmbedState) {
+  const h = s.help;
+  if (!h || (!h.related.length && !h.faq.length)) return '';
+  const l = label(s.lang);
+  const q = new URLSearchParams(Object.entries({ role: s.role, division: s.division, language: s.lang === 'de' ? undefined : s.lang }).filter(([, v]) => v) as [string, string][]);
+  const base = s.action.replace(/\/[^/]*$/, '');
+  const link = (r: { title: string; contextKey: string | null }) => (r.contextKey
+    ? `<a href="${escapeHtml(`${base}/${encodeURIComponent(r.contextKey)}${q.size ? `?${q}` : ''}`)}">${escapeHtml(r.title)}</a>` : escapeHtml(r.title));
+  return `${h.related.length ? `<nav class="see" aria-labelledby="see-h"><h2 id="see-h">${escapeHtml(l.see)}</h2><ul>${h.related.map((r) => `<li>${link(r)}</li>`).join('')}</ul></nav>` : ''}
+${h.faq.length ? `<section aria-labelledby="faq-h"><h2 id="faq-h">${escapeHtml(l.faq)}</h2>${h.faq.map((f) => `<details><summary>${escapeHtml(f.question)}</summary>${f.html}</details>`).join('')}</section>` : ''}`;
 }
 
 function embedPage(s: EmbedState) {
@@ -86,7 +100,8 @@ function embedPage(s: EmbedState) {
     ? `<h1>${escapeHtml(h.title)}</h1>
 <p class="meta">${escapeHtml(l.version)} ${escapeHtml(h.release?.version ?? String(h.versionNo))}${deep}</p>
 ${h.fallback ? `<p class="meta" lang="${escapeHtml(s.lang)}"><strong>${escapeHtml(l.fallback)}</strong></p>` : ''}
-<div${h.fallback ? ' lang="de"' : ''}>${h.html}</div>`
+<div${h.fallback ? ' lang="de"' : ''}>${h.html}</div>
+${seeAlso(s)}`
     : `<h1>${escapeHtml(l.help)}</h1><p>${escapeHtml(l.none)}</p>`;
   return `<!doctype html>
 <html lang="${escapeHtml(s.lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

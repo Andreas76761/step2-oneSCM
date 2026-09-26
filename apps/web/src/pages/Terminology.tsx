@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { patch, post } from '../api';
 import { Card, Empty, ErrorBox, Page, Status, errorText, useApp, useLoad } from '../components/ui';
 
@@ -9,6 +9,8 @@ export function TerminologyPage() {
   const terms = useLoad<any[]>(`/terminology${showRetired ? '?includeRetired=true' : ''}`, [showRetired]);
   const [form, setForm] = useState({ preferred: '', avoid: '', definition: '' });
   const [edit, setEdit] = useState<any | null>(null);
+  // Projektsprachen: Begriff und Definition je Sprache für das Glossar der Leseransicht (ADR-071)
+  const languages = (useLoad<any[]>('/reader/languages').data ?? []).filter((l) => l.code !== 'de');
   const list = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
 
   const save = async (fn: () => Promise<unknown>, msg: string) => {
@@ -57,25 +59,46 @@ export function TerminologyPage() {
             <tbody>
               {terms.data.map((t) =>
                 edit?.id === t.id ? (
-                  <tr key={t.id}>
+                  <Fragment key={t.id}>
+                  <tr>
                     <td><input value={edit.preferred} onChange={(e) => setEdit({ ...edit, preferred: e.target.value })} aria-label="Bevorzugt bearbeiten" /></td>
                     <td><input value={edit.avoid} onChange={(e) => setEdit({ ...edit, avoid: e.target.value })} aria-label="Zu vermeiden bearbeiten" /></td>
                     <td><input value={edit.definition} onChange={(e) => setEdit({ ...edit, definition: e.target.value })} aria-label="Definition bearbeiten" /></td>
                     <td colSpan={2} />
                     <td className="row-actions">
-                      <button className="btn primary small" onClick={async () => (await save(() => patch(`/terminology/${t.id}`, { preferred: edit.preferred, avoid: list(edit.avoid), definition: edit.definition || null }), 'Begriff gespeichert.')) && setEdit(null)}>Speichern</button>
+                      <button className="btn primary small" onClick={async () => (await save(() => patch(`/terminology/${t.id}`, { preferred: edit.preferred, avoid: list(edit.avoid), definition: edit.definition || null, translations: edit.translations }), 'Begriff gespeichert.')) && setEdit(null)}>Speichern</button>
                       <button className="btn small" onClick={() => setEdit(null)}>Abbrechen</button>
                     </td>
                   </tr>
+                  {languages.length > 0 && (
+                    <tr className="term-translations">
+                      <td colSpan={6}>
+                        <fieldset>
+                          <legend className="small">Übersetzungen für das Glossar beim Lesen</legend>
+                          {languages.map((l) => (
+                            <div key={l.code} className="term-lang">
+                              <label className="inline">{l.name}: Begriff
+                                <input value={edit.translations[l.code]?.term ?? ''} onChange={(e) => setEdit({ ...edit, translations: { ...edit.translations, [l.code]: { ...edit.translations[l.code], term: e.target.value } } })} />
+                              </label>
+                              <label className="inline">Definition
+                                <input value={edit.translations[l.code]?.definition ?? ''} onChange={(e) => setEdit({ ...edit, translations: { ...edit.translations, [l.code]: { ...edit.translations[l.code], definition: e.target.value } } })} />
+                              </label>
+                            </div>
+                          ))}
+                        </fieldset>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 ) : (
                   <tr key={t.id}>
                     <td><strong>{t.preferred}</strong></td>
                     <td>{t.avoid.map((a: string) => <span key={a} className="tag">{a}</span>)}</td>
-                    <td className="small">{t.definition ?? '–'}</td>
+                    <td className="small">{t.definition ?? '–'}{Object.keys(t.translations ?? {}).map((c) => <span key={c} className="tag small" title={`${t.translations[c].term}: ${t.translations[c].definition ?? ''}`}>{c.toUpperCase()}</span>)}</td>
                     <td><Status s={t.status === 'active' ? 'confirmed' : 'superseded'} /></td>
                     <td className="small">{t.updatedBy}, {new Date(t.updatedAt).toLocaleString('de-DE')}</td>
                     <td className="row-actions">
-                      {t.status === 'active' && <button className="btn small" onClick={() => setEdit({ id: t.id, preferred: t.preferred, avoid: t.avoid.join(', '), definition: t.definition ?? '' })}>Bearbeiten</button>}
+                      {t.status === 'active' && <button className="btn small" onClick={() => setEdit({ id: t.id, preferred: t.preferred, avoid: t.avoid.join(', '), definition: t.definition ?? '', translations: { ...(t.translations ?? {}) } })}>Bearbeiten</button>}
                       <button className="btn small" onClick={() => save(() => patch(`/terminology/${t.id}`, { status: t.status === 'active' ? 'retired' : 'active' }), t.status === 'active' ? 'Begriff ausgemustert.' : 'Begriff reaktiviert.')}>
                         {t.status === 'active' ? 'Ausmustern' : 'Reaktivieren'}
                       </button>

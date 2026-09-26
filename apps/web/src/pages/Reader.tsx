@@ -136,7 +136,43 @@ export function ChapterContent({ version, role }: { version: any; role?: string 
 }
 
 /** Glossar für Leseransicht und Druck (Terminologie mit Definition und Abkürzungen) */
-export const useReaderGlossary = () => useLoad<GlossaryEntry[]>('/reader/glossary');
+export const useReaderGlossary = (lang = 'de') => useLoad<GlossaryEntry[]>(`/reader/glossary${lang !== 'de' ? `?lang=${lang}` : ''}`, [lang]);
+
+const LANG_KEY = 'onescm.reader.lang';
+/** Lesesprache (ADR-071): aus ?lang=, sonst gemerkt je Browser; nur Sprachen des Projekts */
+function useReaderLanguage() {
+  const [params] = useSearchParams();
+  const languages = useLoad<{ code: string; name: string; chapters: number | null }[]>('/reader/languages');
+  const [lang, setLangState] = useState<string>(() => {
+    try {
+      return params.get('lang') ?? localStorage.getItem(LANG_KEY) ?? 'de';
+    } catch {
+      return params.get('lang') ?? 'de';
+    }
+  });
+  useEffect(() => {
+    if (languages.data && !languages.data.some((l) => l.code === lang)) setLangState('de');
+  }, [languages.data, lang]);
+  const setLang = (code: string) => {
+    setLangState(code);
+    try {
+      localStorage.setItem(LANG_KEY, code);
+    } catch {
+      /* nur für diese Sitzung */
+    }
+  };
+  const name = languages.data?.find((l) => l.code === lang)?.name ?? lang;
+  return { lang, setLang, languages: languages.data ?? [], name };
+}
+
+/** Hinweis, wenn ein Kapitel (noch) nicht in der Lesesprache vorliegt */
+function LanguageNote({ version, name }: { version: any; name: string }) {
+  if (!version || version.requestedLanguage === 'de' || !version.requestedLanguage) return null;
+  if (version.fallback === 'missing') return <p className="reader-lang-note" role="note">Dieses Kapitel ist noch nicht in {name} übersetzt – Sie lesen die deutsche Fassung.</p>;
+  if (version.fallback === 'outdated') return <p className="reader-lang-note" role="note">Die {name}-Übersetzung gehört zu einer älteren Fassung – Sie lesen die aktuelle deutsche Fassung.</p>;
+  if (version.untranslatedBlocks > 0) return <p className="reader-lang-note" role="note">{version.untranslatedBlocks === 1 ? '1 Absatz ist' : `${version.untranslatedBlocks} Absätze sind`} noch nicht übersetzt und erscheinen deutsch.</p>;
+  return null;
+}
 
 const HIGHLIGHT = 'reader-search';
 /**
@@ -183,9 +219,9 @@ function Marked({ text, words }: { text: string; words: string[] }) {
 }
 
 /** „Siehe auch“ und passende häufige Fragen unter einem Kapitel (ADR-069); Redaktion pflegt Verweise direkt hier */
-function Related({ chapterId, drafts, canEdit, chapters, withQ }: { chapterId: string; drafts: boolean; canEdit: boolean; chapters: { id: string; title: string }[]; withQ: (id: string) => string }) {
+function Related({ chapterId, drafts, lang, canEdit, chapters, withQ }: { chapterId: string; drafts: boolean; lang: string; canEdit: boolean; chapters: { id: string; title: string }[]; withQ: (id: string) => string }) {
   const { notify } = useApp();
-  const rel = useLoad<any>(`/reader/related/${chapterId}${drafts ? '?drafts=true' : ''}`, [chapterId, drafts]);
+  const rel = useLoad<any>(`/reader/related/${chapterId}?drafts=${drafts}${lang !== 'de' ? `&lang=${lang}` : ''}`, [chapterId, drafts, lang]);
   const [editing, setEditing] = useState(false);
   const [add, setAdd] = useState('');
   const [busy, setBusy] = useState(false);
@@ -262,10 +298,87 @@ function Related({ chapterId, drafts, canEdit, chapters, withQ }: { chapterId: s
   );
 }
 
+/** Lesezeichen mit eigenen Notizen (ADR-073): filtern, Notiz bearbeiten, entfernen, als CSV speichern */
+export function ReaderBookmarksPage() {
+  const { notify } = useApp();
+  const mine = useLoad<any>('/reader/me');
+  const [filter, setFilter] = useState('');
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const q = filter.trim().toLocaleLowerCase('de');
+  const all: any[] = mine.data?.bookmarks ?? [];
+  const items = all.filter((b) => !q || `${b.title} ${b.note ?? ''}`.toLocaleLowerCase('de').includes(q));
+  const saveNote = async (b: any) => {
+    try {
+      await api('PUT', `/reader/bookmarks/${b.chapterId}`, { note: notes[b.chapterId] ?? '' });
+      notify('Notiz gespeichert.');
+      setNotes(({ [b.chapterId]: _drop, ...rest }) => rest);
+      mine.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const remove = async (b: any) => {
+    try {
+      await api('DELETE', `/reader/bookmarks/${b.chapterId}`);
+      notify(`Lesezeichen „${b.title}“ entfernt.`);
+      mine.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const exportCsv = () => {
+    // Formel-Einschleusung verhindern: beginnt ein Wert wie eine Formel, wird er mit ' als Text markiert
+    const cell = (v: string) => `"${(/^[=+\-@\t\r]/.test(v) ? `'${v}` : v).replace(/"/g, '""')}"`;
+    const rows = [['Kapitel', 'Notiz', 'Gemerkt am', 'Link'], ...items.map((b) => [b.title, b.note ?? '', new Date(b.createdAt).toLocaleDateString('de-DE'), `${window.location.origin}/lesen/${b.chapterId}`])];
+    const url = URL.createObjectURL(new Blob([`\ufeff${rows.map((r) => r.map(cell).join(';')).join('\r\n')}`], { type: 'text/csv;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'lesezeichen.csv';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  return (
+    <Page title="Lesezeichen" subtitle="Ihre gemerkten Kapitel mit eigenen Notizen – nur für Sie sichtbar"
+      actions={<span className="row-actions"><Link className="btn" to="/lesen">← Leseransicht</Link><button className="btn" disabled={!items.length} onClick={exportCsv}>📤 Als CSV speichern</button></span>}>
+      <ErrorBox error={mine.error} />
+      <div className="filters">
+        <label className="inline">Lesezeichen filtern <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Titel oder Notiz" /></label>
+        <span className="small muted" aria-live="polite">{mine.data ? `${items.length} von ${all.length}` : ''}</span>
+      </div>
+      {mine.data && !all.length ? <Empty>Noch keine Lesezeichen. In der <Link to="/lesen">Leseransicht</Link> merken Sie Kapitel mit „☆ Merken“.</Empty> : (
+        <Card title="Gemerkte Kapitel">
+          <ul className="plain bookmark-list">
+            {items.map((b) => {
+              const draft = notes[b.chapterId];
+              return (
+                <li key={b.chapterId}>
+                  <span><Link to={`/lesen/${b.chapterId}`}><strong>{b.title}</strong></Link> <span className="small muted">· gemerkt am {new Date(b.createdAt).toLocaleDateString('de-DE')}</span></span>
+                  <label className="block">Notiz
+                    <textarea rows={2} maxLength={500} aria-label={`Notiz zu „${b.title}“`} value={draft ?? b.note ?? ''} placeholder="z. B. für die Inventur im Dezember"
+                      onChange={(e) => setNotes({ ...notes, [b.chapterId]: e.target.value })} />
+                  </label>
+                  <span className="row-actions">
+                    <button className="btn small primary" disabled={draft === undefined || draft === (b.note ?? '')} onClick={() => saveNote(b)} aria-label={`Notiz zu „${b.title}“ speichern`}>Notiz speichern</button>
+                    <button className="btn small danger" onClick={() => remove(b)} aria-label={`Lesezeichen „${b.title}“ entfernen`}>Entfernen</button>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
+    </Page>
+  );
+}
+
 /** Häufige Fragen für Leser (ADR-069): veröffentlichte FAQ mit Filter */
 export function ReaderFaqPage() {
-  const faq = useLoad<any[]>('/faq?status=published&language=de');
-  const glossary = useReaderGlossary();
+  const { lang, name } = useReaderLanguage();
+  const faqLang = useLoad<any[]>(lang !== 'de' ? `/faq?status=published&language=${lang}` : null, [lang]);
+  const faqDe = useLoad<any[]>('/faq?status=published&language=de');
+  // in der Lesesprache, sonst deutsch (wie die Vorschläge unter den Kapiteln)
+  const faq = lang !== 'de' && faqLang.data?.length ? faqLang : faqDe;
+  const glossary = useReaderGlossary(lang);
   const [filter, setFilter] = useState('');
   const q = filter.trim().toLocaleLowerCase('de');
   const items = (faq.data ?? []).filter((f) => !q || `${f.question} ${f.answer}`.toLocaleLowerCase('de').includes(q));
@@ -274,6 +387,7 @@ export function ReaderFaqPage() {
       <Page title="Häufige Fragen" subtitle="Kurze Antworten auf das, was Leserinnen und Leser oft wissen möchten"
         actions={<Link className="btn no-print" to="/lesen">← Leseransicht</Link>}>
         <ErrorBox error={faq.error} />
+        {lang !== 'de' && faqLang.data && !faqLang.data.length && <p className="reader-lang-note" role="note">Noch keine häufigen Fragen in {name} – Sie lesen die deutschen.</p>}
         <div className="filters">
           <label className="inline">Fragen filtern <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="z. B. Passwort" /></label>
           <span className="small muted" aria-live="polite">{faq.data ? `${items.length} von ${faq.data.length}` : ''}</span>
@@ -293,8 +407,12 @@ export function ReaderPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const chapters = useLoad<any[]>('/chapters');
-  const glossary = useReaderGlossary();
   const [drafts, setDrafts] = useState(false);
+  const { lang, setLang, languages, name: langName } = useReaderLanguage();
+  const glossary = useReaderGlossary(lang);
+  const trans = useLoad<any>(lang !== 'de' ? `/reader/translations?lang=${lang}&drafts=${drafts}` : null, [lang, drafts]);
+  const titleOf = (id: string, fallback: string) => (lang !== 'de' && trans.data?.language === lang ? trans.data.titles[id] ?? fallback : fallback);
+  const untranslated = (id: string) => lang !== 'de' && trans.data?.language === lang && !trans.data.translated.includes(id);
   const [query, setQuery] = useState(params.get('q') ?? '');
   const [search, setSearch] = useState<{ q: string; words: string[]; total: number; results: any[] } | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -309,14 +427,14 @@ export function ReaderPage() {
     }
     let alive = true;
     const t = setTimeout(() => {
-      get<any>(`/reader/search?q=${encodeURIComponent(q)}${drafts ? '&drafts=true' : ''}`)
+      get<any>(`/reader/search?q=${encodeURIComponent(q)}${drafts ? '&drafts=true' : ''}${lang !== 'de' ? `&lang=${lang}` : ''}`)
         .then((r) => alive && (setSearch(r), setSearchError(null)), (e) => alive && setSearchError(errorText(e)));
     }, 250);
     return () => {
       alive = false;
       clearTimeout(t);
     };
-  }, [query, drafts]);
+  }, [query, drafts, lang]);
   // je Kapitel die anzuzeigende Version: freigegeben, sonst (mit „Entwürfe einblenden“) die neueste
   const list = useMemo(() => (chapters.data ?? []).map((c) => {
     // „Entwürfe einblenden“: jeweils die neueste Version (Vorschau); sonst die freigegebene
@@ -324,7 +442,8 @@ export function ReaderPage() {
     return shown ? { id: c.id as string, title: c.title as string, version: shown, draft: shown.status !== 'approved' } : null;
   }).filter((x): x is NonNullable<typeof x> => !!x), [chapters.data, drafts]);
   const current = list.find((c) => c.id === chapterId) ?? null;
-  const version = useLoad<any>(current ? `/chapter-versions/${current.version.id}` : null, [current?.version.id]);
+  // deutsch: Fassung direkt; andere Sprache: dieselbe Fassung mit Texten der freigegebenen Übersetzung (sonst deutsch mit Hinweis)
+  const version = useLoad<any>(current ? (lang === 'de' ? `/chapter-versions/${current.version.id}` : `/reader/versions/${current.version.id}?lang=${lang}`) : null, [current?.version.id, lang]);
   // Lesezeichen, Verlauf, Änderungen seit dem letzten Besuch (ADR-070)
   const mine = useLoad<any>('/reader/me');
   const me = useLoad<any>('/me');
@@ -343,6 +462,7 @@ export function ReaderPage() {
   // übrige markierte Kapitel – live gezählt, sinkt mit jedem gelesenen
   const otherUpdates = Object.keys(updates).filter((id) => id !== current?.id).length;
   const bookmarked = !!mine.data?.bookmarks.some((b: any) => b.chapterId === current?.id);
+  const bookmarkNote = mine.data?.bookmarks.find((b: any) => b.chapterId === current?.id)?.note as string | undefined;
   const idx = current ? list.indexOf(current) : -1;
   // Hervorhebung: Suchwörter aus dem Link (?q=) – bleiben beim Blättern erhalten, bis sie entfernt werden
   const marked = useMemo(() => [...new Set((params.get('q') ?? '').toLocaleLowerCase('de').split(/\s+/).filter((w) => w.length >= 2))], [params]);
@@ -358,6 +478,13 @@ export function ReaderPage() {
       <ErrorBox error={chapters.error} />
       <div className="reader">
         <nav className="reader-toc card no-print" aria-label="Inhaltsverzeichnis">
+          {languages.length > 1 && (
+            <label className="block">Sprache
+              <select value={lang} onChange={(e) => setLang(e.target.value)}>
+                {languages.map((l) => <option key={l.code} value={l.code}>{l.name}{l.chapters !== null ? ` (${l.chapters} übersetzt)` : ''}</option>)}
+              </select>
+            </label>
+          )}
           <div role="search" className="reader-search">
             <label className="reader-search-label" htmlFor="reader-q">Im Handbuch suchen</label>
             <div className="reader-search-row">
@@ -387,13 +514,14 @@ export function ReaderPage() {
               {mine.data?.bookmarks.length > 0 && (
                 <>
                   <h2 className="toc-sub">★ Lesezeichen</h2>
-                  <ul className="plain">{mine.data.bookmarks.map((b: any) => <li key={b.chapterId}><Link to={withQ(b.chapterId)}>{b.title}</Link></li>)}</ul>
+                  <ul className="plain">{mine.data.bookmarks.slice(0, 5).map((b: any) => <li key={b.chapterId}><Link to={withQ(b.chapterId)}>{titleOf(b.chapterId, b.title)}</Link></li>)}</ul>
+                  <p className="small"><Link to="/lesen/lesezeichen">Alle Lesezeichen und Notizen</Link></p>
                 </>
               )}
               {mine.data?.recent.length > 0 && (
                 <>
                   <h2 className="toc-sub">Zuletzt gelesen</h2>
-                  <ul className="plain">{mine.data.recent.slice(0, 3).map((r: any) => <li key={r.chapterId}><Link to={withQ(r.chapterId)}>{r.title}</Link></li>)}</ul>
+                  <ul className="plain">{mine.data.recent.slice(0, 3).map((r: any) => <li key={r.chapterId}><Link to={withQ(r.chapterId)}>{titleOf(r.chapterId, r.title)}</Link></li>)}</ul>
                 </>
               )}
               <h2>Inhalt</h2>
@@ -401,8 +529,9 @@ export function ReaderPage() {
               <ol className="plain">
                 {list.map((c) => (
                   <li key={c.id}>
-                    <Link to={withQ(c.id)} aria-current={c.id === chapterId ? 'page' : undefined} className={c.id === chapterId ? 'active' : ''}>{c.title}</Link>
+                    <Link to={withQ(c.id)} aria-current={c.id === chapterId ? 'page' : undefined} className={c.id === chapterId ? 'active' : ''}><span lang={untranslated(c.id) ? 'de' : lang}>{titleOf(c.id, c.title)}</span></Link>
                     {c.draft && <span className="tag small">Entwurf</span>}
+                    {untranslated(c.id) && <span className="tag small" title="noch nicht übersetzt">DE</span>}
                     {updates[c.id] && <span className={`tag small tag-${updates[c.id]}`}>{updates[c.id] === 'new' ? 'Neu' : 'Geändert'}</span>}
                   </li>
                 ))}
@@ -412,7 +541,7 @@ export function ReaderPage() {
           )}
           {glossary.data && glossary.data.length > 0 && <p className="small muted">Unterstrichene Begriffe erklären sich per Klick oder Maus.</p>}
         </nav>
-        <article ref={article} className="reader-body card" aria-label={current?.title ?? 'Kapitel'}>
+        <article ref={article} className="reader-body card" aria-label={current ? titleOf(current.id, current.title) : 'Kapitel'} lang={version.data?.language ?? 'de'}>
           {!current ? <Empty>Wählen Sie links ein Kapitel{search ? ' aus den Suchergebnissen' : ''}.</Empty> : !version.data ? <ErrorBox error={version.error} /> : (
             <>
               {marked.length > 0 && (
@@ -428,18 +557,20 @@ export function ReaderPage() {
                 </p>
               )}
               <div className="reader-title-row">
-                <h2 className="reader-title">{current.title}{current.draft && <span className="tag small">Entwurf – noch nicht freigegeben</span>}</h2>
+                <h2 className="reader-title">{version.data.title ?? current.title}{current.draft && <span className="tag small">Entwurf – noch nicht freigegeben</span>}</h2>
                 <button type="button" className="btn small no-print" aria-pressed={bookmarked} onClick={async () => {
                   await api(bookmarked ? 'DELETE' : 'PUT', `/reader/bookmarks/${current.id}`);
                   mine.reload();
                 }}>{bookmarked ? '★ Gemerkt' : '☆ Merken'}</button>
               </div>
+              {bookmarkNote && <p className="small bookmark-note">📝 {bookmarkNote} · <Link to="/lesen/lesezeichen">Notiz bearbeiten</Link></p>}
+              <LanguageNote version={version.data} name={langName} />
               <ChapterContent version={version.data} />
-              <Related chapterId={current.id} drafts={drafts} canEdit={canEdit} chapters={list} withQ={withQ} />
+              <Related chapterId={current.id} drafts={drafts} lang={lang} canEdit={canEdit} chapters={list.map((c) => ({ id: c.id, title: titleOf(c.id, c.title) }))} withQ={withQ} />
               <Feedback chapterId={current.id} versionId={version.data.id} />
               <div className="row-actions reader-nav no-print">
-                {idx > 0 && <button className="btn" onClick={() => navigate(withQ(list[idx - 1].id))}>← {list[idx - 1].title}</button>}
-                {idx >= 0 && idx < list.length - 1 && <button className="btn" onClick={() => navigate(withQ(list[idx + 1].id))}>{list[idx + 1].title} →</button>}
+                {idx > 0 && <button className="btn" onClick={() => navigate(withQ(list[idx - 1].id))}>← {titleOf(list[idx - 1].id, list[idx - 1].title)}</button>}
+                {idx >= 0 && idx < list.length - 1 && <button className="btn" onClick={() => navigate(withQ(list[idx + 1].id))}>{titleOf(list[idx + 1].id, list[idx + 1].title)} →</button>}
               </div>
             </>
           )}
@@ -516,11 +647,16 @@ export function PrintPage() {
   const drafts = params.has('entwuerfe');
   const outlineId = params.get('variante') ?? '';
   const role = params.get('rolle') ?? '';
+  const languagesLoad = useLoad<{ code: string; name: string }[]>('/reader/languages');
+  const lang = languagesLoad.data?.some((l) => l.code === params.get('sprache')) ? params.get('sprache')! : 'de';
+  const langName = languagesLoad.data?.find((l) => l.code === lang)?.name ?? lang;
   const { ref } = useApp();
   const outlines = useLoad<any>('/outlines');
   const variants = (outlines.data?.items ?? []).filter((o: any) => o.latest);
   const chapters = useLoad<any>(outlineId ? `/outlines/${outlineId}/chapters` : '/chapters', [outlineId]);
-  const glossary = useReaderGlossary();
+  const glossary = useReaderGlossary(lang);
+  // „Siehe auch“ und FAQ für alle gedruckten Kapitel – Standardhandbuch oder die Kapitel der gewählten Variante (ADR-072)
+  const related = useLoad<Record<string, any>>(`/reader/related?drafts=${drafts}${lang !== 'de' ? `&lang=${lang}` : ''}${outlineId ? `&outline=${encodeURIComponent(outlineId)}` : ''}`, [outlineId, drafts, lang]);
   const layout = useLoad<any>('/layout');
   const [versions, setVersions] = useState<any[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -536,14 +672,25 @@ export function PrintPage() {
     // Antworten einer inzwischen abgewählten Variante/Einstellung verwerfen – sonst stünde das falsche Handbuch unter dem Titel
     let current = true;
     const shown = list.map((c) => (drafts ? c.versions[0] : c.versions.find((v: any) => v.status === 'approved'))).filter(Boolean);
-    Promise.all(shown.map((v: any) => api<any>('GET', `/chapter-versions/${v.id}`)))
+    Promise.all(shown.map((v: any) => api<any>('GET', lang === 'de' ? `/chapter-versions/${v.id}` : `/reader/versions/${v.id}?lang=${lang}`)))
       .then((v) => current && setVersions(v), (e) => current && setError(errorText(e)));
     return () => {
       current = false;
     };
-  }, [chapters.data, drafts, outlineId]);
+  }, [chapters.data, drafts, outlineId, lang]);
   // mit Rolle: Kapitel ohne passenden Inhalt entfallen
   const printed = (versions ?? []).filter((v) => readerSections(v, role || undefined).length);
+  // Kapitelnummern der gedruckten Kapitel: „Siehe auch“ verweist nur auf mitgedruckte Kapitel
+  const numberOf = new Map(printed.map((v, n) => [v.chapterId as string, n + 1]));
+  const seeAlso = (chapterId: string) => {
+    const r = related.data?.[chapterId];
+    return r ? [...r.manual, ...r.automatic].filter((x: any) => numberOf.has(x.chapterId)) : [];
+  };
+  const printedFaq = (() => {
+    const seen = new Map<string, any>();
+    for (const v of printed) for (const f of related.data?.[v.chapterId]?.faq ?? []) if (!seen.has(f.id)) seen.set(f.id, f);
+    return [...seen.values()];
+  })();
   const date = new Date().toLocaleDateString('de-DE');
   const projects = useLoad<any[]>('/projects');
   const releases = useLoad<any[]>('/releases');
@@ -563,7 +710,7 @@ export function PrintPage() {
     preloadMarkdown().then(() => setMarkdownReady(true), () => setMarkdownReady(true));
   }, []);
   useEffect(() => setLogoDone(false), [layout.data?.logoSha]);
-  const ready = !!versions && !!projects.data && !!releases.data && !!layout.data && !!outlines.data && markdownReady && (!layout.data?.logoSha || logoDone);
+  const ready = !!versions && !!projects.data && !!releases.data && !!layout.data && !!outlines.data && (!!related.data || !!related.error) && markdownReady && (!layout.data?.logoSha || logoDone);
   const print = async () => {
     // letzte Absicherung: warten, bis kein Text mehr auf den Renderer wartet (höchstens 3 s)
     for (let i = 0; i < 60 && document.querySelector('.print-book .md-pending'); i++) await new Promise((r) => setTimeout(r, 50));
@@ -609,6 +756,13 @@ export function PrintPage() {
             {(ref?.roles ?? []).filter((r) => r.code !== 'all').map((r) => <option key={r.code} value={r.code}>{r.label}</option>)}
           </select>
         </label>
+        {(languagesLoad.data?.length ?? 0) > 1 && (
+          <label className="inline">Sprache
+            <select value={lang} onChange={(e) => setParam('sprache', e.target.value === 'de' ? '' : e.target.value)}>
+              {languagesLoad.data!.map((l) => <option key={l.code} value={l.code}>{l.name}</option>)}
+            </select>
+          </label>
+        )}
         <label className="inline"><input type="checkbox" checked={drafts} onChange={(e) => setParam('entwuerfe', e.target.checked ? '1' : '')} /> Entwürfe mitdrucken</label>
       </div>
       <p className="small muted no-print">Tipp: Im Druckdialog „Als PDF speichern“ wählen. Das Handbuch beginnt mit einem Deckblatt{lay?.companyName || lay?.logoSha ? ' im Firmen-Layout' : ''}; jedes Kapitel beginnt auf einer neuen Seite, unten steht „Seite X von Y“. Mit einer Rolle erscheinen nur allgemeine und für diese Rolle bestimmte Inhalte.</p>
@@ -619,7 +773,7 @@ export function PrintPage() {
             <p className="print-cover-kicker">{lay?.companyName ? `${lay.companyName} · ` : ''}Benutzerhandbuch</p>
             <h2 className="print-cover-title">{bookTitle}</h2>
             {lay?.coverSubtitle && <p className="print-cover-subtitle">{lay.coverSubtitle}</p>}
-            <p className="print-cover-edition">{edition}{roleLabel && ` · für ${roleLabel}`}</p>
+            <p className="print-cover-edition">{edition}{roleLabel && ` · für ${roleLabel}`}{lang !== 'de' && ` · ${langName}`}</p>
             <dl className="print-cover-meta">
               <div><dt>Stand</dt><dd>{date}</dd></div>
               <div><dt>Kapitel</dt><dd>{printed.length}</dd></div>
@@ -632,15 +786,28 @@ export function PrintPage() {
             <h2>Inhalt</h2>
             <ol>
               {printed.map((v, n) => <li key={v.id}><a href={`#k-${v.id}`}>{numbered(n + 1, v.title)}</a>{v.status !== 'approved' && ' (Entwurf)'}</li>)}
+              {printedFaq.length > 0 && <li><a href="#faq">Häufige Fragen</a></li>}
               {usedGlossary.length > 0 && <li><a href="#glossar">Glossar</a></li>}
             </ol>
           </nav>
           {printed.map((v, n) => (
             <article key={v.id} id={`k-${v.id}`} className="print-chapter reader-body" aria-label={v.title}>
               <h2 className="reader-title">{numbered(n + 1, v.title)}{v.status !== 'approved' && <span className="tag small">Entwurf</span>}</h2>
+              {v.fallback && <p className="small muted">({v.fallback === 'outdated' ? 'Übersetzung veraltet' : 'noch nicht übersetzt'} – deutsche Fassung)</p>}
               <ChapterContent version={v} role={role || undefined} />
+              {seeAlso(v.chapterId).length > 0 && (
+                <p className="print-see"><strong>Siehe auch:</strong> {seeAlso(v.chapterId).map((x: any, i: number) => (
+                  <span key={x.chapterId}>{i > 0 && '; '}<a href={`#k-${printed[numberOf.get(x.chapterId)! - 1].id}`}>Kapitel {numberOf.get(x.chapterId)} „{x.title.replace(/^\d+(\.\d+)*\.?\s+/, '')}“</a></span>
+                ))}</p>
+              )}
             </article>
           ))}
+          {printedFaq.length > 0 && (
+            <section id="faq" className="print-chapter print-faq" aria-labelledby="faq-h">
+              <h2 id="faq-h" className="reader-title">Häufige Fragen</h2>
+              {printedFaq.map((f) => <div key={f.id} className="print-faq-item"><h3>{f.question}</h3><Md text={f.answer} /></div>)}
+            </section>
+          )}
           {usedGlossary.length > 0 && (
             <section id="glossar" className="print-chapter print-glossary" aria-labelledby="glossar-h">
               <h2 id="glossar-h" className="reader-title">Glossar</h2>

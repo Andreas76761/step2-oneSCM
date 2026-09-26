@@ -1,5 +1,6 @@
 // Kontexthilfe für oneSCM (ADR-030): Kontext-IDs an Kapiteln, Auflösung nach Rolle, Sparte und Sprache,
 // Deep-Links in die Anwendung und eine einbettbare Hilfeseite (Widget) mit Handbuch-Assistent.
+import { readerRelated, relatedForVersions } from './reader.js';
 import { audit, type Ctx, type User } from '../context.js';
 import { newId, now, parseJson, type Row } from '../db.js';
 import { CHAPTER_SECTIONS, DIVISION_CODES, ROLE_CODES } from '../domain/reference.js';
@@ -130,6 +131,9 @@ export interface ResolvedHelp {
   deepLink: string;
   /** Kapitelversionen, auf die sich der Assistent im Widget stützt */
   versionIds: string[];
+  /** „Siehe auch“ mit Hilfethema des Zielkapitels (falls vorhanden) und passende FAQ (ADR-072) */
+  related: { chapterId: string; title: string; contextKey: string | null }[];
+  faq: { question: string; answer: string; html: string }[];
 }
 
 function validQuery(q: HelpQuery, languages: string[]) {
@@ -184,9 +188,20 @@ export async function resolveHelp(ctx: Ctx, rawKey: string, q: HelpQuery, source
   const images = (sha: string) => (media.has(sha) ? dataUri(media.get(sha)!) : null);
   const html = sections.map((s) => `<section><h2>${escapeHtml(s.title)}</h2>${s.blocks.map((b) => `<div class="block kind-${escapeHtml(b.kind)}">${markdownToHtml(b.text, images)}</div>`).join('')}</section>`).join('\n');
   const params = new URLSearchParams(Object.entries({ role: q.role, division: q.division, language: language === 'de' ? undefined : language }).filter(([, v]) => v) as [string, string][]);
+  // „Siehe auch“ (ADR-072): aus denselben Fassungen wie die Hilfe (Release bzw. freigegeben), Titel in der Hilfesprache
+  const rel = source === 'release' ? await relatedForVersions(ctx, versionIds, row.chapter_id, fallback ? 'de' : language) : await readerRelated(ctx, row.chapter_id, false, fallback ? 'de' : language);
+  const targets = [...rel.manual, ...rel.automatic];
+  const keys = new Map<string, string>();
+  if (targets.length) {
+    for (const r of await ctx.db.all(`SELECT chapter_id, context_key FROM help_contexts WHERE project_id = ? AND chapter_id IN (${targets.map(() => '?').join(', ')}) ORDER BY context_key`, ctx.projectId, ...targets.map((t) => t.chapterId))) {
+      if (!keys.has(r.chapter_id as string)) keys.set(r.chapter_id as string, r.context_key as string);
+    }
+  }
   return {
     key, chapterId: row.chapter_id, title: chapter.title, versionNo: chapter.versionNo, approvedAt: chapter.approvedAt, section: row.section_code ?? null,
     language: fallback ? 'de' : language, fallback, source, release, sections, html,
     deepLink: `/hilfe/${encodeURIComponent(key)}${params.size ? `?${params}` : ''}`, versionIds,
+    related: targets.map((t) => ({ chapterId: t.chapterId, title: t.title, contextKey: keys.get(t.chapterId) ?? null })),
+    faq: rel.faq.map((f) => ({ question: f.question, answer: f.answer, html: markdownToHtml(f.answer, images) })),
   };
 }
