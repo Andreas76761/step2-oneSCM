@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.18.0 – Etappe 18 (26.09.2026)
+
+### Hinzugefügt
+- **Anleitungs-Check (ADR-051):** Checkliste je Kapitel – Zweck, Voraussetzungen, Schritte, nummerierte Schritte, eine Handlung je Schritt, Menüpfade fett, Ergebnis, Schrittzahl, Abkürzungen, Absatzlänge – mit Wert 0–100 und Korrekturen per Klick; fehlende Abschnitte direkt schreiben.
+- **Kapitel-Assistent (ADR-052):** neues Kapitel in vier Schritten (Aufgabe, Voraussetzungen, Schritte, Ergebnis & Tipps) mit Vorschlägen aus den Quellen und Vorschau; legt einen Entwurf im Standardaufbau mit Quellenbezug an.
+- **Einfache Oberfläche (ADR-053):** Startseite „Was möchten Sie tun?“ mit Hauptaufgaben, Fortschritt und Kapiteln mit Handlungsbedarf; Menü nach Arbeitsablauf (Sammeln, Schreiben, Prüfen, Veröffentlichen), Selteneres unter „Weitere“.
+- **Stilregel-Bibliotheken (ADR-050):** gemeinsame Formulierungsregeln für mehrere Projekte; abonnieren mit Vorrang, wirksame Regeln mit Herkunft, CSV-Import/-Export.
+- Migration `027_style_libraries.sql`; Tests T-186 … T-188, E2E T-228 (axe); Anforderungen NFR-37 … NFR-40.
+
+### Geändert
+- Das Dashboard liegt unter `/dashboard` (Menü „Weitere“); `/` ist die Startseite.
+
+### Behoben
+- Rollenvorlagen: Prüfung auf den letzten Administrator serialisiert; Speichern von Name/E-Mail löst die Vorlagen-Verknüpfung nicht mehr; Veränderung im Stilwert-Verlauf berücksichtigt den Startwert vor dem Zeitraum.
+
 ## 0.17.0 – Etappe 17 (26.09.2026)
 
 ### Hinzugefügt

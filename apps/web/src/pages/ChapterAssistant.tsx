@@ -1,0 +1,235 @@
+// Kapitel-Assistent (ADR-052): ein Kapitel in vier Schritten schreiben – Aufgabe, Voraussetzungen, Schritte, Ergebnis –
+// mit Vorschlägen aus den Quellen statt eines leeren Editors.
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { get, post } from '../api';
+import { Card, Empty, Page, errorText, useApp, useLoad } from '../components/ui';
+import { scoreLabel } from './Guidance';
+
+interface Line { text: string; snippetId?: string | null }
+interface Suggestion { text: string; snippetId: string; seq: number; path: string }
+type Suggestions = Record<'steps' | 'prerequisites' | 'result' | 'hints', Suggestion[]>;
+
+const STEPS = [
+  { key: 'task', title: 'Aufgabe', help: 'Worum geht es, und wozu brauchen Leser diese Anleitung?' },
+  { key: 'prereq', title: 'Voraussetzungen', help: 'Was muss erledigt sein, bevor man beginnt?' },
+  { key: 'steps', title: 'Schritte', help: 'Was ist nacheinander zu tun? Eine Handlung je Schritt.' },
+  { key: 'result', title: 'Ergebnis & Tipps', help: 'Woran erkennt man, dass es geklappt hat?' },
+] as const;
+
+/** Liste mit Hinzufügen, Verschieben, Entfernen */
+function LineList({ label, lines, onChange, numbered, placeholder }: { label: string; lines: Line[]; onChange: (l: Line[]) => void; numbered?: boolean; placeholder: string }) {
+  const [draft, setDraft] = useState('');
+  const move = (i: number, d: number) => {
+    const n = [...lines];
+    [n[i], n[i + d]] = [n[i + d], n[i]];
+    onChange(n);
+  };
+  const add = () => {
+    if (!draft.trim()) return;
+    onChange([...lines, { text: draft.trim() }]);
+    setDraft('');
+  };
+  const List = numbered ? 'ol' : 'ul';
+  return (
+    <div className="line-list">
+      {lines.length > 0 && (
+        <List className="line-items" aria-label={label}>
+          {lines.map((l, i) => (
+            <li key={i}>
+              <input aria-label={`${label} ${i + 1}`} value={l.text} onChange={(e) => onChange(lines.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
+              {l.snippetId && <span className="tag small" title="Aus einer Quelle übernommen – bleibt als Beleg verknüpft">Quelle</span>}
+              <span className="row-actions">
+                <button className="btn small" disabled={i === 0} aria-label={`${label} ${i + 1} nach oben`} onClick={() => move(i, -1)}>↑</button>
+                <button className="btn small" disabled={i === lines.length - 1} aria-label={`${label} ${i + 1} nach unten`} onClick={() => move(i, 1)}>↓</button>
+                <button className="btn small danger" aria-label={`${label} ${i + 1} entfernen`} onClick={() => onChange(lines.filter((_, j) => j !== i))}>✕</button>
+              </span>
+            </li>
+          ))}
+        </List>
+      )}
+      <div className="filters">
+        <label className="inline grow">Neuer Eintrag
+          <input value={draft} placeholder={placeholder} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } }} />
+        </label>
+        <button className="btn" disabled={!draft.trim()} onClick={add}>Hinzufügen</button>
+      </div>
+    </div>
+  );
+}
+
+/** Vorschläge aus den Quellen; übernommene verschwinden aus der Liste */
+function SuggestionList({ title, items, used, onTake }: { title: string; items: Suggestion[]; used: Set<string>; onTake: (s: Suggestion[]) => void }) {
+  const open = items.filter((s) => !used.has(s.text));
+  if (!items.length) return <p className="small muted">Keine passenden Sätze in den Quellen gefunden – schreiben Sie die Einträge selbst.</p>;
+  return (
+    <div className="suggestions" role="region" aria-label={title}>
+      <div className="card-head"><h3>{title}</h3>{open.length > 1 && <button className="btn small" onClick={() => onTake(open)}>Alle übernehmen ({open.length})</button>}</div>
+      {!open.length ? <p className="small muted">Alle Vorschläge übernommen.</p> : (
+        <ul className="plain">
+          {open.map((s) => (
+            <li key={`${s.snippetId}-${s.text}`} className="suggestion">
+              <span>{s.text} <span className="small muted">· {s.path} #{s.seq}</span></span>
+              <button className="btn small" aria-label={`Übernehmen: ${s.text}`} onClick={() => onTake([s])}>Übernehmen</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+const sentence = (t: string) => (/[.!?:]$/.test(t) ? t : `${t}.`);
+/** **fett** in der Vorschau darstellen */
+const inline = (t: string) => sentence(t).split(/(\*\*[^*]+\*\*)/g).map((part, i) => (part.startsWith('**') && part.endsWith('**') ? <strong key={i}>{part.slice(2, -2)}</strong> : part));
+
+export function ChapterAssistantPage() {
+  const { notify } = useApp();
+  const me = useLoad<any>('/me');
+  const canEdit = !!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin');
+  const [step, setStep] = useState(0);
+  const [title, setTitle] = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [prerequisites, setPrerequisites] = useState<Line[]>([]);
+  const [steps, setSteps] = useState<Line[]>([]);
+  const [result, setResult] = useState('');
+  const [hints, setHints] = useState<Line[]>([]);
+  const [sugg, setSugg] = useState<Suggestions | null>(null);
+  const [loadingSugg, setLoadingSugg] = useState(false);
+  const [created, setCreated] = useState<any | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const loadSuggestions = async () => {
+    setLoadingSugg(true);
+    try {
+      setSugg((await get<any>(`/chapter-assistant/suggestions?topic=${encodeURIComponent(title)}`)).suggestions);
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setLoadingSugg(false);
+    }
+  };
+  const next = async () => {
+    if (step === 0 && !sugg) await loadSuggestions();
+    setStep(step + 1);
+  };
+  const missing = step === 0 ? (!title.trim() ? 'Bitte geben Sie der Aufgabe einen Namen.' : !purpose.trim() ? 'Bitte beschreiben Sie kurz, wozu die Anleitung dient.' : null)
+    : step === 2 && !steps.length ? 'Mindestens ein Schritt ist nötig.' : null;
+  const take = (setter: (fn: (l: Line[]) => Line[]) => void) => (s: Suggestion[]) => setter((l) => [...l, ...s.map((x) => ({ text: x.text, snippetId: x.snippetId }))]);
+  const usedOf = (l: Line[]) => new Set(l.map((x) => x.text));
+
+  const create = async () => {
+    setBusy(true);
+    try {
+      const r = await post<any>('/chapter-assistant', { title, purpose, prerequisites, steps, result, hints });
+      setCreated(r);
+      notify('Kapitel angelegt.');
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (created) {
+    const g = created.guidance;
+    return (
+      <Page title="Kapitel-Assistent" subtitle="Fertig – das Kapitel ist als Entwurf angelegt">
+        <Card title={`„${title}“ ist angelegt`}>
+          <p>Leserfreundlichkeit: <strong>{g.score}</strong> von 100 ({scoreLabel(g.score)}), {g.passed} von {g.total} Punkten erfüllt.</p>
+          <div className="row-actions">
+            <Link className="btn primary" to={`/werkstatt/${created.chapterId}`}>In der Werkstatt weiterbearbeiten</Link>
+            <Link className="btn" to={`/anleitungs-check/${created.versionId}`}>Anleitungs-Check ansehen</Link>
+            <button className="btn" onClick={() => { setCreated(null); setStep(0); setTitle(''); setPurpose(''); setPrerequisites([]); setSteps([]); setResult(''); setHints([]); setSugg(null); }}>Weiteres Kapitel schreiben</button>
+          </div>
+        </Card>
+      </Page>
+    );
+  }
+
+  return (
+    <Page title="Kapitel-Assistent" subtitle="Ein Kapitel Schritt für Schritt schreiben – mit Vorschlägen aus Ihren Quellen">
+      {!canEdit && me.data && <p className="alert">Zum Anlegen von Kapiteln ist die Berechtigung „Bearbeiten“ nötig.</p>}
+      <ol className="stepper" aria-label="Fortschritt">
+        {STEPS.map((s, i) => (
+          <li key={s.key} className={i === step ? 'current' : i < step ? 'done' : ''} aria-current={i === step ? 'step' : undefined}>
+            <span className="stepper-no" aria-hidden="true">{i < step ? '✓' : i + 1}</span> {s.title}{i < step && <span className="sr-only"> (erledigt)</span>}
+          </li>
+        ))}
+      </ol>
+      <div className="assistant-grid">
+        <Card title={`${step + 1}. ${STEPS[step].title}`}>
+          <p className="muted">{STEPS[step].help}</p>
+          {step === 0 && (
+            <>
+              <label className="block">Name der Aufgabe (wird die Kapitelüberschrift)
+                <input value={title} maxLength={160} placeholder="z. B. Wareneingang buchen" onChange={(e) => { setTitle(e.target.value); setSugg(null); }} />
+              </label>
+              <label className="block">Wozu dient die Anleitung?
+                <textarea rows={3} value={purpose} placeholder="Mit dieser Anleitung buchen Sie eine Lieferung in den Bestand. Sie brauchen sie, sobald Ware eintrifft." onChange={(e) => setPurpose(e.target.value)} />
+              </label>
+              <p className="small muted">Tipp: Beschreiben Sie die Aufgabe aus Sicht der Leser – „Sie …“ statt „Das System …“.</p>
+            </>
+          )}
+          {step === 1 && <LineList label="Voraussetzung" lines={prerequisites} onChange={setPrerequisites} placeholder="z. B. Sie haben die Berechtigung Lager" />}
+          {step === 2 && (
+            <>
+              <LineList label="Schritt" numbered lines={steps} onChange={setSteps} placeholder="z. B. Klicken Sie auf **Speichern**" />
+              <p className="small muted">Jeder Schritt beginnt mit einer Handlung („Öffnen Sie …“, „Klicken Sie …“). Menüpfade und Schaltflächen setzen Sie mit **…** fett.</p>
+            </>
+          )}
+          {step === 3 && (
+            <>
+              <label className="block">Ergebnis: Was zeigt das System nach dem letzten Schritt?
+                <textarea rows={2} value={result} placeholder="Der Wareneingang ist gebucht und im Bestand sichtbar." onChange={(e) => setResult(e.target.value)} />
+              </label>
+              <h3>Hinweise und Tipps (optional)</h3>
+              <LineList label="Hinweis" lines={hints} onChange={setHints} placeholder="z. B. Teillieferungen buchen Sie einzeln" />
+            </>
+          )}
+          {missing && step !== 1 && step !== 3 && <p className="small" role="status">{missing}</p>}
+          <div className="row-actions wizard-nav">
+            {step > 0 && <button className="btn" onClick={() => setStep(step - 1)}>← Zurück</button>}
+            {step < STEPS.length - 1 && <button className="btn primary" disabled={!!missing || loadingSugg} onClick={() => void next()}>{loadingSugg ? 'Suche Vorschläge …' : 'Weiter →'}</button>}
+            {step === STEPS.length - 1 && <button className="btn primary" disabled={busy || !canEdit} onClick={() => void create()}>Kapitel anlegen</button>}
+          </div>
+        </Card>
+        <div>
+          {step > 0 && sugg && (
+            <Card title="Vorschläge aus den Quellen">
+              {step === 1 && <SuggestionList title="Mögliche Voraussetzungen" items={sugg.prerequisites} used={usedOf(prerequisites)} onTake={take(setPrerequisites)} />}
+              {step === 2 && <SuggestionList title="Mögliche Schritte (in Quellreihenfolge)" items={sugg.steps} used={usedOf(steps)} onTake={take(setSteps)} />}
+              {step === 3 && (
+                <>
+                  {sugg.result.length > 0 && (
+                    <div className="suggestions" role="region" aria-label="Mögliches Ergebnis">
+                      <h3>Mögliches Ergebnis</h3>
+                      <ul className="plain">
+                        {sugg.result.map((s) => (
+                          <li key={s.text} className="suggestion"><span>{s.text}</span><button className="btn small" aria-label={`Als Ergebnis übernehmen: ${s.text}`} onClick={() => setResult(s.text)}>Übernehmen</button></li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <SuggestionList title="Mögliche Hinweise" items={sugg.hints} used={usedOf(hints)} onTake={take(setHints)} />
+                </>
+              )}
+            </Card>
+          )}
+          {step > 0 && (
+            <Card title="Vorschau">
+              <div className="preview">
+                <h3>{title || 'Ohne Titel'}</h3>
+                <p>{purpose}</p>
+                {prerequisites.length > 0 && <><h4>Voraussetzungen</h4><ul>{prerequisites.map((l, i) => <li key={i}>{inline(l.text)}</li>)}</ul></>}
+                {steps.length > 0 ? <><h4>Schrittweise Durchführung</h4><ol>{steps.map((l, i) => <li key={i}>{inline(l.text)}</li>)}</ol></> : <Empty>Noch keine Schritte.</Empty>}
+                {result && <><h4>Ergebnis</h4><p>{result}</p></>}
+                {hints.length > 0 && <><h4>Tipps</h4><ul>{hints.map((l, i) => <li key={i}>{inline(l.text)}</li>)}</ul></>}
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
+    </Page>
+  );
+}

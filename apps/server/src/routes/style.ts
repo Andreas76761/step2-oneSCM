@@ -3,6 +3,8 @@ import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
 import { deleteDiagramTemplate, generateDiagrams, listDiagramTemplates, saveDiagram, saveDiagramTemplate } from '../services/diagrams.js';
 import { styleHistory, applyChapterTexts, copyStyleRules, exportStyleRules, importStyleRules, getStyleRules, updateStyleRules, autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, rewriteText } from '../services/style.js';
+import { applyGuidanceFixes, assistantSuggestions, chapterGuidance, createChapterFromAssistant, guidanceSummary } from '../services/guidance.js';
+import { effectivePhrases, projectLibraries, setProjectLibraries } from '../services/style.js';
 import { userOf } from './helpers.js';
 
 export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -54,4 +56,18 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   // Stilwert-Verlauf (ADR-048)
   app.get<{ Querystring: { chapterId?: string; days?: string } }>('/style/history', async (req) =>
     (userOf(req.ctx, req), styleHistory(req.ctx, { chapterId: req.query.chapterId, days: Number(req.query.days) || undefined })));
+  // Stilregel-Bibliotheken (ADR-050): Abonnements des Projekts und wirksame Regeln
+  app.get('/style/libraries', async (req) => (userOf(req.ctx, req), projectLibraries(req.ctx)));
+  app.put<{ Body: any }>('/style/libraries', async (req) => setProjectLibraries(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+  app.get('/style/rules/effective', async (req) => (userOf(req.ctx, req), effectivePhrases(req.ctx)));
+  // Anleitungs-Check (ADR-051)
+  app.get('/guidance', async (req) => (userOf(req.ctx, req), guidanceSummary(req.ctx)));
+  app.get<{ Params: { versionId: string } }>('/guidance/chapter-versions/:versionId', async (req) => (userOf(req.ctx, req), chapterGuidance(req.ctx, req.params.versionId)));
+  app.post<{ Params: { versionId: string }; Body: any }>('/guidance/chapter-versions/:versionId/apply', async (req) =>
+    applyGuidanceFixes(req.ctx, req.params.versionId, req.body ?? {}, userOf(req.ctx, req, 'edit').id));
+  // Kapitel-Assistent (ADR-052)
+  app.get<{ Querystring: { topic?: string; chapterId?: string } }>('/chapter-assistant/suggestions', async (req) =>
+    (userOf(req.ctx, req), assistantSuggestions(req.ctx, { topic: req.query.topic, chapterId: req.query.chapterId || undefined })));
+  app.post<{ Body: any }>('/chapter-assistant', async (req, reply) =>
+    reply.code(201).send(await createChapterFromAssistant(req.ctx, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit').id)));
 }

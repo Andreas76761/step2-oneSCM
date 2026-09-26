@@ -215,7 +215,7 @@ async function effectiveMode(ctx: Ctx, blockId: string, mode: string): Promise<s
   return parseJson<any>(v?.snapshot, {}).mode ?? 'generated';
 }
 
-interface BlockInput {
+export interface BlockInput {
   section: string;
   position: number;
   kind: string;
@@ -239,7 +239,7 @@ export interface Sentence {
   sourceIds: string[];
 }
 
-async function insertBlock(ctx: Ctx, versionId: string, b: BlockInput, actor: string, reason: string) {
+export async function insertBlock(ctx: Ctx, versionId: string, b: BlockInput, actor: string, reason: string) {
   const id = newId('cb');
   const { db } = ctx;
   await db.run(
@@ -297,7 +297,7 @@ export async function snapshot(ctx: Ctx, blockId: string, versionNo: number, cha
   );
 }
 
-async function normalizePositions(ctx: Ctx, versionId: string) {
+export async function normalizePositions(ctx: Ctx, versionId: string) {
   const order = SECTION_CODES;
   const rows = await ctx.db.all('SELECT id, section_code, position FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NULL', versionId);
   rows.sort((a, b) => order.indexOf(a.section_code) - order.indexOf(b.section_code) || a.position - b.position);

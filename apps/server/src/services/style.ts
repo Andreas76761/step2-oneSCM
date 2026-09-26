@@ -27,6 +27,23 @@ export async function getStyleRules(ctx: Ctx): Promise<StyleRules> {
   return { ...DEFAULT_STYLE_RULES, ...parseJson<Partial<StyleRules>>(r?.style_rules, {}) };
 }
 
+/** Formulierungsregeln prüfen und bereinigen (Projektregeln und Bibliotheken) */
+export function cleanPhrases(v: unknown): StylePhrase[] {
+  if (!Array.isArray(v) || v.length > MAX_PHRASES) throw badRequest(`phrases: Liste mit höchstens ${MAX_PHRASES} Einträgen.`);
+  const seen = new Set<string>();
+  const out: StylePhrase[] = [];
+  for (const raw of v as Record<string, unknown>[]) {
+    const avoid = typeof raw?.avoid === 'string' ? raw.avoid.trim().slice(0, 80) : '';
+    if (!avoid) throw badRequest('Jede Regel braucht „avoid“ (zu vermeidende Formulierung).');
+    if (seen.has(avoid.toLowerCase())) throw badRequest(`Doppelte Regel „${avoid}“.`);
+    seen.add(avoid.toLowerCase());
+    const use = typeof raw.use === 'string' ? raw.use.trim().slice(0, 80) : null;
+    const note = typeof raw.note === 'string' && raw.note.trim() ? raw.note.trim().slice(0, 200) : null;
+    out.push({ avoid, use, note });
+  }
+  return out;
+}
+
 export async function updateStyleRules(ctx: Ctx, input: Partial<Record<keyof StyleRules, unknown>>, user: User) {
   const cur = await getStyleRules(ctx);
   const next: StyleRules = { ...cur };
@@ -43,20 +60,7 @@ export async function updateStyleRules(ctx: Ctx, input: Partial<Record<keyof Sty
     if (n !== null && (typeof n !== 'number' || !Number.isInteger(n) || n < 8 || n > 60)) throw badRequest('maxSentenceWords muss eine ganze Zahl von 8 bis 60 oder null sein.');
     next.maxSentenceWords = n as number | null;
   }
-  if (input.phrases !== undefined) {
-    if (!Array.isArray(input.phrases) || input.phrases.length > MAX_PHRASES) throw badRequest(`phrases: Liste mit höchstens ${MAX_PHRASES} Einträgen.`);
-    const seen = new Set<string>();
-    next.phrases = [];
-    for (const raw of input.phrases as Record<string, unknown>[]) {
-      const avoid = typeof raw?.avoid === 'string' ? raw.avoid.trim().slice(0, 80) : '';
-      if (!avoid) throw badRequest('Jede Regel braucht „avoid“ (zu vermeidende Formulierung).');
-      if (seen.has(avoid.toLowerCase())) throw badRequest(`Doppelte Regel „${avoid}“.`);
-      seen.add(avoid.toLowerCase());
-      const use = typeof raw.use === 'string' ? raw.use.trim().slice(0, 80) : null;
-      const note = typeof raw.note === 'string' && raw.note.trim() ? raw.note.trim().slice(0, 200) : null;
-      next.phrases.push({ avoid, use, note });
-    }
-  }
+  if (input.phrases !== undefined) next.phrases = cleanPhrases(input.phrases);
   await ctx.db.tx(async () => {
     await ctx.db.run('UPDATE projects SET style_rules = ? WHERE id = ?', json(next), ctx.projectId);
     await audit(ctx, user.id, 'style.rules_changed', 'project', ctx.projectId, { disabled: next.disabled, phrases: next.phrases.length, address: next.address, maxSentenceWords: next.maxSentenceWords });
@@ -64,12 +68,76 @@ export async function updateStyleRules(ctx: Ctx, input: Partial<Record<keyof Sty
   return next;
 }
 
+// ---------- Stilregel-Bibliotheken (ADR-050) ----------
+
+type PhraseSource = { type: 'project' } | { type: 'library'; id: string; name: string };
+
+/** Abonnierte Bibliotheken des Projekts in Vorrang-Reihenfolge */
+async function subscribedLibraries(ctx: Ctx) {
+  return (await ctx.db.all(
+    `SELECT l.id, l.name, l.description, l.phrases, s.position FROM project_style_libraries s JOIN style_libraries l ON l.id = s.library_id
+     WHERE s.project_id = ? ORDER BY s.position, l.name`, ctx.projectId,
+  )).map((r) => ({ id: r.id as string, name: r.name as string, description: (r.description as string | null) ?? null, phrases: parseJson<StylePhrase[]>(r.phrases, []) }));
+}
+
+/**
+ * Wirksame Formulierungen: Projektregeln zuerst, danach die Bibliotheken in Abonnement-Reihenfolge; eine Formulierung, die schon
+ * vorkommt (Groß-/Kleinschreibung egal), wird übersprungen und als „überdeckt“ gemeldet.
+ */
+export async function effectivePhrases(ctx: Ctx, own?: StylePhrase[]) {
+  const projectPhrases = own ?? (await getStyleRules(ctx)).phrases;
+  const libs = await subscribedLibraries(ctx);
+  const phrases: (StylePhrase & { source: PhraseSource })[] = projectPhrases.map((p) => ({ ...p, source: { type: 'project' } }));
+  const seen = new Map(phrases.map((p) => [p.avoid.toLowerCase(), p.source]));
+  const shadowed: { avoid: string; libraryId: string; libraryName: string; by: PhraseSource }[] = [];
+  for (const l of libs) {
+    for (const p of l.phrases) {
+      const by = seen.get(p.avoid.toLowerCase());
+      if (by) {
+        shadowed.push({ avoid: p.avoid, libraryId: l.id, libraryName: l.name, by });
+        continue;
+      }
+      const source: PhraseSource = { type: 'library', id: l.id, name: l.name };
+      seen.set(p.avoid.toLowerCase(), source);
+      phrases.push({ ...p, source });
+    }
+  }
+  return { phrases, shadowed, libraries: libs.map((l) => ({ id: l.id, name: l.name, phrases: l.phrases.length })) };
+}
+
+/** Bibliotheken für die Projekt-Einstellung: alle vorhandenen und die abonnierten (in Reihenfolge) */
+export async function projectLibraries(ctx: Ctx) {
+  const all = await ctx.db.all('SELECT id, name, description, phrases FROM style_libraries ORDER BY name');
+  const subscribed = (await subscribedLibraries(ctx)).map((l) => l.id);
+  return {
+    subscribed,
+    available: all.map((l) => ({ id: l.id as string, name: l.name as string, description: (l.description as string | null) ?? null, phrases: parseJson<unknown[]>(l.phrases, []).length })),
+  };
+}
+
+/** Abonnements setzen (Administration des Projekts); die Reihenfolge der Liste ist der Vorrang */
+export async function setProjectLibraries(ctx: Ctx, input: { libraryIds?: unknown }, user: User) {
+  const ids = input.libraryIds;
+  if (!Array.isArray(ids) || ids.some((x) => typeof x !== 'string') || new Set(ids).size !== ids.length || ids.length > 20) throw badRequest('libraryIds: Liste verschiedener Bibliotheks-IDs (höchstens 20).');
+  await ctx.db.tx(async () => {
+    for (const id of ids as string[]) if (!(await ctx.db.get('SELECT 1 FROM style_libraries WHERE id = ?', id))) throw new Problem(404, 'Not Found', `Stilregel-Bibliothek ${id} wurde nicht gefunden.`);
+    const before = (await ctx.db.all('SELECT library_id FROM project_style_libraries WHERE project_id = ?', ctx.projectId)).map((r) => r.library_id as string);
+    await ctx.db.run('DELETE FROM project_style_libraries WHERE project_id = ?', ctx.projectId);
+    let i = 0;
+    for (const id of ids as string[]) await ctx.db.run('INSERT INTO project_style_libraries (project_id, library_id, position, subscribed_by, subscribed_at) VALUES (?, ?, ?, ?, ?)', ctx.projectId, id, i++, user.id, now());
+    await audit(ctx, user.id, 'style.libraries_changed', 'project', ctx.projectId, { before, after: ids });
+  });
+  return projectLibraries(ctx);
+}
+
 async function options(ctx: Ctx) {
   const terms = (await ctx.db.all("SELECT preferred, avoid FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId))
     .map((t) => ({ preferred: t.preferred as string, avoid: parseJson<string[]>(t.avoid, []) }));
   const rules = await getStyleRules(ctx);
   const maxWords = rules.maxSentenceWords ?? Math.min(25, (await getSettings(ctx.db)).readability.maxSentenceWords);
-  return { terms, maxWords, disabled: rules.disabled, phrases: rules.phrases, address: rules.address };
+  // Projektregeln und abonnierte Bibliotheken (ADR-050)
+  const phrases = (await effectivePhrases(ctx, rules.phrases)).phrases.map(({ avoid, use, note }) => ({ avoid, use, note }));
+  return { terms, maxWords, disabled: rules.disabled, phrases, address: rules.address };
 }
 
 const cleanText = (text: unknown) => {
@@ -344,17 +412,18 @@ export async function applyChapterTexts(ctx: Ctx, versionId: string, input: { bl
   const current = new Map(v.sections.flatMap((s) => s.blocks).map((b: any) => [b.id as string, b]));
   const saved: string[] = [];
   const skipped: { id: string; reason: string }[] = [];
-  for (const raw of input.blocks as { id?: unknown; versionNo?: unknown; text?: unknown }[]) {
+  for (const raw of input.blocks as { id?: unknown; versionNo?: unknown; text?: unknown; kind?: unknown }[]) {
     const id = String(raw?.id ?? '');
     const b = current.get(id);
     if (typeof raw?.text !== 'string' || !raw.text.trim() || raw.text.length > MAX_TEXT) skipped.push({ id, reason: 'Text fehlt oder ist zu lang' });
     else if (!b) skipped.push({ id, reason: 'nicht in dieser Version' });
     else if (b.mode === 'locked') skipped.push({ id, reason: 'gesperrt' });
     else if (b.versionNo !== Number(raw.versionNo)) skipped.push({ id, reason: `zwischenzeitlich geändert (Version ${b.versionNo})` });
-    else if (b.text === raw.text) skipped.push({ id, reason: 'unverändert' });
+    else if (b.text === raw.text && (typeof raw.kind !== 'string' || raw.kind === b.kind)) skipped.push({ id, reason: 'unverändert' });
     else {
       try {
-        await patchBlock(ctx, id, { text: raw.text.replace(/\r\n?/g, '\n'), expectedVersionNo: b.versionNo, reason }, actor);
+        // Blocktyp nur ändern, wenn angegeben (z. B. Fließtext → nummerierte Schritte beim Anleitungs-Check)
+        await patchBlock(ctx, id, { text: raw.text.replace(/\r\n?/g, '\n'), expectedVersionNo: b.versionNo, reason, ...(typeof raw.kind === 'string' ? { kind: raw.kind } : {}) }, actor);
         saved.push(id);
       } catch (e) {
         if (!(e instanceof Problem) || e.status !== 409) throw e;
@@ -372,13 +441,18 @@ export async function applyChapterTexts(ctx: Ctx, versionId: string, input: { bl
 const csvCell = (v: string) => (/[;"\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
 const ACTION = (p: StylePhrase) => (p.use === null || p.use === undefined ? 'hinweis' : p.use === '' ? 'streichen' : 'ersetzen');
 
+/** Formulierungen als CSV (Semikolon, BOM – öffnet in Excel direkt richtig) */
+export function phrasesToCsv(phrases: StylePhrase[]) {
+  const lines = ['vermeiden;aktion;ersetzen durch;hinweis', ...phrases.map((p) => [p.avoid, ACTION(p), p.use ?? '', p.note ?? ''].map(csvCell).join(';'))];
+  return `\ufeff${lines.join('\r\n')}\r\n`;
+}
+
 /** Export: CSV (eigene Formulierungen, mit Semikolon, für Excel) oder JSON (alle Regeln) */
 export async function exportStyleRules(ctx: Ctx, format: string) {
   const rules = await getStyleRules(ctx);
   if (format === 'json') return { contentType: 'application/json; charset=utf-8', fileName: 'stilregeln.json', body: JSON.stringify({ format: 'onescm-style-rules', version: 1, ...rules }, null, 2) };
   if (format !== 'csv') throw badRequest('format: csv oder json.');
-  const lines = ['vermeiden;aktion;ersetzen durch;hinweis', ...rules.phrases.map((p) => [p.avoid, ACTION(p), p.use ?? '', p.note ?? ''].map(csvCell).join(';'))];
-  return { contentType: 'text/csv; charset=utf-8', fileName: 'stilregeln.csv', body: `\ufeff${lines.join('\r\n')}\r\n` };
+  return { contentType: 'text/csv; charset=utf-8', fileName: 'stilregeln.csv', body: phrasesToCsv(rules.phrases) };
 }
 
 /** CSV-Zeilen → Formulierungen; Aktion „ersetzen/streichen/hinweis“ oder aus der Ersatzspalte abgeleitet */

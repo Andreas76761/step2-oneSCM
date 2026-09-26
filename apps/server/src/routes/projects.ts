@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { requirePermission, type Ctx, type User } from '../context.js';
 import { createProject, listMembers, listProjects, removeMember, setMember, updateProject } from '../services/projects.js';
 import { createUser, listUsers, updateUser, userProjects } from '../services/users.js';
+import { createStyleLibrary, deleteStyleLibrary, exportStyleLibrary, getStyleLibrary, listStyleLibraries, updateStyleLibrary } from '../services/styleLibraries.js';
 import { createRoleTemplate, deleteRoleTemplate, listRoleTemplates, updateRoleTemplate } from '../services/roleTemplates.js';
 
 function globalUser(req: FastifyRequest, perm?: 'admin'): User {
@@ -34,6 +35,20 @@ export function projectRoutes(app: FastifyInstance, ctx: Ctx) {
   app.patch<{ Params: { userId: string }; Body: any }>('/users/:userId', async (req) => updateUser(ctx, req.params.userId, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin')));
   app.get<{ Params: { userId: string } }>('/users/:userId/projects', async (req) => (globalUser(req, 'admin'), userProjects(ctx, req.params.userId)));
   // Rollenvorlagen (ADR-047)
+  // Stilregel-Bibliotheken (ADR-050): lesen für alle angemeldeten Benutzer (Auswahl im Projekt), pflegen nur Administration
+  app.get('/style-libraries', async (req) => (globalUser(req), listStyleLibraries(ctx)));
+  app.get<{ Params: { libraryId: string } }>('/style-libraries/:libraryId', async (req) => (globalUser(req), getStyleLibrary(ctx, req.params.libraryId)));
+  app.get<{ Params: { libraryId: string } }>('/style-libraries/:libraryId/export', async (req, reply) => {
+    globalUser(req);
+    const f = await exportStyleLibrary(ctx, req.params.libraryId);
+    return reply.header('Content-Type', 'text/csv; charset=utf-8').header('Content-Disposition', `attachment; filename="${f.fileName}"`).send(f.body);
+  });
+  app.post<{ Body: any }>('/style-libraries', async (req, reply) => reply.code(201).send(await createStyleLibrary(ctx, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin'))));
+  app.patch<{ Params: { libraryId: string }; Body: any }>('/style-libraries/:libraryId', async (req) => updateStyleLibrary(ctx, req.params.libraryId, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin')));
+  app.delete<{ Params: { libraryId: string } }>('/style-libraries/:libraryId', async (req, reply) => {
+    await deleteStyleLibrary(ctx, req.params.libraryId, globalUser(req, 'admin'));
+    return reply.code(204).send();
+  });
   app.get('/role-templates', async (req) => (globalUser(req, 'admin'), listRoleTemplates(ctx.db)));
   app.post<{ Body: any }>('/role-templates', async (req, reply) => reply.code(201).send(await createRoleTemplate(ctx, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin'))));
   app.patch<{ Params: { roleTemplateId: string }; Body: any }>('/role-templates/:roleTemplateId', async (req) => updateRoleTemplate(ctx, req.params.roleTemplateId, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin')));

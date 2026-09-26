@@ -106,7 +106,8 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
         : [],
     };
   });
-  app.get('/me', async (req) => userOf(req.ctx, req));
+  // globalPermissions: projektübergreifende Berechtigungen (z. B. Pflege der Stilregel-Bibliotheken nur mit globalem „admin“)
+  app.get('/me', async (req) => ({ ...userOf(req.ctx, req), globalPermissions: req.globalUser?.permissions ?? [] }));
 
   // Öffentlich: Anmeldekonfiguration für die Web-UI (ENTSCHEIDUNG E-15)
   app.get('/auth/config', async (req) =>

@@ -34,28 +34,44 @@ import { ContextHelpAdminPage, ContextHelpPage } from './pages/ContextHelp';
 import { OutlinesPage } from './pages/Outlines';
 import { DraftManualPage } from './pages/DraftManual';
 import { AbbreviationsPage, FaqPage, GlossaryPage, ImageIndexPage, PlanningPage } from './pages/MasterData';
+import { StartPage } from './pages/Start';
+import { GuidancePage } from './pages/Guidance';
+import { ChapterAssistantPage } from './pages/ChapterAssistant';
 
-// Navigation gemäß Masterprompt §14
-const NAV = [
-  { to: '/', label: 'Dashboard', icon: '📊' },
-  { to: '/quellen', label: 'Quellen', icon: '📥' },
-  { to: '/cluster', label: 'Textcluster', icon: '🧩' },
-  { to: '/widersprueche', label: 'Widersprüche', icon: '⚖️' },
-  { to: '/dopplungen', label: 'Dopplungen', icon: '📑' },
-  { to: '/generator', label: 'Kapitelgenerator', icon: '⚙️' },
-  { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: '✏️' },
-  { to: '/draft-manual', label: 'Draft Manual', icon: '📝' },
-  { to: '/schreibstil', label: 'Schreibstil', icon: '🖋️' },
-  { to: '/bilder', label: 'Bilder', icon: '🎨' },
+// Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
+type NavItem = { to: string; label: string; icon: string };
+const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
+  { id: 'sammeln', label: '1 Sammeln', items: [
+    { to: '/quellen', label: 'Quellen', icon: '📥' },
+    { to: '/cluster', label: 'Textcluster', icon: '🧩' },
+    { to: '/widersprueche', label: 'Widersprüche', icon: '⚖️' },
+    { to: '/dopplungen', label: 'Dopplungen', icon: '📑' },
+  ] },
+  { id: 'schreiben', label: '2 Schreiben', items: [
+    { to: '/kapitel-assistent', label: 'Kapitel-Assistent', icon: '🧭' },
+    { to: '/generator', label: 'Kapitelgenerator', icon: '⚙️' },
+    { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: '✏️' },
+    { to: '/draft-manual', label: 'Draft Manual', icon: '📝' },
+    { to: '/bilder', label: 'Bilder', icon: '🎨' },
+  ] },
+  { id: 'pruefen', label: '3 Prüfen', items: [
+    { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: '🔍' },
+    { to: '/schreibstil', label: 'Schreibstil', icon: '🖋️' },
+    { to: '/terminologie', label: 'Terminologie', icon: '📖' },
+    { to: '/evidenz', label: 'Evidenz', icon: '🔎' },
+    { to: '/freigabe', label: 'Freigabe', icon: '✅' },
+  ] },
+  { id: 'veroeffentlichen', label: '4 Veröffentlichen', items: [
+    { to: '/export', label: 'Export', icon: '📤' },
+    { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
+    { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
+  ] },
+];
+const NAV_MORE: NavItem[] = [
+  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
   { to: '/rollen', label: 'Rollenansichten', icon: '👥' },
   { to: '/sparten', label: 'Spartenansichten', icon: '🚘' },
   { to: '/optimierungen', label: 'Optimierungen', icon: '✨' },
-  { to: '/terminologie', label: 'Terminologie', icon: '📖' },
-  { to: '/evidenz', label: 'Evidenz', icon: '🔎' },
-  { to: '/freigabe', label: 'Freigabe', icon: '✅' },
-  { to: '/export', label: 'Export', icon: '📤' },
-  { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
-  { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
   { to: '/assistent', label: 'Assistent', icon: '💬' },
   { to: '/kontexthilfe', label: 'Kontexthilfe', icon: '❓' },
   { to: '/analytik', label: 'Analytik', icon: '📈' },
@@ -170,6 +186,11 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
+  const inMore = NAV_MORE.some((n) => location.pathname === n.to || location.pathname.startsWith(`${n.to}/`));
+  const [moreOpen, setMoreOpen] = useState(inMore);
+  useEffect(() => {
+    if (inMore) setMoreOpen(true);
+  }, [inMore]);
   const inMasterData = location.pathname.startsWith('/stammdaten');
   const [masterOpen, setMasterOpen] = useState(inMasterData);
   useEffect(() => {
@@ -259,11 +280,29 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <NavLink to="/aufgaben" title="Aufgaben & Hinweise" className={({ isActive }) => (isActive ? 'active' : '')}>
               <span aria-hidden="true" className="nav-icon">🔔</span> <span className="nav-label">Aufgaben & Hinweise</span>{unread > 0 && <span className="count" aria-label={`${unread} ungelesen`}>{unread}</span>}
             </NavLink>
-            {NAV.map((n) => (
-              <NavLink key={n.to} to={n.to} end={n.to === '/'} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
-                <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
-              </NavLink>
+            <NavLink to="/" end title="Start" className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span aria-hidden="true" className="nav-icon">🏠</span> <span className="nav-label">Start</span>
+            </NavLink>
+            {NAV_GROUPS.map((g) => (
+              <div key={g.id} role="group" aria-labelledby={`nav-h-${g.id}`} className="nav-section">
+                <span id={`nav-h-${g.id}`} className="nav-heading">{g.label}</span>
+                {g.items.map((n) => (
+                  <NavLink key={n.to} to={n.to} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
+                    <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
+                  </NavLink>
+                ))}
+              </div>
             ))}
+            <button type="button" className={`nav-group${inMore ? ' active-group' : ''}`} aria-expanded={moreOpen} aria-controls="nav-weitere" title="Weitere" onClick={() => setMoreOpen(!moreOpen)}>
+              <span aria-hidden="true" className="nav-icon">⋯</span> <span className="nav-label">Weitere</span><span aria-hidden="true" className="nav-caret">{moreOpen ? '▾' : '▸'}</span>
+            </button>
+            <div id="nav-weitere" className="nav-sub" hidden={!moreOpen}>
+              {NAV_MORE.map((n) => (
+                <NavLink key={n.to} to={n.to} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
+                  <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
+                </NavLink>
+              ))}
+            </div>
             <div className="nav-bottom">
               <button type="button" className={`nav-group${inMasterData ? ' active-group' : ''}`} aria-expanded={masterOpen} aria-controls="nav-stammdaten" title="Stammdaten" onClick={() => setMasterOpen(!masterOpen)}>
                 <span aria-hidden="true" className="nav-icon">🗃</span> <span className="nav-label">Stammdaten</span><span aria-hidden="true" className="nav-caret">{masterOpen ? '▾' : '▸'}</span>
@@ -308,7 +347,11 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
         </aside>
         <main className="main" key={userId} id="main" ref={mainRef} tabIndex={-1}>
           <Routes>
-            <Route path="/" element={<DashboardPage />} />
+            <Route path="/" element={<StartPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/anleitungs-check" element={<GuidancePage />} />
+            <Route path="/anleitungs-check/:versionId" element={<GuidancePage />} />
+            <Route path="/kapitel-assistent" element={<ChapterAssistantPage />} />
             <Route path="/quellen" element={<SourcesPage />} />
             <Route path="/cluster" element={<ClustersPage />} />
             <Route path="/widersprueche" element={<ContradictionsPage />} />

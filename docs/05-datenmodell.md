@@ -46,6 +46,7 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`,
 | – | `outlines`, `outline_nodes` | Gliederungen je Variante (Rollen, Sparten, Blueprint/Märkte), Versionen über `family_id`/`version_no`, Kapitel und Unterkapitel (ADR-032); `projects.markets` |
 | – | `outline_assignments` | Zuordnung Textschnipsel → Gliederungseintrag mit Reihenfolge (Draft Manual, ADR-033) |
 | – | `plan_items` | Redaktionsplanung je Gliederungseintrag: Verantwortliche, Termin, Status, Notiz; `reminded_at` für die einmalige Erinnerung je Termin (ADR-036) |
+| – | Migration `027_style_libraries` | `style_libraries` (Stilregel-Bibliotheken, global: Name, Beschreibung, Formulierungen als JSON), `project_style_libraries` (Abonnement je Projekt mit Reihenfolge = Vorrang, ADR-050); Kapitel aus dem Kapitel-Assistenten nutzen `chapters`/`generated_chapter_versions` (`generator = assistant-1.0`, ADR-052) |
 | – | Migration `026_roles_style_history` | `role_templates` (Rollenvorlagen, global), `users.role_template_id`; `style_scores` (Stilwert-Messpunkte je Kapitel, ADR-047/048) |
 | – | Migration `025_users_style` | `projects.style_rules` (JSON: eigene Stilregeln, ADR-044); `users.disabled_at/disabled_by/created_at/created_by/origin` (Benutzerverwaltung, ADR-045) |
 | – | Migration `024_images_style` | `media_assets.png_sha` (PNG-Fassung eines SVG-Bildes für Word); `diagram_templates` (Diagramm-Vorlagen je Projekt: Name, Bildarten, Struktur, Darstellung) (ADR-042) |
