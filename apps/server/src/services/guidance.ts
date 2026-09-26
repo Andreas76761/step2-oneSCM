@@ -66,19 +66,22 @@ export async function guidanceSummary(ctx: Ctx) {
 type SuggestionKind = 'steps' | 'prerequisites' | 'result' | 'hints';
 const PREREQ = /\b(?:Voraussetzung|voraussetz|Berechtigung|berechtigt|muss\s+(?:bereits\s+)?(?:angelegt|vorhanden|erfasst|freigegeben)|müssen\s+(?:bereits\s+)?(?:angelegt|vorhanden|erfasst)|zuvor|vorher)\b/i;
 const RESULT = /\b(?:wird|werden)\s+(?:\S+\s+){0,4}(?:angezeigt|gespeichert|erstellt|angelegt|übernommen|versendet|gebucht|freigegeben|aktualisiert)\b|\berscheint\b|\bist\s+(?:\S+\s+){0,3}(?:gespeichert|angelegt|abgeschlossen)\b/i;
-const HINT = /^(?:Hinweis|Tipp|Achtung|Wichtig|Beachten Sie)\b|\b(?:beachten Sie|achten Sie darauf)\b/i;
+// Hinweise inkl. Fehlerbilder („Wenn … die Meldung … erscheint“)
+const HINT = /^(?:Hinweis|Tipp|Achtung|Wichtig|Beachten Sie|Wenn|Falls)\b|\b(?:beachten Sie|achten Sie darauf|Meldung)\b/i;
 const STOP = new Set(['und', 'oder', 'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einen', 'für', 'mit', 'von', 'bei', 'wie', 'im', 'in', 'zu', 'zur', 'zum', 'auf', 'an', 'ich', 'sie', 'man', 'neue', 'neuen', 'neuer']);
 
 /** Vorschläge aus den Quellen für ein Thema: Sätze, sortiert nach Treffern, eingeteilt in Schritte, Voraussetzungen, Ergebnis, Hinweise */
 export async function assistantSuggestions(ctx: Ctx, q: { topic?: string; chapterId?: string }) {
   const topic = (q.topic ?? '').trim().slice(0, 200);
   const terms = [...new Set(topic.toLowerCase().split(/[^\p{L}\d]+/u).filter((w) => w.length >= 3 && !STOP.has(w)))].slice(0, 8);
+  // einfache Stammbildung: „erfassen“ findet auch „erfasst“
+  const stems = terms.map((t) => (t.length >= 8 ? t.slice(0, -2) : t));
   if (q.chapterId) await assertIdsInProject(ctx, 'chapterId', [q.chapterId]);
   if (!terms.length && !q.chapterId) return { topic, terms, suggestions: { steps: [], prerequisites: [], result: [], hints: [] } };
   const base = `SELECT s.id, s.seq, s.text, s.chapter_id, d.path FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
      WHERE d.project_id = ? AND d.removed_at IS NULL AND r.is_current = 1 AND s.excluded_reason IS NULL`;
   const matched = terms.length
-    ? await ctx.db.all(`${base} AND (${terms.map(() => 'LOWER(s.text) LIKE ?').join(' OR ')}) ORDER BY s.seq LIMIT 400`, ctx.projectId, ...terms.map((t) => `%${t}%`))
+    ? await ctx.db.all(`${base} AND (${terms.map(() => 'LOWER(s.text) LIKE ?').join(' OR ')}) ORDER BY s.seq LIMIT 400`, ctx.projectId, ...stems.map((t) => `%${t}%`))
     : [];
   // Kapitel mit den meisten Treffern (bzw. das gewählte Kapitel) vollständig einbeziehen: Voraussetzungen und Ergebnis
   // stehen oft in Nachbarabsätzen, die das Thema nicht selbst nennen
@@ -90,30 +93,37 @@ export async function assistantSuggestions(ctx: Ctx, q: { topic?: string; chapte
     : [];
   const rows = [...new Map([...matched, ...context].map((r) => [r.id as string, r])).values()].sort((a, b) => Number(a.seq) - Number(b.seq));
   const inTop = new Set(topChapters);
-  type S = { text: string; snippetId: string; seq: number; path: string; hits: number };
+  // Kapitel, deren Titel das Thema nennt, zählen mehr (z. B. „Vertragsbearbeitung“ für „Vertrag erfassen“)
+  const titled = new Set(topChapters.length
+    ? (await ctx.db.all(`SELECT id, title FROM chapters WHERE id IN (${topChapters.map(() => '?').join(',')})`, ...topChapters))
+      .filter((c) => stems.some((t) => String(c.title).toLowerCase().includes(t))).map((c) => c.id as string)
+    : []);
+  type S = { text: string; snippetId: string; seq: number; path: string; hits: number; rank: number; order: number };
   const out: Record<SuggestionKind, S[]> = { steps: [], prerequisites: [], result: [], hints: [] };
   const seen = new Set<string>();
+  let order = 0;
   for (const r of rows) {
     // Relevanz: Treffer im ganzen Schnipsel (Voraussetzungen nennen das Thema oft nicht selbst) plus Treffer im Satz
-    const snippetHits = terms.filter((t) => String(r.text).toLowerCase().includes(t)).length + (inTop.has(r.chapter_id) ? 1 : 0);
+    const snippetHits = stems.filter((t) => String(r.text).toLowerCase().includes(t)).length + (inTop.has(r.chapter_id) ? 1 : 0) + (titled.has(r.chapter_id) ? 2 : 0);
     for (const seg of segmentSentences(String(r.text))) {
       const text = seg.text.replace(/^\s*(?:\d+[.)]|[-*•])\s+/, '').replace(/^#+\s*/, '').trim();
       if (text.length < 12 || text.length > 300 || seen.has(text.toLowerCase())) continue;
       const lower = text.toLowerCase();
-      const hits = snippetHits + terms.filter((t) => lower.includes(t)).length;
+      const hits = snippetHits + stems.filter((t) => lower.includes(t)).length;
       const kind: SuggestionKind | null = HINT.test(text) ? 'hints' : isAction(text) ? 'steps' : PREREQ.test(text) ? 'prerequisites' : RESULT.test(text) ? 'result' : null;
       if (!kind) continue;
       seen.add(lower);
-      out[kind].push({ text, snippetId: r.id as string, seq: Number(r.seq), path: r.path as string, hits });
+      out[kind].push({ text, snippetId: r.id as string, seq: Number(r.seq), path: r.path as string, hits, rank: snippetHits, order: order++ });
     }
   }
-  // Schritte in Quellreihenfolge (Ablauf), sonst nach Treffern
+  // Schritte: relevanteste Schnipsel zuerst, innerhalb eines Schnipsels in Quellreihenfolge (Ablauf); sonst nach Treffern
+  const res = {} as Record<SuggestionKind, Omit<S, 'rank' | 'order'>[]>;
   for (const k of Object.keys(out) as SuggestionKind[]) {
-    out[k] = out[k].filter((s) => s.hits > 0);
-    if (k !== 'steps') out[k].sort((a, b) => b.hits - a.hits || a.seq - b.seq);
-    out[k] = out[k].slice(0, k === 'steps' ? 30 : 12);
+    const list = out[k].filter((s) => s.hits > 0);
+    list.sort(k === 'steps' ? (a, b) => b.rank - a.rank || a.order - b.order : (a, b) => b.hits - a.hits || a.seq - b.seq);
+    res[k] = list.slice(0, k === 'steps' ? 30 : 12).map(({ rank: _r, order: _o, ...x }) => x);
   }
-  return { topic, terms, suggestions: out };
+  return { topic, terms, suggestions: res };
 }
 
 interface DraftLine { text: string; snippetId?: string | null }

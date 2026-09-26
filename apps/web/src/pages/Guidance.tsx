@@ -52,7 +52,8 @@ function AddSection({ versionId, add, onDone }: { versionId: string; add: { sect
 export function GuidancePanel({ versionId, canEdit, onChanged }: { versionId: string; canEdit: boolean; onChanged?: () => void }) {
   const { notify } = useApp();
   const g = useLoad<any>(`/guidance/chapter-versions/${versionId}`, [versionId]);
-  const [open, setOpen] = useState<string | null>(null);
+  // mehrere Punkte gleichzeitig aufklappbar
+  const [open, setOpen] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   if (!g.data) return <ErrorBox error={g.error} />;
   const d = g.data;
@@ -85,7 +86,7 @@ export function GuidancePanel({ versionId, canEdit, onChanged }: { versionId: st
       <ul className="guide-list">
         {d.checks.map((c: any) => {
           const st = STATUS_ICON[c.status];
-          const expanded = open === c.code;
+          const expanded = open.has(c.code);
           return (
             <li key={c.code} className={`guide-item st-${c.status}`}>
               <div className="guide-row">
@@ -95,7 +96,7 @@ export function GuidancePanel({ versionId, canEdit, onChanged }: { versionId: st
                   <div className="small">{c.message}</div>
                 </div>
                 {c.status !== 'ok' && (
-                  <button className="btn small" aria-expanded={expanded} aria-controls={`guide-${c.code}`} onClick={() => setOpen(expanded ? null : c.code)}>
+                  <button className="btn small" aria-expanded={expanded} aria-controls={`guide-${c.code}`} onClick={() => setOpen((o) => { const n = new Set(o); if (expanded) n.delete(c.code); else n.add(c.code); return n; })}>
                     {expanded ? 'Schließen' : 'So geht’s'}
                   </button>
                 )}

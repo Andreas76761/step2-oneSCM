@@ -52,10 +52,10 @@ const ADVERBS = new Set(['dann', 'anschließend', 'danach', 'zuerst', 'zunächst
 const DU_VERBS = new Set(['klicke', 'wähle', 'öffne', 'gib', 'trage', 'speichere', 'prüfe', 'markiere', 'bestätige', 'drücke', 'lege', 'gehe', 'rufe', 'ändere', 'lösche', 'füge', 'suche', 'setze', 'aktiviere', 'starte', 'schließe', 'erfasse', 'ziehe', 'lade']);
 const INFINITIVE_END = /(?:klicken|wählen|öffnen|eingeben|eintragen|speichern|bestätigen|markieren|drücken|anlegen|aufrufen|ändern|löschen|hinzufügen|prüfen|aktivieren|erfassen|auswählen|anklicken|schließen|starten|hochladen|freigeben)\s*[.!]?$/i;
 const LIST_ITEM = /^(\s*)(?:(\d+)[.)]|[-*•])\s+/;
-// Menüpfad: mindestens zwei Glieder, getrennt durch > → -> » oder „|“ (z. B. „Stammdaten > Artikel > Neu“)
+// Menüpfad: mindestens zwei Glieder, getrennt durch > → -> » › (z. B. „Stammdaten > Artikel > Neu“)
 // Glieder aus großgeschriebenen Wörtern (ohne „Sie“, damit „Öffnen Sie Einkauf > …“ nur den Pfad erfasst)
 const SEG = String.raw`(?!Sie\b)\p{Lu}[\p{L}\d-]*(?: (?!Sie\b)\p{Lu}[\p{L}\d-]*){0,2}`;
-const MENU_PATH = new RegExp(String.raw`(?<![\p{L}*])(${SEG}(?:\s*(?:>|→|->|»)\s*${SEG})+)(?![\p{L}*])`, 'gu');
+const MENU_PATH = new RegExp(String.raw`(?<![\p{L}*])(${SEG}(?:\s*(?:>|→|->|»|›)\s*${SEG})+)(?![\p{L}*])`, 'gu');
 const ACRONYM = /(?<![\p{L}\d])(\p{Lu}{2,6}|\p{Lu}{1,4}\d{1,2})(?![\p{L}\d])/gu;
 const COMMON_ACRONYMS = new Set(['OK', 'PDF', 'URL', 'ID', 'E-MAIL', 'CSV', 'PC', 'USB', 'EU', 'IT', 'CEO', 'GMBH', 'AG', 'KG', 'EUR', 'USD', 'NR', 'II', 'III', 'IV', 'VI']);
 

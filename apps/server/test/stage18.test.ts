@@ -76,6 +76,7 @@ describe('Etappe 18', () => {
     expect(byCode.menu_bold.items[0]).toMatchObject({ excerpt: 'Einkauf > Aufträge' });
     expect(byCode.menu_bold.items[0].fix?.text).toContain('**Einkauf > Aufträge**');
     expect(byCode.abbreviations.items.map((i) => i.excerpt)).toEqual(['MOQ']);
+    expect(analyzeGuidance([{ id: 'm', section: 'steps', kind: 'paragraph', text: 'Öffnen Sie Produkte › Preislisten.', versionNo: 1 }]).checks.find((c) => c.code === 'menu_bold')!.items[0].fix?.text).toBe('Öffnen Sie **Produkte › Preislisten**.');
     expect(a.score).toBeLessThan(80);
 
     const built = await build('guidance');
