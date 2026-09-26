@@ -48,3 +48,6 @@
 | [ADR-044](ADR-044-stilregeln-ki-stapel.md) | Eigene Stilregeln je Projekt, KI-Stapelumformulierung, Suchgewichtung | akzeptiert, umgesetzt |
 | [ADR-045](ADR-045-benutzerverwaltung.md) | Benutzerverwaltung: anlegen, sperren, Projektzugriffe | akzeptiert, umgesetzt |
 | [ADR-046](ADR-046-screenshot-editor.md) | Screenshot-Editor: Pfeile, Textfelder, Unschärfe | akzeptiert, umgesetzt |
+| [ADR-047](ADR-047-rollenvorlagen-stilregeln-austausch.md) | Rollenvorlagen; Stilregeln exportieren, importieren, aus Projekten übernehmen | akzeptiert, umgesetzt |
+| [ADR-048](ADR-048-stilwert-verlauf.md) | Stilwert-Verlauf je Kapitel und Projekt | akzeptiert, umgesetzt |
+| [ADR-049](ADR-049-screenshot-zuschnitt-lupe.md) | Screenshot-Editor: Zuschneiden, Lupe, Verschieben | akzeptiert, umgesetzt |

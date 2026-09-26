@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { requirePermission, type Ctx, type User } from '../context.js';
 import { createProject, listMembers, listProjects, removeMember, setMember, updateProject } from '../services/projects.js';
 import { createUser, listUsers, updateUser, userProjects } from '../services/users.js';
+import { createRoleTemplate, deleteRoleTemplate, listRoleTemplates, updateRoleTemplate } from '../services/roleTemplates.js';
 
 function globalUser(req: FastifyRequest, perm?: 'admin'): User {
   const user = req.globalUser;
@@ -32,4 +33,12 @@ export function projectRoutes(app: FastifyInstance, ctx: Ctx) {
   app.post<{ Body: any }>('/users', async (req, reply) => reply.code(201).send(await createUser(ctx, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin'))));
   app.patch<{ Params: { userId: string }; Body: any }>('/users/:userId', async (req) => updateUser(ctx, req.params.userId, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin')));
   app.get<{ Params: { userId: string } }>('/users/:userId/projects', async (req) => (globalUser(req, 'admin'), userProjects(ctx, req.params.userId)));
+  // Rollenvorlagen (ADR-047)
+  app.get('/role-templates', async (req) => (globalUser(req, 'admin'), listRoleTemplates(ctx.db)));
+  app.post<{ Body: any }>('/role-templates', async (req, reply) => reply.code(201).send(await createRoleTemplate(ctx, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin'))));
+  app.patch<{ Params: { roleTemplateId: string }; Body: any }>('/role-templates/:roleTemplateId', async (req) => updateRoleTemplate(ctx, req.params.roleTemplateId, (req.body ?? {}) as Record<string, unknown>, globalUser(req, 'admin')));
+  app.delete<{ Params: { roleTemplateId: string } }>('/role-templates/:roleTemplateId', async (req, reply) => {
+    await deleteRoleTemplate(ctx, req.params.roleTemplateId, globalUser(req, 'admin'));
+    return reply.code(204).send();
+  });
 }

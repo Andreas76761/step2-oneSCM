@@ -2,8 +2,8 @@
 // professionell bzw. ins Präsens umformulieren – für freien Text, Kapitelabsätze (übernehmen) und Textschnipsel (nur prüfen).
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { patch, post, put, qs } from '../api';
-import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { currentProjectId, patch, post, put, qs } from '../api';
+import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export interface Fix { start: number; end: number; replacement: string; label: string }
 export interface Issue { rule: string; severity: 'warning' | 'info'; message: string; start: number; end: number; fix?: Fix }
@@ -383,7 +383,69 @@ function RulesTab({ canAdmin }: { canAdmin: boolean }) {
         {!ro && <button className="btn small" onClick={() => { setReplacing((r) => new Set(r).add(phrases.length)); setD({ ...d, phrases: [...phrases, { avoid: '', use: '', note: null }] }); }}>+ Formulierung</button>}
       </Card>
       {!ro && <button className="btn primary" onClick={save}>Stilregeln speichern</button>}
+      <RulesExchange canAdmin={canAdmin} onChanged={rules.reload} />
     </>
+  );
+}
+
+/** Stilregeln austauschen (ADR-047): Export CSV/JSON, Import (zusammenführen/ersetzen), Übernahme aus einem anderen Projekt */
+function RulesExchange({ canAdmin, onChanged }: { canAdmin: boolean; onChanged: () => void }) {
+  const { notify } = useApp();
+  const projects = useLoad<any[]>(canAdmin ? '/projects' : null, [canAdmin]);
+  const [mode, setMode] = useState<'merge' | 'replace'>('merge');
+  const [from, setFrom] = useState('');
+  const current = currentProjectId();
+  const done = (r: any, what: string) => {
+    notify(`${what}: ${r.summary.added} neu, ${r.summary.updated} aktualisiert, ${r.summary.total} Formulierungen.`);
+    onChanged();
+  };
+  const importFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const body = /\.json$/i.test(file.name) ? { rules: JSON.parse(text), mode } : { csv: text, mode };
+      done(await post<any>('/style/rules/import', body), 'Import');
+    } catch (e) {
+      notify(e instanceof SyntaxError ? 'Die JSON-Datei ist ungültig.' : errorText(e), 'error');
+    }
+  };
+  return (
+    <Card title="Austauschen">
+      <div className="filters">
+        <DownloadButton href="/api/v1/style/rules/export?format=csv" name="stilregeln.csv">Als CSV exportieren</DownloadButton>
+        <DownloadButton href="/api/v1/style/rules/export?format=json" name="stilregeln.json">Als JSON exportieren</DownloadButton>
+      </div>
+      {canAdmin && (
+        <>
+          <div className="filters">
+            <label className="inline">Übernahme
+              <select value={mode} onChange={(e) => setMode(e.target.value as 'merge' | 'replace')}>
+                <option value="merge">zusammenführen (vorhandene bleiben, gleiche werden aktualisiert)</option>
+                <option value="replace">ersetzen (vorhandene Formulierungen entfallen)</option>
+              </select>
+            </label>
+          </div>
+          <label className="block">Aus Datei importieren (CSV: vermeiden; aktion; ersetzen durch; hinweis – oder JSON-Export)
+            <input type="file" accept=".csv,.json,text/csv,application/json" data-testid="rules-import" onChange={(e) => { void importFile(e.target.files?.[0]); e.target.value = ''; }} />
+          </label>
+          <div className="filters">
+            <label className="inline">Aus Projekt übernehmen
+              <select value={from} onChange={(e) => setFrom(e.target.value)}>
+                <option value="">– Projekt wählen –</option>
+                {(projects.data ?? []).filter((p) => p.id !== current).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </label>
+            <button className="btn" disabled={!from} onClick={async () => {
+              try {
+                done(await post<any>('/style/rules/copy', { fromProjectId: from, mode }), 'Übernommen');
+              } catch (e) {
+                notify(errorText(e), 'error');
+              }
+            }}>Regeln übernehmen</button>
+          </div>
+        </>
+      )}
+    </Card>
   );
 }
 

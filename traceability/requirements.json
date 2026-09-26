@@ -485,5 +485,32 @@
     "documentation": [
       "docs/adr/ADR-046-screenshot-editor.md"
     ]
+  },
+  {
+    "id": "NFR-34",
+    "title": "Rollenvorlagen für Benutzer und Projektmitgliedschaften; Stilregeln als CSV/JSON exportieren, importieren und aus anderen Projekten übernehmen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-047-rollenvorlagen-stilregeln-austausch.md"
+    ]
+  },
+  {
+    "id": "NFR-35",
+    "title": "Stilwert-Verlauf je Kapitel und Projekt im Dashboard",
+    "priority": "P3",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-048-stilwert-verlauf.md"
+    ]
+  },
+  {
+    "id": "NFR-36",
+    "title": "Screenshot-Editor: Zuschneiden, Lupe, Markierungen verschieben",
+    "priority": "P3",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-049-screenshot-zuschnitt-lupe.md"
+    ]
   }
 ]

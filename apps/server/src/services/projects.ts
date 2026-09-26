@@ -8,6 +8,7 @@
 import { audit, DEFAULT_PROJECT_ID, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { PERMISSIONS } from '../domain/reference.js';
+import { getRoleTemplate } from './roleTemplates.js';
 import { badRequest, conflict, forbidden, notFound, Problem } from '../problem.js';
 import { seedTerminology } from './terminology.js';
 import { LANGUAGES } from '../domain/translate.js';
@@ -159,11 +160,12 @@ export async function listMembers(ctx: Ctx, projectId: string) {
   )).map((m) => ({ userId: m.user_id, name: m.name ?? null, permissions: parseJson<string[]>(m.permissions, []), addedBy: m.added_by, addedAt: m.added_at }));
 }
 
-export async function setMember(ctx: Ctx, projectId: string, userId: string, input: { permissions?: unknown }, actor: User) {
+export async function setMember(ctx: Ctx, projectId: string, userId: string, input: { permissions?: unknown; roleTemplateId?: unknown }, actor: User) {
   await projectRow(ctx, projectId);
   const uid = userId.trim();
   if (!uid || uid.length > 200) throw badRequest('Ungültige Benutzerkennung.');
-  const perms = cleanPermissions(input.permissions);
+  // Rollenvorlage (ADR-047) oder einzelne Berechtigungen
+  const perms = input.roleTemplateId ? (await getRoleTemplate(ctx.db, input.roleTemplateId)).permissions : cleanPermissions(input.permissions);
   await ctx.db.tx(async () => {
     await ctx.db.run(
       `INSERT INTO project_members (project_id, user_id, permissions, added_by, added_at) VALUES (?, ?, ?, ?, ?)

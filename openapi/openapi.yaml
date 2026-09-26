@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.16.0
+  version: 0.17.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -2771,6 +2771,114 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '[{ projectId, name, visibility, archived, member, effective }]' }
         '404': { $ref: '#/components/responses/Problem' }
+  /role-templates:
+    get:
+      operationId: listRoleTemplates
+      summary: 'Rollenvorlagen mit Anzahl zugeordneter Benutzer (Berechtigung admin, ADR-047)'
+      tags: [Projekte]
+      x-requirements: [NFR-34]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, name, description, permissions, builtin, users }]' }
+    post:
+      operationId: createRoleTemplate
+      summary: 'Rollenvorlage anlegen (Berechtigung admin, ADR-047)'
+      tags: [Projekte]
+      x-requirements: [NFR-34]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [name, permissions], properties: { name: { type: string }, description: { type: string }, permissions: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Rollenvorlage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'Name existiert bereits' }
+  /role-templates/{roleTemplateId}:
+    patch:
+      operationId: updateRoleTemplate
+      summary: 'Rollenvorlage ändern; zugeordnete lokale Benutzer erhalten die neuen Berechtigungen (ADR-047)'
+      tags: [Projekte]
+      x-requirements: [NFR-34]
+      x-extension: true
+      parameters:
+        - { name: roleTemplateId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, description: { type: [string, 'null'] }, permissions: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Rollenvorlage' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'Name existiert oder letzter Administrator verlöre die Administration' }
+    delete:
+      operationId: deleteRoleTemplate
+      summary: 'Eigene Rollenvorlage löschen (mitgelieferte nicht; ADR-047)'
+      tags: [Projekte]
+      x-requirements: [NFR-34]
+      x-extension: true
+      parameters:
+        - { name: roleTemplateId, in: path, required: true, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'Gelöscht' }
+        '409': { description: 'Mitgelieferte Vorlage' }
+  /style/rules/export:
+    get:
+      operationId: exportStyleRules
+      summary: 'Stilregeln exportieren: CSV (Formulierungen) oder JSON (alle Regeln) (ADR-047)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-34]
+      x-extension: true
+      parameters:
+        - { name: format, in: query, schema: { type: string, enum: [csv, json], default: csv } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /style/rules/import:
+    post:
+      operationId: importStyleRules
+      summary: 'Stilregeln importieren (CSV oder JSON-Export), zusammenführen oder ersetzen (Berechtigung admin, ADR-047)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-34]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { csv: { type: string }, rules: { type: object }, mode: { type: string, enum: [merge, replace] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ rules, summary: { added, updated, total, mode } }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /style/rules/copy:
+    post:
+      operationId: copyStyleRules
+      summary: 'Stilregeln aus einem anderen Projekt übernehmen, sofern dort Zugriff besteht (Berechtigung admin, ADR-047)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-34]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [fromProjectId], properties: { fromProjectId: { type: string }, mode: { type: string, enum: [merge, replace] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ rules, summary }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /style/history:
+    get:
+      operationId: styleHistory
+      summary: 'Stilwert-Verlauf: Projektdurchschnitt je Tag und Messpunkte je Kapitel bzw. eines Kapitels (ADR-048)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-35]
+      x-extension: true
+      parameters:
+        - { name: days, in: query, schema: { type: integer, minimum: 1, maximum: 730, default: 90 } }
+        - { name: chapterId, in: query, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ days, project: [{ day, average }], chapters: [{ chapterId, title, points, change }] } bzw. { chapterId, title, points }' }
   /master-data/import:
     post:
       operationId: importMasterData

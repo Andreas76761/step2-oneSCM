@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.17.0 – Etappe 17 (26.09.2026)
+
+### Hinzugefügt
+- **Rollenvorlagen (ADR-047):** mitgelieferte (Lesen, Redaktion, Fachprüfung, Freigabe, Administration) und eigene Vorlagen; Benutzer und Projektmitgliedschaften per Vorlage; Änderungen einer Vorlage wirken auf zugeordnete Benutzer.
+- **Stilregeln austauschen (ADR-047):** Export als CSV/JSON, Import (zusammenführen oder ersetzen), Übernahme aus einem anderen Projekt.
+- **Stilwert-Verlauf (ADR-048):** Messpunkte je Kapitel bei Änderung; Dashboard mit Verlaufslinie des Projektdurchschnitts und Veränderung je Kapitel (90 Tage).
+- **Screenshot-Editor (ADR-049):** Zuschneiden, Lupe (2-/3-fach), Markierungen per Maus verschieben.
+- Migration `026_roles_style_history.sql`; Tests T-183 … T-185, E2E T-227 (axe); Anforderungen NFR-34 … NFR-36.
+
 ## 0.16.0 – Etappe 16 (25.09.2026)
 
 ### Hinzugefügt

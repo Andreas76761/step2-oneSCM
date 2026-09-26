@@ -1130,5 +1130,43 @@
       "NFR-32",
       "NFR-33"
     ]
+  },
+  {
+    "id": "T-183",
+    "title": "Rollenvorlagen: mitgeliefert, eigene anlegen, Benutzer und Mitgliedschaften per Vorlage, Änderung wirkt auf Benutzer",
+    "file": "apps/server/test/stage17.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-34"
+    ]
+  },
+  {
+    "id": "T-184",
+    "title": "Stilregeln austauschen: CSV-Export/-Import (zusammenführen/ersetzen), JSON, Übernahme aus anderem Projekt",
+    "file": "apps/server/test/stage17.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-34"
+    ]
+  },
+  {
+    "id": "T-185",
+    "title": "Stilwert-Verlauf: Messpunkte bei Änderung, Projektdurchschnitt je Tag, nach Stapelkorrektur fortgeschrieben",
+    "file": "apps/server/test/stage17.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-35"
+    ]
+  },
+  {
+    "id": "T-227",
+    "title": "UI: Rollenvorlagen, Stilregeln-Export/-Import, Stilwert-Verlauf im Dashboard, Screenshot zuschneiden, Lupe und verschieben",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-34",
+      "NFR-35",
+      "NFR-36"
+    ]
   }
 ]
