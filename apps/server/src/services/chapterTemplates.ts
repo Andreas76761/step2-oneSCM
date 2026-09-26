@@ -109,3 +109,74 @@ export async function deleteChapterTemplate(ctx: Ctx, id: string, user: User) {
     await audit(ctx, user.id, 'chapter_template.deleted', 'chapter_template', id, { name: r.name });
   });
 }
+
+// ---------- Duplizieren, Export, Import (ADR-067) ----------
+
+export const TEMPLATE_FORMAT = 'onescm-chapter-templates';
+const MAX_IMPORT = 50;
+
+/** Freier Name: „X“, sonst „X (2)“, „X (3)“ … – mitgelieferte Vorlagen zählen mit */
+async function freeName(ctx: Ctx, base: string) {
+  const taken = new Set([
+    ...CHAPTER_TEMPLATES.map((t) => t.name.toLowerCase()),
+    ...(await ctx.db.all('SELECT name FROM chapter_templates WHERE project_id = ?', ctx.projectId)).map((r) => String(r.name).toLowerCase()),
+  ]);
+  const root = base.slice(0, 72);
+  if (!taken.has(root.toLowerCase())) return root;
+  for (let i = 2; ; i++) if (!taken.has(`${root} (${i})`.toLowerCase())) return `${root} (${i})`;
+}
+
+type TemplateFields = { name: string; description: string; titleHint: string; purpose: string; prerequisites: string[]; steps: string[]; result: string; hints: string[] };
+const fieldsOf = (t: TemplateFields) => ({
+  name: t.name, description: t.description, titleHint: t.titleHint, purpose: t.purpose, prerequisites: t.prerequisites, steps: t.steps, result: t.result, hints: t.hints,
+});
+
+/** Eigene oder mitgelieferte Vorlage als neue eigene Vorlage „X (Kopie)“ anlegen – mitgelieferte so zum Anpassen */
+export async function duplicateChapterTemplate(ctx: Ctx, id: string, user: User) {
+  const builtin = CHAPTER_TEMPLATES.find((t) => t.id === id);
+  const src = builtin ? { ...builtin } : dto(await own(ctx, id));
+  const name = await freeName(ctx, `${src.name} (Kopie)`);
+  return createChapterTemplate(ctx, { ...fieldsOf(src), name }, user);
+}
+
+/** Eigene Vorlagen als JSON-Datei (alle oder ausgewählte) – zum Übernehmen in andere Projekte oder Installationen */
+export async function exportChapterTemplates(ctx: Ctx, ids?: string[]) {
+  let rows = (await ctx.db.all('SELECT * FROM chapter_templates WHERE project_id = ? ORDER BY name', ctx.projectId)).map(dto);
+  if (ids?.length) {
+    rows = rows.filter((r) => ids.includes(r.id));
+    if (rows.length !== new Set(ids).size) throw notFound('Kapitelvorlage');
+  }
+  return { format: TEMPLATE_FORMAT, version: 1, exportedAt: now(), templates: rows.map(fieldsOf) };
+}
+
+/**
+ * Vorlagen aus einer Exportdatei anlegen. Erst wird alles geprüft (Format, höchstens 50, je Vorlage Name und Schritte),
+ * dann angelegt – eine fehlerhafte Datei legt nichts an. Gleichnamige Vorlagen werden nicht überschrieben, sondern
+ * unter freiem Namen („X (2)“) angelegt.
+ */
+export async function importChapterTemplates(ctx: Ctx, input: Record<string, unknown>, user: User) {
+  if (input.format !== TEMPLATE_FORMAT || !Array.isArray(input.templates)) throw badRequest(`Keine Vorlagendatei (format „${TEMPLATE_FORMAT}“ mit templates erwartet).`);
+  const list = input.templates as unknown[];
+  if (!list.length) throw badRequest('Die Datei enthält keine Vorlagen.');
+  if (list.length > MAX_IMPORT) throw badRequest(`Höchstens ${MAX_IMPORT} Vorlagen je Import.`);
+  const prepared = list.map((raw, i) => {
+    const t = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+    const at = `Vorlage ${i + 1}`;
+    const name = clip(t.name, 80);
+    if (!name) throw badRequest(`${at}: name fehlt.`);
+    const steps = cleanLines(t.steps ?? [], `${at}: steps`) ?? [];
+    if (!steps.length) throw badRequest(`${at} („${name}“): mindestens ein Schritt.`);
+    return {
+      name, description: clip(t.description, 300), titleHint: clip(t.titleHint, 160), purpose: clip(t.purpose, 2000), result: clip(t.result, 2000), steps,
+      prerequisites: cleanLines(t.prerequisites ?? [], `${at}: prerequisites`) ?? [], hints: cleanLines(t.hints ?? [], `${at}: hints`) ?? [],
+    };
+  });
+  const created: { id: string; name: string; renamedFrom: string | null }[] = [];
+  for (const t of prepared) {
+    const name = await freeName(ctx, t.name);
+    const c = await createChapterTemplate(ctx, { ...t, name }, user);
+    created.push({ id: c.id, name: c.name, renamedFrom: name === t.name ? null : t.name });
+  }
+  await audit(ctx, user.id, 'chapter_template.imported', 'project', ctx.projectId, { count: created.length });
+  return { imported: created.length, templates: created };
+}

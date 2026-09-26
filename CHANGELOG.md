@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.22.0 – Etappe 22 (26.09.2026)
+
+### Hinzugefügt
+- **Druck je Variante und Rolle (ADR-065):** Standardhandbuch oder Handbuch-Variante, optional nur für eine Rolle; Deckblatt im Firmen-Layout (Logo, Firma, Untertitel, Vertraulichkeit, Hausfarbe), Kopf- und Fußzeile, Glossar-Anhang.
+- **Suche und Glossar beim Lesen (ADR-066):** „Im Handbuch suchen“ mit Ausschnitten und markierten Treffern im Kapitel; Fachbegriffe und Abkürzungen erklären sich per Klick, Maus oder Tastatur.
+- **Vorlagen teilen (ADR-067):** Vorlagen duplizieren (auch mitgelieferte zum Anpassen), als Datei exportieren und in anderen Projekten importieren.
+- Tests T-197, T-198, E2E T-232 (axe); Anforderungen NFR-52 … NFR-54; keine Migration.
+
+### Behoben
+- Drucken erst, wenn Deckblattangaben geladen sind; die Wochenübersicht berechnet den projektweiten Teil einmal je Versand.
+
 ## 0.21.0 – Etappe 21 (26.09.2026)
 
 ### Hinzugefügt

@@ -6,9 +6,11 @@ import { styleHistory, applyChapterTexts, copyStyleRules, exportStyleRules, impo
 import { applyGuidanceFixes, assistantSuggestions, chapterGuidance, createChapterFromAssistant, guidanceSummary } from '../services/guidance.js';
 import { effectivePhrases, projectLibraries, setProjectLibraries } from '../services/style.js';
 import { feedbackInsights, feedbackSummary, feedbackToTask, listFeedback, submitFeedback, updateFeedback } from '../services/feedback.js';
-import { createChapterTemplate, deleteChapterTemplate, listChapterTemplates, updateChapterTemplate } from '../services/chapterTemplates.js';
+import { createChapterTemplate, deleteChapterTemplate, duplicateChapterTemplate, exportChapterTemplates, importChapterTemplates, listChapterTemplates, updateChapterTemplate } from '../services/chapterTemplates.js';
+import { readerGlossary, readerSearch } from '../services/reader.js';
 import { getGuidanceSettings, updateGuidanceSettings } from '../services/guidanceBase.js';
 import { buildDigest, getDigestSettings, sendDigests, updateDigestSettings } from '../services/digest.js';
+import { badRequest } from '../problem.js';
 import { userOf } from './helpers.js';
 
 export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -77,6 +79,22 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   // Kapitelvorlagen (ADR-055)
   // Kapitelvorlagen: mitgeliefert (ADR-055) und eigene je Projekt (ADR-059)
   app.get('/chapter-assistant/templates', async (req) => (userOf(req.ctx, req), listChapterTemplates(req.ctx)));
+  // Duplizieren, Export/Import (ADR-067) – vor der Pfadvariante registriert, damit „export“/„import“ keine ID sind
+  app.get<{ Querystring: { ids?: string } }>('/chapter-templates/export', async (req, reply) => {
+    userOf(req.ctx, req);
+    const data = await exportChapterTemplates(req.ctx, req.query.ids ? req.query.ids.split(',').filter(Boolean) : undefined);
+    return reply.header('Content-Disposition', `attachment; filename="kapitelvorlagen-${data.exportedAt.slice(0, 10)}.json"`).send(data);
+  });
+  app.post<{ Body: any }>('/chapter-templates/import', async (req, reply) => reply.code(201).send(await importChapterTemplates(req.ctx, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit'))));
+  // ID im Body: auch mitgelieferte Vorlagen (nicht in der Tabelle) lassen sich kopieren; eigene prüft own() gegen das Projekt
+  app.post<{ Body: { id?: unknown } }>('/chapter-templates/duplicate', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    if (typeof req.body?.id !== 'string' || !req.body.id) throw badRequest('id ist Pflicht.');
+    return reply.code(201).send(await duplicateChapterTemplate(req.ctx, req.body.id, user));
+  });
+  // Leseransicht: Suche und Glossar (ADR-066)
+  app.get<{ Querystring: { q?: string; drafts?: string } }>('/reader/search', async (req) => (userOf(req.ctx, req), readerSearch(req.ctx, req.query.q, req.query.drafts === 'true')));
+  app.get('/reader/glossary', async (req) => (userOf(req.ctx, req), readerGlossary(req.ctx)));
   app.post<{ Body: any }>('/chapter-templates', async (req, reply) => reply.code(201).send(await createChapterTemplate(req.ctx, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit'))));
   app.patch<{ Params: { chapterTemplateId: string }; Body: any }>('/chapter-templates/:chapterTemplateId', async (req) =>
     updateChapterTemplate(req.ctx, req.params.chapterTemplateId, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit')));

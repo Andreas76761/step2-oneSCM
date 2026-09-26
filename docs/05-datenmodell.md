@@ -46,6 +46,7 @@ Migrationen: `apps/server/migrations/001_init.sql`, `002_jobs_and_ordering.sql`,
 | – | `outlines`, `outline_nodes` | Gliederungen je Variante (Rollen, Sparten, Blueprint/Märkte), Versionen über `family_id`/`version_no`, Kapitel und Unterkapitel (ADR-032); `projects.markets` |
 | – | `outline_assignments` | Zuordnung Textschnipsel → Gliederungseintrag mit Reihenfolge (Draft Manual, ADR-033) |
 | – | `plan_items` | Redaktionsplanung je Gliederungseintrag: Verantwortliche, Termin, Status, Notiz; `reminded_at` für die einmalige Erinnerung je Termin (ADR-036) |
+| – | Etappe 22 (keine Migration) | Suche und Glossar der Leseransicht lesen `content_blocks`, `terminology_terms` (mit Definition) und `abbreviations` (ADR-066); Vorlagen-Export/-Import nutzt `chapter_templates` (ADR-067) |
 | – | Migration `030_weekly_digest` | `projects.digest_weekday` (1 = Montag … 7 = Sonntag, NULL = aus, Standard 1); `digest_log` (Projekt, Person, ISO-Woche, Versandzeit – je Person höchstens eine Übersicht je Woche, ADR-064) |
 | – | Migration `029_templates_feedback_source` | `chapter_templates` (eigene Kapitelvorlagen je Projekt: Name eindeutig, Zweck, Voraussetzungen/Schritte/Tipps als JSON, Ergebnis, Quellversion, ADR-059); `chapter_feedback.source` (`app` \| `online-help`, ADR-061) |
 | – | Migration `028_reader_feedback` | `chapter_feedback` (Leser-Rückmeldung je Kapitel/Version: hilfreich, Kommentar, Status open/done, ADR-054); `projects.guidance_min_score` (Mindestwert des Anleitungs-Checks für Einreichen/Freigabe, NULL = aus, ADR-057) |

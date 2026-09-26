@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import Markdown, { defaultUrlTransform } from 'react-markdown';
 import { ApiError, download, get, mediaUrl, post } from '../api';
+import { MdGlossTerm, remarkGlossary, useGlossary } from './Glossary';
 
 // ---------- Referenzdaten & Benachrichtigungen ----------
 
@@ -255,11 +256,17 @@ export function ImageInsert({ onInsert }: { onInsert: (markdown: string) => void
 }
 
 /** Markdown-Vorschau ohne HTML-Ausführung (kein rehype-raw, §13). */
-export const Md = ({ text }: { text: string }) => (
-  <div className="md">
-    <Markdown skipHtml urlTransform={(url) => (url.startsWith('media:') ? url : defaultUrlTransform(url))} components={{ img: ({ src, alt }) => <MdImage src={typeof src === 'string' ? src : undefined} alt={alt} /> }}>{text}</Markdown>
-  </div>
-);
+export function Md({ text }: { text: string }) {
+  // Glossar nur innerhalb eines GlossaryProvider (Leseransicht, Druck); sonst unverändert
+  const g = useGlossary();
+  const plugins = useMemo(() => (g.regex ? [remarkGlossary(g)] : []), [g]);
+  return (
+    <div className="md">
+      <Markdown skipHtml remarkPlugins={plugins} urlTransform={(url) => (url.startsWith('media:') ? url : defaultUrlTransform(url))}
+        components={{ img: ({ src, alt }) => <MdImage src={typeof src === 'string' ? src : undefined} alt={alt} />, ...({ 'gloss-term': MdGlossTerm } as object) }}>{text}</Markdown>
+    </div>
+  );
+}
 
 export const ErrorBox = ({ error }: { error: string | null }) => (error ? <div className="alert error" role="alert">{error}</div> : null);
 export const Empty = ({ children }: { children: ReactNode }) => <div className="empty">{children}</div>;

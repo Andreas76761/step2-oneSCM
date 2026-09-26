@@ -66,3 +66,6 @@
 | [ADR-062](ADR-062-vorlagen-bearbeiten.md) | Eigene Kapitelvorlagen vollständig bearbeiten | akzeptiert, umgesetzt |
 | [ADR-063](ADR-063-druck-deckblatt.md) | Druck mit Deckblatt und Seitenzahlen | akzeptiert, umgesetzt |
 | [ADR-064](ADR-064-wochenuebersicht.md) | Wöchentliche Übersicht für die Redaktion | akzeptiert, umgesetzt |
+| [ADR-065](ADR-065-druck-variante-rolle.md) | Druck je Variante und Rolle im Firmen-Layout | akzeptiert, umgesetzt |
+| [ADR-066](ADR-066-suche-glossar-lesen.md) | Suche und Glossar in der Leseransicht | akzeptiert, umgesetzt |
+| [ADR-067](ADR-067-vorlagen-teilen.md) | Kapitelvorlagen duplizieren, exportieren und importieren | akzeptiert, umgesetzt |

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.21.0
+  version: 0.22.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3189,6 +3189,72 @@ paths:
         '201': { description: 'Vorlage' }
         '400': { $ref: '#/components/responses/Problem' }
         '409': { $ref: '#/components/responses/Problem' }
+  /chapter-templates/duplicate:
+    post:
+      operationId: duplicateChapterTemplate
+      summary: 'Eigene oder mitgelieferte Vorlage als neue eigene Vorlage kopieren (Berechtigung edit, ADR-067)'
+      tags: [Kapitel]
+      x-requirements: [NFR-54]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [id], properties: { id: { type: string, description: 'ID einer eigenen oder mitgelieferten Vorlage' } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'neue Vorlage (Name „X (Kopie)“ bzw. frei)' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapter-templates/export:
+    get:
+      operationId: exportChapterTemplates
+      summary: 'Eigene Vorlagen als JSON-Datei (ADR-067)'
+      tags: [Kapitel]
+      x-requirements: [NFR-54]
+      x-extension: true
+      parameters:
+        - { name: ids, in: query, description: 'kommagetrennte IDs; ohne = alle eigenen', schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ format: onescm-chapter-templates, version: 1, exportedAt, templates: [{ name, description, titleHint, purpose, prerequisites, steps, result, hints }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapter-templates/import:
+    post:
+      operationId: importChapterTemplates
+      summary: 'Vorlagen aus einer Exportdatei anlegen – alles oder nichts, gleiche Namen werden umbenannt (Berechtigung edit, ADR-067)'
+      tags: [Kapitel]
+      x-requirements: [NFR-54]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [format, templates], properties: { format: { type: string, enum: [onescm-chapter-templates] }, templates: { type: array, maxItems: 50, items: { type: object } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ imported, templates: [{ id, name, renamedFrom }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /reader/search:
+    get:
+      operationId: readerSearch
+      summary: 'Suche in der Leseransicht: Titel und Text der freigegebenen (optional neuesten) Fassungen, mit Ausschnitt (ADR-066)'
+      tags: [Kapitel]
+      x-requirements: [NFR-53]
+      x-extension: true
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string, maxLength: 100 } }
+        - { name: drafts, in: query, schema: { type: boolean, default: false } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ q, words, total, results: [{ chapterId, title, versionId, draft, hits, snippet }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /reader/glossary:
+    get:
+      operationId: readerGlossary
+      summary: 'Begriffe mit Erklärung für die Leseransicht: Terminologie mit Definition und Abkürzungen (ADR-066)'
+      tags: [Kapitel]
+      x-requirements: [NFR-53]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ term, text, kind: term | abbreviation }] – längste zuerst' }
   /chapter-templates/{chapterTemplateId}:
     patch:
       operationId: updateChapterTemplate
