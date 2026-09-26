@@ -5,10 +5,12 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { patch, post } from '../api';
 import { Card, errorText, useApp } from './ui';
 
-interface Marker { x: number; y: number; text: string }
-interface Frame { x: number; y: number; w: number; h: number }
-interface Arrow { x1: number; y1: number; x2: number; y2: number }
-interface Label { x: number; y: number; text: string }
+// jede Markierung hat eine Kennung, damit Rückgängig und Entfernen einander nicht in die Quere kommen
+interface Marker { id?: number; x: number; y: number; text: string }
+interface Frame { id?: number; x: number; y: number; w: number; h: number }
+interface Arrow { id?: number; x1: number; y1: number; x2: number; y2: number }
+interface Label { id?: number; x: number; y: number; text: string }
+let nextShapeId = 1;
 type Tool = 'marker' | 'frame' | 'arrow' | 'text' | 'blur';
 interface Shapes { markers: Marker[]; frames: Frame[]; arrows: Arrow[]; labels: Label[]; blurs: Frame[] }
 const EMPTY: Shapes = { markers: [], frames: [], arrows: [], labels: [], blurs: [] };
@@ -144,7 +146,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
   const [alt, setAlt] = useState('');
   const [title, setTitle] = useState('');
   const [busy, setBusy] = useState(false);
-  const [history, setHistory] = useState<Tool[]>([]);
+  const [history, setHistory] = useState<{ tool: Tool; id: number }[]>([]);
 
   useEffect(() => {
     if (img && canvas.current) draw(canvas.current, img, sh, color, preview);
@@ -171,8 +173,9 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
     return { x: clamp(((e.clientX - r.left) / r.width) * 100), y: clamp(((e.clientY - r.top) / r.height) * 100) };
   };
   const add = <K extends Tool>(t: K, item: Shapes[(typeof KEY)[K]][number]) => {
-    setSh((x) => ({ ...x, [KEY[t]]: [...(x[KEY[t]] as unknown[]), item] }));
-    setHistory((h) => [...h, t]);
+    const id = nextShapeId++;
+    setSh((x) => ({ ...x, [KEY[t]]: [...(x[KEY[t]] as unknown[]), { ...item, id }] }));
+    setHistory((h) => [...h, { tool: t, id }]);
   };
   const addMarker = (x: number, y: number) => add('marker', { x, y, text: '' });
   const addLabel = (x: number, y: number) => add('text', { x, y, text: labelText.trim() || 'Text' });
@@ -205,13 +208,11 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
   const undo = () => {
     const last = history[history.length - 1];
     if (!last) return;
-    setSh((x) => ({ ...x, [KEY[last]]: (x[KEY[last]] as unknown[]).slice(0, -1) }));
+    setSh((x) => ({ ...x, [KEY[last.tool]]: (x[KEY[last.tool]] as { id?: number }[]).filter((it) => it.id !== last.id) }));
     setHistory((h) => h.slice(0, -1));
   };
-  const dropHistory = (t: Tool) => setHistory((h) => {
-    const k = h.lastIndexOf(t);
-    return k < 0 ? h : [...h.slice(0, k), ...h.slice(k + 1)];
-  });
+  /** eine bestimmte Markierung aus der Rückgängig-Liste nehmen (beim Entfernen über die Liste) */
+  const dropHistory = (id?: number) => setHistory((h) => h.filter((e) => e.id !== id));
   const describe = [
     `Screenshot mit ${markers.length} Nummern und ${frames.length} Rahmen`,
     arrows.length ? `${arrows.length} Pfeilen` : '', labels.length ? `${labels.length} Textfeldern` : '', blurs.length ? `${blurs.length} unkenntlichen Bereichen` : '',
@@ -272,7 +273,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
                   <input aria-label={`Nummer ${i + 1} Beschreibung`} placeholder="Was wird hier geklickt?" value={m.text} onChange={(e) => setMarkers(markers.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
                   <input aria-label={`Nummer ${i + 1} X in Prozent`} type="number" min={0} max={100} value={m.x} style={{ width: '5em' }} onChange={(e) => setMarkers(markers.map((x, j) => (j === i ? { ...x, x: clamp(Number(e.target.value)) } : x)))} />
                   <input aria-label={`Nummer ${i + 1} Y in Prozent`} type="number" min={0} max={100} value={m.y} style={{ width: '5em' }} onChange={(e) => setMarkers(markers.map((x, j) => (j === i ? { ...x, y: clamp(Number(e.target.value)) } : x)))} />
-                  <button className="btn small danger" aria-label={`Nummer ${i + 1} entfernen`} onClick={() => { setMarkers(markers.filter((_, j) => j !== i)); dropHistory('marker'); }}>✕</button>
+                  <button className="btn small danger" aria-label={`Nummer ${i + 1} entfernen`} onClick={() => { setMarkers(markers.filter((_, j) => j !== i)); dropHistory(m.id); }}>✕</button>
                 </li>
               ))}
             </ol>
@@ -287,7 +288,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
                     <input aria-label={`Textfeld ${i + 1}`} value={l.text} onChange={(e) => setLabels(labels.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
                     <input aria-label={`Textfeld ${i + 1} X in Prozent`} type="number" min={0} max={100} value={l.x} style={{ width: '5em' }} onChange={(e) => setLabels(labels.map((x, j) => (j === i ? { ...x, x: clamp(Number(e.target.value)) } : x)))} />
                     <input aria-label={`Textfeld ${i + 1} Y in Prozent`} type="number" min={0} max={100} value={l.y} style={{ width: '5em' }} onChange={(e) => setLabels(labels.map((x, j) => (j === i ? { ...x, y: clamp(Number(e.target.value)) } : x)))} />
-                    <button className="btn small danger" aria-label={`Textfeld ${i + 1} entfernen`} onClick={() => { setLabels(labels.filter((_, j) => j !== i)); dropHistory('text'); }}>✕</button>
+                    <button className="btn small danger" aria-label={`Textfeld ${i + 1} entfernen`} onClick={() => { setLabels(labels.filter((_, j) => j !== i)); dropHistory(l.id); }}>✕</button>
                   </li>
                 ))}
               </ul>

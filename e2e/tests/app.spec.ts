@@ -1012,6 +1012,13 @@ test('[T-226] Eigene Stilregeln, Benutzerverwaltung, KI-Stapelumformulierung, Sc
   await expect(page.getByText('▦ 1 Bereich(e) werden im gespeicherten Bild verpixelt.')).toBeVisible();
   await page.getByRole('button', { name: 'Rückgängig' }).click();
   await expect(canvas).toHaveAttribute('aria-label', 'Screenshot mit 0 Nummern und 0 Rahmen, 1 Pfeilen, 1 Textfeldern');
+  // Entfernen über die Liste verschiebt Rückgängig nicht: Text B, dann Text A entfernen → Rückgängig nimmt Text B, nicht den Pfeil
+  await page.getByRole('button', { name: 'T Textfeld setzen' }).click();
+  await page.getByLabel('Beschriftung').fill('B');
+  await canvas.click({ position: { x: 60, y: 150 } });
+  await page.getByRole('button', { name: 'Textfeld 1 entfernen' }).click();
+  await page.getByRole('button', { name: 'Rückgängig' }).click();
+  await expect(canvas).toHaveAttribute('aria-label', 'Screenshot mit 0 Nummern und 0 Rahmen, 1 Pfeilen');
   expect(await axe()).toEqual([]);
 
   // Suche: Kapitel vor Treffern im Quellpfad

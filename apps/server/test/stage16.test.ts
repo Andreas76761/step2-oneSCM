@@ -41,6 +41,10 @@ describe('Etappe 16', () => {
       expect(rulesHit).not.toContain('filler');
       // KI-Umformulierung (Demo) wendet die Projektregeln an
       expect((await call('POST', '/style/rewrite', { text: 'Das Feld ist zu diesem Zeitpunkt leider leer.' })).json.text).toBe('Das Feld ist jetzt leer.');
+      // ausgeschaltete eigene Regeln gelten auch nicht für die KI-Umformulierung
+      await call('PUT', '/style/rules', { disabled: ['filler', 'custom'] });
+      expect((await call('POST', '/style/rewrite', { text: 'Das Feld ist zu diesem Zeitpunkt leider leer.' })).json.text).toBe('Das Feld ist zu diesem Zeitpunkt leider leer.');
+      await call('PUT', '/style/rules', { disabled: ['filler'] });
       // Projekte getrennt
       const p2 = (await call('POST', '/projects', { name: 'Zweites Projekt' })).json;
       expect((await call('GET', '/style/rules', undefined, 'u-admin', p2.id)).json.phrases).toEqual([]);
@@ -90,6 +94,12 @@ describe('Etappe 16', () => {
       expect((await call('PATCH', '/users/u-admin', { disabled: true }, 'u-chef')).status).toBe(200);
       expect((await call('PATCH', '/users/u-chef', { permissions: ['read'] }, 'u-chef')).status).toBe(409);
       expect((await call('PATCH', '/users/u-admin', { disabled: false }, 'u-chef')).status).toBe(200);
+      // gleichzeitiges gegenseitiges Sperren der beiden letzten Administratoren: höchstens eines gelingt
+      const both = await Promise.all([call('PATCH', '/users/u-chef', { disabled: true }, 'u-admin'), call('PATCH', '/users/u-admin', { disabled: true }, 'u-chef')]);
+      expect(both.map((r) => r.status).sort()).toEqual([200, 409]);
+      const activeAdmins = (await call('GET', '/users', undefined, both[0].status === 200 ? 'u-admin' : 'u-chef')).json.filter((u: any) => !u.disabled && u.permissions.includes('admin'));
+      expect(activeAdmins).toHaveLength(1);
+      await call('PATCH', both[0].status === 200 ? '/users/u-chef' : '/users/u-admin', { disabled: false }, both[0].status === 200 ? 'u-admin' : 'u-chef');
       expect((await call('PATCH', '/users/gibtsnicht', { name: 'x' })).status).toBe(404);
 
       // Projektzugriffe

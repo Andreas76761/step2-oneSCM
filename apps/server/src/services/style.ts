@@ -93,7 +93,7 @@ export async function checkText(ctx: Ctx, text: unknown) {
 
 const SYSTEM_PROMPT = `Du überarbeitest Texte eines Software-Benutzerhandbuchs (oneSCM) auf Deutsch.
 Regeln:
-- Professionell und sachlich; Präsens; aktiv, wo möglich; Anrede wie in „address“ angegeben (sie = „Sie“, du = „du“, sonst „Sie“); kurze Sätze (höchstens „maxSentenceWords“ Wörter).
+- Professionell und sachlich; Präsens; aktiv, wo möglich; Anrede wie in „address“ angegeben (sie = „Sie“, du = „du“, null = Anrede nicht ändern); kurze Sätze (höchstens „maxSentenceWords“ Wörter, sofern angegeben).
 - Eigene Regeln des Projekts („phrases“): „avoid“ nicht verwenden, stattdessen „use“ (leer = streichen).
 - Keine neuen Inhalte, nichts weglassen. Zahlen, Fristen, Menüpfade, Feldnamen, **Fettdruck** und Markdown-Struktur (Listen, Zeilen) bleiben erhalten.
 - Terminologie: bevorzugte Begriffe verwenden, zu vermeidende ersetzen.
@@ -122,7 +122,10 @@ export async function rewriteText(ctx: Ctx, input: { text?: unknown; mode?: unkn
     const payload = {
       task: 'style', mode, text, terminology: opts.terms.map((t) => ({ preferred: t.preferred, avoid: t.avoid })),
       // eigene Regeln des Projekts (ADR-044)
-      phrases: opts.phrases, address: opts.address, maxSentenceWords: opts.maxWords,
+      // ausgeschaltete Regeln gehen nicht in die Umformulierung ein
+      phrases: opts.disabled.includes('custom') ? [] : opts.phrases,
+      address: opts.disabled.includes('address') ? null : opts.address,
+      maxSentenceWords: opts.disabled.includes('long_sentence') ? null : opts.maxWords,
     };
     const instruction = mode === 'present' ? 'Setze den Text ins Präsens; ändere sonst nichts.' : 'Überarbeite den Text nach den Regeln.';
     const prompt = { system: SYSTEM_PROMPT, user: `${instruction} Eingabedaten:\n<<<DATA\n${JSON.stringify(payload, null, 2)}\nDATA>>>` };

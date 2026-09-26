@@ -107,10 +107,13 @@ export async function updateUser(ctx: Ctx, id: string, input: Record<string, unk
     changes.disabled = input.disabled;
   }
   if (!set.length) return dto(r);
-  // mindestens ein aktiver Administrator muss bleiben
-  const admins = (await activeAdmins(ctx)).filter((a) => a !== id);
-  if (!admins.length && !(willBeAdmin && willBeActive)) throw conflict('Der letzte aktive Administrator kann nicht gesperrt oder herabgestuft werden.');
   await ctx.db.tx(async () => {
+    // mindestens ein aktiver Administrator muss bleiben – Prüfung und Änderung in einer serialisierten Transaktion
+    // (SQLite: BEGIN IMMEDIATE; PostgreSQL: transaktionsgebundene Advisory-Sperre), damit sich zwei Administratoren
+    // nicht gleichzeitig gegenseitig sperren oder herabstufen
+    if (ctx.db.dialect === 'postgres') await ctx.db.run("SELECT pg_advisory_xact_lock(hashtext('onescm-user-admins'))");
+    const admins = (await activeAdmins(ctx)).filter((a) => a !== id);
+    if (!admins.length && !(willBeAdmin && willBeActive)) throw conflict('Der letzte aktive Administrator kann nicht gesperrt oder herabgestuft werden.');
     await ctx.db.run(`UPDATE users SET ${set.join(', ')} WHERE id = ?`, ...vals, id);
     await audit(ctx, admin.id, 'disabled' in changes ? (changes.disabled ? 'user.disabled' : 'user.enabled') : 'user.updated', 'user', id, changes);
   });
