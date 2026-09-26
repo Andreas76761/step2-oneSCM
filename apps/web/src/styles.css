@@ -685,3 +685,12 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .toc-sub { font-size: 14px; margin: 12px 0 4px; }
 .tag-new { border-color: var(--ok); }
 .tag-changed { border-color: var(--warn); }
+
+/* ---------- Etappe 24: Sprachen, Siehe auch im Druck, Lesezeichen-Notizen ---------- */
+.term-translations fieldset { border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; }
+.term-lang { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 4px 0; }
+.reader-lang-note { background: var(--warn-bg); border-radius: 8px; padding: 6px 10px; }
+.print-see { font-size: 0.95em; border-top: 1px solid var(--border); margin-top: 12px; padding-top: 6px; }
+.bookmark-list li { border-bottom: 1px solid var(--border); padding: 10px 0; display: grid; gap: 6px; }
+.bookmark-list textarea { width: 100%; }
+.bookmark-note { font-style: italic; }

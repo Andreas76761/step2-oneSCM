@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.24.0 – Etappe 24 (26.09.2026)
+
+### Hinzugefügt
+- **Sprachen beim Lesen (ADR-071):** Sprachauswahl in der Leseransicht; Kapitel, Titel, Suche, FAQ und Glossar in der gewählten Sprache aus freigegebenen Übersetzungen; deutscher Rückfall mit Hinweis; Übersetzungen von Begriffen unter „Terminologie“.
+- **„Siehe auch“ und FAQ im Druck und in der Online-Hilfe (ADR-072):** Querverweise mit Kapitelnummer, FAQ-Anhang, Druck in einer Sprache; Online-Hilfe mit Links auf verwandte Hilfethemen und passenden FAQ.
+- **Lesezeichen mit Notizen (ADR-073):** eigene Notiz je Lesezeichen, Seite „Lesezeichen“ mit Filter und CSV-Export.
+- Migration `032_reader_languages_notes.sql`; Tests T-202, T-203, T-204, E2E T-234 (axe); Anforderungen NFR-58, NFR-59, NFR-60.
+
+### Geändert
+- „Siehe auch“ vergleicht Kapitel über die deutsche Quelle – gleiche Verweise in jeder Sprache.
+
+### Behoben
+- „Siehe auch“: höchstens fünf manuelle Verweise auch über die API; Verweis-Editor speichert nacheinander; Hinweis auf neue/geänderte Kapitel zählt beim Lesen herunter (PR #23).
+
 ## 0.23.0 – Etappe 23 (26.09.2026)
 
 ### Hinzugefügt

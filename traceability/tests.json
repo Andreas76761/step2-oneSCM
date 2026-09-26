@@ -1379,5 +1379,43 @@
       "NFR-56",
       "NFR-57"
     ]
+  },
+  {
+    "id": "T-202",
+    "title": "Lesen in Sprachen: übersetzte Fassung, Rückfall mit Hinweis (fehlt/veraltet), Titel, Suche, Glossar und „Siehe auch“ je Sprache",
+    "file": "apps/server/test/stage24.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-58"
+    ]
+  },
+  {
+    "id": "T-203",
+    "title": "Siehe auch und FAQ für alle Kapitel (Druck) und in der Online-Hilfe mit Verweis auf das Hilfethema",
+    "file": "apps/server/test/stage24.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-59"
+    ]
+  },
+  {
+    "id": "T-204",
+    "title": "Lesezeichen mit Notiz: setzen, ändern, leeren; Notiz bleibt beim erneuten Merken ohne Notiz; Längen- und Typprüfung",
+    "file": "apps/server/test/stage24.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-60"
+    ]
+  },
+  {
+    "id": "T-234",
+    "title": "Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; Siehe auch und FAQ im Druck und in der Online-Hilfe; Lesezeichen mit Notizen und CSV (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-58",
+      "NFR-59",
+      "NFR-60"
+    ]
   }
 ]

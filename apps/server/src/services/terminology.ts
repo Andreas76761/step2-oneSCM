@@ -3,6 +3,7 @@
 import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Db } from '../db.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
+import { projectLanguages } from './translations.js';
 
 export interface Term {
   id: string;
@@ -14,6 +15,7 @@ export interface Term {
   createdAt: string;
   updatedBy: string;
   updatedAt: string;
+  translations: Record<string, { term: string; definition: string | null }>;
 }
 
 /** Startbestand bis Etappe 2 (Einstellung `terminology`) */
@@ -44,6 +46,7 @@ const cleanList = (v: unknown) => [...new Set((Array.isArray(v) ? v : []).map((x
 function toTerm(r: Record<string, any>): Term {
   return {
     id: r.id, preferred: r.preferred, avoid: parseJson(r.avoid, []), definition: r.definition, status: r.status,
+    translations: parseJson<Record<string, { term: string; definition: string | null }>>(r.translations, {}),
     createdBy: r.created_by, createdAt: r.created_at, updatedBy: r.updated_by, updatedAt: r.updated_at,
   };
 }
@@ -67,6 +70,22 @@ export interface TermInput {
   avoid?: string[];
   definition?: string | null;
   status?: 'active' | 'retired';
+  /** Begriff und Definition je Projektsprache (Glossar in der Leseransicht, ADR-071) */
+  translations?: Record<string, { term?: string; definition?: string | null }>;
+}
+
+/** Übersetzungen prüfen: nur Projektsprachen, Begriff Pflicht (sonst entfällt die Sprache), Längen begrenzt */
+async function cleanTranslations(ctx: Ctx, v: unknown) {
+  if (v === undefined) return undefined;
+  if (!v || typeof v !== 'object' || Array.isArray(v)) throw badRequest('translations: Objekt { Sprache: { term, definition } }.');
+  const langs = await projectLanguages(ctx);
+  const out: Record<string, { term: string; definition: string | null }> = {};
+  for (const [lang, t] of Object.entries(v as Record<string, any>)) {
+    if (!langs.includes(lang)) throw badRequest(`translations: „${lang}“ ist keine Sprache dieses Projekts.`);
+    const term = typeof t?.term === 'string' ? t.term.trim().slice(0, 120) : '';
+    if (term) out[lang] = { term, definition: typeof t?.definition === 'string' ? t.definition.trim().slice(0, 1000) || null : null };
+  }
+  return out;
 }
 
 /** Ein zu vermeidender Begriff darf nicht zugleich irgendwo bevorzugt sein (sonst widersprüchliche Befunde). */
@@ -95,12 +114,13 @@ export async function createTerm(ctx: Ctx, input: TermInput, actor: string) {
   if (!preferred) throw badRequest('Bevorzugter Begriff (preferred) ist Pflicht.');
   const avoid = cleanList(input.avoid);
   await assertConsistent(ctx, preferred, avoid, null);
+  const translations = (await cleanTranslations(ctx, input.translations)) ?? {};
   const id = newId('term');
   await ctx.db.tx(async () => {
     await ctx.db.run(
-      `INSERT INTO terminology_terms (id, project_id, preferred, avoid, definition, status, created_by, created_at, updated_by, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?)`,
-      id, ctx.projectId, preferred, json(avoid), input.definition?.trim() || null, actor, now(), actor, now(),
+      `INSERT INTO terminology_terms (id, project_id, preferred, avoid, definition, status, created_by, created_at, updated_by, updated_at, translations)
+       VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?)`,
+      id, ctx.projectId, preferred, json(avoid), input.definition?.trim() || null, actor, now(), actor, now(), json(translations),
     );
     await audit(ctx, actor, 'term.created', 'term', id, { preferred, avoid });
   });
@@ -115,10 +135,11 @@ export async function updateTerm(ctx: Ctx, id: string, input: TermInput, actor: 
   const status = input.status ?? before.status;
   if (!['active', 'retired'].includes(status)) throw badRequest('status muss active oder retired sein.');
   if (status === 'active') await assertConsistent(ctx, preferred, avoid, id);
+  const translations = (await cleanTranslations(ctx, input.translations)) ?? before.translations;
   await ctx.db.tx(async () => {
     await ctx.db.run(
-      'UPDATE terminology_terms SET preferred = ?, avoid = ?, definition = ?, status = ?, updated_by = ?, updated_at = ? WHERE id = ?',
-      preferred, json(avoid), input.definition !== undefined ? input.definition?.trim() || null : before.definition, status, actor, now(), id,
+      'UPDATE terminology_terms SET preferred = ?, avoid = ?, definition = ?, status = ?, translations = ?, updated_by = ?, updated_at = ? WHERE id = ?',
+      preferred, json(avoid), input.definition !== undefined ? input.definition?.trim() || null : before.definition, status, json(translations), actor, now(), id,
     );
     await audit(ctx, actor, status === 'retired' && before.status === 'active' ? 'term.retired' : 'term.updated', 'term', id, { before, after: { preferred, avoid, status } });
   });

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.23.0
+  version: 0.24.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -1066,6 +1066,7 @@ paths:
                 preferred: { type: string }
                 avoid: { type: array, items: { type: string } }
                 definition: { type: [string, 'null'] }
+                translations: { type: object, description: 'Je Projektsprache { term, definition } fürs Glossar beim Lesen (ADR-071); andere Sprachen → 400', additionalProperties: { type: object, properties: { term: { type: string }, definition: { type: [string, "null"] } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Angelegt }
@@ -1089,6 +1090,7 @@ paths:
                 preferred: { type: string }
                 avoid: { type: array, items: { type: string } }
                 definition: { type: [string, 'null'] }
+                translations: { type: object, description: 'Je Projektsprache { term, definition } fürs Glossar beim Lesen (ADR-071); andere Sprachen → 400', additionalProperties: { type: object, properties: { term: { type: string }, definition: { type: [string, "null"] } } } }
                 status: { type: string, enum: [active, retired] }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -2071,7 +2073,7 @@ paths:
       parameters: [{ $ref: '#/components/parameters/ContextKey' }, { $ref: '#/components/parameters/HelpRole' }, { $ref: '#/components/parameters/HelpDivision' }, { $ref: '#/components/parameters/HelpLanguage' }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: 'key, title, versionNo, language, fallback, sections, html, deepLink' }
+        '200': { description: 'key, title, versionNo, language, fallback, sections, html, deepLink, related: [{ chapterId, title, contextKey }], faq: [{ question, answer, html }] (ADR-072)' }
         '400': { description: Unbekannte Rolle, Sparte oder Sprache }
         '404': { description: Unbekannte Kontext-ID oder Kapitel nicht freigegeben }
   /help/embed/{projectId}/{contextKey}:
@@ -3241,23 +3243,79 @@ paths:
       parameters:
         - { name: q, in: query, required: true, schema: { type: string, maxLength: 100 } }
         - { name: drafts, in: query, schema: { type: boolean, default: false } }
+        - { name: lang, in: query, description: 'Lesesprache (Projektsprache, Standard de, ADR-071)', schema: { type: string } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ q, words, total, results: [{ chapterId, title, versionId, draft, hits, snippet }] }' }
+        '200': { description: '{ q, words, total, results: [{ chapterId, title, versionId, draft, hits, snippet, translated }] }' }
         '400': { $ref: '#/components/responses/Problem' }
   /reader/related/{chapterId}:
     get:
       operationId: readerRelated
       summary: '„Siehe auch“ (manuell, dann ähnliche Kapitel) und passende veröffentlichte FAQ (ADR-069)'
       tags: [Kapitel]
-      x-requirements: [NFR-56]
+      x-requirements: [NFR-56, NFR-58]
       x-extension: true
       parameters:
         - { name: chapterId, in: path, required: true, schema: { type: string } }
         - { name: drafts, in: query, schema: { type: boolean, default: false } }
+        - { name: lang, in: query, description: 'Lesesprache (Projektsprache, Standard de, ADR-071)', schema: { type: string } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ manual: [{ chapterId, title }], automatic: [{ chapterId, title, score }], hidden: [{ chapterId, title }], faq: [{ id, question, answer, score }] }' }
+        '200': { description: '{ chapterId, manual: [{ chapterId, title }], automatic: [{ chapterId, title, score }], hidden: [{ chapterId, title }], faq: [{ id, question, answer, score }] } – Ähnlichkeit über die deutsche Quelle, Titel in der Lesesprache' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /reader/related:
+    get:
+      operationId: readerRelatedMap
+      summary: '„Siehe auch“ und passende FAQ für alle gezeigten Kapitel auf einmal (Druck, ADR-072)'
+      tags: [Kapitel]
+      x-requirements: [NFR-59]
+      x-extension: true
+      parameters:
+        - { name: drafts, in: query, schema: { type: boolean, default: false } }
+        - { name: lang, in: query, description: 'Lesesprache (Projektsprache, Standard de, ADR-071)', schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ [chapterId]: { manual, automatic, faq } }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /reader/languages:
+    get:
+      operationId: readerLanguages
+      summary: 'Lesesprachen des Projekts mit Anzahl übersetzter Kapitel (Deutsch: chapters null, ADR-071)'
+      tags: [Kapitel]
+      x-requirements: [NFR-58]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ code, name, chapters }]' }
+  /reader/translations:
+    get:
+      operationId: readerTranslations
+      summary: 'Kapiteltitel in der Lesesprache und welche Kapitel übersetzt vorliegen (Inhaltsverzeichnis, Druck, ADR-071)'
+      tags: [Kapitel]
+      x-requirements: [NFR-58]
+      x-extension: true
+      parameters:
+        - { name: drafts, in: query, schema: { type: boolean, default: false } }
+        - { name: lang, in: query, description: 'Lesesprache (Projektsprache, Standard de, ADR-071)', schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ language, titles: { [chapterId]: title }, translated: [chapterId] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /reader/versions/{versionId}:
+    get:
+      operationId: readerVersion
+      summary: 'Kapitelfassung in der Lesesprache: Texte der freigegebenen Übersetzung dieser Fassung, sonst deutsch mit fallback missing | outdated (ADR-071)'
+      tags: [Kapitel]
+      x-requirements: [NFR-58]
+      x-extension: true
+      parameters:
+        - { name: versionId, in: path, required: true, schema: { type: string } }
+        - { name: lang, in: query, description: 'Lesesprache (Projektsprache, Standard de, ADR-071)', schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Kapitelfassung wie GET /chapter-versions/{id} plus language, requestedLanguage, fallback (null | missing | outdated), untranslatedBlocks' }
+        '400': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
   /chapters/{chapterId}/related:
     put:
@@ -3285,7 +3343,7 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ bookmarks: [{ chapterId, title, createdAt }], recent: [{ chapterId, title, visitedAt }], updates: { chapterId: new | changed }, lastVisitAt }' }
+        '200': { description: '{ bookmarks: [{ chapterId, title, createdAt, note }], recent: [{ chapterId, title, visitedAt }], updates: { chapterId: new | changed }, lastVisitAt }' }
   /reader/visits:
     post:
       operationId: recordReaderVisit
@@ -3303,15 +3361,19 @@ paths:
   /reader/bookmarks/{chapterId}:
     put:
       operationId: addReaderBookmark
-      summary: 'Kapitel merken (ADR-070)'
+      summary: 'Kapitel merken, optional mit privater Notiz (ADR-070, ADR-073)'
       tags: [Kapitel]
-      x-requirements: [NFR-57]
+      x-requirements: [NFR-57, NFR-60]
       x-extension: true
       parameters:
         - { name: chapterId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: false
+        content: { application/json: { schema: { type: object, properties: { note: { type: [string, 'null'], maxLength: 500, description: 'leer = keine Notiz; fehlt = Notiz bleibt' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ chapterId, bookmarked: true }' }
+        '200': { description: '{ chapterId, bookmarked: true, note }' }
+        '400': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
     delete:
       operationId: removeReaderBookmark
@@ -3328,10 +3390,12 @@ paths:
   /reader/glossary:
     get:
       operationId: readerGlossary
-      summary: 'Begriffe mit Erklärung für die Leseransicht: Terminologie mit Definition und Abkürzungen (ADR-066)'
+      summary: 'Begriffe mit Erklärung für die Leseransicht: Terminologie mit Definition und Abkürzungen (ADR-066); in anderen Sprachen die Übersetzungen der Begriffe (ADR-071)'
       tags: [Kapitel]
-      x-requirements: [NFR-53]
+      x-requirements: [NFR-53, NFR-58]
       x-extension: true
+      parameters:
+        - { name: lang, in: query, description: 'Lesesprache (Projektsprache, Standard de, ADR-071)', schema: { type: string } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '[{ term, text, kind: term | abbreviation }] – längste zuerst' }

@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { crc32, deflateSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
 
@@ -1557,4 +1558,100 @@ test('[T-233] Siehe auch und häufige Fragen unter dem Kapitel, Verweise pflegen
   await page.getByText('Wie drucke ich eine Rechnung erneut?').click();
   await expect(page.getByText('Öffnen Sie die Rechnung in der Buchhaltung')).toBeVisible();
   expect(await axe()).toEqual([]);
+});
+
+test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; Siehe auch und FAQ im Druck und in der Online-Hilfe; Lesezeichen mit Notizen', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const adm = { 'X-User-Id': 'u-admin' };
+  expect((await request.patch('/api/v1/projects/p_default', { headers: adm, data: { languages: ['en'] } })).ok()).toBe(true);
+  const mk = async (title: string, purpose: string, steps: string[]) => {
+    const c = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title, purpose, steps, result: 'Erledigt.' } })).json();
+    expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/submit`, { headers: red, data: {} })).ok()).toBe(true);
+    expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+    return c;
+  };
+  const a = await mk('E2E Packliste drucken', 'Mit dieser Anleitung drucken Sie die Packliste einer Sendung.', ['Öffnen Sie **Versand › Sendungen**', 'Klicken Sie auf **Packliste drucken**']);
+  const b = await mk('E2E Packliste ändern', 'Mit dieser Anleitung ändern Sie die Packliste einer Sendung.', ['Öffnen Sie **Versand › Sendungen**', 'Klicken Sie auf **Packliste ändern**']);
+  await request.post('/api/v1/faq', { headers: red, data: { question: 'Wo finde ich die Packliste einer Sendung?', answer: 'Unter Versand › Sendungen.', status: 'published' } });
+  // Kapitel a vollständig ins Englische übersetzen und freigeben; b bleibt deutsch
+  const tr = await (await request.post('/api/v1/translations', { headers: red, data: { chapterId: a.chapterId, language: 'en' } })).json();
+  const d = await (await request.get(`/api/v1/translations/${tr.id}`, { headers: red })).json();
+  for (const blk of d.sections.flatMap((s: any) => s.blocks)) {
+    const text = blk.sourceText.startsWith('Mit dieser') ? 'With this guide you print the packing list of a shipment.'
+      : blk.sourceText.includes('Versand') ? '1. Open **Shipping › Shipments**\n2. Click **Print packing list**' : `EN ${blk.sourceText}`;
+    expect((await request.patch(`/api/v1/translation-blocks/${blk.id}`, { headers: red, data: { text } })).ok()).toBe(true);
+  }
+  await request.patch(`/api/v1/translations/${tr.id}`, { headers: red, data: { title: 'E2E Print packing list' } });
+  expect((await request.post(`/api/v1/translations/${tr.id}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+
+  // Terminologie: Übersetzung für das Glossar pflegen
+  expect((await request.post('/api/v1/terminology', { headers: adm, data: { preferred: 'Packliste', definition: 'Liste aller Teile einer Sendung.' } })).status()).toBe(201);
+  await page.goto('/terminologie');
+  await page.getByRole('row', { name: /Packliste/ }).getByRole('button', { name: 'Bearbeiten' }).click();
+  await page.getByLabel('Englisch: Begriff').fill('Packing list');
+  await page.locator('.term-lang').getByLabel('Definition').fill('List of all parts in a shipment.');
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Begriff gespeichert.')).toBeVisible();
+  await expect(page.getByRole('row', { name: /Packliste/ }).getByText('EN', { exact: true })).toBeVisible();
+
+  // Leseransicht auf Englisch: übersetzter Titel und Text, englisches Glossar
+  await page.goto(`/lesen/${a.chapterId}`);
+  await page.getByLabel('Sprache').selectOption('en');
+  const article = page.getByRole('article', { name: 'E2E Print packing list' });
+  await expect(article.getByText('Shipping › Shipments')).toBeVisible();
+  await expect(article).toHaveAttribute('lang', 'en');
+  await article.getByRole('button', { name: 'packing list' }).first().click();
+  await expect(page.getByRole('tooltip')).toContainText('List of all parts in a shipment.');
+  await page.keyboard.press('Escape');
+  const toc = page.getByRole('navigation', { name: 'Inhaltsverzeichnis' });
+  await expect(toc.getByRole('link', { name: 'E2E Print packing list' }).first()).toBeVisible();
+  expect(await axe()).toEqual([]);
+  // nicht übersetztes Kapitel: deutsch mit Hinweis
+  await toc.getByRole('link', { name: 'E2E Packliste ändern' }).first().click();
+  await expect(page.getByRole('article', { name: 'E2E Packliste ändern' }).getByText('Dieses Kapitel ist noch nicht in Englisch übersetzt – Sie lesen die deutsche Fassung.')).toBeVisible();
+  // Sprache bleibt gemerkt
+  await page.reload();
+  await expect(page.getByLabel('Sprache')).toHaveValue('en');
+  expect(await axe()).toEqual([]);
+
+  // Lesezeichen mit Notiz
+  await page.getByRole('article', { name: 'E2E Packliste ändern' }).getByRole('button', { name: '☆ Merken' }).click();
+  await toc.getByRole('link', { name: 'Alle Lesezeichen und Notizen' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lesezeichen');
+  await page.getByLabel('Lesezeichen filtern').fill('Packliste ändern');
+  await page.getByRole('textbox', { name: 'Notiz zu „E2E Packliste ändern“' }).fill('Vor der Inventur prüfen');
+  await page.getByRole('button', { name: 'Notiz zu „E2E Packliste ändern“ speichern' }).click();
+  await expect(page.getByText('Notiz gespeichert.')).toBeVisible();
+  await page.getByLabel('Lesezeichen filtern').fill('Inventur');
+  await expect(page.getByRole('link', { name: 'E2E Packliste ändern' })).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: '📤 Als CSV speichern' }).click();
+  const csv = fs.readFileSync(await (await download).path(), 'utf8');
+  expect(csv).toContain('"E2E Packliste ändern";"Vor der Inventur prüfen"');
+  expect(await axe()).toEqual([]);
+  await page.getByRole('link', { name: 'E2E Packliste ändern' }).click();
+  await expect(page.getByText('📝 Vor der Inventur prüfen')).toBeVisible();
+  await page.goto('/lesen/lesezeichen');
+  await page.getByRole('button', { name: 'Lesezeichen „E2E Packliste ändern“ entfernen' }).click();
+  await expect(page.getByText('Lesezeichen „E2E Packliste ändern“ entfernt.')).toBeVisible();
+
+  // Druck auf Englisch: Siehe auch mit Kapitelnummer, FAQ-Anhang, Rückfall-Hinweis
+  await page.goto('/lesen/druck?sprache=en');
+  await expect(page.getByLabel('Sprache')).toHaveValue('en');
+  const printed = page.getByRole('article', { name: 'E2E Print packing list' });
+  await expect(printed.locator('.print-see')).toContainText(/Siehe auch: Kapitel \d+ „E2E Packliste ändern“/);
+  await expect(page.getByRole('article', { name: 'E2E Packliste ändern' }).getByText('(noch nicht übersetzt – deutsche Fassung)')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Häufige Fragen' })).toBeVisible();
+  await expect(page.locator('#faq').getByText('Wo finde ich die Packliste einer Sendung?')).toBeVisible();
+  await expect(page.getByRole('button', { name: '🖨️ Drucken / als PDF speichern' })).toBeEnabled();
+
+  // Online-Hilfe: Siehe auch als Links auf die Hilfe der anderen Kapitel, passende FAQ
+  expect((await request.post('/api/v1/help-contexts', { headers: red, data: { key: 'e2e.pack.print', chapterId: a.chapterId } })).ok()).toBe(true);
+  expect((await request.post('/api/v1/help-contexts', { headers: red, data: { key: 'e2e.pack.edit', chapterId: b.chapterId } })).ok()).toBe(true);
+  const help = await (await request.get('/api/v1/context-help/e2e.pack.print', { headers: red })).json();
+  expect(help.related).toContainEqual({ chapterId: b.chapterId, title: 'E2E Packliste ändern', contextKey: 'e2e.pack.edit' });
+  expect(help.faq.map((f: any) => f.question)).toContain('Wo finde ich die Packliste einer Sendung?');
 });
