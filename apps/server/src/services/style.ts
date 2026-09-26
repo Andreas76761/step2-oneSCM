@@ -1,13 +1,15 @@
 // Schreibstil (ADR-040): Regelprüfung für freien Text, Kapitelabsätze und Textschnipsel; Umformulierung in professionellen
 // Stil bzw. ins Präsens über den eingerichteten KI-Dienst – ohne KI mit den automatischen Regelkorrekturen.
 import { audit, getSettings, type Ctx, type User } from '../context.js';
-import { json, parseJson } from '../db.js';
+import { json, newId, now, parseJson } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
 import { sha256 } from '../domain/similarity.js';
 import { analyzeStyle, autoFix, PRESENT_RULES, RULE_LABEL, STYLE_RULES, type StylePhrase, type StyleRule } from '../domain/style.js';
 import { LlmError } from '../llm.js';
 import { badRequest, Problem, unprocessable } from '../problem.js';
 import { getChapterVersion, patchBlock } from './chapters.js';
+import { mapHeader, parseCsv } from '../domain/tabular.js';
+import { effectiveUser } from './projects.js';
 import { assertIdsInProject } from './projects.js';
 
 export const MAX_TEXT = 20_000;
@@ -186,7 +188,42 @@ export async function checkSnippets(ctx: Ctx, q: { chapterId?: string; page?: nu
   return { total: list.length, checked: all.length, page, pageSize, items: list.slice((page - 1) * pageSize, page * pageSize) };
 }
 
-/** Stilwert je Kapitel (neueste Version) für Dashboard und Werkstatt (ADR-043); schlechteste zuerst */
+type Opts = Awaited<ReturnType<typeof options>>;
+
+/** Stilwert einer Kapitelversion (gewichtet nach Satzzahl) */
+async function versionScore(ctx: Ctx, versionId: string, opts: Opts) {
+  const blocks = await ctx.db.all("SELECT text FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NULL AND kind NOT IN ('gap', 'xref')", versionId);
+  let sentences = 0;
+  let weighted = 0;
+  let problems = 0;
+  let fixable = 0;
+  for (const b of blocks) {
+    const a = withLabels(analyzeStyle(b.text, opts));
+    sentences += a.sentences.length;
+    weighted += a.score * a.sentences.length;
+    problems += a.problemSentences;
+    fixable += a.fixable;
+  }
+  return { blocks: blocks.length, sentences, problemSentences: problems, fixable, score: sentences ? Math.round(weighted / sentences) : 100 };
+}
+
+/** Verlauf fortschreiben (ADR-048): neuer Eintrag nur, wenn sich Version, Stilwert oder Problemsätze geändert haben */
+async function recordScore(ctx: Ctx, c: { chapterId: string; versionId: string; versionNo: number; score: number; sentences: number; problemSentences: number }) {
+  const last = await ctx.db.get('SELECT version_id, score, problem_sentences FROM style_scores WHERE project_id = ? AND chapter_id = ? ORDER BY recorded_at DESC, id DESC LIMIT 1', ctx.projectId, c.chapterId);
+  if (last && last.version_id === c.versionId && Number(last.score) === c.score && Number(last.problem_sentences) === c.problemSentences) return;
+  await ctx.db.run('INSERT INTO style_scores (id, project_id, chapter_id, version_id, version_no, score, sentences, problem_sentences, recorded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    newId('ss'), ctx.projectId, c.chapterId, c.versionId, c.versionNo, c.score, c.sentences, c.problemSentences, now());
+}
+
+/** Stilwert der neuesten Version eines Kapitels neu berechnen und im Verlauf festhalten (nach Korrekturen) */
+export async function recordChapterStyle(ctx: Ctx, chapterId: string) {
+  const v = await ctx.db.get('SELECT id, version_no FROM generated_chapter_versions WHERE chapter_id = ? ORDER BY version_no DESC LIMIT 1', chapterId);
+  if (!v) return;
+  const sc = await versionScore(ctx, v.id, await options(ctx));
+  await recordScore(ctx, { chapterId, versionId: v.id, versionNo: v.version_no, ...sc });
+}
+
+/** Stilwert je Kapitel (neueste Version) für Dashboard und Werkstatt (ADR-043); schlechteste zuerst; schreibt den Verlauf fort */
 export async function chapterStyleSummary(ctx: Ctx) {
   const opts = await options(ctx);
   const versions = await ctx.db.all(
@@ -196,26 +233,64 @@ export async function chapterStyleSummary(ctx: Ctx) {
   );
   const out = [];
   for (const v of versions) {
-    const blocks = await ctx.db.all("SELECT text FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NULL AND kind NOT IN ('gap', 'xref')", v.version_id);
-    let sentences = 0;
-    let weighted = 0;
-    let problems = 0;
-    let fixable = 0;
-    for (const b of blocks) {
-      const a = withLabels(analyzeStyle(b.text, opts));
-      sentences += a.sentences.length;
-      weighted += a.score * a.sentences.length;
-      problems += a.problemSentences;
-      fixable += a.fixable;
-    }
-    out.push({
+    const sc = await versionScore(ctx, v.version_id, opts);
+    const row = {
       chapterId: v.chapter_id as string, title: v.title as string, variant: !!v.outline_family_id, versionId: v.version_id as string, versionNo: v.version_no as number,
-      status: v.status as string, blocks: blocks.length, sentences, problemSentences: problems, fixable, score: sentences ? Math.round(weighted / sentences) : 100,
-    });
+      status: v.status as string, ...sc,
+    };
+    await recordScore(ctx, row);
+    out.push(row);
   }
   out.sort((a, b) => a.score - b.score || b.problemSentences - a.problemSentences || a.title.localeCompare(b.title));
   const all = out.reduce((n, c) => n + c.sentences, 0);
   return { chapters: out, average: all ? Math.round(out.reduce((n, c) => n + c.score * c.sentences, 0) / all) : null };
+}
+
+/**
+ * Verlauf des Stilwerts (ADR-048): je Kapitel die Messpunkte; für das Projekt je Tag der nach Sätzen gewichtete Durchschnitt
+ * der zu diesem Zeitpunkt jeweils letzten Werte aller Kapitel.
+ */
+export async function styleHistory(ctx: Ctx, q: { chapterId?: string; days?: number }) {
+  const days = Math.min(Math.max(Math.round(q.days ?? 90), 1), 730);
+  if (q.chapterId) await assertIdsInProject(ctx, 'chapterId', [q.chapterId]);
+  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+  // der letzte Wert vor dem Zeitraum gehört als Startwert dazu
+  const rows = await ctx.db.all('SELECT chapter_id, version_no, score, sentences, problem_sentences, recorded_at FROM style_scores WHERE project_id = ? ORDER BY recorded_at, id', ctx.projectId);
+  const titles = new Map((await ctx.db.all('SELECT id, title FROM chapters WHERE project_id = ?', ctx.projectId)).map((c) => [c.id as string, c.title as string]));
+  const point = (r: any) => ({ at: r.recorded_at as string, score: Number(r.score), versionNo: Number(r.version_no), problemSentences: Number(r.problem_sentences) });
+  if (q.chapterId) {
+    const mine = rows.filter((r) => r.chapter_id === q.chapterId);
+    const before = mine.filter((r) => r.recorded_at < since).at(-1);
+    return { chapterId: q.chapterId, title: titles.get(q.chapterId) ?? null, points: [...(before ? [before] : []), ...mine.filter((r) => r.recorded_at >= since)].map(point) };
+  }
+  const latest = new Map<string, { score: number; sentences: number }>();
+  const daily = new Map<string, number | null>();
+  const avg = () => {
+    let n = 0;
+    let w = 0;
+    for (const v of latest.values()) (n += v.sentences), (w += v.score * v.sentences);
+    return n ? Math.round(w / n) : null;
+  };
+  for (const r of rows) {
+    latest.set(r.chapter_id, { score: Number(r.score), sentences: Number(r.sentences) });
+    const day = String(r.recorded_at).slice(0, 10);
+    if (r.recorded_at >= since) daily.set(day, avg());
+    else daily.set('start', avg());
+  }
+  const project = [...daily.entries()].map(([day, average]) => ({ day: day === 'start' ? since.slice(0, 10) : day, average })).sort((a, b) => a.day.localeCompare(b.day));
+  const perChapter = new Map<string, ReturnType<typeof point>[]>();
+  // letzter Wert vor dem Zeitraum als Startwert, damit die Veränderung auch bei nur einem neuen Messpunkt stimmt
+  const startOf = new Map<string, any>();
+  for (const r of rows) if (r.recorded_at < since) startOf.set(r.chapter_id, r);
+  for (const r of rows) {
+    if (r.recorded_at < since) continue;
+    const list = perChapter.get(r.chapter_id) ?? (startOf.has(r.chapter_id) ? [point(startOf.get(r.chapter_id))] : []);
+    perChapter.set(r.chapter_id, [...list, point(r)]);
+  }
+  return {
+    days, project,
+    chapters: [...perChapter.entries()].map(([chapterId, points]) => ({ chapterId, title: titles.get(chapterId) ?? null, points, change: points.length > 1 ? points.at(-1)!.score - points[0].score : 0 })),
+  };
 }
 
 /**
@@ -253,6 +328,7 @@ export async function autofixChapterVersion(ctx: Ctx, versionId: string, input: 
     }
   }
   await audit(ctx, actor, 'style.batch_fixed', 'chapter_version', v.id, { saved: saved.length, skipped: skipped.length });
+  if (saved.length) await recordChapterStyle(ctx, v.chapterId);
   return { saved, skipped };
 }
 
@@ -287,5 +363,78 @@ export async function applyChapterTexts(ctx: Ctx, versionId: string, input: { bl
     }
   }
   await audit(ctx, actor, 'style.batch_applied', 'chapter_version', v.id, { saved: saved.length, skipped: skipped.length, reason });
+  if (saved.length) await recordChapterStyle(ctx, v.chapterId);
   return { saved, skipped };
+}
+
+// ---------- Stilregeln austauschen (ADR-047) ----------
+
+const csvCell = (v: string) => (/[;"\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+const ACTION = (p: StylePhrase) => (p.use === null || p.use === undefined ? 'hinweis' : p.use === '' ? 'streichen' : 'ersetzen');
+
+/** Export: CSV (eigene Formulierungen, mit Semikolon, für Excel) oder JSON (alle Regeln) */
+export async function exportStyleRules(ctx: Ctx, format: string) {
+  const rules = await getStyleRules(ctx);
+  if (format === 'json') return { contentType: 'application/json; charset=utf-8', fileName: 'stilregeln.json', body: JSON.stringify({ format: 'onescm-style-rules', version: 1, ...rules }, null, 2) };
+  if (format !== 'csv') throw badRequest('format: csv oder json.');
+  const lines = ['vermeiden;aktion;ersetzen durch;hinweis', ...rules.phrases.map((p) => [p.avoid, ACTION(p), p.use ?? '', p.note ?? ''].map(csvCell).join(';'))];
+  return { contentType: 'text/csv; charset=utf-8', fileName: 'stilregeln.csv', body: `\ufeff${lines.join('\r\n')}\r\n` };
+}
+
+/** CSV-Zeilen → Formulierungen; Aktion „ersetzen/streichen/hinweis“ oder aus der Ersatzspalte abgeleitet */
+export function phrasesFromCsv(csv: string): StylePhrase[] {
+  const rows = parseCsv(csv);
+  if (!rows.length) throw badRequest('Die CSV-Datei ist leer.');
+  const cols = mapHeader(rows[0], { avoid: ['vermeiden', 'avoid', 'begriff', 'formulierung'], action: ['aktion', 'action'], use: ['ersetzen durch', 'ersetzen', 'use', 'ersatz'], note: ['hinweis', 'note', 'bemerkung'] });
+  if (cols.avoid === undefined) throw badRequest('Spalte „vermeiden“ fehlt.');
+  return rows.slice(1).map((r) => {
+    const cell = (k: string) => (cols[k] === undefined ? '' : (r[cols[k]] ?? '').trim());
+    const action = cell('action').toLowerCase();
+    const use = action === 'hinweis' ? null : action === 'streichen' ? '' : cell('use') || (action === 'ersetzen' ? '' : null);
+    return { avoid: cell('avoid'), use, note: cell('note') || null };
+  }).filter((p) => p.avoid);
+}
+
+function mergePhrases(cur: StylePhrase[], incoming: StylePhrase[], mode: 'merge' | 'replace') {
+  const out = mode === 'replace' ? [] : [...cur];
+  let added = 0;
+  let updated = 0;
+  for (const p of incoming) {
+    const i = out.findIndex((x) => x.avoid.toLowerCase() === p.avoid.toLowerCase());
+    if (i >= 0) (out[i] = p), updated++;
+    else out.push(p), added++;
+  }
+  return { phrases: out, added, updated };
+}
+
+/** Import (Administration): CSV mit Formulierungen oder JSON-Export; „merge“ ergänzt/aktualisiert, „replace“ ersetzt */
+export async function importStyleRules(ctx: Ctx, input: { csv?: unknown; rules?: unknown; mode?: unknown }, user: User) {
+  const mode = input.mode === 'replace' ? 'replace' : 'merge';
+  const cur = await getStyleRules(ctx);
+  let incoming: StylePhrase[];
+  let rest: Partial<Record<keyof StyleRules, unknown>> = {};
+  if (typeof input.csv === 'string') incoming = phrasesFromCsv(input.csv);
+  else if (input.rules && typeof input.rules === 'object') {
+    const r = input.rules as Record<string, unknown>;
+    if (!Array.isArray(r.phrases)) throw badRequest('rules.phrases fehlt.');
+    incoming = r.phrases as StylePhrase[];
+    // Einstellungen aus einem JSON-Export übernehmen
+    rest = { disabled: r.disabled, address: r.address, maxSentenceWords: r.maxSentenceWords };
+    for (const k of Object.keys(rest) as (keyof StyleRules)[]) if (rest[k] === undefined) delete rest[k];
+  } else throw badRequest('csv oder rules ist Pflicht.');
+  const m = mergePhrases(cur.phrases, incoming, mode);
+  const rules = await updateStyleRules(ctx, { ...rest, phrases: m.phrases }, user);
+  return { rules, summary: { added: m.added, updated: m.updated, total: rules.phrases.length, mode } };
+}
+
+/** Regeln aus einem anderen Projekt übernehmen – nur, wenn der Benutzer dort mindestens lesen darf */
+export async function copyStyleRules(ctx: Ctx, input: { fromProjectId?: unknown; mode?: unknown }, globalUser: User, user: User) {
+  const from = typeof input.fromProjectId === 'string' ? input.fromProjectId : '';
+  if (!from || from === ctx.projectId) throw badRequest('fromProjectId: ein anderes Projekt angeben.');
+  const p = await ctx.db.get('SELECT * FROM projects WHERE id = ?', from);
+  if (!p || !(await effectiveUser(ctx, globalUser, p))) throw new Problem(404, 'Not Found', `Projekt ${from} wurde nicht gefunden.`);
+  const src = { ...DEFAULT_STYLE_RULES, ...parseJson<Partial<StyleRules>>(p.style_rules, {}) };
+  const r = await importStyleRules(ctx, { rules: src, mode: input.mode }, user);
+  await audit(ctx, user.id, 'style.rules_copied', 'project', ctx.projectId, { fromProjectId: from, ...r.summary });
+  return r;
 }

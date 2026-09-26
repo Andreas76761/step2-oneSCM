@@ -6,6 +6,7 @@ import { audit, type Ctx, type User } from '../context.js';
 import { json, now, parseJson, type Row } from '../db.js';
 import { PERMISSIONS } from '../domain/reference.js';
 import { badRequest, conflict, notFound } from '../problem.js';
+import { getRoleTemplate } from './roleTemplates.js';
 
 const LOCAL_ID = /^u-[a-z0-9][a-z0-9-]{1,39}$/;
 const OIDC_ID = /^oidc:[^\s]{1,200}$/;
@@ -16,7 +17,7 @@ function dto(r: Row) {
     id: r.id as string, name: r.name as string, email: (r.email as string | null) ?? null, permissions: parseJson<string[]>(r.permissions, []),
     origin: (r.origin as string | null) ?? (String(r.id).startsWith('oidc:') ? 'oidc' : 'local'),
     disabled: !!r.disabled_at, disabledAt: r.disabled_at ?? null, disabledBy: r.disabled_by ?? null, createdAt: r.created_at ?? null, createdBy: r.created_by ?? null,
-    lastActivity: r.last_activity ?? null, projects: Number(r.projects ?? 0),
+    lastActivity: r.last_activity ?? null, projects: Number(r.projects ?? 0), roleTemplateId: (r.role_template_id as string | null) ?? null,
   };
 }
 
@@ -61,14 +62,16 @@ export async function createUser(ctx: Ctx, input: Record<string, unknown>, admin
   if (!LOCAL_ID.test(id) && !OIDC_ID.test(id)) throw badRequest('id: „u-…“ (Kleinbuchstaben, Ziffern, Bindestrich, 3–41 Zeichen) oder „oidc:<Subject>“.');
   if (await ctx.db.get('SELECT 1 FROM users WHERE id = ?', id)) throw conflict(`Benutzer ${id} existiert bereits.`);
   const oidc = id.startsWith('oidc:');
+  // Rollenvorlage (ADR-047) statt einzelner Berechtigungen
+  const template = !oidc && input.roleTemplateId ? await getRoleTemplate(ctx.db, input.roleTemplateId) : null;
   // OIDC: Berechtigungen kommen bei jeder Anmeldung vom Identity Provider; vorab nur Lesen
-  const permissions = oidc ? ['read'] : permissionsOf(input.permissions ?? ['read']);
+  const permissions = oidc ? ['read'] : template ? template.permissions : permissionsOf(input.permissions ?? ['read']);
   const name = cleanName(input.name);
   const email = cleanEmail(input.email);
   await ctx.db.tx(async () => {
-    await ctx.db.run('INSERT INTO users (id, name, permissions, email, origin, created_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      id, name, json(permissions), email, oidc ? 'oidc' : 'local', now(), admin.id);
-    await audit(ctx, admin.id, 'user.created', 'user', id, { name, permissions, origin: oidc ? 'oidc' : 'local' });
+    await ctx.db.run('INSERT INTO users (id, name, permissions, email, origin, created_at, created_by, role_template_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      id, name, json(permissions), email, oidc ? 'oidc' : 'local', now(), admin.id, template?.id ?? null);
+    await audit(ctx, admin.id, 'user.created', 'user', id, { name, permissions, origin: oidc ? 'oidc' : 'local', roleTemplate: template?.name ?? null });
   });
   return dto(await userRow(ctx, id));
 }
@@ -91,9 +94,13 @@ export async function updateUser(ctx: Ctx, id: string, input: Record<string, unk
   }
   let willBeAdmin = parseJson<string[]>(r.permissions, []).includes('admin');
   let willBeActive = !r.disabled_at;
-  if (input.permissions !== undefined) {
+  if (input.permissions !== undefined || input.roleTemplateId) {
     if (oidc) throw badRequest('Berechtigungen von OIDC-Benutzern kommen vom Identity Provider (Rollen-Zuordnung in der Konfiguration); Projektzugriffe lassen sich hier vergeben.');
-    const p = permissionsOf(input.permissions);
+    // mit Vorlage: Berechtigungen der Vorlage und Verknüpfung; einzeln gesetzt: Verknüpfung löst sich
+    const template = input.roleTemplateId ? await getRoleTemplate(ctx.db, input.roleTemplateId) : null;
+    const p = template ? template.permissions : permissionsOf(input.permissions);
+    upd('role_template_id', template?.id ?? null);
+    changes.roleTemplate = template?.name ?? null;
     if (id === admin.id && !p.includes('admin')) throw conflict('Die eigene Administrationsberechtigung kann nicht entzogen werden.');
     willBeAdmin = p.includes('admin');
     upd('permissions', json((changes.permissions = p)));

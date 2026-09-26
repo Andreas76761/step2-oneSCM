@@ -2,6 +2,7 @@
 import type { AppConfig, Settings } from './config.js';
 import { DEFAULT_SETTINGS } from './config.js';
 import { json, newId, now, parseJson, type Db } from './db.js';
+import { seedRoleTemplates } from './services/roleTemplates.js';
 import { DEMO_USERS, DIVISIONS, ROLES, type Permission } from './domain/reference.js';
 import type { JobQueue } from './jobs.js';
 import type { LlmProvider } from './llm.js';
@@ -50,6 +51,7 @@ export async function seedReferenceData(db: Db, authMode: AppConfig['authMode'])
         d.code, d.label, d.icon, d.color,
       );
     }
+    await seedRoleTemplates(db);
     // Demo-Benutzer nur im Demo-Modus (ENTSCHEIDUNG E-15)
     if (authMode === 'demo') {
       for (const u of DEMO_USERS) {

@@ -1,6 +1,7 @@
 // Screenshots markieren (ADR-042, erweitert ADR-046): Bildschirmfoto laden, nummerierte Klickpunkte setzen, Bereiche umrahmen,
 // Pfeile und Textfelder einzeichnen, vertrauliche Bereiche unkenntlich machen (verpixelt – im gespeicherten PNG nicht umkehrbar),
 // Legende pflegen, als PNG speichern. Nummern und Textfelder lassen sich auch per Tastatur (Koordinaten in Prozent) anlegen.
+// Etappe 17 (ADR-049): Ausschnitt zuschneiden, Lupe (vergrößerter Bereich mit Verbindungslinie), Markierungen per Maus verschieben.
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { patch, post } from '../api';
 import { Card, errorText, useApp } from './ui';
@@ -10,11 +11,17 @@ interface Marker { id?: number; x: number; y: number; text: string }
 interface Frame { id?: number; x: number; y: number; w: number; h: number }
 interface Arrow { id?: number; x1: number; y1: number; x2: number; y2: number }
 interface Label { id?: number; x: number; y: number; text: string }
+/** Lupe: Quellbereich (x, y, w, h) vergrößert um „zoom“ an der Zielmitte (cx, cy) – alles in Prozent */
+interface Mag { id?: number; x: number; y: number; w: number; h: number; cx: number; cy: number; zoom: number }
 let nextShapeId = 1;
-type Tool = 'marker' | 'frame' | 'arrow' | 'text' | 'blur';
-interface Shapes { markers: Marker[]; frames: Frame[]; arrows: Arrow[]; labels: Label[]; blurs: Frame[] }
-const EMPTY: Shapes = { markers: [], frames: [], arrows: [], labels: [], blurs: [] };
-const KEY: Record<Tool, keyof Shapes> = { marker: 'markers', frame: 'frames', arrow: 'arrows', text: 'labels', blur: 'blurs' };
+type ShapeTool = 'marker' | 'frame' | 'arrow' | 'text' | 'blur' | 'magnify';
+type Tool = ShapeTool | 'crop' | 'move';
+interface Shapes { markers: Marker[]; frames: Frame[]; arrows: Arrow[]; labels: Label[]; blurs: Frame[]; mags: Mag[] }
+const EMPTY: Shapes = { markers: [], frames: [], arrows: [], labels: [], blurs: [], mags: [] };
+const KEY: Record<ShapeTool, keyof Shapes> = { marker: 'markers', frame: 'frames', arrow: 'arrows', text: 'labels', blur: 'blurs', magnify: 'mags' };
+/** Maße eines Bildes, aus denen sich Größen der Markierungen ableiten (gleich beim Zeichnen und beim Treffertest) */
+const metrics = (w: number, h: number) => ({ unit: Math.max(2, Math.round(Math.max(w, h) / 400)), r: Math.max(12, Math.round(Math.min(w, h) / 30)) });
+const magTarget = (m: Mag) => ({ x: m.cx - (m.w * m.zoom) / 2, y: m.cy - (m.h * m.zoom) / 2, w: m.w * m.zoom, h: m.h * m.zoom });
 export interface SavedShot { sha256: string; markdown: string; legend: string; title: string }
 
 const clamp = (v: number) => Math.min(100, Math.max(0, Math.round(v * 10) / 10));
@@ -51,7 +58,7 @@ function pixelate(g: CanvasRenderingContext2D, x0: number, y0: number, rw0: numb
 }
 
 /** Markierungen auf das Bild zeichnen (Koordinaten in Prozent der Bildgröße); Reihenfolge: Unschärfe, Rahmen, Pfeile, Text, Nummern */
-function draw(canvas: HTMLCanvasElement, img: HTMLImageElement, sh: Shapes, color: string, preview: { tool: Tool; f: Frame; a: Arrow } | null) {
+function draw(canvas: HTMLCanvasElement, img: HTMLImageElement, sh: Shapes, color: string, preview: { tool: Tool; f: Frame; a: Arrow } | null, crop: Frame | null = null, overlay = true) {
   const g = canvas.getContext('2d');
   if (!g) return;
   const w = img.naturalWidth;
@@ -62,8 +69,28 @@ function draw(canvas: HTMLCanvasElement, img: HTMLImageElement, sh: Shapes, colo
   const px = (f: Frame) => [(f.x / 100) * w, (f.y / 100) * h, (f.w / 100) * w, (f.h / 100) * h] as const;
   const block = Math.max(12, Math.round(Math.min(w, h) / 25));
   for (const b of sh.blurs) pixelate(g, ...px(b), block);
-  const unit = Math.max(2, Math.round(Math.max(w, h) / 400));
-  const r = Math.max(12, Math.round(Math.min(w, h) / 30));
+  const { unit, r } = metrics(w, h);
+  // Lupen: Quelle gestrichelt, vergrößerte Kopie (inkl. Unschärfe) mit Rahmen und Verbindungslinie
+  for (const m of sh.mags) {
+    const [sx, sy, sw, sh2] = px(m);
+    const [tx, ty, tw, th] = px(magTarget(m));
+    g.save();
+    g.lineWidth = unit;
+    g.strokeStyle = color;
+    g.setLineDash([unit * 3, unit * 2]);
+    g.strokeRect(sx, sy, sw, sh2);
+    g.beginPath();
+    g.moveTo(sx + sw / 2, sy + sh2 / 2);
+    g.lineTo(tx + tw / 2, ty + th / 2);
+    g.stroke();
+    g.restore();
+    g.fillStyle = '#ffffff';
+    g.fillRect(tx - unit, ty - unit, tw + unit * 2, th + unit * 2);
+    g.drawImage(g.canvas, sx, sy, sw, sh2, tx, ty, tw, th);
+    g.lineWidth = unit * 2;
+    g.strokeStyle = color;
+    g.strokeRect(tx, ty, tw, th);
+  }
   g.lineWidth = unit * 2;
   g.strokeStyle = color;
   for (const f of sh.frames) g.strokeRect(...px(f));
@@ -127,6 +154,21 @@ function draw(canvas: HTMLCanvasElement, img: HTMLImageElement, sh: Shapes, colo
     g.fillStyle = '#ffffff';
     g.fillText(String(i + 1), cx, cy + 1);
   });
+  // Zuschnitt: im Editor wird der Rest abgedunkelt; beim Speichern wird nur der Ausschnitt übernommen
+  if (crop && overlay) {
+    const [cx, cy, cw, ch] = px(crop);
+    g.fillStyle = 'rgba(0,0,0,0.5)';
+    g.fillRect(0, 0, w, cy);
+    g.fillRect(0, cy + ch, w, h - cy - ch);
+    g.fillRect(0, cy, cx, ch);
+    g.fillRect(cx + cw, cy, w - cx - cw, ch);
+    g.save();
+    g.setLineDash([unit * 3, unit * 2]);
+    g.lineWidth = unit;
+    g.strokeStyle = '#ffffff';
+    g.strokeRect(cx, cy, cw, ch);
+    g.restore();
+  }
 }
 
 export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSaved?: (s: SavedShot) => void }) {
@@ -146,11 +188,16 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
   const [alt, setAlt] = useState('');
   const [title, setTitle] = useState('');
   const [busy, setBusy] = useState(false);
-  const [history, setHistory] = useState<{ tool: Tool; id: number }[]>([]);
+  const [history, setHistory] = useState<{ tool: ShapeTool; id: number }[]>([]);
+  const [crop, setCrop] = useState<Frame | null>(null);
+  const [zoom, setZoom] = useState(2);
+  // laufendes Verschieben: welche Markierung, welcher Teil, Startpunkt und Ausgangslage
+  const [moving, setMoving] = useState<{ key: keyof Shapes; id: number; part: 'all' | 'p1' | 'p2' | 'target'; start: { x: number; y: number }; orig: any } | null>(null);
+  const { mags } = sh;
 
   useEffect(() => {
-    if (img && canvas.current) draw(canvas.current, img, sh, color, preview);
-  }, [img, sh, color, preview]);
+    if (img && canvas.current) draw(canvas.current, img, sh, color, preview, crop, true);
+  }, [img, sh, color, preview, crop]);
 
   const load = (file: File | undefined) => {
     if (!file) return;
@@ -162,6 +209,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
       setName(file.name);
       setSh(EMPTY);
       setHistory([]);
+      setCrop(null);
       setTitle(file.name.replace(/\.[^.]+$/, ''));
     };
     i.onerror = () => notify('Bild konnte nicht geladen werden.', 'error');
@@ -172,15 +220,50 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
     const r = e.currentTarget.getBoundingClientRect();
     return { x: clamp(((e.clientX - r.left) / r.width) * 100), y: clamp(((e.clientY - r.top) / r.height) * 100) };
   };
-  const add = <K extends Tool>(t: K, item: Shapes[(typeof KEY)[K]][number]) => {
+  const add = <K extends ShapeTool>(t: K, item: Shapes[(typeof KEY)[K]][number]) => {
     const id = nextShapeId++;
     setSh((x) => ({ ...x, [KEY[t]]: [...(x[KEY[t]] as unknown[]), { ...item, id }] }));
     setHistory((h) => [...h, { tool: t, id }]);
   };
   const addMarker = (x: number, y: number) => add('marker', { x, y, text: '' });
   const addLabel = (x: number, y: number) => add('text', { x, y, text: labelText.trim() || 'Text' });
+  /** Treffertest (oberste Markierung zuerst) für das Verschieben; Größen in Prozent der Bildmaße */
+  const hit = (p: { x: number; y: number }) => {
+    if (!img) return null;
+    const W = img.naturalWidth;
+    const H = img.naturalHeight;
+    const { r } = metrics(W, H);
+    const d = (x1: number, y1: number, x2: number, y2: number) => Math.hypot(((x1 - x2) / 100) * W, ((y1 - y2) / 100) * H);
+    const inside = (f: { x: number; y: number; w: number; h: number }) => p.x >= f.x && p.x <= f.x + f.w && p.y >= f.y && p.y <= f.y + f.h;
+    for (const m of [...markers].reverse()) if (d(m.x, m.y, p.x, p.y) <= r * 1.2) return { key: 'markers' as const, item: m, part: 'all' as const };
+    for (const l of [...labels].reverse()) {
+      const fs = r * 0.9;
+      const lw = (((l.text.trim() || 'Text').length * fs * 0.6 + r * 0.8) / W) * 100;
+      const lh = ((r * 1.5) / H) * 100;
+      if (inside({ x: l.x, y: l.y - lh / 2, w: lw, h: lh })) return { key: 'labels' as const, item: l, part: 'all' as const };
+    }
+    for (const a of [...arrows].reverse()) {
+      if (d(a.x2, a.y2, p.x, p.y) <= r * 1.2) return { key: 'arrows' as const, item: a, part: 'p2' as const };
+      if (d(a.x1, a.y1, p.x, p.y) <= r * 1.2) return { key: 'arrows' as const, item: a, part: 'p1' as const };
+    }
+    for (const m of [...mags].reverse()) {
+      if (inside(magTarget(m))) return { key: 'mags' as const, item: m, part: 'target' as const };
+      if (inside(m)) return { key: 'mags' as const, item: m, part: 'all' as const };
+    }
+    for (const f of [...frames].reverse()) if (inside(f)) return { key: 'frames' as const, item: f, part: 'all' as const };
+    for (const b of [...blurs].reverse()) if (inside(b)) return { key: 'blurs' as const, item: b, part: 'all' as const };
+    return null;
+  };
   const onDown = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     const p = pos(e);
+    if (tool === 'move') {
+      const h = hit(p);
+      if (h?.item.id !== undefined) {
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+        setMoving({ key: h.key, id: h.item.id, part: h.part, start: p, orig: h.item });
+      }
+      return;
+    }
     if (tool === 'marker') addMarker(p.x, p.y);
     else if (tool === 'text') addLabel(p.x, p.y);
     else {
@@ -193,16 +276,42 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
     a: { x1: a.x, y1: a.y, x2: b.x, y2: b.y },
   });
   const onMove = (e: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (moving) {
+      const p = pos(e);
+      const dx = p.x - moving.start.x;
+      const dy = p.y - moving.start.y;
+      const o = moving.orig;
+      const moved = moving.key === 'arrows'
+        ? moving.part === 'p1' ? { ...o, x1: clamp(o.x1 + dx), y1: clamp(o.y1 + dy) } : { ...o, x2: clamp(o.x2 + dx), y2: clamp(o.y2 + dy) }
+        : moving.key === 'mags' && moving.part === 'target' ? { ...o, cx: clamp(o.cx + dx), cy: clamp(o.cy + dy) }
+        : moving.key === 'mags' ? { ...o, x: clamp(o.x + dx), y: clamp(o.y + dy), cx: clamp(o.cx + dx), cy: clamp(o.cy + dy) }
+        : { ...o, x: clamp(o.x + dx), y: clamp(o.y + dy) };
+      setSh((x) => ({ ...x, [moving.key]: (x[moving.key] as { id?: number }[]).map((it) => (it.id === moving.id ? moved : it)) }));
+      return;
+    }
     if (!drag) return;
     setPreview({ tool, ...shape(drag, pos(e)) });
   };
   const onUp = (e: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (moving) return setMoving(null);
     if (!drag) return;
     const { f, a } = shape(drag, pos(e));
     setDrag(null);
     setPreview(null);
     if (tool === 'arrow') {
       if (Math.hypot(a.x2 - a.x1, a.y2 - a.y1) >= 2) add('arrow', a);
+    } else if (tool === 'crop') {
+      if (f.w >= 2 && f.h >= 2) setCrop(f);
+    } else if (tool === 'magnify') {
+      if (f.w >= 1 && f.h >= 1) {
+        // Ziel rechts neben der Quelle, sonst links; innerhalb des Bildes halten
+        const tw = f.w * zoom;
+        const th = f.h * zoom;
+        const right = f.x + f.w + 2 + tw <= 100;
+        const cx = right ? f.x + f.w + 2 + tw / 2 : Math.max(tw / 2, f.x - 2 - tw / 2);
+        const cy = Math.min(100 - th / 2, Math.max(th / 2, f.y + f.h / 2));
+        add('magnify', { ...f, cx: clamp(cx), cy: clamp(cy), zoom });
+      }
     } else if (f.w >= 1 && f.h >= 1) add(tool === 'blur' ? 'blur' : 'frame', f);
   };
   const undo = () => {
@@ -216,6 +325,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
   const describe = [
     `Screenshot mit ${markers.length} Nummern und ${frames.length} Rahmen`,
     arrows.length ? `${arrows.length} Pfeilen` : '', labels.length ? `${labels.length} Textfeldern` : '', blurs.length ? `${blurs.length} unkenntlichen Bereichen` : '',
+    mags.length ? `${mags.length} Lupen` : '', crop ? 'zugeschnitten' : '',
   ].filter(Boolean).join(', ');
   const legend = markers.map((m, i) => `${i + 1}. ${m.text.trim() || `Schritt ${i + 1}`}`).join('\n');
 
@@ -223,7 +333,18 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
     if (!canvas.current || !alt.trim()) return;
     setBusy(true);
     try {
-      const blob = await new Promise<Blob | null>((res) => canvas.current!.toBlob(res, 'image/png'));
+      // sauber neu zeichnen (ohne Abdunklung) und nur den Ausschnitt übernehmen
+      const full = document.createElement('canvas');
+      draw(full, img!, sh, color, null, crop, false);
+      let out = full;
+      if (crop) {
+        out = document.createElement('canvas');
+        const [cx, cy, cw, ch] = [crop.x, crop.y, crop.w, crop.h].map((v, i) => Math.round((v / 100) * (i % 2 ? full.height : full.width)));
+        out.width = Math.max(1, cw);
+        out.height = Math.max(1, ch);
+        out.getContext('2d')!.drawImage(full, cx, cy, cw, ch, 0, 0, cw, ch);
+      }
+      const blob = await new Promise<Blob | null>((res) => out.toBlob(res, 'image/png'));
       if (!blob) throw new Error('Bild konnte nicht erzeugt werden.');
       const fd = new FormData();
       fd.append('file', new File([blob], `${(title || 'screenshot').replace(/[^\w.-]+/g, '_')}.png`, { type: 'image/png' }));
@@ -252,14 +373,29 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
             <button className={`chip${tool === 'arrow' ? ' active' : ''}`} aria-pressed={tool === 'arrow'} onClick={() => setTool('arrow')}>➜ Pfeil ziehen</button>
             <button className={`chip${tool === 'text' ? ' active' : ''}`} aria-pressed={tool === 'text'} onClick={() => setTool('text')}>T Textfeld setzen</button>
             <button className={`chip${tool === 'blur' ? ' active' : ''}`} aria-pressed={tool === 'blur'} onClick={() => setTool('blur')}>▦ Unkenntlich machen</button>
+            <button className={`chip${tool === 'magnify' ? ' active' : ''}`} aria-pressed={tool === 'magnify'} onClick={() => setTool('magnify')}>🔍 Lupe</button>
+            <button className={`chip${tool === 'crop' ? ' active' : ''}`} aria-pressed={tool === 'crop'} onClick={() => setTool('crop')}>✂ Zuschneiden</button>
+            <button className={`chip${tool === 'move' ? ' active' : ''}`} aria-pressed={tool === 'move'} onClick={() => setTool('move')}>✥ Verschieben</button>
             <label className="inline">Farbe <input type="color" value={color} onChange={(e) => setColor(e.target.value)} /></label>
             <button className="btn small" disabled={!history.length} onClick={undo}>Rückgängig</button>
             <button className="btn small" disabled={!history.length} onClick={() => { setSh(EMPTY); setHistory([]); }}>Alles entfernen</button>
           </div>
+          {tool === 'magnify' && (
+            <label className="inline">Vergrößerung
+              <select value={zoom} onChange={(e) => setZoom(Number(e.target.value))}><option value={2}>2-fach</option><option value={3}>3-fach</option></select>
+            </label>
+          )}
+          {crop && (
+            <p className="small">✂ Zuschnitt {Math.round(crop.w)} % × {Math.round(crop.h)} % des Bildes – gespeichert wird nur der helle Ausschnitt.{' '}
+              <button className="btn small" onClick={() => setCrop(null)}>Zuschnitt aufheben</button>
+            </p>
+          )}
           {tool === 'text' && <label className="inline">Beschriftung <input value={labelText} onChange={(e) => setLabelText(e.target.value)} placeholder="z. B. Pflichtfeld" /></label>}
           <p className="small muted">{{
             marker: 'Ins Bild klicken, um die nächste Nummer zu setzen.', frame: 'Mit gedrückter Maustaste einen Rahmen aufziehen.', arrow: 'Mit gedrückter Maustaste vom Anfang zur Spitze des Pfeils ziehen.',
             text: 'Ins Bild klicken, um das Textfeld zu setzen (linke Kante, Mitte).', blur: 'Bereich aufziehen, der unkenntlich werden soll (z. B. Kundendaten) – im gespeicherten Bild nicht wiederherstellbar.',
+            magnify: 'Bereich aufziehen, der vergrößert daneben erscheinen soll.', crop: 'Ausschnitt aufziehen, der gespeichert werden soll.',
+            move: 'Nummer, Textfeld, Pfeilende, Rahmen oder Lupe anfassen und verschieben.',
           }[tool]} {name}</p>
           <div className="shot-canvas">
             <canvas ref={canvas} role="img" aria-label={describe}

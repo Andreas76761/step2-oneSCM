@@ -1,6 +1,6 @@
 {
   "name": "@onescm/e2e",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "scripts": {
     "test": "playwright test"

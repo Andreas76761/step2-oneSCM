@@ -2,7 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
 import { deleteDiagramTemplate, generateDiagrams, listDiagramTemplates, saveDiagram, saveDiagramTemplate } from '../services/diagrams.js';
-import { applyChapterTexts, getStyleRules, updateStyleRules, autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, rewriteText } from '../services/style.js';
+import { styleHistory, applyChapterTexts, copyStyleRules, exportStyleRules, importStyleRules, getStyleRules, updateStyleRules, autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, rewriteText } from '../services/style.js';
 import { userOf } from './helpers.js';
 
 export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -40,4 +40,18 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   // Umformulierungen (KI-Stapel) nach Prüfung übernehmen
   app.post<{ Params: { versionId: string }; Body: any }>('/style/chapter-versions/:versionId/apply', async (req) =>
     applyChapterTexts(req.ctx, req.params.versionId, req.body ?? {}, userOf(req.ctx, req, 'edit').id));
+  // Stilregeln austauschen (ADR-047)
+  app.get<{ Querystring: { format?: string } }>('/style/rules/export', async (req, reply) => {
+    userOf(req.ctx, req);
+    const f = await exportStyleRules(req.ctx, req.query.format ?? 'csv');
+    return reply.header('Content-Type', f.contentType).header('Content-Disposition', `attachment; filename="${f.fileName}"`).send(f.body);
+  });
+  app.post<{ Body: any }>('/style/rules/import', async (req) => importStyleRules(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+  app.post<{ Body: any }>('/style/rules/copy', async (req) => {
+    const user = userOf(req.ctx, req, 'admin');
+    return copyStyleRules(req.ctx, req.body ?? {}, req.globalUser ?? user, user);
+  });
+  // Stilwert-Verlauf (ADR-048)
+  app.get<{ Querystring: { chapterId?: string; days?: string } }>('/style/history', async (req) =>
+    (userOf(req.ctx, req), styleHistory(req.ctx, { chapterId: req.query.chapterId, days: Number(req.query.days) || undefined })));
 }

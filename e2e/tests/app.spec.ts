@@ -1025,3 +1025,83 @@ test('[T-226] Eigene Stilregeln, Benutzerverwaltung, KI-Stapelumformulierung, Sc
   await page.goto('/suche?q=vertrag');
   await expect(page.locator('.search-hits li .tag').first()).toHaveText('Kapitel');
 });
+
+test('[T-227] Rollenvorlagen, Stilregeln-Export/-Import, Stilwert-Verlauf im Dashboard, Screenshot zuschneiden, Lupe und verschieben', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+
+  // Rollenvorlage anlegen und einem neuen Benutzer zuweisen
+  await page.goto('/benutzer');
+  await page.getByLabel('Name der Vorlage').fill('E2E Leitung');
+  await page.getByRole('checkbox', { name: 'Freigeben' }).last().check();
+  await page.getByRole('button', { name: 'Vorlage anlegen' }).click();
+  await expect(page.getByText('Rollenvorlage angelegt.')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Rollenvorlagen' }).getByText('E2E Leitung')).toBeVisible();
+  await page.getByLabel('Kennung').fill('u-leitung');
+  await page.getByLabel('Name', { exact: true }).last().fill('Leitung E2E');
+  await page.getByRole('combobox', { name: 'Rollenvorlage', exact: true }).last().selectOption({ label: 'E2E Leitung (Lesen, Bearbeiten, Freigeben)' });
+  await page.getByRole('button', { name: 'Benutzer anlegen' }).click();
+  await expect(page.getByRole('region', { name: 'Benutzer', exact: true }).getByRole('row', { name: /Leitung E2E/ })).toContainText('E2E Leitung');
+  expect(await axe()).toEqual([]);
+
+  // Stilregeln: CSV-Import und -Export
+  await page.goto('/schreibstil');
+  await page.getByRole('tab', { name: 'Regeln' }).click();
+  await page.getByTestId('rules-import').setInputFiles({ name: 'regeln.csv', mimeType: 'text/csv', buffer: Buffer.from('vermeiden;aktion;ersetzen durch;hinweis\nzu diesem Zeitpunkt;ersetzen;jetzt;\nKunde;hinweis;;Geschäftspartner schreiben\n') });
+  await expect(page.getByText('Import: 2 neu, 0 aktualisiert, 2 Formulierungen.')).toBeVisible();
+  await expect(page.getByLabel('Regel 2 vermeiden')).toHaveValue('Kunde');
+  const dl = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Als CSV exportieren' }).click();
+  const file = await (await dl).path();
+  expect((await import('node:fs')).readFileSync(file!, 'utf8')).toContain('zu diesem Zeitpunkt;ersetzen;jetzt;');
+  expect(await axe()).toEqual([]);
+  await request.put('/api/v1/style/rules', { headers: h, data: { phrases: [] } });
+
+  // Dashboard: Stilwert je Kapitel mit Veränderung, Verlauf (Hinweis bis zum zweiten Tag)
+  const vch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '4. Vertragsbearbeitung');
+  if (!vch.versions.length) await request.post(`/api/v1/chapters/${vch.id}/generate`, { headers: h });
+  await page.goto('/');
+  const styleCard = page.locator('.card', { has: page.getByRole('heading', { name: 'Schreibstil je Kapitel' }) });
+  await expect(styleCard.getByText('Veränderung (90 Tage)')).toBeVisible();
+  await expect(styleCard.getByText(/Der Verlauf erscheint, sobald/)).toBeVisible();
+  await expect(styleCard.getByText(/Verlauf der letzten 90 Tage/)).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Screenshot: Lupe, Zuschneiden, Verschieben, gespeichert nur der Ausschnitt
+  await page.goto('/bilder');
+  await page.getByRole('tab', { name: 'Screenshot markieren' }).click();
+  await page.getByTestId('screenshot-input').setInputFiles({ name: 'maske3.png', mimeType: 'image/png', buffer: png(400, 200, [240, 240, 240]) });
+  const canvas = page.getByTestId('screenshot-canvas');
+  await expect(canvas).toBeVisible();
+  const sx = (await canvas.boundingBox())!.width / 400;
+  // Position je Zug neu bestimmen: Werkzeugoptionen können die Zeichenfläche verschieben
+  const drag = async (x1: number, y1: number, x2: number, y2: number) => {
+    const box = (await canvas.boundingBox())!;
+    await page.mouse.move(box.x + x1 * sx, box.y + y1 * sx);
+    await page.mouse.down();
+    await page.mouse.move(box.x + x2 * sx, box.y + y2 * sx, { steps: 4 });
+    await page.mouse.up();
+  };
+  await canvas.click({ position: { x: 40 * sx, y: 40 * sx } });
+  await expect(page.getByLabel('Nummer 1 X in Prozent')).toHaveValue('10');
+  await page.getByRole('button', { name: '🔍 Lupe' }).click();
+  await drag(20, 20, 60, 60);
+  await expect(canvas).toHaveAttribute('aria-label', /1 Lupen/);
+  // Nummer verschieben
+  await page.getByRole('button', { name: '✥ Verschieben' }).click();
+  await drag(40, 40, 120, 40);
+  await expect(page.getByLabel('Nummer 1 X in Prozent')).toHaveValue('30');
+  await page.getByRole('button', { name: '✂ Zuschneiden' }).click();
+  await drag(2, 2, 302, 152);
+  await expect(page.getByText(/✂ Zuschnitt 75 % × 75 % des Bildes/)).toBeVisible();
+  await expect(canvas).toHaveAttribute('aria-label', /zugeschnitten/);
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Titel (Bildverzeichnis)').fill('E2E Zuschnitt');
+  await page.getByLabel('Alternativtext (Pflicht)').fill('Zugeschnittene Maske');
+  await page.getByRole('button', { name: 'Screenshot speichern' }).click();
+  await expect(page.getByText('Screenshot gespeichert.')).toBeVisible();
+  const idx = await (await request.get('/api/v1/image-index', { headers: h })).json();
+  expect(idx.find((i: any) => i.title === 'E2E Zuschnitt')).toMatchObject({ width: 300, height: 150 });
+});
