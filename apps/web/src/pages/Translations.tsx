@@ -22,11 +22,15 @@ export function TranslationsPage() {
   const projectLangs: string[] = langs.data?.projectLanguages ?? [];
   const name = (code: string) => langs.data?.languages.find((l: any) => l.code === code)?.name ?? code;
   const current = (list.data ?? []).filter((t) => !t.outdated);
-  const create = async (language: string) => {
+  // Übersetzungswünsche aus der Leseransicht (ADR-075)
+  const requests = useLoad<any[]>('/translation-requests');
+  const create = async (language: string, forChapter = chapterId) => {
     try {
-      const t = await post<any>('/translations', { chapterId, language });
+      const t = await post<any>('/translations', { chapterId: forChapter, language });
       notify(`Übersetzung ${name(language)} angelegt.`);
-      list.reload();
+      if (forChapter !== chapterId) setChapterId(forChapter);
+      else list.reload();
+      requests.reload();
       setOpenId(t.id);
     } catch (e) {
       notify(errorText(e), 'error');
@@ -35,6 +39,30 @@ export function TranslationsPage() {
   return (
     <Page title="Übersetzungen" subtitle="Freigegebene deutsche Kapitel in die Zielsprachen des Projekts übersetzen – mit Satz-Zuordnung und Freigabe je Sprache">
       {!projectLangs.length && <div className="alert">Für dieses Projekt sind keine Zielsprachen festgelegt. Die Administration legt sie unter <Link to="/projekte">Projekte</Link> fest.</div>}
+      {!!requests.data?.length && (
+        <Card title={`Gewünschte Übersetzungen (${requests.data.length})`}>
+          <p className="small muted">Leserinnen und Leser haben diese Kapitel in der Leseransicht angefordert – meistgewünschte zuerst. Erledigt ist ein Wunsch, sobald die Übersetzung der aktuellen Fassung freigegeben ist.</p>
+          <table className="table request-list">
+            <thead><tr><th>Kapitel</th><th>Sprache</th><th>Wünsche</th><th>Stand</th><th>Zuletzt</th><th /></tr></thead>
+            <tbody>
+              {requests.data.map((r) => (
+                <tr key={`${r.chapterId}.${r.language}`}>
+                  <td>{r.title}</td>
+                  <td>{r.languageName}</td>
+                  <td className="count">{r.count}</td>
+                  <td>{r.state === 'in_progress' ? <span className="tag">in Arbeit</span> : r.state === 'outdated' ? <span className="tag st-needs_regeneration">veraltet</span> : <span className="tag">fehlt</span>}</td>
+                  <td className="small">{new Date(r.lastRequestedAt).toLocaleDateString('de-DE')}</td>
+                  <td>
+                    {canEdit && r.state !== 'in_progress' && approved.some((c) => c.id === r.chapterId)
+                      ? <button className="btn small" aria-label={`„${r.title}“ übersetzen (${r.languageName})`} onClick={() => create(r.language, r.chapterId)}>Übersetzen</button>
+                      : <button className="btn small" aria-label={`${r.title} öffnen`} onClick={() => (setChapterId(r.chapterId), setOpenId(null))}>Öffnen</button>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
       <Card title="Kapitel">
         {!approved.length ? <Empty>Noch kein Kapitel freigegeben – übersetzt werden nur freigegebene Versionen.</Empty> : (
           <div className="filters">

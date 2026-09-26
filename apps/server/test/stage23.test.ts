@@ -70,7 +70,7 @@ describe('Etappe 23', () => {
       const mk = make(call);
       const a = await mk('Auftrag anlegen', 'Mit dieser Anleitung legen Sie einen Auftrag an.', ['Öffnen Sie **Aufträge**', 'Klicken Sie auf **Neu**']);
       const b = await mk('Auftrag prüfen', 'Mit dieser Anleitung prüfen Sie einen Auftrag.', ['Öffnen Sie **Aufträge**', 'Wählen Sie den Auftrag']);
-      expect((await call('GET', '/reader/me', undefined, 'u-leser')).json).toEqual({ bookmarks: [], recent: [], updates: {}, lastVisitAt: null });
+      expect((await call('GET', '/reader/me', undefined, 'u-leser')).json).toEqual({ bookmarks: [], recent: [], updates: {}, lastVisitAt: null, translationRequests: [] });
       // merken (idempotent), nur je Person
       expect((await call('PUT', `/reader/bookmarks/${a.chapterId}`, undefined, 'u-leser')).json).toEqual({ chapterId: a.chapterId, bookmarked: true, note: null });
       await call('PUT', `/reader/bookmarks/${a.chapterId}`, undefined, 'u-leser');

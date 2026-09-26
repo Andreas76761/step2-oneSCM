@@ -9,6 +9,7 @@ import { feedbackInsights, feedbackSummary, feedbackToTask, listFeedback, submit
 import { createChapterTemplate, deleteChapterTemplate, duplicateChapterTemplate, exportChapterTemplates, importChapterTemplates, listChapterTemplates, updateChapterTemplate } from '../services/chapterTemplates.js';
 import { readerGlossary, readerLanguages, readerMe, readerRelated, readerRelatedMap, readerSearch, readerTranslations, readerVersion, recordVisit, setBookmark, setChapterLinks } from '../services/reader.js';
 import { getGuidanceSettings, updateGuidanceSettings } from '../services/guidanceBase.js';
+import { myTranslationRequests, requestTranslation } from '../services/translationRequests.js';
 import { buildDigest, getDigestSettings, sendDigests, updateDigestSettings } from '../services/digest.js';
 import { badRequest } from '../problem.js';
 import { userOf } from './helpers.js';
@@ -104,7 +105,12 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   // Verwandte Kapitel und FAQ (ADR-069), Lesezeichen und Verlauf (ADR-070)
   app.get<{ Params: { chapterId: string }; Querystring: { drafts?: string; lang?: string } }>('/reader/related/:chapterId', async (req) => (userOf(req.ctx, req), readerRelated(req.ctx, req.params.chapterId, req.query.drafts === 'true', req.query.lang)));
   app.put<{ Params: { chapterId: string }; Body: any }>('/chapters/:chapterId/related', async (req) => setChapterLinks(req.ctx, req.params.chapterId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
-  app.get('/reader/me', async (req) => readerMe(req.ctx, userOf(req.ctx, req).id));
+  app.get('/reader/me', async (req) => {
+    const user = userOf(req.ctx, req);
+    return { ...(await readerMe(req.ctx, user.id)), translationRequests: await myTranslationRequests(req.ctx, user.id) };
+  });
+  // Übersetzung wünschen (ADR-075): jede Person mit Lesezugriff
+  app.post<{ Body: any }>('/reader/translation-requests', async (req) => requestTranslation(req.ctx, req.body ?? {}, userOf(req.ctx, req)));
   app.post<{ Body: any }>('/reader/visits', async (req) => recordVisit(req.ctx, userOf(req.ctx, req).id, req.body ?? {}));
   app.put<{ Params: { chapterId: string }; Body: { note?: unknown } }>('/reader/bookmarks/:chapterId', async (req) => setBookmark(req.ctx, userOf(req.ctx, req).id, req.params.chapterId, true, req.body ?? {}));
   app.delete<{ Params: { chapterId: string } }>('/reader/bookmarks/:chapterId', async (req) => setBookmark(req.ctx, userOf(req.ctx, req).id, req.params.chapterId, false));

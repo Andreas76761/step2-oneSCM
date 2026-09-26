@@ -157,7 +157,8 @@ export async function publicHelpRoutes(app: FastifyInstance, base: Ctx, embedOri
       reply.header('Content-Security-Policy', csp).header('Content-Type', 'text/html; charset=utf-8').header('Cache-Control', 'no-store');
       const project = /^[\w-]{1,80}$/.test(projectId) ? await base.db.get('SELECT id, help_public, archived_at FROM projects WHERE id = ?', projectId) : undefined;
       const ctx = project?.help_public ? withProject(base, project.id) : null;
-      const state: EmbedState = { lang: LABELS[lang] ? lang : 'de', help: null, action: `/help/embed/${encodeURIComponent(projectId)}/${encodeURIComponent(contextKey)}`, role, division, appUrl: base.config.notify.appUrl };
+      // Beschriftungen: fünf Sprachen vollständig, übrige Projektsprachen englisch (wie die Leseransicht, ADR-074)
+      const state: EmbedState = { lang: LABELS[lang] ? lang : /^[a-z]{2}$/.test(lang) && lang !== 'de' ? 'en' : 'de', help: null, action: `/help/embed/${encodeURIComponent(projectId)}/${encodeURIComponent(contextKey)}`, role, division, appUrl: base.config.notify.appUrl };
       // nicht freigeschaltet und unbekannt sind nicht unterscheidbar
       if (!ctx) return reply.code(404).send(embedPage(state));
       try {

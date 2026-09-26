@@ -75,3 +75,6 @@
 | [ADR-071](ADR-071-sprachen-beim-lesen.md) | Sprachen beim Lesen | akzeptiert, umgesetzt |
 | [ADR-072](ADR-072-siehe-auch-druck-hilfe.md) | „Siehe auch“ und FAQ im Druck und in der Online-Hilfe | akzeptiert, umgesetzt |
 | [ADR-073](ADR-073-lesezeichen-notizen.md) | Lesezeichen mit eigenen Notizen | akzeptiert, umgesetzt |
+| [ADR-074](ADR-074-leseransicht-mehrsprachig.md) | Beschriftungen der Leseransicht in der Lesesprache | akzeptiert, umgesetzt |
+| [ADR-075](ADR-075-uebersetzung-anfordern.md) | Übersetzung aus der Leseransicht anfordern | akzeptiert, umgesetzt |
+| [ADR-076](ADR-076-notiz-im-kapitel.md) | Notizen direkt im Kapitel | akzeptiert, umgesetzt |
