@@ -7,7 +7,10 @@ test('[T-201] Navigation, Import einer MD-Datei und Quellenliste', async ({ page
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Start');
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  // Selteneres liegt unter „Weitere“ (ADR-053)
+  await nav.getByRole('button', { name: 'Weitere' }).click();
   for (const item of NAV) {
     await nav.getByRole('link', { name: item }).click();
     await expect(page.getByRole('heading', { level: 1 }).first()).toHaveText(item);
@@ -543,11 +546,11 @@ test('[T-221] Navigation einklappbar, Stammdaten: Inhaltsverzeichnis anlegen, Dr
   // Navigation einklappen: nur Symbole, Zustand bleibt nach Neuladen
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
   await page.getByRole('button', { name: 'Navigation einklappen' }).click();
-  await expect(nav.getByText('Dashboard', { exact: true })).toBeHidden();
-  await expect(nav.getByRole('link', { name: 'Dashboard' })).toBeVisible();
+  await expect(nav.getByText('Quellen', { exact: true })).toBeHidden();
+  await expect(nav.getByRole('link', { name: 'Quellen' })).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: 'Navigation ausklappen' }).click();
-  await expect(nav.getByText('Dashboard', { exact: true })).toBeVisible();
+  await expect(nav.getByText('Quellen', { exact: true })).toBeVisible();
 
   // Stammdaten-Untermenü unten, darunter Einstellungen
   const group = nav.getByRole('button', { name: 'Stammdaten' });
@@ -838,7 +841,7 @@ test('[T-225] Werkstatt: Stil anzeigen und korrigieren, Stapelkorrektur, Bild au
   expect((await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).ok()).toBe(true);
 
   // Dashboard: Stilwert je Kapitel
-  await page.goto('/');
+  await page.goto('/dashboard');
   const styleCard = page.locator('.card', { has: page.getByRole('heading', { name: 'Schreibstil je Kapitel' }) });
   await expect(styleCard.getByRole('row', { name: /12\. E2E-Stil/ })).toBeVisible();
   expect(await axe()).toEqual([]);
@@ -953,7 +956,9 @@ test('[T-226] Eigene Stilregeln, Benutzerverwaltung, KI-Stapelumformulierung, Sc
   // Regeln zurücksetzen (andere Tests nutzen Füllwörter)
   await request.put('/api/v1/style/rules', { headers: h, data: { disabled: [], phrases: [] } });
 
-  // Benutzerverwaltung
+  // Benutzerverwaltung (unter „Weitere“)
+  const more = nav.getByRole('button', { name: 'Weitere' });
+  if ((await more.getAttribute('aria-expanded')) === 'false') await more.click();
   await nav.getByRole('link', { name: 'Benutzer' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Benutzer');
   await page.getByLabel('Kennung').fill('u-e2e');
@@ -1062,7 +1067,7 @@ test('[T-227] Rollenvorlagen, Stilregeln-Export/-Import, Stilwert-Verlauf im Das
   // Dashboard: Stilwert je Kapitel mit Veränderung, Verlauf (Hinweis bis zum zweiten Tag)
   const vch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '4. Vertragsbearbeitung');
   if (!vch.versions.length) await request.post(`/api/v1/chapters/${vch.id}/generate`, { headers: h });
-  await page.goto('/');
+  await page.goto('/dashboard');
   const styleCard = page.locator('.card', { has: page.getByRole('heading', { name: 'Schreibstil je Kapitel' }) });
   await expect(styleCard.getByText('Veränderung (90 Tage)')).toBeVisible();
   await expect(styleCard.getByText(/Der Verlauf erscheint, sobald/)).toBeVisible();
@@ -1104,4 +1109,93 @@ test('[T-227] Rollenvorlagen, Stilregeln-Export/-Import, Stilwert-Verlauf im Das
   await expect(page.getByText('Screenshot gespeichert.')).toBeVisible();
   const idx = await (await request.get('/api/v1/image-index', { headers: h })).json();
   expect(idx.find((i: any) => i.title === 'E2E Zuschnitt')).toMatchObject({ width: 300, height: 150 });
+});
+
+test('[T-228] Startseite, Menü nach Ablauf, Kapitel-Assistent, Anleitungs-Check mit Korrektur, Stilregel-Bibliothek', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+
+  // Start: Hauptaufgaben, Fortschritt, Menü gruppiert nach Arbeitsablauf
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Start');
+  const tasks = page.getByRole('navigation', { name: 'Hauptaufgaben' });
+  await expect(tasks.getByRole('link')).toHaveCount(5);
+  await expect(page.getByText('Ihr Weg zum fertigen Handbuch')).toBeVisible();
+  await expect(page.locator('.progress-list li')).toHaveCount(6);
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await expect(nav.getByRole('group', { name: '2 Schreiben' }).getByRole('link', { name: 'Kapitel-Assistent' })).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'Weitere' })).toHaveAttribute('aria-expanded', 'false');
+  expect(await axe()).toEqual([]);
+
+  // Kapitel-Assistent: vier Schritte, Vorschau, anlegen
+  await tasks.getByRole('link', { name: /Neues Kapitel schreiben/ }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Kapitel-Assistent');
+  await expect(page.getByRole('button', { name: 'Weiter →' })).toBeDisabled();
+  await page.getByLabel('Name der Aufgabe').fill('E2E Lieferung anlegen');
+  await page.getByLabel('Wozu dient die Anleitung?').fill('Mit dieser Anleitung legen Sie eine Lieferung an.');
+  await page.getByRole('button', { name: 'Weiter →' }).click();
+  await expect(page.locator('.stepper li.current')).toContainText('Voraussetzungen');
+  await page.getByLabel('Neuer Eintrag').fill('Sie haben die Berechtigung Einkauf');
+  await page.getByLabel('Neuer Eintrag').press('Enter');
+  await expect(page.getByLabel('Voraussetzung 1', { exact: true })).toHaveValue('Sie haben die Berechtigung Einkauf');
+  await page.getByRole('button', { name: 'Weiter →' }).click();
+  for (const s of ['Öffnen Sie **Einkauf > Lieferungen**', 'Klicken Sie auf **Neu**', 'Klicken Sie auf **Speichern**']) {
+    await page.getByLabel('Neuer Eintrag').fill(s);
+    await page.getByRole('button', { name: 'Hinzufügen' }).click();
+  }
+  await page.getByRole('button', { name: 'Schritt 3 nach oben' }).click();
+  await expect(page.getByLabel('Schritt 2', { exact: true })).toHaveValue('Klicken Sie auf **Speichern**');
+  await page.getByRole('button', { name: 'Schritt 2 nach unten' }).click();
+  const preview = page.locator('.preview');
+  await expect(preview.getByRole('listitem').nth(1)).toHaveText('Öffnen Sie Einkauf > Lieferungen.');
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Weiter →' }).click();
+  await page.getByLabel(/Ergebnis: Was zeigt das System/).fill('Die Lieferung ist gespeichert und erscheint in der Liste.');
+  await page.getByRole('button', { name: 'Kapitel anlegen' }).click();
+  await expect(page.getByRole('heading', { name: '„E2E Lieferung anlegen“ ist angelegt' })).toBeVisible();
+  await expect(page.getByText(/Leserfreundlichkeit: 100 von 100/)).toBeVisible();
+  await page.getByRole('link', { name: 'Anleitungs-Check ansehen' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Anleitungs-Check');
+  await expect(page.locator('.guide-icon.ok')).toHaveCount(10);
+
+  // Anleitungs-Check: Schritte als Fließtext → per Klick nummerieren
+  const chapters = await (await request.get('/api/v1/guidance', { headers: h })).json();
+  const mine = chapters.chapters.find((c: any) => c.title === 'E2E Lieferung anlegen');
+  const v = await (await request.get(`/api/v1/chapter-versions/${mine.versionId}`, { headers: h })).json();
+  const stepsBlock = v.sections.find((s: any) => s.code === 'steps').blocks[0];
+  expect((await request.patch(`/api/v1/content-blocks/${stepsBlock.id}`, { headers: h, data: { text: 'Öffnen Sie **Einkauf > Lieferungen**. Klicken Sie auf **Neu** und wählen Sie den Lieferanten.', kind: 'paragraph', expectedVersionNo: stepsBlock.versionNo } })).ok()).toBe(true);
+  await page.goto('/anleitungs-check');
+  const row = page.getByRole('row', { name: /E2E Lieferung anlegen/ });
+  await expect(row).toContainText('Schritte nicht nummeriert');
+  expect(await axe()).toEqual([]);
+  await row.getByRole('link', { name: 'E2E Lieferung anlegen prüfen' }).click();
+  const numbered = page.locator('.guide-item', { hasText: 'Schritte nummeriert' });
+  await numbered.getByRole('button', { name: 'So geht’s' }).click();
+  expect(await axe()).toEqual([]);
+  await numbered.getByRole('button', { name: 'Als nummerierte Schritte schreiben' }).click();
+  await expect(page.getByText('1 Korrektur übernommen.')).toBeVisible();
+  await expect(page.locator('.guide-icon.ok')).toHaveCount(10);
+  const after = await (await request.get(`/api/v1/chapter-versions/${mine.versionId}`, { headers: h })).json();
+  expect(after.sections.find((s: any) => s.code === 'steps').blocks[0]).toMatchObject({ kind: 'list', text: '1. Öffnen Sie **Einkauf > Lieferungen**.\n2. Klicken Sie auf **Neu**.\n3. Wählen Sie den Lieferanten.' });
+  // aus der Werkstatt erreichbar
+  await page.getByRole('link', { name: 'In der Werkstatt öffnen' }).click();
+  await expect(page.getByRole('link', { name: '🔍 Anleitungs-Check' })).toBeVisible();
+
+  // Stilregel-Bibliothek anlegen und abonnieren
+  await request.put('/api/v1/style/rules', { headers: h, data: { phrases: [{ avoid: 'Popup', use: 'Dialogfenster' }] } });
+  await page.goto('/schreibstil');
+  await page.getByRole('tab', { name: 'Regeln' }).click();
+  await page.getByLabel('Name der neuen Bibliothek').fill('E2E Konzernsprache');
+  await page.getByRole('button', { name: 'Aus Regeln dieses Projekts anlegen' }).click();
+  await expect(page.getByText('Bibliothek aus den Projektregeln angelegt.')).toBeVisible();
+  await page.getByRole('button', { name: '+ E2E Konzernsprache (1)' }).click();
+  await page.getByRole('button', { name: 'Auswahl speichern' }).click();
+  await expect(page.getByText('Bibliotheken gespeichert.')).toBeVisible();
+  await expect(page.getByText(/Überdeckt: „Popup“ aus E2E Konzernsprache/)).toBeVisible();
+  expect(await axe()).toEqual([]);
+  // aufräumen
+  await request.put('/api/v1/style/libraries', { headers: h, data: { libraryIds: [] } });
+  await request.put('/api/v1/style/rules', { headers: h, data: { phrases: [] } });
 });

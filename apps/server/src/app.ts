@@ -57,6 +57,9 @@ export interface BuildOptions {
   worker?: boolean;
 }
 
+/** Projektübergreifende Verwaltung (ohne Projektauflösung, nicht für API-Tokens) */
+const GLOBAL_PATHS = ['/api/v1/projects', '/api/v1/users', '/api/v1/role-templates', '/api/v1/style-libraries'];
+
 export async function buildApp(overrides: Partial<AppConfig> = {}, options: BuildOptions = {}) {
   const config = loadConfig(overrides);
   initTracing(config.tracing);
@@ -198,7 +201,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
         req.globalUser = user;
         req.user = user;
         // Projektverwaltung arbeitet projektübergreifend mit globalen Berechtigungen – nicht für API-Tokens
-        if (url === '/api/v1/projects' || url.startsWith('/api/v1/projects/') || url === '/api/v1/users' || url.startsWith('/api/v1/users/') || url === '/api/v1/role-templates' || url.startsWith('/api/v1/role-templates/')) {
+        if (GLOBAL_PATHS.some((g) => url === g || url.startsWith(`${g}/`))) {
           if (user.token) throw new Problem(403, 'Forbidden', 'API-Tokens haben keinen Zugriff auf die Projekt- und Benutzerverwaltung.');
           return;
         }

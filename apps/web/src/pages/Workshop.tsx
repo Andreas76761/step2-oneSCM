@@ -119,6 +119,7 @@ export function WorkshopPage() {
               </select>
             )}
             {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}
+            {v && <Link className="btn" to={`/anleitungs-check/${v.id}`}>🔍 Anleitungs-Check</Link>}
             {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}>🖋️ Stil anzeigen</button>}
             {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}>🖋️ Stil korrigieren</button>}
             {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}>✨ Kapitel umformulieren</button>}

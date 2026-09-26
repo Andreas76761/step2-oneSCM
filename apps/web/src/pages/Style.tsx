@@ -2,7 +2,7 @@
 // professionell bzw. ins Präsens umformulieren – für freien Text, Kapitelabsätze (übernehmen) und Textschnipsel (nur prüfen).
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { currentProjectId, patch, post, put, qs } from '../api';
+import { api, currentProjectId, patch, post, put, qs } from '../api';
 import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export interface Fix { start: number; end: number; replacement: string; label: string }
@@ -384,6 +384,7 @@ function RulesTab({ canAdmin }: { canAdmin: boolean }) {
       </Card>
       {!ro && <button className="btn primary" onClick={save}>Stilregeln speichern</button>}
       <RulesExchange canAdmin={canAdmin} onChanged={rules.reload} />
+      <Libraries canAdmin={canAdmin} />
     </>
   );
 }
@@ -446,6 +447,123 @@ function RulesExchange({ canAdmin, onChanged }: { canAdmin: boolean; onChanged: 
         </>
       )}
     </Card>
+  );
+}
+
+/**
+ * Gemeinsame Regeln (ADR-050): Bibliotheken abonnieren (Reihenfolge = Vorrang), wirksame Formulierungen mit Herkunft ansehen;
+ * die Administration legt Bibliotheken aus den Regeln dieses Projekts oder aus einer CSV an und aktualisiert sie.
+ */
+function Libraries({ canAdmin }: { canAdmin: boolean }) {
+  const { notify } = useApp();
+  const subs = useLoad<any>('/style/libraries');
+  const eff = useLoad<any>('/style/rules/effective');
+  const [order, setOrder] = useState<string[] | null>(null);
+  const [name, setName] = useState('');
+  useEffect(() => setOrder(subs.data ? [...subs.data.subscribed] : null), [subs.data]);
+  const all: any[] = subs.data?.available ?? [];
+  const byId = new Map(all.map((l) => [l.id, l]));
+  const run = async (fn: () => Promise<unknown>, msg: string) => {
+    try {
+      await fn();
+      notify(msg);
+      subs.reload();
+      eff.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  if (!order) return <ErrorBox error={subs.error} />;
+  const move = (i: number, d: number) => {
+    const n = [...order];
+    [n[i], n[i + d]] = [n[i + d], n[i]];
+    setOrder(n);
+  };
+  const changed = order.join() !== subs.data.subscribed.join();
+  return (
+    <>
+      <Card title="Gemeinsame Regeln (Bibliotheken)">
+        <p className="small muted">Bibliotheken bündeln Formulierungsregeln für mehrere Handbücher – einmal gepflegt, überall gleich. Eigene Formulierungen dieses Projekts haben Vorrang; bei mehreren Bibliotheken gilt die obere.</p>
+        {!all.length && <Empty>Noch keine Bibliothek vorhanden.{canAdmin ? ' Legen Sie unten eine aus den Regeln dieses Projekts an.' : ''}</Empty>}
+        {order.length > 0 && (
+          <ol className="plain lib-order">
+            {order.map((id, i) => (
+              <li key={id}>
+                <strong>{byId.get(id)?.name ?? id}</strong> <span className="small muted">{byId.get(id)?.phrases ?? 0} Formulierungen</span>
+                {canAdmin && (
+                  <span className="row-actions">
+                    <button className="btn small" disabled={i === 0} aria-label={`${byId.get(id)?.name} nach oben`} onClick={() => move(i, -1)}>↑</button>
+                    <button className="btn small" disabled={i === order.length - 1} aria-label={`${byId.get(id)?.name} nach unten`} onClick={() => move(i, 1)}>↓</button>
+                    <button className="btn small" onClick={() => setOrder(order.filter((x) => x !== id))}>Abbestellen</button>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ol>
+        )}
+        {canAdmin && all.some((l) => !order.includes(l.id)) && (
+          <div className="filters">
+            {all.filter((l) => !order.includes(l.id)).map((l) => (
+              <button key={l.id} className="btn small" title={l.description ?? undefined} onClick={() => setOrder([...order, l.id])}>+ {l.name} ({l.phrases})</button>
+            ))}
+          </div>
+        )}
+        {canAdmin && changed && <button className="btn primary" onClick={() => run(() => put('/style/libraries', { libraryIds: order }), 'Bibliotheken gespeichert.')}>Auswahl speichern</button>}
+      </Card>
+      <Card title="Wirksame Formulierungen">
+        {eff.data && !eff.data.phrases.length ? <Empty>Keine Formulierungsregeln.</Empty> : (
+          <div className="table-wrap" role="region" aria-label="Wirksame Formulierungen" tabIndex={0}>
+            <table className="table compact">
+              <thead><tr><th>Vermeiden</th><th>Stattdessen</th><th>Herkunft</th></tr></thead>
+              <tbody>
+                {(eff.data?.phrases ?? []).map((p: any) => (
+                  <tr key={p.avoid}>
+                    <td>{p.avoid}</td>
+                    <td>{p.use === null ? <span className="muted">nur Hinweis{p.note ? `: ${p.note}` : ''}</span> : p.use === '' ? <span className="muted">streichen</span> : p.use}</td>
+                    <td>{p.source.type === 'project' ? 'dieses Projekt' : `Bibliothek „${p.source.name}“`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {eff.data?.shadowed?.length > 0 && (
+          <p className="small muted">Überdeckt: {eff.data.shadowed.map((x: any) => `„${x.avoid}“ aus ${x.libraryName}`).join(', ')}.</p>
+        )}
+      </Card>
+      {canAdmin && (
+        <Card title="Bibliotheken pflegen">
+          <p className="small muted">Pflegen Sie Formulierungen hier im Projekt und veröffentlichen Sie sie dann als Bibliothek – oder laden Sie eine CSV hoch (Spalten wie beim Export).</p>
+          <div className="filters">
+            <label className="inline">Name der neuen Bibliothek <input value={name} onChange={(e) => setName(e.target.value)} placeholder="z. B. Konzernsprache" /></label>
+            <button className="btn" disabled={!name.trim()} onClick={() => run(async () => { await post('/style-libraries', { name, fromProjectId: currentProjectId() }); setName(''); }, 'Bibliothek aus den Projektregeln angelegt.')}>Aus Regeln dieses Projekts anlegen</button>
+          </div>
+          {all.length > 0 && (
+            <div className="table-wrap" role="region" aria-label="Bibliotheken" tabIndex={0}>
+              <table className="table compact">
+                <thead><tr><th>Bibliothek</th><th>Formulierungen</th><th>Aktionen</th></tr></thead>
+                <tbody>
+                  {all.map((l) => (
+                    <tr key={l.id}>
+                      <td>{l.name}{l.description && <div className="small muted">{l.description}</div>}</td>
+                      <td>{l.phrases}</td>
+                      <td className="row-actions">
+                        <button className="btn small" onClick={() => run(() => api('PATCH', `/style-libraries/${l.id}`, { fromProjectId: currentProjectId() }), `„${l.name}“ mit den Regeln dieses Projekts überschrieben.`)}>Mit Projektregeln überschreiben</button>
+                        <label className="btn small file-btn">CSV ergänzen
+                          <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void run(async () => api('PATCH', `/style-libraries/${l.id}`, { csv: await f.text(), mode: 'merge' }), `CSV in „${l.name}“ übernommen.`); }} />
+                        </label>
+                        <DownloadButton className="btn small" href={`/api/v1/style-libraries/${l.id}/export`} name={`${l.name}.csv`}>CSV</DownloadButton>
+                        <button className="btn small danger" onClick={() => run(() => api('DELETE', `/style-libraries/${l.id}`), `„${l.name}“ gelöscht.`)}>Löschen</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
+    </>
   );
 }
 

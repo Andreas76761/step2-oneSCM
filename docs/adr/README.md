@@ -51,3 +51,7 @@
 | [ADR-047](ADR-047-rollenvorlagen-stilregeln-austausch.md) | Rollenvorlagen; Stilregeln exportieren, importieren, aus Projekten übernehmen | akzeptiert, umgesetzt |
 | [ADR-048](ADR-048-stilwert-verlauf.md) | Stilwert-Verlauf je Kapitel und Projekt | akzeptiert, umgesetzt |
 | [ADR-049](ADR-049-screenshot-zuschnitt-lupe.md) | Screenshot-Editor: Zuschneiden, Lupe, Verschieben | akzeptiert, umgesetzt |
+| [ADR-050](ADR-050-stilregel-bibliotheken.md) | Stilregel-Bibliotheken für mehrere Projekte | akzeptiert, umgesetzt |
+| [ADR-051](ADR-051-anleitungs-check.md) | Anleitungs-Check: Leserfreundlichkeit je Kapitel | akzeptiert, umgesetzt |
+| [ADR-052](ADR-052-kapitel-assistent.md) | Kapitel-Assistent: geführte Erstellung mit Vorschlägen aus Quellen | akzeptiert, umgesetzt |
+| [ADR-053](ADR-053-einfache-oberflaeche.md) | Einfache Oberfläche: Startseite und Menü nach Arbeitsablauf | akzeptiert, umgesetzt |

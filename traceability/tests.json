@@ -1168,5 +1168,44 @@
       "NFR-35",
       "NFR-36"
     ]
+  },
+  {
+    "id": "T-186",
+    "title": "Stilregel-Bibliotheken: anlegen (Liste/CSV/aus Projekt), abonnieren, Vorrang der Projektregeln, Prüfung nutzt Bibliothek",
+    "file": "apps/server/test/stage18.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-37"
+    ]
+  },
+  {
+    "id": "T-187",
+    "title": "Anleitungs-Check: Aufbau und Form der Schritte, Korrekturen übernehmen, Übersicht je Kapitel",
+    "file": "apps/server/test/stage18.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-38"
+    ]
+  },
+  {
+    "id": "T-188",
+    "title": "Kapitel-Assistent: Vorschläge aus Quellen, Kapitel im Standardaufbau mit Quellenbezug anlegen",
+    "file": "apps/server/test/stage18.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-39"
+    ]
+  },
+  {
+    "id": "T-228",
+    "title": "Startseite, Menü nach Ablauf, Kapitel-Assistent, Anleitungs-Check mit Korrektur, Stilregel-Bibliothek (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-37",
+      "NFR-38",
+      "NFR-39",
+      "NFR-40"
+    ]
   }
 ]

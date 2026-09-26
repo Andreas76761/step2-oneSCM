@@ -491,3 +491,59 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .trend-tip span { color: var(--muted); }
 /* Kontrollkästchen in Tabellen mit Mindest-Zielgröße (WCAG 2.2, 2.5.8) */
 .perm-inline input[type='checkbox'] { width: 24px; height: 24px; margin: 0 2px 0 0; }
+
+/* ---------- Etappe 18: Navigation nach Ablauf, Startseite, Anleitungs-Check, Kapitel-Assistent ---------- */
+.nav-section { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+.nav-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--sidebar-ink); padding: 4px 10px 2px; }
+@media (min-width: 801px) { .sidebar.collapsed .nav-heading { display: none; } .sidebar.collapsed .nav-section { margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.12); padding-top: 4px; } }
+
+.task-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.task-tile { display: flex; flex-direction: column; gap: 6px; padding: 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); text-decoration: none; min-height: 120px; }
+.task-tile:hover { border-color: var(--link); box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08); }
+.task-tile:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+.task-tile strong { font-size: 16px; color: var(--link); }
+.task-icon { font-size: 26px; }
+.progress-list { list-style: none; padding: 0; margin: 0 0 8px; display: flex; flex-direction: column; gap: 6px; }
+.progress-list li { display: flex; gap: 10px; align-items: baseline; padding: 6px 8px; border-radius: 6px; }
+.progress-list li.next { background: var(--surface-2); font-weight: 600; }
+.progress-mark { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; align-items: center; justify-content: center; border: 2px solid var(--muted); font-size: 12px; flex: none; }
+.progress-list li.done .progress-mark { border-color: var(--ok); color: var(--ok); }
+.progress-list li.next .progress-mark { border-color: var(--link); color: var(--link); }
+.attention li { padding: 6px 0; border-bottom: 1px solid var(--border); }
+
+.guide-head { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; margin-bottom: 12px; }
+.guide-score strong { font-size: 28px; }
+.meter { width: 220px; max-width: 100%; height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; margin-top: 4px; }
+.meter span { display: block; height: 100%; background: var(--primary); border-radius: 4px; }
+.guide-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.guide-item { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+.guide-row { display: flex; gap: 10px; align-items: flex-start; }
+.guide-text { flex: 1; }
+.guide-icon { display: inline-flex; width: 24px; height: 24px; border-radius: 50%; align-items: center; justify-content: center; font-weight: 700; flex: none; color: #fff; }
+.guide-icon.ok { background: #15803d; }
+.guide-icon.warning { background: #b45309; }
+.guide-icon.info { background: #1d4ed8; }
+.guide-detail { margin: 8px 0 0 34px; }
+.guide-hit { display: flex; gap: 10px; justify-content: space-between; align-items: center; padding: 4px 0; border-top: 1px dashed var(--border); }
+.guide-add textarea { width: 100%; }
+.guide-tag { margin: 0 4px 4px 0; display: inline-block; }
+.guide-tag.warning { border-color: #b45309; }
+
+.stepper { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 16px; }
+.stepper li { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+.stepper li.current { border-color: var(--link); color: var(--text); font-weight: 600; }
+.stepper li.done { color: var(--text); }
+.stepper-no { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; align-items: center; justify-content: center; background: var(--border); font-size: 12px; }
+.stepper li.current .stepper-no { background: var(--primary); color: #fff; }
+.assistant-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .assistant-grid { grid-template-columns: 1fr; } }
+.line-items { padding-left: 22px; display: flex; flex-direction: column; gap: 6px; margin: 0 0 10px; }
+.line-items li { display: flex; gap: 6px; align-items: center; }
+.line-items input { flex: 1; min-width: 0; }
+.filters .grow { flex: 1; }
+.filters .grow input { width: 100%; }
+.suggestion { display: flex; gap: 10px; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.suggestions h3 { margin: 0; font-size: 15px; }
+.wizard-nav { margin-top: 16px; }
+.preview h3 { margin-top: 0; }
+.lib-order li { display: flex; gap: 8px; align-items: center; padding: 4px 0; }

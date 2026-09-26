@@ -512,5 +512,41 @@
     "documentation": [
       "docs/adr/ADR-049-screenshot-zuschnitt-lupe.md"
     ]
+  },
+  {
+    "id": "NFR-37",
+    "title": "Stilregel-Bibliotheken: gemeinsame Formulierungsregeln für mehrere Projekte, abonnieren mit Vorrang der Projektregeln",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-050-stilregel-bibliotheken.md"
+    ]
+  },
+  {
+    "id": "NFR-38",
+    "title": "Anleitungs-Check: Leserfreundlichkeit je Kapitel (Aufbau, nummerierte Schritte, eine Handlung je Schritt, Menüpfade, Abkürzungen) mit Korrekturen per Klick",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-051-anleitungs-check.md"
+    ]
+  },
+  {
+    "id": "NFR-39",
+    "title": "Kapitel-Assistent: geführte Erstellung eines Kapitels in vier Schritten mit Vorschlägen aus den Quellen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-052-kapitel-assistent.md"
+    ]
+  },
+  {
+    "id": "NFR-40",
+    "title": "Einfache Oberfläche: Startseite mit Hauptaufgaben und Fortschritt, Menü nach Arbeitsablauf",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-053-einfache-oberflaeche.md"
+    ]
   }
 ]
