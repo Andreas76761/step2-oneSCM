@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.19.0 – Etappe 19 (26.09.2026)
+
+### Hinzugefügt
+- **Leseransicht (ADR-054):** Handbuch mit Inhaltsverzeichnis, Schritten zum Abhaken, hervorgehobenen Hinweisen; „War dieses Kapitel hilfreich?“ mit Kommentar – Kritik erreicht die Redaktion als Hinweis; Übersicht und „Erledigt“ im Anleitungs-Check, offene Rückmeldungen auf der Startseite.
+- **Kapitelvorlagen (ADR-055):** sechs Aufgabentypen im Kapitel-Assistenten; der Anleitungs-Check meldet offene Platzhalter „…“ (elfter Punkt).
+- **Einführung (ADR-056):** kurze Tour beim ersten Start, jederzeit über „Einführung“ neu startbar.
+- **Anleitungs-Check vor der Freigabe (ADR-057):** Wert und offene Punkte in der Freigabe; optionaler Mindestwert als Bedingung im Qualitätsgate.
+- Migration `028_reader_feedback.sql`; Tests T-189 … T-191, E2E T-229 (axe); Anforderungen NFR-41 … NFR-44.
+
+### Behoben
+- Anleitungs-Check: Schritte zählen nur mit erkannten Handlungen; „Alle Korrekturen übernehmen“ wendet mehrere Korrekturen je Absatz nacheinander an; Pflege der Stilregel-Bibliotheken nur mit globaler Administration (`/me` liefert `globalPermissions`).
+
 ## 0.18.0 – Etappe 18 (26.09.2026)
 
 ### Hinzugefügt

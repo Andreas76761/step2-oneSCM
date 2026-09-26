@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.18.0
+  version: 0.19.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3054,6 +3054,96 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: '{ chapterId, versionId, guidance }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /chapters/{chapterId}/feedback:
+    post:
+      operationId: submitFeedback
+      summary: 'Rückmeldung „War das hilfreich?“ abgeben (Leserecht, eine offene je Person und Version, ADR-054)'
+      tags: [Kapitel]
+      x-requirements: [NFR-41]
+      x-extension: true
+      parameters:
+        - { $ref: '#/components/parameters/ChapterId' }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [helpful], properties: { helpful: { type: boolean }, comment: { type: string, maxLength: 1000 }, versionId: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Rückmeldung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /feedback:
+    get:
+      operationId: listFeedback
+      summary: 'Leser-Rückmeldungen des Projekts (ADR-054)'
+      tags: [Kapitel]
+      x-requirements: [NFR-41]
+      x-extension: true
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [open, done] } }
+        - { name: chapterId, in: query, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, chapterId, title, versionId, helpful, comment, status, createdBy, createdAt, handledBy, handledAt }]' }
+  /feedback/summary:
+    get:
+      operationId: feedbackSummary
+      summary: 'Je Kapitel: hilfreich, nicht hilfreich, offene Rückmeldungen (ADR-054)'
+      tags: [Kapitel]
+      x-requirements: [NFR-41]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ chapterId, helpful, notHelpful, open }]' }
+  /feedback/{feedbackId}:
+    patch:
+      operationId: updateFeedback
+      summary: 'Rückmeldung erledigen oder wieder öffnen (Berechtigung edit, ADR-054)'
+      tags: [Kapitel]
+      x-requirements: [NFR-41]
+      x-extension: true
+      parameters:
+        - { name: feedbackId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [status], properties: { status: { type: string, enum: [open, done] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Rückmeldung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapter-assistant/templates:
+    get:
+      operationId: chapterTemplates
+      summary: 'Kapitelvorlagen je Aufgabentyp (ADR-055)'
+      tags: [Kapitel]
+      x-requirements: [NFR-42]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, name, description, titleHint, purpose, prerequisites, steps, result, hints }]' }
+  /guidance/settings:
+    get:
+      operationId: guidanceSettings
+      summary: 'Mindestwert des Anleitungs-Checks für Einreichen und Freigabe (ADR-057)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-44]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ minScore: integer | null }' }
+    put:
+      operationId: updateGuidanceSettings
+      summary: 'Mindestwert setzen oder aufheben (Berechtigung admin, ADR-057)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-44]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [minScore], properties: { minScore: { type: [integer, 'null'], minimum: 0, maximum: 100 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ minScore }' }
         '400': { $ref: '#/components/responses/Problem' }
   /master-data/import:
     post:

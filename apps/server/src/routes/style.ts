@@ -5,6 +5,9 @@ import { deleteDiagramTemplate, generateDiagrams, listDiagramTemplates, saveDiag
 import { styleHistory, applyChapterTexts, copyStyleRules, exportStyleRules, importStyleRules, getStyleRules, updateStyleRules, autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, rewriteText } from '../services/style.js';
 import { applyGuidanceFixes, assistantSuggestions, chapterGuidance, createChapterFromAssistant, guidanceSummary } from '../services/guidance.js';
 import { effectivePhrases, projectLibraries, setProjectLibraries } from '../services/style.js';
+import { CHAPTER_TEMPLATES } from '../domain/chapterTemplates.js';
+import { feedbackSummary, listFeedback, submitFeedback, updateFeedback } from '../services/feedback.js';
+import { getGuidanceSettings, updateGuidanceSettings } from '../services/guidanceBase.js';
 import { userOf } from './helpers.js';
 
 export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -70,4 +73,15 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
     (userOf(req.ctx, req), assistantSuggestions(req.ctx, { topic: req.query.topic, chapterId: req.query.chapterId || undefined })));
   app.post<{ Body: any }>('/chapter-assistant', async (req, reply) =>
     reply.code(201).send(await createChapterFromAssistant(req.ctx, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit').id)));
+  // Kapitelvorlagen (ADR-055)
+  app.get('/chapter-assistant/templates', async (req) => (userOf(req.ctx, req), CHAPTER_TEMPLATES));
+  // Anleitungs-Check als Freigabebedingung (ADR-057): lesen für alle, ändern nur Administration
+  app.get('/guidance/settings', async (req) => (userOf(req.ctx, req), getGuidanceSettings(req.ctx)));
+  app.put<{ Body: any }>('/guidance/settings', async (req) => updateGuidanceSettings(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+  // Rückmeldungen aus der Leseransicht (ADR-054): abgeben mit Leserecht, bearbeiten mit Bearbeitungsrecht
+  app.post<{ Params: { chapterId: string }; Body: any }>('/chapters/:chapterId/feedback', async (req, reply) =>
+    reply.code(201).send(await submitFeedback(req.ctx, req.params.chapterId, req.body ?? {}, userOf(req.ctx, req))));
+  app.get<{ Querystring: { status?: string; chapterId?: string } }>('/feedback', async (req) => (userOf(req.ctx, req), listFeedback(req.ctx, req.query)));
+  app.get('/feedback/summary', async (req) => (userOf(req.ctx, req), feedbackSummary(req.ctx)));
+  app.patch<{ Params: { feedbackId: string }; Body: any }>('/feedback/:feedbackId', async (req) => updateFeedback(req.ctx, req.params.feedbackId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
 }

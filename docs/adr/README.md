@@ -55,3 +55,7 @@
 | [ADR-051](ADR-051-anleitungs-check.md) | Anleitungs-Check: Leserfreundlichkeit je Kapitel | akzeptiert, umgesetzt |
 | [ADR-052](ADR-052-kapitel-assistent.md) | Kapitel-Assistent: geführte Erstellung mit Vorschlägen aus Quellen | akzeptiert, umgesetzt |
 | [ADR-053](ADR-053-einfache-oberflaeche.md) | Einfache Oberfläche: Startseite und Menü nach Arbeitsablauf | akzeptiert, umgesetzt |
+| [ADR-054](ADR-054-leseransicht-rueckmeldungen.md) | Leseransicht und Rückmeldungen von Lesern | akzeptiert, umgesetzt |
+| [ADR-055](ADR-055-kapitelvorlagen.md) | Kapitelvorlagen im Assistenten, Platzhalter-Prüfung | akzeptiert, umgesetzt |
+| [ADR-056](ADR-056-einfuehrung.md) | Einführung beim ersten Start | akzeptiert, umgesetzt |
+| [ADR-057](ADR-057-check-vor-freigabe.md) | Anleitungs-Check vor der Freigabe (optional als Bedingung) | akzeptiert, umgesetzt |

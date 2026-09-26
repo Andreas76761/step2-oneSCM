@@ -1207,5 +1207,44 @@
       "NFR-39",
       "NFR-40"
     ]
+  },
+  {
+    "id": "T-189",
+    "title": "Leser-Rückmeldungen: abgeben (eine je Person und Version), Aufgabe für die Redaktion, Übersicht, erledigen",
+    "file": "apps/server/test/stage19.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-41"
+    ]
+  },
+  {
+    "id": "T-190",
+    "title": "Kapitelvorlagen: je Aufgabentyp, Platzhalter „…“ werden im Anleitungs-Check gemeldet",
+    "file": "apps/server/test/stage19.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-42"
+    ]
+  },
+  {
+    "id": "T-191",
+    "title": "Anleitungs-Check als Freigabebedingung: Mindestwert je Projekt, Gate beim Einreichen und Freigeben",
+    "file": "apps/server/test/stage19.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-44"
+    ]
+  },
+  {
+    "id": "T-229",
+    "title": "Einführung, Leseransicht mit Schritten und Rückmeldung, Vorlagen im Assistenten, Anleitungs-Check vor der Freigabe (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-41",
+      "NFR-42",
+      "NFR-43",
+      "NFR-44"
+    ]
   }
 ]

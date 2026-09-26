@@ -1158,7 +1158,7 @@ test('[T-228] Startseite, Menü nach Ablauf, Kapitel-Assistent, Anleitungs-Check
   await expect(page.getByText(/Leserfreundlichkeit: 100 von 100/)).toBeVisible();
   await page.getByRole('link', { name: 'Anleitungs-Check ansehen' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Anleitungs-Check');
-  await expect(page.locator('.guide-icon.ok')).toHaveCount(10);
+  await expect(page.locator('.guide-icon.ok')).toHaveCount(11);
 
   // Anleitungs-Check: Schritte als Fließtext → per Klick nummerieren
   const chapters = await (await request.get('/api/v1/guidance', { headers: h })).json();
@@ -1178,7 +1178,7 @@ test('[T-228] Startseite, Menü nach Ablauf, Kapitel-Assistent, Anleitungs-Check
   // zwei Korrekturen am selben Absatz (nummerieren, Menüpfad fett) – „Alle“ übernimmt beide nacheinander
   await page.getByRole('button', { name: 'Alle Korrekturen übernehmen (2)' }).click();
   await expect(page.getByText('2 Korrekturen übernommen.')).toBeVisible();
-  await expect(page.locator('.guide-icon.ok')).toHaveCount(10);
+  await expect(page.locator('.guide-icon.ok')).toHaveCount(11);
   const after = await (await request.get(`/api/v1/chapter-versions/${mine.versionId}`, { headers: h })).json();
   expect(after.sections.find((s: any) => s.code === 'steps').blocks[0]).toMatchObject({ kind: 'list', text: '1. Öffnen Sie **Einkauf > Lieferungen**.\n2. Klicken Sie auf **Neu**.\n3. Wählen Sie den Lieferanten.' });
   // aus der Werkstatt erreichbar
@@ -1200,4 +1200,81 @@ test('[T-228] Startseite, Menü nach Ablauf, Kapitel-Assistent, Anleitungs-Check
   // aufräumen
   await request.put('/api/v1/style/libraries', { headers: h, data: { libraryIds: [] } });
   await request.put('/api/v1/style/rules', { headers: h, data: { phrases: [] } });
+});
+
+test('[T-229] Einführung, Leseransicht mit Schritten und Rückmeldung, Vorlagen im Assistenten, Anleitungs-Check vor der Freigabe', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+
+  // Einführung: über „Einführung“ starten, blättern, mit Esc schließen
+  await page.goto('/quellen');
+  await page.getByRole('button', { name: 'Einführung' }).click();
+  const tour = page.getByRole('dialog', { name: 'Was möchten Sie tun?' });
+  await expect(tour).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Start');
+  expect(await axe()).toEqual([]);
+  await tour.getByRole('button', { name: 'Weiter →' }).click();
+  await expect(page.getByRole('dialog', { name: 'Menü nach Arbeitsablauf' })).toBeVisible();
+  await expect(page.locator('.tour-target')).toHaveCount(1);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('onescm.tour.done'))).toBe('1');
+
+  // Kapitel-Assistent mit Vorlage: Felder vorbelegt, Platzhalter-Hinweis
+  await page.goto('/kapitel-assistent');
+  await page.getByRole('radio', { name: /Prüfen und genehmigen/ }).check();
+  await expect(page.getByLabel('Wozu dient die Anleitung?')).toHaveValue(/prüfen Sie …/);
+  await page.getByLabel('Name der Aufgabe').fill('E2E Rechnung prüfen');
+  await page.getByLabel('Wozu dient die Anleitung?').fill('Mit dieser Anleitung prüfen Sie eine Rechnung und genehmigen sie.');
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Weiter →' }).click();
+  await expect(page.getByLabel('Voraussetzung 1', { exact: true })).toHaveValue('Sie haben die Berechtigung „…“');
+  await expect(page.getByText(/Platzhalter „…“ – bitte durch konkrete Begriffe ersetzen/)).toBeVisible();
+
+  // Leseransicht: freigegebenes Kapitel über die API anlegen und freigeben
+  const created = await (await request.post('/api/v1/chapter-assistant', { headers: { 'X-User-Id': 'u-redaktion' }, data: {
+    title: 'E2E Lesen', purpose: 'Mit dieser Anleitung legen Sie eine Notiz an.', steps: ['Öffnen Sie **Notizen › Neu**', 'Klicken Sie auf **Speichern**'], result: 'Die Notiz ist gespeichert.', hints: ['Notizen sehen nur Sie'],
+  } })).json();
+  expect((await request.post(`/api/v1/chapter-versions/${created.versionId}/submit`, { headers: { 'X-User-Id': 'u-redaktion' }, data: {} })).ok()).toBe(true);
+  expect((await request.post(`/api/v1/chapter-versions/${created.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+  await page.goto('/lesen');
+  const toc = page.getByRole('navigation', { name: 'Inhaltsverzeichnis' });
+  await toc.getByRole('link', { name: 'E2E Lesen' }).click();
+  const article = page.getByRole('article', { name: 'E2E Lesen' });
+  await expect(article.getByRole('heading', { name: 'Schrittweise Durchführung' })).toBeVisible();
+  await article.getByRole('checkbox', { name: /Öffnen Sie Notizen › Neu/ }).check();
+  await expect(article.getByText('1 von 2 Schritten erledigt')).toBeVisible();
+  await expect(article.getByText('Tipp:')).toBeVisible();
+  expect(await axe()).toEqual([]);
+  // Rückmeldung als Leser
+  await page.evaluate(() => localStorage.setItem('onescm.user', 'u-leser'));
+  await page.reload();
+  const art2 = page.getByRole('article', { name: 'E2E Lesen' });
+  await art2.getByRole('button', { name: '👎 Nein' }).click();
+  await art2.getByLabel(/Was hat gefehlt/).fill('Wo finde ich Notizen anderer?');
+  await art2.getByRole('button', { name: 'Rückmeldung senden' }).click();
+  await expect(art2.getByRole('status')).toContainText('Danke für Ihre Rückmeldung');
+  await page.evaluate(() => localStorage.setItem('onescm.user', 'u-admin'));
+
+  // Redaktion: Rückmeldung im Anleitungs-Check, erledigen; Mindestwert für die Freigabe
+  await page.goto('/anleitungs-check');
+  await expect(page.getByRole('row', { name: /E2E Lesen/ })).toContainText('👎 1');
+  const fbCard = page.locator('.card', { has: page.getByRole('heading', { name: /Rückmeldungen von Leserinnen und Lesern/ }) });
+  await expect(fbCard).toContainText('Wo finde ich Notizen anderer?');
+  expect(await axe()).toEqual([]);
+  await fbCard.getByRole('button', { name: 'Rückmeldung zu E2E Lesen erledigt' }).click();
+  await expect(page.getByText('Als erledigt markiert.')).toBeVisible();
+  await page.getByLabel('Mindestwert für Einreichen und Freigabe').selectOption('90');
+  await expect(page.getByText('Freigabe ab 90 von 100.')).toBeVisible();
+  // Freigabe zeigt den Check; schwaches Kapitel liegt unter dem Mindestwert
+  const weak = await (await request.post('/api/v1/chapter-assistant', { headers: { 'X-User-Id': 'u-redaktion' }, data: { title: 'E2E Schwach', purpose: 'Zweck …', steps: ['Öffnen Sie …'] } })).json();
+  const gate = await (await request.get(`/api/v1/chapter-versions/${weak.versionId}/gate`, { headers: h })).json();
+  expect(gate.checks.find((c: any) => c.code === 'guidance_min_score').passed).toBe(false);
+  await page.goto('/freigabe');
+  await page.getByRole('row', { name: /E2E Schwach/ }).click();
+  await expect(page.getByRole('note')).toContainText('Unter dem Mindestwert');
+  expect(await axe()).toEqual([]);
+  await request.put('/api/v1/guidance/settings', { headers: h, data: { minScore: null } });
 });

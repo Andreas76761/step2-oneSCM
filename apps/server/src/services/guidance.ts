@@ -8,16 +8,9 @@ import { badRequest } from '../problem.js';
 import { getChapterVersion, insertBlock, normalizePositions } from './chapters.js';
 import { assertIdsInProject } from './projects.js';
 import { applyChapterTexts } from './style.js';
+import { knownAcronyms, SKIP_SECTIONS } from './guidanceBase.js';
 
-/** Der Abschnitt „Quellen- und Freigabestatus“ ist Verwaltungsinformation und kein Anleitungstext */
-const SKIP_SECTIONS = new Set(['status']);
 const SECTION_TITLE = new Map<string, string>(CHAPTER_SECTIONS.map((s) => [s.code, s.title]));
-
-async function knownAcronyms(ctx: Ctx) {
-  const abbr = (await ctx.db.all('SELECT abbreviation FROM abbreviations WHERE project_id = ?', ctx.projectId)).map((r) => String(r.abbreviation).trim().toUpperCase());
-  const terms = (await ctx.db.all("SELECT preferred FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId)).map((r) => String(r.preferred).trim());
-  return new Set([...abbr, ...terms.filter((t) => /^[\p{Lu}\d-]{2,8}$/u.test(t))]);
-}
 
 /** Anleitungs-Check einer Kapitelversion mit Korrekturvorschlägen (nur Entwürfe sind änderbar) */
 export async function chapterGuidance(ctx: Ctx, versionId: string) {

@@ -214,6 +214,7 @@ const OWNER_SQL: Record<string, string> = {
   outlineId: 'SELECT project_id FROM outlines WHERE id = ?',
   nodeId: 'SELECT o.project_id FROM outline_nodes n JOIN outlines o ON o.id = n.outline_id WHERE n.id = ?',
   abbreviationId: 'SELECT project_id FROM abbreviations WHERE id = ?',
+  feedbackId: 'SELECT project_id FROM chapter_feedback WHERE id = ?',
   faqId: 'SELECT project_id FROM faq_entries WHERE id = ?',
   webhookId: 'SELECT project_id FROM webhook_subscriptions WHERE id = ?',
   deliveryId: 'SELECT s.project_id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id WHERE d.id = ?',

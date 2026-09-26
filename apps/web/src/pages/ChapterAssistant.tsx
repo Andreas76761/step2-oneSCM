@@ -98,6 +98,22 @@ export function ChapterAssistantPage() {
   const [loadingSugg, setLoadingSugg] = useState(false);
   const [created, setCreated] = useState<any | null>(null);
   const [busy, setBusy] = useState(false);
+  // Kapitelvorlagen (ADR-055): füllen leere bzw. noch unveränderte Felder
+  const templates = useLoad<any[]>('/chapter-assistant/templates');
+  const [tplId, setTplId] = useState('');
+  const applyTemplate = (id: string) => {
+    const prev = templates.data?.find((t) => t.id === tplId);
+    const t = templates.data?.find((x) => x.id === id);
+    const same = (lines: Line[], src?: string[]) => !lines.length || (!!src && lines.map((l) => l.text).join('\n') === src.join('\n'));
+    const lines = (src: string[]) => src.map((text) => ({ text }));
+    setTplId(id);
+    if (!purpose.trim() || purpose === prev?.purpose) setPurpose(t?.purpose ?? '');
+    if (same(prerequisites, prev?.prerequisites)) setPrerequisites(t ? lines(t.prerequisites) : []);
+    if (same(steps, prev?.steps)) setSteps(t ? lines(t.steps) : []);
+    if (!result.trim() || result === prev?.result) setResult(t?.result ?? '');
+    if (same(hints, prev?.hints)) setHints(t ? lines(t.hints) : []);
+  };
+  const placeholderCount = [purpose, result, ...prerequisites.map((l) => l.text), ...steps.map((l) => l.text), ...hints.map((l) => l.text)].filter((t) => /…|\.\.\./.test(t)).length;
 
   const loadSuggestions = async () => {
     setLoadingSugg(true);
@@ -140,7 +156,7 @@ export function ChapterAssistantPage() {
           <div className="row-actions">
             <Link className="btn primary" to={`/werkstatt/${created.chapterId}`}>In der Werkstatt weiterbearbeiten</Link>
             <Link className="btn" to={`/anleitungs-check/${created.versionId}`}>Anleitungs-Check ansehen</Link>
-            <button className="btn" onClick={() => { setCreated(null); setStep(0); setTitle(''); setPurpose(''); setPrerequisites([]); setSteps([]); setResult(''); setHints([]); setSugg(null); }}>Weiteres Kapitel schreiben</button>
+            <button className="btn" onClick={() => { setCreated(null); setStep(0); setTitle(''); setPurpose(''); setPrerequisites([]); setSteps([]); setResult(''); setHints([]); setSugg(null); setTplId(''); }}>Weiteres Kapitel schreiben</button>
           </div>
         </Card>
       </Page>
@@ -162,8 +178,18 @@ export function ChapterAssistantPage() {
           <p className="muted">{STEPS[step].help}</p>
           {step === 0 && (
             <>
+              <fieldset className="tpl-choice">
+                <legend>Vorlage (optional) – bewährter Aufbau für typische Aufgaben</legend>
+                <label className={`tpl-option${tplId === '' ? ' selected' : ''}`}><input type="radio" name="tpl" checked={tplId === ''} onChange={() => applyTemplate('')} /> <span><strong>Ohne Vorlage</strong><span className="small muted">Alles selbst schreiben</span></span></label>
+                {(templates.data ?? []).map((t) => (
+                  <label key={t.id} className={`tpl-option${tplId === t.id ? ' selected' : ''}`}>
+                    <input type="radio" name="tpl" checked={tplId === t.id} onChange={() => applyTemplate(t.id)} /> <span><strong>{t.name}</strong><span className="small muted">{t.description}</span></span>
+                  </label>
+                ))}
+              </fieldset>
+              {tplId && <p className="small">Die Vorlage füllt die Felder vor. Ersetzen Sie jedes „…“ durch die Begriffe Ihrer Aufgabe.</p>}
               <label className="block">Name der Aufgabe (wird die Kapitelüberschrift)
-                <input value={title} maxLength={160} placeholder="z. B. Wareneingang buchen" onChange={(e) => { setTitle(e.target.value); setSugg(null); }} />
+                <input value={title} maxLength={160} placeholder={templates.data?.find((t) => t.id === tplId)?.titleHint ? `z. B. ${templates.data.find((t) => t.id === tplId).titleHint.replace('…', 'Vertrag')}` : 'z. B. Wareneingang buchen'} onChange={(e) => { setTitle(e.target.value); setSugg(null); }} />
               </label>
               <label className="block">Wozu dient die Anleitung?
                 <textarea rows={3} value={purpose} placeholder="Mit dieser Anleitung buchen Sie eine Lieferung in den Bestand. Sie brauchen sie, sobald Ware eintrifft." onChange={(e) => setPurpose(e.target.value)} />
@@ -192,6 +218,9 @@ export function ChapterAssistantPage() {
             {step > 0 && <button className="btn" onClick={() => setStep(step - 1)}>← Zurück</button>}
             {step < STEPS.length - 1 && <button className="btn primary" disabled={!!missing || loadingSugg} onClick={() => void next()}>{loadingSugg ? 'Suche Vorschläge …' : 'Weiter →'}</button>}
             {step === STEPS.length - 1 && <button className="btn primary" disabled={busy || !canEdit} onClick={() => void create()}>Kapitel anlegen</button>}
+          </div>
+          <div>
+            {placeholderCount > 0 && step > 0 && <p className="alert small" role="status">Noch {placeholderCount} {placeholderCount === 1 ? 'Eintrag enthält' : 'Einträge enthalten'} Platzhalter „…“ – bitte durch konkrete Begriffe ersetzen.</p>}
           </div>
         </Card>
         <div>
