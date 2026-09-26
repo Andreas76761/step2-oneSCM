@@ -92,7 +92,7 @@ describe('Etappe 18', () => {
       const ch = (await call('GET', '/chapters')).json.find((c: any) => c.title === '1. Auftrag anlegen');
       const v = (await call('POST', `/chapters/${ch.id}/generate`, {}, 'u-redaktion')).json;
       const g = (await call('GET', `/guidance/chapter-versions/${v.id}`, undefined, 'u-leser')).json;
-      expect(g).toMatchObject({ editable: true, total: 10 });
+      expect(g).toMatchObject({ editable: true, total: 11 });
       const numbered = g.checks.find((c: any) => c.code === 'numbered');
       expect(numbered.status).toBe('warning');
       expect(numbered.items[0].section).toBeTruthy();
@@ -109,7 +109,7 @@ describe('Etappe 18', () => {
       expect((await call('POST', `/guidance/chapter-versions/${v.id}/apply`, { fixes: [fix] }, 'u-redaktion')).json.skipped[0].reason).toContain('zwischenzeitlich');
       // Übersicht
       const sum = (await call('GET', '/guidance')).json;
-      expect(sum.chapters.find((c: any) => c.chapterId === ch.id)).toMatchObject({ versionId: v.id, total: 10 });
+      expect(sum.chapters.find((c: any) => c.chapterId === ch.id)).toMatchObject({ versionId: v.id, total: 11 });
       expect(sum.average).toBeGreaterThan(0);
       expect((await call('GET', '/guidance/chapter-versions/cv_fremd')).status).toBe(404);
     } finally {

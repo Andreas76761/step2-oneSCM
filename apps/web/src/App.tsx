@@ -37,6 +37,8 @@ import { AbbreviationsPage, FaqPage, GlossaryPage, ImageIndexPage, PlanningPage 
 import { StartPage } from './pages/Start';
 import { GuidancePage } from './pages/Guidance';
 import { ChapterAssistantPage } from './pages/ChapterAssistant';
+import { ReaderPage } from './pages/Reader';
+import { Tour, tourDone } from './components/Tour';
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
 type NavItem = { to: string; label: string; icon: string };
@@ -62,6 +64,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/freigabe', label: 'Freigabe', icon: '✅' },
   ] },
   { id: 'veroeffentlichen', label: '4 Veröffentlichen', items: [
+    { to: '/lesen', label: 'Leseransicht', icon: '📖' },
     { to: '/export', label: 'Export', icon: '📤' },
     { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
     { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
@@ -186,6 +189,11 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
+  // Einführung (ADR-056): beim ersten Besuch der Startseite; automatisierte Browser (Tests) starten sie nicht selbst
+  const [tourOpen, setTourOpen] = useState(false);
+  useEffect(() => {
+    if (location.pathname === '/' && !tourDone() && !navigator.webdriver) setTourOpen(true);
+  }, [location.pathname]);
   const inMore = NAV_MORE.some((n) => location.pathname === n.to || location.pathname.startsWith(`${n.to}/`));
   const [moreOpen, setMoreOpen] = useState(inMore);
   useEffect(() => {
@@ -336,6 +344,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
                 <button className="btn small" onClick={() => void logout()}>Abmelden</button>
               </>
             )}
+            <button id="tour-restart" type="button" className="btn small" onClick={() => { navigate('/'); setTourOpen(true); }}>Einführung</button>
             <label htmlFor="theme-select">Darstellung</label>
             <select id="theme-select" value={theme} onChange={(e) => changeTheme(e.target.value as Theme)}>
               <option value="system">wie System</option>
@@ -352,6 +361,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/anleitungs-check" element={<GuidancePage />} />
             <Route path="/anleitungs-check/:versionId" element={<GuidancePage />} />
             <Route path="/kapitel-assistent" element={<ChapterAssistantPage />} />
+            <Route path="/lesen" element={<ReaderPage />} />
+            <Route path="/lesen/:chapterId" element={<ReaderPage />} />
             <Route path="/quellen" element={<SourcesPage />} />
             <Route path="/cluster" element={<ClustersPage />} />
             <Route path="/widersprueche" element={<ContradictionsPage />} />
@@ -396,6 +407,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
+        {tourOpen && <Tour onClose={() => setTourOpen(false)} />}
         {toast && (
           <div className={`toast ${toast.kind}`} role="status" aria-live="polite">
             {toast.msg}

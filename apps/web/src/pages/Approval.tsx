@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { put } from '../api';
+import { GuidanceSummaryLine } from './Guidance';
 import { Card, Decision, Empty, ErrorBox, Page, Status, errorText, useApp, useLoad, activatable } from '../components/ui';
 import { ApprovalPanel } from './Workshop';
 
@@ -56,6 +57,7 @@ export function ApprovalPage() {
           )}
         </Card>
         <Card title={current ? `${current.title} – Version ${current.versions[0].versionNo}` : 'Freigabe'}>
+          {version.data && !current?.outlineFamilyId && <GuidanceSummaryLine versionId={version.data.id} />}
           {version.data ? <ApprovalPanel version={version.data} onApproved={() => (version.reload(), chapters.reload(), pending.reload())} /> : <Empty>Kapitel auswählen.</Empty>}
         </Card>
       </div>

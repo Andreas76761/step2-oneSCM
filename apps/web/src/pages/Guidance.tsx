@@ -1,7 +1,8 @@
 // Anleitungs-Check (ADR-051): Ist ein Kapitel leicht zu befolgen? Checkliste je Kapitel mit Korrekturen per Klick.
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { post } from '../api';
+import { post, put } from '../api';
+import { FeedbackCard } from './Reader';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 const STATUS_ICON: Record<string, { icon: string; label: string }> = {
@@ -155,6 +156,8 @@ export function GuidancePage() {
   const me = useLoad<any>('/me');
   const canEdit = !!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin');
   const list = useLoad<any>('/guidance', [versionId]);
+  const feedback = useLoad<any[]>(versionId ? null : '/feedback/summary', [versionId]);
+  const canAdmin = !!me.data?.permissions.includes('admin');
   const current = list.data?.chapters.find((c: any) => c.versionId === versionId);
   if (versionId) {
     return (
@@ -165,6 +168,7 @@ export function GuidancePage() {
     );
   }
   const chapters: any[] = list.data?.chapters ?? [];
+  const fbByChapter = new Map((feedback.data ?? []).map((f) => [f.chapterId, f]));
   return (
     <Page title="Anleitungs-Check" subtitle="Sind die Kapitel leicht zu befolgen? Zweck, Voraussetzungen, nummerierte Schritte, Ergebnis – mit Korrekturen per Klick">
       <ErrorBox error={list.error} />
@@ -173,13 +177,14 @@ export function GuidancePage() {
         <Card title={`Kapitel (${chapters.length})`} actions={list.data.average !== null && <span className="small">Durchschnitt: <strong>{list.data.average}</strong> · {scoreLabel(list.data.average)}</span>}>
           <div className="table-wrap" role="region" aria-label="Kapitel im Anleitungs-Check" tabIndex={0}>
             <table className="table">
-              <thead><tr><th>Kapitel</th><th>Wert</th><th>Offene Punkte</th><th /></tr></thead>
+              <thead><tr><th>Kapitel</th><th>Wert</th><th>Offene Punkte</th><th>Leser</th><th /></tr></thead>
               <tbody>
                 {chapters.map((c) => (
                   <tr key={c.chapterId}>
                     <td>{c.title}<div className="small muted">Version {c.versionNo}</div></td>
                     <td><strong>{c.score}</strong> <span className="small muted">({c.passed}/{c.total})</span></td>
                     <td>{c.open.length ? c.open.map((o: any) => <span key={o.code} className={`tag guide-tag ${o.status}`}>{o.status === 'warning' ? '! ' : 'i '}{o.label}</span>) : <span className="small">✓ alles erfüllt</span>}</td>
+                    <td>{fbByChapter.get(c.chapterId) ? (() => { const f = fbByChapter.get(c.chapterId)!; return <span className="small" aria-label={`${f.helpful} hilfreich, ${f.notHelpful} nicht hilfreich, ${f.open} offen`}>👍 {f.helpful} · 👎 {f.notHelpful}{f.open ? ` · ${f.open} offen` : ''}</span>; })() : <span className="small muted">–</span>}</td>
                     <td><Link className="btn small" to={`/anleitungs-check/${c.versionId}`} aria-label={`${c.title} prüfen`}>Prüfen</Link></td>
                   </tr>
                 ))}
@@ -188,6 +193,57 @@ export function GuidancePage() {
           </div>
         </Card>
       )}
+      <FeedbackCard canEdit={canEdit} />
+      <GateSettings canAdmin={canAdmin} />
     </Page>
+  );
+}
+
+/** Mindestwert als Bedingung für Einreichen und Freigabe (ADR-057) */
+function GateSettings({ canAdmin }: { canAdmin: boolean }) {
+  const { notify } = useApp();
+  const s = useLoad<any>('/guidance/settings');
+  if (!s.data) return <ErrorBox error={s.error} />;
+  const value = s.data.minScore === null ? '' : String(s.data.minScore);
+  return (
+    <Card title="Anleitungs-Check vor der Freigabe">
+      <p className="small">Der Wert wird bei jeder Freigabe angezeigt. Mit einem Mindestwert lassen sich Kapitel erst einreichen und freigeben, wenn sie ihn erreichen – als zusätzliche Bedingung im Qualitätsgate.</p>
+      <label className="inline">Mindestwert für Einreichen und Freigabe
+        <select disabled={!canAdmin} value={value} onChange={async (e) => {
+          // Wert vor dem Warten lesen: das gesteuerte Auswahlfeld springt bis zum Neuladen zurück
+          const v = e.target.value;
+          try {
+            await put('/guidance/settings', { minScore: v ? Number(v) : null });
+            notify(v ? `Freigabe ab ${v} von 100.` : 'Kein Mindestwert – der Check wird nur angezeigt.');
+            s.reload();
+          } catch (err) {
+            notify(errorText(err), 'error');
+          }
+        }}>
+          <option value="">keiner (nur anzeigen)</option>
+          {[60, 70, 80, 90, 100].map((n) => <option key={n} value={n}>{n} von 100</option>)}
+          {value && ![60, 70, 80, 90, 100].includes(Number(value)) && <option value={value}>{value} von 100</option>}
+        </select>
+      </label>
+      {!canAdmin && <p className="small muted">Nur die Administration kann den Mindestwert ändern.</p>}
+    </Card>
+  );
+}
+
+/** Kurzfassung für die Freigabe: Wert, offene Pflichtpunkte, Mindestwert */
+export function GuidanceSummaryLine({ versionId }: { versionId: string }) {
+  const g = useLoad<any>(`/guidance/chapter-versions/${versionId}`, [versionId]);
+  const s = useLoad<any>('/guidance/settings');
+  if (!g.data) return null;
+  const warnings = g.data.checks.filter((c: any) => c.status === 'warning');
+  const min = s.data?.minScore ?? null;
+  const below = min !== null && g.data.score < min;
+  return (
+    <div className={`guide-summary${below ? ' below' : ''}`} role="note">
+      <strong>Anleitungs-Check: {g.data.score} von 100</strong> <span className="small">({scoreLabel(g.data.score)}{min !== null ? ` · Freigabe ab ${min}` : ''})</span>
+      {warnings.length > 0 && <div className="small">! {warnings.map((c: any) => c.label).join(' · ')}</div>}
+      {below && <div className="small"><strong>Unter dem Mindestwert – Einreichen und Freigabe sind gesperrt.</strong></div>}
+      <Link className="small" to={`/anleitungs-check/${versionId}`}>Checkliste öffnen →</Link>
+    </div>
   );
 }

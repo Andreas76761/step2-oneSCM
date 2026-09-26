@@ -6,7 +6,7 @@ import { segmentSentences } from './style.js';
 export interface GuidanceBlock { id: string; section: string; kind: string; text: string; versionNo: number; locked?: boolean }
 export interface GuidanceFix { blockId: string; versionNo: number; text: string; kind?: string; label: string }
 export interface GuidanceItem { blockId: string | null; excerpt: string; fix?: GuidanceFix }
-export type GuidanceCode = 'purpose' | 'prerequisites' | 'steps' | 'numbered' | 'one_action' | 'menu_bold' | 'result' | 'step_count' | 'abbreviations' | 'long_paragraph';
+export type GuidanceCode = 'purpose' | 'prerequisites' | 'steps' | 'numbered' | 'one_action' | 'menu_bold' | 'result' | 'step_count' | 'abbreviations' | 'long_paragraph' | 'placeholders';
 export interface GuidanceCheck {
   code: GuidanceCode;
   label: string;
@@ -29,6 +29,7 @@ export const GUIDANCE_LABEL: Record<GuidanceCode, string> = {
   step_count: 'Überschaubare Schrittzahl',
   abbreviations: 'Abkürzungen erklärt',
   long_paragraph: 'Kurze Absätze',
+  placeholders: 'Keine Platzhalter',
 };
 
 /** Kurzbezeichnung eines offenen Punkts (Übersichten) */
@@ -43,6 +44,7 @@ export const GUIDANCE_OPEN_LABEL: Record<GuidanceCode, string> = {
   step_count: 'Sehr viele Schritte',
   abbreviations: 'Abkürzungen unerklärt',
   long_paragraph: 'Lange Absätze',
+  placeholders: 'Platzhalter „…“ offen',
 };
 
 const MAX_STEPS = 10;
@@ -264,6 +266,12 @@ export function analyzeGuidance(blocks: GuidanceBlock[], opts: GuidanceOptions =
   add('long_paragraph', 'info', long.length > 0,
     ['Die Absätze sind kurz.', `${long.length} ${long.length === 1 ? 'Absatz ist' : 'Absätze sind'} länger als ${MAX_PARAGRAPH_WORDS} Wörter.`],
     'Kurze Absätze mit je einem Gedanken lesen sich am Bildschirm leichter.', long);
+
+  // Platzhalter aus Kapitelvorlagen (ADR-055): „…“ bzw. „...“ ist noch auszufüllen
+  const placeholders = content.filter((b) => b.kind !== 'code' && /…|\.\.\./.test(b.text.replace(/\]\([^)]*\)/g, ''))).map((b) => ({ blockId: b.id, excerpt: excerpt(b.text.split('\n').find((l) => /…|\.\.\./.test(l)) ?? b.text, 70) }));
+  add('placeholders', 'warning', placeholders.length > 0,
+    ['Alle Platzhalter sind ausgefüllt.', `${placeholders.length} ${placeholders.length === 1 ? 'Absatz enthält' : 'Absätze enthalten'} noch Platzhalter „…“.`],
+    'Ersetzen Sie „…“ durch die konkreten Menüpunkte, Felder und Begriffe Ihrer Aufgabe.', placeholders);
 
   const penalty = checks.reduce((n, c) => n + (c.status === 'warning' ? 15 : c.status === 'info' ? 5 : 0), 0);
   const score = Math.max(0, 100 - penalty);

@@ -16,6 +16,8 @@ export function StartPage() {
   const dash = useLoad<any>('/dashboard');
   const guidance = useLoad<any>('/guidance');
   const releases = useLoad<any[]>('/releases');
+  const feedback = useLoad<any[]>('/feedback/summary');
+  const openFeedback = (feedback.data ?? []).reduce((n, f) => n + f.open, 0);
   const d = dash.data;
   const g = guidance.data;
   const versions = (status?: string) => (d?.versions ?? []).filter((v: any) => !status || v.status === status).reduce((n: number, v: any) => n + Number(v.n), 0);
@@ -70,7 +72,8 @@ export function StartPage() {
               ))}
             </ul>
           )}
-          <p className="small"><Link to="/anleitungs-check">Alle Kapitel im Anleitungs-Check →</Link></p>
+          {openFeedback > 0 && <p className="small">💬 <Link to="/anleitungs-check"><strong>{openFeedback} {openFeedback === 1 ? 'Rückmeldung' : 'Rückmeldungen'} von Lesern</strong></Link> warten auf die Redaktion.</p>}
+          <p className="small"><Link to="/anleitungs-check">Alle Kapitel im Anleitungs-Check →</Link> · <Link to="/lesen">Handbuch in der Leseransicht →</Link></p>
         </Card>
       </div>
       <p className="small muted">Kennzahlen, Rollen- und Spartenabdeckung finden Sie im <Link to="/dashboard">Dashboard</Link> unter „Weitere“.</p>
