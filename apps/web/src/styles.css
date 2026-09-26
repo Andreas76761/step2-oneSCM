@@ -632,6 +632,6 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .own-templates li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
 .template-editor { display: grid; gap: 10px; }
 .template-editor label { display: grid; gap: 4px; font-weight: 600; }
-.template-editor label .small { font-weight: 400; }
+.template-editor label .small, .template-editor input, .template-editor textarea { font-weight: 400; }
 .digest-preview { border-left: 4px solid var(--link); padding: 4px 14px; margin-top: 12px; }
 .digest-preview h3 { margin: 4px 0 8px; font-size: 16px; }
