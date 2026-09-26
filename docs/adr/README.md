@@ -70,3 +70,5 @@
 | [ADR-066](ADR-066-suche-glossar-lesen.md) | Suche und Glossar in der Leseransicht | akzeptiert, umgesetzt |
 | [ADR-067](ADR-067-vorlagen-teilen.md) | Kapitelvorlagen duplizieren, exportieren und importieren | akzeptiert, umgesetzt |
 | [ADR-068](ADR-068-schnelles-laden.md) | Schnelles Laden: Code-Splitting, vorkomprimierte Dateien, Caching | akzeptiert, umgesetzt |
+| [ADR-069](ADR-069-siehe-auch-faq.md) | „Siehe auch“ und passende häufige Fragen | akzeptiert, umgesetzt |
+| [ADR-070](ADR-070-lesezeichen-verlauf.md) | Lesezeichen und Verlauf in der Leseransicht | akzeptiert, umgesetzt |

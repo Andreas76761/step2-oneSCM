@@ -1351,5 +1351,33 @@
     "requirements": [
       "NFR-55"
     ]
+  },
+  {
+    "id": "T-200",
+    "title": "Verwandte Kapitel: ähnliche automatisch, manuelle zuerst, ausblendbar; passende FAQ; Pflege nur mit Bearbeitungsrecht",
+    "file": "apps/server/test/stage23.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-56"
+    ]
+  },
+  {
+    "id": "T-201",
+    "title": "Lesezeichen und Verlauf je Person: merken, zuletzt gelesen, „geändert“ seit dem Lesen und „neu“ seit dem ersten Lesen",
+    "file": "apps/server/test/stage23.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-57"
+    ]
+  },
+  {
+    "id": "T-233",
+    "title": "Siehe auch und häufige Fragen unter dem Kapitel, Verweise pflegen, FAQ-Seite; Lesezeichen, zuletzt gelesen, neue und geänderte Kapitel (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-56",
+      "NFR-57"
+    ]
   }
 ]

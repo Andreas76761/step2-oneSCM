@@ -46,6 +46,7 @@ const PlanningPage = lazy(() => import('./pages/MasterData').then((m) => ({ defa
 const GuidancePage = lazy(() => import('./pages/Guidance').then((m) => ({ default: m.GuidancePage })));
 const ChapterAssistantPage = lazy(() => import('./pages/ChapterAssistant').then((m) => ({ default: m.ChapterAssistantPage })));
 const PrintPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.PrintPage })));
+const ReaderFaqPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderFaqPage })));
 const ReaderPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderPage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
@@ -374,6 +375,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/kapitel-assistent" element={<ChapterAssistantPage />} />
             <Route path="/lesen" element={<ReaderPage />} />
             <Route path="/lesen/druck" element={<PrintPage />} />
+            <Route path="/lesen/faq" element={<ReaderFaqPage />} />
             <Route path="/rueckmeldungen" element={<FeedbackPage />} />
             <Route path="/lesen/:chapterId" element={<ReaderPage />} />
             <Route path="/quellen" element={<SourcesPage />} />

@@ -7,7 +7,7 @@ import { applyGuidanceFixes, assistantSuggestions, chapterGuidance, createChapte
 import { effectivePhrases, projectLibraries, setProjectLibraries } from '../services/style.js';
 import { feedbackInsights, feedbackSummary, feedbackToTask, listFeedback, submitFeedback, updateFeedback } from '../services/feedback.js';
 import { createChapterTemplate, deleteChapterTemplate, duplicateChapterTemplate, exportChapterTemplates, importChapterTemplates, listChapterTemplates, updateChapterTemplate } from '../services/chapterTemplates.js';
-import { readerGlossary, readerSearch } from '../services/reader.js';
+import { readerGlossary, readerMe, readerRelated, readerSearch, recordVisit, setBookmark, setChapterLinks } from '../services/reader.js';
 import { getGuidanceSettings, updateGuidanceSettings } from '../services/guidanceBase.js';
 import { buildDigest, getDigestSettings, sendDigests, updateDigestSettings } from '../services/digest.js';
 import { badRequest } from '../problem.js';
@@ -95,6 +95,13 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   // Leseransicht: Suche und Glossar (ADR-066)
   app.get<{ Querystring: { q?: string; drafts?: string } }>('/reader/search', async (req) => (userOf(req.ctx, req), readerSearch(req.ctx, req.query.q, req.query.drafts === 'true')));
   app.get('/reader/glossary', async (req) => (userOf(req.ctx, req), readerGlossary(req.ctx)));
+  // Verwandte Kapitel und FAQ (ADR-069), Lesezeichen und Verlauf (ADR-070)
+  app.get<{ Params: { chapterId: string }; Querystring: { drafts?: string } }>('/reader/related/:chapterId', async (req) => (userOf(req.ctx, req), readerRelated(req.ctx, req.params.chapterId, req.query.drafts === 'true')));
+  app.put<{ Params: { chapterId: string }; Body: any }>('/chapters/:chapterId/related', async (req) => setChapterLinks(req.ctx, req.params.chapterId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.get('/reader/me', async (req) => readerMe(req.ctx, userOf(req.ctx, req).id));
+  app.post<{ Body: any }>('/reader/visits', async (req) => recordVisit(req.ctx, userOf(req.ctx, req).id, req.body ?? {}));
+  app.put<{ Params: { chapterId: string } }>('/reader/bookmarks/:chapterId', async (req) => setBookmark(req.ctx, userOf(req.ctx, req).id, req.params.chapterId, true));
+  app.delete<{ Params: { chapterId: string } }>('/reader/bookmarks/:chapterId', async (req) => setBookmark(req.ctx, userOf(req.ctx, req).id, req.params.chapterId, false));
   app.post<{ Body: any }>('/chapter-templates', async (req, reply) => reply.code(201).send(await createChapterTemplate(req.ctx, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit'))));
   app.patch<{ Params: { chapterTemplateId: string }; Body: any }>('/chapter-templates/:chapterTemplateId', async (req) =>
     updateChapterTemplate(req.ctx, req.params.chapterTemplateId, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit')));

@@ -182,6 +182,102 @@ function Marked({ text, words }: { text: string; words: string[] }) {
   return <>{text.split(re).map((p, i) => (i % 2 ? <mark key={i}>{p}</mark> : p))}</>;
 }
 
+/** „Siehe auch“ und passende häufige Fragen unter einem Kapitel (ADR-069); Redaktion pflegt Verweise direkt hier */
+function Related({ chapterId, drafts, canEdit, chapters, withQ }: { chapterId: string; drafts: boolean; canEdit: boolean; chapters: { id: string; title: string }[]; withQ: (id: string) => string }) {
+  const { notify } = useApp();
+  const rel = useLoad<any>(`/reader/related/${chapterId}${drafts ? '?drafts=true' : ''}`, [chapterId, drafts]);
+  const [editing, setEditing] = useState(false);
+  const [add, setAdd] = useState('');
+  const d = rel.data;
+  if (!d) return null;
+  const links = [...d.manual, ...d.automatic];
+  const save = async (manual: string[], hidden: string[], msg: string) => {
+    try {
+      await api('PUT', `/chapters/${chapterId}/related`, { manual, hidden });
+      notify(msg);
+      rel.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const manualIds = d.manual.map((m: any) => m.chapterId);
+  const hiddenIds = d.hidden.map((h: any) => h.chapterId);
+  if (!links.length && !d.faq.length && !canEdit) return null;
+  return (
+    <section className="reader-related no-print" aria-labelledby={`rel-${chapterId}`}>
+      {(links.length > 0 || canEdit) && (
+        <>
+          <h2 id={`rel-${chapterId}`}>Siehe auch</h2>
+          {links.length ? (
+            <ul className="related-list">
+              {links.map((l: any) => (
+                <li key={l.chapterId}>
+                  <Link to={withQ(l.chapterId)}>{l.title}</Link>
+                  {editing && manualIds.includes(l.chapterId) && <button type="button" className="btn small ghost" aria-label={`Verweis auf „${l.title}“ entfernen`} onClick={() => save(manualIds.filter((x: string) => x !== l.chapterId), hiddenIds, 'Verweis entfernt.')}>✕</button>}
+                  {editing && !manualIds.includes(l.chapterId) && <button type="button" className="btn small ghost" aria-label={`Vorschlag „${l.title}“ ausblenden`} onClick={() => save(manualIds, [...hiddenIds, l.chapterId], 'Vorschlag ausgeblendet.')}>Ausblenden</button>}
+                </li>
+              ))}
+            </ul>
+          ) : <p className="small muted">Noch keine verwandten Kapitel.</p>}
+          {canEdit && !editing && <button type="button" className="btn small" onClick={() => setEditing(true)}>Verweise bearbeiten</button>}
+          {editing && (
+            <div className="related-edit">
+              <label className="inline">Kapitel verweisen
+                <select value={add} onChange={(e) => setAdd(e.target.value)}>
+                  <option value="">– wählen –</option>
+                  {chapters.filter((c) => c.id !== chapterId && !manualIds.includes(c.id)).map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+              </label>
+              <button type="button" className="btn small" disabled={!add} onClick={async () => { const id = add; setAdd(''); await save([...manualIds, id], hiddenIds.filter((x: string) => x !== id), 'Verweis hinzugefügt.'); }}>Hinzufügen</button>
+              {d.hidden.length > 0 && (
+                <p className="small">Ausgeblendet: {d.hidden.map((h: any) => (
+                  <button key={h.chapterId} type="button" className="btn small ghost" aria-label={`„${h.title}“ wieder vorschlagen`} onClick={() => save(manualIds, hiddenIds.filter((x: string) => x !== h.chapterId), 'Vorschlag wieder sichtbar.')}>{h.title} ↺</button>
+                ))}</p>
+              )}
+              <button type="button" className="btn small primary" onClick={() => setEditing(false)}>Fertig</button>
+            </div>
+          )}
+        </>
+      )}
+      {d.faq.length > 0 && (
+        <>
+          <h2>Häufige Fragen dazu</h2>
+          {d.faq.map((f: any) => (
+            <details key={f.id} className="faq-item"><summary>{f.question}</summary><Md text={f.answer} /></details>
+          ))}
+          <p className="small"><Link to="/lesen/faq">Alle häufigen Fragen</Link></p>
+        </>
+      )}
+    </section>
+  );
+}
+
+/** Häufige Fragen für Leser (ADR-069): veröffentlichte FAQ mit Filter */
+export function ReaderFaqPage() {
+  const faq = useLoad<any[]>('/faq?status=published&language=de');
+  const glossary = useReaderGlossary();
+  const [filter, setFilter] = useState('');
+  const q = filter.trim().toLocaleLowerCase('de');
+  const items = (faq.data ?? []).filter((f) => !q || `${f.question} ${f.answer}`.toLocaleLowerCase('de').includes(q));
+  return (
+    <GlossaryProvider entries={glossary.data}>
+      <Page title="Häufige Fragen" subtitle="Kurze Antworten auf das, was Leserinnen und Leser oft wissen möchten"
+        actions={<Link className="btn no-print" to="/lesen">← Leseransicht</Link>}>
+        <ErrorBox error={faq.error} />
+        <div className="filters">
+          <label className="inline">Fragen filtern <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="z. B. Passwort" /></label>
+          <span className="small muted" aria-live="polite">{faq.data ? `${items.length} von ${faq.data.length}` : ''}</span>
+        </div>
+        {faq.data && !faq.data.length ? <Empty>Noch keine veröffentlichten Fragen.</Empty> : (
+          <div className="card faq-list">
+            {items.map((f) => <details key={f.id} className="faq-item"><summary>{f.question}</summary><Md text={f.answer} /></details>)}
+          </div>
+        )}
+      </Page>
+    </GlossaryProvider>
+  );
+}
+
 export function ReaderPage() {
   const { chapterId } = useParams();
   const navigate = useNavigate();
@@ -219,6 +315,22 @@ export function ReaderPage() {
   }).filter((x): x is NonNullable<typeof x> => !!x), [chapters.data, drafts]);
   const current = list.find((c) => c.id === chapterId) ?? null;
   const version = useLoad<any>(current ? `/chapter-versions/${current.version.id}` : null, [current?.version.id]);
+  // Lesezeichen, Verlauf, Änderungen seit dem letzten Besuch (ADR-070)
+  const mine = useLoad<any>('/reader/me');
+  const me = useLoad<any>('/me');
+  const canEdit = !!me.data?.permissions?.some((p: string) => p === 'edit' || p === 'admin');
+  const updates: Record<string, 'changed' | 'new'> = mine.data?.updates ?? {};
+  const [initialUpdates, setInitialUpdates] = useState<number | null>(null);
+  useEffect(() => {
+    if (mine.data && initialUpdates === null) setInitialUpdates(Object.keys(mine.data.updates).length);
+  }, [mine.data, initialUpdates]);
+  useEffect(() => {
+    // Besuch merken, sobald das Kapitel angezeigt wird; danach Hinweise „neu/geändert“ aktualisieren
+    if (!current || !version.data) return;
+    post('/reader/visits', { chapterId: current.id, versionId: version.data.id }).then(() => mine.reload(), () => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version.data?.id]);
+  const bookmarked = !!mine.data?.bookmarks.some((b: any) => b.chapterId === current?.id);
   const idx = current ? list.indexOf(current) : -1;
   // Hervorhebung: Suchwörter aus dem Link (?q=) – bleiben beim Blättern erhalten, bis sie entfernt werden
   const marked = useMemo(() => [...new Set((params.get('q') ?? '').toLocaleLowerCase('de').split(/\s+/).filter((w) => w.length >= 2))], [params]);
@@ -260,6 +372,18 @@ export function ReaderPage() {
             </ol>
           ) : (
             <>
+              {mine.data?.bookmarks.length > 0 && (
+                <>
+                  <h2 className="toc-sub">★ Lesezeichen</h2>
+                  <ul className="plain">{mine.data.bookmarks.map((b: any) => <li key={b.chapterId}><Link to={withQ(b.chapterId)}>{b.title}</Link></li>)}</ul>
+                </>
+              )}
+              {mine.data?.recent.length > 0 && (
+                <>
+                  <h2 className="toc-sub">Zuletzt gelesen</h2>
+                  <ul className="plain">{mine.data.recent.slice(0, 3).map((r: any) => <li key={r.chapterId}><Link to={withQ(r.chapterId)}>{r.title}</Link></li>)}</ul>
+                </>
+              )}
               <h2>Inhalt</h2>
               {chapters.data && !list.length && <p className="small muted">Noch keine freigegebenen Kapitel. {drafts ? '' : 'Blenden Sie Entwürfe ein, um sie vorab zu lesen.'}</p>}
               <ol className="plain">
@@ -267,9 +391,11 @@ export function ReaderPage() {
                   <li key={c.id}>
                     <Link to={withQ(c.id)} aria-current={c.id === chapterId ? 'page' : undefined} className={c.id === chapterId ? 'active' : ''}>{c.title}</Link>
                     {c.draft && <span className="tag small">Entwurf</span>}
+                    {updates[c.id] && <span className={`tag small tag-${updates[c.id]}`}>{updates[c.id] === 'new' ? 'Neu' : 'Geändert'}</span>}
                   </li>
                 ))}
               </ol>
+              <p className="small"><Link to="/lesen/faq">❓ Häufige Fragen</Link></p>
             </>
           )}
           {glossary.data && glossary.data.length > 0 && <p className="small muted">Unterstrichene Begriffe erklären sich per Klick oder Maus.</p>}
@@ -283,8 +409,20 @@ export function ReaderPage() {
                   <button type="button" className="btn small ghost" onClick={() => { params.delete('q'); setParams(params); }}>Markierung entfernen</button>
                 </p>
               )}
-              <h2 className="reader-title">{current.title}{current.draft && <span className="tag small">Entwurf – noch nicht freigegeben</span>}</h2>
+              {initialUpdates !== null && initialUpdates > 0 && (
+                <p className="reader-updates no-print" role="note">
+                  {initialUpdates === 1 ? '1 Kapitel ist neu für Sie oder wurde' : `${initialUpdates} Kapitel sind neu für Sie oder wurden`} seit Ihrem letzten Lesen geändert – im Inhalt markiert.
+                </p>
+              )}
+              <div className="reader-title-row">
+                <h2 className="reader-title">{current.title}{current.draft && <span className="tag small">Entwurf – noch nicht freigegeben</span>}</h2>
+                <button type="button" className="btn small no-print" aria-pressed={bookmarked} onClick={async () => {
+                  await api(bookmarked ? 'DELETE' : 'PUT', `/reader/bookmarks/${current.id}`);
+                  mine.reload();
+                }}>{bookmarked ? '★ Gemerkt' : '☆ Merken'}</button>
+              </div>
               <ChapterContent version={version.data} />
+              <Related chapterId={current.id} drafts={drafts} canEdit={canEdit} chapters={list} withQ={withQ} />
               <Feedback chapterId={current.id} versionId={version.data.id} />
               <div className="row-actions reader-nav no-print">
                 {idx > 0 && <button className="btn" onClick={() => navigate(withQ(list[idx - 1].id))}>← {list[idx - 1].title}</button>}

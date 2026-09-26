@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.22.0
+  version: 0.23.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3245,6 +3245,86 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ q, words, total, results: [{ chapterId, title, versionId, draft, hits, snippet }] }' }
         '400': { $ref: '#/components/responses/Problem' }
+  /reader/related/{chapterId}:
+    get:
+      operationId: readerRelated
+      summary: '„Siehe auch“ (manuell, dann ähnliche Kapitel) und passende veröffentlichte FAQ (ADR-069)'
+      tags: [Kapitel]
+      x-requirements: [NFR-56]
+      x-extension: true
+      parameters:
+        - { name: chapterId, in: path, required: true, schema: { type: string } }
+        - { name: drafts, in: query, schema: { type: boolean, default: false } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ manual: [{ chapterId, title }], automatic: [{ chapterId, title, score }], hidden: [{ chapterId, title }], faq: [{ id, question, answer, score }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapters/{chapterId}/related:
+    put:
+      operationId: setChapterLinks
+      summary: 'Manuelle Verweise (Reihenfolge) und ausgeblendete Vorschläge setzen (Berechtigung edit, ADR-069)'
+      tags: [Kapitel]
+      x-requirements: [NFR-56]
+      x-extension: true
+      parameters:
+        - { name: chapterId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { manual: { type: array, maxItems: 10, items: { type: string } }, hidden: { type: array, maxItems: 10, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ manual, hidden }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /reader/me:
+    get:
+      operationId: readerMe
+      summary: 'Lesezeichen, zuletzt gelesen und Hinweise „neu“/„geändert“ der angemeldeten Person (ADR-070)'
+      tags: [Kapitel]
+      x-requirements: [NFR-57]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ bookmarks: [{ chapterId, title, createdAt }], recent: [{ chapterId, title, visitedAt }], updates: { chapterId: new | changed }, lastVisitAt }' }
+  /reader/visits:
+    post:
+      operationId: recordReaderVisit
+      summary: 'Gelesene Fassung eines Kapitels merken (ADR-070)'
+      tags: [Kapitel]
+      x-requirements: [NFR-57]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [chapterId, versionId], properties: { chapterId: { type: string }, versionId: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ ok: true }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /reader/bookmarks/{chapterId}:
+    put:
+      operationId: addReaderBookmark
+      summary: 'Kapitel merken (ADR-070)'
+      tags: [Kapitel]
+      x-requirements: [NFR-57]
+      x-extension: true
+      parameters:
+        - { name: chapterId, in: path, required: true, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chapterId, bookmarked: true }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: removeReaderBookmark
+      summary: 'Lesezeichen entfernen (ADR-070)'
+      tags: [Kapitel]
+      x-requirements: [NFR-57]
+      x-extension: true
+      parameters:
+        - { name: chapterId, in: path, required: true, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chapterId, bookmarked: false }' }
+        '404': { $ref: '#/components/responses/Problem' }
   /reader/glossary:
     get:
       operationId: readerGlossary
