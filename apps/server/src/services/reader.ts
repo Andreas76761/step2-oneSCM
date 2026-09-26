@@ -7,6 +7,7 @@ import { badRequest, notFound } from '../problem.js';
 import { getChapterVersion } from './chapters.js';
 import { assertIdsInProject } from './projects.js';
 import { projectLanguages } from './translations.js';
+import { variantChapters } from './variants.js';
 
 const HIDDEN_SECTIONS = new Set(['status']);
 const lower = (s: string) => s.toLocaleLowerCase('de');
@@ -252,9 +253,15 @@ export async function readerRelated(ctx: Ctx, chapterId: string, drafts: boolean
   return (await relatedAll(ctx, drafts, { lang: await readerLanguage(ctx, lang) })).of(chapterId);
 }
 
-/** Für alle gezeigten Kapitel auf einmal (Druck, ADR-072): chapterId → Verweise und FAQ */
-export async function readerRelatedMap(ctx: Ctx, drafts: boolean, lang?: unknown) {
-  const r = await relatedAll(ctx, drafts, { lang: await readerLanguage(ctx, lang) });
+/** Für alle gezeigten Kapitel auf einmal (Druck, ADR-072): chapterId → Verweise und FAQ; mit `outlineId` die Kapitel dieser Handbuch-Variante */
+export async function readerRelatedMap(ctx: Ctx, drafts: boolean, lang?: unknown, outlineId?: string) {
+  const code = await readerLanguage(ctx, lang);
+  let versionIds: string[] | undefined;
+  if (outlineId) {
+    const { chapters } = await variantChapters(ctx, outlineId); // 404 bei fremder oder unbekannter Variante
+    versionIds = chapters.map((c: any) => (drafts ? c.versions[0] : c.versions.find((v: any) => v.status === 'approved'))?.id).filter(Boolean);
+  }
+  const r = await relatedAll(ctx, drafts, { lang: code, versionIds });
   return Object.fromEntries([...r.shown.keys()].map((id) => {
     const x = r.of(id);
     return [id, { manual: x.manual, automatic: x.automatic, faq: x.faq }];

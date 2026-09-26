@@ -1391,7 +1391,7 @@
   },
   {
     "id": "T-203",
-    "title": "Siehe auch und FAQ für alle Kapitel (Druck) und in der Online-Hilfe mit Verweis auf das Hilfethema",
+    "title": "Siehe auch und FAQ für alle Kapitel (Druck, auch Handbuch-Varianten) und in der Online-Hilfe mit Verweis auf das Hilfethema",
     "file": "apps/server/test/stage24.test.ts",
     "level": "api",
     "requirements": [

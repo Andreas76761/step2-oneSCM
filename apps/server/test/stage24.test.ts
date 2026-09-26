@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
-import { client } from './api-helpers.js';
+import { client, importFile } from './api-helpers.js';
 import { freshDatabase, tempDir } from './helpers.js';
 
 describe('Etappe 24', () => {
@@ -118,6 +118,31 @@ describe('Etappe 24', () => {
       expect(page.body).toContain('<h2 id="see-h">Siehe auch</h2>');
       expect(page.body).toContain('href="/help/embed/p_default/ls.storno?role=dealer"');
       expect(page.body).toContain('<summary>Wie drucke ich einen Lieferschein erneut?</summary>');
+    } finally {
+      await built.app.close();
+    }
+  });
+
+  it('[T-203] Druck einer Handbuch-Variante: „Siehe auch“ und FAQ für die Kapitel der Variante', async () => {
+    const built = await build('variant-related');
+    const call = client(built);
+    try {
+      const fm = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n';
+      await importFile(built, 'lager.md', `${fm}# 1. Lieferschein drucken\n\n## 1.1 Zweck\n\nDer Lieferschein einer Lieferung wird im Lager gedruckt.\n\n# 2. Lieferschein stornieren\n\n## 2.1 Zweck\n\nEin falscher Lieferschein einer Lieferung wird im Lager storniert.\n\n# 3. Kunde anlegen\n\n## 3.1 Zweck\n\nNeue Kunden werden im Vertrieb angelegt.\n`);
+      const outline = (await call('POST', '/outlines', { name: 'Lager-Handbuch', content: '# Lieferschein drucken\n## Zweck\n# Lieferschein stornieren\n## Zweck\n', format: 'markdown' })).json;
+      await call('POST', `/outlines/${outline.id}/auto-assign`, {});
+      const gen = (await call('POST', `/outlines/${outline.id}/generate`, {}, 'u-redaktion')).json;
+      const ids = gen.results.filter((r: any) => r.status === 'generated').map((r: any) => r.chapterId);
+      expect(ids).toHaveLength(2);
+      await call('POST', '/faq', { question: 'Wie drucke ich einen Lieferschein erneut?', answer: 'Im Lager erneut drucken.', status: 'published' }, 'u-redaktion');
+      // Entwürfe der Variante: genau deren Kapitel, untereinander verwiesen
+      const map = (await call('GET', `/reader/related?drafts=true&outline=${outline.id}`, undefined, 'u-leser')).json;
+      expect(Object.keys(map).sort()).toEqual([...ids].sort());
+      expect(map[ids[0]].automatic.map((r: any) => r.chapterId)).toEqual([ids[1]]);
+      expect(map[ids[0]].faq[0]).toMatchObject({ question: 'Wie drucke ich einen Lieferschein erneut?' });
+      // ohne Entwürfe noch nichts freigegeben; unbekannte Variante → 404
+      expect((await call('GET', `/reader/related?outline=${outline.id}`)).json).toEqual({});
+      expect((await call('GET', '/reader/related?outline=ol_unbekannt')).status).toBe(404);
     } finally {
       await built.app.close();
     }

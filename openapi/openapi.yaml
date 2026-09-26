@@ -3273,11 +3273,13 @@ paths:
       x-extension: true
       parameters:
         - { name: drafts, in: query, schema: { type: boolean, default: false } }
+        - { name: outline, in: query, description: 'Gliederungsversion einer Handbuch-Variante: deren Kapitel statt des Standardhandbuchs', schema: { type: string } }
         - { name: lang, in: query, description: 'Lesesprache (Projektsprache, Standard de, ADR-071)', schema: { type: string } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ [chapterId]: { manual, automatic, faq } }' }
         '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /reader/languages:
     get:
       operationId: readerLanguages

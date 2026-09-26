@@ -100,7 +100,7 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Querystring: { lang?: string; drafts?: string } }>('/reader/translations', async (req) => (userOf(req.ctx, req), readerTranslations(req.ctx, req.query.drafts === 'true', req.query.lang)));
   app.get<{ Params: { versionId: string }; Querystring: { lang?: string } }>('/reader/versions/:versionId', async (req) => (userOf(req.ctx, req), readerVersion(req.ctx, req.params.versionId, req.query.lang)));
   // „Siehe auch“ für alle Kapitel auf einmal (Druck, ADR-072)
-  app.get<{ Querystring: { lang?: string; drafts?: string } }>('/reader/related', async (req) => (userOf(req.ctx, req), readerRelatedMap(req.ctx, req.query.drafts === 'true', req.query.lang)));
+  app.get<{ Querystring: { lang?: string; drafts?: string; outline?: string } }>('/reader/related', async (req) => (userOf(req.ctx, req), readerRelatedMap(req.ctx, req.query.drafts === 'true', req.query.lang, req.query.outline || undefined)));
   // Verwandte Kapitel und FAQ (ADR-069), Lesezeichen und Verlauf (ADR-070)
   app.get<{ Params: { chapterId: string }; Querystring: { drafts?: string; lang?: string } }>('/reader/related/:chapterId', async (req) => (userOf(req.ctx, req), readerRelated(req.ctx, req.params.chapterId, req.query.drafts === 'true', req.query.lang)));
   app.put<{ Params: { chapterId: string }; Body: any }>('/chapters/:chapterId/related', async (req) => setChapterLinks(req.ctx, req.params.chapterId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
