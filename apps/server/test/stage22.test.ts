@@ -1,4 +1,6 @@
 import fs from 'node:fs';
+import path from 'node:path';
+import { brotliCompressSync, gzipSync } from 'node:zlib';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { client } from './api-helpers.js';
@@ -105,6 +107,41 @@ describe('Etappe 22', () => {
       const other = (await call('POST', '/projects', { name: 'Leer' })).json;
       expect((await call('GET', '/reader/glossary', undefined, 'u-admin', other.id)).json.some((e: any) => e.term === 'DMS')).toBe(false);
       expect((await call('GET', '/reader/search?q=Drucker', undefined, 'u-admin', other.id)).json.total).toBe(0);
+    } finally {
+      await built.app.close();
+    }
+  });
+
+  it('[T-199] Schnelles Laden: vorkomprimierte Dateien je Accept-Encoding, Assets ein Jahr gecacht, index.html immer geprüft', async () => {
+    const web = path.join(dataDir, 'web');
+    fs.mkdirSync(path.join(web, 'assets'), { recursive: true });
+    const js = 'console.log("oneSCM");'.repeat(200);
+    fs.writeFileSync(path.join(web, 'index.html'), '<!doctype html><title>oneSCM</title>');
+    fs.writeFileSync(path.join(web, 'assets', 'app-abc123.js'), js);
+    fs.writeFileSync(path.join(web, 'assets', 'app-abc123.js.br'), brotliCompressSync(js));
+    fs.writeFileSync(path.join(web, 'assets', 'app-abc123.js.gz'), gzipSync(js));
+    const built = await freshDatabase(dataDir, 'static').then((database) => buildApp({
+      dataDir, database, logger: false, webDist: web, authMode: 'demo', llm: { provider: 'demo', model: 'demo-extractive' },
+    } as any));
+    try {
+      const get = (url: string, enc?: string) => built.app.inject({ method: 'GET', url, headers: enc ? { 'accept-encoding': enc } : {} });
+      const br = await get('/assets/app-abc123.js', 'br, gzip');
+      expect(br.statusCode).toBe(200);
+      expect(br.headers['content-encoding']).toBe('br');
+      expect(br.headers['cache-control']).toBe('public, max-age=31536000, immutable');
+      expect(Number(br.headers['content-length'])).toBeLessThan(js.length / 10);
+      expect((await get('/assets/app-abc123.js', 'gzip')).headers['content-encoding']).toBe('gzip');
+      const plain = await get('/assets/app-abc123.js');
+      expect(plain.headers['content-encoding']).toBeUndefined();
+      expect(plain.body).toBe(js);
+      // Einstieg und SPA-Routen: nie aus dem Cache ohne Rückfrage (neue Version sofort sichtbar)
+      for (const url of ['/', '/lesen/druck']) {
+        const r = await get(url, 'br');
+        expect(r.statusCode).toBe(200);
+        expect(r.headers['cache-control']).toBe('no-cache');
+        expect(r.body).toContain('<title>oneSCM</title>');
+      }
+      expect((await get('/api/v1/gibt-es-nicht')).statusCode).toBe(404);
     } finally {
       await built.app.close();
     }

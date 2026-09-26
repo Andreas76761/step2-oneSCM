@@ -61,6 +61,7 @@
 │   ├── scripts/release.ts         Release-Werkzeug: check, bump, notes (ADR-031)
 │   └── test/                      Vitest Unit- und API-Tests (SQLite; PostgreSQL mit TEST_DATABASE_URL)
 ├── apps/web/                      React + TypeScript (Vite)
-│   └── src/pages/                 eine Seite je Navigationspunkt (Abschnitt 14)
+│   ├── scripts/compress.mjs       Build-Dateien vorkomprimieren (Brotli/gzip, ADR-068)
+│   └── src/pages/                 eine Seite je Navigationspunkt (Abschnitt 14), per React.lazy nachgeladen
 └── e2e/                           Playwright (tests/app.spec.ts Abläufe, tests/a11y.spec.ts WCAG 2.2 AA mit axe)
 ```

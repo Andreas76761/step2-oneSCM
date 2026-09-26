@@ -1377,7 +1377,9 @@ test('[T-231] Vorlage vollständig bearbeiten, Druck mit Deckblatt und Seitenzah
   await expect(cover).toContainText('Benutzerhandbuch');
   await expect(cover).toContainText('Arbeitsstand');
   await expect(cover).toContainText('enthält nicht freigegebene Entwürfe');
-  await expect(page.getByRole('navigation', { name: 'Inhaltsverzeichnis des Handbuchs' }).getByRole('link').first()).toHaveText(/^1\. /);
+  // jedes Kapitel nummeriert; schon nummerierte Titel („4. Vertragsbearbeitung“) ohne zweite Nummer
+  const tocLinks = await page.getByRole('navigation', { name: 'Inhaltsverzeichnis des Handbuchs' }).getByRole('link').allTextContents();
+  expect(tocLinks.filter((t) => t !== 'Glossar').every((t) => /^\d+\. \S/.test(t) && !/^\d+\. \d+\./.test(t))).toBe(true);
   expect(await page.locator('style[data-print-header]').textContent()).toContain('Arbeitsstand');
   expect(await axe()).toEqual([]);
   await page.emulateMedia({ media: 'print' });

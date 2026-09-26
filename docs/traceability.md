@@ -78,6 +78,7 @@ Release 0.22.0. Generiert mit `npm run traceability` aus `traceability/*.json` u
 | NFR-52 | Handbuch je Variante oder Rolle drucken, im Firmen-Layout mit Glossar-Anhang | P2 | decided |  | T-232 | docs/adr/ADR-065-druck-variante-rolle.md | 0.22.0 | covered |
 | NFR-53 | Suche mit Hervorhebung und Glossar-Erklärungen in der Leseransicht | P2 | decided | GET /api/v1/reader/search<br>GET /api/v1/reader/glossary | T-198<br>T-232 | docs/adr/ADR-066-suche-glossar-lesen.md | 0.22.0 | covered |
 | NFR-54 | Kapitelvorlagen duplizieren sowie zwischen Projekten exportieren und importieren | P2 | decided | POST /api/v1/chapter-templates/duplicate<br>GET /api/v1/chapter-templates/export<br>POST /api/v1/chapter-templates/import | T-197<br>T-232 | docs/adr/ADR-067-vorlagen-teilen.md | 0.22.0 | covered |
+| NFR-55 | Schnelles Laden der Oberfläche: Code-Splitting, vorkomprimierte Dateien, langes Caching unveränderlicher Dateien | P2 | decided |  | T-199 | docs/adr/ADR-068-schnelles-laden.md | 0.22.0 | covered |
 
 ## Prüfergebnis
 

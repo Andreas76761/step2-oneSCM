@@ -674,5 +674,14 @@
     "documentation": [
       "docs/adr/ADR-067-vorlagen-teilen.md"
     ]
+  },
+  {
+    "id": "NFR-55",
+    "title": "Schnelles Laden der Oberfläche: Code-Splitting, vorkomprimierte Dateien, langes Caching unveränderlicher Dateien",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-068-schnelles-laden.md"
+    ]
   }
 ]

@@ -1342,5 +1342,14 @@
       "NFR-53",
       "NFR-54"
     ]
+  },
+  {
+    "id": "T-199",
+    "title": "Schnelles Laden: vorkomprimierte Dateien je Accept-Encoding, Assets ein Jahr gecacht, index.html immer geprüft",
+    "file": "apps/server/test/stage22.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-55"
+    ]
   }
 ]

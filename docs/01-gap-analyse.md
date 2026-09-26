@@ -169,6 +169,7 @@ Umfang vom Auftraggeber am 26.09.2026 festgelegt: Druck je Variante/Rolle, Suche
 |---|---|
 | Druck je Variante/Rolle (NFR-52) | ✅ Auswahl Variante und Rolle, Firmen-Layout, Kopf-/Fußzeile, Glossar-Anhang ([ADR-065](adr/ADR-065-druck-variante-rolle.md)) |
 | Suche & Glossar im Lesen (NFR-53) | ✅ Suche mit Ausschnitt und Markierung, Begriffserklärungen per Tooltip ([ADR-066](adr/ADR-066-suche-glossar-lesen.md)) |
+| Schnelles Laden (NFR-55) | ✅ Code-Splitting, Brotli/gzip, Caching – Erstaufruf −60 % ([ADR-068](adr/ADR-068-schnelles-laden.md)) |
 | Vorlagen duplizieren & teilen (NFR-54) | ✅ Duplizieren (auch mitgelieferte), Export/Import als JSON ([ADR-067](adr/ADR-067-vorlagen-teilen.md)) |
 
 ## 1.23 Stand nach Etappe 21 (26.09.2026)

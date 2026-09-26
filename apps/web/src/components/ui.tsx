@@ -1,7 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
-import Markdown, { defaultUrlTransform } from 'react-markdown';
+import { Suspense, createContext, lazy, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { ApiError, download, get, mediaUrl, post } from '../api';
-import { MdGlossTerm, remarkGlossary, useGlossary } from './Glossary';
 
 // ---------- Referenzdaten & Benachrichtigungen ----------
 
@@ -197,24 +195,6 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
   );
 }
 
-/** Bild aus der Medienablage; externe Bilder werden nicht geladen (nur Alternativtext, wie im Export) */
-function MdImage({ src, alt }: { src?: string; alt?: string }) {
-  const sha = /^media:([a-f0-9]{64})$/.exec(src ?? '')?.[1];
-  const [url, setUrl] = useState<string | null>(null);
-  const [failed, setFailed] = useState(false);
-  useEffect(() => {
-    if (!sha) return;
-    let alive = true;
-    mediaUrl(sha).then((u) => alive && setUrl(u), () => alive && setFailed(true));
-    return () => {
-      alive = false;
-    };
-  }, [sha]);
-  if (!alt) return <span className="md-img-missing-alt" role="img" aria-label="Bild ohne Alternativtext">⚠️ Bild ohne Alternativtext</span>;
-  if (!sha || failed) return <span className="md-img-alt">[Bild: {alt}]</span>;
-  return url ? <img className="md-img" src={url} alt={alt} loading="lazy" /> : <span className="md-img-alt" aria-busy="true">[Bild: {alt}]</span>;
-}
-
 /** Bild hochladen und als Markdown-Verweis einfügen; Alternativtext ist Pflicht (Barrierefreiheit, ADR-029) */
 export function ImageInsert({ onInsert }: { onInsert: (markdown: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -255,17 +235,11 @@ export function ImageInsert({ onInsert }: { onInsert: (markdown: string) => void
   );
 }
 
-/** Markdown-Vorschau ohne HTML-Ausführung (kein rehype-raw, §13). */
+/** Markdown-Vorschau ohne HTML-Ausführung (kein rehype-raw, §13) – Renderer wird nachgeladen (Code-Splitting) */
+const MarkdownView = lazy(() => import('./Markdown'));
 export function Md({ text }: { text: string }) {
-  // Glossar nur innerhalb eines GlossaryProvider (Leseransicht, Druck); sonst unverändert
-  const g = useGlossary();
-  const plugins = useMemo(() => (g.regex ? [remarkGlossary(g)] : []), [g]);
-  return (
-    <div className="md">
-      <Markdown skipHtml remarkPlugins={plugins} urlTransform={(url) => (url.startsWith('media:') ? url : defaultUrlTransform(url))}
-        components={{ img: ({ src, alt }) => <MdImage src={typeof src === 'string' ? src : undefined} alt={alt} />, ...({ 'gloss-term': MdGlossTerm } as object) }}>{text}</Markdown>
-    </div>
-  );
+  // bis der Renderer geladen ist: Text unformatiert, damit nichts springt oder fehlt
+  return <Suspense fallback={<div className="md md-pending">{text}</div>}><MarkdownView text={text} /></Suspense>;
 }
 
 export const ErrorBox = ({ error }: { error: string | null }) => (error ? <div className="alert error" role="alert">{error}</div> : null);

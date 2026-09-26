@@ -69,3 +69,4 @@
 | [ADR-065](ADR-065-druck-variante-rolle.md) | Druck je Variante und Rolle im Firmen-Layout | akzeptiert, umgesetzt |
 | [ADR-066](ADR-066-suche-glossar-lesen.md) | Suche und Glossar in der Leseransicht | akzeptiert, umgesetzt |
 | [ADR-067](ADR-067-vorlagen-teilen.md) | Kapitelvorlagen duplizieren, exportieren und importieren | akzeptiert, umgesetzt |
+| [ADR-068](ADR-068-schnelles-laden.md) | Schnelles Laden: Code-Splitting, vorkomprimierte Dateien, Caching | akzeptiert, umgesetzt |
