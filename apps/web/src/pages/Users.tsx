@@ -94,7 +94,11 @@ function UserDetail({ user, onChanged, templates }: { user: any; onChanged: () =
       )}
       <PermChecks legend={oidc ? 'Berechtigungen (vom Identity Provider, hier nicht änderbar)' : user.roleTemplateId ? 'Globale Berechtigungen (aus der Vorlage; Ändern löst die Verknüpfung)' : 'Globale Berechtigungen'} disabled={oidc} value={f.permissions} onChange={(permissions) => setF({ ...f, permissions })} />
       <div className="row-actions">
-        {!oidc && <button className="btn primary" onClick={() => run(() => patch(`/users/${encodeURIComponent(user.id)}`, { name: f.name, email: f.email || null, permissions: f.permissions }), 'Benutzer gespeichert.')}>Speichern</button>}
+        {!oidc && <button className="btn primary" onClick={() => run(() => patch(`/users/${encodeURIComponent(user.id)}`, {
+          name: f.name, email: f.email || null,
+          // mit Rollenvorlage: Berechtigungen nur senden, wenn sie bewusst geändert wurden – sonst bliebe die Verknüpfung nicht erhalten
+          ...(!user.roleTemplateId || f.permissions.join() !== user.permissions.join() ? { permissions: f.permissions } : {}),
+        }), 'Benutzer gespeichert.')}>Speichern</button>}
         <button className={`btn${user.disabled ? '' : ' danger'}`} onClick={() => run(() => patch(`/users/${encodeURIComponent(user.id)}`, { disabled: !user.disabled }), user.disabled ? 'Benutzer entsperrt.' : 'Benutzer gesperrt.')}>
           {user.disabled ? 'Entsperren' : 'Sperren'}
         </button>

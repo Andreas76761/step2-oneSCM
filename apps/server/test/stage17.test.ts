@@ -48,6 +48,15 @@ describe('Etappe 17', () => {
       const adminTpl = (await call('POST', '/role-templates', { name: 'Chef', permissions: ['admin'] })).json;
       await call('PATCH', '/users/u-admin', { roleTemplateId: adminTpl.id });
       expect((await call('PATCH', `/role-templates/${adminTpl.id}`, { permissions: ['edit'] })).status).toBe(409);
+      // gleichzeitig zwei Vorlagen herabstufen, die je den einzigen weiteren Administrator tragen → höchstens eine gelingt
+      const chef2 = (await call('POST', '/role-templates', { name: 'Chef 2', permissions: ['admin'] })).json;
+      await call('POST', '/users', { id: 'u-admin-zwei', name: 'Zweite Administration', roleTemplateId: chef2.id });
+      const res = await Promise.all([adminTpl.id, chef2.id].map((tid) => call('PATCH', `/role-templates/${tid}`, { permissions: ['edit'] })));
+      expect(res.filter((r) => r.status === 200)).toHaveLength(1);
+      const admins = (await call('GET', '/users', undefined, res[0].status === 200 ? 'u-admin-zwei' : 'u-admin')).json.filter((x: any) => !x.disabled && x.permissions.includes('admin'));
+      expect(admins).toHaveLength(1);
+      // Ausgangszustand für die folgenden Prüfungen: u-admin bleibt Administrator
+      if (res[0].status === 200) await call('PATCH', '/users/u-admin', { roleTemplateId: 'rt-admin' }, 'u-admin-zwei');
       // Löschen: mitgelieferte nicht; eigene ja, Benutzer behalten Rechte
       expect((await call('DELETE', '/role-templates/rt-leser')).status).toBe(409);
       expect((await call('DELETE', `/role-templates/${lead.id}`)).status).toBe(204);
@@ -125,6 +134,13 @@ describe('Etappe 17', () => {
       const all = (await call('GET', '/style/history?days=30')).json;
       expect(all.chapters.find((c: any) => c.chapterId === c1.id)).toMatchObject({ title: '1. Anmeldung', change: h.points[1].score - before });
       expect(all.project.at(-1).average).toBeGreaterThan(0);
+      // Startwert vor dem Zeitraum zählt für die Veränderung (auch bei nur einem Messpunkt im Zeitraum)
+      const c2now = (await call('GET', `/style/history?chapterId=${c2.id}`)).json.points.at(-1).score;
+      await built.ctx.db.run("INSERT INTO style_scores (id, project_id, chapter_id, version_id, version_no, score, sentences, problem_sentences, recorded_at) VALUES ('ss-alt', 'p_default', ?, 'cv-alt', 1, 40, 3, 2, ?)",
+        c2.id, new Date(Date.now() - 60 * 86_400_000).toISOString());
+      const w = (await call('GET', '/style/history?days=30')).json.chapters.find((c: any) => c.chapterId === c2.id);
+      expect(w.points[0].score).toBe(40);
+      expect(w.change).toBe(c2now - 40);
       expect(all.project.at(-1).day).toBe(new Date().toISOString().slice(0, 10));
       expect((await call('GET', '/style/history?chapterId=ch_fremd')).status).toBeGreaterThanOrEqual(400);
     } finally {

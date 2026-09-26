@@ -279,7 +279,14 @@ export async function styleHistory(ctx: Ctx, q: { chapterId?: string; days?: num
   }
   const project = [...daily.entries()].map(([day, average]) => ({ day: day === 'start' ? since.slice(0, 10) : day, average })).sort((a, b) => a.day.localeCompare(b.day));
   const perChapter = new Map<string, ReturnType<typeof point>[]>();
-  for (const r of rows) if (r.recorded_at >= since) perChapter.set(r.chapter_id, [...(perChapter.get(r.chapter_id) ?? []), point(r)]);
+  // letzter Wert vor dem Zeitraum als Startwert, damit die Veränderung auch bei nur einem neuen Messpunkt stimmt
+  const startOf = new Map<string, any>();
+  for (const r of rows) if (r.recorded_at < since) startOf.set(r.chapter_id, r);
+  for (const r of rows) {
+    if (r.recorded_at < since) continue;
+    const list = perChapter.get(r.chapter_id) ?? (startOf.has(r.chapter_id) ? [point(startOf.get(r.chapter_id))] : []);
+    perChapter.set(r.chapter_id, [...list, point(r)]);
+  }
   return {
     days, project,
     chapters: [...perChapter.entries()].map(([chapterId, points]) => ({ chapterId, title: titles.get(chapterId) ?? null, points, change: points.length > 1 ? points.at(-1)!.score - points[0].score : 0 })),

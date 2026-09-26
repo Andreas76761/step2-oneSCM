@@ -65,14 +65,17 @@ export async function updateRoleTemplate(ctx: Ctx, id: string, input: Record<str
   if (name.toLowerCase() !== t.name.toLowerCase() && await ctx.db.get('SELECT 1 FROM role_templates WHERE LOWER(name) = LOWER(?)', name)) throw conflict(`Rollenvorlage „${name}“ existiert bereits.`);
   const p = input.permissions === undefined ? t.permissions : perms(input.permissions);
   const description = input.description === undefined ? t.description : typeof input.description === 'string' && input.description.trim() ? input.description.trim().slice(0, 300) : null;
-  const affected = (await ctx.db.all("SELECT id, permissions FROM users WHERE role_template_id = ? AND id NOT LIKE 'oidc:%'", id));
-  // der letzte aktive Administrator darf nicht über eine Vorlage herabgestuft werden
-  if (!p.includes('admin') && affected.some((u) => parseJson<string[]>(u.permissions, []).includes('admin'))) {
-    const others = (await ctx.db.all('SELECT id, permissions, role_template_id FROM users WHERE disabled_at IS NULL'))
-      .filter((u) => u.role_template_id !== id && parseJson<string[]>(u.permissions, []).includes('admin'));
-    if (!others.length) throw conflict('Die Vorlage würde dem letzten aktiven Administrator die Administration entziehen.');
-  }
   await ctx.db.tx(async () => {
+    // Prüfung und Änderung in einer serialisierten Transaktion mit derselben Sperre wie bei der Benutzerverwaltung (ADR-045),
+    // damit gleichzeitige Änderungen nicht gemeinsam den letzten aktiven Administrator herabstufen
+    if (ctx.db.dialect === 'postgres') await ctx.db.run("SELECT pg_advisory_xact_lock(hashtext('onescm-user-admins'))");
+    const affected = await ctx.db.all("SELECT id, permissions, disabled_at FROM users WHERE role_template_id = ? AND id NOT LIKE 'oidc:%'", id);
+    // der letzte aktive Administrator darf nicht über eine Vorlage herabgestuft werden
+    if (!p.includes('admin') && affected.some((u) => !u.disabled_at && parseJson<string[]>(u.permissions, []).includes('admin'))) {
+      const others = (await ctx.db.all('SELECT id, permissions, role_template_id FROM users WHERE disabled_at IS NULL'))
+        .filter((u) => u.role_template_id !== id && parseJson<string[]>(u.permissions, []).includes('admin'));
+      if (!others.length) throw conflict('Die Vorlage würde dem letzten aktiven Administrator die Administration entziehen.');
+    }
     await ctx.db.run('UPDATE role_templates SET name = ?, description = ?, permissions = ?, updated_at = ? WHERE id = ?', name, description, json(p), now(), id);
     for (const u of affected) await ctx.db.run('UPDATE users SET permissions = ? WHERE id = ?', json(p), u.id);
     await audit(ctx, user.id, 'role_template.updated', 'role_template', id, { name, permissions: p, users: affected.length });
