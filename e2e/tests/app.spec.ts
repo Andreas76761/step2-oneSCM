@@ -1461,9 +1461,10 @@ test('[T-232] Leseransicht: Suche mit Hervorhebung, Glossar-Erklärungen; Druck 
   const glossary = page.getByRole('region', { name: 'Glossar' });
   await expect(glossary).toContainText('Beleg, der eine Warensendung begleitet.');
   await expect(glossary).toContainText('Dealer-Management-System');
-  const header = await page.locator('style[data-print-header]').textContent();
-  expect(header).toContain('für Dealer');
-  expect(header).toContain('Nur intern');
+  // Kopf-/Fußzeile schreibt ein Effekt nach dem Rendern – daher warten statt einmal lesen
+  const header = () => page.locator('style[data-print-header]').textContent();
+  await expect.poll(header).toContain('für Dealer');
+  await expect.poll(header).toContain('Nur intern');
   expect(await axe()).toEqual([]);
   await request.put('/api/v1/layout', { headers: adm, data: { companyName: null, confidentiality: null, footerText: null } });
 
