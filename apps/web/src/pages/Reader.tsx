@@ -239,6 +239,8 @@ export function PrintPage() {
   // Deckblatt (ADR-063): Titel, Stand und Version – bei Entwürfen immer „Arbeitsstand“, da nicht veröffentlicht
   const edition = !drafts && release ? `Version ${release.version}` : 'Arbeitsstand';
   const bookTitle = project?.name ?? 'Benutzerhandbuch';
+  // Drucken erst, wenn Kapitel UND Deckblattangaben geladen sind – sonst entstünde ein PDF mit Ersatztitel/„Arbeitsstand“
+  const ready = !!versions && !!projects.data && !!releases.data;
   useEffect(() => {
     // Kopfzeile der gedruckten Seiten: @page-Randboxen erben keine Variablen, daher als eigener Stilblock
     const style = document.createElement('style');
@@ -252,9 +254,9 @@ export function PrintPage() {
     <Page title="Handbuch drucken" subtitle={`${drafts ? 'Freigegebene Kapitel und Entwürfe' : 'Freigegebene Kapitel'} · Stand ${date}`}
       actions={<span className="no-print row-actions">
         <Link className="btn" to="/lesen">← Leseransicht</Link>
-        <button className="btn primary" disabled={!versions} onClick={() => window.print()}>🖨️ Drucken / als PDF speichern</button>
+        <button className="btn primary" disabled={!ready} onClick={() => window.print()}>🖨️ Drucken / als PDF speichern</button>
       </span>}>
-      <ErrorBox error={error ?? chapters.error} />
+      <ErrorBox error={error ?? chapters.error ?? projects.error ?? releases.error} />
       <p className="small muted no-print">Tipp: Im Druckdialog „Als PDF speichern“ wählen. Das Handbuch beginnt mit einem Deckblatt; jedes Kapitel beginnt auf einer neuen Seite, unten steht „Seite X von Y“. Schritte erscheinen mit Kästchen zum Abhaken.</p>
       {!versions ? <p className="muted">Lade …</p> : !versions.length ? <Empty>Noch keine freigegebenen Kapitel.</Empty> : (
         <div className="print-book">

@@ -32,19 +32,25 @@ export async function updateDigestSettings(ctx: Ctx, input: { weekday?: unknown 
   return getDigestSettings(ctx);
 }
 
-/** Inhalt der Übersicht für eine Person (auch als Vorschau) */
-export async function buildDigest(ctx: Ctx, userId: string, date = new Date()) {
+/** Projektweiter Teil der Übersicht (Rückmeldungen, Kapitel mit Handlungsbedarf) – je Versand nur einmal berechnet */
+export async function digestShared(ctx: Ctx) {
   const fb = await ctx.db.all(
     `SELECT f.chapter_id, c.title, COUNT(*) AS n FROM chapter_feedback f LEFT JOIN chapters c ON c.id = f.chapter_id
      WHERE f.project_id = ? AND f.status = 'open' AND (f.helpful = 0 OR f.comment IS NOT NULL) GROUP BY f.chapter_id, c.title ORDER BY n DESC, c.title`, ctx.projectId,
   );
+  const weak = (await guidanceSummary(ctx)).chapters.filter((c) => c.open.some((o) => o.status === 'warning')).slice(0, 3);
+  return { fb, weak };
+}
+
+/** Inhalt der Übersicht für eine Person (auch als Vorschau); `shared` aus digestShared() spart beim Versand die Wiederholung */
+export async function buildDigest(ctx: Ctx, userId: string, date = new Date(), shared?: Awaited<ReturnType<typeof digestShared>>) {
+  const { fb, weak } = shared ?? await digestShared(ctx);
   const openFeedback = fb.reduce((n, r) => n + Number(r.n), 0);
   const tasks = await ctx.db.all(
     "SELECT id, entity_type, entity_id, body, due_date FROM comments WHERE project_id = ? AND kind = 'task' AND status = 'open' AND assignee = ? ORDER BY COALESCE(due_date, '9999'), created_at", ctx.projectId, userId,
   );
   const today = now().slice(0, 10);
   const overdue = tasks.filter((t) => t.due_date && t.due_date < today).length;
-  const weak = (await guidanceSummary(ctx)).chapters.filter((c) => c.open.some((o) => o.status === 'warning')).slice(0, 3);
   const lines: string[] = [];
   if (openFeedback) lines.push(`${openFeedback} offene Leser-Rückmeldung${openFeedback === 1 ? '' : 'en'} (${fb.slice(0, 3).map((r) => `${r.title ?? r.chapter_id}: ${r.n}`).join(', ')})`);
   if (tasks.length) lines.push(`${tasks.length} offene Aufgabe${tasks.length === 1 ? '' : 'n'} für Sie${overdue ? `, davon ${overdue} überfällig` : ''}`);
@@ -67,9 +73,11 @@ export async function sendDigests(ctx: Ctx, opts: { force?: boolean; date?: Date
   const week = isoWeek(date);
   const editors = (await collaborators(ctx)).filter((u) => u.permissions.includes('edit') || u.permissions.includes('admin'));
   let sent = 0;
+  let shared: Awaited<ReturnType<typeof digestShared>> | undefined; // erst bei der ersten offenen Person, dann für alle
   for (const u of editors) {
     if (await ctx.db.get('SELECT 1 FROM digest_log WHERE project_id = ? AND user_id = ? AND week = ?', ctx.projectId, u.id, week)) continue;
-    const d = await buildDigest(ctx, u.id, date);
+    shared ??= await digestShared(ctx);
+    const d = await buildDigest(ctx, u.id, date, shared);
     if (d.empty) continue; // nichts zu tun: keine Nachricht, die Woche bleibt offen
     await ctx.db.tx(async () => {
       const res = await ctx.db.run('INSERT INTO digest_log (project_id, user_id, week, sent_at) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING', ctx.projectId, u.id, week, now());
