@@ -4,10 +4,13 @@ import type { Ctx } from '../context.js';
 import {
   approveTranslation, createTranslation, editTranslationBlock, exportTranslation, getTranslation, languageInfo, listTranslations, projectLanguages, setTranslationTitle, startMachineTranslation,
 } from '../services/translations.js';
+import { listTranslationRequests } from '../services/translationRequests.js';
 import { userOf } from './helpers.js';
 
 export function translationRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get('/languages', async (req) => (userOf(req.ctx, req), { ...languageInfo(), projectLanguages: await projectLanguages(req.ctx) }));
+  // gewünschte Übersetzungen aus der Leseransicht, meistgewünschte zuerst (ADR-075)
+  app.get<{ Querystring: { all?: string } }>('/translation-requests', async (req) => (userOf(req.ctx, req), listTranslationRequests(req.ctx, req.query.all === 'true')));
   app.get<{ Querystring: { chapterId?: string } }>('/translations', async (req) => (userOf(req.ctx, req), listTranslations(req.ctx, req.query.chapterId)));
   app.post<{ Body: { chapterId?: string; language?: string } }>('/translations', async (req, reply) => {
     const user = userOf(req.ctx, req, 'edit');

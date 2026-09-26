@@ -1607,20 +1607,22 @@ test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; 
   await article.getByRole('button', { name: 'packing list' }).first().click();
   await expect(page.getByRole('tooltip')).toContainText('List of all parts in a shipment.');
   await page.keyboard.press('Escape');
-  const toc = page.getByRole('navigation', { name: 'Inhaltsverzeichnis' });
+  // Beschriftungen der Leseransicht folgen der Sprache (ADR-074)
+  const toc = page.getByRole('navigation', { name: 'Table of contents' });
+  await expect(toc.getByRole('heading', { name: 'Contents' })).toBeVisible();
   await expect(toc.getByRole('link', { name: 'E2E Print packing list' }).first()).toBeVisible();
   expect(await axe()).toEqual([]);
   // nicht übersetztes Kapitel: deutsch mit Hinweis
   await toc.getByRole('link', { name: 'E2E Packliste ändern' }).first().click();
-  await expect(page.getByRole('article', { name: 'E2E Packliste ändern' }).getByText('Dieses Kapitel ist noch nicht in Englisch übersetzt – Sie lesen die deutsche Fassung.')).toBeVisible();
+  await expect(page.getByRole('article', { name: 'E2E Packliste ändern' }).getByText('This chapter has not been translated into English yet – you are reading the German version.')).toBeVisible();
   // Sprache bleibt gemerkt
   await page.reload();
-  await expect(page.getByLabel('Sprache')).toHaveValue('en');
+  await expect(page.getByLabel('Language')).toHaveValue('en');
   expect(await axe()).toEqual([]);
 
   // Lesezeichen mit Notiz
-  await page.getByRole('article', { name: 'E2E Packliste ändern' }).getByRole('button', { name: '☆ Merken' }).click();
-  await toc.getByRole('link', { name: 'Alle Lesezeichen und Notizen' }).click();
+  await page.getByRole('article', { name: 'E2E Packliste ändern' }).getByRole('button', { name: '☆ Bookmark' }).click();
+  await toc.getByRole('link', { name: 'All bookmarks and notes' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lesezeichen');
   await page.getByLabel('Lesezeichen filtern').fill('Packliste ändern');
   await page.getByRole('textbox', { name: 'Notiz zu „E2E Packliste ändern“' }).fill('Vor der Inventur prüfen');
@@ -1643,9 +1645,9 @@ test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; 
   await page.goto('/lesen/druck?sprache=en');
   await expect(page.getByLabel('Sprache')).toHaveValue('en');
   const printed = page.getByRole('article', { name: 'E2E Print packing list' });
-  await expect(printed.locator('.print-see')).toContainText(/Siehe auch: Kapitel \d+ „E2E Packliste ändern“/);
-  await expect(page.getByRole('article', { name: 'E2E Packliste ändern' }).getByText('(noch nicht übersetzt – deutsche Fassung)')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Häufige Fragen' })).toBeVisible();
+  await expect(printed.locator('.print-see')).toContainText(/See also: Chapter \d+ “E2E Packliste ändern”/);
+  await expect(page.getByRole('article', { name: 'E2E Packliste ändern' }).getByText('(not translated yet – German version)')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Frequently asked questions' })).toBeVisible();
   await expect(page.locator('#faq').getByText('Wo finde ich die Packliste einer Sendung?')).toBeVisible();
   await expect(page.getByRole('button', { name: '🖨️ Drucken / als PDF speichern' })).toBeEnabled();
 
@@ -1655,4 +1657,69 @@ test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; 
   const help = await (await request.get('/api/v1/context-help/e2e.pack.print', { headers: red })).json();
   expect(help.related).toContainEqual({ chapterId: b.chapterId, title: 'E2E Packliste ändern', contextKey: 'e2e.pack.edit' });
   expect(help.faq.map((f: any) => f.question)).toContain('Wo finde ich die Packliste einer Sendung?');
+});
+
+test('[T-235] Leseransicht auf Französisch mit Übersetzung anfordern, Notiz direkt im Kapitel, gewünschte Übersetzungen für die Redaktion, Druck mit französischen Beschriftungen', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  expect((await request.patch('/api/v1/projects/p_default', { headers: { 'X-User-Id': 'u-admin' }, data: { languages: ['en', 'fr'] } })).ok()).toBe(true);
+  const c = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: {
+    title: 'E2E Retoure buchen', purpose: 'Mit dieser Anleitung buchen Sie eine Retoure.', steps: ['Öffnen Sie **Lager › Retouren**', 'Klicken Sie auf **Buchen**'], hints: ['Retouren ohne Lieferschein prüfen.'], result: 'Erledigt.',
+  } })).json();
+  expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/submit`, { headers: red, data: {} })).ok()).toBe(true);
+  expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+
+  // Leseransicht auf Französisch: Beschriftungen französisch, Kapiteltext deutsch mit Hinweis
+  await page.goto(`/lesen/${c.chapterId}?lang=fr`);
+  const toc = page.getByRole('navigation', { name: 'Table des matières' });
+  await expect(toc.getByRole('heading', { name: 'Sommaire' })).toBeVisible();
+  await expect(page.getByLabel('Langue')).toHaveValue('fr');
+  const article = page.getByRole('article', { name: 'E2E Retoure buchen' });
+  await expect(article.getByText('Ce chapitre n’est pas encore traduit en français – vous lisez la version allemande.')).toBeVisible();
+  await expect(article.getByText('0 étapes sur 2 terminées')).toBeVisible();
+  await expect(article.getByRole('heading', { name: 'Ce chapitre vous a-t-il été utile ?' })).toBeVisible();
+  // Hinweise im Kapiteltext in dessen Sprache (deutsche Fassung → „Tipp“)
+  await expect(article.getByText('Tipp:')).toBeVisible();
+  // Übersetzung anfordern
+  await article.getByRole('button', { name: 'Demander une traduction' }).click();
+  await expect(article.getByText('✓ Traduction demandée – la rédaction a été informée.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Notiz direkt im Kapitel: anlegen (merkt das Kapitel), ändern, löschen
+  await article.getByRole('button', { name: '📝 Ajouter une note' }).click();
+  await article.getByRole('textbox', { name: 'Votre note sur ce chapitre' }).fill('Avec le chef d’équipe');
+  expect(await axe()).toEqual([]);
+  await article.getByRole('button', { name: 'Enregistrer' }).click();
+  await expect(page.getByText('Note enregistrée.')).toBeVisible();
+  await expect(article.getByText('📝 Avec le chef d’équipe')).toBeVisible();
+  await expect(article.getByRole('button', { name: '★ Signet ajouté' })).toHaveAttribute('aria-pressed', 'true');
+  await article.getByRole('button', { name: 'Modifier la note' }).click();
+  await article.getByRole('textbox', { name: 'Votre note sur ce chapitre' }).fill('Avec le chef d’équipe, le lundi');
+  await article.getByRole('button', { name: 'Enregistrer' }).click();
+  await expect(article.getByText('📝 Avec le chef d’équipe, le lundi')).toBeVisible();
+  await article.getByRole('button', { name: 'Modifier la note' }).click();
+  await article.getByRole('button', { name: 'Supprimer la note' }).click();
+  await expect(page.getByText('Note supprimée.')).toBeVisible();
+  await expect(article.getByRole('button', { name: '📝 Ajouter une note' })).toBeVisible();
+
+  // Redaktion: gewünschte Übersetzungen, direkt anlegen
+  await page.goto('/uebersetzungen');
+  const wishes = page.locator('.card', { hasText: 'Gewünschte Übersetzungen' });
+  const row = wishes.getByRole('row', { name: /E2E Retoure buchen/ });
+  await expect(row).toContainText('Französisch');
+  await expect(row).toContainText('fehlt');
+  expect(await axe()).toEqual([]);
+  await row.getByRole('button', { name: '„E2E Retoure buchen“ übersetzen (Französisch)' }).click();
+  await expect(page.getByText('Übersetzung Französisch angelegt.')).toBeVisible();
+  await expect(row).toContainText('in Arbeit');
+
+  // Druck auf Französisch: Deckblatt, Inhaltsverzeichnis und Seitenzahlen französisch
+  await page.goto('/lesen/druck?sprache=fr');
+  await expect(page.getByRole('region', { name: 'Page de garde' })).toContainText('Manuel utilisateur');
+  await expect(page.getByRole('navigation', { name: 'Table des matières du manuel' }).getByRole('heading', { name: 'Sommaire' })).toBeVisible();
+  await expect(page.getByRole('article', { name: 'E2E Retoure buchen' }).getByText('(pas encore traduit – version allemande)')).toBeVisible();
+  await expect.poll(() => page.locator('style[data-print-header]').textContent()).toContain('"Page " counter(page) " sur " counter(pages)');
+  expect(await axe()).toEqual([]);
 });

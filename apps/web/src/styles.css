@@ -694,3 +694,12 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .bookmark-list li { border-bottom: 1px solid var(--border); padding: 10px 0; display: grid; gap: 6px; }
 .bookmark-list textarea { width: 100%; }
 .bookmark-note { font-style: italic; }
+/* Etappe 25: Notiz im Kapitel, Übersetzung anfordern */
+.linklike { background: none; border: 0; padding: 0; font: inherit; font-style: normal; color: var(--link, #1d4ed8); text-decoration: underline; cursor: pointer; min-height: 24px; }
+.linklike:focus-visible { outline: 3px solid var(--focus, #f59e0b); outline-offset: 2px; }
+.chapter-note-add { margin: 0 0 8px; }
+.chapter-note-edit { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 0 0 10px; }
+.chapter-note-edit textarea { width: 100%; }
+div.reader-lang-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+div.reader-lang-note p { margin: 0; }
+.request-list td.count { text-align: right; font-variant-numeric: tabular-nums; }

@@ -1417,5 +1417,34 @@
       "NFR-59",
       "NFR-60"
     ]
+  },
+  {
+    "id": "T-205",
+    "title": "Übersetzung anfordern: je Person einmal, Hinweis an die Redaktion beim ersten Wunsch, Übersicht nach Anzahl, Benachrichtigung bei Freigabe",
+    "file": "apps/server/test/stage25.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-62"
+    ]
+  },
+  {
+    "id": "T-206",
+    "title": "Online-Hilfe: Beschriftungen in der Sprache, übrige Projektsprachen englisch; angefragte Inhaltssprache bleibt in Formularen erhalten",
+    "file": "apps/server/test/stage25.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-61"
+    ]
+  },
+  {
+    "id": "T-235",
+    "title": "Leseransicht auf Französisch mit Übersetzung anfordern, Notiz direkt im Kapitel, gewünschte Übersetzungen für die Redaktion, Druck mit französischen Beschriftungen (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-61",
+      "NFR-62",
+      "NFR-63"
+    ]
   }
 ]

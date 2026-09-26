@@ -728,5 +728,32 @@
     "documentation": [
       "docs/adr/ADR-073-lesezeichen-notizen.md"
     ]
+  },
+  {
+    "id": "NFR-61",
+    "title": "Beschriftungen der Leseransicht, des Drucks und der Online-Hilfe in der Lesesprache (fünf Sprachen, übrige englisch)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-074-leseransicht-mehrsprachig.md"
+    ]
+  },
+  {
+    "id": "NFR-62",
+    "title": "Übersetzungen aus der Leseransicht anfordern; Übersicht der Wünsche für die Redaktion; Benachrichtigung bei Freigabe",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-075-uebersetzung-anfordern.md"
+    ]
+  },
+  {
+    "id": "NFR-63",
+    "title": "Notiz zum Kapitel direkt in der Leseransicht anlegen, ändern und löschen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-076-notiz-im-kapitel.md"
+    ]
   }
 ]

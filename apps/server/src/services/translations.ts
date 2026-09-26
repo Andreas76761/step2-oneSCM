@@ -12,6 +12,7 @@ import {
 import { LlmError } from '../llm.js';
 import { badRequest, conflict, notFound, Problem, unprocessable } from '../problem.js';
 import { getChapterVersion } from './chapters.js';
+import { notifyTranslationReady } from './translationRequests.js';
 import { renderHtml, renderMarkdown, type ExportChapter } from './exports.js';
 import { loadMedia } from './media.js';
 import { preserveImages } from '../domain/media.js';
@@ -226,6 +227,8 @@ export async function approveTranslation(ctx: Ctx, id: string, input: { comment?
     const res = await ctx.db.run("UPDATE translations SET status = 'approved', approved_by = ?, approved_at = ?, approval_comment = ? WHERE id = ? AND status = 'draft'", actor, now(), input.comment!.trim(), id);
     if (!res.changes) throw conflict('Übersetzung wurde zwischenzeitlich geändert.');
     await audit(ctx, actor, 'translation.approved', 'translation', id, { comment: input.comment, language: t.language });
+    // Übersetzungswünsche aus der Leseransicht erfüllt (ADR-075)
+    await notifyTranslationReady(ctx, t.chapter_id as string, t.language as string, String(t.title ?? ''), actor);
   });
   return summary(ctx, await row(ctx, id));
 }

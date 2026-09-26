@@ -35,6 +35,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **11** ✅ | Stammdaten mit Gliederungen je Variante, Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung (ADR-032); Draft Manual mit Kennzeichnung (ADR-033); einklappbare Navigation | 78 Server- und 52 E2E-Tests grün auf SQLite und PostgreSQL |
 | **23** ✅ | „Siehe auch“ und häufige Fragen (ADR-069); Lesezeichen und Verlauf (ADR-070) | 110 Server- und 74 E2E-Tests grün auf SQLite und PostgreSQL |
 | **24** ✅ | Sprachen beim Lesen (ADR-071); „Siehe auch“ und FAQ im Druck und in der Online-Hilfe (ADR-072); Lesezeichen mit Notizen (ADR-073) | 113 Server- und 75 E2E-Tests grün auf SQLite und PostgreSQL |
+| **25** ✅ | Leseransicht in der Lesesprache (ADR-074); Übersetzung anfordern (ADR-075); Notizen direkt im Kapitel (ADR-076) | 116 Server- und 76 E2E-Tests grün auf SQLite und PostgreSQL |
 | **22** ✅ | Druck je Variante und Rolle im Firmen-Layout (ADR-065); Suche und Glossar beim Lesen (ADR-066); Vorlagen duplizieren, exportieren, importieren (ADR-067); schnelles Laden (ADR-068) | 108 Server- und 73 E2E-Tests grün auf SQLite und PostgreSQL |
 | **21** ✅ | Vorlagen bearbeiten (ADR-062); Druck mit Deckblatt und Seitenzahlen (ADR-063); wöchentliche Übersicht (ADR-064) | 105 Server- und 72 E2E-Tests grün auf SQLite und PostgreSQL |
 | **20** ✅ | Rückmeldungen auswerten (ADR-058); eigene Kapitelvorlagen (ADR-059); Druck-/PDF-Ansicht (ADR-060); Rückmeldungen in der Online-Hilfe (ADR-061) | 103 Server- und 71 E2E-Tests grün auf SQLite und PostgreSQL |

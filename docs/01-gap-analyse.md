@@ -161,6 +161,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.27 Stand nach Etappe 25 (26.09.2026)
+
+Umfang vom Auftraggeber am 26.09.2026 festgelegt: Leseransicht mehrsprachig, Übersetzung anfordern, Notizen direkt im Kapitel.
+
+| Punkt | Ergebnis |
+|---|---|
+| Leseransicht mehrsprachig (NFR-61) | ✅ Beschriftungen von Leseransicht, Druck und Online-Hilfe in der Lesesprache ([ADR-074](adr/ADR-074-leseransicht-mehrsprachig.md)) |
+| Übersetzung anfordern (NFR-62) | ✅ Wunsch aus der Leseransicht, Hinweis an die Redaktion, Übersicht nach Anzahl, Benachrichtigung bei Freigabe ([ADR-075](adr/ADR-075-uebersetzung-anfordern.md)) |
+| Notizen direkt im Kapitel (NFR-63) | ✅ Notiz unter dem Kapiteltitel anlegen, ändern, löschen ([ADR-076](adr/ADR-076-notiz-im-kapitel.md)) |
+
 ## 1.26 Stand nach Etappe 24 (26.09.2026)
 
 Umfang vom Auftraggeber am 26.09.2026 festgelegt: Sprachen beim Lesen, Siehe auch in Druck & Online-Hilfe, Lesezeichen mit Notizen.

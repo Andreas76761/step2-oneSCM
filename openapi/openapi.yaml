@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.24.0
+  version: 0.25.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -2080,9 +2080,9 @@ paths:
     servers: [{ url: / }]
     get:
       operationId: getEmbeddedHelp
-      summary: 'Öffentliche Hilfeseite für das Widget (ohne Anmeldung, ohne Skripte; nur bei freigeschalteter Einbettung, Stand des neuesten Releases; frame-ancestors laut HELP_EMBED_ORIGINS)'
+      summary: 'Öffentliche Hilfeseite für das Widget (ohne Anmeldung, ohne Skripte; nur bei freigeschalteter Einbettung, Stand des neuesten Releases; frame-ancestors laut HELP_EMBED_ORIGINS); Beschriftungen in fünf Sprachen, übrige englisch (ADR-074)'
       tags: [Kontexthilfe]
-      x-requirements: [NFR-17]
+      x-requirements: [NFR-17, NFR-61]
       x-extension: true
       security: []
       parameters: [{ name: projectId, in: path, required: true, schema: { type: string } }, { $ref: '#/components/parameters/ContextKey' }, { $ref: '#/components/parameters/HelpRole' }, { $ref: '#/components/parameters/HelpDivision' }, { $ref: '#/components/parameters/HelpLanguage' }]
@@ -3345,7 +3345,34 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ bookmarks: [{ chapterId, title, createdAt, note }], recent: [{ chapterId, title, visitedAt }], updates: { chapterId: new | changed }, lastVisitAt }' }
+        '200': { description: '{ translationRequests: [{ chapterId, language }] (eigene Übersetzungswünsche, ADR-075), bookmarks: [{ chapterId, title, createdAt, note }], recent: [{ chapterId, title, visitedAt }], updates: { chapterId: new | changed }, lastVisitAt }' }
+  /reader/translation-requests:
+    post:
+      operationId: requestTranslation
+      summary: 'Übersetzung eines Kapitels wünschen – je Person, Kapitel und Sprache einmal; erster Wunsch benachrichtigt die Redaktion (ADR-075)'
+      tags: [Kapitel]
+      x-requirements: [NFR-62]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [chapterId, language], properties: { chapterId: { type: string }, language: { type: string, description: 'Projektsprache' } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chapterId, language, requested: true, count, state: missing | outdated | in_progress }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /translation-requests:
+    get:
+      operationId: listTranslationRequests
+      summary: 'Gewünschte Übersetzungen je Kapitel und Sprache, meistgewünschte zuerst; erledigte nur mit all=true (ADR-075)'
+      tags: [Kapitel]
+      x-requirements: [NFR-62]
+      x-extension: true
+      parameters:
+        - { name: all, in: query, schema: { type: boolean, default: false } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ chapterId, title, language, languageName, count, firstRequestedAt, lastRequestedAt, state: missing | outdated | in_progress | done }]' }
   /reader/visits:
     post:
       operationId: recordReaderVisit
@@ -3363,9 +3390,9 @@ paths:
   /reader/bookmarks/{chapterId}:
     put:
       operationId: addReaderBookmark
-      summary: 'Kapitel merken, optional mit privater Notiz (ADR-070, ADR-073)'
+      summary: 'Kapitel merken, optional mit privater Notiz – auch direkt aus dem Kapitel (ADR-070, ADR-073, ADR-076)'
       tags: [Kapitel]
-      x-requirements: [NFR-57, NFR-60]
+      x-requirements: [NFR-57, NFR-60, NFR-63]
       x-extension: true
       parameters:
         - { name: chapterId, in: path, required: true, schema: { type: string } }

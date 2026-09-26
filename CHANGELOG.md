@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.25.0 – Etappe 25 (26.09.2026)
+
+### Hinzugefügt
+- **Leseransicht mehrsprachig (ADR-074):** Beschriftungen von Leseransicht und Druck (Inhaltsverzeichnis, Suche, Hinweise, Schritte, Rückmeldung, „Siehe auch“, Deckblatt, „Seite X von Y“) in der Lesesprache – Deutsch, Englisch, Französisch, Spanisch, Italienisch; übrige Sprachen englisch. Online-Hilfe für übrige Sprachen englisch statt deutsch.
+- **Übersetzung anfordern (ADR-075):** Knopf im Hinweis „noch nicht übersetzt“; Hinweis an die Redaktion beim ersten Wunsch; „Gewünschte Übersetzungen“ nach Anzahl mit direktem Anlegen; Benachrichtigung der Anfragenden bei Freigabe.
+- **Notizen direkt im Kapitel (ADR-076):** Notiz unter dem Kapiteltitel anlegen, ändern, löschen – merkt das Kapitel automatisch.
+- Migration `033_translation_requests.sql`; Tests T-205, T-206, E2E T-235 (axe); Anforderungen NFR-61, NFR-62, NFR-63.
+
+### Behoben
+- Druck einer Handbuch-Variante mit „Siehe auch“ und FAQ-Anhang; CSV-Export der Lesezeichen ohne Formel-Einschleusung (PR #24).
+
 ## 0.24.0 – Etappe 24 (26.09.2026)
 
 ### Hinzugefügt

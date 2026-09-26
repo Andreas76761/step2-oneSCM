@@ -6,11 +6,12 @@ import { api, currentProjectId, get, mediaUrl, post } from '../api';
 import { GlossText, GlossaryProvider, type GlossaryEntry } from '../components/Glossary';
 import { Card, Empty, ErrorBox, Md, Page, errorText, preloadMarkdown, useApp, useLoad } from '../components/ui';
 import { matches } from './FilteredView';
+import { NATIVE_NAMES, ReaderTextProvider, readerTexts, useReaderText } from '../readerText';
 
-const CALLOUT: Record<string, { icon: string; label: string }> = {
-  tip: { icon: '💡', label: 'Tipp' },
-  warning: { icon: '⚠️', label: 'Achtung' },
-  note: { icon: 'ℹ️', label: 'Hinweis' },
+const CALLOUT: Record<string, { icon: string; label: 'tip' | 'warning' | 'note' }> = {
+  tip: { icon: '💡', label: 'tip' },
+  warning: { icon: '⚠️', label: 'warning' },
+  note: { icon: 'ℹ️', label: 'note' },
 };
 // Verwaltungsabschnitt und Lückenhinweise gehören nicht in die Leseransicht
 const HIDDEN_SECTIONS = new Set(['status']);
@@ -43,6 +44,7 @@ function StepList({ versionId, blockId, text }: { versionId: string; blockId: st
     else if (items.length) items[items.length - 1] += ` ${l.trim()}`;
     else intro.push(l.trim());
   }
+  const { t, uiLang } = useReaderText();
   const [done, setDone] = useState<number[]>(() => readDone(`${versionId}.${blockId}`));
   const toggle = (i: number) => {
     const next = done.includes(i) ? done.filter((x) => x !== i) : [...done, i];
@@ -65,7 +67,7 @@ function StepList({ versionId, blockId, text }: { versionId: string; blockId: st
           </li>
         ))}
       </ol>
-      <p className="small muted no-print" aria-live="polite">{done.length} von {items.length} Schritten erledigt</p>
+      <p className="small muted no-print" aria-live="polite" lang={uiLang}>{t('stepsDone', { done: done.length, total: items.length })}</p>
     </>
   );
 }
@@ -73,6 +75,7 @@ function StepList({ versionId, blockId, text }: { versionId: string; blockId: st
 /** „War das hilfreich?“ */
 function Feedback({ chapterId, versionId }: { chapterId: string; versionId: string }) {
   const { notify } = useApp();
+  const { t, uiLang } = useReaderText();
   const [helpful, setHelpful] = useState<boolean | null>(null);
   const [comment, setComment] = useState('');
   const [sent, setSent] = useState(false);
@@ -85,25 +88,25 @@ function Feedback({ chapterId, versionId }: { chapterId: string; versionId: stri
     try {
       await post(`/chapters/${chapterId}/feedback`, { helpful: h, versionId, comment: c?.trim() || undefined });
       setSent(true);
-      notify('Danke für Ihre Rückmeldung.');
+      notify(`${t('fbThanks')}.`);
     } catch (e) {
       notify(errorText(e), 'error');
     }
   };
-  if (sent) return <p className="reader-feedback" role="status">✓ Danke für Ihre Rückmeldung{helpful === false ? ' – die Redaktion kümmert sich darum' : ''}.</p>;
+  if (sent) return <p className="reader-feedback" role="status" lang={uiLang}>✓ {t('fbThanks')}{helpful === false ? t('fbThanksNo') : ''}.</p>;
   return (
-    <section className="reader-feedback no-print" aria-labelledby="fb-q">
-      <h2 id="fb-q">War dieses Kapitel hilfreich?</h2>
+    <section className="reader-feedback no-print" aria-labelledby="fb-q" lang={uiLang}>
+      <h2 id="fb-q">{t('fbQuestion')}</h2>
       <div className="row-actions">
-        <button className="btn" aria-pressed={helpful === true} onClick={() => { setHelpful(true); void send(true); }}>👍 Ja</button>
-        <button className="btn" aria-pressed={helpful === false} onClick={() => setHelpful(false)}>👎 Nein</button>
+        <button className="btn" aria-pressed={helpful === true} onClick={() => { setHelpful(true); void send(true); }}>👍 {t('yes')}</button>
+        <button className="btn" aria-pressed={helpful === false} onClick={() => setHelpful(false)}>👎 {t('no')}</button>
       </div>
       {helpful === false && (
         <div className="reader-feedback-form">
-          <label className="block">Was hat gefehlt oder war unklar? (optional)
-            <textarea rows={3} value={comment} maxLength={1000} onChange={(e) => setComment(e.target.value)} placeholder="z. B. Schritt 3 passt nicht zur aktuellen Maske" />
+          <label className="block">{t('fbMissing')}
+            <textarea rows={3} value={comment} maxLength={1000} onChange={(e) => setComment(e.target.value)} placeholder={t('fbPlaceholder')} />
           </label>
-          <button className="btn primary" onClick={() => void send(false, comment)}>Rückmeldung senden</button>
+          <button className="btn primary" onClick={() => void send(false, comment)}>{t('fbSend')}</button>
         </div>
       )}
     </section>
@@ -119,13 +122,15 @@ export function readerSections(version: any, role?: string) {
 
 /** Kapitelinhalt in Lesedarstellung (Leseransicht und Druckansicht) */
 export function ChapterContent({ version, role }: { version: any; role?: string }) {
+  // Hinweis-Beschriftungen in der Sprache des gezeigten Textes (bei deutschem Rückfall deutsch, wie die Abschnittstitel)
+  const { t } = useMemo(() => readerTexts(version.language ?? 'de'), [version.language]);
   return (
     <>
       {readerSections(version, role).map((s: any) => (
         <section key={s.code} className="reader-section">
           <h3>{s.title}</h3>
           {s.blocks.map((b: any) => {
-            if (CALLOUT[b.kind]) return <div key={b.id} className={`callout ${b.kind}`}><strong><span aria-hidden="true">{CALLOUT[b.kind].icon}</span> {CALLOUT[b.kind].label}:</strong> <Md text={b.text} /></div>;
+            if (CALLOUT[b.kind]) return <div key={b.id} className={`callout ${b.kind}`}><strong><span aria-hidden="true">{CALLOUT[b.kind].icon}</span> {t(CALLOUT[b.kind].label)}:</strong> <Md text={b.text} /></div>;
             if (s.code === 'steps' && b.kind === 'list') return <StepList key={b.id} versionId={version.id} blockId={b.id} text={b.text} />;
             return <Md key={b.id} text={b.text} />;
           })}
@@ -166,11 +171,31 @@ function useReaderLanguage() {
 }
 
 /** Hinweis, wenn ein Kapitel (noch) nicht in der Lesesprache vorliegt */
-function LanguageNote({ version, name }: { version: any; name: string }) {
+function LanguageNote({ version, chapterId, requested, onRequested }: { version: any; chapterId: string; requested: boolean; onRequested: () => void }) {
+  const { t, uiLang } = useReaderText();
+  const { notify } = useApp();
+  const [busy, setBusy] = useState(false);
   if (!version || version.requestedLanguage === 'de' || !version.requestedLanguage) return null;
-  if (version.fallback === 'missing') return <p className="reader-lang-note" role="note">Dieses Kapitel ist noch nicht in {name} übersetzt – Sie lesen die deutsche Fassung.</p>;
-  if (version.fallback === 'outdated') return <p className="reader-lang-note" role="note">Die {name}-Übersetzung gehört zu einer älteren Fassung – Sie lesen die aktuelle deutsche Fassung.</p>;
-  if (version.untranslatedBlocks > 0) return <p className="reader-lang-note" role="note">{version.untranslatedBlocks === 1 ? '1 Absatz ist' : `${version.untranslatedBlocks} Absätze sind`} noch nicht übersetzt und erscheinen deutsch.</p>;
+  const lang = version.requestedLanguage as string;
+  const name = NATIVE_NAMES[lang] ?? lang;
+  // Übersetzung anfordern (ADR-075), wenn das Kapitel fehlt oder veraltet ist
+  const request = async () => {
+    setBusy(true);
+    try {
+      await post('/reader/translation-requests', { chapterId, language: lang });
+      onRequested();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const ask = version.fallback && (requested
+    ? <span className="small" role="status">{t('requested')}</span>
+    : <button type="button" className="btn small" disabled={busy} onClick={() => void request()}>{t('requestTranslation')}</button>);
+  if (version.fallback === 'missing') return <div className="reader-lang-note" role="note" lang={uiLang}><p>{t('langMissing', { lang: name })}</p>{ask}</div>;
+  if (version.fallback === 'outdated') return <div className="reader-lang-note" role="note" lang={uiLang}><p>{t('langOutdated', { lang: name })}</p>{ask}</div>;
+  if (version.untranslatedBlocks > 0) return <p className="reader-lang-note" role="note" lang={uiLang}>{version.untranslatedBlocks === 1 ? t('untranslatedOne') : t('untranslatedMany', { n: version.untranslatedBlocks })}</p>;
   return null;
 }
 
@@ -221,6 +246,7 @@ function Marked({ text, words }: { text: string; words: string[] }) {
 /** „Siehe auch“ und passende häufige Fragen unter einem Kapitel (ADR-069); Redaktion pflegt Verweise direkt hier */
 function Related({ chapterId, drafts, lang, canEdit, chapters, withQ }: { chapterId: string; drafts: boolean; lang: string; canEdit: boolean; chapters: { id: string; title: string }[]; withQ: (id: string) => string }) {
   const { notify } = useApp();
+  const { t, uiLang } = useReaderText();
   const rel = useLoad<any>(`/reader/related/${chapterId}?drafts=${drafts}${lang !== 'de' ? `&lang=${lang}` : ''}`, [chapterId, drafts, lang]);
   const [editing, setEditing] = useState(false);
   const [add, setAdd] = useState('');
@@ -252,7 +278,7 @@ function Related({ chapterId, drafts, lang, canEdit, chapters, withQ }: { chapte
     <section className="reader-related no-print" aria-labelledby={`rel-${chapterId}`}>
       {(links.length > 0 || canEdit) && (
         <>
-          <h2 id={`rel-${chapterId}`}>Siehe auch</h2>
+          <h2 id={`rel-${chapterId}`} lang={uiLang}>{t('seeAlso')}</h2>
           {links.length ? (
             <ul className="related-list">
               {links.map((l: any) => (
@@ -287,11 +313,11 @@ function Related({ chapterId, drafts, lang, canEdit, chapters, withQ }: { chapte
       )}
       {d.faq.length > 0 && (
         <>
-          <h2>Häufige Fragen dazu</h2>
+          <h2 lang={uiLang}>{t('faqRelated')}</h2>
           {d.faq.map((f: any) => (
             <details key={f.id} className="faq-item"><summary>{f.question}</summary><Md text={f.answer} /></details>
           ))}
-          <p className="small"><Link to="/lesen/faq">Alle häufigen Fragen</Link></p>
+          <p className="small" lang={uiLang}><Link to="/lesen/faq">{t('allFaq')}</Link></p>
         </>
       )}
     </section>
@@ -402,13 +428,56 @@ export function ReaderFaqPage() {
   );
 }
 
+/** Notiz zum Kapitel direkt unter dem Titel (ADR-076): anlegen, ändern, löschen – legt dabei das Lesezeichen an */
+function ChapterNote({ chapterId, note, onSaved }: { chapterId: string; note: string | null | undefined; onSaved: () => void }) {
+  const { t } = useReaderText();
+  const { notify } = useApp();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => setEditing(false), [chapterId]);
+  const save = async (text: string) => {
+    setBusy(true);
+    try {
+      await api('PUT', `/reader/bookmarks/${chapterId}`, { note: text });
+      notify(text.trim() ? t('noteSaved') : t('noteDeleted'));
+      setEditing(false);
+      onSaved();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (editing) {
+    return (
+      <div className="chapter-note-edit no-print">
+        <label className="block">{t('noteLabel')}
+          <textarea rows={3} maxLength={500} value={draft} autoFocus placeholder={t('notePlaceholder')} onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape') setEditing(false); }} aria-describedby={`note-hint-${chapterId}`} />
+        </label>
+        <p id={`note-hint-${chapterId}`} className="small muted">{t('noteHint')} {draft.length}/500</p>
+        <span className="row-actions">
+          <button type="button" className="btn small primary" disabled={busy || draft === (note ?? '')} onClick={() => void save(draft)}>{t('save')}</button>
+          <button type="button" className="btn small" disabled={busy} onClick={() => setEditing(false)}>{t('cancel')}</button>
+          {note && <button type="button" className="btn small danger" disabled={busy} onClick={() => void save('')}>{t('deleteNote')}</button>}
+        </span>
+      </div>
+    );
+  }
+  return note
+    ? <p className="small bookmark-note">📝 {note} · <button type="button" className="linklike no-print" onClick={() => { setDraft(note); setEditing(true); }}>{t('editNote')}</button></p>
+    : <p className="no-print chapter-note-add"><button type="button" className="btn small ghost" onClick={() => { setDraft(''); setEditing(true); }}>{t('addNote')}</button></p>;
+}
+
 export function ReaderPage() {
   const { chapterId } = useParams();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const chapters = useLoad<any[]>('/chapters');
   const [drafts, setDrafts] = useState(false);
-  const { lang, setLang, languages, name: langName } = useReaderLanguage();
+  const { lang, setLang, languages } = useReaderLanguage();
+  const { t, uiLang } = useMemo(() => readerTexts(lang), [lang]);
   const glossary = useReaderGlossary(lang);
   const trans = useLoad<any>(lang !== 'de' ? `/reader/translations?lang=${lang}&drafts=${drafts}` : null, [lang, drafts]);
   const titleOf = (id: string, fallback: string) => (lang !== 'de' && trans.data?.language === lang ? trans.data.titles[id] ?? fallback : fallback);
@@ -463,6 +532,7 @@ export function ReaderPage() {
   const otherUpdates = Object.keys(updates).filter((id) => id !== current?.id).length;
   const bookmarked = !!mine.data?.bookmarks.some((b: any) => b.chapterId === current?.id);
   const bookmarkNote = mine.data?.bookmarks.find((b: any) => b.chapterId === current?.id)?.note as string | undefined;
+  const translationRequested = !!mine.data?.translationRequests?.some((r: any) => r.chapterId === current?.id && r.language === lang);
   const idx = current ? list.indexOf(current) : -1;
   // Hervorhebung: Suchwörter aus dem Link (?q=) – bleiben beim Blättern erhalten, bis sie entfernt werden
   const marked = useMemo(() => [...new Set((params.get('q') ?? '').toLocaleLowerCase('de').split(/\s+/).filter((w) => w.length >= 2))], [params]);
@@ -470,6 +540,7 @@ export function ReaderPage() {
   const withQ = (id: string) => `/lesen/${id}${params.get('q') ? `?q=${encodeURIComponent(params.get('q')!)}` : ''}`;
   return (
     <GlossaryProvider entries={glossary.data}>
+    <ReaderTextProvider lang={lang}>
     <Page title="Leseransicht" subtitle="Das Handbuch so lesen, wie Ihre Leserinnen und Leser es sehen"
       actions={<span className="no-print row-actions">
         {current && <button className="btn" onClick={() => window.print()}>🖨️ Kapitel drucken</button>}
@@ -477,34 +548,34 @@ export function ReaderPage() {
       </span>}>
       <ErrorBox error={chapters.error} />
       <div className="reader">
-        <nav className="reader-toc card no-print" aria-label="Inhaltsverzeichnis">
+        <nav className="reader-toc card no-print" aria-label={t('toc')} lang={uiLang}>
           {languages.length > 1 && (
-            <label className="block">Sprache
+            <label className="block">{t('language')}
               <select value={lang} onChange={(e) => setLang(e.target.value)}>
-                {languages.map((l) => <option key={l.code} value={l.code}>{l.name}{l.chapters !== null ? ` (${l.chapters} übersetzt)` : ''}</option>)}
+                {languages.map((l) => <option key={l.code} value={l.code} lang={l.code}>{NATIVE_NAMES[l.code] ?? l.name}{l.chapters !== null ? ` (${t('translatedCount', { n: l.chapters })})` : ''}</option>)}
               </select>
             </label>
           )}
           <div role="search" className="reader-search">
-            <label className="reader-search-label" htmlFor="reader-q">Im Handbuch suchen</label>
+            <label className="reader-search-label" htmlFor="reader-q">{t('search')}</label>
             <div className="reader-search-row">
-              <input id="reader-q" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="z. B. Lieferschein drucken"
+              <input id="reader-q" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('searchPlaceholder')}
                 aria-describedby="reader-q-status" autoComplete="off" />
-              {query && <button type="button" className="btn small ghost" onClick={() => setQuery('')} aria-label="Suche leeren">✕</button>}
+              {query && <button type="button" className="btn small ghost" onClick={() => setQuery('')} aria-label={t('clearSearch')}>✕</button>}
             </div>
             <p id="reader-q-status" className="small muted" aria-live="polite">
-              {searchError ?? (search ? (search.total ? `${search.total} Kapitel gefunden` : `Nichts gefunden zu „${search.q}“ – anderes Wort versuchen`) : '')}
+              {searchError ?? (search ? (search.total ? t('found', { n: search.total }) : t('notFound', { q: search.q })) : '')}
             </p>
           </div>
-          <label className="inline small"><input type="checkbox" checked={drafts} onChange={(e) => setDrafts(e.target.checked)} /> Entwürfe einblenden</label>
+          <label className="inline small" lang="de"><input type="checkbox" checked={drafts} onChange={(e) => setDrafts(e.target.checked)} /> Entwürfe einblenden</label>
           {search ? (
-            <ol className="plain reader-results" aria-label="Suchergebnisse">
+            <ol className="plain reader-results" aria-label={t('searchResults')}>
               {search.results.map((r) => (
                 <li key={r.chapterId}>
                   <Link to={`/lesen/${r.chapterId}?q=${encodeURIComponent(search.q)}`} aria-current={r.chapterId === chapterId ? 'page' : undefined} className={r.chapterId === chapterId ? 'active' : ''}>
                     <Marked text={r.title} words={search.words} />
                   </Link>
-                  {r.draft && <span className="tag small">Entwurf</span>}
+                  {r.draft && <span className="tag small">{t('draft')}</span>}
                   {r.snippet && <p className="small muted"><Marked text={r.snippet} words={search.words} /></p>}
                 </li>
               ))}
@@ -513,58 +584,58 @@ export function ReaderPage() {
             <>
               {mine.data?.bookmarks.length > 0 && (
                 <>
-                  <h2 className="toc-sub">★ Lesezeichen</h2>
+                  <h2 className="toc-sub">{t('bookmarks')}</h2>
                   <ul className="plain">{mine.data.bookmarks.slice(0, 5).map((b: any) => <li key={b.chapterId}><Link to={withQ(b.chapterId)}>{titleOf(b.chapterId, b.title)}</Link></li>)}</ul>
-                  <p className="small"><Link to="/lesen/lesezeichen">Alle Lesezeichen und Notizen</Link></p>
+                  <p className="small"><Link to="/lesen/lesezeichen">{t('allBookmarks')}</Link></p>
                 </>
               )}
               {mine.data?.recent.length > 0 && (
                 <>
-                  <h2 className="toc-sub">Zuletzt gelesen</h2>
+                  <h2 className="toc-sub">{t('recent')}</h2>
                   <ul className="plain">{mine.data.recent.slice(0, 3).map((r: any) => <li key={r.chapterId}><Link to={withQ(r.chapterId)}>{titleOf(r.chapterId, r.title)}</Link></li>)}</ul>
                 </>
               )}
-              <h2>Inhalt</h2>
+              <h2>{t('contents')}</h2>
               {chapters.data && !list.length && <p className="small muted">Noch keine freigegebenen Kapitel. {drafts ? '' : 'Blenden Sie Entwürfe ein, um sie vorab zu lesen.'}</p>}
               <ol className="plain">
                 {list.map((c) => (
                   <li key={c.id}>
                     <Link to={withQ(c.id)} aria-current={c.id === chapterId ? 'page' : undefined} className={c.id === chapterId ? 'active' : ''}><span lang={untranslated(c.id) ? 'de' : lang}>{titleOf(c.id, c.title)}</span></Link>
-                    {c.draft && <span className="tag small">Entwurf</span>}
-                    {untranslated(c.id) && <span className="tag small" title="noch nicht übersetzt">DE</span>}
-                    {updates[c.id] && <span className={`tag small tag-${updates[c.id]}`}>{updates[c.id] === 'new' ? 'Neu' : 'Geändert'}</span>}
+                    {c.draft && <span className="tag small">{t('draft')}</span>}
+                    {untranslated(c.id) && <span className="tag small" title={t('untranslatedTag')}>DE</span>}
+                    {updates[c.id] && <span className={`tag small tag-${updates[c.id]}`}>{updates[c.id] === 'new' ? t('tagNew') : t('tagChanged')}</span>}
                   </li>
                 ))}
               </ol>
-              <p className="small"><Link to="/lesen/faq">❓ Häufige Fragen</Link></p>
+              <p className="small"><Link to="/lesen/faq">{t('faqLink')}</Link></p>
             </>
           )}
-          {glossary.data && glossary.data.length > 0 && <p className="small muted">Unterstrichene Begriffe erklären sich per Klick oder Maus.</p>}
+          {glossary.data && glossary.data.length > 0 && <p className="small muted">{t('glossHint')}</p>}
         </nav>
-        <article ref={article} className="reader-body card" aria-label={current ? titleOf(current.id, current.title) : 'Kapitel'} lang={version.data?.language ?? 'de'}>
-          {!current ? <Empty>Wählen Sie links ein Kapitel{search ? ' aus den Suchergebnissen' : ''}.</Empty> : !version.data ? <ErrorBox error={version.error} /> : (
+        <article ref={article} className="reader-body card" aria-label={current ? titleOf(current.id, current.title) : t('chapter')} lang={version.data?.language ?? 'de'}>
+          {!current ? <Empty><span lang={uiLang}>{t('chooseChapter')}</span></Empty> : !version.data ? <ErrorBox error={version.error} /> : (
             <>
               {marked.length > 0 && (
-                <p className="reader-marked no-print" role="status">
-                  {hits ? `${hits} Treffer für „${params.get('q')}“ markiert.` : `„${params.get('q')}“ kommt in diesem Kapitel nicht vor.`}{' '}
-                  <button type="button" className="btn small ghost" onClick={() => { params.delete('q'); setParams(params); }}>Markierung entfernen</button>
+                <p className="reader-marked no-print" role="status" lang={uiLang}>
+                  {hits ? t('hits', { n: hits, q: params.get('q')! }) : t('noHits', { q: params.get('q')! })}{' '}
+                  <button type="button" className="btn small ghost" onClick={() => { params.delete('q'); setParams(params); }}>{t('removeMark')}</button>
                 </p>
               )}
               {(otherUpdates > 0 || openedAs?.chapterId === current.id) && (
-                <p className="reader-updates no-print" role="note">
-                  {openedAs?.chapterId === current.id && (openedAs.kind === 'new' ? 'Dieses Kapitel ist neu für Sie. ' : 'Dieses Kapitel wurde seit Ihrem letzten Lesen geändert. ')}
-                  {otherUpdates > 0 && `${otherUpdates === 1 ? '1 weiteres Kapitel ist neu für Sie oder wurde' : `${otherUpdates} weitere Kapitel sind neu für Sie oder wurden`} seit Ihrem letzten Lesen geändert – im Inhalt markiert.`}
+                <p className="reader-updates no-print" role="note" lang={uiLang}>
+                  {openedAs?.chapterId === current.id && `${openedAs.kind === 'new' ? t('newChapter') : t('changedChapter')} `}
+                  {otherUpdates > 0 && (otherUpdates === 1 ? t('otherOne') : t('otherMany', { n: otherUpdates }))}
                 </p>
               )}
               <div className="reader-title-row">
-                <h2 className="reader-title">{version.data.title ?? current.title}{current.draft && <span className="tag small">Entwurf – noch nicht freigegeben</span>}</h2>
-                <button type="button" className="btn small no-print" aria-pressed={bookmarked} onClick={async () => {
+                <h2 className="reader-title">{version.data.title ?? current.title}{current.draft && <span className="tag small" lang={uiLang}>{t('draftBanner')}</span>}</h2>
+                <button type="button" className="btn small no-print" lang={uiLang} aria-pressed={bookmarked} onClick={async () => {
                   await api(bookmarked ? 'DELETE' : 'PUT', `/reader/bookmarks/${current.id}`);
                   mine.reload();
-                }}>{bookmarked ? '★ Gemerkt' : '☆ Merken'}</button>
+                }}>{bookmarked ? t('bookmarked') : t('bookmark')}</button>
               </div>
-              {bookmarkNote && <p className="small bookmark-note">📝 {bookmarkNote} · <Link to="/lesen/lesezeichen">Notiz bearbeiten</Link></p>}
-              <LanguageNote version={version.data} name={langName} />
+              <div lang={uiLang}><ChapterNote chapterId={current.id} note={bookmarkNote} onSaved={() => mine.reload()} /></div>
+              <LanguageNote version={version.data} chapterId={current.id} requested={translationRequested} onRequested={() => mine.reload()} />
               <ChapterContent version={version.data} />
               <Related chapterId={current.id} drafts={drafts} lang={lang} canEdit={canEdit} chapters={list.map((c) => ({ id: c.id, title: titleOf(c.id, c.title) }))} withQ={withQ} />
               <Feedback chapterId={current.id} versionId={version.data.id} />
@@ -577,6 +648,7 @@ export function ReaderPage() {
         </article>
       </div>
     </Page>
+    </ReaderTextProvider>
     </GlossaryProvider>
   );
 }
@@ -650,6 +722,9 @@ export function PrintPage() {
   const languagesLoad = useLoad<{ code: string; name: string }[]>('/reader/languages');
   const lang = languagesLoad.data?.some((l) => l.code === params.get('sprache')) ? params.get('sprache')! : 'de';
   const langName = languagesLoad.data?.find((l) => l.code === lang)?.name ?? lang;
+  // Beschriftungen des gedruckten Handbuchs in der Druck-Sprache (ADR-074); Bedienelemente bleiben deutsch
+  const rt = useMemo(() => readerTexts(lang), [lang]);
+  const { t } = rt;
   const { ref } = useApp();
   const outlines = useLoad<any>('/outlines');
   const variants = (outlines.data?.items ?? []).filter((o: any) => o.latest);
@@ -692,6 +767,7 @@ export function PrintPage() {
     return [...seen.values()];
   })();
   const date = new Date().toLocaleDateString('de-DE');
+  const printDate = rt.date(new Date());
   const projects = useLoad<any[]>('/projects');
   const releases = useLoad<any[]>('/releases');
   const project = projects.data?.find((p) => p.id === currentProjectId()) ?? projects.data?.[0];
@@ -700,7 +776,8 @@ export function PrintPage() {
   const variant = variants.find((o: any) => o.id === outlineId);
   const roleLabel = role ? ref?.roles.find((r) => r.code === role)?.label ?? role : '';
   // Deckblatt (ADR-063): Titel, Stand und Version – bei Entwürfen und Varianten „Arbeitsstand“ (Releases gelten dem Standardhandbuch)
-  const edition = !drafts && !outlineId && release ? `Version ${release.version}` : 'Arbeitsstand';
+  const released = !drafts && !outlineId && !!release;
+  const edition = released ? t('version', { v: release.version }) : t('workingState');
   const bookTitle = variant?.name ?? project?.name ?? 'Benutzerhandbuch';
   // Drucken erst, wenn Kapitel, Deckblattangaben, Markdown-Renderer und Logo bereit sind – sonst entstünde ein PDF mit
   // Ersatzangaben, unformatiertem Text oder ohne Logo
@@ -716,17 +793,20 @@ export function PrintPage() {
     for (let i = 0; i < 60 && document.querySelector('.print-book .md-pending'); i++) await new Promise((r) => setTimeout(r, 50));
     window.print();
   };
-  const header = [lay?.headerText || [lay?.companyName, bookTitle].filter(Boolean).join(' · '), edition, roleLabel && `für ${roleLabel}`].filter(Boolean).join(' · ');
+  const header = [lay?.headerText || [lay?.companyName, bookTitle].filter(Boolean).join(' · '), edition, roleLabel && t('forRole', { role: roleLabel })].filter(Boolean).join(' · ');
+  // „Seite X von Y“ in der Druck-Sprache: Text und Zähler als CSS-content-Liste
+  const pageOf = t('pageOf').split(/(\{page\}|\{pages\})/).filter(Boolean)
+    .map((part) => (part === '{page}' ? 'counter(page)' : part === '{pages}' ? 'counter(pages)' : JSON.stringify(part))).join(' ');
   useEffect(() => {
     // Kopf-/Fußzeile der gedruckten Seiten: @page-Randboxen erben keine Variablen, daher als eigener Stilblock
     // Deckblatt ohne Kopfzeile: die :first-Regel muss nach der allgemeinen stehen, sonst gewinnt Chrome die spätere
     const style = document.createElement('style');
     style.dataset.printHeader = '';
     const footer = lay?.footerText ? ` @bottom-left { content: ${JSON.stringify(lay.footerText)}; font-size: 9pt; color: #555; }` : '';
-    style.textContent = `@page { @top-center { content: ${JSON.stringify(header)}; }${footer} } @page :first { @top-center { content: none; } @bottom-left { content: none; } }`;
+    style.textContent = `@page { @top-center { content: ${JSON.stringify(header)}; }${footer} @bottom-right { content: ${pageOf}; } } @page :first { @top-center { content: none; } @bottom-left { content: none; } }`;
     document.head.appendChild(style);
     return () => style.remove();
-  }, [header, lay?.footerText]);
+  }, [header, lay?.footerText, pageOf]);
   // Glossar-Anhang: nur Begriffe, die im gedruckten Text vorkommen
   const usedGlossary = useMemo(() => {
     if (!glossary.data?.length || !printed.length) return [];
@@ -767,54 +847,56 @@ export function PrintPage() {
       </div>
       <p className="small muted no-print">Tipp: Im Druckdialog „Als PDF speichern“ wählen. Das Handbuch beginnt mit einem Deckblatt{lay?.companyName || lay?.logoSha ? ' im Firmen-Layout' : ''}; jedes Kapitel beginnt auf einer neuen Seite, unten steht „Seite X von Y“. Mit einer Rolle erscheinen nur allgemeine und für diese Rolle bestimmte Inhalte.</p>
       {!versions ? <p className="muted">Lade …</p> : !printed.length ? <Empty>{versions.length && role ? `Keine Inhalte für die Rolle „${roleLabel}“.` : 'Noch keine freigegebenen Kapitel.'}</Empty> : (
-        <div className="print-book" style={accent ? ({ '--print-accent': accent } as React.CSSProperties) : undefined}>
-          <section className="print-cover" aria-label="Deckblatt">
+        <ReaderTextProvider lang={lang}>
+        <div className="print-book" lang={rt.uiLang} style={accent ? ({ '--print-accent': accent } as React.CSSProperties) : undefined}>
+          <section className="print-cover" aria-label={t('cover')}>
             {lay?.logoSha && <Logo sha={lay.logoSha} alt={`Logo ${lay.companyName ?? ''}`.trim()} onDone={() => setLogoDone(true)} />}
-            <p className="print-cover-kicker">{lay?.companyName ? `${lay.companyName} · ` : ''}Benutzerhandbuch</p>
+            <p className="print-cover-kicker">{lay?.companyName ? `${lay.companyName} · ` : ''}{t('manual')}</p>
             <h2 className="print-cover-title">{bookTitle}</h2>
             {lay?.coverSubtitle && <p className="print-cover-subtitle">{lay.coverSubtitle}</p>}
-            <p className="print-cover-edition">{edition}{roleLabel && ` · für ${roleLabel}`}{lang !== 'de' && ` · ${langName}`}</p>
+            <p className="print-cover-edition">{edition}{roleLabel && ` · ${t('forRole', { role: roleLabel })}`}{lang !== 'de' && ` · ${NATIVE_NAMES[lang] ?? langName}`}</p>
             <dl className="print-cover-meta">
-              <div><dt>Stand</dt><dd>{date}</dd></div>
-              <div><dt>Kapitel</dt><dd>{printed.length}</dd></div>
-              {edition !== 'Arbeitsstand' && release && <div><dt>Veröffentlicht</dt><dd>{new Date(release.createdAt).toLocaleDateString('de-DE')}</dd></div>}
-              {drafts && <div><dt>Hinweis</dt><dd>enthält nicht freigegebene Entwürfe</dd></div>}
+              <div><dt>{t('asOf')}</dt><dd>{printDate}</dd></div>
+              <div><dt>{t('chapters')}</dt><dd>{printed.length}</dd></div>
+              {released && <div><dt>{t('published')}</dt><dd>{rt.date(release.createdAt)}</dd></div>}
+              {drafts && <div><dt>{t('notice')}</dt><dd>{t('includesDrafts')}</dd></div>}
             </dl>
             {lay?.confidentiality && <p className="print-cover-confidential">{lay.confidentiality}</p>}
           </section>
-          <nav className="print-toc" aria-label="Inhaltsverzeichnis des Handbuchs">
-            <h2>Inhalt</h2>
+          <nav className="print-toc" aria-label={t('printToc')}>
+            <h2>{t('contents')}</h2>
             <ol>
-              {printed.map((v, n) => <li key={v.id}><a href={`#k-${v.id}`}>{numbered(n + 1, v.title)}</a>{v.status !== 'approved' && ' (Entwurf)'}</li>)}
-              {printedFaq.length > 0 && <li><a href="#faq">Häufige Fragen</a></li>}
-              {usedGlossary.length > 0 && <li><a href="#glossar">Glossar</a></li>}
+              {printed.map((v, n) => <li key={v.id}><a href={`#k-${v.id}`}>{numbered(n + 1, v.title)}</a>{v.status !== 'approved' && t('draftSuffix')}</li>)}
+              {printedFaq.length > 0 && <li><a href="#faq">{t('faqTitle')}</a></li>}
+              {usedGlossary.length > 0 && <li><a href="#glossar">{t('glossary')}</a></li>}
             </ol>
           </nav>
           {printed.map((v, n) => (
             <article key={v.id} id={`k-${v.id}`} className="print-chapter reader-body" aria-label={v.title}>
-              <h2 className="reader-title">{numbered(n + 1, v.title)}{v.status !== 'approved' && <span className="tag small">Entwurf</span>}</h2>
-              {v.fallback && <p className="small muted">({v.fallback === 'outdated' ? 'Übersetzung veraltet' : 'noch nicht übersetzt'} – deutsche Fassung)</p>}
+              <h2 className="reader-title">{numbered(n + 1, v.title)}{v.status !== 'approved' && <span className="tag small">{t('draft')}</span>}</h2>
+              {v.fallback && <p className="small muted">{v.fallback === 'outdated' ? t('printOutdated') : t('printMissing')}</p>}
               <ChapterContent version={v} role={role || undefined} />
               {seeAlso(v.chapterId).length > 0 && (
-                <p className="print-see"><strong>Siehe auch:</strong> {seeAlso(v.chapterId).map((x: any, i: number) => (
-                  <span key={x.chapterId}>{i > 0 && '; '}<a href={`#k-${printed[numberOf.get(x.chapterId)! - 1].id}`}>Kapitel {numberOf.get(x.chapterId)} „{x.title.replace(/^\d+(\.\d+)*\.?\s+/, '')}“</a></span>
+                <p className="print-see"><strong>{t('printSeeAlso')}</strong> {seeAlso(v.chapterId).map((x: any, i: number) => (
+                  <span key={x.chapterId}>{i > 0 && '; '}<a href={`#k-${printed[numberOf.get(x.chapterId)! - 1].id}`}>{t('chapterN', { n: numberOf.get(x.chapterId)! })} {t('quote', { x: x.title.replace(/^\d+(\.\d+)*\.?\s+/, '') })}</a></span>
                 ))}</p>
               )}
             </article>
           ))}
           {printedFaq.length > 0 && (
             <section id="faq" className="print-chapter print-faq" aria-labelledby="faq-h">
-              <h2 id="faq-h" className="reader-title">Häufige Fragen</h2>
+              <h2 id="faq-h" className="reader-title">{t('faqTitle')}</h2>
               {printedFaq.map((f) => <div key={f.id} className="print-faq-item"><h3>{f.question}</h3><Md text={f.answer} /></div>)}
             </section>
           )}
           {usedGlossary.length > 0 && (
             <section id="glossar" className="print-chapter print-glossary" aria-labelledby="glossar-h">
-              <h2 id="glossar-h" className="reader-title">Glossar</h2>
+              <h2 id="glossar-h" className="reader-title">{t('glossary')}</h2>
               <dl>{usedGlossary.map((g) => <div key={g.term}><dt>{g.term}</dt><dd>{g.text}</dd></div>)}</dl>
             </section>
           )}
         </div>
+        </ReaderTextProvider>
       )}
     </Page>
     </GlossaryProvider>
