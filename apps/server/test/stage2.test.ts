@@ -146,7 +146,7 @@ describe('OIDC-Anmeldung (ENTSCHEIDUNG E-15)', () => {
     // Redaktion: lesen ja, Einstellungen ändern nein
     const editor = await sign({ sub: 'u-123', name: 'Erika Redaktion', realm_access: { roles: ['onescm-editor', 'offline_access'] } });
     const me = await call('/me', editor);
-    expect(me.json()).toEqual({ id: 'oidc:u-123', name: 'Erika Redaktion', permissions: ['read', 'edit'] });
+    expect(me.json()).toEqual({ id: 'oidc:u-123', name: 'Erika Redaktion', permissions: ['read', 'edit'], globalPermissions: ['read', 'edit'] });
     expect((await call('/chapters', editor)).statusCode).toBe(200);
     expect((await call('/settings', editor, 'PUT', { readability: { maxSentenceWords: 25 } })).statusCode).toBe(403);
 
