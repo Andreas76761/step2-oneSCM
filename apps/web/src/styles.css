@@ -669,3 +669,19 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .file-btn { cursor: pointer; position: relative; }
 .file-btn:focus-within { outline: 2px solid var(--link); outline-offset: 2px; }
 .template-tools { margin-bottom: 10px; align-items: center; }
+
+/* ---------- Etappe 23: Siehe auch, FAQ, Lesezeichen ---------- */
+.reader-related { border-top: 1px solid var(--border); margin-top: 24px; padding-top: 12px; }
+.reader-related h2 { font-size: 18px; margin: 12px 0 8px; }
+.related-list { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.related-list li a { display: inline-block; min-height: 24px; padding: 2px 0; }
+.related-list li .btn { margin-left: 8px; }
+.related-edit { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.faq-item { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; background: var(--surface); }
+.faq-item summary { cursor: pointer; font-weight: 600; min-height: 24px; }
+.faq-list { display: flex; flex-direction: column; }
+.reader-title-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.reader-updates { background: var(--info-bg); border-radius: 8px; padding: 6px 10px; }
+.toc-sub { font-size: 14px; margin: 12px 0 4px; }
+.tag-new { border-color: var(--ok); }
+.tag-changed { border-color: var(--warn); }

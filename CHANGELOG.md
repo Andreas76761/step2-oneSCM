@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.23.0 – Etappe 23 (26.09.2026)
+
+### Hinzugefügt
+- **„Siehe auch“ und häufige Fragen (ADR-069):** unter jedem Kapitel verwandte Kapitel – manuell gepflegt und automatisch aus ähnlichen Inhalten – sowie passende FAQ; Verweise direkt in der Leseransicht bearbeiten; FAQ-Seite `/lesen/faq`.
+- **Lesezeichen und Verlauf (ADR-070):** Kapitel merken, „Zuletzt gelesen“, Markierung „Neu“/„Geändert“ im Inhaltsverzeichnis mit Hinweis im Kapitel.
+- Migration `031_reader_links_bookmarks.sql`; Tests T-200, T-201, E2E T-233 (axe); Anforderungen NFR-56, NFR-57.
+
+### Behoben
+- Druckansicht und alle Seiten übernehmen nur noch die Antwort der jüngsten Anfrage (kein falsches Handbuch nach schnellem Variantenwechsel); Drucken erst mit geladenem Renderer und Logo; Vorlagen-Import in einer Transaktion.
+
 ## 0.22.0 – Etappe 22 (26.09.2026)
 
 ### Hinzugefügt

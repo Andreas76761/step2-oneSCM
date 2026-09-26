@@ -683,5 +683,23 @@
     "documentation": [
       "docs/adr/ADR-068-schnelles-laden.md"
     ]
+  },
+  {
+    "id": "NFR-56",
+    "title": "Verwandte Kapitel („Siehe auch“) automatisch und pflegbar, passende FAQ und FAQ-Seite in der Leseransicht",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-069-siehe-auch-faq.md"
+    ]
+  },
+  {
+    "id": "NFR-57",
+    "title": "Lesezeichen, zuletzt gelesene Kapitel und Hinweise auf neue oder geänderte Kapitel je Person",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-070-lesezeichen-verlauf.md"
+    ]
   }
 ]

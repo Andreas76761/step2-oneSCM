@@ -1489,3 +1489,72 @@ test('[T-232] Leseransicht: Suche mit Hervorhebung, Glossar-Erklärungen; Druck 
   await own.locator('input[type=file]').setInputFiles({ name: 'kaputt.json', mimeType: 'application/json', buffer: Buffer.from('kein json') });
   await expect(page.getByText('Die Datei ist kein gültiges JSON – bitte eine exportierte Vorlagendatei wählen.')).toBeVisible();
 });
+
+test('[T-233] Siehe auch und häufige Fragen unter dem Kapitel, Verweise pflegen, FAQ-Seite; Lesezeichen, zuletzt gelesen, neue und geänderte Kapitel', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const mk = async (title: string, purpose: string, steps: string[]) => {
+    const c = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title, purpose, steps, result: 'Erledigt.' } })).json();
+    expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/submit`, { headers: red, data: {} })).ok()).toBe(true);
+    expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+    return c;
+  };
+  const a = await mk('E2E Rechnung drucken', 'Mit dieser Anleitung drucken Sie eine Rechnung für einen Kundenauftrag.', ['Öffnen Sie **Buchhaltung › Rechnungen**', 'Wählen Sie die Rechnung', 'Klicken Sie auf **Rechnung drucken**']);
+  await mk('E2E Rechnung stornieren', 'Mit dieser Anleitung stornieren Sie eine falsche Rechnung eines Kundenauftrags.', ['Öffnen Sie **Buchhaltung › Rechnungen**', 'Wählen Sie die Rechnung', 'Klicken Sie auf **Stornieren**']);
+  await request.post('/api/v1/faq', { headers: red, data: { question: 'Wie drucke ich eine Rechnung erneut?', answer: 'Öffnen Sie die Rechnung in der Buchhaltung und drucken Sie sie erneut.', status: 'published' } });
+
+  // Siehe auch (automatisch) und passende FAQ
+  await page.goto(`/lesen/${a.chapterId}`);
+  const article = page.getByRole('article', { name: 'E2E Rechnung drucken' });
+  const related = article.getByRole('region', { name: 'Siehe auch' });
+  await expect(related.getByRole('link', { name: 'E2E Rechnung stornieren' })).toBeVisible();
+  await article.getByText('Wie drucke ich eine Rechnung erneut?').click();
+  await expect(article.getByText('Öffnen Sie die Rechnung in der Buchhaltung')).toBeVisible();
+  expect(await axe()).toEqual([]);
+  // Verweise pflegen: Vorschlag ausblenden, Kapitel manuell verweisen
+  await related.getByRole('button', { name: 'Verweise bearbeiten' }).click();
+  await related.getByRole('button', { name: 'Vorschlag „E2E Rechnung stornieren“ ausblenden' }).click();
+  await expect(page.getByText('Vorschlag ausgeblendet.')).toBeVisible();
+  await expect(related.getByRole('link', { name: 'E2E Rechnung stornieren' })).toHaveCount(0);
+  await related.getByLabel('Kapitel verweisen').selectOption({ label: 'E2E Rechnung stornieren' });
+  await related.getByRole('button', { name: 'Hinzufügen' }).click();
+  await expect(page.getByText('Verweis hinzugefügt.')).toBeVisible();
+  await expect(related.getByRole('link', { name: 'E2E Rechnung stornieren' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await related.getByRole('button', { name: 'Fertig' }).click();
+
+  // Lesezeichen und zuletzt gelesen
+  await article.getByRole('button', { name: '☆ Merken' }).click();
+  await expect(article.getByRole('button', { name: '★ Gemerkt' })).toHaveAttribute('aria-pressed', 'true');
+  const toc = page.getByRole('navigation', { name: 'Inhaltsverzeichnis' });
+  await expect(toc.getByRole('heading', { name: '★ Lesezeichen' })).toBeVisible();
+  await expect(toc.getByRole('link', { name: 'E2E Rechnung drucken' }).first()).toBeVisible();
+  await expect(toc.getByRole('heading', { name: 'Zuletzt gelesen' })).toBeVisible();
+
+  // neues Kapitel seit dem letzten Besuch
+  await mk('E2E Rechnung korrigieren', 'Mit dieser Anleitung korrigieren Sie eine Rechnung.', ['Öffnen Sie **Buchhaltung › Rechnungen**', 'Klicken Sie auf **Korrigieren**']);
+  await page.reload();
+  await expect(page.getByRole('note')).toContainText(/neu für Sie oder wurden? seit Ihrem letzten Lesen geändert/);
+  await expect(toc.locator('li', { hasText: 'E2E Rechnung korrigieren' }).getByText('Neu')).toBeVisible();
+  expect(await axe()).toEqual([]);
+  // das neue Kapitel öffnen: Hinweis nennt es, Markierung im Inhalt entfällt, keine weiteren gezählt
+  await toc.getByRole('link', { name: 'E2E Rechnung korrigieren' }).click();
+  // (andere Tests der Suite legen weitere Kapitel an, die hier ebenfalls „neu“ sein können – daher nur der Kapitelteil)
+  await expect(page.getByRole('note')).toContainText('Dieses Kapitel ist neu für Sie.');
+  await expect(toc.locator('li', { hasText: 'E2E Rechnung korrigieren' }).getByText('Neu')).toHaveCount(0);
+  await toc.getByRole('link', { name: 'E2E Rechnung drucken' }).last().click();
+  await expect(page.getByRole('article', { name: 'E2E Rechnung drucken' })).toBeVisible();
+  await expect(page.getByText(/^Dieses Kapitel (ist neu für Sie|wurde seit)/)).toHaveCount(0);
+  await page.getByRole('article', { name: 'E2E Rechnung drucken' }).getByRole('button', { name: '★ Gemerkt' }).click();
+  await expect(toc.getByRole('heading', { name: '★ Lesezeichen' })).toHaveCount(0);
+
+  // FAQ-Seite
+  await page.goto('/lesen/faq');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Häufige Fragen');
+  await page.getByLabel('Fragen filtern').fill('Rechnung');
+  await page.getByText('Wie drucke ich eine Rechnung erneut?').click();
+  await expect(page.getByText('Öffnen Sie die Rechnung in der Buchhaltung')).toBeVisible();
+  expect(await axe()).toEqual([]);
+});
