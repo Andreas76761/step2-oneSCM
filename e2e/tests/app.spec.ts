@@ -1165,7 +1165,7 @@ test('[T-228] Startseite, Menü nach Ablauf, Kapitel-Assistent, Anleitungs-Check
   const mine = chapters.chapters.find((c: any) => c.title === 'E2E Lieferung anlegen');
   const v = await (await request.get(`/api/v1/chapter-versions/${mine.versionId}`, { headers: h })).json();
   const stepsBlock = v.sections.find((s: any) => s.code === 'steps').blocks[0];
-  expect((await request.patch(`/api/v1/content-blocks/${stepsBlock.id}`, { headers: h, data: { text: 'Öffnen Sie **Einkauf > Lieferungen**. Klicken Sie auf **Neu** und wählen Sie den Lieferanten.', kind: 'paragraph', expectedVersionNo: stepsBlock.versionNo } })).ok()).toBe(true);
+  expect((await request.patch(`/api/v1/content-blocks/${stepsBlock.id}`, { headers: h, data: { text: 'Öffnen Sie Einkauf > Lieferungen. Klicken Sie auf **Neu** und wählen Sie den Lieferanten.', kind: 'paragraph', expectedVersionNo: stepsBlock.versionNo } })).ok()).toBe(true);
   await page.goto('/anleitungs-check');
   const row = page.getByRole('row', { name: /E2E Lieferung anlegen/ });
   await expect(row).toContainText('Schritte nicht nummeriert');
@@ -1174,8 +1174,10 @@ test('[T-228] Startseite, Menü nach Ablauf, Kapitel-Assistent, Anleitungs-Check
   const numbered = page.locator('.guide-item', { hasText: 'Schritte nummeriert' });
   await numbered.getByRole('button', { name: 'So geht’s' }).click();
   expect(await axe()).toEqual([]);
-  await numbered.getByRole('button', { name: 'Als nummerierte Schritte schreiben' }).click();
-  await expect(page.getByText('1 Korrektur übernommen.')).toBeVisible();
+  await expect(numbered.getByRole('button', { name: 'Als nummerierte Schritte schreiben' })).toBeVisible();
+  // zwei Korrekturen am selben Absatz (nummerieren, Menüpfad fett) – „Alle“ übernimmt beide nacheinander
+  await page.getByRole('button', { name: 'Alle Korrekturen übernehmen (2)' }).click();
+  await expect(page.getByText('2 Korrekturen übernommen.')).toBeVisible();
   await expect(page.locator('.guide-icon.ok')).toHaveCount(10);
   const after = await (await request.get(`/api/v1/chapter-versions/${mine.versionId}`, { headers: h })).json();
   expect(after.sections.find((s: any) => s.code === 'steps').blocks[0]).toMatchObject({ kind: 'list', text: '1. Öffnen Sie **Einkauf > Lieferungen**.\n2. Klicken Sie auf **Neu**.\n3. Wählen Sie den Lieferanten.' });

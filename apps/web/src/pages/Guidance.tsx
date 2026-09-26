@@ -71,16 +71,40 @@ export function GuidancePanel({ versionId, canEdit, onChanged }: { versionId: st
       setBusy(false);
     }
   };
-  const allFixes = d.checks.flatMap((c: any) => c.items.filter((i: any) => i.fix).map((i: any) => i.fix));
   // je Absatz nur eine Korrektur gleichzeitig (spätere beziehen sich sonst auf einen veralteten Stand)
-  const oneFixPerBlock = [...new Map(allFixes.map((f: any) => [f.blockId, f])).values()];
+  const firstFixes = (data: any) => [...new Map(data.checks.flatMap((c: any) => c.items.filter((i: any) => i.fix).map((i: any) => i.fix)).reverse().map((f: any) => [f.blockId, f])).values()];
+  const oneFixPerBlock = firstFixes(d);
+  const allFixesRounds = d.checks.reduce((n: number, c: any) => n + c.items.filter((i: any) => i.fix).length, 0);
+  /** Alle Korrekturen: runden­weise je Absatz eine, danach neu prüfen, bis nichts mehr zu korrigieren ist (höchstens 5 Runden) */
+  const applyAll = async () => {
+    setBusy(true);
+    let saved = 0;
+    const skipped: string[] = [];
+    try {
+      let fixes = oneFixPerBlock;
+      for (let round = 0; round < 5 && fixes.length; round++) {
+        const r = await post<any>(`/guidance/chapter-versions/${versionId}/apply`, { fixes });
+        saved += r.saved.length;
+        skipped.push(...r.skipped.map((s: any) => s.reason));
+        g.setData(r.guidance);
+        if (!r.saved.length) break;
+        fixes = firstFixes(r.guidance);
+      }
+      notify(skipped.length ? `${saved} übernommen, ${skipped.length} übersprungen (${[...new Set(skipped)].join('; ')}).` : `${saved} ${saved === 1 ? 'Korrektur' : 'Korrekturen'} übernommen.`);
+      onChanged?.();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <div className="guide">
       <div className="guide-head">
         <ScoreMeter score={d.score} />
         <p className="small">{d.passed} von {d.total} Punkten erfüllt{!d.editable && ' · freigegebene oder eingereichte Versionen sind schreibgeschützt'}</p>
         {editable && oneFixPerBlock.length > 0 && (
-          <button className="btn primary" disabled={busy} onClick={() => apply(oneFixPerBlock)}>Alle Korrekturen übernehmen ({oneFixPerBlock.length})</button>
+          <button className="btn primary" disabled={busy} onClick={() => void applyAll()}>Alle Korrekturen übernehmen ({allFixesRounds})</button>
         )}
       </div>
       <ul className="guide-list">

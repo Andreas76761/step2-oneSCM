@@ -315,7 +315,7 @@ const RULE_NAMES: Record<string, string> = {
 interface Phrase { avoid: string; use: string | null; note: string | null }
 
 /** Eigene Stilregeln des Projekts (ADR-044): Regeln an/aus, Anrede, Satzlänge, eigene Formulierungen – ändern nur Administration */
-function RulesTab({ canAdmin }: { canAdmin: boolean }) {
+function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAdmin: boolean }) {
   const { notify } = useApp();
   const rules = useLoad<any>('/style/rules');
   const [d, setD] = useState<any | null>(null);
@@ -384,7 +384,7 @@ function RulesTab({ canAdmin }: { canAdmin: boolean }) {
       </Card>
       {!ro && <button className="btn primary" onClick={save}>Stilregeln speichern</button>}
       <RulesExchange canAdmin={canAdmin} onChanged={rules.reload} />
-      <Libraries canAdmin={canAdmin} />
+      <Libraries canAdmin={canAdmin} canGlobalAdmin={canGlobalAdmin} />
     </>
   );
 }
@@ -454,7 +454,8 @@ function RulesExchange({ canAdmin, onChanged }: { canAdmin: boolean; onChanged: 
  * Gemeinsame Regeln (ADR-050): Bibliotheken abonnieren (Reihenfolge = Vorrang), wirksame Formulierungen mit Herkunft ansehen;
  * die Administration legt Bibliotheken aus den Regeln dieses Projekts oder aus einer CSV an und aktualisiert sie.
  */
-function Libraries({ canAdmin }: { canAdmin: boolean }) {
+// Abonnieren: Projekt-Administration; Bibliotheken pflegen: nur globale Administration (projektübergreifende Daten)
+function Libraries({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAdmin: boolean }) {
   const { notify } = useApp();
   const subs = useLoad<any>('/style/libraries');
   const eff = useLoad<any>('/style/rules/effective');
@@ -484,7 +485,7 @@ function Libraries({ canAdmin }: { canAdmin: boolean }) {
     <>
       <Card title="Gemeinsame Regeln (Bibliotheken)">
         <p className="small muted">Bibliotheken bündeln Formulierungsregeln für mehrere Handbücher – einmal gepflegt, überall gleich. Eigene Formulierungen dieses Projekts haben Vorrang; bei mehreren Bibliotheken gilt die obere.</p>
-        {!all.length && <Empty>Noch keine Bibliothek vorhanden.{canAdmin ? ' Legen Sie unten eine aus den Regeln dieses Projekts an.' : ''}</Empty>}
+        {!all.length && <Empty>Noch keine Bibliothek vorhanden.{canGlobalAdmin ? ' Legen Sie unten eine aus den Regeln dieses Projekts an.' : ''}</Empty>}
         {order.length > 0 && (
           <ol className="plain lib-order">
             {order.map((id, i) => (
@@ -531,7 +532,7 @@ function Libraries({ canAdmin }: { canAdmin: boolean }) {
           <p className="small muted">Überdeckt: {eff.data.shadowed.map((x: any) => `„${x.avoid}“ aus ${x.libraryName}`).join(', ')}.</p>
         )}
       </Card>
-      {canAdmin && (
+      {canGlobalAdmin && (
         <Card title="Bibliotheken pflegen">
           <p className="small muted">Pflegen Sie Formulierungen hier im Projekt und veröffentlichen Sie sie dann als Bibliothek – oder laden Sie eine CSV hoch (Spalten wie beim Export).</p>
           <div className="filters">
@@ -571,6 +572,7 @@ export function StylePage() {
   const me = useLoad<any>('/me');
   const canEdit = !!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin');
   const canAdmin = !!me.data?.permissions.includes('admin');
+  const canGlobalAdmin = !!me.data?.globalPermissions?.includes('admin');
   const [tab, setTab] = useState<'text' | 'chapter' | 'snippets' | 'rules'>('text');
   const empty = useMemo(() => '', []);
   return (
@@ -586,7 +588,7 @@ export function StylePage() {
         {tab === 'text' && <StyleEditor initial={empty} canRewrite={canEdit} />}
         {tab === 'chapter' && <ChapterTab canEdit={canEdit} />}
         {tab === 'snippets' && <SnippetTab />}
-        {tab === 'rules' && <RulesTab canAdmin={canAdmin} />}
+        {tab === 'rules' && <RulesTab canAdmin={canAdmin} canGlobalAdmin={canGlobalAdmin} />}
       </div>
     </Page>
   );

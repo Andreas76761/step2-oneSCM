@@ -26,6 +26,9 @@ describe('Etappe 18', () => {
       expect(csvLib.phrases).toHaveLength(2);
       // Leser sehen die Liste (Auswahl im Projekt), API-Tokens nicht
       expect((await call('GET', '/style-libraries', undefined, 'u-leser')).json).toHaveLength(2);
+      // globale Berechtigungen für die Oberfläche (Pflege nur mit globalem „admin“)
+      expect((await call('GET', '/me')).json.globalPermissions).toContain('admin');
+      expect((await call('GET', '/me', undefined, 'u-redaktion')).json.globalPermissions).not.toContain('admin');
       // Abonnieren: nur Projekt-Administration; Reihenfolge = Vorrang
       expect((await call('PUT', '/style/libraries', { libraryIds: [lib.id] }, 'u-redaktion')).status).toBe(403);
       expect((await call('PUT', '/style/libraries', { libraryIds: ['sl-gibtsnicht'] })).status).toBe(404);
@@ -78,6 +81,9 @@ describe('Etappe 18', () => {
     expect(byCode.abbreviations.items.map((i) => i.excerpt)).toEqual(['MOQ']);
     expect(analyzeGuidance([{ id: 'm', section: 'steps', kind: 'paragraph', text: 'Öffnen Sie Produkte › Preislisten.', versionNo: 1 }]).checks.find((c) => c.code === 'menu_bold')!.items[0].fix?.text).toBe('Öffnen Sie **Produkte › Preislisten**.');
     expect(a.score).toBeLessThan(80);
+    // ein Absatz im Abschnitt „Schritte“ ohne Handlung zählt nicht als Anleitung
+    const noAction = analyzeGuidance([{ id: 's', section: 'steps', kind: 'paragraph', text: 'Der Auftrag wird gespeichert.', versionNo: 1 }]);
+    expect(noAction.checks.find((c) => c.code === 'steps')).toMatchObject({ status: 'warning', addSection: { section: 'steps' } });
 
     const built = await build('guidance');
     const call = client(built);

@@ -128,7 +128,9 @@ export function analyzeGuidance(blocks: GuidanceBlock[], opts: GuidanceOptions =
   const content = blocks.filter((b) => b.kind !== 'gap' && b.kind !== 'xref' && b.text.trim());
   const inSection = (s: string) => content.filter((b) => b.section === s);
   const stepBlocks = inSection('steps');
-  const hasSteps = stepBlocks.length > 0 || content.some((b) => segmentSentences(b.text).filter((x) => isAction(x.text)).length >= 2);
+  // Schritte zählen nur, wenn Handlungen erkannt werden – ein Absatz im Abschnitt „Schritte“ allein genügt nicht
+  const actionsIn = (b: GuidanceBlock) => segmentSentences(b.text).filter((x) => isAction(x.text)).length;
+  const hasSteps = stepBlocks.some((b) => actionsIn(b) > 0) || content.some((b) => actionsIn(b) >= 2);
   const checks: GuidanceCheck[] = [];
   const add = (code: GuidanceCode, bad: 'warning' | 'info', failed: boolean, message: [string, string], hint: string, items: GuidanceItem[] = [], addSection?: GuidanceCheck['addSection']) =>
     checks.push({ code, label: GUIDANCE_LABEL[code], status: failed ? bad : 'ok', message: failed ? message[1] : message[0], hint, items: failed ? items : [], ...(failed && addSection ? { addSection } : {}) });
