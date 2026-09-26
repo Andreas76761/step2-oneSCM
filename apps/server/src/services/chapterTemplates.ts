@@ -171,12 +171,15 @@ export async function importChapterTemplates(ctx: Ctx, input: Record<string, unk
       prerequisites: cleanLines(t.prerequisites ?? [], `${at}: prerequisites`) ?? [], hints: cleanLines(t.hints ?? [], `${at}: hints`) ?? [],
     };
   });
-  const created: { id: string; name: string; renamedFrom: string | null }[] = [];
-  for (const t of prepared) {
-    const name = await freeName(ctx, t.name);
-    const c = await createChapterTemplate(ctx, { ...t, name }, user);
-    created.push({ id: c.id, name: c.name, renamedFrom: name === t.name ? null : t.name });
-  }
-  await audit(ctx, user.id, 'chapter_template.imported', 'project', ctx.projectId, { count: created.length });
-  return { imported: created.length, templates: created };
+  // eine Transaktion für alle Vorlagen und das Protokoll (innere tx werden zusammengeführt): ganz oder gar nicht
+  return ctx.db.tx(async () => {
+    const created: { id: string; name: string; renamedFrom: string | null }[] = [];
+    for (const t of prepared) {
+      const name = await freeName(ctx, t.name);
+      const c = await createChapterTemplate(ctx, { ...t, name }, user);
+      created.push({ id: c.id, name: c.name, renamedFrom: name === t.name ? null : t.name });
+    }
+    await audit(ctx, user.id, 'chapter_template.imported', 'project', ctx.projectId, { count: created.length });
+    return { imported: created.length, templates: created };
+  });
 }

@@ -44,16 +44,22 @@ export function useLoad<T>(path: string | null, deps: unknown[] = []) {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // nur die Antwort der jüngsten Anfrage übernehmen: wechselt der Pfad (z. B. andere Variante), darf eine spät
+  // eintreffende ältere Antwort den neuen Stand nicht überschreiben
+  const latest = useRef(0);
   const load = useCallback(async () => {
     if (!path) return;
+    const id = ++latest.current;
     setLoading(true);
     try {
-      setData(await get<T>(path));
+      const result = await get<T>(path);
+      if (id !== latest.current) return;
+      setData(result);
       setError(null);
     } catch (e) {
-      setError(errorText(e));
+      if (id === latest.current) setError(errorText(e));
     } finally {
-      setLoading(false);
+      if (id === latest.current) setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, ...deps]);
@@ -236,7 +242,10 @@ export function ImageInsert({ onInsert }: { onInsert: (markdown: string) => void
 }
 
 /** Markdown-Vorschau ohne HTML-Ausführung (kein rehype-raw, §13) – Renderer wird nachgeladen (Code-Splitting) */
-const MarkdownView = lazy(() => import('./Markdown'));
+let markdownModule: Promise<typeof import('./Markdown')> | null = null;
+/** Renderer laden (einmal); die Druckansicht wartet darauf, bevor sie das Drucken freigibt */
+export const preloadMarkdown = () => (markdownModule ??= import('./Markdown'));
+const MarkdownView = lazy(preloadMarkdown);
 export function Md({ text }: { text: string }) {
   // bis der Renderer geladen ist: Text unformatiert, damit nichts springt oder fehlt
   return <Suspense fallback={<div className="md md-pending">{text}</div>}><MarkdownView text={text} /></Suspense>;

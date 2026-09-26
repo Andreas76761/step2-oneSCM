@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode }
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, currentProjectId, get, mediaUrl, post } from '../api';
 import { GlossText, GlossaryProvider, type GlossaryEntry } from '../components/Glossary';
-import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Card, Empty, ErrorBox, Md, Page, errorText, preloadMarkdown, useApp, useLoad } from '../components/ui';
 import { matches } from './FilteredView';
 
 const CALLOUT: Record<string, { icon: string; label: string }> = {
@@ -342,16 +342,18 @@ function DoneButton({ id, title, onDone }: { id: string; title: string; onDone: 
 const numbered = (n: number, title: string) => (/^\d+(\.\d+)*\.?\s/.test(title) ? title : `${n}. ${title}`);
 
 /** Firmenlogo aus der Medienablage (Layout, ADR-038) */
-function Logo({ sha, alt }: { sha: string; alt: string }) {
+function Logo({ sha, alt, onDone }: { sha: string; alt: string; onDone: () => void }) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
-    mediaUrl(sha).then((u) => alive && setUrl(u), () => undefined);
+    // fehlt das Bild, wird ohne Logo gedruckt – aber erst, wenn das feststeht
+    mediaUrl(sha).then((u) => alive && setUrl(u), () => alive && onDone());
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sha]);
-  return url ? <img className="print-cover-logo" src={url} alt={alt} /> : null;
+  return url ? <img className="print-cover-logo" src={url} alt={alt} onLoad={onDone} onError={onDone} /> : null;
 }
 
 /**
@@ -380,8 +382,14 @@ export function PrintPage() {
     const list: any[] | undefined = outlineId ? chapters.data?.chapters : chapters.data;
     if (!list) return;
     setVersions(null);
+    // Antworten einer inzwischen abgewählten Variante/Einstellung verwerfen – sonst stünde das falsche Handbuch unter dem Titel
+    let current = true;
     const shown = list.map((c) => (drafts ? c.versions[0] : c.versions.find((v: any) => v.status === 'approved'))).filter(Boolean);
-    Promise.all(shown.map((v: any) => api<any>('GET', `/chapter-versions/${v.id}`))).then(setVersions).catch((e) => setError(errorText(e)));
+    Promise.all(shown.map((v: any) => api<any>('GET', `/chapter-versions/${v.id}`)))
+      .then((v) => current && setVersions(v), (e) => current && setError(errorText(e)));
+    return () => {
+      current = false;
+    };
   }, [chapters.data, drafts, outlineId]);
   // mit Rolle: Kapitel ohne passenden Inhalt entfallen
   const printed = (versions ?? []).filter((v) => readerSections(v, role || undefined).length);
@@ -396,8 +404,20 @@ export function PrintPage() {
   // Deckblatt (ADR-063): Titel, Stand und Version – bei Entwürfen und Varianten „Arbeitsstand“ (Releases gelten dem Standardhandbuch)
   const edition = !drafts && !outlineId && release ? `Version ${release.version}` : 'Arbeitsstand';
   const bookTitle = variant?.name ?? project?.name ?? 'Benutzerhandbuch';
-  // Drucken erst, wenn Kapitel UND Deckblattangaben geladen sind – sonst entstünde ein PDF mit Ersatztitel/„Arbeitsstand“
-  const ready = !!versions && !!projects.data && !!releases.data && !!layout.data && !!outlines.data;
+  // Drucken erst, wenn Kapitel, Deckblattangaben, Markdown-Renderer und Logo bereit sind – sonst entstünde ein PDF mit
+  // Ersatzangaben, unformatiertem Text oder ohne Logo
+  const [markdownReady, setMarkdownReady] = useState(false);
+  const [logoDone, setLogoDone] = useState(false);
+  useEffect(() => {
+    preloadMarkdown().then(() => setMarkdownReady(true), () => setMarkdownReady(true));
+  }, []);
+  useEffect(() => setLogoDone(false), [layout.data?.logoSha]);
+  const ready = !!versions && !!projects.data && !!releases.data && !!layout.data && !!outlines.data && markdownReady && (!layout.data?.logoSha || logoDone);
+  const print = async () => {
+    // letzte Absicherung: warten, bis kein Text mehr auf den Renderer wartet (höchstens 3 s)
+    for (let i = 0; i < 60 && document.querySelector('.print-book .md-pending'); i++) await new Promise((r) => setTimeout(r, 50));
+    window.print();
+  };
   const header = [lay?.headerText || [lay?.companyName, bookTitle].filter(Boolean).join(' · '), edition, roleLabel && `für ${roleLabel}`].filter(Boolean).join(' · ');
   useEffect(() => {
     // Kopf-/Fußzeile der gedruckten Seiten: @page-Randboxen erben keine Variablen, daher als eigener Stilblock
@@ -422,7 +442,7 @@ export function PrintPage() {
     <Page title="Handbuch drucken" subtitle={`${variant ? `Variante „${variant.name}“` : 'Standardhandbuch'}${roleLabel ? ` für ${roleLabel}` : ''} · ${drafts ? 'freigegebene Kapitel und Entwürfe' : 'freigegebene Kapitel'} · Stand ${date}`}
       actions={<span className="no-print row-actions">
         <Link className="btn" to="/lesen">← Leseransicht</Link>
-        <button className="btn primary" disabled={!ready} onClick={() => window.print()}>🖨️ Drucken / als PDF speichern</button>
+        <button className="btn primary" disabled={!ready} onClick={() => void print()}>🖨️ Drucken / als PDF speichern</button>
       </span>}>
       <ErrorBox error={error ?? chapters.error ?? projects.error ?? releases.error ?? layout.error} />
       <div className="filters no-print" role="group" aria-label="Was drucken?">
@@ -444,7 +464,7 @@ export function PrintPage() {
       {!versions ? <p className="muted">Lade …</p> : !printed.length ? <Empty>{versions.length && role ? `Keine Inhalte für die Rolle „${roleLabel}“.` : 'Noch keine freigegebenen Kapitel.'}</Empty> : (
         <div className="print-book" style={accent ? ({ '--print-accent': accent } as React.CSSProperties) : undefined}>
           <section className="print-cover" aria-label="Deckblatt">
-            {lay?.logoSha && <Logo sha={lay.logoSha} alt={`Logo ${lay.companyName ?? ''}`.trim()} />}
+            {lay?.logoSha && <Logo sha={lay.logoSha} alt={`Logo ${lay.companyName ?? ''}`.trim()} onDone={() => setLogoDone(true)} />}
             <p className="print-cover-kicker">{lay?.companyName ? `${lay.companyName} · ` : ''}Benutzerhandbuch</p>
             <h2 className="print-cover-title">{bookTitle}</h2>
             {lay?.coverSubtitle && <p className="print-cover-subtitle">{lay.coverSubtitle}</p>}
