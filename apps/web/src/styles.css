@@ -588,3 +588,32 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .tour-target { outline: 3px solid var(--link) !important; outline-offset: 3px; border-radius: 6px; }
 .guide-summary { border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: 6px; padding: 8px 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 2px; }
 .guide-summary.below { border-left-color: var(--warn); background: var(--warn-bg); }
+
+/* ---------- Etappe 20: Rückmeldungen, Vorlagen, Druckansicht ---------- */
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; }
+.stat strong { font-size: 26px; }
+.word-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.inline-form { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.tpl-own { font-size: 11px; margin-left: 6px; }
+.print-toc ol { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.print-toc a { display: inline-block; min-height: 24px; padding: 2px 0; }
+@media print {
+  .sidebar, .skip-link, .nav-toggle, .no-print, .toast, .tour, .page-head .actions { display: none !important; }
+  .shell { display: block !important; }
+  .main { padding: 0 !important; margin: 0 !important; }
+  body, .card { background: #fff !important; color: #000 !important; box-shadow: none !important; }
+  .reader { display: block; }
+  .card { border: 0 !important; padding: 0 !important; }
+  .reader-body { max-width: none; font-size: 12pt; }
+  .reader-steps label { border: 0; padding: 2pt 0; }
+  .reader-steps input { appearance: none; -webkit-appearance: none; width: 12pt; height: 12pt; border: 1pt solid #000; border-radius: 2pt; }
+  .reader-steps li.done span { text-decoration: none; color: #000; }
+  .callout { border-left: 3pt solid #000; background: none; }
+  .print-chapter { break-before: page; page-break-before: always; }
+  .print-toc { break-after: page; }
+  a { color: #000; text-decoration: none; }
+  h2, h3 { break-after: avoid; }
+  li, .callout { break-inside: avoid; }
+}
+.own-templates li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }

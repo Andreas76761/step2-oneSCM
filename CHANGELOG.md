@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.20.0 – Etappe 20 (26.09.2026)
+
+### Hinzugefügt
+- **Rückmeldungen auswerten (ADR-058):** Seite „Rückmeldungen“ mit Anteil „nicht hilfreich“ je Kapitel, Entwicklung, häufigen Begriffen und neuesten Kommentaren; aus einer Rückmeldung eine Aufgabe erstellen.
+- **Eigene Kapitelvorlagen (ADR-059):** „💾 Als Vorlage“ in der Werkstatt; im Kapitel-Assistenten wählbar, umbenennen und löschen.
+- **Druck-/PDF-Ansicht (ADR-060):** Kapitel oder ganzes Handbuch drucken bzw. als PDF speichern, mit Inhaltsverzeichnis und Kästchen zum Abhaken.
+- **Rückmeldungen in der Online-Hilfe (ADR-061):** „War das hilfreich?“ in der eingebetteten Hilfe – anonym, nur für Veröffentlichtes, mit Grenze je Adresse und Honigtopf.
+- Migration `029_templates_feedback_source.sql`; Tests T-192 … T-194, E2E T-230 (axe); Anforderungen NFR-45 … NFR-48.
+
+### Behoben
+- Anleitungs-Check vor der Freigabe gilt nicht für Handbuch-Varianten; „Entwürfe einblenden“ zeigt die neueste Version; Folgezeilen nummerierter Schritte bleiben in der Leseransicht erhalten.
+
 ## 0.19.0 – Etappe 19 (26.09.2026)
 
 ### Hinzugefügt

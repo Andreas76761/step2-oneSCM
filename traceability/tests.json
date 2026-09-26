@@ -1246,5 +1246,43 @@
       "NFR-43",
       "NFR-44"
     ]
+  },
+  {
+    "id": "T-192",
+    "title": "Rückmeldungen auswerten: Anteil „nicht hilfreich“ je Kapitel, häufige Begriffe, Aufgabe aus Rückmeldung",
+    "file": "apps/server/test/stage20.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-45"
+    ]
+  },
+  {
+    "id": "T-193",
+    "title": "Eigene Kapitelvorlagen: aus Kapitel speichern, pflegen, im Assistenten neben den mitgelieferten",
+    "file": "apps/server/test/stage20.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-46"
+    ]
+  },
+  {
+    "id": "T-194",
+    "title": "Rückmeldung in der Online-Hilfe: anonym, nur veröffentlichte Hilfe, Schutz vor Missbrauch",
+    "file": "apps/server/test/stage20.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-48"
+    ]
+  },
+  {
+    "id": "T-230",
+    "title": "Rückmeldungen auswerten mit Aufgabe, eigene Kapitelvorlage aus der Werkstatt, Druckansicht (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-45",
+      "NFR-46",
+      "NFR-47"
+    ]
   }
 ]

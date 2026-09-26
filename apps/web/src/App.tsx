@@ -37,7 +37,8 @@ import { AbbreviationsPage, FaqPage, GlossaryPage, ImageIndexPage, PlanningPage 
 import { StartPage } from './pages/Start';
 import { GuidancePage } from './pages/Guidance';
 import { ChapterAssistantPage } from './pages/ChapterAssistant';
-import { ReaderPage } from './pages/Reader';
+import { PrintPage, ReaderPage } from './pages/Reader';
+import { FeedbackPage } from './pages/Feedback';
 import { Tour, tourDone } from './components/Tour';
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
@@ -58,6 +59,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   ] },
   { id: 'pruefen', label: '3 Prüfen', items: [
     { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: '🔍' },
+    { to: '/rueckmeldungen', label: 'Rückmeldungen', icon: '💬' },
     { to: '/schreibstil', label: 'Schreibstil', icon: '🖋️' },
     { to: '/terminologie', label: 'Terminologie', icon: '📖' },
     { to: '/evidenz', label: 'Evidenz', icon: '🔎' },
@@ -362,6 +364,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/anleitungs-check/:versionId" element={<GuidancePage />} />
             <Route path="/kapitel-assistent" element={<ChapterAssistantPage />} />
             <Route path="/lesen" element={<ReaderPage />} />
+            <Route path="/lesen/druck" element={<PrintPage />} />
+            <Route path="/rueckmeldungen" element={<FeedbackPage />} />
             <Route path="/lesen/:chapterId" element={<ReaderPage />} />
             <Route path="/quellen" element={<SourcesPage />} />
             <Route path="/cluster" element={<ClustersPage />} />

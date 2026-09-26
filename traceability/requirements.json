@@ -584,5 +584,41 @@
     "documentation": [
       "docs/adr/ADR-057-check-vor-freigabe.md"
     ]
+  },
+  {
+    "id": "NFR-45",
+    "title": "Rückmeldungen auswerten: Anteil „nicht hilfreich“ je Kapitel, Entwicklung, häufige Begriffe, Aufgabe aus Rückmeldung",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-058-rueckmeldungen-auswerten.md"
+    ]
+  },
+  {
+    "id": "NFR-46",
+    "title": "Eigene Kapitelvorlagen je Projekt aus bestehenden Kapiteln",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-059-eigene-kapitelvorlagen.md"
+    ]
+  },
+  {
+    "id": "NFR-47",
+    "title": "Druck- und PDF-Ansicht von Kapitel und Handbuch",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-060-druckansicht.md"
+    ]
+  },
+  {
+    "id": "NFR-48",
+    "title": "Anonyme Rückmeldungen in der öffentlichen Online-Hilfe mit Missbrauchsschutz",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-061-online-hilfe-rueckmeldung.md"
+    ]
   }
 ]
