@@ -596,8 +596,17 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .word-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .inline-form { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .tpl-own { font-size: 11px; margin-left: 6px; }
-.print-toc ol { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.print-cover { border: 1px solid var(--border); border-radius: 12px; padding: 32px 28px; margin-bottom: 20px; background: var(--surface); }
+.print-cover-kicker { text-transform: uppercase; letter-spacing: .08em; font-size: 13px; color: var(--muted); margin: 0; }
+.print-cover-title { font-size: 32px; margin: 8px 0 4px; }
+.print-cover-edition { font-size: 18px; margin: 0 0 20px; }
+.print-cover-meta { display: flex; flex-wrap: wrap; gap: 12px 32px; margin: 0; }
+.print-cover-meta dt { font-size: 13px; color: var(--muted); }
+.print-cover-meta dd { margin: 0; font-weight: 600; }
+.print-toc ol { list-style: none; padding-left: 0; display: flex; flex-direction: column; gap: 4px; }
 .print-toc a { display: inline-block; min-height: 24px; padding: 2px 0; }
+@page { margin: 18mm 16mm 20mm; @top-center { font-size: 9pt; color: #555; } @bottom-right { content: "Seite " counter(page) " von " counter(pages); font-size: 9pt; color: #555; } }
+@page :first { @top-center { content: none; } @bottom-right { content: none; } }
 @media print {
   .sidebar, .skip-link, .nav-toggle, .no-print, .toast, .tour, .page-head .actions { display: none !important; }
   .shell { display: block !important; }
@@ -612,8 +621,17 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
   .callout { border-left: 3pt solid #000; background: none; }
   .print-chapter { break-before: page; page-break-before: always; }
   .print-toc { break-after: page; }
+  .print-cover { border: 0; border-radius: 0; background: none; min-height: 240mm; display: flex; flex-direction: column; justify-content: center; break-after: page; page-break-after: always; padding: 0 10mm; }
+  .print-cover-title { font-size: 34pt; }
+  .print-cover-kicker, .print-cover-meta dt { color: #444; }
+  .page-head { display: none; }
   a { color: #000; text-decoration: none; }
   h2, h3 { break-after: avoid; }
   li, .callout { break-inside: avoid; }
 }
 .own-templates li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.template-editor { display: grid; gap: 10px; }
+.template-editor label { display: grid; gap: 4px; font-weight: 600; }
+.template-editor label .small, .template-editor input, .template-editor textarea { font-weight: 400; }
+.digest-preview { border-left: 4px solid var(--link); padding: 4px 14px; margin-top: 12px; }
+.digest-preview h3 { margin: 4px 0 8px; font-size: 16px; }

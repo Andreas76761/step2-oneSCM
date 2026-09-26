@@ -1317,12 +1317,13 @@ test('[T-230] Rückmeldungen auswerten mit Aufgabe, eigene Kapitelvorlage aus de
   await page.getByRole('radio', { name: /E2E Reklamation/ }).check();
   await expect(page.getByLabel('Wozu dient die Anleitung?')).toHaveValue('Mit dieser Anleitung erfassen Sie eine Reklamation.');
   const own = page.locator('.card', { has: page.getByRole('heading', { name: 'Eigene Vorlagen' }) });
-  await own.getByLabel('Name').fill('E2E Reklamation erfassen');
-  await own.getByRole('button', { name: 'Umbenennen' }).click();
-  await expect(page.getByText('Vorlage umbenannt.')).toBeVisible();
+  await own.getByRole('button', { name: 'Vorlage „E2E Reklamation“ bearbeiten' }).click();
+  await page.getByRole('dialog').getByLabel('Name').fill('E2E Reklamation erfassen');
+  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Vorlage „E2E Reklamation erfassen“ gespeichert.')).toBeVisible();
   await expect(page.getByRole('radio', { name: /E2E Reklamation erfassen/ })).toBeVisible();
   expect(await axe()).toEqual([]);
-  await own.getByRole('button', { name: 'Löschen' }).click();
+  await own.getByRole('button', { name: 'Vorlage „E2E Reklamation erfassen“ löschen' }).click();
   await expect(page.getByRole('radio', { name: /E2E Reklamation/ })).toHaveCount(0);
 
   // Druckansicht: alle Kapitel mit Inhaltsverzeichnis; im Druck ohne Navigation und Schaltflächen
@@ -1337,4 +1338,65 @@ test('[T-230] Rückmeldungen auswerten mit Aufgabe, eigene Kapitelvorlage aus de
   await expect(page.getByRole('button', { name: /Drucken \/ als PDF speichern/ })).toBeHidden();
   await expect(page.getByRole('article', { name: 'E2E Rückmeldung' })).toBeVisible();
   await page.emulateMedia({ media: 'screen' });
+});
+
+test('[T-231] Vorlage vollständig bearbeiten, Druck mit Deckblatt und Seitenzahlen, wöchentliche Übersicht', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const t = await request.post('/api/v1/chapter-templates', { headers: red, data: {
+    name: 'E2E Lieferschein', purpose: 'Lieferschein drucken', steps: ['Öffnen Sie **Lager › Lieferscheine**'], result: 'Der Lieferschein ist gedruckt.',
+  } });
+  expect(t.status()).toBe(201);
+
+  // Vorlage im Dialog bearbeiten: alle Teile, Listen eine Zeile je Eintrag
+  await page.goto('/kapitel-assistent');
+  const own = page.locator('.card', { has: page.getByRole('heading', { name: 'Eigene Vorlagen' }) });
+  await own.getByRole('button', { name: 'Vorlage „E2E Lieferschein“ bearbeiten' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Vorlage bearbeiten: E2E Lieferschein' });
+  await dlg.getByLabel('Kurzbeschreibung').fill('Für Lagerteams');
+  await dlg.getByLabel('Titelvorschlag').fill('Lieferschein drucken');
+  await dlg.getByLabel(/^Voraussetzungen/).fill('Sie haben die Berechtigung Lager');
+  await dlg.getByLabel(/^Schritte/).fill('');
+  await expect(dlg.getByRole('alert')).toHaveText('Eine Vorlage braucht mindestens einen Schritt.');
+  await expect(dlg.getByRole('button', { name: 'Speichern' })).toBeDisabled();
+  await dlg.getByLabel(/^Schritte/).fill('Öffnen Sie **Lager › Lieferscheine**\nWählen Sie den Auftrag\nKlicken Sie auf **Drucken**');
+  await expect(dlg).toContainText('3 erkannt');
+  await dlg.getByLabel(/^Tipps/).fill('Mehrere Aufträge gleichzeitig markieren');
+  expect(await axe()).toEqual([]);
+  await dlg.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Vorlage „E2E Lieferschein“ gespeichert.')).toBeVisible();
+  await expect(own).toContainText('3 Schritte · Für Lagerteams');
+  await page.getByRole('radio', { name: /E2E Lieferschein/ }).check();
+  await expect(page.getByLabel('Wozu dient die Anleitung?')).toHaveValue('Lieferschein drucken');
+
+  // Druck: Deckblatt mit Projekt, Arbeitsstand, Kapitelzahl; nummeriertes Inhaltsverzeichnis; Kopf-/Fußzeile per @page
+  await page.goto('/lesen/druck?entwuerfe=1');
+  const cover = page.getByRole('region', { name: 'Deckblatt' });
+  await expect(cover).toContainText('Benutzerhandbuch');
+  await expect(cover).toContainText('Arbeitsstand');
+  await expect(cover).toContainText('enthält nicht freigegebene Entwürfe');
+  await expect(page.getByRole('navigation', { name: 'Inhaltsverzeichnis des Handbuchs' }).getByRole('link').first()).toHaveText(/^1\. /);
+  expect(await page.locator('style[data-print-header]').textContent()).toContain('Arbeitsstand');
+  expect(await axe()).toEqual([]);
+  await page.emulateMedia({ media: 'print' });
+  await expect(cover).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toBeHidden();
+  await page.emulateMedia({ media: 'screen' });
+
+  // Wöchentliche Übersicht: Vorschau, Wochentag (Administration), jetzt senden
+  const [chapter] = await (await request.get('/api/v1/chapters', { headers: red })).json();
+  expect((await request.post('/api/v1/comments', { headers: { 'X-User-Id': 'u-fachpruefung' }, data: { entityType: 'chapter', entityId: chapter.id, kind: 'task', body: 'E2E Wochenaufgabe', assignee: 'u-admin' } })).ok()).toBe(true);
+  await page.goto('/rueckmeldungen');
+  const digest = page.locator('.card', { has: page.getByRole('heading', { name: 'Wöchentliche Übersicht' }) });
+  await expect(digest.getByRole('heading', { name: /^Ihre Übersicht für \d{4}-W\d{2}$/ })).toBeVisible();
+  await expect(digest.getByRole('link', { name: /offene Aufgabe/ })).toBeVisible();
+  await digest.getByLabel('Senden am').selectOption({ label: 'Freitag' });
+  await expect(page.getByText('Übersicht kommt jetzt jeden Freitag.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await digest.getByRole('button', { name: '📨 Jetzt senden' }).click();
+  await expect(page.getByText(/^Übersicht an \d+ Person/)).toBeVisible();
+  await expect(digest).toContainText('Zuletzt gesendet: ');
+  await digest.getByLabel('Senden am').selectOption({ label: 'Montag' });
 });

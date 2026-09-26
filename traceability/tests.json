@@ -1284,5 +1284,34 @@
       "NFR-46",
       "NFR-47"
     ]
+  },
+  {
+    "id": "T-195",
+    "title": "Eigene Vorlage vollständig bearbeiten: Zweck, Voraussetzungen, Schritte, Ergebnis, Tipps, Titelvorschlag",
+    "file": "apps/server/test/stage21.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-49"
+    ]
+  },
+  {
+    "id": "T-196",
+    "title": "Wöchentliche Übersicht: Inhalt je Person, einmal je Woche, Wochentag einstellbar, nur mit Bearbeitungsrecht",
+    "file": "apps/server/test/stage21.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-51"
+    ]
+  },
+  {
+    "id": "T-231",
+    "title": "Vorlage vollständig bearbeiten, Druck mit Deckblatt und Seitenzahlen, wöchentliche Übersicht (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-49",
+      "NFR-50",
+      "NFR-51"
+    ]
   }
 ]

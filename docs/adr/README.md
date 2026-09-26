@@ -63,3 +63,6 @@
 | [ADR-059](ADR-059-eigene-kapitelvorlagen.md) | Eigene Kapitelvorlagen je Projekt | akzeptiert, umgesetzt |
 | [ADR-060](ADR-060-druckansicht.md) | Druck- und PDF-Ansicht des Handbuchs | akzeptiert, umgesetzt |
 | [ADR-061](ADR-061-online-hilfe-rueckmeldung.md) | Rückmeldungen in der Online-Hilfe (anonym, geschützt) | akzeptiert, umgesetzt |
+| [ADR-062](ADR-062-vorlagen-bearbeiten.md) | Eigene Kapitelvorlagen vollständig bearbeiten | akzeptiert, umgesetzt |
+| [ADR-063](ADR-063-druck-deckblatt.md) | Druck mit Deckblatt und Seitenzahlen | akzeptiert, umgesetzt |
+| [ADR-064](ADR-064-wochenuebersicht.md) | Wöchentliche Übersicht für die Redaktion | akzeptiert, umgesetzt |

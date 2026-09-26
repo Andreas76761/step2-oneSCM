@@ -620,5 +620,32 @@
     "documentation": [
       "docs/adr/ADR-061-online-hilfe-rueckmeldung.md"
     ]
+  },
+  {
+    "id": "NFR-49",
+    "title": "Eigene Kapitelvorlagen vollständig bearbeiten (alle Teile, eine Zeile je Eintrag)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-062-vorlagen-bearbeiten.md"
+    ]
+  },
+  {
+    "id": "NFR-50",
+    "title": "Gedrucktes Handbuch mit Deckblatt, nummerierten Kapiteln und Seitenzahlen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-063-druck-deckblatt.md"
+    ]
+  },
+  {
+    "id": "NFR-51",
+    "title": "Wöchentliche Übersicht offener Rückmeldungen, Aufgaben und Kapitel für die Redaktion",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-064-wochenuebersicht.md"
+    ]
   }
 ]

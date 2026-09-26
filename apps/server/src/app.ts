@@ -36,6 +36,7 @@ import { deliverWebhook, failWebhookDelivery } from './services/webhooks.js';
 import { ensureDailyJob, runDailySnapshots } from './services/analytics.js';
 import { ensureEscalationJob, escalateOverdue } from './services/workflow.js';
 import { ensurePlanReminderJob, remindOverduePlans } from './services/outlines.js';
+import { ensureDigestJob, runDigests } from './services/digest.js';
 import { miscRoutes } from './routes/misc.js';
 import { qualityRoutes } from './routes/quality.js';
 import { rewriteRoutes } from './routes/rewrite.js';
@@ -137,10 +138,15 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     await remindOverduePlans(ctx, (id) => withProject(ctx, id));
     await ensurePlanReminderJob(ctx, true);
   }, undefined, { background: true });
+  jobs.register('weekly-digest', async () => {
+    await runDigests(ctx, (id) => withProject(ctx, id));
+    await ensureDigestJob(ctx, true);
+  }, undefined, { background: true });
   if (options.worker !== false && process.env.JOB_WORKER !== '0') {
     await ensureDailyJob(ctx);
     await ensureEscalationJob(ctx);
     await ensurePlanReminderJob(ctx);
+    await ensureDigestJob(ctx);
     await jobs.start();
   }
 
