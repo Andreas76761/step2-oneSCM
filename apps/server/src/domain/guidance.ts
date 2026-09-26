@@ -11,6 +11,8 @@ export interface GuidanceCheck {
   code: GuidanceCode;
   label: string;
   status: 'ok' | 'warning' | 'info';
+  /** Kurzbezeichnung, wenn der Punkt offen ist (z. B. „Ergebnis fehlt“) */
+  openLabel: string;
   message: string;
   hint: string;
   items: GuidanceItem[];
@@ -135,7 +137,7 @@ export function analyzeGuidance(blocks: GuidanceBlock[], opts: GuidanceOptions =
   const hasSteps = stepBlocks.some((b) => actionsIn(b) > 0) || content.some((b) => actionsIn(b) >= 2);
   const checks: GuidanceCheck[] = [];
   const add = (code: GuidanceCode, bad: 'warning' | 'info', failed: boolean, message: [string, string], hint: string, items: GuidanceItem[] = [], addSection?: GuidanceCheck['addSection']) =>
-    checks.push({ code, label: GUIDANCE_LABEL[code], status: failed ? bad : 'ok', message: failed ? message[1] : message[0], hint, items: failed ? items : [], ...(failed && addSection ? { addSection } : {}) });
+    checks.push({ code, label: GUIDANCE_LABEL[code], openLabel: GUIDANCE_OPEN_LABEL[code], status: failed ? bad : 'ok', message: failed ? message[1] : message[0], hint, items: failed ? items : [], ...(failed && addSection ? { addSection } : {}) });
 
   add('purpose', 'warning', inSection('purpose').length === 0,
     ['Der Zweck des Kapitels ist beschrieben.', 'Es fehlt ein kurzer Einstieg: Wozu dient diese Anleitung?'],

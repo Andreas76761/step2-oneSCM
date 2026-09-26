@@ -241,7 +241,7 @@ export function GuidanceSummaryLine({ versionId }: { versionId: string }) {
   return (
     <div className={`guide-summary${below ? ' below' : ''}`} role="note">
       <strong>Anleitungs-Check: {g.data.score} von 100</strong> <span className="small">({scoreLabel(g.data.score)}{min !== null ? ` · Freigabe ab ${min}` : ''})</span>
-      {warnings.length > 0 && <div className="small">! {warnings.map((c: any) => c.label).join(' · ')}</div>}
+      {warnings.length > 0 && <div className="small">! {warnings.map((c: any) => c.openLabel).join(' · ')}</div>}
       {below && <div className="small"><strong>Unter dem Mindestwert – Einreichen und Freigabe sind gesperrt.</strong></div>}
       <Link className="small" to={`/anleitungs-check/${versionId}`}>Checkliste öffnen →</Link>
     </div>

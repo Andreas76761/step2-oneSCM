@@ -51,7 +51,7 @@ describe('Etappe 19', () => {
     expect(CHAPTER_TEMPLATES.map((t) => t.id)).toEqual(['create', 'approve', 'search', 'change', 'troubleshoot', 'export']);
     for (const t of CHAPTER_TEMPLATES) expect(t.steps.length).toBeGreaterThanOrEqual(3);
     const a = analyzeGuidance([{ id: 'b', section: 'steps', kind: 'list', text: '1. Öffnen Sie **… › …**.\n2. Klicken Sie auf **Neu**.', versionNo: 1 }]);
-    expect(a.checks.find((c) => c.code === 'placeholders')).toMatchObject({ status: 'warning', items: [{ blockId: 'b' }] });
+    expect(a.checks.find((c) => c.code === 'placeholders')).toMatchObject({ status: 'warning', openLabel: 'Platzhalter „…“ offen', items: [{ blockId: 'b' }] });
     const built = await build('templates');
     const call = client(built);
     try {
