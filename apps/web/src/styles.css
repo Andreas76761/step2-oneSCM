@@ -606,7 +606,7 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .print-toc ol { list-style: none; padding-left: 0; display: flex; flex-direction: column; gap: 4px; }
 .print-toc a { display: inline-block; min-height: 24px; padding: 2px 0; }
 @page { margin: 18mm 16mm 20mm; @top-center { font-size: 9pt; color: #555; } @bottom-right { content: "Seite " counter(page) " von " counter(pages); font-size: 9pt; color: #555; } }
-@page :first { @bottom-right { content: none; } }
+@page :first { @top-center { content: none; } @bottom-right { content: none; } }
 @media print {
   .sidebar, .skip-link, .nav-toggle, .no-print, .toast, .tour, .page-head .actions { display: none !important; }
   .shell { display: block !important; }

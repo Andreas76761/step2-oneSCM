@@ -243,7 +243,8 @@ export function PrintPage() {
     // Kopfzeile der gedruckten Seiten: @page-Randboxen erben keine Variablen, daher als eigener Stilblock
     const style = document.createElement('style');
     style.dataset.printHeader = '';
-    style.textContent = `@page :not(:first) { @top-center { content: ${JSON.stringify(`${bookTitle} · ${edition}`)}; } }`;
+    // Deckblatt ohne Kopfzeile: die :first-Regel muss nach der allgemeinen stehen, sonst gewinnt Chrome die spätere
+    style.textContent = `@page { @top-center { content: ${JSON.stringify(`${bookTitle} · ${edition}`)}; } } @page :first { @top-center { content: none; } }`;
     document.head.appendChild(style);
     return () => style.remove();
   }, [bookTitle, edition]);
