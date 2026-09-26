@@ -31,9 +31,16 @@ const readDone = (versionId: string): number[] => {
 
 /** Nummerierte Schritte zum Abhaken (Stand je Browser gemerkt) */
 function StepList({ versionId, blockId, text }: { versionId: string; blockId: string; text: string }) {
-  const lines = text.split('\n');
-  const intro = lines.filter((l) => l.trim() && !/^\s*\d+[.)]\s+/.test(l) && !lines.slice(0, lines.indexOf(l)).some((x) => /^\s*\d+[.)]\s+/.test(x)));
-  const items = lines.filter((l) => /^\s*\d+[.)]\s+/.test(l)).map((l) => l.replace(/^\s*\d+[.)]\s+/, ''));
+  // Zeilen vor dem ersten Schritt = Einleitung; Folgezeilen gehören zum vorangehenden Schritt
+  const intro: string[] = [];
+  const items: string[] = [];
+  for (const l of text.split('\n')) {
+    const m = l.match(/^\s*\d+[.)]\s+/);
+    if (m) items.push(l.slice(m[0].length));
+    else if (!l.trim()) continue;
+    else if (items.length) items[items.length - 1] += ` ${l.trim()}`;
+    else intro.push(l.trim());
+  }
   const [done, setDone] = useState<number[]>(() => readDone(`${versionId}.${blockId}`));
   const toggle = (i: number) => {
     const next = done.includes(i) ? done.filter((x) => x !== i) : [...done, i];
@@ -108,9 +115,9 @@ export function ReaderPage() {
   const [filter, setFilter] = useState('');
   // je Kapitel die anzuzeigende Version: freigegeben, sonst (mit „Entwürfe einblenden“) die neueste
   const list = useMemo(() => (chapters.data ?? []).map((c) => {
-    const approved = c.versions.find((v: any) => v.status === 'approved');
-    const shown = approved ?? (drafts ? c.versions[0] : null);
-    return shown ? { id: c.id as string, title: c.title as string, version: shown, draft: !approved } : null;
+    // „Entwürfe einblenden“: jeweils die neueste Version (Vorschau); sonst die freigegebene
+    const shown = drafts ? c.versions[0] : c.versions.find((v: any) => v.status === 'approved');
+    return shown ? { id: c.id as string, title: c.title as string, version: shown, draft: shown.status !== 'approved' } : null;
   }).filter((x): x is NonNullable<typeof x> => !!x), [chapters.data, drafts]);
   const visible = list.filter((c) => c.title.toLowerCase().includes(filter.trim().toLowerCase()));
   const current = list.find((c) => c.id === chapterId) ?? null;

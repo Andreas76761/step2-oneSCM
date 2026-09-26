@@ -93,6 +93,10 @@ describe('Etappe 19', () => {
       expect((await call('GET', `/chapter-versions/${good.versionId}/gate`)).json.checks.find((c: any) => c.code === 'guidance_min_score').passed).toBe(true);
       expect((await call('POST', `/chapter-versions/${good.versionId}/submit`, {}, 'u-redaktion')).status).toBe(200);
       expect((await call('POST', `/chapter-versions/${good.versionId}/approve`, { comment: 'ok' }, 'u-freigabe')).json.status).toBe('approved');
+      // Handbuch-Varianten sind ausgenommen
+      await built.ctx.db.run("UPDATE chapters SET outline_family_id = 'of_test' WHERE id = ?", weak.chapterId);
+      expect((await call('GET', `/chapter-versions/${weak.versionId}/gate`)).json.checks.some((c: any) => c.code === 'guidance_min_score')).toBe(false);
+      await built.ctx.db.run('UPDATE chapters SET outline_family_id = NULL WHERE id = ?', weak.chapterId);
       await call('PUT', '/guidance/settings', { minScore: null });
       expect((await call('GET', `/chapter-versions/${weak.versionId}/gate`)).json.checks.some((c: any) => c.code === 'guidance_min_score')).toBe(false);
     } finally {

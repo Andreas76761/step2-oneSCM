@@ -135,7 +135,9 @@ export async function gateForChapter(ctx: Ctx, chapterId: string, purpose: 'gene
   const active = versionId ? await activeBlocks(ctx, versionId) : [];
   const result = evaluateGate(active.map(gateBlock), findings, { purpose });
   // Anleitungs-Check als Freigabebedingung, wenn im Projekt ein Mindestwert eingestellt ist (ADR-057)
-  if (purpose === 'approve' && versionId) {
+  // Handbuch-Varianten (outline_family_id) sind ausgenommen (ADR-057)
+  const isVariant = !!(await ctx.db.get('SELECT outline_family_id FROM chapters WHERE id = ?', chapterId))?.outline_family_id;
+  if (purpose === 'approve' && versionId && !isVariant) {
     const check = await guidanceGateCheck(ctx, active.map((b) => ({ id: b.id as string, section: b.section as string, kind: b.kind as string, text: b.text as string, versionNo: b.versionNo as number, mode: b.mode as string })));
     if (check) {
       result.checks.push(check);
