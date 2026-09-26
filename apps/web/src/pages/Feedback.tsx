@@ -2,7 +2,7 @@
 // Aus einer Rückmeldung wird mit einem Klick eine Aufgabe für die Redaktion.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, post } from '../api';
+import { api, post, put } from '../api';
 import { BarList, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 const trendText = (t: number | null) => (t === null ? '–' : t === 0 ? '→ unverändert' : t > 0 ? `▲ ${t} Punkte schlechter` : `▼ ${-t} Punkte besser`);
@@ -41,6 +41,7 @@ export function FeedbackPage() {
   const me = useLoad<any>('/me');
   const canEdit = !!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin');
   const people = useLoad<any[]>(canEdit ? '/collaborators' : null, [canEdit]);
+  const isAdmin = !!me.data?.permissions.includes('admin');
   const d = data.data;
   return (
     <Page title="Rückmeldungen" subtitle="Was Leserinnen und Leser zu den Kapiteln sagen – aus der Leseransicht und der Online-Hilfe">
@@ -117,6 +118,67 @@ export function FeedbackPage() {
           </Card>
         </>
       )}
+      {canEdit && <DigestCard isAdmin={isAdmin} />}
     </Page>
+  );
+}
+
+const WEEKDAYS = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+
+/** Wöchentliche Übersicht (ADR-064): Wochentag einstellen, eigene Übersicht als Vorschau, sofort senden */
+function DigestCard({ isAdmin }: { isAdmin: boolean }) {
+  const { notify } = useApp();
+  const settings = useLoad<any>('/digest/settings');
+  const preview = useLoad<any>('/digest/preview');
+  const s = settings.data;
+  const p = preview.data;
+  const setWeekday = async (value: string) => {
+    try {
+      await put('/digest/settings', { weekday: value ? Number(value) : null });
+      notify(value ? `Übersicht kommt jetzt jeden ${WEEKDAYS[Number(value) - 1]}.` : 'Wöchentliche Übersicht ausgeschaltet.');
+      settings.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const sendNow = async () => {
+    try {
+      const r = await post<any>('/digest/send', {});
+      notify(r.sent ? `Übersicht an ${r.sent} Person${r.sent === 1 ? '' : 'en'} gesendet.` : 'Niemand hatte in dieser Woche etwas Neues – oder alle haben die Übersicht schon erhalten.');
+      settings.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  return (
+    <Card title="Wöchentliche Übersicht">
+      <p className="small muted">Alle mit Bearbeitungsrecht erhalten einmal pro Woche eine Benachrichtigung mit offenen Rückmeldungen, ihren Aufgaben und Kapiteln mit Handlungsbedarf – nur, wenn es etwas zu tun gibt.</p>
+      <ErrorBox error={settings.error ?? preview.error} />
+      {s && (
+        <div className="filters">
+          <label className="inline">Senden am
+            <select value={s.weekday ?? ''} disabled={!isAdmin} onChange={(e) => setWeekday(e.target.value)}>
+              <option value="">nie (ausgeschaltet)</option>
+              {WEEKDAYS.map((w, i) => <option key={w} value={i + 1}>{w}</option>)}
+            </select>
+          </label>
+          {isAdmin && <button className="btn small" onClick={sendNow}>📨 Jetzt senden</button>}
+          <span className="small muted">{s.lastWeek ? `Zuletzt gesendet: ${s.lastWeek}` : 'Noch nie gesendet'}</span>
+        </div>
+      )}
+      {!isAdmin && <p className="small muted">Den Wochentag legt die Projektleitung fest.</p>}
+      {p && (
+        <div className="digest-preview" aria-label="Vorschau Ihrer Übersicht">
+          <h3>Ihre Übersicht für {p.week}</h3>
+          {p.empty ? <p className="small">✓ Nichts zu tun – diese Woche erhielten Sie keine Nachricht.</p> : (
+            <ul>
+              {p.openFeedback > 0 && <li><Link to="/rueckmeldungen">{p.openFeedback} offene Leser-Rückmeldung{p.openFeedback === 1 ? '' : 'en'}</Link>{p.feedbackByChapter.length > 0 && ` – ${p.feedbackByChapter.slice(0, 3).map((c: any) => `${c.title}: ${c.open}`).join(', ')}`}</li>}
+              {p.tasks > 0 && <li><Link to="/aufgaben">{p.tasks} offene Aufgabe{p.tasks === 1 ? '' : 'n'} für Sie</Link>{p.overdueTasks > 0 && `, davon ${p.overdueTasks} überfällig`}</li>}
+              {p.weakChapters.map((c: any) => <li key={c.chapterId}>Anleitungs-Check: <Link to={`/anleitungs-check/${c.versionId}`}>{c.title}</Link> ({c.score} Punkte)</li>)}
+            </ul>
+          )}
+        </div>
+      )}
+    </Card>
   );
 }

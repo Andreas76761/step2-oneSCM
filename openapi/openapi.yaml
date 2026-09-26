@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.20.0
+  version: 0.21.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3192,9 +3192,9 @@ paths:
   /chapter-templates/{chapterTemplateId}:
     patch:
       operationId: updateChapterTemplate
-      summary: 'Eigene Kapitelvorlage ändern (Berechtigung edit, ADR-059)'
+      summary: 'Eigene Kapitelvorlage ändern – alle Teile, nicht übergebene bleiben (Berechtigung edit, ADR-059, ADR-062)'
       tags: [Kapitel]
-      x-requirements: [NFR-46]
+      x-requirements: [NFR-46, NFR-49]
       x-extension: true
       parameters:
         - { name: chapterTemplateId, in: path, required: true, schema: { type: string } }
@@ -3218,6 +3218,49 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '204': { description: 'gelöscht' }
         '404': { $ref: '#/components/responses/Problem' }
+  /digest/settings:
+    get:
+      operationId: getDigestSettings
+      summary: 'Wochentag der wöchentlichen Übersicht und letzter Versand (ADR-064)'
+      tags: [Kapitel]
+      x-requirements: [NFR-51]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ weekday: 1–7 | null, lastWeek, lastSentAt }' }
+    put:
+      operationId: updateDigestSettings
+      summary: 'Wochentag festlegen: 1 (Montag) … 7 (Sonntag) oder null = aus (Berechtigung admin, ADR-064)'
+      tags: [Kapitel]
+      x-requirements: [NFR-51]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [weekday], properties: { weekday: { type: [integer, 'null'], minimum: 1, maximum: 7 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ weekday, lastWeek, lastSentAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /digest/preview:
+    get:
+      operationId: previewDigest
+      summary: 'Vorschau der eigenen Wochenübersicht (ADR-064)'
+      tags: [Kapitel]
+      x-requirements: [NFR-51]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ week, openFeedback, feedbackByChapter, tasks, overdueTasks, weakChapters, empty, text }' }
+  /digest/send:
+    post:
+      operationId: sendDigest
+      summary: 'Wochenübersicht jetzt senden – je Person höchstens einmal je Woche, nur mit Inhalt (Berechtigung admin, ADR-064)'
+      tags: [Kapitel]
+      x-requirements: [NFR-51]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ sent, week }' }
   /master-data/import:
     post:
       operationId: importMasterData

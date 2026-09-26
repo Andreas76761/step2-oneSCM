@@ -8,6 +8,7 @@ import { effectivePhrases, projectLibraries, setProjectLibraries } from '../serv
 import { feedbackInsights, feedbackSummary, feedbackToTask, listFeedback, submitFeedback, updateFeedback } from '../services/feedback.js';
 import { createChapterTemplate, deleteChapterTemplate, listChapterTemplates, updateChapterTemplate } from '../services/chapterTemplates.js';
 import { getGuidanceSettings, updateGuidanceSettings } from '../services/guidanceBase.js';
+import { buildDigest, getDigestSettings, sendDigests, updateDigestSettings } from '../services/digest.js';
 import { userOf } from './helpers.js';
 
 export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -96,4 +97,9 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Querystring: { days?: string } }>('/feedback/insights', async (req) => (userOf(req.ctx, req), feedbackInsights(req.ctx, { days: Number(req.query.days) || undefined })));
   app.post<{ Params: { feedbackId: string }; Body: any }>('/feedback/:feedbackId/task', async (req, reply) =>
     reply.code(201).send(await feedbackToTask(req.ctx, req.params.feedbackId, req.body ?? {}, userOf(req.ctx, req, 'edit'))));
+  // Wöchentliche Übersicht (ADR-064): Einstellung (Administration), Vorschau für die angemeldete Person, sofort senden
+  app.get('/digest/settings', async (req) => (userOf(req.ctx, req), getDigestSettings(req.ctx)));
+  app.put<{ Body: any }>('/digest/settings', async (req) => updateDigestSettings(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+  app.get('/digest/preview', async (req) => buildDigest(req.ctx, userOf(req.ctx, req).id));
+  app.post('/digest/send', async (req) => (userOf(req.ctx, req, 'admin'), sendDigests(req.ctx, { force: true })));
 }

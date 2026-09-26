@@ -2,7 +2,7 @@
 // Hinweise hervorgehoben – und je Kapitel „War das hilfreich?“ beantworten.
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { api, post } from '../api';
+import { api, currentProjectId, post } from '../api';
 import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 
 const CALLOUT: Record<string, { icon: string; label: string }> = {
@@ -232,6 +232,21 @@ export function PrintPage() {
     Promise.all(shown.map((v: any) => api<any>('GET', `/chapter-versions/${v.id}`))).then(setVersions).catch((e) => setError(errorText(e)));
   }, [chapters.data, drafts]);
   const date = new Date().toLocaleDateString('de-DE');
+  const projects = useLoad<any[]>('/projects');
+  const releases = useLoad<any[]>('/releases');
+  const project = projects.data?.find((p) => p.id === currentProjectId()) ?? projects.data?.[0];
+  const release = releases.data?.[0];
+  // Deckblatt (ADR-063): Titel, Stand und Version – bei Entwürfen immer „Arbeitsstand“, da nicht veröffentlicht
+  const edition = !drafts && release ? `Version ${release.version}` : 'Arbeitsstand';
+  const bookTitle = project?.name ?? 'Benutzerhandbuch';
+  useEffect(() => {
+    // Kopfzeile der gedruckten Seiten: @page-Randboxen erben keine Variablen, daher als eigener Stilblock
+    const style = document.createElement('style');
+    style.dataset.printHeader = '';
+    style.textContent = `@page :not(:first) { @top-center { content: ${JSON.stringify(`${bookTitle} · ${edition}`)}; } }`;
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, [bookTitle, edition]);
   return (
     <Page title="Handbuch drucken" subtitle={`${drafts ? 'Freigegebene Kapitel und Entwürfe' : 'Freigegebene Kapitel'} · Stand ${date}`}
       actions={<span className="no-print row-actions">
@@ -239,16 +254,27 @@ export function PrintPage() {
         <button className="btn primary" disabled={!versions} onClick={() => window.print()}>🖨️ Drucken / als PDF speichern</button>
       </span>}>
       <ErrorBox error={error ?? chapters.error} />
-      <p className="small muted no-print">Tipp: Im Druckdialog „Als PDF speichern“ wählen. Jedes Kapitel beginnt auf einer neuen Seite; Schritte erscheinen mit Kästchen zum Abhaken.</p>
+      <p className="small muted no-print">Tipp: Im Druckdialog „Als PDF speichern“ wählen. Das Handbuch beginnt mit einem Deckblatt; jedes Kapitel beginnt auf einer neuen Seite, unten steht „Seite X von Y“. Schritte erscheinen mit Kästchen zum Abhaken.</p>
       {!versions ? <p className="muted">Lade …</p> : !versions.length ? <Empty>Noch keine freigegebenen Kapitel.</Empty> : (
         <div className="print-book">
+          <section className="print-cover" aria-label="Deckblatt">
+            <p className="print-cover-kicker">Benutzerhandbuch</p>
+            <h2 className="print-cover-title">{bookTitle}</h2>
+            <p className="print-cover-edition">{edition}</p>
+            <dl className="print-cover-meta">
+              <div><dt>Stand</dt><dd>{date}</dd></div>
+              <div><dt>Kapitel</dt><dd>{versions.length}</dd></div>
+              {!drafts && release && <div><dt>Veröffentlicht</dt><dd>{new Date(release.createdAt).toLocaleDateString('de-DE')}</dd></div>}
+              {drafts && <div><dt>Hinweis</dt><dd>enthält nicht freigegebene Entwürfe</dd></div>}
+            </dl>
+          </section>
           <nav className="print-toc" aria-label="Inhaltsverzeichnis des Handbuchs">
             <h2>Inhalt</h2>
-            <ol>{versions.map((v) => <li key={v.id}><a href={`#k-${v.id}`}>{v.title}</a>{v.status !== 'approved' && ' (Entwurf)'}</li>)}</ol>
+            <ol>{versions.map((v, n) => <li key={v.id}><a href={`#k-${v.id}`}>{n + 1}. {v.title}</a>{v.status !== 'approved' && ' (Entwurf)'}</li>)}</ol>
           </nav>
-          {versions.map((v) => (
+          {versions.map((v, n) => (
             <article key={v.id} id={`k-${v.id}`} className="print-chapter reader-body" aria-label={v.title}>
-              <h2 className="reader-title">{v.title}{v.status !== 'approved' && <span className="tag small">Entwurf</span>}</h2>
+              <h2 className="reader-title">{n + 1}. {v.title}{v.status !== 'approved' && <span className="tag small">Entwurf</span>}</h2>
               <ChapterContent version={v} />
             </article>
           ))}

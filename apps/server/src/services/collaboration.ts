@@ -223,3 +223,17 @@ export async function systemNotice(ctx: Ctx, chapterId: string, body: string, re
   await notify(ctx, to, type, id, body, info.link);
   return id;
 }
+
+/**
+ * Hinweis ohne Diskussion (z. B. Wochenübersicht, ADR-064): Träger ist ein erledigter Systemkommentar am Projekt, der in keiner
+ * Diskussion erscheint; Zustellung wie andere Hinweise (Posteingang, Webhook/E-Mail je Einstellung).
+ */
+export async function projectNotice(ctx: Ctx, userId: string, body: string, type: string, link: string) {
+  const id = newId('cm');
+  await ctx.db.run(
+    `INSERT INTO comments (id, project_id, entity_type, entity_id, parent_id, kind, body, mentions, assignee, due_date, status, author, created_at, updated_at)
+     VALUES (?, ?, 'project', ?, NULL, 'comment', ?, '[]', NULL, NULL, 'done', 'system', ?, ?)`,
+    id, ctx.projectId, ctx.projectId, body, now(), now(),
+  );
+  await notify(ctx, [userId], type, id, body, link);
+}

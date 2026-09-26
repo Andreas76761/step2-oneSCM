@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.21.0 – Etappe 21 (26.09.2026)
+
+### Hinzugefügt
+- **Vorlagen bearbeiten (ADR-062):** eigene Kapitelvorlagen im Kapitel-Assistenten vollständig bearbeiten – Name, Beschreibung, Titelvorschlag, Zweck, Voraussetzungen, Schritte, Ergebnis, Tipps.
+- **Druck mit Deckblatt (ADR-063):** Deckblatt mit Projekt, Version bzw. Arbeitsstand, Datum und Kapitelzahl; nummerierte Kapitel; Kopfzeile und „Seite X von Y“.
+- **Wöchentliche Übersicht (ADR-064):** einmal pro Woche eine Benachrichtigung mit offenen Rückmeldungen, eigenen Aufgaben und Kapiteln mit Handlungsbedarf – nur wenn es etwas zu tun gibt; Wochentag, Vorschau und „Jetzt senden“ auf der Seite „Rückmeldungen“.
+- Migration `030_weekly_digest.sql`; Tests T-195, T-196, E2E T-231 (axe); Anforderungen NFR-49 … NFR-51.
+
+### Behoben
+- Vorlagenquelle wird gegen das Projekt geprüft; 30-Tage-Entwicklung vergleicht mit dem Vorzeitraum; eine Rückmeldung erzeugt höchstens eine Aufgabe.
+
 ## 0.20.0 – Etappe 20 (26.09.2026)
 
 ### Hinzugefügt

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, get, post } from '../api';
-import { Card, Empty, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Card, Empty, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
 import { scoreLabel } from './Guidance';
 
 interface Line { text: string; snippetId?: string | null }
@@ -264,14 +264,14 @@ export function ChapterAssistantPage() {
   );
 }
 
-/** Eigene Vorlagen umbenennen und löschen (ADR-059); neue entstehen in der Werkstatt über „Als Vorlage“ */
+/** Eigene Vorlagen bearbeiten und löschen (ADR-059, ADR-062); neue entstehen in der Werkstatt über „Als Vorlage“ */
 function OwnTemplates({ templates, onChanged }: { templates: any[]; onChanged: () => void }) {
   const { notify } = useApp();
-  const [names, setNames] = useState<Record<string, string>>({});
-  const run = async (fn: () => Promise<unknown>, msg: string) => {
+  const [editing, setEditing] = useState<any | null>(null);
+  const remove = async (t: any) => {
     try {
-      await fn();
-      notify(msg);
+      await api('DELETE', `/chapter-templates/${t.id}`);
+      notify(`Vorlage „${t.name}“ gelöscht.`);
       onChanged();
     } catch (e) {
       notify(errorText(e), 'error');
@@ -283,16 +283,65 @@ function OwnTemplates({ templates, onChanged }: { templates: any[]; onChanged: (
         <ul className="plain own-templates">
           {templates.map((t) => (
             <li key={t.id}>
-              <label className="inline">Name <input value={names[t.id] ?? t.name} onChange={(e) => setNames({ ...names, [t.id]: e.target.value })} /></label>
-              <span className="small muted">{t.steps.length} Schritte</span>
+              <strong>{t.name}</strong>
+              <span className="small muted">{t.steps.length} Schritte{t.description ? ` · ${t.description}` : ''}</span>
               <span className="row-actions">
-                <button className="btn small" disabled={!(names[t.id] ?? '').trim() || names[t.id] === t.name} onClick={() => run(() => api('PATCH', `/chapter-templates/${t.id}`, { name: names[t.id] }), 'Vorlage umbenannt.')}>Umbenennen</button>
-                <button className="btn small danger" onClick={() => run(() => api('DELETE', `/chapter-templates/${t.id}`), `Vorlage „${t.name}“ gelöscht.`)}>Löschen</button>
+                <button className="btn small" onClick={() => setEditing(t)} aria-label={`Vorlage „${t.name}“ bearbeiten`}>✏️ Bearbeiten</button>
+                <button className="btn small danger" onClick={() => remove(t)} aria-label={`Vorlage „${t.name}“ löschen`}>Löschen</button>
               </span>
             </li>
           ))}
         </ul>
       )}
+      {editing && <TemplateEditor template={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); onChanged(); }} />}
     </Card>
+  );
+}
+
+const toLines = (s: string) => s.split('\n').map((l) => l.trim()).filter(Boolean);
+
+/** Alle Teile einer eigenen Vorlage in einem Dialog bearbeiten (ADR-062): Listen als eine Zeile je Eintrag */
+function TemplateEditor({ template, onClose, onSaved }: { template: any; onClose: () => void; onSaved: () => void }) {
+  const { notify } = useApp();
+  const [f, setF] = useState({
+    name: template.name ?? '', description: template.description ?? '', titleHint: template.titleHint ?? '', purpose: template.purpose ?? '',
+    prerequisites: (template.prerequisites ?? []).join('\n'), steps: (template.steps ?? []).join('\n'), result: template.result ?? '', hints: (template.hints ?? []).join('\n'),
+  });
+  const [busy, setBusy] = useState(false);
+  const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF({ ...f, [k]: e.target.value });
+  const steps = toLines(f.steps);
+  const save = async () => {
+    setBusy(true);
+    try {
+      await api('PATCH', `/chapter-templates/${template.id}`, {
+        name: f.name.trim(), description: f.description, titleHint: f.titleHint, purpose: f.purpose,
+        prerequisites: toLines(f.prerequisites), steps, result: f.result, hints: toLines(f.hints),
+      });
+      notify(`Vorlage „${f.name.trim()}“ gespeichert.`);
+      onSaved();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal title={`Vorlage bearbeiten: ${template.name}`} onClose={onClose} wide>
+      <div className="template-editor">
+        <label>Name <input value={f.name} onChange={set('name')} maxLength={120} /></label>
+        <label>Kurzbeschreibung <input value={f.description} onChange={set('description')} maxLength={300} /></label>
+        <label>Titelvorschlag <input value={f.titleHint} onChange={set('titleHint')} maxLength={160} placeholder="z. B. Lieferanten anlegen" /></label>
+        <label>Wozu dient die Aufgabe? <textarea rows={2} value={f.purpose} onChange={set('purpose')} /></label>
+        <label>Voraussetzungen <span className="small muted">(eine je Zeile)</span><textarea rows={3} value={f.prerequisites} onChange={set('prerequisites')} /></label>
+        <label>Schritte <span className="small muted">(einer je Zeile · {steps.length} erkannt)</span><textarea rows={6} value={f.steps} onChange={set('steps')} /></label>
+        <label>Ergebnis <textarea rows={2} value={f.result} onChange={set('result')} /></label>
+        <label>Tipps <span className="small muted">(einer je Zeile)</span><textarea rows={3} value={f.hints} onChange={set('hints')} /></label>
+        {!steps.length && <p className="small" role="alert">Eine Vorlage braucht mindestens einen Schritt.</p>}
+        <div className="row-actions">
+          <button className="btn primary" disabled={busy || !f.name.trim() || !steps.length} onClick={save}>Speichern</button>
+          <button className="btn" onClick={onClose}>Abbrechen</button>
+        </div>
+      </div>
+    </Modal>
   );
 }
