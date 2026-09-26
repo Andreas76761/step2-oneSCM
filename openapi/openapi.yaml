@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.19.0
+  version: 0.20.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3115,13 +3115,13 @@ paths:
   /chapter-assistant/templates:
     get:
       operationId: chapterTemplates
-      summary: 'Kapitelvorlagen je Aufgabentyp (ADR-055)'
+      summary: 'Kapitelvorlagen: mitgelieferte je Aufgabentyp und eigene des Projekts (ADR-055, ADR-059)'
       tags: [Kapitel]
       x-requirements: [NFR-42]
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '[{ id, name, description, titleHint, purpose, prerequisites, steps, result, hints }]' }
+        '200': { description: '[{ id, name, description, titleHint, purpose, prerequisites, steps, result, hints, builtin }]' }
   /guidance/settings:
     get:
       operationId: guidanceSettings
@@ -3145,6 +3145,79 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ minScore }' }
         '400': { $ref: '#/components/responses/Problem' }
+  /feedback/insights:
+    get:
+      operationId: feedbackInsights
+      summary: 'Auswertung der Rückmeldungen: je Kapitel, Entwicklung, häufige Begriffe (ADR-058)'
+      tags: [Kapitel]
+      x-requirements: [NFR-45]
+      x-extension: true
+      parameters:
+        - { name: days, in: query, schema: { type: integer, minimum: 7, maximum: 730, default: 90 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ days, total, helpful, notHelpful, helpfulShare, chapters: [{ chapterId, title, helpful, notHelpful, total, notHelpfulShare, open, online, trend }], words: [{ word, count }], comments }' }
+  /feedback/{feedbackId}/task:
+    post:
+      operationId: feedbackToTask
+      summary: 'Aufgabe am Kapitel aus einer Rückmeldung; Rückmeldung wird erledigt (Berechtigung edit, ADR-058)'
+      tags: [Kapitel]
+      x-requirements: [NFR-45]
+      x-extension: true
+      parameters:
+        - { name: feedbackId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { assignee: { type: string }, dueDate: { type: string, format: date } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ task, feedback }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapter-templates:
+    post:
+      operationId: createChapterTemplate
+      summary: 'Eigene Kapitelvorlage anlegen – aus einer Kapitelversion oder aus Feldern (Berechtigung edit, ADR-059)'
+      tags: [Kapitel]
+      x-requirements: [NFR-46]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, description: { type: string }, titleHint: { type: string }, fromVersionId: { type: string }, purpose: { type: string }, prerequisites: { type: array, items: { type: string } }, steps: { type: array, items: { type: string } }, result: { type: string }, hints: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Vorlage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /chapter-templates/{chapterTemplateId}:
+    patch:
+      operationId: updateChapterTemplate
+      summary: 'Eigene Kapitelvorlage ändern (Berechtigung edit, ADR-059)'
+      tags: [Kapitel]
+      x-requirements: [NFR-46]
+      x-extension: true
+      parameters:
+        - { name: chapterTemplateId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { name: { type: string }, description: { type: string }, titleHint: { type: string }, fromVersionId: { type: string }, purpose: { type: string }, prerequisites: { type: array, items: { type: string } }, steps: { type: array, items: { type: string } }, result: { type: string }, hints: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Vorlage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteChapterTemplate
+      summary: 'Eigene Kapitelvorlage löschen (Berechtigung edit, ADR-059)'
+      tags: [Kapitel]
+      x-requirements: [NFR-46]
+      x-extension: true
+      parameters:
+        - { name: chapterTemplateId, in: path, required: true, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '404': { $ref: '#/components/responses/Problem' }
   /master-data/import:
     post:
       operationId: importMasterData

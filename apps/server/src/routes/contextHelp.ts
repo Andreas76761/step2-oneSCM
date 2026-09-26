@@ -8,6 +8,7 @@ import type { Ctx, User } from '../context.js';
 import { Problem } from '../problem.js';
 import { ask } from '../services/assistant.js';
 import { createContext, deleteContext, latestRelease, listContexts, resolveHelp, setHelpPublic, updateContext, type ResolvedHelp } from '../services/contextHelp.js';
+import { submitFeedback } from '../services/feedback.js';
 import { withProject } from '../services/projects.js';
 import { escapeHtml } from '../services/render.js';
 import { userOf } from './helpers.js';
@@ -36,13 +37,15 @@ export function contextHelpRoutes(app: FastifyInstance, _ctx: Ctx) {
 // ------------------------------------------------------------------ öffentliche Einbettung
 
 const LABELS: Record<string, Record<string, string>> = {
-  de: { help: 'oneSCM-Hilfe', ask: 'Frage an den Handbuch-Assistenten', send: 'Fragen', sources: 'Quellen', open: 'Im Handbuch öffnen', fallback: 'Noch nicht übersetzt – deutsche Fassung.', none: 'Zu dieser Stelle gibt es noch keine veröffentlichte Hilfe.', version: 'Version' },
-  en: { help: 'oneSCM help', ask: 'Ask the manual assistant', send: 'Ask', sources: 'Sources', open: 'Open in manual', fallback: 'Not yet translated – German version shown.', none: 'No published help for this screen yet.', version: 'Version' },
-  fr: { help: 'Aide oneSCM', ask: 'Poser une question à l’assistant', send: 'Demander', sources: 'Sources', open: 'Ouvrir dans le manuel', fallback: 'Pas encore traduit – version allemande affichée.', none: 'Pas encore d’aide publiée pour cet écran.', version: 'Version' },
-  es: { help: 'Ayuda de oneSCM', ask: 'Preguntar al asistente', send: 'Preguntar', sources: 'Fuentes', open: 'Abrir en el manual', fallback: 'Aún no traducido: se muestra la versión alemana.', none: 'Aún no hay ayuda publicada para esta pantalla.', version: 'Versión' },
-  it: { help: 'Guida oneSCM', ask: 'Chiedi all’assistente', send: 'Chiedi', sources: 'Fonti', open: 'Apri nel manuale', fallback: 'Non ancora tradotto: viene mostrata la versione tedesca.', none: 'Non c’è ancora una guida pubblicata per questa schermata.', version: 'Versione' },
+  de: { fb: 'War das hilfreich?', yes: 'Ja', no: 'Nein', comment: 'Was fehlt? (optional)', thanks: 'Danke für Ihre Rückmeldung.', limit: 'Zu viele Rückmeldungen – bitte später erneut versuchen.', help: 'oneSCM-Hilfe', ask: 'Frage an den Handbuch-Assistenten', send: 'Fragen', sources: 'Quellen', open: 'Im Handbuch öffnen', fallback: 'Noch nicht übersetzt – deutsche Fassung.', none: 'Zu dieser Stelle gibt es noch keine veröffentlichte Hilfe.', version: 'Version' },
+  en: { fb: 'Was this helpful?', yes: 'Yes', no: 'No', comment: 'What is missing? (optional)', thanks: 'Thank you for your feedback.', limit: 'Too much feedback – please try again later.', help: 'oneSCM help', ask: 'Ask the manual assistant', send: 'Ask', sources: 'Sources', open: 'Open in manual', fallback: 'Not yet translated – German version shown.', none: 'No published help for this screen yet.', version: 'Version' },
+  fr: { fb: 'Cette aide vous a-t-elle été utile ?', yes: 'Oui', no: 'Non', comment: 'Que manque-t-il ? (facultatif)', thanks: 'Merci pour votre retour.', limit: 'Trop de retours – veuillez réessayer plus tard.', help: 'Aide oneSCM', ask: 'Poser une question à l’assistant', send: 'Demander', sources: 'Sources', open: 'Ouvrir dans le manuel', fallback: 'Pas encore traduit – version allemande affichée.', none: 'Pas encore d’aide publiée pour cet écran.', version: 'Version' },
+  es: { fb: '¿Le ha resultado útil?', yes: 'Sí', no: 'No', comment: '¿Qué falta? (opcional)', thanks: 'Gracias por su opinión.', limit: 'Demasiadas respuestas: inténtelo más tarde.', help: 'Ayuda de oneSCM', ask: 'Preguntar al asistente', send: 'Preguntar', sources: 'Fuentes', open: 'Abrir en el manual', fallback: 'Aún no traducido: se muestra la versión alemana.', none: 'Aún no hay ayuda publicada para esta pantalla.', version: 'Versión' },
+  it: { fb: 'È stato utile?', yes: 'Sì', no: 'No', comment: 'Cosa manca? (facoltativo)', thanks: 'Grazie per il riscontro.', limit: 'Troppi riscontri: riprovare più tardi.', help: 'Guida oneSCM', ask: 'Chiedi all’assistente', send: 'Chiedi', sources: 'Fonti', open: 'Apri nel manuale', fallback: 'Non ancora tradotto: viene mostrata la versione tedesca.', none: 'Non c’è ancora una guida pubblicata per questa schermata.', version: 'Versione' },
 };
 const label = (lang: string) => LABELS[lang] ?? LABELS.de;
+/** anonyme Rückmeldungen je Stunde und Adresse (ADR-061) */
+const FEEDBACK_MAX = Number(process.env.HELP_FEEDBACK_MAX ?? 10);
 
 const EMBED_CSS = `body{font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#0f172a;margin:0;padding:12px 14px;background:#fff}
 h1{font-size:18px;margin:0 0 2px}h2{font-size:15px;margin:14px 0 4px;border-bottom:1px solid #cbd5e1}.meta{color:#5b6474;font-size:12px}
@@ -52,7 +55,7 @@ form{margin-top:16px;border-top:1px solid #cbd5e1;padding-top:10px}label{display
 input[type=text]{width:100%;box-sizing:border-box;padding:6px;border:1px solid #64748b;border-radius:4px;font:inherit}
 button{margin-top:6px;padding:6px 12px;border:0;border-radius:4px;background:#1d4ed8;color:#fff;font:inherit;cursor:pointer}
 button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
-.answer{background:#f1f5f9;border-radius:6px;padding:8px 10px;margin-top:10px}.answer sup{color:#1d4ed8}a{color:#1d4ed8}`;
+.answer{background:#f1f5f9;border-radius:6px;padding:8px 10px;margin-top:10px}fieldset{border:1px solid #cbd5e1;border-radius:6px;margin:0;padding:8px 10px}legend{font-weight:600}.hp{position:absolute;left:-9999px;width:1px;height:1px}.answer sup{color:#1d4ed8}a{color:#1d4ed8}`;
 
 interface EmbedState {
   lang: string;
@@ -64,6 +67,8 @@ interface EmbedState {
   role?: string;
   division?: string;
   appUrl: string | null;
+  /** Rückmeldung (ADR-061): gesendet bzw. abgelehnt */
+  feedback?: 'sent' | 'limited';
 }
 
 function embedPage(s: EmbedState) {
@@ -92,7 +97,15 @@ ${h ? `<form method="post" action="${escapeHtml(s.action)}">
 <input type="text" id="q" name="question" required minlength="3" maxlength="500" value="${escapeHtml(s.question ?? '')}">
 ${hidden('role', s.role)}${hidden('division', s.division)}${hidden('language', s.lang === 'de' ? undefined : s.lang)}
 <button type="submit">${escapeHtml(l.send)}</button>
-</form>${answer}` : ''}
+</form>${answer}
+<form method="post" action="${escapeHtml(s.action)}/feedback" class="fb">
+<fieldset><legend>${escapeHtml(l.fb)}</legend>
+${s.feedback ? `<p role="status">${escapeHtml(s.feedback === 'sent' ? l.thanks : l.limit)}</p>` : `<label for="fbc">${escapeHtml(l.comment)}</label>
+<input type="text" id="fbc" name="comment" maxlength="500">
+<input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
+${hidden('role', s.role)}${hidden('division', s.division)}${hidden('language', s.lang === 'de' ? undefined : s.lang)}
+<button type="submit" name="helpful" value="1">👍 ${escapeHtml(l.yes)}</button> <button type="submit" name="helpful" value="0">👎 ${escapeHtml(l.no)}</button>`}
+</fieldset></form>` : ''}
 </main></body></html>`;
 }
 
@@ -106,6 +119,7 @@ export async function publicHelpRoutes(app: FastifyInstance, base: Ctx, embedOri
   const ancestors = embedOrigins.length ? embedOrigins.join(' ') : "'self'";
   const csp = `default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; base-uri 'none'; frame-ancestors ${ancestors}`;
   const helpUser: User = { id: 'help-widget', name: 'Kontexthilfe (öffentlich)', permissions: ['read'] };
+  const feedbackUser: User = { id: 'online-hilfe', name: 'Online-Hilfe (anonym)', permissions: ['read'] };
 
   app.get('/help/widget.js', async (_req, reply) => {
     reply.header('Content-Type', 'text/javascript; charset=utf-8').header('Cache-Control', 'public, max-age=3600');
@@ -152,5 +166,44 @@ export async function publicHelpRoutes(app: FastifyInstance, base: Ctx, embedOri
     };
     embed.get<Req>('/help/embed/:projectId/:contextKey', (req, reply) => handle(req, reply, false));
     embed.post<Req>('/help/embed/:projectId/:contextKey', (req, reply) => handle(req, reply, true));
+
+    // Rückmeldung „War das hilfreich?“ (ADR-061): anonym, nur zu veröffentlichter Hilfe, höchstens FEEDBACK_MAX je Stunde und Adresse
+    const recent = new Map<string, number[]>();
+    embed.post<Req>('/help/embed/:projectId/:contextKey/feedback', async (req, reply) => {
+      const { projectId, contextKey } = req.params;
+      const input = (req.body ?? {}) as Record<string, string>;
+      const lang = String(input.language || 'de').slice(0, 5);
+      const role = input.role || undefined;
+      const division = input.division || undefined;
+      reply.header('Content-Security-Policy', csp).header('Content-Type', 'text/html; charset=utf-8').header('Cache-Control', 'no-store');
+      const project = /^[\w-]{1,80}$/.test(projectId) ? await base.db.get('SELECT id, help_public FROM projects WHERE id = ?', projectId) : undefined;
+      const ctx = project?.help_public ? withProject(base, project.id) : null;
+      const state: EmbedState = { lang: LABELS[lang] ? lang : 'de', help: null, action: `/help/embed/${encodeURIComponent(projectId)}/${encodeURIComponent(contextKey)}`, role, division, appUrl: base.config.notify.appUrl };
+      if (!ctx) return reply.code(404).send(embedPage(state));
+      try {
+        state.help = await resolveHelp(ctx, contextKey, { role, division, language: lang }, 'release');
+      } catch (e) {
+        if (e instanceof Problem && (e.status === 404 || e.status === 400)) return reply.code(e.status).send(embedPage(state));
+        throw e;
+      }
+      if (input.helpful !== '1' && input.helpful !== '0') return reply.code(400).send(embedPage(state));
+      const now = Date.now();
+      const key = `${project!.id}:${req.ip}`;
+      const hits = (recent.get(key) ?? []).filter((t) => now - t < 3_600_000);
+      if (hits.length >= FEEDBACK_MAX) {
+        state.feedback = 'limited';
+        return reply.code(429).send(embedPage(state));
+      }
+      recent.set(key, [...hits, now]);
+      if (recent.size > 10_000) for (const [k, v] of recent) if (!v.some((t) => now - t < 3_600_000)) recent.delete(k);
+      // Feld „website“ ist für Menschen unsichtbar – ausgefüllt heißt Bot: freundlich bestätigen, nichts speichern
+      if (!input.website) {
+        const rel = await latestRelease(ctx);
+        const versionId = rel?.chapters.find((c) => c.chapterId === state.help!.chapterId)?.chapterVersionId;
+        await submitFeedback(ctx, state.help.chapterId, { helpful: input.helpful === '1', comment: String(input.comment ?? '').slice(0, 500), versionId }, feedbackUser, 'online-help');
+      }
+      state.feedback = 'sent';
+      return reply.send(embedPage(state));
+    });
   });
 }

@@ -62,7 +62,7 @@ function StepList({ versionId, blockId, text }: { versionId: string; blockId: st
           </li>
         ))}
       </ol>
-      <p className="small muted" aria-live="polite">{done.length} von {items.length} Schritten erledigt</p>
+      <p className="small muted no-print" aria-live="polite">{done.length} von {items.length} Schritten erledigt</p>
     </>
   );
 }
@@ -89,7 +89,7 @@ function Feedback({ chapterId, versionId }: { chapterId: string; versionId: stri
   };
   if (sent) return <p className="reader-feedback" role="status">✓ Danke für Ihre Rückmeldung{helpful === false ? ' – die Redaktion kümmert sich darum' : ''}.</p>;
   return (
-    <section className="reader-feedback" aria-labelledby="fb-q">
+    <section className="reader-feedback no-print" aria-labelledby="fb-q">
       <h2 id="fb-q">War dieses Kapitel hilfreich?</h2>
       <div className="row-actions">
         <button className="btn" aria-pressed={helpful === true} onClick={() => { setHelpful(true); void send(true); }}>👍 Ja</button>
@@ -104,6 +104,24 @@ function Feedback({ chapterId, versionId }: { chapterId: string; versionId: stri
         </div>
       )}
     </section>
+  );
+}
+
+/** Kapitelinhalt in Lesedarstellung (Leseransicht und Druckansicht) */
+export function ChapterContent({ version }: { version: any }) {
+  return (
+    <>
+      {version.sections.filter((s: any) => !HIDDEN_SECTIONS.has(s.code) && s.blocks.some((b: any) => b.kind !== 'gap')).map((s: any) => (
+        <section key={s.code} className="reader-section">
+          <h3>{s.title}</h3>
+          {s.blocks.filter((b: any) => b.kind !== 'gap').map((b: any) => {
+            if (CALLOUT[b.kind]) return <div key={b.id} className={`callout ${b.kind}`}><strong><span aria-hidden="true">{CALLOUT[b.kind].icon}</span> {CALLOUT[b.kind].label}:</strong> <Md text={b.text} /></div>;
+            if (s.code === 'steps' && b.kind === 'list') return <StepList key={b.id} versionId={version.id} blockId={b.id} text={b.text} />;
+            return <Md key={b.id} text={b.text} />;
+          })}
+        </section>
+      ))}
+    </>
   );
 }
 
@@ -124,10 +142,14 @@ export function ReaderPage() {
   const version = useLoad<any>(current ? `/chapter-versions/${current.version.id}` : null, [current?.version.id]);
   const idx = current ? list.indexOf(current) : -1;
   return (
-    <Page title="Leseransicht" subtitle="Das Handbuch so lesen, wie Ihre Leserinnen und Leser es sehen">
+    <Page title="Leseransicht" subtitle="Das Handbuch so lesen, wie Ihre Leserinnen und Leser es sehen"
+      actions={<span className="no-print row-actions">
+        {current && <button className="btn" onClick={() => window.print()}>🖨️ Kapitel drucken</button>}
+        <Link className="btn" to={`/lesen/druck${drafts ? '?entwuerfe=1' : ''}`}>📄 Ganzes Handbuch drucken</Link>
+      </span>}>
       <ErrorBox error={chapters.error} />
       <div className="reader">
-        <nav className="reader-toc card" aria-label="Inhaltsverzeichnis">
+        <nav className="reader-toc card no-print" aria-label="Inhaltsverzeichnis">
           <h2>Inhalt</h2>
           <label className="block">Kapitel filtern <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="z. B. Vertrag" /></label>
           <label className="inline small"><input type="checkbox" checked={drafts} onChange={(e) => setDrafts(e.target.checked)} /> Entwürfe einblenden</label>
@@ -145,18 +167,9 @@ export function ReaderPage() {
           {!current ? <Empty>Wählen Sie links ein Kapitel.</Empty> : !version.data ? <ErrorBox error={version.error} /> : (
             <>
               <h2 className="reader-title">{current.title}{current.draft && <span className="tag small">Entwurf – noch nicht freigegeben</span>}</h2>
-              {version.data.sections.filter((s: any) => !HIDDEN_SECTIONS.has(s.code) && s.blocks.some((b: any) => b.kind !== 'gap')).map((s: any) => (
-                <section key={s.code} className="reader-section">
-                  <h3>{s.title}</h3>
-                  {s.blocks.filter((b: any) => b.kind !== 'gap').map((b: any) => {
-                    if (CALLOUT[b.kind]) return <div key={b.id} className={`callout ${b.kind}`}><strong><span aria-hidden="true">{CALLOUT[b.kind].icon}</span> {CALLOUT[b.kind].label}:</strong> <Md text={b.text} /></div>;
-                    if (s.code === 'steps' && b.kind === 'list') return <StepList key={b.id} versionId={version.data.id} blockId={b.id} text={b.text} />;
-                    return <Md key={b.id} text={b.text} />;
-                  })}
-                </section>
-              ))}
+              <ChapterContent version={version.data} />
               <Feedback chapterId={current.id} versionId={version.data.id} />
-              <div className="row-actions reader-nav">
+              <div className="row-actions reader-nav no-print">
                 {idx > 0 && <button className="btn" onClick={() => navigate(`/lesen/${list[idx - 1].id}`)}>← {list[idx - 1].title}</button>}
                 {idx >= 0 && idx < list.length - 1 && <button className="btn" onClick={() => navigate(`/lesen/${list[idx + 1].id}`)}>{list[idx + 1].title} →</button>}
               </div>
@@ -204,5 +217,43 @@ function DoneButton({ id, title, onDone }: { id: string; title: string; onDone: 
         notify(errorText(e), 'error');
       }
     }}>Erledigt</button>
+  );
+}
+
+/** Druckansicht (ADR-060): ganzes Handbuch mit Inhaltsverzeichnis, je Kapitel neue Seite – über den Browser als PDF speichern */
+export function PrintPage() {
+  const drafts = new URLSearchParams(window.location.search).has('entwuerfe');
+  const chapters = useLoad<any[]>('/chapters');
+  const [versions, setVersions] = useState<any[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!chapters.data) return;
+    const shown = chapters.data.map((c) => (drafts ? c.versions[0] : c.versions.find((v: any) => v.status === 'approved'))).filter(Boolean);
+    Promise.all(shown.map((v: any) => api<any>('GET', `/chapter-versions/${v.id}`))).then(setVersions).catch((e) => setError(errorText(e)));
+  }, [chapters.data, drafts]);
+  const date = new Date().toLocaleDateString('de-DE');
+  return (
+    <Page title="Handbuch drucken" subtitle={`${drafts ? 'Freigegebene Kapitel und Entwürfe' : 'Freigegebene Kapitel'} · Stand ${date}`}
+      actions={<span className="no-print row-actions">
+        <Link className="btn" to="/lesen">← Leseransicht</Link>
+        <button className="btn primary" disabled={!versions} onClick={() => window.print()}>🖨️ Drucken / als PDF speichern</button>
+      </span>}>
+      <ErrorBox error={error ?? chapters.error} />
+      <p className="small muted no-print">Tipp: Im Druckdialog „Als PDF speichern“ wählen. Jedes Kapitel beginnt auf einer neuen Seite; Schritte erscheinen mit Kästchen zum Abhaken.</p>
+      {!versions ? <p className="muted">Lade …</p> : !versions.length ? <Empty>Noch keine freigegebenen Kapitel.</Empty> : (
+        <div className="print-book">
+          <nav className="print-toc" aria-label="Inhaltsverzeichnis des Handbuchs">
+            <h2>Inhalt</h2>
+            <ol>{versions.map((v) => <li key={v.id}><a href={`#k-${v.id}`}>{v.title}</a>{v.status !== 'approved' && ' (Entwurf)'}</li>)}</ol>
+          </nav>
+          {versions.map((v) => (
+            <article key={v.id} id={`k-${v.id}`} className="print-chapter reader-body" aria-label={v.title}>
+              <h2 className="reader-title">{v.title}{v.status !== 'approved' && <span className="tag small">Entwurf</span>}</h2>
+              <ChapterContent version={v} />
+            </article>
+          ))}
+        </div>
+      )}
+    </Page>
   );
 }

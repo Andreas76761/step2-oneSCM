@@ -2,7 +2,7 @@
 // mit Vorschlägen aus den Quellen statt eines leeren Editors.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { get, post } from '../api';
+import { api, get, post } from '../api';
 import { Card, Empty, Page, errorText, useApp, useLoad } from '../components/ui';
 import { scoreLabel } from './Guidance';
 
@@ -183,7 +183,7 @@ export function ChapterAssistantPage() {
                 <label className={`tpl-option${tplId === '' ? ' selected' : ''}`}><input type="radio" name="tpl" checked={tplId === ''} onChange={() => applyTemplate('')} /> <span><strong>Ohne Vorlage</strong><span className="small muted">Alles selbst schreiben</span></span></label>
                 {(templates.data ?? []).map((t) => (
                   <label key={t.id} className={`tpl-option${tplId === t.id ? ' selected' : ''}`}>
-                    <input type="radio" name="tpl" checked={tplId === t.id} onChange={() => applyTemplate(t.id)} /> <span><strong>{t.name}</strong><span className="small muted">{t.description}</span></span>
+                    <input type="radio" name="tpl" checked={tplId === t.id} onChange={() => applyTemplate(t.id)} /> <span><strong>{t.name}{!t.builtin && <span className="tag tpl-own">eigene</span>}</strong><span className="small muted">{t.description}</span></span>
                   </label>
                 ))}
               </fieldset>
@@ -259,6 +259,40 @@ export function ChapterAssistantPage() {
           )}
         </div>
       </div>
+      {step === 0 && canEdit && <OwnTemplates templates={(templates.data ?? []).filter((t) => !t.builtin)} onChanged={templates.reload} />}
     </Page>
+  );
+}
+
+/** Eigene Vorlagen umbenennen und löschen (ADR-059); neue entstehen in der Werkstatt über „Als Vorlage“ */
+function OwnTemplates({ templates, onChanged }: { templates: any[]; onChanged: () => void }) {
+  const { notify } = useApp();
+  const [names, setNames] = useState<Record<string, string>>({});
+  const run = async (fn: () => Promise<unknown>, msg: string) => {
+    try {
+      await fn();
+      notify(msg);
+      onChanged();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  return (
+    <Card title="Eigene Vorlagen">
+      {!templates.length ? <p className="small muted">Noch keine eigenen Vorlagen. In der Kapitelwerkstatt macht „💾 Als Vorlage“ aus einem gelungenen Kapitel eine Vorlage für dieses Projekt.</p> : (
+        <ul className="plain own-templates">
+          {templates.map((t) => (
+            <li key={t.id}>
+              <label className="inline">Name <input value={names[t.id] ?? t.name} onChange={(e) => setNames({ ...names, [t.id]: e.target.value })} /></label>
+              <span className="small muted">{t.steps.length} Schritte</span>
+              <span className="row-actions">
+                <button className="btn small" disabled={!(names[t.id] ?? '').trim() || names[t.id] === t.name} onClick={() => run(() => api('PATCH', `/chapter-templates/${t.id}`, { name: names[t.id] }), 'Vorlage umbenannt.')}>Umbenennen</button>
+                <button className="btn small danger" onClick={() => run(() => api('DELETE', `/chapter-templates/${t.id}`), `Vorlage „${t.name}“ gelöscht.`)}>Löschen</button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }

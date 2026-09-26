@@ -1278,3 +1278,63 @@ test('[T-229] Einführung, Leseransicht mit Schritten und Rückmeldung, Vorlagen
   expect(await axe()).toEqual([]);
   await request.put('/api/v1/guidance/settings', { headers: h, data: { minScore: null } });
 });
+
+test('[T-230] Rückmeldungen auswerten mit Aufgabe, eigene Kapitelvorlage aus der Werkstatt, Druckansicht', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const c = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: {
+    title: 'E2E Rückmeldung', purpose: 'Mit dieser Anleitung erfassen Sie eine Reklamation.', prerequisites: ['Sie haben die Berechtigung Service'],
+    steps: ['Öffnen Sie **Service › Reklamationen**', 'Klicken Sie auf **Neu**'], result: 'Die Reklamation ist gespeichert.', hints: ['Fotos helfen bei der Prüfung'],
+  } })).json();
+  for (const [u, comment] of [['u-leser', 'Wo finde ich die Reklamationsnummer?'], ['u-freigabe', 'Reklamationsnummer fehlt']]) {
+    await request.post(`/api/v1/chapters/${c.chapterId}/feedback`, { headers: { 'X-User-Id': u }, data: { helpful: false, versionId: c.versionId, comment } });
+  }
+
+  // Auswertung: Kapitel oben, häufiger Begriff, Aufgabe aus Rückmeldung
+  await page.goto('/rueckmeldungen');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Rückmeldungen');
+  await expect(page.getByRole('table', { name: 'Anteil nicht hilfreich je Kapitel' })).toContainText('E2E Rückmeldung');
+  await expect(page.locator('.word-list')).toContainText('reklamationsnummer');
+  expect(await axe()).toEqual([]);
+  const item = page.locator('.feedback-list li', { hasText: 'Reklamationsnummer fehlt' });
+  await item.getByRole('button', { name: 'Aufgabe erstellen' }).click();
+  await item.getByLabel('Zuständig').selectOption({ label: 'Redaktion (Demo)' });
+  await item.getByRole('button', { name: 'Erstellen' }).click();
+  await expect(page.getByText('Aufgabe erstellt – die Rückmeldung ist erledigt.')).toBeVisible();
+  await expect(page.locator('.feedback-list li', { hasText: 'Reklamationsnummer fehlt' })).toContainText('erledigt');
+
+  // Eigene Vorlage aus der Werkstatt, im Assistenten wählbar, umbenennen, löschen
+  await page.goto(`/werkstatt/${c.chapterId}`);
+  await page.getByRole('button', { name: '💾 Als Vorlage' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Als Vorlage speichern' });
+  await expect(dlg.getByLabel('Name der Vorlage')).toHaveValue('E2E Rückmeldung');
+  await dlg.getByLabel('Name der Vorlage').fill('E2E Reklamation');
+  await dlg.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Vorlage „E2E Reklamation“ gespeichert – im Kapitel-Assistenten wählbar.')).toBeVisible();
+  await page.goto('/kapitel-assistent');
+  await page.getByRole('radio', { name: /E2E Reklamation/ }).check();
+  await expect(page.getByLabel('Wozu dient die Anleitung?')).toHaveValue('Mit dieser Anleitung erfassen Sie eine Reklamation.');
+  const own = page.locator('.card', { has: page.getByRole('heading', { name: 'Eigene Vorlagen' }) });
+  await own.getByLabel('Name').fill('E2E Reklamation erfassen');
+  await own.getByRole('button', { name: 'Umbenennen' }).click();
+  await expect(page.getByText('Vorlage umbenannt.')).toBeVisible();
+  await expect(page.getByRole('radio', { name: /E2E Reklamation erfassen/ })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await own.getByRole('button', { name: 'Löschen' }).click();
+  await expect(page.getByRole('radio', { name: /E2E Reklamation/ })).toHaveCount(0);
+
+  // Druckansicht: alle Kapitel mit Inhaltsverzeichnis; im Druck ohne Navigation und Schaltflächen
+  await page.goto('/lesen/druck?entwuerfe=1');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Handbuch drucken');
+  const toc = page.getByRole('navigation', { name: 'Inhaltsverzeichnis des Handbuchs' });
+  await expect(toc.getByRole('link', { name: 'E2E Rückmeldung' })).toBeVisible();
+  await expect(page.getByRole('article', { name: 'E2E Rückmeldung' }).getByRole('checkbox')).toHaveCount(2);
+  expect(await axe()).toEqual([]);
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('.sidebar')).toBeHidden();
+  await expect(page.getByRole('button', { name: /Drucken \/ als PDF speichern/ })).toBeHidden();
+  await expect(page.getByRole('article', { name: 'E2E Rückmeldung' })).toBeVisible();
+  await page.emulateMedia({ media: 'screen' });
+});

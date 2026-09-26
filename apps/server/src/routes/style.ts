@@ -5,8 +5,8 @@ import { deleteDiagramTemplate, generateDiagrams, listDiagramTemplates, saveDiag
 import { styleHistory, applyChapterTexts, copyStyleRules, exportStyleRules, importStyleRules, getStyleRules, updateStyleRules, autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, rewriteText } from '../services/style.js';
 import { applyGuidanceFixes, assistantSuggestions, chapterGuidance, createChapterFromAssistant, guidanceSummary } from '../services/guidance.js';
 import { effectivePhrases, projectLibraries, setProjectLibraries } from '../services/style.js';
-import { CHAPTER_TEMPLATES } from '../domain/chapterTemplates.js';
-import { feedbackSummary, listFeedback, submitFeedback, updateFeedback } from '../services/feedback.js';
+import { feedbackInsights, feedbackSummary, feedbackToTask, listFeedback, submitFeedback, updateFeedback } from '../services/feedback.js';
+import { createChapterTemplate, deleteChapterTemplate, listChapterTemplates, updateChapterTemplate } from '../services/chapterTemplates.js';
 import { getGuidanceSettings, updateGuidanceSettings } from '../services/guidanceBase.js';
 import { userOf } from './helpers.js';
 
@@ -74,7 +74,15 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.post<{ Body: any }>('/chapter-assistant', async (req, reply) =>
     reply.code(201).send(await createChapterFromAssistant(req.ctx, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit').id)));
   // Kapitelvorlagen (ADR-055)
-  app.get('/chapter-assistant/templates', async (req) => (userOf(req.ctx, req), CHAPTER_TEMPLATES));
+  // Kapitelvorlagen: mitgeliefert (ADR-055) und eigene je Projekt (ADR-059)
+  app.get('/chapter-assistant/templates', async (req) => (userOf(req.ctx, req), listChapterTemplates(req.ctx)));
+  app.post<{ Body: any }>('/chapter-templates', async (req, reply) => reply.code(201).send(await createChapterTemplate(req.ctx, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit'))));
+  app.patch<{ Params: { chapterTemplateId: string }; Body: any }>('/chapter-templates/:chapterTemplateId', async (req) =>
+    updateChapterTemplate(req.ctx, req.params.chapterTemplateId, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit')));
+  app.delete<{ Params: { chapterTemplateId: string } }>('/chapter-templates/:chapterTemplateId', async (req, reply) => {
+    await deleteChapterTemplate(req.ctx, req.params.chapterTemplateId, userOf(req.ctx, req, 'edit'));
+    return reply.code(204).send();
+  });
   // Anleitungs-Check als Freigabebedingung (ADR-057): lesen für alle, ändern nur Administration
   app.get('/guidance/settings', async (req) => (userOf(req.ctx, req), getGuidanceSettings(req.ctx)));
   app.put<{ Body: any }>('/guidance/settings', async (req) => updateGuidanceSettings(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'admin')));
@@ -84,4 +92,8 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Querystring: { status?: string; chapterId?: string } }>('/feedback', async (req) => (userOf(req.ctx, req), listFeedback(req.ctx, req.query)));
   app.get('/feedback/summary', async (req) => (userOf(req.ctx, req), feedbackSummary(req.ctx)));
   app.patch<{ Params: { feedbackId: string }; Body: any }>('/feedback/:feedbackId', async (req) => updateFeedback(req.ctx, req.params.feedbackId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  // Auswertung der Rückmeldungen (ADR-058)
+  app.get<{ Querystring: { days?: string } }>('/feedback/insights', async (req) => (userOf(req.ctx, req), feedbackInsights(req.ctx, { days: Number(req.query.days) || undefined })));
+  app.post<{ Params: { feedbackId: string }; Body: any }>('/feedback/:feedbackId/task', async (req, reply) =>
+    reply.code(201).send(await feedbackToTask(req.ctx, req.params.feedbackId, req.body ?? {}, userOf(req.ctx, req, 'edit'))));
 }

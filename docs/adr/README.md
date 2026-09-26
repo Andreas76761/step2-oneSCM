@@ -59,3 +59,7 @@
 | [ADR-055](ADR-055-kapitelvorlagen.md) | Kapitelvorlagen im Assistenten, Platzhalter-Prüfung | akzeptiert, umgesetzt |
 | [ADR-056](ADR-056-einfuehrung.md) | Einführung beim ersten Start | akzeptiert, umgesetzt |
 | [ADR-057](ADR-057-check-vor-freigabe.md) | Anleitungs-Check vor der Freigabe (optional als Bedingung) | akzeptiert, umgesetzt |
+| [ADR-058](ADR-058-rueckmeldungen-auswerten.md) | Rückmeldungen auswerten, Aufgabe aus Rückmeldung | akzeptiert, umgesetzt |
+| [ADR-059](ADR-059-eigene-kapitelvorlagen.md) | Eigene Kapitelvorlagen je Projekt | akzeptiert, umgesetzt |
+| [ADR-060](ADR-060-druckansicht.md) | Druck- und PDF-Ansicht des Handbuchs | akzeptiert, umgesetzt |
+| [ADR-061](ADR-061-online-hilfe-rueckmeldung.md) | Rückmeldungen in der Online-Hilfe (anonym, geschützt) | akzeptiert, umgesetzt |

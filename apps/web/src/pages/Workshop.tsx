@@ -122,6 +122,7 @@ export function WorkshopPage() {
             {v && <Link className="btn" to={`/anleitungs-check/${v.id}`}>🔍 Anleitungs-Check</Link>}
             {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}>🖋️ Stil anzeigen</button>}
             {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}>🖋️ Stil korrigieren</button>}
+            {v && me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin') && <SaveTemplateButton versionId={v.id} title={v.title} />}
             {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}>✨ Kapitel umformulieren</button>}
             {chapter && <button className="btn primary" onClick={regenerate}>{chapter.versions.length ? 'Neu generieren' : 'Generieren'}</button>}
           </div>
@@ -784,5 +785,37 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
         </ul>
       )}
     </div>
+  );
+}
+
+/** „Als Vorlage speichern“ (ADR-059): Aufbau dieses Kapitels als eigene Vorlage für den Kapitel-Assistenten */
+function SaveTemplateButton({ versionId, title }: { versionId: string; title: string }) {
+  const { notify } = useApp();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  return (
+    <>
+      <button className="btn" onClick={() => { setName(title.replace(/^\d+(\.\d+)*\.?\s*/, '')); setOpen(true); }}>💾 Als Vorlage</button>
+      {open && (
+        <Modal title="Als Vorlage speichern" onClose={() => setOpen(false)}>
+          <p className="small">Zweck, Voraussetzungen, Schritte, Ergebnis und Tipps dieses Kapitels werden zur Vorlage im Kapitel-Assistenten. Ersetzen Sie danach konkrete Begriffe bei Bedarf durch „…“.</p>
+          <label className="block">Name der Vorlage <input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></label>
+          <label className="block">Beschreibung (optional) <input value={description} maxLength={300} onChange={(e) => setDescription(e.target.value)} placeholder="Wofür eignet sich die Vorlage?" /></label>
+          <div className="row-actions">
+            <button className="btn primary" disabled={!name.trim()} onClick={async () => {
+              try {
+                await post('/chapter-templates', { name, description, fromVersionId: versionId });
+                notify(`Vorlage „${name}“ gespeichert – im Kapitel-Assistenten wählbar.`);
+                setOpen(false);
+              } catch (e) {
+                notify(errorText(e), 'error');
+              }
+            }}>Speichern</button>
+            <button className="btn" onClick={() => setOpen(false)}>Abbrechen</button>
+          </div>
+        </Modal>
+      )}
+    </>
   );
 }
