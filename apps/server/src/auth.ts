@@ -8,7 +8,7 @@ import type { OidcConfig } from './config.js';
 import { resolveDemoUser, type Ctx, type User } from './context.js';
 import { json } from './db.js';
 import { PERMISSIONS } from './domain/reference.js';
-import { Problem } from './problem.js';
+import { forbidden, Problem } from './problem.js';
 import { TOKEN_PREFIX, tokenPrincipal } from './services/tokens.js';
 
 export const unauthorized = (detail: string) => new Problem(401, 'Unauthorized', detail);
@@ -91,8 +91,10 @@ export async function authenticate(ctx: Ctx, headers: Record<string, string | st
   // E-Mail nur aus bestätigtem Claim (für Benachrichtigungen, ADR-019)
   const email = typeof payload.email === 'string' && payload.email_verified !== false ? payload.email : null;
   await ctx.db.run(
-    'INSERT INTO users (id, name, permissions, email) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, permissions = excluded.permissions, email = excluded.email',
-    user.id, user.name, json(user.permissions), email,
+    "INSERT INTO users (id, name, permissions, email, origin, created_at, created_by) VALUES (?, ?, ?, ?, 'oidc', ?, 'oidc') ON CONFLICT (id) DO UPDATE SET name = excluded.name, permissions = excluded.permissions, email = excluded.email",
+    user.id, user.name, json(user.permissions), email, new Date().toISOString(),
   );
+  // Gesperrt in der Benutzerverwaltung (ADR-045): gültiges Token, aber kein Zugriff
+  if ((await ctx.db.get('SELECT disabled_at FROM users WHERE id = ?', user.id))?.disabled_at) throw forbidden(`Benutzer „${user.name}“ ist gesperrt.`);
   return user;
 }

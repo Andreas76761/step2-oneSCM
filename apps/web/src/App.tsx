@@ -23,6 +23,7 @@ import { TerminologyPage } from './pages/Terminology';
 import { EvidencePage } from './pages/Evidence';
 import { ComparePage } from './pages/Compare';
 import { ProjectsPage } from './pages/Projects';
+import { UsersPage } from './pages/Users';
 import { ReleasesPage } from './pages/Releases';
 import { InboxPage } from './pages/Discussion';
 import { TranslationsPage } from './pages/Translations';
@@ -60,6 +61,7 @@ const NAV = [
   { to: '/analytik', label: 'Analytik', icon: '📈' },
   { to: '/traceability', label: 'Traceability', icon: '🔗' },
   { to: '/projekte', label: 'Projekte', icon: '🗂️' },
+  { to: '/benutzer', label: 'Benutzer', icon: '👤' },
   { to: '/integrationen', label: 'Integrationen', icon: '🔌' },
 ];
 
@@ -346,6 +348,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/schreibstil" element={<StylePage />} />
             <Route path="/bilder" element={<DiagramsPage />} />
             <Route path="/projekte" element={<ProjectsPage onChanged={reloadProjects} />} />
+            <Route path="/benutzer" element={<UsersPage />} />
             <Route path="/einstellungen" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

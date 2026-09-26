@@ -2,7 +2,7 @@
 // professionell bzw. ins Präsens umformulieren – für freien Text, Kapitelabsätze (übernehmen) und Textschnipsel (nur prüfen).
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { patch, post, qs } from '../api';
+import { patch, post, put, qs } from '../api';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export interface Fix { start: number; end: number; replacement: string; label: string }
@@ -306,17 +306,99 @@ function SnippetTab() {
   );
 }
 
+const RULE_NAMES: Record<string, string> = {
+  long_sentence: 'Lange Sätze', passive: 'Passiv', future: 'Futur', past: 'Vergangenheit', filler: 'Füllwörter', double_word: 'Doppelte Wörter',
+  punctuation: 'Zeichensetzung', capitalization: 'Großschreibung am Satzanfang', impersonal: 'Unpersönlich („man“)', colloquial: 'Umgangssprache',
+  hedging: 'Unklare Anweisungen', nominal: 'Nominalstil', spelling: 'Rechtschreibung', abbreviation: 'Abkürzungen', terminology: 'Terminologie',
+  custom: 'Eigene Regeln', address: 'Anrede',
+};
+interface Phrase { avoid: string; use: string | null; note: string | null }
+
+/** Eigene Stilregeln des Projekts (ADR-044): Regeln an/aus, Anrede, Satzlänge, eigene Formulierungen – ändern nur Administration */
+function RulesTab({ canAdmin }: { canAdmin: boolean }) {
+  const { notify } = useApp();
+  const rules = useLoad<any>('/style/rules');
+  const [d, setD] = useState<any | null>(null);
+  // Zeilen mit „ersetzen durch …“, deren Ersatz noch leer ist (sonst gleichbedeutend mit „streichen“)
+  const [replacing, setReplacing] = useState<Set<number>>(new Set());
+  useEffect(() => setD(rules.data ? structuredClone(rules.data) : null), [rules.data]);
+  if (!d) return <ErrorBox error={rules.error} />;
+  const phrases: Phrase[] = d.phrases;
+  const setPhrase = (i: number, p: Partial<Phrase>) => setD({ ...d, phrases: phrases.map((x, j) => (j === i ? { ...x, ...p } : x)) });
+  const save = async () => {
+    try {
+      await put('/style/rules', { ...d, phrases: phrases.filter((p) => p.avoid.trim()) });
+      notify('Stilregeln gespeichert.');
+      rules.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const ro = !canAdmin;
+  return (
+    <>
+      {ro && <p className="small muted">Nur die Administration kann die Stilregeln ändern.</p>}
+      <Card title="Regeln">
+        <fieldset className="checks rule-grid">
+          <legend className="small">Aktive Prüfungen</legend>
+          {Object.entries(RULE_NAMES).map(([k, label]) => (
+            <label key={k} className="inline"><input type="checkbox" disabled={ro} checked={!d.disabled.includes(k)} onChange={(e) => setD({ ...d, disabled: e.target.checked ? d.disabled.filter((x: string) => x !== k) : [...d.disabled, k] })} /> {label}</label>
+          ))}
+        </fieldset>
+        <div className="filters">
+          <label className="inline">Anrede
+            <select disabled={ro} value={d.address ?? ''} onChange={(e) => setD({ ...d, address: e.target.value || null })}>
+              <option value="sie">Sie</option><option value="du">du</option><option value="">nicht prüfen</option>
+            </select>
+          </label>
+          <label className="inline">Höchstens Wörter je Satz
+            <input type="number" min={8} max={60} disabled={ro} value={d.maxSentenceWords ?? ''} placeholder="Standard" style={{ width: '6em' }}
+              onChange={(e) => setD({ ...d, maxSentenceWords: e.target.value ? Number(e.target.value) : null })} />
+          </label>
+        </div>
+      </Card>
+      <Card title="Eigene Formulierungen">
+        <p className="small muted">Zu vermeidende Wörter oder Wendungen, optional mit Ersatz (leer = streichen) oder Hinweis. Gilt für Prüfung, automatische Korrektur und KI-Umformulierung.</p>
+        <div className="table-wrap" role="region" aria-label="Eigene Formulierungen" tabIndex={0}>
+          <table className="table compact">
+            <thead><tr><th>Vermeiden</th><th>Aktion</th><th>Hinweis</th><th /></tr></thead>
+            <tbody>
+              {phrases.map((p, i) => (
+                <tr key={i}>
+                  <td><input aria-label={`Regel ${i + 1} vermeiden`} disabled={ro} value={p.avoid} onChange={(e) => setPhrase(i, { avoid: e.target.value })} /></td>
+                  <td>
+                    <select aria-label={`Regel ${i + 1} Aktion`} disabled={ro} value={p.use === null ? 'hint' : p.use === '' && !replacing.has(i) ? 'delete' : 'replace'}
+                      onChange={(e) => { const v = e.target.value; setReplacing((r) => { const n = new Set(r); if (v === 'replace') n.add(i); else n.delete(i); return n; }); setPhrase(i, { use: v === 'hint' ? null : v === 'delete' ? '' : p.use ?? '' }); }}>
+                      <option value="replace">ersetzen durch …</option><option value="delete">streichen</option><option value="hint">nur Hinweis</option>
+                    </select>
+                    {p.use !== null && (p.use !== '' || replacing.has(i)) && <input aria-label={`Regel ${i + 1} ersetzen durch`} disabled={ro} value={p.use} onChange={(e) => setPhrase(i, { use: e.target.value })} />}
+                  </td>
+                  <td><input aria-label={`Regel ${i + 1} Hinweis`} disabled={ro} value={p.note ?? ''} onChange={(e) => setPhrase(i, { note: e.target.value || null })} /></td>
+                  <td>{!ro && <button className="btn small danger" aria-label={`Regel ${i + 1} entfernen`} onClick={() => { setReplacing(new Set()); setD({ ...d, phrases: phrases.filter((_, j) => j !== i) }); }}>✕</button>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {!ro && <button className="btn small" onClick={() => { setReplacing((r) => new Set(r).add(phrases.length)); setD({ ...d, phrases: [...phrases, { avoid: '', use: '', note: null }] }); }}>+ Formulierung</button>}
+      </Card>
+      {!ro && <button className="btn primary" onClick={save}>Stilregeln speichern</button>}
+    </>
+  );
+}
+
 export function StylePage() {
   const me = useLoad<any>('/me');
   const canEdit = !!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin');
-  const [tab, setTab] = useState<'text' | 'chapter' | 'snippets'>('text');
+  const canAdmin = !!me.data?.permissions.includes('admin');
+  const [tab, setTab] = useState<'text' | 'chapter' | 'snippets' | 'rules'>('text');
   const empty = useMemo(() => '', []);
   return (
     <Page title="Schreibstil" subtitle="Professioneller Stil, Grammatik und Präsens – problematische Sätze sind gelb markiert und direkt bearbeitbar">
       <div className="tabs" role="tablist" aria-label="Textquelle">
-        {(['text', 'chapter', 'snippets'] as const).map((t) => (
+        {(['text', 'chapter', 'snippets', 'rules'] as const).map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>
-            {{ text: 'Textfeld', chapter: 'Kapitel', snippets: 'Textschnipsel' }[t]}
+            {{ text: 'Textfeld', chapter: 'Kapitel', snippets: 'Textschnipsel', rules: 'Regeln' }[t]}
           </button>
         ))}
       </div>
@@ -324,6 +406,7 @@ export function StylePage() {
         {tab === 'text' && <StyleEditor initial={empty} canRewrite={canEdit} />}
         {tab === 'chapter' && <ChapterTab canEdit={canEdit} />}
         {tab === 'snippets' && <SnippetTab />}
+        {tab === 'rules' && <RulesTab canAdmin={canAdmin} />}
       </div>
     </Page>
   );

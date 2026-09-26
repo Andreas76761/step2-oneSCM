@@ -53,10 +53,12 @@ export async function seedReferenceData(db: Db, authMode: AppConfig['authMode'])
     // Demo-Benutzer nur im Demo-Modus (ENTSCHEIDUNG E-15)
     if (authMode === 'demo') {
       for (const u of DEMO_USERS) {
+        // Anlage nur beim ersten Start; Änderungen der Benutzerverwaltung (ADR-045) bleiben erhalten
         await db.run(
-          'INSERT INTO users (id, name, permissions, email) VALUES (?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET name = excluded.name, permissions = excluded.permissions, email = excluded.email',
-          u.id, u.name, json(u.permissions), u.email,
+          "INSERT INTO users (id, name, permissions, email, origin, created_at, created_by) VALUES (?, ?, ?, ?, 'demo', ?, 'system') ON CONFLICT (id) DO NOTHING",
+          u.id, u.name, json(u.permissions), u.email, now(),
         );
+        await db.run("UPDATE users SET origin = 'demo' WHERE id = ? AND origin IS NULL", u.id);
       }
     }
   });
@@ -82,8 +84,9 @@ export async function saveSettings(db: Db, patch: Partial<Settings>) {
 
 /** Demo-Modus: Benutzer über Header X-User-Id; ohne Header nur Lesezugriff. */
 export async function resolveDemoUser(db: Db, userId: string | undefined): Promise<User> {
-  const row = await db.get<{ id: string; name: string; permissions: string }>('SELECT * FROM users WHERE id = ?', userId ?? 'u-leser');
+  const row = await db.get<{ id: string; name: string; permissions: string; disabled_at: string | null }>('SELECT * FROM users WHERE id = ?', userId ?? 'u-leser');
   if (!row) return { id: 'anonymous', name: 'Anonym', permissions: ['read'] };
+  if (row.disabled_at) throw forbidden(`Benutzer „${row.name}“ ist gesperrt.`);
   return { id: row.id, name: row.name, permissions: parseJson(row.permissions, []) };
 }
 

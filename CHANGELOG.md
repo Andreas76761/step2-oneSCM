@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.16.0 – Etappe 16 (25.09.2026)
+
+### Hinzugefügt
+- **Eigene Stilregeln (ADR-044):** je Projekt Prüfungen ein-/ausschalten, Anrede Sie/du, maximale Satzlänge, eigene Formulierungen (ersetzen, streichen, Hinweis) – wirksam in Prüfung, Korrektur, Stapelkorrektur, Stilwert und KI-Umformulierung (Schreibstil › Regeln).
+- **KI-Stapelumformulierung (ADR-044):** in der Werkstatt „Stil korrigieren“ mit „KI: professionell umformulieren“ oder „KI: ins Präsens“ – Fortschritt, Vorschau je Absatz, Auswahl, Übernahme mit Versionsprüfung.
+- **Benutzerverwaltung (ADR-045):** Seite „Benutzer“ – anlegen (lokal oder OIDC vorab), Name/E-Mail/Berechtigungen ändern, sperren/entsperren (auch API-Tokens), Projektzugriffe je Benutzer; Schutz vor Selbstaussperrung.
+- **Screenshot-Editor (ADR-046):** Pfeile, Textfelder, unkenntlich machen (verpixelt).
+- Migration `025_users_style.sql`; Tests T-180 … T-182, E2E T-226 (axe, /benutzer); Anforderungen NFR-31 … NFR-33.
+
+### Geändert
+- Suche: Kapitel und Kapiteltexte stehen vor Quellen, die nur über den Dateipfad passen (Gewichtung je Bereich).
+- Demo-Benutzer werden nur beim ersten Start angelegt; Änderungen aus der Benutzerverwaltung bleiben erhalten.
+
 ## 0.15.0 – Etappe 15 (25.09.2026)
 
 ### Hinzugefügt

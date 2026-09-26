@@ -925,3 +925,103 @@ test('[T-225] Werkstatt: Stil anzeigen und korrigieren, Stapelkorrektur, Bild au
   await expect(page.getByText('Screenshot gespeichert.')).toBeVisible();
   await expect(page.locator('code', { hasText: /^!\[Maske mit markierten Klickpunkten\]\(media:[a-f0-9]{64}\)$/ })).toBeVisible();
 });
+
+test('[T-226] Eigene Stilregeln, Benutzerverwaltung, KI-Stapelumformulierung, Screenshot mit Pfeil/Text/Unschärfe, Suche Kapitel zuerst', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // Eigene Stilregeln: Formulierung mit Ersatz, Füllwörter aus
+  await page.goto('/schreibstil');
+  await page.getByRole('tab', { name: 'Regeln' }).click();
+  await page.getByRole('button', { name: '+ Formulierung' }).click();
+  await page.getByLabel('Regel 1 vermeiden').fill('zu diesem Zeitpunkt');
+  await page.getByLabel('Regel 1 ersetzen durch').fill('jetzt');
+  await page.getByRole('checkbox', { name: 'Füllwörter' }).uncheck();
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Stilregeln speichern' }).click();
+  await expect(page.getByText('Stilregeln gespeichert.')).toBeVisible();
+  await page.getByRole('tab', { name: 'Textfeld' }).click();
+  await page.getByRole('textbox', { name: 'Text' }).fill('Das Feld ist zu diesem Zeitpunkt eigentlich leer.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.locator('.style-sentence.warn')).toHaveAttribute('title', /„jetzt“ statt „zu diesem Zeitpunkt“/);
+  await expect(page.locator('.style-sentence.warn')).not.toHaveAttribute('title', /Füllwort/);
+  await page.getByRole('button', { name: /Automatisch korrigieren/ }).click();
+  await expect(page.getByRole('textbox', { name: 'Text' })).toHaveValue('Das Feld ist jetzt eigentlich leer.');
+  // Regeln zurücksetzen (andere Tests nutzen Füllwörter)
+  await request.put('/api/v1/style/rules', { headers: h, data: { disabled: [], phrases: [] } });
+
+  // Benutzerverwaltung
+  await nav.getByRole('link', { name: 'Benutzer' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Benutzer');
+  await page.getByLabel('Kennung').fill('u-e2e');
+  await page.getByLabel('Name', { exact: true }).last().fill('E2E Nutzerin');
+  await page.getByRole('checkbox', { name: 'Bearbeiten' }).last().check();
+  await page.getByRole('button', { name: 'Benutzer anlegen' }).click();
+  await expect(page.getByText('Benutzer „E2E Nutzerin“ angelegt.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'E2E Nutzerin (u-e2e)' })).toBeVisible();
+  await expect(page.locator('#user-select option[value="u-e2e"]')).toHaveCount(1);
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Sperren' }).click();
+  await expect(page.getByText('Benutzer gesperrt.')).toBeVisible();
+  await expect(page.getByRole('row', { name: /E2E Nutzerin/ }).getByText('gesperrt')).toBeVisible();
+  await expect(page.locator('#user-select option[value="u-e2e"]')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Entsperren' }).click();
+  await expect(page.getByText('Benutzer entsperrt.')).toBeVisible();
+
+  // KI-Stapelumformulierung in der Werkstatt (Demo-KI: ins Präsens)
+  const md = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# 13. E2E-KI-Stapel\n\n## 13.1 Zweck\n\nDie Maske war leer.\n\nKlicken Sie auf **Speichern**.\n';
+  expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name: 'e2e_ki_stapel.md', mimeType: 'text/markdown', buffer: Buffer.from(md) } } })).status()).toBe(202);
+  let ch: any;
+  await expect.poll(async () => (ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '13. E2E-KI-Stapel'))).toBeTruthy();
+  expect((await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).ok()).toBe(true);
+  await page.goto(`/werkstatt/${ch.id}`);
+  await page.getByRole('button', { name: '🖋️ Stil korrigieren' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Schreibstil: Kapitel automatisch korrigieren' });
+  await dlg.getByRole('button', { name: '✨ KI: ins Präsens' }).click();
+  await expect(dlg.getByRole('status').filter({ hasText: /Absätze mit Vorschlägen/ })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await dlg.getByRole('button', { name: /^Auswahl übernehmen/ }).click();
+  await expect(page.getByText(/Absatz\/Absätze umformuliert/)).toBeVisible();
+  await expect(page.getByRole('article').filter({ hasText: 'Die Maske ist leer.' })).toBeVisible();
+
+  // Screenshot: Pfeil, Textfeld, Unschärfe
+  await page.goto('/bilder');
+  await page.getByRole('tab', { name: 'Screenshot markieren' }).click();
+  await page.getByTestId('screenshot-input').setInputFiles({ name: 'kunde.png', mimeType: 'image/png', buffer: png(400, 200, [30, 30, 30]) });
+  const canvas = page.getByTestId('screenshot-canvas');
+  await expect(canvas).toBeVisible();
+  const box = (await canvas.boundingBox())!;
+  const drag = async (x1: number, y1: number, x2: number, y2: number) => {
+    await page.mouse.move(box.x + x1, box.y + y1);
+    await page.mouse.down();
+    await page.mouse.move(box.x + x2, box.y + y2, { steps: 4 });
+    await page.mouse.up();
+  };
+  await page.getByRole('button', { name: '➜ Pfeil ziehen' }).click();
+  await drag(20, 20, 120, 80);
+  await page.getByRole('button', { name: 'T Textfeld setzen' }).click();
+  await page.getByLabel('Beschriftung').fill('Pflichtfeld');
+  await canvas.click({ position: { x: 150, y: 40 } });
+  await expect(page.getByLabel('Textfeld 1', { exact: true })).toHaveValue('Pflichtfeld');
+  await page.getByRole('button', { name: '▦ Unkenntlich machen' }).click();
+  await drag(200, 100, 300, 160);
+  await expect(canvas).toHaveAttribute('aria-label', 'Screenshot mit 0 Nummern und 0 Rahmen, 1 Pfeilen, 1 Textfeldern, 1 unkenntlichen Bereichen');
+  await expect(page.getByText('▦ 1 Bereich(e) werden im gespeicherten Bild verpixelt.')).toBeVisible();
+  await page.getByRole('button', { name: 'Rückgängig' }).click();
+  await expect(canvas).toHaveAttribute('aria-label', 'Screenshot mit 0 Nummern und 0 Rahmen, 1 Pfeilen, 1 Textfeldern');
+  // Entfernen über die Liste verschiebt Rückgängig nicht: Text B, dann Text A entfernen → Rückgängig nimmt Text B, nicht den Pfeil
+  await page.getByRole('button', { name: 'T Textfeld setzen' }).click();
+  await page.getByLabel('Beschriftung').fill('B');
+  await canvas.click({ position: { x: 60, y: 150 } });
+  await page.getByRole('button', { name: 'Textfeld 1 entfernen' }).click();
+  await page.getByRole('button', { name: 'Rückgängig' }).click();
+  await expect(canvas).toHaveAttribute('aria-label', 'Screenshot mit 0 Nummern und 0 Rahmen, 1 Pfeilen');
+  expect(await axe()).toEqual([]);
+
+  // Suche: Kapitel vor Treffern im Quellpfad
+  await page.goto('/suche?q=vertrag');
+  await expect(page.locator('.search-hits li .tag').first()).toHaveText('Kapitel');
+});

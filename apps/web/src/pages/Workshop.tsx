@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
 import {
@@ -132,7 +132,7 @@ export function WorkshopPage() {
             Schreibstil: {styleData.data.summary.withProblems} von {styleData.data.summary.blocks} Absätzen mit Problemen – gelb markierte Sätze {editable ? 'anklicken und korrigieren' : 'sind im Entwurf bearbeitbar'} · <Link to="/schreibstil">Schreibstil-Seite</Link>
           </p>
         )}
-        {batchStyleOpen && v && <StyleBatch versionId={v.id} onClose={() => setBatchStyleOpen(false)} onChanged={refresh} />}
+        {batchStyleOpen && v && <StyleBatch version={v} llm={llm.data} onClose={() => setBatchStyleOpen(false)} onChanged={refresh} />}
         {v && llm.data?.enabled && <ChapterRewrite version={v} llm={llm.data} editable={editable} open={batchOpen} onClose={() => setBatchOpen(false)} onChanged={refresh} />}
         {v && !editable && <div className="alert">Version {v.versionNo} ist <strong>{v.status === 'approved' ? 'freigegeben und unveränderlich' : v.status === 'in_review' ? 'zur Freigabe eingereicht' : 'ersetzt'}</strong>. {v.status === 'in_review' ? 'Zum Bearbeiten die Einreichung im Tab „Freigabe“ zurückziehen.' : 'Änderungen erfordern eine neue Version.'}</div>}
         {v?.sections.map((s: any, si: number) => (
@@ -294,30 +294,74 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
   );
 }
 
-/** Stapelkorrektur Schreibstil (ADR-043): Vorschau je Absatz, Auswahl, Übernahme mit Versionsprüfung */
-function StyleBatch({ versionId, onClose, onChanged }: { versionId: string; onClose: () => void; onChanged: () => void }) {
+/**
+ * Stapelkorrektur Schreibstil (ADR-043) bzw. KI-Stapelumformulierung (ADR-044): Vorschau je Absatz, Auswahl, Übernahme mit Versionsprüfung.
+ * Regeln: serverseitige Vorschau. KI: je Absatz über /style/rewrite (Fortschritt sichtbar, Absätze mit Bildern ausgenommen).
+ */
+function StyleBatch({ version, llm, onClose, onChanged }: { version: any; llm: any; onClose: () => void; onChanged: () => void }) {
   const { notify } = useApp();
-  const [data, setData] = useState<any | null>(null);
+  const [mode, setMode] = useState<'rules' | 'professional' | 'present'>('rules');
+  const [items, setItems] = useState<any[] | null>(null);
   const [chosen, setChosen] = useState<string[]>([]);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [busy, setBusy] = useState(false);
-  const load = async () => {
+  const cancelled = useRef(false);
+  useEffect(() => () => {
+    cancelled.current = true;
+  }, []);
+
+  const load = async (m: typeof mode) => {
+    setItems(null);
+    setChosen([]);
+    cancelled.current = false;
     try {
-      const r = await post<any>(`/style/chapter-versions/${versionId}/autofix`, {});
-      setData(r);
-      setChosen(r.blocks.filter((b: any) => !b.locked).map((b: any) => b.id));
+      if (m === 'rules') {
+        const r = await post<any>(`/style/chapter-versions/${version.id}/autofix`, {});
+        setItems(r.blocks.map((b: any) => ({ ...b, note: `${b.applied} Korrektur(en)` })));
+        setChosen(r.blocks.filter((b: any) => !b.locked).map((b: any) => b.id));
+        return;
+      }
+      if (llm?.external && !confirm(`Die Absätze werden zur Umformulierung an ${llm.provider} (${llm.model}) übertragen. Fortfahren?`)) return setMode('rules');
+      const blocks = version.sections.flatMap((s: any) => s.blocks.map((b: any) => ({ ...b, sectionTitle: s.title })))
+        .filter((b: any) => REWRITABLE.includes(b.kind) && b.mode !== 'locked' && !b.text.includes('](media:'));
+      const out: any[] = [];
+      setProgress({ done: 0, total: blocks.length });
+      for (const [n, b] of blocks.entries()) {
+        if (cancelled.current) break;
+        try {
+          const r = await post<any>('/style/rewrite', { text: b.text, mode: m });
+          if (r.text.trim() !== b.text.trim()) {
+            out.push({ id: b.id, section: b.sectionTitle, versionNo: b.versionNo, before: b.text, after: r.text, lostNumbers: r.lostNumbers,
+              note: r.lostNumbers.length ? `⚠ Zahlen fehlen: ${r.lostNumbers.join(', ')}` : r.method === 'ai' ? 'KI-Vorschlag' : 'Regelkorrektur' });
+          }
+        } catch (e) {
+          out.push({ id: b.id, section: b.sectionTitle, versionNo: b.versionNo, before: b.text, after: null, note: `nicht umformuliert: ${errorText(e)}` });
+        }
+        setProgress({ done: n + 1, total: blocks.length });
+      }
+      setItems(out);
+      // Vorschläge mit fehlenden Zahlen nicht vorauswählen
+      setChosen(out.filter((x) => x.after && !x.lostNumbers?.length).map((x) => x.id));
     } catch (e) {
       notify(errorText(e), 'error');
+    } finally {
+      setProgress(null);
     }
   };
   useEffect(() => {
-    void load();
+    void load(mode);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [versionId]);
+  }, [version.id, mode]);
+
   const apply = async () => {
+    if (!items) return;
     setBusy(true);
     try {
-      const r = await post<any>(`/style/chapter-versions/${versionId}/autofix`, { apply: true, blocks: data.blocks.filter((b: any) => chosen.includes(b.id)).map((b: any) => ({ id: b.id, versionNo: b.versionNo })) });
-      notify(`${r.saved.length} Absatz/Absätze korrigiert${r.skipped.length ? `, ${r.skipped.length} übersprungen (${r.skipped.map((x: any) => x.reason).join('; ')})` : ''}.`);
+      const sel = items.filter((b) => chosen.includes(b.id));
+      const r = mode === 'rules'
+        ? await post<any>(`/style/chapter-versions/${version.id}/autofix`, { apply: true, blocks: sel.map((b) => ({ id: b.id, versionNo: b.versionNo })) })
+        : await post<any>(`/style/chapter-versions/${version.id}/apply`, { blocks: sel.map((b) => ({ id: b.id, versionNo: b.versionNo, text: b.after })), reason: mode === 'present' ? 'Schreibstil: ins Präsens (KI)' : 'Schreibstil: professionell umformuliert (KI)' });
+      notify(`${r.saved.length} Absatz/Absätze ${mode === 'rules' ? 'korrigiert' : 'umformuliert'}${r.skipped.length ? `, ${r.skipped.length} übersprungen (${r.skipped.map((x: any) => x.reason).join('; ')})` : ''}.`);
       onChanged();
       onClose();
     } catch (e) {
@@ -326,23 +370,36 @@ function StyleBatch({ versionId, onClose, onChanged }: { versionId: string; onCl
       setBusy(false);
     }
   };
+  const usable = (items ?? []).filter((b) => b.after);
   return (
     <Modal title="Schreibstil: Kapitel automatisch korrigieren" wide onClose={onClose}>
-      {!data && <p className="small">Vorschau wird berechnet …</p>}
-      {data && !data.blocks.length && <Empty>Keine automatischen Korrekturen nötig.</Empty>}
-      {data && data.blocks.length > 0 && (
+      <div className="filters" role="group" aria-label="Art der Überarbeitung">
+        <button className={`chip${mode === 'rules' ? ' active' : ''}`} aria-pressed={mode === 'rules'} disabled={!!progress} onClick={() => setMode('rules')}>Regelkorrekturen</button>
+        {llm?.enabled && <button className={`chip${mode === 'professional' ? ' active' : ''}`} aria-pressed={mode === 'professional'} disabled={!!progress} onClick={() => setMode('professional')}>✨ KI: professionell umformulieren</button>}
+        {llm?.enabled && <button className={`chip${mode === 'present' ? ' active' : ''}`} aria-pressed={mode === 'present'} disabled={!!progress} onClick={() => setMode('present')}>✨ KI: ins Präsens</button>}
+      </div>
+      {progress && (
+        <div role="status">
+          <p className="small">KI formuliert Absatz {Math.min(progress.done + 1, progress.total)} von {progress.total} …</p>
+          <progress max={progress.total} value={progress.done} aria-label="Fortschritt der Umformulierung" />
+          <button className="btn small" onClick={() => (cancelled.current = true)}>Abbrechen</button>
+        </div>
+      )}
+      {!items && !progress && <p className="small">Vorschau wird berechnet …</p>}
+      {items && !usable.length && <Empty>{mode === 'rules' ? 'Keine automatischen Korrekturen nötig.' : 'Keine Änderungsvorschläge.'}</Empty>}
+      {items && items.length > 0 && (
         <>
-          <p className="small" role="status">{data.blocks.length} Absätze mit automatischen Korrekturen · {chosen.length} ausgewählt</p>
+          <p className="small" role="status">{usable.length} Absätze mit {mode === 'rules' ? 'automatischen Korrekturen' : 'Vorschlägen'} · {chosen.length} ausgewählt</p>
           <ul className="plain style-batch">
-            {data.blocks.map((b: any) => (
+            {items.map((b: any) => (
               <li key={b.id}>
-                <label className="inline"><input type="checkbox" disabled={b.locked} checked={chosen.includes(b.id)} onChange={() => setChosen(chosen.includes(b.id) ? chosen.filter((x) => x !== b.id) : [...chosen, b.id])} /> {b.section} · {b.applied} Korrektur(en){b.locked ? ' · gesperrt' : ''}</label>
-                <Diff a={b.before} b={b.after} />
+                <label className="inline"><input type="checkbox" disabled={b.locked || !b.after} checked={chosen.includes(b.id)} onChange={() => setChosen(chosen.includes(b.id) ? chosen.filter((x) => x !== b.id) : [...chosen, b.id])} /> {b.section} · {b.note}{b.locked ? ' · gesperrt' : ''}</label>
+                {b.after && <Diff a={b.before} b={b.after} />}
               </li>
             ))}
           </ul>
           <div className="row-actions">
-            <button className="btn primary" disabled={busy || !chosen.length} onClick={apply}>Auswahl übernehmen ({chosen.length})</button>
+            <button className="btn primary" disabled={busy || !!progress || !chosen.length} onClick={apply}>Auswahl übernehmen ({chosen.length})</button>
             <button className="btn" onClick={onClose}>Abbrechen</button>
           </div>
         </>

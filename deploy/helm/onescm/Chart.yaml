@@ -2,7 +2,7 @@ apiVersion: v2
 name: onescm
 description: oneSCM Handbook Studio – revisionssichere Benutzerhandbücher aus Markdown-Quellen (API, Web-UI, Worker)
 type: application
-version: 0.15.0
-appVersion: "0.15.0"
+version: 0.16.0
+appVersion: "0.16.0"
 kubeVersion: ">=1.25.0-0"
 keywords: [handbook, documentation, onescm]

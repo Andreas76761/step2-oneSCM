@@ -4,17 +4,32 @@
 
 export type StyleRule =
   | 'long_sentence' | 'passive' | 'future' | 'past' | 'filler' | 'double_word' | 'punctuation' | 'capitalization'
-  | 'impersonal' | 'colloquial' | 'hedging' | 'nominal' | 'spelling' | 'abbreviation' | 'terminology';
+  | 'impersonal' | 'colloquial' | 'hedging' | 'nominal' | 'spelling' | 'abbreviation' | 'terminology' | 'custom' | 'address';
+
+export const STYLE_RULES: StyleRule[] = [
+  'long_sentence', 'passive', 'future', 'past', 'filler', 'double_word', 'punctuation', 'capitalization', 'impersonal', 'colloquial', 'hedging', 'nominal',
+  'spelling', 'abbreviation', 'terminology', 'custom', 'address',
+];
+/** Eigene Formulierungsregel eines Projekts (ADR-044): „avoid“ vermeiden, optional durch „use“ ersetzen ('' = streichen) */
+export interface StylePhrase { avoid: string; use?: string | null; note?: string | null }
 
 export interface StyleFix { start: number; end: number; replacement: string; label: string }
 export interface StyleIssue { rule: StyleRule; severity: 'warning' | 'info'; message: string; start: number; end: number; fix?: StyleFix }
 export interface StyleSentence { start: number; end: number; text: string; issues: StyleIssue[] }
-export interface StyleOptions { maxWords?: number; terms?: { preferred: string; avoid: string[] }[] }
+export interface StyleOptions {
+  maxWords?: number;
+  terms?: { preferred: string; avoid: string[] }[];
+  /** ausgeschaltete Regeln (ADR-044) */
+  disabled?: StyleRule[];
+  phrases?: StylePhrase[];
+  /** Anrede: „sie“ meldet du-Formen, „du“ meldet die Sie-Anrede */
+  address?: 'sie' | 'du' | null;
+}
 
 export const RULE_LABEL: Record<StyleRule, string> = {
   long_sentence: 'Langer Satz', passive: 'Passiv', future: 'Futur', past: 'Vergangenheit', filler: 'Füllwort', double_word: 'Doppeltes Wort',
   punctuation: 'Zeichensetzung', capitalization: 'Großschreibung', impersonal: 'Unpersönlich', colloquial: 'Umgangssprache', hedging: 'Unklare Anweisung',
-  nominal: 'Nominalstil', spelling: 'Rechtschreibung', abbreviation: 'Abkürzung', terminology: 'Terminologie',
+  nominal: 'Nominalstil', spelling: 'Rechtschreibung', abbreviation: 'Abkürzung', terminology: 'Terminologie', custom: 'Eigene Regel', address: 'Anrede',
 };
 
 const FILLERS = ['eigentlich', 'grundsätzlich', 'halt', 'eben', 'quasi', 'sozusagen', 'gewissermaßen', 'irgendwie', 'ziemlich', 'relativ', 'einfach mal', 'wohl', 'durchaus', 'letztendlich', 'im Prinzip', 'an und für sich'];
@@ -133,7 +148,16 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
       const at = firstLetter.index! + firstLetter[0].length - 1;
       add('capitalization', 'warning', 'Satzanfang kleingeschrieben', at, at + 1, { replacement: firstLetter[1].toUpperCase(), label: `„${firstLetter[1].toUpperCase()}“` });
     }
-    for (const m of t.matchAll(new RegExp(String.raw`${B}[Mm]an${E}`, 'gu'))) add('impersonal', 'info', 'Unpersönlich – Leser direkt ansprechen („Sie“)', m.index!, m.index! + 3);
+    for (const m of t.matchAll(new RegExp(String.raw`${B}[Mm]an${E}`, 'gu'))) add('impersonal', 'info', `Unpersönlich – Leser direkt ansprechen („${opts.address === 'du' ? 'du' : 'Sie'}“)`, m.index!, m.index! + 3);
+    // Anrede (ADR-044): Sie-Anrede → du-Formen melden; du-Anrede → großgeschriebene Sie-Formen außerhalb des Satzanfangs melden
+    if (opts.address === 'sie') {
+      for (const m of t.matchAll(new RegExp(String.raw`${B}(?:du|dich|dir|dein|deine|deinen|deinem|deiner|deines)${E}`, 'giu'))) add('address', 'warning', `Anrede: „Sie“ statt „${m[0]}“`, m.index!, m.index! + m[0].length);
+    } else if (opts.address === 'du') {
+      const lead = /^\s*(?:(?:\d+\.|[-*])\s+)?(?:\*\*|„)?/.exec(t)![0].length;
+      for (const m of t.matchAll(new RegExp(String.raw`${B}(?:Sie|Ihnen|Ihr|Ihre|Ihren|Ihrem|Ihrer|Ihres)${E}`, 'gu'))) {
+        if (m.index! > lead) add('address', 'warning', `Anrede: „du“ statt „${m[0]}“`, m.index!, m.index! + m[0].length);
+      }
+    }
     for (const w of COLLOQUIAL) for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(w)}(?![\p{L}])`, 'giu'))) add('colloquial', 'info', `Umgangssprache „${m[0]}“ – sachlich formulieren`, m.index!, m.index! + m[0].length);
     for (const w of HEDGING) for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(w)}(?![\p{L}])`, 'giu'))) add('hedging', 'info', `Unklare Anweisung „${m[0]}“ – eindeutig formulieren`, m.index!, m.index! + m[0].length);
     const nominal = [...t.matchAll(/\b[\p{Lu}][\p{Ll}]+(?:ung|heit|keit|ion|ierung|schaft)(?:en)?\b/gu)];
@@ -153,6 +177,21 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
         for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(avoid)}(?![\p{L}])`, 'giu'))) add('terminology', 'warning', `Terminologie: „${term.preferred}“ statt „${m[0]}“`, m.index!, m.index! + m[0].length, { replacement: term.preferred, label: `„${term.preferred}“` });
       }
     }
+    // eigene Formulierungsregeln des Projekts
+    for (const p of opts.phrases ?? []) {
+      if (!p.avoid.trim()) continue;
+      for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(p.avoid.trim())}(?![\p{L}])`, 'giu'))) {
+        const msg = p.note?.trim() || (typeof p.use === 'string' ? (p.use ? `„${p.use}“ statt „${m[0]}“` : `„${m[0]}“ streichen`) : `„${m[0]}“ vermeiden`);
+        if (typeof p.use !== 'string') add('custom', 'warning', msg, m.index!, m.index! + m[0].length);
+        else if (p.use) add('custom', 'warning', msg, m.index!, m.index! + m[0].length, { replacement: p.use, label: `„${p.use}“` });
+        else {
+          // streichen samt vorangehendem Leerzeichen
+          const from = m.index! > 0 && t[m.index! - 1] === ' ' ? m.index! - 1 : m.index!;
+          add('custom', 'warning', msg, m.index!, m.index! + m[0].length, { replacement: '', label: 'streichen', relStart: from, relEnd: m.index! + m[0].length });
+        }
+      }
+    }
+    if (opts.disabled?.length) s.issues = s.issues.filter((i) => !opts.disabled!.includes(i.rule));
     s.issues.sort((a, b) => a.start - b.start || (a.severity === 'warning' ? -1 : 1));
   }
   const counts: Partial<Record<StyleRule, number>> = {};

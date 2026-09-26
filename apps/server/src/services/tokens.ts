@@ -67,6 +67,8 @@ export async function tokenPrincipal(db: Ctx['db'], bearer: string): Promise<Use
   if (!r) return { error: 'API-Token unbekannt.' };
   if (r.revoked_at) return { error: 'API-Token wurde widerrufen.' };
   if (r.expires_at < now()) return { error: 'API-Token ist abgelaufen.' };
+  // Tokens gesperrter Benutzer gelten nicht (ADR-045)
+  if ((await db.get('SELECT disabled_at FROM users WHERE id = ?', r.created_by))?.disabled_at) return { error: 'Ersteller des API-Tokens ist gesperrt.' };
   // Nutzung höchstens alle 5 Minuten schreiben (keine Schreiblast je Anfrage)
   if (!r.last_used_at || Date.parse(r.last_used_at) < Date.now() - 300_000) await db.run('UPDATE api_tokens SET last_used_at = ? WHERE id = ?', now(), r.id);
   const scopes = parseJson<string[]>(r.scopes, []);

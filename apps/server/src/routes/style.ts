@@ -2,7 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
 import { deleteDiagramTemplate, generateDiagrams, listDiagramTemplates, saveDiagram, saveDiagramTemplate } from '../services/diagrams.js';
-import { autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, rewriteText } from '../services/style.js';
+import { applyChapterTexts, getStyleRules, updateStyleRules, autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, rewriteText } from '../services/style.js';
 import { userOf } from './helpers.js';
 
 export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -34,4 +34,10 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
     await deleteDiagramTemplate(req.ctx, req.params.templateId, userOf(req.ctx, req, 'edit'));
     return reply.code(204).send();
   });
+  // Eigene Stilregeln je Projekt (ADR-044): lesen für alle, ändern nur Administration
+  app.get('/style/rules', async (req) => (userOf(req.ctx, req), getStyleRules(req.ctx)));
+  app.put<{ Body: any }>('/style/rules', async (req) => updateStyleRules(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+  // Umformulierungen (KI-Stapel) nach Prüfung übernehmen
+  app.post<{ Params: { versionId: string }; Body: any }>('/style/chapter-versions/:versionId/apply', async (req) =>
+    applyChapterTexts(req.ctx, req.params.versionId, req.body ?? {}, userOf(req.ctx, req, 'edit').id));
 }

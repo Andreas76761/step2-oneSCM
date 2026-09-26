@@ -163,6 +163,10 @@ export function searchTerms(q: string) {
   return [...q.normalize('NFC').matchAll(/[\p{L}\p{N}]+/gu)].map((m) => m[0]).slice(0, 12);
 }
 
+// Gewichtung je Bereich (Etappe 16): Kapitel und Kapiteltexte vor Quellen, deren Titel nur der Dateipfad ist
+export const TYPE_WEIGHT: Record<IndexType, number> = { chapter: 2, block: 1.5, faq: 1.2, term: 1.1, abbreviation: 1.1, outline: 1, snippet: 1, source: 0.5 };
+const weightSql = `CASE type ${Object.entries(TYPE_WEIGHT).map(([t, w]) => `WHEN '${t}' THEN ${w}`).join(' ')} ELSE 1 END`;
+
 const HIT_START = '\u0002';
 const HIT_END = '\u0003';
 
@@ -177,7 +181,7 @@ export async function queryIndex(ctx: Ctx, terms: string[], types: IndexType[], 
     const where = `search_fts MATCH ? AND project_id = ?`;
     const facets = await db.all(`SELECT type, COUNT(*) AS n FROM search_fts WHERE ${where} GROUP BY type`, match, projectId);
     const rows = await db.all(
-      `SELECT type, ref_id, title, link, snippet(search_fts, 1, '${HIT_START}', '${HIT_END}', ' … ', 24) AS excerpt, bm25(search_fts, 6.0, 1.0) AS score
+      `SELECT type, ref_id, title, link, snippet(search_fts, 1, '${HIT_START}', '${HIT_END}', ' … ', 24) AS excerpt, bm25(search_fts, 6.0, 1.0) * ${weightSql} AS score
        FROM search_fts WHERE ${where}${typeSql} ORDER BY score LIMIT ${limit} OFFSET ${offset}`, match, projectId, ...types,
     );
     return { facets, rows: rows.map((r) => ({ type: r.type, refId: r.ref_id, title: r.title, link: r.link, excerpt: r.excerpt || null, score: -Number(r.score) })) as IndexHit[] };
@@ -187,7 +191,7 @@ export async function queryIndex(ctx: Ctx, terms: string[], types: IndexType[], 
   const tsq = terms.map((t) => `${plain(t)}:*`).join(' & ');
   const facets = await db.all("SELECT type, COUNT(*) AS n FROM search_docs WHERE project_id = ? AND tsv @@ to_tsquery('german', ?) GROUP BY type", projectId, tsq);
   const rows = await db.all(
-    `SELECT type, ref_id, title, link, ts_rank(tsv, to_tsquery('german', ?)) AS score,
+    `SELECT type, ref_id, title, link, ts_rank(tsv, to_tsquery('german', ?)) * ${weightSql} AS score,
        CASE WHEN body = '' THEN NULL ELSE ts_headline('german', body, to_tsquery('german', ?), 'StartSel=${HIT_START}, StopSel=${HIT_END}, MaxWords=28, MinWords=12, ShortWord=2, MaxFragments=1, FragmentDelimiter=" … "') END AS excerpt
      FROM search_docs WHERE project_id = ? AND tsv @@ to_tsquery('german', ?)${typeSql} ORDER BY score DESC, title LIMIT ${limit} OFFSET ${offset}`,
     tsq, tsq, projectId, tsq, ...types,
