@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.26.0 – Etappe 26 (27.09.2026)
+
+### Hinzugefügt
+- **Häufige Fragen übersetzen (ADR-077):** Übersetzung je FAQ-Eintrag und Projektsprache – von Hand oder als KI-Vorschlag, mit Freigabe; veraltet, sobald sich das deutsche Original ändert. Leseransicht, „Häufige Fragen dazu“, Druck und Online-Hilfe zeigen die freigegebene Übersetzung, sonst deutsch mit Kennzeichen.
+- **Alle Projektsprachen vollständig (ADR-078):** Niederländisch, Polnisch, Tschechisch und Portugiesisch mit eigenen Beschriftungen in Leseransicht, Druck und Online-Hilfe sowie übersetzten Abschnittstiteln.
+- Migration `034_faq_translations.sql`; Tests T-207, T-208, E2E T-236 (axe); Anforderungen NFR-64, NFR-65.
+
+### Geändert
+- Online-Hilfe: „Siehe auch“ und FAQ in der angefragten Sprache, auch wenn das Kapitel selbst noch deutsch angezeigt wird.
+
+### Behoben
+- Online-Hilfe behält die angefragte Inhaltssprache in Formularen und Links; Hinweis an die Redaktion beim ersten Übersetzungswunsch genau einmal (PR #25).
+
 ## 0.25.0 – Etappe 25 (26.09.2026)
 
 ### Hinzugefügt

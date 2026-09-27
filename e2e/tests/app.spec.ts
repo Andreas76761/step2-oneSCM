@@ -1645,7 +1645,9 @@ test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; 
   await page.goto('/lesen/druck?sprache=en');
   await expect(page.getByLabel('Sprache')).toHaveValue('en');
   const printed = page.getByRole('article', { name: 'E2E Print packing list' });
-  await expect(printed.locator('.print-see')).toContainText(/See also: Chapter \d+ “E2E Packliste ändern”/);
+  // (Kapitel anderer Tests können ebenfalls verweisen – daher nur „enthält“)
+  await expect(printed.locator('.print-see')).toContainText('See also:');
+  await expect(printed.locator('.print-see')).toContainText(/Chapter \d+ “E2E Packliste ändern”/);
   await expect(page.getByRole('article', { name: 'E2E Packliste ändern' }).getByText('(not translated yet – German version)')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Frequently asked questions' })).toBeVisible();
   await expect(page.locator('#faq').getByText('Wo finde ich die Packliste einer Sendung?')).toBeVisible();
@@ -1722,4 +1724,63 @@ test('[T-235] Leseransicht auf Französisch mit Übersetzung anfordern, Notiz di
   await expect(page.getByRole('article', { name: 'E2E Retoure buchen' }).getByText('(pas encore traduit – version allemande)')).toBeVisible();
   await expect.poll(() => page.locator('style[data-print-header]').textContent()).toContain('"Page " counter(page) " sur " counter(pages)');
   expect(await axe()).toEqual([]);
+});
+
+test('[T-236] Häufige Fragen übersetzen und freigeben, KI-Vorschlag; FAQ-Seite auf Englisch; Leseransicht und Druck auf Polnisch', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  expect((await request.patch('/api/v1/projects/p_default', { headers: { 'X-User-Id': 'u-admin' }, data: { languages: ['en', 'pl'] } })).ok()).toBe(true);
+  const c = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: {
+    title: 'E2E Rechnung stornieren FAQ', purpose: 'Mit dieser Anleitung stornieren Sie eine Rechnung.', steps: ['Öffnen Sie **Rechnungen**', 'Klicken Sie auf **Stornieren**'], result: 'Erledigt.',
+  } })).json();
+  expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/submit`, { headers: red, data: {} })).ok()).toBe(true);
+  expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+  await request.post('/api/v1/faq', { headers: red, data: { question: 'E2E Wie storniere ich eine Rechnung?', answer: 'Öffnen Sie die Rechnung und klicken Sie auf **Stornieren**.', status: 'published' } });
+  await request.post('/api/v1/faq', { headers: red, data: { question: 'E2E Wer darf Rechnungen löschen?', answer: 'Nur die Buchhaltung.', status: 'published' } });
+
+  // Stammdaten › FAQ: englische Übersetzung von Hand, freigeben; polnisch als KI-Vorschlag
+  await page.goto('/stammdaten/faq');
+  const entry = page.locator('details.faq-entry', { hasText: 'E2E Wie storniere ich eine Rechnung?' });
+  await entry.locator('summary').click();
+  const tr = entry.getByRole('region', { name: 'Übersetzungen zu „E2E Wie storniere ich eine Rechnung?“' });
+  await tr.getByRole('button', { name: 'Englisch bearbeiten' }).click();
+  await tr.getByLabel('Frage (Englisch)').fill('E2E How do I cancel an invoice?');
+  await tr.getByLabel('Antwort (Englisch, Markdown)').fill('Open the invoice and click **Cancel**.');
+  await tr.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Übersetzung gespeichert.')).toBeVisible();
+  await expect(tr.getByRole('listitem').filter({ hasText: 'Englisch' })).toContainText('Entwurf');
+  await tr.getByRole('button', { name: 'Englisch freigeben' }).click();
+  await expect(page.getByText('Übersetzung Englisch freigegeben.')).toBeVisible();
+  await expect(tr.getByRole('listitem').filter({ hasText: 'Englisch' })).toContainText('freigegeben');
+  await tr.getByRole('button', { name: 'Polnisch: KI-Vorschlag' }).click();
+  await expect(page.getByText('KI-Vorschlag Polnisch erstellt – bitte prüfen und freigeben.')).toBeVisible();
+  await expect(tr.getByRole('listitem').filter({ hasText: 'Polnisch' })).toContainText('KI-Vorschlag');
+  await expect(entry.locator('summary')).toContainText('EN ✓');
+  expect(await axe()).toEqual([]);
+
+  // FAQ-Seite auf Englisch: übersetzte Frage englisch, nicht übersetzte deutsch mit Kennzeichen
+  await page.goto('/lesen/faq?lang=en');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Frequently asked questions');
+  await expect(page.getByText('Some questions have not been translated yet and appear in German.')).toBeVisible();
+  await page.getByLabel('Filter questions').fill('E2E');
+  await page.getByText('E2E How do I cancel an invoice?').click();
+  await expect(page.getByText('Open the invoice and click')).toBeVisible();
+  await expect(page.locator('details.faq-item', { hasText: 'E2E Wer darf Rechnungen löschen?' })).toHaveAttribute('lang', 'de');
+  expect(await axe()).toEqual([]);
+
+  // Leseransicht auf Polnisch: Beschriftungen polnisch, Kapitel deutsch mit Hinweis
+  await page.goto(`/lesen/${c.chapterId}?lang=pl`);
+  await expect(page.getByLabel('Język')).toHaveValue('pl');
+  const article = page.getByRole('article', { name: 'E2E Rechnung stornieren FAQ' });
+  await expect(article.getByText('Ten rozdział nie został jeszcze przetłumaczony na język polski – czytasz wersję niemiecką.')).toBeVisible();
+  await expect(article.getByRole('button', { name: 'Poproś o tłumaczenie' })).toBeVisible();
+  await expect(article.getByRole('heading', { name: 'Czy ten rozdział był pomocny?' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Druck auf Polnisch
+  await page.goto('/lesen/druck?sprache=pl');
+  await expect(page.getByRole('region', { name: 'Strona tytułowa' })).toContainText('Podręcznik użytkownika');
+  await expect.poll(() => page.locator('style[data-print-header]').textContent()).toContain('"Strona " counter(page) " z " counter(pages)');
 });

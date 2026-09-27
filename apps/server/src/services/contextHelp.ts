@@ -133,7 +133,7 @@ export interface ResolvedHelp {
   versionIds: string[];
   /** „Siehe auch“ mit Hilfethema des Zielkapitels (falls vorhanden) und passende FAQ (ADR-072) */
   related: { chapterId: string; title: string; contextKey: string | null }[];
-  faq: { question: string; answer: string; html: string }[];
+  faq: { question: string; answer: string; language: string; html: string }[];
 }
 
 function validQuery(q: HelpQuery, languages: string[]) {
@@ -188,8 +188,9 @@ export async function resolveHelp(ctx: Ctx, rawKey: string, q: HelpQuery, source
   const images = (sha: string) => (media.has(sha) ? dataUri(media.get(sha)!) : null);
   const html = sections.map((s) => `<section><h2>${escapeHtml(s.title)}</h2>${s.blocks.map((b) => `<div class="block kind-${escapeHtml(b.kind)}">${markdownToHtml(b.text, images)}</div>`).join('')}</section>`).join('\n');
   const params = new URLSearchParams(Object.entries({ role: q.role, division: q.division, language: language === 'de' ? undefined : language }).filter(([, v]) => v) as [string, string][]);
-  // „Siehe auch“ (ADR-072): aus denselben Fassungen wie die Hilfe (Release bzw. freigegeben), Titel in der Hilfesprache
-  const rel = source === 'release' ? await relatedForVersions(ctx, versionIds, row.chapter_id, fallback ? 'de' : language) : await readerRelated(ctx, row.chapter_id, false, fallback ? 'de' : language);
+  // „Siehe auch“ (ADR-072): aus denselben Fassungen wie die Hilfe (Release bzw. freigegeben); Titel und FAQ in der angefragten
+  // Sprache, je Eintrag deutsch, wo (noch) keine Übersetzung vorliegt – auch wenn dieses Kapitel selbst deutsch angezeigt wird (ADR-077)
+  const rel = source === 'release' ? await relatedForVersions(ctx, versionIds, row.chapter_id, language) : await readerRelated(ctx, row.chapter_id, false, language);
   const targets = [...rel.manual, ...rel.automatic];
   const keys = new Map<string, string>();
   if (targets.length) {
@@ -202,6 +203,6 @@ export async function resolveHelp(ctx: Ctx, rawKey: string, q: HelpQuery, source
     language: fallback ? 'de' : language, fallback, source, release, sections, html,
     deepLink: `/hilfe/${encodeURIComponent(key)}${params.size ? `?${params}` : ''}`, versionIds,
     related: targets.map((t) => ({ chapterId: t.chapterId, title: t.title, contextKey: keys.get(t.chapterId) ?? null })),
-    faq: rel.faq.map((f) => ({ question: f.question, answer: f.answer, html: markdownToHtml(f.answer, images) })),
+    faq: rel.faq.map((f) => ({ question: f.question, answer: f.answer, language: f.language, html: markdownToHtml(f.answer, images) })),
   };
 }

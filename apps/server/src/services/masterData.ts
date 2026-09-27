@@ -149,6 +149,7 @@ export async function deleteFaq(ctx: Ctx, id: string, user: User) {
   const r = await ctx.db.get('SELECT id FROM faq_entries WHERE id = ? AND project_id = ?', id, ctx.projectId);
   if (!r) throw notFound(`FAQ-Eintrag ${id}`);
   await ctx.db.tx(async () => {
+    await ctx.db.run('DELETE FROM faq_translations WHERE faq_id = ?', id);
     await ctx.db.run('DELETE FROM faq_entries WHERE id = ?', id);
     await audit(ctx, user.id, 'faq.deleted', 'faq', id, {});
   });

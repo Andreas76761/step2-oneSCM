@@ -703,3 +703,10 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 div.reader-lang-note { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
 div.reader-lang-note p { margin: 0; }
 .request-list td.count { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Etappe 26: Übersetzungen häufiger Fragen */
+.faq-translations { border-top: 1px solid var(--border); margin-top: 8px; padding-top: 6px; }
+.faq-translations h4 { margin: 4px 0; font-size: 0.95rem; }
+.faq-translations li { margin: 6px 0; }
+.faq-tr-edit { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 6px 0; }
+.faq-tr-edit textarea, .faq-tr-edit input { width: 100%; }

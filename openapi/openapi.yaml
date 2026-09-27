@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.25.0
+  version: 0.26.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -2080,9 +2080,9 @@ paths:
     servers: [{ url: / }]
     get:
       operationId: getEmbeddedHelp
-      summary: 'Öffentliche Hilfeseite für das Widget (ohne Anmeldung, ohne Skripte; nur bei freigeschalteter Einbettung, Stand des neuesten Releases; frame-ancestors laut HELP_EMBED_ORIGINS); Beschriftungen in fünf Sprachen, übrige englisch (ADR-074)'
+      summary: 'Öffentliche Hilfeseite für das Widget (ohne Anmeldung, ohne Skripte; nur bei freigeschalteter Einbettung, Stand des neuesten Releases; frame-ancestors laut HELP_EMBED_ORIGINS); Beschriftungen in allen neun Projektsprachen, unbekannte englisch (ADR-074, ADR-078)'
       tags: [Kontexthilfe]
-      x-requirements: [NFR-17, NFR-61]
+      x-requirements: [NFR-17, NFR-61, NFR-65]
       x-extension: true
       security: []
       parameters: [{ name: projectId, in: path, required: true, schema: { type: string } }, { $ref: '#/components/parameters/ContextKey' }, { $ref: '#/components/parameters/HelpRole' }, { $ref: '#/components/parameters/HelpDivision' }, { $ref: '#/components/parameters/HelpLanguage' }]
@@ -3608,6 +3608,96 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'OK' }
+  /faq/translations:
+    get:
+      operationId: faqTranslationSummary
+      summary: 'Übersetzungsstand aller deutschen FAQ-Einträge je Projektsprache (ADR-077)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-64]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ languages, entries: { [faqId]: { [language]: missing | draft | approved | outdated } } }' }
+  /faq/{faqId}/translations:
+    get:
+      operationId: listFaqTranslations
+      summary: 'Übersetzungen eines deutschen FAQ-Eintrags in allen Projektsprachen (ADR-077)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-64]
+      x-extension: true
+      parameters: [{ name: faqId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ faqId, language, languageName, question, answer, status: missing | draft | approved, mode: manual | machine, outdated, issues, updatedBy, updatedAt, approvedBy, approvedAt }]' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /faq/{faqId}/translations/{language}:
+    put:
+      operationId: saveFaqTranslation
+      summary: 'Übersetzung speichern – immer als Entwurf, jede Änderung braucht eine neue Freigabe (Berechtigung edit, ADR-077)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-64]
+      x-extension: true
+      parameters: [{ name: faqId, in: path, required: true, schema: { type: string } }, { name: language, in: path, required: true, schema: { type: string }, description: 'Projektsprache' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [question, answer], properties: { question: { type: string, minLength: 3, maxLength: 500 }, answer: { type: string, maxLength: 10000 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ faqId, language, languageName, question, answer, status: missing | draft | approved, mode: manual | machine, outdated, issues, updatedBy, updatedAt, approvedBy, approvedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteFaqTranslation
+      summary: 'Übersetzung löschen (Berechtigung edit, ADR-077)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-64]
+      x-extension: true
+      parameters: [{ name: faqId, in: path, required: true, schema: { type: string } }, { name: language, in: path, required: true, schema: { type: string }, description: 'Projektsprache' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'Gelöscht' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /faq/{faqId}/translations/{language}/machine:
+    post:
+      operationId: machineFaqTranslation
+      summary: 'KI-Vorschlag für Frage und Antwort, als Entwurf gespeichert und geprüft (Berechtigung edit, ADR-077)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-64]
+      x-extension: true
+      parameters: [{ name: faqId, in: path, required: true, schema: { type: string } }, { name: language, in: path, required: true, schema: { type: string }, description: 'Projektsprache' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ faqId, language, languageName, question, answer, status: missing | draft | approved, mode: manual | machine, outdated, issues, updatedBy, updatedAt, approvedBy, approvedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '502': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /faq/{faqId}/translations/{language}/approve:
+    post:
+      operationId: approveFaqTranslation
+      summary: 'Übersetzung freigeben – nur ein aktueller Entwurf; veraltete (deutsches Original geändert) → 409 (Berechtigung approve, ADR-077)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-64]
+      x-extension: true
+      parameters: [{ name: faqId, in: path, required: true, schema: { type: string } }, { name: language, in: path, required: true, schema: { type: string }, description: 'Projektsprache' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ faqId, language, languageName, question, answer, status: missing | draft | approved, mode: manual | machine, outdated, issues, updatedBy, updatedAt, approvedBy, approvedAt }' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /reader/faq:
+    get:
+      operationId: readerFaq
+      summary: 'Veröffentlichte FAQ in der Lesesprache: freigegebene, aktuelle Übersetzungen, sonst deutsch (translated false), dazu direkt in der Sprache verfasste Einträge (ADR-077)'
+      tags: [Kapitel]
+      x-requirements: [NFR-64]
+      x-extension: true
+      parameters:
+        - { name: lang, in: query, description: 'Lesesprache (Projektsprache, Standard de)', schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, question, answer, language, translated, source }]' }
+        '400': { $ref: '#/components/responses/Problem' }
   /faq/{faqId}:
     patch:
       operationId: updateFaq

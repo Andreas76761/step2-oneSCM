@@ -315,7 +315,10 @@ function Related({ chapterId, drafts, lang, canEdit, chapters, withQ }: { chapte
         <>
           <h2 lang={uiLang}>{t('faqRelated')}</h2>
           {d.faq.map((f: any) => (
-            <details key={f.id} className="faq-item"><summary>{f.question}</summary><Md text={f.answer} /></details>
+            <details key={f.id} className="faq-item" lang={f.language}>
+              <summary>{f.question}{lang !== 'de' && f.language === 'de' && <> <span className="tag small" lang={uiLang} title={t('untranslatedTag')}>DE</span></>}</summary>
+              <Md text={f.answer} />
+            </details>
           ))}
           <p className="small" lang={uiLang}><Link to="/lesen/faq">{t('allFaq')}</Link></p>
         </>
@@ -397,32 +400,38 @@ export function ReaderBookmarksPage() {
   );
 }
 
-/** Häufige Fragen für Leser (ADR-069): veröffentlichte FAQ mit Filter */
+/** Häufige Fragen für Leser (ADR-069, ADR-077): veröffentlichte FAQ in der Lesesprache – übersetzt, sonst deutsch – mit Filter */
 export function ReaderFaqPage() {
-  const { lang, name } = useReaderLanguage();
-  const faqLang = useLoad<any[]>(lang !== 'de' ? `/faq?status=published&language=${lang}` : null, [lang]);
-  const faqDe = useLoad<any[]>('/faq?status=published&language=de');
-  // in der Lesesprache, sonst deutsch (wie die Vorschläge unter den Kapiteln)
-  const faq = lang !== 'de' && faqLang.data?.length ? faqLang : faqDe;
+  const { lang } = useReaderLanguage();
+  const { t, uiLang } = useMemo(() => readerTexts(lang), [lang]);
+  const faq = useLoad<{ id: string; question: string; answer: string; language: string; translated: boolean }[]>(`/reader/faq${lang !== 'de' ? `?lang=${lang}` : ''}`, [lang]);
   const glossary = useReaderGlossary(lang);
   const [filter, setFilter] = useState('');
-  const q = filter.trim().toLocaleLowerCase('de');
-  const items = (faq.data ?? []).filter((f) => !q || `${f.question} ${f.answer}`.toLocaleLowerCase('de').includes(q));
+  const q = filter.trim().toLocaleLowerCase(uiLang);
+  const items = (faq.data ?? []).filter((f) => !q || `${f.question} ${f.answer}`.toLocaleLowerCase(uiLang).includes(q));
+  const partly = lang !== 'de' && (faq.data ?? []).some((f) => !f.translated);
   return (
     <GlossaryProvider entries={glossary.data}>
-      <Page title="Häufige Fragen" subtitle="Kurze Antworten auf das, was Leserinnen und Leser oft wissen möchten"
+      <Page title={t('faqTitle')} subtitle="Kurze Antworten auf das, was Leserinnen und Leser oft wissen möchten"
         actions={<Link className="btn no-print" to="/lesen">← Leseransicht</Link>}>
-        <ErrorBox error={faq.error} />
-        {lang !== 'de' && faqLang.data && !faqLang.data.length && <p className="reader-lang-note" role="note">Noch keine häufigen Fragen in {name} – Sie lesen die deutschen.</p>}
-        <div className="filters">
-          <label className="inline">Fragen filtern <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="z. B. Passwort" /></label>
-          <span className="small muted" aria-live="polite">{faq.data ? `${items.length} von ${faq.data.length}` : ''}</span>
-        </div>
-        {faq.data && !faq.data.length ? <Empty>Noch keine veröffentlichten Fragen.</Empty> : (
-          <div className="card faq-list">
-            {items.map((f) => <details key={f.id} className="faq-item"><summary>{f.question}</summary><Md text={f.answer} /></details>)}
+        <div lang={uiLang}>
+          <ErrorBox error={faq.error} />
+          {partly && <p className="reader-lang-note" role="note">{t('faqPartly')}</p>}
+          <div className="filters">
+            <label className="inline">{t('faqFilter')} <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder={t('faqPlaceholder')} /></label>
+            <span className="small muted" aria-live="polite">{faq.data ? `${items.length} / ${faq.data.length}` : ''}</span>
           </div>
-        )}
+          {faq.data && !faq.data.length ? <Empty>{t('faqEmpty')}</Empty> : (
+            <div className="card faq-list">
+              {items.map((f) => (
+                <details key={f.id} className="faq-item" lang={f.language}>
+                  <summary>{f.question}{!f.translated && <> <span className="tag small" lang={uiLang} title={t('untranslatedTag')}>DE</span></>}</summary>
+                  <Md text={f.answer} />
+                </details>
+              ))}
+            </div>
+          )}
+        </div>
       </Page>
     </GlossaryProvider>
   );
@@ -886,7 +895,7 @@ export function PrintPage() {
           {printedFaq.length > 0 && (
             <section id="faq" className="print-chapter print-faq" aria-labelledby="faq-h">
               <h2 id="faq-h" className="reader-title">{t('faqTitle')}</h2>
-              {printedFaq.map((f) => <div key={f.id} className="print-faq-item"><h3>{f.question}</h3><Md text={f.answer} /></div>)}
+              {printedFaq.map((f) => <div key={f.id} className="print-faq-item" lang={f.language}><h3>{f.question}</h3><Md text={f.answer} /></div>)}
             </section>
           )}
           {usedGlossary.length > 0 && (

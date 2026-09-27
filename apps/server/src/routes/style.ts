@@ -7,9 +7,10 @@ import { applyGuidanceFixes, assistantSuggestions, chapterGuidance, createChapte
 import { effectivePhrases, projectLibraries, setProjectLibraries } from '../services/style.js';
 import { feedbackInsights, feedbackSummary, feedbackToTask, listFeedback, submitFeedback, updateFeedback } from '../services/feedback.js';
 import { createChapterTemplate, deleteChapterTemplate, duplicateChapterTemplate, exportChapterTemplates, importChapterTemplates, listChapterTemplates, updateChapterTemplate } from '../services/chapterTemplates.js';
-import { readerGlossary, readerLanguages, readerMe, readerRelated, readerRelatedMap, readerSearch, readerTranslations, readerVersion, recordVisit, setBookmark, setChapterLinks } from '../services/reader.js';
+import { readerGlossary, readerLanguage, readerLanguages, readerMe, readerRelated, readerRelatedMap, readerSearch, readerTranslations, readerVersion, recordVisit, setBookmark, setChapterLinks } from '../services/reader.js';
 import { getGuidanceSettings, updateGuidanceSettings } from '../services/guidanceBase.js';
 import { myTranslationRequests, requestTranslation } from '../services/translationRequests.js';
+import { readerFaqEntries } from '../services/faqTranslations.js';
 import { buildDigest, getDigestSettings, sendDigests, updateDigestSettings } from '../services/digest.js';
 import { badRequest } from '../problem.js';
 import { userOf } from './helpers.js';
@@ -98,6 +99,8 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Querystring: { lang?: string } }>('/reader/glossary', async (req) => (userOf(req.ctx, req), readerGlossary(req.ctx, req.query.lang)));
   // Sprachen beim Lesen (ADR-071)
   app.get('/reader/languages', async (req) => (userOf(req.ctx, req), readerLanguages(req.ctx)));
+  // häufige Fragen in der Lesesprache: freigegebene Übersetzungen, sonst deutsch (ADR-077)
+  app.get<{ Querystring: { lang?: string } }>('/reader/faq', async (req) => (userOf(req.ctx, req), readerFaqEntries(req.ctx, await readerLanguage(req.ctx, req.query.lang))));
   app.get<{ Querystring: { lang?: string; drafts?: string } }>('/reader/translations', async (req) => (userOf(req.ctx, req), readerTranslations(req.ctx, req.query.drafts === 'true', req.query.lang)));
   app.get<{ Params: { versionId: string }; Querystring: { lang?: string } }>('/reader/versions/:versionId', async (req) => (userOf(req.ctx, req), readerVersion(req.ctx, req.params.versionId, req.query.lang)));
   // „Siehe auch“ für alle Kapitel auf einmal (Druck, ADR-072)
