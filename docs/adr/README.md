@@ -78,3 +78,5 @@
 | [ADR-074](ADR-074-leseransicht-mehrsprachig.md) | Beschriftungen der Leseransicht in der Lesesprache | akzeptiert, umgesetzt |
 | [ADR-075](ADR-075-uebersetzung-anfordern.md) | Übersetzung aus der Leseransicht anfordern | akzeptiert, umgesetzt |
 | [ADR-076](ADR-076-notiz-im-kapitel.md) | Notizen direkt im Kapitel | akzeptiert, umgesetzt |
+| [ADR-077](ADR-077-faq-uebersetzen.md) | Häufige Fragen übersetzen | akzeptiert, umgesetzt |
+| [ADR-078](ADR-078-weitere-sprachen.md) | Alle Projektsprachen vollständig beschriftet | akzeptiert, umgesetzt |

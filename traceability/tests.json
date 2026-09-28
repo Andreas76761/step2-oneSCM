@@ -1446,5 +1446,33 @@
       "NFR-62",
       "NFR-63"
     ]
+  },
+  {
+    "id": "T-207",
+    "title": "Häufige Fragen übersetzen: Entwurf, KI-Vorschlag, Freigabe (ohne Prüfbefunde, Vier-Augen-Prinzip), veraltet nach Änderung; Leseransicht, „Siehe auch“ und Online-Hilfe in der Sprache",
+    "file": "apps/server/test/stage26.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-64"
+    ]
+  },
+  {
+    "id": "T-208",
+    "title": "Weitere Sprachen: Abschnittstitel und Beschriftungen der Online-Hilfe auf Niederländisch, Polnisch, Tschechisch und Portugiesisch",
+    "file": "apps/server/test/stage26.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-65"
+    ]
+  },
+  {
+    "id": "T-236",
+    "title": "Häufige Fragen übersetzen und freigeben, KI-Vorschlag; FAQ-Seite auf Englisch; Leseransicht und Druck auf Polnisch (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-64",
+      "NFR-65"
+    ]
   }
 ]

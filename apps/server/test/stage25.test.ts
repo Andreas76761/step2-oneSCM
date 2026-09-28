@@ -74,7 +74,7 @@ describe('Etappe 25', () => {
     }
   });
 
-  it('[T-206] Online-Hilfe: Beschriftungen in der Sprache, übrige Projektsprachen englisch', async () => {
+  it('[T-206] Online-Hilfe: Beschriftungen in der Sprache, unbekannte Sprachen englisch; angefragte Inhaltssprache bleibt erhalten', async () => {
     const built = await build('help-labels');
     const call = client(built);
     try {
@@ -86,18 +86,19 @@ describe('Etappe 25', () => {
       const page = (lang: string) => built.app.inject({ method: 'GET', url: `/help/embed/p_default/ls.print?language=${lang}` }).then((r) => r.body);
       expect(await page('de')).toContain('War das hilfreich?');
       expect(await page('fr')).toContain('Cette aide vous a-t-elle été utile ?');
-      // Niederländisch: keine eigenen Beschriftungen → englisch statt deutsch
+      // Niederländisch: eigene Beschriftungen (seit Etappe 26, ADR-078); unbekannte Sprachcodes englisch
       const nl = await page('nl');
-      expect(nl).toContain('Was this helpful?');
-      expect(nl).toContain('Not yet translated – German version shown.');
-      expect(nl).toContain('<html lang="en">');
+      expect(nl).toContain('Was dit nuttig?');
+      expect(nl).toContain('Nog niet vertaald – Duitse versie.');
+      expect(nl).toContain('<html lang="nl">');
+      expect(await page('sv')).toContain('<html lang="en">');
       expect(nl).toContain('<div lang="de">');
       // die angefragte Inhaltssprache bleibt in Formularen (Assistent, Rückmeldung) erhalten – nicht die Beschriftungssprache
       expect(nl.match(/<input type="hidden" name="language" value="nl">/g)).toHaveLength(2);
       expect(nl).not.toContain('name="language" value="en"');
       // Rückmeldung aus der niederländischen Hilfe: Seite bleibt niederländisch angefragt
       const fb = await built.app.inject({ method: 'POST', url: '/help/embed/p_default/ls.print/feedback', payload: 'helpful=1&language=nl', headers: { 'content-type': 'application/x-www-form-urlencoded' } });
-      expect(fb.body).toContain('Thank you for your feedback.');
+      expect(fb.body).toContain('Bedankt voor uw feedback.');
       expect(fb.body).toContain('name="language" value="nl"');
     } finally {
       await built.app.close();

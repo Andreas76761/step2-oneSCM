@@ -1,6 +1,6 @@
-// Beschriftungen der Leseransicht und des Drucks in der Lesesprache (ADR-074): was Leserinnen und Leser sehen, folgt der
-// gewählten Sprache; Bedienelemente der Redaktion (Verweise bearbeiten, Entwürfe einblenden) bleiben deutsch.
-// Deutsch, Englisch, Französisch, Spanisch, Italienisch vollständig; übrige Projektsprachen lesen die englischen Texte.
+// Beschriftungen der Leseransicht und des Drucks in der Lesesprache (ADR-074, ADR-078): was Leserinnen und Leser sehen, folgt
+// der gewählten Sprache; Bedienelemente der Redaktion (Verweise bearbeiten, Entwürfe einblenden) bleiben deutsch.
+// Alle neun Projektsprachen vollständig; eine unbekannte Sprache liest die englischen Texte.
 import { createContext, createElement, useContext, useMemo, type ReactNode } from 'react';
 
 const de = {
@@ -29,6 +29,7 @@ const de = {
   printMissing: '(noch nicht übersetzt – deutsche Fassung)', printOutdated: '(Übersetzung veraltet – deutsche Fassung)', draftSuffix: ' (Entwurf)',
   manual: 'Benutzerhandbuch', workingState: 'Arbeitsstand', version: 'Version {v}', forRole: 'für {role}', asOf: 'Stand', chapters: 'Kapitel', published: 'Veröffentlicht',
   notice: 'Hinweis', includesDrafts: 'enthält nicht freigegebene Entwürfe', cover: 'Deckblatt', printToc: 'Inhaltsverzeichnis des Handbuchs', pageOf: 'Seite {page} von {pages}', quote: '„{x}“',
+  faqFilter: 'Fragen filtern', faqPlaceholder: 'z. B. Passwort', faqEmpty: 'Noch keine veröffentlichten Fragen.', faqPartly: 'Einige Fragen sind noch nicht übersetzt und erscheinen deutsch.',
 };
 export type ReaderTextKey = keyof typeof de;
 type Texts = Record<ReaderTextKey, string>;
@@ -59,6 +60,7 @@ const en: Texts = {
   printMissing: '(not translated yet – German version)', printOutdated: '(translation outdated – German version)', draftSuffix: ' (draft)',
   manual: 'User manual', workingState: 'Working version', version: 'Version {v}', forRole: 'for {role}', asOf: 'As of', chapters: 'Chapters', published: 'Published',
   notice: 'Note', includesDrafts: 'contains drafts that are not yet approved', cover: 'Cover page', printToc: 'Table of contents of the manual', pageOf: 'Page {page} of {pages}', quote: '“{x}”',
+  faqFilter: 'Filter questions', faqPlaceholder: 'e.g. password', faqEmpty: 'No published questions yet.', faqPartly: 'Some questions have not been translated yet and appear in German.',
 };
 
 const fr: Texts = {
@@ -87,6 +89,7 @@ const fr: Texts = {
   printMissing: '(pas encore traduit – version allemande)', printOutdated: '(traduction obsolète – version allemande)', draftSuffix: ' (brouillon)',
   manual: 'Manuel utilisateur', workingState: 'Version de travail', version: 'Version {v}', forRole: 'pour {role}', asOf: 'État au', chapters: 'Chapitres', published: 'Publié le',
   notice: 'Remarque', includesDrafts: 'contient des brouillons non validés', cover: 'Page de garde', printToc: 'Table des matières du manuel', pageOf: 'Page {page} sur {pages}', quote: '« {x} »',
+  faqFilter: 'Filtrer les questions', faqPlaceholder: 'p. ex. mot de passe', faqEmpty: 'Aucune question publiée pour l’instant.', faqPartly: 'Certaines questions ne sont pas encore traduites et apparaissent en allemand.',
 };
 
 const es: Texts = {
@@ -115,6 +118,7 @@ const es: Texts = {
   printMissing: '(aún no traducido: versión alemana)', printOutdated: '(traducción desactualizada: versión alemana)', draftSuffix: ' (borrador)',
   manual: 'Manual de usuario', workingState: 'Versión de trabajo', version: 'Versión {v}', forRole: 'para {role}', asOf: 'Fecha', chapters: 'Capítulos', published: 'Publicado',
   notice: 'Nota', includesDrafts: 'contiene borradores no aprobados', cover: 'Portada', printToc: 'Índice del manual', pageOf: 'Página {page} de {pages}', quote: '«{x}»',
+  faqFilter: 'Filtrar preguntas', faqPlaceholder: 'p. ej. contraseña', faqEmpty: 'Aún no hay preguntas publicadas.', faqPartly: 'Algunas preguntas aún no están traducidas y aparecen en alemán.',
 };
 
 const it: Texts = {
@@ -143,9 +147,126 @@ const it: Texts = {
   printMissing: '(non ancora tradotto: versione tedesca)', printOutdated: '(traduzione non aggiornata: versione tedesca)', draftSuffix: ' (bozza)',
   manual: 'Manuale utente', workingState: 'Versione di lavoro', version: 'Versione {v}', forRole: 'per {role}', asOf: 'Aggiornato al', chapters: 'Capitoli', published: 'Pubblicato',
   notice: 'Nota', includesDrafts: 'contiene bozze non approvate', cover: 'Copertina', printToc: 'Indice del manuale', pageOf: 'Pagina {page} di {pages}', quote: '«{x}»',
+  faqFilter: 'Filtra domande', faqPlaceholder: 'ad es. password', faqEmpty: 'Nessuna domanda pubblicata finora.', faqPartly: 'Alcune domande non sono ancora tradotte e appaiono in tedesco.',
 };
 
-const TEXTS: Record<string, Texts> = { de, en, fr, es, it };
+const nl: Texts = {
+  tip: 'Tip', warning: 'Let op', note: 'Opmerking',
+  stepsDone: '{done} van {total} stappen voltooid',
+  fbQuestion: 'Was dit hoofdstuk nuttig?', yes: 'Ja', no: 'Nee', fbMissing: 'Wat ontbrak of was onduidelijk? (optioneel)',
+  fbPlaceholder: 'bijv. stap 3 komt niet overeen met het huidige scherm', fbSend: 'Feedback versturen', fbThanks: 'Bedankt voor uw feedback', fbThanksNo: ' – de redactie gaat ermee aan de slag',
+  seeAlso: 'Zie ook', faqRelated: 'Gerelateerde vragen', allFaq: 'Alle veelgestelde vragen',
+  langMissing: 'Dit hoofdstuk is nog niet vertaald in het {lang} – u leest de Duitse versie.',
+  langOutdated: 'De vertaling in het {lang} hoort bij een oudere versie – u leest de actuele Duitse versie.',
+  untranslatedOne: '1 alinea is nog niet vertaald en verschijnt in het Duits.', untranslatedMany: '{n} alinea’s zijn nog niet vertaald en verschijnen in het Duits.',
+  requestTranslation: 'Vertaling aanvragen', requested: '✓ Vertaling aangevraagd – de redactie is op de hoogte gebracht.',
+  bookmark: '☆ Bladwijzer', bookmarked: '★ Bladwijzer gezet', addNote: '📝 Notitie toevoegen', editNote: 'Notitie bewerken', noteLabel: 'Uw notitie bij dit hoofdstuk',
+  notePlaceholder: 'bijv. voor de inventaris in december', save: 'Opslaan', cancel: 'Annuleren', deleteNote: 'Notitie verwijderen', noteSaved: 'Notitie opgeslagen.', noteDeleted: 'Notitie verwijderd.',
+  noteHint: 'Alleen zichtbaar voor u; het hoofdstuk krijgt ook een bladwijzer.', allBookmarks: 'Alle bladwijzers en notities',
+  newChapter: 'Dit hoofdstuk is nieuw voor u.', changedChapter: 'Dit hoofdstuk is gewijzigd sinds u het laatst las.',
+  otherOne: '1 ander hoofdstuk is nieuw voor u of gewijzigd sinds u het laatst las – gemarkeerd in de inhoud.',
+  otherMany: '{n} andere hoofdstukken zijn nieuw voor u of gewijzigd sinds u ze laatst las – gemarkeerd in de inhoud.',
+  tagNew: 'Nieuw', tagChanged: 'Gewijzigd', untranslatedTag: 'nog niet vertaald',
+  contents: 'Inhoud', bookmarks: '★ Bladwijzers', recent: 'Recent gelezen', faqLink: '❓ Veelgestelde vragen', glossHint: 'Onderstreepte begrippen worden uitgelegd bij klikken of aanwijzen.',
+  toc: 'Inhoudsopgave', language: 'Taal', translatedCount: '{n} vertaald', search: 'Zoeken in de handleiding', searchPlaceholder: 'bijv. pakbon afdrukken', clearSearch: 'Zoekopdracht wissen', searchResults: 'Zoekresultaten',
+  found: '{n} hoofdstukken gevonden', notFound: 'Niets gevonden voor ‘{q}’ – probeer een ander woord',
+  hits: '{n} treffers voor ‘{q}’ gemarkeerd.', noHits: '‘{q}’ komt niet voor in dit hoofdstuk.', removeMark: 'Markering verwijderen',
+  chooseChapter: 'Kies links een hoofdstuk.', chapter: 'Hoofdstuk', draft: 'Concept', draftBanner: 'Concept – nog niet vrijgegeven',
+  printSeeAlso: 'Zie ook:', chapterN: 'Hoofdstuk {n}', faqTitle: 'Veelgestelde vragen', glossary: 'Woordenlijst',
+  printMissing: '(nog niet vertaald – Duitse versie)', printOutdated: '(vertaling verouderd – Duitse versie)', draftSuffix: ' (concept)',
+  manual: 'Gebruikershandleiding', workingState: 'Werkversie', version: 'Versie {v}', forRole: 'voor {role}', asOf: 'Stand', chapters: 'Hoofdstukken', published: 'Gepubliceerd',
+  notice: 'Opmerking', includesDrafts: 'bevat nog niet vrijgegeven concepten', cover: 'Titelpagina', printToc: 'Inhoudsopgave van de handleiding', pageOf: 'Pagina {page} van {pages}', quote: '‘{x}’',
+  faqFilter: 'Vragen filteren', faqPlaceholder: 'bijv. wachtwoord', faqEmpty: 'Nog geen gepubliceerde vragen.', faqPartly: 'Sommige vragen zijn nog niet vertaald en verschijnen in het Duits.',
+};
+
+const pl: Texts = {
+  tip: 'Wskazówka', warning: 'Uwaga', note: 'Informacja',
+  stepsDone: 'Wykonano {done} z {total} kroków',
+  fbQuestion: 'Czy ten rozdział był pomocny?', yes: 'Tak', no: 'Nie', fbMissing: 'Czego brakowało lub co było niejasne? (opcjonalnie)',
+  fbPlaceholder: 'np. krok 3 nie pasuje do obecnego ekranu', fbSend: 'Wyślij opinię', fbThanks: 'Dziękujemy za opinię', fbThanksNo: ' – redakcja się tym zajmie',
+  seeAlso: 'Zobacz także', faqRelated: 'Powiązane pytania', allFaq: 'Wszystkie najczęściej zadawane pytania',
+  langMissing: 'Ten rozdział nie został jeszcze przetłumaczony na język {lang} – czytasz wersję niemiecką.',
+  langOutdated: 'Tłumaczenie na język {lang} dotyczy starszej wersji – czytasz aktualną wersję niemiecką.',
+  untranslatedOne: '1 akapit nie został jeszcze przetłumaczony i jest wyświetlany po niemiecku.', untranslatedMany: 'Akapity jeszcze nieprzetłumaczone i wyświetlane po niemiecku: {n}.',
+  requestTranslation: 'Poproś o tłumaczenie', requested: '✓ Poproszono o tłumaczenie – redakcja została powiadomiona.',
+  bookmark: '☆ Dodaj zakładkę', bookmarked: '★ Zakładka dodana', addNote: '📝 Dodaj notatkę', editNote: 'Edytuj notatkę', noteLabel: 'Twoja notatka do tego rozdziału',
+  notePlaceholder: 'np. na inwentaryzację w grudniu', save: 'Zapisz', cancel: 'Anuluj', deleteNote: 'Usuń notatkę', noteSaved: 'Notatka zapisana.', noteDeleted: 'Notatka usunięta.',
+  noteHint: 'Widoczna tylko dla Ciebie; rozdział zostanie też dodany do zakładek.', allBookmarks: 'Wszystkie zakładki i notatki',
+  newChapter: 'Ten rozdział jest dla Ciebie nowy.', changedChapter: 'Ten rozdział zmienił się od Twojej ostatniej lektury.',
+  otherOne: '1 inny rozdział jest dla Ciebie nowy lub zmienił się od ostatniej lektury – oznaczony w spisie treści.',
+  otherMany: 'Inne rozdziały nowe lub zmienione od ostatniej lektury: {n} – oznaczone w spisie treści.',
+  tagNew: 'Nowy', tagChanged: 'Zmieniony', untranslatedTag: 'jeszcze nieprzetłumaczony',
+  contents: 'Spis treści', bookmarks: '★ Zakładki', recent: 'Ostatnio czytane', faqLink: '❓ Najczęściej zadawane pytania', glossHint: 'Podkreślone pojęcia są objaśniane po kliknięciu lub najechaniu kursorem.',
+  toc: 'Spis treści', language: 'Język', translatedCount: 'przetłumaczono: {n}', search: 'Szukaj w podręczniku', searchPlaceholder: 'np. drukowanie dowodu dostawy', clearSearch: 'Wyczyść wyszukiwanie', searchResults: 'Wyniki wyszukiwania',
+  found: 'Znalezione rozdziały: {n}', notFound: 'Nic nie znaleziono dla „{q}” – spróbuj innego słowa',
+  hits: 'Zaznaczone trafienia dla „{q}”: {n}.', noHits: '„{q}” nie występuje w tym rozdziale.', removeMark: 'Usuń zaznaczenie',
+  chooseChapter: 'Wybierz rozdział po lewej stronie.', chapter: 'Rozdział', draft: 'Wersja robocza', draftBanner: 'Wersja robocza – jeszcze niezatwierdzona',
+  printSeeAlso: 'Zobacz także:', chapterN: 'Rozdział {n}', faqTitle: 'Najczęściej zadawane pytania', glossary: 'Słowniczek',
+  printMissing: '(jeszcze nieprzetłumaczone – wersja niemiecka)', printOutdated: '(tłumaczenie nieaktualne – wersja niemiecka)', draftSuffix: ' (wersja robocza)',
+  manual: 'Podręcznik użytkownika', workingState: 'Wersja robocza', version: 'Wersja {v}', forRole: 'dla roli {role}', asOf: 'Stan na', chapters: 'Rozdziały', published: 'Opublikowano',
+  notice: 'Informacja', includesDrafts: 'zawiera niezatwierdzone wersje robocze', cover: 'Strona tytułowa', printToc: 'Spis treści podręcznika', pageOf: 'Strona {page} z {pages}', quote: '„{x}”',
+  faqFilter: 'Filtruj pytania', faqPlaceholder: 'np. hasło', faqEmpty: 'Brak opublikowanych pytań.', faqPartly: 'Niektóre pytania nie zostały jeszcze przetłumaczone i są wyświetlane po niemiecku.',
+};
+
+const cs: Texts = {
+  tip: 'Tip', warning: 'Pozor', note: 'Poznámka',
+  stepsDone: 'Hotovo {done} z {total} kroků',
+  fbQuestion: 'Byla tato kapitola užitečná?', yes: 'Ano', no: 'Ne', fbMissing: 'Co chybělo nebo nebylo jasné? (nepovinné)',
+  fbPlaceholder: 'např. krok 3 neodpovídá aktuální obrazovce', fbSend: 'Odeslat zpětnou vazbu', fbThanks: 'Děkujeme za zpětnou vazbu', fbThanksNo: ' – redakce se tím bude zabývat',
+  seeAlso: 'Viz také', faqRelated: 'Související otázky', allFaq: 'Všechny časté dotazy',
+  langMissing: 'Tato kapitola zatím není přeložena do jazyka {lang} – čtete německou verzi.',
+  langOutdated: 'Překlad do jazyka {lang} patří ke starší verzi – čtete aktuální německou verzi.',
+  untranslatedOne: '1 odstavec zatím není přeložen a zobrazuje se německy.', untranslatedMany: 'Odstavce, které zatím nejsou přeloženy a zobrazují se německy: {n}.',
+  requestTranslation: 'Požádat o překlad', requested: '✓ O překlad bylo požádáno – redakce byla informována.',
+  bookmark: '☆ Přidat záložku', bookmarked: '★ Záložka přidána', addNote: '📝 Přidat poznámku', editNote: 'Upravit poznámku', noteLabel: 'Vaše poznámka k této kapitole',
+  notePlaceholder: 'např. pro inventuru v prosinci', save: 'Uložit', cancel: 'Zrušit', deleteNote: 'Smazat poznámku', noteSaved: 'Poznámka uložena.', noteDeleted: 'Poznámka smazána.',
+  noteHint: 'Viditelná jen pro vás; kapitola se zároveň přidá do záložek.', allBookmarks: 'Všechny záložky a poznámky',
+  newChapter: 'Tato kapitola je pro vás nová.', changedChapter: 'Tato kapitola se od vašeho posledního čtení změnila.',
+  otherOne: '1 další kapitola je pro vás nová nebo se od posledního čtení změnila – označeno v obsahu.',
+  otherMany: 'Další kapitoly, které jsou nové nebo se od posledního čtení změnily: {n} – označeno v obsahu.',
+  tagNew: 'Nové', tagChanged: 'Změněno', untranslatedTag: 'zatím nepřeloženo',
+  contents: 'Obsah', bookmarks: '★ Záložky', recent: 'Naposledy čtené', faqLink: '❓ Časté dotazy', glossHint: 'Podtržené pojmy se vysvětlí po kliknutí nebo najetí myší.',
+  toc: 'Obsah', language: 'Jazyk', translatedCount: 'přeloženo: {n}', search: 'Hledat v příručce', searchPlaceholder: 'např. tisk dodacího listu', clearSearch: 'Vymazat hledání', searchResults: 'Výsledky hledání',
+  found: 'Nalezené kapitoly: {n}', notFound: 'Pro „{q}“ nebylo nic nalezeno – zkuste jiné slovo',
+  hits: 'Označené výskyty „{q}“: {n}.', noHits: '„{q}“ se v této kapitole nevyskytuje.', removeMark: 'Odstranit zvýraznění',
+  chooseChapter: 'Vyberte vlevo kapitolu.', chapter: 'Kapitola', draft: 'Koncept', draftBanner: 'Koncept – zatím neschváleno',
+  printSeeAlso: 'Viz také:', chapterN: 'Kapitola {n}', faqTitle: 'Časté dotazy', glossary: 'Slovníček',
+  printMissing: '(zatím nepřeloženo – německá verze)', printOutdated: '(překlad je zastaralý – německá verze)', draftSuffix: ' (koncept)',
+  manual: 'Uživatelská příručka', workingState: 'Pracovní verze', version: 'Verze {v}', forRole: 'pro roli {role}', asOf: 'Stav k', chapters: 'Kapitoly', published: 'Zveřejněno',
+  notice: 'Poznámka', includesDrafts: 'obsahuje neschválené koncepty', cover: 'Titulní strana', printToc: 'Obsah příručky', pageOf: 'Strana {page} z {pages}', quote: '„{x}“',
+  faqFilter: 'Filtrovat otázky', faqPlaceholder: 'např. heslo', faqEmpty: 'Zatím nejsou zveřejněny žádné otázky.', faqPartly: 'Některé otázky zatím nejsou přeloženy a zobrazují se německy.',
+};
+
+const pt: Texts = {
+  tip: 'Dica', warning: 'Atenção', note: 'Nota',
+  stepsDone: '{done} de {total} passos concluídos',
+  fbQuestion: 'Este capítulo foi útil?', yes: 'Sim', no: 'Não', fbMissing: 'O que faltou ou não ficou claro? (opcional)',
+  fbPlaceholder: 'p. ex. o passo 3 não corresponde ao ecrã atual', fbSend: 'Enviar feedback', fbThanks: 'Obrigado pelo seu feedback', fbThanksNo: ' – a equipa editorial vai tratar do assunto',
+  seeAlso: 'Ver também', faqRelated: 'Perguntas relacionadas', allFaq: 'Todas as perguntas frequentes',
+  langMissing: 'Este capítulo ainda não foi traduzido para {lang} – está a ler a versão alemã.',
+  langOutdated: 'A tradução para {lang} pertence a uma versão anterior – está a ler a versão alemã atual.',
+  untranslatedOne: '1 parágrafo ainda não foi traduzido e aparece em alemão.', untranslatedMany: '{n} parágrafos ainda não foram traduzidos e aparecem em alemão.',
+  requestTranslation: 'Pedir tradução', requested: '✓ Tradução pedida – a equipa editorial foi informada.',
+  bookmark: '☆ Marcar', bookmarked: '★ Marcado', addNote: '📝 Adicionar nota', editNote: 'Editar nota', noteLabel: 'A sua nota sobre este capítulo',
+  notePlaceholder: 'p. ex. para o inventário de dezembro', save: 'Guardar', cancel: 'Cancelar', deleteNote: 'Eliminar nota', noteSaved: 'Nota guardada.', noteDeleted: 'Nota eliminada.',
+  noteHint: 'Visível apenas para si; o capítulo também fica marcado.', allBookmarks: 'Todos os marcadores e notas',
+  newChapter: 'Este capítulo é novo para si.', changedChapter: 'Este capítulo foi alterado desde a sua última leitura.',
+  otherOne: 'Mais 1 capítulo é novo para si ou foi alterado desde a sua última leitura – assinalado no índice.',
+  otherMany: 'Mais {n} capítulos são novos para si ou foram alterados desde a sua última leitura – assinalados no índice.',
+  tagNew: 'Novo', tagChanged: 'Alterado', untranslatedTag: 'ainda não traduzido',
+  contents: 'Índice', bookmarks: '★ Marcadores', recent: 'Lido recentemente', faqLink: '❓ Perguntas frequentes', glossHint: 'Os termos sublinhados são explicados ao clicar ou passar o rato.',
+  toc: 'Índice', language: 'Idioma', translatedCount: '{n} traduzido(s)', search: 'Pesquisar no manual', searchPlaceholder: 'p. ex. imprimir guia de remessa', clearSearch: 'Limpar pesquisa', searchResults: 'Resultados da pesquisa',
+  found: '{n} capítulos encontrados', notFound: 'Nada encontrado para «{q}» – tente outra palavra',
+  hits: '{n} ocorrências de «{q}» realçadas.', noHits: '«{q}» não ocorre neste capítulo.', removeMark: 'Remover realce',
+  chooseChapter: 'Escolha um capítulo à esquerda.', chapter: 'Capítulo', draft: 'Rascunho', draftBanner: 'Rascunho – ainda não aprovado',
+  printSeeAlso: 'Ver também:', chapterN: 'Capítulo {n}', faqTitle: 'Perguntas frequentes', glossary: 'Glossário',
+  printMissing: '(ainda não traduzido – versão alemã)', printOutdated: '(tradução desatualizada – versão alemã)', draftSuffix: ' (rascunho)',
+  manual: 'Manual do utilizador', workingState: 'Versão de trabalho', version: 'Versão {v}', forRole: 'para {role}', asOf: 'Data', chapters: 'Capítulos', published: 'Publicado',
+  notice: 'Nota', includesDrafts: 'contém rascunhos não aprovados', cover: 'Capa', printToc: 'Índice do manual', pageOf: 'Página {page} de {pages}', quote: '«{x}»',
+  faqFilter: 'Filtrar perguntas', faqPlaceholder: 'p. ex. palavra-passe', faqEmpty: 'Ainda não há perguntas publicadas.', faqPartly: 'Algumas perguntas ainda não foram traduzidas e aparecem em alemão.',
+};
+
+const TEXTS: Record<string, Texts> = { de, en, fr, es, it, nl, pl, cs, pt };
 /** Sprachname in der Sprache selbst (für Hinweise wie „nicht in English übersetzt“) */
 export const NATIVE_NAMES: Record<string, string> = {
   de: 'Deutsch', en: 'English', fr: 'français', es: 'español', it: 'italiano', nl: 'Nederlands', pl: 'polski', cs: 'čeština', pt: 'português',

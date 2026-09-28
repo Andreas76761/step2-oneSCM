@@ -1,6 +1,6 @@
 # ADR-074 Beschriftungen der Leseransicht in der Lesesprache
 
-**Status:** akzeptiert, umgesetzt in Etappe 25 (erweitert ADR-071, ADR-072)
+**Status:** akzeptiert, umgesetzt in Etappe 25 (erweitert ADR-071, ADR-072); in Etappe 26 auf alle neun Sprachen erweitert (ADR-078)
 
 ## Kontext
 Seit Etappe 24 erscheinen Kapitel in der gewählten Sprache, die Beschriftungen rundherum („Tipp“, „Siehe auch“, „3 von 5 Schritten erledigt“, „War dieses Kapitel hilfreich?“, Deckblatt und Seitenzahlen im Druck) blieben aber deutsch. Für Händler im Ausland wirkte das Handbuch dadurch halb übersetzt.

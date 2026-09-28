@@ -755,5 +755,23 @@
     "documentation": [
       "docs/adr/ADR-076-notiz-im-kapitel.md"
     ]
+  },
+  {
+    "id": "NFR-64",
+    "title": "Häufige Fragen je Projektsprache übersetzen (von Hand oder KI-Vorschlag) und freigeben; Leseransicht, Druck und Online-Hilfe in der Lesesprache",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-077-faq-uebersetzen.md"
+    ]
+  },
+  {
+    "id": "NFR-65",
+    "title": "Beschriftungen und Abschnittstitel in allen Projektsprachen (auch Niederländisch, Polnisch, Tschechisch, Portugiesisch)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-078-weitere-sprachen.md"
+    ]
   }
 ]

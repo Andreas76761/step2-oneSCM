@@ -6,6 +6,7 @@ import { LANGUAGES, SECTION_TITLES } from '../domain/translate.js';
 import { badRequest, notFound } from '../problem.js';
 import { getChapterVersion } from './chapters.js';
 import { assertIdsInProject } from './projects.js';
+import { readerFaqEntries } from './faqTranslations.js';
 import { projectLanguages } from './translations.js';
 import { variantChapters } from './variants.js';
 
@@ -200,7 +201,7 @@ type Related = {
   manual: { chapterId: string; title: string }[];
   automatic: { chapterId: string; title: string; score: number }[];
   hidden: { chapterId: string; title: string }[];
-  faq: { id: string; question: string; answer: string; score: number }[];
+  faq: { id: string; question: string; answer: string; language: string; score: number }[];
 };
 
 /**
@@ -211,23 +212,26 @@ async function relatedAll(ctx: Ctx, drafts: boolean, opts: { lang?: string; vers
   const { shown, blocksOf, sourceBlocksOf, lang } = await loadShown(ctx, drafts, opts);
   const titleOf = (id: string) => String(shown.get(id)?.title ?? '');
   const links = await ctx.db.all('SELECT l.chapter_id, l.target_chapter_id, l.kind, c.title FROM chapter_links l JOIN chapters c ON c.id = l.target_chapter_id WHERE l.project_id = ? ORDER BY l.position, c.title', ctx.projectId);
-  let faqRows = await ctx.db.all("SELECT id, question, answer FROM faq_entries WHERE project_id = ? AND status = 'published' AND language = ? ORDER BY position", ctx.projectId, lang);
-  const faqLang = faqRows.length ? lang : 'de';
-  if (!faqRows.length && lang !== 'de') faqRows = await ctx.db.all("SELECT id, question, answer FROM faq_entries WHERE project_id = ? AND status = 'published' AND language = 'de' ORDER BY position", ctx.projectId);
+  // FAQ in der Lesesprache: freigegebene Übersetzungen, sonst deutsch (ADR-077)
+  const faqRows = await readerFaqEntries(ctx, lang);
   const vecOf = (title: unknown, blocks: string[] | undefined) => tf([[String(title), 3], ...(blocks ?? []).map((t): [string, number] => [t, 1])]);
   // Kapitel untereinander: immer über die deutsche Quelle – „Siehe auch“ ist in jeder Sprache gleich, auch wenn nur ein Teil übersetzt ist
   const docs = new Map<string, Vec>([...shown].map(([id, v]) => [id, vecOf(v.source_title, sourceBlocksOf.get(v.id as string))]));
-  // FAQ: in der Sprache der Fragen (übersetzte Texte, wo vorhanden)
-  const faqSide = faqLang === 'de' ? docs : new Map<string, Vec>([...shown].map(([id, v]) => [id, vecOf(v.title, blocksOf.get(v.id as string))]));
-  const faqDocs = faqRows.map((f) => ({ f, vec: tf([[String(f.question), 2], [String(f.answer), 1]]) }));
+  // FAQ: Einträge mit deutscher Quelle (deutsch oder übersetzt) über die deutsche Quelle – wie „Siehe auch“ unabhängig davon, was
+  // schon übersetzt ist; direkt in der Lesesprache verfasste Einträge gegen die gezeigten (übersetzten) Kapiteltexte
+  const shownSide = lang === 'de' ? docs : new Map<string, Vec>([...shown].map(([id, v]) => [id, vecOf(v.title, blocksOf.get(v.id as string))]));
+  const faqDocs = faqRows.map((f) => {
+    const basis = f.source ?? f;
+    return { f, vec: tf([[basis.question, 2], [basis.answer, 1]]), side: f.source ? docs : shownSide };
+  });
   // Seltenheit eines Wortes über Kapitel und FAQ: häufige Wörter tragen wenig zur Ähnlichkeit bei
   const idfOf = (vecs: Vec[]) => {
     const df = new Map<string, number>();
     for (const vec of vecs) for (const t of vec.keys()) df.set(t, (df.get(t) ?? 0) + 1);
     return new Map([...df].map(([t, d]) => [t, Math.log(1 + vecs.length / d)]));
   };
-  const idf = idfOf([...docs.values(), ...(faqSide === docs ? faqDocs.map((d) => d.vec) : [])]);
-  const faqIdf = faqSide === docs ? idf : idfOf([...faqSide.values(), ...faqDocs.map((d) => d.vec)]);
+  const idf = idfOf([...docs.values(), ...faqDocs.filter((d) => d.side === docs).map((d) => d.vec)]);
+  const shownIdf = shownSide === docs ? idf : idfOf([...shownSide.values(), ...faqDocs.filter((d) => d.side === shownSide).map((d) => d.vec)]);
   const of = (chapterId: string): Related => {
     const mine = links.filter((l) => l.chapter_id === chapterId);
     const manualIds = mine.filter((l) => l.kind === 'manual').map((l) => l.target_chapter_id as string);
@@ -240,8 +244,8 @@ async function relatedAll(ctx: Ctx, drafts: boolean, opts: { lang?: string; vers
     const automatic = [...docs].filter(([id]) => id !== chapterId && !manualIds.includes(id) && !hiddenIds.has(id))
       .map(([id, vec]) => ({ chapterId: id, title: titleOf(id), score: Math.round(cosine(me, vec, idf) * 100) / 100 }))
       .filter((r) => r.score >= MIN_RELATED).sort((a, b) => b.score - a.score).slice(0, Math.max(0, MAX_RELATED - manual.length));
-    const mineFaq = faqSide.get(chapterId)!;
-    const faq = faqDocs.map(({ f, vec }) => ({ id: f.id as string, question: String(f.question), answer: String(f.answer), score: Math.round(cosine(mineFaq, vec, faqIdf) * 100) / 100 }))
+    const faq = faqDocs.map(({ f, vec, side }) => ({ id: f.id, question: f.question, answer: f.answer, language: f.language,
+      score: Math.round(cosine(side.get(chapterId)!, vec, side === docs ? idf : shownIdf) * 100) / 100 }))
       .filter((f) => f.score >= MIN_FAQ).sort((a, b) => b.score - a.score).slice(0, 3);
     return { chapterId, manual, automatic, hidden, faq };
   };

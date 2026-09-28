@@ -15,6 +15,7 @@ import { badRequest, Problem } from '../problem.js';
 import { importMasterData } from '../services/masterDataImport.js';
 import { setRendition } from '../services/media.js';
 import { getSettings } from '../context.js';
+import { approveFaqTranslation, deleteFaqTranslation, faqTranslationSummary, listFaqTranslations, machineFaqTranslation, saveFaqTranslation } from '../services/faqTranslations.js';
 import { num, userOf } from './helpers.js';
 
 type P<T extends string> = { Params: Record<T, string> };
@@ -124,6 +125,19 @@ export function masterDataRoutes(app: FastifyInstance, _ctx: Ctx) {
 
   // FAQ
   app.get<{ Querystring: Record<string, string> }>('/faq', async (req) => (userOf(req.ctx, req), listFaq(req.ctx, req.query)));
+  // Übersetzungen häufiger Fragen (ADR-077): lesen mit Leserecht, bearbeiten mit Bearbeitungs-, freigeben mit Freigaberecht
+  app.get('/faq/translations', async (req) => (userOf(req.ctx, req), faqTranslationSummary(req.ctx)));
+  app.get<P<'faqId'>>('/faq/:faqId/translations', async (req) => (userOf(req.ctx, req), listFaqTranslations(req.ctx, req.params.faqId)));
+  app.put<{ Params: { faqId: string; language: string }; Body: any }>('/faq/:faqId/translations/:language', async (req) =>
+    saveFaqTranslation(req.ctx, req.params.faqId, req.params.language, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.post<{ Params: { faqId: string; language: string } }>('/faq/:faqId/translations/:language/machine', async (req) =>
+    machineFaqTranslation(req.ctx, req.params.faqId, req.params.language, userOf(req.ctx, req, 'edit')));
+  app.post<{ Params: { faqId: string; language: string } }>('/faq/:faqId/translations/:language/approve', async (req) =>
+    approveFaqTranslation(req.ctx, req.params.faqId, req.params.language, userOf(req.ctx, req, 'approve')));
+  app.delete<{ Params: { faqId: string; language: string } }>('/faq/:faqId/translations/:language', async (req, reply) => {
+    await deleteFaqTranslation(req.ctx, req.params.faqId, req.params.language, userOf(req.ctx, req, 'edit'));
+    return reply.code(204).send();
+  });
   app.get('/faq/suggestions', async (req) => (userOf(req.ctx, req, 'edit'), faqSuggestions(req.ctx)));
   app.post<{ Body: any }>('/faq', async (req, reply) => {
     const user = userOf(req.ctx, req, 'edit');

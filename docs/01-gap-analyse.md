@@ -161,6 +161,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.28 Stand nach Etappe 26 (27.09.2026)
+
+Umfang vom Auftraggeber am 27.09.2026 festgelegt: Häufige Fragen übersetzen, weitere Sprachen vollständig.
+
+| Punkt | Ergebnis |
+|---|---|
+| Häufige Fragen übersetzen (NFR-64) | ✅ Übersetzung je Eintrag und Sprache, KI-Vorschlag, Freigabe, veraltet nach Änderung; Leseransicht, Druck, Online-Hilfe ([ADR-077](adr/ADR-077-faq-uebersetzen.md)) |
+| Weitere Sprachen vollständig (NFR-65) | ✅ nl, pl, cs, pt mit Beschriftungen und Abschnittstiteln ([ADR-078](adr/ADR-078-weitere-sprachen.md)) |
+
 ## 1.27 Stand nach Etappe 25 (26.09.2026)
 
 Umfang vom Auftraggeber am 26.09.2026 festgelegt: Leseransicht mehrsprachig, Übersetzung anfordern, Notizen direkt im Kapitel.

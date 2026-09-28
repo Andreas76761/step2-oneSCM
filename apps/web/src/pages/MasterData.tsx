@@ -289,7 +289,8 @@ export function FaqPage() {
   const list = useLoad<any[]>('/faq');
   const canEdit = useCanEdit();
   const sugg = useLoad<any[]>(canEdit ? '/faq/suggestions' : null, [canEdit]);
-  const run = useRun(() => (list.reload(), sugg.reload()));
+  const trans = useLoad<{ languages: string[]; entries: Record<string, Record<string, string>> }>('/faq/translations');
+  const run = useRun(() => (list.reload(), sugg.reload(), trans.reload()));
   const [form, setForm] = useState<FaqForm | null>(null);
   const toggle = (l: string[], v: string) => (l.includes(v) ? l.filter((x) => x !== v) : [...l, v]);
   const save = async () => {
@@ -326,8 +327,11 @@ export function FaqPage() {
           <details key={f.id} className="faq-entry">
             <summary><strong>{f.question}</strong> {f.status === 'draft' && <span className="tag">Entwurf</span>} {f.source === 'assistant' && <span className="tag">aus Assistent</span>}
               {[...f.roles.map((r: string) => ref?.roles.find((x) => x.code === r)?.label ?? r), ...f.divisions.map((d: string) => ref?.divisions.find((x) => x.code === d)?.label ?? d)].map((l) => <span key={l} className="tag">{l}</span>)}
+              {f.language !== 'de' && <span className="tag">{f.language.toUpperCase()}</span>}
+              {Object.entries(trans.data?.entries[f.id] ?? {}).map(([l, st]) => <span key={l} className={`tag small faq-tr faq-tr-${st}`} title={`${l.toUpperCase()}: ${TR_LABEL[st]}`}>{l.toUpperCase()} {TR_ICON[st]}</span>)}
             </summary>
             <Md text={f.answer} />
+            {f.language === 'de' && (trans.data?.languages.length ?? 0) > 0 && <FaqTranslations faqId={f.id} question={f.question} canEdit={canEdit} onChanged={() => trans.reload()} />}
             {canEdit && (
               <div className="row-actions">
                 <button className="btn small" onClick={() => setForm({ id: f.id, question: f.question, answer: f.answer, roles: f.roles, divisions: f.divisions, status: f.status })}>Bearbeiten</button>
@@ -443,5 +447,67 @@ export function PlanningPage() {
         </div>
       )}
     </Page>
+  );
+}
+
+const TR_LABEL: Record<string, string> = { missing: 'fehlt', draft: 'Entwurf', approved: 'freigegeben', outdated: 'veraltet' };
+const TR_ICON: Record<string, string> = { missing: '–', draft: '✎', approved: '✓', outdated: '⚠' };
+const ISSUE_LABEL: Record<string, string> = { empty: 'leer', numbers_changed: 'Zahlen abweichend', structure_changed: 'Aufzählung abweichend', no_sources: 'ohne Quellsatz', unknown_source: 'unbekannter Quellsatz', uncovered_source: 'Satz fehlt' };
+
+/** Übersetzungen eines FAQ-Eintrags (ADR-077): je Projektsprache von Hand oder als KI-Vorschlag, dann freigeben */
+function FaqTranslations({ faqId, question, canEdit, onChanged }: { faqId: string; question: string; canEdit: boolean; onChanged: () => void }) {
+  const list = useLoad<any[]>(`/faq/${faqId}/translations`, [faqId]);
+  const me = useLoad<any>('/me');
+  const canApprove = !!me.data?.permissions?.some((p: string) => p === 'approve' || p === 'admin');
+  const run = useRun(() => (list.reload(), onChanged()));
+  const [edit, setEdit] = useState<{ language: string; question: string; answer: string } | null>(null);
+  const saveEdit = async () => {
+    if (edit && await run(() => put(`/faq/${faqId}/translations/${edit.language}`, { question: edit.question, answer: edit.answer }), 'Übersetzung gespeichert.')) setEdit(null);
+  };
+  return (
+    <section className="faq-translations" aria-label={`Übersetzungen zu „${question}“`}>
+      <h4>Übersetzungen</h4>
+      <ErrorBox error={list.error} />
+      <ul className="plain">
+        {list.data?.map((t) => {
+          const cur = edit && edit.language === t.language ? edit : null;
+          return (
+          <li key={t.language}>
+            <strong>{t.languageName}</strong>{' '}
+            <span className={`tag small faq-tr faq-tr-${t.outdated ? 'outdated' : t.status}`}>{TR_LABEL[t.outdated ? 'outdated' : t.status]}</span>
+            {t.mode === 'machine' && t.status === 'draft' && <span className="tag small">KI-Vorschlag</span>}
+            {t.issues.length > 0 && <span className="small sev-text"> · Prüfbefund: {t.issues.map((i: string) => ISSUE_LABEL[i] ?? i).join(', ')}</span>}
+            {t.question && <div className="small" lang={t.language}><em>{t.question}</em></div>}
+            <span className="row-actions">
+              {canEdit && <button className="btn small" aria-label={`${t.languageName} bearbeiten`} onClick={() => setEdit({ language: t.language, question: t.question ?? '', answer: t.answer ?? '' })}>{t.status === 'missing' ? 'Übersetzen' : 'Bearbeiten'}</button>}
+              {canEdit && <button className="btn small" aria-label={`${t.languageName}: KI-Vorschlag`} onClick={() => run(() => post(`/faq/${faqId}/translations/${t.language}/machine`, {}), `KI-Vorschlag ${t.languageName} erstellt – bitte prüfen und freigeben.`)}>✨ KI-Vorschlag</button>}
+              {canApprove && t.status === 'draft' && !t.outdated && (() => {
+                // Freigabe nur ohne Prüfbefunde und durch eine andere Person als die zuletzt bearbeitende (Vier-Augen-Prinzip, ADR-077)
+                const why = t.issues.length ? 'erst die Prüfbefunde beheben' : t.updatedBy === me.data?.id ? 'Freigabe durch eine andere Person (Vier-Augen-Prinzip)' : null;
+                return (
+                  <>
+                    <button className="btn small primary" disabled={!!why} aria-label={`${t.languageName} freigeben`} aria-describedby={why ? `why-${faqId}-${t.language}` : undefined}
+                      onClick={() => run(() => post(`/faq/${faqId}/translations/${t.language}/approve`, {}), `Übersetzung ${t.languageName} freigegeben.`)}>Freigeben</button>
+                    {why && <span id={`why-${faqId}-${t.language}`} className="small muted">{why}</span>}
+                  </>
+                );
+              })()}
+              {canEdit && t.status !== 'missing' && <button className="btn small danger" aria-label={`${t.languageName} löschen`} onClick={() => confirm(`Übersetzung ${t.languageName} löschen?`) && run(() => del(`/faq/${faqId}/translations/${t.language}`), 'Übersetzung gelöscht.')}>Löschen</button>}
+            </span>
+            {cur && (
+              <div className="faq-tr-edit">
+                <label className="block">Frage ({t.languageName}) <input lang={t.language} value={cur.question} onChange={(e) => setEdit({ ...cur, question: e.target.value })} /></label>
+                <label className="block">Antwort ({t.languageName}, Markdown) <textarea lang={t.language} rows={3} value={cur.answer} onChange={(e) => setEdit({ ...cur, answer: e.target.value })} /></label>
+                <span className="row-actions">
+                  <button className="btn small primary" disabled={cur.question.trim().length < 3 || !cur.answer.trim()} onClick={() => void saveEdit()}>Speichern</button>
+                  <button className="btn small" onClick={() => setEdit(null)}>Abbrechen</button>
+                </span>
+              </div>
+            )}
+          </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
