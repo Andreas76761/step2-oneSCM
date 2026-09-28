@@ -1751,9 +1751,19 @@ test('[T-236] Häufige Fragen übersetzen und freigeben, KI-Vorschlag; FAQ-Seite
   await tr.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Übersetzung gespeichert.')).toBeVisible();
   await expect(tr.getByRole('listitem').filter({ hasText: 'Englisch' })).toContainText('Entwurf');
+  // Vier-Augen-Prinzip: wer übersetzt hat, gibt nicht frei
+  await expect(tr.getByRole('button', { name: 'Englisch freigeben' })).toBeDisabled();
+  await expect(tr.getByText('Freigabe durch eine andere Person (Vier-Augen-Prinzip)')).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Demo-Benutzer').selectOption('u-freigabe');
+  await page.goto('/stammdaten/faq');
+  await entry.locator('summary').click();
   await tr.getByRole('button', { name: 'Englisch freigeben' }).click();
   await expect(page.getByText('Übersetzung Englisch freigegeben.')).toBeVisible();
   await expect(tr.getByRole('listitem').filter({ hasText: 'Englisch' })).toContainText('freigegeben');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.goto('/stammdaten/faq');
+  await entry.locator('summary').click();
   await tr.getByRole('button', { name: 'Polnisch: KI-Vorschlag' }).click();
   await expect(page.getByText('KI-Vorschlag Polnisch erstellt – bitte prüfen und freigeben.')).toBeVisible();
   await expect(tr.getByRole('listitem').filter({ hasText: 'Polnisch' })).toContainText('KI-Vorschlag');

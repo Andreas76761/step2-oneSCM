@@ -3675,7 +3675,7 @@ paths:
   /faq/{faqId}/translations/{language}/approve:
     post:
       operationId: approveFaqTranslation
-      summary: 'Übersetzung freigeben – nur ein aktueller Entwurf; veraltete (deutsches Original geändert) → 409 (Berechtigung approve, ADR-077)'
+      summary: 'Übersetzung freigeben – nur ein aktueller Entwurf ohne Prüfbefunde, nicht durch die zuletzt bearbeitende Person (Vier-Augen-Prinzip); sonst 409 (Berechtigung approve, ADR-077)'
       tags: [Stammdaten]
       x-requirements: [NFR-64]
       x-extension: true

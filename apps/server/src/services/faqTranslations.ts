@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { audit, type Ctx, type User } from '../context.js';
 import { json, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
-import { buildTranslatePrompt, checkTranslation, LANGUAGES, parseTranslateResponse, splitSentences, type TranslationIssue } from '../domain/translate.js';
+import { buildTranslatePrompt, checkTranslation, LANGUAGES, parseTranslateResponse, splitSentences, TRANSLATION_ISSUE_LABELS, type TranslationIssue } from '../domain/translate.js';
 import { badRequest, conflict, notFound, Problem } from '../problem.js';
 
 /** Fingerabdruck der deutschen Quelle: ändert sich Frage oder Antwort, ist die Übersetzung veraltet */
@@ -131,6 +131,11 @@ export async function approveFaqTranslation(ctx: Ctx, faqId: string, lang: strin
   if (!t) throw notFound(`Übersetzung ${lang} zu FAQ ${faqId}`);
   if (t.status === 'approved') throw conflict('Die Übersetzung ist bereits freigegeben.');
   if (t.source_hash !== faqHash(String(source.question), String(source.answer))) throw conflict('Die deutsche Frage wurde seit der Übersetzung geändert – bitte zuerst die Übersetzung überarbeiten.');
+  // wie bei Kapitelübersetzungen: nur ohne offene Prüfbefunde (geänderte Zahlen, Struktur, nicht abgedeckte Sätze …)
+  const issues = parseJson<TranslationIssue[]>(t.issues, []);
+  if (issues.length) throw conflict(`Freigabe nicht möglich: ${issues.map((i) => TRANSLATION_ISSUE_LABELS[i] ?? i).join('; ')}. Bitte die Übersetzung korrigieren.`, { issues });
+  // Vier-Augen-Prinzip: wer den Entwurf zuletzt bearbeitet (oder als KI-Vorschlag angelegt) hat, gibt ihn nicht frei
+  if (t.updated_by === user.id) throw conflict('Vier-Augen-Prinzip: Die Übersetzung muss von einer anderen Person freigegeben werden, als sie zuletzt bearbeitet hat.');
   await ctx.db.tx(async () => {
     const res = await ctx.db.run("UPDATE faq_translations SET status = 'approved', approved_by = ?, approved_at = ? WHERE faq_id = ? AND language = ? AND status = 'draft' AND updated_at = ?",
       user.id, now(), faqId, lang, t.updated_at);

@@ -452,6 +452,7 @@ export function PlanningPage() {
 
 const TR_LABEL: Record<string, string> = { missing: 'fehlt', draft: 'Entwurf', approved: 'freigegeben', outdated: 'veraltet' };
 const TR_ICON: Record<string, string> = { missing: '–', draft: '✎', approved: '✓', outdated: '⚠' };
+const ISSUE_LABEL: Record<string, string> = { empty: 'leer', numbers_changed: 'Zahlen abweichend', structure_changed: 'Aufzählung abweichend', no_sources: 'ohne Quellsatz', unknown_source: 'unbekannter Quellsatz', uncovered_source: 'Satz fehlt' };
 
 /** Übersetzungen eines FAQ-Eintrags (ADR-077): je Projektsprache von Hand oder als KI-Vorschlag, dann freigeben */
 function FaqTranslations({ faqId, question, canEdit, onChanged }: { faqId: string; question: string; canEdit: boolean; onChanged: () => void }) {
@@ -475,12 +476,22 @@ function FaqTranslations({ faqId, question, canEdit, onChanged }: { faqId: strin
             <strong>{t.languageName}</strong>{' '}
             <span className={`tag small faq-tr faq-tr-${t.outdated ? 'outdated' : t.status}`}>{TR_LABEL[t.outdated ? 'outdated' : t.status]}</span>
             {t.mode === 'machine' && t.status === 'draft' && <span className="tag small">KI-Vorschlag</span>}
-            {t.issues.length > 0 && <span className="small sev-text"> · {t.issues.length} Prüfbefund(e)</span>}
+            {t.issues.length > 0 && <span className="small sev-text"> · Prüfbefund: {t.issues.map((i: string) => ISSUE_LABEL[i] ?? i).join(', ')}</span>}
             {t.question && <div className="small" lang={t.language}><em>{t.question}</em></div>}
             <span className="row-actions">
               {canEdit && <button className="btn small" aria-label={`${t.languageName} bearbeiten`} onClick={() => setEdit({ language: t.language, question: t.question ?? '', answer: t.answer ?? '' })}>{t.status === 'missing' ? 'Übersetzen' : 'Bearbeiten'}</button>}
               {canEdit && <button className="btn small" aria-label={`${t.languageName}: KI-Vorschlag`} onClick={() => run(() => post(`/faq/${faqId}/translations/${t.language}/machine`, {}), `KI-Vorschlag ${t.languageName} erstellt – bitte prüfen und freigeben.`)}>✨ KI-Vorschlag</button>}
-              {canApprove && t.status === 'draft' && !t.outdated && <button className="btn small primary" aria-label={`${t.languageName} freigeben`} onClick={() => run(() => post(`/faq/${faqId}/translations/${t.language}/approve`, {}), `Übersetzung ${t.languageName} freigegeben.`)}>Freigeben</button>}
+              {canApprove && t.status === 'draft' && !t.outdated && (() => {
+                // Freigabe nur ohne Prüfbefunde und durch eine andere Person als die zuletzt bearbeitende (Vier-Augen-Prinzip, ADR-077)
+                const why = t.issues.length ? 'erst die Prüfbefunde beheben' : t.updatedBy === me.data?.id ? 'Freigabe durch eine andere Person (Vier-Augen-Prinzip)' : null;
+                return (
+                  <>
+                    <button className="btn small primary" disabled={!!why} aria-label={`${t.languageName} freigeben`} aria-describedby={why ? `why-${faqId}-${t.language}` : undefined}
+                      onClick={() => run(() => post(`/faq/${faqId}/translations/${t.language}/approve`, {}), `Übersetzung ${t.languageName} freigegeben.`)}>Freigeben</button>
+                    {why && <span id={`why-${faqId}-${t.language}`} className="small muted">{why}</span>}
+                  </>
+                );
+              })()}
               {canEdit && t.status !== 'missing' && <button className="btn small danger" aria-label={`${t.languageName} löschen`} onClick={() => confirm(`Übersetzung ${t.languageName} löschen?`) && run(() => del(`/faq/${faqId}/translations/${t.language}`), 'Übersetzung gelöscht.')}>Löschen</button>}
             </span>
             {cur && (

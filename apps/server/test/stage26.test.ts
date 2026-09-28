@@ -17,7 +17,7 @@ describe('Etappe 26', () => {
     return c as { chapterId: string; versionId: string };
   };
 
-  it('[T-207] Häufige Fragen übersetzen: Entwurf, KI-Vorschlag, Freigabe, veraltet nach Änderung; Leseransicht, „Siehe auch“ und Online-Hilfe in der Sprache', async () => {
+  it('[T-207] Häufige Fragen übersetzen: Entwurf, KI-Vorschlag, Freigabe (ohne Prüfbefunde, Vier-Augen-Prinzip), veraltet nach Änderung; Leseransicht, „Siehe auch“ und Online-Hilfe in der Sprache', async () => {
     const built = await build('faq-translations');
     const call = client(built);
     try {
@@ -39,6 +39,12 @@ describe('Etappe 26', () => {
       expect(draftView.find((f: any) => f.id === faq.id)).toMatchObject({ language: 'de', translated: false, question: 'Wie drucke ich einen Lieferschein erneut?' });
       // Freigabe nur mit Freigaberecht, dann englisch
       expect((await call('POST', `/faq/${faq.id}/translations/en/approve`, {}, 'u-redaktion')).status).toBe(403);
+      // Prüfbefund (Zahl geändert) verhindert die Freigabe; nach Korrektur möglich
+      await call('PUT', `/faq/${faq.id}/translations/en`, { question: 'How do I reprint a delivery note?', answer: 'Open the delivery note in warehouse 2 and print it again.' }, 'u-redaktion');
+      const blocked = await call('POST', `/faq/${faq.id}/translations/en/approve`, {}, 'u-freigabe');
+      expect(blocked.status).toBe(409);
+      expect(blocked.json.issues).toEqual(['numbers_changed']);
+      await call('PUT', `/faq/${faq.id}/translations/en`, { question: 'How do I reprint a delivery note?', answer: 'Open the delivery note in the warehouse and print it again.' }, 'u-redaktion');
       expect((await call('POST', `/faq/${faq.id}/translations/en/approve`, {}, 'u-freigabe')).json).toMatchObject({ status: 'approved', approvedBy: 'u-freigabe' });
       expect((await call('POST', `/faq/${faq.id}/translations/en/approve`, {}, 'u-freigabe')).status).toBe(409);
       expect((await call('GET', '/reader/faq?lang=en')).json.find((f: any) => f.id === faq.id)).toMatchObject({ language: 'en', translated: true, question: 'How do I reprint a delivery note?' });
@@ -63,8 +69,11 @@ describe('Etappe 26', () => {
       expect(machine).toMatchObject({ language: 'fr', status: 'draft', mode: 'machine', outdated: false });
       expect(machine.question.length).toBeGreaterThan(3);
       expect((await call('POST', `/faq/${faq.id}/translations/fr/approve`, {}, 'u-freigabe')).status).toBe(200);
-      // Überarbeiten der veralteten englischen Fassung: neuer Entwurf, dann Freigabe
-      await call('PUT', `/faq/${faq.id}/translations/en`, { question: 'How do I reprint a delivery note?', answer: 'Open the delivery note in the warehouse and click **Reprint**.' }, 'u-redaktion');
+      // Überarbeiten der veralteten englischen Fassung: neuer Entwurf; Vier-Augen-Prinzip – wer zuletzt bearbeitet hat, gibt nicht frei
+      await call('PUT', `/faq/${faq.id}/translations/en`, { question: 'How do I reprint a delivery note?', answer: 'Open the delivery note in the warehouse and click **Reprint**.' }, 'u-admin');
+      const own = await call('POST', `/faq/${faq.id}/translations/en/approve`, {}, 'u-admin');
+      expect(own.status).toBe(409);
+      expect(own.json.detail).toContain('Vier-Augen-Prinzip');
       expect((await call('POST', `/faq/${faq.id}/translations/en/approve`, {}, 'u-freigabe')).status).toBe(200);
       expect((await call('GET', '/reader/faq?lang=en')).json[0]).toMatchObject({ translated: true, answer: 'Open the delivery note in the warehouse and click **Reprint**.' });
       // fremdes Projekt, Löschen

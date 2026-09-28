@@ -3,7 +3,7 @@
 ## 0.26.0 – Etappe 26 (27.09.2026)
 
 ### Hinzugefügt
-- **Häufige Fragen übersetzen (ADR-077):** Übersetzung je FAQ-Eintrag und Projektsprache – von Hand oder als KI-Vorschlag, mit Freigabe; veraltet, sobald sich das deutsche Original ändert. Leseransicht, „Häufige Fragen dazu“, Druck und Online-Hilfe zeigen die freigegebene Übersetzung, sonst deutsch mit Kennzeichen.
+- **Häufige Fragen übersetzen (ADR-077):** Übersetzung je FAQ-Eintrag und Projektsprache – von Hand oder als KI-Vorschlag, mit Freigabe (ohne Prüfbefunde, Vier-Augen-Prinzip); veraltet, sobald sich das deutsche Original ändert. Leseransicht, „Häufige Fragen dazu“, Druck und Online-Hilfe zeigen die freigegebene Übersetzung, sonst deutsch mit Kennzeichen.
 - **Alle Projektsprachen vollständig (ADR-078):** Niederländisch, Polnisch, Tschechisch und Portugiesisch mit eigenen Beschriftungen in Leseransicht, Druck und Online-Hilfe sowie übersetzten Abschnittstiteln.
 - Migration `034_faq_translations.sql`; Tests T-207, T-208, E2E T-236 (axe); Anforderungen NFR-64, NFR-65.
 

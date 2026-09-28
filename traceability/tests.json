@@ -1449,7 +1449,7 @@
   },
   {
     "id": "T-207",
-    "title": "Häufige Fragen übersetzen: Entwurf, KI-Vorschlag, Freigabe, veraltet nach Änderung; Leseransicht, „Siehe auch“ und Online-Hilfe in der Sprache",
+    "title": "Häufige Fragen übersetzen: Entwurf, KI-Vorschlag, Freigabe (ohne Prüfbefunde, Vier-Augen-Prinzip), veraltet nach Änderung; Leseransicht, „Siehe auch“ und Online-Hilfe in der Sprache",
     "file": "apps/server/test/stage26.test.ts",
     "level": "api",
     "requirements": [
