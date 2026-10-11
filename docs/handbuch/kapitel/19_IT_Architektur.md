@@ -583,7 +583,7 @@ Die Glocke in der Navigationsleiste zeigt die Anzahl offener Benachrichtigungen 
 2. Lehnt MPC 1 die Anfrage ab, erhält der Antragsteller den Status „Abgelehnt“.
 3. Nimmt MPC 1 Änderungen vor, etwa am Preis, erhalten alle anderen MPC-Nutzer den Status „In Prüfung“.
 4. Akzeptiert der zweite Prüfer die Änderungen, erhält der Antragsteller den Status „Genehmigt“. Nimmt der zweite Prüfer selbst Änderungen vor, durchläuft der Vorgang die Freigabe erneut.
-5. Am Ende erhält der Antragsteller eine Benachrichtigung. Liegen zwei Prüfungen vor, schließt ein Endpunkt die Benachrichtigung mit „Akzeptiert“ oder „Abgelehnt“ ab. Der Status „Geprüft“ ist diesem Endpunkt vorbehalten.
+5. Am Ende erhält der Antragsteller eine Benachrichtigung. Liegen zwei Prüfungen vor, kann der Vorgang nur noch mit „Akzeptiert“ oder „Abgelehnt“ abgeschlossen werden.
 
 **Historie bei automatisierten Aktionen.** In der Vertragshistorie zeigt das Feld „Modified By“ bei automatisierten Aktionen den Wert „System“. Er ist eine reservierte Kennung für nicht menschliche Akteure und gilt in allen Diensten. Betroffen sind Statusübergänge, automatische Wiederholungen der MO-Prüfungen, die automatische Vertragsaktivierung, zeitgesteuerte Statusübergänge wie Prolongation und Ablauf, ereignisgesteuerte Aktualisierungen über Kafka, automatische Freigaben im Final Contract Review, die Dokumentgenerierung, Zahlungsverarbeitung und Batch-Jobs, die in die Vertragshistorie schreiben. Bei manuellen Aktionen erscheint weiterhin die Benutzer-ID.
 
@@ -599,11 +599,11 @@ Der Edge Service wertet Anfragen mit Datumsangaben nach den Marktvorgaben aus. E
 
 **DevOps und Betrieb.** Die CI/CD-Workflows aktualisiert eine eigene Abstraktionsschicht in allen Repositories. Die Workflows starten den gewählten Branch. Das Deployment erfolgt auf AWS ECS. Die Datei-Überwachung durch CFT veröffentlicht Ereignisse für die Anwendung File Scanner. Wichtige Kafka-Topics sichert ein MSK Connector in einem eigenen Bucket. Die Secrets auf Organisationsebene liegen auf Repository-Ebene. Für ECR gehen automatisierte Benachrichtigungen bei hohen und kritischen Schwachstellen aus.
 
-Datadog ist für die Produktivumgebung eingerichtet. Monitore überwachen Anomalien im Frontend. Die Produktivumgebung ist mit Zertifikaten, Secrets, Anwendungsprofilen und Datenbanken bereitgestellt. Ein Lasttest prüft Skalierung, Load Balancer, Anwendungen, Datenbankanfragen und Netzwerk. Disaster-Recovery-Szenarien messen die Zeit für einen Rollback.
+Datadog ist für die Produktivumgebung eingerichtet. Monitore überwachen Anomalien im Frontend. Zur Vorbereitung des Produktivbetriebs ist der Produktions-Account eingerichtet, mit Infrastruktur, Zertifikaten, Secrets, Anwendungsprofilen und Datenbanken. Ein Lasttest prüft Skalierung, Load Balancer, Anwendungen, Datenbankanfragen und Netzwerk. Disaster-Recovery-Szenarien messen die Zeit für einen Rollback.
 
 **Ergebnis und Systemstatus.** Benutzer sehen Benachrichtigungen in der Glocke und im Center. Batch-Fehler erreichen das NPM-Team per E-Mail. Die Historie kennzeichnet automatisierte Einträge mit „System“. Sonderfälle laufen über die Vier-Augen-Freigabe mit dem Status der Anfrage.
 
-**Besonderheiten je Sparte und Markt.** Die Fehlerbenachrichtigung gilt für Revenue-Batches in den Märkten DE, IN und SK. Der Edge Service stellt Produkte für die Vertriebskanäle Leasing und OnlineSales bereit.
+**Besonderheiten je Sparte und Markt.** Die Fehlerbenachrichtigung gilt für alle Batch-Typen in den Märkten DE, IN und SK. Der Edge Service stellt Produkte für die Vertriebskanäle Leasing und OnlineSales bereit.
 
 **Hinweise.** Die Benachrichtigung über abgelehnte Zahlungen beschreibt Abschnitt 19.15. Die Aktion „Stop“ für laufende Batch-Jobs beschreibt Abschnitt 19.17. Die Zusammenhänge der Edge-Schnittstellen beschreibt Abschnitt 19.22.
 
