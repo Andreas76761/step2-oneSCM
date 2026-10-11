@@ -109,21 +109,24 @@ def faq(qa, title="Häufig gestellte Fragen und Antworten", size=9):
     return {"type": "faq", "qa": qa, "title": title, "h": round(0.14 + _h_items(items, COLW - 0.24, size) + len(qa) * 0.04 + 0.1, 2), "size": size}
 
 
-def guide(nr, slug, title, ziel, rollen, voraus, themen, schritte, warnung, hinweise, check, fragen, links, footer=None, shot1="Einstieg in das Thema", shot2="Arbeitsmaske"):
+def guide(nr, slug, title, ziel, rollen, voraus, themen, schritte, warnung, hinweise, check, fragen, links, footer=None, shot1="Einstieg in das Thema", shot2="Arbeitsmaske",
+          kind="Kapitel", chs=None, flow=None, key=None, overview_title="Die Themen im Überblick"):
     """Standardaufbau: Seite 1 Überblick und Vorgehen, Seite 2 Checkliste, Hinweise, FAQ, Links."""
-    footer = footer or f"**Hinweis**: Dieser Quick Guide fasst Kapitel {nr} des oneSCM-Handbuchs zusammen. Details, Bildschirmbilder und Nachweise finden Sie im Handbuchkapitel."
+    key = key or "%02d" % nr
+    chs = chs if chs is not None else [nr]
+    footer = footer or f"**Hinweis**: Dieser Quick Guide fasst {kind} {nr} des oneSCM-Handbuchs zusammen. Details, Bildschirmbilder und Nachweise finden Sie im Handbuch."
     half = math.ceil(len(schritte) / 2)
     s1, s2 = schritte[:half], schritte[half:]
-    fl = FLOW[nr]
+    fl = flow or FLOW[nr]
     flow_h = 1.05 if len(fl) <= 5 else 1.65
     left1 = [
-        dict(card("Ziel und Nutzen", [ziel], shot=shot1, shot_h=1.15), img="img/badge_%02d.png" % nr),
+        dict(card("Ziel und Nutzen", [ziel], shot=shot1, shot_h=1.15), img="img/badge_%s.png" % key),
         note("Dieses Dokument ist interaktiv – Verweise auf Handbuchkapitel und Systeme sind als Links hinterlegt.", blue=True),
-        overview(themen),
-        image("img/landscape_%02d.png" % nr, 1.32),
+        overview(themen, title=overview_title),
+        image("img/landscape_%s.png" % key, 1.32),
     ]
     rollen_card = card("Rollen und Voraussetzungen", [{"head": "Beteiligte Rollen"}, {"bullets": rollen}, "", {"head": "Voraussetzungen"}, {"bullets": voraus}])
-    right1 = [image("img/flow_%02d.png" % nr, flow_h), steps([{"steps": s1}], title="So gehen Sie vor"), warn(warnung)]
+    right1 = [image("img/flow_%s.png" % key, flow_h), steps([{"steps": s1}], title="So gehen Sie vor"), warn(warnung)]
     rest = steps([{"start": half + 1, "steps": s2}]) if s2 else None
     right2_extra = []
     if rest:
@@ -134,7 +137,7 @@ def guide(nr, slug, title, ziel, rollen, voraus, themen, schritte, warnung, hinw
             right2_extra.append(rest)
     # Linke Spalte Seite 1 darf nicht überlaufen: Landkarte sonst auf Seite 2
     if sum(b["h"] for b in left1) + 0.12 * (len(left1) - 1) > 6.28:
-        left1.pop(); right2_extra.append(image("img/landscape_%02d.png" % nr, 1.32))
+        left1.pop(); right2_extra.append(image("img/landscape_%s.png" % key, 1.32))
     left2 = [
         rollen_card,
         card("Checkliste vor dem Abschluss", [{"bullets": [f"☐  {c}" for c in check]}]),
@@ -147,7 +150,7 @@ def guide(nr, slug, title, ziel, rollen, voraus, themen, schritte, warnung, hinw
         if not cands: break
         i = max(cands, key=lambda k: right2[k]["h"])
         left2.append(right2.pop(i))
-    return {"nr": nr, "slug": slug, "title": title, "stand": STAND, "footer": footer, "flow": fl,
+    return {"nr": nr, "key": key, "kind": kind, "chs": chs, "slug": slug, "title": title, "stand": STAND, "footer": footer, "flow": fl,
             "pages": [{"left": left1, "right": right1}, {"left": left2, "right": right2}]}
 
 
@@ -678,6 +681,12 @@ G.append(guide(23, "FAQ_Troubleshooting_und_Support", "FAQ, Troubleshooting und 
   ("Kann eine andere Person als der Halter den Vertrag abschließen?", "Nein, Vertragsinhaber und Halter müssen identisch sein.")],
  ["**Hilfestellung Servicevertrag Van**: __sc-van@mercedes-benz.com__", LINK_RP, "__Ticket-zu-Kapitel-Zuordnung__ – Anhang E.", LINK_HB],
  shot1="FAQ-Übersicht", shot2="Supportfall anlegen"))
+
+
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from content_extra import add_extra
+add_extra(G, guide, T, cols, LINK_HB, LINK_FAQ, LINK_GLOSSAR, LINK_SUPPORT, LINK_RP)
 
 
 def build(path):

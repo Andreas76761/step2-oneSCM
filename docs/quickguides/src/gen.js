@@ -201,7 +201,7 @@ if (require.main === module) {
   fs.mkdirSync(outDir, { recursive: true });
   (async () => {
     for (const g of specs) {
-      const name = `${String(g.nr).padStart(2, '0')}_Quick_Guide_oneSCM_${g.slug}.pptx`;
+      const name = `${g.key || String(g.nr).padStart(2, '0')}_Quick_Guide_oneSCM_${g.slug}.pptx`;
       await build(g, path.join(outDir, name));
       console.log('✓', name);
     }
