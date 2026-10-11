@@ -227,22 +227,22 @@ Quellen: Batch 142.9
 
 ## Verschiebung in andere Kapitel
 
-- Kapitel 4.3, Kundendaten und Pflichtangaben prüfen: Batch 1034.2: Adressdaten, Reihenfolge der Eingabefelder, Zeichenlängen für Stadt, Straße, Hausnummer und Zusatzzeile.
-- Kapitel 4.7, Partner- und Dealerbeziehungen: Batch 594.2: Eigentümerwechsel in Deutschland, Vorgänger und Nachfolger, Historie und Benachrichtigung von Market Operations.
-- Kapitel 9.8, Contract Review: Profile und Übersicht: Batch 1263.3: Genehmigungsschwelle in der Währung des Vertragslandes, Formatierung nach der Marktkonfiguration.
-- Kapitel 10.1, Verträge suchen und Details prüfen: Batch 855.2: Sortierung der Vertragsübersicht, Anzahl der Zeilen, Suche per Klick und per Eingabetaste.
-- Kapitel 11.4, Kostenmanagement und Claims: Batch 711.1: Prüfung der Forderungen je Markt beim I156-Import, Import bei fehlendem Händler mit Bindestrich als Händlername.
-- Kapitel 14.2, Marktspezifische Einstellungen: Batch 650.1: Configuration Service mit Formaten und Sprachen je Markt, Batch 989.1 (Seiten General Settings und Feature Settings, Schaltflächen Restore und Update.
-- Kapitel 14.6, Marktbezogene Sichtbarkeit und Berechtigungen: Batch 68.1: Cross File Transfer, Klärungsbedarf, Batch 143.2 und 142.9 (Sichtbarkeit von Seiten je Markt.
-- Kapitel 14.8, Produktdefinition, Anlage und Veröffentlichung: Batch 1220.4: Schritt 2 zur Marktspezifität des Coverage Codes.
-- Kapitel 14.9, Preisversionen, Cluster und Faktorgrenzen: Batch 1268.5: Fahrzeugverwaltung mit Ergebnissen nach Auswahl von Produkt und Preisversion.
-- Kapitel 14.11, Fahrzeuggruppen und Van-Baumuster-Clustering: Batch 10.5: Marktauswahl für Fahrzeuggruppen.
-- Kapitel 14.13, Kampagnenanlage und Rabattpflege: Batch 882.2: Gültigkeit der Kampagnenanfragen in Kalendertagen je Division.
-- Kapitel 19.1, Architekturüberblick und Systemlandkarte: Batch 1310.6: lokale Entwicklungsumgebung mit Mock-Services, Wiremock und Benutzern je Rolle, Batch 551.4 (marktspezifische Logik in eigenen Implementierungen, Klärungsbedarf.
-- Kapitel 19.9, VEGA, Vertrag, Coverage und Claim: Batch 936.2: i155-Datei je Markt, Klärungsbedarf.
-- Kapitel 19.12, CoFiCo, und Kapitel 19.13, SWT, FI-Anbindung: Batch 177.4 und 181.5: Anzeige der Exported- und Imported-Status im Finanzabgleich.
-- Kapitel 19.21, Technische Integrationswege: Batch 1095.3: Markt-ID als Pflichtfeld der Vertragsanfrage, Header X-Market bei Leasingverträgen.
-- Kapitel 19.22, Schnittstellenbetrieb und Fehlerbehandlung: Batch 519.7: Wiederholungen, Zeitabstände, Timeouts und Wiederanstoß.
+- Kapitel 4.3, Kundendaten und Pflichtangaben prüfen: Batch 1034.2 mit Adressdaten, Reihenfolge der Eingabefelder und Zeichenlängen für Stadt, Straße, Hausnummer und Zusatzzeile.
+- Kapitel 4.7, Partner- und Dealerbeziehungen: Batch 594.2 mit Eigentümerwechsel in Deutschland, Vorgänger, Nachfolger, Historie und Benachrichtigung von Market Operations.
+- Kapitel 9.8, Contract Review: Profile und Übersicht: Batch 1263.3 mit der Genehmigungsschwelle in der Währung des Vertragslandes.
+- Kapitel 10.1, Verträge suchen und Details prüfen: Batch 855.2 mit Sortierung der Vertragsübersicht, Zeilenanzahl und Suche per Klick und per Eingabetaste.
+- Kapitel 11.4, Kostenmanagement und Claims: Batch 711.1 mit der Prüfung der Forderungen je Markt beim I156-Import und dem Import bei fehlendem Händler.
+- Kapitel 14.2, Marktspezifische Einstellungen: Batch 650.1 mit dem Configuration Service für Formate und Sprachen je Markt sowie Batch 989.1 mit den Seiten General Settings und Feature Settings und den Schaltflächen Restore und Update.
+- Kapitel 14.6, Marktbezogene Sichtbarkeit und Berechtigungen: Batch 68.1 mit dem Cross File Transfer sowie Batch 143.2 und 142.9 mit der Sichtbarkeit von Seiten je Markt.
+- Kapitel 14.8, Produktdefinition, Anlage und Veröffentlichung: Batch 1220.4 mit Schritt 2 zur Marktspezifität des Coverage Codes.
+- Kapitel 14.9, Preisversionen, Cluster und Faktorgrenzen: Batch 1268.5 mit den Ergebnissen der Fahrzeugverwaltung nach Auswahl von Produkt und Preisversion.
+- Kapitel 14.11, Fahrzeuggruppen und Van-Baumuster-Clustering: Batch 10.5 mit der Marktauswahl für Fahrzeuggruppen.
+- Kapitel 14.13, Kampagnenanlage und Rabattpflege: Batch 882.2 mit der Gültigkeit der Kampagnenanfragen in Kalendertagen je Division.
+- Kapitel 19.1, Architekturüberblick und Systemlandkarte: Batch 1310.6 mit der lokalen Entwicklungsumgebung sowie Batch 551.4 mit der marktspezifischen Logik in eigenen Implementierungen, siehe Klärungsbedarf.
+- Kapitel 19.9, VEGA, Vertrag, Coverage und Claim: Batch 936.2 mit der i155-Datei je Markt, siehe Klärungsbedarf.
+- Kapitel 19.12, CoFiCo, und Kapitel 19.13, SWT, FI-Anbindung: Batch 177.4 und 181.5 mit der Anzeige der Status Exported und Imported im Finanzabgleich.
+- Kapitel 19.21, Technische Integrationswege: Batch 1095.3 mit der Markt-ID als Pflichtfeld der Vertragsanfrage und dem Header X-Market bei Leasingverträgen.
+- Kapitel 19.22, Schnittstellenbetrieb und Fehlerbehandlung: Batch 519.7 mit Wiederholungen, Zeitabständen, Timeouts und Wiederanstoß.
 
 Quellen: Batch 1034.2, 594.2, 1263.3, 855.2, 711.1, 650.1, 989.1, 68.1, 143.2, 142.9, 1220.4, 1268.5, 10.5, 882.2, 1310.6, 551.4, 936.2, 177.4, 181.5, 1095.3, 519.7
 
@@ -252,7 +252,7 @@ Quellen: Batch 1034.2, 594.2, 1263.3, 855.2, 711.1, 650.1, 989.1, 68.1, 143.2, 1
 2. Divisionen, Batch 1308.1: Die Aussage „fast alle Märkte“ nennt keine Ausnahmen außer Malaysia. Die übrigen Märkte mit eingeschränkter Division sind nicht benannt.
 3. Mercedes me Rollenbezeichnung, Batch 644.1 und Batch 640.1: Batch 644.1 nennt die Vertragsrolle „Holder“, Batch 640.1 die Rolle „Halter“. Batch 644.1 nennt den Reiter „Contract Generation“, Batch 640.1 die „Vertragserstellung“. Das Kapitel 5 spricht von einem Menü, Batch 644.1 von einem Reiter.
 4. Mercedes me, Batch 644.1, 638.2 und 640.1: Die drei Abschnitte beschreiben denselben Ablauf. Sie sind in Teilen als Soll formuliert, etwa für die Ergänzung der Mercedes me ID. Die Pflichtfelder sollen in der Entwicklung verifiziert werden. Die Angaben zu Bankdaten lauten „nicht relevant“ in Batch 644.1 und „nicht anwendbar“ in Batch 638.2. Die Werte für Deutschland sind als MVP-Werte bezeichnet.
-5. Zahlung in Tschechien, Batch 53.1: Eine Störung der Zahlungsfunktion MPay im tschechischen Markt ist als geschlossen gemeldet. Das Material beschreibt weder Ursache noch Umfang. Die Meldung gehört nicht in den Fließtext.
+5. Zahlung in Tschechien, Batch 53.1: Eine Störung der Zahlungsfunktion MPay im tschechischen Markt ist als geschlossen gemeldet. Das Material beschreibt Ursache und Umfang nicht. Die Meldung gehört nicht in den Fließtext.
 6. SAP-Debitorennummern je Markt, Batch 578.2: Die Änderung ist als geschlossen geführt. Das Material beschreibt die Pflege der Markttabelle und der Debitorennummern nur als Zielbild. Die Aussage, dass die Pflege bisher aus Sicht Deutschlands erfolgt, ist nicht mit einem Stand belegt.
 7. Lieferantentabelle, Batch 582.3: Der Text spricht bei der Lieferantentabelle von Händlerbetrieben. Es ist unklar, ob die Filterung Lieferanten oder Händler betrifft.
 8. Cross File Transfer, Batch 68.1: Die Marktbegrenzung ist in Abstimmung. Ungeklärt sind das Verhalten bei einem Upload einer Datei eines anderen Marktes und die technische Umsetzbarkeit der Einschränkung.
