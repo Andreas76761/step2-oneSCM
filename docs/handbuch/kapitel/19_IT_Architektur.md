@@ -208,7 +208,7 @@ Der Wert in der Satzart RC05 an Position 260, das sogenannte Return Flag, richte
 
 1. MBLD fragt über den Edge Service den Kontostand zu einer Vertragsnummer ab und prüft, ob Vertragsanpassungen zulässig sind. Der Vertrag muss im Vertriebskanal „Leasing“ den Status „Aktiv“ haben.
 2. MBLD fragt beim Product-Microservice ein Preisangebot für Laufleistung und Laufzeit an. Die Anfrage enthält einen Offset und optional ein Wirksamkeitsdatum. Die Antwort enthält den Gesamtpreis, den Intervallpreis und den Preis je Mehr- oder Minderkilometer.
-3. Ist die Konfiguration nicht passend, sendet MBLD eine neue Anfrage mit angepassten Parametern. Ist sie passend, sendet MBLD die Anwendung der Langzeitverlängerung. Der Contract-Microservice legt die Konfiguration an und bestätigt sie mit den aktualisierten Preisangaben.
+3. Ist die Konfiguration nicht passend, sendet MBLD eine neue Anfrage mit geänderten Parametern. Ist sie passend, sendet MBLD die Anwendung der Langzeitverlängerung. Der Contract-Microservice legt die Konfiguration an und bestätigt sie mit den aktualisierten Preisangaben.
 4. Lehnt der Endkunde das Angebot ab, verwirft der Contract-Microservice die Konfiguration. Stimmt der Endkunde zu, übernimmt der Contract-Microservice die neue Konfiguration auf Vertragsebene, erzeugt die i155 und benachrichtigt VEGA, den Revenue-Microservice und NEMESIS.
 
 Den Offset und das Wirksamkeitsdatum der Leasing-Langzeitverlängerung beschreibt Abschnitt 19.22.
