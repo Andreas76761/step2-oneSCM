@@ -4,7 +4,7 @@ Dieses Kapitel beschreibt die Verwaltung aktiver Serviceverträge im Vertragsman
 
 ## 10.1 Verträge suchen und Details prüfen
 
-**Zweck.** Sie suchen aktive Verträge im Vertragsmanagement und prüfen die Details eines Vertrags, bevor Sie eine Aktion auslösen. Die Suche findet einen Vertrag unabhängig davon, ob Sie die Fahrgestellnummer als FIN oder als VIN eingeben. Das Suchfeld trägt die Bezeichnung „Search Contract“. In den Ergebnissen und auf der Startseite erscheint die Vertragsnummer als „Reference Number“. Beim Zurückkehren aus einer anderen Funktion setzt das System die Suche zurück, sodass kein Ergebnis einer früheren Suche angezeigt wird.
+**Zweck.** Sie suchen aktive Verträge im Vertragsmanagement und prüfen die Details eines Vertrags, bevor Sie eine Aktion auslösen. Die Suche findet einen Vertrag unabhängig davon, ob Sie die Fahrgestellnummer als FIN oder als VIN eingeben. Das Suchfeld trägt die Bezeichnung „Search Contract“. In den Ergebnissen und auf der Startseite erscheint die Vertragsnummer als „Reference Number“. Beim Zurückkehren aus einer anderen Funktion setzt das System die Suche zurück, sodass kein Ergebnis einer vorherigen Suche angezeigt wird.
 
 **Voraussetzungen.** Der Vertrag ist angelegt und trägt eine Vertragsnummer. Der Export von Verträgen steht nur für aktive Verträge zur Verfügung. Die Registerkarte „Documents & Notifications“ zeigt Dokumente und E-Mails für Verträge, denen eine Vertragsnummer zugewiesen wurde und die den Status „Aktiv“ hatten.
 
@@ -52,7 +52,7 @@ Quellen: Batch 785.1, 355.3, 757.4, 761.3, 763.1, 778.1, 790.1, 795.4, 801.1, 82
 
 **Besonderheiten je Sparte und Markt.** Das Steuersatzfeld akzeptiert Werte im Format 0,ddddd und damit Steuersätze mit bis zu drei Nachkommastellen. Bestehende Werte im Format 0,dd bleiben gültig. Eine Eingabe mit mehr Nachkommastellen lehnt das System mit einer Fehlermeldung ab, ohne zu runden.
 
-**Hinweise.** Änderungen an Kundennamen übernimmt das Vertragsmanagement. Änderungen an Kontaktdaten im Kundenprofil gibt das System an den Vertragsservice weiter. Frühere Kontaktdaten speichert das System zu Prüfzwecken, zeigt sie aber nicht an. Die Kundendaten pflegen Sie in der Kundenverwaltung. Bei einer Einmalzahlung entspricht die Zahlungsdauer der Vertragslaufzeit. Bei monatlicher Zahlung mit Preisumverteilung beginnt die Zahlungsdauer am Startdatum der Rechnungsperiode nach dem Umverteilungszeitraum und endet mit dem Vertragsende. Die Änderung mehrerer Felder gleichzeitig, etwa der jährlichen Fahrleistung, ist im Klärungsbedarf erfasst.
+**Hinweise.** Änderungen an Kundennamen übernimmt das Vertragsmanagement. Änderungen an Kontaktdaten im Kundenprofil gibt das System an den Vertragsservice weiter. Vorherige Kontaktdaten speichert das System zu Prüfzwecken, zeigt sie aber nicht an. Die Kundendaten pflegen Sie in der Kundenverwaltung. Bei einer Einmalzahlung entspricht die Zahlungsdauer der Vertragslaufzeit. Bei monatlicher Zahlung mit Preisumverteilung beginnt die Zahlungsdauer am Startdatum der Rechnungsperiode nach dem Umverteilungszeitraum und endet mit dem Vertragsende. Die Änderung mehrerer Felder gleichzeitig, etwa der jährlichen Fahrleistung, ist im Klärungsbedarf erfasst.
 
 **Fehlerbehebung.** Das Feld „Industry“ erscheint im Bearbeitungsmodus der Vertragsdetailseite. Die Meldungen beim Hinzufügen einer Zahlungsreferenz zu einem Vertrag sind eindeutig. Die Zahlungsdauer aktualisiert sich in allen relevanten Szenarien. Der Zahlungsplan übernimmt bei einer Regenerierung die aktuellen Preisinformationen. Die Schaltfläche „Übernehmen“ beim Händlerrabatt übernimmt den Wert. Das Feld heißt „Anzahl Reifen Gesamt/Verbrauch“.
 
@@ -98,7 +98,7 @@ Quellen: Batch 225.2, 238.1, 616.6, 752.1, 761.2, 762.1, 778.1, 784.1, 790.1, 79
 
 **Fehlerbehebung.** Ein doppelter Klick auf „Next“ löst beim Bestätigen keinen Fehler aus. Mehrfaches Klicken auf die Vertragsübertragung legt keinen neuen Kunden doppelt an. Der Käufer erhält eine E-Mail-Benachrichtigung. Ein auf einen neuen gewerblichen Kunden übertragener Vertrag bleibt nicht im Status „Suspended“. Der verbleibende Kilometerstand nach einer Übertragung wird korrekt berechnet. Die Aktion „Transfer“ funktioniert. Die Reaktivierungsoptionen stehen nicht zur Verfügung, wenn der Vertrag während einer Übertragung oder eines Zahlerwechsels ausgesetzt wird.
 
-Quellen: Batch 414.1, 428.3, 479.3, 761.2, 795.3, 806.1, 807.3, 813.1, 815.1, 819.3, 820.1, 824.4, 827.2, 831.5, 834.3, 835.1, 847.1, 788.3, 797.1, 1102.5, 1102.6, 1110.5, 749.1, 750.1, 784.1
+Quellen: Batch 844.4, 414.1, 428.3, 479.3, 761.2, 795.3, 806.1, 807.3, 813.1, 815.1, 819.3, 820.1, 824.4, 827.2, 831.5, 834.3, 835.1, 847.1, 788.3, 797.1, 1102.5, 1102.6, 1110.5, 749.1, 750.1, 784.1
 
 ## 10.4 Aussetzen und Reaktivieren
 
@@ -152,7 +152,7 @@ Quellen: Batch 777.6, 778.2, 780.1, 783.1, 786.1, 787.2, 790.1, 794.1, 802.1, 80
 1. Wählen Sie den aktiven Vertrag aus und öffnen Sie über „Prolongate“ die Auswahl der Verlängerungsart. Das System bietet beide Verlängerungsarten an, soweit das Produkt sie unterstützt.
 2. Wählen Sie die Laufzeit von einem bis sechs Monaten. Haben Sie den Vertrag bereits verlängert, zeigt das System nur die Monate, mit denen die Gesamtdauer von sechs Monaten nicht überschritten wird. Bei zwei bereits verlängerten Monaten stehen nur noch ein bis vier Monate zur Auswahl.
 3. Erfassen Sie optional einen Kommentar. Das Feld ist auf 100 Zeichen begrenzt.
-4. Prüfen Sie im zweiten Schritt die Übersicht mit Referenznummer, Produkt, Verlängerungsdetails und Vergleichstabelle. Das Startdatum bleibt unverändert, das Vertragsende verschiebt sich um die gewählten Monate. Das Zahlungsintervall ist monatlich.
+4. Prüfen Sie im zweiten Schritt die Übersicht mit Referenznummer, Produkt, Verlängerungsdetails und Vergleichstabelle. Das Startdatum bleibt unverändert, das Vertragsende verschiebt sich um die gewählten Monate. Das Zahlungsintervall ist monatlich. Die Übersicht zeigt die Vertragsdauer mit der Maßeinheit „Months“ und an, um wie viele Monate der Vertrag noch verlängert werden kann.
 5. Bestätigen Sie mit dem Häkchen. Das System wendet die Verlängerung an, versendet eine E-Mail an den Kunden, erzeugt eine i155-Meldung mit dem neuen Vertragsende und informiert das Revenue Management.
 
 Für die Laufleistung bei einer Kurzzeitverlängerung gilt die Markteinstellung „Short Term Prolongation Mileage Handling“. Die Einstellung „Extend Mileage“ erhöht die Fahrleistung anteilig. Dafür teilt das System die Jahresfahrleistung durch 12 und multipliziert das Ergebnis mit den verlängerten Monaten. Bei 10.000 km pro Jahr und drei Monaten ergeben sich 2.500 km. Die Einstellung „Do Not Extend Mileage“ lässt die Fahrleistung unverändert. Der Standardwert ist „Extend Mileage“. Die Einstellung wertet das System zum Zeitpunkt des Starts der Verlängerung aus.
@@ -180,21 +180,21 @@ Vor dem Vertragsende informiert das System den Vertragsinhaber automatisch über
 
 Ein Folgevertrag nach Ablauf ist im vorliegenden Material nicht beschrieben. Material: keine Quellen in den RAG-Batches für einen Folgevertrag.
 
-**Preisberechnung.** Die Verlängerung erfolgt während der Laufzeit des Vertrags. Bei der Preisberechnung für Verlängerungen berücksichtigt das System keine Händlerprovision, keine Marktkampagnen und keine Händlerrabatte. Der zahlungsabhängige Aufschlag bleibt im Preis enthalten. Die Produktkonfiguration legt fest, ob der Preis mit der Preisversion zum Verkaufsdatum oder mit der Preisversion zum Verlängerungszeitpunkt berechnet wird. Bei „Pricing at Prolongation Time“ verwendet das System den neuen Matrixwert, bei „Pricing at Contract Sales Date“ den Matrixwert zum Verkaufsdatum. Die Berechnung zieht den bisher gezahlten Nettobetrag des Vertrags ab und teilt das Ergebnis durch die verbleibenden Monate. Ergibt die Berechnung einen negativen Betrag, setzt das System ihn auf 0.
+**Preisberechnung.** Die Verlängerung erfolgt während der Laufzeit des Vertrags. Bei der Preisberechnung für Verlängerungen berücksichtigt das System keine Händlerprovision, keine Marktkampagnen und keine Händlerrabatte. Der zahlungsabhängige Aufschlag bleibt im Preis enthalten. Die Produktkonfiguration legt fest, ob der Preis mit der Preisversion zum Verkaufsdatum oder mit der Preisversion zum Verlängerungszeitpunkt berechnet wird. Bei „Pricing at Prolongation Time“ verwendet das System den neuen Matrixwert, bei „Pricing at Contract Sales Date“ den Matrixwert zum Verkaufsdatum. Die Berechnung zieht den bereits gezahlten Nettobetrag des Vertrags ab und teilt das Ergebnis durch die verbleibenden Monate. Ergibt die Berechnung einen negativen Betrag, setzt das System ihn auf 0.
 
 Bei der Verlängerung eines Sonderfall-Vertrags berechnet das System den Angebotspreis aus dem ursprünglichen Sonderfallpreis zuzüglich der Differenz der Preispunkte. Beispiel: Ein ursprünglicher Sonderfallpreis von 1.800 zuzüglich einer Differenz von 950 ergibt einen Angebotspreis von 2.750. Eine erneute Sonderfallanfrage ist bei der Verlängerung nicht möglich.
 
 Für MBLD-Verträge stellt oneSCM Verlängerungspreise bereit, die aus der Gesamtlaufleistung abgeleitet und zwischen vorhandenen Preispunkten derselben Laufzeit interpoliert werden. Verlängerungen mit preisrelevanten Optionen verwenden die Preisversion, die die Produktkonfiguration für Verlängerungen vorsieht.
 
-**Besonderheiten je Rolle.** Händler fragen Preise für bestehende Verträge an. Die Verlängerung selbst führen Market Operations und MPC aus. Bei MBLD-Verträgen erfolgt die Verlängerung über die Schnittstelle, ohne Dokument und ohne Kundenunterschrift.
+**Besonderheiten je Rolle.** Händler fragen Preise für bestehende Verträge an. Die Verlängerung selbst führen Market Operations und MPC aus. Bei MBLD-Verträgen erfolgt die Verlängerung über die Schnittstelle, ohne Dokument und ohne Kundenunterschrift. Der einzige Nachweis der Verlängerung ist der Eintrag in der Vertragshistorie.
 
 **Besonderheiten je Sparte und Markt.** Bei Reifenprodukten ist die Anzahl der Reifen ein Vielfaches von 2, und das System zeigt eine Empfehlung an. Die Langzeitverlängerung steht für alle Produkte zur Verfügung. Ist ein Produkt nicht für die Kurzzeitverlängerung konfiguriert, zeigt die Oberfläche die Option nicht an. Bei subventionierten Verträgen erscheinen Kurz- und Langzeitverlängerung erst, wenn der Kunde seine Zahlungsinformationen hinterlegt hat.
 
 **Hinweise.** Kurz- und Langzeitverlängerung lassen sich auf einem Vertrag kombinieren, sofern alle Voraussetzungen erfüllt sind. Mehrere Langzeitverlängerungen sind möglich, solange das System nicht auf die DSS-Unterschrift wartet. Verträge mit einer Langzeitverlängerung lassen sich verkürzen, und jede Anpassung berechnet das System auf Basis der aktuellen Vertragswerte. Das Kommentarfeld ist optional. Die Vertragsübersicht ist in der Anwendung, in E-Mails und in Dokumenten identisch. Die E-Mail zur Langzeitverlängerung nennt bei Geschäftskunden das Feld „Firmenname“. Eine Verlängerung mit Zusatzdeckungen ist auch ohne Auswahl einer Laufleistung möglich. Die Vertragsanpassung, die Reduzierung von Laufzeit und Laufleistung für MBLD-Verträge, ist im Klärungsbedarf erfasst.
 
-**Fehlerbehebung.** Die Verlängerungs-E-Mail wird einmal versendet. Der Monatspreis wird korrekt angezeigt. Der Gesamtpreis des Vertrags aktualisiert sich nach einer genehmigten Kurzzeitverlängerung. Die Zahlungsdauer erhöht sich um die verlängerten Monate. Die geplante Laufleistung bei Langzeitverlängerungen wird korrekt berechnet. Der Preis optionaler Deckungen wird über die Vertragslaufzeit verteilt. Die Verlängerung von Verträgen aus Sonderfällen ist möglich. Die Auswahl „Long Term Prolongation“ öffnet den Assistenten ohne Fehlermeldung.
+**Fehlerbehebung.** Die Verlängerungs-E-Mail wird einmal versendet. Der Monatspreis wird korrekt angezeigt. Der Gesamtpreis des Vertrags aktualisiert sich nach einer genehmigten Kurzzeitverlängerung. Die Zahlungsdauer erhöht sich um die verlängerten Monate. Die vereinbarte Laufleistung bei Langzeitverlängerungen wird korrekt berechnet. Der Preis optionaler Deckungen wird über die Vertragslaufzeit verteilt. Die Verlängerung von Verträgen aus Sonderfällen ist möglich. Die Auswahl „Long Term Prolongation“ öffnet den Assistenten ohne Fehlermeldung.
 
-Quellen: Batch 123.1, 185.4, 248.1, 254.2, 234.1, 384.4, 409.1, 760.1, 762.1, 765.6, 769.1, 769.2, 771.1, 774.1, 776.1, 777.1, 777.3, 780.1, 781.1, 781.2, 782.1, 783.1, 783.2, 783.5, 787.3, 788.2, 791.1, 793.1, 799.1, 800.1, 807.4, 809.3, 810.2, 811.1, 817.1, 819.1, 820.2, 821.2, 822.6, 823.3, 824.1, 824.2, 826.1, 828.1, 829.1, 830.1, 830.3, 830.4, 830.5, 830.7, 831.3, 834.2, 839.1, 889.3, 1150.3, 1150.4, 1154.2, 1154.6, 1157.1, 1167.1, 1194.2, 1211.1, 1213.1, 1213.2, 1213.4, 1258.1, 1264.5, 1273.4, 1274.7, 1278.9, 754.2, 752.1
+Quellen: Batch 787.5, 827.3, 123.1, 185.4, 248.1, 254.2, 234.1, 384.4, 409.1, 760.1, 762.1, 765.6, 769.1, 769.2, 771.1, 774.1, 776.1, 777.1, 777.3, 780.1, 781.1, 781.2, 782.1, 783.1, 783.2, 783.5, 787.3, 788.2, 791.1, 793.1, 800.1, 807.4, 809.3, 810.2, 811.1, 817.1, 819.1, 820.2, 821.2, 822.6, 823.3, 824.1, 824.2, 826.1, 828.1, 829.1, 830.1, 830.3, 830.4, 830.5, 830.7, 831.3, 834.2, 839.1, 889.3, 1150.3, 1150.4, 1154.2, 1154.6, 1157.1, 1167.1, 1194.2, 1211.1, 1213.1, 1213.2, 1213.4, 1258.1, 1264.5, 1273.4, 1274.7, 1278.9, 754.2, 752.1
 
 ## 10.6 Kündigung, Stornierung und Beendigung
 
@@ -234,11 +234,11 @@ Ein vorzeitiger Ablauf durch Eingabe eines Kilometerstands erfordert eine Bestä
 
 **Besonderheiten je Sparte und Markt.** Für Deutschland ist die Rückdatierung der vorzeitigen Beendigung im Klärungsbedarf erfasst. Bei Reifenprodukten endet der Vertrag nicht, wenn die vereinbarte Endlaufleistung oder die vollständige Nutzung der Reifensätze erreicht ist. Der Vertrag bleibt in diesem Fall aktiv. Kontingentprodukte stehen für die vorzeitige Beendigung im MVP nicht zur Verfügung.
 
-**Hinweise.** Die Stornierungsfrist richtet sich nach den Markteinstellungen. Bei einer Stornierung innerhalb der Widerrufsfrist storniert das System terminierte Belege der Typen DD, SCOM, SDAS und CAMP automatisch. Ein Vertrag, der mit einer Grace-Period-Kampagne innerhalb der Widerrufsfrist storniert wird, sendet ein Storno-Ereignis an Products. Der Kilometerstand bei einer Beendigung wird je Fahrzeug erfasst. Die Kündigungsoption nach einer Aktivierung entfällt nach 14 Tagen. Eine Reaktivierung nach einer Aussetzung setzt diese Frist nicht zurück. Die Beendigung nach Laufleistung und die Stornierung bei Schadensfall sind im Klärungsbedarf erfasst.
+**Hinweise.** Die Stornierungsfrist richtet sich nach den Markteinstellungen. Eine Kündigung betrifft jeweils nur einen einzelnen Vertrag. Bei einer Stornierung innerhalb der Widerrufsfrist storniert das System terminierte Belege der Typen DD, SCOM, SDAS und CAMP automatisch. Ein Vertrag, der mit einer Grace-Period-Kampagne innerhalb der Widerrufsfrist storniert wird, sendet ein Storno-Ereignis an Products. Der Kilometerstand bei einer Beendigung wird je Fahrzeug erfasst. Die Kündigungsoption nach einer Aktivierung entfällt nach 14 Tagen. Eine Reaktivierung nach einer Aussetzung setzt diese Frist nicht zurück. Die Sanktionslistenprüfung CAS läuft alle drei Monate. Ein positiver Treffer beendet den Vertrag vorzeitig, das MO-Team erhält eine E-Mail mit dem Hinweis auf die automatische Beendigung. Die Beendigung nach Laufleistung und die Stornierung bei Schadensfall sind im Klärungsbedarf erfasst.
 
 **Fehlerbehebung.** Die Datumsauswahl bei der Stornierung berücksichtigt die 14-Tage-Frist ab der Aktivierung. Die Vertragsdauer aktualisiert sich bei vorzeitiger Beendigung und bei Stornierung mit dem tatsächlichen Enddatum. Die Stornierung bleibt erlaubt, wenn ein offener Schadensfall später storniert, abgelehnt oder gelöscht wird und die Widerrufsfrist noch läuft. Eine vorzeitige Beendigung storniert nicht alle Rechnungen aus oneSCM. Besteht für einen Vertrag ein Schadensfall, steht die Option „Vertrag stornieren“ nicht zur Verfügung. Ein Vertrag mit einer Review-Zahlung von 0 läuft ab oder wird geschlossen. Das Eingabefeld für die Laufleistung in der vorzeitigen Beendigung ist aktiv, sobald ein Beendigungsdatum gewählt ist.
 
-Quellen: Batch 153.1, 224.3, 141.4, 144.1, 477.1, 478.3, 492.1, 748.2, 754.3, 763.6, 770.2, 770.3, 771.2, 779.3, 784.1, 785.1, 786.1, 786.5, 788.5, 792.1, 799.2, 800.2, 803.1, 804.1, 809.2, 810.1, 812.1, 813.1, 820.3, 823.2, 825.2, 825.6, 827.1, 831.1, 833.2, 834.3, 835.1, 843.2, 852.5, 853.2, 855.4, 856.2, 869.7, 976.8, 976.9, 988.2, 1021.3, 1026.1, 1080.2, 835.2, 824.4
+Quellen: Batch 651.1, 764.1, 786.2, 153.1, 224.3, 141.4, 144.1, 478.3, 492.1, 748.2, 754.3, 763.6, 770.2, 770.3, 771.2, 779.3, 784.1, 785.1, 786.1, 786.5, 788.5, 792.1, 799.2, 800.2, 803.1, 804.1, 809.2, 810.1, 812.1, 813.1, 820.3, 823.2, 825.2, 825.6, 827.1, 831.1, 833.2, 834.3, 835.1, 843.2, 852.5, 853.2, 855.4, 856.2, 869.7, 976.8, 976.9, 988.2, 1021.3, 1026.1, 1080.2, 835.2, 824.4
 
 ## 10.7 Finanzielle Folgen und Abschlussnachweise
 
@@ -310,7 +310,7 @@ Quellen: Batch 759.1, 791.1, 799.2, 806.2, 808.1, 809.3, 811.1, 812.1, 821.1, 82
 
 1. Öffnen Sie den Reiter „Vehicle“ und prüfen Sie die Tabelle „Mileage History“. Der jeweils zuletzt importierte Eintrag steht oben. Jede Spalte lässt sich sortieren.
 2. Klicken Sie auf „Get Mileage Information“, um den letzten bekannten Kilometerstand mit Datum aus MIC abzurufen. Der Eintrag erhält die Quelle „MIC“ und den Bearbeiter „System“. Ist MIC für das Fahrzeug nicht verfügbar, erscheint die Meldung „MIC is not available for this vehicle“, und die Historie bleibt unverändert.
-3. Erfassen Sie einen Kilometerstand manuell, wenn MIC nicht verfügbar ist. Geben Sie das Datum der tatsächlichen Erfassung und den Kilometerstand ein. Der Wert muss größer sein als der Eintrag mit dem nächstniedrigeren früheren Datum und kleiner als der Eintrag mit dem nächsthöheren späteren Datum. Ein abgelehnter Wert wird nicht gespeichert. Gültige Einträge erhalten die Quelle „User“ und die Benutzerkennung.
+3. Erfassen Sie einen Kilometerstand manuell, wenn MIC nicht verfügbar ist. Geben Sie das Datum der tatsächlichen Erfassung und den Kilometerstand ein. Der Wert muss größer sein als der Eintrag mit dem nächstniedrigeren vorherigen Datum und kleiner als der Eintrag mit dem nächsthöheren späteren Datum. Ein abgelehnter Wert wird nicht gespeichert. Gültige Einträge erhalten die Quelle „User“ und die Benutzerkennung.
 4. Löschen Sie einen manuellen Eintrag über die Löschfunktion. Nach der Bestätigung der Abfrage „Are you sure? This action is irreversible.“ ist die Löschung endgültig. Einträge aus MIC, VEGA, Vertrag und Hochrechnung lassen sich nicht löschen.
 5. Klicken Sie auf „Calculate Mileage Projection“, wenn keine aktuellen MIC-Daten vorliegen. Das System berechnet den Kilometerstand auf Basis des letzten bekannten Stands und des Vertragsbeginns. Der Höchstwert beträgt 9.999.999 km. Liegt keine Historie vor, erscheint die Meldung „Mileage Projection cannot be calculated because no historical mileage exists“.
 
@@ -336,29 +336,29 @@ Quellen: Batch 2.1, 16.2, 17.3, 763.1, 763.3, 763.4, 763.5, 763.6, 768.2, 768.5,
 
 | Zielkapitel | Batch-Verweis | Inhalt |
 |---|---|---|
-| 2.2 Fachliche Rollen und technische Berechtigungen | 762.1 | Berechtigung des MPC im Markt SK für Batch-Jobs anderer Märkte |
-| 2.6 Sicherer Umgang mit Benutzerkonto und Sitzung | 1102.5 | Nutzungsbedingungen als Pop-up beim ersten Login mit Scrollpflicht |
-| 3.1 Startseite und Menü | 1106.4 | Link „Terms of Use“ im Footer neben „Privacy Policy“ |
-| 4.7 Partner- und Dealerbeziehungen | 594.1 | Automatische Aktualisierung der Händlerdaten bei Eigentümerwechsel |
-| 5.3 Fahrzeugdaten, Pflichtfelder und Validierungsregeln | 1000.1, 17.3, 1019.1, 1056.4, 1082.2, 979.1 | Ermittlung und Erfassung des Kilometerstands bei der Vertragserstellung |
-| 5.5 Laufzeit, Laufleistung und Optionen konfigurieren | 1061.5, 1183.4 | Laufleistungsvalidierung im Vertragsvorschlag und Auswahl der Matrixwerte |
-| 6.2 Vertragsdaten und Pflichtfelder erfassen | 876.1, 971.1 | Vertragsstart bei Garantieverlängerungen sowie Klassifizierung FRD und nicht FRD |
-| 7.4 Vertragsdokumente und Sprachvarianten | 372.1 | Standardisierte Schreiben für Antrag, Anpassung, Suspendierung und Vertragsende |
-| 8.5 Automatische und manuelle Aktivierungsvarianten | 423.3, 496.5 | Inhalt der Aktivierungs- und Bestätigungs-E-Mail |
-| 9.8 Contract Review: Profile und Übersicht | 1216.2, 1216.3, 768.6, 768.2 | Profilanlage, Übersichtsseite und Regular Review |
-| 12.5 Dealer-Zuordnung und Weiterbearbeitung | 1184.5, 959.8 | Anfragen zu Laufzeit und Laufleistung sowie beantwortete Konditionen |
-| 12.9 Massenanlage und Validierung von Fahrzeuglisten | 935.7 | Group ID bei Massenverträgen |
-| 14.2 Marktspezifische Einstellungen | 1103.4 | Umbenennung in „Proposal Validity (Days)“ in der Markt-Konfiguration |
-| 14.4 Vorlagenverwaltung und Template Management | 408.3, 424.2, 470.1, 491.2, 492.1 | Anlage von E-Mail-Vorlagen für Verlängerung, Übertragung, Reaktivierung und Kündigung |
-| 14.8 Produktdefinition, Anlage und Veröffentlichung | 899.6, 971.1, 1195.1, 1213.2, 1239.1, 1239.4, 876.1 | Produktkonfiguration für Verlängerung, Anzahl Services, vertragsbezogene Produkte und Fahrzeugvoraussetzungen |
-| 14.9 Preisversionen, Cluster und Faktorgrenzen | 1257.3, 1224.6, 1246.1 | Dependency Definition des Industry Price Factors, Schritt 4 der Preismatrix und Bereiche der Preismatrix |
-| 16.1 Datenschutz und sichere Beispieldaten | 993.1, 759.1 | Automatische Bereinigung nicht aktivierter Verträge und Löschkonzept |
-| 16.4 Testnachweise und produktiver Funktionsstand | 1285.1, 779.3 | Testabdeckung und Architekturvorhaben |
-| 19.9 VEGA – Vertrag, Coverage und Claim | 156.5, 855.1, 1080.2, 1026.1, 789.1 | Schadencodes, Datenmodell, i155-Erzeugung, Fehlerbehandlung und Umstellung der Vertragstypen |
-| 19.18 Weitere Systeme und Dienste | 321.6 | ISP Data Product und Divisions-Zuordnung |
-| 19.19 Datenplattformen und Reporting | 307.2, 837.1 | Feld expiry_criterion und Übergabe an OpenSearch |
-| 19.21 Technische Integrationswege | 270.2, 270.3, 1230.2, 1095.4, 1194.2, 755.1, 1213.2 | Vertragsereignisse, JSON-Daten, Anfrageparameter, MBLD-Parameter und Service API |
-| 20.3 Lokale Produkte, Preise und Kampagnen | 1085.1 | Steuersätze mit Nachkommastellen für Märkte wie die Schweiz |
+| 2.2 Fachliche Rollen und technische Berechtigungen | Batch 762.1 | Berechtigung des MPC im Markt SK für Batch-Jobs anderer Märkte |
+| 2.6 Sicherer Umgang mit Benutzerkonto und Sitzung | Batch 1102.5 | Nutzungsbedingungen als Pop-up beim ersten Login mit Scrollpflicht |
+| 3.1 Startseite und Menü | Batch 1106.4 | Link „Terms of Use“ im Footer neben „Privacy Policy“ |
+| 4.7 Partner- und Dealerbeziehungen | Batch 594.1 | Automatische Aktualisierung der Händlerdaten bei Eigentümerwechsel |
+| 5.3 Fahrzeugdaten, Pflichtfelder und Validierungsregeln | Batch 1000.1, 17.3, 1019.1, 1056.4, 1082.2, 979.1 | Ermittlung und Erfassung des Kilometerstands bei der Vertragserstellung |
+| 5.5 Laufzeit, Laufleistung und Optionen konfigurieren | Batch 1061.5, 1183.4 | Laufleistungsvalidierung im Vertragsvorschlag und Auswahl der Matrixwerte |
+| 6.2 Vertragsdaten und Pflichtfelder erfassen | Batch 876.1, 971.1 | Vertragsstart bei Garantieverlängerungen sowie Klassifizierung FRD und nicht FRD |
+| 7.4 Vertragsdokumente und Sprachvarianten | Batch 372.1 | Standardisierte Schreiben für Antrag, Anpassung, Suspendierung und Vertragsende |
+| 8.5 Automatische und manuelle Aktivierungsvarianten | Batch 423.3, 496.5 | Inhalt der Aktivierungs- und Bestätigungs-E-Mail |
+| 9.8 Contract Review: Profile und Übersicht | Batch 1216.2, 1216.3, 768.6, 768.2 | Profilanlage, Übersichtsseite und Regular Review |
+| 12.5 Dealer-Zuordnung und Weiterbearbeitung | Batch 1184.5, 959.8 | Anfragen zu Laufzeit und Laufleistung sowie beantwortete Konditionen |
+| 12.9 Massenanlage und Validierung von Fahrzeuglisten | Batch 935.7 | Group ID bei Massenverträgen |
+| 14.2 Marktspezifische Einstellungen | Batch 1103.4 | Umbenennung in „Proposal Validity Days“ in der Markt-Konfiguration |
+| 14.4 Vorlagenverwaltung und Template Management | Batch 408.3, 424.2, 470.1, 491.2, 492.1 | Anlage von E-Mail-Vorlagen für Verlängerung, Übertragung, Reaktivierung und Kündigung |
+| 14.8 Produktdefinition, Anlage und Veröffentlichung | Batch 899.6, 971.1, 1195.1, 1213.2, 1239.1, 1239.4, 876.1 | Produktkonfiguration für Verlängerung, Anzahl Services, vertragsbezogene Produkte und Fahrzeugvoraussetzungen |
+| 14.9 Preisversionen, Cluster und Faktorgrenzen | Batch 1257.3, 1224.6, 1246.1, 1133.2 | Dependency Definition des Industry Price Factors, Schritt 4 der Preismatrix und Bereiche der Preismatrix |
+| 16.1 Datenschutz und sichere Beispieldaten | Batch 993.1, 759.1 | Automatische Bereinigung nicht aktivierter Verträge und Löschkonzept |
+| 16.4 Testnachweise und produktiver Funktionsstand | Batch 1285.1, 779.3 | Testabdeckung und Architekturvorhaben |
+| 19.9 VEGA, Vertrag, Coverage und Claim | Batch 156.5, 855.1, 1080.2, 1026.1, 789.1 | Schadencodes, Datenmodell, i155-Erzeugung, Fehlerbehandlung und Umstellung der Vertragstypen |
+| 19.18 Weitere Systeme und Dienste | Batch 321.6 | ISP Data Product und Divisions-Zuordnung |
+| 19.19 Datenplattformen und Reporting | Batch 307.2, 837.1 | Feld expiry_criterion und Übergabe an OpenSearch |
+| 19.21 Technische Integrationswege | Batch 270.2, 270.3, 1230.2, 1095.4, 1194.2, 755.1, 1213.2 | Vertragsereignisse, JSON-Daten, Anfrageparameter, MBLD-Parameter und Service API |
+| 20.3 Lokale Produkte, Preise und Kampagnen | Batch 1085.1 | Steuersätze mit Nachkommastellen für Märkte wie die Schweiz |
 
 ## Klärungsbedarf
 
@@ -369,7 +369,7 @@ Quellen: Batch 2.1, 16.2, 17.3, 763.1, 763.3, 763.4, 763.5, 763.6, 768.2, 768.5,
 - Vertragsbeginn und Verkaufsdatum: Batch 837.1 setzt den Vertragsbeginn auf das Erstellungsdatum und das Verkaufsdatum auf die Unterschrift. Batch 971.1 setzt den Vertragsbeginn bei FRD-Produkten auf das FRD. Batch 1090.2 setzt das Verkaufsdatum auf das Erstellungsdatum und Batch 1195.1 auf das Kaufdatum.
 - Vertragsbeginn bei Garantieverlängerungen: Batch 876.1 setzt den Beginn auf FRD plus Warranty Duration plus 1 Tag. Die Auswirkungen auf Revenue, Reporting und Final Review sind laut Material zu bestätigen.
 - Real Mileage at Contract End: Batch 861.4 berechnet den Wert aus Jahreslaufleistung mal Laufzeit. Batch 825.5 lässt den Wert bei aktiven Verträgen leer und nutzt bei Ablauf die Prognose. Batch 833.3 nutzt den Wert aus MIC.
-- Contract Duration (Real): Batch 861.4 zeigt die tatsächliche Laufzeit gleich der geplanten Laufzeit. Batch 837.1 zeigt „-“ bei aktiven und ausgesetzten Verträgen. Batch 825.4 nennt das Format „12 Months/4 Months“.
+- Contract Duration Real: Batch 861.4 zeigt die tatsächliche Laufzeit gleich der vereinbarten Laufzeit. Batch 837.1 zeigt „-“ bei aktiven und ausgesetzten Verträgen. Batch 825.4 nennt das Format „12 Months/4 Months“.
 - Zahlungsintervall bei Verlängerungen: Batch 820.2 und 821.2 erlauben nur „Monatlich“. Batch 830.3 bietet „OneTime“ und „Monthly“ an. Batch 834.2 unterstützt Einmalzahlung bei Kurzzeitverlängerungen. Batch 254.2 nennt, dass im Vertragsmanagement vorerst nur die monatliche Zahlung auswählbar ist. Batch 793.1 schließt Einmalzahlung im deutschen Markt aus.
 - Zahlungsintervall ändern: Batch 849.1 erlaubt Market Operations und MPC die Umstellung von „Monthly“ auf „One Time“. Batch 838.3 schließt MPC davon aus.
 - Rolle MPC bei Aussetzung und Beendigung: Die Batches 802.1, 787.2 und 780.1 nennen MO und MPC. Batch 830.2 und 856.1 nennen Market Operations. Batch 838.3 schließt MPC aus.
@@ -386,7 +386,7 @@ Quellen: Batch 2.1, 16.2, 17.3, 763.1, 763.3, 763.4, 763.5, 763.6, 768.2, 768.5,
 - Process Indicator in RC05, Position 62: Batch 1080.2 setzt immer den Wert 1. Batch 823.2 und 825.2 setzen 2 bei einer Stornierung innerhalb von 14 Tagen.
 - Vega-Code bei regulärem Ablauf: Batch 856.2 nennt den Status 101. Batch 833.1 nennt 003 für den Ablauf nach Datum, Batch 810.1 nennt 003 für den Ablauf nach Laufleistung.
 - Rückdatierung der vorzeitigen Beendigung: Batch 833.2 erlaubt nur den heutigen Tag. Batch 843.2 untersagt die Rückdatierung. Die Batches 831.1 und 835.2 erlauben für Deutschland bis zu drei Monate. Die Batches 792.1, 788.5 und 786.5 erlauben bis zu 90 Tage zurück mit unterschiedlichen Untergrenzen. Batch 831.1 erlaubt zusätzlich Daten in der Zukunft.
-- Statusbezeichnung nach vorzeitiger Beendigung: „Early Terminated“ (Batch 792.1), „Terminated“ (Batch 855.4), „Close Terminated“ (Batch 850.2).
+- Statusbezeichnung nach vorzeitiger Beendigung: „Early Terminated“ Batch 792.1, „Terminated“ Batch 855.4, „Close Terminated“ Batch 850.2.
 - Gründe für die vorzeitige Beendigung: Batch 855.4 enthält „Transfer“, Batch 843.2 entfernt „Transfer“. Batch 824.4 nennt „Customer Request“ und „Other“.
 - Vertragsprüfung nach vorzeitiger Beendigung: Batch 792.1 verlangt eine manuelle Vertragsprüfung. Batch 812.1 führt keine Vertragsprüfung mehr durch. Batch 819.3 bietet bei Minderlaufleistung „Request review“ an. Batch 806.4 nennt keine Prüfung bei Wunsch des Kunden.
 - Kontingentprodukte und Ablauf: Batch 800.2 und 976.9 nennen den Ablauf bei Verbrauch aller Leistungen. Batch 856.2 und 855.4 nennen Kontingentabläufe als nicht im MVP. Batch 806.4 löst die Prüfung bei Kontingent nicht aus.
@@ -419,9 +419,9 @@ Quellen: Batch 2.1, 16.2, 17.3, 763.1, 763.3, 763.4, 763.5, 763.6, 768.2, 768.5,
 
 - Batch 756.1: Das Vorhaben „Änderung der Bezahlmethode abbrechen“ ist eingestellt. Ein Abbruch durch Market Operations ist nicht möglich. Die Meldung zur Pufferzeit der Widerrufsfrist ist geschlossen. Weitere Meldungen sind ohne Umsetzung geschlossen oder abgebrochen.
 - Batch 790.1: Die Sperre gegen parallele Aktionen, die Korrektur doppelter Protokolleinträge bei der Aktivierung, der Zugriffsfehler bei getContractsV2 und die Analyse zu fehlenden Auftragsnummern bei Van-Verträgen sind eingestellt.
-- Batch 766.2: Die Integration von MIC und „Get Mileage“ in die Vertragsverwaltung (nur PROD) ist abgebrochen. Die Themen Van-Reifen und Verlängerung für Management-Verträge sind ohne Inhalt.
-- Batch 818.4: Die geplante Anpassung der Kilometerstandsermittlung bei vorzeitiger Beendigung, Eigentumsübertragung und Vertragsprüfung ist abgebrochen.
-- Batch 901.2: Das Thema „Get Real Vehicle Mileage (MIC Part 1)“ ist abgebrochen, ohne Inhalt.
+- Batch 766.2: Die Integration von MIC und „Get Mileage“ in die Vertragsverwaltung nur in PROD ist abgebrochen. Die Themen Van-Reifen und Verlängerung für Management-Verträge sind ohne Inhalt.
+- Batch 818.4: Die vorgesehene Anpassung der Kilometerstandsermittlung bei vorzeitiger Beendigung, Eigentumsübertragung und Vertragsprüfung ist abgebrochen.
+- Batch 901.2: Das Thema „Get Real Vehicle Mileage MIC Part 1“ ist abgebrochen, ohne Inhalt.
 - Batch 1166.2: Der Umschalter in der Preismatrix für Preis pro Kilometer ist abgebrochen, ohne Informationen.
 - Batch 1285.1: Der Eintrag zur Anbindung „Customer and Operations Communication“ in den Markteinstellungen ist abgebrochen. Die Vorhaben zu CrowdIn und zur automatisierten Qualitätssicherung sind ohne vollständige Beschreibung.
 - Batch 141.4: Der Fehlerhinweis, dass DD, SCOM und SDAS nach einer vorzeitigen Beendigung innerhalb der Kulanzfrist nicht storniert werden, ist abgebrochen.
@@ -436,13 +436,13 @@ Quellen: Batch 2.1, 16.2, 17.3, 763.1, 763.3, 763.4, 763.5, 763.6, 768.2, 768.5,
 - Batch 754.3: Die Eingabe der Laufleistung im Dialog vor den Pflichtfeldern ist als Vorhaben beschrieben.
 - Batch 779.3: Die Erweiterung der Tests für Sperrung und Reaktivierung für Commercial Customer ist offen.
 - Batch 793.1: Die Anpassung der Health-Check-Funktion für mehrere Instanzen ist als Vorhaben beschrieben.
-- Batch 15.1: Die Produktsuche beim Anlegen eines Vertrags ist als behobene Meldung geschlossen. Das Verhalten steht in Kapitel 5.
+- Batch 15.1: Die Produktsuche beim Anlegen eines Vertrags ist als Meldung mit geschlossenem Vorgang. Das Verhalten steht in Kapitel 5.
 - Batch 751.2: Die Vorhaben zu „Limited / Unlimited Tire“, zu Produkten mit zwei Basispreistabellen und zu komplexen Optionen sind offen ohne Inhalt.
 - Batch 185.4: Die Szenarien für Vertragsanpassungen sind überwiegend offen. Das Grundszenario für gewerbliche Verträge ohne Kilometerabweichung befindet sich in Prüfung.
 - Batch 19.3: Die Angabe „Mileage Indicator“ ist ohne Funktionsbeschreibung.
 - Batch 1102.6: Die Ausprägung der Dokumentdruck-Option für die Vertragsübertragung ist im Material nicht beschrieben.
 
-**Sammelmeldungen ohne eigenständigen Handbuchinhalt.** Die folgenden Release-Zusammenfassungen enthalten keine beschreibbaren Funktionen: Batch 757.4, 769.1, 754.1, 823.1, 818.2 und 818.3. Batch 818.3 nennt offene Prüfpunkte zur Historientabelle. Batch 839.2 nennt behobene Fehler ohne Sollverhalten.
+**Sammelmeldungen ohne eigenständigen Handbuchinhalt.** Die folgenden Release-Zusammenfassungen enthalten keine beschreibbaren Funktionen: Batch 757.4, 769.1, 754.1, 823.1, 818.2 und 818.3. Batch 818.3 nennt offene Prüfpunkte zur Historientabelle. Batch 839.2 nennt Fehlerkorrekturen ohne Sollverhalten.
 
 ## Vorschläge zur Gliederung
 
@@ -454,4 +454,4 @@ Quellen: Batch 2.1, 16.2, 17.3, 763.1, 763.3, 763.4, 763.5, 763.6, 768.2, 768.5,
 - Neues Unterkapitel „10.11 Vertragsstatus und zulässige Aktionen“, da die Ermittlung der verfügbaren Aktionen und die Statusbezeichnungen über mehrere Unterkapitel verteilt sind.
 - Neues Unterkapitel „10.12 Folgevertrag nach Ablauf“, da das Material dazu keine Quellen enthält.
 - Die Kilometerstandsabfrage bei der Vertragserstellung sollte in Kapitel 5.3 beschrieben und aus 10.9 verwiesen werden. Unterkapitel 10.9 sollte sich auf Historie, Synchronisation, Hochrechnung und Prüfung beschränken.
-- Die Übersicht der Vertragsprüfung (Regular Review, Operative Review Page, Profile) sollte vollständig in Kapitel 9.8 stehen. Unterkapitel 10.7 behält die Endabrechnung.
+- Die Übersicht der Vertragsprüfung Regular Review, Operative Review Page und Profile sollte vollständig in Kapitel 9.8 stehen. Unterkapitel 10.7 behält die Endabrechnung.

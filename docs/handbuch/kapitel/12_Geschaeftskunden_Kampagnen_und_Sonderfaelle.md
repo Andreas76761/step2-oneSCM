@@ -8,7 +8,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 
 **Voraussetzungen.** Sie sind mit einer Rolle angemeldet, die Serviceverträge anlegt. Sie wählen den Kundentyp „Gewerblich“. Für den Kunden liegt eine USt-IdNr. oder eine Steuernummer vor. Mindestens eine dieser Angaben ist für den Vertrag erforderlich.
 
-**Rollen.** Verträge für Geschäftskunden legen Händler, Dealer+, Market Operations (MO) und der MPC an. Key Account Manager (KAM) sind eine eigene Rolle für die Betreuung von Geschäftskunden. Ansprechpartner des Kunden erhalten die Rolle „Signee“, die Rolle „Payment Responsible“ oder beide Rollen. Die Rolle „Payment Responsible“ betrifft digitale Zahlungen und Zahlungsartänderungen im Customer Account Center.
+**Rollen.** Verträge für Geschäftskunden legen Händler, Dealer+, die Rolle MO und der MPC an. Die Rolle MO steht für Market Operations, die Rolle KAM für Key Account Manager und die Betreuung von Geschäftskunden. Ansprechpartner des Kunden erhalten die Rolle „Signee“, die Rolle „Payment Responsible“ oder beide Rollen. Die Rolle „Payment Responsible“ betrifft digitale Zahlungen und Zahlungsartänderungen im Customer Account Center.
 
 **Schritt für Schritt: Geschäftskundenvertrag anlegen.**
 
@@ -127,14 +127,14 @@ Quellen: Batch 908.6, 1163.1, 1185.2, 959.1, 1193.2, 1161.2
 10. Erfassen Sie die „External Campaign ID“. Sie darf keine Leerzeichen enthalten und umfasst bis zu zehn Zeichen. Eine ID darf für dieselbe Fahrzeuggruppe zur selben Zeit nur einer Kampagne zugeordnet sein.
 11. Aktivieren Sie bei Bedarf „Automatisch anwenden“. Ist das Kontrollkästchen aktiv, wendet das System die Kampagne automatisch in der Vertragserstellung an.
 12. Wählen Sie im Schritt „Discounted Products & Vehicles“ das Produkt und die Cluster aus. Bei einer Sticker-Price-Kampagne pflegen Sie Nettopreise je Laufzeit und Laufleistung in der Preismatrix. Die Eingabe erfolgt manuell, per Copy and Paste oder per Excel-Upload, wahlweise auf Basis des Monatspreises oder des Gesamtpreises. Ein Gesamtrabatt wendet einen Prozentsatz mit optionalem Maximalbetrag auf alle leeren Felder eines Clusters an. Sie können einzelne Baumuster oder Modellcodes eines Clusters auswählen. Die Kampagne gilt dann nur für diese Codes.
-13. Klicken Sie auf „Next“, sobald alle Pflichtfelder des Schrittes gültig ausgefüllt sind. Mit „Back“ kehren Sie zu einem bereits abgeschlossenen Schritt zurück. Ändern Sie nach einem Rücksprung ein Feld, das Preis oder Konfiguration beeinflusst, setzt das System nachfolgende Auswahlen zurück.
+13. Klicken Sie auf „Next“, sobald alle Pflichtfelder des Schrittes gültig ausgefüllt sind. Mit „Back“ kehren Sie zu einem bereits bearbeiteten Schritt zurück. Ändern Sie nach einem Rücksprung ein Feld, das Preis oder Konfiguration beeinflusst, setzt das System nachfolgende Auswahlen zurück.
 14. Prüfen Sie im Schritt „Campaign Summary“ alle Angaben. Der Schritt zeigt die Einstellungen schreibgeschützt. Mit „Submit“ speichern Sie die Kampagne. Sie erscheint danach in der Kampagnenübersicht und durchläuft die Freigabe nach Abschnitt 12.6.
 
 **Schritt für Schritt: Kampagne im Vertragsangebot anwenden.**
 
 1. Starten Sie auf der Einstiegsseite der Vertragserstellung einen neuen Vertrag. Wählen Sie die Ablaufvariante „Available Chassis Number“, „Build to Stock“ oder „Not Available Chassis Number“ und füllen Sie die Pflichtfelder der Fahrzeugdaten aus.
 2. Das System ruft die Vertragskalkulation auf und zeigt die passenden Produkte. Die Produktkarte zeigt den Grundpreis durchgestrichen und den Preis inklusive Kampagne darunter.
-3. Wählen und konfigurieren Sie das Produkt. Ist die Konfiguration abgeschlossen, wird die Schaltfläche „Kampagnen“ aktiv.
+3. Wählen und konfigurieren Sie das Produkt. Ist die Konfiguration vollständig, wird die Schaltfläche „Kampagnen“ aktiv.
 4. Öffnen Sie die Schaltfläche „Kampagnen“ und wählen Sie eine Kampagne aus. Pro Produkt können Sie nur eine Kampagne auswählen. Mit „Apply“ übernehmen Sie die Kampagne, mit „Cancel“ verwerfen Sie die Auswahl.
 5. Vergeben Sie bei Bedarf einen Händlerrabatt. Der Link „Dealer Discount“ steht unter dem Zahlungsintervall. Im Dialog erfassen Sie einen Rabatt als Prozentwert oder als Betrag, mehrere Eingaben sind möglich. Name und Beschreibung der Kampagne sind schreibgeschützt.
 6. Prüfen Sie den Preis im Kopfbereich von „Overview and Confirmation“. Der Grundpreis steht durchgestrichen, darunter der reduzierte Preis. Der Tooltip nennt den Namen der Kampagne, die prozentuale Reduktion und den Betrag, den Händlerrabatt und die Gesamtsumme.
@@ -212,7 +212,7 @@ Quellen: Batch 1014.1, 1227.1, 1227.3, 1250.1, 1270.1, 901.1, 1187.1, 1205.1, 12
 
 **Zweck.** Der Händler stellt für einen Flottenkunden eine Sonderfallanfrage, wenn der Standardpreis oder die Standardkonfiguration nicht passt. Die Anfrage betrifft einen neuen Preis oder eine neue Laufleistung oder Laufzeit. Sie enthält eine verpflichtende Begründung. Der MPC prüft und entscheidet nach Abschnitt 12.6.
 
-**Voraussetzungen.** Der Kundentyp ist „Commercial Fleet“. Für Privat- und Gewerbekunden steht die Sonderfallanfrage nicht zur Verfügung. Die Produktkonfiguration ist abgeschlossen. Es gibt keine auswählbare Kampagne, die Sie nicht ausgewählt haben. Eine Grace-Period-Kampagne bildet hierbei eine Ausnahme. Ob ein Produkt für die Sonderfallanfrage freigegeben ist, beschreibt der Abschnitt Klärungsbedarf.
+**Voraussetzungen.** Der Kundentyp ist „Commercial Fleet“. Für Privat- und Gewerbekunden steht die Sonderfallanfrage nicht zur Verfügung. Die Produktkonfiguration ist vollständig. Es gibt keine auswählbare Kampagne, die Sie nicht ausgewählt haben. Eine Grace-Period-Kampagne bildet hierbei eine Ausnahme. Ob ein Produkt für die Sonderfallanfrage freigegeben ist, beschreibt der Abschnitt Klärungsbedarf.
 
 **Rollen.** Händler, KAM, MO und MPC stellen Sonderfallanfragen. Ein Händler sieht nur die Anfragen zu Outlet-IDs, die ihm zugeordnet sind.
 
@@ -342,7 +342,7 @@ Quellen: Batch 952.2, 955.1, 888.1, 1041.4
 
 1. Der Requester erstellt oder bearbeitet die Kampagne und reicht sie über „Submit for Review“ ein. Die Kampagne erhält den Status „In Review“.
 2. Der Reviewer erkennt die Kampagne an einem blauen Punkt neben dem Namen. Er öffnet die Bearbeitungsansicht über das Aktionsmenü.
-3. Der Reviewer klickt auf „Approve“. Damit ist das Verfahren abgeschlossen. Alternativ bearbeitet er die Kampagne. Dann wechselt die Schaltfläche auf „Submit for Review“, und er reicht die Kampagne erneut ein.
+3. Der Reviewer klickt auf „Approve“. Damit ist das Verfahren beendet. Alternativ bearbeitet er die Kampagne. Dann wechselt die Schaltfläche auf „Submit for Review“, und er reicht die Kampagne erneut ein.
 4. Ein Reviewer darf im jeweiligen Schritt nicht dieselbe Person wie der Requester sein. Die Rollen wechseln mit jeder Aktion.
 5. Die Aktion „Review Log“ zeigt die Statusänderungen mit Benutzerkennung und Zeitstempel.
 
@@ -433,7 +433,7 @@ Quellen: Batch 406.5, 1132.1, 890.1, 881.5
 
 ## 12.8 Customer Account Center
 
-**Zweck.** Das Customer Account Center (CAC) ist die kundenorientierte Website von oneSCM. Endkunden melden sich an, sehen ihre Verträge und Dokumente, laden Dokumente herunter, ändern Zahlungsdaten, bezahlen offene Beträge und lesen die rechtlichen Hinweise.
+**Zweck.** Das Customer Account Center, kurz CAC, ist die kundenorientierte Website von oneSCM. Endkunden melden sich an, sehen ihre Verträge und Dokumente, laden Dokumente herunter, ändern Zahlungsdaten, bezahlen offene Beträge und lesen die rechtlichen Hinweise.
 
 **Voraussetzungen.** Der Kunde hat einen Vertrag mit dem Status „Aktiv“, „Suspendiert“ oder „Abgelaufen“. Ein aktives Mercedes-me-Profil ist für den Zugang zur Vertragsseite nicht erforderlich. Für Zahlungen mit Mpay ohne Profil gilt die Einmalzahlung. Für die Vorauszahlung sind die MPay Digital Payments in den Markteinstellungen konfiguriert.
 
@@ -513,7 +513,7 @@ Quellen: Batch 616.3, 590.2, 526.3, 540.1, 587.1, 536.1, 577.2, 606.2, 535.1, 53
 5. Beachten Sie die Formatregeln. Eine Fahrgestellnummer umfasst 17 Stellen. Das Erstzulassungsdatum hat das Format TT.MM.JJJJ. Der Kilometerstand besteht aus Ziffern. Das Kennzeichen umfasst höchstens 11 alphanumerische Zeichen. Eine Auftragsnummer umfasst 10 Ziffern. Bei einer Fahrgestellnummer ohne Erstzulassungsdatum bleibt das Datum leer und der Kilometerstand steht auf „0“.
 6. Bestätigen Sie die Liste mit dem Häkchen. Das System setzt den Kennungstyp automatisch auf „Chassis Number“ oder „Order Number“. Fehlerhafte Zeilen sortiert das System nach oben.
 7. Das System prüft die Liste gegen die Fahrzeugdaten. Stimmt das Erstzulassungsdatum nicht, erscheint „FRD incorrect for vehicle“. Liegt die Laufleistung unter dem letzten Servicestand, erscheint „Minimum value is XX.XXX. Correct the mileage“. Passt das Produkt nicht, erscheint „Product not found for vehicle“.
-8. Korrigieren oder löschen Sie fehlerhafte Zeilen. „Delete All Rows having errors“ entfernt alle Zeilen mit Fehlermarker. Nach einer Korrektur ist „Update“ aktiv. Die Bestätigung bleibt deaktiviert, bis alle Fehler behoben sind.
+8. Korrigieren oder löschen Sie fehlerhafte Zeilen. „Delete All Rows having errors“ entfernt alle Zeilen mit Fehlermarker. Nach einer Korrektur ist „Update“ aktiv. Die Bestätigung bleibt deaktiviert, bis keine Fehler mehr vorliegen.
 9. Die Validierung kann einige Sekunden oder Minuten dauern. Das System zeigt einen Hinweis an. Sie dürfen die Seite verlassen. Sobald alle Fahrzeuge validiert sind, erhalten Sie eine Benachrichtigung. Der Floater zeigt den Fortschritt als Anzahl validierter Fahrzeuge zur Gesamtzahl. Er ist orange, bis alle Fahrzeuge validiert sind, und wechselt danach auf grün.
 10. Bestätigen Sie die gültige Liste mit „Confirm“. Die Schaltfläche ist aktiv, sobald 2 bis 100 Fahrzeuge gültig sind.
 11. Wählen Sie „Create Proposal“. Geben Sie Firmenname und USt-IdNr. oder Steuernummer ein. Das System prüft auf Dubletten. Ein bestehender Kunde übernimmt seine Daten automatisch. Andernfalls erfassen Sie die Kunden- und Zahlungsinformationen.
