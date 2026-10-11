@@ -172,7 +172,7 @@ Die Datei ist positionsbasiert aufgebaut. Die Satzarten RC01, RC05 und RC20 sind
 
 Der Wert in der Satzart RC05 an Position 260, das sogenannte Return Flag, richtet sich nach dem Ablaufkriterium des Produkts. Hat das Produkt das Ablaufkriterium TIME, steht bei jeder Aufnahme des Vertrags in eine i155 der Wert 1. Hat das Produkt das Ablaufkriterium Time & Mileage, Mileage oder Contingent, steht dort der Wert *. Die Regel gilt über den gesamten Lebenszyklus des Vertrags, also nach Generierung, Aktivierung, Suspendierung, Reaktivierung, vorzeitiger Beendigung und Verlängerung.
 
-**Branchenschlüssel.** Bei einem Vertragsangebot für einen Gewerbekunden wählen Sie die Branche (Industry Type) aus einer Auswahlliste. Die Auswahl gilt auf Vertragsebene und erscheint in der Oberfläche und in den Dokumenten an der Stelle des Platzhalters „Industry“. Bei der Aktivierung und Erzeugung der i155 übernimmt das System den Code der Branche in die Satzart RC05 an den Positionen 266 bis 269, linksbündig und mit einem nachfolgenden Leerzeichen. Die Liste umfasst die Codes 001 bis 049 sowie den Code 099 für „FleetSite - vehicle“. Ist als Branche „Not Relevant“ gewählt, steht an dieser Stelle der Wert ****.
+**Branchenschlüssel.** Bei einem Vertragsangebot für einen Gewerbekunden wählen Sie die Branche aus einer Auswahlliste, die im Feld Industry Type geführt wird. Die Auswahl gilt auf Vertragsebene und erscheint in der Oberfläche und in den Dokumenten an der Stelle des Platzhalters „Industry“. Bei der Aktivierung und Erzeugung der i155 übernimmt das System den Code der Branche in die Satzart RC05 an den Positionen 266 bis 269, linksbündig und mit einem nachfolgenden Leerzeichen. Die Liste umfasst die Codes 001 bis 049 sowie den Code 099 für „FleetSite - vehicle“. Ist als Branche „Not Relevant“ gewählt, steht an dieser Stelle der Wert ****.
 
 **Ausschluss von Deckungen.** Eine Deckung mit dem Kennzeichen „Not Needed for VEGA“ wird nicht in die i155 aufgenommen. Bei der Vertragsaktivierung erhält Revenue dennoch alle Deckungen, unabhängig von diesem Kennzeichen. Die i155 enthält also ausschließlich die für VEGA relevanten Deckungen, während Revenue den vollständigen Deckungsumfang erhält.
 
@@ -198,7 +198,7 @@ Den Offset und das Wirksamkeitsdatum der Leasing-Langzeitverlängerung beschreib
 1. Die Kostenverwaltung importiert die Schnittstelle i156 und prüft, ob ein Schaden oder eine Forderung als Kontingent zählt.
 2. Wird eine Forderung als kontingentfähig erkannt, erhält das Vertragsmanagement eine Benachrichtigung. Es zieht die von der Erlösverwaltung übermittelten Werte von der Anzahl der Kontingentleistungen im Vertrag ab und zeigt die verbleibenden Leistungen an.
 3. Die i155 enthält in der Satzart RC20 die ursprüngliche Anzahl der Leistungen an den Positionen 165 bis 169, die Anzahl der genutzten Leistungen an den Positionen 170 bis 174 und an Position 175 den Wert 1.
-4. Sind alle Leistungen erbracht, endet der Vertrag automatisch mit dem Status „Abgelaufen“ (VEGA-Code 003) und dem Grund „Kontingent“. Anschließend erzeugt das System eine i155.
+4. Sind alle Leistungen erbracht, endet der Vertrag automatisch mit dem Status „Abgelaufen“ und dem VEGA-Code 003 und dem Grund „Kontingent“. Anschließend erzeugt das System eine i155.
 5. Ohne offene Abgleichsprüfung und ohne Schlussrechnung setzt das System den Vertrag auf „Geschlossen“ (VEGA-Code 004) und übermittelt eine i155 mit dem neuen Status.
 
 Eine fehlende Zählung oder eine fehlende Übermittlung an VEGA kann finanzielle Folgen haben.

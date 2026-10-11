@@ -195,7 +195,7 @@ Quellen: Batch 594.4
 **Ergebnis und Systemstatus.** Bei „OK“ kann die Aktivierung fortgesetzt werden. Bei „Not OK“ ist die Aktivierung blockiert. Bei „Pending“ wartet das System auf die Zahlung.
 
 
-**Fehlerbehebung.** Schlägt die Zahlung fehl, kann MO den Vertrag jederzeit ablehnen.
+**Fehlerbehebung.** Schlägt die Zahlung fehl, kann MO den Vertrag ablehnen.
 
 Quellen: Batch 903.7
 
