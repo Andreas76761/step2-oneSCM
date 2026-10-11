@@ -1,0 +1,2534 @@
+[
+  {
+    "nr": 12,
+    "key": "12",
+    "kind": "Kapitel",
+    "chs": [
+      12
+    ],
+    "slug": "Geschaeftskunden_Kampagnen_und_Sonderfaelle",
+    "title": "Business Customers, Campaigns and Special Cases",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 12 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Enter business customer",
+      "Check campaign",
+      "Request special case",
+      "Assignment and validation",
+      "Comments",
+      "Customer Account Center"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You know the **additional requirements for business customers** and **fleets**, apply **campaigns and special conditions**, submit **special case requests** with a justification, understand **dealer assignment, validation and approval** as well as **comments** and the **Customer Account Center** (Chapter 12.1 to 12.8)."
+            ],
+            "h": 1.73,
+            "size": 9,
+            "shot": "Campaigns and dealer discount",
+            "shotH": 1.15,
+            "img": "img/badge_12.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "12.1 – 12.4 Business customers and special case",
+                    "bullets": [
+                      "Additional requirements for business customers",
+                      "Fleet and special customer constellations",
+                      "Campaigns and special conditions",
+                      "Special case request and justification"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "12.5 – 12.8 Processing",
+                    "bullets": [
+                      "Dealer assignment and further processing",
+                      "Validation, approval and rejection",
+                      "Internal and external comments",
+                      "Customer Account Center"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.76,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_12.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_12.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "For **business customers**, enter the company name and **VAT ID** and, if applicable, the industry (12.1); for **fleets**, check the customer constellation (12.2).",
+                  "Select **campaigns** or **special conditions** only if the eligibility described is met (12.3).",
+                  "For deviations from the standard, submit a **special case request** with a comprehensible **justification** (12.4)."
+                ]
+              }
+            ],
+            "h": 1.42,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~The customer group \"KAM-managed key accounts\" is to be used only for individual price requests~~, i.e. for KAM-managed customers or for FS 140+.",
+            "h": 0.52,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "The request is assigned to the responsible **Dealer** or processor (12.5) and **validated, approved or rejected** by MO or Market (12.6).",
+                  "Use **internal comments** for coordination and **external comments** for feedback to the customer (12.7).",
+                  "Manage customer accounts and special cases in the **Customer Account Center** (12.8)."
+                ]
+              }
+            ],
+            "h": 0.97,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer**: special case request, campaign selection, comments",
+                  "**MO/Market**: validation, approval or rejection",
+                  "**KAM**: managed key accounts and individual price requests"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Customer group \"Business customer\" or \"KAM-managed key accounts\" is selected correctly (Chapter 4.1)",
+                  "Campaign eligibility is given as described",
+                  "Justification for the special case is available"
+                ]
+              }
+            ],
+            "h": 2.47,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Customer group and additional details correct",
+                  "☐  Campaign eligibility checked",
+                  "☐  Special case justified and submitted",
+                  "☐  Comment visibility observed"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Special approvals always trigger an MO check (Chapters 6.5 and 9).",
+                  "External comments are visible to the customer; do not enter internal information.",
+                  "Campaigns are maintained by the Market (Chapter 14.13)."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "When do I need a special case request?",
+                "When conditions, customer constellation or product deviate from the standard (12.4)."
+              ],
+              [
+                "Who decides on the special case?",
+                "MO or Market after validation; you see the result in the application and in the comments (12.6)."
+              ],
+              [
+                "What is the Customer Account Center?",
+                "The area for managing customer accounts, relationships and special cases (12.8)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__Practical examples along the contract process__ – Appendix I.1.",
+                  "__FAQ and troubleshooting__ – Chapter 23 with questions per process phase and known errors per market and release.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.79,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 13,
+    "key": "13",
+    "kind": "Kapitel",
+    "chs": [
+      13
+    ],
+    "slug": "Reifenprodukte_Tyres",
+    "title": "Tyre Products – Tyres",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 13 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Scope",
+      "Tyre type and size",
+      "Term and scope",
+      "Price and campaign",
+      "Application and activation",
+      "Management and termination"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You position **tyre products** relative to the standard process, select **product, tyre type and tyre size**, configure **term, mileage and scope of services**, check **price, options and campaigns**, carry out **application, documents and activation** and manage the contract through to **termination** (Chapter 13.1 to 13.7)."
+            ],
+            "h": 1.89,
+            "size": 9,
+            "shot": "Select tyre product",
+            "shotH": 1.15,
+            "img": "img/badge_13.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "13.1 – 13.4 Product",
+                    "bullets": [
+                      "Positioning and distinction from the standard process",
+                      "Product, tyre type and tyre size",
+                      "Term, mileage and scope of services",
+                      "Price, options and campaigns"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "13.5 – 13.7 Contract",
+                    "bullets": [
+                      "Application, documents and activation",
+                      "Ongoing management and claiming services",
+                      "Renewal and termination"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.76,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_13.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_13.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Recognize the **distinction** (13.1): tyre products follow the standard process but have their own product and price parameters.",
+                  "Select the **tyre product** as well as **tyre type** and **tyre size** matching the vehicle (13.2).",
+                  "Configure **term, mileage and scope of services** (13.3) and check **price, options and campaigns** (13.4)."
+                ]
+              }
+            ],
+            "h": 1.42,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Tyre size and tyre type must match the vehicle equipment.~~ Deviations lead to rejection in the MO Check and prevent services from being claimed.",
+            "h": 0.52,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "Create the **application**, obtain the signature and upload the documents (13.5, as in Chapters 6 to 8).",
+                  "During the active contract, **services are claimed** via the workshop (13.6).",
+                  "Before the end of the term, check **renewal** or **termination** (13.7)."
+                ]
+              }
+            ],
+            "h": 0.82,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer**: offer, apply for and manage tyre contracts",
+                  "**Market**: maintain tyre products, sizes and prices",
+                  "**MO**: check and activation"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Vehicle data loaded (Chapter 5)",
+                  "Tyre type and tyre size of the vehicle known",
+                  "Tyre product is released in the market"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Tyre product available in the market",
+                  "☐  Tyre type and size correct",
+                  "☐  Term and mileage configured",
+                  "☐  Application activated, services can be claimed"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Technical options and coverage codes are maintained centrally (Chapter 15.7).",
+                  "Observe division differences Cars/Vans (Chapter 21).",
+                  "Campaigns for tyre products depend on market and time (Chapter 14.13)."
+                ]
+              }
+            ],
+            "h": 1.11,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Can I combine tyres and service in one contract?",
+                "This depends on the market's product offering (Chapters 13.1 and 14.8)."
+              ],
+              [
+                "Where does the tyre size come from?",
+                "From the vehicle data; check it against the actual equipment (13.2)."
+              ],
+              [
+                "How are services claimed?",
+                "Via the workshop with reference to contract and coverage (13.6 and 19.9)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__VEGA__ – Contract, coverage and claim (Chapter 19.9).",
+                  "__FAQ and troubleshooting__ – Chapter 23 with questions per process phase and known errors per market and release.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.79,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 14,
+    "key": "14",
+    "kind": "Kapitel",
+    "chs": [
+      14
+    ],
+    "slug": "Marktrolle_Produkt_und_Preispflege_sowie_Administration",
+    "title": "Market Role, Product and Price Maintenance and Administration",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 14 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Tasks and settings",
+      "Templates and administration",
+      "Create product",
+      "Maintain price versions",
+      "Change and cluster",
+      "Product Testing",
+      "Document approval"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You know the **tasks and scope of the Market role**, maintain **market-specific settings**, **templates**, **products, price versions, vehicle groups and campaigns**, use **Product Testing** and document **changes and approvals** (Chapter 14.1 to 14.14)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Administration area",
+            "shotH": 1.15,
+            "img": "img/badge_14.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "14.1 – 14.7 Market and administration",
+                    "bullets": [
+                      "Tasks and scope of the Market role",
+                      "Market-specific settings",
+                      "Country deviations from the Blueprint",
+                      "Template administration and template management",
+                      "Administration area and permitted actions",
+                      "Market-related visibility and authorizations",
+                      "Check, approve and document changes"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "14.8 – 14.14 Product, price, campaign",
+                    "bullets": [
+                      "Product definition, creation and publication",
+                      "Price versions, clusters and factor limits",
+                      "Product change, versioning and effect on existing contracts",
+                      "Vehicle groups and Van model series clustering",
+                      "Product Testing as a work area",
+                      "Campaign creation and discount maintenance",
+                      "Price components, Cost Unit Split and inflation"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 2.75,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_14.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Clarify **tasks and scope** relative to the HQ role (14.1) and maintain **market-specific settings** and **country deviations** (14.2 and 14.3).",
+                  "Manage **templates** (14.4) and use only the **permitted actions** in the administration area (14.5); check **visibility and authorizations** (14.6).",
+                  "**Define** products, create them and **publish** them (14.8).",
+                  "Maintain **price versions, clusters and factor limits** as well as **price components, Cost Unit Split and inflation** (14.9 and 14.14)."
+                ]
+              }
+            ],
+            "h": 1.62,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Published price versions take effect immediately on new quotes.~~ Check factor limits and the effect on existing contracts in Product Testing before you publish.",
+            "h": 0.52,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 5,
+                "steps": [
+                  "For **product changes**, observe **versioning** and the **effect on existing contracts** (14.10); cluster **vehicle groups** and **Van model series** (14.11).",
+                  "Test changes in **Product Testing** (14.12) before you create **campaigns and discounts** (14.13).",
+                  "**Check, approve and document** every change (14.7)."
+                ]
+              }
+            ],
+            "h": 0.97,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Market**: product, price and campaign maintenance, administration",
+                  "**HQ**: Blueprint and approvals (Chapter 15)",
+                  "**MO/Dealer**: feedback from checks and sales"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Market role with administration rights (Chapter 2)",
+                  "Blueprint and country deviations known (Chapters 15 and 20)",
+                  "Market's approval process clarified (Chapter 16.3)"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Change checked in Product Testing",
+                  "☐  Price version, cluster and factor limits plausible",
+                  "☐  Effect on existing contracts assessed",
+                  "☐  Approval documented"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Country deviations must be documented in the register (Chapter 20.6); otherwise the Blueprint applies.",
+                  "Depending on versioning, product changes affect only new contracts or existing contracts as well (14.10).",
+                  "Transition modules T14-15 and T15-14 describe the interaction with HQ."
+                ]
+              }
+            ],
+            "h": 1.44,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/landscape_14.png",
+            "h": 1.32
+          },
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "What may the Market change without HQ?",
+                "Market-specific settings, prices, campaigns and templates within the Blueprint; deviations require HQ approval (14.3 and 15.4)."
+              ],
+              [
+                "How do I test a new product?",
+                "In Product Testing with test data from Appendix I.3, before it is published (14.12)."
+              ],
+              [
+                "What is a Cost Unit Split?",
+                "The split of the price into cost components, e.g. for inflation adjustments (14.14)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.68,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Transition module T14-15__ – Connecting market maintenance and central requirements.",
+                  "__Test data catalog__ – Appendix I.3.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 15,
+    "key": "15",
+    "kind": "Kapitel",
+    "chs": [
+      15
+    ],
+    "slug": "HQ_Rolle_Blueprint_und_zentrale_Stammdaten",
+    "title": "HQ Role, Blueprint and Central Master Data",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 15 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Define HQ role",
+      "Maintain Blueprint",
+      "Assess deviation",
+      "Governance and approval",
+      "Align with Market and MO",
+      "Maintain Technical Options"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You know the **tasks and scope of the HQ role**, maintain the **Blueprint** and **global standards**, handle **country deviations**, steer **governance and approvals**, work together with **Market and MO** and are responsible for **Technical Options, SA matching and coverage codes** (Chapter 15.1 to 15.7)."
+            ],
+            "h": 1.73,
+            "size": 9,
+            "shot": "Blueprint maintenance",
+            "shotH": 1.15,
+            "img": "img/badge_15.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "15.1 – 15.4 Blueprint and governance",
+                    "bullets": [
+                      "Tasks and scope of the HQ role",
+                      "Blueprint maintenance and global standards",
+                      "Handling country deviations",
+                      "Governance and approvals at HQ level"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "15.5 – 15.7 Collaboration and master data",
+                    "bullets": [
+                      "Collaboration with Market and MO",
+                      "Task description versus documented navigation",
+                      "Technical Options, SA matching and coverage codes"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.58,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_15.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_15.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Distinguish the **HQ role** from Market and MO (15.1).",
+                  "Maintain the **Blueprint** and the **global standards** as the binding basis for all markets (15.2).",
+                  "Assess **country deviations** and approve or reject them (15.3); record the result in the register (Chapter 20.6)."
+                ]
+              }
+            ],
+            "h": 1.27,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Changes to coverage codes and SA matching affect all markets and divisions.~~ They are published only after approval and with test evidence (Chapter 16.4).",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "Steer **governance and approvals** at HQ level (15.4) following the approval workflow from Chapter 16.3.",
+                  "Align with **Market and MO** (15.5); distinguish between **task description** and **documented navigation** in the system (15.6).",
+                  "Maintain **Technical Options, SA matching and coverage codes** centrally (15.7); they control product assignment and claiming of services."
+                ]
+              }
+            ],
+            "h": 1.12,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**HQ**: Blueprint, global standards, central master data",
+                  "**Market**: local configuration and feedback (Chapter 14)",
+                  "**MO**: check rules and quality feedback (Chapter 9)"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "HQ role with central maintenance rights",
+                  "Governance process and approval levels known (Chapter 16)",
+                  "Country deviation register accessible (Chapter 20.6)"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Blueprint change justified and approved",
+                  "☐  Country deviation assessed and in the register",
+                  "☐  Technical Options and coverage codes tested",
+                  "☐  Market and MO informed"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "The Blueprint is the reference for training and handbook; deviations are documented per country (Chapter 20).",
+                  "HQ approvals are traceable in the clarification register (Appendix F).",
+                  "Transition modules T15-14 and T15-16 connect HQ maintenance with Market and governance."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "What is the Blueprint?",
+                "The global standard process with products, rules and master data from which markets may deviate only in a documented way (15.2)."
+              ],
+              [
+                "Who maintains coverage codes?",
+                "HQ centrally; markets use them in product definition and claiming of services (15.7)."
+              ],
+              [
+                "How do HQ and Market proceed in case of conflicts?",
+                "Via the clarification register and the governance approval (15.4 and 16.7)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Transition module T15-14__ – Handing over central foundations to market maintenance.",
+                  "__Transition module T15-16__ – From the maintenance decision to governance evidence.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 16,
+    "key": "16",
+    "kind": "Kapitel",
+    "chs": [
+      16
+    ],
+    "slug": "Governance_Qualitaet_Datenschutz_und_Archivierung",
+    "title": "Governance, Quality, Data Protection and Archiving",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 16 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Safe sample data",
+      "Data ownership",
+      "Approval workflow",
+      "Test evidence",
+      "Management vs. archive",
+      "Sources and register",
+      "Dealer governance"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You observe **data protection** and safe sample data, ensure **data quality and data ownership**, use the **approval workflow**, document **test evidence**, distinguish **document management and archiving**, maintain **sources, tickets and versions** as well as the **clarification register** (Chapter 16.1 to 16.8)."
+            ],
+            "h": 1.73,
+            "size": 9,
+            "shot": "Document management",
+            "shotH": 1.15,
+            "img": "img/badge_16.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "16.1 – 16.4 Data protection and quality",
+                    "bullets": [
+                      "Data protection and safe sample data",
+                      "Data quality and data ownership",
+                      "Functional review and approval workflow",
+                      "Test evidence and productive functional baseline"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "16.5 – 16.8 Evidence",
+                    "bullets": [
+                      "Distinguishing document management and archiving",
+                      "Sources, ticket references and version control",
+                      "Contradictions, gaps and clarification register",
+                      "Dealer governance and reporting evidence"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 2.06,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_16.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_16.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Use only **safe sample data** in training, tickets and screenshots; no real customer or bank details (16.1).",
+                  "Observe **data ownership** (16.2): the leading system (e.g. oneERP for customers) is authoritative; corrections are made there.",
+                  "Go through the **approval workflow** (16.3): functional review, approval, documentation.",
+                  "Store **test evidence** and record the **productive functional baseline** (16.4)."
+                ]
+              }
+            ],
+            "h": 1.77,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Personal data never belongs in comments, tickets or screenshots.~~ Use the test data catalog (Appendix I.3) and anonymize examples.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 5,
+                "steps": [
+                  "Distinguish **document management** (ongoing process) from **archiving** (legally secure filing) (16.5).",
+                  "Maintain **sources, ticket references and versions** (16.6) and enter **contradictions and gaps** in the **clarification register** (16.7).",
+                  "Ensure **dealer governance** and **reporting evidence** (16.8)."
+                ]
+              }
+            ],
+            "h": 0.97,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**All roles**: data protection and data quality",
+                  "**Market/HQ**: approval workflow, version control, governance",
+                  "**Dealer**: dealer governance and reporting evidence"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Knowledge of the group's data protection rules",
+                  "Access to clarification register and ticket references",
+                  "Market's approval levels known"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Examples anonymized",
+                  "☐  Leading system observed",
+                  "☐  Approval documented",
+                  "☐  Clarification register updated"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Archived documents are immutable; corrections create new versions.",
+                  "Every handbook statement has a source or ticket reference (Appendix F).",
+                  "The clarification register is required reading before releases (Chapter 22)."
+                ]
+              }
+            ],
+            "h": 1.11,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "May I send a screenshot with customer data to Support?",
+                "Only anonymized or with test data; real data must be redacted (16.1)."
+              ],
+              [
+                "What is the difference between document management and archiving?",
+                "Document management accompanies the process; archiving is the legally secure, immutable filing (16.5)."
+              ],
+              [
+                "Where do I report a contradiction in the handbook?",
+                "In the clarification register with chapter, source and ticket reference (16.7 and Appendix F)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.68,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Sources and clarification register__ – Appendix F.",
+                  "__Test data catalog and evidence__ – Appendix I.3.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 17,
+    "key": "17",
+    "kind": "Kapitel",
+    "chs": [
+      17
+    ],
+    "slug": "Rollout_und_Einfuehrung",
+    "title": "Rollout and Go-Live",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 17 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Target markets and scope",
+      "Prerequisites",
+      "Preparation and acceptance",
+      "Training and handover",
+      "Support"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You know the **target markets and go-live scope**, the **prerequisites for access, configuration and training**, the **market preparation with functional acceptance**, the **training and handover to operations** as well as the **support after go-live** (Chapter 17.1 to 17.5)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Rollout plan",
+            "shotH": 1.15,
+            "img": "img/badge_17.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "17.1 – 17.3 Preparation",
+                    "bullets": [
+                      "Target markets and go-live scope",
+                      "Prerequisites for access, configuration and training",
+                      "Market preparation and functional acceptance"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "17.4 – 17.5 Operations",
+                    "bullets": [
+                      "Training and handover to operations",
+                      "Support after go-live and open items"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.43,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_17.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_17.png",
+            "h": 1.05
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Clarify **target markets and go-live scope** (17.1): which divisions, products and roles go live when?",
+                  "Ensure the **prerequisites** (17.2): access, market configuration, training environment.",
+                  "Carry out the **market preparation** and document the **functional acceptance** with test evidence (17.3, Chapter 16.4)."
+                ]
+              }
+            ],
+            "h": 1.42,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Without documented functional acceptance there is no productive start in the market.~~ Acceptance, test evidence and training status are prerequisites for the handover to operations.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "Train the roles with the handbook, Quick Guides and knowledge checks (Appendix H) and hand over to **operations** (17.4).",
+                  "Support the go-live (**hypercare**) and track **open items** in the clarification register (17.5)."
+                ]
+              }
+            ],
+            "h": 0.76,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Project/HQ**: rollout planning and acceptance",
+                  "**Market**: market preparation, configuration, training",
+                  "**Dealer/MO**: participation in training and acceptance"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Rollout plan with target markets is available",
+                  "Authorizations for training and production system requested (Chapter 2)",
+                  "Market configuration completed according to Chapter 14"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Target markets and scope confirmed",
+                  "☐  Access and configuration ready",
+                  "☐  Acceptance documented",
+                  "☐  Training carried out, open items recorded"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Country-specific go-live and migration are covered in Chapters 20.5 and 18.",
+                  "Everyday checklists for getting started can be found in Appendix B.",
+                  "Release information on the functional baseline in Chapter 22.4."
+                ]
+              }
+            ],
+            "h": 1.11,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Who accepts the market?",
+                "The Market functionally, HQ for Blueprint conformity; both are documented (17.3)."
+              ],
+              [
+                "Which training materials are available?",
+                "Handbook, Quick Guides per chapter, knowledge checks (Appendix H) and training material in the RetailPortal."
+              ],
+              [
+                "How long does the support after go-live last?",
+                "According to the market's rollout plan; open items are tracked in the register until closed (17.5)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__oneSCM RetailPortal__ – System news and training material.",
+                  "__Knowledge checks and solutions__ – Appendix H.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 18,
+    "key": "18",
+    "kind": "Kapitel",
+    "chs": [
+      18
+    ],
+    "slug": "Migration_und_Uebernahme_von_Bestandsdaten",
+    "title": "Migration and Transfer of Existing Data",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 18 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Define scope",
+      "Source systems",
+      "Mapping and quality",
+      "Check transfer",
+      "Error cases",
+      "Cutover"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You know the **scope and boundaries of the migration**, the **source systems and data objects**, the **data mapping and quality check**, check **transferred customers and contracts**, handle **error cases** and understand **cutover and parallel operation** (Chapter 18.1 to 18.6)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Migration overview",
+            "shotH": 1.15,
+            "img": "img/badge_18.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "18.1 – 18.3 Preparation",
+                    "bullets": [
+                      "Scope and boundaries of the migration",
+                      "Source systems and data objects",
+                      "Data mapping and quality check"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "18.4 – 18.6 Execution",
+                    "bullets": [
+                      "Checking transferred customers and contracts",
+                      "Error cases, correction paths and evidence",
+                      "Cutover and parallel operation"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.43,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_18.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_18.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Clarify **scope and boundaries** (18.1): which contracts, customers and documents are transferred, which remain in the legacy system?",
+                  "Identify **source systems and data objects** (18.2), e.g. legacy systems from Chapter 19.20.",
+                  "Check **data mapping** and **quality** using the check rules (18.3)."
+                ]
+              }
+            ],
+            "h": 1.27,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~During parallel operation, migrated contracts may be changed only in the leading system.~~ Duplicate maintenance creates contradictions and blocks activation.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "Check **transferred customers and contracts** on a sample basis and according to the error list (18.4).",
+                  "Handle **error cases** via the defined **correction paths** and secure **evidence** (18.5).",
+                  "Observe **cutover and parallel operation** (18.6): from the cutover date, oneSCM is the leading system."
+                ]
+              }
+            ],
+            "h": 1.12,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Project/HQ**: migration scope, cutover",
+                  "**Market**: data mapping and quality check",
+                  "**Dealer/MO**: checking transferred customers and contracts"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Migration plan and source systems are known",
+                  "Access to check and error lists",
+                  "Correction paths and contact persons are defined"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Migration scope confirmed",
+                  "☐  Mapping and quality checked",
+                  "☐  Samples checked",
+                  "☐  Error cases corrected with evidence"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Migrated contracts are marked as migrated in the history (Chapter 10.8).",
+                  "Data ownership according to Chapter 16.2 also applies to legacy data.",
+                  "Country-specific migration in Chapter 20.5."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Are all legacy contracts migrated?",
+                "Only those defined in the migration scope; the rest run out in the legacy system (18.1)."
+              ],
+              [
+                "What do I do with an incorrectly migrated contract?",
+                "Report the error case via the correction path; do not rebuild it manually (18.5)."
+              ],
+              [
+                "When does parallel operation end?",
+                "On the cutover date defined in the cutover plan (18.6)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Legacy systems and transition architecture__ – Chapter 19.20.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__FAQ and troubleshooting__ – Chapter 23 with questions per process phase and known errors per market and release.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.79,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 19,
+    "key": "19",
+    "kind": "Kapitel",
+    "chs": [
+      19
+    ],
+    "slug": "IT_Architektur",
+    "title": "IT Architecture",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 19 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "System map",
+      "Assign data sources",
+      "Integration paths",
+      "Error handling",
+      "Architecture register",
+      "Profiles"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You know the **system map** and the connected systems for **order, vehicle, contract, finance, payment and authorization data**, the **integration paths**, the **interface operation with error handling** as well as the **individual system profiles** (Chapter 19.1 to 19.31)."
+            ],
+            "h": 1.73,
+            "size": 9,
+            "shot": "System map",
+            "shotH": 1.15,
+            "img": "img/badge_19.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "Order and vehicle (19.2 – 19.10)",
+                    "bullets": [
+                      "GO – Cars order information",
+                      "AFAB – Vans order information",
+                      "CEPRO – Vans vehicle master data",
+                      "OTR – Order and vehicle reference",
+                      "DSB – Mileage reading",
+                      "Warranty-and-Goodwill-API, MIC",
+                      "VEGA – Contract, coverage, claim",
+                      "BS4 or SDB4"
+                    ]
+                  },
+                  {
+                    "head": "Finance, payment, authorization (19.11 – 19.17)",
+                    "bullets": [
+                      "oneERP – Customer and finance integration",
+                      "CoFiCo and SWT – FI connection",
+                      "NEMESIS – Accounting",
+                      "MPay – Payment",
+                      "ALICE – Authorizations",
+                      "DATIX – Manual handover"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "Operation and profiles (19.18 – 19.31)",
+                    "bullets": [
+                      "Other systems, data platforms, legacy",
+                      "Integration paths and interface operation",
+                      "Architecture register",
+                      "Profiles: VeDoc, VERSO/VOM, oneDoC, Xentry, MBFS Bundling, POS channels, insurers, suppliers"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 3.64,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_19.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Start with the **architecture overview and system map** (19.1).",
+                  [
+                    "Assign the data sources per process step:",
+                    "Vehicle and order: GO, AFAB, CEPRO, OTR, MIC, DSB (19.2 to 19.8)",
+                    "Contract and services: VEGA, BS4/SDB4, Warranty-and-Goodwill-API (19.7, 19.9, 19.10)",
+                    "Customer and finance: oneERP, CoFiCo, SWT, NEMESIS, MPay (19.11 to 19.15)",
+                    "Access: ALICE (19.16); manual handover: DATIX (19.17)"
+                  ],
+                  "Know the **technical integration paths** (19.21) and the **interface operation** with **error handling** (19.22)."
+                ]
+              }
+            ],
+            "h": 2.02,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Do not work around interface errors with manual duplicate maintenance.~~ Report the error with reference number and system to Support; DATIX is only the documented manual handover path.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "Use the **architecture register** for open evidence (19.23).",
+                  "Look up the **individual system profiles** as needed (19.24 to 19.31)."
+                ]
+              }
+            ],
+            "h": 0.46,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**HQ/IT**: architecture, interface operation",
+                  "**Market/MO**: error handling and evidence",
+                  "**Dealer**: understanding of data origin"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Basic understanding of the contract process (Chapter 3)",
+                  "Access to the architecture register (19.23)",
+                  "Support path for interface errors known (Chapter 23)"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  System map understood",
+                  "☐  Data source per process step known",
+                  "☐  Error path for interface failures known",
+                  "☐  Profile of the affected system read"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Cars and Vans use different order systems (GO or AFAB/CEPRO).",
+                  "Data platforms and reporting (19.19) are connected read-only.",
+                  "Legacy systems (19.20) run only until the cutover (Chapter 18.6)."
+                ]
+              }
+            ],
+            "h": 1.11,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/landscape_19.png",
+            "h": 1.32
+          },
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Where does the vehicle data in the application come from?",
+                "Depending on the entry point, from OTR, VERSO/VOM or MIC; Vans master data from CEPRO (19.4 to 19.8)."
+              ],
+              [
+                "What does VEGA do?",
+                "VEGA maintains contract, coverage and claim for claiming services (19.9)."
+              ],
+              [
+                "When is DATIX used?",
+                "Only for the documented manual handover when no automated path exists (19.17)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Architecture register and open evidence__ – Chapter 19.23.",
+                  "__Interface operation and error handling__ – Chapter 19.22.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 20,
+    "key": "20",
+    "kind": "Kapitel",
+    "chs": [
+      20
+    ],
+    "slug": "Laenderspezifische_Themen",
+    "title": "Country-Specific Topics",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 20 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Country profile",
+      "Local roles",
+      "Local products",
+      "Payment and signature",
+      "Go-live and migration",
+      "Deviation register"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You read the **country and market profile**, know **local roles and access variants**, **local products, prices and campaigns**, **payment, documents and signature per country**, the **country-specific go-live and migration** as well as the **country deviation register** (Chapter 20.1 to 20.6)."
+            ],
+            "h": 1.73,
+            "size": 9,
+            "shot": "Country profile",
+            "shotH": 1.15,
+            "img": "img/badge_20.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "20.1 – 20.3 Profile and products",
+                    "bullets": [
+                      "Country and market profile",
+                      "Local roles and access variants",
+                      "Local products, prices and campaigns"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "20.4 – 20.6 Processing and quality",
+                    "bullets": [
+                      "Payment, documents and signature per country",
+                      "Country-specific go-live and migration",
+                      "Country deviation register and quality"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_20.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_20.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Read the **country and market profile** of your country (20.1).",
+                  "Check **local roles and access variants** (20.2) against Chapter 2.",
+                  "Observe **local products, prices and campaigns** (20.3) and their maintenance by the Market (Chapter 14)."
+                ]
+              }
+            ],
+            "h": 1.12,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Undocumented country deviations are not permitted.~~ In case of doubt, the Blueprint applies; deviations are added to the register via Market and HQ.",
+            "h": 0.52,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "Apply the country-specific rules for **payment, documents and signature** (20.4), e.g. language variants and permitted signature types.",
+                  "Follow the **go-live and migration** of your country (20.5, Chapters 17 and 18).",
+                  "Check every deviation in the **country deviation register** (20.6); only documented deviations apply."
+                ]
+              }
+            ],
+            "h": 0.97,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Market**: maintain country profile and deviation register",
+                  "**HQ**: approve deviations (Chapter 15.3)",
+                  "**Dealer/MO**: apply local rules"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Own country and market are known (Chapter 2.4)",
+                  "Access to the country deviation register",
+                  "Knowledge of the Blueprint (Chapter 15.2)"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Country profile read",
+                  "☐  Local roles and access checked",
+                  "☐  Local product and payment rules known",
+                  "☐  Deviations checked in the register"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "For each deviation, the register contains reason, approval and validity.",
+                  "Signature types and document languages may differ per country (Chapters 7.4 to 7.6).",
+                  "Known errors with market reference are listed in Chapter 23.2."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Does my Quick Guide apply in every country?",
+                "The standard process does; country-specific deviations are in the country profile and register (20.1 and 20.6)."
+              ],
+              [
+                "Who enters deviations?",
+                "The Market requests, HQ approves (15.3 and 20.6)."
+              ],
+              [
+                "Which signature types exist in my country?",
+                "See Chapter 20.4 and the country profile."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.38,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Country deviation register__ – Chapter 20.6.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__FAQ and troubleshooting__ – Chapter 23 with questions per process phase and known errors per market and release.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.79,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 21,
+    "key": "21",
+    "kind": "Kapitel",
+    "chs": [
+      21
+    ],
+    "slug": "Spartenspezifische_Themen",
+    "title": "Division-Specific Topics",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 21 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Division profile",
+      "Identifiers per division",
+      "Products per division",
+      "Application and activation",
+      "Management and finance",
+      "Planning and tests"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You know the **division profile** and the **distinction Cars/Vans**, the **vehicle data and identifiers per division**, **products and price parameters per division**, **application, signature and activation per division**, **management and financial consequences** as well as **division planning, tests and approvals** (Chapter 21.1 to 21.6)."
+            ],
+            "h": 1.73,
+            "size": 9,
+            "shot": "Division context",
+            "shotH": 1.15,
+            "img": "img/badge_21.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "21.1 – 21.3 Profile and data",
+                    "bullets": [
+                      "Division profile and distinction Cars/Vans",
+                      "Vehicle data and identifiers per division",
+                      "Products and price parameters per division"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "21.4 – 21.6 Process and planning",
+                    "bullets": [
+                      "Application, signature and activation per division",
+                      "Management and financial consequences per division",
+                      "Division planning, tests and approvals"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.43,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_21.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_21.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Read the **division profile** and the **distinction Cars/Vans** (21.1).",
+                  [
+                    "Use the **identifiers per division** (21.2):",
+                    "Cars: order data from GO (Chapter 19.2)",
+                    "Vans: order data from AFAB, master data from CEPRO, model series clustering (Chapters 19.3, 19.4, 14.11)"
+                  ],
+                  "Select the division's **products and price parameters** (21.3)."
+                ]
+              }
+            ],
+            "h": 1.51,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Cars and Vans contracts use different order systems and identifiers.~~ A wrong division context leads to wrong products and prices; check the context before the quote.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "Carry out **application, signature and activation** according to the division rules (21.4).",
+                  "Observe **management and financial consequences** per division (21.5).",
+                  "**Division planning, tests and approvals** are the responsibility of Market and HQ (21.6)."
+                ]
+              }
+            ],
+            "h": 0.67,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer**: entry in the correct division",
+                  "**Market**: products and prices per division (Chapter 14.11)",
+                  "**HQ**: division planning and approvals"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Role for the respective division enabled (e.g. oneSCM.DealerVAN)",
+                  "Division context is set (Chapter 2.4)",
+                  "Vehicle identifiers of the division known"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Division context correct",
+                  "☐  Identifier of the division used",
+                  "☐  Product of the division selected",
+                  "☐  Division rules for signature and activation observed"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "The template for this Quick Guide is the Vans example \"Application creation and management\".",
+                  "Van model series are clustered into vehicle groups (Chapter 14.11).",
+                  "Cross-division special cases in Chapter 12."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Can I create Cars contracts with the Vans role?",
+                "No, this requires the Cars role and the matching context (Chapter 2.2)."
+              ],
+              [
+                "Why do the entry points differ?",
+                "Because Cars and Vans have different order and master data systems (21.2 and 19)."
+              ],
+              [
+                "Where are the division tests?",
+                "In Chapter 21.6 and in the test data catalog (Appendix I.3)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.38,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Division profile Cars/Vans__ – Chapter 21.1.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__FAQ and troubleshooting__ – Chapter 23 with questions per process phase and known errors per market and release.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.79,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 22,
+    "key": "22",
+    "kind": "Kapitel",
+    "chs": [
+      22
+    ],
+    "slug": "Ausblick_und_Weiterentwicklung",
+    "title": "Outlook and Further Development",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 22 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Check functional baseline",
+      "Know enhancements",
+      "Assess training",
+      "Follow releases"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You know the **confirmed functional baseline**, the **planned enhancements and open requirements**, the **impact on training and handbook** as well as the **release information and change overview** (Chapter 22.1 to 22.4)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Release overview",
+            "shotH": 1.15,
+            "img": "img/badge_22.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "22.1 – 22.2 Baseline and planning",
+                    "bullets": [
+                      "Confirmed functional baseline",
+                      "Planned enhancements and open requirements"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "22.3 – 22.4 Impact and release",
+                    "bullets": [
+                      "Impact on training and handbook",
+                      "Release information and change overview"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.25,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_22.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_22.png",
+            "h": 1.05
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Check the **confirmed functional baseline** (22.1): only documented and tested functions count as productive (Chapter 16.4).",
+                  "Read **planned enhancements and open requirements** (22.2); they are not part of the current process."
+                ]
+              }
+            ],
+            "h": 1.06,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Planned functions must not be trained or promised to customers~~ before they are confirmed as the productive functional baseline.",
+            "h": 0.52,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 3,
+                "steps": [
+                  "Assess the **impact on training and handbook** (22.3) and plan updates to the Quick Guides.",
+                  "Follow the **release information and change overview** (22.4) and align the version in the footer of the guides."
+                ]
+              }
+            ],
+            "h": 0.76,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**HQ/Project**: release planning and change overview",
+                  "**Market**: assessment of the impact on training",
+                  "**All roles**: knowledge of the valid functional baseline"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Current handbook version and release status known",
+                  "Access to release information",
+                  "Clarification register for open requirements (Appendix F)"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Functional baseline checked",
+                  "☐  Open requirements known",
+                  "☐  Training needs assessed",
+                  "☐  Release changes read"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Every change has a ticket reference (Chapter 16.6).",
+                  "Release-related known errors are listed in Chapter 23.2.",
+                  "The version of each Quick Guide is shown in the footer."
+                ]
+              }
+            ],
+            "h": 1.11,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "How do I know whether a function is productive?",
+                "From the confirmed functional baseline (22.1) and the test evidence (16.4)."
+              ],
+              [
+                "How often are the Quick Guides updated?",
+                "With every release that changes process steps (22.3 and 22.4)."
+              ],
+              [
+                "Where do I report a new requirement?",
+                "Via the clarification register and the Market to HQ (22.2 and 16.7)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Release information and change overview__ – Chapter 22.4.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__FAQ and troubleshooting__ – Chapter 23 with questions per process phase and known errors per market and release.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.79,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  }
+]

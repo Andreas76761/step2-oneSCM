@@ -1,0 +1,2278 @@
+[
+ {
+  "nr": "I.3",
+  "key": "I3",
+  "kind": "Anhang",
+  "chs": [
+   14,
+   16,
+   17
+  ],
+  "slug": "Testdatenkatalog_und_Nachweise",
+  "title": "Appendix I.3: Test Data Catalog and Evidence",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix I.3 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Select test data",
+   "Run test case",
+   "Document evidence",
+   "Use for images and tests",
+   "Report gaps"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **test data catalog** provides safe **sample customers, vehicles, products and payment data** for training, tests and screenshots and documents the **evidence** per test case. This guide shows how to **select** test data and file **evidence**."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_I3.png"
+     },
+     {
+      "type": "note",
+      "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Catalog",
+          "bullets": [
+           "Test customers: private, business, KAM",
+           "Test vehicles per division with VIN, model series, OTR deal ID",
+           "Test products, campaigns, bank details (test accounts)"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Evidence",
+          "bullets": [
+           "Test case, date, release, environment",
+           "Result and deviation",
+           "Reference to ticket and chapter (Appendix E)"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.58,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_I3.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_I3.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Select the customer, vehicle and product from the **catalog** to match the test case or practical example.",
+         "Run the test case in the **test or training system**; use only test accounts for bank details.",
+         "Document the **evidence**: test case, date, release, environment, result."
+        ]
+       }
+      ],
+      "h": 1.27,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Real customer, vehicle or bank data are not test data.~~ Test data come exclusively from the catalog; production data are not permitted in tests and images (Chapter 16.1).",
+      "h": 0.67,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Also use test data for **screenshots** (Appendix G) and **Product Testing** (Chapter 14.12).",
+         "Report unusable or missing test data to the editorial team (Appendix F)."
+        ]
+       }
+      ],
+      "h": 0.61,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Trainer/tester**: use test data",
+         "**Market**: Product Testing (Chapter 14.12)",
+         "**Editorial team**: maintain catalog and evidence"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Training or test system",
+         "Test case or practical example (Appendix I.1)",
+         "Data protection rules (Chapter 16.1)"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Test data selected from the catalog",
+         "☐  Test case run in the test system",
+         "☐  Evidence fully documented",
+         "☐  Missing test data reported"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "Test vehicles are available per division with matching identifiers (Chapter 21.2).",
+         "Evidence is a prerequisite for the productive functional baseline (Chapter 16.4).",
+         "The catalog is updated with each release (Chapter 22)."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "May I create a real vehicle in the training system?",
+        "No, only test vehicles from the catalog."
+       ],
+       [
+        "Where do I file the evidence?",
+        "In the evidence register of the catalog with reference to test case and release."
+       ],
+       [
+        "Are there test data for tyre contracts?",
+        "Yes, test products with tyre type and tyre size (Chapter 13)."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Test data catalog and evidence__ – Appendix I.3.",
+         "__Product Testing__ – Chapter 14.12.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Test data"
+ },
+ {
+  "nr": "T6-7",
+  "key": "T06-07",
+  "kind": "Übergangsmodul",
+  "chs": [
+   6,
+   7
+  ],
+  "slug": "Vom_gespeicherten_Antrag_zu_Zahlungsdaten_und_Signatur",
+  "title": "T6-7: From Saved Application to Payment Data and Signature",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes transition module T6-7 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Open application",
+   "Check completeness",
+   "Customer data and collective invoice",
+   "Enter payment data",
+   "Preview and check mark",
+   "Obtain signature"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "This module links **Chapter 6** (application saved, reference number available) with **Chapter 7** (payment data, documents, signature). You check what must be in place at the **transition** and avoid the typical breaks between application and signature."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_T06-07.png"
+     },
+     {
+      "type": "note",
+      "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Transition at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Starting point (Chapter 6)",
+          "bullets": [
+           "Application saved, status \"entered\"",
+           "Customer, vehicle, product assigned",
+           "Special approval identified or not required"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Target (Chapter 7)",
+          "bullets": [
+           "Payment method, interval, payer and invoice recipient entered",
+           "SEPA mandate and documents generated",
+           "Signature obtained, status checked"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.43,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_T06-07.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_T06-07.png",
+      "h": 1.65
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Open the saved application via the **reference number** (Chapter 8.1) and check the **application status**.",
+         "Make sure the application is **complete**: an application with open validation cannot proceed to signature.",
+         "Switch to the **customer data check** and activate the **collective invoice** if required (Chapters 6 and 7.2)."
+        ]
+       }
+      ],
+      "h": 1.42,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~After \"Create application\", product, term and mileage can no longer be changed.~~ Errors from Chapter 6 cannot be corrected in the transition; they require a new contract.",
+      "h": 0.67,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Enter **payment method, interval and bank details** (Chapters 7.1 to 7.3).",
+         "Generate the **application preview** and click the **check mark** to sign (Chapter 7.4).",
+         "Select the **signature type** and check the **signature status** (Chapters 7.5 to 7.8)."
+        ]
+       }
+      ],
+      "h": 0.97,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Dealer**: carry out the transition",
+         "**Customer**: provide payment data and sign",
+         "**MO**: reads signature status during review"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Application saved, reference number noted (Chapter 6.7)",
+         "No red validation messages",
+         "Customer e-mail and mobile number in customer master data"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Application status checked",
+         "☐  Validation without red messages",
+         "☐  Payment data entered",
+         "☐  Signature route selected and status checked"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The payment interval can later only be changed to \"one-time\".",
+         "With special approvals, activation waits for the MO Check; the signature can still be obtained.",
+         "Missing customer contact data block e-mail and SMS signature."
+        ]
+       }
+      ],
+      "h": 1.28,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Can I pause between saving and signature?",
+        "Yes, the application remains accessible under its reference number in Application Management."
+       ],
+       [
+        "What if the customer wants to change the payment method?",
+        "Change it before signature in Chapter 7.1; after signature, a new signature is required (Chapter 7.7)."
+       ],
+       [
+        "Does the payer have to sign?",
+        "The payer signs the SEPA mandate; the contract holder signs the contract (Chapter 7.2)."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Chapter 6__ – Create service contract and complete application.",
+         "__Chapter 7__ – Payment data, documents and signature.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Chapter 6 to 7"
+ },
+ {
+  "nr": "T7-8",
+  "key": "T07-08",
+  "kind": "Übergangsmodul",
+  "chs": [
+   7,
+   8
+  ],
+  "slug": "Von_Dokumenten_und_Signatur_zur_Aktivierungspruefung",
+  "title": "T7-8: From Documents and Signature to Activation Check",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes transition module T7-8 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Check signature status",
+   "Open Update",
+   "First registration and license plate",
+   "Upload ZB II",
+   "Check special approval",
+   "Track activation"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "This module links **Chapter 7** (signature and documents available) with **Chapter 8** (track and activate application). You make sure that all **activation prerequisites** are met before Customer Management reviews."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_T07-08.png"
+     },
+     {
+      "type": "note",
+      "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Transition at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Starting point (Chapter 7)",
+          "bullets": [
+           "Signature obtained digitally or manually",
+           "Documents filed in the system or uploaded",
+           "Payment data complete"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Target (Chapter 8)",
+          "bullets": [
+           "First registration and license plate added",
+           "ZB II uploaded",
+           "Application fully submitted, activation done"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.43,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_T07-08.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_T07-08.png",
+      "h": 1.65
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Check the **signature and document status** in **Application Management** (Chapters 7.8 and 8.1).",
+         "Open the \"**Update**\" action via \"**…**\" and add the **first registration date** and **license plate** (Chapter 8.3).",
+         "In the \"**Communication**\" tab, upload the copy of **ZB I/ZB II** and, for the print variant, the signed document."
+        ]
+       }
+      ],
+      "h": 1.42,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Without first registration, license plate and ZB II, no activation takes place~~, even if the application is signed. The upload is not a mandatory field in the system.",
+      "h": 0.67,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Make sure that no **open special approval** is blocking activation (Chapters 6.5 and 9).",
+         "Track the **application status** until activation and respond to queries from Customer Management (Chapters 8.6 and 8.7)."
+        ]
+       }
+      ],
+      "h": 0.76,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Dealer**: complete data and documents",
+         "**Customer Management/MO**: review and activation",
+         "**System**: automatic activation when complete"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Signature status \"signed\" (Chapter 7.8)",
+         "Contract document and SEPA mandate filed",
+         "First registration, license plate and ZB II available"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Signature and document status checked",
+         "☐  First registration and license plate added",
+         "☐  ZB II uploaded",
+         "☐  No open special approval"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "With e-signature and e-mail signature, the contract documents are filed automatically; with print, they must be uploaded.",
+         "Incorrect applications are rejected; the customer is informed.",
+         "The limit of 12 months or 50,000 km after first registration applies (Chapter 23.1)."
+        ]
+       }
+      ],
+      "h": 1.28,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "The customer has signed, but the application is not active. Why?",
+        "Usually first registration, license plate or ZB II is missing; see Chapter 8.3."
+       ],
+       [
+        "Can I submit the ZB II later?",
+        "Yes, at any time via Application Management › Reference number › Communication."
+       ],
+       [
+        "Who activates the contract?",
+        "The system if data are complete, otherwise Customer Management after review (Chapter 8.5)."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Chapter 7__ – Payment data, documents and signature.",
+         "__Chapter 8__ – Track and activate application.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Chapter 7 to 8"
+ },
+ {
+  "nr": "T8-9",
+  "key": "T08-09",
+  "kind": "Übergangsmodul",
+  "chs": [
+   8,
+   9
+  ],
+  "slug": "Gesamtprozess_und_MO_Rollenvertiefung",
+  "title": "T8-9: Overall Process and MO Role Deep Dive",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes transition module T8-9 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Place in overall process",
+   "MO reviews",
+   "Dealer reads status",
+   "Correction and re-review",
+   "Check activation"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "This module links the **dealer view** of the application (**Chapter 8**) with the **MO view** of the functional review (**Chapter 9**). You understand what the MO reviews, how feedback reaches the dealer and how both roles complete the **overall process** together."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_T08-09.png"
+     },
+     {
+      "type": "note",
+      "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Transition at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Dealer view (Chapter 8)",
+          "bullets": [
+           "Track application and read status",
+           "Add missing data and documents",
+           "Rejection and resubmission"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "MO view (Chapter 9)",
+          "bullets": [
+           "MO Check work list",
+           "Check criteria, check status, reasons",
+           "Approve, reject, hand over"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.28,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_T08-09.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_T08-09.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Place the application in the **overall process**: submitted → under review → approved/rejected → active (Appendix D).",
+         "As MO, open the application from the **work list** and check it against the **criteria** (Chapters 9.2 and 9.4).",
+         "As dealer, read the **check status** and the **reasons** in the communication (Chapters 8.2 and 9.3)."
+        ]
+       }
+      ],
+      "h": 1.42,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Dealer and MO communicate via the application, not via private channels.~~ Reasons and queries belong in the application's communication so they remain traceable.",
+      "h": 0.67,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "On **rejection**, the dealer corrects and resubmits; the MO reviews again (Chapters 8.7 and 9.5).",
+         "After **approval**, activation takes place; both roles check the result (Chapters 8.6 and 9.6)."
+        ]
+       }
+      ],
+      "h": 0.76,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Dealer**: submit complete application, answer queries",
+         "**MO**: review, approval, rejection",
+         "**Customer Management**: activation and customer information"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Application fully submitted (Chapter 8)",
+         "MO role and check criteria known (Chapter 9.1)",
+         "Communication channel between dealer and MO clarified"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Application status in overall process known",
+         "☐  Check criteria clear to both roles",
+         "☐  Feedback documented via the application",
+         "☐  Result checked by both roles"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "Rejections always require a comment (Chapter 9).",
+         "Special approvals from Chapter 12 go through the same MO Check.",
+         "Contract Review profiles give the MO the overview (Chapter 9.8)."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "How does the dealer learn the review result?",
+        "Via status and communication in Application Management (Chapter 8.2)."
+       ],
+       [
+        "Can the MO correct data directly?",
+        "The MO reviews; corrections to the application are made by the dealer (Chapter 9.5)."
+       ],
+       [
+        "How long does an MO Check take?",
+        "Depends on completeness and work list; complete applications are processed first."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Chapter 8__ – Track and activate application.",
+         "__Chapter 9__ – MO Checks and functional reviews.",
+         "__Role/status/scope matrices__ – Appendix D.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D)."
+        ]
+       }
+      ],
+      "h": 1.47,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Chapter 8 to 9"
+ },
+ {
+  "nr": "T9-10",
+  "key": "T09-10",
+  "kind": "Übergangsmodul",
+  "chs": [
+   9,
+   10
+  ],
+  "slug": "Vom_Pruefergebnis_zur_laufenden_Vertragsverwaltung",
+  "title": "T9-10: From Review Result to Ongoing Contract Administration",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes transition module T9-10 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Check details after activation",
+   "Know the locked data",
+   "Use permitted changes",
+   "Have re-reviewed",
+   "Document history"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "This module links the **review result** (**Chapter 9**, approved and activated) with **ongoing contract administration** (**Chapter 10**). You know which data are locked upon activation, what remains changeable in day-to-day work and when changes are re-reviewed."
+      ],
+      "h": 1.73,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_T09-10.png"
+     },
+     {
+      "type": "note",
+      "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Transition at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Starting point (Chapter 9)",
+          "bullets": [
+           "Review completed, contract active",
+           "Check status and reasons in the history",
+           "Handover to support if disputed"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Target (Chapter 10)",
+          "bullets": [
+           "Search contract and check details",
+           "Know permitted changes",
+           "Have changes re-reviewed (Chapter 9.7)"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.43,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_T09-10.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_T09-10.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "After activation, check the **contract details** and the **payment plan** (Chapters 10.1 and 11.1).",
+         "Know the **locked data**: product, term, mileage, payment interval (can only be changed to \"one-time\").",
+         "In day-to-day work, use the **permitted actions**: customer and payment data, change of payer, suspension, follow-up quote (Chapters 10.2 to 10.5)."
+        ]
+       }
+      ],
+      "h": 1.42,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Activation starts the payment plan and the service entitlement.~~ Changes to product or term are only possible via a new contract; terminations have financial consequences (Chapters 10.6 and 11.6).",
+      "h": 0.67,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Changes requiring review go back into the **MO Check** (Chapter 9.7).",
+         "Document every change traceably in the **history** (Chapter 10.8)."
+        ]
+       }
+      ],
+      "h": 0.46,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**MO**: complete review, review changes",
+         "**Dealer**: administer contract day to day",
+         "**Finance department**: payment plan and consequences"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Contract status \"active\" (Chapter 8.6)",
+         "Review result documented (Chapter 9.3)",
+         "Responsibilities for changes known (Chapter 10)"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Contract details and payment plan checked after activation",
+         "☐  Locked data known",
+         "☐  Permitted changes known",
+         "☐  Change requiring review passed to MO"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The review history from Chapter 9 remains visible on the contract.",
+         "Transition module T6-7 describes the start, this module the end of the application process.",
+         "Reporting on active contracts in Chapter 11.7."
+        ]
+       }
+      ],
+      "h": 1.28,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Can the MO revoke an active contract?",
+        "No, after activation the rules in Chapter 10.6 for cancellation and termination apply."
+       ],
+       [
+        "Which changes trigger an MO Check?",
+        "Change of payer, contract transfer and special conditions (Chapters 9.7 and 10.3)."
+       ],
+       [
+        "Where can I see the review result later?",
+        "In the change history of the contract (Chapter 10.8)."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Chapter 9__ – MO Checks and functional reviews.",
+         "__Chapter 10__ – Administer contracts day to day.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Chapter 9 to 10"
+ },
+ {
+  "nr": "T14-15",
+  "key": "T14-15",
+  "kind": "Übergangsmodul",
+  "chs": [
+   14,
+   15
+  ],
+  "slug": "Marktpflege_und_zentrale_Vorgaben_verbinden",
+  "title": "T14-15: Linking Market Maintenance and Central Requirements",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes transition module T14-15 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Classify change",
+   "Product Testing",
+   "Request deviation",
+   "Await approval",
+   "Inform roles"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "This module links **market maintenance** (**Chapter 14**) with the **central requirements of HQ** (**Chapter 15**). You know which maintenance decisions the market makes alone, which need **HQ approval** and how **country deviations** are requested."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_T14-15.png"
+     },
+     {
+      "type": "note",
+      "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Transition at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Market decides (Chapter 14)",
+          "bullets": [
+           "Market-specific settings and templates",
+           "Price versions, campaigns, discounts within the Blueprint",
+           "Product Testing and publication"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "HQ decides (Chapter 15)",
+          "bullets": [
+           "Blueprint and global standards",
+           "Country deviations",
+           "Technical options, SA matching, coverage codes"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.58,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_T14-15.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_T14-15.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Classify the planned change: **within the Blueprint** (market decides) or **deviation** (HQ approval required).",
+         "Prepare the change in **Product Testing** and secure test evidence (Chapters 14.12, 16.4).",
+         "Request a **country deviation** from HQ with justification (Chapter 15.3) and enter it in the register (Chapter 20.6)."
+        ]
+       }
+      ],
+      "h": 1.42,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~No publication of a deviation before HQ approval.~~ Unapproved deviations count as a Blueprint violation and are withdrawn.",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Await **HQ approval** before publishing (Chapters 14.7 and 15.4).",
+         "Inform **MO and dealers** about effective changes (Chapter 15.5)."
+        ]
+       }
+      ],
+      "h": 0.46,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Market**: maintenance and request for deviation",
+         "**HQ**: Blueprint, approval, central master data",
+         "**MO**: feedback from review"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Market role with maintenance rights (Chapter 14.1)",
+         "Blueprint and country deviation register known (Chapters 15.2, 20.6)",
+         "Approval workflow clarified (Chapter 16.3)"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Change classified as Blueprint or deviation",
+         "☐  Test evidence available",
+         "☐  Deviation requested and registered",
+         "☐  Approval awaited before publication"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The counterpart T15-14 describes the handover of central foundations to the market.",
+         "Coverage codes and technical options affect all markets (Chapter 15.7).",
+         "Approvals are kept traceable in the clarification register (Appendix F)."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "May the market create a campaign without HQ?",
+        "Yes, within the Blueprint (Chapter 14.13); deviating conditions need HQ approval."
+       ],
+       [
+        "How long does HQ approval take?",
+        "According to the HQ governance process (Chapter 15.4); the status is in the register."
+       ],
+       [
+        "What happens on rejection?",
+        "The change remains unpublished; the market can request again with a new justification."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Chapter 14__ – Market role, product and price maintenance.",
+         "__Chapter 15__ – HQ role, Blueprint and central master data.",
+         "__Country deviation register__ – Chapter 20.6.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D)."
+        ]
+       }
+      ],
+      "h": 1.47,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Chapter 14 to 15"
+ },
+ {
+  "nr": "T15-14",
+  "key": "T15-14",
+  "kind": "Übergangsmodul",
+  "chs": [
+   15,
+   14
+  ],
+  "slug": "Zentrale_Grundlagen_an_die_Marktpflege_uebergeben",
+  "title": "T15-14: Handing Over Central Foundations to Market Maintenance",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes transition module T15-14 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Read release information",
+   "Adopt foundations",
+   "Configure locally",
+   "Test and accept",
+   "Publish and inform"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "This module describes the path from **HQ** (**Chapter 15**) to the **market** (**Chapter 14**): how Blueprint changes, new **products**, **coverage codes** and **technical options** are provided centrally and **adopted, configured locally and published** by the market."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_T15-14.png"
+     },
+     {
+      "type": "note",
+      "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Transition at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "HQ provides (Chapter 15)",
+          "bullets": [
+           "Blueprint version and change overview",
+           "Product definitions, coverage codes, technical options",
+           "Requirements for price components and factor limits"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Market adopts (Chapter 14)",
+          "bullets": [
+           "Market-specific settings and templates",
+           "Price versions, clusters, vehicle groups",
+           "Product Testing, approval, publication"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.73,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_T15-14.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_T15-14.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Read the HQ **release information**: what changes in the Blueprint, and from when does it apply (Chapter 22.4)?",
+         "Adopt **product definitions** and **coverage codes** into market maintenance (Chapters 14.8, 15.7).",
+         "Configure locally: **price versions, clusters, vehicle groups, campaigns** (Chapters 14.9 to 14.13)."
+        ]
+       }
+      ],
+      "h": 1.42,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Central changes apply from the date named by HQ.~~ A market that delays adoption offers products outside the valid Blueprint.",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Test in **Product Testing** and document the **functional acceptance** (Chapters 14.12, 17.3).",
+         "**Publish** and inform MO and dealers; update training materials (Chapters 14.7, 22.3)."
+        ]
+       }
+      ],
+      "h": 0.76,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**HQ**: provide and communicate central foundations",
+         "**Market**: adopt, configure locally, test, publish",
+         "**MO/Dealer**: information about changes"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Approved Blueprint change or new product (Chapter 15.2)",
+         "HQ release information (Chapter 22.4)",
+         "Market role with maintenance rights (Chapter 14)"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Release information read",
+         "☐  Central foundations adopted",
+         "☐  Configured locally and tested",
+         "☐  Published and communicated"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "Counterpart to T14-15 (market requests deviation from HQ).",
+         "Note the effect of product changes on existing contracts (Chapter 14.10).",
+         "Division reference: Vans model series clustering (Chapter 14.11)."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Does the market have to adopt every Blueprint change?",
+        "Yes, unless an approved country deviation says otherwise (Chapter 15.3)."
+       ],
+       [
+        "Who maintains the prices for a new product?",
+        "The market in its price versions (Chapter 14.9) based on the HQ requirements."
+       ],
+       [
+        "How are dealers informed?",
+        "Via the RetailPortal and the release information (Chapter 22.4)."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Chapter 15__ – HQ role, Blueprint and central master data.",
+         "__Chapter 14__ – Market role, product and price maintenance.",
+         "__oneSCM RetailPortal__ – System news and training material.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D)."
+        ]
+       }
+      ],
+      "h": 1.47,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Chapter 15 to 14"
+ },
+ {
+  "nr": "T15-16",
+  "key": "T15-16",
+  "kind": "Übergangsmodul",
+  "chs": [
+   15,
+   16
+  ],
+  "slug": "Von_der_Pflegeentscheidung_zum_Governance_Nachweis",
+  "title": "T15-16: From Maintenance Decision to Governance Evidence",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes transition module T15-16 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Document decision",
+   "Approval workflow",
+   "File test evidence",
+   "Close register",
+   "Archive"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "This module links the **HQ maintenance decision** (**Chapter 15**) with the **governance evidence** (**Chapter 16**): every decision receives a **source, test evidence, approval and version** so that it can be audited and archived."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_T15-16.png"
+     },
+     {
+      "type": "note",
+      "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Transition at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Decision (Chapter 15)",
+          "bullets": [
+           "Blueprint change or country deviation",
+           "Technical options, SA matching, coverage codes",
+           "Governance and approval at HQ level"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Evidence (Chapter 16)",
+          "bullets": [
+           "Functional review and approval workflow",
+           "Test evidence and functional baseline",
+           "Sources, tickets, versions, clarification register, archiving"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.58,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_T15-16.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_T15-16.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Document the **decision** with justification, source and ticket reference (Chapter 16.6).",
+         "Go through the **approval workflow** with functional review (Chapter 16.3).",
+         "File **test evidence** and set the **functional baseline** (Chapter 16.4)."
+        ]
+       }
+      ],
+      "h": 1.12,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~A decision without evidence is not approved.~~ Only with source, test evidence and documented approval does it become part of the productive functional baseline.",
+      "h": 0.67,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Close open entries in the **clarification register** and update the **version** (Chapter 16.7).",
+         "**Archive** the approved version; working documents remain in document management (Chapter 16.5)."
+        ]
+       }
+      ],
+      "h": 0.76,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**HQ**: make and evidence the decision",
+         "**Editorial team**: maintain sources, versions, registers",
+         "**Market/MO**: use and supplement evidence"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Maintenance decision available (Chapter 15.4)",
+         "Approval workflow known (Chapter 16.3)",
+         "Access to clarification register and version control"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Decision documented with source",
+         "☐  Approval workflow completed",
+         "☐  Test evidence and functional baseline set",
+         "☐  Register closed, version archived"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "Evidence is the basis for rollout and training (Chapter 17).",
+         "Data protection also applies to evidence and test data (Chapter 16.1, Appendix I.3).",
+         "The change overview (Chapter 22.4) is fed by this evidence."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "What evidence does a coverage code change need?",
+        "Source, test evidence per affected division and HQ approval (Chapters 15.7, 16.4)."
+       ],
+       [
+        "Who archives?",
+        "The editorial team after approval (Chapter 16.5)."
+       ],
+       [
+        "How do I find the decision later?",
+        "Via version control and the clarification register (Chapter 16.6, Appendix F)."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.38,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Chapter 15__ – HQ role, Blueprint and central master data.",
+         "__Chapter 16__ – Governance, quality, data protection and archiving.",
+         "__Sources and clarification register__ – Appendix F.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D)."
+        ]
+       }
+      ],
+      "h": 1.47,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Chapter 15 to 16"
+ },
+ {
+  "nr": "V.1",
+  "key": "V1",
+  "kind": "Vorspann",
+  "chs": [
+   1,
+   3
+  ],
+  "slug": "Willkommen_und_Dokumentkontext",
+  "title": "V.1: Welcome and Document Context",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes preface V.1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Check version",
+   "Select variant",
+   "Know chapter structure",
+   "Use Quick Guides",
+   "Give feedback"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **preface** explains **who** the oneSCM handbook is written for, **which version** applies, how **variants** per role, market and division are created and how to give **feedback**. This guide is the entry point before all chapters."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_V1.png"
+     },
+     {
+      "type": "note",
+      "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Document context",
+          "bullets": [
+           "Target groups: Dealer, MO, Market, HQ",
+           "Validity: version, release, date",
+           "Variants per role, market and division"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Working with the handbook",
+          "bullets": [
+           "Chapter structure (purpose, prerequisites, steps, result, notes)",
+           "Quick Guides per chapter",
+           "Feedback and clarification register"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.43,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_V1.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_V1.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Check the **version and date** of the handbook; they appear in the footer of every page.",
+         "Select the **variant** for your role, your market and your division.",
+         "Get to know the **chapter structure**: purpose, prerequisites, roles, steps, result, special cases, notes, troubleshooting, sources."
+        ]
+       }
+      ],
+      "h": 1.12,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Only the current version of the handbook is valid.~~ Older exports may contain outdated processes; check date and release (Chapter 22.4).",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Use the **Quick Guides** as a summary and the handbook for details.",
+         "Give **feedback** via the clarification register or the feedback function of the online help (Appendix F)."
+        ]
+       }
+      ],
+      "h": 0.61,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**All roles**: know the document context",
+         "**Editorial team**: maintain version and variants",
+         "**Market**: approve local variants"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Handbook version and date (see footer)",
+         "Your own role, market and division",
+         "Access to the handbook or the online help"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Version and date checked",
+         "☐  Appropriate variant selected",
+         "☐  Chapter structure known",
+         "☐  Feedback channel known"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The reading path per role is in V.2.",
+         "Terms are explained in the glossary (Appendix A).",
+         "Data protection rules for examples in Chapter 16.1."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Who is the handbook for?",
+        "For all roles in oneSCM: Dealer, MO, Market and HQ, with variants per market and division."
+       ],
+       [
+        "How do I recognize the valid version?",
+        "By the date in the footer and the release information (Chapter 22.4)."
+       ],
+       [
+        "Where do I give feedback?",
+        "Via the clarification register (Appendix F) or the feedback function of the online help."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Table of contents and reading paths__ – V.2.",
+         "__Glossary__ – Appendix A with terms and abbreviations.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Welcome"
+ },
+ {
+  "nr": "V.2",
+  "key": "V2",
+  "kind": "Vorspann",
+  "chs": [
+   1,
+   3
+  ],
+  "slug": "Inhaltsverzeichnis_und_Lesepfade",
+  "title": "V.2: Table of Contents and Reading Paths",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes preface V.2 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Select reading path",
+   "Read fundamentals",
+   "Follow process chapters",
+   "Use appendices",
+   "FAQ and knowledge check"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **table of contents** shows the 23 chapters, appendices and transition modules; the **reading paths** recommend the order of chapters per **role**. This guide helps you quickly find the right entry point."
+      ],
+      "h": 1.4,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_V2.png"
+     },
+     {
+      "type": "note",
+      "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Reading paths",
+          "bullets": [
+           "Dealer: 1, 2, 3, 4, 5, 6, T6-7, 7, T7-8, 8, 10, 12, 23",
+           "MO: 1, 2, 3, 8, T8-9, 9, T9-10, 10, 11, 16",
+           "Market: 1, 2, 14, T14-15, 15, 20, 21, 17",
+           "HQ: 1, 15, T15-14, T15-16, 16, 19, 22"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Structure",
+          "bullets": [
+           "Main part: Chapters 1 to 23",
+           "Transition modules T6-7 to T15-16",
+           "Appendices A to I",
+           "Preface V.1 and V.2"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.76,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_V2.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_V2.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Select the **reading path for your role** and read the **fundamentals** first (Chapters 1 to 3).",
+         "Follow the **process chapters** in the order of the reading path; the **transition modules** link them.",
+         "For each chapter, use the **Quick Guide** as a summary and checklist."
+        ]
+       }
+      ],
+      "h": 1.27,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~The reading paths are recommendations, not authorizations.~~ Which chapters you may carry out in the system is determined by role and scope (Appendix D).",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Consult the **appendices** as needed: glossary, checklists, matrices, practical examples.",
+         "Finish with **Chapter 23** (FAQ and support) and the **knowledge check** (Appendix H)."
+        ]
+       }
+      ],
+      "h": 0.61,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Dealer**: reading path contract process",
+         "**MO**: reading path review and administration",
+         "**Market/HQ**: reading path maintenance and governance"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Your own role known (Chapter 1.3)",
+         "Access to the handbook",
+         "Fundamentals Chapters 1 to 3 read or scheduled"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Reading path for the role selected",
+         "☐  Fundamentals read",
+         "☐  Process chapters worked through in order",
+         "☐  Appendices used as needed"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The dashboard shows the structure and the click path interactively.",
+         "Country and division chapters (20, 21) supplement every reading path.",
+         "New chapters are added to the reading paths with releases (Chapter 22)."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Do I have to read all 23 chapters?",
+        "No, the reading path for your role names the relevant chapters; the others are for reference."
+       ],
+       [
+        "Where are the transition modules?",
+        "Between the chapters they link, e.g. T6-7 between Chapters 6 and 7."
+       ],
+       [
+        "Are there reading paths per market?",
+        "Reading paths apply per role; market specifics are in Chapter 20."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Welcome and document context__ – V.1.",
+         "__Handbook dashboard__ – Structure and click path.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "__FAQ and troubleshooting__ – Chapter 23 with questions per process phase and known errors per market and release."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Reading paths"
+ }
+]

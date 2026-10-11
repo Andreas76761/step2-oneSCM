@@ -1,0 +1,2567 @@
+[
+  {
+    "nr": 1,
+    "key": "01",
+    "kind": "Kapitel",
+    "chs": [
+      1
+    ],
+    "slug": "Einfuehrung_und_Ueberblick",
+    "title": "Introduction and Overview",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Goals and benefits",
+      "Position the project",
+      "Identify your role",
+      "Understand domains",
+      "Standard and deviation"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "oneSCM is the central system for service contract and maintenance products. This guide shows **what oneSCM is used for**, which **roles** work together and how the **global standard** interacts with **local variants** per market (Chapter 1.1 to 1.6)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "oneSCM start page",
+            "shotH": 1.15,
+            "img": "img/badge_01.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "1.1 – 1.3 Goals and roles",
+                    "bullets": [
+                      "Goals and benefits of oneSCM",
+                      "Project background and context",
+                      "Roles involved and tasks"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "1.4 – 1.6 Ecosystem and standard",
+                    "bullets": [
+                      "Roles in the oneSCM ecosystem",
+                      "Business domains and collaboration",
+                      "Global standard and local variants"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.43,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_01.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_01.png",
+            "h": 1.05
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Read **Goals and benefits** (1.1): oneSCM combines price information, quote, application, contract and management in one system.",
+                  "Position the project (1.2): oneSCM replaces legacy systems and maps the contract process for **Cars and Vans** uniformly.",
+                  [
+                    "Identify your **role** (1.3 and 1.4) and the related chapters:",
+                    "Dealer: Chapters 4 to 8 and 10",
+                    "MO: Chapters 9 and 10",
+                    "Market: Chapter 14",
+                    "HQ: Chapter 15"
+                  ]
+                ]
+              }
+            ],
+            "h": 2.02,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Country-specific deviations~~ from the Blueprint are only valid if they are documented and approved in the country deviation register (Chapter 20.6).",
+            "h": 0.52,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "Understand the **business domains** (1.5): customer, vehicle, product, contract, payment and document are interlinked.",
+                  "Note **standard and deviation** (1.6): The Blueprint applies globally; country deviations are documented in the register (Chapter 20)."
+                ]
+              }
+            ],
+            "h": 0.76,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer** (dealership): quote, application, Application Management",
+                  "**MO** (Market Operation): business review and activation",
+                  "**Market**: product, price and campaign maintenance, administration",
+                  "**HQ**: Blueprint, global standards, central master data"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Access to oneSCM via RetailPortal or direct link (Chapter 2)",
+                  "Knowledge of your own market, division and dealership context",
+                  "Handbook Chapter 1 as an entry point before all process chapters"
+                ]
+              }
+            ],
+            "h": 2.5,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Own role and market are known",
+                  "☐  Relevant handbook chapters are identified",
+                  "☐  Access to oneSCM is requested or available",
+                  "☐  Glossary and process map are known"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Terms and abbreviations (MO, HQ, OTR, VIN, ZB I) can be found in the glossary (Appendix A).",
+                  "The process map (Chapter 3.4) shows the order of the process chapters.",
+                  "Reading paths per role are in the preface (V.2)."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "What does oneSCM stand for?",
+                "For central Service Contract Management: quote, application, contract and management of service and maintenance products."
+              ],
+              [
+                "Does the handbook apply to Cars and Vans?",
+                "Yes. Division differences are described in Chapter 21, country differences in Chapter 20."
+              ],
+              [
+                "Where do I start as a new user?",
+                "With Chapter 2 (access) and Chapter 3 (navigation), then with the process chapter for your role."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__oneSCM RetailPortal__ – System news and training material.",
+                  "__Glossary__ – Appendix A with terms and abbreviations.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 2,
+    "key": "02",
+    "kind": "Kapitel",
+    "chs": [
+      2
+    ],
+    "slug": "Zugang_Rollen_und_Berechtigungen",
+    "title": "Access, Roles and Authorizations",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 2 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Log in via SSO",
+      "Check context",
+      "Match role",
+      "Request authorization",
+      "Solve access issue",
+      "Secure session"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You log in via **Single Sign-on**, check your **business role** and **technical authorizations**, and know how to **request** missing rights and solve access issues (Chapter 2.1 to 2.6)."
+            ],
+            "h": 1.4,
+            "size": 9,
+            "shot": "Single Sign-on login",
+            "shotH": 1.15,
+            "img": "img/badge_02.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "2.1 – 2.3 Login and roles",
+                    "bullets": [
+                      "Login and Single Sign-on",
+                      "Business roles and technical authorizations",
+                      "Authorization request and approval"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "2.4 – 2.6 Context and security",
+                    "bullets": [
+                      "Check market, division and dealership context",
+                      "Missing authorizations and access issues",
+                      "Secure handling of user account and session"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.73,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_02.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_02.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Open oneSCM via __RetailPortal__ or via the __direct link__. Login is via **Single Sign-on** (2.1).",
+                  "After login, check your **market, division and dealership context** (2.4): A wrong context means wrong products and prices.",
+                  "Match your **business role** against your **technical authorizations** (2.2). Missing menu items indicate missing roles."
+                ]
+              }
+            ],
+            "h": 1.42,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Authorizations are never granted by e-mail or verbal request.~~ Every role is requested, reviewed and approved via ALICE; the approval is documented traceably.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "If an authorization is missing, submit the **authorization request** via ALICE (2.3). In the dealership, the **ALICE dealership admin** grants access.",
+                  "For access issues (2.5): clear the browser cache, log in again, then report a support case with user ID and screenshot.",
+                  "Lock your session when away and never share your account with others (2.6)."
+                ]
+              }
+            ],
+            "h": 1.12,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**User**: login, context check, authorization request",
+                  "**ALICE dealership admin**: activation of roles in the dealership",
+                  "**Market/HQ**: role model and approvals"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Valid user account in the corporate directory",
+                  "Assigned oneSCM role (e.g. oneSCM.DealerVAN)",
+                  "Access via RetailPortal or direct link"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Login via SSO works",
+                  "☐  Market, division and dealership are correct",
+                  "☐  All required menu items are visible",
+                  "☐  Contact person for ALICE is known"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "The oneSCM.DealerVAN role is a prerequisite for application creation in the Vans business.",
+                  "After a role change, you need to log in again.",
+                  "Multiple markets or divisions require multiple role assignments."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Why can't I see the Contract Creation menu item?",
+                "The related role is missing. Request it via ALICE from your dealership admin."
+              ],
+              [
+                "How long does an approval take?",
+                "Approval is given by the responsible admin; you can see the current status in the authorization request."
+              ],
+              [
+                "Can I have multiple roles?",
+                "Yes, for example Dealer roles for Cars and Vans; the active context is shown in oneSCM."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__ALICE – authorization management__ – Role request and approval (Chapter 19.16).",
+                  "__oneSCM RetailPortal__ – System news and training material.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 3,
+    "key": "03",
+    "kind": "Kapitel",
+    "chs": [
+      3
+    ],
+    "slug": "Grundlagen_Navigation_und_Customer_Journey",
+    "title": "Basics, Navigation and Customer Journey",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 3 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Start page and menu",
+      "Search and filters",
+      "Interaction patterns",
+      "Process map",
+      "Lead and interfaces",
+      "Interpret status",
+      "Language and context"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You find your way around the **start page and menu**, use **search and filters**, know the **interaction patterns** and place the contract process from **price information** to **contract** on the **process map** (Chapter 3.1 to 3.9)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Start page with tiles",
+            "shotH": 1.15,
+            "img": "img/badge_03.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "3.1 – 3.3 User interface",
+                    "bullets": [
+                      "Start page and menu",
+                      "Search and filters",
+                      "UI elements and interaction patterns"
+                    ]
+                  },
+                  {
+                    "head": "3.4 – 3.6 Customer Journey",
+                    "bullets": [
+                      "Process map",
+                      "Price information, quote, application and contract",
+                      "Lead and CRM handover"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "3.7 – 3.9 Status and context",
+                    "bullets": [
+                      "Interfaces and system handovers",
+                      "Interpreting status information correctly",
+                      "Personal work context and languages"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 2.35,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_03.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_03.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Start on the **start page** (3.1): The tiles lead to **Contract Creation**, **Application Management**, **Customer Management** as well as warranty packages and external portals.",
+                  "Use **search and filters** (3.2): reference number, VIN, customer name or status narrow down lists. Columns such as \"Actions\" are reached via the horizontal slider.",
+                  "Recognize the **interaction patterns** (3.3): step bar with check marks, toggles for optional entries, three-dot menu for actions, mandatory fields marked with an asterisk.",
+                  "Place your case on the **process map** (3.4 and 3.5): price information → quote → application → contract."
+                ]
+              }
+            ],
+            "h": 1.93,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~A green check mark in the step bar does not mean that the contract is active.~~ Only the contract status \"active\" after review and activation (Chapter 8) is binding.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 5,
+                "steps": [
+                  "Take over **leads** from the CRM and return results (3.6); note the **system handovers** to OTR, VEGA and oneERP (3.7).",
+                  "Read **status information** correctly (3.8): application status, signature status and contract status are separate values.",
+                  "Set your **work context and language** (3.9); documents follow the market's language variant (Chapter 7.4)."
+                ]
+              }
+            ],
+            "h": 1.12,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**All roles**: navigation, search, understanding status",
+                  "**Dealer**: customer journey from lead to contract",
+                  "**MO/Market**: status information and system handovers"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Successful login with correct context (Chapter 2)",
+                  "Basic knowledge of the process map",
+                  "Personal work context and language are set"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Start page and main menu are known",
+                  "☐  Search by reference number and VIN works",
+                  "☐  Process phase of the case is clear",
+                  "☐  Language and work context are set"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "The status overview with permitted transitions is in Chapter 8.2 and Appendix D.",
+                  "The search only finds cases in your own market and dealership context.",
+                  "Browser zoom below 100 % hides columns; use the slider."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Where can I find a saved application again?",
+                "Under Contract Creation › Application Management via the reference number (Chapter 8.1)."
+              ],
+              [
+                "What is the difference between a quote and an application?",
+                "The quote is non-binding price information; the application is saved, signed, reviewed and activated."
+              ],
+              [
+                "Can I use the interface in another language?",
+                "Yes, via the personal work context (3.9); contract documents follow the market's language variants."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.68,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__Process diagrams__ – Appendix C with process map and sub-processes.",
+                  "__Glossary__ – Appendix A with terms and abbreviations.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 4,
+    "key": "04",
+    "kind": "Kapitel",
+    "chs": [
+      4
+    ],
+    "slug": "Kunden_Partner_und_Vertragsrollen",
+    "title": "Customers, Partners and Contract Roles",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 4 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Select customer group",
+      "Search customer",
+      "Check mandatory data",
+      "Assign contract roles",
+      "Transfer data",
+      "Partners and Dealers"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You distinguish **private and business customers**, find **existing customers**, check **mandatory data**, assign the **contract roles** (holder, payer, user, contact, invoice recipient) and avoid **duplicates** (Chapter 4.1 to 4.8)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Customer search",
+            "shotH": 1.15,
+            "img": "img/badge_04.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "4.1 – 4.3 Entering customers",
+                    "bullets": [
+                      "Private customers and business customers",
+                      "Searching for and assigning existing customers",
+                      "Checking customer data and mandatory data"
+                    ]
+                  },
+                  {
+                    "head": "4.4 – 4.6 Roles and quality",
+                    "bullets": [
+                      "Contract holder, payer, user, contact, invoice recipient",
+                      "Data transfer from connected systems",
+                      "Duplicates and conflicting master data"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "4.7 – 4.8 Partners",
+                    "bullets": [
+                      "Partner and Dealer relationships",
+                      "Dealer onboarding and partner process"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 2.65,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_04.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_04.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Select the **customer group** (4.1). \"KAM-managed key accounts\" only for individual price requests or FS 140+.",
+                  [
+                    "First **search** for the customer and select them; only create a new record if needed (4.2). Identification is based on:",
+                    "Private customer: first and last name, phone number, e-mail address or Mercedes me ID",
+                    "Business customer: company name, VAT ID"
+                  ],
+                  "Check **mandatory data** and plausibility (4.3): address, contact details, legal form; errors block later checks."
+                ]
+              }
+            ],
+            "h": 1.81,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Contract holder and registered keeper of the vehicle must be identical.~~ A different contract holder is not permitted; only payer and invoice recipient may differ.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "Assign the **contract roles** (4.4): contract holder, payer, user, contact and invoice recipient may differ, but must be permitted per market.",
+                  "Transfer data from **connected systems** (4.5, e.g. oneERP) instead of retyping it; check for **duplicates** and conflicts (4.6).",
+                  "Maintain **partner and Dealer relationships** (4.7); new dealers go through **Dealer onboarding** (4.8)."
+                ]
+              }
+            ],
+            "h": 1.12,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer**: customer search, new creation, role assignment",
+                  "**MO**: review of master data and duplicates",
+                  "**Market**: Dealer onboarding and partner process"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Customer group is known (private, business, KAM-managed key accounts)",
+                  "Customer identification data is available",
+                  "Data protection notes are observed (Chapter 16.1)"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Customer searched, no duplicate created",
+                  "☐  Customer group selected correctly",
+                  "☐  Mandatory data complete and plausible",
+                  "☐  Contract roles assigned and permitted"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Duplicates usually result from creating new records without searching first; the MO can reject them.",
+                  "Personal data does not belong in comments or screenshots (Chapter 16.1).",
+                  "When transferring data from external systems, the leading system is authoritative (Chapter 16.2)."
+                ]
+              }
+            ],
+            "h": 1.6,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "May the payer differ from the contract holder?",
+                "Yes, the payer and the invoice recipient may differ; the contract holder must be the registered keeper."
+              ],
+              [
+                "What to do about conflicting master data?",
+                "Do not overwrite; document the deviation and pass it to the leading system or to support (Chapter 4.6)."
+              ],
+              [
+                "How is a new Dealer connected?",
+                "Via the partner process and the market's Dealer onboarding (Chapter 4.8)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Customer Account Center__ – Customer accounts and special cases (Chapter 12.8).",
+                  "__oneERP__ – Customer and finance integration (Chapter 19.11).",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 5,
+    "key": "05",
+    "kind": "Kapitel",
+    "chs": [
+      5
+    ],
+    "slug": "Fahrzeug_Produkt_und_Angebot_vorbereiten",
+    "title": "Preparing Vehicle, Product and Quote",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 5 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Create contract",
+      "Select entry point",
+      "Add vehicle data",
+      "Configure product",
+      "Options and campaigns",
+      "Price information",
+      "Create application"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You select the **contract type** and **entry point**, load **vehicle data**, select **product and scope of services**, configure **term, mileage and options** and create a **quote** with campaigns and discounts (Chapter 5.1 to 5.8)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Create contract: entry point",
+            "shotH": 1.15,
+            "img": "img/badge_05.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "5.1 – 5.3 Vehicle",
+                    "bullets": [
+                      "Contract types and entry points",
+                      "Vehicle and case identifiers",
+                      "Vehicle data, mandatory fields and validation rules"
+                    ]
+                  },
+                  {
+                    "head": "5.4 – 5.6 Product and price",
+                    "bullets": [
+                      "Selecting products and scope of services",
+                      "Configuring term, mileage and options",
+                      "Prices, campaigns and discounts in the quote"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "5.7 – 5.8 Quote",
+                    "bullets": [
+                      "Quote validity and changes",
+                      "Handover to application creation"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 2.65,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_05.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_05.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Click \"**Create contract**\" and select the **contract type** (5.1).",
+                  [
+                    "Depending on the phase, enter the appropriate **entry point** to load the vehicle data (5.2):",
+                    "For a price indication: **model series**",
+                    "From quote: OTR **deal ID**",
+                    "From order: VerSO **order ID**",
+                    "From production: **VIN**"
+                  ],
+                  "Add **first registration**, **current mileage** or **license plate** (5.3). If these are not yet known, activate the toggle.",
+                  "Select the **service/maintenance package** (5.4) and configure **payment interval, term, annual mileage** and, if applicable, **industry** (5.5)."
+                ]
+              }
+            ],
+            "h": 2.37,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~As soon as you click \"Create application\", you jump to customer data entry~~ and can only edit the contract again later. Check product, term and mileage beforehand.",
+            "h": 0.67,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer**: create and hand over quote",
+                  "**Market**: provide products, prices and campaigns (Chapter 14)",
+                  "**MO**: review for special approvals"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Customer is created or assigned (Chapter 4)",
+                  "Vehicle identifier is available: model series, OTR deal ID, VerSO order ID or VIN",
+                  "Permitted products for market and division are known"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Entry point selected to match the phase",
+                  "☐  Vehicle data loaded and mandatory fields checked",
+                  "☐  Product, term and mileage match the customer's wishes",
+                  "☐  Campaign permitted, price information generated"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "The payment intervals \"one-time\" and \"monthly\" are always available; other intervals depend on customer segment and term.",
+                  "Terms and conditions as well as dealer information can be permanently displayed via the icons.",
+                  "Demonstrator and company cars count as used vehicles; only a pure maintenance package is possible for them."
+                ]
+              }
+            ],
+            "h": 1.6,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 5,
+                "steps": [
+                  "If available, add **technical options** and **additional services** and select **active campaigns** or **your own dealer discounts** (5.6). Check eligibility against the campaign description.",
+                  "Check the contract details in the **payment plan** and generate the \"**Price information**\" preview (PDF) for quote purposes. Note the **quote validity** (5.7).",
+                  "With \"**Create application**\" you hand over the quote to application creation (5.8, Chapter 6)."
+                ]
+              }
+            ],
+            "h": 1.57,
+            "size": 9,
+            "title": "How to proceed (continued)"
+          },
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Which identifier do I use before the order?",
+                "The model series for a price indication; from quote the OTR deal ID, from order the VerSO order ID."
+              ],
+              [
+                "Can I change a quote later?",
+                "Yes, until application creation; after that the change rules from Chapter 5.7 and 10.2 apply."
+              ],
+              [
+                "How long is a quote valid?",
+                "Validity depends on market requirements and price version (Chapter 5.7 and 14.9)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__OTR__ – Order and vehicle reference (Chapter 19.5).",
+                  "__MIC__ – Vehicle data API (Chapter 19.8).",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 6,
+    "key": "06",
+    "kind": "Kapitel",
+    "chs": [
+      6
+    ],
+    "slug": "Servicevertrag_anlegen_und_Antrag_abschliessen",
+    "title": "Creating a Service Contract and Completing the Application",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 6 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Check prerequisites",
+      "Enter contract data",
+      "Check assignment",
+      "Read validation",
+      "Identify special approval",
+      "Final check",
+      "Save and reference"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You check **prerequisites and contract type**, enter **contract data and mandatory fields**, check **customer, vehicle and product assignment**, understand **validation rules** and save the **application** with a **reference number** (Chapter 6.1 to 6.7)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Create contract",
+            "shotH": 1.15,
+            "img": "img/badge_06.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "6.1 – 6.3 Entering",
+                    "bullets": [
+                      "Checking prerequisites and contract type",
+                      "Entering contract data and mandatory fields",
+                      "Checking customer, vehicle and product assignment"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "6.4 – 6.7 Checking and saving",
+                    "bullets": [
+                      "Validation rules and error messages",
+                      "Identifying special approvals in the standard process",
+                      "Overview and final check",
+                      "Saving the application and checking the reference"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.61,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_06.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_06.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Check **contract type and prerequisites** (6.1): vehicle, product and customer group must match the contract type.",
+                  "Enter the **contract data** (6.2): mandatory fields are marked with an asterisk; missing entries block saving.",
+                  "In the **payment plan** section, check the assignment of **customer, vehicle and product** (6.3) and use the **application preview** (PDF).",
+                  "Read **validation messages** (6.4): red messages must be resolved; yellow notes allow you to continue."
+                ]
+              }
+            ],
+            "h": 1.77,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~The payment interval can later only be changed to \"one-time\"~~; other changes require a new contract.",
+            "h": 0.52,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 5,
+                "steps": [
+                  "Identify **special approvals** (6.5): deviating conditions or customer groups trigger an MO review (Chapter 9 and 12.4).",
+                  "Carry out the **final check** in the overview (6.6) and click the **check mark** to proceed to signing.",
+                  "**Save** the application and note the **reference number** (6.7); it is the key for Application Management and support."
+                ]
+              }
+            ],
+            "h": 1.12,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer**: enter, check and save application",
+                  "**MO**: special approvals and review (Chapter 9)",
+                  "**Market**: validation rules per market"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Quote is prepared (Chapter 5)",
+                  "Customer is assigned (Chapter 4)",
+                  "Role for application creation is activated (Chapter 2)"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Contract type and prerequisites checked",
+                  "☐  Mandatory fields complete, no red messages",
+                  "☐  Customer, vehicle and product assigned correctly",
+                  "☐  Application saved, reference number noted"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "In the handbook example, an application is submitted for a business customer; deviations for private customers and KAM-managed key accounts are marked.",
+                  "You activate a collective invoice during the customer data check via the toggle at the bottom of the page.",
+                  "Saved applications can be found under Application Management (Chapter 8.1)."
+                ]
+              }
+            ],
+            "h": 1.44,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Can I change the application after saving?",
+                "To a limited extent: first registration, license plate and documents via \"Update\" (Chapter 8.3); conditions require a new contract."
+              ],
+              [
+                "What does a special approval mean?",
+                "The application deviates from the standard and is reviewed by the MO before it can be activated (Chapter 9 and 12.4)."
+              ],
+              [
+                "Where can I see the reference number?",
+                "In the overview after saving and in the first column of Application Management."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.68,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Transition module T6-7__ – From saved application to payment data and signature.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__FAQ and troubleshooting__ – Chapter 23 with questions per process phase and known errors per market and release.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.79,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 7,
+    "key": "07",
+    "kind": "Kapitel",
+    "chs": [
+      7
+    ],
+    "slug": "Zahlungsdaten_Dokumente_und_Unterschrift",
+    "title": "Payment Data, Documents and Signature",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 7 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Payment method and interval",
+      "Bank details and mandate",
+      "Check documents",
+      "Select signature type",
+      "Re-signature",
+      "Check status"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You enter **payment method and payment interval**, **payer and invoice recipient**, **bank details and mandates**, generate the **contract documents** in the correct language and obtain the **signature** digitally or manually (Chapter 7.1 to 7.8)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Payment plan",
+            "shotH": 1.15,
+            "img": "img/badge_07.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "7.1 – 7.3 Payment",
+                    "bullets": [
+                      "Payment methods and payment intervals",
+                      "Contract payer and invoice recipient",
+                      "Bank details and mandates"
+                    ]
+                  },
+                  {
+                    "head": "7.4 – 7.6 Documents and signature",
+                    "bullets": [
+                      "Contract documents and language variants",
+                      "Digital signature",
+                      "Manual signature and document upload"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "7.7 – 7.8 Checking",
+                    "bullets": [
+                      "Multiple signatures and re-signature",
+                      "Checking signature, document and application status"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 2.35,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_07.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_07.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Select **payment method and payment interval** (7.1) and define **payer and invoice recipient** (7.2).",
+                  "Enter **bank details** and generate the **SEPA mandate** (7.3); for a collective invoice, activate the toggle.",
+                  "Generate the **application preview** (PDF) and check the **language variant** of the documents (7.4)."
+                ]
+              }
+            ],
+            "h": 1.42,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~For contract review and activation, first registration, license plate and a copy of the ZB II must be available.~~ For the print variant, contract documents and SEPA mandate must be uploaded separately.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  [
+                    "Select the **signature type** (7.5 and 7.6):",
+                    "**E-signature (QR code)**: customer scans the code, signs on mobile; filed automatically.",
+                    "**Signature by e-mail**: link by e-mail, access with 4-digit SMS code; filed automatically.",
+                    "**Print document**: handwritten signature, then scan and \"Upload application\"."
+                  ],
+                  "For multiple signatories or changes, obtain the **signature again** (7.7).",
+                  "Check **signature, document and application status** (7.8) before moving on to the activation check (Chapter 8)."
+                ]
+              }
+            ],
+            "h": 1.84,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer**: enter payment data, obtain signature, upload documents",
+                  "**Customer**: signing via QR code, e-mail or on paper",
+                  "**MO**: review of signature and document status"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Application is saved (Chapter 6)",
+                  "Customer e-mail and mobile number are stored in the customer master",
+                  "Payer's bank details are available"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Payment method, interval, payer and invoice recipient entered",
+                  "☐  SEPA mandate generated or uploaded",
+                  "☐  Documents in the correct language variant",
+                  "☐  Signature status \"signed\" checked"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "With digital signing, the contract is sent to the customer automatically.",
+                  "The print variant is suitable when several signatures are required or when no digital signature is possible.",
+                  "Alternatively, the contract document can be opened on a computer via the link."
+                ]
+              }
+            ],
+            "h": 1.44,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "The customer has no mobile number on file. What now?",
+                "The e-mail variant requires SMS verification; use the e-signature via QR code or the print variant."
+              ],
+              [
+                "Can a document be uploaded later?",
+                "Yes, via Application Management › Update › Communication (Chapter 8.3)."
+              ],
+              [
+                "What happens with a re-signature?",
+                "The previous document is replaced; the signature status starts over (Chapter 7.7)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.68,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Transition module T7-8__ – From documents and signature to the activation check.",
+                  "__MPay__ – Payment integration (Chapter 19.15).",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 8,
+    "key": "08",
+    "kind": "Kapitel",
+    "chs": [
+      8
+    ],
+    "slug": "Antrag_verfolgen_und_aktivieren",
+    "title": "Tracking and Activating the Application",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 8 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Open Application Management",
+      "Update",
+      "First registration and plate",
+      "Upload documents",
+      "Check status",
+      "Check result",
+      "Handle rejection"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You **search and filter applications**, read the **status overview**, add **missing vehicle data and documents**, know the **activation prerequisites** and respond correctly to **rejection, delay and resubmission** (Chapter 8.1 to 8.7)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Application Management",
+            "shotH": 1.15,
+            "img": "img/badge_08.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "8.1 – 8.3 Tracking",
+                    "bullets": [
+                      "Searching, filtering and tracking applications",
+                      "Status overview and permitted transitions",
+                      "Adding missing vehicle data and documents"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "8.4 – 8.7 Activating",
+                    "bullets": [
+                      "Approval process and activation prerequisites",
+                      "Automatic and manual activation variants",
+                      "Checking activation and result",
+                      "Rejection, delay and resubmission"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.91,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_08.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_08.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Under **Contract Creation**, click \"**Application Management**\" and search for the application via the **reference number** (8.1).",
+                  "Move the slider to the right to the \"**Actions**\" column, click \"**…**\" and select \"**Update**\".",
+                  "Enter the **first registration date** and **license plate** (8.3).",
+                  "Open the application via the reference number, switch to the \"**Communication**\" tab and use the upload icon to upload the copy of the **ZB I/ZB II** or the signed contract document."
+                ]
+              }
+            ],
+            "h": 1.77,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Uploading the ZB II is not a mandatory field in the system, but no activation takes place without the document.~~ Incorrect applications are rejected and the customer is informed.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 5,
+                "steps": [
+                  "Check the **status overview** (8.2): only permitted transitions are possible; the application is reviewed and activated by Customer Management (8.4 and 8.5).",
+                  "Check the **result** (8.6): contract status \"active\" and feedback in Communication.",
+                  "In case of **rejection**, Customer Management will contact you; correct the data and resubmit the application (8.7)."
+                ]
+              }
+            ],
+            "h": 1.12,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer**: track application, submit missing data and documents",
+                  "**MO/Customer Management**: review, approval and activation",
+                  "**System**: automatic activation when data is complete"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Application is saved and signed (Chapter 6 and 7)",
+                  "Reference number is available",
+                  "First registration, license plate and ZB II are available"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Application found in Application Management",
+                  "☐  First registration and license plate entered",
+                  "☐  ZB II and contract document uploaded",
+                  "☐  Contract status \"active\" checked"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "A service contract can be concluded up to 12 months and/or a maximum of 50,000 km after first registration, provided the vehicle has not yet received a service (exception: company and demonstrator vehicles with a previous owner).",
+                  "The contract start corresponds to the date of first registration.",
+                  "Status transitions are documented as a matrix in Appendix D."
+                ]
+              }
+            ],
+            "h": 1.44,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "How long does activation take?",
+                "With complete data, automatic activation takes place promptly; manual reviews by Customer Management take correspondingly longer (8.5)."
+              ],
+              [
+                "My application was rejected. What to do?",
+                "Read the rejection reason in Communication, correct the data and resubmit the application (8.7)."
+              ],
+              [
+                "Can I filter by status?",
+                "Yes, Application Management offers filters by status, date and customer (8.1)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.68,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Transition module T8-9__ – Overall process and MO role deep dive.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__FAQ and troubleshooting__ – Chapter 23 with questions per process phase and known errors per market and release.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.79,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 9,
+    "key": "09",
+    "kind": "Kapitel",
+    "chs": [
+      9
+    ],
+    "slug": "MO_Checks_und_fachliche_Pruefungen",
+    "title": "MO Checks and Business Reviews",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 9 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Open worklist",
+      "Check criteria",
+      "Set check status",
+      "Clarify deviation",
+      "Approve or reject",
+      "Change and review"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You know the **tasks and scope of the MO role**, carry out **MO Checks** within contract creation, assess **check status and reasons**, ensure **quality**, handle **deviations** and hand over to **decision or support** (Chapter 9.1 to 9.8)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "MO Check worklist",
+            "shotH": 1.15,
+            "img": "img/badge_09.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "9.1 – 9.4 Review",
+                    "bullets": [
+                      "Tasks and scope of the MO role",
+                      "MO Checks within contract creation",
+                      "Check status, reasons and open checks",
+                      "Quality assurance and system checks"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "9.5 – 9.8 Result",
+                    "bullets": [
+                      "Deviations and re-check",
+                      "Handover for decision or to support",
+                      "MO Checks for contract changes",
+                      "Contract Review: profiles and overview"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.61,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_09.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_09.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Open the **MO Check worklist** and select the application (9.2).",
+                  "Check **vehicle data, customer data, documents and signature** against the check criteria (9.2 and 9.4); system checks indicate deviations.",
+                  "Set the **check status** and enter the **reason** (9.3). Open checks remain visible in the worklist."
+                ]
+              }
+            ],
+            "h": 1.27,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~A rejection is only permitted with a comment.~~ The reason must be comprehensible for the Dealer and is saved in the history.",
+            "h": 0.52,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "In case of **deviations**, request corrections from the Dealer and check again (9.5).",
+                  "**Approve** or **reject**; hand over disputed cases for decision or to support (9.6).",
+                  "Check **contract changes** by the same rules (9.7) and use the **Contract Review profiles** for the overview (9.8)."
+                ]
+              }
+            ],
+            "h": 0.97,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**MO** (Market Operation): business review, approval, rejection",
+                  "**Dealer**: subsequent delivery of data and documents",
+                  "**HQ/Market**: check rules and Contract Review profiles"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "MO role is activated (Chapter 2)",
+                  "Application is signed and fully submitted (Chapter 7 and 8)",
+                  "The market's check criteria are known"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  All check criteria assessed",
+                  "☐  Check status and reason entered",
+                  "☐  Deviations documented and reported back",
+                  "☐  Decision approved or rejected"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "The MO reviews business aspects; technical faults go to support (Chapter 23).",
+                  "Comments are visible internally or externally; check the visibility before saving (Chapter 12.7).",
+                  "Checks are part of the approval workflow according to Chapter 16.3."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "What exactly does the MO check?",
+                "Completeness and plausibility of customer, vehicle, product, payment data, documents and signature (9.2 and 9.4)."
+              ],
+              [
+                "Can the Dealer see the check status?",
+                "Yes, in Application Management as a status and in Communication as feedback."
+              ],
+              [
+                "How often can a re-check be done?",
+                "As often as corrections are submitted; every check is traceable in the history (9.5)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.53,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__Transition module T9-10__ – From check result to ongoing contract management.",
+                  "__Role/status/scope matrices__ – Appendix D.",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 10,
+    "key": "10",
+    "kind": "Kapitel",
+    "chs": [
+      10
+    ],
+    "slug": "Vertraege_im_Alltag_verwalten",
+    "title": "Managing Contracts in Daily Operations",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 10 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Search contract",
+      "Change data",
+      "Change of payer",
+      "Suspend and reactivate",
+      "Follow-up quote",
+      "Termination and closure",
+      "Check history"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You **search for contracts**, change **contract, customer and payment data**, carry out **change of payer and transfer**, **suspend and reactivate**, extend or **close** contracts and use the **change history** (Chapter 10.1 to 10.8)."
+            ],
+            "h": 1.56,
+            "size": 9,
+            "shot": "Contract search",
+            "shotH": 1.15,
+            "img": "img/badge_10.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "10.1 – 10.4 Changing",
+                    "bullets": [
+                      "Searching for contracts and checking details",
+                      "Changing contract, customer and payment data",
+                      "Change of payer and contract transfer",
+                      "Suspend and reactivate"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "10.5 – 10.8 Closing and tracing",
+                    "bullets": [
+                      "Extension, follow-up quote and follow-up contract",
+                      "Termination, cancellation and closure",
+                      "Financial consequences and closing evidence",
+                      "Change history and traceability"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.91,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_10.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_10.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Search for the contract via reference number, VIN or customer and check the **details** (10.1).",
+                  "Change **contract, customer or payment data** via the permitted actions (10.2); the payment interval can later only be changed to \"one-time\".",
+                  "Carry out a **change of payer** or **contract transfer** with the required evidence (10.3).",
+                  "**Suspend** or **reactivate** for legitimate reasons (10.4)."
+                ]
+              }
+            ],
+            "h": 1.62,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Changes to product, term or mileage require a new contract.~~ Cancellations and closures have financial consequences (Chapter 11.6) and are irreversible.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 5,
+                "steps": [
+                  "Before the end of the term, create a **follow-up quote** or a **follow-up contract** (10.5).",
+                  "For **termination, cancellation or closure**, check the **financial consequences** and secure the **closing evidence** (10.6 and 10.7).",
+                  "Check the **change history** (10.8); every change is traceable with time, role and reason."
+                ]
+              }
+            ],
+            "h": 0.97,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer**: initiate changes, create follow-up quotes",
+                  "**MO**: review of changes (Chapter 9.7)",
+                  "**Finance department**: financial consequences and evidence"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Contract is active (Chapter 8)",
+                  "Reason and time of the change are known",
+                  "Customer consent is available where required"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Contract uniquely identified",
+                  "☐  Permitted change selected, evidence available",
+                  "☐  Financial consequences checked",
+                  "☐  Change documented in the history"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Changes go through the MO Check according to Chapter 9.7.",
+                  "Contract transfer requires a new registered keeper and identity of holder and registered keeper (Chapter 4.4).",
+                  "The history is the basis for reporting and governance (Chapter 16)."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Can I increase the mileage?",
+                "Not in the current contract; this requires a new contract or follow-up contract (10.2 and 10.5)."
+              ],
+              [
+                "What is the difference between cancellation and termination?",
+                "Cancellation voids the contract, termination ends it at a set date; both have their own financial consequences (10.6 and 10.7)."
+              ],
+              [
+                "Where can I see who changed something?",
+                "In the contract's change history (10.8)."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.68,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "__Calculation examples and finance reference__ – Appendix I.2.",
+                  "__FAQ and troubleshooting__ – Chapter 23 with questions per process phase and known errors per market and release.",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.79,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "nr": 11,
+    "key": "11",
+    "kind": "Kapitel",
+    "chs": [
+      11
+    ],
+    "slug": "Rechnung_Zahlung_Kosten_und_Auswertungen",
+    "title": "Invoicing, Payment, Costs and Reports",
+    "stand": "11.10.2026",
+    "footer": "**Note**: This Quick Guide summarizes Chapter 11 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+    "flow": [
+      "Check payment schedule",
+      "Distinguish statuses",
+      "Invoice recipient",
+      "Costs and claims",
+      "Final settlement",
+      "Reporting and handover"
+    ],
+    "pages": [
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Purpose and benefit",
+            "items": [
+              "You understand **invoicing and payment schedules**, distinguish **invoice and payment status**, handle **different invoice recipients and collective invoices**, know **cost management and claims**, **final settlement and corrections** and use **reporting and exports** (Chapter 11.1 to 11.8)."
+            ],
+            "h": 1.73,
+            "size": 9,
+            "shot": "Payment schedule",
+            "shotH": 1.15,
+            "img": "img/badge_11.png"
+          },
+          {
+            "type": "note",
+            "text": "This document is interactive – references to handbook chapters and systems are provided as links.",
+            "blue": true,
+            "h": 0.36,
+            "size": 9
+          },
+          {
+            "type": "overview",
+            "title": "Topics at a glance",
+            "cols": [
+              {
+                "sections": [
+                  {
+                    "head": "11.1 – 11.4 Invoice and costs",
+                    "bullets": [
+                      "Invoicing and payment schedules",
+                      "Distinguishing invoice status and payment status",
+                      "Different invoice recipients and collective invoice",
+                      "Cost management and claims"
+                    ]
+                  }
+                ]
+              },
+              {
+                "sections": [
+                  {
+                    "head": "11.5 – 11.8 Settlement and reporting",
+                    "bullets": [
+                      "Workshop and supplier references",
+                      "Final settlement, refund and corrections",
+                      "Reporting, filters and exports",
+                      "Handing over deviations to the department or support"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "h": 1.76,
+            "size": 9
+          },
+          {
+            "type": "image",
+            "path": "img/landscape_11.png",
+            "h": 1.32
+          }
+        ],
+        "right": [
+          {
+            "type": "image",
+            "path": "img/flow_11.png",
+            "h": 1.65
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "steps": [
+                  "Check the contract's **payment schedule** (11.1): interval, amounts and due dates.",
+                  "Distinguish **invoice status** (issued, cancelled) and **payment status** (open, paid, overdue) (11.2).",
+                  "For a **different invoice recipient** or **collective invoice**, check the assignment from Chapter 7.2 (11.3)."
+                ]
+              }
+            ],
+            "h": 1.27,
+            "size": 9,
+            "title": "How to proceed"
+          },
+          {
+            "type": "warn",
+            "text": "~~Invoice and payment status are separate values.~~ An issued invoice is not paid, and an incoming payment does not automatically change the contract status.",
+            "h": 0.67,
+            "size": 9
+          },
+          {
+            "type": "steps",
+            "items": [
+              {
+                "start": 4,
+                "steps": [
+                  "Track **costs and claims** per contract (11.4) and the **workshop and supplier references** (11.5).",
+                  "On closure, the **final settlement** takes place with **refund** or **correction** (11.6).",
+                  "Use **reporting, filters and exports** for analyses (11.7) and hand over **deviations** to the department or support (11.8)."
+                ]
+              }
+            ],
+            "h": 0.97,
+            "size": 9
+          }
+        ]
+      },
+      {
+        "left": [
+          {
+            "type": "card",
+            "title": "Roles and prerequisites",
+            "items": [
+              {
+                "head": "Roles involved"
+              },
+              {
+                "bullets": [
+                  "**Dealer**: check invoice and payment status, workshop reference",
+                  "**Finance department**: payment schedules, corrections, refunds",
+                  "**Market/HQ**: reporting and analyses"
+                ]
+              },
+              "",
+              {
+                "head": "Prerequisites"
+              },
+              {
+                "bullets": [
+                  "Contract is active and payment data is entered (Chapter 7)",
+                  "Access to invoice and payment information",
+                  "Knowledge of the interfaces to oneERP, NEMESIS and MPay (Chapter 19)"
+                ]
+              }
+            ],
+            "h": 2.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Checklist before completion",
+            "items": [
+              {
+                "bullets": [
+                  "☐  Payment schedule and due dates checked",
+                  "☐  Invoice and payment status read correctly",
+                  "☐  Invoice recipient and collective invoice appropriate",
+                  "☐  Deviation handed over with reference number"
+                ]
+              }
+            ],
+            "h": 1.31,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Notes and pitfalls",
+            "items": [
+              {
+                "bullets": [
+                  "Accounting processing takes place in NEMESIS, payments via MPay, customer data via oneERP (Chapter 19.11 to 19.15).",
+                  "Exports contain personal data; observe Chapter 16.1.",
+                  "Calculation examples for refunds are in Appendix I.2."
+                ]
+              }
+            ],
+            "h": 1.28,
+            "size": 9
+          }
+        ],
+        "right": [
+          {
+            "type": "faq",
+            "qa": [
+              [
+                "Why is the contract \"paid\" but the invoice \"open\"?",
+                "Both statuses come from different systems and are updated at different times (11.2)."
+              ],
+              [
+                "Who corrects an incorrect invoice?",
+                "The Finance department via the correction process; you hand over the case with the reference number (11.6 and 11.8)."
+              ],
+              [
+                "Can I export reports?",
+                "Yes, via Reporting with filters and export (11.7), depending on your role."
+              ]
+            ],
+            "title": "Frequently asked questions and answers",
+            "h": 1.68,
+            "size": 9
+          },
+          {
+            "type": "card",
+            "title": "Important links and contacts",
+            "items": [
+              {
+                "bullets": [
+                  "__NEMESIS__ – Accounting processing (Chapter 19.14).",
+                  "__MPay__ – Payment integration (Chapter 19.15).",
+                  "__oneSCM handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+                  "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapter 23.4 and 23.5)."
+                ]
+              }
+            ],
+            "h": 1.63,
+            "size": 9
+          }
+        ]
+      }
+    ]
+  }
+]

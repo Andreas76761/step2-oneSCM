@@ -80,7 +80,7 @@ function frame(slide, g, pageNo, pageCount) {
   ], { x: 9.9, y: 0.12, w: 0.9, h: 0.55, margin: 0, isTextBox: true, valign: 'top', lineSpacingMultiple: 0.9, objectName: 'Logo Text' });
   // Fußzeile
   slide.addText(runs(g.footer, body(8)), { x: 0.22, y: 7.12, w: 8.2, h: 0.28, margin: 0, isTextBox: true, valign: 'middle', objectName: 'Fußzeile Hinweis' });
-  slide.addText(`STAND: ${g.stand} | ${pageNo}/${pageCount}`, {
+  slide.addText(`${g.standLabel || 'STAND'}: ${g.stand} | ${pageNo}/${pageCount}`, {
     x: 8.5, y: 7.12, w: 2.1, h: 0.28, margin: 0, isTextBox: true, align: 'right', valign: 'middle',
     fontFace: FONT_B, fontSize: 7, color: C.footer, charSpacing: 2.5, objectName: 'Stand',
   });

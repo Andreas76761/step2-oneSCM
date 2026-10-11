@@ -78,6 +78,17 @@ def flow(labels, w_in, h_in, path, title=None):
             arrow(d, b[0] + (b[1] - b[0]) / 2, a[3] + pt(4), b[0] + (b[1] - b[0]) / 2, b[2] - (b[3] - b[2]) - pt(1) + pt(1), C["blue"], pt(1))
     img.save(path)
 
+LANG = {"de": {"phases": ["Zugang und Navigation", "Kunde und Fahrzeug", "Angebot", "Antrag", "Signatur", "Prüfung und Aktivierung", "Verwaltung", "Abrechnung"],
+               "lanes": ["Markt- und HQ-Pflege, Länder und Sparten", "Governance, Rollout, Migration", "Architektur, Ausblick, Support"],
+               "map": "Prozesslandkarte oneSCM – Einordnung von %s %s", "chap": "Kap. ", "of": "Kapitel %d von 23", "flow": "Prozessbild: ",
+               "kinds": {"Kapitel": "Kapitel", "Anhang": "Anhang", "Übergangsmodul": "Übergangsmodul", "Vorspann": "Vorspann"}},
+        "en": {"phases": ["Access and navigation", "Customer and vehicle", "Quote", "Application", "Signature", "Review and activation", "Administration", "Billing"],
+               "lanes": ["Market and HQ maintenance, countries and divisions", "Governance, rollout, migration", "Architecture, outlook, support"],
+               "map": "oneSCM process map – position of %s %s", "chap": "Ch. ", "of": "Chapter %d of 23", "flow": "Process view: ",
+               "kinds": {"Kapitel": "Chapter", "Anhang": "Appendix", "Übergangsmodul": "Transition module", "Vorspann": "Preface"}}}
+CUR = {"lang": "de"}
+def L(): return LANG[CUR["lang"]]
+
 PHASES = [("Zugang und Navigation", [1, 2, 3]), ("Kunde und Fahrzeug", [4, 5]), ("Angebot", [5]), ("Antrag", [6]),
           ("Signatur", [7]), ("Prüfung und Aktivierung", [8, 9]), ("Verwaltung", [10, 12, 13]), ("Abrechnung", [11])]
 LANES = [("Markt- und HQ-Pflege, Länder und Sparten", [14, 15, 20, 21]), ("Governance, Rollout, Migration", [16, 17, 18]),
@@ -88,24 +99,26 @@ def landscape(nr, w_in, h_in, path, chs=None, kind="Kapitel"):
     W, H = int(w_in * DPI), int(h_in * DPI)
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(img)
     pad = pt(4); f_t, f_l, f_k = font(8, True), font(6.5), font(6)
-    d.text((pad, pad), "Prozesslandkarte oneSCM – Einordnung von %s %s" % (kind, nr), font=f_t, fill=C["text"])
+    d.text((pad, pad), L()["map"] % (L()["kinds"].get(kind, kind), nr), font=f_t, fill=C["text"])
     top = pt(16); gap = pt(6)
     n = len(PHASES); bw = (W - 2 * pad - (n - 1) * gap) / n; bh = pt(30)
     for i, (name, chs) in enumerate(PHASES):
+        name = L()["phases"][i]
         x0 = pad + i * (bw + gap); x1 = x0 + bw; hl = bool(hl_set & set(chs))
         rrect(d, (x0, top, x1, top + bh), pt(3), C["redfill"] if hl else C["fill"], C["red"] if hl else C["blue"], pt(1.2 if hl else 0.7))
         lines = wrap(d, name, f_l, bw - pt(6))[:2]; ty = top + pt(4)
         for ln in lines:
             tw = d.textlength(ln, font=f_l); d.text((x0 + (bw - tw) / 2, ty), ln, font=f_l, fill=C["red"] if hl else C["text"]); ty += pt(7.5)
-        k = "Kap. " + ", ".join(str(c) for c in chs); tw = d.textlength(k, font=f_k)
+        k = L()["chap"] + ", ".join(str(c) for c in chs); tw = d.textlength(k, font=f_k)
         d.text((x0 + (bw - tw) / 2, top + bh - pt(8.5)), k, font=f_k, fill=C["red"] if hl else C["muted"])
         if i < n - 1:
             arrow(d, x1 + pt(0.5), top + bh / 2, x1 + gap - pt(0.5), top + bh / 2, C["blue"], pt(0.8))
     ly = top + bh + pt(7); lh = (H - ly - pad - (len(LANES) - 1) * pt(3)) / len(LANES)
     for j, (name, chs) in enumerate(LANES):
+        name = L()["lanes"][j]
         y0 = ly + j * (lh + pt(3)); y1 = y0 + lh; hl = bool(hl_set & set(chs))
         rrect(d, (pad, y0, W - pad, y1), pt(2), C["redfill"] if hl else C["lightgray"], C["red"] if hl else C["gray"], pt(1.0 if hl else 0.5))
-        txt = "%s   (Kap. %s)" % (name, ", ".join(str(c) for c in chs))
+        txt = "%s   (%s%s)" % (name, L()["chap"], ", ".join(str(c) for c in chs))
         d.text((pad + pt(5), y0 + (lh - pt(7)) / 2), txt, font=f_l, fill=C["red"] if hl else C["text"])
     img.save(path)
 
@@ -114,10 +127,11 @@ def badge(nr, title, w_in, h_in, path, chs=None, kind="Kapitel", sub=None):
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0)); d = ImageDraw.Draw(img)
     rrect(d, (0, 0, W - 1, H - 1), pt(5), C["white"], C["blue"], pt(0.7))
     hl_set = set(chs if chs is not None else [nr])
-    phase = sub or next((n for n, c in PHASES + LANES if hl_set & set(c)), "")
+    names = L()["phases"] + L()["lanes"]
+    phase = sub or next((names[i] for i, (n, c) in enumerate(PHASES + LANES) if hl_set & set(c)), "")
     num = str(nr); f_big = font(30 if len(num) <= 3 else 20, True); tw = d.textlength(num, font=f_big)
     d.text(((W - tw) / 2, pt(6) if len(num) <= 3 else pt(12)), num, font=f_big, fill=C["blue"])
-    f_s = font(7, True); t = ("Kapitel %d von 23" % nr) if kind == "Kapitel" else kind; tw = d.textlength(t, font=f_s)
+    f_s = font(7, True); t = (L()["of"] % nr) if kind == "Kapitel" else L()["kinds"].get(kind, kind); tw = d.textlength(t, font=f_s)
     d.text(((W - tw) / 2, pt(44)), t, font=f_s, fill=C["text"])
     f_p = font(6.5); lines = wrap(d, phase, f_p, W - pt(10)); ty = pt(55)
     for ln in lines[:2]:
@@ -128,9 +142,10 @@ if __name__ == "__main__":
     import sys, json
     out = sys.argv[1]; os.makedirs(out, exist_ok=True)
     spec = json.load(open(sys.argv[2], encoding="utf-8"))
+    CUR["lang"] = sys.argv[3] if len(sys.argv) > 3 else "de"
     for g in spec:
         k = g.get("key") or "%02d" % g["nr"]; kind = g.get("kind", "Kapitel"); chs = g.get("chs")
-        flow(g["flow"], 5.1, 1.05 if len(g["flow"]) <= 5 else 1.65, os.path.join(out, "flow_%s.png" % k), title="Prozessbild: " + g["title"])
+        flow(g["flow"], 5.1, 1.05 if len(g["flow"]) <= 5 else 1.65, os.path.join(out, "flow_%s.png" % k), title=L()["flow"] + g["title"])
         landscape(g["nr"], 5.1, 1.32, os.path.join(out, "landscape_%s.png" % k), chs=chs, kind=kind)
         badge(g["nr"], g["title"], 1.9, 1.15, os.path.join(out, "badge_%s.png" % k), chs=chs, kind=kind, sub=g.get("sub"))
     print("Bilder erzeugt:", len(spec) * 3)
