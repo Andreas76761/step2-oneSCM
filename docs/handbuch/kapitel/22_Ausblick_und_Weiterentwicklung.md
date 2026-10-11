@@ -132,7 +132,7 @@ Quellen: Batch 363.2, 966.3, 966.2, 1092.5, 1255.5, 1089.7, 1185.3, 614.4, 846.1
 - Die Weiterentwicklung umfasst die zeitgesteuerte Aktualisierung von Images zur Verringerung der Schwachstellen sowie die automatische Aktualisierung von Workflows in allen Repositories außer den End-to-End-Repositories. Batch 544.1.
 - Die Weiterentwicklung umfasst die Behebung kritischer ECR-Findings im Document-Management-Service, im Customer-Service und im Notification-Service. Batch 1305.3.
 
-Hinweise zu 22.2: Die Ausblickpunkte haben einen unterschiedlichen Detailgrad. Einzelne Punkte nennen nur Titel oder Ziele ohne Funktionsbeschreibung. Solche Punkte stehen im Klärungsbedarf. Die Vermerke zu Status und Pausierung gelten nur für die genannten Punkte.
+**Hinweise.** Die Ausblickpunkte haben einen unterschiedlichen Detailgrad. Einzelne Punkte nennen nur Titel oder Ziele ohne Funktionsbeschreibung. Solche Punkte stehen im Klärungsbedarf. Die Vermerke zu Status und Pausierung gelten nur für die genannten Punkte.
 
 Quellen: Batch 866.2, 1244.3, 1082.6, 1086.3, 772.2, 1098.5, 754.8, 614.4, 1305.3, 835.6, 862.4, 395.5, 1253.8, 391.6, 1255.5, 1254.5, 1244.4, 1.6, 26.6, 264.2, 336.1, 1311.4, 1314.7, 1126.3, 1297.3, 1292.1, 516.1, 541.1, 531.5, 525.1, 527.2, 520.2, 532.1, 544.1, 1305.3, 1098.5
 
@@ -200,7 +200,7 @@ Quellen: keine Quellen in den RAG-Batches zu Schulung und Handbuchpflege. Redakt
 - Datei i155: Die Erzeugung der Datei i155 entspricht dem Sollverhalten, und die Beobachtbarkeitsvalidierung ist durchgeführt. Batch 544.1.
 - Dokumentation: Die Dokumentation der Anwendung ist aktualisiert und validiert. Batch 538.1.
 
-Hinweise zu 22.4: Die Angaben zu Infrastruktur richten sich an Betrieb und Administration. Die Architekturbeschreibung steht in Kapitel 19. Release-Notes und Versionierung setzen Commit- und Pull-Request-Konventionen voraus. Schwellenwerte für Qualitäts- und Freigabeprüfungen sind bewusst zu wählen, damit sie die Arbeit nicht unnötig ausbremsen. Batch 521.2.
+**Hinweise.** Die Angaben zu Infrastruktur richten sich an Betrieb und Administration. Die Architekturbeschreibung steht in Kapitel 19. Release-Notes und Versionierung setzen Commit- und Pull-Request-Konventionen voraus. Schwellenwerte für Qualitäts- und Freigabeprüfungen sind bewusst zu wählen, damit sie die Arbeit nicht unnötig ausbremsen. Batch 521.2.
 
 **Ausblick.** Die Weiterentwicklung umfasst die Anzeige der Release-Version in der Benutzeroberfläche. Der Status dieses Punktes ist im Klärungsbedarf vermerkt. Batch 1309.3. Die Weiterentwicklung umfasst die Bereinigung der automatisierten Tests, die sich laut Material in der Analyse befindet. Batch 1309.3. Die übrigen Ausblickpunkte aus den Releasehinweisen stehen in 22.2.
 
@@ -240,7 +240,7 @@ Quellen: Batch 336.1, 337.1, 862.4, 547.1, 531.1, 531.3, 531.4, 527.2, 1309.3, 5
 | Fahrzeuggruppen: Änderungsprotokoll und Spaltensortierung | 14.11 Fahrzeuggruppen und Van-Baumuster-Clustering | 26.6 |
 | Vorlagen für E-Mails, Dokumente, Suche und Gestaltung | 14.4 Vorlagenverwaltung und Template Management | 395.5, 1253.8, 391.6 |
 | Mercedes-me-Profil auf der Kundendetailseite | 4.3 Kundendaten und Pflichtangaben prüfen | 614.4 |
-| Chargenjobs und Benachrichtigungen aus dem Systembetrieb | 14.5 Administrationsbereich und zulässige Aktionen | 264.2, 911.3 |
+| Protokolle eines Chargenjob-Laufs im Administrationsbereich | 14.5 Administrationsbereich und zulässige Aktionen | 264.2 |
 | Testautomatisierung, Produktionstests, Xray und Selenium | 16.4 Testnachweise und produktiver Funktionsstand | 1314.7, 1126.3, 1297.3, 1292.1 |
 | Deployment-Strategie, CI/CD-Effizienz, Graviton, Observability, Dokumentation, Sicherheitsüberwachung und Betrieb | 19.1 Architekturüberblick und Systemlandkarte und 19.23 Architekturregister und offene Nachweise | 516.1, 541.1, 525.1, 527.2, 532.1, 537.1, 538.1, 539.1, 544.1, 520.2, 531.5, 531.1, 543.1, 1305.3 |
 | Release-Prozess, Versionierung, Release-Notes und Release-Version | 16.6 Quellen und Versionsführung | 521.2, 547.1, 1309.3, 527.2 |
@@ -276,7 +276,7 @@ Quellen: Batch 336.1, 337.1, 862.4, 547.1, 531.1, 531.3, 531.4, 527.2, 1309.3, 5
 - Zielverhalten bei Prolongation mit Deckungen: Batch 772.2 beschreibt Szenarien, aber kein Zielverhalten. Batch 772.2
 - Vorgänge und Bearbeitungskreislauf: Batch 439.4 nennt die Zuweisung von Vorgängen und den Abschluss des Bearbeitungskreislaufs ohne weitere Angaben. Batch 439.4
 - Contract Generation: Die Einträge sind mit Status „Offen“ gekennzeichnet. Zielzustand, Akzeptanzkriterien und betroffene Rollen fehlen. Batch 866.2
-- Stammdaten zu Produktanlage und Statusname: Batch 835.6 nennt Statusbezeichnungen als offen, ohne Zuordnung der Datumswerte im Detail. Batch 835.6
+- Statusbezeichnungen und Datumszuordnung: Batch 835.6 nennt die Statusbezeichnungen und die Zuordnung der Datumswerte ohne Festlegung. Batch 835.6
 
 **Eingestellte Vorhaben**
 
@@ -329,6 +329,8 @@ Quellen: Batch 336.1, 337.1, 862.4, 547.1, 531.1, 531.3, 531.4, 527.2, 1309.3, 5
 - Manuelle Rechnungserstellung im Backend: Batch 219.2.
 - Abschnitte ohne Funktionstext mit abgebrochenem Status: Batch 576.1, 672.1, 920.1, 928.1, 473.1, 932.1, 678.1, 935.1, 987.1, 900.1. Die Aufnahme in das Handbuch erfolgt nur bei ausdrücklicher Freigabe durch das Release-Team. Batch 928.1
 - Mileage Check Market Operations Interface: Batch 1015.1. Der Abschnitt enthält einen Redaktionskommentar statt eines Handbuchtexts.
+- Übermittlung von Zahlungsbeginn und Zahlungsende an NEMESIS: Batch 253.5.
+- Behandlung von Deferred Logic in SWT, Zahlungsart Banküberweisung für Behördenkunden mit Versand der Rechnungen an oneERP sowie Aktualisierung der Hauptnavigation für Revenue und Cost Management: Batch 196.3.
 
 **Geschlossene Meldungen**
 

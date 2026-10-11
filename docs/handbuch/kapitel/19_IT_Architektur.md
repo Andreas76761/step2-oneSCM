@@ -366,3 +366,72 @@ Für Rechnungen aus dem Feedback des Finanzsystems gilt außerdem: Der Zahlbetra
 **Fehlerbehebung.** Meldet die Validierung einen Zählerfehler, prüfen Sie den Eintrag in Datadog. Der Batch zeigt dann den Status „Validation Error“. Nach der Ursachenanalyse starten Sie den Export-Batch erneut. Die Rechnungen werden mit neuer Verarbeitungsnummer übermittelt.
 
 Quellen: Batch 121.1, 121.3, 156.2, 198.1, 584.1, 619.1, 591.1, 591.4, 585.5, 127.1, 161.2, 142.3, 138.2, 164.5, 217.2, 162.4, 201.1, 177.1, 181.2, 581.3, 141.3, 181.6
+
+## 19.14 NEMESIS – Buchhalterische Verarbeitung
+
+**Zweck.** NEMESIS verarbeitet die buchhalterischen Finanzdaten von Serviceverträgen zum Monatsende. Der Schwerpunkt liegt auf Berechnungen für die Buchhaltung, etwa Umsatzrealisierung, Vertragsverbindlichkeiten und Rückstellungen. oneSCM sendet Ereignisse zu Kunden, Verträgen, Umsätzen und Kosten an NEMESIS. Dieser Abschnitt beschreibt die Auslöser der Ereignisse, die Steuerung je Markt, die Fehlerrückmeldungen und die historische Synchronisation.
+
+**Voraussetzungen.** Der Markt ist für NEMESIS aktiviert. Die Option „Allow Nemesis events to be sent“ steht im Bereich „Nemesis“ der Markteinstellungen unter „External System Settings“. Die Anzeige der historischen Synchronisation und der Fehlerliste setzt den Zugriff auf die Nemesis-Seite voraus.
+
+**Rollen.** Benutzer mit der Berechtigung „Market Settings“ führen die historische Synchronisation aus. HQ-Administratoren steuern die Erzeugung der Ereignisse je Produkt. Der Bereich für fachliche Fehler steht ausschließlich Market-Operation-Benutzern im 2nd Level Support zur Verfügung.
+
+**Ereignisse und Schnittstelle.** oneSCM übermittelt die Daten über eine REST-Schnittstelle an NEMESIS. Ein gemeinsamer Endpunkt gilt für alle Mandanten. Die Schnittstelle liefert Informationen zu Verträgen, Vertragserlösen, Vertragsforderungen und Kundendaten. Die Ereignisse entstehen beim Revenue-Export mit dem Status „Exported“ und bei der Rückmeldung des Finanzsystems mit dem Status „FI Document Created“.
+
+Ein Vertragsereignis entsteht bei der Aktivierung eines Fahrzeugvertrags. Der Vertragsservice im oneSCM-Backend legt das Ereignis an, und ein Batch-Job sendet es an den NEMESIS-Service. Dieser leitet die Informationen an NEMESIS weiter.
+
+Für jeden Erlös stellt oneSCM Revenue-Informationen als JSON bereit, sowohl für automatisch erzeugte Erlöse als auch für manuell angelegte. Die Angaben umfassen unter anderem Ländercode, Fahrgestellnummer, Servicevertragsnummer, Währung, Gesamtbetrag, Gutschrifts- und Belastungsbeträge mit Datum, Verkaufssubventionen, Zahlungsart, kalkulierten Anfangspreis und monatlichen Preis. Die Zahlungsart richtet sich nach dem Preismodell und dem Zahlungsintervall. Bei Fest- oder variablem Preis lautet der Wert 01, bei einmaliger Zahlung 02 und bei Stufenpreismodellen 03. Staffelpreise für die Jahre 2 bis 15 übermittelt oneSCM nicht, da keine Stufenpreise vorliegen.
+
+**Zeitpunkt der Revenue-Ereignisse.** oneSCM erzeugt das Revenue-Ereignis erst, nachdem das Finanzsystem die Rechnung gebucht hat. Voraussetzung ist die Rückmeldung „FI Document Created“ oder ein späterer Status wie „Paid On-Time“, „Paid overdue“ oder „Dunning Level 1“. In den Markteinstellungen wählen Sie im Mehrfachauswahl-Dropdown „NEMESIS Revenue Event Generation“ die Rechnungsstatus aus, für die das Ereignis entsteht. Neben dem Dropdown zeigt ein Info-Symbol den Hinweis „Select status for NEMESIS Revenue Event generation“. Nemesis-Ereignisse entstehen nur für Rechnungen, die den Status „FI Doc Created“ erreicht haben.
+
+Bei Verkaufszuschuss-Rechnungen und internen Rechnungen erzeugt oneSCM Revenue-Ereignisse. Bei internen Rechnungen sendet oneSCM das Ereignis erst, wenn die Rechnung den Status „EXPORTED“ erreicht. Die Markteinstellungen gelten für diese Rechnungen nicht. Beträge in den Revenue- und Cost-Ereignissen übermittelt oneSCM im Format von NEMESIS. Der Betrag wird mit 100 multipliziert, und die Nachkommastellen entfallen. Aus 123,4567 wird so 12345, aus 123,4 wird 12340 und aus 1234 wird 123400.
+
+**Steuerung je Produkt.** HQ-Administratoren legen in den Markteinstellungen fest, für welche Produkte NEMESIS Ereignisse erhält. Die Seite zeigt die Produkte des Marktes in einem Dropdown. Ist ein Produkt nicht ausgewählt, erzeugt oneSCM für dieses Produkt weder Vertragsstamm-Ereignisse noch Umsatz- oder Nicht-VEGA-Kostenereignisse noch Kundenereignisse. Ist ein Produkt ausgewählt, erzeugt oneSCM alle vier Ereignisarten. Jede Änderung protokolliert das System mit Zeitstempel und Benutzerkennung. PC und Van sind getrennt konfiguriert, mit einem eigenen Reiter je Division.
+
+Für Management-Verträge sendet oneSCM keine Kunden-, Vertrags-, Umsatz- oder Händlerereignisse an NEMESIS. Verträge mit einer 100-%-Aftersales-Kampagne lösen keine Ereignisse für Vertrag, Umsatz, Kunde oder Kosten aus.
+
+**Kostenereignisse.** Das Ereignis „Dealer Invoice“ trägt im Feld interfaceName den Wert „DealerInvoice“. Die Händlerrechnungsnummer hat 10 Zeichen, der Company Code lautet 2724. Die Händler-ID im Händlerrechnungs-Ereignis ist die Partnernummer, also die VEGA-ID, und nicht die GSSN-Outlet-ID. Die Kafka-Nachricht enthält den Marktcode für das Reporting und bei manueller Kostenerfassung das Erstzulassungsdatum. Nicht-VEGA-Kostenereignisse entstehen für manuelle Kostenanpassungen und händlerbezogene Kosten. VEGA-Kostenereignisse beruhen auf Werkstattforderungen aus dem VEGA-Import, den CLAI-Rechnungen. In beiden Fällen entsteht pro Forderung ein Kostenereignis.
+
+**Vertragsereignisse.** Das Ereignis zur Änderung der Zahlungsdauer enthält das Feld „numberOfInvoices“. Bei vollständig subventionierten Verträgen, in denen der Kunde nichts zahlt, entsprechen Zahlungsbeginn und Zahlungsende dem Vertragsbeginn und dem Vertragsende. Wird ein Vertrag verlängert, fordert NEMESIS ein Contract-Master-Data-Event an, in dem das Feld „ExtensionReductionIndicator“ befüllt ist. Bei einer kurzfristigen Verlängerung enthält das Feld den Wert „S“.
+
+**Import funktionaler Fehler.** NEMESIS meldet fachliche Fehler als CSV-Datei über den CFT-Ablauf. Die Datei liegt im Ordner für eingehende NEMESIS-Dateien des Landes. Sie enthält unter anderem Company Code, Business Unit, Period, Fehlerdatum und -uhrzeit im Format HHmm, Closing Date, FIN, Vertragsnummer, Vertragsstatus, Produktlinie, Meldungsnummer, Fehlergrund, Fehlertyp, Occurrence und First Incidence.
+
+1. oneSCM ordnet jeden Fehler anhand der Meldungsnummer einem Ereignis zu. Gibt es für eine Nummer mehrere Regeln, entsteht der Fehler in allen genannten Ereignissen. Bei Fehler 23 entstehen beispielsweise Fehler in den Bereichen Contract, Revenue und Cost.
+2. Für die Zuordnung zum Ereignistyp Contract, Customer, Revenue oder Cost ist der Interface-Subset maßgeblich. Andere Schnittstellentypen wie ISP ignoriert oneSCM.
+3. oneSCM klassifiziert die Fehler nach Meldungsnummer und zeigt sie unter der zugehörigen Domäne an. Dem Bereich Contract sind Meldungen zu fehlendem oder ungültigem Ländercode, fehlendem Vertrag, abweichender FIN, fehlender Vertragslaufzeit, nicht gefundenem Vertragsstamm, einem Vertragsende vor der Migration bei aktivem Status und einem zukünftigen Vertragsbeginn zugeordnet. Der Bereich Revenue zeigt, dass für einen Vertrag keine Umsatzaktualisierung erfolgt ist. Im Bereich Cost erscheint die Meldung, dass Ist-Kosten für das Abschlussdatum nicht geladen wurden. Meldungen, die ausschließlich die Kostenverteilung im Financial Management betreffen, berücksichtigt oneSCM nicht.
+
+**Fehlerbehandlung im Admin-Bereich.** Die Suche nach fachlichen Fehlern bietet die Kriterien First Incident als Datum, Contract Number als Textfeld mit unscharfer Suche ohne Unterscheidung von Groß- und Kleinschreibung, Status als Mehrfachauswahl und Error code. Mit „Search“ füllt sich der Ergebnisbereich, „Cancel“ verwirft alle Änderungen. Änderungen an den Filterfeldern wirken sich erst nach „Search“ auf die Ergebnisse aus.
+
+Jeder Fehler steht in einer eigenen Zeile. Eine Auswahl ist nur bei Fehlern mit dem Status „Unresolved“ möglich. Die Spalten zeigen Modification Date, Contract Number, FIN, Error code, Reason For Error, Occurrence, First Incidence und Status. Standardmäßig sortiert die Tabelle nach Modification Date, und jede Seite zeigt 10 Einträge, wählbar sind 10, 20, 30, 40 und 50.
+
+Die Aktion „Resend“ sendet alle vier Ereignisse Customer, Contract, Revenue und Cost mit den aktuellen Daten erneut. Die Aktion „Acknowledge“ dient dem Fall, dass der Fehler keine manuelle Korrektur zulässt und der Benutzer ihn nicht beheben kann.
+
+Die Fehlerprotokolle liefert NEMESIS bislang monatlich als Excel-Datei über CFT. oneSCM liest die Datei aus und zeigt den Inhalt an. Das Material beschreibt zudem die tägliche Bereitstellung der Protokolle. Den Stand dieser Umstellung erfasst der Klärungsbedarf.
+
+**Fehlerbehandlung und erneutes Senden bei der historischen Synchronisation.** Im Sync-Verlauf öffnet die Aktion „View Details“ den Dialog „Sync Failure Details“ mit den Vertragsnummern, für die Ereignisse fehlgeschlagen sind. Über „Retrigger“ gelangen Sie zu „Nemesis Errors“, wo das fehlgeschlagene Ereignis unter seinem Ereignistyp steht. Nach der Behebung der Ursache senden Sie es erneut. Der Fehlertyp lautet „Infrastructure“ oder „Functional“.
+
+**Historische Synchronisation.** Benutzer mit der Berechtigung „Market Settings“ synchronisieren historische Daten zwischen oneSCM und NEMESIS. Die Funktion deckt alle Ereignistypen ab: Kunde, Vertrag, Umsatz und Kosten. Sie finden sie unter Finance Management, Nemesis, mit den Reitern „Nemesis Errors“, „Historical Data Sync“ und „Sync History“.
+
+1. Im Reiter „Historical Data Sync“ geben Sie Vertragsnummern manuell in das Textfeld ein, getrennt durch Komma oder Zeilenumbruch. Alternativ laden Sie eine Datei im Format .xls hoch. oneSCM prüft Dateityp und Format der Vertragsnummern und entfernt doppelte Einträge.
+2. Wählen Sie die Ereignistypen. Standardmäßig sind alle ausgewählt, mindestens einer bleibt ausgewählt. Bei Kosten ist mindestens eine der Optionen VEGA oder Non-VEGA aktiv.
+3. Kunden erzeugen je Vertrag ein Ereignis mit den vollständigen Kundenprofildaten. Vertragsereignisse legen den Vertragsstamm an. Für Umsatzereignisse (RevenueSet) verwendet oneSCM die letzte Rechnung mit dem Status „FI Doc Created“, die die kumulierten Werte des Vertrags enthalten soll.
+4. Klicken Sie auf „Start Historical Sync“ und bestätigen Sie im Dialog mit „Confirm & Start Sync“. Danach öffnet sich der Reiter „Sync History“ mit dem laufenden Lauf. Brechen Sie den Dialog ab, bleiben Ihre Eingaben erhalten.
+
+Der Reiter „Sync History“ zeigt Datum, Anzahl der Verträge, Ereignistypen, Gesamtzahl der Ereignisse, Dauer und Status. Die Status lauten „Success“ oder „Completed with Errors“. Einzelne Fehler stoppen den Lauf nicht. Die Fehleranzahl steht je Ereignistyp. Nach Abschluss zeigt der Eintrag die Vertragsnummern mit fehlgeschlagenen Ereignissen.
+
+Für Benutzer mit eingeschränkter Sicht gilt: Erneutes Senden und Bestätigen sind bei Nemesis-Fehlern nicht möglich. Die Seite „Historical Data Sync“ ist sichtbar, die Eingabefelder sind deaktiviert. Dieses Verhalten gilt für alle Benutzer mit eingeschränkter Sicht und nicht nur für die Rolle „View only“.
+
+**Fehlerprotokoll und Abgrenzung.** oneSCM liest zusätzliche Meldungsnummern aus der Nemesis-Fehlerdatei, die früher unberücksichtigt blieben. Die Liste der funktionalen Fehler umfasst die Fehler, die oneSCM in den Ereignistypen anzeigt. Die Fehler 83, 250 und 225 sind nicht Teil der Umsetzung, der Fehler 247 gehört in den Contract Master.
+
+**Markt Indien.** Für den Markt Indien gilt der Ablauf des deutschen Marktes für Customer, Revenue, Cost und Contract. Mapping, Statuslogik und Validierungen sind identisch. Abweichend verwendet oneSCM für Indien den Company Code 1414 und den Country Code 82536. Revenue-Ereignisse übermitteln die Werte für Indien. Für Customer-Ereignisse und den Contract-Stammdatensatz gilt dieselbe Funktionsweise.
+
+**Management-Verträge.** Für Management-Verträge sendet oneSCM keine Kunden-, Vertrags-, Umsatz- oder Händlerereignisse an NEMESIS. Die Abhängigkeit zu den Arbeitsströmen für Kunden und Verträge ist im Klärungsbedarf erfasst.
+
+**Ergebnis und Systemstatus.** NEMESIS erhält Ereignisse für Märkte, für die die Option aktiviert ist, und für Produkte, die HQ-Administratoren ausgewählt haben. Fehlerhafte Ereignisse erscheinen in der Fehlerliste, und Sie senden sie nach der Korrektur erneut. Die historische Synchronisation zeigt Status und Fehleranzahl je Lauf.
+
+**Besonderheiten je Markt.** Nemesis-Ereignisse entstehen nur für Märkte, in denen die Option „Allow Nemesis events to be sent“ aktiviert ist. Für Märkte ohne NEMESIS sind die Ereignisse vollständig entkoppelt. Die Anbindung für Südkorea (MBKR) und die Angaben dazu sind im Klärungsbedarf erfasst.
+
+**Hinweise.** Die Datenstruktur der Revenue-Dateien für NEMESIS und die Verarbeitung in der Data Foundation beschreibt Abschnitt 19.19. Die Dateiübertragung über CFT beschreibt Abschnitt 19.21.
+
+**Fehlerbehebung.** Ein Ereignis mit dem Fehler „Functional“ korrigieren Sie in den Stammdaten oder im Vertrag und senden es danach über „Resend“ erneut. Ein Ereignis mit dem Fehler „Infrastructure“ senden Sie nach der Behebung der Ursache erneut, etwa über „Retrigger“ aus dem Sync-Verlauf. Ist eine Meldung nicht manuell korrigierbar, setzen Sie die Aktion „Acknowledge“ ein.
+
+Quellen: Batch 270.1, 263.2, 253.4, 168.1, 191.1, 206.1, 154.2, 229.6, 716.5, 225.3, 225.4, 222.2, 156.4, 183.4, 708.4, 240.2, 251.1, 125.5, 138.1, 144.2, 253.3, 161.3, 163.4, 109.1, 162.2, 145.1, 251.5

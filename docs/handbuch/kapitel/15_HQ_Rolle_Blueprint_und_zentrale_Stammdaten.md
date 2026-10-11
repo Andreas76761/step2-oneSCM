@@ -79,7 +79,7 @@ Quellen: keine
 
 - „FRD“ entspricht der Logik FRD Related ohne den Zusatz „Related“.
 - „Sales date“ bezieht sich auf das Datum der Angebotserstellung und entspricht der Logik FRD Not Related.
-- „Future date“ steht für ein zukünftiges Datum, etwa das Ende der Garantiedauer oder das vorgesehene Vertragsende des ursprünglichen Produkts. Das Kontrollkästchen „Future date“ ist standardmäßig nicht ausgewählt.
+- „Future date“ steht für ein Datum in der Zukunft, etwa das Ende der Garantiedauer oder das vorgesehene Vertragsende des ursprünglichen Produkts. Das Kontrollkästchen „Future date“ ist standardmäßig nicht ausgewählt.
 
 Auf Blueprint-Ebene lassen sich mehrere Werte gleichzeitig auswählen. Ein Produkt übernimmt nur die aktivierten Werte. Im Produkt wählt der MPC-Anwender genau einen davon aus. Die Verknüpfung der Produktlimits mit der Verkaufslogik bezieht sich auf die Werte FRD, Sales date und Future date.
 
@@ -121,6 +121,72 @@ Material: keine Quellen in den RAG-Batches
 Quellen: keine
 
 ## 15.4 Governance und Freigaben auf HQ-Ebene
+
+Material: keine Quellen in den RAG-Batches
+
+Quellen: keine
+
+## 15.5 Zusammenarbeit mit Markt und MO
+
+**Zweck.** Die HQ-Rolle definiert Coverage Codes, Industry Codes, ISP-Codes und K/JX-Codes zentral und stellt sie den Märkten als Vorgabe zur Verfügung. Die Märkte ergänzen in den Market Settings ihre eigenen, sprachspezifischen Bezeichnungen. Die Übermittlung verläuft nur in eine Richtung, vom HQ-Bereich in die Market Settings. Die HQ-Felder sind für Marktnutzer schreibgeschützt. Der Markt kann die ursprünglichen HQ-Vorgaben weder ändern noch überschreiben.
+
+**Voraussetzungen.** Der Code ist im HQ-Bereich angelegt und bestätigt, bevor der Markt ihn in den Market Settings übersetzt. Die Marktspezifität legt fest, in welchen Märkten der Code verwendet werden kann. Die Anlage der Codes beschreibt Kapitel 15.7.
+
+**Rollen.** HQ-Administratoren legen Codes an und pflegen sie. Market-Operation-Nutzer und MPC-Benutzer pflegen in den Market Settings die Sprachfelder ihres Marktes und sehen die HQ-Felder schreibgeschützt. Ein lokaler Marktnutzer kann Daten oder Übersetzungen eines anderen Marktsegments oder einer anderen Division weder einsehen noch ändern, wenn ihm die Berechtigung fehlt. Händler, MO-Mitarbeitende und MPC-Nutzer unterliegen der HQ-Sperre für Fahrzeuge.
+
+**Schritt für Schritt.**
+
+*Code im HQ-Bereich anlegen.*
+
+1. Legen Sie den Coverage Code oder Industry Code im Schritt 1 an und konfigurieren Sie ihn je Division.
+2. Wählen Sie im Schritt 2 „Marktspezifität“ die Märkte. Zur Auswahl stehen „Current and Upcoming Markets“ und „Custom Markets“. Bei Custom Markets setzen Sie die Märkte per Checkbox. In diesem Schritt gibt es keine Sprachfelder.
+3. Prüfen Sie im Schritt 3 die Übersicht und bestätigen Sie den Code.
+
+*ISP-Codes anlegen.*
+
+4. Öffnen Sie im Bereich Vehicle Management den dreistufigen Wizard für ISP-Codes. Das Vorgehen entspricht dem der Vega Codes.
+5. Legen Sie den Code an. Upload und Download sind dabei deaktiviert. Definieren Sie danach die Märkte und füllen Sie das HQ-Feld mit der HQ-Empfehlung aus.
+6. Prüfen Sie die Übersicht. Fehlende Pflichtangaben wie Code, Marktdefinition oder HQ-Felder verhindern den Abschluss des Wizards.
+
+*K/JX-Codes pflegen.*
+
+7. Öffnen Sie im Bereich Fahrzeugverwaltung den HQ-Reiter für K/JX-Codes. Die Tabelle enthält die Spalten Code mit höchstens 10 Zeichen, Laufleistung in Kilometern, Laufleistung in Meilen, Laufzeit in ganzen Monaten, Geschäftsbereich PC oder Van und eine Beschreibung mit höchstens 800 Zeichen ohne Sonderzeichen.
+8. Legen Sie Einträge über „Erstellen“ an. Für mehrere Einträge laden Sie eine Excel-Vorlage hoch. Beim Bearbeiten überschreiben die neuen Werte die bestehenden. Vor dem Löschen fragt das System nach einer Bestätigung.
+
+*Änderungen im HQ-Bereich übernehmen.*
+
+9. Ändern Sie einen Code im HQ-Bereich. Das System übernimmt die Änderung in die HQ-Felder der Market Settings. Marktfelder aktualisiert es, sofern der Markt sie nicht überschrieben hat.
+10. Deaktivieren Sie einen Coverage Code. Er verschwindet danach aus der Liste der aktiven Coverage Codes in den Market Settings.
+
+**Ergebnis und Systemstatus.** Die Märkte arbeiten mit denselben HQ-Vorgaben. Eine Änderung im HQ-Bereich erscheint in den Market Settings. Das System übernimmt neue Sprachen aus den Market Settings mit den aktuellen Inhalten und füllt die Felder vor. Die HQ-Empfehlungen sind in den marktspezifischen Attributen vorbelegt, sodass die Daten abgestimmt bleiben.
+
+K/JX-Codes werden in der Vertragserstellung verwendet. Bei einem Fahrgestellidentifikator erkennt das System, ob es sich um einen Van oder einen PC handelt, und ermittelt die K/JX-Codes über einen VeDoc-Aufruf oder aus vorhandenen Daten des CePro-Imports. Berücksichtigt werden nur Codes aus der Tabelle in oneSCM. Laufleistung und Laufzeit des Eintrags gehen in der Einheit der Markteinstellung an die Generierung, also in Kilometern oder Meilen. Gibt es keinen Eintrag, bleiben die Werte leer. Bei einer Auftragsnummer ruft das System die K/JX-Codes für einen PC über die GoOrder-API und für einen Van über die AFAB-API ab. Auch hier bleiben die Werte leer, wenn kein Eintrag existiert.
+
+**Besonderheiten je Rolle, Sparte und Markt.**
+
+- HQ-Administratoren pflegen die ISP-Codes im Bereich Vehicle Management und die K/JX-Codes im Bereich Fahrzeugverwaltung.
+- Die Übersetzungen der Marktseite sind je Sparte getrennt nach Passenger Cars und Vans. Wo ein Markt keine eigene Übersetzung erfasst hat, verwendet das System den HQ-Vorschlag. Der HQ-Vorschlag ist je Code einheitlich, wird von der Zentrale gepflegt und kann von den Märkten nicht verändert werden.
+- Die Felder mit Übersetzungen unterscheiden sich je Code-Typ. Bei Coverage Codes übersetzen Sie Coverage Name, Description und Family Tag. Bei Damage Codes übersetzen Sie Code Name und Type Description. Bei Industry Codes gibt es das Feld Industry. Bei Technischen Optionen übersetzen Sie Group Name und Group Description. Bei ISP-Codes gibt es das Feld Description.
+- Die Marktliste enthält ausschließlich Deutschland. Weitere Märkte erscheinen, sobald oneSCM sie unterstützt.
+- Ist die Markteinstellung Deutsch, erscheint „Deutschland“ statt „Germany“ in der Marktspalte der Tabellen, in der Detail- und Zusammenfassungsansicht sowie in Schritt 2 der Anlage. Dafür liefert das Backend die Marktcodes der ausgewählten Märkte.
+
+**Hinweise.**
+
+- Die HQ-Sperre verhindert, dass Händler, MO-Mitarbeitende und MPC-Nutzer für gesperrte Fahrzeuge Serviceverträge anlegen oder aktivieren. Die Vertragskalkulation prüft nach der Auswahl des Kundentyps und der Eingabe einer Fahrgestellnummer, ob das Fahrzeug von der Zentrale gesperrt ist. Ist es gesperrt, liefert das System keine Produkte und Preise. Ist es nicht gesperrt, stellt es alle passenden Produkte und Preise bereit.
+- Bei einem Baumuster oder einer Auftragsnummer ohne verfügbare Fahrgestellnummer liefert das System Produkte und Preise, und der Vertrag kann den Status „Confirmed“ erreichen. Liefert das Fahrzeugmanagement bei einem erstellten Vertrag später die Fahrgestellnummer nach, prüft das System die Sperre erneut. Bei einer Sperre setzt es den Vertrag auf „Rejected“ und die Marktorganisation erhält gemäß der Vorlage eine Benachrichtigung. Andernfalls setzt das System die Aktivierung fort.
+- Eine entfernte Sprache verschwindet aus der aktiven Anzeige der Benutzeroberfläche. Die Datensätze bleiben erhalten. Bei einer Wiederherstellung ist das Feld mit der zuvor gespeicherten Übersetzung wieder sichtbar.
+- Ein lokaler Marktnutzer kann die ursprünglichen HQ-Vorgaben zur Feldkonfiguration in den Market Settings weder ändern noch überschreiben.
+- Die Beschreibung des ISP-Wizards stammt aus einem Entwicklungsstand, der die Abläufe nur mit dem Verweis „gemäß UI“ beschreibt. Der Stand ist im Klärungsbedarf erfasst.
+
+**Fehlerbehebung.**
+
+- Nach dem Speichern der Market Settings erscheint die Meldung „Settings saved successfully“. Der eingegebene Text bleibt erhalten.
+- Ist die Vertragsanlage für ein gesperrtes Fahrzeug nicht möglich, erscheint die Meldung „locked vehicle - no products available“.
+- Ist ein Pflichtfeld im ISP-Wizard leer, lässt sich der Wizard nicht abschließen. Ergänzen Sie die Angabe und fahren Sie fort.
+
+Quellen: Batch 1130.1, 884.1, 884.3, 5.1, 4.1, 1116.1, 1129.1, 994.2, 1197.1, 1208.1
+
+## 15.6 Aufgabenbeschreibung versus dokumentierte Navigation
 
 Material: keine Quellen in den RAG-Batches
 
