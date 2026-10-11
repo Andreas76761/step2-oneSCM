@@ -309,7 +309,7 @@ Quellen: keine
 - Nach einem Import erscheint die Meldung „File Dateiname was successfully imported“. Schlägt der Import fehl, erscheint die Meldung „File Dateiname could not be imported.“ mit einer Schaltfläche „Close“. Das Fenster bleibt geöffnet, damit Sie die Datei erneut hochladen können.
 - Die Schaltfläche für den Download der Schadencodes ist deaktiviert, wenn die Suche keinen Code findet. Ein Hinweis erklärt dies beim Überfahren mit der Maus.
 
-Quellen: Batch 1220.2, 1220.3, 1264.2, 1191.1, 1162.1, 1161.3, 1160.4, 1263.1, 1221.1, 1204.1, 1208.1, 1209.1, 1203.2, 1259.2, 1258.6, 1254.1, 1201.2, 1174.3, 1174.1, 1188.2, 1167.2, 1207.1, 7.3, 5.3, 4.1, 731.3, 732.1, 169.3, 199.4, 703.3, 884.3, 1171.3, 1100.2, 1130.1
+Quellen: Batch 1220.2, 1220.3, 1264.2, 1191.1, 1162.1, 1161.3, 1160.4, 1263.1, 1221.1, 1204.1, 1208.1, 1209.1, 1203.2, 1259.2, 1258.6, 1254.1, 1201.2, 1174.3, 1174.1, 1188.2, 1167.2, 1207.1, 7.3, 5.3, 4.1, 731.3, 732.1, 169.3, 199.4, 703.3, 884.3, 1171.3, 1100.2, 1130.1, 1279.3
 
 ## Verschiebung in andere Kapitel
 
