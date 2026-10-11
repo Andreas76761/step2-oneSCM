@@ -83,7 +83,7 @@ Quellen: keine
 
 Auf Blueprint-Ebene lassen sich mehrere Werte gleichzeitig auswählen. Ein Produkt übernimmt nur die aktivierten Werte. Im Produkt wählt der MPC-Anwender genau einen davon aus. Die Verknüpfung der Produktlimits mit der Verkaufslogik bezieht sich auf die Werte FRD, Sales date und Future date.
 
-**Maximale Grenzwerte auf Blueprint-Ebene.** Märkte sollen Servicevertragsprodukte nur auf Fahrzeuge anwenden, die die Berechtigungskriterien erfüllen. Die Grenzwerte auf Blueprint-Ebene, sogenannte Max Limits, bilden den Rahmen, in dem die MPCs agieren. Je nach Produkt und Ablaufkriterium stehen im Blueprint-Setup folgende Felder bereit:
+**Maximale Grenzwerte auf Blueprint-Ebene.** Märkte verkaufen Servicevertragsprodukte nur auf Fahrzeuge, die die Berechtigungskriterien erfüllen. Die Grenzwerte auf Blueprint-Ebene, sogenannte Max Limits, bilden den Rahmen, in dem die MPCs agieren. Je nach Produkt und Ablaufkriterium stehen im Blueprint-Setup folgende Felder bereit:
 
 - Bei Reifenprodukten „Maximum Allowed Tire Replacements“. Sie geben einen absoluten Wert ein oder wählen die Option „Unlimited“.
 - Bei dem Ablaufkriterium „Kontingent“ „Maximum Allowed Services“, ebenfalls mit der Option „Unlimited“.
@@ -279,7 +279,7 @@ Quellen: keine
 **Besonderheiten je Rolle, Sparte und Markt.**
 
 - Die Division bestimmt die Auswahl. Coverage Codes lassen sich den Divisionen Passenger Cars und Vans zuordnen. Industry Codes sind auf die Division Vans festgelegt. Technische Optionen legen Sie je Division an.
-- Die Marktliste für Coverage Codes, Industry Codes und Schadencodes enthält ausschließlich Deutschland. Weitere Märkte erscheinen, sobald oneSCM sie unterstützt.
+- Die Marktlisten für Industry Codes und Schadencodes enthalten ausschließlich Deutschland. Weitere Märkte erscheinen, sobald oneSCM sie unterstützt.
 - Die Übersetzungen der Märkte stehen in Kapitel 15.5. Die Marktnamen erscheinen je nach Markteinstellung in der Sprache des Marktes.
 - Die Quelle nennt einen Tab zum Anlegen von Industry Codes, der vor allem für Testzwecke gedacht ist. Dieser Abschnitt beschreibt die Anlage als regulären Ablauf. Die Abweichung ist im Klärungsbedarf erfasst.
 - Die Gruppenart Reifengröße gehört zum Reifenprodukt. Ein Reifenprodukt mit Radgrößen, Wetterprofilen und Preisen beschreibt Kapitel 13.2. Die Wetterprofile „Summer“, „Summer/Winter“ und „All-Season“ sind fest hinterlegt und ohne Technische Optionen verfügbar.

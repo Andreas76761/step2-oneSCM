@@ -555,3 +555,58 @@ Wird der CFDM-Batch gestoppt, setzt oneSCM Rechnungen mit dem Status „Accepted
 
 Quellen: Batch 225.1, 617.4, 1288.1
 
+
+## 19.18 Weitere Systeme und Dienste
+
+**Zweck.** Dieser Abschnitt beschreibt Dienste, die über die Fachdomänen hinaus wirken: das Benachrichtigungscenter, die Fehlerbenachrichtigung für Batch-Jobs, die Vier-Augen-Freigabe für Sonderfälle, die Kennzeichnung automatisierter Historieneinträge, den Edge Service für externe Vertriebskanäle und die DevOps-Umgebung.
+
+**Voraussetzungen.** Die Benachrichtigungen erhalten Benutzer mit den Rollen MO, MPC und Dealer. Die Fehlerbenachrichtigung für Batch-Jobs geht an das Operations-Team im 2nd Level. Der Edge Service ist für angebundene externe Systeme wie MBLD bereitgestellt.
+
+**Rollen.** Market Operation, kurz MO, prüft und bearbeitet die Benachrichtigungen. MPC prüft Sonderfälle in der Vier-Augen-Freigabe. Dealer stellen Anfragen für Sonderfälle und erhalten die Entscheidung.
+
+**Systeminterne Benachrichtigungen.** oneSCM versendet automatisch Benachrichtigungen zu Vorgängen, die Aufmerksamkeit erfordern. Die Benachrichtigung geht an Benutzer der Market Operation. Der Benutzer, der den Vorgang angelegt hat, erhält sie nicht. Ziel ist ein Freigabeprozess, der auf Benachrichtigungen zwischen den Benutzern beruht.
+
+Das Benachrichtigungscenter zeigt folgende Auslöser:
+
+- manuell erstellte Rechnungen oberhalb eines Schwellenwerts, mit der Meldung „Please approve invoice“ und der Rechnungsnummer
+- Kampagnen mit Kulanzzeit (Grace Period), die beim Verkauf eines Servicevertrags angeboten werden. Der MPC genehmigt oder lehnt die Anfrage ab. Der Händler erhält danach die Meldung „Grace Period Campaign“ mit dem Namen der Kampagne und der Vertragsnummer, dass sie genehmigt oder nicht genehmigt wurde.
+- Kundenrechnungen, die zu prüfen sind. Mit „Approve“ geben Sie die Rechnung frei, und der Status wechselt auf „accepted“. Mit „Reject“ lehnen Sie sie ab und gelangen auf eine dafür vorgesehene Seite.
+- fehlgeschlagene Zahlungen nach den Wiederholungsversuchen (Abschnitt 19.15)
+
+Die Glocke in der Navigationsleiste zeigt die Anzahl offener Benachrichtigungen bis 9. Bei mehr als 9 Benachrichtigungen erscheint „9+“. Ein Klick öffnet das Benachrichtigungscenter auf der rechten Seite. Jede Benachrichtigung ist mit der zugehörigen Seite verlinkt. Benachrichtigungen, die eine Aktion erfordern, sind mit einem blauen Punkt markiert. Eine erledigte Benachrichtigung, etwa nach Genehmigen oder Ablehnen, verschwindet aus dem Center. Das Center schließen Sie über das X.
+
+**Zuweisung einer Aufgabe.** Benutzer der Market Operation oder des MPC weisen eine Benachrichtigung einer bestimmten Person zu. Sie klicken dazu auf „@unassigned“ und geben einen Namen ein. Ab drei Zeichen schlägt ein Dropdown passende Personen vor, gesucht wird nach Vor- und Nachname oder Benutzer-ID. Nach der Zuweisung sieht nur die zugewiesene Person die Benachrichtigung und erhält eine E-Mail mit einem Link. Über „Go to Invoice“ gelangt sie zur Rechnung oder zur Kampagne.
+
+**Vier-Augen-Freigabe für Sonderfälle.** Für Sonderfälle gibt es eine Freigabe über das Benachrichtigungscenter. Ein Antragsteller stellt die Anfrage, ein erster Nutzer führt Änderungen durch, und ein zweiter Nutzer gibt sie frei. Der zweite Nutzer darf weder der erste Nutzer noch der Antragsteller sein. Die Funktion richtet sich an MPC 1, MPC 2 und Dealer.
+
+1. Der Dealer stellt die Anfrage für den Sonderfall. MPC 1 sieht eine neue Benachrichtigung mit dem Status „Offen“ und der Referenz- oder Gruppen-ID.
+2. Lehnt MPC 1 die Anfrage ab, erhält der Antragsteller den Status „Abgelehnt“.
+3. Nimmt MPC 1 Änderungen vor, etwa am Preis, erhalten alle anderen MPC-Nutzer den Status „In Prüfung“.
+4. Akzeptiert der zweite Prüfer die Änderungen, erhält der Antragsteller den Status „Genehmigt“. Nimmt der zweite Prüfer selbst Änderungen vor, durchläuft der Vorgang die Freigabe erneut.
+5. Am Ende erhält der Antragsteller eine Benachrichtigung. Liegen zwei Prüfungen vor, schließt ein Endpunkt die Benachrichtigung mit „Akzeptiert“ oder „Abgelehnt“ ab. Der Status „Geprüft“ ist diesem Endpunkt vorbehalten.
+
+**Historie bei automatisierten Aktionen.** In der Vertragshistorie zeigt das Feld „Modified By“ bei automatisierten Aktionen den Wert „System“. Er ist eine reservierte Kennung für nicht menschliche Akteure und gilt in allen Diensten. Betroffen sind Statusübergänge, automatische Wiederholungen der MO-Prüfungen, die automatische Vertragsaktivierung, zeitgesteuerte Statusübergänge wie Prolongation und Ablauf, ereignisgesteuerte Aktualisierungen über Kafka, automatische Freigaben im Final Contract Review, die Dokumentgenerierung, Zahlungsverarbeitung und Batch-Jobs, die in die Vertragshistorie schreiben. Bei manuellen Aktionen erscheint weiterhin die Benutzer-ID.
+
+**Fehlerbenachrichtigung für Batch-Jobs.** Fehlschlagende oder abgebrochene Batch-Jobs melden sich automatisch per E-Mail an das NPM-Team (Network Performance Management). Die Funktion gilt für alle Batch-Typen in allen Märkten, darunter die CFDM-Batches und die Exporte E167, E169 und E174. Das Batch-Framework beobachtet den Status fortlaufend. Wechselt ein Batch auf „Failed“ oder „Aborted“, startet die Benachrichtigung. Die Anfrage an den Benachrichtigungsdienst erfolgt innerhalb von 10 Sekunden nach der Erkennung.
+
+Die E-Mail enthält Batch-Namen, Markt, Zeitpunkt des Fehlers im UTC-Format, Laufzeit bis zum Fehler und Fehlerstatus. Das System schreibt zusätzlich einen Protokolleintrag. Ziel der Funktion ist eine Abdeckung der Benachrichtigungen von mindestens 99 Prozent über Märkte und Umgebungen hinweg.
+
+**Edge Service.** Der Edge Service stellt Produkte und Preise für externe Vertriebskanäle bereit. Für den Vertriebskanal „OnlineSales“ enthält die Antwort ausschließlich Produkte und Preise, die gegen die Vertriebsebene „Direct-to-customer“ und die Fahrzeugvoraussetzungen „Limits for Direct-to-customer“ validiert sind. Die Preispunkte bleiben auf Basis der jährlichen Fahrleistung. Bei Langzeitverlängerung und kurzfristiger Verlängerung bietet das System nur zulässige Kombinationen aus Laufleistung und Laufzeit an.
+
+Für Vertragsvorschläge, die über die API angelegt werden, übernimmt oneSCM die Angebotsgültigkeit aus den Markteinstellungen. Für MBLD erfolgt keine automatische Ablehnung. Ist eine Produktversion nicht mehr verfügbar, wendet oneSCM das dafür definierte Verhalten an. Über die OTR-Schnittstelle ruft oneSCM AFAB- und GO-Auftragsnummern ab und setzt danach den bisherigen Ablauf fort.
+
+Der Edge Service wertet Anfragen mit Datumsangaben nach den Marktvorgaben aus. Ein Datum, das nicht den Vorgaben entspricht, führt zu einer Fehlermeldung, und der Vorgang wird nicht abgeschlossen. Bei der Aktivierung darf das Erstzulassungsdatum nicht nach dem Datum der Anfrage liegen. Die Baumuster-Validierung prüft Produkt, Produktkonfiguration und Preis gegen die ursprünglichen Angaben.
+
+**DevOps und Betrieb.** Die CI/CD-Workflows aktualisiert eine eigene Abstraktionsschicht in allen Repositories. Die Workflows starten den gewählten Branch. Das Deployment erfolgt auf AWS ECS. Die Datei-Überwachung durch CFT veröffentlicht Ereignisse für die Anwendung File Scanner. Wichtige Kafka-Topics sichert ein MSK Connector in einem eigenen Bucket. Die Secrets auf Organisationsebene liegen auf Repository-Ebene. Für ECR gehen automatisierte Benachrichtigungen bei hohen und kritischen Schwachstellen aus.
+
+Datadog ist für die Produktivumgebung eingerichtet. Monitore überwachen Anomalien im Frontend. Die Produktivumgebung ist mit Zertifikaten, Secrets, Anwendungsprofilen und Datenbanken bereitgestellt. Ein Lasttest prüft Skalierung, Load Balancer, Anwendungen, Datenbankanfragen und Netzwerk. Disaster-Recovery-Szenarien messen die Zeit für einen Rollback.
+
+**Ergebnis und Systemstatus.** Benutzer sehen Benachrichtigungen in der Glocke und im Center. Batch-Fehler erreichen das NPM-Team per E-Mail. Die Historie kennzeichnet automatisierte Einträge mit „System“. Sonderfälle laufen über die Vier-Augen-Freigabe mit dem Status der Anfrage.
+
+**Besonderheiten je Sparte und Markt.** Die Fehlerbenachrichtigung gilt für Revenue-Batches in den Märkten DE, IN und SK. Der Edge Service stellt Produkte für die Vertriebskanäle Leasing und OnlineSales bereit.
+
+**Hinweise.** Die Benachrichtigung über abgelehnte Zahlungen beschreibt Abschnitt 19.15. Die Aktion „Stop“ für laufende Batch-Jobs beschreibt Abschnitt 19.17. Die Zusammenhänge der Edge-Schnittstellen beschreibt Abschnitt 19.22.
+
+**Fehlerbehebung.** Erhalten Sie keine Benachrichtigung, prüfen Sie die Rolle und die Zuständigkeit des Vorgangs. Der Benutzer, der den Vorgang angelegt hat, erhält sie nicht. Erscheint eine Benachrichtigung nicht mehr, ist sie bereits durch eine Aktion erledigt.
+
+Quellen: Batch 452.1, 428.2, 378.1, 159.1, 1087.2, 1189.1, 1082.5, 1142.6, 545.1, 436.2, 439.1, 461.1, 444.1, 458.1, 440.1, 441.1, 443.1, 445.1, 446.1, 447.1, 448.1, 449.1, 450.1, 451.1, 454.1, 455.1, 456.1, 459.1, 462.1, 486.1, 437.1, 521.1
