@@ -184,7 +184,7 @@ Ein Folgevertrag nach Ablauf ist im vorliegenden Material nicht beschrieben. Mat
 
 Bei der Verlängerung eines Sonderfall-Vertrags berechnet das System den Angebotspreis aus dem ursprünglichen Sonderfallpreis zuzüglich der Differenz der Preispunkte. Beispiel: Ein ursprünglicher Sonderfallpreis von 1.800 zuzüglich einer Differenz von 950 ergibt einen Angebotspreis von 2.750. Eine erneute Sonderfallanfrage ist bei der Verlängerung nicht möglich.
 
-Für MBLD-Verträge stellt oneSCM Verlängerungspreise bereit, die aus der Gesamtlaufleistung abgeleitet und zwischen vorhandenen Preispunkten derselben Laufzeit interpoliert werden. Verlängerungen mit preisrelevanten Optionen verwenden die Preisversion, die die Produktkonfiguration für Verlängerungen vorsieht.
+Für MBLD-Verträge stellt oneSCM Verlängerungspreise bereit, die aus der Gesamtlaufleistung abgeleitet und zwischen vorhandenen Preispunkten derselben Laufzeit interpoliert werden. Verlängerungen mit preisrelevanten Optionen verwenden die Preisversion, die Produktkonfiguration für Verlängerungen vorsieht.
 
 **Besonderheiten je Rolle.** Händler fragen Preise für bestehende Verträge an. Die Verlängerung selbst führen Market Operations und MPC aus. Bei MBLD-Verträgen erfolgt die Verlängerung über die Schnittstelle, ohne Dokument und ohne Kundenunterschrift. Der einzige Nachweis der Verlängerung ist der Eintrag in der Vertragshistorie.
 
