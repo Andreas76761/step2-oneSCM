@@ -57,6 +57,7 @@
   .hb-qg a { display: flex; gap: .5rem; align-items: flex-start; padding: var(--cds-pad-sm); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); text-decoration: none; font-size: var(--cds-font-size-caption); }
   .hb-qg a:hover { border-color: var(--color-fg); }
   .hb-qg .hb-qg-nr { font-family: var(--font-anthropic-serif); font-size: 1.25rem; line-height: 1; min-width: 1.6rem; color: var(--color-fg-muted); }
+  .hb-qg .hb-qg-head { grid-column: 1 / -1; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); margin-top: var(--cds-gap-xs); }
   .hb-qg a.hb-qg-all { grid-column: 1 / -1; background: color-mix(in srgb, var(--color-fg) 6%, var(--color-bg)); }
   .hb-qg-link { color: var(--color-fg); text-decoration: underline; text-underline-offset: .15em; white-space: nowrap; }
   .hb-fail { display: flex; align-items: center; justify-content: center; gap: .375rem; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
@@ -127,7 +128,7 @@
 
   <section class="hb-card" style="margin-bottom: var(--cds-gap-lg)">
     <h2 id="quickguides">Quick Guides je Kapitel</h2>
-    <p class="hb-note" id="qg-note">Zweiseitige Quick Guides als PDF im Design der Van-Vorlage. Klick öffnet die PDF in einem neuen Tab.</p>
+    <p class="hb-note" id="qg-note">Zweiseitige Quick Guides zu Hauptkapiteln, Übergangsmodulen, Anhängen und Vorspann als PDF. Klick öffnet die PDF in einem neuen Tab.</p>
     <div id="qg-list" class="hb-qg dash-skeleton" data-source="quickguides"></div>
   </section>
 
@@ -207,10 +208,10 @@
 
   dash.calc('guideLinks', {
     title: 'Quick-Guide-Link je Hauptkapitel',
-    description: 'Verknüpft jede Zeile der Gliederung mit der PDF des Quick Guides ihres Hauptkapitels (Kapitelnummer vor dem Punkt).',
+    description: 'Verknüpft jede Zeile der Gliederung mit der PDF ihres Quick Guides: exakte Kennung (Anhang, Übergangsmodul, Vorspann) oder sonst das Hauptkapitel vor dem Punkt.',
     inputs: ['gliederung', 'quickguides'],
     fn: (gliederung, quickguides) => gliederung.map(r => {
-      const q = quickguides.find(g => g.kapitel === r.kapitel.split('.')[0]);
+      const q = quickguides.find(g => g.kapitel === r.kapitel) || quickguides.find(g => g.kapitel === r.kapitel.split('.')[0]);
       return { kapitel: r.kapitel, url: q ? q.url : '' };
     })
   });
@@ -445,9 +446,16 @@
     if (d.status !== 'ok') return;
     box.classList.remove('dash-skeleton');
     box.textContent = '';
-    const rows = [...d.data].sort((a, b) => (a.kapitel === 'Alle' ? -1 : b.kapitel === 'Alle' ? 1 : Number(a.kapitel) - Number(b.kapitel)));
+    const order = ['Alle', 'Kapitel', 'Übergangsmodul', 'Anhang', 'Vorspann'];
+    const rows = [...d.data].sort((a, b) => order.indexOf(a.art) - order.indexOf(b.art) || kapNum(a.kapitel) - kapNum(b.kapitel) || a.kapitel.localeCompare(b.kapitel, 'de', { numeric: true }));
+    let lastArt = '';
     rows.forEach(r => {
       if (!/^\/_blob\//.test(r.url)) return;
+      if (r.art !== lastArt && r.art !== 'Alle') {
+        const h = document.createElement('div'); h.className = 'hb-qg-head';
+        h.textContent = r.art === 'Kapitel' ? 'Hauptkapitel' : r.art === 'Übergangsmodul' ? 'Übergangsmodule' : r.art === 'Anhang' ? 'Anhänge' : 'Vorspann';
+        box.appendChild(h); lastArt = r.art;
+      }
       const a = document.createElement('a');
       a.href = r.url; a.target = '_blank'; a.rel = 'noopener';
       a.className = r.kapitel === 'Alle' ? 'hb-qg-all' : '';
@@ -458,7 +466,7 @@
       a.append(n, t);
       box.appendChild(a);
     });
-    document.getElementById('qg-note').textContent = `${fmt(rows.length - 1)} Quick Guides als PDF im Design der Van-Vorlage, dazu eine Gesamtdatei. Klick öffnet die PDF in einem neuen Tab.`;
+    document.getElementById('qg-note').textContent = `${fmt(rows.length - 1)} Quick Guides (Hauptkapitel, Übergangsmodule, Anhänge, Vorspann) als PDF im Design der Van-Vorlage, dazu eine Gesamtdatei. Klick öffnet die PDF in einem neuen Tab.`;
   }
 
   function drawTable() {
