@@ -51,7 +51,7 @@ Quellen: Batch 1302.1, 1303.1, 1301.1, 1306.1, 1291.1, 1290.1, 1312.1, 1313.1, 5
 
 **Material:** Die RAG-Batches enthalten keine Abschnitte, die die Pkw-Auftragsinformationen selbst beschreiben. Der Batch-Job für GO ist im Abschnitt zur Einrichtung der Batch-Jobs beschrieben und wird hier übernommen.
 
-**Batch-Job für GO.** Für das Vorsystem GO steht der Batch-Job „GetDeliveryDateGlobalOrder“ zur Verfügung. Sie legen ihn an der üblichen Stelle für Batch-Jobs an und terminieren ihn nach den bestehenden Regeln. Die Terminierung erfolgt über eine Cron-ähnliche Einstellung. Als automatischer Rhythmus ist ein Lauf pro Monat vorgesehen. Der Abruf von Lieferterminen aus GO ist in Abschnitt 19.31 beschrieben.
+**Batch-Job für GO.** Für das Vorsystem GO steht der Batch-Job „GetDeliveryDateGlobalOrder“ zur Verfügung. Sie legen ihn an der üblichen Stelle für Batch-Jobs an und terminieren ihn nach den bestehenden Regeln. Die Terminierung erfolgt über eine Cron-ähnliche Einstellung. Als automatischer Rhythmus gilt ein Lauf pro Monat. Der Abruf von Lieferterminen aus GO ist in Abschnitt 19.31 beschrieben.
 
 Quellen: Batch 1178.2
 
@@ -68,7 +68,7 @@ Quellen: Batch 1178.2
 3. oneSCM ruft die Details zur Auftragsnummer ab und übergibt sie an die Generierung, so wie bei der Auftragsnummer eines Pkw.
 4. Die Fahrzeugstammdaten stehen für die Kundentypen Gewerblich und Privat zur Verfügung.
 
-**Batch-Job für den Liefertermin.** Der Job „GetDeliveryDateAFABOrder“ fragt AFAB entweder über die Auftragsnummer oder über die FIN/VIN ab. Den Liefertermin entnimmt das System dem dafür vorgesehenen Feld „GLT BAT Err EN: TDD-BAT calc.“ der AFAB-Antwort beziehungsweise der AFAB-Datei. Die Bezeichnung trägt die Sprachkennung EN. Ist das Feld befüllt, meldet das System den Termin an CONTRACT. Ist es leer, meldet das System für diesen Auftrag in diesem Lauf nichts. Bei den nächsten terminierten Läufen fragt es erneut ab, bis ein Termin vorliegt. Als Standardwert gilt ein zweimaliger Lauf pro Monat.
+**Batch-Job für den Liefertermin.** Der Job „GetDeliveryDateAFABOrder“ fragt AFAB entweder über die Auftragsnummer oder über die FIN/VIN ab. Den Liefertermin entnimmt das System dem dafür bestimmten Feld „GLT BAT Err EN: TDD-BAT calc.“ der AFAB-Antwort beziehungsweise der AFAB-Datei. Die Bezeichnung trägt die Sprachkennung EN. Ist das Feld befüllt, meldet das System den Termin an CONTRACT. Ist es leer, meldet das System für diesen Auftrag in diesem Lauf nichts. Bei den nächsten terminierten Läufen fragt es erneut ab, bis ein Termin vorliegt. Als Standardwert gilt ein zweimaliger Lauf pro Monat.
 
 **Ergebnis und Systemstatus.** Die Fahrzeugstammdaten erscheinen in der Vertragserstellung, sobald die AFAB-Abfrage sie liefert. Ein Liefertermin erscheint erst, wenn das Feld in der AFAB-Antwort befüllt ist.
 
@@ -179,7 +179,7 @@ Quellen: keine Quellen in den RAG-Batches
 
 **Dateischnittstelle i155 an VEGA.** Für den deutschen Markt überträgt die Schnittstelle i155 Servicevertragsdaten und die zugehörigen Deckungen zwischen oneSCM und VEGA. Die Übertragung erfolgt mandantenübergreifend, wobei die Daten nach Codepages getrennt werden. Jede Änderung am Fahrzeugvertrag oder an den Deckungen löst eine Übertragung aller Vertragsinformationen und Deckungen aus.
 
-Die Datei ist positionsbasiert aufgebaut. Die Satzarten RC01, RC05 und RC20 sind Pflichtfelder. Die Satzart RC80 mit den optionalen Angaben wird ebenfalls erzeugt. Die Satzart RC10 mit Vertrags-, Fahrzeug- und Kundeninformationen wird nur befüllt, wenn dafür Text vorhanden ist. Die Satzarten RC15 bis RC18 sind für Sonderfälle vorgesehen und nicht erforderlich. Der Kraftstofftyp in den Positionen 151 bis 152 stammt aus den Fahrzeugdaten, die bei der Vertragskalkulation aus VeDoc abgerufen werden. Die erzeugte Datei wird in Amazon S3 unter dem Pfad für ausgehende Dateien der Schnittstelle i155 für Deutschland abgelegt.
+Die Datei ist positionsbasiert aufgebaut. Die Satzarten RC01, RC05 und RC20 sind Pflichtfelder. Die Satzart RC80 mit den optionalen Angaben wird ebenfalls erzeugt. Die Satzart RC10 mit Vertrags-, Fahrzeug- und Kundeninformationen wird nur befüllt, wenn dafür Text vorhanden ist. Die Satzarten RC15 bis RC18 sind dienen Sonderfällen und sind nicht erforderlich. Der Kraftstofftyp in den Positionen 151 bis 152 stammt aus den Fahrzeugdaten, die bei der Vertragskalkulation aus VeDoc abgerufen werden. Die erzeugte Datei wird in Amazon S3 unter dem Pfad für ausgehende Dateien der Schnittstelle i155 für Deutschland abgelegt.
 
 **Steuerung der Erzeugung.** Im Bereich „Batch Job“ stellen Sie den Zeitplan der Erzeugung der i155 ein. Die Ergebnistabelle zeigt den Jobnamen „Vega i155“, den Jobstatus, die Markt-ID, den Zeitpunkt des letzten Laufs und den Zeitpunkt des nächsten Laufs. Die Zeitangaben stehen im Format TT.MM.JJJJ HH:MM:SS UTC.
 
@@ -223,7 +223,7 @@ Den Offset und das Wirksamkeitsdatum der Leasing-Langzeitverlängerung beschreib
 2. Wird eine Forderung als kontingentfähig erkannt, erhält das Vertragsmanagement eine Benachrichtigung. Es zieht die von der Erlösverwaltung übermittelten Werte von der Anzahl der Kontingentleistungen im Vertrag ab und zeigt die verbleibenden Leistungen an.
 3. Die i155 enthält in der Satzart RC20 die ursprüngliche Anzahl der Leistungen an den Positionen 165 bis 169, die Anzahl der genutzten Leistungen an den Positionen 170 bis 174 und an Position 175 den Wert 1.
 4. Sind alle Leistungen erbracht, endet der Vertrag automatisch mit dem Status „Abgelaufen“ und dem VEGA-Code 003 und dem Grund „Kontingent“. Anschließend erzeugt das System eine i155.
-5. Ohne offene Abgleichsprüfung und ohne Schlussrechnung setzt das System den Vertrag auf „Geschlossen“ mit dem VEGA-Code 004 und übermittelt eine i155 mit dem neuen Status.
+5. Ohne Abgleichsprüfung und ohne Schlussrechnung setzt das System den Vertrag auf „Geschlossen“ mit dem VEGA-Code 004 und übermittelt eine i155 mit dem neuen Status.
 
 Eine fehlende Zählung oder eine fehlende Übermittlung an VEGA kann finanzielle Folgen haben.
 
@@ -443,7 +443,7 @@ Für Management-Verträge sendet oneSCM keine Kunden-, Vertrags-, Umsatz- oder H
 
 Jeder Fehler steht in einer eigenen Zeile. Eine Auswahl ist nur bei Fehlern mit dem Status „Unresolved“ möglich. Die Spalten zeigen Modification Date, Contract Number, FIN, Error code, Reason For Error, Occurrence, First Incidence und Status. Standardmäßig sortiert die Tabelle nach Modification Date, und jede Seite zeigt 10 Einträge, wählbar sind 10, 20, 30, 40 und 50.
 
-Die Aktion „Resend“ sendet alle vier Ereignisse Customer, Contract, Revenue und Cost mit den aktuellen Daten erneut. Die Aktion „Acknowledge“ dient dem Fall, dass der Fehler keine manuelle Korrektur zulässt und der Benutzer ihn nicht beheben kann.
+Die Aktion „Resend“ sendet alle vier Ereignisse Customer, Contract, Revenue und Cost mit den aktuellen Daten erneut. Die Aktion „Acknowledge“ dient dem Fall, dass der Fehler keine manuelle Änderung zulässt und der Benutzer ihn nicht beheben kann.
 
 Die Fehlerprotokolle liefert NEMESIS als Excel-Datei über CFT, und zwar monatlich. oneSCM liest die Datei aus und zeigt den Inhalt an. Das Material beschreibt zudem die tägliche Bereitstellung der Protokolle. Den Stand dieser Umstellung erfasst der Klärungsbedarf.
 
@@ -460,19 +460,19 @@ Der Reiter „Sync History“ zeigt Datum, Anzahl der Verträge, Ereignistypen, 
 
 Für Benutzer mit eingeschränkter Sicht gilt: Erneutes Senden und Bestätigen sind bei Nemesis-Fehlern nicht möglich. Die Seite „Historical Data Sync“ ist sichtbar, die Eingabefelder sind deaktiviert. Dieses Verhalten gilt für alle Benutzer mit eingeschränkter Sicht und nicht nur für die Rolle „View only“.
 
-**Fehlerprotokoll und Abgrenzung.** oneSCM liest zusätzliche Meldungsnummern aus der Nemesis-Fehlerdatei und klassifiziert sie. Die Liste der funktionalen Fehler umfasst die Fehler, die oneSCM in den Ereignistypen anzeigt. Die Fehler 83, 250 und 225 sind für oneSCM nicht vorgesehen, der Fehler 247 gehört in den Contract Master.
+**Fehlerprotokoll und Abgrenzung.** oneSCM liest zusätzliche Meldungsnummern aus der Nemesis-Fehlerdatei und klassifiziert sie. Die Liste der funktionalen Fehler umfasst die Fehler, die oneSCM in den Ereignistypen anzeigt. Die Fehler 83, 250 und 225 sind für oneSCM nicht relevant, der Fehler 247 gehört in den Contract Master.
 
 **Markt Indien.** Für den Markt Indien gilt der Ablauf des deutschen Marktes für Customer, Revenue, Cost und Contract. Mapping, Statuslogik und Validierungen sind identisch. Abweichend verwendet oneSCM für Indien den Company Code 1414 und den Country Code 82536. Revenue-Ereignisse übermitteln die Werte für Indien. Für Customer-Ereignisse und den Contract-Stammdatensatz gilt dieselbe Funktionsweise.
 
 **Management-Verträge.** Für Management-Verträge sendet oneSCM keine Kunden-, Vertrags-, Umsatz- oder Händlerereignisse an NEMESIS. Die Abhängigkeit zu den Arbeitsströmen für Kunden und Verträge ist im Klärungsbedarf erfasst.
 
-**Ergebnis und Systemstatus.** NEMESIS erhält Ereignisse für Märkte, für die die Option aktiviert ist, und für Produkte, die HQ-Administratoren ausgewählt haben. Fehlerhafte Ereignisse erscheinen in der Fehlerliste, und Sie senden sie nach der Korrektur erneut. Die historische Synchronisation zeigt Status und Fehleranzahl je Lauf.
+**Ergebnis und Systemstatus.** NEMESIS erhält Ereignisse für Märkte, für die die Option aktiviert ist, und für Produkte, die HQ-Administratoren ausgewählt haben. Fehlerhafte Ereignisse erscheinen in der Fehlerliste, und Sie senden sie nach der Änderung erneut. Die historische Synchronisation zeigt Status und Fehleranzahl je Lauf.
 
 **Besonderheiten je Markt.** Nemesis-Ereignisse entstehen nur für Märkte, in denen die Option „Allow Nemesis events to be sent“ aktiviert ist. Für Märkte ohne NEMESIS sind die Ereignisse vollständig entkoppelt. Die Anbindung für Südkorea mit dem Marktkürzel MBKR und die Angaben dazu sind im Klärungsbedarf erfasst.
 
 **Hinweise.** Die Datenstruktur der Revenue-Dateien für NEMESIS und die Verarbeitung in der Data Foundation beschreibt Abschnitt 19.19. Die Dateiübertragung über CFT beschreibt Abschnitt 19.21.
 
-**Fehlerbehebung.** Ein Ereignis mit dem Fehler „Functional“ korrigieren Sie in den Stammdaten oder im Vertrag und senden es danach über „Resend“ erneut. Ein Ereignis mit dem Fehler „Infrastructure“ senden Sie nach der Behebung der Ursache erneut, etwa über „Retrigger“ aus dem Sync-Verlauf. Ist eine Meldung nicht manuell korrigierbar, setzen Sie die Aktion „Acknowledge“ ein.
+**Fehlerbehebung.** Ein Ereignis mit dem Fehler „Functional“ ändern Sie in den Stammdaten oder im Vertrag und senden es danach über „Resend“ erneut. Ein Ereignis mit dem Fehler „Infrastructure“ senden Sie nach der Behebung der Ursache erneut, etwa über „Retrigger“ aus dem Sync-Verlauf. Ist eine Meldung nicht manuell änderbar, setzen Sie die Aktion „Acknowledge“ ein.
 
 Quellen: Batch 270.1, 263.2, 253.4, 168.1, 191.1, 206.1, 154.2, 229.6, 716.5, 225.3, 225.4, 222.2, 156.4, 183.4, 708.4, 240.2, 251.1, 125.5, 138.1, 144.2, 253.3, 161.3, 163.4, 109.1, 162.2, 145.1, 251.5
 
@@ -526,11 +526,11 @@ Aktualisiert der Kunde seine Kartendaten nicht, versendet das System Erinnerunge
 
 **Mastercard Transaction Link ID.** oneSCM speichert und verwendet die Transaction Link ID, kurz TLID, für Mastercard im Zahlungsablauf über MPay. Die TLID verknüpft eine Ausgangstransaktion mit allen Folgetransaktionen des Vertrags, also den Customer Initiated Transactions, kurz CIT, und den Merchant Initiated Transactions, kurz MIT,. Die TLID ist eine global eindeutige Zeichenkette. Die NTR-Werte bleiben ebenfalls in Verwendung und werden auf dieselbe Weise gespeichert.
 
-Bei neuen Verträgen entsteht die TLID in der ersten CIT, in der Regel einer Zero-Authorization mit starker Kundenauthentifizierung. oneSCM speichert sie und verwendet sie für alle folgenden MITs. Bei bestehenden Verträgen ohne TLID übernimmt oneSCM die TLID aus der ersten MIT-Antwort, die eine enthält. Eine gespeicherte TLID überschreibt oneSCM nicht. Jede MIT-Anfrage enthält die TLID im Zahlungsobjekt. Fehlt eine gültige TLID, löst oneSCM eine neue CIT mit SCA aus, etwa über eine Zahlungsanfrage mit dem Betrag null und dem hinterlegten Asset. Für die Anforderung der starken Kundenauthentifizierung ist der Parameter challengeRequested vorgesehen.
+Bei neuen Verträgen entsteht die TLID in der ersten CIT, in der Regel einer Zero-Authorization mit starker Kundenauthentifizierung. oneSCM speichert sie und verwendet sie für alle folgenden MITs. Bei bestehenden Verträgen ohne TLID übernimmt oneSCM die TLID aus der ersten MIT-Antwort, die eine enthält. Eine gespeicherte TLID überschreibt oneSCM nicht. Jede MIT-Anfrage enthält die TLID im Zahlungsobjekt. Fehlt eine gültige TLID, löst oneSCM eine neue CIT mit SCA aus, etwa über eine Zahlungsanfrage mit dem Betrag null und dem hinterlegten Asset. Für die Anforderung der starken Kundenauthentifizierung verwendet man den Parameter challengeRequested.
 
 Die Pflicht zur Speicherung und Übermittlung der TLID gilt laut Vorgaben der Kartenorganisation mit den Stichtagen 2. Juni 2026 für die Speicherung und 23. Oktober 2026 für die Übermittlung in Transaktionsanfragen. Eine fehlerhafte Speicherung kann zu Soft Declines des Kartenherausgebers führen.
 
-**Wiederholung fehlgeschlagener Zahlungen.** Für jede per MPay bezahlte Rechnung sind maximal drei Wiederholungsversuche vorgesehen, die die Konfiguration festlegt. Schlägt eine Transaktion fehl, führt oneSCM folgende Schritte aus:
+**Wiederholung fehlgeschlagener Zahlungen.** Für jede per MPay bezahlte Rechnung gelten maximal drei Wiederholungsversuche, die die Konfiguration festlegt. Schlägt eine Transaktion fehl, führt oneSCM folgende Schritte aus:
 
 1. Der MPay-Status der Rechnung wird auf „Refused“ gesetzt.
 2. Kunde und MO-Benutzer erhalten je eine Benachrichtigung. Für den Kunden verwendet oneSCM die Vorlage aus Documents & Communications, für die MO-Benutzer eine eigene Vorlage.
@@ -564,7 +564,7 @@ Bei Verträgen mit Vor- und Nachaktivierung bleiben Rechnungen im Status „Acce
 
 **Hinweise.** Die Benachrichtigung des MO bei abgelehnten Zahlungen erscheint im Notification Center. oneSCM entfernt private Angaben zu Fahrzeug und Karteninhaber aus den MPay-Logs. Die Löschung von CIAM-IDs prüft oneSCM über eine API, die das CID Tool von Mercedes me aufruft. oneSCM beantwortet die Anfrage nach den geschäftlichen Anforderungen, da eine CIAM-ID nicht gelöscht werden soll, solange sie für MPay-Zahlungen benötigt wird.
 
-**Fehlerbehebung.** Schlägt eine Zahlung fehl, prüfen Sie den MPay-Status in der Statushistorie. Ist die Wiederholung abgeschlossen, starten Sie die Zahlung über „Retry“ erneut. Ist der Zahlungslink abgelaufen, erzeugt „Regenerate“ einen neuen Link. Erscheint eine Meldung zu einer abgelehnten Zahlung, wählen Sie den Link in der Meldung und prüfen Sie die Rechnung.
+**Fehlerbehebung.** Schlägt eine Zahlung fehl, prüfen Sie den MPay-Status in der Statushistorie. Ist die Wiederholung beendet, starten Sie die Zahlung über „Retry“ erneut. Ist der Zahlungslink abgelaufen, erzeugt „Regenerate“ einen neuen Link. Erscheint eine Meldung zu einer abgelehnten Zahlung, wählen Sie den Link in der Meldung und prüfen Sie die Rechnung.
 
 Quellen: Batch 616.5, 157.1, 182.1, 129.2, 220.1, 216.1, 135.1, 194.1, 194.2, 160.1, 160.2, 173.1, 197.1, 215.2, 905.2, 376.2, 148.1, 903.6, 164.4, 577.4, 543.2, 905.5, 806.6, 567.1, 199.6, 217.1, 148.2
 
@@ -618,10 +618,10 @@ Das Benachrichtigungscenter zeigt folgende Auslöser:
 
 - manuell erstellte Rechnungen oberhalb eines Schwellenwerts, mit der Meldung „Please approve invoice“ und der Rechnungsnummer
 - Kampagnen mit Kulanzzeit (Grace Period), die beim Verkauf eines Servicevertrags angeboten werden. Der MPC genehmigt oder lehnt die Anfrage ab. Der Händler erhält danach die Meldung „Grace Period Campaign“ mit dem Namen der Kampagne und der Vertragsnummer, dass sie genehmigt oder nicht genehmigt wurde.
-- Kundenrechnungen, die zu prüfen sind. Mit „Approve“ geben Sie die Rechnung frei, und der Status wechselt auf „accepted“. Mit „Reject“ lehnen Sie sie ab und gelangen auf eine dafür vorgesehene Seite.
+- Kundenrechnungen, die zu prüfen sind. Mit „Approve“ geben Sie die Rechnung frei, und der Status wechselt auf „accepted“. Mit „Reject“ lehnen Sie sie ab und gelangen auf eine dafür bestimmte Seite.
 - fehlgeschlagene Zahlungen nach den Wiederholungsversuchen (Abschnitt 19.15)
 
-Die Glocke in der Navigationsleiste zeigt die Anzahl offener Benachrichtigungen bis 9. Bei mehr als 9 Benachrichtigungen erscheint „9+“. Ein Klick öffnet das Benachrichtigungscenter auf der rechten Seite. Jede Benachrichtigung ist mit der zugehörigen Seite verlinkt. Benachrichtigungen, die eine Aktion erfordern, sind mit einem blauen Punkt markiert. Eine erledigte Benachrichtigung, etwa nach Genehmigen oder Ablehnen, verschwindet aus dem Center. Das Center schließen Sie über das X.
+Die Glocke in der Navigationsleiste zeigt die Anzahl unerledigter Benachrichtigungen bis 9. Bei mehr als 9 Benachrichtigungen erscheint „9+“. Ein Klick öffnet das Benachrichtigungscenter auf der rechten Seite. Jede Benachrichtigung ist mit der zugehörigen Seite verlinkt. Benachrichtigungen, die eine Aktion erfordern, sind mit einem blauen Punkt markiert. Eine erledigte Benachrichtigung, etwa nach Genehmigen oder Ablehnen, verschwindet aus dem Center. Das Center schließen Sie über das X.
 
 **Zuweisung einer Aufgabe.** Benutzer der Market Operation oder des MPC weisen eine Benachrichtigung einer bestimmten Person zu. Sie klicken dazu auf „@unassigned“ und geben einen Namen ein. Ab drei Zeichen schlägt ein Dropdown passende Personen vor, gesucht wird nach Vor- und Nachname oder Benutzer-ID. Nach der Zuweisung sieht nur die zugewiesene Person die Benachrichtigung und erhält eine E-Mail mit einem Link. Über „Go to Invoice“ gelangt sie zur Rechnung oder zur Kampagne.
 
@@ -631,7 +631,7 @@ Die Glocke in der Navigationsleiste zeigt die Anzahl offener Benachrichtigungen 
 2. Lehnt MPC 1 die Anfrage ab, erhält der Antragsteller den Status „Abgelehnt“.
 3. Nimmt MPC 1 Änderungen vor, etwa am Preis, erhalten alle anderen MPC-Nutzer den Status „In Prüfung“.
 4. Akzeptiert der zweite Prüfer die Änderungen, erhält der Antragsteller den Status „Genehmigt“. Nimmt der zweite Prüfer selbst Änderungen vor, durchläuft der Vorgang die Freigabe erneut.
-5. Am Ende erhält der Antragsteller eine Benachrichtigung. Liegen zwei Prüfungen vor, kann der Vorgang nur noch mit „Akzeptiert“ oder „Abgelehnt“ abgeschlossen werden.
+5. Am Ende erhält der Antragsteller eine Benachrichtigung. Liegen zwei Prüfungen vor, kann der Vorgang nur noch mit „Akzeptiert“ oder „Abgelehnt“ beendet werden.
 
 **Historie bei automatisierten Aktionen.** In der Vertragshistorie zeigt das Feld „Modified By“ bei automatisierten Aktionen den Wert „System“. Er ist eine reservierte Kennung für nicht menschliche Akteure und gilt in allen Diensten. Betroffen sind Statusübergänge, automatische Wiederholungen der MO-Prüfungen, die automatische Vertragsaktivierung, zeitgesteuerte Statusübergänge wie Prolongation und Ablauf, ereignisgesteuerte Aktualisierungen über Kafka, automatische Freigaben im Final Contract Review, die Dokumentgenerierung, Zahlungsverarbeitung und Batch-Jobs, die in die Vertragshistorie schreiben. Bei manuellen Aktionen erscheint weiterhin die Benutzer-ID.
 
@@ -641,9 +641,9 @@ Die E-Mail enthält Batch-Namen, Markt, Zeitpunkt des Fehlers im UTC-Format, Lau
 
 **Edge Service.** Der Edge Service stellt Produkte und Preise für externe Vertriebskanäle bereit. Für den Vertriebskanal „OnlineSales“ enthält die Antwort ausschließlich Produkte und Preise, die gegen die Vertriebsebene „Direct-to-customer“ und die Fahrzeugvoraussetzungen „Limits for Direct-to-customer“ validiert sind. Die Preispunkte bleiben auf Basis der jährlichen Fahrleistung. Bei Langzeitverlängerung und kurzfristiger Verlängerung bietet das System nur zulässige Kombinationen aus Laufleistung und Laufzeit an.
 
-Für Vertragsvorschläge, die über die API angelegt werden, übernimmt oneSCM die Angebotsgültigkeit aus den Markteinstellungen. Für MBLD erfolgt keine automatische Ablehnung. Ist eine Produktversion nicht mehr verfügbar, wendet oneSCM das dafür definierte Verhalten an. Über die OTR-Schnittstelle ruft oneSCM AFAB- und GO-Auftragsnummern ab und setzt danach den bisherigen Ablauf fort.
+Für Vertragsvorschläge, die über die API angelegt werden, übernimmt oneSCM die Angebotsgültigkeit aus den Markteinstellungen. Für MBLD erfolgt keine automatische Ablehnung. Ist eine Produktversion nicht mehr verfügbar, wendet oneSCM das dafür definierte Verhalten an. Über die OTR-Schnittstelle ruft oneSCM AFAB- und GO-Auftragsnummern ab und setzt danach den anschließenden Ablauf fort.
 
-Der Edge Service wertet Anfragen mit Datumsangaben nach den Marktvorgaben aus. Ein Datum, das nicht den Vorgaben entspricht, führt zu einer Fehlermeldung, und der Vorgang wird nicht abgeschlossen. Bei der Aktivierung darf das Erstzulassungsdatum nicht nach dem Datum der Anfrage liegen. Die Baumuster-Validierung prüft Produkt, Produktkonfiguration und Preis gegen die ursprünglichen Angaben.
+Der Edge Service wertet Anfragen mit Datumsangaben nach den Marktvorgaben aus. Ein Datum, das nicht den Vorgaben entspricht, führt zu einer Fehlermeldung, und der Vorgang wird nicht beendet. Bei der Aktivierung darf das Erstzulassungsdatum nicht nach dem Datum der Anfrage liegen. Die Baumuster-Validierung prüft Produkt, Produktkonfiguration und Preis gegen die ursprünglichen Angaben.
 
 **DevOps und Betrieb.** Die CI/CD-Workflows aktualisiert eine eigene Abstraktionsschicht in allen Repositories. Die Workflows starten den gewählten Branch. Das Deployment erfolgt auf AWS ECS. Die Datei-Überwachung durch CFT veröffentlicht Ereignisse für die Anwendung File Scanner. Wichtige Kafka-Topics sichert ein MSK Connector in einem eigenen Bucket. Die Secrets auf Organisationsebene liegen auf Repository-Ebene. Für ECR gehen automatisierte Benachrichtigungen bei hohen und kritischen Schwachstellen aus.
 
@@ -663,7 +663,7 @@ Quellen: Batch 526.1, 459.1, 451.1, 448.1, 450.1, 454.1, 443.1, 451.2, 457.2, 46
 
 **Zweck.** Die Datenplattform führt Daten aus den Domänen von oneSCM, aus NEMESIS, aus den Altsystemen und aus ISP im Unified Data Model, kurz UDM, zusammen. Daraus entstehen Datenprodukte (Data Products, DP) für das Reporting. Dieser Abschnitt beschreibt die Überwachung des Datenflusses, die Ladewege, die Scheduler und die wichtigsten Inhalte der Datenprodukte.
 
-**Voraussetzungen.** Die Datenquellen liefern ihre Dateien in den vorgesehenen Ordnern. Für Nemesis-Daten gilt zusätzlich die Ablage je Division und Markt. Die Datenprodukte entstehen aus dem UDM.
+**Voraussetzungen.** Die Datenquellen liefern ihre Dateien in den festgelegten Ordnern. Für Nemesis-Daten gilt zusätzlich die Ablage je Division und Markt. Die Datenprodukte entstehen aus dem UDM.
 
 **Rollen.** Das technische Team prüft die Ursache einer Meldung. Das BU-Team aus dem Fachbereich erhält die Benachrichtigungen und klärt fehlende Daten in der Quelle.
 
@@ -681,7 +681,7 @@ Eine Benachrichtigung entsteht, wenn Kafka-Daten beim DCS nicht verarbeitet werd
 
 Die Benachrichtigung geht an einen definierten Empfängerkreis, der auch das BU-Team umfasst. Ein Incident wird automatisch angelegt und enthält alle Angaben, um die betroffenen Datensätze zu finden. Eine Anmeldung der Empfänger ist nicht erforderlich. Der Glue-Job löst die Benachrichtigung nach seinem Ende aus, und fehlende Datensätze führen zu einer zusammenfassenden E-Mail.
 
-**Nemesis-Daten im Ladeprozess.** Die Revenue-Dateien von NEMESIS laden über zwei Wege in die Data Foundation: über Kafka, DCS und den Reporting Service sowie über den Initial Load aus S3. Die Dateistruktur ergänzt NEMESIS um neue Felder. Neun Felder kommen in den Vertragsstammdaten und zwei Felder in den Berechnungsdaten hinzu, die Kopfinformationen bleiben gleich. Der Ladeprozess verarbeitet das bisherige und das neue Format. Im Ladeprozess über DCS und Reporting Service werden neue Felder ignoriert, der Initial-Load-Job über Glue übernimmt sie in die UDM-Tabellen. Ältere Dateien bleiben ladbar. Der Zeitplan der Umstellung auf das neue Format erfasst der Klärungsbedarf.
+**Nemesis-Daten im Ladeprozess.** Die Revenue-Dateien von NEMESIS laden über zwei Wege in die Data Foundation: über Kafka, DCS und den Reporting Service sowie über den Initial Load aus S3. Die Dateistruktur ergänzt NEMESIS um neue Felder. Neun Felder kommen in den Vertragsstammdaten und zwei Felder in den Berechnungsdaten hinzu, die Kopfinformationen bleiben gleich. Der Ladeprozess verarbeitet das ältere und das neue Format. Im Ladeprozess über DCS und Reporting Service werden neue Felder ignoriert, der Initial-Load-Job über Glue übernimmt sie in die UDM-Tabellen. Ältere Dateien bleiben ladbar. Der Zeitplan der Umstellung auf das neue Format erfasst der Klärungsbedarf.
 
 Die neue Struktur mit zusätzlichen Feldern gilt für alle Märkte ab 08/2023, für Großbritannien ab 07/2023. Umsatzdateien für Mai, Juni und Juli 2023 enthalten die Felder daher nicht. Der Initial Load wertet beide Strukturen aus.
 
@@ -693,7 +693,7 @@ Ein Datensatz mit ungültiger Länge bricht den Ablauf nicht mehr ab. Das System
 
 **Zeitplan und Scheduler.** Die Base-DP-Jobs laufen am 4. eines jeden Monats. Der Batch-Scheduler ReportingDataProducts löste alle Datenprodukt-Jobs gemeinsam aus. Heute gibt es getrennte Scheduler. Der bestehende Scheduler bedient die Base-Datenprodukte für Vertrag, Kosten, Van-Kosten und Umsatz. ISP und SC Financials haben jeweils einen eigenen Scheduler. Die Funktion function_dp_from_udm verarbeitet die unterschiedlichen Payloads. Alle Scheduler verwenden zunächst denselben Zeitplan, sie lassen sich jedoch unabhängig voneinander einstellen.
 
-**Datenprodukte.** Das Base-Service-Contracts-Datenprodukt enthält drei Spalten für die Hauptdeckung: Maintenance, Warranty und Wear and Tear. Jede Spalte zeigt Y oder N. Ein Komplettvertrag mit allen drei Hauptdeckungen erhält in allen drei Spalten Y. Die Zuordnung erfolgt über eine Mapping-Tabelle für Deckungsarten und Deckungscodes. SIRIUS-Märkte sind in dieser Umsetzung ausgenommen. Die Dateien mit Inventardaten werden monatlich je Markt und Division bereitgestellt, spätestens am 3. eines Monats. Die Felder Marke, Produktkategorie, Kennzeichen, Unterschriftsdatum sowie Name des Verkäufers übernimmt das UDM aus den Inventarlisten.
+**Datenprodukte.** Das Base-Service-Contracts-Datenprodukt enthält drei Spalten für die Hauptdeckung: Maintenance, Warranty und Wear and Tear. Jede Spalte zeigt Y oder N. Ein Komplettvertrag mit allen drei Hauptdeckungen erhält in allen drei Spalten Y. Die Zuordnung erfolgt über eine Mapping-Tabelle für Deckungsarten und Deckungscodes. SIRIUS-Märkte sind in dieser Auswertung ausgenommen. Die Dateien mit Inventardaten werden monatlich je Markt und Division bereitgestellt, spätestens am 3. eines Monats. Die Felder Marke, Produktkategorie, Kennzeichen, Unterschriftsdatum sowie Name des Verkäufers übernimmt das UDM aus den Inventarlisten.
 
 Der Reporting-Batch für Vertrags- und Umsatzdaten erzeugt CSV-Dateien für Delta- und Vollladungen. Für Umsatzdaten gibt es die Spalten Status mit den Werten „New“ und „Exported“ sowie eine Job-ID. Ein neuer oder geänderter Umsatzdatensatz erhält den Status „New“. Eine Schnittstelle setzt den Status auf „Exported“, sobald eine Liste von Revenue-IDs, eine Job-ID und die Markt-ID übergeben werden.
 
@@ -709,7 +709,7 @@ Die Zuordnung des Felds aq_veh_model_series_cd leitet das System immer aus der F
 
 **Hinweise.** Die Vertragsdaten zu Nemesis beschreibt Abschnitt 19.14. Die Kundentypen für das Kunden-Datenprodukt sind im Klärungsbedarf erfasst.
 
-**Fehlerbehebung.** Erhalten Sie eine Meldung über fehlende Datensätze, prüfen Sie die Quelle, den Markt und die Division aus der Meldung. Fehlt ein Monat einer Nemesis-Datei, laden Sie die fehlende Datei zusammen mit den Folgemonaten manuell nach CFT. Enthält die Fehlerdatei übersprungene Datensätze, korrigieren Sie sie in der Quelle.
+**Fehlerbehebung.** Erhalten Sie eine Meldung über fehlende Datensätze, prüfen Sie die Quelle, den Markt und die Division aus der Meldung. Fehlt ein Monat einer Nemesis-Datei, laden Sie die fehlende Datei zusammen mit den Folgemonaten manuell nach CFT. Enthält die Fehlerdatei übersprungene Datensätze, prüfen Sie die Daten in der Quelle.
 
 Quellen: Batch 304.1, 303.1, 317.1, 322.4, 331.1, 301.1, 300.3, 305.3, 314.1, 304.3
 
@@ -725,11 +725,11 @@ Quellen: keine Quellen in den RAG-Batches
 
 **Zweck.** oneSCM tauscht Daten über Schnittstellen aus: über REST-Aufrufe am Edge Service und an den Diensten, über Kafka-Ereignisse und über Dateien, die CFT in S3-Ordnern ablegt. Dieser Abschnitt beschreibt die Dateiwege und Ordner, die Dateiübertragung über CFT, die Kafka-Ereignisse und die Verarbeitung der Rückmeldedatei i156.
 
-**Voraussetzungen.** Die Dateien liegen im vorgesehenen Ordner. Für die Dateiübertragung ist der CFT-Ablauf eingerichtet. Den Bereich „Cross File Transfer“ nutzen HQ-Administratoren und Benutzer mit Zugriff auf den Bereich.
+**Voraussetzungen.** Die Dateien liegen im festgelegten Ordner. Für die Dateiübertragung ist der CFT-Ablauf eingerichtet. Den Bereich „Cross File Transfer“ nutzen HQ-Administratoren und Benutzer mit Zugriff auf den Bereich.
 
 **Rollen.** HQ-Administratoren und Benutzer mit Zugriff auf den Bereich Admin prüfen die Dateiübertragungen. Market Operation prüft die Ergebnisse der Verarbeitung.
 
-**Dateiwege für Finanzsysteme.** Für SWT liegen der Ausgangs- und der Eingangsordner im Bereich „IN/SWT“ mit der Kennung „IN_E169“. Für CoFiCo liegen sie im Bereich „SK/CoFiCo“ mit der Kennung „SK_E169“. Die Ordner für technische Rückmeldungen „IN_E169_ERROR“ und „SK_E169_ERROR“ sind in der Struktur vorgesehen. Die zugehörigen Abläufe erfasst der Klärungsbedarf. Die Pfade müssen im CFT-Ablauf nachgezogen sein.
+**Dateiwege für Finanzsysteme.** Für SWT liegen der Ausgangs- und der Eingangsordner im Bereich „IN/SWT“ mit der Kennung „IN_E169“. Für CoFiCo liegen sie im Bereich „SK/CoFiCo“ mit der Kennung „SK_E169“. Die Ordner für technische Rückmeldungen „IN_E169_ERROR“ und „SK_E169_ERROR“ sind in der Struktur angelegt. Die zugehörigen Abläufe erfasst der Klärungsbedarf. Die Pfade müssen im CFT-Ablauf nachgezogen sein.
 
 Die Datei E167 für CoFiCo und SWT liegt im Ordner für ausgehende Dateien unter ENV, Marktcode, Finanzsystem, Outgoing und E167. Die Exportdateien erhalten einen Namen mit Division und Uhrzeit.
 
@@ -745,7 +745,7 @@ Die Aktion „Statistics“ öffnet die Details einer Datei mit den Spalten Proc
 
 Werden einzelne Ansprüche wegen fehlerhafter Daten übersprungen, protokolliert oneSCM den Fehler in Datadog. Der Administrator erhält eine gesammelte Benachrichtigung mit dem Text „Please review the skipped claims in DataDog“.
 
-Eine Datei mit demselben Zeitstempel lässt sich erneut verarbeiten. Dafür laden Sie die Datei im Bereich „Cross File Transfer“ im Tab „Upload“ hoch. Die Suche bietet den Dateinamen mit höchstens 50 Zeichen, das Datum, die Schnittstelle, die nur i156 umfasst, und „Uploaded by“ mit höchstens 10 Zeichen. Unterstützt werden die Dateitypen .dat und .txt. Bei der erneuten Verarbeitung vergleicht oneSCM die Ansprüche mit der Datenbank. Stimmen Zeitstempel und Entscheidungsnummer überein, überspringt oneSCM den Anspruch. Importiert werden nur Ansprüche, die noch nicht vorhanden sind. So lassen sich korrigierte Ansprüche nachträglich importieren, etwa eine Datei mit demselben Header und dem korrigierten Anspruch.
+Eine Datei mit demselben Zeitstempel lässt sich erneut verarbeiten. Dafür laden Sie die Datei im Bereich „Cross File Transfer“ im Tab „Upload“ hoch. Die Suche bietet den Dateinamen mit höchstens 50 Zeichen, das Datum, die Schnittstelle, die nur i156 umfasst, und „Uploaded by“ mit höchstens 10 Zeichen. Unterstützt werden die Dateitypen .dat und .txt. Bei der erneuten Verarbeitung vergleicht oneSCM die Ansprüche mit der Datenbank. Stimmen Zeitstempel und Entscheidungsnummer überein, überspringt oneSCM den Anspruch. Importiert werden nur Ansprüche, die noch nicht vorhanden sind. So lassen sich geänderte Ansprüche nachträglich importieren, etwa eine Datei mit demselben Header und dem geänderten Anspruch.
 
 **Kafka-Ereignisse.** oneSCM verarbeitet Änderungen aus MMe CMDS über ein Kafka-Ereignis. Neuanlagen, Änderungen der E-Mail-Adresse und Löschungen von MMe-Profilen werden verarbeitet. Ungültige MMe-IDs entfernt oneSCM aus Datenschutzgründen. Eine MMe-ID wird sichtbar, sobald der Kunde sein Konto aktiviert hat, also nach dem ersten erfolgreich verarbeiteten Ereignis. Die E-Mail-Adresse für Benachrichtigungen bleibt von der MMe-E-Mail-Adresse getrennt. Die Kafka-Listener ignorieren unbekannte Felder.
 
@@ -759,7 +759,7 @@ Ein Fahrzeug aus VeDoc lässt sich mit einer längeren Motor-Seriennummer synchr
 
 **Hinweise.** Die Ordnerwahl und die Benennung der Dateien hängen vom CFT-Flow ab. Die Datei für die manuelle Übergabe von Rückmeldungen beschreibt Abschnitt 19.11.
 
-**Fehlerbehebung.** Übersprungene Ansprüche finden Sie in Datadog. Korrigieren Sie den Anspruch in der Quelle oder erstellen Sie eine Datei mit demselben Header und dem korrigierten Anspruch. Laden Sie diese Datei im Tab „Upload“ hoch. Für eine erneute Verarbeitung einer Datei mit demselben Zeitstempel laden Sie sie erneut hoch.
+**Fehlerbehebung.** Übersprungene Ansprüche finden Sie in Datadog. Ändern Sie den Anspruch in der Quelle oder erstellen Sie eine Datei mit demselben Header und dem geänderten Anspruch. Laden Sie diese Datei im Tab „Upload“ hoch. Für eine erneute Verarbeitung einer Datei mit demselben Zeitstempel laden Sie sie erneut hoch.
 
 Quellen: Batch 1302.1, 1290.1, 141.1, 719.2, 225.3, 843.5, 851.1, 820.7, 1246.5, 589.1, 229.6, 147.1
 
@@ -775,7 +775,7 @@ Quellen: Batch 1302.1, 1290.1, 141.1, 719.2, 225.3, 843.5, 851.1, 820.7, 1246.5,
 
 Den Online-Vertrieb bedienen die Endpunkte POST /contract/v1/online-sales und POST /contract/v2/online-sales sowie GET /contract/v1/status, GET /contract/v1/contract und GET /contract/v1/contracts. Den Leasingvertrag bedienen POST und PUT auf /contract/v1/leasing und /contract/v2/leasing sowie die Konfigurationsendpunkte. Die Verlängerung bedient POST /prolongation, die Preisermittlung bei Verlängerungsangeboten. Den Kontosaldo liefert GET /contract/v1/balance. Die Produktsuche bedienen POST /product/v1/search, POST /product/v2/search, POST /product/v1/detailed, POST /product/v1/leasing/searches und POST /product/v1/online-sales/searches. Die Callbacks für das TraCS-Ergebnis des Adressabgleichs und die digitale Signatur aus dem Dokumentenmanagement nehmen die Endpunkte an POST /v1/tracs/onescm_address-match-final-result und GET /document-management/dss entgegen.
 
-Fehlerantworten und Antworten auf Anfragen gelten als Teil der externen Schnittstelle. Interne Fehlercodes übersetzt der Edge Service in die passenden externen Codes. Ein interner Fehler 403 erscheint extern als 403, ebenso 404 und 500. Zuvor kam extern immer 500 an. Partner sehen dadurch die Ursache eines Fehlers. Die Fehlerbehandlung wird durch Monitore und Benachrichtigungen bei Fehlern im Edge Service begleitet.
+Fehlerantworten und Antworten auf Anfragen gelten als Teil der externen Schnittstelle. Interne Fehlercodes übersetzt der Edge Service in die passenden externen Codes. Ein interner Fehler 403 erscheint extern als 403, ebenso 404 und 500. Ohne diese Zuordnung kam extern immer 500 an. Partner sehen dadurch die Ursache eines Fehlers. Die Fehlerbehandlung wird durch Monitore und Benachrichtigungen bei Fehlern im Edge Service begleitet.
 
 Der Edge Service prüft Datumsangaben. Beim Anlegen eines Vertrags verlangt er ein Datum im ISO-Format, etwa 2025-12-01. Bei der Aktivierung im Bereich Leasing zeigt das System die Differenz zwischen dem Datum des ersten Fälligkeitstermins und dem Erstellungsdatum des Angebots in Monaten an.
 
@@ -785,7 +785,7 @@ Die Endpunkte für Produkte und Preise liefern die Währung als dreistelligen IS
 
 Die Produktsuche gibt den Preis für die übergebene Kombination aus Laufleistung und Laufzeit aus. Fehlt diese Angabe, liefert die Antwort den Preis der kleinsten verfügbaren Kombination. Zusätzlich enthält die Antwort alle verfügbaren Kombinationen des Produkts. Über das Feld mileageType unterscheidet die Anfrage jährliche Laufleistung „annual“ und Gesamtlaufleistung „total“, das Feld requestedMileage übernimmt die Angabe. Die vollständige Preismatrix liefert ein eigener Preis-Endpunkt mit Produkt-ID als Pflichtparameter.
 
-Die Leasingsuche liefert die vorgesehene Antwort. Bei der Aktivierung eines Leasingvertrags übergibt oneSCM die Zahlungsreferenz. Der Endpunkt POST contract/v1/leasing akzeptiert die externalCampaignId als Zeichenkette. Die Produktsuche mit product/v2/search ruft Produkte ab, und der Sprachwert der Produktsuche in product/v1/search steht in den Headern.
+Die Leasingsuche liefert die festgelegte Antwort. Bei der Aktivierung eines Leasingvertrags übergibt oneSCM die Zahlungsreferenz. Der Endpunkt POST contract/v1/leasing akzeptiert die externalCampaignId als Zeichenkette. Die Produktsuche mit product/v2/search ruft Produkte ab, und der Sprachwert der Produktsuche in product/v1/search steht in den Headern.
 
 Die Edge-Endpunkte für Verlängerungen und Verträge bieten nur zulässige Kombinationen aus Laufleistung und Laufzeit an. Bei Langzeitverlängerungen und kurzfristigen Verlängerungen gilt die Verlängerungsregel aus Abschnitt 19.9. Der Edge Service prüft beim Anlegen eines Vertrags das Erstzulassungsdatum und das Datum der Anfrage. Bei Leasing über den Edge Service übergibt MBLD einen Offset als Pflichtfeld mit höchstens drei Stellen. Der Offset gibt an, wie viele der nächsten verfügbaren Wirksamkeitsdaten aus Revenue übersprungen werden, bevor die Langzeitverlängerung angewendet wird. Übersteigt der Offset die Anzahl der verfügbaren Daten, gibt das System einen Fehler aus. Unterscheiden sich Offset und Leasing Effective Date, gilt der Offset.
 
@@ -795,14 +795,14 @@ Ob sich Verträge im Status „Created“ über den Edge Service aktualisieren l
 
 Administratoren laden Dateien eines Jobs aus S3 herunter. Die Dateisuche filtert nach dem Dateinamen, der Enthält-Suche, und einem Zeitraum: Today, Last week, Last month oder Last 3 months. Die Dateien erscheinen erst nach „Search for Files“. Jede Datei hat eine eigene Download-Schaltfläche, und der Name und das Format bleiben wie im S3-Bucket. Die Ergebnisse erscheinen seitenweise mit 10, 20, 30, 40 oder 50 Einträgen.
 
-Die Ausführungshistorie speichert zu jedem Lauf die Job-ID, Start- und Endzeit, die Dauer, den Status „abgeschlossen“, „fehlgeschlagen“ oder „gestoppt“ sowie die Benutzer-ID des Auslösers. Die Liste der Läufe ist sortierbar, paginiert und über den Jobnamen durchsuchbar. Während ein Lauf läuft, zählt die Oberfläche die Laufzeit in Sekunden und aktualisiert den Status regelmäßig. Ein Klick auf die Zeile öffnet die Läufe des Jobs.
+Die Ausführungshistorie speichert zu jedem Lauf die Job-ID, Start- und Endzeit, die Dauer, den Status „erfolgreich“, „fehlgeschlagen“ oder „gestoppt“ sowie die Benutzer-ID des Auslösers. Die Liste der Läufe ist sortierbar, paginiert und über den Jobnamen durchsuchbar. Während ein Lauf läuft, zählt die Oberfläche die Laufzeit in Sekunden und aktualisiert den Status regelmäßig. Ein Klick auf die Zeile öffnet die Läufe des Jobs.
 
 Die Zeitangaben der Batch-Jobs stehen in UTC. Der Dashboard-Filter nennt die Felder „Date From“, „Date To“ und „Status“, und die Detailansicht zeigt die Parameter des Jobs wie USERNAME, DIVISIONS, LAUNCH_DATE oder MARKET_ID. Bei einem Fehler zeigt die Detailansicht den Fehlercode.
 
 **Batch-Scheduler und Aktionen.** Jeder Job hat einen Zeitplan aus Cron-Ausdrücken. Ein Job kann bis zu zehn Cron-Ausdrücke haben. Die Schaltfläche „Save“ ist nur aktiv, wenn der Ausdruck gültig ist. Die Validierung in der Oberfläche entspricht der Prüfung im Backend, sodass Ausdrücke wie „*/5 * * * *“ bereits bei der Eingabe abgelehnt werden.
 
 1. Mit „Run Now“ startet ein Administrator einen Job sofort. Die Aktion ist deaktiviert, solange derselbe Job läuft. Ein Tooltip nennt den Grund.
-2. Mit „Disable“ setzt ein Administrator den Job auf „Disabled“. Der Job läuft dann nicht mehr zum geplanten Zeitpunkt, bis er wieder aktiviert wird.
+2. Mit „Disable“ setzt ein Administrator den Job auf „Disabled“. Der Job läuft dann nicht mehr zum terminierten Zeitpunkt, bis er wieder aktiviert wird.
 3. Mit „Enable“ aktiviert ein Administrator einen deaktivierten Job. Ein Job läuft nach dem Zeitplan nur, wenn er den Status „Enabled“ hat.
 4. Mit „Stop“ beendet ein MO-Benutzer einen laufenden Job, siehe Abschnitt 19.17.
 
@@ -822,7 +822,7 @@ Die Schnittstelle SA31 ersetzt die Schnittstelle SA26. oneERP sendet je Rechnung
 
 **Batch-Ergebnisse von Exporten.** Der Export der Ausgangsrechnungsdatei für SWT und CoFiCo verwendet die Operation-ID anstelle der Merchant Reference. Bei MPay-Rechnungen überführt der Batch eine Rechnung nur in den Status „Accepted“, wenn der MPay-Status nicht „PENDING“ lautet. Die exportierte Operation-ID richtet sich nach dem MPay-Status: bei „Capture“ die Operation-ID der Capture-Transaktion, bei „Refund“ die der Erstattung und bei „ChargeBack“ die der Rückbuchung. Der CFDM-Batch setzt die Rechnungen auf „Accepted“, der E169-Export erzeugt die Datei mit der VIN oder einem Platzhalter „-“, wenn die VIN fehlt.
 
-Im Export E169 steht für Altteilesteuer-Transaktionen im HEADER-Satz der Wert 4 im Feld „Type of Business Transaction“. Für alle anderen Geschäftsvorfälle bleibt der bisherige Wert. Die Satzstruktur und die Feldlänge bleiben unverändert.
+Im Export E169 steht für Altteilesteuer-Transaktionen im HEADER-Satz der Wert 4 im Feld „Type of Business Transaction“. Für alle anderen Geschäftsvorfälle bleibt der bestehende Wert. Die Satzstruktur und die Feldlänge bleiben unverändert.
 
 Die Sales-Campaign-Schnittstelle E174 übergibt für Zeile 240 das Sachkonto 40170000. In Zeile 250 steht das Economic Model, das aus den letzten sechs Stellen der QSD5-Materialnummer besteht. Der Job OneERPInvE169EXP schlägt bei fehlerhaften Daten nicht mehr fehl.
 
@@ -836,7 +836,7 @@ Die Kontingentzählung im Satz RC20 erfolgt für Basisleistungen. Optionale Leis
 
 Die Warteschlange des Exports leert oneSCM, sodass Verträge nicht mehr wiederholt exportiert werden. Die Datei wird auch für das Herunterladen aus der Vertragshistorie bereitgestellt. Der Batch-Job I155 läuft in der Integrationsumgebung fehlerfrei. Die Antwort der Schnittstelle getBatchContracts enthält FIN und VIN.
 
-**Nemesis-Schnittstelle.** Die Zguid in den Nemesis-Ereignissen wird mit führenden Nullen auf 30 Stellen angegeben. Der Ländercode für Deutschland lautet 20000, der IconTenant entspricht der 1SCM-Tenant-ID, und der CompanyCode lautet DE01. Beim Wechsel des Zahlungsintervalls von monatlich auf einmalig sendet oneSCM ein Contract-Master-Ereignis mit ExtentionReductionIndicator E und PaymentType 02. Das Zahlungsbeginn-Datum entspricht dem Feld „Invoice period from“ der ersten Rechnung des Zahlungsplans, das Zahlungsende dem Feld „Invoice period to“ der letzten Rechnung. Im Feld für die externe Vertragsnummer übermittelt oneSCM nicht die oneSCM-Vertragsnummer. Erfolgreich übermittelte Vertragsereignisse erzeugen kein Fehlerereignis in NEMESIS. Die Abweichung zwischen geplanter Vertragsdauer in der Oberfläche und in der Kafka-Nachricht ist im Material als beseitigt beschrieben.
+**Nemesis-Schnittstelle.** Die Zguid in den Nemesis-Ereignissen wird mit führenden Nullen auf 30 Stellen angegeben. Der Ländercode für Deutschland lautet 20000, der IconTenant entspricht der 1SCM-Tenant-ID, und der CompanyCode lautet DE01. Beim Wechsel des Zahlungsintervalls von monatlich auf einmalig sendet oneSCM ein Contract-Master-Ereignis mit ExtentionReductionIndicator E und PaymentType 02. Das Zahlungsbeginn-Datum entspricht dem Feld „Invoice period from“ der ersten Rechnung des Zahlungsplans, das Zahlungsende dem Feld „Invoice period to“ der letzten Rechnung. Im Feld für die externe Vertragsnummer übermittelt oneSCM nicht die oneSCM-Vertragsnummer. Erfolgreich übermittelte Vertragsereignisse erzeugen kein Fehlerereignis in NEMESIS. Die Vertragsdauer in der Oberfläche und in der Kafka-Nachricht stimmt überein.
 
 Für den Nemesis-Import nimmt die Schnittstelle den Dateinamen als Request-Parameter entgegen und dekodiert ihn. Die Rechnungsfilter-API berücksichtigt den Rechnungstyp.
 
@@ -858,7 +858,7 @@ Wird ein Schadenfall mit einer neueren Entscheidungsnummer vollständig abgelehn
 
 Beim Import prüft oneSCM jeden Datensatz. Als Fehler gelten eine nicht übereinstimmende FRD, eine Kilometereinheit, die von der Einheit des Automotive-Objekts abweicht, eine Kombination aus Vertragsnummer und FIN, die nicht passt, eine Teilemenge und Anzahl der Positionen, die nicht größer als 0 ist, und Total service relevant costs, die nicht größer als 0 sind. Der Datensatz gilt dann als Fehler, der Schadenfall wird übersprungen und eine E-Mail geht an das Market-Operation-Team. Alle Fehler und Warnungen protokolliert oneSCM in Datadog mit der Zeilennummer, damit der Schadenfall eindeutig zu finden ist.
 
-**Wiederholung und Circuit Breaker.** Die Dienste nutzen Wiederholungen (Retry) und einen Circuit Breaker auf Basis von Resilience4j, soweit dies für den jeweiligen Dienst zutrifft. Für die Clients der nachgelagerten Dienste im Edge Service sind Timeouts, Wiederholungen und Circuit Breaker vorgesehen. Ein langsamer oder nicht verfügbarer Dienst führt dann zu einer zeitlich begrenzten Fehlermeldung statt zu einer hängenden Anfrage. Den Stand dieser Umsetzung erfasst der Klärungsbedarf.
+**Wiederholung und Circuit Breaker.** Die Dienste nutzen Wiederholungen (Retry) und einen Circuit Breaker auf Basis von Resilience4j, soweit dies für den jeweiligen Dienst zutrifft. Für die Clients der nachgelagerten Dienste im Edge Service sind Timeouts, Wiederholungen und Circuit Breaker beschrieben. Ein langsamer oder nicht verfügbarer Dienst führt dann zu einer zeitlich begrenzten Fehlermeldung statt zu einer hängenden Anfrage. Den Stand dieser Anbindung erfasst der Klärungsbedarf.
 
 **Batch-Fehler und Wiederanlauf.** Ein Batch-Job, der fehlschlägt oder abgebrochen wird, löst eine Benachrichtigung aus. Die Beschreibung steht in Abschnitt 19.18. Jobs, deren Instanz heruntergefahren wurde, schließen korrekt ab und verbleiben nicht im Status „STARTED“. Der Job E169 und der Job E174 bleiben nicht im Status „Started“. Der CFDMBatch startet nicht doppelt, solange eine Instanz läuft. Für eine Sammelrechnung über unterschiedliche Verträge funktioniert die Erstellung. Ein fehlgeschlagener Job lässt sich über „Run Now“ erneut starten.
 
@@ -870,16 +870,16 @@ Beim Import prüft oneSCM jeden Datensatz. Als Fehler gelten eine nicht überein
 
 **Hinweise.** Die Batch-Jobs der Fachdomänen beschreibt jeweils das Unterkapitel der Domäne, etwa 19.12 für CoFiCo, 19.14 für NEMESIS und 19.9 für VEGA. Die Dateiwege und Ordner beschreibt Abschnitt 19.21. Für Partner gelten die Konventionen des Edge Service, die der Klärungsbedarf erfasst.
 
-**Fehlerbehebung.** Schlägt ein Batch-Job fehl, starten Sie ihn über „Run Now“ neu, sobald die Ursache behoben ist. Bei einem Job, der nicht mehr endet, nutzen Sie „Stop“. Die Ausführungshistorie zeigt den Status „fehlgeschlagen“ oder „gestoppt“. Ist ein Schadenfall in der i156-Datei nicht importierbar, prüfen Sie die Meldung in Datadog anhand der Zeilennummer. Edge-Fehler mit den Codes 403, 404 oder 500 entsprechen den Fehlerursachen, die der Partner nachvollziehen kann.
+**Fehlerbehebung.** Schlägt ein Batch-Job fehl, starten Sie ihn über „Run Now“ neu, sobald die Ursache beseitigt ist. Bei einem Job, der nicht mehr endet, nutzen Sie „Stop“. Die Ausführungshistorie zeigt den Status „fehlgeschlagen“ oder „gestoppt“. Ist ein Schadenfall in der i156-Datei nicht importierbar, prüfen Sie die Meldung in Datadog anhand der Zeilennummer. Edge-Fehler mit den Codes 403, 404 oder 500 entsprechen den Fehlerursachen, die der Partner nachvollziehen kann.
 Quellen: Batch 781.3, 514.1, 512.1, 514.2, 534.1, 513.2, 515.1, 532.2, 527.1, 533.2, 520.1, 518.1, 524.2, 1253.2, 1095.2, 1107.5, 1113.5, 1027.3, 1079.6, 1081.5, 1100.4, 1111.5, 1096.5, 1082.4, 1092.3, 93.1, 771.4, 184.1, 184.4, 196.1, 205.2, 208.2, 208.4, 1310.4, 1180.1, 7.6, 855.3, 796.3, 714.6, 716.3, 795.5, 819.4, 1068.7, 1069.7, 297.1, 565.3, 565.4, 519.10, 1299.2, 667.4, 251.6, 223.4, 1070.7, 143.1, 151.2, 162.3, 163.2, 224.2, 239.2, 239.3, 253.2, 260.2, 261.1, 261.2, 262.1, 263.1, 271.5, 275.3, 276.2, 277.2, 277.3, 278.1, 738.2, 788.4, 898.2, 898.4, 1160.3, 1310.3
 
 ## 19.23 Architekturregister und offene Nachweise
 
 **Zweck.** Dieser Abschnitt bündelt die Nachweise zur Architektur, die für Prüfungen und Freigaben verwendet werden. Das Material enthält für dieses Unterkapitel nur einen Abschnitt, der die Benachrichtigungsfunktion beschreibt. Ein Architekturregister mit Nachweisen liegt im Material nicht vor.
 
-**Ergebnis und Systemstatus.** Die Benachrichtigungsfunktion zeigt das Glockensymbol in der Navigationsleiste mit der Anzahl offener Benachrichtigungen. Die Anzahl zählt bis 9, darüber erscheint „9+“. Ein Klick öffnet das Benachrichtigungscenter auf der rechten Seite. Benachrichtigungen mit einer offenen Aktion sind mit einem blauen Punkt markiert. Erledigte Benachrichtigungen erscheinen nicht mehr.
+**Ergebnis und Systemstatus.** Die Benachrichtigungsfunktion zeigt das Glockensymbol in der Navigationsleiste mit der Anzahl unerledigter Benachrichtigungen. Die Anzahl zählt bis 9, darüber erscheint „9+“. Ein Klick öffnet das Benachrichtigungscenter auf der rechten Seite. Benachrichtigungen mit einer ausstehenden Aktion sind mit einem blauen Punkt markiert. Erledigte Benachrichtigungen erscheinen nicht mehr.
 
-**Hinweise.** Die Funktion ist in Abschnitt 19.18 ausführlich beschrieben. Der Stand des Architekturregisters und der offenen Nachweise erfasst der Klärungsbedarf.
+**Hinweise.** Die Funktion ist in Abschnitt 19.18 ausführlich beschrieben. Der Stand des Architekturregisters und der Nachweise erfasst der Klärungsbedarf.
 
 **Fehlerbehebung.** Erscheint die Glocke ohne Eintrag, prüfen Sie, ob die Benachrichtigungen bereits durch eine Aktion erledigt sind.
 
@@ -1024,12 +1024,12 @@ Die folgenden Punkte enthalten Widersprüche, unklare Aussagen oder Meldungen, d
 - Delta-Format der Datenprodukte: Batch 317.1 nennt nur das Parquet-Format mit Vollladung, Batch 314.1 nennt Plain Parquet und Delta als Iceberg-Tabellen.
 - Kundentypen für das Kunden-Datenprodukt: Batch 317.1 nennt die Herkunft aus dem Altsystem, oneSCM liefert diese Typen nach Angabe des Materials nicht.
 - Datumsformat bei Leasingverträgen: Batch 520.1 nennt für die Aktualisierung das Format TT.MM.JJJJ, für die Anlage das ISO-Format.
-- Zuweisung von Benachrichtigungen: Batch 428.2 beschreibt die Zuweisung als verfügbar, Batch 461.1 und 440.1 nennen erweiterte Funktionen wie die Zuweisung als künftige Ausbaustufe.
+- Zuweisung von Benachrichtigungen: Batch 428.2 beschreibt die Zuweisung als verfügbar, Batch 461.1 und 440.1 nennen erweiterte Funktionen wie die Zuweisung als weitere Ausbaustufe.
 - Anzeige der Zahlungslink-Gültigkeit: Batch 806.6 nennt Sekunden, Batch 129.2 nennt Minuten in der Oberfläche.
 - Sichtbarkeit des Abschnitts MPay Information: Batch 216.1 nennt die Umgebungen DEV, INT und PREPROD, Batch 220.1 nennt DEV und INT.
-- Markt Südkorea: Batch 557.1 führt die Einführung im Dev Backlog, Batch 109.1 beschreibt Konfiguration und S3-Pfade. Der SAP Company Code fehlt nach Batch 109.1.
-- Nemesis-Validierung und Statusübergänge im Material: Batch 241.1 führt die Validierungen vor dem Versand als offen, Batch 251.5 führt sie als abgebrochen.
-- Vertragsstatus Created für Aktualisierungen über den Edge Service: Batch 1095.2 beschreibt das Verhalten als Vorhaben.
+- Markt Südkorea: Batch 557.1 führt die Einführung im Entwicklungsstatus, Batch 109.1 beschreibt Konfiguration und S3-Pfade. Der SAP Company Code fehlt nach Batch 109.1.
+- Nemesis-Validierung und Statusübergänge im Material: Batch 241.1 führt die Validierungen vor dem Versand ohne Ergebnis, Batch 251.5 führt sie als abgebrochen.
+- Vertragsstatus Created für Aktualisierungen über den Edge Service: Batch 1095.2 beschreibt das Verhalten ohne Angabe zum Stand.
 - Erzeugungszeitpunkt der i155 und Übertragung an VEGA: Batch 862.2 nennt eine Erzeugung um 22 Uhr und eine Übertragung um 1 Uhr als Beispiel, das Zeitintervall fehlt.
 
 **Unklare oder nicht belegte Aussagen**
@@ -1038,10 +1038,10 @@ Die folgenden Punkte enthalten Widersprüche, unklare Aussagen oder Meldungen, d
 - Statuswechsel von active zu terminated über die Statusschnittstelle: Batch 1040.3 nennt einen Endpunkt als zu klären.
 - Erlösverwaltung für Balancing und Schlussrechnung: Batch 841.1 nennt die Anbindung ab PI5. Der Ablehnungsgrund bei abgelaufener Gültigkeit wird als Vorschlag beschrieben: Batch 841.1.
 - Datenquelle der Laufleistung aus DSB oder MiC: Batch 1204.6 nennt einen Testlauf im BAT-Test.
-- Prüfungen für Fahrzeugalter, Höchstlaufleistung und einzige abgelaufene Preisversion: Batch 1251.4 nennt diese Prüfungen als nicht Teil der Umsetzung.
+- Prüfungen für Fahrzeugalter, Höchstlaufleistung und einzige abgelaufene Preisversion: Batch 1251.4 nennt diese Prüfungen als nicht Bestandteil der Abläufe.
 - Kreditkartenwechsel über MPay: Batch 199.6 nennt den Status Blocked BAT Testing.
 - Einmalverträge im Online-Shop und Zahlung per PayPal: Batch 217.1 und 148.2 enthalten keine vollständigen Angaben.
-- Bank-Dialog für mehrere IBANs und Zahlungsdetails mit Hauptkonto: Batch 1210.1 nennt diese Vorhaben ohne Status.
+- Bank-Dialog für mehrere IBANs und Zahlungsdetails mit Hauptkonto: Batch 1210.1 nennt diese Themen ohne Status.
 - Mock-Daten für die Vertriebsprovision und Variable expiryCriteria: Batch 1210.1.
 - Pflicht der Lieferantenstammdaten über SDB4 und die Übergangslösung: Batch 1161.1.
 - Auswahl der Lieferantendaten über SDB4 als Schnittstelle: Batch 617.2.
@@ -1050,8 +1050,8 @@ Die folgenden Punkte enthalten Widersprüche, unklare Aussagen oder Meldungen, d
 - Zeitfenster für Ausfall und Aufholen der Lieferantenberichte sowie Zeitregeln: Batch 297.1.
 - Benachrichtigung über Jobfehler bei Nemesis und ISP: Batch 304.1 und 303.1.
 - Lösung für Kafka-Datenfehler im Reporting: Batch 304.1.
-- Kundenabfrage Searchdealership über Outlet-ID: Batch 572.6 nennt die Integration als offen.
-- Synchronisation der Kundendaten mit Elasticsearch bei der Produktindizierung je Markt: Batch 1165.2 nennt die marktübergreifende Ausführung als nicht umgesetzt.
+- Kundenabfrage Searchdealership über Outlet-ID: Batch 572.6 nennt die Integration ohne Angabe zum Stand.
+- Synchronisation der Kundendaten mit Elasticsearch bei der Produktindizierung je Markt: Batch 1165.2 nennt die marktübergreifende Ausführung ohne Angabe zum Stand.
 - Daten der Lieferantenberichte aus der Historie: Batch 297.1.
 - Konsistenz der Dateinamen und der Rückmeldeordner für SWT und CoFiCo: Batch 1302.1 nennt die Ordner für Fehlerrückmeldungen, die Abläufe fehlen.
 - Migration der VEGA-Ordner auf globale Ordner und Umbenennung VEGA-ALL: Batch 1290.1 beschreibt die Zielstruktur mit Migrationsskripten, der Stand ist nicht belegt.
@@ -1061,29 +1061,29 @@ Die folgenden Punkte enthalten Widersprüche, unklare Aussagen oder Meldungen, d
 - Abschnitte ohne Inhalt: Batch 1305.1 und 1314.1 enthalten nur Überschriften.
 - Ausstehende Gespräche zu Architekturthemen der Dokumentation: Batch 1299.1 beschreibt eine KI-Konfiguration ohne Zielbild.
 - Zusammenführung der externen Anwendungen: Batch 1180.1 nennt keine Einzelheiten.
-- Übergreifende Vorhaben für Benutzeroberfläche und Schnittstellen: Batch 138.4 nennt Themen in Bearbeitung ohne Angaben zum Ergebnis, etwa die Prüfung des MPay-Status Not due ohne MME-Konto, die Zahlungsbedingung in der Exportdatei für Behörden- und Flottenverträge, die automatische Akzeptanz von Rechnungen und die automatische Anlage von Batch-Jobs aus YAML-Dateien.
-- Weitere geplante Themen: Batch 549.3 nennt offene Punkte ohne Beschreibung, etwa den Umgang mit Händlern mit mehreren VEGA-IDs, die Harmonisierung der Kundentypen, die Pflicht der SAP-Debitorennummer bei Affiliate-Händlern, die Aktivierung des Marktes MY sowie die Festlegung von Halter, Zahler und Rechnungsempfänger über oneERP, CoFiCo und SWT.
-- Automatische Ursachenanalyse: Batch 1295.1 beschreibt den Stand als offen.
+- Übergreifende Themen für Benutzeroberfläche und Schnittstellen: Batch 138.4 nennt Themen in Bearbeitung ohne Angaben zum Ergebnis, etwa die Prüfung des MPay-Status Not due ohne MME-Konto, die Zahlungsbedingung in der Exportdatei für Behörden- und Flottenverträge, die automatische Akzeptanz von Rechnungen und die automatische Anlage von Batch-Jobs aus YAML-Dateien.
+- Weitere Themen: Batch 549.3 nennt Punkte ohne Beschreibung, etwa den Umgang mit Händlern mit mehreren VEGA-IDs, die Harmonisierung der Kundentypen, die Pflicht der SAP-Debitorennummer bei Affiliate-Händlern, die Aktivierung des Marktes MY sowie die Festlegung von Halter, Zahler und Rechnungsempfänger über oneERP, CoFiCo und SWT.
+- Automatische Ursachenanalyse: Batch 1295.1 beschreibt den Stand ohne Angabe zum Abschluss.
 - Zusammenführung der Machbarkeitsprüfung und Leasing-SA-Codes: Batch 527.1 führt den SA-Code-Punkt als geschlossen.
 - Endpunkte für die Produktsuche in Version 2 und das Feld mileageType: Batch 534.1 und 513.2.
-- Validierung der Datumsangaben und Fehlerformat RFC 9457: Batch 515.1 nennt die Konventionen als offen.
+- Validierung der Datumsangaben und Fehlerformat RFC 9457: Batch 515.1 beschreibt die Konventionen ohne Angabe zum Stand.
 - Callbacks des Edge Service mit Speicherung nicht verarbeitbarer Ereignisse und Berechtigungen für externe Systeme: Batch 512.1.
 - Vollständiger Stand der Edge-Endpunkte für Online-Vertrieb und Leasing: Batch 514.1 und 514.2 beschreiben einen Zielzustand.
 - Push-Back-Endpunkt und Voraussetzungen zum Verbindungsaufbau von TraCS: Batch 565.4.
 - Migration des Screenings von CAS zu TraCS: Batch 565.1 beschreibt die Migration, ihr Stand ist nicht belegt.
 - Transparenz bei systemseitig ausgelösten Änderungen im FI-System: Batch 587.2 nennt keine Details.
 - Sync-API von CoFiCo und Termin des Lieferanten: Batch 584.1.
-- BankId bei IBAN-Änderung in CoFiCo: Batch 585.5 nennt die Klärung als offen.
+- BankId bei IBAN-Änderung in CoFiCo: Batch 585.5 nennt die Klärung ohne Ergebnis.
 - Business Registration Number, Zahlungsart und Namensformat für Südkorea: Batch 557.1.
 - Anbindung der Business-Partner-API für Lieferanten: Batch 650.2 nennt die Schnittstelle für die Datei als noch nicht festgelegt.
 - Prüfpfad für Banküberweisungen bei Privatkunden: Batch 883.7.
 - Erweiterung von NEMESIS um Management-Verträge: Batch 183.4 und 708.4.
-- Speicherung von NEMESIS-Ereignissen in der Datenbank: Batch 162.2 beschreibt die Speicherung als Vorhaben ohne Status.
-- Audit Report für NEMESIS: Batch 145.1 nennt den Stand als Planung.
+- Speicherung von NEMESIS-Ereignissen in der Datenbank: Batch 162.2 beschreibt die Speicherung ohne Angabe zum Stand.
+- Audit Report für NEMESIS: Batch 145.1 beschreibt den Stand als Entwurf.
 - Dynamische Ermittlung von Country Code und Company Code für weitere Märkte in NEMESIS: Batch 161.3.
 - Funktionale Fehler der NEMESIS-Liste mit Nummern 83, 250, 225 und 247: Batch 163.4 führt die Zuordnung des Payloads als geschlossen.
-- Zahlungsbeginn und Zahlungsende bei subventionierten Verträgen in NEMESIS: Batch 144.2 nennt eine Spaltenanpassung im PI-Backlog.
-- Test für die Fehlerbehandlung in NEMESIS: Batch 240.2 nennt den Test als offen.
+- Zahlungsbeginn und Zahlungsende bei subventionierten Verträgen in NEMESIS: Batch 144.2 nennt eine Spaltenanpassung in einem späteren Programminkrement.
+- Test für die Fehlerbehandlung in NEMESIS: Batch 240.2 nennt den Test ohne Ergebnis.
 - Tägliche Bereitstellung der Fehlerprotokolle durch NEMESIS: Batch 240.2 und 251.1.
 - Ausgehende Rechnungsstellung für CoFiCo über CFT und Axway: Batch 212.2 führt die Integration als abgebrochen.
 - Lieferantennummer aus oneERP über SDB4: Batch 617.2 führt die Untersuchung als nicht weiterverfolgt.
@@ -1097,11 +1097,11 @@ Die folgenden Punkte enthalten Widersprüche, unklare Aussagen oder Meldungen, d
 
 - Batch 1303.1: Vorhaben Configure Market Users abgebrochen.
 - Batch 1304.2: Globaler Wiederholungsmechanismus, Verringerung von Aufrufen am Vertragsservice, Verlagerung von Konfigurationen aus dem Secrets Manager, automatische Versionierung von OpenSearch-Indizes, Umstellung der API auf Market ID und die Verschiebung der Steuerkonfiguration sind geschlossen.
-- Batch 1291.1: Cross-Browser-Tests und die Roadmap der Testautomatisierung sind als Einträge ohne Umsetzungsstand beschrieben.
+- Batch 1291.1: Cross-Browser-Tests und die Roadmap der Testautomatisierung sind als Einträge ohne Angabe zum Stand beschrieben.
 - Batch 1290.1: Erweiterung des manuellen Regressionspakets und automatisierte Testprüfung nach Deployments sind abgebrochen.
 - Batch 1313.1: PROD-Release mit Freigaben und Point-in-Time-Recovery sind abgebrochen.
-- Batch 545.1: Ein Ticket zum Import der I156-Datei ist geschlossen. Die Umbenennung der Microservices ist abgebrochen.
-- Batch 145.1 und 144.2: Audit Report und Spalte Resend date stehen im Planungsstand.
+- Batch 545.1: Eine Meldung zum Import der I156-Datei ist geschlossen. Die Umbenennung der Microservices ist abgebrochen.
+- Batch 145.1 und 144.2: Audit Report und Spalte Resend date stehen als Entwurf.
 - Batch 163.4: Payload-Protokollierung in Datadog für NEMESIS ist geschlossen.
 - Batch 521.1: Stabilität des Reportings im Edge Service ist geschlossen.
 - Batch 617.2: Lieferantennummer aus oneERP ist abgebrochen.
@@ -1117,14 +1117,14 @@ Die folgenden Punkte enthalten Widersprüche, unklare Aussagen oder Meldungen, d
 
 **Vorläufige Angaben, die nicht in den Fließtext übernommen wurden**
 
-- Batch 512.1: Die Berechtigung EXT_EDGE_VEHICLE_R für das Lesen von Fahrzeugdaten ist als Vorhaben beschrieben.
+- Batch 512.1: Die Berechtigung EXT_EDGE_VEHICLE_R für das Lesen von Fahrzeugdaten ist ohne Angabe zum Stand beschrieben.
 - Batch 129.4, 163.3 und 220.4: Die Fehlerbehebungen sind in Abschnitt 22.4 verschoben.
 - Batch 1095.2: Die Übersetzung des Ländernamens für slowakische Dokumente im BAT-Test.
 - Batch 1204.6 und 151.1: BAT-Test ohne Abschluss.
 - Batch 1082.5 und 1142.6: Status BAT Confirmed.
-- Batch 528.1: Vertrags-API mit Blockierung im BAT-Test, Erweiterungen des Kundentyps, Branchenfaktor und SA-Codes im Vorhaben, Meldung zum internen Serverfehler beim Anlegen eines Kunden über Online-Sales abgebrochen.
-- Batch 513.1: Das Vorhaben hat die niedrigste Priorität und kann zurückgestellt werden.
-- Batch 534.1: Die geplante Neugruppierung der Anfragen ist abgebrochen.
+- Batch 528.1: Vertrags-API mit Blockierung im BAT-Test, Erweiterungen des Kundentyps, Branchenfaktor und SA-Codes ohne Angabe zum Stand, Meldung zum internen Serverfehler beim Anlegen eines Kunden über Online-Sales abgebrochen.
+- Batch 513.1: Das Material nennt die niedrigste Priorität und die Möglichkeit, das Vorhaben zurückzustellen.
+- Batch 534.1: Die Neugruppierung der Anfragen ist abgebrochen.
 
 ## Vorschläge zur Gliederung
 
