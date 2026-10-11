@@ -24,7 +24,17 @@ function runs(text, base) {
     const t = m[0];
     if (t.startsWith('**')) out.push({ text: t.slice(2, -2), options: { ...base, bold: true } });
     else if (t.startsWith('~~')) out.push({ text: t.slice(2, -2), options: { ...base, bold: true, color: C.red } });
-    else out.push({ text: t.slice(2, -2), options: { ...base, color: C.blue, underline: { style: 'sng' } } });
+    else {
+      // __Text|url__ erzeugt einen Hyperlink; eine E-Mail-Adresse wird automatisch zu mailto:
+      const inner = t.slice(2, -2);
+      const bar = inner.lastIndexOf('|');
+      let label = inner, url = '';
+      if (bar > 0) { label = inner.slice(0, bar); url = inner.slice(bar + 1); }
+      else if (/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(inner)) url = 'mailto:' + inner;
+      const opts = { ...base, color: C.blue, underline: { style: 'sng' } };
+      if (url) opts.hyperlink = { url, tooltip: label };
+      out.push({ text: label, options: opts });
+    }
     last = m.index + t.length;
   }
   if (last < text.length) out.push({ text: text.slice(last), options: { ...base } });
