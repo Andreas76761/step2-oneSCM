@@ -158,7 +158,7 @@ Quellen: keine
 9. Ändern Sie einen Code im HQ-Bereich. Das System übernimmt die Änderung in die HQ-Felder der Market Settings. Marktfelder aktualisiert es, sofern der Markt sie nicht überschrieben hat.
 10. Deaktivieren Sie einen Coverage Code. Er verschwindet danach aus der Liste der aktiven Coverage Codes in den Market Settings.
 
-**Ergebnis und Systemstatus.** Die Märkte arbeiten mit denselben HQ-Vorgaben. Eine Änderung im HQ-Bereich erscheint in den Market Settings. Das System übernimmt neue Sprachen aus den Market Settings mit den aktuellen Inhalten und füllt die Felder vor. Die HQ-Empfehlungen sind in den marktspezifischen Attributen vorbelegt, sodass die Daten abgestimmt bleiben.
+**Ergebnis und Systemstatus.** Die Märkte arbeiten mit denselben HQ-Vorgaben. Eine Änderung im HQ-Bereich erscheint in den Market Settings. Wird in den Market Settings eine neue Sprache hinzugefügt, übernimmt das System die aktuellen Inhalte und füllt die Felder vor. Die HQ-Empfehlungen sind in den marktspezifischen Attributen vorbelegt, sodass die Daten abgestimmt bleiben.
 
 K/JX-Codes werden in der Vertragserstellung verwendet. Bei einem Fahrgestellidentifikator erkennt das System, ob es sich um einen Van oder einen PC handelt, und ermittelt die K/JX-Codes über einen VeDoc-Aufruf oder aus vorhandenen Daten des CePro-Imports. Berücksichtigt werden nur Codes aus der Tabelle in oneSCM. Laufleistung und Laufzeit des Eintrags gehen in der Einheit der Markteinstellung an die Generierung, also in Kilometern oder Meilen. Gibt es keinen Eintrag, bleiben die Werte leer. Bei einer Auftragsnummer ruft das System die K/JX-Codes für einen PC über die GoOrder-API und für einen Van über die AFAB-API ab. Auch hier bleiben die Werte leer, wenn kein Eintrag existiert.
 
@@ -174,7 +174,7 @@ K/JX-Codes werden in der Vertragserstellung verwendet. Bei einem Fahrgestelliden
 
 - Die HQ-Sperre verhindert, dass Händler, MO-Mitarbeitende und MPC-Nutzer für gesperrte Fahrzeuge Serviceverträge anlegen oder aktivieren. Die Vertragskalkulation prüft nach der Auswahl des Kundentyps und der Eingabe einer Fahrgestellnummer, ob das Fahrzeug von der Zentrale gesperrt ist. Ist es gesperrt, liefert das System keine Produkte und Preise. Ist es nicht gesperrt, stellt es alle passenden Produkte und Preise bereit.
 - Bei einem Baumuster oder einer Auftragsnummer ohne verfügbare Fahrgestellnummer liefert das System Produkte und Preise, und der Vertrag kann den Status „Confirmed“ erreichen. Liefert das Fahrzeugmanagement bei einem erstellten Vertrag später die Fahrgestellnummer nach, prüft das System die Sperre erneut. Bei einer Sperre setzt es den Vertrag auf „Rejected“ und die Marktorganisation erhält gemäß der Vorlage eine Benachrichtigung. Andernfalls setzt das System die Aktivierung fort.
-- Eine entfernte Sprache verschwindet aus der aktiven Anzeige der Benutzeroberfläche. Die Datensätze bleiben erhalten. Bei einer Wiederherstellung ist das Feld mit der zuvor gespeicherten Übersetzung wieder sichtbar.
+- Eine entfernte Sprache verschwindet aus der aktiven Anzeige der Benutzeroberfläche. Die Datensätze bleiben erhalten. Bei einer Wiederherstellung ist das Feld mit der gespeicherten Übersetzung wieder sichtbar.
 - Ein lokaler Marktnutzer kann die ursprünglichen HQ-Vorgaben zur Feldkonfiguration in den Market Settings weder ändern noch überschreiben.
 - Die Beschreibung des ISP-Wizards stammt aus einem Entwicklungsstand, der die Abläufe nur mit dem Verweis „gemäß UI“ beschreibt. Der Stand ist im Klärungsbedarf erfasst.
 
@@ -191,4 +191,123 @@ Quellen: Batch 1130.1, 884.1, 884.3, 5.1, 4.1, 1116.1, 1129.1, 994.2, 1197.1, 12
 Material: keine Quellen in den RAG-Batches
 
 Quellen: keine
+
+## 15.7 Technical Options, SA-Matching, Coverage- und Industry-Codes
+
+**Zweck.** Dieser Abschnitt beschreibt die zentralen Stammdaten, mit denen Produkte Leistungen und Ausstattung abbilden. Coverage Codes bilden Deckungen ab, Industry Codes Branchen, Technische Optionen Ausstattungscodes und Reifengrößen. Das SA-Matching ordnet Modelltypen den Ausstattungscodes zu. Schadencodes ordnen Werkstattfälle einem Deckungscode zu. Coverage Codes, Industry Codes und Schadencodes pflegen Sie im Menüpunkt „Manage Vega Codes“ mit den Reitern „Coverage Codes“, „Industry Codes“ und „Damage codes“. Technische Optionen pflegen Sie in der Fahrzeugverwaltung unter „Technische Optionen“. Die Bezeichnung „Technical Options“ gilt durchgängig in der Preisübersicht, der Angebotsvorschau und den Platzhaltern für Vertragsdokumente. Coverage Codes sind eigenständige Stammdaten, die HQPM definiert und Blueprints zuordnet.
+
+**Voraussetzungen.** Sie sind als HQPM oder HQ-Administrator angemeldet. Für einen Coverage Code legen Sie die Divisionen fest, für die er gelten soll. Die Märkte, in denen ein Code verwendet werden kann, bestimmt die Marktspezifität; sie beschreibt Kapitel 15.5. Für Technische Optionen wählen Sie die Division und den Gruppentyp vor dem Anlegen der Gruppe.
+
+**Rollen.** HQPM legt Coverage Codes, Industry Codes und Technische Optionen an und verwaltet sie. Das Deaktivieren und das Löschen von Industry Codes ist dem HQPM vorbehalten. HQ-Administratoren fassen Ausstattungscodes zu TO-Gruppen zusammen, die Märkte bepreisen. Market-Operation-Nutzer und Administratoren legen Schadencodes an. MPC- und HQ-Nutzer filtern Coverage Codes nach der Kategorie und sehen deren Details.
+
+**Schritt für Schritt.**
+
+*Coverage Code anlegen.*
+
+1. Öffnen Sie den Reiter „Coverage Codes“ und wählen Sie „Create Coverage Code“. Der Assistent führt in drei Schritten durch die Anlage. In jedem Schritt können Sie abbrechen; ein Klick auf das X öffnet einen Dialog zum Beenden.
+2. Wählen Sie im Schritt 1 die Coverage Category. Zur Auswahl stehen Base, Body und Optional in alphabetischer Reihenfolge. Die Kategorie „Tire product reference“ steht für die Divisionen Passenger Cars und Vans zur Verfügung.
+3. Wählen Sie die Division. Das Dropdown ist eine Mehrfachauswahl mit den Einträgen „Passenger Cars“ und „Vans“. Das Feld zeigt die Anzahl der Auswahl, zum Beispiel „X divisions selected“.
+4. Geben Sie den Coverage Name ein. Er umfasst 5 bis 200 Zeichen.
+5. Geben Sie den Coverage Code ein. Er besteht aus genau vier Zeichen aus Großbuchstaben und Ziffern; Kleinbuchstaben wandelt das System um. Der Code muss innerhalb der Division eindeutig sein. Das System prüft dies beim Wechsel zum zweiten Schritt und vor dem Speichern. Der erste Buchstabe wird je Kategorie vorbelegt: P für Base, O für Optional und A für Body.
+6. Geben Sie die Coverage Reference ein. Sie umfasst 3 bis 10 Zeichen aus Großbuchstaben, Ziffern, Unterstrichen und Bindestrichen.
+7. Optional geben Sie einen Family Tag mit 3 bis 25 Zeichen ein. Sonderzeichen sind erlaubt. Der Family Tag muss nicht eindeutig sein.
+8. Wählen Sie im Schritt 2 die Märkte über „Current and Upcoming Markets“ oder „Custom Markets“. Der Family Tag erscheint auch in diesem Schritt.
+9. Prüfen Sie im Schritt 3 die Übersicht und bestätigen Sie. Der Code erscheint in der Übersichtsliste mit der Spalte „Family tag“.
+
+*Coverage Code bearbeiten und deaktivieren.*
+
+10. Wählen Sie im Aktionsmenü „Bearbeiten“. Der Coverage Code und die Coverage Reference sind nicht änderbar. Im zweiten Schritt passen Sie Beschreibungen an und fügen Märkte hinzu oder entfernen sie. Gespeichert wird im letzten Schritt.
+11. Deaktivieren Sie einen Coverage Code oder löschen Sie ihn, sofern er nicht verwendet wird. Beide Aktionen verlangen eine Bestätigung. Ein deaktivierter Code verschwindet aus der Liste und steht für neue Blueprints nicht zur Verfügung. Ein gelöschter Code ist endgültig entfernt; die Aktion lässt sich nicht rückgängig machen.
+
+*Coverage Codes suchen.*
+
+12. Suchen Sie über die Felder für den Coverage Code und die Coverage Reference, den Divisionsfilter und den Kategoriefilter. Die Kategorien Base, Optional und Body lassen sich mehrfach auswählen. Die Suche lösen Sie über „Suchen“ aus. Die Liste ist standardmäßig nach dem vierstelligen Coverage Code sortiert, und jede Spalte lässt sich auf- und absteigend sortieren.
+
+*Industry Code anlegen.*
+
+13. Öffnen Sie den Admin-Bereich, den Menüpunkt „Manage VEGA Codes“ und den Reiter „Industry Codes“. Wählen Sie „Create Industry Code“. Der Vorgang läuft in drei Schritten: „Define Industry Codes“, „Market Specificity“ und „Overview & Confirmation“.
+14. Legen Sie im Schritt 1 den Branchencode fest. Er hat genau vier Zeichen: das große I, das das System vorbelegt, und drei Ziffern, die Sie eingeben. Der Code muss eindeutig sein. Die Division ist auf Vans festgelegt. Der Branchenname umfasst 5 bis 200 Zeichen.
+15. Wählen Sie im Schritt 2 die Marktspezifität. Die Option „Current and Upcoming Markets“ ist vorausgewählt. Alle Märkte sind dann gewählt, die Kästchen lassen sich nicht ändern. Ein später hinzukommender Markt wird automatisch gewählt und erhält den Branchennamen aus Schritt 1.
+16. Wählen Sie für „Custom Markets“ die Märkte per Checkbox. Ein Klick auf „Select All“ oder „Deselect All“ wählt alle Märkte oder hebt alle Auswahlen auf. Nach der Bestätigung erscheint je Markt und Sprache eine Karte mit einem Pflichtfeld für den Branchennamen mit 5 bis 200 Zeichen. Eine geleerte Karte setzt den Standardnamen aus Schritt 1 ein. Ohne ausgewählten Markt bleibt „Confirm“ deaktiviert.
+17. Prüfen Sie im Schritt 3 die Übersicht und wählen Sie „Confirm“. Das System speichert den Industry Code.
+
+*Industry Code bearbeiten und deaktivieren.*
+
+18. Wählen Sie „Bearbeiten“. Der Schritt 1 öffnet sich. Der Branchencode ist nicht änderbar, der Name schon. Im Schritt 2 fügen Sie Märkte hinzu oder entfernen sie. Gespeichert wird im letzten Schritt.
+19. Deaktivieren Sie einen Industry Code, der Produkten zugeordnet ist. Er verschwindet aus der Auflistung und steht für neue Produkte nicht mehr zur Verfügung. Löschen Sie einen nicht verwendeten Industry Code endgültig. Beide Aktionen verlangen eine Bestätigung.
+
+*Technische Option anlegen.*
+
+20. Öffnen Sie in der Fahrzeugverwaltung den Bereich „Technische Optionen“ und wählen Sie die Division. Danach wählen Sie den Gruppentyp „General“, „Tire Type“ oder „Tire Size“. Beim Bearbeiten ist der Gruppentyp deaktiviert.
+21. Geben Sie den Gruppennamen ein. Der Name ist je Division eindeutig. Bei der Gruppenart Reifengröße geben Sie eine Größe ein, zum Beispiel 195/65 R17. Die Eingabe akzeptiert Ziffern, Buchstaben, Leerzeichen und Sonderzeichen wie „/“ und „R“ und ist auf 35 Zeichen begrenzt. Das System speichert den Namen unverändert.
+22. Wählen Sie die Matching-Logik: „Alle müssen übereinstimmen“, „Keine darf übereinstimmen“ oder „Eine muss übereinstimmen“.
+23. Fügen Sie SA-Codes hinzu. Nach jedem SA-Code zeigt das System eine Tabelle mit den Modellcodes, die diesen SA-Code enthalten. Die Tabelle passt sich an, sobald Sie SA-Codes hinzufügen oder entfernen. Werden zwei unterschiedliche Größen zugeordnet, verwendet das System die größere.
+24. Sind in einer Gruppe vom Typ Reifen zwei oder mehr Codes hinterlegt, müssen alle Codes in der VeDoc-Antwort enthalten sein, damit der für diese Kombination definierte Preis angewendet wird.
+
+*TO-Gruppe für die Preisbildung anlegen.*
+
+25. Wählen Sie „Create TO Group“ und anschließend die Division. Geben Sie einen Gruppennamen mit 3 bis 30 Zeichen und eine Gruppenbeschreibung mit 20 bis 2000 Zeichen ein. Fügen Sie Ausstattungscodes hinzu. Jeder Code hat genau drei alphanumerische Zeichen und wird in Großbuchstaben umgewandelt. Eine Gruppe enthält höchstens 15 Ausstattungscodes.
+26. Wählen Sie „Create“, um zu speichern. „Cancel“ kehrt ohne Speichern zur Übersicht zurück. Die zuletzt angelegte Gruppe steht standardmäßig oben.
+
+*Schadencode anlegen.*
+
+27. Öffnen Sie den Admin-Bereich unter „VEGA Codes“, wechseln Sie zum Reiter „Damage codes“ und wählen Sie „Create Damage code“. Der Assistent führt in drei Schritten durch die Anlage.
+28. Wählen Sie im Schritt „Define Damage Code“ den Coverage Code über die Coverage Reference aus. Die Division ist schreibgeschützt und ergibt sich aus dem Coverage Code. Der Schadencode besteht aus genau fünf Zeichen aus den Ziffern 0 bis 9 und den Buchstaben A bis Z. Der Schadenstyp besteht aus genau zwei Zeichen aus denselben Zeichen. Für jede Kombination aus Division, Schadencode und Schadenstyp entsteht eine eigene Zeile.
+29. Wählen Sie im Schritt „Market Specificity“ mindestens einen Markt aus. „Select All Markets“ wählt alle verfügbaren Märkte aus. Je Markt geben Sie Code Description und Type Description ein. Beide Felder umfassen 5 bis 100 Zeichen.
+30. Prüfen Sie im Schritt „Overview & Confirmation“ die Übersicht und wählen Sie „Confirm“.
+
+*Schadencodes importieren.*
+
+31. Öffnen Sie im Admin-Bereich den Bereich „Damage Codes“ und wählen Sie „Upload damage codes“. Wählen Sie eine Datei im Format .xlsx über „Browse“ oder per Drag and Drop aus. „Confirm“ startet den Import. Während des Imports erscheint ein Ladeindikator.
+32. Die Excel-Datei enthält die Spalte „MSM coverage“ für den Deckungscode, die Spalte „DC+DT“ für den Schadencode und die Spalte „dc Description + dt Description“ für die Beschreibung. Die importierten Codes werden mit ihren Übersetzungen gespeichert, zum Beispiel DE, EN und FR.
+33. Laden Sie für eine Kombination aus Deckungscode und Division erneut eine Datei hoch, ersetzt das System die bisher importierten Codes dieser Kombination. Manuell angelegte Schadencodes bleiben erhalten.
+
+*Schadencodes exportieren und ansehen.*
+
+34. Öffnen Sie im Bereich Product Management die VEGA Codes, wählen Sie „Damage Codes“ und suchen Sie. Die Schaltfläche für den Download ist nur aktiv, wenn die Suche mindestens einen Schadencode findet. Die Datei enthält die Codes der aktuellen Suchfilter im XLSX-Format. Wird ohne Filter gesucht, enthält die Datei alle Schadencodes, auch wenn die Oberfläche nur 10.000 anzeigt.
+35. Öffnen Sie einen Schadencode über die Spalte „Aktion“ oder über den Link im Schadencode. Der Ansichtsmodus zeigt die Inhalte ohne Bearbeitung. „Cancel“ schließt die Ansicht, „Back“ wechselt in den Bearbeitungsmodus.
+
+**Ergebnis und Systemstatus.**
+
+- Coverage Codes stehen für die Blueprint-Auswahl bereit. Family Tag gruppiert die Coverage Codes in Ansichten für Vertrieb und Kunden. Die Übergabe an die Generierung erfolgt in der festgelegten Reihenfolge und gruppiert nach Family Tag.
+- Eine Coverage mit der Kategorie „Tire product reference“ kann im Produkt auf „Optional“ oder „Not Included“ gesetzt werden, nicht auf „Always Included“. Das gilt für die Divisionen Passenger Cars und Vans. Ein Reifenprodukt für Van Unlimited lässt sich eigenständig oder als Option an ein bestehendes Produkt anhängen.
+- Industry Codes stehen bei der Produkterstellung zur Auswahl. Die Vertragserstellung übermittelt die Branchendaten für jedes Produkt. Der Branchenname ist eindeutig.
+- Technische Optionen werden zentral definiert. Märkte bepreisen die TO-Gruppen. Händler verwenden sie im Verkaufsprozess für Serviceverträge. Die Abfrage verfügbarer Produkte liefert das Feld „included“ je nach Auswahl des Benutzers als wahr oder falsch; die Liste zeigt die Optionen für Laufleistung und Laufzeit.
+- Der SA-Code-Filter für Modelltypen der Van-Sparte bietet die Einstellungen „Include SA Code/s“ als Standard, „Exclude SA Code/s“ und „No Rule“. Bei „Include SA Code/s“ zeigt das System nur Modelltypen mit den angegebenen SA-Codes. Bei „Exclude SA Code/s“ zeigt es nur Modelltypen ohne diese Codes. Bei „No Rule“ erscheinen alle relevanten Modelltypen.
+- Schadencodes gelten je Division, Schadencode und Schadenstyp und sind in den Märkten verfügbar, die im Assistenten gewählt wurden. Importierte Schadencodes erscheinen in der richtigen Spalte, und die Sortierung nach Coverage Code funktioniert.
+
+**Besonderheiten je Rolle, Sparte und Markt.**
+
+- Die Division bestimmt die Auswahl. Coverage Codes lassen sich den Divisionen Passenger Cars und Vans zuordnen. Industry Codes sind auf die Division Vans festgelegt. Technische Optionen legen Sie je Division an.
+- Die Marktliste für Coverage Codes, Industry Codes und Schadencodes enthält ausschließlich Deutschland. Weitere Märkte erscheinen, sobald oneSCM sie unterstützt.
+- Die Übersetzungen der Märkte stehen in Kapitel 15.5. Die Marktnamen erscheinen je nach Markteinstellung in der Sprache des Marktes.
+- Der Reiter „Industry Codes“ ist in der Übersicht des Admin-Bereichs für Testzwecke vorgesehen. Die Funktionen zum Anlegen gehören zum Industry-Overview-Vorhaben. Die Anlage beschreibt dieser Abschnitt als regulären Ablauf.
+- Die Gruppenart Reifengröße gehört zum Reifenprodukt. Ein Reifenprodukt mit Radgrößen, Wetterprofilen und Preisen beschreibt Kapitel 13.2. Die Wetterprofile „Summer“, „Summer/Winter“ und „All-Season“ sind fest hinterlegt und ohne Technische Optionen verfügbar.
+- Die Einträge der Technischen Optionen zeigen Gruppenname, Division, SA-Codes und den Typ der Technischen Option auf Karten. Eine Tabelle gibt es nicht mehr. Die Funktionalität bleibt gleich. Dies gilt in der Fahrzeugverwaltung.
+
+**Hinweise.**
+
+- Die Platzhalter für Vertragsdokumente lauten technicalOptions, contractTechnicalOptions und contractTechnicalOptionsAfterProlongation.
+- Ein Angebot über die Fahrgestellnummer oder Bestellnummer zeigt Technische Optionen ohne Preis. Ist bereits eine Technische Option vorhanden, lassen sich Optionen nicht hinzufügen oder entfernen. Diese Abläufe beschreibt Kapitel 5.5.
+- Ein Coverage Code kann den Namen eines zuvor gelöschten Coverage Codes übernehmen, wenn Sie ihn neu anlegen. Hinweis: Dieser Satz steht nur im Quellenkontext des Abschnitts; die Formulierung im Text lautet: Ein neuer Coverage Code darf den Namen eines gelöschten Codes tragen.
+- Die Übersicht lässt sich nur erreichen, wenn die Pflichtangaben für Kurz- und Langbeschreibung gültig sind.
+- Eine Coverage Category Technical Option ist in der Anlage eine eigene Kategorie mit Präfix T. Das Präfix und die Bezeichnung dieser Kategorie sind im Klärungsbedarf erfasst.
+- Bei Schadencodes bleibt die Division bei Änderungen eines Deckungscodes führend. oneSCM ist das führende System für die Beziehung zwischen Division und Coverage Code.
+- Die Vergabe der Industry-Code-Übersetzungen erfolgt je Sprache und Markt; der Markt ergänzt sie in den Market Settings (Kapitel 15.5).
+
+**Fehlerbehebung.**
+
+- „Must be at least 4 characters long.“ erscheint, wenn ein Code der Kategorie „Tire product reference“ kürzer als vier Zeichen ist. Der Code beginnt standardmäßig mit „T“, zum Beispiel mit dem Testwert T001.
+- „Coverage Code for this division is already existing. Please change it and try again.“ erscheint, wenn der Code in der Division bereits vergeben ist.
+- „Coverage Code with this name is already existing. Please change it and try again“ erscheint bei einer doppelten Anlage ohne Divisionsbezug. Ändern Sie den Code und versuchen Sie es erneut.
+- Ist ein Branchencode bereits vergeben, erscheint eine Meldung, dass ein Branchencode mit diesem Namen bereits existiert. Ändern Sie den Code und versuchen Sie es erneut.
+- „Industry Code saved successfully“ bestätigt die Speicherung. Die Meldung „Failed to update Industry Code successfully“ erscheint bei einem Fehler in der Bearbeitung.
+- „Could not load available markets. Please exit and try again later“ erscheint, wenn die Marktliste nicht geladen werden kann. Beenden Sie den Vorgang und versuchen Sie es später erneut.
+- „Group Name for this division is already existing. Please change it and try again.“ erscheint, wenn der Gruppenname in der Division bereits vergeben ist.
+- Der Button „Create“ bleibt deaktiviert, bis alle Pflichtfelder der TO-Gruppe ausgefüllt sind.
+- Das Suchfeld für den Coverage Code begrenzt die Eingabe auf vier Zeichen.
+- Nach einem Import erscheint die Meldung „File Dateiname was successfully imported“. Schlägt der Import fehl, erscheint die Meldung „File Dateiname could not be imported.“ mit einer Schaltfläche „Close“. Das Fenster bleibt geöffnet, damit Sie die Datei erneut hochladen können.
+- Die Schaltfläche für den Download der Schadencodes ist deaktiviert, wenn die Suche keinen Code findet. Ein Hinweis erklärt dies beim Überfahren mit der Maus.
+
+Quellen: Batch 1220.2, 1220.3, 1264.2, 1191.1, 1162.1, 1161.3, 1160.4, 1263.1, 1221.1, 1204.1, 1208.1, 1209.1, 1203.2, 1259.2, 1258.6, 1254.1, 1201.2, 1174.3, 1174.1, 1188.2, 1167.2, 1207.1, 7.3, 5.3, 4.1, 731.3, 732.1, 169.3, 199.4, 703.3, 884.3, 1171.3, 1100.2, 1130.1
 
