@@ -153,7 +153,7 @@ Quellen: Batch 941.1, 883.4, 883.2, 581.2, 1030.2, 1178.3
 
 **Hinweise.**
 
-- Die Exporte E174 und E169 verwenden den Gruppennamen E174-SC. Das Feld „Reserve for additional BSSEG Fields“ umfasst 10 Zeichen.
+- Der Export E174 verwendet den Gruppennamen E174-SC. Das Feld „Reserve for additional BSSEG Fields“ umfasst 10 Zeichen.
 - Die Datei E174_AfterSales führt den Revenue-Bereich in der aktuellen Fassung.
 - Im Export E169 lauten die Rechnungstypen ESUB und ESER. Sie ersetzen EXTSUB und EXTSER.
 - Die Fristen der Vertragsverwaltung hinterlegen Sie je Division. Dazu zählen die Widerrufsfrist, der Zeitraum für die manuelle Vertragsprüfung, die Wartezeit bei Übertragungen, die Wartezeit bei einem Wechsel des Zahlers sowie die erste und zweite Erinnerung, jeweils in Tagen. Der Zeitraum für die Erstellung von Werkstattrechnungen ist ein verpflichtendes Feld und wird in Monaten angegeben. Für die Datenlöschung gelten Fristen für abgelehnte Verträge in Tagen, für stornierte Verträge in Tagen und für Verträge nach ihrem Abschluss in Jahren.
@@ -176,7 +176,7 @@ Quellen: keine
 - **Kapitel 4.3, Kundendaten und Pflichtangaben prüfen:** Batch 581.2. Das Feld Company Registration Number umfasst Eindeutigkeit, maximal 15 Zeichen und die Prüfung auf Duplikate. Für Kunden vom Typ Commercial Governmental im slowakischen Markt ist es ein Pflichtfeld.
 - **Kapitel 4.8, Dealer-Onboarding und Partnerprozess:** Batch 552.4. Die Händlerregistrierung verlangt identische Warranty-IDs über die Divisionen hinweg.
 - **Kapitel 5.7, Angebotsgültigkeit und Änderungen:** Batch 891.2. Die Gültigkeitsdauer eines Angebots mit Mindestwert, Empfehlung und betroffenen Kundentypen.
-- **Kapitel 8.3 beziehungsweise Kapitel 15.7, Technical Options, SA-Matching, Coverage- und Industry-Codes:** Batch 8.3. Die Anlage von TO-Gruppen erkennt doppelte Gruppennamen und lässt keine Sonderzeichen im Gruppennamen zu. Die Sortierung nach Gruppenname und Division ist korrekt. Die Zielzuordnung ist im Klärungsbedarf zu bestätigen.
+- **Kapitel 15.7, Technical Options, SA-Matching, Coverage- und Industry-Codes:** Batch 8.3. Die Anlage von TO-Gruppen erkennt doppelte Gruppennamen und lässt keine Sonderzeichen im Gruppennamen zu. Die Sortierung nach Gruppenname und Division ist korrekt. Die Zielzuordnung ist im Klärungsbedarf zu bestätigen.
 - **Kapitel 11.1, Rechnungsstellung und Zahlpläne:** Batch 706.2. Das Feld Division bei internationalen Rechnungen im Admin-Bereich wird aus Vedoc übernommen und dient als Filter.
 - **Kapitel 11.7, Reporting, Filter und Exporte:** Batch 315.2. Die Reportingfelder für den Vertragsnettopreis bei MBD-Vans.
 - **Kapitel 12.3, Kampagnen und Sonderkonditionen:** Batch 1144.4. Die Division als Pflichtfeld und die Divisionsfilter bei Kampagnen.
