@@ -145,6 +145,30 @@ Quellen: Batch 23.1, 8.5, 1165.2, 22.2, 1204.6, 1258.8, 516.2
 
 Quellen: Batch 1263.4, 874.1, 1251.4, 1132.3
 
+## 19.6 DSB – Kilometerstandsinformationen
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu dieser Schnittstelle liegen keine Abschnitte vor. Die Servicehistorie über DSB beschreibt Abschnitt 19.4, die Kilometerstand-Schnittstellen des Edge Service beschreibt Abschnitt 19.22.
+
+Quellen: keine Quellen in den RAG-Batches
+
+## 19.7 Warranty-and-Goodwill-API
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu dieser Schnittstelle liegen keine Abschnitte vor. Die Servicehistorie aus dem System Warranty and Goodwill, die über DSB bereitgestellt wird, beschreibt Abschnitt 19.4.
+
+Quellen: keine Quellen in den RAG-Batches
+
+## 19.8 MIC – Fahrzeugdaten-API
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu dieser Schnittstelle liegen keine Abschnitte vor. Den Abruf von Kilometerstandsdaten über MIC nach der Vertragsbestätigung beschreibt Abschnitt 19.5.
+
+Quellen: keine Quellen in den RAG-Batches
+
 ## 19.9 VEGA – Vertrag, Coverage und Claim
 
 **Zweck.** VEGA verarbeitet Vertrags-, Deckungs- und Schadendaten. oneSCM übermittelt Vertragsdaten und Deckungen an VEGA und empfängt von VEGA Schadenfälle, Kostendetails und Händlerdaten. Dieser Abschnitt beschreibt die Dateischnittstellen i155 und i156, die Vergabe der Coverage-IDs, die Statusübergänge, die Verlängerungs- und Kontingentabläufe sowie die Händlerdaten, die VEGA benötigt.
@@ -225,6 +249,14 @@ Eine fehlende Zählung oder eine fehlende Übermittlung an VEGA kann finanzielle
 **Fehlerbehebung.** Ist die Datei i155 nicht verfügbar, prüfen Sie zuerst den Status des Jobs „Vega i155“ und das Transferprotokoll. Ein fehlgeschlagener Lauf lässt sich über „Run Now“ erneut starten. Erscheinen bei einer Verlängerung Fehlermeldungen, enthält die Antwort den Grund der Ablehnung.
 
 Quellen: Batch 779.1, 530.1, 783.7, 841.1, 843.5, 851.1, 842.1, 862.1, 934.1, 947.1, 927.1, 1161.1, 1040.3, 1026.2, 778.3, 966.1, 744.5, 692.2, 730.4, 742.4, 626.3, 913.1, 594.3, 856.5, 1217.3, 1274.4, 1255.4, 1246.7, 865.1
+
+## 19.10 BS4 beziehungsweise SDB4
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu dieser Schnittstelle liegen keine Abschnitte vor. Die Lieferantendaten aus SDB4 für Kostenverantwortung beschreibt Abschnitt 19.9.
+
+Quellen: keine Quellen in den RAG-Batches
 
 ## 19.11 oneERP – Kunden- und Finanzintegration
 
@@ -366,6 +398,14 @@ Für Rechnungen aus dem Feedback des Finanzsystems gilt außerdem: Der Zahlbetra
 **Fehlerbehebung.** Meldet die Validierung einen Zählerfehler, prüfen Sie den Eintrag in Datadog. Der Batch zeigt dann den Status „Validation Error“. Nach der Ursachenanalyse starten Sie den Export-Batch erneut. Die Rechnungen werden mit neuer Verarbeitungsnummer übermittelt.
 
 Quellen: Batch 121.1, 121.3, 156.2, 198.1, 584.1, 619.1, 591.1, 591.4, 585.5, 127.1, 161.2, 142.3, 138.2, 164.5, 217.2, 162.4, 201.1, 177.1, 181.2, 581.3, 141.3, 181.6
+
+## 19.13 SWT – FI-Anbindung
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu dieser Schnittstelle liegen keine Abschnitte vor. Die Kundenanlage für SWT in Indien beschreibt Abschnitt 19.11, die Plausibilitätsprüfung der Rechnungsanzahl Abschnitt 19.15.
+
+Quellen: keine Quellen in den RAG-Batches
 
 ## 19.14 NEMESIS – Buchhalterische Verarbeitung
 
@@ -528,6 +568,14 @@ Bei Verträgen mit Vor- und Nachaktivierung bleiben Rechnungen im Status „Acce
 
 Quellen: Batch 157.1, 182.1, 129.2, 220.1, 216.1, 135.1, 194.1, 194.2, 160.1, 160.2, 173.1, 197.1, 215.2, 905.2, 376.2, 148.1, 903.6, 164.4, 577.4, 543.2, 905.5, 806.6, 567.1, 199.6, 217.1, 148.2
 
+## 19.16 ALICE – Berechtigungsmanagement
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu dieser Schnittstelle liegen keine Abschnitte vor. Die Anmeldung über die ALICE-API für Indien und die Slowakei beschreibt Abschnitt 19.11, die Ermittlung der verkaufenden Person über ALICE beschreibt Abschnitt 19.22.
+
+Quellen: keine Quellen in den RAG-Batches
+
 ## 19.17 DATIX – Manuelle Übergabe
 
 **Zweck.** Dieser Abschnitt beschreibt die manuellen Eingriffe, mit denen Mitarbeitende der Market Operation einen laufenden Batch-Job beenden und einen Rollback auslösen können. Eine automatisierte Übergabe von Kundendaten an das DATIX-System beschreibt das Material nicht. Der Stand des Kundendatenexports für DATIX erfasst der Klärungsbedarf.
@@ -664,6 +712,14 @@ Die Zuordnung des Felds aq_veh_model_series_cd leitet das System immer aus der F
 **Fehlerbehebung.** Erhalten Sie eine Meldung über fehlende Datensätze, prüfen Sie die Quelle, den Markt und die Division aus der Meldung. Fehlt ein Monat einer Nemesis-Datei, laden Sie die fehlende Datei zusammen mit den Folgemonaten manuell nach CFT. Enthält die Fehlerdatei übersprungene Datensätze, korrigieren Sie sie in der Quelle.
 
 Quellen: Batch 304.1, 303.1, 317.1, 322.4, 331.1, 301.1, 300.3, 305.3, 314.1, 304.3
+
+## 19.20 Legacy-Systeme und Übergangsarchitektur
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu diesem Unterkapitel liegen keine Abschnitte vor. Die Altsysteme iCON, ASSET und SIRIUS im Datenfluss des Reportings beschreibt Abschnitt 19.19.
+
+Quellen: keine Quellen in den RAG-Batches
 
 ## 19.21 Technische Integrationswege
 
@@ -817,3 +873,103 @@ Beim Import prüft oneSCM jeden Datensatz. Als Fehler gelten eine nicht überein
 **Fehlerbehebung.** Schlägt ein Batch-Job fehl, starten Sie ihn über „Run Now“ neu, sobald die Ursache behoben ist. Bei einem Job, der nicht mehr endet, nutzen Sie „Stop“. Die Ausführungshistorie zeigt den Status „fehlgeschlagen“ oder „gestoppt“. Ist ein Schadenfall in der i156-Datei nicht importierbar, prüfen Sie die Meldung in Datadog anhand der Zeilennummer. Edge-Fehler mit den Codes 403, 404 oder 500 entsprechen den Fehlerursachen, die der Partner nachvollziehen kann.
 Quellen: Batch 514.1, 512.1, 514.2, 534.1, 513.2, 515.1, 532.2, 527.1, 533.2, 520.1, 518.1, 524.2, 1253.2, 1095.2, 1107.5, 1113.5, 1027.3, 1079.6, 1081.5, 1100.4, 1111.5, 1096.5, 1082.4, 1092.3, 93.1, 771.4, 184.1, 184.4, 196.1, 205.2, 208.2, 208.4, 1310.4, 1180.1, 7.6, 855.3, 796.3, 714.6, 716.3, 795.5, 819.4, 1068.7, 1069.7, 297.1, 565.3, 565.4, 519.10, 1299.2, 667.4, 251.6, 223.4, 1070.7
 
+## 19.23 Architekturregister und offene Nachweise
+
+**Zweck.** Dieser Abschnitt soll die Nachweise zur Architektur bündeln, die für Prüfungen und Freigaben verwendet werden. Das Material enthält für dieses Unterkapitel nur einen Abschnitt, der die Benachrichtigungsfunktion beschreibt. Ein Architekturregister mit Nachweisen liegt im Material nicht vor.
+
+**Ergebnis und Systemstatus.** Die Benachrichtigungsfunktion zeigt das Glockensymbol in der Navigationsleiste mit der Anzahl offener Benachrichtigungen. Die Anzahl zählt bis 9, darüber erscheint „9+“. Ein Klick öffnet das Benachrichtigungscenter auf der rechten Seite. Benachrichtigungen mit einer offenen Aktion sind mit einem blauen Punkt markiert. Erledigte Benachrichtigungen erscheinen nicht mehr.
+
+**Hinweise.** Die Funktion ist in Abschnitt 19.18 ausführlich beschrieben. Der Stand des Architekturregisters und der offenen Nachweise erfasst der Klärungsbedarf.
+
+**Fehlerbehebung.** Erscheint die Glocke ohne Eintrag, prüfen Sie, ob die Benachrichtigungen bereits durch eine Aktion erledigt sind.
+
+Quellen: Batch 446.2
+
+## 19.24 VeDoc: Einzelsteckbrief
+
+**Zweck.** VeDoc liefert Fahrzeugdaten für Vertragsberechnung und Produktauswahl. Dieser Abschnitt beschreibt die Kraftstoffart, den Ablauf bei Bestellnummern ohne Fahrgestellnummer in VeDoc und die Prüfung des Erstzulassungsdatums.
+
+**Voraussetzungen.** Für Bestellnummern der Typen GO, AFAB, VERSO und OTR liegt eine Fahrgestellnummer in den Bestellnummerdaten vor. Die Fahrzeugdaten stammen aus VeDoc.
+
+**Ablauf.**
+
+1. Die Kraftstoffart des abgefragten Fahrzeugtyps ermittelt oneSCM, speichert sie und übermittelt sie bei der Bereitstellung von Produkten und Preisen an Stream 2.
+2. Liegt zu einer Bestellnummer eine Fahrgestellnummer vor, die in VeDoc noch nicht vorhanden ist, zeigt oneSCM die Produkte an. Vor der Aktivierung prüft der Vertrag die Kompatibilität von Produkt und Preis.
+3. Das übermittelte Erstzulassungsdatum prüft oneSCM gegen die Angabe in VeDoc zur übergebenen FIN. Stimmt das Datum überein, fährt oneSCM fort. Existiert in VeDoc kein Datum, speichert oneSCM das vom Kunden angegebene Datum und fährt fort.
+4. Weicht das Datum in VeDoc vom übermittelten Datum ab, verwendet oneSCM das Datum des Systems und meldet die Abweichung an die Fachabteilung Operations. Dort wird das Datum manuell geprüft.
+
+**Ergebnis und Systemstatus.** Das Erstzulassungsdatum im Vertrag stammt aus VeDoc oder ist vom Kunden angegeben. Bei einer Abweichung gilt das Systemdatum, bis die Fachabteilung entschieden hat.
+
+**Besonderheiten je Sparte und Markt.** Die Prüfung des Erstzulassungsdatums gilt für die Fahrzeugdaten aus VeDoc in allen Märkten, in denen oneSCM VeDoc nutzt.
+
+**Hinweise.** Die Kraftstoffart wird an Stream 2 übergeben. Die Abfragen für OTR-Fahrzeuge beschreibt Abschnitt 19.5. Die Abgleichsjobs für VeDoc beschreibt Abschnitt 19.4. Der Stand der Anpassungen zum Erstzulassungsdatum erfasst der Klärungsbedarf.
+
+**Fehlerbehebung.** Meldet oneSCM eine Abweichung des Erstzulassungsdatums, prüft die Fachabteilung Operations das Datum manuell. Bis dahin gilt das Systemdatum.
+
+Quellen: Batch 17.4, 1246.4, 1230.4
+
+## 19.25 VERSO/VOM: Einzelsteckbrief
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu dieser Schnittstelle liegen keine Abschnitte vor. Die Integration der VerSO-ID über die OTR-Schnittstelle beschreibt Abschnitt 19.18.
+
+Quellen: keine Quellen in den RAG-Batches
+
+## 19.26 oneDoC: Einzelsteckbrief
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu diesem Unterkapitel liegen keine Abschnitte vor.
+
+Quellen: keine Quellen in den RAG-Batches
+
+## 19.27 Xentry: Einzelsteckbrief
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu diesem Unterkapitel liegen keine Abschnitte vor.
+
+Quellen: keine Quellen in den RAG-Batches
+
+## 19.28 MBFS Bundling: Einzelsteckbrief
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu diesem Unterkapitel liegen keine Abschnitte vor.
+
+Quellen: keine Quellen in den RAG-Batches
+
+## 19.29 POS-Kanäle: Einzelsteckbrief
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu diesem Unterkapitel liegen keine Abschnitte vor.
+
+Quellen: keine Quellen in den RAG-Batches
+
+## 19.30 Versicherer: Einzelsteckbrief
+
+**Material:** keine Quellen in den RAG-Batches.
+
+Zu diesem Unterkapitel liegen keine Abschnitte vor.
+
+Quellen: keine Quellen in den RAG-Batches
+
+## 19.31 Lieferanten: Einzelsteckbrief
+
+**Zweck.** Dieser Abschnitt beschreibt den automatischen Abruf der Lieferfristen aus den Vorsystemen GO und AFAB. Die Lieferantenstammdaten sind nicht Teil dieses Abschnitts.
+
+**Rollen.** Der HQ-Administrator richtet die Batch-Jobs ein und terminiert sie. Die Händler erhalten die Information zum Liefertermin.
+
+**Ablauf.** Im Bereich Vertragskalkulation ruft oneSCM den voraussichtlichen Liefertermin eines Fahrzeugs aus den Vorsystemen ab und meldet ihn an das Vertragssystem CONTRACT. Der Abruf erfolgt zeitgesteuert über Batch-Jobs. Die Jobs heißen „GetDeliveryDateGlobalOrder“ für GO und „GetDeliveryDateAFABOrder“ für AFAB. Die Details zu AFAB beschreibt Abschnitt 19.3, die Details zu GO Abschnitt 19.2.
+
+**Ergebnis und Systemstatus.** Der Liefertermin steht im Vertrag bereit, sobald der Job einen Wert aus dem Vorsystem erhält. Ohne Wert meldet das System keinen Termin.
+
+**Besonderheiten je Sparte und Markt.** GO gilt für Pkw, AFAB für Vans.
+
+**Hinweise.** Der Abruf des Liefertermins erfolgt ohne manuelles Zutun. Die Terminierung der Jobs folgt den bestehenden Regeln für Batch-Jobs, siehe Abschnitt 19.22. Die Anlage von Lieferantenstammdaten über die Kreditorennummer ist im Klärungsbedarf erfasst.
+
+**Fehlerbehebung.** Fehlt ein Liefertermin, prüfen Sie, ob das Vorsystem einen Wert liefert. Der Job versucht es bei den nächsten Läufen erneut.
+
+Quellen: Batch 1178.1, 617.2

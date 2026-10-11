@@ -53,7 +53,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Die Hinweismeldung zur Eindeutigkeit der Firmenregistrierungsnummer erscheint einmal.
 - Schlägt die Prüfung der USt-IdNr. fehl, lässt sich der Vertrag nicht automatisch aktivieren.
 
-{{Q:12.1}}
+Quellen: Batch 918.3, 624.3, 577.5, 1056.2, 973.4, 572.3, 960.1, 618.1, 994.1, 574.2
 
 ## 12.2 Flotten- und besondere Kundenkonstellationen
 
@@ -103,7 +103,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Fehlt ein erwartetes Produkt im Vertragsmodul, prüfen Sie die Zuordnung des Kundentyps am Produkt.
 - Offene MO-Prüfungen blockieren die automatische Aktivierung des VIP-Vertrags. Der MO bearbeitet die betroffene Prüfung, anschließend aktiviert das System den Vertrag.
 
-{{Q:12.2}}
+Quellen: Batch 908.6, 1163.1, 1185.2, 959.1, 1193.2, 1161.2
 
 ## 12.3 Kampagnen und Sonderkonditionen
 
@@ -206,7 +206,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Die Vertragserstellung schlägt bei Kampagnen, die nur für gewerbliche Kunden gelten, nicht mit „Invalid campaign“ fehl.
 - Eine leere Zelle der Sticker-Price-Matrix gilt für diese Kombination aus Laufleistung und Laufzeit als unrabattierter Preis.
 
-{{Q:12.3}}
+Quellen: Batch 1014.1, 1227.1, 1227.3, 1250.1, 1270.1, 901.1, 1187.1, 1205.1, 1226.1, 1249.1, 1226.2, 440.3, 441.3, 443.3, 446.4, 450.3, 453.3, 459.3, 869.1, 973.1, 1014.2, 1098.2, 1251.2, 1259.1, 1268.3, 5.4, 882.1, 1092.1, 1111.3, 1154.4, 1253.5, 1205.4, 1226.4, 437.3, 439.3, 444.3, 445.3, 447.3, 448.3, 449.3, 451.4, 454.3, 455.3, 456.3, 457.4, 462.3, 754.4, 953.1, 962.1, 973.2, 1002.2, 1017.1, 1102.4, 1132.2, 1142.3, 1143.4, 1153.2, 1154.3, 1163.5, 1188.5, 1197.2, 1222.1, 1227.4, 1246.3, 1260.3, 1261.2, 1269.1, 1272.6, 1273.5, 1277.5, 1279.5, 869.3, 1175.3, 1227.5, 1258.7, 945.5, 953.5, 1089.6, 1096.6, 1204.4, 1214.2, 1264.4, 1278.8, 1202.1, 1205.2, 1255.3, 882.3, 899.5, 953.2, 1227.2, 10.3, 1064.6, 1274.6, 1280.6, 953.3, 1017.3, 1017.5, 882.6, 973.6, 1125.3, 1205.5, 929.11, 1017.2, 1017.7, 170.2, 1133.1
 
 ## 12.4 Sonderfallanfrage und Begründung
 
@@ -252,7 +252,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Fehlt der Kommentar, lässt sich die Anfrage nicht absenden. Der Kommentar ist Pflicht.
 - Verträge im Sonderfall werden nicht wegen fehlender Rabatte auf Vertragsebene abgelehnt.
 
-{{Q:12.4}}
+Quellen: Batch 953.4, 959.6, 111.1, 959.4, 929.8, 1186.1, 956.1, 907.2, 959.3, 1064.2, 953.6, 959.5
 
 ## 12.5 Dealer-Zuordnung und Weiterbearbeitung
 
@@ -301,7 +301,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Verträge im Sonderfall werden nicht wegen fehlender Rabatte auf Vertragsebene abgelehnt.
 - Der Sonderfall zeigt die richtige Branche im Ablauf an.
 
-{{Q:12.5}}
+Quellen: Batch 952.2, 955.1, 888.1, 1041.4
 
 ## 12.6 Validierung, Freigabe und Ablehnung
 
@@ -388,7 +388,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Ändert sich die Fahrgestellnummer, und passen Produkt, Produktkonfiguration oder Preis nicht mehr, lehnt das System den Vertrag ab. Der Ablehnungsgrund bezeichnet die Abweichung: bei der Produkt-ID oder Produktlinie, bei der Produktkonfiguration etwa mit Deckungen, technischen Optionen, Kampagnen, Rabatten oder Sonderfall, oder beim Nettopreis nach der Neuberechnung. Die Fahrgestellnummer lässt sich dann nicht stillschweigend übernehmen, und der Vertrag kann nicht aktiviert werden.
 - Gibt man bei einer editierbaren Preiskomponente einen nicht numerischen Wert ein, zeigt das System beim Speichern eine Fehlermeldung. Entspricht der Rabatt dem vollen Grundpreis, beträgt die Nettosumme des Kostenträgers null.
 
-{{Q:12.6}}
+Quellen: Batch 1120.1, 831.2, 1070.6, 1141.3, 881.3, 881.6, 973.5, 881.2, 1094.1, 1184.4, 1247.1, 1166.1, 922.3, 881.4, 1014.5, 382.1, 874.4, 1184.3
 
 ## 12.7 Interne und externe Kommentare
 
@@ -429,7 +429,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Überschreitet ein Kommentar die zulässige Länge, lässt sich die Ablehnung nicht absenden.
 - Versucht der Anfragende, seinen eigenen Sonderfall zu genehmigen oder abzulehnen, zeigt das System eine Fehlermeldung.
 
-{{Q:12.7}}
+Quellen: Batch 406.5, 1132.1, 890.1, 881.5
 
 ## 12.8 Customer Account Center
 
@@ -494,7 +494,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Die Dokumentenseite überlagert Dokumentname und Dokumenttyp auch bei erhöhter Zoomstufe nicht.
 - Ist die Umgebung nicht verfügbar, zeigt die Oberfläche eine Meldung, dass oneSCM gerade repariert wird.
 
-{{Q:12.8}}
+Quellen: Batch 616.3, 590.2, 526.3, 540.1, 587.1, 536.1, 577.2, 606.2, 535.1, 530.2, 580.1, 524.3, 362.4, 616.2
 
 ## 12.9 Massenanlage und Validierung von Fahrzeuglisten
 
@@ -556,13 +556,46 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Der Kilometerstand und das Kennzeichen lassen keine Eingabe über die maximale Zeichenzahl zu.
 - Die Filter und die Suche nach Referenznummer in der Sonderfall-Tabelle funktionieren.
 
-{{Q:12.9}}
+Quellen: Batch 1059.4, 1247.1, 916.1, 914.1, 1061.2, 928.2, 913.2, 1180.3, 917.1, 1092.2, 915.1, 2.3, 3.5, 1132.4, 915.2, 917.7, 917.2, 917.3
 
 ## Verschiebung in andere Kapitel
 
 Die folgenden Inhalte gehören nach den Abschnitten der Gliederung in andere Kapitel. Die Angabe nennt das Zielkapitel und den Batch-Verweis.
 
-{{VERSCHIEBUNG}}
+- Batch 1217.4: Kapitel 3.9, Arbeitskontext: Im Benutzerprofil gespeicherte Einstellungen wie Markt, Spaltensortierung, Produkt und Preisversion sowie das Verhalten der Filter.
+- Batch 836.6: Kapitel 4.4, Vertragsinhaber und Zahler: Schalter „Add Contract Holder as Payer“ mit den Meldungen zur Freigabe und zur Benachrichtigung.
+- Batch 1125.3: Kapitel 5.6, Berechnungslogik: Kostenstellen, Gebührenkomponenten und Mehrwertsteuer werden getrennt berechnet. Kampagnen und Händlerrabatt wirken auf aggregierter Ebene.
+- Batch 1247.1: Kapitel 5.4, Technische Optionen: Berechnung nur auf Basis von BASE. Kapitel 14, Produkt- und Preispflege: Preisversionen mit Händlerprovision, Blueprint-Namen mit Tooltip und Lieferanten-Ereignis.
+- Batch 899.4: Kapitel 5.4, Produktvergleich: Aufbau der Vergleichsansicht mit Kopfbereich, Produktkonfiguration, technischen und optionalen Leistungen, Kampagnen und Rabatten.
+- Batch 899.5: Kapitel 5.5, Produktkonfiguration: Auswahllisten für Zahlungsart, Zahlungsintervall, Vertragslaufzeit und jährliche Laufleistung, Branche bei Geschäftskunden und technische Optionen je nach Kennung.
+- Batch 1069.4: Kapitel 6.6, Übersicht und Bestätigung: Mehrwertsteuerwerte, umverteilter Betrag im Zahlungsplan, Servicerate bei monatlicher Zahlung als Nettobetrag, Marktkampagnen nicht als Händlerrabatt, Bestätigungsdatum und Zeilen bei der Verlängerung mit langer Laufzeit.
+- Batch 1094.1: Kapitel 6.2, Vertragsbeginn: Bei FRD-bezogenen Produkten beginnt der Vertrag mit dem FRD, sonst mit dem Erstellungsdatum. Suche nach Produktnamen in der Vertragserstellung und im Vertragsmanagement.
+- Batch 1098.2: Kapitel 7.1, Zahlungspläne: Bei MBLD-Serviceverträgen gilt das Erstellungsdatum als Startdatum. Kapitel 7.3, MPay: Das Zahlungsfeld wird nach der Erfassung der Kartendaten und dem Status Waiting for Confirmation nicht mehr angezeigt.
+- Batch 74.1: Kapitel 8.2, Statusübersicht: Massenänderung des Vertragsstatus von Active nach Suspended oder Terminated und von Suspended nach Active oder Terminated, mit einer Obergrenze von 200 Verträgen und einer Freigabe durch den MPC ab dem Schwellenwert.
+- Batch 874.2: Kapitel 8.3, Fehlende Fahrzeugdaten: Nach der Ergänzung von FRD und Kennzeichen prüft das System die Fahrgestellnummer erneut mit Produkt, Konfiguration, Kampagnen, Rabatten und Sonderfall.
+- Batch 922.3: Kapitel 9.3, Prüfstatus: Aktive Bestätigung von Not Ok und Pending in den MO Checks mit Daumen nach oben oder unten und Begründung. Der Status Pending betrifft nur das Steuerbefreiungszertifikat.
+- Batch 973.5: Kapitel 9.2, MO Checks: Kategorie Preis mit dem Feld Kampagne bei autoApply false, Status Not Ok bis zur Bestätigung der Kampagnenbedingungen. Aktivierung nur manuell durch MO oder MPC.
+- Batch 1122.2: Kapitel 10.5, Verlängerung: Preisneuberechnung bei Sonderfall und Prolongation mit Preis pro Kilometer, Preis bei Minderkilometern und jährlicher Laufleistung.
+- Batch 820.4: Kapitel 10.4, Aussetzen und Reaktivieren: Pflichtdropdown „Reason for Suspension“ mit den Werten „Payment Overdue“ und „Other“. Bei „Other“ ist ein Kommentar Pflicht.
+- Batch 690.1: Kapitel 11.1, Rechnungsdokumente: CAMP und SDAS Dokumente zeigen die bei der Vertragserstellung angewendete Kampagne und deren External Campaign ID.
+- Batch 690.2: Kapitel 11.1, Rechnungsdokumente: Felder Campaign Name als Link und External Campaign ID bei CAMP und SDAS Dokumenten.
+- Batch 690.3: Kapitel 11.7, Reporting: Tabelle Financial Documents mit den Spalten Campaign Name und External Campaign ID, auch im Excel-Export.
+- Batch 690.4: Kapitel 11.7, Reporting und Filter: Die Seite Financial Documents erhält im Dialog More Filters die Filter Campaign Name und External Campaign ID.
+- Batch 1059.4: Kapitel 13, Reifenprodukte: Auswahl des Reifenlieferanten und Platzhalter bei komplexen Produkten. Kapitel 7.1, Zahlungsplan: Ein Zahlungsplan entsteht auch ohne gesetzten Gesamtnettopreis. Kapitel 7.4, Dokumente: Das SEPA-Dokument lässt sich ohne Fehlermeldung herunterladen. Kapitel 7.1, Zahlungsarten: Ein Vertrag mit Überweisung lässt sich bei der Kontonotiz KB oder ZZ nicht aktivieren.
+- Batch 1121.1: Kapitel 14, Produkt- und Preispflege: Mehrsprachige Produktnamen, Produktbeschreibungen, Kampagnennamen und Verkaufsbeschreibungen für Märkte mit mehreren Amtssprachen.
+- Batch 1121.3: Kapitel 14, Pflege je Sprache: Die Standardsprache ist verpflichtend, weitere Sprachen sind optional. Für jede Sprache wählen Sie, ob Standardwerte übernommen oder abweichende Werte erfasst werden.
+- Batch 360.3: Kapitel 14, Vorlagen: Vorlage Preisinformation für den Produktvergleich mit Zahlungsart, Kampagnenrabatten als eigene Zeilen und Händlerrabatt.
+- Batch 989.3: Kapitel 14, Administration: Tab „Timers & Reminders“ mit Tages-, Monats- und Jahreswerten, Angebotserinnerungen, Vertrags-Timeouts und Fristen. Die Aufbewahrungsfristen gehören zusätzlich in Kapitel 16.
+- Batch 989.4: Kapitel 14, Administration: Tab „Market Configuration“ mit Rechtsformen, CAS-Clearing-Gruppe, bis zu zehn Segmenten für Geschäftskunden und Marketing-Einwilligungen.
+- Batch 1286.3: Kapitel 16, Qualität: Validierung einer internen Testpipeline mit Jira und Xray. Kein Anwenderinhalt.
+- Batch 535.1: Kapitel 16, DevOps und Betrieb: Onboarding des Disco Portals, GitHub App für Runner, ECS Deployment, Zertifikate für die GO-SOAP-Schnittstelle und Monitoring. Kein Anwenderinhalt.
+- Batch 911.2: Kapitel 16, Qualität: Automatisierte Qualitätssicherungstests für zwei Sonderfälle von Commercial-Fleet-Kunden. Kein Anwenderinhalt.
+- Batch 1096.3: Kapitel 19, Schnittstellen: Leasing-Integration mit Vertragsbeginn beim FRD, Kampagnen-ID im Attribut scActionId und Status-Endpunkt für alle Vertragsstatus.
+- Batch 1153.4: Kapitel 19, Schnittstellen: Leasing übergibt eine externe Kampagnen-ID. Eine ID ohne passende aktive Kampagne führt nicht zur Anwendung.
+- Batch 1252.1: Kapitel 19, Schnittstellen: Preistabellen für den Leasingkanal mit Gesamtfahrleistung, Interpolation, Währungsangabe im Knoten priceConfigurations und Umgang mit extCampaignIds.
+- Batch 142.6: Kapitel 19, Schnittstellen: Anpassungen der Schnittstelle E174 für Verkaufskampagnen mit Sachkonto, leeren Feldern für Materialnummer und FIN sowie angepassten Retail-IDs.
+- Batch 170.2: Kapitel 19, Schnittstellen: Validierungen der E169-Exportdatei und die External Campaign ID im Positionstext der Schnittstelle E174.
+- Batch 536.1: Kapitel 23, Support: Meldung der Benutzeroberfläche bei nicht verfügbarer Umgebung und Monitoring mit Datadog. Die übrigen DevOps-Punkte sind kein Anwenderinhalt.
 
 ## Klärungsbedarf
 
@@ -600,7 +633,54 @@ Die folgenden Punkte betreffen Widersprüche, unklare Aussagen sowie eingestellt
 
 **Einzelmeldungen mit Batch-Verweis.**
 
-{{KLAERUNG}}
+- Batch 486.3: Hinweis zu einem zweiten Anwendungsfall mit Grace-Period-Benachrichtigung an den MPC ist als nicht mehr gültig gekennzeichnet und verweist auf eine andere Stelle. Bitte klären, ob der Anwendungsfall im Handbuch entfällt.
+- Batch 561.4: Die Erweiterung der Rechtsformen für Geschäftskunden ist laut Eintrag im Einsatz, Details fehlen. Bitte den Umfang der Rechtsformen je Markt bestätigen.
+- Batch 954.1: Vorhaben zur Massenanlage mit Sonderfall für Flottenkunden hat den Status Abgebrochen. Die Beschreibung widerspricht den Abschnitten zur Massenanlage in den Batches 915.1 und 917.1 sowie dem Hinweis in Batch 935.2.
+- Batch 1193.1: Flottenkonditionen mit einem Gesamtbetrag oder einer Vertragsanzahl als Grenze einer Kampagne. Der Status der Anforderung ist nicht entschieden, die Variante mit eigenem Produkt oder Kampagnenlimit ist nicht entschieden. Aufnahme ins Handbuch nach Entscheidung.
+- Batch 960.1: Rohdaten mit Status Blocked BAT Testing. Angaben zur Zwei-Unterzeichner-Funktion sind im Ausgangsmaterial durchgestrichen. Vor der Veröffentlichung klären, welche Teile in der Release-Version enthalten sind.
+- Batch 588.1: Vollständig geförderte Verträge für Gewerbekunden mit Kundenschalter und KAM-Kampagne mit 100 Prozent Rabatt. Der Status ist Cancelled, die Funktion ist nicht ausgeliefert. Der Text gehört nur ins Handbuch, wenn die Auslieferung bestätigt ist.
+- Batch 935.2: Beschreibt die Massenerstellung als Ziel und enthält die Aussage, dass bisher keine Massenanlage und kein Vertragskontingent möglich sind. Widerspruch zu den Batches 915.1, 917.1 und 1061.2, die eine vorhandene Massenanlage beschreiben.
+- Batch 574.2: Der Eintrag steht im Status QG-BU. Bitte klären, ob das beschriebene Verhalten für den Kontoinhaber gilt.
+- Batch 1003.1: Marktkampagne mit automatischer Anwendung und Überleitung zu Overview & Confirmation mit DSS-Signatur. Der Status ist Cancelled. Die Abschnitte 1017.1 bis 1017.7 beschreiben die Funktion als vorhanden. Bitte den Status bestätigen.
+- Batch 1259.1: Die Eindeutigkeit der External Campaign ID bezieht sich laut Eintrag auf den Markt und den Gültigkeitszeitraum. Die Batches 1249.1, 1250.1 und 1154.4 nennen dagegen die Fahrzeuggruppe. Bitte die Regel bestätigen.
+- Batch 1092.1: Die Schwelle für vollständig subventionierte Verträge ist im Eintrag als Summe gleich Vertragspreis beschrieben. Batch 1017.3 verlangt eine Summe unter dem Vertragswert. Bitte die Schwelle bestätigen.
+- Batch 1111.3: Der MPC kann eine Grace-Period-Kampagne laut Eintrag auch im Status Waiting for Confirmation freigeben. Batch 1002.2 nennt die Status Created, Confirmed und Waiting for Activation. Bitte die Statusliste bestätigen.
+- Batch 1154.4: Die Standardansicht der Kampagnenübersicht zeigt Upcoming und Active. Batch 1227.3 beschreibt dagegen alle Kampagnen des Marktes als Standard. Grace-Period-Kampagnen mit Status Finished lassen sich laut Eintrag wie aktive Kampagnen deaktivieren, Batch 1227.4 nennt für die Karenzzeit den Status Active. Bitte klären.
+- Batch 929.8: Bei einem Baumuster sind laut Eintrag weder Kulanzkampagnen noch Sonderfallanfragen verfügbar. Die Batches 959.1 und 959.3 beschreiben die Sonderfallanfrage für die Kennung BM6. Bitte klären.
+- Batch 1186.1: Das Sonderfall-Kennzeichen pro Produkt ist als vorhanden beschrieben und auf die Kundentypen Commercial Fleet und Commercial Governmental begrenzt. Batch 906.2 erklärt dieselbe Funktion für abgebrochen. Bitte klären.
+- Batch 754.4: Die Rückbuchung des Kampagnenbetrags bei Stornierung innerhalb der Widerrufsfrist ist im Eintrag als Vorhaben beschrieben. Batch 882.6 beschreibt das Ereignis als Verhalten. Bitte den Stand bestätigen.
+- Batch 1002.2: Die Quelle nennt sieben Tage für die Entscheidung. Bei fehlender Entscheidung löscht das System die Anfrage laut diesem Eintrag, laut Batch 881.6 wechselt sie auf Expired. Die Frist für die Rückweisung des Vertrags nennt die Quelle mit 30 Tagen, sie ist nicht abschließend geklärt. Die Frist aus den Market Settings nach Batch 881.6 weicht von den sieben Tagen ab.
+- Batch 1141.3: Der Eintrag nennt für eine neu angelegte Kampagne den Status Created. Batch 1166.1 nennt für die Prüfung den Status In Review und vor der Einreichung einen Strich. Bitte die Statusfolge bestätigen.
+- Batch 1153.2: Der Eintrag beschreibt für das Reaktivieren eine neue Version mit Status Created und verpflichtender Vier-Augen-Freigabe. Batch 1227.5 beschreibt das Reaktivieren als direkte Rückkehr zum Status Active. Bitte klären.
+- Batch 1197.2: Der Eintrag beschreibt das Kontrollkästchen Automatisch anwenden mit dem Standard nicht aktiviert. Batch 1226.2 nennt das Kontrollkästchen Auto apply in dealer sales view als standardmäßig aktiviert. Bitte Bezeichnung und Standardwert bestätigen.
+- Batch 1222.1: Mehrere Funktionen der Kampagnenübersicht, etwa Sortierung, Anzahl der Einträge pro Seite, Hinweis bei nicht gefundener Kampagne und Prüfung der Suchfelder, sind im Eintrag als Prüfung ohne abschließende Freigabe beschrieben.
+- Batch 1246.3: Das Feld Provision Component entfällt laut Eintrag vollständig. Batch 1226.2 beschreibt es als Pflichtfeld mit drei Zeichen, Batch 1270.1 nennt es als Ergänzung und Batch 1260.3 als statischen Wert je Markt. Bitte klären, ob das Feld vorhanden ist.
+- Batch 1261.2: Die Begrenzung der Felder Amount und Maximum Amount auf fünf Zeichen widerspricht den Batches 1226.2 und 1202.1, die acht Zeichen nennen. Batch 1268.3 nennt den Maximalbetrag als Pflicht, Batch 1226.2 als optional. Bitte klären.
+- Batch 302.2: Berechnung des Feldes sales_discount_amt im Revenue Data Product. Die Spalte salesCampaign im iCON-Inventory-Report ist noch zu verifizieren, die Bereitstellung durch das iCON-Team ist nicht bestätigt. Zuordnung zu Kapitel 11.7 prüfen.
+- Batch 1214.2: Der Eintrag nennt die Aktion View im Aktionsmenü aller Kampagnen. Batch 1264.4 nennt die Aktion View als entfernt und die Kampagnennamen als Hyperlinks. Batch 1259.1 nennt View als erste Option unabhängig vom Status. Bitte den Ort der Ansicht bestätigen.
+- Batch 1264.4: Der Eintrag nennt die Aktion View als entfernt, die Kampagnennamen als Hyperlinks und für die Rolle MO die Aktion View Product. Die Abweichung zu den Batches 1214.2 und 1259.1 ist zu klären.
+- Batch 1280.6: Der Eintrag beschreibt, dass der Fall behandelt wird, in dem das Startdatum nach dem Enddatum liegt. Die Reaktion des Systems ist nicht beschrieben. Bitte klären.
+- Batch 907.2: Die Steuerung der Sonderfallanfrage auf Produktebene je Kundentyp ist als Funktion beschrieben. Batch 906.2 erklärt die Funktion für abgebrochen. Bitte klären.
+- Batch 885.2: Vorhaben mit Status abgebrochen zur Ansicht Special Case Components. Der Sonderfall-Preis soll als eigener Preisbestandteil mit editierbarer Verwaltungsgebühr behandelt werden. Die Funktion ist nicht beschrieben.
+- Batch 906.2: Das Sonderfall-Kennzeichen pro Produkt ist als abgebrochen gekennzeichnet und nicht Bestandteil des Releases. Widerspruch zu Batch 1186.1 und Batch 907.2. Bitte klären.
+- Batch 1128.7: Ungeklärte Frage zur Standardsprache: Bei einem Wechsel der Standardsprache ohne Produktdaten in der neuen Sprache sind eine automatische Migration und die Fehlermeldung „No Language Configured for Product“ beschrieben. Entscheidung klären. Zuordnung auch zu Kapitel 14 prüfen.
+- Batch 1047.2: Der Eintrag beschreibt eine laufende Prüfung der korrekten Anzeige des Kampagnentyps im Auswahldialog. Außerdem ist für das Fahrzeugmodell EQV die Auswahl der Ladebordwand als optionale Leistung zu prüfen, da sie nur für Sprinter gilt.
+- Batch 953.6: Die Benachrichtigungsfunktion für Sonderfälle ist beschrieben. Marktbenutzer sollen festlegen können, wie lange Anfragen offen bleiben dürfen. Die Einstellung selbst ist nicht beschrieben. Bitte bestätigen.
+- Batch 690.5: Hinweis zum Stand der Abstimmung: Die Fragen zu durchsuchbaren Dropdown-Listen, zur Kürzung des Kampagnennamens in Rechnungen, zur Spaltenposition und zum Umgang mit umbenannten Kampagnen sind laut Quelle nicht abschließend geklärt.
+- Batch 1017.7: Summenregeln für Marktkampagnen und Händlerrabatte: Die Behandlung der Fälle, in denen Markt oder Händler Zahler werden, ist für PI4 vorgesehen. Bitte den Stand bestätigen.
+- Batch 170.2: Verträge mit vollständiger Deckung durch Kampagnen und Händlerrabatte erhalten laut Eintrag keinen Zahlungsplan für den Kunden. Batch 908.6 und Batch 1092.1 beschreiben einen Zahlungsplan mit dem Wert 0. Bitte klären.
+- Batch 907.3: Weitere Themen mit Vorhaben: Erweiterung der VdZ-Integration um P.EN-Daten und Verbesserung der Sticker-Price-Kampagne zum Real Sticker Price. Es liegen keine Beschreibungen vor.
+- Batch 1247.1: Ein Vorhaben beschreibt, dass negative Werte bei der Prolongation vollständig subventionierter Verträge auf 0 gesetzt werden sollen. Die Anpassung der Laufleistungsvalidierung in der Massenanlage, der geänderte Ablauf für komplexe Produkte mit unbegrenzten Reifen und die Validierung der Deal-ID gegen OTR sind als abgebrochen gekennzeichnet.
+- Batch 559.3: Vorhaben zur internen Benachrichtigung bei Freigabe von Preisversionen und Kampagnen. Die Quelle kennzeichnet den Eintrag als Vorhaben. Der Inhalt entspricht Batch 1132.1. Bitte den Status bestätigen.
+- Batch 526.3: Der Ablauf für Privatkunden mit MMe-Profil und Kreditkarte bei Zahlungsintervallen außer Einmalzahlung ist im Eintrag als nicht festgelegt gekennzeichnet. Bitte klären, ob die beschriebenen Schritte gelten.
+- Batch 587.1: Bei Prepaid-Verträgen lehnt das System nach Fristablauf den Vertrag ab, laut Batch 580.1 wird der Vertrag bei nicht genutztem Zahlungslink suspendiert. Der Zeitpunkt der automatischen Ablehnung ist nicht festgelegt. Bitte klären.
+- Batch 512.3: Meldung zu einer nicht auffindbaren E-Mail-Adresse des Customer Account Centers in einer Vorproduktionsumgebung. Der Status ist abgebrochen, die Meldung wird nicht weiterverfolgt.
+- Batch 362.4: Verbesserung für große Anhänge laut Eintrag in der Qualitätsprüfung. Das beschriebene Verhalten, Versand ohne Anhang mit Link zum Customer Account Center, ist nicht als gültig bestätigt. Bitte klären.
+- Batch 968.1: Massenanlage mit der Schaltfläche Mehrere Fahrzeuge hinzufügen hat den Status Cancelled. Die Beschreibung ist im Eintrag nicht als verfügbare Funktion gekennzeichnet. Abschnitt 12.9 beschreibt dieselbe Schaltfläche nach den Batches 917.1, 917.3 und 928.2. Bitte bestätigen.
+- Batch 931.1: Vorhaben mit Status abgebrochen zu Sonderfällen bei der Massenanlage für Fleet-Kunden. Die Beschreibung gibt den letzten dokumentierten Stand wieder und ist nicht als Funktion zu verstehen.
+- Batch 1132.4: Die Aussage beschreibt eine Prüfung der Zahlungsintervalle bei Einzel- und Massenanlage, kein Verhalten. Bitte bestätigen, dass alle Intervalle unterstützt werden.
+- Batch 917.7: Die beschriebenen Szenarien für Sonderfall und Preisanzeige bei der Massenanlage gehören laut Quelle zu einer zweiten Entwicklungsphase. Bitte den Umfang bestätigen.
+- Batch 1097.1: Hinweis zu Meldungen mit Status Cancelled für die Massenanlage von Fahrzeugen, für neue Request-Attribute bei Leasing-Verträgen und für die Quelle der Händlerprovisionsdaten. Diese Meldungen sind nicht berücksichtigt.
 
 ## Vorschläge zur Gliederung
 
