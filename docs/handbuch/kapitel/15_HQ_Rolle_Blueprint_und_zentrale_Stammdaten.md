@@ -349,8 +349,8 @@ Quellen: Batch 1220.2, 1220.3, 1264.2, 1191.1, 1162.1, 1161.3, 1160.4, 1263.1, 1
 | Rollen für Passenger Cars und Vans, einheitlicher Geschäftsbereichsfilter in allen Bereichen | 2.2 Fachliche Rollen und technische Berechtigungen; 21.1 Spartenprofil und Abgrenzung Pkw/Van; 14.6 Marktbezogene Sichtbarkeit und Berechtigungen | 603.1 |
 | Aktualisierung von SA-Codes aus externen Bestellsystemen, wiederholbare Produktabfrage | 22.2 Ausblick und offene Anforderungen | 1143.5 |
 | Erweiterung des Produkt-Blueprints für den Anwendungsfall MBLD | 22.2 Ausblick und offene Anforderungen | 1143.6 |
-| Erweiterung der Produktdefinition für das Produkt „Excellent“ und Optimierung der Blueprint-Logik | Anhang F Quellen und Klärungsregister | 1244.5 |
-| Verkaufslogik für Produkte ohne Fahrgestellnummer, Garantiedauer und Vertragsstart | 6.2 Vertragsdaten und Pflichtfelder erfassen | 1118.1 |
+| Definition eines Produkt-Blueprints für das Produkt „Excellent“ und Optimierung der Blueprint-Logik | Anhang F Quellen und Klärungsregister | 1244.5 |
+| Vertragsstartdatum aus der Verkaufslogik und Garantiedauer beim Erfassen des Vertrags | 6.2 Vertragsdaten und Pflichtfelder erfassen | 1118.1 |
 
 ## Klärungsbedarf
 
@@ -376,18 +376,17 @@ Quellen: Batch 1220.2, 1220.3, 1264.2, 1191.1, 1162.1, 1161.3, 1160.4, 1263.1, 1
 18. Testfälle der Industry Codes: Batch 1203.2 nennt Testfälle für Erstellung, Übersicht, Bearbeitung, Zuordnung zu Produkten und Branchenpreise, enthält aber keine funktionale Beschreibung. Der Text enthält dazu nichts.
 19. Kennzeichnung der Schadencodes: Batch 732.1 nennt die Absicht, importierte und manuell angelegte Schadencodes zu kennzeichnen. Die Quelle beschreibt weder den Umfang noch den Zeitpunkt dieser Kennzeichnung.
 20. Schrittnamen der Produkterstellung: Batch 1224.3 nennt den Entfall des Dropdowns Brand. Batch 1242.1 nennt drei Dropdowns einschließlich Marke. Batch 1192.3, Batch 1242.1, Batch 1224.4 und Batch 1224.5 nennen unterschiedliche Schrittnamen. Batch 1242.1 nennt „Create Product“, Batch 1207.2 „Create New Product“. Die Abweichungen betreffen Kapitel 14.8.
-21. Wirkung auf das Vertragsmanagement: Batch 1149.1 nennt, dass das Vertragsmanagement Änderungen an Coverages derzeit nicht berücksichtigt und dafür einen Eintrag für Stream 2 besteht. Der Umgang mit der VEGA-Datei ist nicht beschrieben. Stream 2 ist im Material nicht erläutert.
+21. Wirkung auf das Vertragsmanagement: Batch 1149.1 nennt, dass das Vertragsmanagement Änderungen an Coverages nicht berücksichtigt und dafür ein Eintrag für Stream 2 besteht. Der Umgang mit der VEGA-Datei ist nicht beschrieben. Stream 2 ist im Material nicht erläutert.
 22. Stand des ISP-Wizards: Batch 1129.1 nennt, dass das Vorhaben dem Entwicklungsstand zugeordnet ist und die Abläufe nur mit dem Verweis „gemäß UI“ beschrieben sind. Die Ergänzung ist vor der Veröffentlichung nötig. Batch 1116.1 beschreibt denselben Ablauf als Sollverhalten. Der Text folgt beiden Quellen.
 23. Entfallende Felder in den Markteinstellungen: Batch 963.2 nennt die Felder DSS-Signaturlink, CAS-Antwort, SEPA-Validierung und SAP-Debitorennummer als in der Zielstruktur gestrichen. Die Quelle nennt keinen Zeitpunkt für den Entfall.
 24. Preisfaktoren: Batch 1195.4 nennt Probleme mit Preisfaktoren in der Vorproduktionsumgebung, ohne das Sollverhalten zu beschreiben.
 25. Ausstehende Prüfpunkte in der Fahrzeugverwaltung: Batch 4.1 nennt die Absicht, bei Van-Fahrzeuggruppen den Namen des SA-Codes anzuzeigen, und das Prüfziel, dass eine aktuelle Preisversion vorausgewählt wird. Die Quelle nennt keinen Stand für beide Punkte.
 26. Erweiterung des Contingent Blueprints: Batch 1258.3 nennt eine Erweiterung ohne Angabe des Inhalts.
-27. Begriffe Vans und Sparten: Batch 603.1 nennt die Trennung der Geschäftsbereiche und Rollen für PC und Van. Der Text in 15.2 folgt dieser Trennung ohne weitere Angaben.
 
 **Eingestellte, geschlossene und ungeklärte Meldungen.**
 
 - Batch 1244.5 nennt die eingestellte Definition eines Produkt-Blueprints für das Produkt „Excellent“, die Optimierung der Blueprint-Logik und Änderungen an der Produktversion. Diese Punkte gehören nicht zum aktuellen Funktionsumfang und sind daher kein Handbuchinhalt.
-- Batch 937.1 ist als Ticket mit dem Status „Cancelled“ gekennzeichnet. Die Redaktion soll prüfen, ob die Funktion überhaupt ausgeliefert wird. Die Rohdaten enthalten Markierungen, dass Wortlaut und Ablauf im Schritt „Technische Optionen“ noch anzupassen sind. Der Text übernimmt aus dieser Meldung keinen Inhalt.
+- Batch 937.1 ist als Vorgang mit dem Status „Cancelled“ gekennzeichnet. Die Redaktion soll prüfen, ob die Funktion überhaupt ausgeliefert wird. Die Rohdaten enthalten Markierungen, dass Wortlaut und Ablauf im Schritt „Technische Optionen“ noch anzupassen sind. Der Text übernimmt aus dieser Meldung keinen Inhalt.
 - Batch 1143.6 nennt die Erweiterung des Produkt-Blueprints für den Anwendungsfall MBLD und verweist auf fehlende Angaben. Der Text enthält dazu nichts.
 - Batch 1143.5 beschreibt die Aktualisierung von SA-Codes aus externen Bestellsystemen und eine wiederholbare Produktabfrage als Vorhaben. Die Quelle nennt keinen Stand. Die Verschiebung nach Kapitel 22.2 erfolgt daher ohne Verhaltensbeschreibung.
 - Batch 1203.2 nennt Testfälle für Industry Codes ohne funktionale Beschreibung. Siehe Punkt 18.
