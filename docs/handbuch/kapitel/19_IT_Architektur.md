@@ -1060,6 +1060,7 @@ Die folgenden Punkte enthalten Widersprüche, unklare Aussagen oder Meldungen, d
 - Erweiterte Funktionen des Benachrichtigungscenters: Batch 461.1 und 444.1, siehe Vorschlag zur Gliederung.
 - Abschnitte ohne Inhalt: Batch 1305.1 und 1314.1 enthalten nur Überschriften.
 - Ausstehende Gespräche zu Architekturthemen der Dokumentation: Batch 1299.1 beschreibt eine KI-Konfiguration ohne Zielbild.
+- Verarbeitungskette der Vertragserstellung: Batch 865.1 beschreibt eine gemeinsame Verarbeitungskette für Standard-, Massen- und Leasingerstellung mit Abnahmekriterien, einer Einführungsreihenfolge der Märkte DE, SK, IN, GR, CH, CZ und KR sowie einer Auslieferung in drei Stufen. Ob diese Kette produktiv betrieben wird, ist im Material nicht belegt.
 - Zusammenführung der externen Anwendungen: Batch 1180.1 nennt keine Einzelheiten.
 - Übergreifende Themen für Benutzeroberfläche und Schnittstellen: Batch 138.4 nennt Themen in Bearbeitung ohne Angaben zum Ergebnis, etwa die Prüfung des MPay-Status Not due ohne MME-Konto, die Zahlungsbedingung in der Exportdatei für Behörden- und Flottenverträge, die automatische Akzeptanz von Rechnungen und die automatische Anlage von Batch-Jobs aus YAML-Dateien.
 - Weitere Themen: Batch 549.3 nennt Punkte ohne Beschreibung, etwa den Umgang mit Händlern mit mehreren VEGA-IDs, die Harmonisierung der Kundentypen, die Pflicht der SAP-Debitorennummer bei Affiliate-Händlern, die Aktivierung des Marktes MY sowie die Festlegung von Halter, Zahler und Rechnungsempfänger über oneERP, CoFiCo und SWT.
