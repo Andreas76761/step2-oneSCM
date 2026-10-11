@@ -47,7 +47,7 @@
   .hb-flow .hb-node.hb-sel rect { fill: color-mix(in srgb, var(--color-fg) 8%, var(--color-bg)); }
   .hb-flow text { fill: var(--color-fg); font-size: var(--cds-font-size-caption); }
   .hb-flow text.hb-nodenum { font-family: var(--font-anthropic-serif); font-size: 1.25rem; }
-  .hb-flow .hb-pdf text { font-size: 0.7rem; }
+  .hb-flow .hb-pdf text { font-size: 0.62rem; }
   .hb-flow text.hb-muted { fill: var(--color-fg-muted); }
   .hb-flow .hb-pdf text { fill: var(--color-fg); text-decoration: underline; font-weight: 600; }
   .hb-flow .hb-pdf:hover text { fill: var(--color-fg-muted); }
@@ -117,7 +117,7 @@
 
   <section class="hb-card" style="margin-bottom: var(--cds-gap-lg)">
     <h2 id="klickstrecke">Klickstrecke Vertragsprozess</h2>
-    <p class="hb-note">Kapitel als Stationen, Übergangsmodule als Pfeile. Zwei Ketten: Vertragsprozess (6 bis 10) und Pflege (14 bis 16). Klick auf eine Station filtert die Tabelle, „Van“ und „Pkw“ öffnen den Quick Guide des Kapitels in der jeweiligen Variante, Klick auf einen Pfeil zeigt das Übergangsmodul.</p>
+    <p class="hb-note">Kapitel als Stationen, Übergangsmodule als Pfeile. Zwei Ketten: Vertragsprozess (6 bis 10) und Pflege (14 bis 16). Klick auf eine Station filtert die Tabelle, die Links im Knoten öffnen den Quick Guide des Kapitels in der jeweiligen Sprache und Sparte, Klick auf einen Pfeil zeigt das Übergangsmodul.</p>
     <div id="flow" class="hb-flow dash-skeleton" data-source="uebergaenge gliederung quickguides"></div>
   </section>
 
@@ -129,7 +129,7 @@
 
   <section class="hb-card" style="margin-bottom: var(--cds-gap-lg)">
     <h2 id="quickguides">Quick Guides je Kapitel</h2>
-    <p class="hb-note" id="qg-note">Zweiseitige Quick Guides zu Hauptkapiteln, Übergangsmodulen, Anhängen und Vorspann als PDF, je als Van- und Pkw-Variante. Klick öffnet die PDF in einem neuen Tab.</p>
+    <p class="hb-note" id="qg-note">Zweiseitige Quick Guides zu Hauptkapiteln, Übergangsmodulen, Anhängen und Vorspann als PDF, je in Deutsch (Van, Pkw) und Englisch (Vans, Cars). Klick öffnet die PDF in einem neuen Tab.</p>
     <div id="qg-list" class="hb-qg dash-skeleton" data-source="quickguides"></div>
   </section>
 
@@ -209,17 +209,18 @@
 
   dash.calc('guideLinks', {
     title: 'Quick-Guide-Link je Hauptkapitel',
-    description: 'Verknüpft jede Zeile der Gliederung mit den PDFs ihres Quick Guides in den Varianten Van und Pkw: exakte Kennung (Anhang, Übergangsmodul, Vorspann) oder sonst das Hauptkapitel vor dem Punkt.',
+    description: 'Verknüpft jede Zeile der Gliederung mit den PDFs ihres Quick Guides in den Varianten DE Van, DE Pkw, EN Vans und EN Cars: exakte Kennung (Anhang, Übergangsmodul, Vorspann) oder sonst das Hauptkapitel vor dem Punkt.',
     inputs: ['gliederung', 'quickguides'],
     fn: (gliederung, quickguides) => gliederung.map(r => {
       const pick = (v) => quickguides.find(g => g.variante === v && g.kapitel === r.kapitel) || quickguides.find(g => g.variante === v && g.kapitel === r.kapitel.split('.')[0]);
-      const van = pick('Van'), pkw = pick('Pkw');
-      return { kapitel: r.kapitel, url_van: van ? van.url : '', url_pkw: pkw ? pkw.url : '' };
+      const van = pick('Van'), pkw = pick('Pkw'), envan = pick('EN Vans'), encars = pick('EN Cars');
+      return { kapitel: r.kapitel, url_van: van ? van.url : '', url_pkw: pkw ? pkw.url : '', url_en_vans: envan ? envan.url : '', url_en_cars: encars ? encars.url : '' };
     })
   });
 </script>
 
 <script>
+  window.hbVariants = [['Van', 'DE Van'], ['Pkw', 'DE Pkw'], ['EN Vans', 'EN Vans'], ['EN Cars', 'EN Cars']];
   window.hbState = { teil: '', bereich: '', kapitel: '', suche: '', sortCol: '', sortDir: 1, animated: false };
   const S = window.hbState;
   const root = document.querySelector('.hb');
@@ -315,7 +316,7 @@
     const width = Math.max(320, box.clientWidth);
     const narrow = width < 560;
     const maxN = d3.max(rows, r => r.length);
-    const padX = 12, gap = narrow ? 28 : 56, rowH = 150, nodeH = 64;
+    const padX = 12, gap = narrow ? 28 : 56, rowH = 160, nodeH = 76;
     const nodeW = Math.max(56, (width - 2 * padX - (maxN - 1) * gap) / maxN);
     const height = rows.length * rowH + 20;
     const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`);
@@ -369,22 +370,22 @@
       .attr('class', n => 'hb-node' + (isDimNode(n) ? ' hb-dim' : '') + (S.kapitel === n ? ' hb-sel' : ''))
       .attr('transform', n => `translate(${pos[n].x},${pos[n].y})`);
     ng.append('rect').attr('width', nodeW).attr('height', nodeH).attr('rx', 8).attr('stroke', n => bereichColor(bereichOf(n)));
-    ng.append('text').attr('class', 'hb-nodenum').attr('x', 10).attr('y', 26).text(n => n);
-    const title = ng.append('text').attr('x', 10).attr('y', 48)
+    ng.append('text').attr('class', 'hb-nodenum').attr('x', 10).attr('y', 28).text(n => n);
+    const title = ng.append('text').attr('x', 10).attr('y', 52)
       .attr('data-source', 'gliederung').attr('data-field', 'thema').attr('data-where', n => 'kapitel=' + n)
       .text(n => titleOf(n));
     title.each(function () {
-      const el = this, max = nodeW - 20; let t = el.textContent;
+      const el = this, max = nodeW - 72; let t = el.textContent;
       if (narrow) { el.textContent = ''; return; }
       while (t.length > 1 && el.getComputedTextLength() > max) { t = t.slice(0, -1); el.textContent = t.trimEnd() + '…'; }
     });
-    [['Van', 0], ['Pkw', 1]].forEach(([v, i]) => {
+    window.hbVariants.forEach(([v, lab], i) => {
       ng.filter(n => guideUrl(n, v)).append('a').attr('class', 'hb-pdf')
         .attr('href', n => guideUrl(n, v)).attr('target', '_blank').attr('rel', 'noopener')
         .attr('data-source', 'quickguides').attr('data-field', 'url').attr('data-where', n => 'kapitel=' + n + '&variante=' + v)
         .on('click', (ev) => ev.stopPropagation())
-        .on('mousemove', (ev, n) => { ev.stopPropagation(); showTip(ev, [`Quick Guide Kapitel ${n} (${v})`, 'PDF in neuem Tab öffnen']); })
-        .append('text').attr('x', nodeW - 10).attr('y', 26 + i * 12).attr('text-anchor', 'end').text(v);
+        .on('mousemove', (ev, n) => { ev.stopPropagation(); showTip(ev, [`Quick Guide Kapitel ${n} (${lab})`, 'PDF in neuem Tab öffnen']); })
+        .append('text').attr('x', nodeW - 8).attr('y', 20 + i * 13).attr('text-anchor', 'end').text(lab);
     });
     ng.on('mousemove', (ev, n) => showTip(ev, [`Kapitel ${n}`, titleOf(n), `Bereich ${bereichOf(n)}`]))
       .on('mouseleave', () => { tip.style.display = 'none'; })
@@ -457,8 +458,8 @@
     rows.forEach(r => {
       if (!/^\/_blob\//.test(r.url) || seen.has(r.kapitel)) return;
       seen.add(r.kapitel);
-      const pkw = d.data.find(x => x.kapitel === r.kapitel && x.variante === 'Pkw');
       const van = d.data.find(x => x.kapitel === r.kapitel && x.variante === 'Van') || r;
+      const byVar = (v) => d.data.find(x => x.kapitel === r.kapitel && x.variante === v);
       if (r.art !== lastArt && r.art !== 'Alle') {
         const h = document.createElement('div'); h.className = 'hb-qg-head';
         h.textContent = r.art === 'Kapitel' ? 'Hauptkapitel' : r.art === 'Übergangsmodul' ? 'Übergangsmodule' : r.art === 'Anhang' ? 'Anhänge' : 'Vorspann';
@@ -472,17 +473,18 @@
       const body = document.createElement('span');
       const t = document.createElement('span'); t.textContent = r.titel + ' (' + fmt(Number(r.seiten)) + ' Seiten)';
       const ln = document.createElement('span'); ln.className = 'hb-qg-links';
-      [['Van', van.url], ['Pkw', pkw && pkw.url]].forEach(([lab, url]) => {
+      window.hbVariants.forEach(([v, lab]) => {
+        const row = byVar(v); const url = row && row.url;
         if (!url || !/^\/_blob\//.test(url)) return;
         if (ln.childNodes.length) ln.appendChild(document.createTextNode(' · '));
-        const l = document.createElement('a'); l.className = 'hb-qg-link'; l.href = url; l.target = '_blank'; l.rel = 'noopener'; l.textContent = 'PDF ' + lab;
+        const l = document.createElement('a'); l.className = 'hb-qg-link'; l.href = url; l.target = '_blank'; l.rel = 'noopener'; l.textContent = lab;
         ln.appendChild(l);
       });
       body.append(t, document.createElement('br'), ln);
       a.append(n, body);
       box.appendChild(a);
     });
-    document.getElementById('qg-note').textContent = `${fmt(seen.size - 1)} Quick Guides (Hauptkapitel, Übergangsmodule, Anhänge, Vorspann), je in den Varianten „für Van“ und „für Pkw“, dazu je eine Gesamtdatei. Klick öffnet die PDF in einem neuen Tab.`;
+    document.getElementById('qg-note').textContent = `${fmt(seen.size - 1)} Quick Guides (Hauptkapitel, Übergangsmodule, Anhänge, Vorspann), je in den Varianten DE Van, DE Pkw, EN Vans und EN Cars, dazu je eine Gesamtdatei. Klick öffnet die PDF in einem neuen Tab.`;
   }
 
   function drawTable() {
@@ -531,7 +533,7 @@
       badge.append(sw, document.createTextNode(r.bereich)); tdB.appendChild(badge);
       const tdQ = document.createElement('td');
       const link = links.find(l => l.kapitel === r.kapitel);
-      [['Van', link && link.url_van], ['Pkw', link && link.url_pkw]].forEach(([lab, url], i) => {
+      [['DE Van', link && link.url_van], ['DE Pkw', link && link.url_pkw], ['EN Vans', link && link.url_en_vans], ['EN Cars', link && link.url_en_cars]].forEach(([lab, url], i) => {
         if (!url || !/^\/_blob\//.test(url)) return;
         if (tdQ.childNodes.length) tdQ.appendChild(document.createTextNode(' · '));
         const a = document.createElement('a'); a.className = 'hb-qg-link'; a.href = url; a.target = '_blank'; a.rel = 'noopener';

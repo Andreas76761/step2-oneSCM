@@ -87,3 +87,91 @@ T15-14,Zentrale Grundlagen an die Marktpflege übergeben,Übergangsmodul,Pkw,2,/
 T15-16,Von der Pflegeentscheidung zum Governance-Nachweis,Übergangsmodul,Pkw,2,/_blob/461e52967e82d8b6f40d1301e2b9251a
 V.1,Willkommen und Dokumentkontext,Vorspann,Pkw,2,/_blob/9cc0ef230f04b084af4e9a3a7abe3ab4
 V.2,Inhaltsverzeichnis und Lesepfade,Vorspann,Pkw,2,/_blob/34027e55d75dac5089ff9c3a0c176c17
+Alle,All Quick Guides in one file,Alle,EN Vans,86,/_blob/b606e69ebe3ff6b7546096932f20f501
+1,Introduction and Overview,Kapitel,EN Vans,2,/_blob/d54851e832f317fce3b97ad0494756c5
+2,"Access, Roles and Authorizations",Kapitel,EN Vans,2,/_blob/e31cedfee49055cd0f4516a5c95933d6
+3,"Basics, Navigation and Customer Journey",Kapitel,EN Vans,2,/_blob/4619e152b9bf99e4099fde7331f3c0f0
+4,"Customers, Partners and Contract Roles",Kapitel,EN Vans,2,/_blob/cb98a2838bec137df69ec11a9eb6705d
+5,"Preparing Vehicle, Product and Quote",Kapitel,EN Vans,2,/_blob/c156bae0ba6f28536c278d8f1be81cb2
+6,Creating a Service Contract and Completing the Application,Kapitel,EN Vans,2,/_blob/1126b5cc637da55497a06336b1a74a5e
+7,"Payment Data, Documents and Signature",Kapitel,EN Vans,2,/_blob/664b434e9942a82daa9ebf10480b1f93
+8,Tracking and Activating the Application,Kapitel,EN Vans,2,/_blob/2011fdf2419f46cd01c13bf301426467
+9,MO Checks and Business Reviews,Kapitel,EN Vans,2,/_blob/8dfc9ccfde48fac507dfdc8a8e50236c
+10,Managing Contracts in Daily Operations,Kapitel,EN Vans,2,/_blob/ce33457ba9baf2902435ee9d71337e3b
+11,"Invoicing, Payment, Costs and Reports",Kapitel,EN Vans,2,/_blob/eb2ff96efc8e22f172d77471353ec3b9
+12,"Business Customers, Campaigns and Special Cases",Kapitel,EN Vans,2,/_blob/aa27a70d45082ecf05b37169702bfb7e
+13,Tyre Products – Tyres,Kapitel,EN Vans,2,/_blob/9561a5185e8c597aeb2e6f7658d55f51
+14,"Market Role, Product and Price Maintenance and Administration",Kapitel,EN Vans,2,/_blob/4549494095211ad05a39ad432b935407
+15,"HQ Role, Blueprint and Central Master Data",Kapitel,EN Vans,2,/_blob/c9e2347e098b4c7cf0cd348e86f30442
+16,"Governance, Quality, Data Protection and Archiving",Kapitel,EN Vans,2,/_blob/3d577eb477d4ad1ed127b1966fb42644
+17,Rollout and Go-Live,Kapitel,EN Vans,2,/_blob/3c7042284632f2c0854a1cd75ec54474
+18,Migration and Transfer of Existing Data,Kapitel,EN Vans,2,/_blob/86efddf32fe98fd31c1bacbc7c9beac1
+19,IT Architecture,Kapitel,EN Vans,2,/_blob/615d15826938f958c9712810f05c753c
+20,Country-Specific Topics,Kapitel,EN Vans,2,/_blob/4a3326b5115d3d1d93e82ff500ca4a54
+21,Division-Specific Topics,Kapitel,EN Vans,2,/_blob/f2571e815435a11ab1fa247056e113ef
+22,Outlook and Further Development,Kapitel,EN Vans,2,/_blob/e82a7953236d9f382e9bfff560570934
+23,"FAQ, Troubleshooting and Support",Kapitel,EN Vans,2,/_blob/139503c9e6cb615ce58762f6bce4c72c
+A.1,Glossary and Abbreviations,Anhang,EN Vans,2,/_blob/202cc77be33f4276065e567b9e52e7c6
+B.1,Everyday Checklists,Anhang,EN Vans,2,/_blob/874e42ad4246bf8d995553a93cfd7dfe
+C.1,Process Diagrams,Anhang,EN Vans,2,/_blob/4a4f6a8530644b2cf31fbe875786c3b7
+D.1,Role/Status/Scope Matrices,Anhang,EN Vans,2,/_blob/2925785c03c0f36442ef34488388b48a
+E.1,Ticket-to-Chapter Mapping,Anhang,EN Vans,2,/_blob/08d3fd7dcb48dcf85ef5076da238ce03
+F.1,Sources and Clarification Register,Anhang,EN Vans,2,/_blob/67e77ccd5e7f82e2fd09353ad54189a0
+G.1,Figure Index and Evidence,Anhang,EN Vans,2,/_blob/2672c243281eaca6c2143edccea87b89
+H.1,Knowledge Checks and Solutions,Anhang,EN Vans,2,/_blob/410da6abbb8d71794af1a1814f1d6a82
+I.1,Practical Examples along the Contract Process,Anhang,EN Vans,2,/_blob/43e13c67685119f07cad285275612d0a
+I.2,Calculation Examples and Finance Reference,Anhang,EN Vans,2,/_blob/3c40daa1ab5b2640c4f99e0b51f4f6c5
+I.3,Test Data Catalog and Evidence,Anhang,EN Vans,2,/_blob/e8b7be2edb4afaaad11f653cc960b7e8
+T6-7,From Saved Application to Payment Data and Signature,Übergangsmodul,EN Vans,2,/_blob/0188577dcd0e6be689561f5e6570f289
+T7-8,From Documents and Signature to Activation Check,Übergangsmodul,EN Vans,2,/_blob/fab01e50a99a92a581213e10f4aef7f3
+T8-9,Overall Process and MO Role Deep Dive,Übergangsmodul,EN Vans,2,/_blob/7e2889daeb62f0018c7385dc807c84ec
+T9-10,From Review Result to Ongoing Contract Administration,Übergangsmodul,EN Vans,2,/_blob/0b8d6087284a163cc949a9edd3500e1f
+T14-15,Linking Market Maintenance and Central Requirements,Übergangsmodul,EN Vans,2,/_blob/5a8ec545fb04862f56d41a1d0915db1e
+T15-14,Handing Over Central Foundations to Market Maintenance,Übergangsmodul,EN Vans,2,/_blob/39ba73dc8074be8142162e4dcc1004c9
+T15-16,From Maintenance Decision to Governance Evidence,Übergangsmodul,EN Vans,2,/_blob/f10496e5e865da1255ff06586b751874
+V.1,Welcome and Document Context,Vorspann,EN Vans,2,/_blob/2a34edbf4be4a87c03a6d5576264bce8
+V.2,Table of Contents and Reading Paths,Vorspann,EN Vans,2,/_blob/e85747ce2ac9bd7a0cdb87cdfecbbcd7
+Alle,All Quick Guides in one file,Alle,EN Cars,86,/_blob/8ea37aa3021e9b095626fa77c7b71584
+1,Introduction and Overview,Kapitel,EN Cars,2,/_blob/9c09ee3667723a80dd1c374553960b90
+2,"Access, Roles and Authorizations",Kapitel,EN Cars,2,/_blob/c5662aad53381072993d02e4c6a5c165
+3,"Basics, Navigation and Customer Journey",Kapitel,EN Cars,2,/_blob/389fdf82a4fd65fbca8952289fd141ba
+4,"Customers, Partners and Contract Roles",Kapitel,EN Cars,2,/_blob/47d16157cf9b33700131a3c85d992673
+5,"Preparing Vehicle, Product and Quote",Kapitel,EN Cars,2,/_blob/6ecacd76158211fbeee032c697a7fbb3
+6,Creating a Service Contract and Completing the Application,Kapitel,EN Cars,2,/_blob/30892247d73c23406376e9b507ae4de7
+7,"Payment Data, Documents and Signature",Kapitel,EN Cars,2,/_blob/95b0556d60bc2f0b9f9d7b95226ed838
+8,Tracking and Activating the Application,Kapitel,EN Cars,2,/_blob/e9b286aa83b6bd81c5bb9722f281eadb
+9,MO Checks and Business Reviews,Kapitel,EN Cars,2,/_blob/a58b9e993a5528ed8172e6f23c1edb3e
+10,Managing Contracts in Daily Operations,Kapitel,EN Cars,2,/_blob/08a54b1e5d206f3eb91335201bfdcd61
+11,"Invoicing, Payment, Costs and Reports",Kapitel,EN Cars,2,/_blob/a8d2cdf42b776e94b4ee9d965c230477
+12,"Business Customers, Campaigns and Special Cases",Kapitel,EN Cars,2,/_blob/18ee265503e7eb197176e7bb143a23cd
+13,Tyre Products – Tyres,Kapitel,EN Cars,2,/_blob/07c5a5b8ed5ebe93f243616f6d2de111
+14,"Market Role, Product and Price Maintenance and Administration",Kapitel,EN Cars,2,/_blob/b0828f597bf6363ea04f89a59e1ea29a
+15,"HQ Role, Blueprint and Central Master Data",Kapitel,EN Cars,2,/_blob/4899f87518ec852c622a7150ff2c69f4
+16,"Governance, Quality, Data Protection and Archiving",Kapitel,EN Cars,2,/_blob/2b4965510919eaf2878f48b28d70bfa3
+17,Rollout and Go-Live,Kapitel,EN Cars,2,/_blob/93e53e44108e1a0cfa620ab0a9e16e6c
+18,Migration and Transfer of Existing Data,Kapitel,EN Cars,2,/_blob/065e84d405681e5f925bdcd3125cf43a
+19,IT Architecture,Kapitel,EN Cars,2,/_blob/2f4616b7b1dbcb3a683bdfedb513ae73
+20,Country-Specific Topics,Kapitel,EN Cars,2,/_blob/a921893fa2423eba4b0b2720c5a162bc
+21,Division-Specific Topics,Kapitel,EN Cars,2,/_blob/ff79dcf7c23e1c2ce459c9669e37df21
+22,Outlook and Further Development,Kapitel,EN Cars,2,/_blob/b1d63c317d8f8487ca960bb21813d4a7
+23,"FAQ, Troubleshooting and Support",Kapitel,EN Cars,2,/_blob/ef829e0474a24b23132a93e360a38e62
+A.1,Glossary and Abbreviations,Anhang,EN Cars,2,/_blob/8dc6cccc929b80b55100ce7aa6ec10fa
+B.1,Everyday Checklists,Anhang,EN Cars,2,/_blob/030248e0dc35b545b59033620965dd4d
+C.1,Process Diagrams,Anhang,EN Cars,2,/_blob/1f60a202c1c3c605b3dab4f4d0a656d3
+D.1,Role/Status/Scope Matrices,Anhang,EN Cars,2,/_blob/e067f1e02eb0f314249429b9364d4c27
+E.1,Ticket-to-Chapter Mapping,Anhang,EN Cars,2,/_blob/9b45e505d6fa102466b5eafe14d8e26c
+F.1,Sources and Clarification Register,Anhang,EN Cars,2,/_blob/ede772b6d6fe0e4afe62ac2a928c5de6
+G.1,Figure Index and Evidence,Anhang,EN Cars,2,/_blob/d80eb359f8e30df394d519db6c09b981
+H.1,Knowledge Checks and Solutions,Anhang,EN Cars,2,/_blob/951d782e4b8d2bec3fd83926d5ce1edd
+I.1,Practical Examples along the Contract Process,Anhang,EN Cars,2,/_blob/acc8138ee069139600e4f25bfb02d74e
+I.2,Calculation Examples and Finance Reference,Anhang,EN Cars,2,/_blob/d1b6149015c531e4231db50e84d054f1
+I.3,Test Data Catalog and Evidence,Anhang,EN Cars,2,/_blob/eb93fef1e7bc6624227c32495d0015f3
+T6-7,From Saved Application to Payment Data and Signature,Übergangsmodul,EN Cars,2,/_blob/7a47d77b155d493796c9621494963521
+T7-8,From Documents and Signature to Activation Check,Übergangsmodul,EN Cars,2,/_blob/bfce42af024740f6855eaed4a75df2d3
+T8-9,Overall Process and MO Role Deep Dive,Übergangsmodul,EN Cars,2,/_blob/4b1e0f41a0026fa71f226b4125e41ca0
+T9-10,From Review Result to Ongoing Contract Administration,Übergangsmodul,EN Cars,2,/_blob/0c6f472e0b9e90ed1c1901d895126cf6
+T14-15,Linking Market Maintenance and Central Requirements,Übergangsmodul,EN Cars,2,/_blob/fe46a252e467e339a8995489b965c1e5
+T15-14,Handing Over Central Foundations to Market Maintenance,Übergangsmodul,EN Cars,2,/_blob/efdaf9ed55793096a9bf537249b2de47
+T15-16,From Maintenance Decision to Governance Evidence,Übergangsmodul,EN Cars,2,/_blob/8823be2cf9371df734964a0855294e96
+V.1,Welcome and Document Context,Vorspann,EN Cars,2,/_blob/2633391c5e9dea77fe511b878cf3b6bf
+V.2,Table of Contents and Reading Paths,Vorspann,EN Cars,2,/_blob/eba8309a21027906da9076c7689b3325
