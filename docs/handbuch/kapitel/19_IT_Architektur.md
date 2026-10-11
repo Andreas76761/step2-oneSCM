@@ -610,3 +610,99 @@ Datadog ist für die Produktivumgebung eingerichtet. Monitore überwachen Anomal
 **Fehlerbehebung.** Erhalten Sie keine Benachrichtigung, prüfen Sie die Rolle und die Zuständigkeit des Vorgangs. Der Benutzer, der den Vorgang angelegt hat, erhält sie nicht. Erscheint eine Benachrichtigung nicht mehr, ist sie bereits durch eine Aktion erledigt.
 
 Quellen: Batch 452.1, 428.2, 378.1, 159.1, 1087.2, 1189.1, 1082.5, 1142.6, 545.1, 436.2, 439.1, 461.1, 444.1, 458.1, 440.1, 441.1, 443.1, 445.1, 446.1, 447.1, 448.1, 449.1, 450.1, 451.1, 454.1, 455.1, 456.1, 459.1, 462.1, 486.1, 437.1, 521.1
+
+## 19.19 Datenplattformen und Reporting
+
+**Zweck.** Die Datenplattform führt Daten aus den Domänen von oneSCM, aus NEMESIS, aus den Altsystemen und aus ISP im Unified Data Model, kurz UDM, zusammen. Daraus entstehen Datenprodukte (Data Products, DP) für das Reporting. Dieser Abschnitt beschreibt die Überwachung des Datenflusses, die Ladewege, die Scheduler und die wichtigsten Inhalte der Datenprodukte.
+
+**Voraussetzungen.** Die Datenquellen liefern ihre Dateien in den vorgesehenen Ordnern. Für Nemesis-Daten gilt zusätzlich die Ablage je Division und Markt. Die Datenprodukte entstehen aus dem UDM.
+
+**Rollen.** Das Reporting-Team und das technische Team überwachen den Datenfluss. Das BU-Team aus dem Fachbereich erhält die Benachrichtigungen zu fehlenden Daten.
+
+**Überwachung des Datenflusses.** Die Überwachung meldet Datensätze, die nicht vom Data Capture Service (DCS) oder vom Glue-Job verarbeitet werden können, fehlende Daten für einen Markt oder eine Division sowie Jobfehler. Die Meldung nennt die Quelle, den Markt, die Division und die Anzahl der betroffenen Datensätze.
+
+- Datensätze aus den Altsystemen iCON, ASSET und SIRIUS, die nicht aus der Datei in das UDM gelangen
+- Nemesis-Daten, die nicht aus der Datei in das UDM gelangen, auch beim initialen Nemesis-Load
+- oneSCM-Daten, die nicht vom DCS in das UDM übertragen werden
+- Daten, die nicht vom UDM in die Datenprodukte übernommen werden
+- Abweichungen zwischen gelesenen und geschriebenen Datensätzen
+
+Ein einzelner Datensatz, der nicht verarbeitet werden kann, wird ausgeschlossen und gemeldet. Der Job läuft für die übrigen Datensätze erfolgreich weiter. Die Meldungen bündelt das System je Datenprodukt oder Job, etwa mit der Angabe „23 Verträge aus Nemesis für den Markt BE konnten nicht verarbeitet werden“. Bei einem Bulk Load wird direkt nach Abschluss benachrichtigt. Ein Nemesis-Paket meldet das System nach vollständiger Verarbeitung.
+
+Eine Benachrichtigung entsteht, wenn Kafka-Daten beim DCS nicht verarbeitet werden. Bei Nemesis gilt dies auch, wenn Dateien im Eingangsordner liegen, aber nicht in den Zielbereich des DCS gelangen. Fehlen einzelne Nemesis-Dateien für einen Markt oder eine Division, erfolgt zunächst keine Meldung, weil Dateien zeitversetzt eintreffen. Fehlende I131-Dateien lösen keine Meldung aus.
+
+Die Benachrichtigung geht an einen definierten Empfängerkreis, der auch das BU-Team umfasst. Ein Incident wird automatisch angelegt und enthält alle Angaben, um die betroffenen Datensätze zu finden. Eine Anmeldung der Empfänger ist nicht erforderlich. Der Glue-Job löst die Benachrichtigung nach seinem Ende aus, und fehlende Datensätze führen zu einer zusammenfassenden E-Mail.
+
+**Nemesis-Daten im Ladeprozess.** Die Revenue-Dateien von NEMESIS laden über zwei Wege in die Data Foundation: über Kafka, DCS und den Reporting Service sowie über den Initial Load aus S3. Die Dateistruktur ergänzt NEMESIS um neue Felder. Neun Felder kommen in den Vertragsstammdaten und zwei Felder in den Berechnungsdaten hinzu, die Kopfinformationen bleiben gleich. Der Ladeprozess verarbeitet das bisherige und das neue Format. Im Ladeprozess über DCS und Reporting Service werden neue Felder ignoriert, der Initial-Load-Job über Glue übernimmt sie in die UDM-Tabellen. Ältere Dateien bleiben ladbar. Der Zeitplan der Umstellung auf das neue Format erfasst der Klärungsbedarf.
+
+Die neue Struktur mit zusätzlichen Feldern gilt für alle Märkte ab 08/2023, für Großbritannien ab 07/2023. Umsatzdateien für Mai, Juni und Juli 2023 enthalten die Felder daher nicht. Der Initial Load wertet beide Strukturen aus.
+
+Nemesis-Verträge mit dem Status „NOT YET ACTIVATED“ filtert der initiale Ladeprozess in Glue heraus. Bereits geladene Datensätze mit diesem Status löscht das System aus UDM Financials, da vor der Aktivierung Angaben wie das Erstzulassungsdatum fehlen.
+
+**Dateiablage für den Ladeprozess.** Im Legacy-Ablauf startet die Verarbeitung, sobald eine Datendatei zusammen mit der EOF-Datei im CFT-Verzeichnis des Nemesis-Raw-Buckets liegt. Die Lambda-Funktion verfolgt die Reihenfolge aller hochgeladenen Dateien. Der Glue-Job prüft die Reihenfolge. Fehlt ein Monat und trifft ein späterer Monat ein, verarbeitet der Job die späteren Dateien weiter. Der Job überspringt den fehlenden Monat und erzeugt eine Warnung mit einer E-Mail. Sobald die fehlende Datei eintrifft, laden Sie sie manuell hoch, zusammen mit den Folgemonaten in der richtigen Reihenfolge. Die Folgedateien liegen im Backup-Ordner.
+
+Ein Datensatz mit ungültiger Länge bricht den Ablauf nicht mehr ab. Das System protokolliert den Fehler, überspringt den Datensatz und verarbeitet die übrigen Datensätze der Datei. Die übersprungenen Datensätze stehen in einer separaten Fehlerdatei mit Dateiname, Datensatzkennung oder Vertragsnummer, Berichtsjahr und Berichtsmonat sowie dem Zeitstempel.
+
+**Zeitplan und Scheduler.** Die Base-DP-Jobs laufen am 4. eines jeden Monats. Der Batch-Scheduler ReportingDataProducts löste bisher alle Datenprodukt-Jobs gemeinsam aus. Nun gibt es getrennte Scheduler. Der bestehende Scheduler bedient die Base-Datenprodukte für Vertrag, Kosten, Van-Kosten und Umsatz. ISP und SC Financials haben jeweils einen eigenen Scheduler. Die Funktion function_dp_from_udm verarbeitet die unterschiedlichen Payloads. Alle Scheduler verwenden zunächst denselben Zeitplan, sie lassen sich jedoch unabhängig voneinander einstellen.
+
+**Datenprodukte.** Das Base-Service-Contracts-Datenprodukt enthält drei Spalten für die Hauptdeckung: Maintenance, Warranty und Wear and Tear. Jede Spalte zeigt Y oder N. Ein Komplettvertrag mit allen drei Hauptdeckungen erhält in allen drei Spalten Y. Die Zuordnung erfolgt über eine Mapping-Tabelle für Deckungsarten und Deckungscodes. SIRIUS-Märkte sind in dieser Umsetzung ausgenommen. Die Dateien mit Inventardaten werden monatlich je Markt und Division bereitgestellt, spätestens am 3. eines Monats. Die Felder Marke, Produktkategorie, Kennzeichen, Unterschriftsdatum sowie Name des Verkäufers übernimmt das UDM aus den Inventarlisten.
+
+Der Reporting-Batch für Vertrags- und Umsatzdaten erzeugt CSV-Dateien für Delta- und Vollladungen. Für Umsatzdaten gibt es die Spalten Status mit den Werten „New“ und „Exported“ sowie eine Job-ID. Ein neuer oder geänderter Umsatzdatensatz erhält den Status „New“. Eine Schnittstelle setzt den Status auf „Exported“, sobald eine Liste von Revenue-IDs, eine Job-ID und die Markt-ID übergeben werden.
+
+Die Schnittstelle getAvailableProducts gibt für Produkte mit ISP die maximale Laufzeit und die maximale Laufleistung aus. Ist das Feld isp_available in der Tabelle vehicle_information auf „true“ gesetzt, liefert die Antwort die Details anhand des isp_code.
+
+Für MBD Vans erweitert das Umsatz-Datenprodukt die Preisfelder. Der Vertragsnettopreis stammt aus den Inventory-Reports von ICON und Asset. Der Nettopreis je Kilometer stammt aus dem DDECost-Report von ICON, Asset und SIRIUS. Der Vertragsservice liefert diese Werte für oneSCM. Das Kunden-Datenprodukt enthält die Felder fin_id, vin_id und status_cd.
+
+Die Zuordnung des Felds aq_veh_model_series_cd leitet das System immer aus der FIN ab. Das Feld BAUREIHE aus den Nemesis-Daten wird ignoriert, da seine Werte nicht zum erwarteten Schlüssel passen. Die Änderung gilt im DCS und im Glue-Prozess gleichermaßen. Den ASSET-Import übernimmt oneSCM so, wie ASSET die Schadensfolgenummer und die Schadenspositionsnummer liefert.
+
+**Ergebnis und Systemstatus.** Die Datenprodukte stehen im Reporting zur Verfügung. Fehlende oder nicht verarbeitete Datensätze sind über die Benachrichtigung und den Incident nachvollziehbar. Die Ablage der Datenprodukte erfolgt in S3.
+
+**Besonderheiten je Sparte und Markt.** Die Datenprodukte unterscheiden Pkw und Vans in den Feldern je Division. Die Inventardateien gelten für die ASSET- und iCON-Märkte. SIRIUS-Märkte sind bei den Deckungsfeldern ausgenommen.
+
+**Hinweise.** Die Vertragsdaten zu Nemesis beschreibt Abschnitt 19.14. Die Kundentypen für das Kunden-Datenprodukt sind im Klärungsbedarf erfasst.
+
+**Fehlerbehebung.** Erhalten Sie eine Meldung über fehlende Datensätze, prüfen Sie die Quelle, den Markt und die Division aus der Meldung. Fehlt ein Monat einer Nemesis-Datei, laden Sie die fehlende Datei zusammen mit den Folgemonaten manuell nach CFT. Enthält die Fehlerdatei übersprungene Datensätze, korrigieren Sie sie in der Quelle.
+
+Quellen: Batch 304.1, 303.1, 317.1, 322.4, 331.1, 301.1, 300.3, 305.3, 314.1, 304.3
+
+## 19.21 Technische Integrationswege
+
+**Zweck.** oneSCM tauscht Daten über Schnittstellen aus: über REST-Aufrufe am Edge Service und an den Diensten, über Kafka-Ereignisse und über Dateien, die CFT in S3-Ordnern ablegt. Dieser Abschnitt beschreibt die Dateiwege und Ordner, die Dateiübertragung über CFT, die Kafka-Ereignisse und die Verarbeitung der Rückmeldedatei i156.
+
+**Voraussetzungen.** Die Dateien liegen im vorgesehenen Ordner. Für die Dateiübertragung ist der CFT-Ablauf eingerichtet. Der Zugriff auf den Bereich „Cross File Transfer“ erfordert eine Admin-Rolle.
+
+**Rollen.** HQ-Administratoren und Benutzer mit Zugriff auf den Bereich Admin prüfen die Dateiübertragungen. Market Operation prüft die Ergebnisse der Verarbeitung.
+
+**Dateiwege für Finanzsysteme.** Für SWT liegen der Ausgangs- und der Eingangsordner im Bereich „IN/SWT“ mit der Kennung „IN_E169“. Für CoFiCo liegen sie im Bereich „SK/CoFiCo“ mit der Kennung „SK_E169“. Die Ordner für technische Rückmeldungen „IN_E169_ERROR“ und „SK_E169_ERROR“ sind in der Struktur vorgesehen. Die zugehörigen Abläufe richtet der Klärungsbedarf dar. Die Pfade müssen im CFT-Ablauf nachgezogen sein.
+
+Die Datei E167 für CoFiCo und SWT liegt im Ordner für ausgehende Dateien unter ENV, Marktcode, Finanzsystem, Outgoing und E167. Die Exportdateien erhalten einen Namen mit Division und Uhrzeit. Die Datei E169 für oneERP liegt im Ordner ENV und dem Land.
+
+**Dateiwege für VEGA.** Die Schnittstelle i155 legt ihre ausgehenden Dateien in Amazon S3 unter INT, DE, VEGA, Outgoing und i155 ab. Die Logdateien der i155 liegen ergänzend im Ordner I155_LOGS. Die eingehenden Dateien I156 und I131 liegen im Bereich für eingehende Dateien. Das Material beschreibt eine Struktur mit zentralen, globalen Ordnern für alle Märkte anstelle je Markt eigener Ordner. Der Ordner VEGA-ALL wird in VEGA_FULL_TEMP umbenannt. Mehrere Ordner für denselben CFT-Flow erzeugen hohen Wartungsaufwand und können Sperren auslösen, wenn derselbe Flow gleichzeitig läuft. Die Migration der Dateien und Datenbankverweise und die Abstimmung auf dem CFT-Server erfasst der Klärungsbedarf.
+
+**Dateiwege für NEMESIS und die Datenplattform.** Die Fehlerdatei mit funktionalen Fehlern legt NEMESIS im Eingangsordner des Landes unter Environment, DE, NEMESIS und Incoming ab. Die Revenue-Dateien laden in die Datenplattform über CFT. Die Verarbeitung ist in Abschnitt 19.19 beschrieben.
+
+**Dateiübertragung über CFT und Statistik.** Im Admin-Bereich steht der Eintrag „Cross File Transfer“ mit zwei Tabs zur Verfügung: „Cross File Transfer“ zeigt die Übertragungshistorie, und „Upload“ hochgeladene Dateien. Für Exportdateien von SWT, CoFiCo, oneERP und E169 zeigt die Spalte „Total Number of Items“ die Anzahl der exportierten Rechnungen. Bei Status „Completed“ folgt die Anzahl der übersprungenen Rechnungen in Klammern, etwa „1000 (450 skipped)“. Kann die Datei nicht gelesen werden, lautet der Wert „N/A“.
+
+Die Aktion „Statistics“ öffnet die Details einer Datei mit den Spalten Processing Number, oneSCM-Rechnungsnummer, Vertragsnummer, Status und Reason. Als Filter stehen die Nummern, ein Status-Dropdown mit „Exported“ und „Skipped“ sowie die Schaltflächen „Search“ und „Reset“ zur Verfügung. Die Gründe stammen aus Datadog. Die Aktion „Details“ bleibt unverändert.
+
+**Verarbeitung der Rückmeldedatei i156.** oneSCM importiert i156-Dateien in der Reihenfolge, in der VEGA sie erzeugt hat. Liegen mehrere Dateien gleichzeitig im S3-Bucket aus dem CFT-Ablauf, verarbeitet das System sie anhand des Zeitstempels im Satztyp 01 an den Positionen 49 bis 74. Eine Datei mit einem älteren Zeitstempel als der zuletzt importierten Datei überspringt oneSCM und protokolliert einen Fehler in Datadog.
+
+Werden einzelne Ansprüche wegen fehlerhafter Daten übersprungen, protokolliert oneSCM den Fehler in Datadog. Der Administrator erhält eine gesammelte Benachrichtigung mit dem Text „Please review the skipped claims in DataDog“.
+
+Eine Datei mit demselben Zeitstempel lässt sich erneut verarbeiten. Dafür laden Sie die Datei im Bereich „Cross File Transfer“ im Tab „Upload“ hoch. Die Suche bietet den Dateinamen mit höchstens 50 Zeichen, das Datum, die Schnittstelle, die derzeit nur i156 umfasst, und „Uploaded by“ mit höchstens 10 Zeichen. Unterstützt werden die Dateitypen .dat und .txt. Bei der erneuten Verarbeitung vergleicht oneSCM die Ansprüche mit der Datenbank. Stimmen Zeitstempel und Entscheidungsnummer überein, überspringt oneSCM den Anspruch. Importiert werden nur Ansprüche, die noch nicht vorhanden sind. So lassen sich korrigierte Ansprüche nachträglich importieren, etwa eine Datei mit demselben Header und dem korrigierten Anspruch.
+
+**Kafka-Ereignisse.** oneSCM verarbeitet Änderungen aus MMe CMDS über ein Kafka-Ereignis. Neuanlagen, Änderungen der E-Mail-Adresse und Löschungen von MMe-Profilen werden verarbeitet. Ungültige MMe-IDs entfernt oneSCM aus Datenschutzgründen. Eine MMe-ID wird sichtbar, sobald der Kunde sein Konto aktiviert hat, also nach dem ersten erfolgreich verarbeiteten Ereignis. Die E-Mail-Adresse für Benachrichtigungen bleibt von der MMe-E-Mail-Adresse getrennt. Die Kafka-Listener ignorieren unbekannte Felder.
+
+Der Producer für die Kontingentanzahl sendet an das Topic „contingent_count“ mit den Feldern coverageCode, damageCode und vegaApplicationNr. Der Zugriff auf das Topic folgt den Datenschutz- und Berechtigungsregeln des Teams.
+
+Ein Fahrzeug aus VeDoc lässt sich mit einer längeren Motor-Seriennummer synchronisieren. Das Datenbankfeld akzeptiert die längere Nummer.
+
+**Ergebnis und Systemstatus.** Dateien erscheinen in den Ordnern mit dem Status der Übertragung. Die Statistik zeigt die verarbeiteten und übersprungenen Datensätze. Übersprungene Ansprüche und Datensätze erscheinen als Meldung in Datadog.
+
+**Besonderheiten je Sparte und Markt.** Die Ordner für SWT gelten für Indien, die Ordner für CoFiCo für die Slowakei und die Ordner für oneERP für Deutschland. Die Ordner für VEGA gelten für Deutschland.
+
+**Hinweise.** Die Ordnerwahl und die Benennung der Dateien hängen vom CFT-Flow ab. Die Datei für die manuelle Übergabe von Rückmeldungen beschreibt Abschnitt 19.11.
+
+**Fehlerbehebung.** Übersprungene Ansprüche finden Sie in Datadog. Korrigieren Sie den Anspruch in der Quelle oder erstellen Sie eine Datei mit demselben Header und dem korrigierten Anspruch. Laden Sie diese Datei im Tab „Upload“ hoch. Für eine erneute Verarbeitung einer Datei mit demselben Zeitstempel laden Sie sie erneut hoch.
+
+Quellen: Batch 1302.1, 1290.1, 141.1, 719.2, 225.3, 843.5, 851.1, 820.7, 1246.5, 589.1, 229.6, 147.1
