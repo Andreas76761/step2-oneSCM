@@ -198,7 +198,7 @@ Quellen: Batch 787.5, 827.3, 123.1, 185.4, 248.1, 254.2, 234.1, 384.4, 409.1, 76
 
 ## 10.6 Kündigung, Stornierung und Beendigung
 
-**Zweck.** Sie beenden einen Vertrag auf drei Wegen. Sie stornieren einen Vertrag innerhalb der Widerrufsfrist, Sie beenden einen aktiven oder ausgesetzten Vertrag vorzeitig, oder der Vertrag läuft automatisch nach Datum, Laufleistung oder Kontingent ab. Nach dem Ablauf oder der vorzeitigen Beendigung setzt das System den Vertrag nach einer konfigurierten Frist auf „Closed“.
+**Zweck.** Sie beenden einen Vertrag auf drei Wegen. Sie stornieren einen Vertrag innerhalb der Widerrufsfrist oder beenden einen aktiven oder ausgesetzten Vertrag vorzeitig. Alternativ läuft der Vertrag automatisch nach Datum, Laufleistung oder Kontingent ab. Nach dem Ablauf oder der vorzeitigen Beendigung setzt das System den Vertrag nach einer konfigurierten Frist auf „Closed“.
 
 **Voraussetzungen.** Für die Stornierung eines aktivierten Vertrags muss die Stornierungsfrist in den Markteinstellungen hinterlegt sein. Der Vertrag darf keinen offenen Schadensfall haben. Vor der Aktivierung storniert der Benutzer einen Vertrag im Status „Created“ oder „Waiting for Activation“. Für die vorzeitige Beendigung muss der Vertrag aktiv oder ausgesetzt sein. Bei Leasingverträgen prüft das System zusätzlich den Vertragstyp. Die Eingabe der Laufleistung ist erst möglich, nachdem ein Beendigungsdatum gewählt wurde.
 
@@ -401,7 +401,7 @@ Quellen: Batch 2.1, 16.2, 17.3, 763.1, 763.3, 763.4, 763.5, 763.6, 768.2, 768.5,
 - Vorlage bei Reaktivierung: Batch 854.1 nennt die Aktivierungsvorlage. Die Batches 491.2 und 794.1 nennen eine Reaktivierungsvorlage.
 - Zahlungslink: Batch 160.3 beschreibt am 14. Tag eine automatische Stornierung und im selben Absatz eine Aussetzung.
 - Provision: Batch 848.1 zeigt die Händlerprovision als Platzhalter mit 100 EUR, die Berechnungslogik ist ungeklärt. Die Batches 826.1 und 812.1 beschreiben eine ermittelte Provision.
-- Kilometerquellen der Historie: Batch 807.1 nennt DSB, MIC, VEGA und die Benutzerkennung. Batch 1196.4 nennt DSB, Warranty and Goodwill, VEGA-Claims und manuelle Werkstattrechnungen. Die Anbindung von VEGA-Claims und manuellen Rechnungen sowie von MIC ist laut Batch 1196.4 ungeklärt. Batch 763.3 nennt MIC als Quelle mit Bearbeiter „System“.
+- Kilometerquellen der Historie: Batch 807.1 nennt DSB, MIC, VEGA und die Benutzerkennung. Batch 1196.4 nennt DSB, Warranty and Goodwill, VEGA-Claims und manuelle Werkstattrechnungen. Laut Batch 1196.4 sind die Anbindungen für VEGA-Claims und manuelle Werkstattrechnungen noch nicht vorhanden, die MIC-Anbindung ist zurückgestellt. Batch 763.3 nennt MIC als Quelle mit Bearbeiter „System“.
 - Status der Operative Review: Batch 834.1 nennt „Approved“, „Dismissed“, „Pending“, „Waiting for Customer Request“ und „TBD“. Batch 831.4 nennt „Approved“ und „Pending“. Batch 768.6 nennt für das Regular Review „Pending“, „Acknowledged“, „Customer Notified“ und „Prolongation Offer Sent“.
 - Freigabe über Schwellenwert: Batch 827.4 genehmigt die Prüfung automatisch, wenn der Schwellenwert über dem Zahlbetrag liegt. Batch 831.4 setzt den Status „Approved“, wenn der Schwellenwert kleiner ist als der gutzuschreibende Betrag, und „Pending“ im umgekehrten Fall.
 - Prognose am Vertragsende: Batch 825.5 übernimmt bei Vertragsablauf den Prognosewert als tatsächlichen Stand, wenn keine MIC-API verfügbar ist. Die Batches 2.1 und 763.6 verwenden die Prognose ausschließlich als Referenzwert.
@@ -438,9 +438,8 @@ Quellen: Batch 2.1, 16.2, 17.3, 763.1, 763.3, 763.4, 763.5, 763.6, 768.2, 768.5,
 - Batch 793.1: Die Anpassung der Health-Check-Funktion für mehrere Instanzen ist als Vorhaben beschrieben.
 - Batch 15.1: Die Produktsuche beim Anlegen eines Vertrags ist als Meldung mit geschlossenem Vorgang. Das Verhalten steht in Kapitel 5.
 - Batch 751.2: Die Vorhaben zu „Limited / Unlimited Tire“, zu Produkten mit zwei Basispreistabellen und zu komplexen Optionen sind offen ohne Inhalt.
-- Batch 185.4: Die Szenarien für Vertragsanpassungen sind überwiegend offen. Das Grundszenario für gewerbliche Verträge ohne Kilometerabweichung befindet sich in Prüfung.
+- Batch 185.4: Die Szenarien für Vertragsanpassungen sind überwiegend offen. Das Grundszenario für gewerbliche Verträge mit geänderter Laufleistung bei gleichbleibender Laufzeit befindet sich in Prüfung.
 - Batch 19.3: Die Angabe „Mileage Indicator“ ist ohne Funktionsbeschreibung.
-- Batch 1102.6: Die Ausprägung der Dokumentdruck-Option für die Vertragsübertragung ist im Material nicht beschrieben.
 
 **Sammelmeldungen ohne eigenständigen Handbuchinhalt.** Die folgenden Release-Zusammenfassungen enthalten keine beschreibbaren Funktionen: Batch 757.4, 769.1, 754.1, 823.1, 818.2 und 818.3. Batch 818.3 nennt offene Prüfpunkte zur Historientabelle. Batch 839.2 nennt Fehlerkorrekturen ohne Sollverhalten.
 

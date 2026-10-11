@@ -657,7 +657,7 @@ Datadog ist für die Produktivumgebung eingerichtet. Monitore überwachen Anomal
 
 **Fehlerbehebung.** Erhalten Sie keine Benachrichtigung, prüfen Sie die Rolle und die Zuständigkeit des Vorgangs. Der Benutzer, der den Vorgang angelegt hat, erhält sie nicht. Erscheint eine Benachrichtigung nicht mehr, ist sie bereits durch eine Aktion erledigt.
 
-Quellen: Batch 452.1, 428.2, 378.1, 159.1, 1087.2, 1189.1, 1082.5, 1142.6, 545.1, 436.2, 439.1, 461.1, 444.1, 458.1, 440.1, 441.1, 443.1, 445.1, 446.1, 447.1, 448.1, 449.1, 450.1, 451.1, 454.1, 455.1, 456.1, 459.1, 462.1, 486.1, 437.1, 521.1
+Quellen: Batch 459.1, 451.1, 448.1, 450.1, 454.1, 443.1, 451.2, 457.2, 461.2, 574.6, 534.2, 460.1, 457.1, 453.1, 452.1, 428.2, 378.1, 159.1, 1087.2, 1189.1, 1082.5, 1142.6, 545.1, 436.2, 439.1, 461.1, 444.1, 458.1, 440.1, 441.1, 443.1, 445.1, 446.1, 447.1, 448.1, 449.1, 450.1, 451.1, 454.1, 455.1, 456.1, 459.1, 462.1, 486.1, 437.1, 521.1
 
 ## 19.19 Datenplattformen und Reporting
 
@@ -787,7 +787,7 @@ Die Produktsuche gibt den Preis für die übergebene Kombination aus Laufleistun
 
 Die Leasingsuche liefert die vorgesehene Antwort. Bei der Aktivierung eines Leasingvertrags übergibt oneSCM die Zahlungsreferenz. Der Endpunkt POST contract/v1/leasing akzeptiert die externalCampaignId als Zeichenkette. Die Produktsuche mit product/v2/search ruft Produkte ab, und der Sprachwert der Produktsuche in product/v1/search steht in den Headern.
 
-Die Edge-Endpunkte für Verlängerungen und Verträge bieten nur zulässige Kombinationen aus Laufleistung und Laufzeit an. Bei Langzeitverlängerungen und kurzfristigen Verlängerungen gilt die Verlängerungsregel aus Abschnitt 19.9. Der Edge Service prüft beim Anlegen eines Vertrags das Erstzulassungsdatum und das Datum der Anfrage.
+Die Edge-Endpunkte für Verlängerungen und Verträge bieten nur zulässige Kombinationen aus Laufleistung und Laufzeit an. Bei Langzeitverlängerungen und kurzfristigen Verlängerungen gilt die Verlängerungsregel aus Abschnitt 19.9. Der Edge Service prüft beim Anlegen eines Vertrags das Erstzulassungsdatum und das Datum der Anfrage. Bei Leasing über den Edge Service übergibt MBLD einen Offset als Pflichtfeld mit höchstens drei Stellen. Der Offset gibt an, wie viele der nächsten verfügbaren Wirksamkeitsdaten aus Revenue übersprungen werden, bevor die Langzeitverlängerung angewendet wird. Übersteigt der Offset die Anzahl der verfügbaren Daten, gibt das System einen Fehler aus. Unterscheiden sich Offset und Leasing Effective Date, gilt der Offset.
 
 Ob sich Verträge im Status „Created“ über den Edge Service aktualisieren lassen, erfasst der Klärungsbedarf.
 
@@ -871,11 +871,11 @@ Beim Import prüft oneSCM jeden Datensatz. Als Fehler gelten eine nicht überein
 **Hinweise.** Die Batch-Jobs der Fachdomänen beschreibt jeweils das Unterkapitel der Domäne, etwa 19.12 für CoFiCo, 19.14 für NEMESIS und 19.9 für VEGA. Die Dateiwege und Ordner beschreibt Abschnitt 19.21. Für Partner gelten die Konventionen des Edge Service, die der Klärungsbedarf erfasst.
 
 **Fehlerbehebung.** Schlägt ein Batch-Job fehl, starten Sie ihn über „Run Now“ neu, sobald die Ursache behoben ist. Bei einem Job, der nicht mehr endet, nutzen Sie „Stop“. Die Ausführungshistorie zeigt den Status „fehlgeschlagen“ oder „gestoppt“. Ist ein Schadenfall in der i156-Datei nicht importierbar, prüfen Sie die Meldung in Datadog anhand der Zeilennummer. Edge-Fehler mit den Codes 403, 404 oder 500 entsprechen den Fehlerursachen, die der Partner nachvollziehen kann.
-Quellen: Batch 514.1, 512.1, 514.2, 534.1, 513.2, 515.1, 532.2, 527.1, 533.2, 520.1, 518.1, 524.2, 1253.2, 1095.2, 1107.5, 1113.5, 1027.3, 1079.6, 1081.5, 1100.4, 1111.5, 1096.5, 1082.4, 1092.3, 93.1, 771.4, 184.1, 184.4, 196.1, 205.2, 208.2, 208.4, 1310.4, 1180.1, 7.6, 855.3, 796.3, 714.6, 716.3, 795.5, 819.4, 1068.7, 1069.7, 297.1, 565.3, 565.4, 519.10, 1299.2, 667.4, 251.6, 223.4, 1070.7
+Quellen: Batch 781.3, 514.1, 512.1, 514.2, 534.1, 513.2, 515.1, 532.2, 527.1, 533.2, 520.1, 518.1, 524.2, 1253.2, 1095.2, 1107.5, 1113.5, 1027.3, 1079.6, 1081.5, 1100.4, 1111.5, 1096.5, 1082.4, 1092.3, 93.1, 771.4, 184.1, 184.4, 196.1, 205.2, 208.2, 208.4, 1310.4, 1180.1, 7.6, 855.3, 796.3, 714.6, 716.3, 795.5, 819.4, 1068.7, 1069.7, 297.1, 565.3, 565.4, 519.10, 1299.2, 667.4, 251.6, 223.4, 1070.7
 
 ## 19.23 Architekturregister und offene Nachweise
 
-**Zweck.** Dieser Abschnitt soll die Nachweise zur Architektur bündeln, die für Prüfungen und Freigaben verwendet werden. Das Material enthält für dieses Unterkapitel nur einen Abschnitt, der die Benachrichtigungsfunktion beschreibt. Ein Architekturregister mit Nachweisen liegt im Material nicht vor.
+**Zweck.** Dieser Abschnitt bündelt die Nachweise zur Architektur, die für Prüfungen und Freigaben verwendet werden. Das Material enthält für dieses Unterkapitel nur einen Abschnitt, der die Benachrichtigungsfunktion beschreibt. Ein Architekturregister mit Nachweisen liegt im Material nicht vor.
 
 **Ergebnis und Systemstatus.** Die Benachrichtigungsfunktion zeigt das Glockensymbol in der Navigationsleiste mit der Anzahl offener Benachrichtigungen. Die Anzahl zählt bis 9, darüber erscheint „9+“. Ein Klick öffnet das Benachrichtigungscenter auf der rechten Seite. Benachrichtigungen mit einer offenen Aktion sind mit einem blauen Punkt markiert. Erledigte Benachrichtigungen erscheinen nicht mehr.
 
@@ -898,9 +898,9 @@ Quellen: Batch 446.2
 3. Das übermittelte Erstzulassungsdatum prüft oneSCM gegen die Angabe in VeDoc zur übergebenen FIN. Stimmt das Datum überein, fährt oneSCM fort. Existiert in VeDoc kein Datum, speichert oneSCM das vom Kunden angegebene Datum und fährt fort.
 4. Weicht das Datum in VeDoc vom übermittelten Datum ab, verwendet oneSCM das Datum des Systems und meldet die Abweichung an die Fachabteilung Operations. Dort wird das Datum manuell geprüft.
 
-**Ergebnis und Systemstatus.** Das Erstzulassungsdatum im Vertrag stammt aus VeDoc oder ist vom Kunden angegeben. Bei einer Abweichung gilt das Systemdatum, bis die Fachabteilung entschieden hat.
+**Ergebnis und Systemstatus.** Das Erstzulassungsdatum im Vertrag stammt aus VeDoc oder ist vom Kunden angegeben. Bei einer Abweichung verwendet oneSCM das Systemdatum.
 
-**Besonderheiten je Sparte und Markt.** Die Prüfung des Erstzulassungsdatums gilt für die Fahrzeugdaten aus VeDoc in allen Märkten, in denen oneSCM VeDoc nutzt.
+**Besonderheiten je Sparte und Markt.** Die Prüfung betrifft Fahrzeuge aus den Bestellnummern GO, AFAB, VERSO und OTR.
 
 **Hinweise.** Die Kraftstoffart wird an Stream 2 übergeben. Die Abfragen für OTR-Fahrzeuge beschreibt Abschnitt 19.5. Die Abgleichsjobs für VeDoc beschreibt Abschnitt 19.4. Der Stand der Anpassungen zum Erstzulassungsdatum erfasst der Klärungsbedarf.
 
