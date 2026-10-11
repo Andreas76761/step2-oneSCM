@@ -313,13 +313,17 @@
     nodesAll.forEach(n => { const r = find(n); (chains[r] = chains[r] || []).push(n); });
     const rows = Object.values(chains).sort((a, b) => Number(a[0]) - Number(b[0]));
 
-    const width = Math.max(320, box.clientWidth);
-    const narrow = width < 560;
+    const avail = Math.max(240, box.clientWidth);
+    const narrow = avail < 560;
     const maxN = d3.max(rows, r => r.length);
-    const padX = 12, gap = narrow ? 28 : 56, rowH = 160, nodeH = 76;
-    const nodeW = Math.max(56, (width - 2 * padX - (maxN - 1) * gap) / maxN);
+    const padX = 12, gap = narrow ? 20 : 56, rowH = 160, nodeH = 76, minNodeW = 72;
+    const needed = 2 * padX + maxN * minNodeW + (maxN - 1) * gap;
+    const width = Math.max(avail, needed);
+    const nodeW = (width - 2 * padX - (maxN - 1) * gap) / maxN;
     const height = rows.length * rowH + 20;
-    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`);
+    box.style.overflowX = width > avail ? 'auto' : '';
+    const svg = d3.select(box).append('svg').attr('width', width > avail ? width : '100%').attr('viewBox', `0 0 ${width} ${height}`);
+    if (width > avail) svg.style('min-width', width + 'px');
     const defs = svg.append('defs');
     defs.append('marker').attr('id', 'hb-arrow').attr('viewBox', '0 0 10 10').attr('refX', 9).attr('refY', 5)
       .attr('markerWidth', 7).attr('markerHeight', 7).attr('orient', 'auto-start-reverse')
@@ -494,7 +498,9 @@
     const note = document.getElementById('tabelle-note');
     document.querySelectorAll('#teil-chips .hb-chip').forEach(c => c.classList.toggle('hb-on', c.textContent === S.teil));
     document.querySelectorAll('#tabelle th').forEach(th => {
-      const col = th.querySelector('button').dataset.col;
+      const btn = th.querySelector('button');
+      if (!btn) return;
+      const col = btn.dataset.col;
       th.setAttribute('aria-sort', S.sortCol === col ? (S.sortDir > 0 ? 'ascending' : 'descending') : 'none');
     });
     if (d.status === 'error' || d.status === 'connect') { note.textContent = 'Die Gliederung konnte nicht geladen werden.'; return; }
