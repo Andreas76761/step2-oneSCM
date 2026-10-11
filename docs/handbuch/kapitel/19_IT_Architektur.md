@@ -315,7 +315,7 @@ Für einen neuen Kunden sendet oneSCM eine POST-Anfrage mit der CMD-Struktur an 
 
 Die Felder für Kunden der Slowakei lauten wie folgt. Die Region stammt aus der Google-API, Feld administrative_area_level_1, umfasst höchstens 35 Zeichen und ist für alle Kundenarten verpflichtend. Die Personal ID umfasst 15 alphanumerische Zeichen und kann Sonderzeichen wie einen Schrägstrich enthalten. Die Sichtbarkeit der Personal ID richtet sich nach den Markteinstellungen. Als Zahlungsart steht die Kreditkarte zur Verfügung. Eine SEPA-Datei und ein Lastschriftcode sind für die Slowakei nicht erforderlich.
 
-Der Löschkennzeichen-Status (DeletionIndicator) des Finanzsystems mit dem Feld DeletionIndicator ist führend. Hat das Kennzeichen den Wert „true“, zeigt oneSCM „Marked for Deletion“ an, unabhängig von weiteren Status. Andernfalls zeigt oneSCM „Blocked“. Bei Firmenkunden wertet oneSCM das Kennzeichen ebenfalls aus. Für inaktive Kunden löscht oneSCM die SAP- und SEPA-Informationen und hält dies in der Kundenhistorie fest. Der FI-Status wird für diese Kunden nicht mehr synchronisiert. Legen Sie einen neuen Servicevertrag an, prüft oneSCM die SAP- und SEPA-Daten erneut. Änderungen im Finanzsystem sind damit zum Zeitpunkt des neuen Vertrags berücksichtigt.
+Der Löschkennzeichen-Status des Finanzsystems mit dem Feld DeletionIndicator ist führend. Hat das Kennzeichen den Wert „true“, zeigt oneSCM „Marked for Deletion“ an, unabhängig von weiteren Status. Andernfalls zeigt oneSCM „Blocked“. Bei Firmenkunden wertet oneSCM das Kennzeichen ebenfalls aus. Für inaktive Kunden löscht oneSCM die SAP- und SEPA-Informationen und hält dies in der Kundenhistorie fest. Der FI-Status wird für diese Kunden nicht mehr synchronisiert. Legen Sie einen neuen Servicevertrag an, prüft oneSCM die SAP- und SEPA-Daten erneut. Änderungen im Finanzsystem sind damit zum Zeitpunkt des neuen Vertrags berücksichtigt.
 
 Wird bei der Kundenanlage ein Treffer gefunden und wählt der Benutzer dennoch die Neuanlage, übernimmt oneSCM die USt-IdNr. automatisch in den neuen Kunden. Die SAP-Debitorennummer ist alphanumerisch zulässig.
 
@@ -463,7 +463,7 @@ Ist MPay ausgeschaltet, sind alle MPay-Felder nur lesbar, und vorhandene Werte b
 **Regelfall.** Der Händler wählt Produkt und Kundendaten und die Zahlungsart MPay. Das System prüft, ob ein Mercedes me Konto vorhanden ist. Anschließend folgt die Aktivierung ohne Erfassung von Kartendaten.
 
 1. Nach der Aktivierung erzeugt oneSCM den MPay-Zahlungslink, sobald der CFDM-Batch gelaufen ist und die Rechnung den Status „Accepted“ erreicht hat.
-2. Die Aktivierungs-E-Mail enthält einen Link zum Customer Account Center (CAC). Der Kunde öffnet das CAC per OTP, wählt „Bezahlen“, gibt seine Kartendaten ein und schließt die Zahlung ab. Dabei speichert MPay kein Asset.
+2. Die Aktivierungs-E-Mail enthält einen Link zum Customer Account Center, kurz CAC. Der Kunde öffnet das CAC per OTP, wählt „Bezahlen“, gibt seine Kartendaten ein und schließt die Zahlung ab. Dabei speichert MPay kein Asset.
 3. oneSCM erhält die MPay-Benachrichtigungen für autorisiert und eingezogen, markiert die Rechnung als bezahlt und übermittelt die Details an das Finanzsystem.
 
 **Zahlung vor der Aktivierung.** Revenue erzeugt den Zahlungsplan und bestätigt ihn dem Vertrag. Der Vertrag sendet dem Kunden eine E-Mail mit dem Link zum CAC. Nach dem Aufruf des CAC prüft der Vertrag die Zahlungsberechtigung. Ist die Zahlung möglich, fordert der Vertrag bei Revenue einen Zahlungslink an. Betrag und Gültigkeit stammen aus den Markteinstellungen, „Payment Validity“. Das CAC zeigt Link, Betrag und optional die Gültigkeit an. Läuft der Link ab, zeigt das CAC einen Fehler, und die Schaltfläche „Regenerate“ wird im CAC und in den MO Checks aktiv. Nach der Neuerzeugung steht der Status in den MO Checks auf „Pending“. Der Customer-&-Partner-Microservice fragt den Zahlungsstatus per Short Polling bei Revenue ab. Das CAC zeigt danach „Payment Successful“ oder „Payment Failed“.
@@ -484,7 +484,7 @@ Der Kunde ruft das CAC über die E-Mail auf und meldet sich mit Mercedes me an. 
 
 Aktualisiert der Kunde seine Kartendaten nicht, versendet das System Erinnerungen. Der Abstand beträgt die Anzahl der Tage bis zum Ablauf geteilt durch drei. Vor jedem Versand prüft das System, ob der Kunde die Daten bereits aktualisiert hat, und beendet dann die Erinnerungen. Als aktualisiert gelten die Kartendaten, sobald MPay eine neue Asset-ID samt NTR liefert.
 
-**Mastercard Transaction Link ID.** oneSCM speichert und verwendet die Transaction Link ID (TLID) für Mastercard im Zahlungsablauf über MPay. Die TLID verknüpft eine Ausgangstransaktion mit allen Folgetransaktionen des Vertrags, also den Customer Initiated Transactions, kurz CIT, und den Merchant Initiated Transactions, kurz MIT,. Die TLID ist eine global eindeutige Zeichenkette. Die NTR-Werte bleiben ebenfalls in Verwendung und werden auf dieselbe Weise gespeichert.
+**Mastercard Transaction Link ID.** oneSCM speichert und verwendet die Transaction Link ID, kurz TLID, für Mastercard im Zahlungsablauf über MPay. Die TLID verknüpft eine Ausgangstransaktion mit allen Folgetransaktionen des Vertrags, also den Customer Initiated Transactions, kurz CIT, und den Merchant Initiated Transactions, kurz MIT,. Die TLID ist eine global eindeutige Zeichenkette. Die NTR-Werte bleiben ebenfalls in Verwendung und werden auf dieselbe Weise gespeichert.
 
 Bei neuen Verträgen entsteht die TLID in der ersten CIT, in der Regel einer Zero-Authorization mit starker Kundenauthentifizierung. oneSCM speichert sie und verwendet sie für alle folgenden MITs. Bei bestehenden Verträgen ohne TLID übernimmt oneSCM die TLID aus der ersten MIT-Antwort, die eine enthält. Eine gespeicherte TLID überschreibt oneSCM nicht. Jede MIT-Anfrage enthält die TLID im Zahlungsobjekt. Fehlt eine gültige TLID, löst oneSCM eine neue CIT mit SCA aus, etwa über eine Zahlungsanfrage mit dem Betrag null und dem hinterlegten Asset. Für die Anforderung der starken Kundenauthentifizierung ist der Parameter challengeRequested vorgesehen.
 
@@ -527,3 +527,31 @@ Bei Verträgen mit Vor- und Nachaktivierung bleiben Rechnungen im Status „Acce
 **Fehlerbehebung.** Schlägt eine Zahlung fehl, prüfen Sie den MPay-Status in der Statushistorie. Ist die Wiederholung abgeschlossen, starten Sie die Zahlung über „Retry“ erneut. Ist der Zahlungslink abgelaufen, erzeugt „Regenerate“ einen neuen Link. Erscheint eine Meldung zu einer abgelehnten Zahlung, wählen Sie den Link in der Meldung und prüfen Sie die Rechnung.
 
 Quellen: Batch 157.1, 182.1, 129.2, 220.1, 216.1, 135.1, 194.1, 194.2, 160.1, 160.2, 173.1, 197.1, 215.2, 905.2, 376.2, 148.1, 903.6, 164.4, 577.4, 543.2, 905.5, 806.6, 567.1, 199.6, 217.1, 148.2
+
+## 19.17 DATIX – Manuelle Übergabe
+
+**Zweck.** Dieser Abschnitt beschreibt die manuellen Eingriffe, mit denen Mitarbeitende der Market Operation einen laufenden Batch-Job beenden und einen Rollback auslösen können. Eine automatisierte Übergabe von Kundendaten an das DATIX-System beschreibt das Material nicht. Der Stand des Kundendatenexports für DATIX erfasst der Klärungsbedarf.
+
+**Voraussetzungen.** Der Batch-Job läuft, und Sie sind als MO-Benutzer angemeldet. Die Schaltfläche „Stop“ erscheint nur, wenn der Job den Status „Running“ hat.
+
+**Rollen.** MO-Benutzer stoppen laufende Batch-Jobs. Die Protokollierung in Datadog hält fest, wer den Job gestoppt hat.
+
+**Ablauf des manuellen Stopps.**
+
+1. Öffnen Sie im Admin-Bereich die Seite „Batch jobs“ und suchen Sie den laufenden Job.
+2. Wählen Sie in der Spalte „Action“ die Schaltfläche „Stop“. Solange der Job läuft, ist die Option „Run now“ deaktiviert.
+3. oneSCM setzt den Job auf den Status „Stopped“, der rot dargestellt wird, und trägt den Namen des Benutzers als User-ID ein.
+4. oneSCM führt einen Rollback aus. Alle während der Laufzeit geänderten Daten und alle erzeugten Sequenzen gehen auf den Stand vor dem Start zurück.
+
+Wird der CFDM-Batch gestoppt, setzt oneSCM Rechnungen mit dem Status „Accepted“ auf „Planned“ oder „Created“ zurück. Wurde beim Stopp eine oneERP-Datei erzeugt und sind Rechnungen als exportiert markiert, löscht oneSCM die Datei, auch aus S3. Die Rechnungen erhalten ihren Ausgangszustand zurück, zum Beispiel Status und FI-Processing-Nummer.
+
+**Ergebnis und Systemstatus.** Ein gestoppter Job zeigt den Status „Stopped“. Die Daten entsprechen dem Stand vor dem Start des Jobs.
+
+**Besonderheiten je Sparte und Markt.** Die Rückabwicklung der Export-Dateien betrifft oneERP-Dateien und die entsprechenden Rechnungen.
+
+**Hinweise.** Der Rollback setzt die Daten zurück und löscht erzeugte Dateien. Die Übersicht der Batch-Jobs beschreibt Abschnitt 19.22.
+
+**Fehlerbehebung.** Ein Job, der nicht mehr beendet werden kann, lässt sich über „Stop“ abbrechen. Die Warnung in Datadog nennt den Benutzer, der den Job gestoppt hat.
+
+Quellen: Batch 225.1, 617.4, 1288.1
+

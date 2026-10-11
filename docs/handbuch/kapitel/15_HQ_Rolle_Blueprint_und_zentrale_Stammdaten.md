@@ -44,7 +44,7 @@ Quellen: keine
 *Schritt 3, Übersicht.*
 
 15. Prüfen Sie die Übersicht mit der Bezeichnung „Overview & Confirmation“. Sie zeigt alle Angaben aus den Schritten 1 und 2. Beim Ablaufkriterium sehen Sie Ihre Auswahl als Einzel- oder Mehrfachauswahl, je nach Konfiguration. Von hier aus erstellen Sie den Blueprint.
-16. Aus den Schritten 2 und 3 kehren Sie jederzeit zu den vorherigen Schritten zurück und ändern bereits ausgefüllte Angaben.
+16. Aus den Schritten 2 und 3 gelangen Sie zu den vorherigen Schritten zurück und ändern bereits ausgefüllte Angaben.
 
 *Blueprint bearbeiten.*
 
@@ -58,12 +58,12 @@ Quellen: keine
 21. Legen Sie den neuen Deckungscode in den VEGA Codes an, wie in Kapitel 15.7 beschrieben. Öffnen Sie danach den Blueprint und fügen Sie den Deckungscode hinzu.
 22. Ist der Blueprint bereits in einem Produkt verwendet, erscheint am Ende des Blueprint-Ergebnisses eine Hinweismeldung. Sie bestätigt die Änderung und weist auf die Auswirkungen auf die zugehörigen Produkte hin.
 23. Deaktivieren Sie das Produkt, das diesen Blueprint nutzt.
-24. Öffnen Sie das deaktivierte Produkt zur Bearbeitung. Einmalig erscheint ein Banner, dass der Blueprint aktualisiert wurde. Das Banner erscheint nur beim ersten Bearbeiten, bis der Wizard abgeschlossen ist.
+24. Öffnen Sie das deaktivierte Produkt zur Bearbeitung. Einmalig erscheint ein Banner, dass der Blueprint aktualisiert wurde. Das Banner erscheint nur beim ersten Bearbeiten, bis Sie den Wizard speichern.
 25. Wählen Sie im Schritt 4 „Coverages“ die Schaltfläche „Edit Coverages“. Das Fenster zeigt die geänderten Deckungen aus dem Blueprint. Hinzugefügte und entfernte Deckungen sind klar voneinander unterschieden. Als „NOT INCLUDED“ markierte Deckungen erscheinen bei jeder weiteren Bearbeitung des Produkts nicht im Fenster. Hinzugefügte Deckungscodes bleiben immer zur Auswahl sichtbar.
 
 *Blueprint löschen.*
 
-26. Wählen Sie „Löschen“ und bestätigen Sie den Vorgang. Der Blueprint wird dauerhaft entfernt und steht danach bei der Erstellung neuer Produkte nicht mehr zur Verfügung. Bestehende Marktprodukte und Verträge sind davon nicht betroffen.
+26. Wählen Sie „Löschen“ und bestätigen Sie den Vorgang. Der Blueprint wird dauerhaft entfernt und steht danach bei der Erstellung neuer Produkte nicht mehr zur Verfügung. Bestehende Marktprodukte und Verträge bleiben davon unberührt.
 
 **Ergebnis und Systemstatus.** Ein gespeicherter Blueprint steht in allen Märkten für die Produkterstellung bereit. Die Tabelle „Manage Product Blueprints“ ist nach Geschäftsbereich sortiert, daher gibt es dort keinen zusätzlichen Filter. Wird der Name eines Blueprints im Blueprint-Bereich geändert, aktualisiert sich der Name in der Produktübersicht. Ein Blueprint, zu dem ein veröffentlichtes Produkt existiert, lässt sich bearbeiten. Wird im ersten Schritt die Division gewechselt, setzt das System die Deckungen zurück; die Zusammenfassung ist erst erreichbar, wenn Deckungen ausgewählt sind. Die Verkaufslogik bleibt beim Wechsel zwischen Schritt 1 und Schritt 2 erhalten. Ein Produkt erbt aus dem Blueprint die Felder Sales Dependency, Verkaufslogik, Rabatte, Branchen, Ablaufkriterien und Lieferant. Die Auswahl im Produkt beschreibt Kapitel 14.8.
 
@@ -181,7 +181,7 @@ K/JX-Codes werden in der Vertragserstellung verwendet. Bei einem Fahrgestelliden
 **Fehlerbehebung.**
 
 - Nach dem Speichern der Market Settings erscheint die Meldung „Settings saved successfully“. Der eingegebene Text bleibt erhalten.
-- Ist die Vertragsanlage für ein gesperrtes Fahrzeug nicht möglich, erscheint die Meldung „locked vehicle - no products available“.
+- Ist die Vertragsanlage für ein gesperrtes Fahrzeug nicht möglich, erscheint die Meldung „locked vehicle“ mit dem Zusatz „no products available“.
 - Ist ein Pflichtfeld im ISP-Wizard leer, lässt sich der Wizard nicht abschließen. Ergänzen Sie die Angabe und fahren Sie fort.
 
 Quellen: Batch 1130.1, 884.1, 884.3, 5.1, 4.1, 1116.1, 1129.1, 994.2, 1197.1, 1208.1
@@ -343,12 +343,12 @@ Quellen: Batch 1220.2, 1220.3, 1264.2, 1191.1, 1162.1, 1161.3, 1160.4, 1263.1, 1
 | Schadencodes bei der manuellen Erfassung einer Werkstattrechnung | 11.5 Werkstatt- und Lieferantenbezüge | 732.1 |
 | Kostenstelle und Lieferantenpreis je Deckungscode, Branchenpreise | 14.14 Preiskomponenten, Cost Unit Split und Inflation | 127.2, 1203.2 |
 | Branchencode in den Basis-Data-Products | 19.19 Datenplattformen und Reporting | 321.8 |
-| i155-Erzeugung bei Vertragsende vor Vertragsbeginn, Logdatei, eindeutige Coverage-ID in Satzart RC20 | 19.9 VEGA – Vertrag, Coverage und Claim | 842.2 |
-| CePro-Import von E-Performance-Fahrzeugen mit 4Matic | 19.4 CEPRO – Van-Fahrzeugstammdaten | 1254.1 |
+| i155-Erzeugung bei Vertragsende vor Vertragsbeginn, Logdatei, eindeutige Coverage-ID in Satzart RC20 | 19.9 VEGA: Vertrag, Coverage und Claim | 842.2 |
+| CePro-Import von E-Performance-Fahrzeugen mit 4Matic | 19.4 CEPRO: Van-Fahrzeugstammdaten | 1254.1 |
 | Name von Fahrzeuggruppen mit höchstens 100 Zeichen, Ausrichtung der Seite Technical Options | 14.11 Fahrzeuggruppen und Van-Baumuster-Clustering | 1258.5 |
 | Rollen für Passenger Cars und Vans, einheitlicher Geschäftsbereichsfilter in allen Bereichen | 2.2 Fachliche Rollen und technische Berechtigungen; 21.1 Spartenprofil und Abgrenzung Pkw/Van; 14.6 Marktbezogene Sichtbarkeit und Berechtigungen | 603.1 |
-| Aktualisierung von SA-Codes aus externen Bestellsystemen, wiederholbare Produktabfrage | 22.2 Ausblick und offene Anforderungen | 1143.5 |
-| Erweiterung des Produkt-Blueprints für den Anwendungsfall MBLD | 22.2 Ausblick und offene Anforderungen | 1143.6 |
+| Aktualisierung von SA-Codes aus externen Bestellsystemen, wiederholbare Produktabfrage | 22.2 Ausblick | 1143.5 |
+| Erweiterung des Produkt-Blueprints für den Anwendungsfall MBLD | 22.2 Ausblick | 1143.6 |
 | Definition eines Produkt-Blueprints für das Produkt „Excellent“ und Optimierung der Blueprint-Logik | Anhang F Quellen und Klärungsregister | 1244.5 |
 | Vertragsstartdatum aus der Verkaufslogik und Garantiedauer beim Erfassen des Vertrags | 6.2 Vertragsdaten und Pflichtfelder erfassen | 1118.1 |
 
@@ -360,7 +360,7 @@ Quellen: Batch 1220.2, 1220.3, 1264.2, 1191.1, 1162.1, 1161.3, 1160.4, 1263.1, 1
 2. Länge des Blueprint-Namens: Batch 1219.3 nennt 3 bis 100 Zeichen. Batch 1264.3 und Batch 1268.2 nennen 3 bis 30 Zeichen. Der Text folgt den beiden letzten Quellen.
 3. VEGA-Vertragstyp: Batch 1219.3 nennt 1 bis 11 Zeichen. Die Fehlermeldung in derselben Quelle nennt 6 Zeichen, das Beispiel P_ABC_XYZ hat 9 Zeichen. Die Meldung nennt zusätzlich Bindestriche, die Regel nur Unterstriche. Der Text folgt der Regel.
 4. Werte der Verkaufslogik: Batch 1118.1 nennt die Werte FRD, Sales date und Future date. Batch 1183.2 nennt FRD Related, FRD Not Related und Used Car Related. Batch 1163.2 nennt die Sales Logic als Multi Select mit den Werten FRD Related und FRD Not Related. Batch 1183.2 verknüpft die Obergrenzenlogik für Used Car Related mit dem Vorhaben ONESCM-31107. Der Zeitpunkt, zu dem dieses Vorhaben die Logik ablöst, fehlt. Der Text folgt Batch 1118.1.
-5. Änderung von Coverages im Blueprint: Batch 1219.4 beschreibt, dass hinzugefügte Optional und Body Coverages in den Produkten als „Not included“ ergänzt und entfernte Coverages aus den Produkten entfernt werden. Batch 1259.2 nennt, dass nur Produkte betroffen sind, die nach der Aktualisierung erstellt werden. Batch 1149.1 beschreibt die Übernahme für ein deaktiviertes Produkt bei dessen Bearbeitung. Der Text folgt Batch 1259.2 und Batch 1149.1.
+5. Änderung von Coverages im Blueprint: Batch 1219.4 beschreibt, dass hinzugefügte Optional und Body Coverages in den Produkten als „Not included“ ergänzt und entfernte Coverages aus den Produkten entfernt werden. Batch 1259.2 nennt, dass sich die Änderung nur auf Produkte auswirkt, die nach der Aktualisierung erstellt werden. Batch 1149.1 beschreibt die Übernahme für ein deaktiviertes Produkt bei dessen Bearbeitung. Der Text folgt Batch 1259.2 und Batch 1149.1.
 6. Vertriebsabhängigkeit: Batch 1274.3 nennt die Vertriebsabhängigkeit als Feld in Schritt 1 des Blueprints. Batch 1192.2 und Batch 1219.3 führen die Felder von Schritt 1 ohne sie auf. Der Text folgt Batch 1274.3.
 7. Zuordnung der Lieferanten: Batch 710.2 nennt, dass jedem Deckungscode nur ein Lieferant zugeordnet sein kann. Batch 571.1 nennt, dass ein Deckungscode bei mehreren Lieferanten verwendet und je Lieferant unterschiedlich konfiguriert werden kann. Batch 710.2 nennt die Zahlungspläne „Light“ und „Normal“ oder „Full“, Batch 571.1 nennt „Light Billing“ und „Full Billing“.
 8. Schadencodes und Märkte: Batch 731.3 erlaubt die Auswahl mehrerer Märkte mit Beschreibungen je Markt. Batch 732.1 nennt Schadencodes, die allen Märkten zur Verfügung stehen. Batch 884.3 nennt, dass ein Schadencode genau einem Markt gehört und keine Zuordnung zum eigenen Markt vorgesehen ist. Batch 731.3 nennt „Code Description“ und „Type Description“, Batch 884.3 nennt „Code Name“ und „Type Description“. Zu bestätigen.
