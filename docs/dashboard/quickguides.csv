@@ -1,177 +1,177 @@
 kapitel,titel,art,variante,seiten,url
-Alle,Alle Quick Guides in einer Datei,Alle,Van,86,/_blob/ac7f6acfe55be12b3003454b3ad3a075
-1,Einführung und Überblick,Kapitel,Van,2,/_blob/83192b0482b425b6a9c20cf2e90ba45d
-2,"Zugang, Rollen und Berechtigungen",Kapitel,Van,2,/_blob/1529bc2cfc788f5a184c2b5040dc26cb
-3,"Grundlagen, Navigation und Customer Journey",Kapitel,Van,2,/_blob/71c0613128281918091e96dbd7f84101
-4,"Kunden, Partner und Vertragsrollen",Kapitel,Van,2,/_blob/f42bb8f29685ac19d6641f37ef99e25b
-5,"Fahrzeug, Produkt und Angebot vorbereiten",Kapitel,Van,2,/_blob/e8dfd0d642328a86dd70ec603fb86d55
-6,Servicevertrag anlegen und Antrag abschließen,Kapitel,Van,2,/_blob/c1b4d2bbb8af32f3f50a4b81d45a7ca0
-7,"Zahlungsdaten, Dokumente und Unterschrift",Kapitel,Van,2,/_blob/368bf7a0aeaccbb21ac926f4c9a5c853
-8,Antrag verfolgen und aktivieren,Kapitel,Van,2,/_blob/4d2a7bdfde97b10a23f567766d6c8636
-9,MO Checks und fachliche Prüfungen,Kapitel,Van,2,/_blob/77465b27026f4a318869ce5fae12250a
-10,Verträge im Alltag verwalten,Kapitel,Van,2,/_blob/2f82837e210177f71ea942b07302dbc0
-11,"Rechnung, Zahlung, Kosten und Auswertungen",Kapitel,Van,2,/_blob/52618a0981ad60b80a805d5909073504
-12,"Geschäftskunden, Kampagnen und Sonderfälle",Kapitel,Van,2,/_blob/d06c9695eb60bcebb1b96c5a82bcf38b
-13,Reifenprodukte – Tyres,Kapitel,Van,2,/_blob/ab9a3468c9b32e375920fcd79099412e
-14,"Marktrolle, Produkt- und Preispflege sowie Administration",Kapitel,Van,2,/_blob/9b844cd8948afc2b3e8fe85f2b154771
-15,"HQ-Rolle, Blueprint und zentrale Stammdaten",Kapitel,Van,2,/_blob/c9587a3b098d9a304e5ad80d757c6c66
-16,"Governance, Qualität, Datenschutz und Archivierung",Kapitel,Van,2,/_blob/c28f42f7efdbff85236be5a3487f688b
-17,Rollout und Einführung,Kapitel,Van,2,/_blob/dc10b4d850e59ef1e91999cbdd8ae082
-18,Migration und Übernahme von Bestandsdaten,Kapitel,Van,2,/_blob/620c1c72ea7bd3534dd2ad497a240487
-19,IT Architektur,Kapitel,Van,2,/_blob/b7e5d0c18f135ecb8e3a9b24be5124e3
-20,Länderspezifische Themen,Kapitel,Van,2,/_blob/d1edb1306f7220ac717341d0c828fc21
-21,Spartenspezifische Themen,Kapitel,Van,2,/_blob/c54cc64e020924f92e75795a06375a42
-22,Ausblick und Weiterentwicklung,Kapitel,Van,2,/_blob/756124f9ce3a720233631efb9f9a9c3f
-23,"FAQ, Troubleshooting und Support",Kapitel,Van,2,/_blob/82d997e515f4b53b2cfc68eb9c698848
-A.1,Glossar und Abkürzungen,Anhang,Van,2,/_blob/f79ff5be8241a9aec776cffe0e851f0e
-B.1,Alltagschecklisten,Anhang,Van,2,/_blob/cf6ea5a4bc8aa193b4924eea9c80541b
-C.1,Prozessdiagramme,Anhang,Van,2,/_blob/85ae9193a6f82cfff52f7e1e98501702
-D.1,Rollen-/Status-/Scopematrizen,Anhang,Van,2,/_blob/d38b5e031c9ffb874a39d6ecf598c357
-E.1,Ticket-zu-Kapitel-Zuordnung,Anhang,Van,2,/_blob/64a6026f21d7afbf3855fdeaa9371cfa
-F.1,Quellen und Klärungsregister,Anhang,Van,2,/_blob/edb65985325ec0109add0e0a5ee6bce2
-G.1,Bildverzeichnis und Nachweise,Anhang,Van,2,/_blob/e11271765120dac0f94b1b215eaf2b9a
-H.1,Wissenschecks und Lösungen,Anhang,Van,2,/_blob/8125c9412652ae41226c688146321231
-I.1,Praxisbeispiele entlang des Vertragsprozesses,Anhang,Van,2,/_blob/3fe044c39e00617f5b8ef7d19db08e64
-I.2,Rechenbeispiele und Finanzbezug,Anhang,Van,2,/_blob/27fe27fb114724ef621eb5dd7bc79a1b
-I.3,Testdatenkatalog und Nachweise,Anhang,Van,2,/_blob/8ec8629ddba00fce51dc124e195d2cef
-T6-7,Vom gespeicherten Antrag zu Zahlungsdaten und Signatur,Übergangsmodul,Van,2,/_blob/39edf3a1a000e904f03e3e1ba1856a1a
-T7-8,Von Dokumenten und Signatur zur Aktivierungsprüfung,Übergangsmodul,Van,2,/_blob/59b0a735e4c00093efb81556e28ec4a8
-T8-9,Gesamtprozess und MO-Rollenvertiefung,Übergangsmodul,Van,2,/_blob/2b594dcf2a34aaa3cb9822399c999652
-T9-10,Vom Prüfergebnis zur laufenden Vertragsverwaltung,Übergangsmodul,Van,2,/_blob/725a858136eed4215aceb2c5ef3833ff
-T14-15,Marktpflege und zentrale Vorgaben verbinden,Übergangsmodul,Van,2,/_blob/87b90914a80a941d813e60573932e345
-T15-14,Zentrale Grundlagen an die Marktpflege übergeben,Übergangsmodul,Van,2,/_blob/cc1291ddfdec8a3b283fd17f8842197a
-T15-16,Von der Pflegeentscheidung zum Governance-Nachweis,Übergangsmodul,Van,2,/_blob/657740f6a1831ad9939c87b94d753b1f
-V.1,Willkommen und Dokumentkontext,Vorspann,Van,2,/_blob/02778f1d6ed79f8b22814672ed3a6260
-V.2,Inhaltsverzeichnis und Lesepfade,Vorspann,Van,2,/_blob/694e9868f5c7021085c8ef8652ed52dd
-Alle,Alle Quick Guides in einer Datei,Alle,Pkw,86,/_blob/ec8d459247faa37a4a86c804be284e54
-1,Einführung und Überblick,Kapitel,Pkw,2,/_blob/0a164a351dae24065d9454a2d5cf3b4d
-2,"Zugang, Rollen und Berechtigungen",Kapitel,Pkw,2,/_blob/b7baed8a8fe4bdf219135a65840a7f50
-3,"Grundlagen, Navigation und Customer Journey",Kapitel,Pkw,2,/_blob/464d3c98c413d6fe6006f815e3d93181
-4,"Kunden, Partner und Vertragsrollen",Kapitel,Pkw,2,/_blob/74cbf15570b3ffd56c45403b148dae00
-5,"Fahrzeug, Produkt und Angebot vorbereiten",Kapitel,Pkw,2,/_blob/30400c2ff8b0fcdc0e05053bdc9d68c1
-6,Servicevertrag anlegen und Antrag abschließen,Kapitel,Pkw,2,/_blob/9a110a58b9a3cb090f8f31b6b6cd3112
-7,"Zahlungsdaten, Dokumente und Unterschrift",Kapitel,Pkw,2,/_blob/c55efa7e636e5813c1af1167454608a8
-8,Antrag verfolgen und aktivieren,Kapitel,Pkw,2,/_blob/7565e4020e5837adab60f937345d49eb
-9,MO Checks und fachliche Prüfungen,Kapitel,Pkw,2,/_blob/9d7705d1eb01e18b030c54d0eeccb84e
-10,Verträge im Alltag verwalten,Kapitel,Pkw,2,/_blob/3a9325da2a6bc4889fc587f1f786dccf
-11,"Rechnung, Zahlung, Kosten und Auswertungen",Kapitel,Pkw,2,/_blob/e73eca083617faf2df3ee276ead45964
-12,"Geschäftskunden, Kampagnen und Sonderfälle",Kapitel,Pkw,2,/_blob/87f961e53e21d3a2caa0f8fc62fcb777
-13,Reifenprodukte – Tyres,Kapitel,Pkw,2,/_blob/46665db77304f5d970cf81c4d797c73f
-14,"Marktrolle, Produkt- und Preispflege sowie Administration",Kapitel,Pkw,2,/_blob/3877f3263f1197b6b997fac29f1f90ae
-15,"HQ-Rolle, Blueprint und zentrale Stammdaten",Kapitel,Pkw,2,/_blob/42ec837373304173f36b244031a51b54
-16,"Governance, Qualität, Datenschutz und Archivierung",Kapitel,Pkw,2,/_blob/47064c5b8616e33bcba7fd7ffa5a22b2
-17,Rollout und Einführung,Kapitel,Pkw,2,/_blob/671a1829f20242dfbc36fa630af645f4
-18,Migration und Übernahme von Bestandsdaten,Kapitel,Pkw,2,/_blob/7089cca2d4e0bd6e0fb477d55a3fd9bc
-19,IT Architektur,Kapitel,Pkw,2,/_blob/e2cacb0f089275994d28cc1f7b4e6fb1
-20,Länderspezifische Themen,Kapitel,Pkw,2,/_blob/42bdd36387715085c084d6615569f060
-21,Spartenspezifische Themen,Kapitel,Pkw,2,/_blob/ead5819ad04deb995b173f6146a9f625
-22,Ausblick und Weiterentwicklung,Kapitel,Pkw,2,/_blob/1271b42388eedf107d0e7e999006c1ff
-23,"FAQ, Troubleshooting und Support",Kapitel,Pkw,2,/_blob/315a04d63763c011a43a91faf44442bc
-A.1,Glossar und Abkürzungen,Anhang,Pkw,2,/_blob/b1883092bc35e7eabc13364ad2322f50
-B.1,Alltagschecklisten,Anhang,Pkw,2,/_blob/bdcf296b1448ae5ea30eea71554c9621
-C.1,Prozessdiagramme,Anhang,Pkw,2,/_blob/446418cb337108f2d49cbf87a6950557
-D.1,Rollen-/Status-/Scopematrizen,Anhang,Pkw,2,/_blob/d3ae3bcbe10ad35fe3a86c45e7df6f38
-E.1,Ticket-zu-Kapitel-Zuordnung,Anhang,Pkw,2,/_blob/342d3238064ea1b5d8322b8bfcfc907c
-F.1,Quellen und Klärungsregister,Anhang,Pkw,2,/_blob/2defe75ad38e703cd6f9eedc20df1e78
-G.1,Bildverzeichnis und Nachweise,Anhang,Pkw,2,/_blob/7b15e8833466c5e0b5bea195c5ab47e6
-H.1,Wissenschecks und Lösungen,Anhang,Pkw,2,/_blob/47bb77a7f1178d04749a716a8fa19672
-I.1,Praxisbeispiele entlang des Vertragsprozesses,Anhang,Pkw,2,/_blob/0e5a490f3e643b5e13a261c61ea93903
-I.2,Rechenbeispiele und Finanzbezug,Anhang,Pkw,2,/_blob/0c4cfeb8b3aab19d731ccdb032c015d0
-I.3,Testdatenkatalog und Nachweise,Anhang,Pkw,2,/_blob/f15bd15b3606a60aa36475eeb002f676
-T6-7,Vom gespeicherten Antrag zu Zahlungsdaten und Signatur,Übergangsmodul,Pkw,2,/_blob/05862764719a9e0e907fe820abf1cbde
-T7-8,Von Dokumenten und Signatur zur Aktivierungsprüfung,Übergangsmodul,Pkw,2,/_blob/29fb81f4ee64291a39b8a54e12a93f04
-T8-9,Gesamtprozess und MO-Rollenvertiefung,Übergangsmodul,Pkw,2,/_blob/5efe944888cdd7d20c9d1cc5a872c683
-T9-10,Vom Prüfergebnis zur laufenden Vertragsverwaltung,Übergangsmodul,Pkw,2,/_blob/936d4411c113df435b316b2bc3ab7c60
-T14-15,Marktpflege und zentrale Vorgaben verbinden,Übergangsmodul,Pkw,2,/_blob/4bf75b9a5b1cf971e38e9af98d68d1d9
-T15-14,Zentrale Grundlagen an die Marktpflege übergeben,Übergangsmodul,Pkw,2,/_blob/921988932c01b2d4bcd3ba4d55a02604
-T15-16,Von der Pflegeentscheidung zum Governance-Nachweis,Übergangsmodul,Pkw,2,/_blob/461e52967e82d8b6f40d1301e2b9251a
-V.1,Willkommen und Dokumentkontext,Vorspann,Pkw,2,/_blob/9cc0ef230f04b084af4e9a3a7abe3ab4
-V.2,Inhaltsverzeichnis und Lesepfade,Vorspann,Pkw,2,/_blob/34027e55d75dac5089ff9c3a0c176c17
-Alle,All Quick Guides in one file,Alle,EN Vans,86,/_blob/b606e69ebe3ff6b7546096932f20f501
-1,Introduction and Overview,Kapitel,EN Vans,2,/_blob/d54851e832f317fce3b97ad0494756c5
-2,"Access, Roles and Authorizations",Kapitel,EN Vans,2,/_blob/e31cedfee49055cd0f4516a5c95933d6
-3,"Basics, Navigation and Customer Journey",Kapitel,EN Vans,2,/_blob/4619e152b9bf99e4099fde7331f3c0f0
-4,"Customers, Partners and Contract Roles",Kapitel,EN Vans,2,/_blob/cb98a2838bec137df69ec11a9eb6705d
-5,"Preparing Vehicle, Product and Quote",Kapitel,EN Vans,2,/_blob/c156bae0ba6f28536c278d8f1be81cb2
-6,Creating a Service Contract and Completing the Application,Kapitel,EN Vans,2,/_blob/1126b5cc637da55497a06336b1a74a5e
-7,"Payment Data, Documents and Signature",Kapitel,EN Vans,2,/_blob/664b434e9942a82daa9ebf10480b1f93
-8,Tracking and Activating the Application,Kapitel,EN Vans,2,/_blob/2011fdf2419f46cd01c13bf301426467
-9,MO Checks and Business Reviews,Kapitel,EN Vans,2,/_blob/8dfc9ccfde48fac507dfdc8a8e50236c
-10,Managing Contracts in Daily Operations,Kapitel,EN Vans,2,/_blob/ce33457ba9baf2902435ee9d71337e3b
-11,"Invoicing, Payment, Costs and Reports",Kapitel,EN Vans,2,/_blob/eb2ff96efc8e22f172d77471353ec3b9
-12,"Business Customers, Campaigns and Special Cases",Kapitel,EN Vans,2,/_blob/aa27a70d45082ecf05b37169702bfb7e
-13,Tyre Products – Tyres,Kapitel,EN Vans,2,/_blob/9561a5185e8c597aeb2e6f7658d55f51
-14,"Market Role, Product and Price Maintenance and Administration",Kapitel,EN Vans,2,/_blob/4549494095211ad05a39ad432b935407
-15,"HQ Role, Blueprint and Central Master Data",Kapitel,EN Vans,2,/_blob/c9e2347e098b4c7cf0cd348e86f30442
-16,"Governance, Quality, Data Protection and Archiving",Kapitel,EN Vans,2,/_blob/3d577eb477d4ad1ed127b1966fb42644
-17,Rollout and Go-Live,Kapitel,EN Vans,2,/_blob/3c7042284632f2c0854a1cd75ec54474
-18,Migration and Transfer of Existing Data,Kapitel,EN Vans,2,/_blob/86efddf32fe98fd31c1bacbc7c9beac1
-19,IT Architecture,Kapitel,EN Vans,2,/_blob/615d15826938f958c9712810f05c753c
-20,Country-Specific Topics,Kapitel,EN Vans,2,/_blob/4a3326b5115d3d1d93e82ff500ca4a54
-21,Division-Specific Topics,Kapitel,EN Vans,2,/_blob/f2571e815435a11ab1fa247056e113ef
-22,Outlook and Further Development,Kapitel,EN Vans,2,/_blob/e82a7953236d9f382e9bfff560570934
-23,"FAQ, Troubleshooting and Support",Kapitel,EN Vans,2,/_blob/139503c9e6cb615ce58762f6bce4c72c
-A.1,Glossary and Abbreviations,Anhang,EN Vans,2,/_blob/202cc77be33f4276065e567b9e52e7c6
-B.1,Everyday Checklists,Anhang,EN Vans,2,/_blob/874e42ad4246bf8d995553a93cfd7dfe
-C.1,Process Diagrams,Anhang,EN Vans,2,/_blob/4a4f6a8530644b2cf31fbe875786c3b7
-D.1,Role/Status/Scope Matrices,Anhang,EN Vans,2,/_blob/2925785c03c0f36442ef34488388b48a
-E.1,Ticket-to-Chapter Mapping,Anhang,EN Vans,2,/_blob/08d3fd7dcb48dcf85ef5076da238ce03
-F.1,Sources and Clarification Register,Anhang,EN Vans,2,/_blob/67e77ccd5e7f82e2fd09353ad54189a0
-G.1,Figure Index and Evidence,Anhang,EN Vans,2,/_blob/2672c243281eaca6c2143edccea87b89
-H.1,Knowledge Checks and Solutions,Anhang,EN Vans,2,/_blob/410da6abbb8d71794af1a1814f1d6a82
-I.1,Practical Examples along the Contract Process,Anhang,EN Vans,2,/_blob/43e13c67685119f07cad285275612d0a
-I.2,Calculation Examples and Finance Reference,Anhang,EN Vans,2,/_blob/3c40daa1ab5b2640c4f99e0b51f4f6c5
-I.3,Test Data Catalog and Evidence,Anhang,EN Vans,2,/_blob/e8b7be2edb4afaaad11f653cc960b7e8
-T6-7,From Saved Application to Payment Data and Signature,Übergangsmodul,EN Vans,2,/_blob/0188577dcd0e6be689561f5e6570f289
-T7-8,From Documents and Signature to Activation Check,Übergangsmodul,EN Vans,2,/_blob/fab01e50a99a92a581213e10f4aef7f3
-T8-9,Overall Process and MO Role Deep Dive,Übergangsmodul,EN Vans,2,/_blob/7e2889daeb62f0018c7385dc807c84ec
-T9-10,From Review Result to Ongoing Contract Administration,Übergangsmodul,EN Vans,2,/_blob/0b8d6087284a163cc949a9edd3500e1f
-T14-15,Linking Market Maintenance and Central Requirements,Übergangsmodul,EN Vans,2,/_blob/5a8ec545fb04862f56d41a1d0915db1e
-T15-14,Handing Over Central Foundations to Market Maintenance,Übergangsmodul,EN Vans,2,/_blob/39ba73dc8074be8142162e4dcc1004c9
-T15-16,From Maintenance Decision to Governance Evidence,Übergangsmodul,EN Vans,2,/_blob/f10496e5e865da1255ff06586b751874
-V.1,Welcome and Document Context,Vorspann,EN Vans,2,/_blob/2a34edbf4be4a87c03a6d5576264bce8
-V.2,Table of Contents and Reading Paths,Vorspann,EN Vans,2,/_blob/e85747ce2ac9bd7a0cdb87cdfecbbcd7
-Alle,All Quick Guides in one file,Alle,EN Cars,86,/_blob/8ea37aa3021e9b095626fa77c7b71584
-1,Introduction and Overview,Kapitel,EN Cars,2,/_blob/9c09ee3667723a80dd1c374553960b90
-2,"Access, Roles and Authorizations",Kapitel,EN Cars,2,/_blob/c5662aad53381072993d02e4c6a5c165
-3,"Basics, Navigation and Customer Journey",Kapitel,EN Cars,2,/_blob/389fdf82a4fd65fbca8952289fd141ba
-4,"Customers, Partners and Contract Roles",Kapitel,EN Cars,2,/_blob/47d16157cf9b33700131a3c85d992673
-5,"Preparing Vehicle, Product and Quote",Kapitel,EN Cars,2,/_blob/6ecacd76158211fbeee032c697a7fbb3
-6,Creating a Service Contract and Completing the Application,Kapitel,EN Cars,2,/_blob/30892247d73c23406376e9b507ae4de7
-7,"Payment Data, Documents and Signature",Kapitel,EN Cars,2,/_blob/95b0556d60bc2f0b9f9d7b95226ed838
-8,Tracking and Activating the Application,Kapitel,EN Cars,2,/_blob/e9b286aa83b6bd81c5bb9722f281eadb
-9,MO Checks and Business Reviews,Kapitel,EN Cars,2,/_blob/a58b9e993a5528ed8172e6f23c1edb3e
-10,Managing Contracts in Daily Operations,Kapitel,EN Cars,2,/_blob/08a54b1e5d206f3eb91335201bfdcd61
-11,"Invoicing, Payment, Costs and Reports",Kapitel,EN Cars,2,/_blob/a8d2cdf42b776e94b4ee9d965c230477
-12,"Business Customers, Campaigns and Special Cases",Kapitel,EN Cars,2,/_blob/18ee265503e7eb197176e7bb143a23cd
-13,Tyre Products – Tyres,Kapitel,EN Cars,2,/_blob/07c5a5b8ed5ebe93f243616f6d2de111
-14,"Market Role, Product and Price Maintenance and Administration",Kapitel,EN Cars,2,/_blob/b0828f597bf6363ea04f89a59e1ea29a
-15,"HQ Role, Blueprint and Central Master Data",Kapitel,EN Cars,2,/_blob/4899f87518ec852c622a7150ff2c69f4
-16,"Governance, Quality, Data Protection and Archiving",Kapitel,EN Cars,2,/_blob/2b4965510919eaf2878f48b28d70bfa3
-17,Rollout and Go-Live,Kapitel,EN Cars,2,/_blob/93e53e44108e1a0cfa620ab0a9e16e6c
-18,Migration and Transfer of Existing Data,Kapitel,EN Cars,2,/_blob/065e84d405681e5f925bdcd3125cf43a
-19,IT Architecture,Kapitel,EN Cars,2,/_blob/2f4616b7b1dbcb3a683bdfedb513ae73
-20,Country-Specific Topics,Kapitel,EN Cars,2,/_blob/a921893fa2423eba4b0b2720c5a162bc
-21,Division-Specific Topics,Kapitel,EN Cars,2,/_blob/ff79dcf7c23e1c2ce459c9669e37df21
-22,Outlook and Further Development,Kapitel,EN Cars,2,/_blob/b1d63c317d8f8487ca960bb21813d4a7
-23,"FAQ, Troubleshooting and Support",Kapitel,EN Cars,2,/_blob/ef829e0474a24b23132a93e360a38e62
-A.1,Glossary and Abbreviations,Anhang,EN Cars,2,/_blob/8dc6cccc929b80b55100ce7aa6ec10fa
-B.1,Everyday Checklists,Anhang,EN Cars,2,/_blob/030248e0dc35b545b59033620965dd4d
-C.1,Process Diagrams,Anhang,EN Cars,2,/_blob/1f60a202c1c3c605b3dab4f4d0a656d3
-D.1,Role/Status/Scope Matrices,Anhang,EN Cars,2,/_blob/e067f1e02eb0f314249429b9364d4c27
-E.1,Ticket-to-Chapter Mapping,Anhang,EN Cars,2,/_blob/9b45e505d6fa102466b5eafe14d8e26c
-F.1,Sources and Clarification Register,Anhang,EN Cars,2,/_blob/ede772b6d6fe0e4afe62ac2a928c5de6
-G.1,Figure Index and Evidence,Anhang,EN Cars,2,/_blob/d80eb359f8e30df394d519db6c09b981
-H.1,Knowledge Checks and Solutions,Anhang,EN Cars,2,/_blob/951d782e4b8d2bec3fd83926d5ce1edd
-I.1,Practical Examples along the Contract Process,Anhang,EN Cars,2,/_blob/acc8138ee069139600e4f25bfb02d74e
-I.2,Calculation Examples and Finance Reference,Anhang,EN Cars,2,/_blob/d1b6149015c531e4231db50e84d054f1
-I.3,Test Data Catalog and Evidence,Anhang,EN Cars,2,/_blob/eb93fef1e7bc6624227c32495d0015f3
-T6-7,From Saved Application to Payment Data and Signature,Übergangsmodul,EN Cars,2,/_blob/7a47d77b155d493796c9621494963521
-T7-8,From Documents and Signature to Activation Check,Übergangsmodul,EN Cars,2,/_blob/bfce42af024740f6855eaed4a75df2d3
-T8-9,Overall Process and MO Role Deep Dive,Übergangsmodul,EN Cars,2,/_blob/4b1e0f41a0026fa71f226b4125e41ca0
-T9-10,From Review Result to Ongoing Contract Administration,Übergangsmodul,EN Cars,2,/_blob/0c6f472e0b9e90ed1c1901d895126cf6
-T14-15,Linking Market Maintenance and Central Requirements,Übergangsmodul,EN Cars,2,/_blob/fe46a252e467e339a8995489b965c1e5
-T15-14,Handing Over Central Foundations to Market Maintenance,Übergangsmodul,EN Cars,2,/_blob/efdaf9ed55793096a9bf537249b2de47
-T15-16,From Maintenance Decision to Governance Evidence,Übergangsmodul,EN Cars,2,/_blob/8823be2cf9371df734964a0855294e96
-V.1,Welcome and Document Context,Vorspann,EN Cars,2,/_blob/2633391c5e9dea77fe511b878cf3b6bf
-V.2,Table of Contents and Reading Paths,Vorspann,EN Cars,2,/_blob/eba8309a21027906da9076c7689b3325
+Alle,Alle Quick Guides in einer Datei,Alle,Van,86,guides/de-van/Alle_Quick_Guides_oneSCM.pdf
+1,Einführung und Überblick,Kapitel,Van,2,guides/de-van/01_Quick_Guide_oneSCM_Einfuehrung_und_Ueberblick.pdf
+2,"Zugang, Rollen und Berechtigungen",Kapitel,Van,2,guides/de-van/02_Quick_Guide_oneSCM_Zugang_Rollen_und_Berechtigungen.pdf
+3,"Grundlagen, Navigation und Customer Journey",Kapitel,Van,2,guides/de-van/03_Quick_Guide_oneSCM_Grundlagen_Navigation_und_Customer_Journey.pdf
+4,"Kunden, Partner und Vertragsrollen",Kapitel,Van,2,guides/de-van/04_Quick_Guide_oneSCM_Kunden_Partner_und_Vertragsrollen.pdf
+5,"Fahrzeug, Produkt und Angebot vorbereiten",Kapitel,Van,2,guides/de-van/05_Quick_Guide_oneSCM_Fahrzeug_Produkt_und_Angebot_vorbereiten.pdf
+6,Servicevertrag anlegen und Antrag abschließen,Kapitel,Van,2,guides/de-van/06_Quick_Guide_oneSCM_Servicevertrag_anlegen_und_Antrag_abschliessen.pdf
+7,"Zahlungsdaten, Dokumente und Unterschrift",Kapitel,Van,2,guides/de-van/07_Quick_Guide_oneSCM_Zahlungsdaten_Dokumente_und_Unterschrift.pdf
+8,Antrag verfolgen und aktivieren,Kapitel,Van,2,guides/de-van/08_Quick_Guide_oneSCM_Antrag_verfolgen_und_aktivieren.pdf
+9,MO Checks und fachliche Prüfungen,Kapitel,Van,2,guides/de-van/09_Quick_Guide_oneSCM_MO_Checks_und_fachliche_Pruefungen.pdf
+10,Verträge im Alltag verwalten,Kapitel,Van,2,guides/de-van/10_Quick_Guide_oneSCM_Vertraege_im_Alltag_verwalten.pdf
+11,"Rechnung, Zahlung, Kosten und Auswertungen",Kapitel,Van,2,guides/de-van/11_Quick_Guide_oneSCM_Rechnung_Zahlung_Kosten_und_Auswertungen.pdf
+12,"Geschäftskunden, Kampagnen und Sonderfälle",Kapitel,Van,2,guides/de-van/12_Quick_Guide_oneSCM_Geschaeftskunden_Kampagnen_und_Sonderfaelle.pdf
+13,Reifenprodukte – Tyres,Kapitel,Van,2,guides/de-van/13_Quick_Guide_oneSCM_Reifenprodukte_Tyres.pdf
+14,"Marktrolle, Produkt- und Preispflege sowie Administration",Kapitel,Van,2,guides/de-van/14_Quick_Guide_oneSCM_Marktrolle_Produkt_und_Preispflege_sowie_Administration.pdf
+15,"HQ-Rolle, Blueprint und zentrale Stammdaten",Kapitel,Van,2,guides/de-van/15_Quick_Guide_oneSCM_HQ_Rolle_Blueprint_und_zentrale_Stammdaten.pdf
+16,"Governance, Qualität, Datenschutz und Archivierung",Kapitel,Van,2,guides/de-van/16_Quick_Guide_oneSCM_Governance_Qualitaet_Datenschutz_und_Archivierung.pdf
+17,Rollout und Einführung,Kapitel,Van,2,guides/de-van/17_Quick_Guide_oneSCM_Rollout_und_Einfuehrung.pdf
+18,Migration und Übernahme von Bestandsdaten,Kapitel,Van,2,guides/de-van/18_Quick_Guide_oneSCM_Migration_und_Uebernahme_von_Bestandsdaten.pdf
+19,IT Architektur,Kapitel,Van,2,guides/de-van/19_Quick_Guide_oneSCM_IT_Architektur.pdf
+20,Länderspezifische Themen,Kapitel,Van,2,guides/de-van/20_Quick_Guide_oneSCM_Laenderspezifische_Themen.pdf
+21,Spartenspezifische Themen,Kapitel,Van,2,guides/de-van/21_Quick_Guide_oneSCM_Spartenspezifische_Themen.pdf
+22,Ausblick und Weiterentwicklung,Kapitel,Van,2,guides/de-van/22_Quick_Guide_oneSCM_Ausblick_und_Weiterentwicklung.pdf
+23,"FAQ, Troubleshooting und Support",Kapitel,Van,2,guides/de-van/23_Quick_Guide_oneSCM_FAQ_Troubleshooting_und_Support.pdf
+A.1,Glossar und Abkürzungen,Anhang,Van,2,guides/de-van/A1_Quick_Guide_oneSCM_Glossar_und_Abkuerzungen.pdf
+B.1,Alltagschecklisten,Anhang,Van,2,guides/de-van/B1_Quick_Guide_oneSCM_Alltagschecklisten.pdf
+C.1,Prozessdiagramme,Anhang,Van,2,guides/de-van/C1_Quick_Guide_oneSCM_Prozessdiagramme.pdf
+D.1,Rollen-/Status-/Scopematrizen,Anhang,Van,2,guides/de-van/D1_Quick_Guide_oneSCM_Rollen_Status_Scopematrizen.pdf
+E.1,Ticket-zu-Kapitel-Zuordnung,Anhang,Van,2,guides/de-van/E1_Quick_Guide_oneSCM_Ticket_zu_Kapitel_Zuordnung.pdf
+F.1,Quellen und Klärungsregister,Anhang,Van,2,guides/de-van/F1_Quick_Guide_oneSCM_Quellen_und_Klaerungsregister.pdf
+G.1,Bildverzeichnis und Nachweise,Anhang,Van,2,guides/de-van/G1_Quick_Guide_oneSCM_Bildverzeichnis_und_Nachweise.pdf
+H.1,Wissenschecks und Lösungen,Anhang,Van,2,guides/de-van/H1_Quick_Guide_oneSCM_Wissenschecks_und_Loesungen.pdf
+I.1,Praxisbeispiele entlang des Vertragsprozesses,Anhang,Van,2,guides/de-van/I1_Quick_Guide_oneSCM_Praxisbeispiele_entlang_des_Vertragsprozesses.pdf
+I.2,Rechenbeispiele und Finanzbezug,Anhang,Van,2,guides/de-van/I2_Quick_Guide_oneSCM_Rechenbeispiele_und_Finanzbezug.pdf
+I.3,Testdatenkatalog und Nachweise,Anhang,Van,2,guides/de-van/I3_Quick_Guide_oneSCM_Testdatenkatalog_und_Nachweise.pdf
+T6-7,Vom gespeicherten Antrag zu Zahlungsdaten und Signatur,Übergangsmodul,Van,2,guides/de-van/T06-07_Quick_Guide_oneSCM_Vom_gespeicherten_Antrag_zu_Zahlungsdaten_und_Signatur.pdf
+T7-8,Von Dokumenten und Signatur zur Aktivierungsprüfung,Übergangsmodul,Van,2,guides/de-van/T07-08_Quick_Guide_oneSCM_Von_Dokumenten_und_Signatur_zur_Aktivierungspruefung.pdf
+T8-9,Gesamtprozess und MO-Rollenvertiefung,Übergangsmodul,Van,2,guides/de-van/T08-09_Quick_Guide_oneSCM_Gesamtprozess_und_MO_Rollenvertiefung.pdf
+T9-10,Vom Prüfergebnis zur laufenden Vertragsverwaltung,Übergangsmodul,Van,2,guides/de-van/T09-10_Quick_Guide_oneSCM_Vom_Pruefergebnis_zur_laufenden_Vertragsverwaltung.pdf
+T14-15,Marktpflege und zentrale Vorgaben verbinden,Übergangsmodul,Van,2,guides/de-van/T14-15_Quick_Guide_oneSCM_Marktpflege_und_zentrale_Vorgaben_verbinden.pdf
+T15-14,Zentrale Grundlagen an die Marktpflege übergeben,Übergangsmodul,Van,2,guides/de-van/T15-14_Quick_Guide_oneSCM_Zentrale_Grundlagen_an_die_Marktpflege_uebergeben.pdf
+T15-16,Von der Pflegeentscheidung zum Governance-Nachweis,Übergangsmodul,Van,2,guides/de-van/T15-16_Quick_Guide_oneSCM_Von_der_Pflegeentscheidung_zum_Governance_Nachweis.pdf
+V.1,Willkommen und Dokumentkontext,Vorspann,Van,2,guides/de-van/V1_Quick_Guide_oneSCM_Willkommen_und_Dokumentkontext.pdf
+V.2,Inhaltsverzeichnis und Lesepfade,Vorspann,Van,2,guides/de-van/V2_Quick_Guide_oneSCM_Inhaltsverzeichnis_und_Lesepfade.pdf
+Alle,Alle Quick Guides in einer Datei,Alle,Pkw,86,guides/de-pkw/Alle_Quick_Guides_oneSCM_Pkw.pdf
+1,Einführung und Überblick,Kapitel,Pkw,2,guides/de-pkw/01_Quick_Guide_oneSCM_Einfuehrung_und_Ueberblick_Pkw.pdf
+2,"Zugang, Rollen und Berechtigungen",Kapitel,Pkw,2,guides/de-pkw/02_Quick_Guide_oneSCM_Zugang_Rollen_und_Berechtigungen_Pkw.pdf
+3,"Grundlagen, Navigation und Customer Journey",Kapitel,Pkw,2,guides/de-pkw/03_Quick_Guide_oneSCM_Grundlagen_Navigation_und_Customer_Journey_Pkw.pdf
+4,"Kunden, Partner und Vertragsrollen",Kapitel,Pkw,2,guides/de-pkw/04_Quick_Guide_oneSCM_Kunden_Partner_und_Vertragsrollen_Pkw.pdf
+5,"Fahrzeug, Produkt und Angebot vorbereiten",Kapitel,Pkw,2,guides/de-pkw/05_Quick_Guide_oneSCM_Fahrzeug_Produkt_und_Angebot_vorbereiten_Pkw.pdf
+6,Servicevertrag anlegen und Antrag abschließen,Kapitel,Pkw,2,guides/de-pkw/06_Quick_Guide_oneSCM_Servicevertrag_anlegen_und_Antrag_abschliessen_Pkw.pdf
+7,"Zahlungsdaten, Dokumente und Unterschrift",Kapitel,Pkw,2,guides/de-pkw/07_Quick_Guide_oneSCM_Zahlungsdaten_Dokumente_und_Unterschrift_Pkw.pdf
+8,Antrag verfolgen und aktivieren,Kapitel,Pkw,2,guides/de-pkw/08_Quick_Guide_oneSCM_Antrag_verfolgen_und_aktivieren_Pkw.pdf
+9,MO Checks und fachliche Prüfungen,Kapitel,Pkw,2,guides/de-pkw/09_Quick_Guide_oneSCM_MO_Checks_und_fachliche_Pruefungen_Pkw.pdf
+10,Verträge im Alltag verwalten,Kapitel,Pkw,2,guides/de-pkw/10_Quick_Guide_oneSCM_Vertraege_im_Alltag_verwalten_Pkw.pdf
+11,"Rechnung, Zahlung, Kosten und Auswertungen",Kapitel,Pkw,2,guides/de-pkw/11_Quick_Guide_oneSCM_Rechnung_Zahlung_Kosten_und_Auswertungen_Pkw.pdf
+12,"Geschäftskunden, Kampagnen und Sonderfälle",Kapitel,Pkw,2,guides/de-pkw/12_Quick_Guide_oneSCM_Geschaeftskunden_Kampagnen_und_Sonderfaelle_Pkw.pdf
+13,Reifenprodukte – Tyres,Kapitel,Pkw,2,guides/de-pkw/13_Quick_Guide_oneSCM_Reifenprodukte_Tyres_Pkw.pdf
+14,"Marktrolle, Produkt- und Preispflege sowie Administration",Kapitel,Pkw,2,guides/de-pkw/14_Quick_Guide_oneSCM_Marktrolle_Produkt_und_Preispflege_sowie_Administration_Pkw.pdf
+15,"HQ-Rolle, Blueprint und zentrale Stammdaten",Kapitel,Pkw,2,guides/de-pkw/15_Quick_Guide_oneSCM_HQ_Rolle_Blueprint_und_zentrale_Stammdaten_Pkw.pdf
+16,"Governance, Qualität, Datenschutz und Archivierung",Kapitel,Pkw,2,guides/de-pkw/16_Quick_Guide_oneSCM_Governance_Qualitaet_Datenschutz_und_Archivierung_Pkw.pdf
+17,Rollout und Einführung,Kapitel,Pkw,2,guides/de-pkw/17_Quick_Guide_oneSCM_Rollout_und_Einfuehrung_Pkw.pdf
+18,Migration und Übernahme von Bestandsdaten,Kapitel,Pkw,2,guides/de-pkw/18_Quick_Guide_oneSCM_Migration_und_Uebernahme_von_Bestandsdaten_Pkw.pdf
+19,IT Architektur,Kapitel,Pkw,2,guides/de-pkw/19_Quick_Guide_oneSCM_IT_Architektur_Pkw.pdf
+20,Länderspezifische Themen,Kapitel,Pkw,2,guides/de-pkw/20_Quick_Guide_oneSCM_Laenderspezifische_Themen_Pkw.pdf
+21,Spartenspezifische Themen,Kapitel,Pkw,2,guides/de-pkw/21_Quick_Guide_oneSCM_Spartenspezifische_Themen_Pkw.pdf
+22,Ausblick und Weiterentwicklung,Kapitel,Pkw,2,guides/de-pkw/22_Quick_Guide_oneSCM_Ausblick_und_Weiterentwicklung_Pkw.pdf
+23,"FAQ, Troubleshooting und Support",Kapitel,Pkw,2,guides/de-pkw/23_Quick_Guide_oneSCM_FAQ_Troubleshooting_und_Support_Pkw.pdf
+A.1,Glossar und Abkürzungen,Anhang,Pkw,2,guides/de-pkw/A1_Quick_Guide_oneSCM_Glossar_und_Abkuerzungen_Pkw.pdf
+B.1,Alltagschecklisten,Anhang,Pkw,2,guides/de-pkw/B1_Quick_Guide_oneSCM_Alltagschecklisten_Pkw.pdf
+C.1,Prozessdiagramme,Anhang,Pkw,2,guides/de-pkw/C1_Quick_Guide_oneSCM_Prozessdiagramme_Pkw.pdf
+D.1,Rollen-/Status-/Scopematrizen,Anhang,Pkw,2,guides/de-pkw/D1_Quick_Guide_oneSCM_Rollen_Status_Scopematrizen_Pkw.pdf
+E.1,Ticket-zu-Kapitel-Zuordnung,Anhang,Pkw,2,guides/de-pkw/E1_Quick_Guide_oneSCM_Ticket_zu_Kapitel_Zuordnung_Pkw.pdf
+F.1,Quellen und Klärungsregister,Anhang,Pkw,2,guides/de-pkw/F1_Quick_Guide_oneSCM_Quellen_und_Klaerungsregister_Pkw.pdf
+G.1,Bildverzeichnis und Nachweise,Anhang,Pkw,2,guides/de-pkw/G1_Quick_Guide_oneSCM_Bildverzeichnis_und_Nachweise_Pkw.pdf
+H.1,Wissenschecks und Lösungen,Anhang,Pkw,2,guides/de-pkw/H1_Quick_Guide_oneSCM_Wissenschecks_und_Loesungen_Pkw.pdf
+I.1,Praxisbeispiele entlang des Vertragsprozesses,Anhang,Pkw,2,guides/de-pkw/I1_Quick_Guide_oneSCM_Praxisbeispiele_entlang_des_Vertragsprozesses_Pkw.pdf
+I.2,Rechenbeispiele und Finanzbezug,Anhang,Pkw,2,guides/de-pkw/I2_Quick_Guide_oneSCM_Rechenbeispiele_und_Finanzbezug_Pkw.pdf
+I.3,Testdatenkatalog und Nachweise,Anhang,Pkw,2,guides/de-pkw/I3_Quick_Guide_oneSCM_Testdatenkatalog_und_Nachweise_Pkw.pdf
+T6-7,Vom gespeicherten Antrag zu Zahlungsdaten und Signatur,Übergangsmodul,Pkw,2,guides/de-pkw/T06-07_Quick_Guide_oneSCM_Vom_gespeicherten_Antrag_zu_Zahlungsdaten_und_Signatur_Pkw.pdf
+T7-8,Von Dokumenten und Signatur zur Aktivierungsprüfung,Übergangsmodul,Pkw,2,guides/de-pkw/T07-08_Quick_Guide_oneSCM_Von_Dokumenten_und_Signatur_zur_Aktivierungspruefung_Pkw.pdf
+T8-9,Gesamtprozess und MO-Rollenvertiefung,Übergangsmodul,Pkw,2,guides/de-pkw/T08-09_Quick_Guide_oneSCM_Gesamtprozess_und_MO_Rollenvertiefung_Pkw.pdf
+T9-10,Vom Prüfergebnis zur laufenden Vertragsverwaltung,Übergangsmodul,Pkw,2,guides/de-pkw/T09-10_Quick_Guide_oneSCM_Vom_Pruefergebnis_zur_laufenden_Vertragsverwaltung_Pkw.pdf
+T14-15,Marktpflege und zentrale Vorgaben verbinden,Übergangsmodul,Pkw,2,guides/de-pkw/T14-15_Quick_Guide_oneSCM_Marktpflege_und_zentrale_Vorgaben_verbinden_Pkw.pdf
+T15-14,Zentrale Grundlagen an die Marktpflege übergeben,Übergangsmodul,Pkw,2,guides/de-pkw/T15-14_Quick_Guide_oneSCM_Zentrale_Grundlagen_an_die_Marktpflege_uebergeben_Pkw.pdf
+T15-16,Von der Pflegeentscheidung zum Governance-Nachweis,Übergangsmodul,Pkw,2,guides/de-pkw/T15-16_Quick_Guide_oneSCM_Von_der_Pflegeentscheidung_zum_Governance_Nachweis_Pkw.pdf
+V.1,Willkommen und Dokumentkontext,Vorspann,Pkw,2,guides/de-pkw/V1_Quick_Guide_oneSCM_Willkommen_und_Dokumentkontext_Pkw.pdf
+V.2,Inhaltsverzeichnis und Lesepfade,Vorspann,Pkw,2,guides/de-pkw/V2_Quick_Guide_oneSCM_Inhaltsverzeichnis_und_Lesepfade_Pkw.pdf
+Alle,All Quick Guides in one file,Alle,EN Vans,86,guides/en-vans/All_Quick_Guides_oneSCM_EN_vans.pdf
+1,Introduction and Overview,Kapitel,EN Vans,2,guides/en-vans/01_Quick_Guide_oneSCM_Einfuehrung_und_Ueberblick_EN.pdf
+2,"Access, Roles and Authorizations",Kapitel,EN Vans,2,guides/en-vans/02_Quick_Guide_oneSCM_Zugang_Rollen_und_Berechtigungen_EN.pdf
+3,"Basics, Navigation and Customer Journey",Kapitel,EN Vans,2,guides/en-vans/03_Quick_Guide_oneSCM_Grundlagen_Navigation_und_Customer_Journey_EN.pdf
+4,"Customers, Partners and Contract Roles",Kapitel,EN Vans,2,guides/en-vans/04_Quick_Guide_oneSCM_Kunden_Partner_und_Vertragsrollen_EN.pdf
+5,"Preparing Vehicle, Product and Quote",Kapitel,EN Vans,2,guides/en-vans/05_Quick_Guide_oneSCM_Fahrzeug_Produkt_und_Angebot_vorbereiten_EN.pdf
+6,Creating a Service Contract and Completing the Application,Kapitel,EN Vans,2,guides/en-vans/06_Quick_Guide_oneSCM_Servicevertrag_anlegen_und_Antrag_abschliessen_EN.pdf
+7,"Payment Data, Documents and Signature",Kapitel,EN Vans,2,guides/en-vans/07_Quick_Guide_oneSCM_Zahlungsdaten_Dokumente_und_Unterschrift_EN.pdf
+8,Tracking and Activating the Application,Kapitel,EN Vans,2,guides/en-vans/08_Quick_Guide_oneSCM_Antrag_verfolgen_und_aktivieren_EN.pdf
+9,MO Checks and Business Reviews,Kapitel,EN Vans,2,guides/en-vans/09_Quick_Guide_oneSCM_MO_Checks_und_fachliche_Pruefungen_EN.pdf
+10,Managing Contracts in Daily Operations,Kapitel,EN Vans,2,guides/en-vans/10_Quick_Guide_oneSCM_Vertraege_im_Alltag_verwalten_EN.pdf
+11,"Invoicing, Payment, Costs and Reports",Kapitel,EN Vans,2,guides/en-vans/11_Quick_Guide_oneSCM_Rechnung_Zahlung_Kosten_und_Auswertungen_EN.pdf
+12,"Business Customers, Campaigns and Special Cases",Kapitel,EN Vans,2,guides/en-vans/12_Quick_Guide_oneSCM_Geschaeftskunden_Kampagnen_und_Sonderfaelle_EN.pdf
+13,Tyre Products – Tyres,Kapitel,EN Vans,2,guides/en-vans/13_Quick_Guide_oneSCM_Reifenprodukte_Tyres_EN.pdf
+14,"Market Role, Product and Price Maintenance and Administration",Kapitel,EN Vans,2,guides/en-vans/14_Quick_Guide_oneSCM_Marktrolle_Produkt_und_Preispflege_sowie_Administration_EN.pdf
+15,"HQ Role, Blueprint and Central Master Data",Kapitel,EN Vans,2,guides/en-vans/15_Quick_Guide_oneSCM_HQ_Rolle_Blueprint_und_zentrale_Stammdaten_EN.pdf
+16,"Governance, Quality, Data Protection and Archiving",Kapitel,EN Vans,2,guides/en-vans/16_Quick_Guide_oneSCM_Governance_Qualitaet_Datenschutz_und_Archivierung_EN.pdf
+17,Rollout and Go-Live,Kapitel,EN Vans,2,guides/en-vans/17_Quick_Guide_oneSCM_Rollout_und_Einfuehrung_EN.pdf
+18,Migration and Transfer of Existing Data,Kapitel,EN Vans,2,guides/en-vans/18_Quick_Guide_oneSCM_Migration_und_Uebernahme_von_Bestandsdaten_EN.pdf
+19,IT Architecture,Kapitel,EN Vans,2,guides/en-vans/19_Quick_Guide_oneSCM_IT_Architektur_EN.pdf
+20,Country-Specific Topics,Kapitel,EN Vans,2,guides/en-vans/20_Quick_Guide_oneSCM_Laenderspezifische_Themen_EN.pdf
+21,Division-Specific Topics,Kapitel,EN Vans,2,guides/en-vans/21_Quick_Guide_oneSCM_Spartenspezifische_Themen_EN.pdf
+22,Outlook and Further Development,Kapitel,EN Vans,2,guides/en-vans/22_Quick_Guide_oneSCM_Ausblick_und_Weiterentwicklung_EN.pdf
+23,"FAQ, Troubleshooting and Support",Kapitel,EN Vans,2,guides/en-vans/23_Quick_Guide_oneSCM_FAQ_Troubleshooting_und_Support_EN.pdf
+A.1,Glossary and Abbreviations,Anhang,EN Vans,2,guides/en-vans/A1_Quick_Guide_oneSCM_Glossar_und_Abkuerzungen_EN.pdf
+B.1,Everyday Checklists,Anhang,EN Vans,2,guides/en-vans/B1_Quick_Guide_oneSCM_Alltagschecklisten_EN.pdf
+C.1,Process Diagrams,Anhang,EN Vans,2,guides/en-vans/C1_Quick_Guide_oneSCM_Prozessdiagramme_EN.pdf
+D.1,Role/Status/Scope Matrices,Anhang,EN Vans,2,guides/en-vans/D1_Quick_Guide_oneSCM_Rollen_Status_Scopematrizen_EN.pdf
+E.1,Ticket-to-Chapter Mapping,Anhang,EN Vans,2,guides/en-vans/E1_Quick_Guide_oneSCM_Ticket_zu_Kapitel_Zuordnung_EN.pdf
+F.1,Sources and Clarification Register,Anhang,EN Vans,2,guides/en-vans/F1_Quick_Guide_oneSCM_Quellen_und_Klaerungsregister_EN.pdf
+G.1,Figure Index and Evidence,Anhang,EN Vans,2,guides/en-vans/G1_Quick_Guide_oneSCM_Bildverzeichnis_und_Nachweise_EN.pdf
+H.1,Knowledge Checks and Solutions,Anhang,EN Vans,2,guides/en-vans/H1_Quick_Guide_oneSCM_Wissenschecks_und_Loesungen_EN.pdf
+I.1,Practical Examples along the Contract Process,Anhang,EN Vans,2,guides/en-vans/I1_Quick_Guide_oneSCM_Praxisbeispiele_entlang_des_Vertragsprozesses_EN.pdf
+I.2,Calculation Examples and Finance Reference,Anhang,EN Vans,2,guides/en-vans/I2_Quick_Guide_oneSCM_Rechenbeispiele_und_Finanzbezug_EN.pdf
+I.3,Test Data Catalog and Evidence,Anhang,EN Vans,2,guides/en-vans/I3_Quick_Guide_oneSCM_Testdatenkatalog_und_Nachweise_EN.pdf
+T6-7,From Saved Application to Payment Data and Signature,Übergangsmodul,EN Vans,2,guides/en-vans/T06-07_Quick_Guide_oneSCM_Vom_gespeicherten_Antrag_zu_Zahlungsdaten_und_Signatur_EN.pdf
+T7-8,From Documents and Signature to Activation Check,Übergangsmodul,EN Vans,2,guides/en-vans/T07-08_Quick_Guide_oneSCM_Von_Dokumenten_und_Signatur_zur_Aktivierungspruefung_EN.pdf
+T8-9,Overall Process and MO Role Deep Dive,Übergangsmodul,EN Vans,2,guides/en-vans/T08-09_Quick_Guide_oneSCM_Gesamtprozess_und_MO_Rollenvertiefung_EN.pdf
+T9-10,From Review Result to Ongoing Contract Administration,Übergangsmodul,EN Vans,2,guides/en-vans/T09-10_Quick_Guide_oneSCM_Vom_Pruefergebnis_zur_laufenden_Vertragsverwaltung_EN.pdf
+T14-15,Linking Market Maintenance and Central Requirements,Übergangsmodul,EN Vans,2,guides/en-vans/T14-15_Quick_Guide_oneSCM_Marktpflege_und_zentrale_Vorgaben_verbinden_EN.pdf
+T15-14,Handing Over Central Foundations to Market Maintenance,Übergangsmodul,EN Vans,2,guides/en-vans/T15-14_Quick_Guide_oneSCM_Zentrale_Grundlagen_an_die_Marktpflege_uebergeben_EN.pdf
+T15-16,From Maintenance Decision to Governance Evidence,Übergangsmodul,EN Vans,2,guides/en-vans/T15-16_Quick_Guide_oneSCM_Von_der_Pflegeentscheidung_zum_Governance_Nachweis_EN.pdf
+V.1,Welcome and Document Context,Vorspann,EN Vans,2,guides/en-vans/V1_Quick_Guide_oneSCM_Willkommen_und_Dokumentkontext_EN.pdf
+V.2,Table of Contents and Reading Paths,Vorspann,EN Vans,2,guides/en-vans/V2_Quick_Guide_oneSCM_Inhaltsverzeichnis_und_Lesepfade_EN.pdf
+Alle,All Quick Guides in one file,Alle,EN Cars,86,guides/en-cars/All_Quick_Guides_oneSCM_EN_cars.pdf
+1,Introduction and Overview,Kapitel,EN Cars,2,guides/en-cars/01_Quick_Guide_oneSCM_Einfuehrung_und_Ueberblick_EN_Cars.pdf
+2,"Access, Roles and Authorizations",Kapitel,EN Cars,2,guides/en-cars/02_Quick_Guide_oneSCM_Zugang_Rollen_und_Berechtigungen_EN_Cars.pdf
+3,"Basics, Navigation and Customer Journey",Kapitel,EN Cars,2,guides/en-cars/03_Quick_Guide_oneSCM_Grundlagen_Navigation_und_Customer_Journey_EN_Cars.pdf
+4,"Customers, Partners and Contract Roles",Kapitel,EN Cars,2,guides/en-cars/04_Quick_Guide_oneSCM_Kunden_Partner_und_Vertragsrollen_EN_Cars.pdf
+5,"Preparing Vehicle, Product and Quote",Kapitel,EN Cars,2,guides/en-cars/05_Quick_Guide_oneSCM_Fahrzeug_Produkt_und_Angebot_vorbereiten_EN_Cars.pdf
+6,Creating a Service Contract and Completing the Application,Kapitel,EN Cars,2,guides/en-cars/06_Quick_Guide_oneSCM_Servicevertrag_anlegen_und_Antrag_abschliessen_EN_Cars.pdf
+7,"Payment Data, Documents and Signature",Kapitel,EN Cars,2,guides/en-cars/07_Quick_Guide_oneSCM_Zahlungsdaten_Dokumente_und_Unterschrift_EN_Cars.pdf
+8,Tracking and Activating the Application,Kapitel,EN Cars,2,guides/en-cars/08_Quick_Guide_oneSCM_Antrag_verfolgen_und_aktivieren_EN_Cars.pdf
+9,MO Checks and Business Reviews,Kapitel,EN Cars,2,guides/en-cars/09_Quick_Guide_oneSCM_MO_Checks_und_fachliche_Pruefungen_EN_Cars.pdf
+10,Managing Contracts in Daily Operations,Kapitel,EN Cars,2,guides/en-cars/10_Quick_Guide_oneSCM_Vertraege_im_Alltag_verwalten_EN_Cars.pdf
+11,"Invoicing, Payment, Costs and Reports",Kapitel,EN Cars,2,guides/en-cars/11_Quick_Guide_oneSCM_Rechnung_Zahlung_Kosten_und_Auswertungen_EN_Cars.pdf
+12,"Business Customers, Campaigns and Special Cases",Kapitel,EN Cars,2,guides/en-cars/12_Quick_Guide_oneSCM_Geschaeftskunden_Kampagnen_und_Sonderfaelle_EN_Cars.pdf
+13,Tyre Products – Tyres,Kapitel,EN Cars,2,guides/en-cars/13_Quick_Guide_oneSCM_Reifenprodukte_Tyres_EN_Cars.pdf
+14,"Market Role, Product and Price Maintenance and Administration",Kapitel,EN Cars,2,guides/en-cars/14_Quick_Guide_oneSCM_Marktrolle_Produkt_und_Preispflege_sowie_Administration_EN_Cars.pdf
+15,"HQ Role, Blueprint and Central Master Data",Kapitel,EN Cars,2,guides/en-cars/15_Quick_Guide_oneSCM_HQ_Rolle_Blueprint_und_zentrale_Stammdaten_EN_Cars.pdf
+16,"Governance, Quality, Data Protection and Archiving",Kapitel,EN Cars,2,guides/en-cars/16_Quick_Guide_oneSCM_Governance_Qualitaet_Datenschutz_und_Archivierung_EN_Cars.pdf
+17,Rollout and Go-Live,Kapitel,EN Cars,2,guides/en-cars/17_Quick_Guide_oneSCM_Rollout_und_Einfuehrung_EN_Cars.pdf
+18,Migration and Transfer of Existing Data,Kapitel,EN Cars,2,guides/en-cars/18_Quick_Guide_oneSCM_Migration_und_Uebernahme_von_Bestandsdaten_EN_Cars.pdf
+19,IT Architecture,Kapitel,EN Cars,2,guides/en-cars/19_Quick_Guide_oneSCM_IT_Architektur_EN_Cars.pdf
+20,Country-Specific Topics,Kapitel,EN Cars,2,guides/en-cars/20_Quick_Guide_oneSCM_Laenderspezifische_Themen_EN_Cars.pdf
+21,Division-Specific Topics,Kapitel,EN Cars,2,guides/en-cars/21_Quick_Guide_oneSCM_Spartenspezifische_Themen_EN_Cars.pdf
+22,Outlook and Further Development,Kapitel,EN Cars,2,guides/en-cars/22_Quick_Guide_oneSCM_Ausblick_und_Weiterentwicklung_EN_Cars.pdf
+23,"FAQ, Troubleshooting and Support",Kapitel,EN Cars,2,guides/en-cars/23_Quick_Guide_oneSCM_FAQ_Troubleshooting_und_Support_EN_Cars.pdf
+A.1,Glossary and Abbreviations,Anhang,EN Cars,2,guides/en-cars/A1_Quick_Guide_oneSCM_Glossar_und_Abkuerzungen_EN_Cars.pdf
+B.1,Everyday Checklists,Anhang,EN Cars,2,guides/en-cars/B1_Quick_Guide_oneSCM_Alltagschecklisten_EN_Cars.pdf
+C.1,Process Diagrams,Anhang,EN Cars,2,guides/en-cars/C1_Quick_Guide_oneSCM_Prozessdiagramme_EN_Cars.pdf
+D.1,Role/Status/Scope Matrices,Anhang,EN Cars,2,guides/en-cars/D1_Quick_Guide_oneSCM_Rollen_Status_Scopematrizen_EN_Cars.pdf
+E.1,Ticket-to-Chapter Mapping,Anhang,EN Cars,2,guides/en-cars/E1_Quick_Guide_oneSCM_Ticket_zu_Kapitel_Zuordnung_EN_Cars.pdf
+F.1,Sources and Clarification Register,Anhang,EN Cars,2,guides/en-cars/F1_Quick_Guide_oneSCM_Quellen_und_Klaerungsregister_EN_Cars.pdf
+G.1,Figure Index and Evidence,Anhang,EN Cars,2,guides/en-cars/G1_Quick_Guide_oneSCM_Bildverzeichnis_und_Nachweise_EN_Cars.pdf
+H.1,Knowledge Checks and Solutions,Anhang,EN Cars,2,guides/en-cars/H1_Quick_Guide_oneSCM_Wissenschecks_und_Loesungen_EN_Cars.pdf
+I.1,Practical Examples along the Contract Process,Anhang,EN Cars,2,guides/en-cars/I1_Quick_Guide_oneSCM_Praxisbeispiele_entlang_des_Vertragsprozesses_EN_Cars.pdf
+I.2,Calculation Examples and Finance Reference,Anhang,EN Cars,2,guides/en-cars/I2_Quick_Guide_oneSCM_Rechenbeispiele_und_Finanzbezug_EN_Cars.pdf
+I.3,Test Data Catalog and Evidence,Anhang,EN Cars,2,guides/en-cars/I3_Quick_Guide_oneSCM_Testdatenkatalog_und_Nachweise_EN_Cars.pdf
+T6-7,From Saved Application to Payment Data and Signature,Übergangsmodul,EN Cars,2,guides/en-cars/T06-07_Quick_Guide_oneSCM_Vom_gespeicherten_Antrag_zu_Zahlungsdaten_und_Signatur_EN_Cars.pdf
+T7-8,From Documents and Signature to Activation Check,Übergangsmodul,EN Cars,2,guides/en-cars/T07-08_Quick_Guide_oneSCM_Von_Dokumenten_und_Signatur_zur_Aktivierungspruefung_EN_Cars.pdf
+T8-9,Overall Process and MO Role Deep Dive,Übergangsmodul,EN Cars,2,guides/en-cars/T08-09_Quick_Guide_oneSCM_Gesamtprozess_und_MO_Rollenvertiefung_EN_Cars.pdf
+T9-10,From Review Result to Ongoing Contract Administration,Übergangsmodul,EN Cars,2,guides/en-cars/T09-10_Quick_Guide_oneSCM_Vom_Pruefergebnis_zur_laufenden_Vertragsverwaltung_EN_Cars.pdf
+T14-15,Linking Market Maintenance and Central Requirements,Übergangsmodul,EN Cars,2,guides/en-cars/T14-15_Quick_Guide_oneSCM_Marktpflege_und_zentrale_Vorgaben_verbinden_EN_Cars.pdf
+T15-14,Handing Over Central Foundations to Market Maintenance,Übergangsmodul,EN Cars,2,guides/en-cars/T15-14_Quick_Guide_oneSCM_Zentrale_Grundlagen_an_die_Marktpflege_uebergeben_EN_Cars.pdf
+T15-16,From Maintenance Decision to Governance Evidence,Übergangsmodul,EN Cars,2,guides/en-cars/T15-16_Quick_Guide_oneSCM_Von_der_Pflegeentscheidung_zum_Governance_Nachweis_EN_Cars.pdf
+V.1,Welcome and Document Context,Vorspann,EN Cars,2,guides/en-cars/V1_Quick_Guide_oneSCM_Willkommen_und_Dokumentkontext_EN_Cars.pdf
+V.2,Table of Contents and Reading Paths,Vorspann,EN Cars,2,guides/en-cars/V2_Quick_Guide_oneSCM_Inhaltsverzeichnis_und_Lesepfade_EN_Cars.pdf

@@ -342,7 +342,7 @@
   function drawFlow() {
     const u = dash.data('uebergaenge'), g = dash.data('gliederung'), q = dash.data('quickguides');
     const guides = q.status === 'ok' ? q.data : [];
-    const guideUrl = (k, v = 'Van') => { const r = guides.find(x => x.kapitel === k && (x.variante || 'Van') === v); return r && /^\/_blob\//.test(r.url) ? r.url : ''; };
+    const guideUrl = (k, v = 'Van') => { const r = guides.find(x => x.kapitel === k && (x.variante || 'Van') === v); return r && /^(\/_blob\/|guides\/)/.test(r.url) ? r.url : ''; };
     const box = document.getElementById('flow');
     if (u.status === 'error' || u.status === 'connect' || g.status === 'error' || g.status === 'connect') { fail(box); return; }
     if (u.status !== 'ok' || g.status !== 'ok') return;
@@ -562,7 +562,7 @@
     let lastArt = '';
     const seen = new Set();
     rows.forEach(r => {
-      if (!/^\/_blob\//.test(r.url) || seen.has(r.kapitel)) return;
+      if (!/^(\/_blob\/|guides\/)/.test(r.url) || seen.has(r.kapitel)) return;
       seen.add(r.kapitel);
       const van = d.data.find(x => x.kapitel === r.kapitel && x.variante === 'Van') || r;
       const byVar = (v) => d.data.find(x => x.kapitel === r.kapitel && x.variante === v);
@@ -581,7 +581,7 @@
       const ln = document.createElement('span'); ln.className = 'hb-qg-links';
       window.hbVariants.forEach(([v, lab]) => {
         const row = byVar(v); const url = row && row.url;
-        if (!url || !/^\/_blob\//.test(url)) return;
+        if (!url || !/^(\/_blob\/|guides\/)/.test(url)) return;
         if (ln.childNodes.length) ln.appendChild(document.createTextNode(' · '));
         const l = document.createElement('a'); l.className = 'hb-qg-link'; l.href = url; l.target = '_blank'; l.rel = 'noopener'; l.textContent = lab;
         ln.appendChild(l);
@@ -642,7 +642,7 @@
       const tdQ = document.createElement('td');
       const link = links.find(l => l.kapitel === r.kapitel);
       [['DE Van', link && link.url_van], ['DE Pkw', link && link.url_pkw], ['EN Vans', link && link.url_en_vans], ['EN Cars', link && link.url_en_cars]].forEach(([lab, url], i) => {
-        if (!url || !/^\/_blob\//.test(url)) return;
+        if (!url || !/^(\/_blob\/|guides\/)/.test(url)) return;
         if (tdQ.childNodes.length) tdQ.appendChild(document.createTextNode(' · '));
         const a = document.createElement('a'); a.className = 'hb-qg-link'; a.href = url; a.target = '_blank'; a.rel = 'noopener';
         a.textContent = lab; tdQ.appendChild(a);
