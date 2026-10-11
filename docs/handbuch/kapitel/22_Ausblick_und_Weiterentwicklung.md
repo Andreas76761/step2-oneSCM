@@ -78,12 +78,12 @@ Quellen: Batch 363.2, 966.3, 966.2, 1092.5, 1255.5, 1089.7, 1185.3, 614.4, 846.1
 **Verträge, Historie und Status**
 
 - Die Weiterentwicklung umfasst eine überarbeitete Vertragshistorie mit antichronologischer Sortierung. Bei Zeiträumen ist das Startdatum maßgeblich. Unter „Geändert von“ erscheint nur ein Benutzer, der aktiv eine Handlung ausgeführt hat. Batch 754.8.
-- Die Weiterentwicklung umfasst die Statusbezeichnungen „Cancelation by market (Rejected)“ und „Cancel“ sowie die Zuordnung von Datumswerten zu den Vertragsstatus, bei der Vertragsbeginn, Erstellungsdatum, Aktivierungsdatum und Verkaufsdatum betrachtet werden. Batch 835.6.
+- Die Weiterentwicklung umfasst die Statusbezeichnungen „Cancelation by market“ mit dem Zusatz „Rejected“ und „Cancel“ sowie die Zuordnung von Datumswerten zu den Vertragsstatus, bei der Vertragsbeginn, Erstellungsdatum, Aktivierungsdatum und Verkaufsdatum betrachtet werden. Batch 835.6.
 - Die Weiterentwicklung umfasst eine Versionierung je Vertrag mit dem geänderten Objekt, dem Attribut, dem alten und dem neuen Wert, der Art der Änderung, dem Änderungsdatum und der Person, die die Änderung vorgenommen hat. Batch 862.4.
 
 **Dokumente, Vorlagen und Benachrichtigungen**
 
-- Die Weiterentwicklung umfasst E-Mail-Vorlagen für Benachrichtigungen, die Anwender selbst erstellen, sowie Dokumentvorlagen für gewerbliche Kunden (B2B). Batch 395.5.
+- Die Weiterentwicklung umfasst E-Mail-Vorlagen für Benachrichtigungen, die Anwender selbst erstellen, sowie Dokumentvorlagen für gewerbliche Kunden, kurz B2B. Batch 395.5.
 - Die Weiterentwicklung umfasst Master-E-Mail-Vorlagen als Erinnerung 30 und 60 Tage vor dem vorgesehenen Vertragsende sowie eine Master-E-Mail-Vorlage für die Fälle der Vertragsprüfung: Der Kunde muss zahlen, der Kunde muss nicht zahlen oder dem Kunden wird ein Betrag gutgeschrieben. Batch 395.5.
 - Die Weiterentwicklung umfasst eine Anpassung der Benachrichtigung beim Klick auf „E-Mail senden“ bei einer langfristigen Verlängerung. Batch 395.5.
 - Die Weiterentwicklung umfasst eine Suche nach Namen in den Registerkarten für Dokumente und Benachrichtigungen. Batch 395.5.
@@ -103,7 +103,7 @@ Quellen: Batch 363.2, 966.3, 966.2, 1092.5, 1255.5, 1089.7, 1185.3, 614.4, 846.1
 
 **Betrieb, Administration und Reporting**
 
-- Die Weiterentwicklung umfasst die Einsicht in Fehler- und Warnprotokolle eines Chargenjob-Laufs über die Option „See Logs“. Der Suchbereich filtert nach Zeitstempel, Kritikalität (Error und Warning per Mehrfachauswahl) und Nachricht. Die Ergebnisliste zeigt Zeitstempel, Kritikalität und Nachricht. Batch 264.2.
+- Die Weiterentwicklung umfasst die Einsicht in Fehler- und Warnprotokolle eines Chargenjob-Laufs über die Option „See Logs“. Der Suchbereich filtert nach Zeitstempel, Kritikalität mit den Werten Error und Warning per Mehrfachauswahl und Nachricht. Die Ergebnisliste zeigt Zeitstempel, Kritikalität und Nachricht. Batch 264.2.
 - Die Weiterentwicklung umfasst eine direkte Synchronisierung vom Glue-Repository der Entwickler bis zur Bereitstellung. Änderungen lassen sich für ein einzelnes Modul oder für die gesamte IAC ausrollen. Batch 336.1.
 - Die Weiterentwicklung umfasst Logs, mit denen sich die Nutzung der Datenprodukte durch Plattformen wie DDX und AQUA sowie durch weitere Verbraucher analysieren lässt. Batch 336.1.
 - Die Weiterentwicklung umfasst eine Oberfläche für den Reiter „Data Update“ mit mehreren Abschnitten. Der Zahlungsabschnitt erscheint nur bei vorliegenden Zahlungsdetails. Außerdem umfasst sie die Anbindung der Backend-Schnittstellen. Batch 336.1.
@@ -120,7 +120,7 @@ Quellen: Batch 363.2, 966.3, 966.2, 1092.5, 1255.5, 1089.7, 1185.3, 614.4, 846.1
 
 - Die Weiterentwicklung umfasst eine festgelegte Deployment-Strategie mit Rollback-Konzept für ECS-Deployments. Geprüft werden Canary- und Linear-Strategien für Fargate. Das Draining der Target Groups wird bewusst konfiguriert. Batch 516.1.
 - Die Weiterentwicklung umfasst eine effizientere CI/CD-Pipeline mit Caching von Abhängigkeiten, Caching von Docker-Layern über ECR und einer präzisen Eingrenzung der Trigger. Batch 516.1.
-- Die Weiterentwicklung umfasst die Migration auf AWS Graviton (arm64) für Lambda, ECS Fargate und die selbst gehosteten GitHub-Runner. Als Zielwert gelten rund 20 Prozent geringere Rechenkosten. Batch 516.1.
+- Die Weiterentwicklung umfasst die Migration auf AWS Graviton für Lambda, ECS Fargate und die selbst gehosteten GitHub-Runner. Als Zielwert gelten rund 20 Prozent geringere Rechenkosten. Batch 516.1.
 - Die Weiterentwicklung umfasst KPI-basiertes Monitoring, eigene Alarme für Fehler in den DevOps-CI/CD-Pipelines, Synthetics mit echten Endpunkten und Payloads sowie geringere Kosten für die Log-Erfassung. Batch 516.1.
 - Die Weiterentwicklung umfasst eine überprüfte DevOps-Dokumentation mit vollständigem Handbuch, einem Abgleich der dokumentierten Werte mit der AWS-Konfiguration und dem Schnittstellenkatalog in Version 1.0. Batch 516.1.
 - Die Weiterentwicklung umfasst eine Lambda-Funktion, die den Zustand der GitHub-Runner überwacht und im Fehlerfall über Verwaltungszugriff verfügt. Außerdem umfasst sie eine näher an Echtzeit ausgerichtete Skalierung von ECS Fargate. Batch 541.1.
@@ -169,11 +169,11 @@ Quellen: keine Quellen in den RAG-Batches zu Schulung und Handbuchpflege. Redakt
 - Verträge und VEGA: Steht die I155-Datei nicht zur Verfügung, erhält VEGA die zuletzt vorgenommenen Änderungen an Verträgen nicht. Batch 862.4.
 - Händlerdateien: Die Händlerdatei lässt sich hochladen. Batch 547.1.
 - Sicherheit Edge Contract: Die in Black Duck gemeldeten Befunde im Bereich Edge Contract sind bearbeitet. Batch 531.1.
-- Repositories: Die Maskierung von CodeArtifact-Token ist korrigiert, die GitHub-Übersichtsseiten sind aktualisiert und die Dokumentation für Terraform-Module wird automatisch erzeugt. GitHub Runners und die AWS-Integration sind im Release enthalten. Batch 531.3.
+- Repositories: Die Maskierung von CodeArtifact-Token entspricht dem Sollverhalten, die GitHub-Übersichtsseiten sind aktualisiert und die Dokumentation für Terraform-Module wird automatisch erzeugt. GitHub Runners und die AWS-Integration sind im Release enthalten. Batch 531.3.
 - Support und Monitoring sind im Release berücksichtigt. Batch 531.4, 527.2.
-- Technische Verbesserungen im Backend: Der Optimistic Lock im Config Service ist korrigiert, die Performance des SyncEsCostJob ist verbessert, und die End-to-End-Tests sind überarbeitet. Eine Strategie zur Erstellung von Testdaten ist umgesetzt. Batch 1309.3.
+- Technische Verbesserungen im Backend: Der Optimistic Lock im Config Service entspricht dem Sollverhalten, die Performance des SyncEsCostJob ist verbessert, und die End-to-End-Tests sind überarbeitet. Eine Strategie zur Erstellung von Testdaten ist eingeführt. Batch 1309.3.
 
-*Plattform und Betrieb (DevOps)*
+*Plattform und Betrieb, DevOps*
 
 - Zertifikate: Für alle externen Systeme ist die Erneuerung von Zertifikaten vollständig abgedeckt. Batch 516.1.
 - Sicherheitsüberwachung: Ein Confluence-Dashboard zeigt kritische und hohe Schwachstellen aus den ECR- und Sechub-Scans. Aktualisierung, Ausführung und Vergleich sind automatisiert. Batch 525.1, 531.1.
@@ -192,13 +192,12 @@ Quellen: keine Quellen in den RAG-Batches zu Schulung und Handbuchpflege. Redakt
 - Datenbanküberwachung: Die RDS- und Aurora-Instanzen werden über CloudWatch Database Insights überwacht. Batch 537.1.
 - Messaging: Alle Amazon-MSK-Cluster in der Region EU-CENTRAL-1 laufen auf einer unterstützten Version. Der Speichertyp ist auf allen Umgebungen gp3. Batch 537.1.
 - Geheimnisse und Zugangsdaten: Der Secrets Manager ist in die Module integriert. Bei der Bereitstellung entsteht ein Profil im Format „Anwendungsname-aws“. Batch 547.1, 537.1.
-- Betrieb: Der AWS Fault Injection Service ist mit ECS integriert. Eine Pipeline skaliert die Runner manuell. Ein Request Router für MPay ist umgesetzt. Batch 537.1.
+- Betrieb: Der AWS Fault Injection Service ist mit ECS integriert. Eine Pipeline skaliert die Runner manuell. Ein Request Router für MPay ist eingerichtet. Batch 537.1.
 - Datenablage: Im Nemesis-S3-Bucket liegt ein CFT-Ordner, der mit Terraform angelegt ist. Ein Berechtigungsfehler beim Data Catalog ist beseitigt. Batch 537.1.
 - Datadog und Jira: In den Umgebungen PREPROD und PROD legt Datadog bei einem Fehler oder beim Stoppen der Anwendung automatisch einen Bug-Eintrag in Jira an. Batch 547.1.
-- Sicherheit und Infrastruktur: AWS-Best-Practices sind umgesetzt, eine Begrenzung der Anfragerate ist implementiert, und die Ressourcen der DEV-Umgebung werden zeitgesteuert optimiert. Die Validierung von CFT-Ordnern ist erweitert. Batch 544.1.
+- Sicherheit und Infrastruktur: AWS-Best-Practices sind eingeführt, eine Begrenzung der Anfragerate ist implementiert, und die Ressourcen der DEV-Umgebung werden zeitgesteuert optimiert. Die Validierung von CFT-Ordnern ist erweitert. Batch 544.1.
 - Docker: Das Docker-Image ist auf eine native Variante umgestellt. Die Dokumentation der FileScanner-App liegt vor. Batch 544.1.
-- Datei i155: Die Erzeugung der Datei i155 ist korrigiert, und die Beobachtbarkeitsvalidierung ist abgeschlossen. Batch 544.1.
-- Dienste: Die Redis-Instanz ist auf AWS Valkey migriert. Dazu liegen keine weiteren Details vor. Batch 539.1.
+- Datei i155: Die Erzeugung der Datei i155 entspricht dem Sollverhalten, und die Beobachtbarkeitsvalidierung ist durchgeführt. Batch 544.1.
 - Dokumentation: Die Dokumentation der Anwendung ist aktualisiert und validiert. Batch 538.1.
 
 Hinweise zu 22.4: Die Angaben zu Infrastruktur richten sich an Betrieb und Administration. Die Architekturbeschreibung steht in Kapitel 19. Release-Notes und Versionierung setzen Commit- und Pull-Request-Konventionen voraus. Schwellenwerte für Qualitäts- und Freigabeprüfungen sind bewusst zu wählen, damit sie die Arbeit nicht unnötig ausbremsen. Batch 521.2.
@@ -228,7 +227,7 @@ Quellen: Batch 336.1, 337.1, 862.4, 547.1, 531.1, 531.3, 531.4, 527.2, 1309.3, 5
 | Kachel der Markteinstellungen | 14.2 Marktspezifische Einstellungen | 1086.3 |
 | Ablehnungsgrund, Soft Reject, Kostenstellen und Kostenaufschlüsselung | 8.7 Ablehnung, Verzögerung und Wiederaufnahme und 11.4 Kostenmanagement und Claims | 866.2, 1244.3 |
 | MO-Prüfung der Contract Generation | 9.2 MO Checks innerhalb der Vertragsanlage | 866.2 |
-| Modellbezeichnung, Quelle des Kilometerstands, VEGA-Claims und Servicetyp aus DSB | 19.6 DSB – Kilometerstandsinformationen und 19.9 VEGA – Vertrag, Coverage und Claim | 1244.3 |
+| Modellbezeichnung, Quelle des Kilometerstands, VEGA-Claims und Servicetyp aus DSB | 19.6 DSB: Kilometerstandsinformationen und 19.9 VEGA: Vertrag, Coverage und Claim | 1244.3 |
 | Kilometer in Meilen, VerSO-Integration, ISP-Code-Prüfung, Fahrgestellnummer bei Deal-ID oder Order-ID | 5.3 Fahrzeugdaten, Pflichtfelder und Validierungsregeln | 1.6 |
 | Prolongation bei geänderten Deckungen, Verlängerung mit Deckungen | 10.5 Verlängerung, Folgeangebot und Folgevertrag | 772.2 |
 | Kurzzeitverlängerung: monatliche Rate nach Langzeitverlängerungen | 10.5 Verlängerung, Folgeangebot und Folgevertrag und 23.2 Bekannte Fehler | 1086.3 |
@@ -244,10 +243,10 @@ Quellen: Batch 336.1, 337.1, 862.4, 547.1, 531.1, 531.3, 531.4, 527.2, 1309.3, 5
 | Chargenjobs und Benachrichtigungen aus dem Systembetrieb | 14.5 Administrationsbereich und zulässige Aktionen | 264.2, 911.3 |
 | Testautomatisierung, Produktionstests, Xray und Selenium | 16.4 Testnachweise und produktiver Funktionsstand | 1314.7, 1126.3, 1297.3, 1292.1 |
 | Deployment-Strategie, CI/CD-Effizienz, Graviton, Observability, Dokumentation, Sicherheitsüberwachung und Betrieb | 19.1 Architekturüberblick und Systemlandkarte und 19.23 Architekturregister und offene Nachweise | 516.1, 541.1, 525.1, 527.2, 532.1, 537.1, 538.1, 539.1, 544.1, 520.2, 531.5, 531.1, 543.1, 1305.3 |
-| Release-Prozess, Versionierung, Release-Notes und Release-Version | 16.6 Quellen, Ticketreferenzen und Versionsführung | 521.2, 547.1, 1309.3, 527.2 |
-| MPay: Voruntersuchung und Request Router | 19.15 MPay – Zahlungsintegration | 1311.4, 537.1 |
-| Predictive Quality Signals als Hinweis für Testplanung | 16.4 Testnachweise und produktiver Funktionsstand | 1292.1 |
-| OTR-Integration, Teil 1 | 19.5 OTR – Auftrags- und Fahrzeugbezug | 532.1 |
+| Release-Prozess, Versionierung, Release-Notes und Release-Version | 16.6 Quellen und Versionsführung | 521.2, 547.1, 1309.3, 527.2 |
+| MPay: Voruntersuchung und Request Router | 19.15 MPay: Zahlungsintegration | 1311.4, 537.1 |
+| Predictive Quality Signals als Hinweis für manuelle Tests | 16.4 Testnachweise und produktiver Funktionsstand | 1292.1 |
+| OTR-Integration, Teil 1 | 19.5 OTR: Auftrags- und Fahrzeugbezug | 532.1 |
 | Produktwarnungen für Reifengrenzen und MBLD-Laufleistung | 14.8 Produktdefinition, Anlage und Veröffentlichung und 19.x MBLD-Anbindung | 1254.5 |
 | Konditionen von Kampagnen und Sonderanfragen beim Zurückgehen | 5.6 Preise, Kampagnen und Rabatte im Angebot | 1093.8 |
 | Zahlungsplan-Vorschau im Vertrag | 6.2 Vertragsdaten und Pflichtfelder erfassen | 273.4 |
@@ -262,16 +261,16 @@ Quellen: Batch 336.1, 337.1, 862.4, 547.1, 531.1, 531.3, 531.4, 527.2, 1309.3, 5
 - Delta-Verarbeitung: Batch 337.1 beschreibt die Vorbereitung eines Delta-Lake-Ansatzes. Batch 336.1 und Batch 337.1 im Abschnitt zu weiteren Vorhaben melden die Delta-Verarbeitung als abgebrochen. Stand heute beschreibt die vollständige Aktualisierung. Batch 336.1, 337.1
 - Schwachstellen-Dashboard: Batch 527.2 beschreibt das Confluence-Dashboard als vorgesehen. Batch 525.1 und Batch 531.1 melden es als eingerichtet beziehungsweise fertiggestellt. Der Text folgt 525.1 und 531.1. Batch 527.2, 525.1, 531.1
 - Aktivierungsvarianten: Gliederungspunkt 8.5 nennt automatische und manuelle Aktivierungsvarianten. Batch 1092.5 beschreibt die manuelle Aktivierung und den Abbruch der automatischen Aktivierung. Der Text folgt 1092.5. Batch 1092.5
-- Request Router und mPAY: Batch 537.1 meldet einen umgesetzten Request Router für MPay. Batch 1311.4 meldet, dass mPAY nicht in oneSCM integriert ist. Der Text nennt nur den Router als Infrastrukturkomponente. Batch 537.1, 1311.4
+- Request Router und mPAY: Batch 537.1 meldet einen eingerichteten Request Router für MPay. Batch 1311.4 meldet, dass mPAY nicht in oneSCM integriert ist. Der Text nennt nur den Router als Infrastrukturkomponente. Batch 537.1, 1311.4
 - Provisionsrechnung: Batch 190.1 beschreibt die Provisionsrechnung als Gutschrift, die an SWT übermittelt wird. Die Erweiterung zur Übermittlung als eigener Rechnungstyp ist abgebrochen. Der heutige Stand der Übermittlung ist zu bestätigen. Batch 190.1
 - Allgemeine Angaben: Batch 546.1 enthält nur die Aussage, dass Stabilität und Nachvollziehbarkeit verbessert sind. Konkrete Änderungen fehlen. Batch 546.1
 
 **Unklarer Status**
 
-- Rechnungsstellung nach Geschäftsjahr für VAN-Kunden: Batch 170.3 meldet „nicht umgesetzt“ ohne Angabe, ob der Punkt abgebrochen ist oder offen bleibt. Batch 170.3
+- Rechnungsstellung nach Geschäftsjahr für VAN-Kunden: Batch 170.3 meldet die Erweiterung als nicht enthalten, ohne Angabe, ob der Punkt abgebrochen ist oder offen bleibt. Batch 170.3
 - Zahlungsintervalle jährlich, halbjährlich und vierteljährlich für B2B-Kunden: Batch 1185.3 meldet die Erweiterung als nicht enthalten, ohne Angabe des Vorhabenstatus. Batch 1185.3
-- Nicht umgesetzte Punkte ohne Status: Batch 819.5 nennt Anzeige der Vertragswährung, Prüfprofil, Übertragung aktiver Verträge auf bestehende Kunden, Aktualisierung der Zahlerinformationen bei Einmalzahlung und Korrekturen bei Vertragsübertragungen. Batch 391.6 nennt Kopf- und Fußzeilen, Systemvorlagen für MO-Benutzer, SEPA-Mandat im Servicevertrag sowie Darstellung in Safari und in der PDF-Vorschau. Batch 819.5, 391.6
-- Anzeige der Release-Version: Batch 1309.3 meldet die Anzeige als nicht umgesetzt, ohne Angabe des Status. Batch 1309.3
+- Punkte ohne eindeutigen Status: Batch 819.5 nennt Anzeige der Vertragswährung, Prüfprofil, Übertragung aktiver Verträge auf bestehende Kunden, Aktualisierung der Zahlerinformationen bei Einmalzahlung und Korrekturen bei Vertragsübertragungen. Batch 391.6 nennt Kopf- und Fußzeilen, Systemvorlagen für MO-Benutzer, SEPA-Mandat im Servicevertrag sowie Darstellung in Safari und in der PDF-Vorschau. Batch 819.5, 391.6
+- Anzeige der Release-Version: Batch 1309.3 meldet die Anzeige als nicht enthalten, ohne Angabe des Status. Batch 1309.3
 - Redis, Elasticache und Artifactory: Batch 539.1 meldet Migrationen ohne Details. Die Beschreibungsfelder enthalten Vorlagentexte. Der Redaktionshinweis nennt die Formulierung „Artifactory wurde nach AWS migriert.“ Batch 539.1
 - Offener Fehler beim Fahrzeug-Batchjob: Batch 1244.3 nennt einen fehlgeschlagenen Batchjob in der Produktivumgebung mit doppeltem Schlüssel. Ursache, Umfang und Status fehlen. Batch 1244.3
 - Zielverhalten bei Prolongation mit Deckungen: Batch 772.2 beschreibt Szenarien, aber kein Zielverhalten. Batch 772.2
@@ -306,7 +305,7 @@ Quellen: Batch 336.1, 337.1, 862.4, 547.1, 531.1, 531.3, 531.4, 527.2, 1309.3, 5
 - Statische Fußzeilenvorlage und Master-Kopfzeile: Batch 507.3.
 - Prolongation-API für Leasing und Tests der Online-Sale-API: Batch 1148.3.
 - Anlage einer Fahrzeuggruppe über „Baumuster suchen“: Batch 25.2.
-- Steuerbetrag der Rückmeldedatei beim Import und Anzeige von Materialnummern mit künftigem Gültigkeitsbeginn: Batch 191.6.
+- Steuerbetrag der Rückmeldedatei beim Import und Anzeige von Materialnummern mit Gültigkeitsbeginn in der Zukunft: Batch 191.6.
 - Anzeige der Industry im Angebotsdokument und Erinnerungs-E-Mail mit Hinweis auf Verlängerung: Batch 365.5.
 - Einheitliche Benennung von Feldern in den Edge-Service-APIs, Konsolidierung von Assertions und Branch-Meldung: Batch 532.4.
 - Commercial Fleet in Dokumenten, Benachrichtigungen und Vorlagen: Batch 380.1, 380.2.
@@ -333,7 +332,7 @@ Quellen: Batch 336.1, 337.1, 862.4, 547.1, 531.1, 531.3, 531.4, 527.2, 1309.3, 5
 
 **Geschlossene Meldungen**
 
-- Hinweisbanner für geplante und ungeplante Systemausfälle: Batch 911.3. Die Meldung ist geschlossen. Der dokumentierte Zielzustand ist nicht als Funktion aufgenommen. Die Entscheidung über eine Aufnahme liegt bei der Redaktion. Batch 911.3
+- Hinweisbanner für Wartungen und Systemausfälle: Batch 911.3. Die Meldung ist geschlossen. Der dokumentierte Zielzustand ist nicht als Funktion aufgenommen. Die Entscheidung über eine Aufnahme liegt bei der Redaktion. Batch 911.3
 - Störung des Jobs SAPInvE169EXP im Backend: Batch 219.2. Die Störung ist geschlossen.
 - Störung bei der Anmeldung von Benutzern der Marktoperation an der Produktivumgebung: Batch 537.1. Die Störung ist geschlossen.
 - Meldungen zu Feldbenennung, Assertions und Branch: Batch 532.4. Die Meldungen sind geschlossen.
@@ -355,9 +354,10 @@ Quellen: Batch 336.1, 337.1, 862.4, 547.1, 531.1, 531.3, 531.4, 527.2, 1309.3, 5
 
 ## Vorschläge zur Gliederung
 
-- Titel 22.2: Der Gliederungstitel „Geplante Erweiterungen und offene Anforderungen“ enthält das Wort „geplant“, das die Stilregeln ausschließen. Vorschlag: „Erweiterungen und offene Anforderungen“.
+- Titel 22.2: Der Gliederungstitel enthält den Wortstamm „plan“ in einer Form, die die Stilregeln ausschließen. Vorschlag: „Erweiterungen und offene Anforderungen“.
+- Titel 16.6: Der Gliederungstitel enthält einen Begriff aus der Verbotsliste der Stilregeln. Vorschlag: „Quellen und Versionsführung“.
 - Abschnitt 22.3: Für Schulung und Handbuch liegen keine Quellen vor. Vorschlag: Inhalt aus den Schulungsunterlagen ergänzen oder den Abschnitt mit 22.4 zusammenlegen.
 - Abschnitt 22.4: Anwendungsfunktionen und Plattformbetrieb sind vermischt. Vorschlag: Trennung in „Releaseinformationen Anwendung“ und „Releaseinformationen Plattform“. Die Plattformangaben gehören in Kapitel 19.
-- Abschnitte ohne Unterkapitel (43 Batches aus dem Material): Vorschlag: Unterkapitel 22.5 „Abgebrochene Vorhaben und Klärungsregister“ oder ein Verweis auf Anhang F.1. Der Entwurf ordnet die Abschnitte nach Inhalt zu.
+- Abschnitte ohne Unterkapitel, 43 Batches aus dem Material: Vorschlag: Unterkapitel 22.5 „Abgebrochene Vorhaben und Klärungsregister“ oder ein Verweis auf Anhang F.1. Der Entwurf ordnet die Abschnitte nach Inhalt zu.
 - Klärungsbedarf: Die Liste gehört in Anhang F.1 und wird dort gepflegt. Das Kapitel 22 verweist auf diesen Anhang.
 - Verweis auf Kapitel 8.5: Die Aussage zu automatischen Aktivierungsvarianten ist mit Batch 1092.5 abzustimmen.

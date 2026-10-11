@@ -59,7 +59,7 @@ Quellen: keine
 22. Ist der Blueprint bereits in einem Produkt verwendet, erscheint am Ende des Blueprint-Ergebnisses eine Hinweismeldung. Sie bestätigt die Änderung und weist auf die Auswirkungen auf die zugehörigen Produkte hin.
 23. Deaktivieren Sie das Produkt, das diesen Blueprint nutzt.
 24. Öffnen Sie das deaktivierte Produkt zur Bearbeitung. Einmalig erscheint ein Banner, dass der Blueprint aktualisiert wurde. Das Banner erscheint nur beim ersten Bearbeiten, bis der Wizard abgeschlossen ist.
-25. Wählen Sie im Schritt 4 „Coverages“ die Schaltfläche „Edit Coverages“. Das Fenster zeigt die geänderten Deckungen aus dem Blueprint. Hinzugefügte und entfernte Deckungen sind klar voneinander unterschieden. Markierte Deckungen mit dem Status „NOT INCLUDED“ erscheinen bei künftigen Bearbeitungen des Produkts nicht mehr im Fenster. Neu hinzugefügte Deckungscodes bleiben immer zur Auswahl sichtbar.
+25. Wählen Sie im Schritt 4 „Coverages“ die Schaltfläche „Edit Coverages“. Das Fenster zeigt die geänderten Deckungen aus dem Blueprint. Hinzugefügte und entfernte Deckungen sind klar voneinander unterschieden. Als „NOT INCLUDED“ markierte Deckungen erscheinen bei jeder weiteren Bearbeitung des Produkts nicht im Fenster. Hinzugefügte Deckungscodes bleiben immer zur Auswahl sichtbar.
 
 *Blueprint löschen.*
 
@@ -75,11 +75,11 @@ Quellen: keine
 - Bei Blueprints mit dem Ablaufkriterium „Kontingent“ sind Basisdeckungen Einfachauswahl; Optional und Body Coverages sind ausgeschlossen. Der Blueprint „Compact“ ist ein kontingentbasierter Blueprint der Division Passenger Car, dessen Produktanlage Kapitel 14.8 beschreibt.
 - Der VEGA-Vertragstyp bleibt editierbar, auch wenn ein veröffentlichtes Produkt den Blueprint verwendet. Bei Contingent-Produkten und Reifen sendet das System die Contingent-Nummer im Payload nur für Basisdeckungen, nicht für Optional- oder Body Coverages.
 
-**Verkaufslogik (Vertragsstart).** Die Verkaufslogik steuert das Startdatum eines Vertrags. Sie dient als Grundlage für Zertifizierte Gebrauchtwagen (CPO) und für Garantieverlängerungen, die erst nach Ablauf der Herstellergarantie beginnen. Die Dauer der Herstellergarantie hinterlegt jeder Markt in den Markteinstellungen (Kapitel 14.2); sie wird mit der Marktdauer addiert, zum Beispiel 24 Monate Herstellerdauer und 12 Monate Marktdauer ergeben 36 Monate. Der Blueprint zeigt das Feld als „Sales Logic (Contract start date)“. Es gilt für alle Divisionen und Blueprint-Typen. Die Werte lauten:
+**Verkaufslogik für den Vertragsstart.** Die Verkaufslogik steuert das Startdatum eines Vertrags. Sie dient als Grundlage für zertifizierte Gebrauchtwagen, also CPO-Fahrzeuge, und für Garantieverlängerungen, die erst nach Ablauf der Herstellergarantie beginnen. Die Dauer der Herstellergarantie hinterlegt jeder Markt in den Markteinstellungen, die Kapitel 14.2 beschreibt. Sie wird mit der Marktdauer addiert, zum Beispiel ergeben 24 Monate Herstellerdauer und 12 Monate Marktdauer insgesamt 36 Monate. Der Blueprint zeigt das Feld als „Sales Logic“ mit dem Zusatz „Contract start date“. Es gilt für alle Divisionen und Blueprint-Typen. Die Werte lauten:
 
 - „FRD“ entspricht der Logik FRD Related ohne den Zusatz „Related“.
 - „Sales date“ bezieht sich auf das Datum der Angebotserstellung und entspricht der Logik FRD Not Related.
-- „Future date“ steht für ein zukünftiges Datum, etwa das Ende der Garantiedauer oder das geplante Vertragsende des ursprünglichen Produkts. Das Kontrollkästchen „Future date“ ist standardmäßig nicht ausgewählt.
+- „Future date“ steht für ein zukünftiges Datum, etwa das Ende der Garantiedauer oder das vorgesehene Vertragsende des ursprünglichen Produkts. Das Kontrollkästchen „Future date“ ist standardmäßig nicht ausgewählt.
 
 Auf Blueprint-Ebene lassen sich mehrere Werte gleichzeitig auswählen. Ein Produkt übernimmt nur die aktivierten Werte. Im Produkt wählt der MPC-Anwender genau einen davon aus. Die Verknüpfung der Produktlimits mit der Verkaufslogik bezieht sich auf die Werte FRD, Sales date und Future date.
 
@@ -87,23 +87,23 @@ Auf Blueprint-Ebene lassen sich mehrere Werte gleichzeitig auswählen. Ein Produ
 
 - Bei Reifenprodukten „Maximum Allowed Tire Replacements“. Sie geben einen absoluten Wert ein oder wählen die Option „Unlimited“.
 - Bei dem Ablaufkriterium „Kontingent“ „Maximum Allowed Services“, ebenfalls mit der Option „Unlimited“.
-- „Vehicle Age at Contract End (Max)“ mit einem Mindestwert von 24 Monaten.
-- Bei den Ablaufkriterien „Time“ oder „Time or Mileage“ zusätzlich „Vehicle Mileage at Contract End (Max)“. Beim Ablaufkriterium „Time“ gibt es das Kontrollkästchen, mit dem der Vertrag endet, sobald die maximale Fahrleistung erreicht ist. Die maximale Fahrleistung entspricht dem Wert aus dem Schritt „Precondition“ im Modul Product Configuration.
+- Das Feld für das maximale Fahrzeugalter bei Vertragsende mit einem Mindestwert von 24 Monaten.
+- Bei den Ablaufkriterien „Time“ oder „Time or Mileage“ zusätzlich das Feld für die maximale Fahrleistung bei Vertragsende. Beim Ablaufkriterium „Time“ gibt es das Kontrollkästchen, mit dem der Vertrag endet, sobald die maximale Fahrleistung erreicht ist. Die maximale Fahrleistung entspricht dem Wert aus dem Schritt „Precondition“ im Modul Product Configuration.
 
 Alle Felder akzeptieren nur absolute Zahlenwerte. Die Grenzwerte wirken auf die Preismatrix im Modul „Products & Prices“. Bei Reifenprodukten darf das Feld „Max Amount of Tires“ den Blueprint-Wert nicht überschreiten. Bei Produkten ohne Reifenbezug bilden das maximale Fahrzeugalter und die maximale Fahrleistung die Obergrenzen für Max-Months unter „Define Duration Options“ und für Max-Kilometers unter „Define Annual Mileage Options“. Nutzer können in der Preismatrix keine X-Y-Dimensionen konfigurieren, die über diese Grenzen hinausgehen. Der Abschnitt „Calculated Maximum Mileage/Age at Contract End“ ist in der Preismatrix nicht vorhanden.
 
-Der Schritt „Vehicle Preconditions“ heißt nun „Vehicle Preconditions & Limits“. Dort setzen MPC- und MOC-Nutzer Limits für drei Nutzergruppen: MPC- und MOC-Nutzer, Händler und Direktvertriebskanäle. Die Limits gelten für Produkte aller Ablaufkriterien, für Reifen- und Nicht-Reifenprodukte. Beispielhaft lässt die Van-Sparte in Deutschland bis zu 300.000 km zu. Die Felder „Maximum Vehicle Age at Contract End“ und „Maximum Vehicle Mileage at Contract End“ verhindern, dass ein Produkt mit einer Laufzeit verkauft wird, die das definierte Alter oder die definierte Laufleistung überschreitet.
+Der Schritt heißt „Vehicle Preconditions & Limits“. Dort setzen MPC- und MOC-Nutzer Limits für drei Nutzergruppen: MPC- und MOC-Nutzer, Händler und Direktvertriebskanäle. Die Limits gelten für Produkte aller Ablaufkriterien, für Reifen- und Nicht-Reifenprodukte. Beispielhaft lässt die Van-Sparte in Deutschland bis zu 300.000 km zu. Die Felder „Maximum Vehicle Age at Contract End“ und „Maximum Vehicle Mileage at Contract End“ verhindern, dass ein Produkt mit einer Laufzeit verkauft wird, die das definierte Alter oder die definierte Laufleistung überschreitet.
 
 **Produkte ohne FRD-Bezug.** Der Preis eines Produkts ohne FRD-Bezug stammt aus der Preismatrix und wird durch die gewählte Laufzeit geteilt. Das Vertragsstartdatum entspricht dem Datum, an dem das Produkt gekauft oder aktiviert wird. Das Vertragsenddatum ergibt sich aus dem Aktivierungsdatum zuzüglich der gewählten Laufzeit. Voraussetzung ist, dass das Produkt verfügbar ist. Im Fahrzeugbereich stehen die Platzhalter „Vehicle Age at Contract End“ und „Vehicle Mileage at Contract End“ zur Verfügung.
 
 **Hinweise.**
 
 - Die Ablaufkriterien einer Vertragslogik legt der Blueprint fest; die endgültige Auswahl trifft der Produktanwender. Ein Blueprint mit mehreren Kriterien erlaubt dem MPC-Anwender zu bestimmen, wann das Vertragsende eintritt.
-- Änderungen an Coverages wirken auf Prolongationen unterschiedlich, je nachdem, ob das Produkt mit dem Preis zum Vertragsverkaufsdatum oder zum Prolongationszeitpunkt geführt wird. Bei Produkten mit Preis zum Vertragsverkaufsdatum ignoriert der bestehende Vertrag später hinzugefügte oder entfernte Deckungen; der Kunde zahlt weiterhin den ursprünglichen Preis. Eine entfernte Deckung bleibt bei der Prolongation buchbar, auch wenn die neue Produktversion sie nicht mehr anbietet. Eine neu hinzugefügte optionale Deckung kann nicht nachträglich in den Vertrag aufgenommen werden, weil sie zum Verkaufszeitpunkt keinen Preis hatte.
+- Änderungen an Coverages wirken auf Prolongationen unterschiedlich, je nachdem, ob das Produkt mit dem Preis zum Vertragsverkaufsdatum oder zum Prolongationszeitpunkt geführt wird. Bei Produkten mit Preis zum Vertragsverkaufsdatum ignoriert der bestehende Vertrag später hinzugefügte oder entfernte Deckungen; der Kunde zahlt weiterhin den ursprünglichen Preis. Eine entfernte Deckung bleibt bei der Prolongation buchbar, auch wenn die neue Produktversion sie nicht mehr anbietet. Eine hinzugefügte optionale Deckung kann nicht nachträglich in den Vertrag aufgenommen werden, weil sie zum Verkaufszeitpunkt keinen Preis hatte.
 - Bei Produkten mit Preis zum Prolongationszeitpunkt gilt: Eine hinzugefügte immer eingeschlossene Deckung erhöht den Prolongationspreis, ohne die Deckungen des Vertrags zu erweitern. Eine entfernte immer eingeschlossene Deckung senkt ihn entsprechend. Eine optionale Deckung, die im Vertrag enthalten ist und entfernt wurde, hat zum Prolongationszeitpunkt keinen Preis; dann greift eine Fallback-Logik, die den zuletzt verfügbaren Preis dieser Option verwendet. Die Preise übermittelt das System unter diesen Bedingungen an den Partner Brabus.
 - Das Vertragsmanagement berücksichtigt diese Änderungen nicht. Der Umgang mit der VEGA-Datei bei hinzugefügten oder entfernten Deckungen ist im Klärungsbedarf erfasst.
 - Ein doppelter Blueprint-Name führt beim Bearbeiten zu einer Fehlermeldung.
-- Ein Blueprint-Bild fehlt nicht mehr im Blueprint-Bereich, und das Blueprint-Bild wird in der Vorschau angezeigt.
+- Blueprint-Bilder werden im Blueprint-Bereich angezeigt.
 
 **Fehlerbehebung.**
 
