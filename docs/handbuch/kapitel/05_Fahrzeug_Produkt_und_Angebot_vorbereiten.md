@@ -12,7 +12,7 @@ Dieses Kapitel beschreibt den ersten Teil der Vertragserstellung in oneSCM: Sie 
 
 **Vertragsarten.** oneSCM unterscheidet Produkte nach ihrer Konfigurationslogik und ihrem Ablaufkriterium:
 
-- Produkte nach Zeit und Laufleistung (zum Beispiel die Produktlinie „Excellent“): Sie wählen Laufzeit, jährliche Laufleistung und Zahlungsintervall. Der Vertrag endet mit dem geplanten Enddatum (Ablaufkriterium TIME) oder mit dem Enddatum beziehungsweise dem Erreichen der geplanten Laufleistung (TIME_OR_MILEAGE).
+- Produkte nach Zeit und Laufleistung (zum Beispiel die Produktlinie „Excellent“): Sie wählen Laufzeit, jährliche Laufleistung und Zahlungsintervall. Der Vertrag endet mit dem vorgesehenen Enddatum (Ablaufkriterium TIME) oder mit dem Enddatum beziehungsweise dem Erreichen der vereinbarten Gesamtlaufleistung (TIME_OR_MILEAGE).
 - Kontingentprodukte (Ablaufkriterium CONTINGENT): Der Kunde erwirbt eine Anzahl von Serviceleistungen; der Vertrag endet, wenn alle Leistungen verbraucht sind.
 - Reifenprodukte und komplexe Produkte mit Reifenoption: Zusätzlich zu Laufzeit und Laufleistung konfigurieren Sie Reifenart, Reifengröße, Wetterprofil, Felge und Anzahl der Reifen.
 
@@ -91,7 +91,7 @@ Jedes Mercedes-Benz Fahrzeug besitzt eine FIN, nicht jedes Fahrzeug eine VIN. F�
 - Die Deal-ID erscheint beim Bearbeiten der Fahrzeugdetails im eigenen Feld, nicht im Feld „Order Number“.
 - Die VerSO-Order-ID und die Deal-ID stehen auch in den Dokumentvorlagen als Druckvariablen zur Verfügung (Kapitel 7.4).
 
-Quellen: Batch 891.3, 1039.1, 1010.1, 1005.2, 24.1, 1175.2, 948.1, 948.2, 1160.2, 3.2, 1153.1, 1088.1, 1044.1, 1043.1, 906.1, 1091.1, 1101.2, 998.3, 1013.1, 1113.4, 7.4, 1111.1, 1060.1, 1061.6, 1062.1, 1097.2, 1110.1, 1176.3, 1.5, 1070.2
+Quellen: Batch 891.3, 1039.1, 1010.1, 1005.2, 24.1, 1068.3, 1175.2, 948.1, 948.2, 1160.2, 3.2, 1153.1, 1088.1, 1044.1, 1043.1, 906.1, 1091.1, 1101.2, 998.3, 1013.1, 1113.4, 7.4, 1111.1, 1060.1, 1061.6, 1062.1, 1097.2, 1110.1, 1176.3, 1.5, 1070.2
 
 ## 5.3 Fahrzeugdaten, Pflichtfelder und Validierungsregeln
 
@@ -135,7 +135,7 @@ Treffen mehrere Gründe zu, fasst das System sie zusammen, zum Beispiel „… A
 - Bei Fahrgestellnummern ohne FRD löst das System die Produktabfrage aus, und die Produkte bleiben anklickbar, auch wenn Sie mehrfach zwischen Eingaben wechseln.
 - Die Prüfungen aus diesem Kapitel wiederholt oneSCM beim Erstellen des Antrags (Kapitel 5.8 und 6.4) und bei der Aktivierung; eine Aktivierung ist nur mit einer in VeDoc validierten Fahrgestellnummer möglich.
 
-Quellen: Batch 1039.1, 1038.1, 1101.2, 1012.1, 1073.1, 1067.1, 1115.1, 1254.3, 1070.3, 1080.1, 523.2, 1010.1, 1074.1, 1114.4, 933.2, 917.5, 1112.1, 1070.2, 14.2, 1043.1, 951.1, 964.1, 1142.5, 1249.5, 3.3, 1261.3, 1063.1, 974.1, 1054.3, 990.1, 982.1, 1075.1, 1069.2, 1030.1
+Quellen: Batch 1039.1, 1038.1, 1101.2, 1012.1, 1073.1, 1067.1, 851.2, 1115.1, 1254.3, 1070.3, 1080.1, 523.2, 1010.1, 1074.1, 1114.4, 933.2, 917.5, 1112.1, 1070.2, 14.2, 1043.1, 951.1, 964.1, 1142.5, 1249.5, 3.3, 1261.3, 1063.1, 974.1, 1054.3, 990.1, 982.1, 1075.1, 1069.2, 1030.1
 
 ## 5.4 Produkte und Leistungsumfang auswählen
 
@@ -216,8 +216,8 @@ Sobald die Vertragsattribute gewählt sind, zeigt die Detailansicht Monats- und 
 
 - Bei fahrzeugbezogenen Produkten wie „Excellent“ beginnt der Vertrag mit dem Erstzulassungsdatum. Das System bietet daher nur Laufzeiten an, die länger sind als der Zeitraum von der Erstzulassung bis zum Anfragedatum. Beispiel: Erstzulassung 10. Januar 2022, Anfrage 7. Dezember 2023, Abstand 23 Monate; angeboten wird die kleinste Laufzeit über 23 Monaten, „12 Monate“ steht nicht mehr zur Auswahl. Kontingentprodukte sind von dieser Regel ausgenommen.
 - Liegt die Summe aus Erstzulassungsdatum und Laufzeit vor dem Erstellungsdatum, erscheint „Contract duration cannot be made in the past“, und „Next“ ist deaktiviert. Ohne FRD-Bezug ist jede Laufzeit möglich; die Zählung beginnt mit der Erstellung des Vertrags.
-- Das geplante Vertragsende liegt taggenau einen Tag vor Ablauf der Laufzeit: Ein Vertrag ab 01.12.2023 mit 24 Monaten endet am 30.11.2025. Die geplante Gesamtlaufleistung ergibt sich aus Laufzeit mal jährlicher Laufleistung.
-- Es werden nur Kombinationen angeboten, bei denen die geplante Gesamtlaufleistung nicht unter dem Kilometerstand zum Verkaufszeitpunkt liegt. Beispiel: 100.000 km zum Verkaufszeitpunkt, 36 Monate und 20.000 km ergeben 60.000 km und sind nicht zulässig.
+- Das planmäßige Vertragsende liegt taggenau einen Tag vor Ablauf der Laufzeit: Ein Vertrag ab 01.12.2023 mit 24 Monaten endet am 30.11.2025. Die vereinbarte Gesamtlaufleistung ergibt sich aus Laufzeit mal jährlicher Laufleistung.
+- Es werden nur Kombinationen angeboten, bei denen die vereinbarte Gesamtlaufleistung nicht unter dem Kilometerstand zum Verkaufszeitpunkt liegt. Beispiel: 100.000 km zum Verkaufszeitpunkt, 36 Monate und 20.000 km ergeben 60.000 km und sind nicht zulässig.
 - Liegt das Erstzulassungsdatum in der Vergangenheit, muss die Vertragslaufzeit dazu passen; bei laufleistungsabhängigen Wartungsprodukten mit FRD-Bezug beträgt die Startlaufleistung 0.
 - Ohne Erstzulassungsdatum (Build to Stock, Build to Order, Deal-ID, Baumuster) nutzt der Zahlungsplan den aktuellen Tag als Startdatum; Vertragsbeginn und Laufzeit zeigen in der Übersicht „Not yet available“, bis das FRD vorliegt (Kapitel 5.7).
 
@@ -227,7 +227,7 @@ Sobald die Vertragsattribute gewählt sind, zeigt die Detailansicht Monats- und 
 - Beginnen Sie mit der Anzahl der Services, zeigen die Dropdowns die empfohlene Laufzeit und Fahrleistung; bei abweichender Wahl erscheint die „empfohlene Anzahl an Services“ (zum Beispiel 2 Services bei 24 Monaten und 10.000 km).
 - Neben der Anzahl der Services steht ein Info-Symbol. Beim Überfahren sehen Sie die Empfehlungen je Anzahl: 1 Service entspricht 12 Monaten und dem K/JX-Code-Wert, 2 Services 24 Monaten und dem doppelten Wert, bis zur maximal definierten Anzahl (bei bis zu 8 Services also 8 Empfehlungen bis 96 Monate). Der Hinweis erscheint auch bei Auftragsnummern als Kennung.
 
-Die geplante Gesamtfahrleistung ergibt sich aus dem K/JX-Code-Wert multipliziert mit den Jahren der Vertragslaufzeit; die geplante Fahrzeugfahrleistung aus der Gesamtfahrleistung plus Kilometerstand zum Verkaufsdatum. Vertragsbeginn, Verkaufsdatum und Erstellungsdatum entsprechen einander. In der Übersicht erscheint die Anzahl der enthaltenen Services in den Produktoptionen. Kontingentprodukte stehen für Privat- und Gewerbekunden mit optionalen Deckungen, Händlerrabatt, Kampagnen und Provision zur Verfügung.
+Die vereinbarte Gesamtfahrleistung ergibt sich aus dem K/JX-Code-Wert multipliziert mit den Jahren der Vertragslaufzeit; die vorgesehene Fahrzeugfahrleistung aus der Gesamtfahrleistung plus Kilometerstand zum Verkaufsdatum. Vertragsbeginn, Verkaufsdatum und Erstellungsdatum entsprechen einander. In der Übersicht erscheint die Anzahl der enthaltenen Services in den Produktoptionen. Kontingentprodukte stehen für Privat- und Gewerbekunden mit optionalen Deckungen, Händlerrabatt, Kampagnen und Provision zur Verfügung.
 
 **Reifenprodukte.** Für Reifenprodukte stehen zusätzliche Felder bereit: „Reifenart“ (zum Beispiel MO, MOE, MOE-S), „Reifengröße“, „Wetterprofil“ (Ganzjahresreifen oder Sommer/Winter), „Felge“ und „Anzahl der Reifen“. Die Werte liefert die Vertragskalkulation. Wählen Sie zuerst eine Reifenart, zeigt die Reifengröße nur passende Werte, und umgekehrt. Reifentyp und Reifenanzahl werden erst nach Auswahl des Wetterprofils aktiv; der Assistent zeigt den je Wetterprofil und Felge verfügbaren Größenbereich an. Die Anzahl der Reifen ist stets ein Vielfaches von 2 und mit der Empfehlung aus der Matrix für Laufzeit und Fahrleistung vorbelegt („We recommend x tires“); sie wird nach dem Zahlungsintervall freigeschaltet. Für Felgen enthält die Auswahlliste die Option „Nicht enthalten“. Nach der Konfiguration erscheinen Reifenart, Reifengröße und Wetterprofil im Bereich „Technische Spezifikation“ neben den enthaltenen Leistungen; Ausdruck und E-Mail der Preisinformation enthalten die Reifenspezifikation. Ändern Sie die Auswahl, passt sich der Preis an. Bei einem Baumuster als Kennung liefert das System alle passenden Reifenprodukte; im ersten Konfigurationsschritt wählen Sie zusätzlich die Fahrzeuggruppe (schreibgeschützt, wenn nur eine verfügbar ist) und die Radgröße. Nach der Eingabe einer Fahrgestell- oder Auftragsnummer entfallen die Dropdowns für Reifenart und Reifengröße, und die „Technische Spezifikation“ wird aus den Produkt- und Fahrzeugdaten befüllt. Bei Reifenprodukten übermittelt oneSCM den aktuellen Fahrzeugkilometerstand, nicht den Kilometerstand zum Verkaufsdatum.
 
@@ -359,7 +359,7 @@ Sobald zu einem Vertrag ohne Fahrgestellnummer (Baumuster, Auftragsnummer, Deal-
 - Verträge im Status „Rejected“ werden gelöscht; Leasingverträge aktiviert der MO oder MPC über „Update“ mit Fahrgestellnummer, FRD, Kennzeichen und Vertragsbeginn (Kapitel 19).
 - Beim Nachtragen des Erstzulassungsdatums bleiben die Prüfung und Anzeige bei Händlern ohne Zugehörigkeit korrekt, auch bei Verträgen, die ein MO für einen Händler bestellt hat.
 
-Quellen: Batch 891.1, 891.4, 891.5, 891.6, 891.8, 993.2, 1098.1, 1086.2, 1053.1, 1102.2, 993.4, 1089.8, 1069.5, 1053.2, 1055.1, 1063.1, 992.2, 1083.1, 1020.1, 1012.1, 1033.1, 1112.1, 1057.1, 1052.1, 1071.1, 772.1, 1060.1, 1045.1, 1100.1, 1105.1, 1013.4, 1113.4, 1101.3, 998.3, 1112.1, 906.1, 950.1, 895.1, 910.1, 1042.1, 1089.1, 1180.2, 1244.2, 981.2, 1022.1, 1077.1, 1065.1, 873.5, 1067.1
+Quellen: Batch 891.1, 891.4, 891.5, 891.6, 891.8, 993.2, 1098.1, 1086.2, 1053.1, 1102.2, 993.4, 1089.8, 1069.5, 1053.2, 1055.1, 1063.1, 992.2, 1083.1, 1020.1, 1012.1, 1033.1, 1112.1, 1057.1, 1052.1, 1071.1, 772.1, 1060.1, 1045.1, 1100.1, 1105.1, 1013.4, 1113.4, 1101.3, 998.3, 906.1, 950.1, 895.1, 874.7, 910.1, 1042.1, 1089.1, 1180.2, 1244.2, 981.2, 1022.1, 1077.1, 1065.1, 873.5, 1067.1
 
 ## 5.8 Übergabe zur Antragserstellung
 
@@ -406,7 +406,7 @@ Nach dem Hinzufügen einer Kennung sind Vertragslaufzeit und Laufleistung weiter
 - Aus einem Deep Link von OTR startet die Übergabe mit vorbelegter Deal-ID (Kapitel 5.1).
 - Für die Massenerstellung übergeben Sie statt eines Fahrzeugs eine validierte Fahrzeugliste; Kunden- und Zahlungsinformationen gelten für alle Fahrzeuge der Gruppe (Kapitel 12.9).
 
-Quellen: Batch 999.4, 1004.1, 909.1, 929.10, 972.1, 958.2, 1064.5, 1061.6, 1111.1, 1090.4, 1088.1, 974.1, 1062.1, 1020.1, 1027.2, 634.1, 991.2, 1054.2, 1029.1, 1029.2, 1030.1, 1005.2, 1079.1, 1080.1, 1112.1, 1075.1, 1076.1, 1105.1, 976.7, 424.1, 906.1, 910.1, 1033.1, 1051.1, 894.1
+Quellen: Batch 999.4, 1004.1, 909.1, 929.10, 1059.1, 972.1, 958.2, 1064.5, 1061.6, 1111.1, 1090.4, 1088.1, 974.1, 1062.1, 1020.1, 1027.2, 634.1, 991.2, 1054.2, 1029.1, 1029.2, 1030.1, 1005.2, 1079.1, 1080.1, 1112.1, 1075.1, 1076.1, 1105.1, 976.7, 424.1, 906.1, 910.1, 1033.1, 1051.1, 894.1
 
 ## Verschiebung in andere Kapitel
 
@@ -447,6 +447,9 @@ Quellen: Batch 999.4, 1004.1, 909.1, 929.10, 972.1, 958.2, 1064.5, 1061.6, 1111.
 | Webhook-Zustellung, DLT, Kill Switch | 19.22 Schnittstellenbetrieb | 519.8 |
 | Lieferantenberichte (eingestellt) | Anhang F | 753.1 |
 | Suchfunktion „Search Baumuster“, Layout | 14.11 | 1082.1 |
+| Produktzusammenfassung je Sprache und Übergabe der Sprachversionen an die Vertragserstellung | 14.8 | 1128.4 |
+| Übersicht der Gruppen technischer Optionen | 15.7 Technical Options | 1204.3 |
+| Testdaten in der Vorproduktionsumgebung (Obfuskator), Listener-Stabilität | 16.4 und 19.22 | 925.1 |
 
 ## Klärungsbedarf
 
@@ -468,7 +471,9 @@ Quellen: Batch 999.4, 1004.1, 909.1, 929.10, 972.1, 958.2, 1064.5, 1061.6, 1111.
 - Lücke zwischen Erstzulassung und Vertragsabschluss: Batch 256.2 nennt bis zu sechs Monate; Grenze zu bestätigen.
 - Produkttyp in der Referenznummer: Batch 1079.1 nennt A für Advance, C für Compact, E für Excellent; weitere Produktlinien (Kontingent, Reifen, Van) sind nicht belegt.
 - „Created By“ im Proposal Management: Batch 1024.2 nennt das Frontend-System, Batch 1079.4 „OneSCM“ im MVP, Batch 986.1 „MBLD“. Werteliste zu bestätigen.
-- Erweiterte Vertragshistorie (Batch 944.1) trägt den Status „On Hold“ in der Quelle; nicht als Verhalten beschrieben.
+- Erweiterte Vertragshistorie (Batch 944.1) ist in der Quelle als pausiertes Vorhaben gekennzeichnet; nicht als Verhalten beschrieben.
+- Status „Declined“ mit einer Gültigkeit von einer Stunde im MVP (Batch 1022.2) gegenüber „Rejected“ mit marktspezifischer Gültigkeitsdauer (Batch 891.1, 993.2). Der Text verwendet „Rejected“.
+- Release-Zusammenfassungen ohne eigenständigen Funktionsinhalt (Batch 1041.5, 1041.6, 1058.1, 1059.5, 1061.1, 1064.1, 1068.1, 1069.1, 1070.1, 574.7, 651.4) sind als Sollverhalten in die Unterkapitel eingeflossen oder enthalten keine handbuchrelevanten Angaben.
 - Zahlungsintervall „jährlich“ bei 54 Monaten Laufzeit (Batch 1048.1): Meldung eingestellt; Verhalten offen.
 - Kompatible Produkte „Teil 2“ und Check 6 (nur abgelaufene Preisversion): Batch 3.3 und 1249.5 nennen das Vorhaben ohne Umsetzung; nicht beschrieben.
 - Eingestellte oder geschlossene Meldungen ohne Handbuchinhalt (Anhang F): Vertragserstellung über zwölfstellige Deal-ID (Batch 1000.2, 1212.2), VdZ-Kundendaten (Batch 900.2, 897.1), Produktbild in Schritt 3 (Batch 1077.1), Lieferantenberichte (Batch 753.1), QA-Framework Phase 2 (Batch 1287.2), DATIX-Export (Batch 961.1), Reduktion der Pflichtfelder in der Kundensuche (Batch 1115.1), MBIL-Produktabfrage (Batch 3.2), Tooltips und „Must not be null“ (Batch 1075.1), „Payment Interval not visible while editing“ (Batch 829.2), Baumuster-Suche nicht geladen (Batch 14.2), Liftgate-Daten und erste reguläre Abrechnung (Batch 1046.1), geschlossene Meldungen aus Batch 1.7, Change-Request-Sammlungen ohne Inhalt (Batch 900.3, 913.3, 934.3, 961.1, 950.1), Themenliste ohne Umsetzung (Batch 867.2), Löschung abgelaufener Angebote nach sechs Monaten (Batch 822.2, 1053.1), REST-Zahlungsplan (Batch 168.4), Online Sales (Batch 912.2), Endpunkt-Harmonisierung (Batch 868.1), Druckvariable Ablaufkriterium (Batch 366.1), Kundenreiter „Edit“ als Platzhalter (Batch 1012.1), Vertragsanpassung in Entwicklung (Batch 765.1), M&M-Schnittstellen (Batch 922.1), unterdrückte Ablehnungsbenachrichtigungen (Batch 1083.1, zeitlich begrenzt).
