@@ -12,7 +12,7 @@ Für Vans gibt es das Reifenprodukt „Van Unlimited“. Es lässt sich eigenst�
 
 Reifenprodukte gehören zur Produktlinie „Tire“. Das Ablaufkriterium dieser Produkte ist Zeit. Abweichungen von diesem Ablaufkriterium bei Unlimited-Produkten sind im Klärungsbedarf erfasst.
 
-**Voraussetzungen.** Das Reifenprodukt ist angelegt und konfiguriert, bevor Sie es im Angebot auswählen. Ein Servicevertrag mit Reifenprodukt setzt zusätzlich voraus, dass das Produkt konfiguriert ist.
+**Voraussetzungen.** Das Reifenprodukt ist angelegt und konfiguriert, bevor Sie es im Angebot auswählen.
 
 **Rollen.** Die Rollen Händler, Mercedes-Benz Niederlassungen, kurz MO, und MPC bieten Serviceverträge für Reifenprodukte an und erzeugen sie. Für Vans nutzen die Rollen Dealer Van, MO Van und MPC Van die Funktion Van Unlimited.
 
@@ -106,7 +106,7 @@ Quellen: Batch 899.7, 924.2, 929.4, 937.3, 1064.4, 1093.3, 1100.3, 1119.2, 1173.
 
 **Voraussetzungen.** Das Reifenprodukt ist mit Preisen angelegt. Die Sales Dependency ist als Mehrfachauswahl aus Standalone Product und Product Option konfiguriert. Ein Servicevertragsprodukt mit Reifenoption und die zugehörigen Preise sind vorhanden.
 
-**Rollen.** Händler, MO und MPC bieten Serviceverträge mit Reifenoption an und erzeugen sie. Der Händlerrabatt ist der vom Händler vergebene Wert.
+**Rollen.** Händler, MO und MPC bieten Serviceverträge mit Reifenoption an und erzeugen sie.
 
 **Schritt für Schritt.**
 

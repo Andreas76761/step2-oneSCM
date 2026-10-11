@@ -311,3 +311,93 @@ Quellen: keine
 
 Quellen: Batch 1220.2, 1220.3, 1264.2, 1191.1, 1162.1, 1161.3, 1160.4, 1263.1, 1221.1, 1204.1, 1208.1, 1209.1, 1203.2, 1259.2, 1258.6, 1254.1, 1201.2, 1174.3, 1174.1, 1188.2, 1167.2, 1207.1, 7.3, 5.3, 4.1, 731.3, 732.1, 169.3, 199.4, 703.3, 884.3, 1171.3, 1100.2, 1130.1
 
+## Verschiebung in andere Kapitel
+
+| Inhalt | Zielkapitel | Batch |
+|---|---|---|
+| Produkterstellung auf Basis eines Blueprints: Auswahl von Division und Blueprint, Product Setup, Basisproduktinformationen, Vertriebs- und Vertragskonfigurationen, Produktzusammenfassung, Sales Dependency, Lieferant und Reifenumfang des Produkts, Branchen und Kontingentprodukte mit dem Blueprint „Compact“ | 14.8 Produktdefinition, Anlage und Veröffentlichung | 1171.3, 1192.3, 1207.2, 1223.3, 1224.3, 1224.4, 1224.5, 1238.3, 1242.1, 1284.2 |
+| Produktbearbeitung, Produktbilder und Ladezeit, Admin-Fee-Werte, Maximallängen der Felder, Industry-Anzeige in der Zusammenfassung, Wetterprofil und T&C bei Produkten | 14.8 Produktdefinition, Anlage und Veröffentlichung | 1259.2, 1264.3, 1273.2, 1278.3, 1279.2 |
+| Garantieverlängerung als Produkt durch den MPC-Anwender | 14.8 Produktdefinition, Anlage und Veröffentlichung | 1118.1 |
+| Vorschau und Tabelle der Preisversionen | 14.9 Preisversionen, Cluster und Faktorgrenzen | 1268.2 |
+| Preismatrix und Tab „Optional Coverages“ eines Clusters | 14.9 Preisversionen, Cluster und Faktorgrenzen | 1264.3 |
+| Technische Optionen in Preisclustern, Preisdefinition und Auswahl der TO-Gruppen | 14.9 Preisversionen, Cluster und Faktorgrenzen | 1204.2, 1206.1, 1257.2 |
+| Produkte ohne FRD-Bezug: Preisberechnung aus der Preismatrix und Platzhalter für Vertragsdokumente | 14.9 und 7.4 Vertragsdokumente und Sprachvarianten | 1163.2 |
+| Technische Optionen im Vertragsangebot, Anzeige ohne Preise, Auswahl bei Baumuster | 5.5 Laufzeit, Laufleistung und Optionen konfigurieren | 929.5, 1100.2 |
+| Kategorie „Technischer Tarif“ in der Preisübersicht | 5.6 Preise, Kampagnen und Rabatte im Angebot | 945.3 |
+| Gruppierung der Coverage Codes nach Family Tag in Vertriebs- und Kundenansichten | 5.4 Produkte und Leistungsumfang auswählen | 1191.1 |
+| Anzeige der Preisinformationen und des Preisclusters auf der Vertragsdetailseite | 10.1 Verträge suchen und Details prüfen | 769.3 |
+| Übersetzte Bezeichnungen der Codes in Vertragsdokumenten, Dokumentgenerierung, Bearbeitung Technischer Optionen | 7.4 Vertragsdokumente und Sprachvarianten | 884.1, 1.4 |
+| Herstellergarantie je Markt in den Markteinstellungen | 14.2 Marktspezifische Einstellungen | 1118.1 |
+| Neuordnung der HQ-Konfigurationsseite, Gruppierung von Timer und Reminder, Währung in den Allgemeinen Einstellungen | 14.2 Marktspezifische Einstellungen | 963.2 |
+| Sortierung der Engine Series im Administrationsbereich der Fahrzeugverwaltung | 14.5 Administrationsbereich und zulässige Aktionen | 8.6 |
+| Verwaltung der K/JX-Codes im HQ-Reiter der Fahrzeugverwaltung | 14.5 Administrationsbereich und zulässige Aktionen | 1197.1 |
+| Ermittlung der K/JX-Codes im Angebot über VeDoc, GoOrder und AFAB | 5.5 Laufzeit, Laufleistung und Optionen konfigurieren; 19.2 GO; 19.3 AFAB; 19.4 CEPRO | 1197.1 |
+| Verlängerung und Prolongation bei Änderungen an Coverages, Preis zum Prolongationszeitpunkt | 10.5 Verlängerung, Folgeangebot und Folgevertrag | 1149.1 |
+| Produktversion, Deaktivierung von Produkten und Bestandswirkung bei Coverage-Änderungen | 14.10 Produktänderung, Versionierung und Bestandswirkung | 1149.1 |
+| Sperre gesperrter Fahrzeuge im Angebotsprozess und Status „Rejected“ bei nachgelieferter Fahrgestellnummer | 5.2 Fahrzeug- und Vorgangskennungen; 8.7 Ablehnung, Verzögerung und Wiederaufnahme | 994.2 |
+| Baumuster mit sieben und acht Stellen, Java-Version des Vehicle Managements, Fehlerbehebungen, Testendpunkt, Suche über Auftragsnummer, Ladezeit im Vertragsmanagement | 5.2 Fahrzeug- und Vorgangskennungen; 19.1 Architekturüberblick und Systemlandkarte; 16.4 Testnachweise und produktiver Funktionsstand | 4.1 |
+| Van-Produktlinien und I155-Codes in Produkten und Payload | 21.3 Produkte und Preisparameter je Sparte | 1195.2 |
+| Reifenprodukt Van Unlimited, Reifenkonfiguration, Radgrößen und Wetterprofile in der Produktanlage | 13.2 Produkt, Reifentyp und Reifengröße; 13.4 Preis, Optionen und Kampagnen | 1161.3, 1171.3, 1174.1, 1174.3 |
+| Zuordnung von Deckungscodes zu Lieferanten, Lieferantenregistrierung, Zahlungspläne Light und Full | 11.5 Werkstatt- und Lieferantenbezüge; 11.1 Rechnungsstellung und Zahlpläne | 571.1, 710.2 |
+| Schadencode in Schadensfällen in Abhängigkeit vom Deckungscode | 11.4 Kostenmanagement und Claims | 58.1 |
+| Schadencodes bei der manuellen Erfassung einer Werkstattrechnung | 11.5 Werkstatt- und Lieferantenbezüge | 732.1 |
+| Kostenstelle und Lieferantenpreis je Deckungscode, Branchenpreise | 14.14 Preiskomponenten, Cost Unit Split und Inflation | 127.2, 1203.2 |
+| Branchencode in den Basis-Data-Products | 19.19 Datenplattformen und Reporting | 321.8 |
+| i155-Erzeugung bei Vertragsende vor Vertragsbeginn, Logdatei, eindeutige Coverage-ID in Satzart RC20 | 19.9 VEGA – Vertrag, Coverage und Claim | 842.2 |
+| CePro-Import von E-Performance-Fahrzeugen mit 4Matic | 19.4 CEPRO – Van-Fahrzeugstammdaten | 1254.1 |
+| Name von Fahrzeuggruppen mit höchstens 100 Zeichen, Ausrichtung der Seite Technical Options | 14.11 Fahrzeuggruppen und Van-Baumuster-Clustering | 1258.5 |
+| Rollen für Passenger Cars und Vans, einheitlicher Geschäftsbereichsfilter in allen Bereichen | 2.2 Fachliche Rollen und technische Berechtigungen; 21.1 Spartenprofil und Abgrenzung Pkw/Van; 14.6 Marktbezogene Sichtbarkeit und Berechtigungen | 603.1 |
+| Aktualisierung von SA-Codes aus externen Bestellsystemen, wiederholbare Produktabfrage | 22.2 Ausblick und offene Anforderungen | 1143.5 |
+| Erweiterung des Produkt-Blueprints für den Anwendungsfall MBLD | 22.2 Ausblick und offene Anforderungen | 1143.6 |
+| Erweiterung der Produktdefinition für das Produkt „Excellent“ und Optimierung der Blueprint-Logik | Anhang F Quellen und Klärungsregister | 1244.5 |
+| Verkaufslogik für Produkte ohne Fahrgestellnummer, Garantiedauer und Vertragsstart | 6.2 Vertragsdaten und Pflichtfelder erfassen | 1118.1 |
+
+## Klärungsbedarf
+
+**Widersprüche und unklare Aussagen.**
+
+1. Ablaufkriterium im Blueprint: Batch 1219.3 nennt, dass genau eines der Ablaufkriterien „Contingent“, „Time“ oder „Time or Mileage“ gewählt wird. Batch 1192.2 und Batch 1192.1 nennen Mehrfachauswahl und die Entscheidung im Produkt. Batch 1195.4 nennt, dass das Ablaufkriterium aller Produkt-Blueprints und Produkte in der Produktionsumgebung „Zeit“ ist. Der Text folgt Batch 1192.1 und Batch 1192.2. Zu bestätigen.
+2. Länge des Blueprint-Namens: Batch 1219.3 nennt 3 bis 100 Zeichen. Batch 1264.3 und Batch 1268.2 nennen 3 bis 30 Zeichen. Der Text folgt den beiden letzten Quellen.
+3. VEGA-Vertragstyp: Batch 1219.3 nennt 1 bis 11 Zeichen. Die Fehlermeldung in derselben Quelle nennt 6 Zeichen, das Beispiel P_ABC_XYZ hat 9 Zeichen. Die Meldung nennt zusätzlich Bindestriche, die Regel nur Unterstriche. Der Text folgt der Regel.
+4. Werte der Verkaufslogik: Batch 1118.1 nennt die Werte FRD, Sales date und Future date. Batch 1183.2 nennt FRD Related, FRD Not Related und Used Car Related. Batch 1163.2 nennt die Sales Logic als Multi Select mit den Werten FRD Related und FRD Not Related. Batch 1183.2 verknüpft die Obergrenzenlogik für Used Car Related mit dem Vorhaben ONESCM-31107. Der Zeitpunkt, zu dem dieses Vorhaben die Logik ablöst, fehlt. Der Text folgt Batch 1118.1.
+5. Änderung von Coverages im Blueprint: Batch 1219.4 beschreibt, dass hinzugefügte Optional und Body Coverages in den Produkten als „Not included“ ergänzt und entfernte Coverages aus den Produkten entfernt werden. Batch 1259.2 nennt, dass nur Produkte betroffen sind, die nach der Aktualisierung erstellt werden. Batch 1149.1 beschreibt die Übernahme für ein deaktiviertes Produkt bei dessen Bearbeitung. Der Text folgt Batch 1259.2 und Batch 1149.1.
+6. Vertriebsabhängigkeit: Batch 1274.3 nennt die Vertriebsabhängigkeit als Feld in Schritt 1 des Blueprints. Batch 1192.2 und Batch 1219.3 führen die Felder von Schritt 1 ohne sie auf. Der Text folgt Batch 1274.3.
+7. Zuordnung der Lieferanten: Batch 710.2 nennt, dass jedem Deckungscode nur ein Lieferant zugeordnet sein kann. Batch 571.1 nennt, dass ein Deckungscode bei mehreren Lieferanten verwendet und je Lieferant unterschiedlich konfiguriert werden kann. Batch 710.2 nennt die Zahlungspläne „Light“ und „Normal“ oder „Full“, Batch 571.1 nennt „Light Billing“ und „Full Billing“.
+8. Schadencodes und Märkte: Batch 731.3 erlaubt die Auswahl mehrerer Märkte mit Beschreibungen je Markt. Batch 732.1 nennt Schadencodes, die allen Märkten zur Verfügung stehen. Batch 884.3 nennt, dass ein Schadencode genau einem Markt gehört und keine Zuordnung zum eigenen Markt vorgesehen ist. Batch 731.3 nennt „Code Description“ und „Type Description“, Batch 884.3 nennt „Code Name“ und „Type Description“. Zu bestätigen.
+9. Rollen für die Anlage der Codes: Batch 1220.2, Batch 1204.1, Batch 1191.1 und Batch 1221.1 nennen die Rolle HQPM. Batch 1162.1 nennt die Rollen HQ, MPC und MO mit vollständigen Rechten und den Zugang über MPC oder HQ. Batch 1161.3 nennt den Zugang über MPC oder HQ. Batch 731.3 nennt Market-Operation-Nutzer und Administratoren für Schadencodes, Batch 1130.1 den HQ-Administrator. Der Text nennt HQPM als Regelfall. Zu bestätigen.
+10. Ablageort der VEGA-Codes: Batch 1162.1 nennt das Modul VEGA Codes im Bereich Product Management, nicht im Admin-Bereich. Batch 1221.1, Batch 1208.1, Batch 1204.1, Batch 731.3 und Batch 1160.4 nennen den Admin-Bereich. Der Text folgt dem Admin-Bereich.
+11. Kategorien und Begriffe der Coverage Codes: Batch 1220.3 nennt die Kategorien Base, Body und Optional. Batch 1221.1 nennt Basic, Optional und Body für den Filter. Batch 1160.4 nennt „Tire product reference“. Batch 1161.3 und Batch 1162.1 nennen „Tire Option“. Batch 1162.1 nennt für diese Kategorie den Präfix T, Batch 1264.2 nennt die Präfixe P, O und A. Der Text verwendet Base, Optional, Body und „Tire product reference“.
+12. Eindeutigkeit des Coverage Codes: Batch 1220.3 nennt die Eindeutigkeit ohne Bezug. Batch 1263.1 und Batch 1162.1 nennen die Eindeutigkeit innerhalb der Division. Der Text folgt der Division. Batch 1263.1 enthält zusätzlich die Frage, ob der Divisionsfilter „smart“ enthalten soll; die Quelle vermerkt, dass „smart“ eher eine Marke als eine Division ist. Die Frage ist nicht beantwortet.
+13. Family Tag: Batch 1191.1 beschreibt, dass einzeln geführte Coverage Codes als Coverage-Kategorie angezeigt werden. Das Verhältnis zur Gruppierung über den Family Tag ist nicht eindeutig.
+14. Namen und Längen bei Technischen Optionen: Batch 1207.1 nennt 3 bis 30 Zeichen für den Gruppennamen. Batch 1258.5 nennt 100 Zeichen für den Namen von Fahrzeuggruppen; die Quelle erwähnt dabei die Seite Technical Options. Batch 7.3 nennt für eine Gruppe der Reifengröße nur zwei Ziffern. Batch 1174.3 nennt frei wählbare Namen mit bis zu 35 Zeichen. Der Text folgt Batch 1207.1 und Batch 1174.3.
+15. Gruppentyp der Reifengröße: Batch 1201.2 nennt den Gruppentyp „Tire Size“. Batch 1174.3 nennt die Gruppenart „Wheel Size“. Der Text folgt Batch 1201.2 im Dropdown.
+16. Beschriftung der Abhängigkeit: Batch 1254.1 nennt die Beschriftung „Cost Dependency“ statt „Dependency Definition“. Batch 1257.2 nennt weiterhin „Dependency Definition“. Der Text folgt Batch 1254.1.
+17. Industry-Codes-Testtab: Batch 1259.2 beschreibt einen Tab zum Anlegen von Industry Codes, der vor allem für Testzwecke gedacht ist. Batch 1208.1 und Batch 1209.1 beschreiben die Anlage als regulären Ablauf. Der Text folgt Batch 1209.1.
+18. Testfälle der Industry Codes: Batch 1203.2 nennt Testfälle für Erstellung, Übersicht, Bearbeitung, Zuordnung zu Produkten und Branchenpreise, enthält aber keine funktionale Beschreibung. Der Text enthält dazu nichts.
+19. Kennzeichnung der Schadencodes: Batch 732.1 nennt die Absicht, importierte und manuell angelegte Schadencodes zu kennzeichnen. Die Quelle beschreibt weder den Umfang noch den Zeitpunkt dieser Kennzeichnung.
+20. Schrittnamen der Produkterstellung: Batch 1224.3 nennt den Entfall des Dropdowns Brand. Batch 1242.1 nennt drei Dropdowns einschließlich Marke. Batch 1192.3, Batch 1242.1, Batch 1224.4 und Batch 1224.5 nennen unterschiedliche Schrittnamen. Batch 1242.1 nennt „Create Product“, Batch 1207.2 „Create New Product“. Die Abweichungen betreffen Kapitel 14.8.
+21. Wirkung auf das Vertragsmanagement: Batch 1149.1 nennt, dass das Vertragsmanagement Änderungen an Coverages derzeit nicht berücksichtigt und dafür einen Eintrag für Stream 2 besteht. Der Umgang mit der VEGA-Datei ist nicht beschrieben. Stream 2 ist im Material nicht erläutert.
+22. Stand des ISP-Wizards: Batch 1129.1 nennt, dass das Vorhaben dem Entwicklungsstand zugeordnet ist und die Abläufe nur mit dem Verweis „gemäß UI“ beschrieben sind. Die Ergänzung ist vor der Veröffentlichung nötig. Batch 1116.1 beschreibt denselben Ablauf als Sollverhalten. Der Text folgt beiden Quellen.
+23. Entfallende Felder in den Markteinstellungen: Batch 963.2 nennt die Felder DSS-Signaturlink, CAS-Antwort, SEPA-Validierung und SAP-Debitorennummer als in der Zielstruktur gestrichen. Die Quelle nennt keinen Zeitpunkt für den Entfall.
+24. Preisfaktoren: Batch 1195.4 nennt Probleme mit Preisfaktoren in der Vorproduktionsumgebung, ohne das Sollverhalten zu beschreiben.
+25. Ausstehende Prüfpunkte in der Fahrzeugverwaltung: Batch 4.1 nennt die Absicht, bei Van-Fahrzeuggruppen den Namen des SA-Codes anzuzeigen, und das Prüfziel, dass eine aktuelle Preisversion vorausgewählt wird. Die Quelle nennt keinen Stand für beide Punkte.
+26. Erweiterung des Contingent Blueprints: Batch 1258.3 nennt eine Erweiterung ohne Angabe des Inhalts.
+27. Begriffe Vans und Sparten: Batch 603.1 nennt die Trennung der Geschäftsbereiche und Rollen für PC und Van. Der Text in 15.2 folgt dieser Trennung ohne weitere Angaben.
+
+**Eingestellte, geschlossene und ungeklärte Meldungen.**
+
+- Batch 1244.5 nennt die eingestellte Definition eines Produkt-Blueprints für das Produkt „Excellent“, die Optimierung der Blueprint-Logik und Änderungen an der Produktversion. Diese Punkte gehören nicht zum aktuellen Funktionsumfang und sind daher kein Handbuchinhalt.
+- Batch 937.1 ist als Ticket mit dem Status „Cancelled“ gekennzeichnet. Die Redaktion soll prüfen, ob die Funktion überhaupt ausgeliefert wird. Die Rohdaten enthalten Markierungen, dass Wortlaut und Ablauf im Schritt „Technische Optionen“ noch anzupassen sind. Der Text übernimmt aus dieser Meldung keinen Inhalt.
+- Batch 1143.6 nennt die Erweiterung des Produkt-Blueprints für den Anwendungsfall MBLD und verweist auf fehlende Angaben. Der Text enthält dazu nichts.
+- Batch 1143.5 beschreibt die Aktualisierung von SA-Codes aus externen Bestellsystemen und eine wiederholbare Produktabfrage als Vorhaben. Die Quelle nennt keinen Stand. Die Verschiebung nach Kapitel 22.2 erfolgt daher ohne Verhaltensbeschreibung.
+- Batch 1203.2 nennt Testfälle für Industry Codes ohne funktionale Beschreibung. Siehe Punkt 18.
+
+## Vorschläge zur Gliederung
+
+- Die Unterkapitel 15.1, 15.3, 15.4 und 15.6 haben keine Quellen in den RAG-Batches. Für 15.3 bieten sich die Länderabweichungen aus den Batches 884.1, 1130.1, 1118.1 und 963.2 an, sofern die Zuordnung bestätigt wird. Für 15.4 bietet sich die HQ-Sperre aus Batch 994.2 an, wenn sie als Freigabe auf HQ-Ebene verstanden wird.
+- Das Unterkapitel 15.7 umfasst 59 Abschnitte und sollte aufgeteilt werden: 15.7 für Coverage Codes, ein eigenes Unterkapitel für Industry Codes, ein eigenes für Technische Optionen und SA-Matching sowie ein eigenes für Schadencodes. Schadencodes sind im Gliederungstitel von 15.7 nicht genannt.
+- ISP-Codes und K/JX-Codes fehlen in der Gliederung. Sie bilden als HQ-Stammdaten ein eigenes Unterkapitel, etwa „K/JX-Codes und ISP-Codes“.
+- Das Unterkapitel 15.2 umfasst 28 Abschnitte. Eine Aufteilung in Blueprint-Anlage und -Bearbeitung, Coverages im Blueprint, Verkaufslogik und Grenzwerte sowie Besonderheiten der Van-Blueprints wäre übersichtlicher.
+- Die Batches ohne Unterkapitel-Zuordnung sollten zugeordnet werden: Batch 8.6 gehört zu 14.5, Batch 1163.2 zu 14.9 und 15.2, Batch 1195.4 ist im Klärungsbedarf erfasst.
+- Die Lieferantenthemen aus den Batches 571.1 und 710.2 fehlen im Kapitel 15 und gehören zu Kapitel 11.5 und 11.1.
+- Die Schadencodes gehören zum Kapitel 11.4 für den Schadensfall. Die Stammdaten pflegt Kapitel 15.7.

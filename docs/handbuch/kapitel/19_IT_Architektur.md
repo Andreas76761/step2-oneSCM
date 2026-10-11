@@ -435,3 +435,93 @@ Für Benutzer mit eingeschränkter Sicht gilt: Erneutes Senden und Bestätigen s
 **Fehlerbehebung.** Ein Ereignis mit dem Fehler „Functional“ korrigieren Sie in den Stammdaten oder im Vertrag und senden es danach über „Resend“ erneut. Ein Ereignis mit dem Fehler „Infrastructure“ senden Sie nach der Behebung der Ursache erneut, etwa über „Retrigger“ aus dem Sync-Verlauf. Ist eine Meldung nicht manuell korrigierbar, setzen Sie die Aktion „Acknowledge“ ein.
 
 Quellen: Batch 270.1, 263.2, 253.4, 168.1, 191.1, 206.1, 154.2, 229.6, 716.5, 225.3, 225.4, 222.2, 156.4, 183.4, 708.4, 240.2, 251.1, 125.5, 138.1, 144.2, 253.3, 161.3, 163.4, 109.1, 162.2, 145.1, 251.5
+
+## 19.15 MPay – Zahlungsintegration
+
+**Zweck.** MPay ist der interne Zahlungsdienstleister von Mercedes-Benz. oneSCM nutzt MPay für Kreditkartenzahlungen, monatliche Transaktionen, Zahlungslinks, Wiederholungen fehlgeschlagener Zahlungen und Rückerstattungen. Dieser Abschnitt beschreibt die Konfiguration je Markt, die Zahlungsabläufe, die Statushistorie, die Wiederholung und die Rückerstattung.
+
+**Voraussetzungen.** MPay ist im Markt aktiviert. Die Option „Enable MPay“ steht in den Markteinstellungen unter „MPay Configuration“ und ist für alle Märkte zunächst ausgeschaltet. Ist MPay eingeschaltet, sind alle MPay-Felder Pflichtfelder, und die Konfiguration lässt sich nur speichern, wenn alle Felder gefüllt sind.
+
+**Rollen.** Administratoren pflegen die MPay-Konfiguration. Händler und MO legen Verträge mit der Zahlungsart MPay an. Mitarbeitende aus MO und MPC sehen die Statushistorie. MO bearbeitet abgelehnte Zahlungen und Rückerstattungen.
+
+**Konfiguration je Markt.** Administratoren pflegen die Werte unter Admin, Markteinstellungen und dem Reiter „External System Settings“ im Bereich „MPay Configuration“. Die Angaben sind:
+
+- Händlername als Text mit 1 bis 255 Zeichen
+- Händler-ID als UUID mit 36 Zeichen
+- Benachrichtigungs-URL mit 1 bis 1500 Zeichen
+- Gültigkeit des Zahlungslinks in Sekunden als ganze Zahl von 1 bis 15.768.000, Standardwert 86.400
+- Transaktionstyp Preauth, Preauth & Capture oder Debit
+- Anzahl der Wiederholungsversuche von 0 bis 99, Standardwert 3
+- Intervall zwischen den Wiederholungen in Tagen von 0 bis 99, Standardwert 7
+
+Jede Änderung speichert das System in der Historie. Die Seite zeigt an, wer die letzte Änderung wann vorgenommen hat. Änderungen an den Zahlungseinstellungen gelten nur für neu erstellte Serviceverträge. Bestehende Verträge behalten ihre Zahlungskonfiguration. Unter „Supported Payments“ wählen Sie im Dropdown mit Mehrfachauswahl die Zahlungsarten MPay Credit Card, MPay UPI und MPay Netbanking aus. UPI und Netbanking gelten für Indien.
+
+Ist MPay ausgeschaltet, sind alle MPay-Felder nur lesbar, und vorhandene Werte bleiben erhalten. Händler und MO können beim Anlegen neuer Verträge die Zahlungsart MPay nicht mehr auswählen. Bestehende Verträge mit MPay bleiben gültig, und Transaktionen für sie laufen weiter.
+
+**Zahlungsart Kreditkarte bei Verträgen mit Mercedes me Konto.** Hat der Kunde ein Mercedes me Konto, ist die monatliche MPay-Zahlung möglich. Die Karte speichert MPay als Asset unter der Konsumentenreferenz. Hat der Kunde kein Mercedes me Konto, steht MPay nur für eine Einmalzahlung zur Verfügung, und bei der Vertragsaktivierung entsteht kein Karten-Asset. Der Grund ist die begrenzte Gültigkeit der Zahlungslinks für Vorautorisierung und Capture, etwa 30 Tage, während die Aktivierung länger dauern kann.
+
+**Regelfall.** Der Händler wählt Produkt und Kundendaten und die Zahlungsart MPay. Das System prüft, ob ein Mercedes me Konto vorhanden ist. Anschließend folgt die Aktivierung ohne Erfassung von Kartendaten.
+
+1. Nach der Aktivierung erzeugt oneSCM den MPay-Zahlungslink, sobald der CFDM-Batch gelaufen ist und die Rechnung den Status „Accepted“ erreicht hat.
+2. Die Aktivierungs-E-Mail enthält einen Link zum Customer Account Center (CAC). Der Kunde öffnet das CAC per OTP, wählt „Bezahlen“, gibt seine Kartendaten ein und schließt die Zahlung ab. Dabei speichert MPay kein Asset.
+3. oneSCM erhält die MPay-Benachrichtigungen für autorisiert und eingezogen, markiert die Rechnung als bezahlt und übermittelt die Details an das Finanzsystem.
+
+**Zahlung vor der Aktivierung.** Revenue erzeugt den Zahlungsplan und bestätigt ihn dem Vertrag. Der Vertrag sendet dem Kunden eine E-Mail mit dem Link zum CAC. Nach dem Aufruf des CAC prüft der Vertrag die Zahlungsberechtigung. Ist die Zahlung möglich, fordert der Vertrag bei Revenue einen Zahlungslink an. Betrag und Gültigkeit stammen aus den Markteinstellungen, „Payment Validity“. Das CAC zeigt Link, Betrag und optional die Gültigkeit an. Läuft der Link ab, zeigt das CAC einen Fehler, und die Schaltfläche „Regenerate“ wird im CAC und in den MO Checks aktiv. Nach der Neuerzeugung steht der Status in den MO Checks auf „Pending“. Der Customer-&-Partner-Microservice fragt den Zahlungsstatus per Short Polling bei Revenue ab. Das CAC zeigt danach „Payment Successful“ oder „Payment Failed“.
+
+Bei der Vertragsaktivierung erzeugt oneSCM den Zahlungslink neu. Solange ein Vertrag im Status „Waiting for Confirmation“ oder „Waiting for Activation“ ist, liefert das System bei jeder Anfrage des Frontends einen gültigen Zahlungslink. Wurde der Link bereits verwendet, stellt das System keinen neuen bereit.
+
+**Kreditkartenzahlung für Indien.** Im Retail-Verkauf kann der Kunde im Autohaus einen Einmalvertrag mit Kreditkarte bezahlen. Der Ablauf zur Vertragserstellung bleibt unverändert. Der Händler wählt den Markt, zu dem der Vertrag gehört. Bei der Aktivierung erzeugt oneSCM einen Zahlungslink, der im Vertrag unter „Revenue“ im Abschnitt „Payment details“ steht und nur für den indischen Markt erscheint. Der Link wird als Link und als QR-Code bereitgestellt. Er ist zwei Tage ab Erstellung gültig. Der Betrag entspricht dem Bruttobetrag der einzigen MPPI-Rechnung. Nach erfolgreicher Zahlung mit dem Status „Settled“ steht der Link für eine weitere Transaktion nicht mehr zur Verfügung.
+
+Für die Zuordnung erzeugt oneSCM den Parameter merchantReference als UUID und speichert ihn in der Rechnungstabelle. Anhand dieses Parameters ordnet oneSCM die Benachrichtigungen von MPay der Rechnung zu und bestätigt sie. Alle empfangenen Status speichert das System als Historie. Der letzte Status erscheint pro Rechnung in der Oberfläche. Die Spalte „MPay status“ steht im Zahlungsplan nach „Invoice status“ und nur für den indischen Markt zur Verfügung.
+
+Von MPay sind folgende Status möglich: ERROR, CREATED, PENDING, AUTHORIZED, CLEARED, CAPTURED, SETTLED, COMPLETED, REFUSED, CANCELLED, REFUND_PENDING, REFUND_REFUSED und REFUNDED. Die Rechnung exportiert oneSCM unabhängig vom Transaktionsstatus. Hat die Rechnung den Status „Exported“ und die Transaktion den Status „Captured“, setzt oneSCM den Rechnungsstatus auf „Paid“.
+
+**Monatliche Zahlung und Online-Verkauf.** Bei monatlich bezahlten Verträgen erzeugt oneSCM für jede Rechnung im Status „Fi-Document created“ eine Transaktion mit dem hinterlegten Asset. Die Benachrichtigung zum Transaktionsstatus aktualisiert den MPay-Status. Bei Erfolg setzt oneSCM die Rechnung auf „PAID“. Diese Logik gilt nur für indische Verträge. Für Servicevertrag-Abschlüsse im Online-Shop erzeugt der Online-Shop den Zahlungslink und übermittelt die Asset-ID, die oneSCM im Revenue-Bereich speichert. Die Bereiche „MPay Information“ und die Spalte „MPay status“ sind in den Umgebungen DEV, INT und PREPROD sichtbar.
+
+**Benachrichtigung bei Kartenupdate.** Kreditkarten laufen ab, auch während der Laufzeit eines Vertrags. Die Ablaufkette beginnt mit einer Benachrichtigung von Revenue, die auf der CIAM-ID basiert. Das System ermittelt den Kunden, wählt die E-Mail-Vorlage und versendet sie. Die E-Mail erscheint in der Historie des Vertrags.
+
+Der Kunde ruft das CAC über die E-Mail auf und meldet sich mit Mercedes me an. Die Seite zeigt Vertragsnummer, Vertragsbeginn, Fahrgestellnummer, Zahlungsmethode, Produkt, Kennzeichen, anonymisierte Kreditkartendaten und das Ablaufdatum. Bei „Change Payment Method“ bestätigt der Kunde, dass der Monatsbetrag bis zur Kündigung abgebucht wird. Danach leitet oneSCM zu MPay weiter. Nach dem Callback zeigt das CAC eine Erfolgs- oder Fehlermeldung. Im Erfolgsfall speichert der Vertrag die neue Asset-ID samt NTR, und es erfolgen keine weiteren Benachrichtigungen.
+
+Aktualisiert der Kunde seine Kartendaten nicht, versendet das System Erinnerungen. Der Abstand beträgt die Anzahl der Tage bis zum Ablauf geteilt durch drei. Vor jedem Versand prüft das System, ob der Kunde die Daten bereits aktualisiert hat, und beendet dann die Erinnerungen. Als aktualisiert gelten die Kartendaten, sobald MPay eine neue Asset-ID samt NTR liefert.
+
+**Mastercard Transaction Link ID.** oneSCM speichert und verwendet die Transaction Link ID (TLID) für Mastercard im Zahlungsablauf über MPay. Die TLID verknüpft eine Ausgangstransaktion mit allen Folgetransaktionen des Vertrags, also den Customer Initiated Transactions (CIT) und den Merchant Initiated Transactions (MIT). Die TLID ist eine global eindeutige Zeichenkette. Die NTR-Werte bleiben ebenfalls in Verwendung und werden auf dieselbe Weise gespeichert.
+
+Bei neuen Verträgen entsteht die TLID in der ersten CIT, in der Regel einer Zero-Authorization mit starker Kundenauthentifizierung. oneSCM speichert sie und verwendet sie für alle folgenden MITs. Bei bestehenden Verträgen ohne TLID übernimmt oneSCM die TLID aus der ersten MIT-Antwort, die eine enthält. Eine gespeicherte TLID überschreibt oneSCM nicht. Jede MIT-Anfrage enthält die TLID im Zahlungsobjekt. Fehlt eine gültige TLID, löst oneSCM eine neue CIT mit SCA aus, etwa über eine Zahlungsanfrage mit dem Betrag null und dem hinterlegten Asset. Für die Anforderung der starken Kundenauthentifizierung ist der Parameter challengeRequested vorgesehen.
+
+Die Pflicht zur Speicherung und Übermittlung der TLID gilt laut Vorgaben der Kartenorganisation mit den Stichtagen 2. Juni 2026 für die Speicherung und 23. Oktober 2026 für die Übermittlung in Transaktionsanfragen. Eine fehlerhafte Speicherung kann zu Soft Declines des Kartenherausgebers führen.
+
+**Wiederholung fehlgeschlagener Zahlungen.** Für jede per MPay bezahlte Rechnung sind maximal drei Wiederholungsversuche vorgesehen, die die Konfiguration festlegt. Schlägt eine Transaktion fehl, führt oneSCM folgende Schritte aus:
+
+1. Der MPay-Status der Rechnung wird auf „Refused“ gesetzt.
+2. Kunde und MO-Benutzer erhalten je eine Benachrichtigung. Für den Kunden verwendet oneSCM die Vorlage aus Documents & Communications, für die MO-Benutzer eine eigene Vorlage.
+3. In der Historie der Rechnung entsteht ein Eintrag mit dem Grund „Transaction failed“, der Transaktions-ID, dem neuen Status „MPay Refused“ und dem alten Status „MPay Not Due“.
+4. Die Zahl der verbleibenden Wiederholungen sinkt um eins. Nach einer Woche erstellt oneSCM eine neue Transaktion. Dies wiederholt sich, bis keine Wiederholung mehr übrig ist.
+
+Ist die Zahlung nach drei Versuchen im Abstand von einer Woche noch abgelehnt, erhält der MO eine Benachrichtigung. Voraussetzung ist, dass die Zahlungsart Kreditkarte ist, der MPay-Status „refused“ lautet und der Kunde bereits per E-Mail informiert wurde. Zusätzlich sendet oneSCM eine E-Mail an die in den Markteinstellungen hinterlegte Adresse, damit das MO-Team den Vorgang extern dokumentieren kann. Das Glockensymbol in der Navigationsleiste zeigt bis zu 9 Benachrichtigungen, darüber „9+“. Die Meldung „Contract number has a refused payment.“ verweist auf Contract Management, Payments, Customer Invoice. Bei mehreren abgelehnten Zahlungen lautet die Meldung „Multiple Contracts have refused payments.“ Führt der MO die Aktion „Retry“ aus, ergänzt das System den Zahlungsverlauf, und die Benachrichtigung verschwindet.
+
+**Statushistorie.** MO- und MPC-Mitarbeitende sehen den Verlauf der MPay-Status für Verträge, die über MPay bezahlt werden. Wählen Sie den Vertrag und öffnen Sie den Reiter „Payment“. Ein Klick auf den MPay-Status einer Rechnung öffnet das Protokoll. Die Einträge zeigen den UTC-Zeitstempel, den Grund „Automatic Changed by System“, den alten und den neuen Wert sowie „Changed by System“. Bei der Anlage einer Rechnung steht als alter Wert „-“. Die Historie können Sie nicht löschen. Sie schließen das Popup über „Back“ oder das X.
+
+**Rückerstattung für Kunden ohne Mercedes me Konto.** Der Ablauf gilt nur für Rechnungen und Verträge mit der Zahlungsart „Digital Payment“. Die Auszahlungsart richtet sich nach der Sechs-Monats-Grenze ab dem Zeitpunkt der Benachrichtigung „CAPTURED“.
+
+- Vor Ablauf von sechs Monaten erfolgt die Rückerstattung automatisiert über den MPay-Rückerstattungsendpunkt. Der Kunde muss nichts unternehmen.
+- Nach sechs Monaten kann die Kreditkarte keine erfolgreiche Rückerstattung mehr garantieren. Ein Benutzer der Market Operations startet die Erstellung der manuellen Rückerstattung. Fehlen dem Kunden IBAN und Bankdaten, sendet MO eine „Refund Payout Notification“ mit einem Link zum CAC.
+- Der Kunde authentifiziert sich im CAC mit Captcha und OTP und gibt seine IBAN an. Ist eine SWIFT-Validierung verfügbar, prüft das System die Bankdaten. Nach der Bestätigung übermittelt oneSCM die IBAN per POST an das Finanzsystem CoFiCo, SWT oder oneERP.
+- Die Bankdaten erscheinen in oneSCM und in den Kundendaten unter „Payment Refund Information“. Nach der erfolgreichen Übermittlung sendet oneSCM die Benachrichtigung „IBAN is there“ an das Revenue Management, und die Freigabeschaltfläche wird aktiv.
+
+Die Vorlage „Refund Specific Payout Notification“ verwendet die Kopffelder bestehender Vorlagen. Der Betreff lautet für Privatkunden „Customer Account Center access for“ mit Vor- und Nachname, für Geschäftskunden „Customer Account Center access for representative of“ mit dem Firmennamen. Die E-Mail enthält einen einmaligen Zugangslink, den Hinweis auf den mobilen Autorisierungscode mit 15 Minuten Gültigkeit und den Hinweis, dass die E-Mail nicht beantwortet werden kann.
+
+**Zahlungsstatus bei Export.** Während des CFDM-Batchs wechseln Rechnungen mit Erlaubnis und Zeitraum bis heute auf den Status „Accepted“. Ist MPay im Markt aktiviert, erzeugt oneSCM anschließend die MPay-Transaktion. Der Export an das Finanzsystem umfasst Rechnungen im Status „Accepted“. Bei aktiviertem MPay muss zusätzlich der MPay-Status „Captured“ oder „Refunded“ vorliegen. Ist MPay im Markt nicht aktiviert, entfällt diese Prüfung. Für den Export von Rechnungen im Nicht-MPay-Ablauf gelten die Typen MANU und MPPI im Status „Accepted“.
+
+Bei Verträgen mit Vor- und Nachaktivierung bleiben Rechnungen im Status „Accepted + Captured“, wenn der Export-Batch für CoFiCo oder SWT deaktiviert ist. Sie werden nach der erneuten Aktivierung exportiert. Bei der Nachaktivierung setzt oneSCM eine Rechnung nicht auf „Accepted“, wenn das Fahrzeug nicht autorisiert ist. Für die Zahlungsart „UPI“ und „NetBanking“ erzeugt oneSCM den Zahlungslink direkt aus der Rechnung, nicht aus der Vertragserstellung. Die Zahlart in der H-Zeile lautet für Karte „Z“, für NetBanking „Y“ und für UPI „Z“.
+
+**Ereignisse an NEMESIS.** Die Einstellung „Allow Nemesis Events to be sent“ steuert die Ereignisse. Ist sie aktiviert, sendet oneSCM Kosten-, Kunden- und Vertragsereignisse. Umsatzereignisse richten sich zusätzlich nach den Nemesis-Umsatzstatus. Sind alle Status ausgewählt, sendet oneSCM jedes Umsatzereignis. Ist nur „Accepted“ ausgewählt, sendet oneSCM nur für diesen Status. Sind alle Status abgewählt, entfällt das Umsatzereignis. Den Zahlungstyp in Verträgen setzt das Ereignis nach der Zahlungsweise: 01 für monatlich, 02 für einmalig, 04 für vierteljährlich, 05 für halbjährlich und 06 für jährlich.
+
+**Ergebnis und Systemstatus.** Die Rechnung trägt den MPay-Status und den Rechnungsstatus. Nach dem Export und einer erfolgreichen Transaktion steht die Rechnung auf „Paid“. Bei abgelehnten Zahlungen zeigt die Benachrichtigung die Referenznummer.
+
+**Besonderheiten je Markt.** Die Zahlungsarten UPI und NetBanking gelten nur für Indien. Der Einmalvertrag per Kreditkarte im Retail-Verkauf und im Online-Shop startet mit Indien. Für Kunden ohne Mercedes me Konto steht nur die Einmalzahlung zur Verfügung. Die Anbindung von MPay an Märkte außerhalb Indiens beschreibt der Klärungsbedarf.
+
+**Hinweise.** Die Benachrichtigung des MO bei abgelehnten Zahlungen erscheint im Notification Center. Die Löschung von CIAM-IDs prüft oneSCM über eine API, die das CID Tool von Mercedes me aufruft. oneSCM beantwortet die Anfrage nach den geschäftlichen Anforderungen, da eine CIAM-ID nicht gelöscht werden soll, solange sie für MPay-Zahlungen benötigt wird.
+
+**Fehlerbehebung.** Schlägt eine Zahlung fehl, prüfen Sie den MPay-Status in der Statushistorie. Ist die Wiederholung abgeschlossen, starten Sie die Zahlung über „Retry“ erneut. Ist der Zahlungslink abgelaufen, erzeugt „Regenerate“ einen neuen Link. Erscheint eine Meldung zu einer abgelehnten Zahlung, wählen Sie den Link in der Meldung und prüfen Sie die Rechnung.
+
+Quellen: Batch 157.1, 182.1, 129.2, 220.1, 216.1, 135.1, 194.1, 194.2, 160.1, 160.2, 173.1, 197.1, 215.2, 905.2, 376.2, 148.1, 903.6, 164.4, 577.4, 543.2, 905.5, 806.6, 567.1, 199.6, 217.1, 148.2
