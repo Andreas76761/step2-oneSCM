@@ -973,3 +973,168 @@ Quellen: keine Quellen in den RAG-Batches
 **Fehlerbehebung.** Fehlt ein Liefertermin, prüfen Sie, ob das Vorsystem einen Wert liefert. Der Job versucht es bei den nächsten Läufen erneut.
 
 Quellen: Batch 1178.1, 617.2
+
+## Verschiebung in andere Kapitel
+
+Die folgenden Abschnitte aus dem Material betreffen fachliche Abläufe, Oberflächen oder Testverfahren, die in anderen Kapiteln beschrieben werden. Die Architekturbeschreibung in diesem Kapitel verweist auf sie.
+
+- **Kapitel 2.2, Fachliche Rollen und technische Berechtigungen:** Batch 1290.1 (Kilometerstand durch die Rolle MO), Batch 1312.1 (Schaltfläche Admin Section für Dealer), Batch 754.7 (Händlerbenutzer mit mehreren Standorten).
+- **Kapitel 4.3, Kundendaten und Pflichtangaben prüfen:** Batch 1315.4 (Prüfung der USt-IdNr. im B2B-Prozess, Validierungsdienst in oneSCM).
+- **Kapitel 4.5, Datenübernahme aus angebundenen Systemen:** Batch 643.1, 638.3, 659.2 (Adressdaten im Mercedes me Profil), Batch 589.1 (MMe-Updates über Kafka). Die Abläufe zur Kundenanlage mit Mercedes me stehen in Abschnitt 19.11.
+- **Kapitel 4.7, Partner- und Dealerbeziehungen:** Batch 594.3, 913.1 (Eigentümerwechsel und Aktualisierung der Serviceverträge), Batch 594.5 (Änderungsprotokoll bei Änderungen ohne Eigentümerwechsel), Batch 626.3 (Validierung in der Händlerverwaltung), Batch 624.1 (Erfassung und Pflege von Händlerdaten, Dateiupload).
+- **Kapitel 5.1, Vertragsarten und Einstiegspunkte:** Batch 873.6 (Sales Channel als Feld am Vertrag für Leasing und Retail-UI).
+- **Kapitel 5.2, Fahrzeug- und Vorgangskennungen:** Batch 918.2 (Validierung der Deal-ID mit 36 Zeichen und Bindestrich).
+- **Kapitel 5.3, Fahrzeugdaten, Pflichtfelder und Validierungsregeln:** Batch 22.2 (Servicehistorie und Zulassung für Verträge), Batch 874.6 (Fahrgestellnummer nach Erfassung der FRD).
+- **Kapitel 8.3, Fehlende Fahrzeugdaten und Dokumente ergänzen:** Batch 918.5 (Deal-ID mit Fahrgestellnummer und Schaltfläche Update), Batch 423.1 (E-Mail bei ergänzten Vertragsdaten).
+- **Kapitel 9.2, MO Checks innerhalb der Vertragsanlage:** Batch 403.2 (interne Benachrichtigung bei gesperrten Fahrzeugen), Batch 921.3 (Überweisung bei Account Note ungleich K mit Prüfung und Benachrichtigung).
+- **Kapitel 9.8, Contract Review: Profile und Übersicht:** Batch 220.4 (Marktcode bei Rechnungen der Vertragsprüfung).
+- **Kapitel 10.4, Aussetzen und Reaktivieren:** Batch 810.3 (vorzeitige Beendigung eines suspendierten Vertrags).
+- **Kapitel 10.5, Verlängerung, Folgeangebot und Folgevertrag:** Batch 777.4 (Bestätigung durch den Kunden und Ratenneuverteilung bei Langzeitverlängerung).
+- **Kapitel 10.6, Kündigung, Stornierung und Beendigung:** Batch 810.3 (Enddatum bei Stornierung, Early Settlement).
+- **Kapitel 10.8, Änderungshistorie und Nachvollziehbarkeit:** Batch 857.2 und 825.7 (VEGA-Historie), Batch 1315.2 (globaler Historienservice).
+- **Kapitel 10.9, Laufleistung, Kilometerstandshistorie und Prognose:** Batch 201.4 (neuer Kilometerstand nach Werkstattrechnung), Batch 516.2 (Kilometerstand-API als Benutzersicht).
+- **Kapitel 11.4, Kostenmanagement und Claims:** Batch 142.5 (externe Händlerprovision in der E169 mit dem Exporttyp ESER).
+- **Kapitel 14.2, Marktspezifische Einstellungen:** Batch 1301.1 (Schadencodes je Markt und Sprache), Batch 1303.1 (Tax Management im Tab der Markteinstellungen), Batch 201.4 (Steuerfaktor für Indien).
+- **Kapitel 14.5, Administrationsbereich und zulässige Aktionen:** Batch 1255.4, 1274.4, 1246.7 (VEGA-Codes und Coverage-Arten), Batch 125.6 (sichtbare Bereiche im Admin-Bereich).
+- **Kapitel 14.6, Marktbezogene Sichtbarkeit und Berechtigungen:** Batch 1301.1 (Sichtbarkeit der Seite VEGA Codes für Marktbenutzer).
+- **Kapitel 14.8, Produktdefinition, Anlage und Veröffentlichung:** Batch 1217.3 (Marktauswahl für Produkte), Batch 1161.1 (Kostenverantwortung und Ausschluss der Deckungen von der i155).
+- **Kapitel 16.4, Testnachweise und produktiver Funktionsstand:** Batch 1290.1 und 1288.1 (autonomes QA-Framework), Batch 1303.1 (AQA-Themen des Programminkrements), Batch 1306.1 und 1298.2 (Testflows, Architektur der Tests), Batch 1297.1 (Regressionstest-Design), Batch 1295.1 (automatische Ursachenanalyse für UI-Tests), Batch 1299.1 (Konfiguration für den KI-Einsatz in der Entwicklung), Batch 1304.1 (Prüfschritt für Vertrags-PDF-Dateien), Batch 1287.1 (interne Testautomatisierung).
+- **Kapitel 17.1, Zielmärkte und Einführungsumfang:** Batch 132.1 (Märkte Schweiz und Tschechien mit Konfiguration, Batch-Jobs und S3-Pfaden).
+- **Kapitel 18.2, Quellsysteme und Datenobjekte:** Batch 1290.1 (Migration der Datenbasis, Verwaltungsfunktionen NEMESIS und Prolongation).
+- **Kapitel 22.4, Releaseinformationen und Änderungsübersicht:** Batch 1290.1 (Apollo-Rollout), Batch 1302.2 (Angular und Java 21), Batch 919.2 (BRABUS mit Java 21), Batch 3.6 und 11.3 und 1277.9 (CePro-Import und Batch-Job-Oberfläche), Batch 143.4 (Batch-Timer und Verträge), Batch 164.7 (Fehlerbehebungen bei i156 und i155), Batch 305.4 (Fehlerbehebungen in ETL, Backend und UDM), Batch 129.4 (Operation-ID bei Einmalverträgen im CoFiCo-Export), Batch 163.3 (Prüfung des NACOS-Jobs), Batch 220.4 (erneutes Senden von Revenue-Ereignissen an NEMESIS), Batch 623.4 (Prüfung von E-Mail-Einschränkungen), Batch 1081.5 (Warteschlange der i155), Batch 534.2 (Benutzerbenachrichtigungen und Betriebsstörungen).
+- **Kapitel 23.5, Support- und Eskalationswege:** Batch 1313.1 (Hotfix- und Notfallmanagement).
+
+## Klärungsbedarf
+
+Die folgenden Punkte enthalten Widersprüche, unklare Aussagen oder Meldungen, die im Material als eingestellt oder geschlossen geführt sind. Sie gehören nicht in den Fließtext.
+
+**Widersprüche im Material**
+
+- Vertragstyp des Produkts CompleteCare: Batch 843.5 nennt P_CPLC statt P_EXC, Batch 1217.3 nennt den Wechsel von P_CPLC zu 1P_CPLC, Batch 778.3 nennt den Wechsel von 1P_CPLC zu 1P_FSV.
+- Branchenschlüssel an VEGA: Batch 934.1 beschreibt die Übermittlung in RC05 an den Positionen 266 bis 269, Batch 771.4 beschreibt, dass die Position leer bleibt.
+- Zahlungstyp in NEMESIS: Batch 157.1 nennt 01 für monatlich, 02 für einmalig, 04 für vierteljährlich, 05 für halbjährlich und 06 für jährlich. Batch 263.2 nennt 01 für fest oder variabel, 02 für einmalig und 03 für Stufenpreise. Batch 819.4 nennt 02 für einmalig.
+- Länge der Zguid in NEMESIS: Batch 229.6 und 819.4 nennen 30 Stellen, Batch 1068.7 nennt 32 Zeichen.
+- Auslöser des Revenue-Ereignisses in NEMESIS: Batch 263.2 nennt den Export mit Status Exported, Batch 253.4 nennt den Zeitpunkt nach der Buchung im Finanzsystem.
+- Startstatus eines Kunden in der Slowakei: Batch 619.1 nennt Temporary, Batch 620.1 und 586.1 nennen Waiting for Confirmation für SWT-Märkte.
+- Abgleich von SAP- und SEPA-Daten bei inaktiven Kunden in CoFiCo-Märkten: Batch 619.1 nennt oneERP.
+- Rückmeldedatei für CoFiCo: Batch 177.1 nennt die Rückmeldedatei von SWT.
+- Verwendung von taxNumber in SWT: Batch 581.3 bezeichnet die Nutzung als noch zu klären.
+- Delta-Format der Datenprodukte: Batch 317.1 nennt nur das Parquet-Format mit Vollladung, Batch 314.1 nennt Plain Parquet und Delta als Iceberg-Tabellen.
+- Kundentypen für das Kunden-Datenprodukt: Batch 317.1 nennt die Herkunft aus dem Altsystem, oneSCM liefert diese Typen nach Angabe des Materials nicht.
+- Datumsformat bei Leasingverträgen: Batch 520.1 nennt für die Aktualisierung das Format TT.MM.JJJJ, für die Anlage das ISO-Format.
+- Zuweisung von Benachrichtigungen: Batch 428.2 beschreibt die Zuweisung als verfügbar, Batch 461.1 und 440.1 nennen erweiterte Funktionen wie die Zuweisung als künftige Ausbaustufe.
+- Anzeige der Zahlungslink-Gültigkeit: Batch 806.6 nennt Sekunden, Batch 129.2 nennt Minuten in der Oberfläche.
+- Sichtbarkeit des Abschnitts MPay Information: Batch 216.1 nennt die Umgebungen DEV, INT und PREPROD, Batch 220.1 nennt DEV und INT.
+- Markt Südkorea: Batch 557.1 führt die Einführung im Dev Backlog, Batch 109.1 beschreibt Konfiguration und S3-Pfade. Der SAP Company Code fehlt nach Batch 109.1.
+- Nemesis-Validierung und Statusübergänge im Material: Batch 241.1 führt die Validierungen vor dem Versand als offen, Batch 251.5 führt sie als abgebrochen.
+- Vertragsstatus Created für Aktualisierungen über den Edge Service: Batch 1095.2 beschreibt das Verhalten als Vorhaben.
+- Erzeugungszeitpunkt der i155 und Übertragung an VEGA: Batch 862.2 nennt eine Erzeugung um 22 Uhr und eine Übertragung um 1 Uhr als Beispiel, das Zeitintervall fehlt.
+
+**Unklare oder nicht belegte Aussagen**
+
+- Rückmeldung von VEGA als Bericht an oneSCM: Batch 862.3 beschreibt die Abnahmekriterien, die Anbindung ist nicht belegt.
+- Statuswechsel von active zu terminated über die Statusschnittstelle: Batch 1040.3 nennt einen Endpunkt als zu klären.
+- Erlösverwaltung für Balancing und Schlussrechnung: Batch 841.1 nennt die Anbindung ab PI5. Der Ablehnungsgrund bei abgelaufener Gültigkeit wird als Vorschlag beschrieben: Batch 841.1.
+- Datenquelle der Laufleistung aus DSB oder MiC: Batch 1204.6 nennt einen Testlauf im BAT-Test.
+- Prüfungen für Fahrzeugalter, Höchstlaufleistung und einzige abgelaufene Preisversion: Batch 1251.4 nennt diese Prüfungen als nicht Teil der Umsetzung.
+- Kreditkartenwechsel über MPay: Batch 199.6 nennt den Status Blocked BAT Testing.
+- Einmalverträge im Online-Shop und Zahlung per PayPal: Batch 217.1 und 148.2 enthalten keine vollständigen Angaben.
+- Bank-Dialog für mehrere IBANs und Zahlungsdetails mit Hauptkonto: Batch 1210.1 nennt diese Vorhaben ohne Status.
+- Mock-Daten für die Vertriebsprovision und Variable expiryCriteria: Batch 1210.1.
+- Pflicht der Lieferantenstammdaten über SDB4 und die Übergangslösung: Batch 1161.1.
+- Auswahl der Lieferantendaten über SDB4 als Schnittstelle: Batch 617.2.
+- Verarbeitung des Kundenmicroservice: Batch 681.2 enthält nur Platzhalter.
+- Datensatz HDRPAR in einer Datei mit VEGA-Händler-ID: Batch 740.6 nennt eine Testkennung und keine Dateibezeichnung.
+- Zeitfenster für Ausfall und Aufholen der Lieferantenberichte sowie Zeitregeln: Batch 297.1.
+- Benachrichtigung über Jobfehler bei Nemesis und ISP: Batch 304.1 und 303.1.
+- Lösung für Kafka-Datenfehler im Reporting: Batch 304.1.
+- Kundenabfrage Searchdealership über Outlet-ID: Batch 572.6 nennt die Integration als offen.
+- Synchronisation der Kundendaten mit Elasticsearch bei der Produktindizierung je Markt: Batch 1165.2 nennt die marktübergreifende Ausführung als nicht umgesetzt.
+- Daten der Lieferantenberichte aus der Historie: Batch 297.1.
+- Konsistenz der Dateinamen und der Rückmeldeordner für SWT und CoFiCo: Batch 1302.1 nennt die Ordner für Fehlerrückmeldungen, die Abläufe fehlen.
+- Migration der VEGA-Ordner auf globale Ordner und Umbenennung VEGA-ALL: Batch 1290.1 beschreibt die Zielstruktur mit Migrationsskripten, der Stand ist nicht belegt.
+- Protokollierung personenbezogener Kundendaten: Batch 1291.1 beschreibt Daten in Anwendungslogs und in Datadog. Die Entfernung dieser Daten ist im Material nicht als erledigt belegt.
+- Rolle mit reinen Leserechten: Batch 1298.2 und 1290.1 beschreiben Fehler auf der Startseite und in der Produktverwaltung.
+- Erweiterte Funktionen des Benachrichtigungscenters: Batch 461.1 und 444.1, siehe Vorschlag zur Gliederung.
+- Abschnitte ohne Inhalt: Batch 1305.1 und 1314.1 enthalten nur Überschriften.
+- Ausstehende Gespräche zu Architekturthemen der Dokumentation: Batch 1299.1 beschreibt eine KI-Konfiguration ohne Zielbild.
+- Zusammenführung der externen Anwendungen: Batch 1180.1 nennt keine Einzelheiten.
+- Automatische Ursachenanalyse: Batch 1295.1 beschreibt den Stand als offen.
+- Zusammenführung der Machbarkeitsprüfung und Leasing-SA-Codes: Batch 527.1 führt den SA-Code-Punkt als geschlossen.
+- Endpunkte für die Produktsuche in Version 2 und das Feld mileageType: Batch 534.1 und 513.2.
+- Validierung der Datumsangaben und Fehlerformat RFC 9457: Batch 515.1 nennt die Konventionen als offen.
+- Callbacks des Edge Service mit Speicherung nicht verarbeitbarer Ereignisse und Berechtigungen für externe Systeme: Batch 512.1.
+- Vollständiger Stand der Edge-Endpunkte für Online-Vertrieb und Leasing: Batch 514.1 und 514.2 beschreiben einen Zielzustand.
+- Push-Back-Endpunkt und Voraussetzungen zum Verbindungsaufbau von TraCS: Batch 565.4.
+- Migration des Screenings von CAS zu TraCS: Batch 565.1 beschreibt die Migration, ihr Stand ist nicht belegt.
+- Transparenz bei systemseitig ausgelösten Änderungen im FI-System: Batch 587.2 nennt keine Details.
+- Sync-API von CoFiCo und Termin des Lieferanten: Batch 584.1.
+- BankId bei IBAN-Änderung in CoFiCo: Batch 585.5 nennt die Klärung als offen.
+- Business Registration Number, Zahlungsart und Namensformat für Südkorea: Batch 557.1.
+- Anbindung der Business-Partner-API für Lieferanten: Batch 650.2 nennt die Schnittstelle für die Datei als noch nicht festgelegt.
+- Gutschrift in der E169 für Privatkunden und Prüfung des Banküberweisungspfads: Batch 883.7.
+- Erweiterung von NEMESIS um Management-Verträge: Batch 183.4 und 708.4.
+- Speicherung von NEMESIS-Ereignissen in der Datenbank: Batch 162.2 beschreibt die Speicherung als Vorhaben ohne Status.
+- Audit Report für NEMESIS: Batch 145.1 nennt den Stand als Planung.
+- Dynamische Ermittlung von Country Code und Company Code für weitere Märkte in NEMESIS: Batch 161.3.
+- Funktionale Fehler der NEMESIS-Liste mit Nummern 83, 250, 225 und 247: Batch 163.4 führt die Zuordnung des Payloads als geschlossen.
+- Zahlungsbeginn und Zahlungsende bei subventionierten Verträgen in NEMESIS: Batch 144.2 nennt eine Spaltenanpassung im PI-Backlog.
+- Test für die Fehlerbehandlung in NEMESIS: Batch 240.2 nennt den Test als offen.
+- Tägliche Bereitstellung der Fehlerprotokolle durch NEMESIS: Batch 240.2 und 251.1.
+- Ausgehende Rechnungsstellung für CoFiCo über CFT und Axway: Batch 212.2 führt die Integration als abgebrochen.
+- Lieferantennummer aus oneERP über SDB4: Batch 617.2 führt die Untersuchung als nicht weiterverfolgt.
+- DATIX-Kundendatenexport mit .xlsx-Format: Batch 617.4 führt die Funktion als geschlossen.
+- Point-in-Time-Recovery für die Wiederherstellung: Batch 1313.1 führt das Verfahren als abgebrochen.
+- Hintergrundfehler bei Vertragsstatus-Updates und Mahnstufen: Batch 208.4 und 208.2 enthalten Regeln ohne Angabe des Status.
+- Vorgang bei Datumsabweichungen im Erstzulassungsdatum: Batch 1230.4 nennt Anpassungen als später festzulegen.
+- Kundenkreditoren für Eigentümerwechsel in ROW-Märkten: Batch 594.3.
+- Nemesis Revenue-Felder und Ereignisse für Management-Verträge: Batch 229.6.
+- Kafka Bonus-Eventuelle Ereignisse von oneERP für SA26 und SA31: Batch 1142.6 beschreibt den Ablauf ohne Status.
+
+**Eingestellte oder geschlossene Meldungen**
+
+- Batch 1303.1: Vorhaben Configure Market Users abgebrochen.
+- Batch 1304.2: Globaler Wiederholungsmechanismus, Verringerung von Aufrufen am Vertragsservice, Verlagerung von Konfigurationen aus dem Secrets Manager, automatische Versionierung von OpenSearch-Indizes, Umstellung der API auf Market ID und die Verschiebung der Steuerkonfiguration sind geschlossen.
+- Batch 1291.1: Cross-Browser-Tests und Roadmap der Testautomatisierung sind im Backlog eingetragen.
+- Batch 1290.1: Erweiterung des manuellen Regressionspakets und automatisierte Testprüfung nach Deployments sind abgebrochen.
+- Batch 1313.1: PROD-Release mit Freigaben und Point-in-Time-Recovery sind abgebrochen.
+- Batch 1290.1 und 1313.1: Die Umbenennung aller Microservices ist abgebrochen.
+- Batch 545.1: Ein Ticket zum Import der I156-Datei ist geschlossen. Die Umbenennung der Microservices ist abgebrochen.
+- Batch 145.1 und 144.2: Audit Report und Spalte Resend date stehen im Planungsstand.
+- Batch 163.4: Payload-Protokollierung in Datadog für NEMESIS ist geschlossen.
+- Batch 521.1: Stabilität des Reportings im Edge Service ist geschlossen.
+- Batch 617.2: Lieferantennummer aus oneERP ist abgebrochen.
+- Batch 617.4: DATIX-Kundendatenexport ist geschlossen.
+- Batch 212.2: CoFiCo-Integration für die ausgehende Rechnungsstellung ist abgebrochen.
+- Batch 1288.1: Der Architekturpunkt zu PI17 ist abgebrochen.
+- Batch 565.1 und 565.4: Migration von CAS zu TraCS mit Push-Back-Endpunkt.
+- Batch 1290.1: Die geplante Umstellung der Datenprodukte auf das Delta-Table-Format ist abgebrochen.
+- Batch 317.1: Das Feld payment_interval_txt im Base-Contract-DP ist abgebrochen. Es bleibt im Base-Revenue-DP verfügbar.
+- Batch 1290.1 und 1302.2: Angular und Java-Versionen sind als Vorhaben ohne Zeitangabe beschrieben.
+- Batch 1297.1: Die Pipeline für Regressionstests steht im Entwicklungsstand.
+- Batch 1295.1: Das Skript zur Ursachenanalyse steht im Entwicklungsstand.
+- Batch 1302.2: Angular 15.2.0 auf 18.2.X.
+- Batch 1313.1 und 1304.2: Themen, die nicht weiterverfolgt wurden.
+
+**Vorläufige Angaben, die nicht in den Fließtext übernommen wurden**
+
+- Batch 1290.1: Das Vorhaben Zusammenführung der Berechtigungen für Edge-Systeme ist im Material als Vorhaben beschrieben.
+- Batch 129.4, 163.3 und 220.4: Die Fehlerbehebungen sind in Abschnitt 22.4 verschoben.
+- Batch 1095.2: Der Stand der Slowakischen Übersetzung des Ländernamens im BAT-Test.
+- Batch 1204.6 und 151.1: BAT-Test ohne Abschluss.
+- Batch 1082.5 und 1142.6: Status BAT Confirmed.
+- Batch 528.1: Vertrags-API mit Blockierung im BAT-Test, Erweiterungen des Kundentyps, Branchenfaktor und SA-Codes im Vorhaben, Ticket zum internen Serverfehler abgebrochen.
+- Batch 513.1: Das Vorhaben hat die niedrigste Priorität und kann zurückgestellt werden.
+- Batch 534.1: Die geplante Neugruppierung der Anfragen ist abgebrochen.
+
+## Vorschläge zur Gliederung
+
+- **Finanzsysteme zusammenführen:** Die Unterkapitel 19.11 bis 19.14 beschreiben oneERP, CoFiCo, SWT und NEMESIS. CoFiCo und SWT ergeben im Material ähnliche Abläufe. Ein Unterkapitel „Finanzsysteme und Dateiexporte“ mit Abschnitten je System würde die Wiederholungen verringern. Das Unterkapitel 19.13 für SWT hat keine eigenen Quellen und könnte dort aufgehen.
+- **Kunden- und Partnerintegration:** Das Unterkapitel 19.11 umfasst Kundenanlage, CAS, IBAN-Prüfung, Mercedes me, Behördenkunden und Materialnummern. Ein eigenes Unterkapitel für Kundenintegration und Sanktionsprüfung wäre sinnvoll.
+- **Edge Service als eigenes Unterkapitel:** Die Endpunkte verteilen sich auf 19.9, 19.18 und 19.22. Ein Unterkapitel mit Endpunktkatalog, Verträgen und Konventionen würde die Lesbarkeit verbessern.
+- **Batch-Jobs als eigenes Unterkapitel:** Die Steuerung der Batch-Jobs umfasst Zeitpläne, Aktionen, Dateisuche, Berechtigungen und Ausführungshistorie. Im Unterkapitel 19.22 ist das ein eigener Schwerpunkt.
+- **Notification Center und Freigaben:** Die Benachrichtigungen, die Zuweisung und die Vier-Augen-Freigabe stehen in 19.18 und 19.23. Ein eigenes Unterkapitel würde die Themen bündeln.
+- **Einzelsteckbriefe ohne Material:** Die Unterkapitel 19.6, 19.7, 19.8, 19.10, 19.13, 19.16, 19.20 und 19.25 bis 19.30 haben keine Quellen. Sie sollten gestrichen oder mit Quellen aus weiteren Batches belegt werden. Die Einzelsteckbriefe 19.24 und 19.31 enthalten nur wenige Quellen.
+- **Einheitliche Benennung der Einzelsteckbriefe:** Die Titel der Unterkapitel 19.24 bis 19.31 nutzen einen anderen Aufbau als die Unterkapitel 19.2 bis 19.22. Eine einheitliche Benennung wäre hilfreich.
+- **Datenplattform aufteilen:** Das Unterkapitel 19.19 vereint Überwachung, Ladewege, Scheduler und Datenprodukte. Eine Aufteilung in zwei Unterkapitel wäre übersichtlicher.
+- **Testautomatisierung in Kapitel 16:** Die Batches zur Testautomatisierung, zur AQA und zur Ursachenanalyse gehören in Kapitel 16.4 und nicht in die IT-Architektur.
