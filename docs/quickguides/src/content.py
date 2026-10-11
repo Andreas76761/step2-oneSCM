@@ -689,10 +689,41 @@ from content_extra import add_extra
 add_extra(G, guide, T, cols, LINK_HB, LINK_FAQ, LINK_GLOSSAR, LINK_SUPPORT, LINK_RP)
 
 
-def build(path):
-    json.dump(G, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    return len(G)
+PKW = [
+    ("Kann ich mit der Van-Rolle Pkw-Verträge anlegen?", "Kann ich mit der Pkw-Rolle Van-Verträge anlegen?"),
+    ("Nein, dafür ist die Pkw-Rolle und der passende Kontext nötig (Kapitel 2.2).", "Nein, dafür ist die Van-Rolle und der passende Kontext nötig (Kapitel 2.2)."),
+    ("oneSCM.DealerVAN", "oneSCM.DealerPKW"),
+    ("im Van-Geschäft", "im Pkw-Geschäft"),
+    ("Ab Bestellung: VerSO-**Order-ID**", "Ab Bestellung: **Auftragsnummer aus GO**"),
+    ("ab Bestellung die VerSO-Order-ID", "ab Bestellung die Auftragsnummer aus GO"),
+    ("Baumuster, OTR-Deal-ID, VerSO-Order-ID oder VIN/FIN", "Baumuster, OTR-Deal-ID, GO-Auftragsnummer oder VIN/FIN"),
+    ("aus OTR, VERSO/VOM oder MIC; Van-Stammdaten aus CEPRO", "aus OTR, GO oder MIC (Kapitel 19.2); Van-Stammdaten aus CEPRO"),
+    ("Hilfestellung Servicevertrag Van über **sc-van@mercedes-benz.com**; weitere Wege je Markt", "Hilfestellung Servicevertrag Pkw über den Supportweg Ihres Marktes (Kapitel 23.5)"),
+    ("**Hilfestellung Servicevertrag Van**: __sc-van@mercedes-benz.com__", "**Hilfestellung Servicevertrag Pkw**: Supportweg Ihres Marktes (Kapitel 23.5)"),
+    ("Die Vorlage dieses Quick Guides ist das Van-Beispiel „Antragserstellung und -verwaltung“.", "Diese Pkw-Variante beruht auf dem Van-Beispiel „Antragserstellung und -verwaltung“; Pkw-Kennungen siehe Kapitel 21.2."),
+    ("Beispiel 1 entspricht dem Fall der Van-Vorlage „Antragserstellung und -verwaltung“.", "Beispiel 1 entspricht dem Fall der Van-Vorlage „Antragserstellung und -verwaltung“, hier mit Pkw-Kennungen."),
+    ("Welches Beispiel passt für Van-Händler?", "Welches Beispiel passt für Pkw-Händler?"),
+    ("beide mit Van-Kennungen", "beide mit Pkw-Kennungen"),
+    ("im Design der Van-Vorlage", "im Design der Van-Vorlage, als Pkw-Variante"),
+]
+
+def _subst(o):
+    if isinstance(o, str):
+        for a, b in PKW: o = o.replace(a, b)
+        return o
+    if isinstance(o, list): return [_subst(x) for x in o]
+    if isinstance(o, dict): return {k: _subst(v) for k, v in o.items()}
+    return o
+
+def build(path, variant="van"):
+    data = G
+    if variant == "pkw":
+        data = _subst(G)
+        for g in data:
+            g["variant"] = "für Pkw"; g["slug"] = g["slug"] + "_Pkw"
+    json.dump(data, open(path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    return len(data)
 
 if __name__ == "__main__":
     import sys
-    print(build(sys.argv[1]), "Guides geschrieben")
+    print(build(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else "van"), "Guides geschrieben")
