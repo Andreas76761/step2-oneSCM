@@ -713,7 +713,7 @@ Quellen: Batch 1302.1, 1290.1, 141.1, 719.2, 225.3, 843.5, 851.1, 820.7, 1246.5,
 
 **Voraussetzungen.** Für den Zugriff auf den Batch-Job-Bereich benötigen Sie eine Admin-Rolle. MO-Benutzer sehen Batch-Jobs und deren Läufe, ohne sie zu verändern. Externe Partner nutzen den Edge Service mit einer technischen Berechtigung für die betreffenden Endpunkte.
 
-**Rollen.** Administratoren verwalten Batch-Jobs, laden und laden herunter. MO-Benutzer sehen Batch-Jobs und Läufe. Partnersysteme wie Leasingpartner und Online-Vertrieb rufen den Edge Service auf. Der Support analysiert Fehler über die Protokolle.
+**Rollen.** Administratoren verwalten Batch-Jobs und laden Dateien herunter. MO-Benutzer sehen Batch-Jobs und Läufe. Partnersysteme wie Leasingpartner und Online-Vertrieb rufen den Edge Service auf. Der Support analysiert Fehler über die Protokolle.
 
 **Edge Service.** Der Edge Service ist die externe Schnittstelle für Online-Vertrieb, Leasing, Produkte, Verträge und Kilometerstände. Die Schnittstelle richtet sich an Partner und an das Frontend.
 
@@ -729,11 +729,11 @@ Die Endpunkte für Produkte und Preise liefern die Währung als dreistelligen IS
 
 Die Produktsuche gibt den Preis für die übergebene Kombination aus Laufleistung und Laufzeit aus. Fehlt diese Angabe, liefert die Antwort den Preis der kleinsten verfügbaren Kombination. Zusätzlich enthält die Antwort alle verfügbaren Kombinationen des Produkts. Über das Feld mileageType unterscheidet die Anfrage jährliche Laufleistung „annual“ und Gesamtlaufleistung „total“, das Feld requestedMileage übernimmt die Angabe. Die vollständige Preismatrix liefert ein eigener Preis-Endpunkt mit Produkt-ID als Pflichtparameter.
 
-Die Leasingsuche antwortet nach der Korrektur mit der vorgesehenen Antwort. Bei der Aktivierung eines Leasingvertrags übergibt oneSCM die Zahlungsreferenz. Der Endpunkt POST contract/v1/leasing akzeptiert die externalCampaignId als Zeichenkette. Die Produktsuche mit product/v2/search ruft Produkte ab, und der Sprachwert der Produktsuche in product/v1/search steht in den Headern.
+Die Leasingsuche liefert die vorgesehene Antwort. Bei der Aktivierung eines Leasingvertrags übergibt oneSCM die Zahlungsreferenz. Der Endpunkt POST contract/v1/leasing akzeptiert die externalCampaignId als Zeichenkette. Die Produktsuche mit product/v2/search ruft Produkte ab, und der Sprachwert der Produktsuche in product/v1/search steht in den Headern.
 
 Die Edge-Endpunkte für Verlängerungen und Verträge bieten nur zulässige Kombinationen aus Laufleistung und Laufzeit an. Bei Langzeitverlängerungen und kurzfristigen Verlängerungen gilt die Verlängerungsregel aus Abschnitt 19.9. Der Edge Service prüft beim Anlegen eines Vertrags das Erstzulassungsdatum und das Datum der Anfrage.
 
-Der Vertrag aktualisiert sich über den Edge Service auch dann, wenn er im Status „Created“ steht. Diese Aussage erfasst der Klärungsbedarf.
+Ob sich Verträge im Status „Created“ über den Edge Service aktualisieren lassen, erfasst der Klärungsbedarf.
 
 **Batch-Jobs im Schnittstellenbetrieb.** Die Dateien und Ereignisse der Schnittstellen verarbeiten Batch-Jobs. Die Übersicht „Batch Job Management“ im Bereich Admin zeigt alle Batch-Jobs aller Märkte mit Name, Status, Markt-ID, Dauer, Zeitpunkt und Status des letzten Laufs, dem Zeitplan und den Aktionen. Globale Jobs, zum Beispiel für die Synchronisation mit Elasticsearch, den CePro-Import und die Dokumentmetadaten, führt das System unter dem Markt „Global“. Sie erscheinen in allen Märkten. Ein Filter nach Markt zeigt also sowohl die globalen Jobs als auch die Jobs des gewählten Marktes.
 
@@ -750,7 +750,7 @@ Die Zeitangaben der Batch-Jobs stehen in UTC. Der Dashboard-Filter nennt die Fel
 3. Mit „Enable“ aktiviert ein Administrator einen deaktivierten Job. Ein Job läuft nach dem Zeitplan nur, wenn er den Status „Enabled“ hat.
 4. Mit „Stop“ beendet ein MO-Benutzer einen laufenden Job, siehe Abschnitt 19.17.
 
-Ein Lauf lässt sich nur noch starten, wenn der Job in der aktuellen Sitzung aktiviert ist. Neu angelegte Jobs sind standardmäßig deaktiviert.
+Ein Lauf startet nicht, wenn der Job in einer anderen Sitzung deaktiviert wurde. Neu angelegte Jobs sind standardmäßig deaktiviert.
 
 Die Sprache der Oberfläche übergibt oneSCM beim Auslösen eines Batch-Jobs im HTTP-Header X-Language, analog zum Header X-Market. Der Wert ist verpflichtend und steht dem Job als Parameter language zur Verfügung.
 
@@ -778,9 +778,9 @@ Die Datei enthält weitere Angaben. Der Startkilometerstand steht rechtsbündig 
 
 Die Kontingentzählung im Satz RC20 erfolgt für Basisleistungen. Optionale Leistungen und Karosserieleistungen zählen nicht. Bei Reifen- und Kontingentprodukten stehen in den Positionen 165 bis 169 und 170 bis 174 die Werte „00000“ und die Position 175 bleibt leer. Andernfalls trägt die Position den Wert 1 ein. Die Deckungskategorie „Duration and Mileage“ wird im Satz RC20 entsprechend konfiguriert.
 
-Die Warteschlange des Exports leert oneSCM, sodass Verträge nicht mehr wiederholt exportiert werden. Die Datei wird auch für das Herunterladen aus der Vertragshistorie bereitgestellt. Der Batch-Job I155 läuft in der Integrationsumgebung fehlerfrei. Die Datei wird mit getBatchContracts erzeugt, deren Antwort FIN und VIN enthält.
+Die Warteschlange des Exports leert oneSCM, sodass Verträge nicht mehr wiederholt exportiert werden. Die Datei wird auch für das Herunterladen aus der Vertragshistorie bereitgestellt. Der Batch-Job I155 läuft in der Integrationsumgebung fehlerfrei. Die Antwort der Schnittstelle getBatchContracts enthält FIN und VIN.
 
-**Nemesis-Schnittstelle.** Die Zguid in den Nemesis-Ereignissen wird mit führenden Nullen auf 30 Stellen angegeben. Der Ländercode für Deutschland lautet 20000, der IconTenant entspricht der 1SCM-Tenant-ID, und der CompanyCode lautet DE01. Beim Wechsel des Zahlungsintervalls von monatlich auf einmalig sendet oneSCM ein Contract-Master-Ereignis mit ExtentionReductionIndicator E und PaymentType 02. Das Zahlungsbeginn-Datum entspricht dem Feld „Invoice period from“ der ersten Rechnung des Zahlungsplans, das Zahlungsende dem Feld „Invoice period to“ der letzten Rechnung. Im Feld für die externe Vertragsnummer übermittelt oneSCM nicht die oneSCM-Vertragsnummer. Das Contract-Ereignis gelangt auch dann an Nemesis, wenn der Vertrag mit einem Fehler bereits verarbeitet wurde, es entsteht kein Fehlerereignis, wenn das Vertragsereignis erfolgreich übermittelt wurde. Die Abweichung zwischen geplanter Vertragsdauer in der Oberfläche und in der Kafka-Nachricht ist im Material als beseitigt beschrieben.
+**Nemesis-Schnittstelle.** Die Zguid in den Nemesis-Ereignissen wird mit führenden Nullen auf 30 Stellen angegeben. Der Ländercode für Deutschland lautet 20000, der IconTenant entspricht der 1SCM-Tenant-ID, und der CompanyCode lautet DE01. Beim Wechsel des Zahlungsintervalls von monatlich auf einmalig sendet oneSCM ein Contract-Master-Ereignis mit ExtentionReductionIndicator E und PaymentType 02. Das Zahlungsbeginn-Datum entspricht dem Feld „Invoice period from“ der ersten Rechnung des Zahlungsplans, das Zahlungsende dem Feld „Invoice period to“ der letzten Rechnung. Im Feld für die externe Vertragsnummer übermittelt oneSCM nicht die oneSCM-Vertragsnummer. Erfolgreich übermittelte Vertragsereignisse erzeugen kein Fehlerereignis in NEMESIS. Die Abweichung zwischen geplanter Vertragsdauer in der Oberfläche und in der Kafka-Nachricht ist im Material als beseitigt beschrieben.
 
 Für den Nemesis-Import nimmt die Schnittstelle den Dateinamen als Request-Parameter entgegen und dekodiert ihn. Die Rechnungsfilter-API berücksichtigt den Rechnungstyp.
 
@@ -796,5 +796,5 @@ Bei einem Ausfall der Historie holen die Ereignisse nach der Wiederherstellung a
 
 **Ergebnis und Systemstatus.** Eine erfolgreich verarbeitete Schnittstelle erzeugt einen Eintrag in der Ausführungshistorie des Jobs und einen Status am betroffenen Datensatz. Fehler erscheinen im jeweiligen Fehlerbereich oder in der Datadog-Protokollierung, siehe nächster Teil.
 
-Quellen: Batch 514.1, 512.1, 514.2, 534.1, 513.2, 515.1, 532.2, 527.1, 533.2, 520.1, 518.1, 524.2, 1253.2, 1095.2, 1107.5, 1113.5, 1027.3, 1079.6, 1081.5, 1100.4, 1111.5, 1096.5, 1082.4, 1092.3, 93.1, 771.4, 184.1, 184.4, 196.1, 205.2, 208.2, 208.4, 1310.4, 1180.1, 7.6, 855.3, 796.3, 714.6, 716.3, 795.5, 819.4, 1068.7, 1069.7, 297.1, 565.3, 565.4, 519.10, 1299.2, 667.4, 251.6, 223.4, 1070.7, 1080.3
+Quellen: Batch 514.1, 512.1, 514.2, 534.1, 513.2, 515.1, 532.2, 527.1, 533.2, 520.1, 518.1, 524.2, 1253.2, 1095.2, 1107.5, 1113.5, 1027.3, 1079.6, 1081.5, 1100.4, 1111.5, 1096.5, 1082.4, 1092.3, 93.1, 771.4, 184.1, 184.4, 196.1, 205.2, 208.2, 208.4, 1310.4, 1180.1, 7.6, 855.3, 796.3, 714.6, 716.3, 795.5, 819.4, 1068.7, 1069.7, 297.1, 565.3, 565.4, 519.10, 1299.2, 667.4, 251.6, 223.4, 1070.7
 

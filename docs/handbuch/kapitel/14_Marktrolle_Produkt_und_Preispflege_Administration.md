@@ -210,7 +210,7 @@ Quellen: Batch 975.1, 482.3
 6. Im Schritt 5 legen Sie die Preismatrix und die Limits fest. Limits zeigen Mindest- und Höchstwerte für das Alter bei Vertragsbeginn in Monaten und für die Laufleistung in Kilometern, für MPC, Direct-to-Customer und Dealership.
 7. Im Schritt 6 definieren Sie die Fahrzeugvoraussetzungen. Die Option „Allow vehicles with age less than“ akzeptiert Tage von 1 bis 999 ohne Dezimalstellen.
 8. Im Schritt 7 prüfen Sie die Produktzusammenfassung und bestätigen. Der Bestätigungsdialog nach dem Absenden reagiert auf die Eingabetaste mit der Hauptaktion.
-9. Speichern Sie einen Entwurf jederzeit als Entwurf. Ein Entwurf mit nur dem Produktnamen lässt sich speichern. Ein Entwurf lässt sich abschließen, auch wenn Sie zuletzt Schritt 4 bearbeitet haben. Nach dem Abschluss erhält das Produkt den Status „Erstellt“.
+9. Speichern Sie einen Entwurf zu jedem Zeitpunkt als Entwurf. Ein Entwurf mit nur dem Produktnamen lässt sich speichern. Ein Entwurf lässt sich abschließen, auch wenn Sie zuletzt Schritt 4 bearbeitet haben. Nach dem Abschluss erhält das Produkt den Status „Erstellt“.
 10. Veröffentlichen Sie das Produkt über die Aktion „Publish“. Das System prüft vorab, ob das Produkt veröffentlicht werden kann. Ist die Preisversion nicht freigegeben, lautet die Meldung „{Produktname} could not be published, because {Grund}“.
 11. Über das Symbol „Assigned price“ gelangen Sie zur Preisversion. Ist keine Preisgültigkeit aktiv, erscheint das Symbol im Ghost-Zustand.
 12. Über die Schaltfläche „T&C“ im Vertragsangebot sehen Dealer, MO und MPC die AGB des gewählten Produkts. Das Fenster erlaubt Lesen, Herunterladen und Drucken. Im Modal für den Produktvergleich müssen die AGB nicht enthalten sein.
@@ -396,7 +396,7 @@ Quellen: Batch 1155.1, 1136.1, 1137.2, 1140.1, 896.1, 1209.2, 1282.4, 1253.3, 12
 
 **Schritt für Schritt: Fahrzeuggruppe bearbeiten und löschen.**
 
-1. Öffnen Sie die Karte der Fahrzeuggruppe. Bei den Status Created und Ready bearbeiten Sie die Gruppe in der aktuellen Preisversion und in Preisversionen mit Startdatum in der Zukunft. Bei Published und Deactivated bearbeiten Sie nur zukünftige Preisversionen. Vergangene Preisversionen zeigen die Gruppe nur an.
+1. Öffnen Sie die Karte der Fahrzeuggruppe. Bei den Status Created und Ready bearbeiten Sie die Gruppe in der aktuellen Preisversion und in Preisversionen mit Startdatum in der Zukunft. Bei Published und Deactivated bearbeiten Sie nur Preisversionen mit Startdatum in der Zukunft. Vergangene Preisversionen zeigen die Gruppe nur an.
 2. Wählen Sie „Edit“. Ein Pop-up öffnet sich, in dem Sie Name und Details ändern. Mit „Update“ speichern Sie. Die Erfolgsmeldung lautet „Vehicle Group "X" was successfully updated“.
 3. Entfernen Sie Baumuster über „Entfernen“. Ein zweites Pop-up bestätigt den Vorgang. Die entfernten Baumuster stehen danach für eine andere Fahrzeuggruppe zur Verfügung.
 4. Zum Löschen wählen Sie die Aktion auf der Karte. Das Pop-up warnt, dass die Gruppe mit allen Details verloren geht und die Baumuster entfernt, aber nicht gelöscht werden. Mit „Delete“ bestätigen Sie. Die Meldung lautet „Vehicle Group "X" was successfully deleted“.
@@ -611,7 +611,7 @@ Die folgenden Punkte betreffen Widersprüche, unklare Aussagen und Meldungen mit
 7. **Rolle bei eingeschränkter Registrierung.** Die Sperre der Registrierung ist beschrieben, die Rolle nicht genannt. Batch 1134.7.
 8. **Rolle bei ausgeblendeten Schaltflächen.** Das Material nennt die Rolle für die ausgeblendeten Schaltflächen im Administrationsbereich nicht. Batch 1134.8.
 9. **Entfernen von Sprachen.** Ein Abschnitt beschreibt Sprachen im Reiter Dokumente als nicht entfernbar, ein anderer das Entfernen mit Soft Delete. Batch 975.1, 1128.6.
-10. **Weitere Verwendungen der Standardsprache.** Das Material verweist auf spätere Planungsperioden, nennt aber keine Verwendung. Batch 870.1.
+10. **Weitere Verwendungen der Standardsprache.** Das Material verweist auf spätere Versionen, nennt aber keine Verwendung. Batch 870.1.
 11. **Banküberweisung außerhalb der Schweiz.** Ein Abschnitt beschränkt die Banküberweisung in allen anderen Märkten auf gewerbliche Kunden, ein anderer nennt nur Deutschland. Batch 1041.2, 1123.1.
 12. **Kundentypen in der Zahlungsmatrix.** Die Matrix kennt All, Private, Commercial und Governmental, die Vertragserstellung unterscheidet weitere Kundentypen. Batch 883.3.
 13. **Längen der Vorlagennamen.** Das Material nennt 25 Zeichen für Vorlagen, 56 Zeichen in der Suche und 128 Zeichen für Systembenachrichtigungen. Batch 468.2, 497.1, 374.4.
@@ -631,7 +631,7 @@ Die folgenden Punkte betreffen Widersprüche, unklare Aussagen und Meldungen mit
 27. **Eindeutigkeit des Versionsnamens.** Ein Abschnitt verlangt Eindeutigkeit, ein anderer lässt das Speichern unter einem vorhandenen Namen zu. Batch 1270.2, 1277.4.
 28. **Einreichen eines Preis-Clusters.** Das Material nennt das Einreichen als nicht möglich und beschreibt zugleich den Ablauf Submit for Review. Batch 1.3, 1159.3.
 29. **Freigabe bei unvollständiger Prüfung.** Die Schaltfläche Approve bleibt aktiv, auch wenn der Prüfer nicht alle Cluster geprüft hat. Batch 1159.4.
-30. **Vertriebskanäle der Händlerprovision.** Ein Satz nennt die Auswahl jederzeit änderbar, ein anderer sperrt die Änderung bei veröffentlichtem Produkt. Batch 1144.1.
+30. **Vertriebskanäle der Händlerprovision.** Ein Satz nennt die Auswahl änderbar, ein anderer sperrt die Änderung bei veröffentlichtem Produkt. Batch 1144.1.
 31. **Anzahl der Felder für den relativen Basispreis.** Ein Abschnitt nennt drei zusätzliche Felder, ein anderer zwei. Batch 1221.2, 1223.2.
 32. **Duplizieren mit Prozentwerten und Exploration.** Die Erweiterung zum Duplizieren mit Prozentwerten trägt den Status Cancelled, die Exploration weiterer Märkte ist ein reines Untersuchungsthema. Das Duplizieren von Preisversionen ist an anderer Stelle beschrieben, die Erweiterung trägt den Status in Entwicklung. Batch 1196.1, 1146.1, 1234.6.
 33. **Obergrenze für den Industriefaktor.** Das Material nennt eine Grenze von 100 Prozent und zugleich eine Erhöhung auf mindestens 200 Prozent. Batch 1255.2.
