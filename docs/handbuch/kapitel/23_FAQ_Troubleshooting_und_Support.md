@@ -157,7 +157,7 @@ Die folgenden Einträge beschreiben das Symptom, die Ursache, soweit sie bekannt
 
 - **Symptom:** Der Händler-Upload endet mit einem Serverfehler 500.
 - **Ursache:** Nicht beschrieben.
-- **Lösung:** Der Händler-Upload wird ohne Serverfehler abgeschlossen.
+- **Lösung:** Der Händler-Upload endet ohne Serverfehler.
 
 **Fehlerbild: Market-Konfiguration beim Dienstaufruf**
 
@@ -181,7 +181,7 @@ Die folgenden Einträge beschreiben das Symptom, die Ursache, soweit sie bekannt
 **Fehlerbild: I155-Datei wird für einzelne Verträge nicht erzeugt**
 
 - **Symptom:** Die automatische Erzeugung der I155-Datei für die Übermittlung an VEGA bricht mit einer Ausnahme ab. Die Datei fehlt für die betroffenen Verträge.
-- **Ursache:** Die gespeicherten Vertragsdaten im JSON-Format enthalten Felder, die das aktuelle Vertragsobjekt nicht kennt, zum Beispiel den Gesamtnettolistenpreis (totalNetListPrice). Die Verarbeitung betraf insbesondere Datensätze des Satztyps 05.
+- **Ursache:** Die gespeicherten Vertragsdaten im JSON-Format enthalten Felder, die das aktuelle Vertragsobjekt nicht kennt, zum Beispiel das Feld totalNetListPrice für den Gesamtnettolistenpreis. Die Verarbeitung betraf insbesondere Datensätze des Satztyps 05.
 - **Lösung:** Unbekannte Felder in den gespeicherten Vertragsdaten führen nicht zum Abbruch. Die I155-Datei entsteht auch für Verträge mit älteren oder zusätzlichen Feldern.
 
 **Weitere Schnittstellen- und Job-Eigenschaften**
@@ -200,7 +200,7 @@ Die folgenden Einträge beschreiben das Symptom, die Ursache, soweit sie bekannt
 ### Preise, Anbindungen und Nachweise
 
 - Der Total Price Outcome in der Preisinformation im Vergleich zeigt korrekte Werte an.
-- Die Anbindung an Nemesis sendet Anfragen ohne Fehler „Bad Request“ (POST 400). Ein leerer Startkilometerstand führt bei einem Nemesis-Ereignis nicht zu einem Validierungsfehler.
+- Die Anbindung an Nemesis sendet Anfragen ohne den Fehler „Bad Request“ mit POST 400. Ein leerer Startkilometerstand führt bei einem Nemesis-Ereignis nicht zu einem Validierungsfehler.
 - Der Refund an MPay wird einmal ausgelöst.
 - Die Mercedes-me-Meldung zum Telefonnummernformat erscheint nur bei eingeschaltetem Mercedes-me-Schalter.
 - Die Vorschau der MO-Prüfungen in der Kundenverwaltung wird erzeugt.
@@ -263,7 +263,7 @@ Ja. Die Mercedes-me-Suche funktioniert.
 - **Ursache:** Nicht beschrieben.
 - **Lösung:** Das Erfassen von Kundendetails für Geschäftskunden gelingt.
 
-- **Symptom:** Benachrichtigungen und E-Mails erscheinen auf Englisch, obwohl Deutsch als Sprache gewählt ist. Die Sprache springt wiederholt auf Englisch zurück.
+- **Symptom:** Benachrichtigungen und E-Mails erscheinen auf Englisch, obwohl Deutsch als Sprache gewählt ist. Die Oberfläche springt auf Englisch zurück.
 - **Ursache:** Nicht beschrieben.
 - **Lösung:** Benachrichtigungen und E-Mails erscheinen in der gewählten Sprache. Die Oberfläche bleibt in der gewählten Sprache.
 
@@ -321,7 +321,7 @@ Quellen: keine Quellen in den RAG-Batches
 
 Eine Lambda-Funktion prüft regelmäßig die von oneSCM genutzten AWS-Dienste. Für die Prüfung gelten festgelegte Schwellenwerte für Alarme. Bei einer Dienststörung benachrichtigt das angebundene Incident-Response-System das zuständige Team.
 
-Für den Support sind die täglich wiederkehrenden Aufgaben gebündelt und mit klaren Handlungsanweisungen versehen.
+Für den Support sind die täglichen Aufgaben gebündelt und mit klaren Handlungsanweisungen versehen.
 
 Quellen: Batch 542.1, 546.3
 
@@ -368,7 +368,7 @@ Quellen: keine Quellen in den RAG-Batches
 - **Nicht weiterverfolgte Meldungen, Batch 364.2:** Die Quelle nennt fehlende Werte in der Erinnerungs-E-Mail vor Ablauf der Angebotsgültigkeit und eine nicht auffindbare Preisinformationsvorlage Transporter in deutscher Sprache. Ein Sollverhalten ist nicht beschrieben.
 - **Geschlossene Meldung, Batch 364.2:** Die Meldung zur Aktualisierung der Preisinformationsvorlage nach der Bearbeitung ist geschlossen. Das Sollverhalten ist nicht beschrieben.
 - **Berechtigungsfehler, Batch 364.2:** Für den AccessDenied-Fehler bei der Dokumentenerstellung in der Document-Management-Anwendung nennt die Quelle kein Ergebnis der Untersuchung.
-- **Geschlossene Meldung, Batch 241.3:** Die Meldung zum Statuscode 500 bei erneuter Anlage eines Steuersatzes mit gleichen Daten ist als abgeschlossen geführt. Das Sollverhalten und die Art der Anpassung fehlen.
+- **Geschlossene Meldung, Batch 241.3:** Die Meldung zum Statuscode 500 bei erneuter Anlage eines Steuersatzes mit gleichen Daten ist geschlossen. Das Sollverhalten und die Art der Anpassung fehlen.
 - **Geschlossene Meldung, Batch 1078.1:** Die Meldung zur I155-Datei ist geschlossen. Die technische Anpassung ist nicht beschrieben. Abschnitt 23.2 beschreibt nur das Sollverhalten.
 - **Ergebnisstand fehlt, Batch 315.5:** Die Quelle nennt für die Validierung der Trennung von Batch-Jobs keinen Ergebnisstand.
 - **Unklarer Eintrag, Batch 823.4:** „UI Adaptations Brabus“ ohne Details. Der Inhalt der Anpassungen ist nicht beschrieben.
@@ -380,7 +380,7 @@ Quellen: keine Quellen in den RAG-Batches
 - **Unklare Angabe, Batch 273.3:** Die Quelle nennt einen Speicherort eines Ordners im S3-Ablagesystem, ohne das Sollverhalten zu beschreiben.
 - **Unklare Begriffe, Batch 610.3:** Die Quelle nennt „GSSN“ ohne Erläuterung. Die Auswirkung auf die Namen für Märkte ist nur als Aussage vorhanden.
 - **Fehlender Wortlaut, Batch 5.6:** Der Wortlaut der Fehlermeldung bei falscher Auftragsnummer ist nicht angegeben.
-- **Doppelte Quellen und uneinheitliche Bezeichnungen, Batch 421.3, 485.3, 494.5:** Batch 421.3 und Batch 485.3 beschreiben denselben Text der Suspendierungs-E-Mail mit abweichender Formulierung. Batch 421.3 und Batch 485.3 nennen den MB Style Guide, Batch 494.5 den Mercedes-Benz E-Mail-Styleguide. Die Anrede lautet in Batch 421.3 „Dear %First Name, %Last name“, in Batch 494.5 „Dear (%First Name) (%Last name),“.
+- **Doppelte Quellen und uneinheitliche Bezeichnungen, Batch 421.3, 485.3, 494.5:** Batch 421.3 und Batch 485.3 beschreiben denselben Text der Suspendierungs-E-Mail mit abweichender Formulierung. Batch 421.3 und Batch 485.3 nennen den MB Style Guide, Batch 494.5 den Mercedes-Benz E-Mail-Styleguide. Die Anrede lautet in Batch 421.3 „Dear %First Name, %Last name“, in Batch 494.5 mit Klammern um die Platzhalter.
 - **Releasebezug, Batch 838.4:** Die Quellen nennen nur Release Candidate 10. Weitere Releases mit Fehlerbildern fehlen.
 
 ## Vorschläge zur Gliederung
