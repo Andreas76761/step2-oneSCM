@@ -5,20 +5,20 @@ Je Hauptkapitel des oneSCM-Handbuchs (Kapitel 1 bis 23) ein zweiseitiger Quick G
 
 - `pptx/` – bearbeitbare PowerPoint-Dateien (Schriften MB Corpo A Title Cond Office und MB Corpo S Text Office wie in der Vorlage)
 - `pdf/` – Einzel-PDFs, `Alle_Quick_Guides_oneSCM.pdf` – alle 23 Guides in einer Datei
-- `src/` – Generator: `content.py` (Inhalte je Kapitel) und `gen.js` (Layout, pptxgenjs)
+- `src/` – Generator: `content.py` (Inhalte je Kapitel), `images.py` (Prozessbilder) und `gen.js` (Layout, pptxgenjs)
 
 ## Aufbau je Guide
 
 Seite 1: Ziel und Nutzen, Themen im Überblick (Unterkapitel), „So gehen Sie vor“ als nummerierte Schritte, Warnhinweis.
 Seite 2: Rollen und Voraussetzungen, Checkliste, Hinweise und Stolpersteine, FAQ, wichtige Links und Ansprechpartner.
 
-Grau hinterlegte Felder „Screenshot: …“ sind Platzhalter für Bildschirmbilder aus dem jeweiligen Handbuchkapitel.
+Jeder Guide enthält drei Grafiken: ein Kapitelbild (Nummer und Prozessphase), ein Prozessbild mit den nummerierten Schritten des Kapitels und eine Prozesslandkarte, in der die Phase des Kapitels rot hervorgehoben ist. Die Grafiken erzeugt `src/images.py` im Design der Vorlage; echte Bildschirmbilder können sie ersetzen.
 
 ## Neu erzeugen
 
 ```bash
 cd docs/quickguides/src && npm install
-python3 content.py spec.json && node gen.js spec.json ../out
+python3 content.py spec.json && python3 images.py assets/img spec.json && node gen.js spec.json ../out
 ```
 
 Die Inhalte sind aus der Kapitelgliederung und den gesicherten Prozessinhalten der Vorlage abgeleitet; Aussagen zu Systemdetails sind gegen das jeweilige Handbuchkapitel zu prüfen.

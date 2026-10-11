@@ -8,7 +8,7 @@ def _plain(t):
     return re.sub(r"\*\*|~~|__", "", t)
 
 def _lines(text, width_in, size=9):
-    cpi = 15.5 * 9 / size            # Zeichen je Zoll (Liberation Sans, 9 pt)
+    cpi = 17.5 * 9 / size            # Zeichen je Zoll (Liberation Sans, 9 pt)
     return max(1, math.ceil(len(_plain(text)) / (cpi * width_in)))
 
 def _h_items(items, width_in, size=9):
@@ -36,9 +36,39 @@ def _h_items(items, width_in, size=9):
 
 COLW = 5.1
 
+FLOW = {
+ 1: ["Ziele und Nutzen", "Projekt einordnen", "Rolle identifizieren", "Domänen verstehen", "Standard und Abweichung"],
+ 2: ["Login per SSO", "Kontext prüfen", "Rolle abgleichen", "Berechtigung beantragen", "Zugangsproblem lösen", "Sitzung sichern"],
+ 3: ["Startseite und Menü", "Suche und Filter", "Bedienmuster", "Prozesslandkarte", "Lead und Schnittstellen", "Status einordnen", "Sprache und Kontext"],
+ 4: ["Kundengruppe wählen", "Kunde suchen", "Pflichtangaben prüfen", "Vertragsrollen zuordnen", "Daten übernehmen", "Partner und Dealer"],
+ 5: ["Vertrag erstellen", "Einstiegspunkt wählen", "Fahrzeugdaten ergänzen", "Produkt konfigurieren", "Optionen und Kampagnen", "Preisinformation", "Antrag erstellen"],
+ 6: ["Voraussetzungen prüfen", "Vertragsdaten erfassen", "Zuordnung kontrollieren", "Validierung lesen", "Sonderfreigabe erkennen", "Abschlusskontrolle", "Speichern und Referenz"],
+ 7: ["Zahlungsart und Intervall", "Bankdaten und Mandat", "Dokumente prüfen", "Unterschriftsart wählen", "Erneute Signatur", "Status kontrollieren"],
+ 8: ["Antragsverwaltung öffnen", "Aktualisieren", "Erstzulassung und Kennzeichen", "Dokumente hochladen", "Status prüfen", "Ergebnis kontrollieren", "Ablehnung bearbeiten"],
+ 9: ["Arbeitsliste öffnen", "Kriterien prüfen", "Prüfstatus setzen", "Abweichung klären", "Genehmigen oder zurückweisen", "Änderung und Review"],
+ 10: ["Vertrag suchen", "Daten ändern", "Zahlerwechsel", "Aussetzen und Reaktivieren", "Folgeangebot", "Kündigung und Beendigung", "Historie prüfen"],
+ 11: ["Zahlplan prüfen", "Status unterscheiden", "Rechnungsempfänger", "Kosten und Claims", "Endabrechnung", "Reporting und Übergabe"],
+ 12: ["Geschäftskunde erfassen", "Kampagne prüfen", "Sonderfall beantragen", "Zuordnung und Validierung", "Kommentare", "Customer Account Center"],
+ 13: ["Abgrenzung", "Reifentyp und Größe", "Laufzeit und Umfang", "Preis und Kampagne", "Antrag und Aktivierung", "Verwaltung und Beendigung"],
+ 14: ["Aufgaben und Einstellungen", "Vorlagen und Administration", "Produkt anlegen", "Preisversionen pflegen", "Änderung und Cluster", "Product Testing", "Freigabe dokumentieren"],
+ 15: ["HQ-Rolle abgrenzen", "Blueprint pflegen", "Abweichung bewerten", "Governance und Freigabe", "Mit Markt und MO abstimmen", "Technical Options pflegen"],
+ 16: ["Sichere Beispieldaten", "Datenführerschaft", "Freigabeworkflow", "Testnachweise", "Verwaltung vs. Archiv", "Quellen und Register", "Dealer-Governance"],
+ 17: ["Zielmärkte und Umfang", "Voraussetzungen", "Vorbereitung und Abnahme", "Schulung und Übergabe", "Begleitung"],
+ 18: ["Umfang abgrenzen", "Quellsysteme", "Mapping und Qualität", "Übernahme prüfen", "Fehlerfälle", "Cutover"],
+ 19: ["Systemlandkarte", "Datenquellen zuordnen", "Integrationswege", "Fehlerbehandlung", "Architekturregister", "Steckbriefe"],
+ 20: ["Länderprofil", "Lokale Rollen", "Lokale Produkte", "Zahlung und Signatur", "Einführung und Migration", "Abweichungsregister"],
+ 21: ["Spartenprofil", "Kennungen je Sparte", "Produkte je Sparte", "Antrag und Aktivierung", "Verwaltung und Finanzen", "Planung und Tests"],
+ 22: ["Funktionsstand prüfen", "Erweiterungen kennen", "Schulung bewerten", "Release verfolgen"],
+ 23: ["FAQ und bekannte Fehler", "Anliegen einordnen", "Supportfall vorbereiten", "Support kontaktieren", "Workaround prüfen"],
+}
+
+def image(path, h):
+    return {"type": "image", "path": path, "h": h}
+
 def card(title, items, shot=None, shot_h=1.25, size=9):
     tw = COLW - 0.2 - ((min(1.9, COLW * 0.38) + 0.12) if shot else 0)
-    h = 0.08 + (0.3 if title else 0) + _h_items(items, tw, size) + 0.12
+    if shot: tw *= 0.86
+    h = (0.08 + (0.3 if title else 0) + _h_items(items, tw, size)) * 1.08 + 0.12
     if shot:
         h = max(h, shot_h + 0.2)
     b = {"type": "card", "title": title, "items": items, "h": round(h, 2), "size": size}
@@ -84,22 +114,40 @@ def guide(nr, slug, title, ziel, rollen, voraus, themen, schritte, warnung, hinw
     footer = footer or f"**Hinweis**: Dieser Quick Guide fasst Kapitel {nr} des oneSCM-Handbuchs zusammen. Details, Bildschirmbilder und Nachweise finden Sie im Handbuchkapitel."
     half = math.ceil(len(schritte) / 2)
     s1, s2 = schritte[:half], schritte[half:]
+    fl = FLOW[nr]
+    flow_h = 1.05 if len(fl) <= 5 else 1.65
     left1 = [
-        card("Ziel und Nutzen", [ziel], shot=shot1, shot_h=1.15),
+        dict(card("Ziel und Nutzen", [ziel], shot=shot1, shot_h=1.15), img="img/badge_%02d.png" % nr),
         note("Dieses Dokument ist interaktiv – Verweise auf Handbuchkapitel und Systeme sind als Links hinterlegt.", blue=True),
         overview(themen),
+        image("img/landscape_%02d.png" % nr, 1.32),
     ]
     rollen_card = card("Rollen und Voraussetzungen", [{"head": "Beteiligte Rollen"}, {"bullets": rollen}, "", {"head": "Voraussetzungen"}, {"bullets": voraus}])
-    right1 = [steps([{"steps": s1}], title="So gehen Sie vor", shot=shot2, shot_h=1.6), warn(warnung)]
-    if s2:
-        right1.append(steps([{"start": half + 1, "steps": s2}]))
+    right1 = [image("img/flow_%02d.png" % nr, flow_h), steps([{"steps": s1}], title="So gehen Sie vor"), warn(warnung)]
+    rest = steps([{"start": half + 1, "steps": s2}]) if s2 else None
+    right2_extra = []
+    if rest:
+        if sum(b["h"] for b in right1) + rest["h"] + 0.12 * len(right1) <= 6.28:
+            right1.append(rest)
+        else:
+            rest["title"] = "So gehen Sie vor (Fortsetzung)"; rest["h"] += 0.3
+            right2_extra.append(rest)
+    # Linke Spalte Seite 1 darf nicht überlaufen: Landkarte sonst auf Seite 2
+    if sum(b["h"] for b in left1) + 0.12 * (len(left1) - 1) > 6.28:
+        left1.pop(); right2_extra.append(image("img/landscape_%02d.png" % nr, 1.32))
     left2 = [
         rollen_card,
         card("Checkliste vor dem Abschluss", [{"bullets": [f"☐  {c}" for c in check]}]),
         card("Hinweise und Stolpersteine", [{"bullets": hinweise}]),
     ]
-    right2 = [faq(fragen), card("Wichtige Links und Ansprechpartner", [{"bullets": links}])]
-    return {"nr": nr, "slug": slug, "title": title, "stand": STAND, "footer": footer,
+    right2 = right2_extra + [faq(fragen), card("Wichtige Links und Ansprechpartner", [{"bullets": links}])]
+    def colh(col): return sum(b["h"] for b in col) + 0.12 * (len(col) - 1)
+    while colh(right2) > 6.28 and len(right2) > 1:
+        cands = [i for i in range(len(right2)) if right2[i]["type"] != "steps" and colh(left2) + 0.12 + right2[i]["h"] <= 6.28]
+        if not cands: break
+        i = max(cands, key=lambda k: right2[k]["h"])
+        left2.append(right2.pop(i))
+    return {"nr": nr, "slug": slug, "title": title, "stand": STAND, "footer": footer, "flow": fl,
             "pages": [{"left": left1, "right": right1}, {"left": left2, "right": right2}]}
 
 

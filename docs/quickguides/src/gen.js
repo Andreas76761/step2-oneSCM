@@ -116,7 +116,8 @@ function block(slide, b, x, y, w) {
       ty += 0.3;
     }
     slide.addText(paragraphs(b.items, size), { x: x + 0.12, y: ty, w: tw, h: y + h - ty - 0.06, margin: 0, isTextBox: true, valign: 'top', objectName: 'Karteninhalt' });
-    if (b.shot) shot(slide, x + w - 0.1 - shotW, y + 0.1, shotW, Math.min(h - 0.2, b.shotH || 1.25), b.shot);
+    if (b.img) slide.addImage({ path: path.join(SRC, b.img), x: x + w - 0.1 - shotW, y: y + 0.1, w: shotW, h: Math.min(h - 0.2, b.shotH || 1.25), objectName: 'Kapitelbild' });
+    else if (b.shot) shot(slide, x + w - 0.1 - shotW, y + 0.1, shotW, Math.min(h - 0.2, b.shotH || 1.25), b.shot);
   } else if (b.type === 'steps') {
     const shotW = b.shot ? Math.min(1.9, w * 0.38) : 0;
     const tw = w - (shotW ? shotW + 0.12 : 0);
@@ -144,6 +145,8 @@ function block(slide, b, x, y, w) {
     slide.addText(runs(b.text, { ...body(size), color: b.blue ? C.blue : C.text }), { x, y, w, h, margin: 0, isTextBox: true, valign: 'top', objectName: 'Hinweis' });
   } else if (b.type === 'text') {
     slide.addText(paragraphs(b.items, size), { x, y, w, h, margin: 0, isTextBox: true, valign: 'top', objectName: 'Text' });
+  } else if (b.type === 'image') {
+    slide.addImage({ path: path.join(SRC, b.path), x, y, w, h, objectName: 'Prozessbild' });
   } else if (b.type === 'faq') {
     card(slide, x, y, w, h, 'FAQ');
     const items = [{ head: b.title || 'Häufig gestellte Fragen und Antworten' }];
