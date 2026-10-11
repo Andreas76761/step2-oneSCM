@@ -706,3 +706,95 @@ Ein Fahrzeug aus VeDoc lässt sich mit einer längeren Motor-Seriennummer synchr
 **Fehlerbehebung.** Übersprungene Ansprüche finden Sie in Datadog. Korrigieren Sie den Anspruch in der Quelle oder erstellen Sie eine Datei mit demselben Header und dem korrigierten Anspruch. Laden Sie diese Datei im Tab „Upload“ hoch. Für eine erneute Verarbeitung einer Datei mit demselben Zeitstempel laden Sie sie erneut hoch.
 
 Quellen: Batch 1302.1, 1290.1, 141.1, 719.2, 225.3, 843.5, 851.1, 820.7, 1246.5, 589.1, 229.6, 147.1
+
+## 19.22 Schnittstellenbetrieb und Fehlerbehandlung
+
+**Zweck.** Dieser Abschnitt beschreibt, wie oneSCM Schnittstellen betreibt, Dateien und Ereignisse verarbeitet, Batch-Jobs steuert und Fehler behandelt. Er ergänzt die fachlichen Beschreibungen der einzelnen Anbindungen in den Unterkapiteln 19.2 bis 19.21.
+
+**Voraussetzungen.** Für den Zugriff auf den Batch-Job-Bereich benötigen Sie eine Admin-Rolle. MO-Benutzer sehen Batch-Jobs und deren Läufe, ohne sie zu verändern. Externe Partner nutzen den Edge Service mit einer technischen Berechtigung für die betreffenden Endpunkte.
+
+**Rollen.** Administratoren verwalten Batch-Jobs, laden und laden herunter. MO-Benutzer sehen Batch-Jobs und Läufe. Partnersysteme wie Leasingpartner und Online-Vertrieb rufen den Edge Service auf. Der Support analysiert Fehler über die Protokolle.
+
+**Edge Service.** Der Edge Service ist die externe Schnittstelle für Online-Vertrieb, Leasing, Produkte, Verträge und Kilometerstände. Die Schnittstelle richtet sich an Partner und an das Frontend.
+
+Den Online-Vertrieb bedienen die Endpunkte POST /contract/v1/online-sales und POST /contract/v2/online-sales sowie GET /contract/v1/status, GET /contract/v1/contract und GET /contract/v1/contracts. Den Leasingvertrag bedienen POST und PUT auf /contract/v1/leasing und /contract/v2/leasing sowie die Konfigurationsendpunkte. Die Verlängerung bedient POST /prolongation, die Preisermittlung bei Verlängerungsangeboten. Den Kontosaldo liefert GET /contract/v1/balance. Die Produktsuche bedienen POST /product/v1/search, POST /product/v2/search, POST /product/v1/detailed, POST /product/v1/leasing/searches und POST /product/v1/online-sales/searches. Die Callbacks für das TraCS-Ergebnis des Adressabgleichs und die digitale Signatur aus dem Dokumentenmanagement nehmen die Endpunkte an POST /v1/tracs/onescm_address-match-final-result und GET /document-management/dss entgegen.
+
+Fehlerantworten und Antworten auf Anfragen gelten als Teil der externen Schnittstelle. Interne Fehlercodes übersetzt der Edge Service in die passenden externen Codes. Ein interner Fehler 403 erscheint extern als 403, ebenso 404 und 500. Zuvor kam extern immer 500 an. Partner sehen dadurch die Ursache eines Fehlers. Die Fehlerbehandlung wird durch Monitore und Benachrichtigungen bei Fehlern im Edge Service begleitet.
+
+Der Edge Service prüft Datumsangaben. Beim Anlegen eines Vertrags verlangt er ein Datum im ISO-Format, etwa 2025-12-01. Bei der Aktivierung im Bereich Leasing zeigt das System die Differenz zwischen dem Datum des ersten Fälligkeitstermins und dem Erstellungsdatum des Angebots in Monaten an.
+
+Für Leasingverträge übernimmt oneSCM die Angaben zur verkaufenden Person aus der E-Mail-Adresse über ALICE und speichert sie auf Vertragsebene. Die Felder salesmanFirstName, salesmanLastName, outletName, outletCountry, salesmanPhoneNumber, dealerName und dealerAddress entfallen aus dem Request-Body. Edge-Anfragen enthalten die Division PC oder VAN. Fehlt die Division oder ist sie nicht zuzuordnen, gibt der Service einen Fehler aus. Der Vertriebskanal steht in den Produktdetails und wird in den Anfragen für Leasing- und Standardverträge übergeben.
+
+Die Endpunkte für Produkte und Preise liefern die Währung als dreistelligen ISO-Code im Knoten priceConfigurations, einmal je Produkt. Das gilt für /product/v1/leasing, /product/v1/online-sales und die Suchen für Leasing und Online-Vertrieb. Die Anfrage an /product/v1/leasing nimmt die vollständige Liste der SA-Codes entgegen. oneSCM filtert die preisrelevanten technischen Optionen und ISP-Codes heraus und gibt die angewendeten Codes im Knoten technicalOptions aus. Das Attribut includedTechnicalOptionIds entfällt. Mit dem Attribut priceDate lassen sich frühere Preisversionen abrufen, etwa für eine Wiederholung der Preisberechnung nach einer Preisaktualisierung zum Jahresbeginn.
+
+Die Produktsuche gibt den Preis für die übergebene Kombination aus Laufleistung und Laufzeit aus. Fehlt diese Angabe, liefert die Antwort den Preis der kleinsten verfügbaren Kombination. Zusätzlich enthält die Antwort alle verfügbaren Kombinationen des Produkts. Über das Feld mileageType unterscheidet die Anfrage jährliche Laufleistung „annual“ und Gesamtlaufleistung „total“, das Feld requestedMileage übernimmt die Angabe. Die vollständige Preismatrix liefert ein eigener Preis-Endpunkt mit Produkt-ID als Pflichtparameter.
+
+Die Leasingsuche antwortet nach der Korrektur mit der vorgesehenen Antwort. Bei der Aktivierung eines Leasingvertrags übergibt oneSCM die Zahlungsreferenz. Der Endpunkt POST contract/v1/leasing akzeptiert die externalCampaignId als Zeichenkette. Die Produktsuche mit product/v2/search ruft Produkte ab, und der Sprachwert der Produktsuche in product/v1/search steht in den Headern.
+
+Die Edge-Endpunkte für Verlängerungen und Verträge bieten nur zulässige Kombinationen aus Laufleistung und Laufzeit an. Bei Langzeitverlängerungen und kurzfristigen Verlängerungen gilt die Verlängerungsregel aus Abschnitt 19.9. Der Edge Service prüft beim Anlegen eines Vertrags das Erstzulassungsdatum und das Datum der Anfrage.
+
+Der Vertrag aktualisiert sich über den Edge Service auch dann, wenn er im Status „Created“ steht. Diese Aussage erfasst der Klärungsbedarf.
+
+**Batch-Jobs im Schnittstellenbetrieb.** Die Dateien und Ereignisse der Schnittstellen verarbeiten Batch-Jobs. Die Übersicht „Batch Job Management“ im Bereich Admin zeigt alle Batch-Jobs aller Märkte mit Name, Status, Markt-ID, Dauer, Zeitpunkt und Status des letzten Laufs, dem Zeitplan und den Aktionen. Globale Jobs, zum Beispiel für die Synchronisation mit Elasticsearch, den CePro-Import und die Dokumentmetadaten, führt das System unter dem Markt „Global“. Sie erscheinen in allen Märkten. Ein Filter nach Markt zeigt also sowohl die globalen Jobs als auch die Jobs des gewählten Marktes.
+
+Administratoren laden Dateien eines Jobs aus S3 herunter. Die Dateisuche filtert nach dem Dateinamen, der Enthält-Suche, und einem Zeitraum: Today, Last week, Last month oder Last 3 months. Die Dateien erscheinen erst nach „Search for Files“. Jede Datei hat eine eigene Download-Schaltfläche, und der Name und das Format bleiben wie im S3-Bucket. Die Ergebnisse erscheinen seitenweise mit 10, 20, 30, 40 oder 50 Einträgen.
+
+Die Ausführungshistorie speichert zu jedem Lauf die Job-ID, Start- und Endzeit, die Dauer, den Status „abgeschlossen“, „fehlgeschlagen“ oder „gestoppt“ sowie die Benutzer-ID des Auslösers. Die Liste der Läufe ist sortierbar, paginiert und über den Jobnamen durchsuchbar. Während ein Lauf läuft, zählt die Oberfläche die Laufzeit in Sekunden und aktualisiert den Status regelmäßig. Ein Klick auf die Zeile öffnet die Läufe des Jobs.
+
+Die Zeitangaben der Batch-Jobs stehen in UTC. Der Dashboard-Filter nennt die Felder „Date From“, „Date To“ und „Status“, und die Detailansicht zeigt die Parameter des Jobs wie USERNAME, DIVISIONS, LAUNCH_DATE oder MARKET_ID. Bei einem Fehler zeigt die Detailansicht den Fehlercode.
+
+**Batch-Scheduler und Aktionen.** Jeder Job hat einen Zeitplan aus Cron-Ausdrücken. Ein Job kann bis zu zehn Cron-Ausdrücke haben. Die Schaltfläche „Save“ ist nur aktiv, wenn der Ausdruck gültig ist. Die Validierung in der Oberfläche entspricht der Prüfung im Backend, sodass Ausdrücke wie „*/5 * * * *“ bereits bei der Eingabe abgelehnt werden.
+
+1. Mit „Run Now“ startet ein Administrator einen Job sofort. Die Aktion ist deaktiviert, solange derselbe Job läuft. Ein Tooltip nennt den Grund.
+2. Mit „Disable“ setzt ein Administrator den Job auf „Disabled“. Der Job läuft dann nicht mehr zum geplanten Zeitpunkt, bis er wieder aktiviert wird.
+3. Mit „Enable“ aktiviert ein Administrator einen deaktivierten Job. Ein Job läuft nach dem Zeitplan nur, wenn er den Status „Enabled“ hat.
+4. Mit „Stop“ beendet ein MO-Benutzer einen laufenden Job, siehe Abschnitt 19.17.
+
+Ein Lauf lässt sich nur noch starten, wenn der Job in der aktuellen Sitzung aktiviert ist. Neu angelegte Jobs sind standardmäßig deaktiviert.
+
+Die Sprache der Oberfläche übergibt oneSCM beim Auslösen eines Batch-Jobs im HTTP-Header X-Language, analog zum Header X-Market. Der Wert ist verpflichtend und steht dem Job als Parameter language zur Verfügung.
+
+Die automatische Wiederholung der MO-Prüfungen übernimmt der Batch-Job „MO Checks Sync“. Er läuft pro Markt und führt nur Prüfungen mit dem Status „Ausführung fehlgeschlagen“ erneut aus. Ein Erfolg setzt den Status auf OK, Nicht OK oder Ausstehend. Bleibt das technische Problem bestehen, bleibt der Status erhalten, und der nächste Lauf versucht es erneut.
+
+**Ereignisse von oneERP.** oneERP sendet Statusänderungen über Kafka-Topics. Jedes Ereignis gehört zu genau einem FI-Beleg oder einer Rechnung. oneSCM übernimmt nur relevante Ereignisse in eine Warteschlange und verarbeitet sie nacheinander. Die Häufigkeit des Abrufs ist konfigurierbar, ein täglicher Import ist sinnvoll. Ereignisse ohne Inhalt überspringt oneSCM.
+
+Ein Ereignis enthält Controller, Company Code, Fiscal Year und Document Number. Die Belegnummer identifiziert die FI-Rechnungsnummer. Hinzu kommen Nettofälligkeitsdatum, Ausgleichsdatum und Mahnstufe. Ist das Nettofälligkeitsdatum gesetzt, das Ausgleichsdatum aber nicht, bleibt der Rechnungsstatus unverändert. Sind beide Daten gesetzt, aktualisiert oneSCM den Status nach der Regel. Die Mahnstufe steigt nach einer marktspezifischen Frist. Für den deutschen Markt sperrt oneSCM den Vertrag bei Mahnstufe 3.
+
+Für den Rechnungsaustausch mit CoFiCo gilt die Struktur der Dateien aus Abschnitt 19.12. Rechnungsrückmeldungen von SWT importiert oneSCM. Die Signaturangabe im Feld HTXT06 der E169-Datei gilt nur für Gutschriften. Bei Rechnungen bleiben die Felder für Unterschriften leer.
+
+Die Schnittstelle SA31 ersetzt die Schnittstelle SA26. oneERP sendet je Rechnung eine SA31-Kafka-Nachricht, sobald die Rechnung in oneERP aktualisiert wird. oneSCM liest die Ereignisse aus einem gesicherten Topic und aktualisiert den Rechnungsstatus nach den Mapping-Regeln. Die Nachricht besteht aus Kafka-Header, Payload-Header und Payload-Positionen. Die Umstellung auf SA31 erfasst der Klärungsbedarf.
+
+**Batch-Ergebnisse von Exporten.** Der Export der Ausgangsrechnungsdatei für SWT und CoFiCo verwendet die Operation-ID anstelle der Merchant Reference. Bei MPay-Rechnungen überführt der Batch eine Rechnung nur in den Status „Accepted“, wenn der MPay-Status nicht „PENDING“ lautet. Die exportierte Operation-ID richtet sich nach dem MPay-Status: bei „Capture“ die Operation-ID der Capture-Transaktion, bei „Refund“ die der Erstattung und bei „ChargeBack“ die der Rückbuchung. Der CFDM-Batch setzt die Rechnungen auf „Accepted“, der E169-Export erzeugt die Datei mit der VIN oder einem Platzhalter „-“, wenn die VIN fehlt.
+
+Im Export E169 steht für Altteilesteuer-Transaktionen im HEADER-Satz der Wert 4 im Feld „Type of Business Transaction“. Für alle anderen Geschäftsvorfälle bleibt der bisherige Wert. Die Satzstruktur und die Feldlänge bleiben unverändert.
+
+Die Sales-Campaign-Schnittstelle E174 übergibt für Zeile 240 das Sachkonto 40170000. In Zeile 250 steht das Economic Model, das aus den letzten sechs Stellen der QSD5-Materialnummer besteht. Der Job OneERPInvE169EXP schlägt bei fehlerhaften Daten nicht mehr fehl.
+
+Die Gutschrift für Altteilesteuer und der Upload der i156-Datei arbeiten wieder. Der Export für den slowakischen Markt setzt für jede H-Zeile eine eindeutige Verarbeitungsnummer.
+
+**Dateien an VEGA und Schnittstelle i155.** Der Dateiname der i155 setzt sich aus der Kennung I155, dem ISO-Ländercode, der Markenzuordnung PC, VAN oder SMART, einem Zeitstempel im Format JJJJMMTThhmmss und der Endung txt zusammen. Die Datei enthält nur Verträge im Status „aktiv“. Sie endet mit einer Abschlusskennung und einem Zeilenumbruch.
+
+Die Datei enthält weitere Angaben. Der Startkilometerstand steht rechtsbündig in den Positionen 98 bis 104. Das Kennzeichen steht im Satz RC05 an den Positionen 177 bis 186, linksbündig, wenn es erfasst ist. Die Coverage-IDs sind eindeutig. Bei Reifenprodukten gibt die Datei die Wetterprofile „Sommer“, „Sommer/Winter“ und „Allwetter“ auf Deutsch aus. Die Branchenschlüssel der Position 266 bis 269 übermittelt die Datei nicht; die Position bleibt leer, sofern das Material dies bestätigt, siehe Klärungsbedarf.
+
+Die Kontingentzählung im Satz RC20 erfolgt für Basisleistungen. Optionale Leistungen und Karosserieleistungen zählen nicht. Bei Reifen- und Kontingentprodukten stehen in den Positionen 165 bis 169 und 170 bis 174 die Werte „00000“ und die Position 175 bleibt leer. Andernfalls trägt die Position den Wert 1 ein. Die Deckungskategorie „Duration and Mileage“ wird im Satz RC20 entsprechend konfiguriert.
+
+Die Warteschlange des Exports leert oneSCM, sodass Verträge nicht mehr wiederholt exportiert werden. Die Datei wird auch für das Herunterladen aus der Vertragshistorie bereitgestellt. Der Batch-Job I155 läuft in der Integrationsumgebung fehlerfrei. Die Datei wird mit getBatchContracts erzeugt, deren Antwort FIN und VIN enthält.
+
+**Nemesis-Schnittstelle.** Die Zguid in den Nemesis-Ereignissen wird mit führenden Nullen auf 30 Stellen angegeben. Der Ländercode für Deutschland lautet 20000, der IconTenant entspricht der 1SCM-Tenant-ID, und der CompanyCode lautet DE01. Beim Wechsel des Zahlungsintervalls von monatlich auf einmalig sendet oneSCM ein Contract-Master-Ereignis mit ExtentionReductionIndicator E und PaymentType 02. Das Zahlungsbeginn-Datum entspricht dem Feld „Invoice period from“ der ersten Rechnung des Zahlungsplans, das Zahlungsende dem Feld „Invoice period to“ der letzten Rechnung. Im Feld für die externe Vertragsnummer übermittelt oneSCM nicht die oneSCM-Vertragsnummer. Das Contract-Ereignis gelangt auch dann an Nemesis, wenn der Vertrag mit einem Fehler bereits verarbeitet wurde, es entsteht kein Fehlerereignis, wenn das Vertragsereignis erfolgreich übermittelt wurde. Die Abweichung zwischen geplanter Vertragsdauer in der Oberfläche und in der Kafka-Nachricht ist im Material als beseitigt beschrieben.
+
+Für den Nemesis-Import nimmt die Schnittstelle den Dateinamen als Request-Parameter entgegen und dekodiert ihn. Die Rechnungsfilter-API berücksichtigt den Rechnungstyp.
+
+**Lieferantenberichte.** Die Lieferantenberichte (Supplier Reports) stützen sich auf eine gemeinsame Datengrundlage aus den Services Vertrag, Kunde und Lieferant, Erlöse und Kosten, Produkt und Fahrzeug. Die Quell-Services erfassen Momentaufnahmen über eine gemeinsame Bibliothek und speichern sie zusammen mit der fachlichen Änderung in einer Outbox. Ein gemeinsamer Relay veröffentlicht sie über Kafka. Der History Service übernimmt die Daten und legt typisierte aktuelle und historische Sichten in OpenSearch ab.
+
+Bei einem Ausfall der Historie holen die Ereignisse nach der Wiederherstellung auf, Kafka hält sie vor. Ist Kafka nicht verfügbar, bleiben die Snapshots in der Outbox und werden nach der Wiederherstellung übertragen. Unvollständige Eingaben meldet die Bereitschaftsprüfung mit dem Status WAITING oder BLOCKED samt Gründen. Die Berichtserstellung, die CSV- und XML-Ausgabe, die Vorlagen und die Oberfläche gehören nicht zu dieser Lieferung. Zeitfenster für Ausfälle und die Regeln für Zeitstempel sind im Klärungsbedarf erfasst.
+
+**Konsumenten von Ereignissen.** Ein Konsument einer oneSCM-Schnittstelle authentifiziert und validiert die Anfrage und speichert oder reiht sie dauerhaft ein. Er antwortet innerhalb von 10 Sekunden mit dem Status 202. Er dedupliziert nach Idempotency-Key und eventId, verlässt sich nicht auf die Reihenfolge der Ankunft und ignoriert unbekannte JSON-Felder. Dauerhafte Validierungsfehler melden 4xx, vorübergehende Annahmeunfähigkeit 5xx oder 429. Das Token prüft der Konsument auf Aussteller, Zielgruppe, Ablauf, Signatur und Scope, etwa final-invoices.write.
+
+**Schnittstelle TraCS.** Das Screening für die Schweiz und Tschechien läuft über TraCS. Die Ergebnisse wertet oneSCM anhand der Felder matchFound, wasGoodGuy und wasBadGuy aus. Bei allen drei Werten „false“ liegt kein Treffer vor, und der Geschäftsvorgang läuft weiter. matchFound „true“ mit wasBadGuy „true“ und wasGoodGuy „false“ ist ein Treffer, der den Vorgang stoppt. matchFound „true“ mit wasGoodGuy „true“ ist kein Treffer. Bei matchFound „true“ ohne weitere Entscheidung bindet ein Clearer das Ergebnis im TraCS-Frontend ein. Die endgültige Klärung erfolgt über den Push-Back-Endpunkt. Den GET-Endpunkt für die Abfrage des finalen Clearing-Status verwendet oneSCM mit der cusAebCheckID aus der Antwort auf den POST-Aufruf.
+
+**Market Playground.** Der Market Playground ist eine Demo- und Testumgebung für das HQ-Rollout-Team und Marktvertreter von Rollout-Kandidaten. Er verhält sich wie der deutsche Markt und nutzt dessen Schnittstellen, technisch und datenseitig aber getrennt. Flat Files erhalten eigene Namen und Kennungen und liegen an einem dedizierten S3-Speicherort. Intern speichert der Playground seine Daten in einem eigenen Tenant.
+
+**Ergebnis und Systemstatus.** Eine erfolgreich verarbeitete Schnittstelle erzeugt einen Eintrag in der Ausführungshistorie des Jobs und einen Status am betroffenen Datensatz. Fehler erscheinen im jeweiligen Fehlerbereich oder in der Datadog-Protokollierung, siehe nächster Teil.
+
+Quellen: Batch 514.1, 512.1, 514.2, 534.1, 513.2, 515.1, 532.2, 527.1, 533.2, 520.1, 518.1, 524.2, 1253.2, 1095.2, 1107.5, 1113.5, 1027.3, 1079.6, 1081.5, 1100.4, 1111.5, 1096.5, 1082.4, 1092.3, 93.1, 771.4, 184.1, 184.4, 196.1, 205.2, 208.2, 208.4, 1310.4, 1180.1, 7.6, 855.3, 796.3, 714.6, 716.3, 795.5, 819.4, 1068.7, 1069.7, 297.1, 565.3, 565.4, 519.10, 1299.2, 667.4, 251.6, 223.4, 1070.7, 1080.3
+

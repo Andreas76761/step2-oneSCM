@@ -96,7 +96,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 **Hinweise.**
 
 - Bei einer Kampagne mit mehreren Kundentypen wendet das System diejenige Kampagne an, die dem Kunden den höchsten Rabatt gewährt.
-- Der VIP-Ablauf greift nur, wenn alle drei Bedingungen erfüllt sind. Ist eine Bedingung nicht erfüllt, gilt der übliche Ablauf für Geschäftskundenverträge.
+- Der VIP-Ablauf greift nur, wenn der Kunde als VIP-Kunde markiert ist und die 100-%-Kampagne angewendet wird. Ist eine Bedingung nicht erfüllt, gilt der übliche Ablauf für Geschäftskundenverträge.
 
 **Fehlerbehebung.**
 
@@ -227,25 +227,24 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 7. Das Fenster schließt sich. Mit „X“ oder „Cancel“ schließen Sie das Fenster ohne Speichern.
 8. Erfassen Sie die Kunden- und Zahlungsdaten und gelangen Sie zu „Overview and Confirmation“. Dort erstellt das System das Angebot und vergibt eine Referenznummer. Die Anfrage geht über den Notification Service an den MPC. Bei einem neuen Preis umfasst sie die Produktkonfiguration, die Preisdetails mit Rabatten, Kampagnen und optionalen Deckungen sowie die Kommentare. Bei einer neuen Laufleistung oder Laufzeit umfasst sie die Sonderkonfiguration, die Händler-Outlet-ID, die Händlerrabattbeträge netto, brutto und Steuer, die Kampagnen-ID, den Kampagnenwert oder -prozentsatz, die Kostenstelle der Kampagne und die Kommentare.
 
-**Ergebnis und Systemstatus.** Nach der Anfrage ist die Konfiguration gesperrt. Optionale Deckungen und technische Optionen lassen sich nicht mehr ändern. Ein Preisangebot lässt sich nicht erstellen, drucken oder per E-Mail versenden. Es wird kein Zahlungsplan angefordert, der Reiter „Payment Plan“ entfällt und der Produktpreis ist ausgeblendet. Die Anfrage erscheint in der Sonderfall-Übersicht, siehe Abschnitt 12.6. Nach der Beantwortung zeigt das System die Preise erneut an.
+**Ergebnis und Systemstatus.** Nach der Anfrage ist die Konfiguration gesperrt. Optionale Deckungen und technische Optionen lassen sich nicht mehr ändern. Ein Preisangebot lässt sich nicht erstellen, drucken oder per E-Mail versenden. Es wird kein Zahlungsplan angefordert, der Reiter „Payment Plan“ entfällt und der Produktpreis ist ausgeblendet. Die Anfrage erscheint in der Sonderfall-Übersicht, siehe Abschnitt 12.6. Nach der Bestätigung zeigt das System den korrekten monatlichen Preis.
 
 **Besonderheiten je Rolle.**
 
-- Die Sonderfall-Übersicht zeigt dem Händler die Referenznummer, den Kundennamen, die Anfrageart, die Fahrzeuganzahl, das Einreichungsdatum mit der Benutzerkennung des Anlegers, den Status und die verbleibenden Tage bis zur Fälligkeit. Die Filter umfassen Referenznummer, Kundenname, Anfrageart und den Status „Open“, „In Prüfung“, „Genehmigt“ oder „Rejected“.
+- Die Sonderfall-Übersicht zeigt dem Händler die Referenznummer, den Kundennamen, die Anfrageart, die Fahrzeuganzahl, das Einreichungsdatum mit der Benutzerkennung des Anlegers, den Status und die verbleibenden Tage bis zur Fälligkeit. Die Filter umfassen Referenznummer, Kundenname, Anfrageart und den Status „Offen“, „In Prüfung“, „Genehmigt“ oder „Abgelehnt“.
 - Die Aktion „Ansehen“ öffnet die Detailansicht für Anfragen im Status Open oder In Prüfung. Die Aktion „Prüfen“ steht für genehmigte und abgelehnte Anfragen bereit.
 - Der Vertrag mit Sonderfallanfrage lässt sich auch dann anlegen, wenn eine Kampagne mit automatischer Anwendung hinterlegt ist.
 - Das Feld „Industry“ ist nach der Anfrage deaktiviert.
 
 **Besonderheiten je Sparte und Markt.**
 
-- Die Anfrage für Flottenkunden ist im Material für Geschäftskunden und den Van-Ablauf ausgerichtet. Die Verfügbarkeit je Division ist im Abschnitt Klärungsbedarf beschrieben.
 - Sonderfallrabatte erfassen Sie mit dem Rabatttyp „Sales“ oder „After Sales“. Die Kostenstelle wird je Geschäftsbereich vorbelegt und lässt sich vor dem Speichern anpassen. Die Debitorennummer ist optional.
 
 **Hinweise.**
 
 - Ein Sonderfall und eine Grace-Period-Kampagne schließen sich auf demselben Vertrag gegenseitig aus. Wählen Sie eine Kampagne, ist der Bereich „Special Case“ deaktiviert. Ist ein Sonderfall gewählt, sind die Optionsfelder der Kampagnen deaktiviert.
 - Ist eine Grace-Period-Kampagne angewendet, lässt sich „Request Special Case“ öffnen. Ein Banner weist darauf hin, dass Sie die Kampagne zuerst entfernen müssen. „Make Request“ bleibt bis dahin ausgegraut.
-- Die Sonderfallanfrage ist an die Auswahl der Konfiguration gebunden. Sie können Sonderfallanfragen für abweichende Laufleistungen und Laufzeiten stellen.
+- Sonderfallanfragen sind auch für abweichende Laufleistungen und Laufzeiten möglich.
 - Nach der Bestätigung eines Sonderfalls zeigt die Übersicht den korrekten monatlichen Preis.
 
 **Fehlerbehebung.**
@@ -268,7 +267,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 1. Starten Sie das Vertragsangebot und konfigurieren Sie das Produkt. Optional fügen Sie einen Händlerrabatt hinzu.
 2. Erstellen Sie die Sonderfallanfrage nach Abschnitt 12.4.
 3. Ordnen Sie das Angebot optional einem Händler zu. Wurde kein Händlerrabatt angewendet, wählen Sie „Assign to Myself“, um sich selbst zuzuweisen, oder geben Sie die Händlerdaten ein.
-4. Die Anfrage durchläuft den Bewertungsprozess nach Abschnitt 12.6. Der Anfragende darf die Anfrage nur genehmigen, wenn ein anderer berechtigter Benutzer die verpflichtende Validierung durchgeführt hat.
+4. Die Anfrage durchläuft den Bewertungsprozess nach Abschnitt 12.6. Die Prüfung folgt dem Verfahren nach Abschnitt 12.6.
 5. Nach der Genehmigung benachrichtigt das System den zugeordneten Händler. Er kann den Händlerrabatt hinzufügen oder bearbeiten und die Aktivierung fortsetzen.
 6. Nach der Ablehnung benachrichtigt das System den zugeordneten Händler und den Ersteller. Die Vertragsaktivierung lässt sich nicht fortsetzen.
 7. Bei der Aktivierung schließt der zugeordnete Händler die Schritte ab. Das System übermittelt die Händlerinformationen an den Revenue-Microservice und erzeugt die i155.
@@ -326,14 +325,14 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 
 **Schritt für Schritt: Kostenträger im Sonderfall bearbeiten.**
 
-1. Öffnen Sie die Benachrichtigung zu einer Sonderfallanfrage für einen Komplexprodukt oder ein Produkt mit Kostenträgern.
+1. Öffnen Sie die Benachrichtigung zu einer Sonderfallanfrage für ein Komplexprodukt oder ein Produkt mit Kostenträgern.
 2. Öffnen Sie „Modify Special Case“. Das Modal zeigt Reiter für die Kostenträger, zum Beispiel „MB“ und „Supplier“, und für das Komplexprodukt.
 3. Bearbeiten Sie je Reiter die Preiskomponenten, die Rabattart, die Kostenstelle und das Konto. Ein Rabatt je Kostenträger ist möglich.
 4. Erfassen Sie interne und externe Kommentare. Speichern Sie mit „Save Cost Unit“.
 
 **Schritt für Schritt: Grace-Period-Anfrage prüfen.**
 
-1. Öffnen Sie die Liste der Anfragen. Die Suche umfasst Referenznummer, Kundenname, Einreichungsdatum und Status. Der Status ist „All“, „Open“, „Approved“, „Rejected“ oder „Expired“.
+1. Öffnen Sie die Liste der Anfragen. Die Suche umfasst Referenznummer, Kundenname, Einreichungsdatum und den Status. Zur Wahl stehen All, Open, Approved, Rejected und Expired.
 2. Klicken Sie bei einer offenen Anfrage auf „Review“. Bei genehmigten, abgelehnten und abgelaufenen Anfragen steht „View“ zur Verfügung. Händler sehen immer nur „View“.
 3. Genehmigen Sie die Anfrage mit „Approve“. Sie können einen Kommentar hinzufügen. Der Endpreis ergibt sich aus Listenpreis minus Kampagnenwert und steht im Vertrag. Zahlungsplan und Entwurfsdokument entstehen auf dieser Basis. „Next“ im Schritt „Overview & Confirmation“ des Verkäufers ist danach freigegeben. Der Status wechselt auf „Approved“.
 4. Lehnen Sie die Anfrage mit „Reject“ ab. Sie können eine Begründung hinterlegen. Die Kampagne wird nicht angewendet, der Vertrag behält den ursprünglichen Listenpreis. Zahlungsplan und Entwurfsdokument entstehen mit dem ursprünglichen Preis. Der Status wechselt auf „Rejected“.
@@ -372,24 +371,22 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 
 **Besonderheiten je Sparte und Markt.**
 
-- Bei einem Vertrag mit Division „Van“ oder „PC“ gilt die Freigabe für die Division der Kampagne.
-- Die Freigabe von Preisversionen und Kampagnen gilt für die jeweilige Marktkonfiguration.
+- Kampagnen gehören zu einer Division, Vans oder PC. Eine Kampagne lässt sich nicht beiden Divisionen zugleich zuordnen.
 
 **Hinweise.**
 
 - Ein Vertrag mit Sonderfallanfrage bleibt nach der Ablehnung durch den MPC nicht im Status „Created“ blockiert.
 - Bleibt die Grace-Period-Anfrage ohne Entscheidung, verbleibt der Vertrag mit dem ursprünglichen Preis. Die Frist richtet sich nach den Einstellungen des Marktes.
 - Ein Vertrag, für den eine Grace-Period-Kampagne abgelehnt wurde, bleibt im Status „Waiting for Activation“ und lässt sich manuell aktivieren. Der Name der abgelehnten Kampagne erscheint nicht mehr, im Feld „Campaign Name“ steht ein Strich.
-- Eine Kulanzkampagne wird nach sieben Tagen ohne Entscheidung nicht mehr angezeigt.
+- Der Hinweis zur Kulanzzeit verschwindet nach sieben Tagen.
 - Entscheidungen zu Preisänderungen mit Kostenstelle und Kommentaren gehen mit allen Details an die Vertragserstellung zurück.
 - Die Preisänderung und der Rabatt wirken zusammen. Prozentuale Rabatte speichert das System als Betrag.
-- Der Vertrag mit Nettopreis zeigt im Prüfdialog Nettopreise. Fährt man mit der Maus über einen Nettopreis, erscheint der Bruttopreis.
+- Der Prüfdialog für Sonderfälle zeigt Nettopreise. Beim Überfahren erscheint der Bruttopreis.
 
 **Fehlerbehebung.**
 
-- Ändert sich die Fahrgestellnummer, und passen Produkt, Produktkonfiguration oder Preis nicht mehr, lehnt das System den Vertrag ab. Der Ablehnungsgrund nennt die Ursache: „Produktlinien-Abweichung“ bei einer anderen Produkt-ID oder Produktlinie, „Konfigurationsabweichung“ bei Deckungen, technischen Optionen, Kampagnen, Rabatten oder Sonderfall und „Preisabweichung“ bei einem neuen Nettopreis. Die Fahrgestellnummer lässt sich dann nicht stillschweigend übernehmen, und der Vertrag kann nicht aktiviert werden.
+- Ändert sich die Fahrgestellnummer, und passen Produkt, Produktkonfiguration oder Preis nicht mehr, lehnt das System den Vertrag ab. Der Ablehnungsgrund bezeichnet die Abweichung: bei der Produkt-ID oder Produktlinie, bei der Produktkonfiguration etwa mit Deckungen, technischen Optionen, Kampagnen, Rabatten oder Sonderfall, oder beim Nettopreis nach der Neuberechnung. Die Fahrgestellnummer lässt sich dann nicht stillschweigend übernehmen, und der Vertrag kann nicht aktiviert werden.
 - Gibt man bei einer editierbaren Preiskomponente einen nicht numerischen Wert ein, zeigt das System beim Speichern eine Fehlermeldung. Entspricht der Rabatt dem vollen Grundpreis, beträgt die Nettosumme des Kostenträgers null.
-- Die Meldung „Min. 1 and max. 5 characters allowed. Please correct your input and try again“ erscheint bei einem ungültigen Prozentwert.
 
 {{Q:12.6}}
 
@@ -405,7 +402,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 
 1. Öffnen Sie die Prüf- oder Genehmigungsansicht des Sonderfalls.
 2. Erfassen Sie beim Bearbeiten, Prüfen oder bei der Statusänderung einen externen Kommentar, einen internen Kommentar oder beide. Beide Felder sind optional.
-3. Speichern Sie die Entscheidung. Das System schaltet den Status des Sonderfalls weiter. Ein einzelner Kommentar entsteht als Eintrag der jeweiligen Sichtbarkeit.
+3. Speichern Sie die Entscheidung. Das System schaltet den Status des Sonderfalls weiter. Jeder Kommentar entsteht als eigener Eintrag mit seiner Sichtbarkeit.
 
 **Ergebnis und Systemstatus.** Die Kommentarhistorie enthält jeden Eintrag mit Autor, Zeitstempel, Inhalt und Sichtbarkeitstyp. Die Kommentare erscheinen in chronologischer Reihenfolge, der älteste zuerst. Bestehende Kommentare lassen sich nicht ändern oder löschen. Interne Kommentare tragen die Kennzeichnung „Internal“. In der Historie erscheinen Benutzerkennung, Rolle und Datum.
 
@@ -423,7 +420,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Der Anfragende, der den Sonderfall erstellt hat, kann ihn nicht selbst genehmigen oder ablehnen. Versucht er es, weist das System die Aktion mit einer Fehlermeldung ab.
 - Eine Benachrichtigung zu einer Kampagne oder einer Preisversion erscheint bei den Rollen MPC und MO in der Kategorie „Products and Prices“. Ein Klick führt direkt zur gefilterten Übersicht. Benutzer ohne die Rolle MPC oder MO erhalten keine Benachrichtigung.
 - Lehnt ein Prüfer eine Kampagne oder Preisversion ab, steht ein optionales Kommentarfeld bereit. Der Kommentar umfasst bis zu 500 Zeichen. Überschreitet er die Grenze, lässt sich die Ablehnung nicht absenden. Der Einreicher erhält danach eine Rückmeldung zum Status.
-- Die Benachrichtigung zur Kulanzfrist verschwindet nach sieben Tagen ohne Aktion.
+- Benachrichtigungen zur Kulanzfrist werden nach sieben Tagen Inaktivität gelöscht.
 
 **Ansichtsmodus „View“.** Die Ansicht „View“ zeigt dasselbe Layout wie „Review“, schreibgeschützt und ohne die Schaltflächen „Approve“ und „Reject“. In der Fußzeile steht nur „Back“. Ein Banner zeigt das Ergebnis, etwa „The request was rejected!“, „The request was approved!“ oder „The request expired without a decision.“. Der Reiter „Comments“ zeigt den vollständigen Kommentarverlauf. Kommentare sind nach dem Absenden unveränderlich.
 
@@ -472,13 +469,13 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 4. Das System versendet eine E-Mail an den Kunden mit dem Link zum CAC. Im CAC sieht der Kunde den zu zahlenden Betrag und gelangt über den Zahlungslink zur Zahlungsseite. Nach der Zahlung erscheint eine Erfolgsmeldung. Die Vertragsaktivierung lässt sich danach fortsetzen.
 5. Die Vorlage „Zahlung Prepaid-Verträge“ für die Kundenbenachrichtigung erfassen Sie mit dem Verwendungszweck „Payment Completion“, dem Markt, dem Kundentyp und dem Datum „Gültig ab“. Fehlende Pflichtfelder markiert das System. „Als Entwurf speichern“ ist möglich, „Veröffentlichen“ nicht.
 
-**Ergebnis und Systemstatus.** Dokumente, die zu einem Servicevertrag erzeugt oder angehängt wurden, sind im CAC einsehbar. Die Aktivierungs-E-Mail enthält einen Link zum CAC, der Kunde kann ihn bei Bedarf erneut anfordern. Bei einer Änderung der Zahlungsart bestätigt das System die Auswahl mit einer Erfolgsmeldung. Das CAC kennzeichnet eine Kreditkarte nach der letzten Erinnerung und der Umsatzbestätigung als abgelaufen. Aktualisiert der Kunde die Karte vor Ablauf, sendet das System keine weiteren Erinnerungen. Voraussetzung ist ein aktiver Servicevertrag mit einer gültigen Kreditkarte, die über Asset-ID und NTR zugeordnet ist, eine mit dem Vertrag verknüpfte CIAM-ID und die funktionsfähige Mercedes-me-Authentifizierung.
+**Ergebnis und Systemstatus.** Dokumente, die zu einem Servicevertrag erzeugt oder angehängt wurden, sind im CAC einsehbar. Die Aktivierungs-E-Mail enthält einen Link zum CAC. Der MO kann die Aktivierungs-E-Mail bei Bedarf erneut senden. Das CAC kennzeichnet eine Kreditkarte nach der letzten Erinnerung und der Umsatzbestätigung als abgelaufen. Aktualisiert der Kunde die Karte vor Ablauf, sendet das System keine weiteren Erinnerungen. Voraussetzung ist ein aktiver Servicevertrag mit einer gültigen Kreditkarte, die über Asset-ID und NTR zugeordnet ist, eine mit dem Vertrag verknüpfte CIAM-ID und die funktionsfähige Mercedes-me-Authentifizierung.
 
 **Erinnerungen bei ausbleibender Zahlung.** Wird der Zahlungslink nicht genutzt, sendet das System am siebten Tag eine Erinnerung mit der Vorlage „Payment Completion“, deren Tageszahl angepasst ist. Zusätzlich erhält der MO eine interne Benachrichtigung. Am 14. Tag suspendiert das System den Vertrag, sofern der Link weiterhin nicht genutzt ist, und informiert den MO. Ist der Zahlungslink abgelaufen, erzeugt eine Schaltfläche den Link neu. Zahlt der Kunde später, reaktiviert das System den Vertrag nach dem Eingang der Zahlung.
 
 **Besonderheiten je Rolle.**
 
-- Der MO legt Kunden und Verträge im Kundenmanagement an, auch für Bestandskunden der Gruppen Privat, Gewerbe und Gewerbe-Flotte. Er sendet die Aktivierungs-E-Mail erneut und startet die Zahlungsänderung.
+- Im Kundenmanagement legen Sie Kunden und Verträge für die Kundengruppen Privat, Gewerbe und Gewerbe-Flotte an, auch für Bestandskunden. Der MO sendet die Aktivierungs-E-Mail erneut und startet die Zahlungsänderung.
 - Die Aktion für Änderungsanfragen trägt die Bezeichnung „Customer Self Service“. Das System lädt die Vorlage, sendet die E-Mail an den Endkunden und protokolliert sie in der Vertragshistorie.
 
 **Besonderheiten je Sparte und Markt.**
@@ -494,7 +491,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 **Fehlerbehebung.**
 
 - Gibt der Kunde einen falschen Captcha-Code ein, erscheint die Fehlermeldung in der Sprache des Marktes.
-- Die Dokumentenseite zeigt Dokumentnamen und Dokumenttyp bei erhöhter Zoomstufe überlappungsfrei an.
+- Die Dokumentenseite überlagert Dokumentname und Dokumenttyp auch bei erhöhter Zoomstufe nicht.
 - Ist die Umgebung nicht verfügbar, zeigt die Oberfläche eine Meldung, dass oneSCM gerade repariert wird.
 
 {{Q:12.8}}
@@ -529,9 +526,9 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 
 **Besonderheiten je Rolle.**
 
-- Der Händler startet die Massenanlage für Flottenkunden und sieht die Validierung in der Benachrichtigung. Er kann die Liste jederzeit erneut bestätigen.
+- Der Händler startet die Massenanlage für Flottenkunden. Nach Änderungen sendet er die Fahrzeugliste erneut ab.
 - Ein Benutzer mit der Rolle „Nur Ansicht“ kann die Kennung nicht ändern.
-- Der Vertrag mit Deal-ID bezieht nur fahrzeugbezogene Daten ein. Sonderpreise und Kundeninformationen, die mit der Deal-ID verknüpft sind, werden ignoriert.
+- Bei einer Deal-ID berücksichtigt das System nur fahrzeugbezogene Daten. Sonderpreise und Kundeninformationen, die mit der Deal-ID verknüpft sind, ignoriert es.
 
 **Besonderheiten je Sparte und Markt.**
 
