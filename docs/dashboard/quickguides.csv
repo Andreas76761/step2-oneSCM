@@ -1,45 +1,89 @@
-kapitel,titel,art,seiten,url
-Alle,Alle Quick Guides in einer Datei,Alle,86,/_blob/ac7f6acfe55be12b3003454b3ad3a075
-1,Einführung und Überblick,Kapitel,2,/_blob/83192b0482b425b6a9c20cf2e90ba45d
-2,"Zugang, Rollen und Berechtigungen",Kapitel,2,/_blob/1529bc2cfc788f5a184c2b5040dc26cb
-3,"Grundlagen, Navigation und Customer Journey",Kapitel,2,/_blob/71c0613128281918091e96dbd7f84101
-4,"Kunden, Partner und Vertragsrollen",Kapitel,2,/_blob/f42bb8f29685ac19d6641f37ef99e25b
-5,"Fahrzeug, Produkt und Angebot vorbereiten",Kapitel,2,/_blob/e8dfd0d642328a86dd70ec603fb86d55
-6,Servicevertrag anlegen und Antrag abschließen,Kapitel,2,/_blob/c1b4d2bbb8af32f3f50a4b81d45a7ca0
-7,"Zahlungsdaten, Dokumente und Unterschrift",Kapitel,2,/_blob/368bf7a0aeaccbb21ac926f4c9a5c853
-8,Antrag verfolgen und aktivieren,Kapitel,2,/_blob/4d2a7bdfde97b10a23f567766d6c8636
-9,MO Checks und fachliche Prüfungen,Kapitel,2,/_blob/77465b27026f4a318869ce5fae12250a
-10,Verträge im Alltag verwalten,Kapitel,2,/_blob/2f82837e210177f71ea942b07302dbc0
-11,"Rechnung, Zahlung, Kosten und Auswertungen",Kapitel,2,/_blob/52618a0981ad60b80a805d5909073504
-12,"Geschäftskunden, Kampagnen und Sonderfälle",Kapitel,2,/_blob/d06c9695eb60bcebb1b96c5a82bcf38b
-13,Reifenprodukte – Tyres,Kapitel,2,/_blob/ab9a3468c9b32e375920fcd79099412e
-14,"Marktrolle, Produkt- und Preispflege sowie Administration",Kapitel,2,/_blob/9b844cd8948afc2b3e8fe85f2b154771
-15,"HQ-Rolle, Blueprint und zentrale Stammdaten",Kapitel,2,/_blob/c9587a3b098d9a304e5ad80d757c6c66
-16,"Governance, Qualität, Datenschutz und Archivierung",Kapitel,2,/_blob/c28f42f7efdbff85236be5a3487f688b
-17,Rollout und Einführung,Kapitel,2,/_blob/dc10b4d850e59ef1e91999cbdd8ae082
-18,Migration und Übernahme von Bestandsdaten,Kapitel,2,/_blob/620c1c72ea7bd3534dd2ad497a240487
-19,IT Architektur,Kapitel,2,/_blob/b7e5d0c18f135ecb8e3a9b24be5124e3
-20,Länderspezifische Themen,Kapitel,2,/_blob/d1edb1306f7220ac717341d0c828fc21
-21,Spartenspezifische Themen,Kapitel,2,/_blob/c54cc64e020924f92e75795a06375a42
-22,Ausblick und Weiterentwicklung,Kapitel,2,/_blob/756124f9ce3a720233631efb9f9a9c3f
-23,"FAQ, Troubleshooting und Support",Kapitel,2,/_blob/82d997e515f4b53b2cfc68eb9c698848
-A.1,Glossar und Abkürzungen,Anhang,2,/_blob/f79ff5be8241a9aec776cffe0e851f0e
-B.1,Alltagschecklisten,Anhang,2,/_blob/cf6ea5a4bc8aa193b4924eea9c80541b
-C.1,Prozessdiagramme,Anhang,2,/_blob/85ae9193a6f82cfff52f7e1e98501702
-D.1,Rollen-/Status-/Scopematrizen,Anhang,2,/_blob/d38b5e031c9ffb874a39d6ecf598c357
-E.1,Ticket-zu-Kapitel-Zuordnung,Anhang,2,/_blob/64a6026f21d7afbf3855fdeaa9371cfa
-F.1,Quellen und Klärungsregister,Anhang,2,/_blob/edb65985325ec0109add0e0a5ee6bce2
-G.1,Bildverzeichnis und Nachweise,Anhang,2,/_blob/e11271765120dac0f94b1b215eaf2b9a
-H.1,Wissenschecks und Lösungen,Anhang,2,/_blob/8125c9412652ae41226c688146321231
-I.1,Praxisbeispiele entlang des Vertragsprozesses,Anhang,2,/_blob/3fe044c39e00617f5b8ef7d19db08e64
-I.2,Rechenbeispiele und Finanzbezug,Anhang,2,/_blob/27fe27fb114724ef621eb5dd7bc79a1b
-I.3,Testdatenkatalog und Nachweise,Anhang,2,/_blob/8ec8629ddba00fce51dc124e195d2cef
-T6-7,Vom gespeicherten Antrag zu Zahlungsdaten und Signatur,Übergangsmodul,2,/_blob/39edf3a1a000e904f03e3e1ba1856a1a
-T7-8,Von Dokumenten und Signatur zur Aktivierungsprüfung,Übergangsmodul,2,/_blob/59b0a735e4c00093efb81556e28ec4a8
-T8-9,Gesamtprozess und MO-Rollenvertiefung,Übergangsmodul,2,/_blob/2b594dcf2a34aaa3cb9822399c999652
-T9-10,Vom Prüfergebnis zur laufenden Vertragsverwaltung,Übergangsmodul,2,/_blob/725a858136eed4215aceb2c5ef3833ff
-T14-15,Marktpflege und zentrale Vorgaben verbinden,Übergangsmodul,2,/_blob/87b90914a80a941d813e60573932e345
-T15-14,Zentrale Grundlagen an die Marktpflege übergeben,Übergangsmodul,2,/_blob/cc1291ddfdec8a3b283fd17f8842197a
-T15-16,Von der Pflegeentscheidung zum Governance-Nachweis,Übergangsmodul,2,/_blob/657740f6a1831ad9939c87b94d753b1f
-V.1,Willkommen und Dokumentkontext,Vorspann,2,/_blob/02778f1d6ed79f8b22814672ed3a6260
-V.2,Inhaltsverzeichnis und Lesepfade,Vorspann,2,/_blob/694e9868f5c7021085c8ef8652ed52dd
+kapitel,titel,art,variante,seiten,url
+Alle,Alle Quick Guides in einer Datei,Alle,Van,86,/_blob/ac7f6acfe55be12b3003454b3ad3a075
+1,Einführung und Überblick,Kapitel,Van,2,/_blob/83192b0482b425b6a9c20cf2e90ba45d
+2,"Zugang, Rollen und Berechtigungen",Kapitel,Van,2,/_blob/1529bc2cfc788f5a184c2b5040dc26cb
+3,"Grundlagen, Navigation und Customer Journey",Kapitel,Van,2,/_blob/71c0613128281918091e96dbd7f84101
+4,"Kunden, Partner und Vertragsrollen",Kapitel,Van,2,/_blob/f42bb8f29685ac19d6641f37ef99e25b
+5,"Fahrzeug, Produkt und Angebot vorbereiten",Kapitel,Van,2,/_blob/e8dfd0d642328a86dd70ec603fb86d55
+6,Servicevertrag anlegen und Antrag abschließen,Kapitel,Van,2,/_blob/c1b4d2bbb8af32f3f50a4b81d45a7ca0
+7,"Zahlungsdaten, Dokumente und Unterschrift",Kapitel,Van,2,/_blob/368bf7a0aeaccbb21ac926f4c9a5c853
+8,Antrag verfolgen und aktivieren,Kapitel,Van,2,/_blob/4d2a7bdfde97b10a23f567766d6c8636
+9,MO Checks und fachliche Prüfungen,Kapitel,Van,2,/_blob/77465b27026f4a318869ce5fae12250a
+10,Verträge im Alltag verwalten,Kapitel,Van,2,/_blob/2f82837e210177f71ea942b07302dbc0
+11,"Rechnung, Zahlung, Kosten und Auswertungen",Kapitel,Van,2,/_blob/52618a0981ad60b80a805d5909073504
+12,"Geschäftskunden, Kampagnen und Sonderfälle",Kapitel,Van,2,/_blob/d06c9695eb60bcebb1b96c5a82bcf38b
+13,Reifenprodukte – Tyres,Kapitel,Van,2,/_blob/ab9a3468c9b32e375920fcd79099412e
+14,"Marktrolle, Produkt- und Preispflege sowie Administration",Kapitel,Van,2,/_blob/9b844cd8948afc2b3e8fe85f2b154771
+15,"HQ-Rolle, Blueprint und zentrale Stammdaten",Kapitel,Van,2,/_blob/c9587a3b098d9a304e5ad80d757c6c66
+16,"Governance, Qualität, Datenschutz und Archivierung",Kapitel,Van,2,/_blob/c28f42f7efdbff85236be5a3487f688b
+17,Rollout und Einführung,Kapitel,Van,2,/_blob/dc10b4d850e59ef1e91999cbdd8ae082
+18,Migration und Übernahme von Bestandsdaten,Kapitel,Van,2,/_blob/620c1c72ea7bd3534dd2ad497a240487
+19,IT Architektur,Kapitel,Van,2,/_blob/b7e5d0c18f135ecb8e3a9b24be5124e3
+20,Länderspezifische Themen,Kapitel,Van,2,/_blob/d1edb1306f7220ac717341d0c828fc21
+21,Spartenspezifische Themen,Kapitel,Van,2,/_blob/c54cc64e020924f92e75795a06375a42
+22,Ausblick und Weiterentwicklung,Kapitel,Van,2,/_blob/756124f9ce3a720233631efb9f9a9c3f
+23,"FAQ, Troubleshooting und Support",Kapitel,Van,2,/_blob/82d997e515f4b53b2cfc68eb9c698848
+A.1,Glossar und Abkürzungen,Anhang,Van,2,/_blob/f79ff5be8241a9aec776cffe0e851f0e
+B.1,Alltagschecklisten,Anhang,Van,2,/_blob/cf6ea5a4bc8aa193b4924eea9c80541b
+C.1,Prozessdiagramme,Anhang,Van,2,/_blob/85ae9193a6f82cfff52f7e1e98501702
+D.1,Rollen-/Status-/Scopematrizen,Anhang,Van,2,/_blob/d38b5e031c9ffb874a39d6ecf598c357
+E.1,Ticket-zu-Kapitel-Zuordnung,Anhang,Van,2,/_blob/64a6026f21d7afbf3855fdeaa9371cfa
+F.1,Quellen und Klärungsregister,Anhang,Van,2,/_blob/edb65985325ec0109add0e0a5ee6bce2
+G.1,Bildverzeichnis und Nachweise,Anhang,Van,2,/_blob/e11271765120dac0f94b1b215eaf2b9a
+H.1,Wissenschecks und Lösungen,Anhang,Van,2,/_blob/8125c9412652ae41226c688146321231
+I.1,Praxisbeispiele entlang des Vertragsprozesses,Anhang,Van,2,/_blob/3fe044c39e00617f5b8ef7d19db08e64
+I.2,Rechenbeispiele und Finanzbezug,Anhang,Van,2,/_blob/27fe27fb114724ef621eb5dd7bc79a1b
+I.3,Testdatenkatalog und Nachweise,Anhang,Van,2,/_blob/8ec8629ddba00fce51dc124e195d2cef
+T6-7,Vom gespeicherten Antrag zu Zahlungsdaten und Signatur,Übergangsmodul,Van,2,/_blob/39edf3a1a000e904f03e3e1ba1856a1a
+T7-8,Von Dokumenten und Signatur zur Aktivierungsprüfung,Übergangsmodul,Van,2,/_blob/59b0a735e4c00093efb81556e28ec4a8
+T8-9,Gesamtprozess und MO-Rollenvertiefung,Übergangsmodul,Van,2,/_blob/2b594dcf2a34aaa3cb9822399c999652
+T9-10,Vom Prüfergebnis zur laufenden Vertragsverwaltung,Übergangsmodul,Van,2,/_blob/725a858136eed4215aceb2c5ef3833ff
+T14-15,Marktpflege und zentrale Vorgaben verbinden,Übergangsmodul,Van,2,/_blob/87b90914a80a941d813e60573932e345
+T15-14,Zentrale Grundlagen an die Marktpflege übergeben,Übergangsmodul,Van,2,/_blob/cc1291ddfdec8a3b283fd17f8842197a
+T15-16,Von der Pflegeentscheidung zum Governance-Nachweis,Übergangsmodul,Van,2,/_blob/657740f6a1831ad9939c87b94d753b1f
+V.1,Willkommen und Dokumentkontext,Vorspann,Van,2,/_blob/02778f1d6ed79f8b22814672ed3a6260
+V.2,Inhaltsverzeichnis und Lesepfade,Vorspann,Van,2,/_blob/694e9868f5c7021085c8ef8652ed52dd
+Alle,Alle Quick Guides in einer Datei,Alle,Pkw,86,/_blob/ec8d459247faa37a4a86c804be284e54
+1,Einführung und Überblick,Kapitel,Pkw,2,/_blob/0a164a351dae24065d9454a2d5cf3b4d
+2,"Zugang, Rollen und Berechtigungen",Kapitel,Pkw,2,/_blob/b7baed8a8fe4bdf219135a65840a7f50
+3,"Grundlagen, Navigation und Customer Journey",Kapitel,Pkw,2,/_blob/464d3c98c413d6fe6006f815e3d93181
+4,"Kunden, Partner und Vertragsrollen",Kapitel,Pkw,2,/_blob/74cbf15570b3ffd56c45403b148dae00
+5,"Fahrzeug, Produkt und Angebot vorbereiten",Kapitel,Pkw,2,/_blob/30400c2ff8b0fcdc0e05053bdc9d68c1
+6,Servicevertrag anlegen und Antrag abschließen,Kapitel,Pkw,2,/_blob/9a110a58b9a3cb090f8f31b6b6cd3112
+7,"Zahlungsdaten, Dokumente und Unterschrift",Kapitel,Pkw,2,/_blob/c55efa7e636e5813c1af1167454608a8
+8,Antrag verfolgen und aktivieren,Kapitel,Pkw,2,/_blob/7565e4020e5837adab60f937345d49eb
+9,MO Checks und fachliche Prüfungen,Kapitel,Pkw,2,/_blob/9d7705d1eb01e18b030c54d0eeccb84e
+10,Verträge im Alltag verwalten,Kapitel,Pkw,2,/_blob/3a9325da2a6bc4889fc587f1f786dccf
+11,"Rechnung, Zahlung, Kosten und Auswertungen",Kapitel,Pkw,2,/_blob/e73eca083617faf2df3ee276ead45964
+12,"Geschäftskunden, Kampagnen und Sonderfälle",Kapitel,Pkw,2,/_blob/87f961e53e21d3a2caa0f8fc62fcb777
+13,Reifenprodukte – Tyres,Kapitel,Pkw,2,/_blob/46665db77304f5d970cf81c4d797c73f
+14,"Marktrolle, Produkt- und Preispflege sowie Administration",Kapitel,Pkw,2,/_blob/3877f3263f1197b6b997fac29f1f90ae
+15,"HQ-Rolle, Blueprint und zentrale Stammdaten",Kapitel,Pkw,2,/_blob/42ec837373304173f36b244031a51b54
+16,"Governance, Qualität, Datenschutz und Archivierung",Kapitel,Pkw,2,/_blob/47064c5b8616e33bcba7fd7ffa5a22b2
+17,Rollout und Einführung,Kapitel,Pkw,2,/_blob/671a1829f20242dfbc36fa630af645f4
+18,Migration und Übernahme von Bestandsdaten,Kapitel,Pkw,2,/_blob/7089cca2d4e0bd6e0fb477d55a3fd9bc
+19,IT Architektur,Kapitel,Pkw,2,/_blob/e2cacb0f089275994d28cc1f7b4e6fb1
+20,Länderspezifische Themen,Kapitel,Pkw,2,/_blob/42bdd36387715085c084d6615569f060
+21,Spartenspezifische Themen,Kapitel,Pkw,2,/_blob/ead5819ad04deb995b173f6146a9f625
+22,Ausblick und Weiterentwicklung,Kapitel,Pkw,2,/_blob/1271b42388eedf107d0e7e999006c1ff
+23,"FAQ, Troubleshooting und Support",Kapitel,Pkw,2,/_blob/315a04d63763c011a43a91faf44442bc
+A.1,Glossar und Abkürzungen,Anhang,Pkw,2,/_blob/b1883092bc35e7eabc13364ad2322f50
+B.1,Alltagschecklisten,Anhang,Pkw,2,/_blob/bdcf296b1448ae5ea30eea71554c9621
+C.1,Prozessdiagramme,Anhang,Pkw,2,/_blob/446418cb337108f2d49cbf87a6950557
+D.1,Rollen-/Status-/Scopematrizen,Anhang,Pkw,2,/_blob/d3ae3bcbe10ad35fe3a86c45e7df6f38
+E.1,Ticket-zu-Kapitel-Zuordnung,Anhang,Pkw,2,/_blob/342d3238064ea1b5d8322b8bfcfc907c
+F.1,Quellen und Klärungsregister,Anhang,Pkw,2,/_blob/2defe75ad38e703cd6f9eedc20df1e78
+G.1,Bildverzeichnis und Nachweise,Anhang,Pkw,2,/_blob/7b15e8833466c5e0b5bea195c5ab47e6
+H.1,Wissenschecks und Lösungen,Anhang,Pkw,2,/_blob/47bb77a7f1178d04749a716a8fa19672
+I.1,Praxisbeispiele entlang des Vertragsprozesses,Anhang,Pkw,2,/_blob/0e5a490f3e643b5e13a261c61ea93903
+I.2,Rechenbeispiele und Finanzbezug,Anhang,Pkw,2,/_blob/0c4cfeb8b3aab19d731ccdb032c015d0
+I.3,Testdatenkatalog und Nachweise,Anhang,Pkw,2,/_blob/f15bd15b3606a60aa36475eeb002f676
+T6-7,Vom gespeicherten Antrag zu Zahlungsdaten und Signatur,Übergangsmodul,Pkw,2,/_blob/05862764719a9e0e907fe820abf1cbde
+T7-8,Von Dokumenten und Signatur zur Aktivierungsprüfung,Übergangsmodul,Pkw,2,/_blob/29fb81f4ee64291a39b8a54e12a93f04
+T8-9,Gesamtprozess und MO-Rollenvertiefung,Übergangsmodul,Pkw,2,/_blob/5efe944888cdd7d20c9d1cc5a872c683
+T9-10,Vom Prüfergebnis zur laufenden Vertragsverwaltung,Übergangsmodul,Pkw,2,/_blob/936d4411c113df435b316b2bc3ab7c60
+T14-15,Marktpflege und zentrale Vorgaben verbinden,Übergangsmodul,Pkw,2,/_blob/4bf75b9a5b1cf971e38e9af98d68d1d9
+T15-14,Zentrale Grundlagen an die Marktpflege übergeben,Übergangsmodul,Pkw,2,/_blob/921988932c01b2d4bcd3ba4d55a02604
+T15-16,Von der Pflegeentscheidung zum Governance-Nachweis,Übergangsmodul,Pkw,2,/_blob/461e52967e82d8b6f40d1301e2b9251a
+V.1,Willkommen und Dokumentkontext,Vorspann,Pkw,2,/_blob/9cc0ef230f04b084af4e9a3a7abe3ab4
+V.2,Inhaltsverzeichnis und Lesepfade,Vorspann,Pkw,2,/_blob/34027e55d75dac5089ff9c3a0c176c17

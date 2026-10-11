@@ -705,13 +705,14 @@ PKW = [
     ("Welches Beispiel passt für Van-Händler?", "Welches Beispiel passt für Pkw-Händler?"),
     ("beide mit Van-Kennungen", "beide mit Pkw-Kennungen"),
     ("im Design der Van-Vorlage", "im Design der Van-Vorlage, als Pkw-Variante"),
+    ("OTR-Deal-ID, VerSO-Order-ID, Baumuster", "OTR-Deal-ID, GO-Auftragsnummer, Baumuster"),
 ]
 
 def _subst(o):
     if isinstance(o, str):
         for a, b in PKW: o = o.replace(a, b)
         return o
-    if isinstance(o, list): return [_subst(x) for x in o]
+    if isinstance(o, (list, tuple)): return [_subst(x) for x in o]
     if isinstance(o, dict): return {k: _subst(v) for k, v in o.items()}
     return o
 

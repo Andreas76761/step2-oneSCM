@@ -47,6 +47,7 @@
   .hb-flow .hb-node.hb-sel rect { fill: color-mix(in srgb, var(--color-fg) 8%, var(--color-bg)); }
   .hb-flow text { fill: var(--color-fg); font-size: var(--cds-font-size-caption); }
   .hb-flow text.hb-nodenum { font-family: var(--font-anthropic-serif); font-size: 1.25rem; }
+  .hb-flow .hb-pdf text { font-size: 0.7rem; }
   .hb-flow text.hb-muted { fill: var(--color-fg-muted); }
   .hb-flow .hb-pdf text { fill: var(--color-fg); text-decoration: underline; font-weight: 600; }
   .hb-flow .hb-pdf:hover text { fill: var(--color-fg-muted); }
@@ -54,11 +55,11 @@
   .hb-flow .hb-edge.hb-dim { opacity: .35; }
   .hb-flow .hb-edgelabel { cursor: pointer; }
   .hb-qg { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr)); gap: var(--cds-gap-sm); }
-  .hb-qg a { display: flex; gap: .5rem; align-items: flex-start; padding: var(--cds-pad-sm); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); text-decoration: none; font-size: var(--cds-font-size-caption); }
-  .hb-qg a:hover { border-color: var(--color-fg); }
+  .hb-qg .hb-qg-tile { display: flex; gap: .5rem; align-items: flex-start; padding: var(--cds-pad-sm); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); text-decoration: none; font-size: var(--cds-font-size-caption); }
+  .hb-qg .hb-qg-links { display: inline-block; margin-top: .25rem; }
   .hb-qg .hb-qg-nr { font-family: var(--font-anthropic-serif); font-size: 1.25rem; line-height: 1; min-width: 1.6rem; color: var(--color-fg-muted); }
   .hb-qg .hb-qg-head { grid-column: 1 / -1; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); margin-top: var(--cds-gap-xs); }
-  .hb-qg a.hb-qg-all { grid-column: 1 / -1; background: color-mix(in srgb, var(--color-fg) 6%, var(--color-bg)); }
+  .hb-qg .hb-qg-tile.hb-qg-all { grid-column: 1 / -1; background: color-mix(in srgb, var(--color-fg) 6%, var(--color-bg)); }
   .hb-qg-link { color: var(--color-fg); text-decoration: underline; text-underline-offset: .15em; white-space: nowrap; }
   .hb-fail { display: flex; align-items: center; justify-content: center; gap: .375rem; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
   .hb-fail::before { content: ''; width: .375rem; height: .375rem; border-radius: 999px; background: var(--color-bad); }
@@ -116,7 +117,7 @@
 
   <section class="hb-card" style="margin-bottom: var(--cds-gap-lg)">
     <h2 id="klickstrecke">Klickstrecke Vertragsprozess</h2>
-    <p class="hb-note">Kapitel als Stationen, Übergangsmodule als Pfeile. Zwei Ketten: Vertragsprozess (6 bis 10) und Pflege (14 bis 16). Klick auf eine Station filtert die Tabelle, „PDF“ öffnet den Quick Guide des Kapitels, Klick auf einen Pfeil zeigt das Übergangsmodul.</p>
+    <p class="hb-note">Kapitel als Stationen, Übergangsmodule als Pfeile. Zwei Ketten: Vertragsprozess (6 bis 10) und Pflege (14 bis 16). Klick auf eine Station filtert die Tabelle, „Van“ und „Pkw“ öffnen den Quick Guide des Kapitels in der jeweiligen Variante, Klick auf einen Pfeil zeigt das Übergangsmodul.</p>
     <div id="flow" class="hb-flow dash-skeleton" data-source="uebergaenge gliederung quickguides"></div>
   </section>
 
@@ -128,7 +129,7 @@
 
   <section class="hb-card" style="margin-bottom: var(--cds-gap-lg)">
     <h2 id="quickguides">Quick Guides je Kapitel</h2>
-    <p class="hb-note" id="qg-note">Zweiseitige Quick Guides zu Hauptkapiteln, Übergangsmodulen, Anhängen und Vorspann als PDF. Klick öffnet die PDF in einem neuen Tab.</p>
+    <p class="hb-note" id="qg-note">Zweiseitige Quick Guides zu Hauptkapiteln, Übergangsmodulen, Anhängen und Vorspann als PDF, je als Van- und Pkw-Variante. Klick öffnet die PDF in einem neuen Tab.</p>
     <div id="qg-list" class="hb-qg dash-skeleton" data-source="quickguides"></div>
   </section>
 
@@ -148,7 +149,7 @@
             <th data-field="thema" aria-sort="none"><button data-col="thema">Thema</button></th>
             <th data-field="ebene" aria-sort="none" class="hb-col-hide"><button data-col="ebene">Ebene</button></th>
             <th data-field="bereich" aria-sort="none" class="hb-col-hide"><button data-col="bereich">Bereich</button></th>
-            <th data-source="guideLinks" data-field="url">Quick Guide</th>
+            <th data-source="guideLinks" data-field="url_van">Quick Guide</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -208,11 +209,12 @@
 
   dash.calc('guideLinks', {
     title: 'Quick-Guide-Link je Hauptkapitel',
-    description: 'Verknüpft jede Zeile der Gliederung mit der PDF ihres Quick Guides: exakte Kennung (Anhang, Übergangsmodul, Vorspann) oder sonst das Hauptkapitel vor dem Punkt.',
+    description: 'Verknüpft jede Zeile der Gliederung mit den PDFs ihres Quick Guides in den Varianten Van und Pkw: exakte Kennung (Anhang, Übergangsmodul, Vorspann) oder sonst das Hauptkapitel vor dem Punkt.',
     inputs: ['gliederung', 'quickguides'],
     fn: (gliederung, quickguides) => gliederung.map(r => {
-      const q = quickguides.find(g => g.kapitel === r.kapitel) || quickguides.find(g => g.kapitel === r.kapitel.split('.')[0]);
-      return { kapitel: r.kapitel, url: q ? q.url : '' };
+      const pick = (v) => quickguides.find(g => g.variante === v && g.kapitel === r.kapitel) || quickguides.find(g => g.variante === v && g.kapitel === r.kapitel.split('.')[0]);
+      const van = pick('Van'), pkw = pick('Pkw');
+      return { kapitel: r.kapitel, url_van: van ? van.url : '', url_pkw: pkw ? pkw.url : '' };
     })
   });
 </script>
@@ -293,7 +295,7 @@
   function drawFlow() {
     const u = dash.data('uebergaenge'), g = dash.data('gliederung'), q = dash.data('quickguides');
     const guides = q.status === 'ok' ? q.data : [];
-    const guideUrl = (k) => { const r = guides.find(x => x.kapitel === k); return r && /^\/_blob\//.test(r.url) ? r.url : ''; };
+    const guideUrl = (k, v = 'Van') => { const r = guides.find(x => x.kapitel === k && (x.variante || 'Van') === v); return r && /^\/_blob\//.test(r.url) ? r.url : ''; };
     const box = document.getElementById('flow');
     if (u.status === 'error' || u.status === 'connect' || g.status === 'error' || g.status === 'connect') { fail(box); return; }
     if (u.status !== 'ok' || g.status !== 'ok') return;
@@ -376,12 +378,14 @@
       if (narrow) { el.textContent = ''; return; }
       while (t.length > 1 && el.getComputedTextLength() > max) { t = t.slice(0, -1); el.textContent = t.trimEnd() + '…'; }
     });
-    ng.filter(n => guideUrl(n)).append('a').attr('class', 'hb-pdf')
-      .attr('href', n => guideUrl(n)).attr('target', '_blank').attr('rel', 'noopener')
-      .attr('data-source', 'quickguides').attr('data-field', 'url').attr('data-where', n => 'kapitel=' + n)
-      .on('click', (ev) => ev.stopPropagation())
-      .on('mousemove', (ev, n) => { ev.stopPropagation(); showTip(ev, [`Quick Guide Kapitel ${n}`, 'PDF in neuem Tab öffnen']); })
-      .append('text').attr('x', nodeW - 10).attr('y', 26).attr('text-anchor', 'end').text('PDF');
+    [['Van', 0], ['Pkw', 1]].forEach(([v, i]) => {
+      ng.filter(n => guideUrl(n, v)).append('a').attr('class', 'hb-pdf')
+        .attr('href', n => guideUrl(n, v)).attr('target', '_blank').attr('rel', 'noopener')
+        .attr('data-source', 'quickguides').attr('data-field', 'url').attr('data-where', n => 'kapitel=' + n + '&variante=' + v)
+        .on('click', (ev) => ev.stopPropagation())
+        .on('mousemove', (ev, n) => { ev.stopPropagation(); showTip(ev, [`Quick Guide Kapitel ${n} (${v})`, 'PDF in neuem Tab öffnen']); })
+        .append('text').attr('x', nodeW - 10).attr('y', 26 + i * 12).attr('text-anchor', 'end').text(v);
+    });
     ng.on('mousemove', (ev, n) => showTip(ev, [`Kapitel ${n}`, titleOf(n), `Bereich ${bereichOf(n)}`]))
       .on('mouseleave', () => { tip.style.display = 'none'; })
       .on('click', (ev, n) => { setFilter({ kapitel: S.kapitel === n ? '' : n, teil: 'Hauptteil', bereich: '', suche: '' }); document.getElementById('suche').value = ''; });
@@ -449,24 +453,36 @@
     const order = ['Alle', 'Kapitel', 'Übergangsmodul', 'Anhang', 'Vorspann'];
     const rows = [...d.data].sort((a, b) => order.indexOf(a.art) - order.indexOf(b.art) || kapNum(a.kapitel) - kapNum(b.kapitel) || a.kapitel.localeCompare(b.kapitel, 'de', { numeric: true }));
     let lastArt = '';
+    const seen = new Set();
     rows.forEach(r => {
-      if (!/^\/_blob\//.test(r.url)) return;
+      if (!/^\/_blob\//.test(r.url) || seen.has(r.kapitel)) return;
+      seen.add(r.kapitel);
+      const pkw = d.data.find(x => x.kapitel === r.kapitel && x.variante === 'Pkw');
+      const van = d.data.find(x => x.kapitel === r.kapitel && x.variante === 'Van') || r;
       if (r.art !== lastArt && r.art !== 'Alle') {
         const h = document.createElement('div'); h.className = 'hb-qg-head';
         h.textContent = r.art === 'Kapitel' ? 'Hauptkapitel' : r.art === 'Übergangsmodul' ? 'Übergangsmodule' : r.art === 'Anhang' ? 'Anhänge' : 'Vorspann';
         box.appendChild(h); lastArt = r.art;
       }
-      const a = document.createElement('a');
-      a.href = r.url; a.target = '_blank'; a.rel = 'noopener';
-      a.className = r.kapitel === 'Alle' ? 'hb-qg-all' : '';
+      const a = document.createElement('div');
+      a.className = 'hb-qg-tile' + (r.kapitel === 'Alle' ? ' hb-qg-all' : '');
       a.setAttribute('data-source', 'quickguides'); a.setAttribute('data-field', 'titel');
-      a.setAttribute('data-where', 'kapitel=' + encodeURIComponent(r.kapitel));
+      a.setAttribute('data-where', 'kapitel=' + encodeURIComponent(van.kapitel) + '&variante=' + encodeURIComponent(van.variante));
       const n = document.createElement('span'); n.className = 'hb-qg-nr'; n.textContent = r.kapitel === 'Alle' ? '∑' : r.kapitel;
-      const t = document.createElement('span'); t.textContent = r.titel + ' (PDF, ' + fmt(Number(r.seiten)) + ' Seiten)';
-      a.append(n, t);
+      const body = document.createElement('span');
+      const t = document.createElement('span'); t.textContent = r.titel + ' (' + fmt(Number(r.seiten)) + ' Seiten)';
+      const ln = document.createElement('span'); ln.className = 'hb-qg-links';
+      [['Van', van.url], ['Pkw', pkw && pkw.url]].forEach(([lab, url]) => {
+        if (!url || !/^\/_blob\//.test(url)) return;
+        if (ln.childNodes.length) ln.appendChild(document.createTextNode(' · '));
+        const l = document.createElement('a'); l.className = 'hb-qg-link'; l.href = url; l.target = '_blank'; l.rel = 'noopener'; l.textContent = 'PDF ' + lab;
+        ln.appendChild(l);
+      });
+      body.append(t, document.createElement('br'), ln);
+      a.append(n, body);
       box.appendChild(a);
     });
-    document.getElementById('qg-note').textContent = `${fmt(rows.length - 1)} Quick Guides (Hauptkapitel, Übergangsmodule, Anhänge, Vorspann) als PDF im Design der Van-Vorlage, dazu eine Gesamtdatei. Klick öffnet die PDF in einem neuen Tab.`;
+    document.getElementById('qg-note').textContent = `${fmt(seen.size - 1)} Quick Guides (Hauptkapitel, Übergangsmodule, Anhänge, Vorspann), je in den Varianten „für Van“ und „für Pkw“, dazu je eine Gesamtdatei. Klick öffnet die PDF in einem neuen Tab.`;
   }
 
   function drawTable() {
@@ -515,10 +531,12 @@
       badge.append(sw, document.createTextNode(r.bereich)); tdB.appendChild(badge);
       const tdQ = document.createElement('td');
       const link = links.find(l => l.kapitel === r.kapitel);
-      if (link && /^\/_blob\//.test(link.url)) {
-        const a = document.createElement('a'); a.className = 'hb-qg-link'; a.href = link.url; a.target = '_blank'; a.rel = 'noopener';
-        a.textContent = 'PDF öffnen'; tdQ.appendChild(a);
-      }
+      [['Van', link && link.url_van], ['Pkw', link && link.url_pkw]].forEach(([lab, url], i) => {
+        if (!url || !/^\/_blob\//.test(url)) return;
+        if (tdQ.childNodes.length) tdQ.appendChild(document.createTextNode(' · '));
+        const a = document.createElement('a'); a.className = 'hb-qg-link'; a.href = url; a.target = '_blank'; a.rel = 'noopener';
+        a.textContent = lab; tdQ.appendChild(a);
+      });
       tr.append(tdK, tdT, tdE, tdB, tdQ);
       tbody.appendChild(tr);
     });
