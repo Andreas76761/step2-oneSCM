@@ -118,7 +118,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 1. Öffnen Sie im Hauptmenü der Produktverwaltung den Menüpunkt „Manage Campaigns“. Die Kampagnenübersicht zeigt alle Kampagnen Ihres Marktes.
 2. Klicken Sie auf „Create Campaign“. Der Assistent besteht aus den Schritten „Campaign Setup“, „Discounted Products & Vehicles“ und „Campaign Summary“.
 3. Erfassen Sie im Schritt „Campaign Setup“ den Kampagnennamen. Der Name umfasst 3 bis 100 Zeichen. Sonderzeichen sind erlaubt.
-4. Legen Sie die Gültigkeit fest. „Valid From“ beginnt frühestens am Folgetag, „Valid To“ ist das Ende der Kampagne. Die Karenzzeit „Grace Period (Days)“ umfasst ein bis zwei Ziffern und hat den Standardwert 0. Die Kampagnenbeschreibung umfasst bis zu 512 Zeichen.
+4. Legen Sie die Gültigkeit fest. „Valid From“ beginnt frühestens am Folgetag, „Valid To“ ist das Ende der Kampagne. Die Karenzzeit „Grace Period“ in Tagen umfasst ein bis zwei Ziffern und hat den Standardwert 0. Die Kampagnenbeschreibung umfasst bis zu 512 Zeichen.
 5. Wählen Sie den Rabatttyp „Percentage“, „Fixed Amount“ oder „Sticker Price“. Bei „Percentage“ geben Sie einen Wert von 1 bis 100 mit maximal fünf Zeichen und zwei Nachkommastellen ein. Der Maximalbetrag „Maximum Amount“ ist optional. Bei „Fixed Amount“ geben Sie den Betrag ein, mindestens 1 und mit maximal acht Ziffern und zwei Nachkommastellen. Die Währung ist zunächst EUR.
 6. Wählen Sie die Division. Benutzer mit einer Rolle für eine Division sehen nur diese Division. Benutzer mit beiden Rollen können zwischen PC und Van wählen.
 7. Wählen Sie mindestens einen Vertriebskanal. Zur Auswahl stehen „Stationary Retail Sales“ und „Direct Online Sales“, die als stand-alone Kanäle gelten, sowie „Leasing“, „Finance“ und „Rental“. Der Kanal bestimmt, welche Produkte im zweiten Schritt erscheinen.
@@ -150,17 +150,17 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 6. Das Benachrichtigungscenter sendet die Anfrage an den MPC. Der MPC prüft sie nach Abschnitt 12.6.
 7. Der Händler erhält eine Benachrichtigung über die Entscheidung. Bei einer Genehmigung enthält die Benachrichtigung den Hinweis „Grace Period Campaign „Kampagnenname“ for Contract „Referenznummer“ has been approved.“ Zusätzlich erhält der Händler die aktualisierten Vertragsdetails und den aktualisierten Zahlungsplan. Bei einer Ablehnung lautet der Hinweis „has not been approved“.
 
-**Ergebnis und Systemstatus.** Eine aktive Kampagne wird bei der Preisermittlung berücksichtigt. Das System übermittelt dabei die vollen und die rabattierten Beträge netto und brutto sowie Kostenstelle und Kontonummer. Eine Karenzzeit gilt als Teil der Gültigkeit, die Kampagne bleibt währenddessen mit dem Status „Active“ sichtbar. Die Kampagnenübersicht zeigt den Status „Active“, „Finished“, „Upcoming“ oder „Deactivated“. Der Preis wird nie negativ. Übersteigt der Betrag einer Festbetragskampagne den Vertragspreis, setzt das System den Endpreis auf 0. Bei einer Grace-Period-Kampagne bleibt der Preis bis zur Entscheidung ohne Kampagne, der Produktpreis ist ausgeblendet und es entsteht kein Zahlungsplan. Nach der Genehmigung wendet das System die Kampagne an. Nach der Aktivierung meldet das System die Vertragsdaten an Revenue, Nemesis und Reporting. Die Gesamtausgaben der Kampagne im Produktmanagement erhöhen sich um den Betrag.
+**Ergebnis und Systemstatus.** Eine aktive Kampagne wird bei der Preisermittlung berücksichtigt. Das System übermittelt dabei die vollen und die rabattierten Beträge netto und brutto sowie Kostenstelle und Kontonummer. Eine Karenzzeit berücksichtigt das System bei der Preisermittlung. Die Kampagnenübersicht zeigt den Status „Active“, „Finished“, „Upcoming“ oder „Deactivated“. Der Preis wird nie negativ. Übersteigt der Betrag einer Festbetragskampagne den Vertragspreis, setzt das System den Endpreis auf 0. Bei einer Grace-Period-Kampagne bleibt der Preis bis zur Entscheidung ohne Kampagne, der Produktpreis ist ausgeblendet und es entsteht kein Zahlungsplan. Nach der Genehmigung wendet das System die Kampagne an. Nach der Aktivierung meldet das System die Vertragsdaten an Revenue, Nemesis und Reporting. Die Gesamtausgaben der Kampagne im Produktmanagement erhöhen sich um den Betrag.
 
 **Kampagnen verwalten.**
 
 - Die Übersicht durchsuchen Sie nach Kampagnenname und externer Kampagnen-ID mit mindestens drei Zeichen. Das Jahr filtern Sie mit einer vierstelligen Zahl, den Status über eine Auswahlliste. Eine Filterauswahl schränkt die Optionen der übrigen Filter ein. Mit dem Zurücksetzen leeren Sie alle Felder.
 - Die Tabelle zeigt Campaign Name als Link zur Kampagne, External Campaign ID, Discount, Validity Period, Last Modified, Total Expense, Status, Auto Apply, Division, Campaign Type, die Produkte und die Aktionen. Der Campaign Name ist ein Link.
 - Eine aktive Kampagne lässt sich bearbeiten, duplizieren und deaktivieren. Bearbeitbar sind dann nur der Kampagnenname, die Sales Description, die Internal Description mit bis zu 512 Zeichen und die Kostenstelle.
-- Eine Kampagne mit Status „Upcoming“ lässt sich bearbeiten, duplizieren und für Startdatum in der Zukunft löschen. Der Discount Type ist nicht mehr änderbar.
+- Eine Kampagne mit Status „Upcoming“ lässt sich bearbeiten und duplizieren. Löschen ist für Kampagnen möglich, die erst in der Zukunft starten. Der Discount Type ist nicht mehr änderbar.
 - Eine Kampagne mit Status „Finished“ lässt sich duplizieren.
 - Eine deaktivierte Kampagne lässt sich bearbeiten und duplizieren. Sie lässt sich reaktivieren, wenn das Gültigkeitsende nicht in der Vergangenheit liegt.
-- Beim Duplizieren erhält die neue Kampagne den Namen „Copy of“ mit dem Namen der Vorlage. Die Vertriebskanäle und die Produkte sowie die Cluster werden zurückgesetzt. Die External Campaign ID bleibt leer. Bei einer beendeten Kampagne sind „Gültig ab“ und „Gültig bis“ leer.
+- Der Standardname der Kopie lautet „Copy of“, gefolgt vom Namen der Vorlage. Die Vertriebskanäle und die Produkte sowie die Cluster werden zurückgesetzt. Die External Campaign ID bleibt leer. Bei einer beendeten Kampagne sind „Gültig ab“ und „Gültig bis“ leer.
 - Beim Deaktivieren erscheint eine Bestätigung. Danach gilt die Kampagne nicht mehr für Produkte und Preise. Beim Reaktivieren erscheint ebenfalls eine Bestätigung, der Status wechselt auf „Active“.
 - Die Kampagnenansicht zeigt die Konfiguration ohne Bearbeitungsmodus.
 - Ein Sticker-Price-Wert von 0 oder ein fehlender Wert in der Matrix wird nicht an die Vertragserstellung übermittelt.
@@ -173,14 +173,13 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Eine Sticker-Price-Kampagne gibt den Preis aus der Preismatrix für Laufzeit und Laufleistung zurück. Ist der Sticker Price niedriger als der unrabattierte Preis, ist die Differenz der Rabattwert. Ist er gleich hoch, beträgt der Rabattwert null. Ist er höher, gibt das System den Sticker Price zurück und setzt den Rabattwert auf null. Eine leere Zelle der Matrix behält den unrabattierten Preis.
 - Der Händlerrabatt und die Kampagne sind zusammen kleiner als der Vertragswert. Ein Beispiel: Bei einem Vertragswert von 1.200 EUR und einer Kampagnenreduktion von 200 EUR beträgt der Preis 1.000 EUR. Ein Händlerrabatt von 50 % senkt den Preis auf 500 EUR, ein Betragsrabatt von 499 EUR auf 1 EUR. Die Kampagne trägt der Markt, die Händlerrabatte trägt der Händler, der Kunde zahlt 1 EUR. Erreicht oder übersteigt die Summe den Vertragswert, zeigt das System die Meldung „Sum of Market Campaign Reduction and Dealer Discount cannot exceed the Contract Value“ und deaktiviert „Apply“.
 - Kampagnenwerte und Händlerrabatt werden auf aggregierter Ebene berechnet. Vom Marktlistenpreis ziehen Sie den Kampagnenwert und den Händlerrabatt ab, wahlweise als Prozentwert oder als Betrag. Die Mehrwertsteuer berechnet das System einmal auf den endgültigen Kundennettopreis.
-- Ein Zahlungsintervall für einen vollständig subventionierten Vertrag setzt das System auf einmalig, und es entstehen keine Rechnungen.
+- Bei vollständig subventionierten Verträgen setzt das System das Zahlungsintervall auf einmalig. Die Anzahl der Rechnungen beträgt 0.
 
 **Besonderheiten je Rolle.**
 
 - Der MPC legt Kampagnen an und sieht die Kampagnen seines Marktes. Eine Kampagne ist nur für MPC-Benutzer des jeweiligen Marktes sichtbar.
 - Der MO kann eine Grace-Period-Kampagne nicht genehmigen.
-- Händler wählen Kampagnen nach Vertriebskanal und Verkaufsebene aus. Die Auswahl „Automatisch anwenden“ entscheidet, ob eine Kampagne ohne Auswahl übernommen wird.
-- Die Rolle „Dealer+“ steht für besondere Verkaufssituationen zur Verfügung.
+- Ist „Automatisch anwenden“ nicht aktiviert, übernimmt das System die Kampagne nicht automatisch in die Vertragserstellung. Der Händler wählt die gültigen Kampagnen dann selbst aus.
 
 **Besonderheiten je Sparte und Markt.**
 
@@ -197,7 +196,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Bei einer Stornierung innerhalb der Widerrufsfrist sendet das System ein Rückbuchungsereignis an das Produktmanagement. Es entfernt den Kampagnenbetrag aus den Gesamtausgaben. Verträge ohne Kampagne lösen kein solches Ereignis aus.
 - Bei aktivierter Kampagne sendet das System Vertrags-ID, Kampagnen-ID, Rabattwert und Endpreis an Revenue. Das Produktmanagement erhält ein Ereignis zur Aktualisierung der Gesamtausgaben. Zusätzlich entsteht das Dokument i155.
 - Der Zahler des Vertrags kann bei einem Vertragswert von null nicht um einen abweichenden Zahler ergänzt werden.
-- Sie öffnen den Rabattdialog erneut. Die zuletzt gewählte Kampagne ist vorausgewählt. Mit „Cancel Request“ nehmen Sie eine Grace-Period-Anfrage zurück. Danach wählen Sie eine andere Kampagne. Eine Auswahl, die die Kulanzkampagne wiederholt, ändert den Preis nicht.
+- Sie öffnen das Fenster „Manage Campaign“ erneut. Die zuletzt gewählte Kampagne ist vorausgewählt. Mit „Cancel Request“ nehmen Sie eine Grace-Period-Anfrage zurück. Danach wählen Sie eine andere Kampagne.
 - Der Vertrag zeigt die Kampagne im Reiter „Zahlung“ mit Wert und Währung, sofern die Marktkonfiguration die Anzeige vorsieht.
 
 **Fehlerbehebung.**
@@ -205,7 +204,7 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 - Der Kampagnenname umfasst 3 bis 100 Zeichen. Bei einer Abweichung erscheint die Meldung „Min. 3 and max. 100 characters allowed. Please correct your input and try again“.
 - Die Kampagnenübersicht zeigt „There are no campaigns to display“, wenn keine Kampagne den Kriterien entspricht.
 - Die Vertragserstellung schlägt bei Kampagnen, die nur für gewerbliche Kunden gelten, nicht mit „Invalid campaign“ fehl.
-- Die Preisanzeige einer Sticker-Price-Kampagne zeigt keinen Wert an, wenn die Kampagne für die Konfiguration keine Preise enthält.
+- Eine leere Zelle der Sticker-Price-Matrix gilt für diese Kombination aus Laufleistung und Laufzeit als unrabattierter Preis.
 
 {{Q:12.3}}
 
@@ -213,18 +212,18 @@ Dieses Kapitel beschreibt, wie Sie in oneSCM Serviceverträge für Geschäftskun
 
 **Zweck.** Der Händler stellt für einen Flottenkunden eine Sonderfallanfrage, wenn der Standardpreis oder die Standardkonfiguration nicht passt. Die Anfrage betrifft einen neuen Preis oder eine neue Laufleistung oder Laufzeit. Sie enthält eine verpflichtende Begründung. Der MPC prüft und entscheidet nach Abschnitt 12.6.
 
-**Voraussetzungen.** Der Kundentyp ist „Commercial Fleet“. Für Privat- und Gewerbekunden steht die Sonderfallanfrage nicht zur Verfügung. Die Produktkonfiguration ist abgeschlossen. Für den Kunden liegt keine auswählbare Kampagne vor, die Sie nicht ausgewählt haben. Eine Grace-Period-Kampagne gilt hierbei als Ausnahme. Ob ein Produkt für die Sonderfallanfrage freigegeben ist, beschreibt der Abschnitt Klärungsbedarf.
+**Voraussetzungen.** Der Kundentyp ist „Commercial Fleet“. Für Privat- und Gewerbekunden steht die Sonderfallanfrage nicht zur Verfügung. Die Produktkonfiguration ist abgeschlossen. Es gibt keine auswählbare Kampagne, die Sie nicht ausgewählt haben. Eine Grace-Period-Kampagne bildet hierbei eine Ausnahme. Ob ein Produkt für die Sonderfallanfrage freigegeben ist, beschreibt der Abschnitt Klärungsbedarf.
 
 **Rollen.** Händler, KAM, MO und MPC stellen Sonderfallanfragen. Ein Händler sieht nur die Anfragen zu Outlet-IDs, die ihm zugeordnet sind.
 
 **Schritt für Schritt: Sonderfallanfrage stellen.**
 
 1. Konfigurieren Sie das Produkt für den Flottenkunden.
-2. Prüfen Sie, ob auswählbare Kampagnen vorhanden sind. Ist eine solche Kampagne nicht ausgewählt, bleibt „Request Special Case“ deaktiviert. Ist keine Kulanzkampagne ausgewählt, ist die Schaltfläche bei einem Flottenkunden aktiv.
+2. Prüfen Sie, ob auswählbare Kampagnen vorhanden sind. Ist eine solche Kampagne nicht ausgewählt, bleibt „Request Special Case“ deaktiviert. Ist keine Grace-Period-Kampagne ausgewählt, ist die Schaltfläche bei einem Flottenkunden aktiv.
 3. Klicken Sie auf „Request Special Case“ und wählen Sie die Variante „Neuer Preis“ oder „Neue Laufleistung/Laufzeit“. Die andere Variante verwerfen Sie.
 4. Bei einem neuen Preis zeigt das System die Produktkonfiguration schreibgeschützt an. Begründen Sie die Anfrage im Kommentarfeld. Der Kommentar ist Pflicht und umfasst bis zu 500 alphanumerische Zeichen. Ein Beispiel lautet: Der Kunde erweitert seine Flotte und hat ein Budget von 500 Euro pro Jahr für die gewählte Konfiguration.
 5. Bei einer neuen Laufleistung oder Laufzeit öffnen Sie mit „Configure Product“ die Produkteinstellungen und wählen die Standard- oder die Sonderkonfiguration. Die Schaltfläche „Make Request“ ist aktiv, wenn die Auswahl gültig ist.
-6. Klicken Sie auf „Make Request“. Die Anfrage wird gespeichert und zur Genehmigung gesendet, sobald der Vertrag den Status „Created“ erreicht. Ändern Sie die Anfrage später, ersetzt „Update“ die Schaltfläche und überschreibt die vorherige Anfrage. Gilt die zuletzt gespeicherte Konfiguration.
+6. Klicken Sie auf „Make Request“. Die Anfrage wird gespeichert und zur Genehmigung gesendet, sobald der Vertrag den Status „Created“ erreicht. Ändern Sie die Anfrage später, ersetzt „Update“ die Schaltfläche und überschreibt die vorherige Anfrage. Es gilt die zuletzt gespeicherte Konfiguration.
 7. Das Fenster schließt sich. Mit „X“ oder „Cancel“ schließen Sie das Fenster ohne Speichern.
 8. Erfassen Sie die Kunden- und Zahlungsdaten und gelangen Sie zu „Overview and Confirmation“. Dort erstellt das System das Angebot und vergibt eine Referenznummer. Die Anfrage geht über den Notification Service an den MPC. Bei einem neuen Preis umfasst sie die Produktkonfiguration, die Preisdetails mit Rabatten, Kampagnen und optionalen Deckungen sowie die Kommentare. Bei einer neuen Laufleistung oder Laufzeit umfasst sie die Sonderkonfiguration, die Händler-Outlet-ID, die Händlerrabattbeträge netto, brutto und Steuer, die Kampagnen-ID, den Kampagnenwert oder -prozentsatz, die Kostenstelle der Kampagne und die Kommentare.
 
