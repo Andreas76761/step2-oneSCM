@@ -114,7 +114,7 @@ Kunden- und Zahlungsinformationen sind auf zwei Schritte verteilt. Auf der Seite
 
 **Adressdaten.** Die Felder stehen in der Reihenfolge Land, Postleitzahl, Ort, Straße, Hausnummer und Adresszeile 2. Das Land ist mit dem Land des Mandanten vorbelegt, an dem Sie angemeldet sind; Händler und MPC können ein anderes verfügbares Land wählen. „Post Code“, „Street“ und „Street Line 2“ fassen höchstens 60 Zeichen, „House Number“ 30 und „City“ 40. oneSCM prüft Land, Postleitzahl, Ort, Straße und Hausnummer über die Google Address Validation API, sowohl in der Vertragserstellung als auch in der Kundenverwaltung:
 
-1. Geben Sie den Ort ein. Schreibfehler werden korrigiert; bei einem ungültigen Ort fordert eine Meldung zur Eingabe eines gültigen Ortsnamens auf.
+1. Geben Sie den Ort ein. Schreibfehler berichtigt das System automatisch; bei einem ungültigen Ort fordert eine Meldung zur Eingabe eines gültigen Ortsnamens auf.
 2. Geben Sie die Postleitzahl ein. Bei ungültigem Wert erscheint eine Meldung; bei gültigem oder plausiblem Wert folgt die erneute Prüfung des Ortes.
 3. Geben Sie die Straße und danach die Hausnummer ein. Eine Hausnummer, die weder bestätigt noch plausibel ist, wird mit einer Meldung abgelehnt. Ist sie plausibel, aber nicht bestätigt, fragt ein Pop-up, ob die Hausnummer korrekt ist; mit Ihrer Bestätigung übernimmt das System den Wert.
 
@@ -262,8 +262,7 @@ Die Funktion gilt für alle Kundentypen. Danach folgen Zahlungsart, Übersicht, 
 
 - SB – Schlechtzahler (gemahnt oder Einzug fehlgeschlagen)
 - SI – Insolvenz
-- SJ RA Stuttgart – juristischer Kunde, wird verklagt
-- SJ RA Sachman – juristischer Kunde, verklagt uns
+- SJ RA – juristischer Kunde (zwei Ausprägungen: Kunde wird verklagt beziehungsweise Kunde verklagt uns; die vollständige Bezeichnung liefert das FI-System)
 - K – Kreditkonto, Zahlung auf Rechnung
 - KB – Lastschrifteinzug/SEPA
 - S – Sofortzahler
@@ -298,7 +297,7 @@ Quellen: Batch 553.1, 558.1, 562.1, 563.1, 566.1, 568.1, 569.1, 573.1, 589.2, 59
 1. Stufe 1 in der Kundensuche der Vertragserstellung: Nach Eingabe einer Kennung zeigt das System alle Treffer aus oneSCM ab 80 Prozent Übereinstimmung als Liste, höhere Übereinstimmungen oben. Wählen Sie einen Treffer, läuft der Prozess mit den vorhandenen Daten weiter.
 2. Stufe 2 nach „New Customer“: Sobald Kundendaten und Adresse erfasst sind und Sie auf „Next“ klicken, vergleicht das System die Angaben erneut mit dem Bestand. Da nun deutlich mehr Daten vorliegen, erkennt es auch Tippfehler in Vor- oder Nachname als vorhandenen Kunden. Bei einer erkannten Dublette können Sie nicht fortfahren und erhalten die Meldung „An Account with name & contact details already exists“.
 
-Nach jeder weiteren Dateneingabe durchsucht das System die Datenbank erneut und zeigt passende Datensätze an, die Sie bestätigen oder durch Auswahl eines vorhandenen Datensatzes ersetzen. Legen Sie trotz Treffer einen neuen Kunden an, belegt das System Vorname, Nachname, E-Mail-Adresse und Telefonnummer aus dem Suchdialog vor; bei Geschäftskunden nur den Firmennamen. Wählen Sie nach einer Suche einen anderen Kunden oder die Neuanlage, setzt das System die Daten des zuvor ausgewählten Kunden zurück. Die Dublettenprüfung gilt unabhängig von der E-Mail-Domain.
+Nach jeder weiteren Dateneingabe durchsucht das System die Datenbank erneut und zeigt passende Datensätze an, die Sie bestätigen oder durch Auswahl eines vorhandenen Datensatzes ersetzen. Legen Sie trotz Treffer einen neuen Kunden an, belegt das System Vorname, Nachname, E-Mail-Adresse und Telefonnummer aus dem Suchdialog vor; bei Geschäftskunden nur den Firmennamen. Wählen Sie nach einer Suche einen anderen Kunden oder die Neuanlage, setzt das System die Daten des vorher ausgewählten Kunden zurück. Die Dublettenprüfung gilt unabhängig von der E-Mail-Domain.
 
 **Geschäftskunden und Fuhrparks.** Stufe 1 prüft Firmenname in Kombination mit USt-IdNr. oder Steuernummer sowie Namenszusatz und Stadt. Stufe 2 vergleicht beim Klick auf „Next“ Mercedes me ID, USt-IdNr., Steuernummer, Firmenname, Straße mit Hausnummer, Postleitzahl, Ort, Land und IBAN; bei einer Dublette erscheint „An account with similar name and other details already exists“. Im Abschnitt „Tax & Legal Details“ ist die Steuernummer aus dem Suchdialog vorbelegt und editierbar; ändern Sie dort Steuernummer oder USt-IdNr., greifen dieselben Prüfungen. Mehrere Geschäftskunden mit derselben USt-IdNr. sind zulässig, weil Niederlassungen dieselbe Nummer tragen; unterscheiden Sie sie über Namenszusatz und Stadt, statt bestehende Einträge zu verändern, um die Auswahl „passend zu machen“. Für Kontaktpersonen gilt: Dieselbe Person kann nicht mehrfach mit identischen Angaben hinzugefügt werden, und die E-Mail-Adressen von Signee1 und Signee2 müssen sich unterscheiden.
 
