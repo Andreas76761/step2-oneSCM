@@ -397,7 +397,7 @@ Für Management-Verträge sendet oneSCM keine Kunden-, Vertrags-, Umsatz- oder H
 
 1. oneSCM ordnet jeden Fehler anhand der Meldungsnummer einem Ereignis zu. Gibt es für eine Nummer mehrere Regeln, entsteht der Fehler in allen genannten Ereignissen. Bei Fehler 23 entstehen beispielsweise Fehler in den Bereichen Contract, Revenue und Cost.
 2. Für die Zuordnung zum Ereignistyp Contract, Customer, Revenue oder Cost ist der Interface-Subset maßgeblich. Andere Schnittstellentypen wie ISP ignoriert oneSCM.
-3. oneSCM klassifiziert die Fehler nach Meldungsnummer und zeigt sie unter der zugehörigen Domäne an. Dem Bereich Contract sind Meldungen zu fehlendem oder ungültigem Ländercode, fehlendem Vertrag, abweichender FIN, fehlender Vertragslaufzeit, nicht gefundenem Vertragsstamm, einem Vertragsende vor der Migration bei aktivem Status und einem zukünftigen Vertragsbeginn zugeordnet. Der Bereich Revenue zeigt, dass für einen Vertrag keine Umsatzaktualisierung erfolgt ist. Im Bereich Cost erscheint die Meldung, dass Ist-Kosten für das Abschlussdatum nicht geladen wurden. Meldungen, die ausschließlich die Kostenverteilung im Financial Management betreffen, berücksichtigt oneSCM nicht.
+3. oneSCM klassifiziert die Fehler nach Meldungsnummer und zeigt sie unter der zugehörigen Domäne an. Dem Bereich Contract sind Meldungen zu fehlendem oder ungültigem Ländercode, fehlendem Vertrag, abweichender FIN, fehlender Vertragslaufzeit, nicht gefundenem Vertragsstamm, einem Vertragsende vor der Migration bei aktivem Status und einem Vertragsbeginn in der Zukunft zugeordnet. Der Bereich Revenue zeigt, dass für einen Vertrag keine Umsatzaktualisierung erfolgt ist. Im Bereich Cost erscheint die Meldung, dass Ist-Kosten für das Abschlussdatum nicht geladen wurden. Meldungen, die ausschließlich die Kostenverteilung im Financial Management betreffen, berücksichtigt oneSCM nicht.
 
 **Fehlerbehandlung im Admin-Bereich.** Die Suche nach fachlichen Fehlern bietet die Kriterien First Incident als Datum, Contract Number als Textfeld mit unscharfer Suche ohne Unterscheidung von Groß- und Kleinschreibung, Status als Mehrfachauswahl und Error code. Mit „Search“ füllt sich der Ergebnisbereich, „Cancel“ verwirft alle Änderungen. Änderungen an den Filterfeldern wirken sich erst nach „Search“ auf die Ergebnisse aus.
 
@@ -405,7 +405,7 @@ Jeder Fehler steht in einer eigenen Zeile. Eine Auswahl ist nur bei Fehlern mit 
 
 Die Aktion „Resend“ sendet alle vier Ereignisse Customer, Contract, Revenue und Cost mit den aktuellen Daten erneut. Die Aktion „Acknowledge“ dient dem Fall, dass der Fehler keine manuelle Korrektur zulässt und der Benutzer ihn nicht beheben kann.
 
-Die Fehlerprotokolle liefert NEMESIS bislang monatlich als Excel-Datei über CFT. oneSCM liest die Datei aus und zeigt den Inhalt an. Das Material beschreibt zudem die tägliche Bereitstellung der Protokolle. Den Stand dieser Umstellung erfasst der Klärungsbedarf.
+Die Fehlerprotokolle liefert NEMESIS als Excel-Datei über CFT, bisher nur monatlich. oneSCM liest die Datei aus und zeigt den Inhalt an. Das Material beschreibt zudem die tägliche Bereitstellung der Protokolle. Den Stand dieser Umstellung erfasst der Klärungsbedarf.
 
 **Fehlerbehandlung und erneutes Senden bei der historischen Synchronisation.** Im Sync-Verlauf öffnet die Aktion „View Details“ den Dialog „Sync Failure Details“ mit den Vertragsnummern, für die Ereignisse fehlgeschlagen sind. Über „Retrigger“ gelangen Sie zu „Nemesis Errors“, wo das fehlgeschlagene Ereignis unter seinem Ereignistyp steht. Nach der Behebung der Ursache senden Sie es erneut. Der Fehlertyp lautet „Infrastructure“ oder „Functional“.
 
@@ -420,7 +420,7 @@ Der Reiter „Sync History“ zeigt Datum, Anzahl der Verträge, Ereignistypen, 
 
 Für Benutzer mit eingeschränkter Sicht gilt: Erneutes Senden und Bestätigen sind bei Nemesis-Fehlern nicht möglich. Die Seite „Historical Data Sync“ ist sichtbar, die Eingabefelder sind deaktiviert. Dieses Verhalten gilt für alle Benutzer mit eingeschränkter Sicht und nicht nur für die Rolle „View only“.
 
-**Fehlerprotokoll und Abgrenzung.** oneSCM liest zusätzliche Meldungsnummern aus der Nemesis-Fehlerdatei, die früher unberücksichtigt blieben. Die Liste der funktionalen Fehler umfasst die Fehler, die oneSCM in den Ereignistypen anzeigt. Die Fehler 83, 250 und 225 sind nicht Teil der Umsetzung, der Fehler 247 gehört in den Contract Master.
+**Fehlerprotokoll und Abgrenzung.** oneSCM liest zusätzliche Meldungsnummern aus der Nemesis-Fehlerdatei und klassifiziert sie. Die Liste der funktionalen Fehler umfasst die Fehler, die oneSCM in den Ereignistypen anzeigt. Die Fehler 83, 250 und 225 sind für oneSCM nicht vorgesehen, der Fehler 247 gehört in den Contract Master.
 
 **Markt Indien.** Für den Markt Indien gilt der Ablauf des deutschen Marktes für Customer, Revenue, Cost und Contract. Mapping, Statuslogik und Validierungen sind identisch. Abweichend verwendet oneSCM für Indien den Company Code 1414 und den Country Code 82536. Revenue-Ereignisse übermitteln die Werte für Indien. Für Customer-Ereignisse und den Contract-Stammdatensatz gilt dieselbe Funktionsweise.
 
