@@ -6,7 +6,7 @@ Dieses Kapitel beschreibt, wie sich oneSCM je Markt unterscheidet. Es behandelt 
 
 **Zweck.** Das Marktprofil bestimmt, welchen Markt der angemeldete Benutzer in oneSCM verwendet, welche Formate für Zahlen, Datum, Währung und Namen gelten und welche Pflichtangaben je Land zu erfassen sind. oneSCM richtet die Anwendung am angemeldeten Benutzer aus.
 
-**Voraussetzungen.** Sie sind an einem Markt angemeldet. Ist Ihnen in ALICE mehr als ein Markt zugewiesen, berücksichtigt oneSCM alle zugewiesenen Märkte (Abschnitt 20.2).
+**Voraussetzungen.** Sie sind an einem Markt angemeldet. Ist Ihnen in ALICE mehr als ein Markt zugewiesen, berücksichtigt oneSCM alle zugewiesenen Märkte, siehe Abschnitt 20.2.
 
 **Unterstützte Märkte.** oneSCM unterstützt 38 Märkte und einen globalen Markt. Die Liste umfasst Deutschland, Belgien, Russland, Frankreich, Griechenland, das Vereinigte Königreich, Italien, die Niederlande, Österreich, Portugal, Polen, Rumänien, Dänemark, Schweden, die Schweiz, Tschechien, Spanien, die Slowakei, die Türkei, Ungarn, Südafrika, Kanada, die USA mit der Gesellschaft MBUSA, Mexiko, Argentinien, Brasilien, Taiwan, China, Indien, Indonesien, Japan, Südkorea, Malaysia, Singapur, Thailand, Vietnam, Australien und Neuseeland.
 
@@ -16,13 +16,13 @@ Dieses Kapitel beschreibt, wie sich oneSCM je Markt unterscheidet. Es behandelt 
 
 | Markt | Regel |
 |---|---|
-| Deutschland | Standardsteuer ist die Mehrwertsteuer (VAT). Die Seiten „Old Part Taxes“ erscheinen nur für diesen Markt. Für Mercedes me gelten die Werte Ländercode DE, Sprachregion de-DE, Typ B2C und Anwendungsfall MMCR_NEW_USER. |
-| Slowakei | Gewerbekunden erfassen eine VAT-ID, eine Steuernummer oder beide Angaben (Abschnitt unten). Einige Seiten sind ausgeblendet. Im Reiter „Zahlung“ eines Vertrags stehen keine Funktionen für Werkstattrechnungen zur Verfügung. |
+| Deutschland | Standardsteuer ist die Mehrwertsteuer VAT. Die Seiten „Old Part Taxes“ erscheinen nur für diesen Markt. Für Mercedes me gelten die Werte Ländercode DE, Sprachregion de-DE, Typ B2C und Anwendungsfall MMCR_NEW_USER. |
+| Slowakei | Gewerbekunden erfassen eine VAT-ID, eine Steuernummer oder beide Angaben. Die Regel gilt unten. Einige Seiten sind ausgeblendet. Im Reiter „Zahlung“ eines Vertrags stehen keine Funktionen für Werkstattrechnungen zur Verfügung. |
 | Schweiz | Steuernummer und VAT-ID lassen sich im Schweizer Format erfassen. Für die Sprachen sind zum Beispiel Deutsch, Französisch, Italienisch und Englisch vorgesehen. |
-| Indien | Die Steuer ermittelt das System über den GST-Satz (Abschnitt 20.3). Für gewerbliche Kunden ist Kreditkartenzahlung auch ohne Mercedes me Konto zulässig (Abschnitt 20.4). |
+| Indien | Die Steuer ermittelt das System über den GST-Satz, siehe Abschnitt 20.3. Für gewerbliche Kunden ist Kreditkartenzahlung auch ohne Mercedes me Konto zulässig, siehe Abschnitt 20.4. |
 | Malaysia | Nur die Division Passenger Car ist verfügbar. |
 
-**Gewerbekunden im slowakischen Markt.** Die Gewerbekunden-Typen Commercial, Commercial Fleet und Commercial Governmental können eine Umsatzsteuer-Identifikationsnummer (VAT-ID), eine Steuernummer oder beide Angaben hinterlegen. Die Steuernummer besteht aus zehn Ziffern, die VAT-ID aus dem Länderkürzel SK und zehn Ziffern. Geben Sie die VAT-ID ein, übernimmt oneSCM den Wert ohne Länderkürzel in das Feld „Steuernummer“. Dieses Feld bleibt editierbar. Erfassen Sie nur die Steuernummer, bleibt das Feld „VAT-ID“ leer. Die Anfrage an CoFiCo enthält im ersten Fall beide Angaben, im zweiten Fall nur die Steuernummer im Attribut taxNumber1. Beispiel mit Testdaten: Die VAT-ID SK1234567890 ergibt die Steuernummer 1234567890.
+**Gewerbekunden im slowakischen Markt.** Die Gewerbekunden-Typen Commercial, Commercial Fleet und Commercial Governmental können eine Umsatzsteuer-Identifikationsnummer VAT-ID, eine Steuernummer oder beide Angaben hinterlegen. Die Steuernummer besteht aus zehn Ziffern, die VAT-ID aus dem Länderkürzel SK und zehn Ziffern. Geben Sie die VAT-ID ein, übernimmt oneSCM den Wert ohne Länderkürzel in das Feld „Steuernummer“. Dieses Feld bleibt editierbar. Erfassen Sie nur die Steuernummer, bleibt das Feld „VAT-ID“ leer. Die Anfrage an CoFiCo enthält im ersten Fall beide Angaben, im zweiten Fall nur die Steuernummer im Attribut taxNumber1. Beispiel mit Testdaten: Die VAT-ID SK1234567890 ergibt die Steuernummer 1234567890.
 
 **Sichtbarkeit je Markt.** Im slowakischen Markt sind Seiten ausgeblendet, die nicht zu diesem Markt gehören. Die Materialnummernverwaltung im Bereich Admin erscheint nur für oneERP-Märkte. Die Seiten „Old Part Taxes/I156“ und die zugehörige Manual-Variante stehen unter Finanzverwaltung und dann Finanzkontrolle nur für Deutschland zur Verfügung. Die Berechtigungen je Seite beschreibt Abschnitt 14.6.
 
@@ -48,7 +48,7 @@ Die Pflege der Markteinstellungen beschreibt Abschnitt 14.2.
 4. Wählen Sie einen Kundentreffer oder legen Sie einen neuen Kunden an, und ist der Kunde nicht mit einer Mercedes me ID erfasst, aktivieren Sie am Ende der Seite den Schalter mit der Beschriftung „I have obtained the customer's consent to create an account for them.“ Nur mit aktiviertem Schalter übermittelt oneSCM die Daten an Mercedes me.
 5. Nach dem Anlegen des Profils befüllt oneSCM das Feld „Mercedes me ID“ im Bereich „Kundendetails“.
 
-**Ergebnis und Systemstatus.** Wird zu einem vorhandenen oneSCM-Datensatz ein passendes Mercedes me Profil gefunden, ergänzt oneSCM den Datensatz um die Profil-ID. Hat der Kunde ein Mercedes me Profil, aber noch keine Mercedes me ID im Datensatz, übernimmt oneSCM die gefundene ID. Dafür ist ein Abruf des Profils aus Mercedes me erforderlich.
+**Ergebnis und Systemstatus.** Wird zu einem vorhandenen oneSCM-Datensatz ein passendes Mercedes me Profil gefunden, ergänzt oneSCM den Datensatz um die Profil-ID. Hat der Kunde ein Mercedes me Profil, aber keine Mercedes me ID im Datensatz, übernimmt oneSCM die gefundene ID. Dafür ist ein Abruf des Profils aus Mercedes me erforderlich.
 
 **Pflichtfelder und Einwilligungen.**
 
@@ -65,7 +65,7 @@ Die Pflege der Markteinstellungen beschreibt Abschnitt 14.2.
 - Die Pflichtfelder können je Land abweichen. Die Abfrage erfolgt bei jedem Anlegen über den Endpunkt getProfileFields.
 - Für die Profilanlage nutzt oneSCM die Endpunkte getProfileFields und createUserV2 mit dem Anwendungsfall MMCR_NEW_USER.
 - Die Kundenanlage mit Trefferprüfung beschreibt Abschnitt 4.2 und 4.3.
-- Die Angaben zu Mercedes me stimmen zwischen den Quellen überein, die Rollenbezeichnung und einzelne Formulierungen weichen ab (Klärungsbedarf).
+- Die Angaben zu Mercedes me stimmen im Ablauf überein. Die Rollenbezeichnung und einzelne Formulierungen weichen ab und sind im Klärungsbedarf geführt.
 
 Quellen: Batch 1308.1, 581.1, 143.2, 142.9, 552.2, 650.1, 989.1, 644.1, 638.2, 640.1
 
@@ -87,7 +87,7 @@ Quellen: Batch 1308.1, 581.1, 143.2, 142.9, 552.2, 650.1, 989.1, 644.1, 638.2, 6
 
 **Händlertyp.** Im Dialog zum Registrieren oder Bearbeiten eines Händlers wählen Sie im Dropdown „Type“ entweder „Dealership“ oder „Market“. Bei „Dealership“ heißt das folgende Feld „Vega ID“, bei „Market“ heißt es „Country Code ID“. Die Country Code ID besteht aus fünf Ziffern, für Deutschland zum Beispiel 20000. In der Ergebnistabelle der Händlerverwaltung trägt die Spalte die Bezeichnung „Vega/Country Code ID“.
 
-**Besonderheiten je Markt.** Die Zuordnung mehrerer Märkte zu einem Benutzer ist in der Praxis an Kombinationen wie Indien und Deutschland gebunden. Eine vollständige Übersicht der marktspezifischen Sichtbarkeiten liegt im Material nicht vor. Die Marktbegrenzung der Seite „Cross File Transfer“ im Admin-Bereich wird im Klärungsbedarf geführt.
+**Besonderheiten je Markt.** Als Beispiel für eine Mehrmarktzuordnung nennt oneSCM die Kombination Indien und Deutschland. Eine vollständige Übersicht der marktspezifischen Sichtbarkeiten liegt nicht vor. Die Marktbegrenzung der Seite „Cross File Transfer“ im Admin-Bereich wird im Klärungsbedarf geführt.
 
 **Hinweise.**
 
@@ -134,12 +134,12 @@ Quellen: Batch 1308.1, 578.1, 582.3, 1268.5, 68.1
 | Fall | Satz |
 |---|---|
 | Servicevertrag nach dem Fahrzeugkauf | 18 Prozent GST insgesamt |
-| Transaktion innerhalb eines Bundesstaates (Intra-State) | 9 Prozent CGST und 9 Prozent SGST |
-| Transaktion zwischen Bundesstaaten (Inter-State) | 18 Prozent IGST |
+| Transaktion innerhalb eines Bundesstaates, Intra-State | 9 Prozent CGST und 9 Prozent SGST |
+| Transaktion zwischen Bundesstaaten, Inter-State | 18 Prozent IGST |
 
 Die CGST erhebt die Zentralregierung, die SGST die Landesregierung des eigenen Bundesstaates. Die IGST gilt, wenn die Leistung aus einem anderen Bundesstaat stammt.
 
-**Besonderheiten je Markt.** Die Produktverfügbarkeit folgt dem Markt. Für Malaysia ist nur die Division Passenger Car verfügbar (Abschnitt 20.1). Die Steuerarten im Markt Indien unterscheiden sich von denen im Markt Deutschland, dort ist die Mehrwertsteuer Standard.
+**Besonderheiten je Markt.** Die Produktverfügbarkeit folgt dem Markt. Für Malaysia ist nur die Division Passenger Car verfügbar, siehe Abschnitt 20.1. In Deutschland ist die Mehrwertsteuer die Standardsteuer, für Indien gilt die GST.
 
 **Hinweise.**
 
@@ -163,7 +163,7 @@ Quellen: Batch 1220.4, 1268.5, 10.5, 882.2, 246.1, 256.1, 218.1
 
 **Schritt für Schritt: Finanzabgleich prüfen.**
 
-1. Lösen Sie den Batch CoFiCoInvExp beziehungsweise SWTInvExp aus und warten Sie, bis er abgeschlossen ist.
+1. Lösen Sie den Batch CoFiCoInvExp beziehungsweise SWTInvExp aus und warten Sie, bis die Verarbeitung beendet ist.
 2. Öffnen Sie die Seite „CoFiCo Check“ beziehungsweise „SWT Check“. Sie sehen den Status „Exported“ und den exportierten Gesamtbetrag der Datei.
 3. Sobald das Feedback eingegangen ist, wechselt der Status auf „Imported“, und der importierte Gesamtbetrag erscheint.
 4. Das Prüfergebnis lautet „OK“, wenn der exportierte Gesamtbetrag der importierten Summe entspricht. Andernfalls lautet es „Not OK“.
@@ -174,7 +174,7 @@ Quellen: Batch 1220.4, 1268.5, 10.5, 882.2, 246.1, 256.1, 218.1
 
 **Ergebnis und Systemstatus.** Der Status im Finanzabgleich zeigt, ob die exportierten Beträge mit den importierten Beträgen übereinstimmen. Die Auswertungen des Finanzabgleichs beschreibt Abschnitt 11.7.
 
-**Besonderheiten je Markt.** Für den Markt Tschechien ist die Zahlungsfunktion MPay im Klärungsbedarf geführt. Die Zahlungsart MPay ist im Material nicht als Verhalten beschrieben.
+**Besonderheiten je Markt.** Zur Zahlungsfunktion MPay im Markt Tschechien ist kein Verhalten als Handbuchinhalt beschrieben. Die Meldung ist im Klärungsbedarf geführt.
 
 **Hinweise.**
 
@@ -187,19 +187,19 @@ Quellen: Batch 1096.4, 177.4, 181.5
 
 **Zweck.** Dieser Abschnitt beschreibt, wie ein Markt in oneSCM eingeführt wird und welche Einstellungen dabei gelten.
 
-**Voraussetzungen.** Die Marktkonfiguration ist angelegt und die Steuerarten sind festgelegt (Abschnitt 20.3).
+**Voraussetzungen.** Die Steuerarten und die Marktkonfiguration sind für den Markt festgelegt, siehe Abschnitt 20.3 und Abschnitt 14.2.
 
 **Einführung eines Marktes.**
 
 - Ein Administrator legt die Liste der Steuerarten fest, die im Markt verfügbar und anwendbar sind. Danach erhalten die Steuerarten Steuersätze und Gültigkeiten.
-- Die Konfiguration des Marktes, etwa Formate und Sprachen, legt der MPC fest (Abschnitt 14.2).
+- Die Konfiguration des Marktes, etwa Formate und Sprachen, legt der MPC fest, siehe Abschnitt 14.2.
 - Bei einer Auswahl von „Current and Upcoming Markets“ beim Coverage Code wird ein neu hinzukommender Markt automatisch einbezogen. Die gespeicherte Default Short Description dient als Kurzbeschreibung.
 
-**Einführung des Marktes Indien.** Mit der Einführung des Marktes Indien wird die Steuer über die GST ermittelt, die in Indien die Mehrwertsteuer ablöst. Für Indien steht ein eigenes Steuermodul zur Verfügung (Abschnitt 20.3).
+**Einführung des Marktes Indien.** Mit der Einführung des Marktes Indien wird die Steuer über die GST ermittelt, die in Indien die Mehrwertsteuer ablöst. Für Indien steht ein eigenes Steuermodul zur Verfügung, siehe Abschnitt 20.3.
 
-**Feature-Toggle für die Slowakei.** Für Verträge im Markt Slowakei steht in der Produktivumgebung ein Feature-Toggle bereit. Welche Funktion er steuert, beschreibt das Material nicht (Klärungsbedarf).
+**Feature-Toggle für die Slowakei.** Für Verträge im Markt Slowakei steht in der Produktivumgebung ein Feature-Toggle bereit. Welche Funktion er steuert, ist im Klärungsbedarf geführt.
 
-**Ergebnis und Systemstatus.** Ein neuer Markt erscheint in der Liste der Märkte und erhält seine Steuerarten, Formate und Kampagnenfristen aus den Einstellungen des Marktes.
+**Ergebnis und Systemstatus.** Ein neuer Markt erscheint in der Liste der Märkte. Die Steuerarten legt ein Administrator fest, die Formate und die Kampagnenfristen legt der MPC fest.
 
 **Hinweise.**
 
@@ -214,7 +214,7 @@ Quellen: Batch 246.1, 218.1, 1220.4, 528.2
 
 **Länderabweichungsregister.** Ein Register der Länderabweichungen ist im Material nicht beschrieben. Material: keine Quellen in den RAG-Batches für das Register selbst. Die Abweichungen vom Blueprint beschreibt Abschnitt 14.3. Eingestellte oder geschlossene Meldungen führt das Klärungsregister im Anhang F.
 
-**Prüfung der Sichtbarkeit von Batch-Jobs.** Die Sichtbarkeit der Batch-Jobs wurde für die Märkte Deutschland, Slowakei und Indien geprüft. Jeder Markt zeigt alle marktspezifischen Batch-Jobs sowie die globalen Batch-Jobs ohne Duplikate.
+**Prüfung der Sichtbarkeit von Batch-Jobs.** Die Sichtbarkeit der Batch-Jobs wird für die Märkte Deutschland, Slowakei und Indien geprüft. Jeder Markt zeigt alle marktspezifischen Batch-Jobs sowie die globalen Batch-Jobs ohne Duplikate.
 
 **Ergebnis und Systemstatus.** Die Batch-Jobs eines Marktes erscheinen nur dort, wo sie für den Markt gelten. Globale Batch-Jobs erscheinen in allen Märkten.
 
@@ -227,42 +227,42 @@ Quellen: Batch 142.9
 
 ## Verschiebung in andere Kapitel
 
-- Kapitel 4.3, Kundendaten und Pflichtangaben prüfen: Batch 1034.2 (Adressdaten, Reihenfolge der Eingabefelder, Zeichenlängen für Stadt, Straße, Hausnummer und Zusatzzeile).
-- Kapitel 4.7, Partner- und Dealerbeziehungen: Batch 594.2 (Eigentümerwechsel in Deutschland, Vorgänger und Nachfolger, Historie und Benachrichtigung von Market Operations).
-- Kapitel 9.8, Contract Review: Profile und Übersicht: Batch 1263.3 (Genehmigungsschwelle in der Währung des Vertragslandes, Formatierung nach der Marktkonfiguration).
-- Kapitel 10.1, Verträge suchen und Details prüfen: Batch 855.2 (Sortierung der Vertragsübersicht, Anzahl der Zeilen, Suche per Klick und per Eingabetaste).
-- Kapitel 11.4, Kostenmanagement und Claims: Batch 711.1 (Prüfung der Forderungen je Markt beim I156-Import, Import bei fehlendem Händler mit Bindestrich als Händlername).
-- Kapitel 14.2, Marktspezifische Einstellungen: Batch 650.1 (Configuration Service mit Formaten und Sprachen je Markt), Batch 989.1 (Seiten General Settings und Feature Settings, Schaltflächen Restore und Update).
-- Kapitel 14.6, Marktbezogene Sichtbarkeit und Berechtigungen: Batch 68.1 (Cross File Transfer, Klärungsbedarf), Batch 143.2 und 142.9 (Sichtbarkeit von Seiten je Markt).
-- Kapitel 14.8, Produktdefinition, Anlage und Veröffentlichung: Batch 1220.4 (Schritt 2 zur Marktspezifität des Coverage Codes).
-- Kapitel 14.9, Preisversionen, Cluster und Faktorgrenzen: Batch 1268.5 (Fahrzeugverwaltung mit Ergebnissen nach Auswahl von Produkt und Preisversion).
-- Kapitel 14.11, Fahrzeuggruppen und Van-Baumuster-Clustering: Batch 10.5 (Marktauswahl für Fahrzeuggruppen).
-- Kapitel 14.13, Kampagnenanlage und Rabattpflege: Batch 882.2 (Gültigkeit der Kampagnenanfragen in Kalendertagen je Division).
-- Kapitel 19.1, Architekturüberblick und Systemlandkarte: Batch 1310.6 (lokale Entwicklungsumgebung mit Mock-Services, Wiremock und Benutzern je Rolle), Batch 551.4 (marktspezifische Logik in eigenen Implementierungen, Klärungsbedarf).
-- Kapitel 19.9, VEGA, Vertrag, Coverage und Claim: Batch 936.2 (i155-Datei je Markt, Klärungsbedarf).
-- Kapitel 19.12, CoFiCo, und Kapitel 19.13, SWT, FI-Anbindung: Batch 177.4 und 181.5 (Anzeige der Exported- und Imported-Status im Finanzabgleich).
-- Kapitel 19.21, Technische Integrationswege: Batch 1095.3 (Markt-ID als Pflichtfeld der Vertragsanfrage, Header X-Market bei Leasingverträgen).
-- Kapitel 19.22, Schnittstellenbetrieb und Fehlerbehandlung: Batch 519.7 (Wiederholungen, Zeitabstände, Timeouts und Wiederanstoß).
+- Kapitel 4.3, Kundendaten und Pflichtangaben prüfen: Batch 1034.2: Adressdaten, Reihenfolge der Eingabefelder, Zeichenlängen für Stadt, Straße, Hausnummer und Zusatzzeile.
+- Kapitel 4.7, Partner- und Dealerbeziehungen: Batch 594.2: Eigentümerwechsel in Deutschland, Vorgänger und Nachfolger, Historie und Benachrichtigung von Market Operations.
+- Kapitel 9.8, Contract Review: Profile und Übersicht: Batch 1263.3: Genehmigungsschwelle in der Währung des Vertragslandes, Formatierung nach der Marktkonfiguration.
+- Kapitel 10.1, Verträge suchen und Details prüfen: Batch 855.2: Sortierung der Vertragsübersicht, Anzahl der Zeilen, Suche per Klick und per Eingabetaste.
+- Kapitel 11.4, Kostenmanagement und Claims: Batch 711.1: Prüfung der Forderungen je Markt beim I156-Import, Import bei fehlendem Händler mit Bindestrich als Händlername.
+- Kapitel 14.2, Marktspezifische Einstellungen: Batch 650.1: Configuration Service mit Formaten und Sprachen je Markt, Batch 989.1 (Seiten General Settings und Feature Settings, Schaltflächen Restore und Update.
+- Kapitel 14.6, Marktbezogene Sichtbarkeit und Berechtigungen: Batch 68.1: Cross File Transfer, Klärungsbedarf, Batch 143.2 und 142.9 (Sichtbarkeit von Seiten je Markt.
+- Kapitel 14.8, Produktdefinition, Anlage und Veröffentlichung: Batch 1220.4: Schritt 2 zur Marktspezifität des Coverage Codes.
+- Kapitel 14.9, Preisversionen, Cluster und Faktorgrenzen: Batch 1268.5: Fahrzeugverwaltung mit Ergebnissen nach Auswahl von Produkt und Preisversion.
+- Kapitel 14.11, Fahrzeuggruppen und Van-Baumuster-Clustering: Batch 10.5: Marktauswahl für Fahrzeuggruppen.
+- Kapitel 14.13, Kampagnenanlage und Rabattpflege: Batch 882.2: Gültigkeit der Kampagnenanfragen in Kalendertagen je Division.
+- Kapitel 19.1, Architekturüberblick und Systemlandkarte: Batch 1310.6: lokale Entwicklungsumgebung mit Mock-Services, Wiremock und Benutzern je Rolle, Batch 551.4 (marktspezifische Logik in eigenen Implementierungen, Klärungsbedarf.
+- Kapitel 19.9, VEGA, Vertrag, Coverage und Claim: Batch 936.2: i155-Datei je Markt, Klärungsbedarf.
+- Kapitel 19.12, CoFiCo, und Kapitel 19.13, SWT, FI-Anbindung: Batch 177.4 und 181.5: Anzeige der Exported- und Imported-Status im Finanzabgleich.
+- Kapitel 19.21, Technische Integrationswege: Batch 1095.3: Markt-ID als Pflichtfeld der Vertragsanfrage, Header X-Market bei Leasingverträgen.
+- Kapitel 19.22, Schnittstellenbetrieb und Fehlerbehandlung: Batch 519.7: Wiederholungen, Zeitabstände, Timeouts und Wiederanstoß.
 
 Quellen: Batch 1034.2, 594.2, 1263.3, 855.2, 711.1, 650.1, 989.1, 68.1, 143.2, 142.9, 1220.4, 1268.5, 10.5, 882.2, 1310.6, 551.4, 936.2, 177.4, 181.5, 1095.3, 519.7
 
 ## Klärungsbedarf
 
-1. Marktliste, Batch 1220.4 und Batch 1308.1: Batch 1220.4 beschreibt eine Marktliste mit nur Deutschland. Batch 1308.1 nennt 38 Märkte und einen globalen Markt. Batch 142.9 bezieht sich auf die Märkte Slowakei und Indien. Welcher Stand gilt, ist offen.
+1. Marktliste, Batch 1220.4 und Batch 1308.1: Batch 1220.4 beschreibt eine Marktliste mit nur Deutschland. Batch 1308.1 nennt 38 Märkte und einen globalen Markt. Batch 142.9 bezieht sich auf die Märkte Slowakei und Indien. Welcher Stand gilt, ist nicht geklärt.
 2. Divisionen, Batch 1308.1: Die Aussage „fast alle Märkte“ nennt keine Ausnahmen außer Malaysia. Die übrigen Märkte mit eingeschränkter Division sind nicht benannt.
 3. Mercedes me Rollenbezeichnung, Batch 644.1 und Batch 640.1: Batch 644.1 nennt die Vertragsrolle „Holder“, Batch 640.1 die Rolle „Halter“. Batch 644.1 nennt den Reiter „Contract Generation“, Batch 640.1 die „Vertragserstellung“. Das Kapitel 5 spricht von einem Menü, Batch 644.1 von einem Reiter.
-4. Mercedes me, Batch 644.1, 638.2 und 640.1: Die drei Abschnitte beschreiben denselben Ablauf. Sie sind in Teilen als Soll formuliert, etwa für die Ergänzung der Mercedes me ID. Die Pflichtfelder sollen in der Entwicklung verifiziert werden. Die Angaben zu Bankdaten lauten „derzeit nicht relevant“ in Batch 644.1 und „nicht anwendbar“ in Batch 638.2. Die Werte für Deutschland sind als MVP-Werte bezeichnet.
+4. Mercedes me, Batch 644.1, 638.2 und 640.1: Die drei Abschnitte beschreiben denselben Ablauf. Sie sind in Teilen als Soll formuliert, etwa für die Ergänzung der Mercedes me ID. Die Pflichtfelder sollen in der Entwicklung verifiziert werden. Die Angaben zu Bankdaten lauten „nicht relevant“ in Batch 644.1 und „nicht anwendbar“ in Batch 638.2. Die Werte für Deutschland sind als MVP-Werte bezeichnet.
 5. Zahlung in Tschechien, Batch 53.1: Eine Störung der Zahlungsfunktion MPay im tschechischen Markt ist als geschlossen gemeldet. Das Material beschreibt weder Ursache noch Umfang. Die Meldung gehört nicht in den Fließtext.
 6. SAP-Debitorennummern je Markt, Batch 578.2: Die Änderung ist als geschlossen geführt. Das Material beschreibt die Pflege der Markttabelle und der Debitorennummern nur als Zielbild. Die Aussage, dass die Pflege bisher aus Sicht Deutschlands erfolgt, ist nicht mit einem Stand belegt.
 7. Lieferantentabelle, Batch 582.3: Der Text spricht bei der Lieferantentabelle von Händlerbetrieben. Es ist unklar, ob die Filterung Lieferanten oder Händler betrifft.
-8. Cross File Transfer, Batch 68.1: Die Marktbegrenzung befindet sich in der Abstimmung. Offen sind das Verhalten bei einem Upload einer Datei eines anderen Marktes und die technische Umsetzbarkeit der Einschränkung.
-9. Sichtbarkeit von Partnerdaten bei Eigentümerwechsel, Batch 594.2: Die Sichtbarkeit soll sich nach einem angepassten ORG-Scope richten. Der Begriff ORG-Scope ist im Material nicht erläutert. Die Daten sind im Epic-Test auf der eigenen Seite zu simulieren. Der Stand des Epic-Tests ist nicht angegeben.
+8. Cross File Transfer, Batch 68.1: Die Marktbegrenzung ist in Abstimmung. Ungeklärt sind das Verhalten bei einem Upload einer Datei eines anderen Marktes und die technische Umsetzbarkeit der Einschränkung.
+9. Sichtbarkeit von Partnerdaten bei Eigentümerwechsel, Batch 594.2: Die Sichtbarkeit soll sich nach dem ORG-Scope richten. Der Begriff ORG-Scope ist im Material nicht erläutert. Die Daten sind im Epic-Test auf der eigenen Seite zu simulieren. Der Stand des Epic-Tests ist nicht angegeben.
 10. Feature-Toggle Slowakei, Batch 528.2: Das Material nennt das Feature nicht und beschreibt die Wirkung nicht.
 11. Feld HTXT2 in E169, Batch 142.9: Das Feld und sein Zweck sind nicht beschrieben.
 12. Finanzabgleich Indien, Batch 177.4 und 181.5: Beide Abschnitte beschreiben Prüfungen für MO und MPC des Marktes Indien, einmal als CoFiCo Check, einmal als SWT Check. Unklar ist, ob beide gelten oder welche Verarbeitung welcher Prüfung zugeordnet ist.
 13. Schweizer Format, Batch 552.2: Das Format für Steuernummer und VAT-ID ist nicht angegeben.
-14. Marktübergreifende Kundenlogik, Batch 551.4: Der Abschnitt beschreibt ein Zielbild mit der Formulierung „Künftig soll“. Der Stand ist nicht belegt. Ebenso offen ist, ob das bestehende Verhalten aller Märkte durch Regressionstests je Markt überprüft wird.
-15. i155 je Markt, Batch 936.2: Die Formulierung „Künftig wird“ beschreibt keinen belegten Stand.
+14. Marktübergreifende Kundenlogik, Batch 551.4: Der Abschnitt beschreibt ein Zielbild, in dem die marktspezifische Logik je Markt gebündelt werden soll. Der Stand ist nicht belegt. Ungeklärt ist, ob das bestehende Verhalten aller Märkte durch Regressionstests je Markt überprüft wird.
+15. i155 je Markt, Batch 936.2: Die Aussage beschreibt keinen belegten Stand.
 16. Seitengröße in Tabellen, Batch 10.5, 246.1 und 256.1: Die Fahrzeugverwaltung speichert die Anzahl der Einträge je Seite im Benutzerprofil. Die Seiten Tax Type und Tax Rates setzen die Anzahl nach dem Neuladen zurück. Unklar ist, ob das unterschiedliche Verhalten gewollt ist.
 17. Zuständigkeit für Steuern, Batch 246.1, 256.1 und 218.1: Batch 246.1 nennt einen Administrator für die Steuerarten bei der Markteinführung, Batch 256.1 nennt den MPC für die Steuersätze. Das Steuermodul für Indien wird nicht einer Rolle zugeordnet.
 18. Lokale Entwicklungsumgebung, Batch 1310.6: Der Abschnitt richtet sich an Entwickler und nicht an Fachanwender. Die Zielgruppe ist im Material nicht eindeutig benannt.
