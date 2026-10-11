@@ -298,3 +298,71 @@ Adressänderungen sendet oneSCM nur innerhalb eines Landes und nur mit Zustimmun
 **Fehlerbehebung.** Schlägt eine Anlage in oneERP fehl, versucht das System den Vorgang automatisch erneut. Prüfen Sie bei wiederholten Fehlern die Materialnummern. Fehlende Materialnummern führen dazu, dass alle Datensätze an oneERP fehlschlagen. Bei einer Störung der automatischen Rückmeldung können HQ-Administratoren die Rückmeldung über den manuellen Upload einspielen.
 
 Quellen: Batch 650.2, 1210.1, 179.2, 586.1, 620.1, 664.1, 615.4, 618.7, 633.1, 883.7, 585.5, 761.1, 210.1, 607.1, 607.3, 559.2, 583.2, 231.1, 591.2, 557.1, 151.3, 147.1, 199.2, 644.2, 673.2, 673.3, 675.2, 681.2, 1210.1, 777.4
+
+## 19.12 CoFiCo – FI-Anbindung
+
+**Zweck.** CoFiCo ist das Finanzsystem für die Slowakei und weitere europäische Märkte. oneSCM überträgt Kunden, Rechnungen und Werkstattbelege an CoFiCo und empfängt Rückmeldungen. Dieser Abschnitt beschreibt die Kundenanbindung, die Exportdateien, die Validierung der Rechnungsdatei, die Plausibilitätsprüfungen und die Konfiguration des Finanzsystems.
+
+**Voraussetzungen.** Der Markt ist mit dem Finanzsystem CoFiCo konfiguriert. Die Werte der FI-Konfiguration sind gepflegt. Die Finanzsystem-Konfiguration für SWT- und CoFiCo-Märkte pflegen HQ-Administratoren über die Seite „FI-Configuration Feature“.
+
+**Rollen.** HQ-Administratoren pflegen die FI-Konfiguration. Mitarbeitende aus Market Operations und MPC prüfen die Plausibilitätsprüfungen. Mitarbeitende im Revenue- und Cost-Management validieren Belege für den Export E167.
+
+**Kundenanbindung.** Für den Markt Slowakei legt die Kundenverwaltung Privatkunden (B2C) und Geschäftskunden (B2B) an und synchronisiert sie mit CoFiCo. Aus CoFiCo ruft oneSCM die SAP-Debitorennummer, den Kundenstatus und weitere Kundendetails ab. Die SAP-Debitorennummer darf alphanumerisch sein. Die Struktur für Anlage und Aktualisierung entspricht der Struktur der SWT-Anbindung. Die Suche in CoFiCo erfolgt nach abgestimmten Kriterien, etwa der USt-IdNr.
+
+Der Kundenstatus zeigt den Stand der Synchronisation. Zu Beginn lautet er „Temporary“, und Änderungen sind erlaubt. Während der Synchronisation steht er auf „In Confirmation“, und Bearbeitungen sind gesperrt. Liegen die SAP-Daten vor und ist mindestens ein Servicevertrag des Kunden aktiv, wechselt der Status auf „Active“. Änderungen an einem aktiven Kunden lösen eine Aktualisierung an CoFiCo aus, bei der auch die oneSCM-ID übermittelt wird.
+
+Für einen neuen Kunden sendet oneSCM eine POST-Anfrage mit der CMD-Struktur an CoFiCo. Für bestehende Kunden mit Änderungen verwendet oneSCM dieselbe Struktur. Die Antwort kommt in derselben Struktur über die Outbound-Schnittstelle von CoFiCo zurück, die bei jeder Anlage oder Änderung im Finanzsystem aktiviert wird. Die Anfrage enthält die Felder salesOrganization, paymentMethod, taxNumber1 bis taxNumber5, directDebit und partnerBankType. Nicht festgelegte Felder erhalten einen leeren Wert. taxNumber1 enthält die Steuernummer, taxNumber2 die Company Registration Number. Ein neues Feld „Währung“ steht am Ende der Struktur und trägt den Währungswert aus der Marktkonfiguration.
+
+Die Felder für Kunden der Slowakei lauten wie folgt. Die Region stammt aus der Google-API (administrative_area_level_1), umfasst höchstens 35 Zeichen und ist für alle Kundenarten verpflichtend. Die Personal ID umfasst 15 alphanumerische Zeichen und kann Sonderzeichen wie einen Schrägstrich enthalten. Die Sichtbarkeit der Personal ID richtet sich nach den Markteinstellungen. Als Zahlungsart steht die Kreditkarte zur Verfügung. Eine SEPA-Datei und ein Lastschriftcode sind für die Slowakei nicht erforderlich.
+
+Der Löschkennzeichen-Status (DeletionIndicator) des Finanzsystems ist führend. Hat das Kennzeichen den Wert „true“, zeigt oneSCM „Marked for Deletion“ an, unabhängig von weiteren Status. Andernfalls zeigt oneSCM „Blocked“. Bei Firmenkunden wertet oneSCM das Kennzeichen ebenfalls aus. Für inaktive Kunden löscht oneSCM die SAP- und SEPA-Informationen und hält dies in der Kundenhistorie fest. Der FI-Status wird für diese Kunden nicht mehr synchronisiert. Legen Sie einen neuen Servicevertrag an, prüft oneSCM die SAP- und SEPA-Daten erneut. Änderungen im Finanzsystem sind damit zum Zeitpunkt des neuen Vertrags berücksichtigt.
+
+Wird bei der Kundenanlage ein Treffer gefunden und wählt der Benutzer dennoch die Neuanlage, übernimmt oneSCM die USt-IdNr. automatisch in den neuen Kunden. Die SAP-Debitorennummer ist alphanumerisch zulässig.
+
+**Synchronisation mit CoFiCo.** Das Material beschreibt eine bidirektionale Synchronisation zwischen oneSCM und CoFiCo. Änderungen aus CoFiCo übernimmt oneSCM schrittweise über einen Sync-Endpunkt. Jeder Änderungsdatensatz trägt einen Zeitstempel. Ist der Zeitstempel von CoFiCo neuer, aktualisiert oneSCM den Datensatz. Ist der Zeitstempel in oneSCM neuer, bleibt der oneSCM-Wert erhalten, und er wird per Update an CoFiCo gesendet. Die Antworten sind paginiert, und der Batch-Job ruft alle verfügbaren Seiten nacheinander ab. Der Zeitplan darf höchstens 24 Stunden Intervall haben. Zusätzlich gleicht ein Abgleich der Kundendaten über zwei bis drei Wochen die Daten mit dem bestehenden Get-Customer-Endpunkt ab. Voraussetzung ist, dass CoFiCo die Sync-API bereitstellt und den Get-Customer-Endpunkt um Zeitstempel erweitert. Den Stand dieser Voraussetzung erfasst der Klärungsbedarf.
+
+**Exportdateien und Dateinamen.** Die Exportdateien für CoFiCo und SWT tragen einen Dateinamen mit Division und Uhrzeit. Das Format lautet 1SCM_CountryCode_CompanyCode_SalesOrganization_Division_SAPDebit_YYYYDDMM_HHmmss. Dadurch entstehen auch bei sehr schnellen Exporten keine Dateien mit identischem Namen.
+
+Die Exportjobs berücksichtigen CAMP- und DD-Rechnungen für vollständig subventionierte Verträge. In der H-Zeile ab Position 66 steht für alle Händlerrabatt-Rechnungen der Text „Dealer participation in the service contract based on the agreement.“
+
+**Händlerrechnungstyp.** Händlerrabattrechnungen tragen intern und extern sowie bei manueller Anlage den Rechnungstyp Dealer Discount mit dem Kürzel DD. Beim Export richtet sich der Typ nach der Zugehörigkeit des Händlers. Für zugehörige Händler übermittelt oneSCM IDD, für nicht zugehörige Händler EDD.
+
+**Datei E167 für CoFiCo und SWT.** oneSCM stellt die Schnittstelle E167 für Werkstatt-Finanzbelege bereit. Sie übergibt manuelle Werkstattrechnungen und Kostenweiterleitungsbelege an CoFiCo und SWT. Fachlich entspricht sie der E167-Werkstattschnittstelle für oneERP, verwendet jedoch eine eigene SAP-Dateistruktur, ein eigenes Mapping, einen eigenen Batch-Job und eine eigene Namenskonvention.
+
+Die Datei ist positionsbasiert mit Datensätzen fester Länge. Sie enthält drei Satzarten. Der F-Satz steht einmal pro Datei und enthält Datum und Uhrzeit der Verarbeitung, das oneSCM-Mandat, den ISO-Ländercode, die laufende Nummer der Ausführung sowie die Summen der H- und L-Sätze. Der H-Satz enthält Kopfnummer, Kreditorennummer des Händlers oder Lieferanten, VEGA-Händlernummer, Belegtyp mit 01 für Rechnung und 02 für Gutschrift, Rechnungstyp, Rechnungsdatum, Nummern der Belege und den Bruttogesamtbetrag. Ein neuer H-Satz entsteht, sobald sich der VEGA-Händler, der Belegtyp oder der SAP-Rechnungstyp ändert. Der L-Satz enthält Positionsnummer, Reparaturdatum, Kfz-Kennzeichen, die 17-stellige FIN, die Vertragstypbezeichnung, Netto- und Bruttobetrag sowie den Steuerschlüssel. Der Steuerschlüssel stammt aus den Routing-Einträgen des Tax Managements.
+
+In der Exportdatei trägt die Position „Finance System Document Code“ den Wert aus „Tax Management, Tax Rate, FI Tax Code“. Der Wert wird mit führenden Nullen aufgefüllt. Für die Felder „External Contract Reference“ und „External Payment Reference“ gilt Folgendes. Die External Contract Reference steht in der L-Zeile. Die External Payment Reference übernimmt oneSCM aus der Vertragsebene und stellt sie im Feld „Invoice position text“ dar. Bei MANU- und MPPI-Rechnungen steht sie hinter dem Rechnungspositionstext. Fehlt eine der Referenzen, läuft die Rechnungserstellung weiter, und das Feld bleibt in CoFiCo oder SWT leer.
+
+Der Produktname ersetzt die Produktlinie im Export. Da der Produktname bis zu 50 Zeichen umfassen kann, übergibt oneSCM 40 Zeichen. Kürzere Namen füllt oneSCM mit Leerzeichen auf. Die Regeln sind in den Outbound Mapping Rules für CoFiCo dokumentiert.
+
+**Validierung der Ausgangsrechnungsdatei.** Die Exportläufe SWTInvExp und CoFiCoInvExp prüfen die erzeugte Datei, bevor sie im S3-Ordner abgelegt wird. Der Kopfsatz enthält die Zähler für Rechnungsköpfe und Rechnungspositionen. oneSCM vergleicht sie mit der tatsächlichen Anzahl in der Datei.
+
+1. Stimmen die Zähler nicht überein, protokolliert oneSCM einen Eintrag mit allen Details in Datadog.
+2. oneSCM setzt den Vorgang zurück. Der Status der Rechnungen der Datei wechselt von „Exported“ auf „Accepted“. Verarbeitungsnummer und FI-System-Übertragungsdatum entfallen.
+3. Auf der Batch-Job-Seite zeigt der Batch den Status „Validation Error“.
+4. Nach der Behebung der Ursache startet ein Administrator den Export-Batch erneut. Die zurückgesetzten Rechnungen gehen mit neuer Verarbeitungsnummer und neuem Übertragungsdatum an das Finanzsystem. Sie werden im nächsten regulären Lauf abgerechnet.
+
+**FI-Konfiguration.** HQ-Administratoren pflegen die bisher fest hinterlegte Konfiguration des Finanzsystems selbst. Die Seite finden Sie unter Admin, Market Settings, External System Settings und FI-Configuration Feature. Sie steht nur für SWT- und CoFiCo-Märkte zur Verfügung. Die Werte gelten für den Export von Kundendaten über die API und für den Export von Rechnungen.
+
+- General Details: oneSCM-Mandat als Freitext, Sprachcode und Währungscode aus einer Liste.
+- Invoice Settings: je Division ein Tab für PC oder VAN mit dem Feld Sales Organization. Das Feld nimmt einen alphanumerischen Wert mit höchstens vier Zeichen auf.
+- Customer Settings: je Division das Feld Legal Entity als SAP Company Code mit höchstens vier Ziffern, die Account Group mit höchstens vier Ziffern und Land1 als Ländercode aus der Liste.
+- History: Änderungen auf Attributebene mit Zeitpunkt.
+
+Mit „Save“ speichern Sie die Änderungen. „Restore“ ersetzt die neu eingegebenen Werte durch die zuletzt gespeicherten.
+
+**Plausibilitätsprüfungen.** Auf der Seite „Financial Control“ stehen für CoFiCo und SWT eigene Prüfungen bereit. Der Tab „CoFiCo Check“ vergleicht die Summe der an CoFiCo gesendeten Rechnungsbeträge mit der Summe aus der Rückmeldedatei. Stimmen beide Summen überein, sind die Rechnungen korrekt übermittelt. Der Tab „SWT Checks“ prüft die Vergleichswerte für Indien. Die Funktion ist für alle Finanzsysteme verfügbar, daher lassen sich Werte je Markt filtern. Mehrfach hochgeladene Rechnungen erhöhen die Summen nicht, und die Gesamtsumme wird durch 100 geteilt.
+
+Für Rechnungen aus dem Feedback des Finanzsystems gilt außerdem: Die Feld-Position für den Zahlbetrag ist 58 bis 73, die Währung steht in den Stellen 74 bis 76. Für den indischen Markt wird im Feld „MPay Operation Id“ die Transaktions-ID übermittelt.
+
+**Rechnungstexte.** Der allgemeine Rechnungstext für Händlerrabatte und Händlerprovisionen besteht bei SWT und CoFiCo aus 240 Leerzeichen. Bei Händlerrabatten steht der Text der Rechnungsposition im Export für SWT.
+
+**Ergebnis und Systemstatus.** Nach dem Export und der erfolgreichen Validierung stehen die Rechnungen im Status „Exported“. Die Plausibilitätsprüfung zeigt, ob die übermittelten Summen mit der Rückmeldung übereinstimmen. Den Status der Kunden zeigt die Kundenverwaltung.
+
+**Besonderheiten je Markt.** CoFiCo gilt für die Slowakei und weitere europäische Märkte. Für CoFiCo-Märkte existiert keine Account Note. Die MO-Prüfung der Banküberweisung ist daher nicht anwendbar. Das Feld Account Note blendet die Oberfläche in CoFiCo-Märkten aus. Die Abläufe für Indien mit SWT beschreibt Abschnitt 19.14 nicht, sondern Abschnitt 19.11 mit den Kundenregeln.
+
+**Hinweise.** Die Rückmeldung zu Rechnungen aus dem Finanzsystem beschreibt Abschnitt 19.22. Die Verarbeitung der Rückmeldungen und der Nemesis-Ereignisse nach der Rechnungsbuchung beschreibt Abschnitt 19.14.
+
+**Fehlerbehebung.** Meldet die Validierung einen Zählerfehler, prüfen Sie den Eintrag in Datadog. Der Batch zeigt dann den Status „Validation Error“. Nach der Ursachenanalyse starten Sie den Export-Batch erneut. Die Rechnungen werden mit neuer Verarbeitungsnummer übermittelt.
+
+Quellen: Batch 121.1, 121.3, 156.2, 198.1, 584.1, 619.1, 591.1, 142.3, 138.2, 164.5, 217.2, 162.4, 201.1, 177.1, 181.2, 581.3, 141.3, 181.6
