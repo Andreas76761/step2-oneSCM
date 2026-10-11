@@ -617,9 +617,9 @@ Quellen: Batch 225.1, 617.4, 1288.1
 Das Benachrichtigungscenter zeigt folgende Auslöser:
 
 - manuell erstellte Rechnungen oberhalb eines Schwellenwerts, mit der Meldung „Please approve invoice“ und der Rechnungsnummer
-- Kampagnen mit Kulanzzeit (Grace Period), die beim Verkauf eines Servicevertrags angeboten werden. Der MPC genehmigt oder lehnt die Anfrage ab. Der Händler erhält danach die Meldung „Grace Period Campaign“ mit dem Namen der Kampagne und der Vertragsnummer, dass sie genehmigt oder nicht genehmigt wurde.
+- Kampagnen mit Kulanzzeit, englisch Grace Period, die beim Verkauf eines Servicevertrags angeboten werden. Der MPC genehmigt oder lehnt die Anfrage ab. Der Händler erhält danach die Meldung „Grace Period Campaign“ mit dem Namen der Kampagne und der Vertragsnummer, dass sie genehmigt oder nicht genehmigt wurde.
 - Kundenrechnungen, die zu prüfen sind. Mit „Approve“ geben Sie die Rechnung frei, und der Status wechselt auf „accepted“. Mit „Reject“ lehnen Sie sie ab und gelangen auf eine dafür bestimmte Seite.
-- fehlgeschlagene Zahlungen nach den Wiederholungsversuchen (Abschnitt 19.15)
+- fehlgeschlagene Zahlungen nach den Wiederholungsversuchen, siehe Abschnitt 19.15
 
 Die Glocke in der Navigationsleiste zeigt die Anzahl unerledigter Benachrichtigungen bis 9. Bei mehr als 9 Benachrichtigungen erscheint „9+“. Ein Klick öffnet das Benachrichtigungscenter auf der rechten Seite. Jede Benachrichtigung ist mit der zugehörigen Seite verlinkt. Benachrichtigungen, die eine Aktion erfordern, sind mit einem blauen Punkt markiert. Eine erledigte Benachrichtigung, etwa nach Genehmigen oder Ablehnen, verschwindet aus dem Center. Das Center schließen Sie über das X.
 
@@ -635,7 +635,7 @@ Die Glocke in der Navigationsleiste zeigt die Anzahl unerledigter Benachrichtigu
 
 **Historie bei automatisierten Aktionen.** In der Vertragshistorie zeigt das Feld „Modified By“ bei automatisierten Aktionen den Wert „System“. Er ist eine reservierte Kennung für nicht menschliche Akteure und gilt in allen Diensten. Betroffen sind Statusübergänge, automatische Wiederholungen der MO-Prüfungen, die automatische Vertragsaktivierung, zeitgesteuerte Statusübergänge wie Prolongation und Ablauf, ereignisgesteuerte Aktualisierungen über Kafka, automatische Freigaben im Final Contract Review, die Dokumentgenerierung, Zahlungsverarbeitung und Batch-Jobs, die in die Vertragshistorie schreiben. Bei manuellen Aktionen erscheint weiterhin die Benutzer-ID.
 
-**Fehlerbenachrichtigung für Batch-Jobs.** Fehlschlagende oder abgebrochene Batch-Jobs melden sich automatisch per E-Mail an das NPM-Team (Network Performance Management). Die Funktion gilt für alle Batch-Typen in allen Märkten, darunter die CFDM-Batches und die Exporte E167, E169 und E174. Das Batch-Framework beobachtet den Status fortlaufend. Wechselt ein Batch auf „Failed“ oder „Aborted“, startet die Benachrichtigung. Die Anfrage an den Benachrichtigungsdienst erfolgt innerhalb von 10 Sekunden nach der Erkennung.
+**Fehlerbenachrichtigung für Batch-Jobs.** Fehlschlagende oder abgebrochene Batch-Jobs melden sich automatisch per E-Mail an das NPM-Team, Network Performance Management,. Die Funktion gilt für alle Batch-Typen in allen Märkten, darunter die CFDM-Batches und die Exporte E167, E169 und E174. Das Batch-Framework beobachtet den Status fortlaufend. Wechselt ein Batch auf „Failed“ oder „Aborted“, startet die Benachrichtigung. Die Anfrage an den Benachrichtigungsdienst erfolgt innerhalb von 10 Sekunden nach der Erkennung.
 
 Die E-Mail enthält Batch-Namen, Markt, Zeitpunkt des Fehlers im UTC-Format, Laufzeit bis zum Fehler und Fehlerstatus. Das System schreibt zusätzlich einen Protokolleintrag. Ziel der Funktion ist eine Abdeckung der Benachrichtigungen von mindestens 99 Prozent über Märkte und Umgebungen hinweg.
 
@@ -661,13 +661,13 @@ Quellen: Batch 526.1, 459.1, 451.1, 448.1, 450.1, 454.1, 443.1, 451.2, 457.2, 46
 
 ## 19.19 Datenplattformen und Reporting
 
-**Zweck.** Die Datenplattform führt Daten aus den Domänen von oneSCM, aus NEMESIS, aus den Altsystemen und aus ISP im Unified Data Model, kurz UDM, zusammen. Daraus entstehen Datenprodukte (Data Products, DP) für das Reporting. Dieser Abschnitt beschreibt die Überwachung des Datenflusses, die Ladewege, die Scheduler und die wichtigsten Inhalte der Datenprodukte.
+**Zweck.** Die Datenplattform führt Daten aus den Domänen von oneSCM, aus NEMESIS, aus den Altsystemen und aus ISP im Unified Data Model, kurz UDM, zusammen. Daraus entstehen Datenprodukte, englisch Data Products, kurz DP, für das Reporting. Dieser Abschnitt beschreibt die Überwachung des Datenflusses, die Ladewege, die Scheduler und die wichtigsten Inhalte der Datenprodukte.
 
 **Voraussetzungen.** Die Datenquellen liefern ihre Dateien in den festgelegten Ordnern. Für Nemesis-Daten gilt zusätzlich die Ablage je Division und Markt. Die Datenprodukte entstehen aus dem UDM.
 
 **Rollen.** Das technische Team prüft die Ursache einer Meldung. Das BU-Team aus dem Fachbereich erhält die Benachrichtigungen und klärt fehlende Daten in der Quelle.
 
-**Überwachung des Datenflusses.** Die Überwachung meldet Datensätze, die nicht vom Data Capture Service (DCS) oder vom Glue-Job verarbeitet werden können, fehlende Daten für einen Markt oder eine Division sowie Jobfehler. Die Meldung nennt die Quelle, den Markt, die Division und die Anzahl der betroffenen Datensätze.
+**Überwachung des Datenflusses.** Die Überwachung meldet Datensätze, die nicht vom Data Capture Service, kurz DCS, oder vom Glue-Job verarbeitet werden können, fehlende Daten für einen Markt oder eine Division sowie Jobfehler. Die Meldung nennt die Quelle, den Markt, die Division und die Anzahl der betroffenen Datensätze.
 
 - Datensätze aus den Altsystemen iCON, ASSET und SIRIUS, die nicht aus der Datei in das UDM gelangen
 - Nemesis-Daten, die nicht aus der Datei in das UDM gelangen, auch beim initialen Nemesis-Load
@@ -737,7 +737,7 @@ Die Datei E167 für CoFiCo und SWT liegt im Ordner für ausgehende Dateien unter
 
 **Dateiwege für NEMESIS und die Datenplattform.** Die Fehlerdatei mit funktionalen Fehlern legt NEMESIS im Eingangsordner des Landes unter Environment, DE, NEMESIS und Incoming ab. Die Revenue-Dateien für die Datenplattform liegen im CFT-Verzeichnis des Nemesis-Raw-Buckets. Die Verarbeitung ist in Abschnitt 19.19 beschrieben.
 
-**Dateiübertragung über CFT und Statistik.** Im Admin-Bereich steht der Eintrag „Cross File Transfer“ mit zwei Tabs zur Verfügung: „Cross File Transfer“ zeigt die Übertragungshistorie, und „Upload“ hochgeladene Dateien. Für die Exportdateien E169, E167, E174, SWT und CoFiCo zeigt die Spalte „Total Number of Items“ die Anzahl der exportierten Rechnungen. Bei Status „Completed“ folgt die Anzahl der übersprungenen Rechnungen in Klammern, etwa „1000 (450 skipped)“. Kann die Datei nicht gelesen werden, lautet der Wert „N/A“.
+**Dateiübertragung über CFT und Statistik.** Im Admin-Bereich steht der Eintrag „Cross File Transfer“ mit zwei Tabs zur Verfügung: „Cross File Transfer“ zeigt die Übertragungshistorie, und „Upload“ hochgeladene Dateien. Für die Exportdateien E169, E167, E174, SWT und CoFiCo zeigt die Spalte „Total Number of Items“ die Anzahl der exportierten Rechnungen. Bei Status „Completed“ folgt die Anzahl der übersprungenen Rechnungen in Klammern, etwa „1000, davon 450 skipped“. Kann die Datei nicht gelesen werden, lautet der Wert „N/A“.
 
 Die Aktion „Statistics“ öffnet die Details einer Datei mit den Spalten Processing Number, oneSCM-Rechnungsnummer, Vertragsnummer, Status und Reason. Als Filter stehen die Nummern, ein Status-Dropdown mit „Exported“ und „Skipped“ sowie die Schaltflächen „Search“ und „Reset“ zur Verfügung. Die Gründe stammen aus Datadog. Die Aktion „Details“ bleibt unverändert.
 
@@ -840,7 +840,7 @@ Die Warteschlange des Exports leert oneSCM, sodass Verträge nicht mehr wiederho
 
 Für den Nemesis-Import nimmt die Schnittstelle den Dateinamen als Request-Parameter entgegen und dekodiert ihn. Die Rechnungsfilter-API berücksichtigt den Rechnungstyp.
 
-**Lieferantenberichte.** Die Lieferantenberichte (Supplier Reports) stützen sich auf eine gemeinsame Datengrundlage aus den Services Vertrag, Kunde und Lieferant, Erlöse und Kosten, Produkt und Fahrzeug. Die Quell-Services erfassen Momentaufnahmen über eine gemeinsame Bibliothek und speichern sie zusammen mit der fachlichen Änderung in einer Outbox. Ein gemeinsamer Relay veröffentlicht sie über Kafka. Der History Service übernimmt die Daten und legt typisierte aktuelle und historische Sichten in OpenSearch ab.
+**Lieferantenberichte.** Die Lieferantenberichte, englisch Supplier Reports, stützen sich auf eine gemeinsame Datengrundlage aus den Services Vertrag, Kunde und Lieferant, Erlöse und Kosten, Produkt und Fahrzeug. Die Quell-Services erfassen Momentaufnahmen über eine gemeinsame Bibliothek und speichern sie zusammen mit der fachlichen Änderung in einer Outbox. Ein gemeinsamer Relay veröffentlicht sie über Kafka. Der History Service übernimmt die Daten und legt typisierte aktuelle und historische Sichten in OpenSearch ab.
 
 Bei einem Ausfall der Historie holen die Ereignisse nach der Wiederherstellung auf, Kafka hält sie vor. Ist Kafka nicht verfügbar, bleiben die Snapshots in der Outbox und werden nach der Wiederherstellung übertragen. Unvollständige Eingaben meldet die Bereitschaftsprüfung mit dem Status WAITING oder BLOCKED samt Gründen. Die Berichtserstellung, die CSV- und XML-Ausgabe, die Vorlagen und die Oberfläche gehören nicht zu dieser Lieferung. Zeitfenster für Ausfälle und die Regeln für Zeitstempel sind im Klärungsbedarf erfasst.
 
@@ -858,7 +858,7 @@ Wird ein Schadenfall mit einer neueren Entscheidungsnummer vollständig abgelehn
 
 Beim Import prüft oneSCM jeden Datensatz. Als Fehler gelten eine nicht übereinstimmende FRD, eine Kilometereinheit, die von der Einheit des Automotive-Objekts abweicht, eine Kombination aus Vertragsnummer und FIN, die nicht passt, eine Teilemenge und Anzahl der Positionen, die nicht größer als 0 ist, und Total service relevant costs, die nicht größer als 0 sind. Der Datensatz gilt dann als Fehler, der Schadenfall wird übersprungen und eine E-Mail geht an das Market-Operation-Team. Alle Fehler und Warnungen protokolliert oneSCM in Datadog mit der Zeilennummer, damit der Schadenfall eindeutig zu finden ist.
 
-**Wiederholung und Circuit Breaker.** Die Dienste nutzen Wiederholungen (Retry) und einen Circuit Breaker auf Basis von Resilience4j, soweit dies für den jeweiligen Dienst zutrifft. Für die Clients der nachgelagerten Dienste im Edge Service sind Timeouts, Wiederholungen und Circuit Breaker beschrieben. Ein langsamer oder nicht verfügbarer Dienst führt dann zu einer zeitlich begrenzten Fehlermeldung statt zu einer hängenden Anfrage. Den Stand dieser Anbindung erfasst der Klärungsbedarf.
+**Wiederholung und Circuit Breaker.** Die Dienste nutzen Wiederholungen, englisch Retry, und einen Circuit Breaker auf Basis von Resilience4j, soweit dies für den jeweiligen Dienst zutrifft. Für die Clients der nachgelagerten Dienste im Edge Service sind Timeouts, Wiederholungen und Circuit Breaker beschrieben. Ein langsamer oder nicht verfügbarer Dienst führt dann zu einer zeitlich begrenzten Fehlermeldung statt zu einer hängenden Anfrage. Den Stand dieser Anbindung erfasst der Klärungsbedarf.
 
 **Batch-Fehler und Wiederanlauf.** Ein Batch-Job, der fehlschlägt oder abgebrochen wird, löst eine Benachrichtigung aus. Die Beschreibung steht in Abschnitt 19.18. Jobs, deren Instanz heruntergefahren wurde, schließen korrekt ab und verbleiben nicht im Status „STARTED“. Der Job E169 und der Job E174 bleiben nicht im Status „Started“. Der CFDMBatch startet nicht doppelt, solange eine Instanz läuft. Für eine Sammelrechnung über unterschiedliche Verträge funktioniert die Erstellung. Ein fehlgeschlagener Job lässt sich über „Run Now“ erneut starten.
 
@@ -978,33 +978,33 @@ Quellen: Batch 1178.1, 617.2
 
 Die folgenden Abschnitte aus dem Material betreffen fachliche Abläufe, Oberflächen oder Testverfahren, die in anderen Kapiteln beschrieben werden. Die Architekturbeschreibung in diesem Kapitel verweist auf sie.
 
-- **Kapitel 2.2, Fachliche Rollen und technische Berechtigungen:** Batch 1290.1 (Kilometerstand durch die Rolle MO), Batch 1312.1 (Schaltfläche Admin Section für Dealer), Batch 754.7 (Händlerbenutzer mit mehreren Standorten).
-- **Kapitel 4.3, Kundendaten und Pflichtangaben prüfen:** Batch 1315.4 (Prüfung der USt-IdNr. im B2B-Prozess, Validierungsdienst in oneSCM).
-- **Kapitel 4.5, Datenübernahme aus angebundenen Systemen:** Batch 643.1, 638.3, 659.2 (Adressdaten im Mercedes me Profil), Batch 589.1 (MMe-Updates über Kafka). Die Abläufe zur Kundenanlage mit Mercedes me stehen in Abschnitt 19.11.
-- **Kapitel 4.7, Partner- und Dealerbeziehungen:** Batch 594.3, 913.1 (Eigentümerwechsel und Aktualisierung der Serviceverträge), Batch 594.5 (Änderungsprotokoll bei Änderungen ohne Eigentümerwechsel), Batch 626.3 (Validierung in der Händlerverwaltung), Batch 624.1 (Erfassung und Pflege von Händlerdaten, Dateiupload).
-- **Kapitel 5.1, Vertragsarten und Einstiegspunkte:** Batch 873.6 (Sales Channel als Feld am Vertrag für Leasing und Retail-UI).
-- **Kapitel 5.2, Fahrzeug- und Vorgangskennungen:** Batch 918.2 (Validierung der Deal-ID mit 36 Zeichen und Bindestrich).
-- **Kapitel 5.3, Fahrzeugdaten, Pflichtfelder und Validierungsregeln:** Batch 22.2 (Servicehistorie und Zulassung für Verträge), Batch 874.6 (Fahrgestellnummer nach Erfassung der FRD).
-- **Kapitel 8.3, Fehlende Fahrzeugdaten und Dokumente ergänzen:** Batch 918.5 (Deal-ID mit Fahrgestellnummer und Schaltfläche Update), Batch 423.1 (E-Mail bei ergänzten Vertragsdaten).
-- **Kapitel 9.2, MO Checks innerhalb der Vertragsanlage:** Batch 403.2 (interne Benachrichtigung bei gesperrten Fahrzeugen), Batch 921.3 (Überweisung bei Account Note ungleich K mit Prüfung und Benachrichtigung).
-- **Kapitel 9.8, Contract Review: Profile und Übersicht:** Batch 220.4 (Marktcode bei Rechnungen der Vertragsprüfung).
-- **Kapitel 10.4, Aussetzen und Reaktivieren:** Batch 810.3 (vorzeitige Beendigung eines suspendierten Vertrags).
-- **Kapitel 10.5, Verlängerung, Folgeangebot und Folgevertrag:** Batch 777.4 (Bestätigung durch den Kunden und Ratenneuverteilung bei Langzeitverlängerung).
-- **Kapitel 10.6, Kündigung, Stornierung und Beendigung:** Batch 810.3 (Enddatum bei Stornierung, Early Settlement).
-- **Kapitel 10.8, Änderungshistorie und Nachvollziehbarkeit:** Batch 857.2 und 825.7 (VEGA-Historie), Batch 1315.2 (globaler Historienservice).
-- **Kapitel 10.9, Laufleistung, Kilometerstandshistorie und Prognose:** Batch 201.4 (neuer Kilometerstand nach Werkstattrechnung), Batch 516.2 (Kilometerstand-API als Benutzersicht).
-- **Kapitel 11.4, Kostenmanagement und Claims:** Batch 142.5 (externe Händlerprovision in der E169 mit dem Exporttyp ESER).
-- **Kapitel 11.4, Kostenmanagement und Claims, Reiter Cost:** Batch 119.5 (Kategorien und Spalten des Reiters Cost).
-- **Kapitel 14.2, Marktspezifische Einstellungen:** Batch 1301.1 (Schadencodes je Markt und Sprache), Batch 1303.1 (Tax Management im Tab der Markteinstellungen), Batch 201.4 (Steuerfaktor für Indien).
-- **Kapitel 14.5, Administrationsbereich und zulässige Aktionen:** Batch 1255.4, 1274.4, 1246.7 (VEGA-Codes und Coverage-Arten), Batch 125.6 (sichtbare Bereiche im Admin-Bereich).
-- **Kapitel 14.4, Vorlagenverwaltung und Template Management:** Batch 362.2 (Bezeichnung Business Partner Type in der Vorlagenverwaltung für System-Benachrichtigungs-E-Mails).
-- **Kapitel 14.6, Marktbezogene Sichtbarkeit und Berechtigungen:** Batch 1301.1 (Sichtbarkeit der Seite VEGA Codes für Marktbenutzer).
-- **Kapitel 14.8, Produktdefinition, Anlage und Veröffentlichung:** Batch 1217.3 (Marktauswahl für Produkte), Batch 1161.1 (Kostenverantwortung und Ausschluss der Deckungen von der i155).
-- **Kapitel 16.4, Testnachweise und produktiver Funktionsstand:** Batch 1290.1 und 1288.1 (autonomes QA-Framework), Batch 1303.1 (AQA-Themen des Programminkrements), Batch 1306.1 und 1298.2 (Testflows, Architektur der Tests), Batch 1297.1 (Regressionstest-Design), Batch 1295.1 (automatische Ursachenanalyse für UI-Tests), Batch 1299.1 (Konfiguration für den KI-Einsatz in der Entwicklung), Batch 1304.1 (Prüfschritt für Vertrags-PDF-Dateien), Batch 1287.1 (interne Testautomatisierung).
-- **Kapitel 17.1, Zielmärkte und Einführungsumfang:** Batch 132.1 (Märkte Schweiz und Tschechien mit Konfiguration, Batch-Jobs und S3-Pfaden).
-- **Kapitel 18.2, Quellsysteme und Datenobjekte:** Batch 1290.1 (Migration der Datenbasis, Verwaltungsfunktionen NEMESIS und Prolongation).
-- **Kapitel 22.4, Releaseinformationen und Änderungsübersicht:** Batch 1290.1 (Apollo-Rollout), Batch 1302.2 (Angular und Java 21), Batch 919.2 (BRABUS mit Java 21), Batch 3.6 und 11.3 und 1277.9 (CePro-Import und Batch-Job-Oberfläche), Batch 143.4 (Batch-Timer und Verträge), Batch 164.7 (Fehlerbehebungen bei i156 und i155), Batch 305.4 (Fehlerbehebungen in ETL, Backend und UDM), Batch 129.4 (Operation-ID bei Einmalverträgen im CoFiCo-Export), Batch 163.3 (Prüfung des NACOS-Jobs), Batch 220.4 (erneutes Senden von Revenue-Ereignissen an NEMESIS), Batch 623.4 (Prüfung von E-Mail-Einschränkungen), Batch 1081.5 (Warteschlange der i155), Batch 534.2 (Benutzerbenachrichtigungen und Betriebsstörungen), Batch 360.6 (Darstellung des Hintergrundbilds und der Systembenachrichtigungen).
-- **Kapitel 23.5, Support- und Eskalationswege:** Batch 1313.1 (Hotfix- und Notfallmanagement).
+- **Kapitel 2.2, Fachliche Rollen und technische Berechtigungen:** Batch 1290.1: Kilometerstand durch die Rolle MO, Batch 1312.1: Schaltfläche Admin Section für Dealer, Batch 754.7: Händlerbenutzer mit mehreren Standorten.
+- **Kapitel 4.3, Kundendaten und Pflichtangaben prüfen:** Batch 1315.4: Prüfung der USt-IdNr. im B2B-Prozess, Validierungsdienst in oneSCM.
+- **Kapitel 4.5, Datenübernahme aus angebundenen Systemen:** Batch 643.1, 638.3, 659.2: Adressdaten im Mercedes me Profil, Batch 589.1: MMe-Updates über Kafka. Die Abläufe zur Kundenanlage mit Mercedes me stehen in Abschnitt 19.11.
+- **Kapitel 4.7, Partner- und Dealerbeziehungen:** Batch 594.3, 913.1: Eigentümerwechsel und Aktualisierung der Serviceverträge, Batch 594.5: Änderungsprotokoll bei Änderungen ohne Eigentümerwechsel, Batch 626.3: Validierung in der Händlerverwaltung, Batch 624.1: Erfassung und Pflege von Händlerdaten, Dateiupload.
+- **Kapitel 5.1, Vertragsarten und Einstiegspunkte:** Batch 873.6: Sales Channel als Feld am Vertrag für Leasing und Retail-UI.
+- **Kapitel 5.2, Fahrzeug- und Vorgangskennungen:** Batch 918.2: Validierung der Deal-ID mit 36 Zeichen und Bindestrich.
+- **Kapitel 5.3, Fahrzeugdaten, Pflichtfelder und Validierungsregeln:** Batch 22.2: Servicehistorie und Zulassung für Verträge, Batch 874.6: Fahrgestellnummer nach Erfassung der FRD.
+- **Kapitel 8.3, Fehlende Fahrzeugdaten und Dokumente ergänzen:** Batch 918.5: Deal-ID mit Fahrgestellnummer und Schaltfläche Update, Batch 423.1: E-Mail bei ergänzten Vertragsdaten.
+- **Kapitel 9.2, MO Checks innerhalb der Vertragsanlage:** Batch 403.2: interne Benachrichtigung bei gesperrten Fahrzeugen, Batch 921.3: Überweisung bei Account Note ungleich K mit Prüfung und Benachrichtigung.
+- **Kapitel 9.8, Contract Review: Profile und Übersicht:** Batch 220.4: Marktcode bei Rechnungen der Vertragsprüfung.
+- **Kapitel 10.4, Aussetzen und Reaktivieren:** Batch 810.3: vorzeitige Beendigung eines suspendierten Vertrags.
+- **Kapitel 10.5, Verlängerung, Folgeangebot und Folgevertrag:** Batch 777.4: Bestätigung durch den Kunden und Ratenneuverteilung bei Langzeitverlängerung.
+- **Kapitel 10.6, Kündigung, Stornierung und Beendigung:** Batch 810.3: Enddatum bei Stornierung, Early Settlement.
+- **Kapitel 10.8, Änderungshistorie und Nachvollziehbarkeit:** Batch 857.2 und 825.7: VEGA-Historie, Batch 1315.2: globaler Historienservice.
+- **Kapitel 10.9, Laufleistung, Kilometerstandshistorie und Prognose:** Batch 201.4: neuer Kilometerstand nach Werkstattrechnung, Batch 516.2: Kilometerstand-API als Benutzersicht.
+- **Kapitel 11.4, Kostenmanagement und Claims:** Batch 142.5: externe Händlerprovision in der E169 mit dem Exporttyp ESER.
+- **Kapitel 11.4, Kostenmanagement und Claims, Reiter Cost:** Batch 119.5: Kategorien und Spalten des Reiters Cost.
+- **Kapitel 14.2, Marktspezifische Einstellungen:** Batch 1301.1: Schadencodes je Markt und Sprache, Batch 1303.1: Tax Management im Tab der Markteinstellungen, Batch 201.4: Steuerfaktor für Indien.
+- **Kapitel 14.5, Administrationsbereich und zulässige Aktionen:** Batch 1255.4, 1274.4, 1246.7: VEGA-Codes und Coverage-Arten, Batch 125.6: sichtbare Bereiche im Admin-Bereich.
+- **Kapitel 14.4, Vorlagenverwaltung und Template Management:** Batch 362.2: Bezeichnung Business Partner Type in der Vorlagenverwaltung für System-Benachrichtigungs-E-Mails.
+- **Kapitel 14.6, Marktbezogene Sichtbarkeit und Berechtigungen:** Batch 1301.1: Sichtbarkeit der Seite VEGA Codes für Marktbenutzer.
+- **Kapitel 14.8, Produktdefinition, Anlage und Veröffentlichung:** Batch 1217.3: Marktauswahl für Produkte, Batch 1161.1: Kostenverantwortung und Ausschluss der Deckungen von der i155.
+- **Kapitel 16.4, Testnachweise und produktiver Funktionsstand:** Batch 1290.1 und 1288.1: autonomes QA-Framework, Batch 1303.1: AQA-Themen des Programminkrements, Batch 1306.1 und 1298.2: Testflows, Architektur der Tests, Batch 1297.1: Regressionstest-Design, Batch 1295.1: automatische Ursachenanalyse für UI-Tests, Batch 1299.1: Konfiguration für den KI-Einsatz in der Entwicklung, Batch 1304.1: Prüfschritt für Vertrags-PDF-Dateien, Batch 1287.1: interne Testautomatisierung.
+- **Kapitel 17.1, Zielmärkte und Einführungsumfang:** Batch 132.1: Märkte Schweiz und Tschechien mit Konfiguration, Batch-Jobs und S3-Pfaden.
+- **Kapitel 18.2, Quellsysteme und Datenobjekte:** Batch 1290.1: Migration der Datenbasis, Verwaltungsfunktionen NEMESIS und Prolongation.
+- **Kapitel 22.4, Releaseinformationen und Änderungsübersicht:** Batch 1290.1: Apollo-Rollout, Batch 1302.2: Angular und Java 21, Batch 919.2: BRABUS mit Java 21, Batch 3.6 und 11.3 und 1277.9: CePro-Import und Batch-Job-Oberfläche, Batch 143.4: Batch-Timer und Verträge, Batch 164.7: Fehlerbehebungen bei i156 und i155, Batch 305.4: Fehlerbehebungen in ETL, Backend und UDM, Batch 129.4: Operation-ID bei Einmalverträgen im CoFiCo-Export, Batch 163.3: Prüfung des NACOS-Jobs, Batch 220.4: erneutes Senden von Revenue-Ereignissen an NEMESIS, Batch 623.4: Prüfung von E-Mail-Einschränkungen, Batch 1081.5: Warteschlange der i155, Batch 534.2: Benutzerbenachrichtigungen und Betriebsstörungen, Batch 360.6: Darstellung des Hintergrundbilds und der Systembenachrichtigungen.
+- **Kapitel 23.5, Support- und Eskalationswege:** Batch 1313.1: Hotfix- und Notfallmanagement.
 
 ## Klärungsbedarf
 
