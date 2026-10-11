@@ -31,7 +31,7 @@ Quellen: keine
 6. Wählen Sie die Produktlinie in einem Dropdown mit Einfachauswahl. Die Angabe ist Pflicht.
 7. Geben Sie den VEGA-Vertragstyp ein. Erlaubt sind Großbuchstaben, Ziffern und Unterstriche, zum Beispiel der Testwert P_ABC_XYZ. Das System wandelt Eingaben in Großbuchstaben um.
 8. Wählen Sie das Ablaufkriterium. Die Option „Kontingent“ ist nur als Einzelauswahl möglich und schließt alle anderen Einträge aus. „Zeit“ und „Zeit oder Laufleistung“ sind als Mehrfachauswahl verfügbar. Im ersten Schritt legen Sie die Vertriebsabhängigkeit ebenfalls fest. Der MPC-Anwender wählt im Produkt eines der im Blueprint aktivierten Kriterien aus.
-9. Wählen Sie die Verkaufslogik mit dem Zusatz „Contract start date“ aus. Die Werte sind in der Beschreibung unter „Besonderheiten je Rolle, Sparte und Markt“ erläutert.
+9. Wählen Sie die Verkaufslogik mit dem Zusatz „Contract start date“ aus. Die Werte sind unter „Verkaufslogik für den Vertragsstart“ in diesem Kapitel beschrieben.
 10. Laden Sie das Produktbild von Ihrem Computer hoch. Das Bild ist Pflicht. Die Bildprüfung und das Bedienelement entsprechen dem Produkterstellungsprozess auf Marktebene.
 11. Wechseln Sie erst zum nächsten Schritt, wenn alle Pflichtfelder ausgefüllt sind.
 
@@ -260,7 +260,7 @@ Quellen: keine
 
 31. Öffnen Sie im Admin-Bereich den Bereich „Damage Codes“ und wählen Sie „Upload damage codes“. Wählen Sie eine Datei im Format .xlsx über „Browse“ oder per Drag and Drop aus. „Confirm“ startet den Import. Während des Imports erscheint ein Ladeindikator.
 32. Die Excel-Datei enthält die Spalte „MSM coverage“ für den Deckungscode, die Spalte „DC+DT“ für den Schadencode und die Spalte „dc Description + dt Description“ für die Beschreibung. Die importierten Codes werden mit ihren Übersetzungen gespeichert, zum Beispiel DE, EN und FR.
-33. Laden Sie für eine Kombination aus Deckungscode und Division erneut eine Datei hoch, ersetzt das System die bisher importierten Codes dieser Kombination. Manuell angelegte Schadencodes bleiben erhalten.
+33. Laden Sie für eine Kombination aus Deckungscode und Division erneut eine Datei hoch, ersetzt das System die bereits importierten Codes dieser Kombination. Manuell angelegte Schadencodes bleiben erhalten.
 
 *Schadencodes exportieren und ansehen.*
 
@@ -281,19 +281,19 @@ Quellen: keine
 - Die Division bestimmt die Auswahl. Coverage Codes lassen sich den Divisionen Passenger Cars und Vans zuordnen. Industry Codes sind auf die Division Vans festgelegt. Technische Optionen legen Sie je Division an.
 - Die Marktliste für Coverage Codes, Industry Codes und Schadencodes enthält ausschließlich Deutschland. Weitere Märkte erscheinen, sobald oneSCM sie unterstützt.
 - Die Übersetzungen der Märkte stehen in Kapitel 15.5. Die Marktnamen erscheinen je nach Markteinstellung in der Sprache des Marktes.
-- Der Reiter „Industry Codes“ ist in der Übersicht des Admin-Bereichs für Testzwecke vorgesehen. Die Funktionen zum Anlegen gehören zum Industry-Overview-Vorhaben. Die Anlage beschreibt dieser Abschnitt als regulären Ablauf.
+- Die Quelle nennt einen Tab zum Anlegen von Industry Codes, der vor allem für Testzwecke gedacht ist. Dieser Abschnitt beschreibt die Anlage als regulären Ablauf. Die Abweichung ist im Klärungsbedarf erfasst.
 - Die Gruppenart Reifengröße gehört zum Reifenprodukt. Ein Reifenprodukt mit Radgrößen, Wetterprofilen und Preisen beschreibt Kapitel 13.2. Die Wetterprofile „Summer“, „Summer/Winter“ und „All-Season“ sind fest hinterlegt und ohne Technische Optionen verfügbar.
-- Die Einträge der Technischen Optionen zeigen Gruppenname, Division, SA-Codes und den Typ der Technischen Option auf Karten. Eine Tabelle gibt es nicht mehr. Die Funktionalität bleibt gleich. Dies gilt in der Fahrzeugverwaltung.
+- Technische Optionen erscheinen in der Fahrzeugverwaltung als Karten mit Gruppenname, Division, SA-Codes und Typ der Technischen Option.
 
 **Hinweise.**
 
 - Die Platzhalter für Vertragsdokumente lauten technicalOptions, contractTechnicalOptions und contractTechnicalOptionsAfterProlongation.
 - Ein Angebot über die Fahrgestellnummer oder Bestellnummer zeigt Technische Optionen ohne Preis. Ist bereits eine Technische Option vorhanden, lassen sich Optionen nicht hinzufügen oder entfernen. Diese Abläufe beschreibt Kapitel 5.5.
-- Ein Coverage Code kann den Namen eines zuvor gelöschten Coverage Codes übernehmen, wenn Sie ihn neu anlegen. Hinweis: Dieser Satz steht nur im Quellenkontext des Abschnitts; die Formulierung im Text lautet: Ein neuer Coverage Code darf den Namen eines gelöschten Codes tragen.
-- Die Übersicht lässt sich nur erreichen, wenn die Pflichtangaben für Kurz- und Langbeschreibung gültig sind.
-- Eine Coverage Category Technical Option ist in der Anlage eine eigene Kategorie mit Präfix T. Das Präfix und die Bezeichnung dieser Kategorie sind im Klärungsbedarf erfasst.
-- Bei Schadencodes bleibt die Division bei Änderungen eines Deckungscodes führend. oneSCM ist das führende System für die Beziehung zwischen Division und Coverage Code.
-- Die Vergabe der Industry-Code-Übersetzungen erfolgt je Sprache und Markt; der Markt ergänzt sie in den Market Settings (Kapitel 15.5).
+- Ein neu angelegter Coverage Code darf den Namen eines gelöschten Coverage Codes tragen.
+- Die Übersicht erreichen Sie nur mit gültigen Pflichtangaben für Kurz- und Langbeschreibung.
+- Die Kategorie „Tire product reference“ verwendet das Präfix T. Die Abweichung zu den übrigen Kategorien ist im Klärungsbedarf erfasst.
+- Bei Schadencodes ist die Division schreibgeschützt und ergibt sich aus dem gewählten Coverage Code. oneSCM ist das führende System für die Beziehung zwischen Division und Coverage Code.
+- Der Markt ergänzt die Übersetzungen je Sprache in den Market Settings. Kapitel 15.5 beschreibt diese Übermittlung.
 
 **Fehlerbehebung.**
 

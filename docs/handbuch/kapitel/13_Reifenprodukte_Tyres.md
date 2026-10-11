@@ -313,10 +313,10 @@ Quellen: Batch 358.2, 368.1, 904.1, 1148.1, 1150.1, 1150.2, 1150.5, 1249.4, 1272
 
 18. **Empfänger der Logdatei.** Batch 809.1 beschreibt eine Logdatei bei nicht importierten Claims. Der Empfänger ist nicht festgelegt.
 19. **Stream 4.** Batch 1173.1 beschreibt die Anbindung des Reifenlieferanten per API über Stream 4 als Vorhaben. Die Umsetzung ist nicht belegt.
-20. **Kostenstruktur der Basisabdeckung bei Unlimited.** Batch 1142.2 beschreibt eine Anpassung, die einem Planungsintervall zugeordnet ist. Der Umfang und der Stand sind nicht belegt.
+20. **Kostenstruktur der Basisabdeckung bei Unlimited.** Batch 1142.2 beschreibt eine Anpassung ohne Angaben zu Umfang und Zeitbezug. Der Stand ist nicht belegt.
 21. **Infotext zum Wetterprofil.** Batch 1171.4 beschreibt einen Infotext mit dem Platzhalter SAMPLE TEXT for now.
-22. **Abgrenzung der Reifenprodukte.** Batch 899.7 verweist die Abgrenzung zwischen begrenzten und unbegrenzten Reifenprodukten und komplexen Produkten in ein Planungsintervall.
-23. **Reifenprodukte ohne Begrenzung.** Batch 929.4 verweist die Konfiguration der Reifenprodukte ohne Begrenzung in das Planungsintervall PI13.
+22. **Abgrenzung der Reifenprodukte.** Batch 899.7 beschreibt die Abgrenzung zwischen begrenzten und unbegrenzten Reifenprodukten sowie komplexen Produkten nicht. Der Batch verweist auf eine spätere Festlegung ohne nähere Angaben.
+23. **Reifenprodukte ohne Begrenzung.** Batch 929.4 verweist die Konfiguration der Reifenprodukte ohne Begrenzung auf PI13.
 24. **Long Term Prolongation.** Batch 911.1 beschreibt die Berücksichtigung von Reifenprodukten in der Langzeitverlängerung. Das Material nennt die Abnahmetestphase als Status. Ein Produktivstand ist nicht belegt.
 25. **Details der Langzeitverlängerung.** Batch 904.1 beschreibt die Erweiterung um Reifen ohne weitere Angaben zu Umfang oder Verhalten.
 26. **Optionale Deckungen bei deaktivierten Produkten.** Batch 1272.3 beschreibt, dass optionale Deckungen für deaktivierte Produkte standardmäßig hinzugefügt werden. Die Bedeutung ist nicht belegt.
