@@ -796,5 +796,24 @@ Bei einem Ausfall der Historie holen die Ereignisse nach der Wiederherstellung a
 
 **Ergebnis und Systemstatus.** Eine erfolgreich verarbeitete Schnittstelle erzeugt einen Eintrag in der Ausführungshistorie des Jobs und einen Status am betroffenen Datensatz. Fehler erscheinen im jeweiligen Fehlerbereich oder in der Datadog-Protokollierung, siehe nächster Teil.
 
+**Import der Rückmeldedatei i156.** Die Datei i156 enthält Schadenfälle und Kostendetails von VEGA. oneSCM übernimmt pro Schadencode die Beträge aus dem Satz RC20: den Nettowert für Arbeit, Material, Fremdleistungen und Händleraufwand. Der Netto-Gesamtbetrag ist die Summe dieser vier Werte, der Brutto-Gesamtbetrag entspricht dem Netto-Gesamtbetrag. Händler- und Marktnamen bezieht oneSCM aus dem Dealership Management. Den Aufruf an GSSN für diese Angaben gibt es nicht mehr.
+
+Wird ein Schadenfall mit einer neueren Entscheidungsnummer vollständig abgelehnt, importiert oneSCM ihn und aktualisiert die ältere Version. Bei einem vollständig abgelehnten Schadenfall enthalten die Sätze RC10 und RC20 nur Beträge von 0.
+
+Beim Import prüft oneSCM jeden Datensatz. Als Fehler gelten eine nicht übereinstimmende FRD, eine Kilometereinheit, die von der Einheit des Automotive-Objekts abweicht, eine Kombination aus Vertragsnummer und FIN, die nicht passt, eine Teilemenge und Anzahl der Positionen, die nicht größer als 0 ist, und Total service relevant costs, die nicht größer als 0 sind. Der Datensatz gilt dann als Fehler, der Schadenfall wird übersprungen und eine E-Mail geht an das Market-Operation-Team. Alle Fehler und Warnungen protokolliert oneSCM in Datadog mit der Zeilennummer, damit der Schadenfall eindeutig zu finden ist.
+
+**Wiederholung und Circuit Breaker.** Die Dienste nutzen Wiederholungen (Retry) und einen Circuit Breaker auf Basis von Resilience4j, soweit dies für den jeweiligen Dienst zutrifft. Für die Clients der nachgelagerten Dienste im Edge Service sind Timeouts, Wiederholungen und Circuit Breaker vorgesehen. Ein langsamer oder nicht verfügbarer Dienst führt dann zu einer zeitlich begrenzten Fehlermeldung statt zu einer hängenden Anfrage. Den Stand dieser Umsetzung erfasst der Klärungsbedarf.
+
+**Batch-Fehler und Wiederanlauf.** Ein Batch-Job, der fehlschlägt oder abgebrochen wird, löst eine Benachrichtigung aus. Die Beschreibung steht in Abschnitt 19.18. Jobs, deren Instanz heruntergefahren wurde, schließen korrekt ab und verbleiben nicht im Status „STARTED“. Der Job E169 und der Job E174 bleiben nicht im Status „Started“. Der CFDMBatch startet nicht doppelt, solange eine Instanz läuft. Für eine Sammelrechnung über unterschiedliche Verträge funktioniert die Erstellung. Ein fehlgeschlagener Job lässt sich über „Run Now“ erneut starten.
+
+**Kafka-Nachrichten und Reporting.** Beim Versand von Rechnungen an das Reporting sendet oneSCM Kafka-Nachrichten in Blöcken. Die Rechnungsfilter-API berücksichtigt den Rechnungstyp, da mehrere Rechnungen dieselbe ID tragen können. Die Interface-Datei E169 für den Typ ESUB enthält den Kundennamen im Feld PTXT01.
+
+**Ergebnis und Systemstatus.** Eine erfolgreich verarbeitete Schnittstelle erzeugt einen Eintrag in der Ausführungshistorie des Jobs und einen Status am betroffenen Datensatz. Fehler erscheinen im jeweiligen Fehlerbereich der Fachmaske oder in der Datadog-Protokollierung. Übersprungene Schadenfälle melden sich über die E-Mail an das Market-Operation-Team.
+
+**Besonderheiten je Sparte und Markt.** Die Schnittstellen für Online-Vertrieb und Leasing gelten für Vans und Pkw über die Division im Request. Die Dateien für SWT und CoFiCo beschreibt Abschnitt 19.21. Der Market Playground nutzt die deutschen Schnittstellen in einem getrennten Tenant.
+
+**Hinweise.** Die Batch-Jobs der Fachdomänen beschreibt jeweils das Unterkapitel der Domäne, etwa 19.12 für CoFiCo, 19.14 für NEMESIS und 19.9 für VEGA. Die Dateiwege und Ordner beschreibt Abschnitt 19.21. Für Partner gelten die Konventionen des Edge Service, die der Klärungsbedarf erfasst.
+
+**Fehlerbehebung.** Schlägt ein Batch-Job fehl, starten Sie ihn über „Run Now“ neu, sobald die Ursache behoben ist. Bei einem Job, der nicht mehr endet, nutzen Sie „Stop“. Die Ausführungshistorie zeigt den Status „fehlgeschlagen“ oder „gestoppt“. Ist ein Schadenfall in der i156-Datei nicht importierbar, prüfen Sie die Meldung in Datadog anhand der Zeilennummer. Edge-Fehler mit den Codes 403, 404 oder 500 entsprechen den Fehlerursachen, die der Partner nachvollziehen kann.
 Quellen: Batch 514.1, 512.1, 514.2, 534.1, 513.2, 515.1, 532.2, 527.1, 533.2, 520.1, 518.1, 524.2, 1253.2, 1095.2, 1107.5, 1113.5, 1027.3, 1079.6, 1081.5, 1100.4, 1111.5, 1096.5, 1082.4, 1092.3, 93.1, 771.4, 184.1, 184.4, 196.1, 205.2, 208.2, 208.4, 1310.4, 1180.1, 7.6, 855.3, 796.3, 714.6, 716.3, 795.5, 819.4, 1068.7, 1069.7, 297.1, 565.3, 565.4, 519.10, 1299.2, 667.4, 251.6, 223.4, 1070.7
 
