@@ -1,0 +1,17 @@
+# Batch 420 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 10 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Dokumente und Kommunikation**
+
+Im Bereich Dokumente und Kommunikation steht Marktvertretern jetzt in der Vorlagenverwaltung (Template Management) eine Stammvorlage für die Übertragung eines Servicevertrags zur Verfügung. Sie kann an die Anforderungen des jeweiligen Marktes angepasst werden und wird vom System im Übertragungsprozess verwendet. Die Vorlage deckt sowohl einmalig als auch monatlich bezahlte Servicevertrage ab. Bei der Übertragung geht der Vertrag vom bisherigen Kunden auf einen neuen Kunden über; beide müssen das Übertragungsdokument unterschreiben.
+
+Die Vorlage wird mit folgenden Angaben angelegt: Vorlagenname (Pflichtfeld, Texteingabe, z. B. „Contract Transfer"), Markt (Pflichtfeld, Auswahlliste, z. B. Deutschland), Verwendet für (Pflichtfeld, Auswahlliste, Wert „Contract Transfer") und Gültig ab (Pflichtfeld, Datumsauswahl). Für die Gültig-ab-Angabe und den Markt stehen die entsprechenden Auswahlfelder zur Verfügung.
+
+Im Übertragungsprozess werden zwei Fälle unterschieden. Solange der Benutzer die Übertragung im Bereich der Fußzeile noch nicht bestätigt hat, wird das Dokument mit dem Wasserzeichen „DRAFT" angezeigt. Unterschriften sind dann nicht erforderlich, und der Zahlungsplan ist im Vertrag enthalten. Sobald der Benutzer die Übertragung bestätigt und die Unterschrift wünscht, wird das Dokument ohne Wasserzeichen erzeugt. Die Unterschrift des neuen Kunden ist dann verpflichtend, die des bisherigen Kunden optional; hinzu kommt die Unterschrift des Unternehmens (MB). Je nach gewählter Signaturmethode (DSS oder On-Premise) wird das Übertragungsdokument anschließend zur Unterschrift versendet.
+
+Damit die Vorlage mit den Daten des bisherigen und des neuen Kunden befüllt werden kann, wurden zusätzliche Druckvariablen angelegt. Dazu gehören das Übertragungsdatum des Vertrags, die verbleibende Laufzeit, die verbleibende Laufleistung, die Gesamtzahl der Services und die Zahl der verbleibenden Services. Außerdem gibt es Variablen für Vor- und Nachnamen sowie für Adresse, Straße, Hausnummer, Postleitzahl und Ort jeweils für den bisherigen und den neuen Kunden. Zusätzlich enthält die Vorlage einen Textbaustein „Article 1 Transfer", in dem der Verkäufer erklärt, den Servicevertrag mit Produktname und Servicevertragsnummer an den Käufer abzutreten, der dies annimmt.
+
+Auch bei den E-Mail-Benachrichtigungen gibt es Neuerungen. Wird ein Vertrag übertragen, erhält der neue Kunde eine E-Mail-Benachrichtigung. Für die Aktualisierung fehlender Vertragsinformationen (Fahrgestellnummer, Datum der Erstzulassung bzw. FRD, Kennzeichen) steht eine Stammvorlage für E-Mail-Benachrichtigungen bereit. Benutzer können diese Vorlage als Entwurf speichern oder veröffentlichen, und nach der Aktualisierung eines Vertrags wird die entsprechende E-Mail versendet. Die E-Mail-Benachrichtigungen werden zudem in Gmail korrekt dargestellt.
+
+Darüber hinaus wurden mehrere Fehler behoben. Der Wert des Feldes „Verwendet für" wird beim Anzeigen einer Vorlage nun dargestellt. Beim Bearbeiten von Kundendaten, die mit einem Mercedes me-Konto verknüpft sind, wird der Aktualisierungsschalter für Mercedes me angezeigt. Das Datum der vorzeitigen Beendigung (earlyTerminationDate) erscheint in der E-Mail zur Kündigung eines Servicevertrags.

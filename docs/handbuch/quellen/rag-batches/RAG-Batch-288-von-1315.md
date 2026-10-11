@@ -1,0 +1,19 @@
+# Batch 288 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Rechnungen bearbeiten (Revenue Management)**
+
+Benutzer der Market Operation können die Details einer Rechnung bearbeiten. Die Bearbeitung starten Sie in der Tabelle der Kundenrechnungen über die Aktionsspalte (die drei Punkte). Die Option „Edit" steht ausschließlich für Rechnungen in den Status „Planned", „Created" und „Accepted" zur Verfügung.
+
+Nach dem Klick auf „Edit" öffnet sich die Bearbeitungsansicht. Sie zeigt folgende Felder an: Rechnungsnummer, Bearbeitungsnummer, Dokumenttyp, Kundenrechnungstyp, Rechnungserstellungsdatum (Format TT.MM.JJJJ, z. B. 16.05.2023), Rechnungszeitraum (Start- und Enddatum), Rechnungsstatus, tatsächliche Laufleistung, Rechnungstext, Rechnungsempfänger, Übertragungsdatum an das Finanzsystem (Format TT.MM.JJJJ), Rechnungsnummer im Finanzsystem, Rechnungsreferenz und Währung. Die Rechnungsreferenz ist nur dann befüllt, wenn die Rechnung im Zusammenhang mit einer bereits vorhandenen Rechnung erstellt wurde, die schon exportiert und ausgestellt wurde.
+
+Nettobetrag, Steuerbetrag und Gesamtbetrag werden aus den Rechnungspositionen abgeleitet und lassen sich nicht direkt bearbeiten. Der Nettobetrag ergibt sich aus der Summe der angelegten Rechnungspositionen: Bei zwei Positionen mit je 100 € werden 200 € angezeigt. Der Steuerbetrag wird ebenfalls als Summe der Steuerbeträge der Positionen gebildet: Bei zwei Positionen mit je 19 € Steuer werden 38 € angezeigt. Der Gesamtbetrag ist die Summe aus Nettobetrag und Steuerbetrag.
+
+Bearbeitbar sind der Rechnungstext, die tatsächliche Laufleistung und die Rechnungspositionen. Die Laufleistung ist ein optionales numerisches Eingabefeld mit Werten zwischen 0 und 9999999. Der Rechnungstext ist ein optionales Textfeld, das Sonderzeichen zulässt und auf maximal 240 Zeichen begrenzt ist. In der Positionstabelle können Sie neue Positionen anlegen, vorhandene Positionen bearbeiten und vorhandene Positionen löschen. Damit die Rechnung gültig ist, muss die Positionstabelle mindestens eine Position enthalten.
+
+Mit der Schaltfläche „Cancel" verlassen Sie die Bearbeitung. Wurde kein Feld geändert, wird die Bearbeitungsansicht direkt geschlossen. Wurde mindestens ein Feld geändert, erscheint ein Hinweisfenster mit dem Titel „You have unsaved changes!" und dem Text, dass die vorgenommenen Änderungen nicht übernommen werden und verloren gehen und ob Sie wirklich fortfahren möchten. Über „Proceed" schließen Sie das Fenster und die Bearbeitungsansicht, und alle Änderungen werden verworfen. Über „Cancel" im Hinweisfenster schließen Sie lediglich das Fenster, die Bearbeitungsansicht bleibt geöffnet und die Werte können weiter bearbeitet werden.
+
+Die Schaltfläche „Update" ist nur aktiv, wenn alle Felder die gleichen Validierungsregeln wie bei der Erstellung der Rechnung erfüllen. Beim Klick auf „Update" werden die Änderungen gespeichert, und Sie werden zur Tabelle der Kundenrechnungen weitergeleitet. Bei erfolgreicher Aktualisierung erscheint die Meldung „Invoice <INVOICE_NUMBER> was successfully updated". Lässt sich die Rechnung nicht aktualisieren, werden die neuen Werte nicht gespeichert, und es erscheint die Fehlermeldung „An error occurred while updating Invoice <INVOICE_NUMBER>". Diese Fehlermeldung enthält eine Schaltfläche „Close" und bleibt so lange sichtbar, bis der Benutzer sie schließt.
+
+Jede Änderung wird zu Prüfzwecken in der Datenbank protokolliert. Die Oberfläche entspricht der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.

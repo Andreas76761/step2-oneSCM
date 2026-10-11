@@ -1,0 +1,17 @@
+# Batch 38 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Manuelle Abschlussbelege zur Vertragsprüfung (MDCR) im Bereich Revenue Management
+
+Im Modul Revenue steht ein neuer, einheitlicher Belegtyp zur Verfügung, mit dem sich die finanzielle Endabrechnung eines Vertrags abschließen lässt, entweder zum regulären Vertragsende oder bei vorzeitiger Beendigung. Der Belegtyp gilt sowohl für Leasingverträge als auch für Nicht-Leasingverträge. Er bildet eine Schlussabrechnung ab, also eine Rechnung bzw. Belastung oder eine Gutschrift bzw. Erstattung, die die Differenz zwischen dem tatsächlich Verbrauchten oder Geschuldeten und dem Vereinbarten ausgleicht. Typische Beispiele sind eine Mehrkilometerabrechnung bei einem Servicevertrag, der Endsaldo bei vorzeitiger Fahrzeugrückgabe in einem Leasingvertrag oder eine Vertragsstrafe bei vorzeitiger Kündigung.
+
+Die Berechnung des Betrags erfolgt außerhalb von oneSCM, da jeder Vertragstyp und jeder Markt eigene Regeln hat, etwa Preis pro Kilometer, Prozentsätze für Vertragsstrafen, Kilometerobergrenzen oder Datenbankberechnungen im Leasing. Das System automatisiert diese Berechnung nicht. Es bietet stattdessen einen klar definierten Belegtyp samt Erstellungs- und Exportprozess, um den bereits berechneten Betrag zu erfassen und zu exportieren.
+
+Der Beleg wird manuell von Benutzern der Rollen MO bzw. MPC im Bereich der Finanzbelege eines Vertrags angelegt, nachdem sie den Abrechnungsbetrag extern ermittelt haben. Es wird keine neue Rolle eingeführt; es gelten die bereits vorhandenen Berechtigungen zur manuellen Belegerstellung. Bei der Erstellung wählt der Benutzer, ob der Beleg als Rechnung (Belastung des Kunden) oder als Gutschrift (Erstattung an den Kunden) angelegt wird. Für Gutschriften gibt es dabei keine Einschränkung. Anschließend erfasst der Benutzer den extern berechneten Nettobetrag sowie einen Positionstext, der die Berechnung beschreibt, zum Beispiel: „12.500 km gefahren − 10.000 km vereinbart = 2.500 km × 0,15 EUR/km = 375,00 EUR“. Die Felder für den Rechnungszeitraum („Beleg von“ und „Beleg bis“) sind optional, weil ein solcher Beleg keinen Abrechnungszeitraum darstellt.
+
+Der Beleg durchläuft den üblichen Belegslebenszyklus (Erstellt → Akzeptiert → Exportiert → FI-Beleg erstellt usw.) und wird über den Standard-Exportjob E169/CoFiCo exportiert. Dabei wird der Positionstext in die exportierte Position der Exportdatei übernommen.
+
+Für Verträge von MBLD gilt eine zusätzliche Regel: Belege dieses Typs werden dort zusätzlich anhand des Vertriebskanals Leasing und des Belegtyps ausgewählt und per API an MBLD übermittelt. Belege von Nicht-Leasingverträgen werden nicht an MBLD gesendet. So ist sichergestellt, dass Endabrechnungsdaten aus dem Leasing zuverlässig bei MBLD ankommen.
+
+Hintergrund der Neuerung ist, dass Vertragsende und vorzeitige Beendigung häufige Ereignisse sind, für die bisher uneinheitlich benannte, manuell erstellte Belege verwendet wurden. Das führte zu Unklarheit zwischen den Teams, welcher Belegtyp eine Schlussabrechnung darstellt. Der neue Belegtyp schafft hier Eindeutigkeit. Er ergänzt die bereits bestehende manuelle Belegerstellung für Standard-Kundenrechnungen und -gutschriften im Finanzbelegbereich des Vertrags.

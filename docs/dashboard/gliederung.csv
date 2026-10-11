@@ -84,6 +84,7 @@ kapitel,thema,ebene,bereich,teil
 10.6,"Kündigung, Stornierung und Beendigung",2,Betrieb,Hauptteil
 10.7,Finanzielle Folgen und Abschlussnachweise,2,Betrieb,Hauptteil
 10.8,Änderungshistorie und Nachvollziehbarkeit,2,Betrieb,Hauptteil
+10.9,"Laufleistung, Kilometerstandshistorie und Prognose",2,Betrieb,Hauptteil
 11,"Rechnung, Zahlung, Kosten und Auswertungen",1,Betrieb,Hauptteil
 11.1,Rechnungsstellung und Zahlpläne,2,Betrieb,Hauptteil
 11.2,Rechnungsstatus und Zahlungsstatus unterscheiden,2,Betrieb,Hauptteil
@@ -102,6 +103,7 @@ kapitel,thema,ebene,bereich,teil
 12.6,"Validierung, Freigabe und Ablehnung",2,Betrieb,Hauptteil
 12.7,Interne und externe Kommentare,2,Betrieb,Hauptteil
 12.8,Customer Account Center,2,Betrieb,Hauptteil
+12.9,Massenanlage und Validierung von Fahrzeuglisten,2,Betrieb,Hauptteil
 13,Reifenprodukte – Tyres,1,Betrieb,Hauptteil
 13.1,Einordnung und Abgrenzung zum Standardprozess,2,Betrieb,Hauptteil
 13.2,"Produkt, Reifentyp und Reifengröße",2,Betrieb,Hauptteil
@@ -132,7 +134,7 @@ kapitel,thema,ebene,bereich,teil
 15.4,Governance und Freigaben auf HQ-Ebene,2,Steuerung,Hauptteil
 15.5,Zusammenarbeit mit Markt und MO,2,Steuerung,Hauptteil
 15.6,Aufgabenbeschreibung versus dokumentierte Navigation,2,Steuerung,Hauptteil
-15.7,"Technical Options, SA-Matching und Coverage-Codes",2,Steuerung,Hauptteil
+15.7,"Technical Options, SA-Matching, Coverage- und Industry-Codes",2,Steuerung,Hauptteil
 16,"Governance, Qualität, Datenschutz und Archivierung",1,Steuerung,Hauptteil
 16.1,Datenschutz und sichere Beispieldaten,2,Steuerung,Hauptteil
 16.2,Datenqualität und Datenführerschaft,2,Steuerung,Hauptteil

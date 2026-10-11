@@ -1,0 +1,19 @@
+# Batch 257 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 9 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management – Änderungen und Hinweise**
+
+Für die Buchhaltung zum Monatsabschluss wurde ein Prozess zur Übergabe von Kostenstammdaten an das System Nemesis definiert. Nemesis dient der Behandlung der buchhalterischen Finanzdaten von Serviceverträgen und integrierten Serviceseiten. Im Mittelpunkt stehen Berechnungen für buchhalterische Zwecke, etwa die Umsatzrealisierung, Vertragsverbindlichkeiten und Rückstellungen. Die Anbindung erfolgt über einen Webservice beziehungsweise eine REST-API. Nemesis stellt dafür einen Endpunkt bereit, an den oneSCM die erforderlichen Daten übermittelt. Die Schnittstelle liefert Informationen zu Verträgen, Vertragserlösen, Vertragsansprüchen (Claims) und Kundendaten. Es gibt einen gemeinsamen Endpunkt für alle Mandanten. Wird beispielsweise ein Fahrzeugvertrag aktiviert, entsteht im oneSCM-Backend ein Vertragsereignis. Der Nemesis-Service übermittelt die Informationen zum aktivierten Vertrag anschließend an Nemesis, sodass das externe System die Daten erhält.
+
+Für Händlerrechnungen werden Informationen zu jedem in oneSCM angelegten Claim bereitgestellt, sofern es sich nicht um einen VEGA-Claim handelt. Dies umfasst sowohl automatisch erzeugte als auch manuell angelegte Claims. Die Ereignisse basieren auf den Werkstatt-Finanzdokumenten. Übermittelt werden unter anderem Länderkennzeichen, Fahrgestellnummer, Vertragsnummer, Händlernummer (VEGA-ID), Werkstattrechnungsnummer und -datum, aktueller Kilometerstand, Reparaturdatum, Währung sowie der Netto-Gesamtbetrag. Das Kennzeichen für die Händlerart wird aus dem Eintrag zur Händlernummer abgeleitet: Ist der Händler konzernintern, wird der Wert 0 (intern) übergeben, andernfalls 1 (extern). Ob eine Rechnung als extern gilt, richtet sich nach der Werkstattrechnungsart. Der Typ CLAI steht für einen VEGA-Claim, die Typen COMM, SPIN, SPMP und WSIN gelten als Nicht-VEGA-Claims und werden als externe Rechnung gekennzeichnet. Die Angaben zu verbrauchten Kontingenten und zur Rückversicherungsgebühr sind vorerst nicht Teil des Umfangs und sollen in einem späteren Planungsinkrement berücksichtigt werden. Die Ereignisse für Händlerrechnungen werden beim Export eines Claims sowie beim Import eines Claims ausgelöst, zum Beispiel beim Import von Lieferanten-Finanzdokumenten.
+
+Im Bereich der Stapelverarbeitung (Batch Job Management) kann die von einem Job erzeugte Datei heruntergeladen werden; diese Funktion ist im Einsatz. Außerdem wurde bei den Schaltflächen „Suchen“ und „Zurücksetzen“ in den Batch-Job-Dateien die Test-ID korrigiert, die sich von der anderer Such- und Zurücksetzen-Schaltflächen unterschied.
+
+Beim Erzeugen von Kampagnenrechnungen wurde geprüft, dass eine Gutschrift für die Kostenstelle erstellt werden kann. Dabei wurden sowohl die Anzeige im Reiter „Preisreduzierung“ als auch die Option „Historie“ über die Schaltfläche „Aktion“ getestet.
+
+Wechselt eine Rechnung von der Mahnstufe 3 zurück in einen früheren Status, wird der zugehörige Vertrag nun wieder aktiviert.
+
+Behoben wurden außerdem ein Fehler im ersten Schritt des Assistenten beim Erzeugen eines Servicevertrags sowie ein Fehler bei der Verarbeitung von Zahlungsplänen, bei dem ein unbekanntes Feld zum Zahlungspflichtigen (Debitorennummer) in der Nachricht zu einer Ausnahme führte.
+
+Die Anforderung, den Jobstatus zwischen mehreren Benutzern dynamisch zu aktualisieren, wurde nicht umgesetzt und abgebrochen.

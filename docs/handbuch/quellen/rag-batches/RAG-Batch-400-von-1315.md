@@ -1,0 +1,17 @@
+# Batch 400 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 7 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Dokumente und Kommunikation: E-Mail-Benachrichtigung bei gekündigtem Vertrag**
+
+Neu im System ist eine E-Mail-Vorlage, mit der bei der Kündigung eines Vertrags automatisch eine Benachrichtigung versendet wird. Ausgelöst wird der Versand, sobald ein aktiver Vertrag im Vertragsmanagement gekündigt wird. Die Vorlage legen Sie im Administrationsbereich unter „Template Management“ im Reiter „Notification“ an. Voraussetzung ist, dass Sie mit den entsprechenden Berechtigungen angemeldet sind und die Vorlagen für Kopf- und Fußzeile bereits definiert sind. Über „Create Template“ und die Auswahl „E-mail“ gelangen Sie zur Erstellungsseite.
+
+Zunächst erfassen Sie die Pflichtangaben: den Vorlagennamen (Textfeld, maximal 25 Zeichen, zum Beispiel „Template-Cancel Status“), den Markt (zunächst auf Deutschland voreingestellt, künftig abhängig vom Land) und das Feld „Used For“, in dem Sie für diese Vorlage „Cancellation“ auswählen. Außerdem legen Sie fest, ab welchem Datum („Valid From“) die Vorlage für den Geschäftsprozess gelten soll. Sind Pflichtfelder nicht ausgefüllt, weist das System auf das betreffende Feld hin. Dann ist zwar „Save as Draft“ möglich, „Publish“ jedoch nicht.
+
+Optional können Sie weitere Angaben machen: die Division (zunächst PC, Van folgt später), die Marke (zunächst Mercedes-Benz, Smart folgt später) und die Sprache, die sich nach der Marktrolle des Benutzers richtet und zunächst Englisch ist.
+
+Anschließend erfassen Sie den E-Mail-Inhalt gemäß dem Mercedes-Benz-Styleguide für E-Mails. Der Betreff lautet „Service Contract Cancelled (Contract Number: %Contract Number)“. Der Text spricht den Kunden mit Vor- und Nachnamen an und informiert darüber, dass der Servicevertrag zum Kündigungsdatum gekündigt wurde. Damit sind entsprechende Wartungs- und Reparaturleistungen in autorisierten Servicebetrieben nicht mehr abgedeckt. Es folgen die Vertragsdetails: Vertragsnummer (zum Beispiel DEPE001A), Fahrgestellnummer, Kennzeichen und Produkt (zum Beispiel Excellent). Das Kennzeichen wird nur angezeigt, wenn ein Wert vorhanden ist, andernfalls entfällt das Feld in der E-Mail. Der Text endet mit dem Hinweis, sich bei Fragen an das Customer-Support-Team zu wenden, der Grußformel „Service Contract Team, Mercedes-Benz Cars Germany“, den marktspezifischen Kontaktdaten (Telefonnummer und E-Mail-Adresse) und dem Hinweis, die Umwelt vor dem Drucken zu bedenken.
+
+Mit „Send Test E-mail“ senden Sie sich selbst eine Testmail im identischen Format wie die spätere Kundenmail, einschließlich Betreff, Kopfzeile, Fußzeile und Inhalt. So sehen Sie, wie die E-Mail beim Empfänger aussieht. Mit „Save as Draft“ speichern Sie einen Entwurf, der noch nicht für Geschäftsprozesse gilt. Mit „Publish“ veröffentlichen Sie die endgültige Version. Sie wird entsprechend dem Gültigkeitsdatum („Valid From“) angewendet.
+
+Darüber hinaus wurden mehrere Fehler behoben. Der Platzhalter für den Nachnamen des Kunden war nur mit einer geschweiften Klammer geschrieben und wird nun korrekt dargestellt. Zudem kann die Angabe „Used For“ nicht mehr mehrfach auf derselben Vorlage vorkommen.

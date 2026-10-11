@@ -1,0 +1,19 @@
+# Batch 18 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 19 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Fahrzeugverwaltung: Import von Fahrzeugstammdaten und Baumuster-Suche
+
+Die Fahrzeugverwaltung wurde um den Import von Transporter-Stammdaten aus CePro erweitert. Übernommen werden die Baumuster-Nummer (zum Beispiel 907857), Klasse, Baureihe, Motortyp, Bezeichnung, Modelljahr und Motor. Hinzu kommen die Tonnage (zum Beispiel IT5 oder IT9), die Nebenabtriebsangabe (PTO, Power Take Off) und der Antriebstyp (zum Beispiel 4x4 oder 2x4).
+
+Bei der Synchronisation mit CePro wurden zwei Fehler behoben. Zum einen wurden Fahrzeugtypen, bei denen sich nur der Motor geändert hatte, nicht aktualisiert, weil der Motor beim Abgleich der empfangenen Daten mit den vorhandenen Datensätzen nicht berücksichtigt wurde. Zum anderen war die Beziehung zwischen Motor und Fahrzeugtyp im Code inkonsistent definiert. Sie wurde korrigiert, und die Stellen, an denen der Motor verarbeitet wird, wurden angepasst.
+
+Auch die Pflege der Motorbaureihen wurde verbessert. Zuvor trat beim Ändern der Zylinderanzahl oder der Eigenschaft „High Performance Engine“ (HPE) mitunter ein Fehler auf, sodass die Änderung nicht gespeichert wurde. Diese Eigenschaften lassen sich nun zuverlässig und ohne Fehlermeldung aktualisieren. Bei der Suche nach einer Motorbaureihe blieb die Suchschaltfläche teilweise im Ladezustand hängen. Wurde keine Baureihe gefunden, erschien außerdem eine Fehlermeldung, die nicht mehr verschwand. Jetzt bleibt die Schaltfläche nicht mehr hängen, und bei fehlenden Treffern wird stets die Ansicht „No data to display“ ohne zusätzliche Meldung angezeigt.
+
+Die Seite „Search Baumuster“, erreichbar unter Product Management > Manage Vehicle Groups, wurde in mehreren Punkten überarbeitet. Die Sortierung der Spalten „Motor Cylinder“, „High Performance Engine“ und „Engine Modal Series“ führte zuvor zu einer Fehlermeldung und wurde korrigiert. Beim erstmaligen Öffnen der Seite erschien ohne erkennbaren Grund eine Fehlermeldung, die nun bei erfolgreichem Laden der Daten nicht mehr angezeigt wird. In der Spalte „High Performance Engine“ werden statt „true“ und „false“ nun „Yes“ und „No“ dargestellt.
+
+Beim Wechsel der Seitengröße von einer kleineren auf eine größere Anzahl von Einträgen erschien zuvor die Meldung „No data to display!“. Nun wird automatisch die letzte Seite für die gewählte Anzahl angezeigt. Unter „More Filters“ wurden zudem zwei Probleme behoben: Der Filter „High Performance Engine“ zeigte keine Einträge, und bei der Auswahl eines Filterkriteriums wurden keine Optionen angeboten. Die Optionen basieren nun auf den Daten aus CePro oder von der Vehicle-Admin-Seite, und die Baumuster-Liste wird beim Anwenden eines Filters entsprechend gefiltert.
+
+Beim Anlegen einer Fahrzeuggruppe im Bereich Product Management, Abschnitt Vehicle Groups, über die Schaltfläche „Create Vehicle Group“ werden die Eingaben nun geprüft. Der Name der Fahrzeuggruppe darf höchstens 25 Zeichen umfassen und keine Sonderzeichen enthalten. In den Details der Fahrzeuggruppe sind Sonderzeichen ebenfalls nicht zulässig.
+
+Zusätzlich wurde das Zuordnen von Baumustern zu Fahrzeuggruppen geprüft. Dies umfasst, dass verfügbare Fahrzeuggruppen nur einzeln ausgewählt werden können, dass die Schaltfläche zum Hinzufügen erst aktiv wird, wenn ein oder mehrere noch nicht zugeordnete Baumuster ausgewählt sind, und dass Baumuster einer Fahrzeuggruppe hinzugefügt werden können. Ebenso wurde die Suche nach einer nicht vorhandenen Motorbaureihe getestet. Die Prüfung, ob geänderte Tabellendaten gespeichert werden und über die Suche wiederauffindbar sind, ist derzeit noch in Arbeit.

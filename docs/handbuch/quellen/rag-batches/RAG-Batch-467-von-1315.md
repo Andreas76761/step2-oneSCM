@@ -1,0 +1,17 @@
+# Batch 467 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 6 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Dokumente und Kommunikation: Vertragsvorlagen und Signaturen in der Vorlagenverwaltung**
+
+Marktvertreter können für Vertragsaktivierungen und Angebote Vorlagen verwenden, die dem Mercedes-Benz-Styleguide entsprechen. Sie lassen sich an die Anforderungen des jeweiligen Marktes anpassen. Die Vertragsvorlagen wurden dafür um mehrere Angaben erweitert: die Daten des Verkäufers, das aktuelle Ausstellungsdatum des Vertrags bzw. Entwurfs, ein Wasserzeichen für den Entwurfsstatus sowie Signaturfelder für zwei Vertreter von Mercedes-Benz und eine Unterschrift des Kunden.
+
+Für ein Vertragsangebot (Status „Created“) enthält die Vorlage das aktuelle Datum, Name, Telefonnummer und E-Mail-Adresse des Verkäufers sowie Name und Adresse des Händlers. Das Datum entspricht dem Systemdatum zu dem Zeitpunkt, zu dem der Entwurf bzw. der Vertrag für den Kunden bereitgestellt wird. Die Verkäufer- und Händlerdaten werden über die ALICE-API vorbelegt. Das Angebot trägt das Wasserzeichen „DRAFT“ in einem Winkel von 45 Grad. Die Deckkraft liegt bei 20 bis 30 Prozent, höchstens jedoch bei 40 Prozent. Das Wasserzeichen wird in der Vorlagenverwaltung hinterlegt und erscheint ausschließlich im Status „Created“. Signaturen enthält das Angebot nicht.
+
+Für eine Vertragsaktivierung (Status „Active“) enthält die Vorlage das Ausstellungsdatum und einen Signaturbereich mit den Texten „Signed for and on behalf of Mercedes-Benz“ und „Signed for and on behalf of customer“. Ein Wasserzeichen wird hier nicht angezeigt. Die Signaturen der Mercedes-Benz-Vertreter müssen in der Vorlagenverwaltung angelegt werden und sind Voraussetzung dafür, dass ein Vertrag erstellt werden kann. Eine Signatur besteht entweder aus Vor- und Nachname sowie der Position bei Mercedes-Benz oder aus einem hochgeladenen Bild der eingescannten Unterschrift, ebenfalls mit Name und Position. Das Signaturdatum wird erfasst. Der Hintergrund einer hochgeladenen Signatur muss exakt dem Hintergrund des Vertrags entsprechen, es darf kein Kontrast sichtbar sein.
+
+Verträge, die eine Kundenunterschrift erfordern, sind für die Integration mit dem digitalen Signaturdienst (DSS) vorbereitet. Dazu muss die Vorlage oberhalb der Unterschriftsstelle des Kunden den Tag „!DigSign_1“ enthalten. Muss ein zweiter Kunde unterschreiben, wird zusätzlich der Tag „!DigSign_2“ verwendet. Der Tag ist nicht sichtbar (weiße Schrift auf weißem Hintergrund) und dient dazu, dass der DSS-Dienst ihn erkennt und das Signaturfeld an der richtigen Stelle platziert.
+
+Je nach Zahlungsart (monatlich oder einmalig) wird dem Vertrag ein Zahlungsplan nach MB-Standard beigefügt, den das Revenue Management erzeugt. Beim Angebot ist er mit dem Wasserzeichen „DRAFT“ versehen, bei der Vertragsaktivierung ohne Wasserzeichen.
+
+Die Vorlagenverwaltung wurde außerdem um einen Bereich für Signaturen erweitert. Dort können Benutzer neue Signaturen anlegen, bestehende Signaturen bearbeiten und angelegte Signaturen löschen. Die Erstellung einer neuen Signatur lässt sich auch nach der Eingabe von Daten abbrechen. Werden die Felder bei der Erstellung nicht korrekt befüllt, erscheint für jedes betroffene Feld eine Fehlermeldung, und die Signatur kann nicht angelegt werden.

@@ -1,0 +1,17 @@
+# Batch 502 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Blockvorlagen erstellen**
+
+Im Bereich „Documents" können Sie Blockvorlagen anlegen. Blöcke sind statische Inhalte, beispielsweise rechtliche Texte, die sich in anderen Vorlagen wie SEPA- oder Vertragsvorlagen wiederverwenden lassen. So sparen Sie Zeit, wenn Sie weitere Vorlagen erstellen. Voraussetzung ist, dass Sie sich mit den passenden Zugangsdaten angemeldet haben. Wählen Sie anschließend im Reiter „Documents" den Weg über „Create Templates" und dann „Blocks". Sie gelangen daraufhin auf die Seite zur Erstellung einer Blockvorlage, die sich an der vom Kunden freigegebenen UI-Gestaltung und am Mercedes-Benz Workbench orientiert.
+
+Die Seite gliedert sich in die Bereiche „Template Setup" und „Template Details". Im Template Setup sind der Vorlagenname, der Markt und das Gültig-ab-Datum Pflichtangaben. Der Vorlagenname ist ein Eingabefeld, in dem beispielsweise ein Text wie „Datenschutztext" mit maximal 56 Zeichen eingetragen werden kann. Der Markt wird über ein Dropdown-Feld ausgewählt. Die verfügbaren Werte richten sich nach Ihrer Benutzerrolle, vorbelegt ist Deutschland. Das Datum „Valid From" wählen Sie über einen Datepicker. Es sind nur das aktuelle Datum und zukünftige Daten zulässig, Daten in der Vergangenheit werden nicht akzeptiert.
+
+In den Template Details stehen drei optionale Dropdown-Felder zur Verfügung. Beim Geschäftsbereich (Division) ist im MVP „PC" (Personal Car) auswählbar, „VAN" folgt erst nach dem MVP. Bei der Marke (Brand) steht im MVP Mercedes-Benz zur Verfügung, Smart folgt später. Die Sprache (Language) richtet sich nach der Rolle des Benutzers im jeweiligen Markt, im MVP ist Englisch verfügbar.
+
+Den Inhalt des Blocks gestalten Sie im WYSIWYG-Editor. Dort können Sie Text direkt eingeben oder einfügen. Der Editor ist gemäß den Layout-Richtlinien formatiert. Da Blockvorlagen vom Typ STATIC sind, werden weder Druckvariablen noch Komponenten benötigt.
+
+Für die Bearbeitung stehen drei Schaltflächen bereit. Mit „Save as Draft" speichern Sie die Vorlage als Entwurf, wofür das Pflichtfeld „Template Name" ausgefüllt sein muss. Der Entwurf wird 30 Tage aufbewahrt und kann in dieser Zeit bearbeitet werden, danach wird er gelöscht. Mit „Publish" erstellen Sie die Vorlage. Mit „Cancel" brechen Sie den Vorgang ab. Wurden bereits Daten in ein Feld oder in den Editor eingegeben, erscheint ein Hinweis auf drohenden Datenverlust. Wählen Sie dort „Cancel", wird nur der Hinweisdialog geschlossen. Mit „Proceed" werden die Daten nicht gespeichert, und Sie kehren zur vorherigen Seite zurück. Wurden keine Daten eingegeben, gelangen Sie direkt zur vorherigen Seite, abhängig vom gewählten Navigationspfad.
+
+Nach der Erstellung steht der Block entsprechend seiner Parameter im Bereich „Blocks" des WYSIWYG-Editors zur Wiederverwendung in anderen Vorlagen bereit. Wird eine neue Version eines Blocks erstellt, gilt die alte Version als veraltet und ist im Bereich „Blocks" nicht mehr verfügbar.

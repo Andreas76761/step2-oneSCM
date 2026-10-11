@@ -1,0 +1,21 @@
+# Batch 523 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Marktsprache und Support-Modus: Trennung von Oberflächen- und Inhaltssprache**
+
+In oneSCM lassen sich die Sprachen für jeden Markt unter Market Settings > Market Config > General Settings > Format > Languages festlegen. Bisher wirkt sich die Auswahl einer Sprache sowohl auf die Benutzeroberfläche als auch auf die Inhalte aus, beispielsweise auf Dokumentvorlagen. Das führt zu einem Zielkonflikt: Die Zentrale (HQ) und die Global Lead (GL) möchten in jeder Marktumgebung Englisch nutzen können, etwa um Vorfälle nachzustellen. Die Märkte wollen Englisch hingegen nicht aktivieren, weil sie sonst englische Dokumente und Geschäftsbedingungen pflegen müssten und keine Verträge in englischer Sprache abgeschlossen werden sollen.
+
+Als Kompromiss bleibt pro Markt eine Sprachliste in den Market Settings bestehen, Englisch wird darin jedoch gesondert behandelt. Wird Englisch abgewählt, bleibt es dennoch als reine Oberflächensprache verfügbar. Für Inhalte wie Dokumentvorlagen oder Produktbeschreibungen ist Englisch dann nicht mehr erforderlich. Alle übrigen Sprachen gelten weiterhin sowohl für die Oberfläche als auch für die Inhalte. Hat ein Benutzer Englisch als Oberflächensprache gewählt, ist Englisch für Inhalte aber deaktiviert, werden die Inhalte in der Sprache angezeigt, die in den Market Settings als Standardsprache markiert ist.
+
+Die Option erscheint als „English (support mode)“ in den Spracheinstellungen. Sie steht ausschließlich berechtigten Support- und Administrator-Benutzern zur Verfügung. Reguläre Marktbenutzer und Händlerbenutzer sehen sie nicht; ihnen werden nur die für den Markt ausgewählten Sprachen angeboten. Für den Markt werden keine englischen Dokumentvorlagen angelegt.
+
+Aktiviert ein berechtigter Benutzer den Support-Modus, wechselt die Anzeigesprache auf Englisch, und ein sichtbarer, dauerhaft eingeblendeter Hinweis zeigt auf jeder Seite, dass der Modus aktiv ist. Bildschirmtitel, Menüeinträge, Schaltflächen und Feldbezeichnungen erscheinen dann auf Englisch. So können Support-Mitarbeitende beispielsweise ein Problem im französischen Markt untersuchen, ohne durch die Sprache eingeschränkt zu sein, während alle Geschäftsdaten in Französisch bleiben.
+
+Der Support-Modus lässt sich jederzeit wieder ausschalten, auch mitten in einem Arbeitsablauf. Die Oberfläche kehrt dann sofort zur zuvor gewählten Marktsprache zurück, der Hinweis verschwindet, und der Arbeitsfortschritt geht nicht verloren. Die Aktivierung betrifft ausschließlich den jeweiligen Benutzer; andere Benutzer desselben Marktes behalten ihre eigene Anzeigesprache.
+
+Der Support-Modus wirkt sich nur auf die Oberfläche aus. Erzeugte Dokumente, E-Mails an Kunden und kundensichtbare Verträge werden nicht auf Englisch erstellt, sondern in der ausgewählten Marktsprache, und die verwendeten Vorlagen entsprechen ebenfalls dieser Sprache. Englische Texte aus den Oberflächenübersetzungen gelangen nicht in Dokumente. Beim Bearbeiten und Speichern bestehender Datensätze werden sprachabhängige Feldwerte nicht durch englische Übersetzungen überschrieben. Auch Werte aus Auswahllisten werden in der Marktsprache gespeichert und nicht als englische Übersetzung der Option.
+
+**Einheitliche Schreibweise der Abkürzung für Kilometer**
+
+Die Abkürzung für Kilometer wurde in oneSCM bisher uneinheitlich verwendet, meist als „Km“, teilweise als „km“. Künftig wird für alle Märkte und in allen Sprachen einheitlich die Schreibweise „km“ verwendet. Dies betrifft insbesondere den Produktdefinitionsprozess, den Vertragserstellungsprozess, die Vertragsdetailseite mit dem Reiter „Vertrag“, die Definition und die Tabellen der Vertragsprüfprofile sowie auf der Vertragsdetailseite im Reiter „Fahrzeug“ die Tabelle der Kilometerstandshistorie. Ziel ist, dass „Km“ in oneSCM nirgends mehr vorkommt.

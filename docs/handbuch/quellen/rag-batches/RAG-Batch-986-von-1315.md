@@ -1,0 +1,21 @@
+# Batch 986 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**MBLD – Vertragserstellung (Phase 1)**
+
+Bisher konnten Serviceverträge ausschließlich in der oneSCM-Anwendung selbst angelegt werden; eine Anbindung externer Systeme war nicht vorgesehen. Mit Phase 1 der Anbindung von MBLD (Mercedes-Benz Leasing Deutschland) wird dies erweitert: Ein externes System kann nun Serviceverträge erstellen, sodass die Anwendung darüber Umsatz generieren kann. Der gesamte Ablauf findet im Backend statt, es ist keine Änderung der Benutzeroberfläche erforderlich. Voraussetzungen sind, dass jede Anfrage ein unterscheidendes Merkmal enthält, anhand dessen oneSCM den Ablauf für den Anfragenden anpasst, dass alle Anfragen über den Edge Service (Aggregator) laufen und dass MBLD in oneSCM als Geschäftskunde angelegt ist.
+
+Zunächst fragt MBLD über den Edge Service bei der Produktdomäne ein Produkt samt Preis für eine bestimmte Konfiguration an. Die Produktdomäne liefert Produkt und Preis über den Aggregator zurück. Das Angebot ist 30 Tage gültig. Möchte MBLD Konfiguration oder Produkt ändern, muss die Produktdomäne erneut angefragt werden, wobei neue Preise ermittelt werden.
+
+Innerhalb der Angebotsgültigkeit ruft MBLD die Domäne Contract Generation über den Aggregator auf, um eine Service-Leasing-Anfrage zu erstellen. Mitzuliefern sind das Produkt, Laufzeit und Laufleistung (LZ/LL) als Gesamtvertragsdauer und Gesamtlaufleistung, der Betrag, das Baumuster, die SA-Codes, der Industry Type, die Deal-ID, die SC-Action-ID, die Individual-Condition-ID, die VdZ-Kunden-ID sowie das SC-Kundensegment. Alle übermittelten Attribute werden auf Vertragsebene gespeichert. Das System rechnet LZ/LL in die Vertragsdauer und die jährliche Laufleistung um, die sich aus der Gesamtlaufleistung geteilt durch die Vertragsdauer ergibt. Offen ist derzeit, ob die Maßeinheit für die Distanz mitgeliefert wird und ob der Betrag netto oder brutto angegeben wird.
+
+Anschließend legt das System das Angebot (Proposal) im Status „Created“ an, wobei sämtliche Systemprüfungen übersprungen werden. Dies betrifft Fahrgestellnummer, Laufleistung, Produkt, Preise, Kennzeichen, FRD, Kundendublettenprüfung, Prüfungen im Zusammenhang mit dem FI-System sowie den CAS-Check. Die Rechnung wird auf „nicht gesammelt“ gesetzt, eine Referenznummer wird vergeben und über den Aggregator an MBLD gesendet.
+
+Im weiteren Verlauf des Angebots sind Stornierung und Konfigurationsänderung durch MBLD erst für PI10 vorgesehen. Ob die Gültigkeit des Angebots marktspezifisch konfigurierbar sein soll, ist noch offen. Bestätigt MBLD den Servicevertrag innerhalb der Gültigkeit, liefert MBLD die fehlenden Angaben nach: Fahrgestellnummer, Kennzeichen, FRD und Vertragsbeginn (dessen genaue Ausgestaltung noch zu klären ist), außerdem ein Status-Update. Der Vertragsmicroservice aktualisiert den Vertrag entsprechend. Bei der Aktivierung werden CAS-Check und Signatur übersprungen, und die Verträge beziehungsweise Angebote werden nicht in die MO-Checks aufgenommen.
+
+Bei der Aktivierung des Vertrags werden die Vertragsinformationen im Vertragsmanagement angezeigt, sichtbar ausschließlich für MO und MPC. Zudem wird die i155 erzeugt, die Daten werden an das Revenue Management übermittelt, und die Aktivierung wird an MBLD bestätigt.
+
+Die Historie wird vereinfacht und zeigt nur zwei Einträge. Beim Anlegen lautet das geänderte Objekt „Contract“, der Grund „Contract Proposal created“, der alte Wert „-“ und der neue Wert „Created“. Bei der Aktivierung lautet der Grund „Contract Activated“, der alte Wert „Created“ und der neue Wert „Active“. Das Datum wird jeweils im Format TT.MM.JJJJ gemäß den Markteinstellungen ausgegeben. Wer als Ändernder angezeigt wird (vorgesehen ist oneSCM), ist noch zu bestätigen.
+
+Auf der Startseite des Vertragsmanagements erscheinen alle aktivierten Serviceverträge von MBLD in der Spalte „Created By“ mit dem Wert „MBLD“. Nach diesem Attribut kann gefiltert werden, sodass Verträge aller Systeme oder gezielt nur die von oneSCM beziehungsweise von MBLD angezeigt werden können.

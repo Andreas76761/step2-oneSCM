@@ -1,0 +1,27 @@
+# Batch 1238 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Produktzusammenfassung und Zahlungsoptionen beim Anlegen eines Produkts**
+
+Beim Anlegen eines neuen Produkts in der Produktkalkulation durchläuft der MPC-Benutzer einen mehrstufigen Assistenten. Die Zahlungsoptionen bilden dabei den sechsten Schritt, die Produktzusammenfassung den letzten, siebten Schritt.
+
+**Schritt 6: Zahlungsoptionen**
+
+Sobald alle Pflichtangaben des vorherigen Schritts „Fahrzeugvoraussetzungen" vollständig sind, gelangt der MPC-Benutzer zum Schritt „Zahlungsoptionen". Hier legt er die zahlungsbezogenen Einstellungen fest und bestimmt damit, welche Optionen Kunden beim Kauf eines Produkts zur Verfügung stehen. Für jeden Bereich unter „Zahlungsoptionen" ist ein Wert auszuwählen. Die Auswahl erfolgt jeweils über eine Dropdown-Liste. Derzeit gelten die Vorgaben für das MVP sowie für den Blueprint „Excellent". Für das Zahlungsintervall stehen „einmalig" und „monatlich" zur Verfügung, beide sind für MVP und Excellent Blueprint vorgesehen.
+
+Damit die Schaltfläche „Weiter" aktiv wird, muss mindestens eine Zahlungsmethode ausgewählt sein. Sobald ein Zahlungsintervall über das zugehörige Kontrollkästchen gesetzt wurde, erscheint darunter ein neues Eingabefeld. Daneben wird die Marktwährung angezeigt, die nicht editierbar ist. Das Feld nimmt maximal fünf numerische Zeichen auf, wovon zwei Nachkommastellen sind, zum Beispiel 112.50. Der eingegebene Wert dient dazu, den zusätzlichen monatlichen Aufschlag zu berechnen, der im Vertragserstellungsprozess anfällt, wenn der Kunde das jeweilige Zahlungsintervall wählt. Das Feld für den einmaligen Aufschlag trägt die Bezeichnung „One time markup", das Feld für den monatlichen Aufschlag die Bezeichnung „Markup per month". Bei ungültigen Eingaben erscheint eine Fehlermeldung mit dem Hinweis, dass für den ganzzahligen Teil drei numerische Zeichen und höchstens zwei Nachkommastellen zulässig sind.
+
+In diesem Schritt stehen folgende Navigationsaktionen zur Verfügung: „Abbrechen" verwirft die Änderungen und führt zurück zur Produktübersicht. „Als Entwurf speichern" sichert alle Änderungen dieser Seite sowie der vorherigen Schritte und leitet ebenfalls zur Produktübersicht weiter. „Zurück" führt zum vorherigen Schritt und speichert dabei die Änderungen dieser Seite. „Weiter" führt zum nächsten Schritt und speichert ebenfalls die Änderungen dieser Seite. Wird beim Abbrechen mindestens ein Feld befüllt oder geändert, erscheint eine Bestätigungsabfrage. Bestätigt der Benutzer mit „Ja", wird der Assistent geschlossen und die Änderungen werden verworfen. Wählt er „Nein", wird die Abfrage geschlossen und er kehrt zum Assistenten zurück.
+
+**Schritt 7: Produktzusammenfassung**
+
+Der letzte Schritt bei der Produktanlage ist die Zusammenfassung. Hier sieht der MPC-Benutzer alle Einstellungen des neuen Produkts ausschließlich lesend. Angezeigt werden folgende Angaben: Division, Marke, Blueprint, Produktlinie, Blueprint-Produktcode, Produktcode, Produktname, Produktbezeichnung, Zusatzinfotext, Bildpfad samt Anzeige des Bildes, Vertriebsebene, Vertriebskanal, Hauptdeckungen, Vertragslogik, Preismodell, Aufschläge, Rabatte, Modifikationen, Ablauf, Gesamtlaufleistung mit Minimum, Maximum und Schrittweite, Gesamtlaufzeit mit Minimum, Maximum und Schrittweite sowie die Limits für MPC-Benutzer, Händler und Kunden. Sofern vorhanden, werden zudem die Fahrzeugvoraussetzungen angezeigt: ein Fahrzeugalter unterhalb eines festgelegten Wertes, die Wartung des Fahrzeugs nach MB-Standards und der Hinweis, dass das Fahrzeug noch nicht gewartet wurde. Abgeschlossen wird die Anzeige durch Zahlungsintervall, Zahlungsmethode, Zahlungsdauer und Rechnungsvariante.
+
+Die Schaltfläche „Abbrechen" ist stets aktiviert. „Als Entwurf speichern" ist aktiv, wenn der Produktname mit gültigen Informationen befüllt und die Angaben aus Schritt 1 vollständig sind. „Zurück" ist ebenfalls aktiviert. „Absenden" ist aktiv, sobald alle Pflichtfelder gültige Angaben enthalten.
+
+Beim Speichern als Entwurf wird das Produkt mit den bisher erfassten Angaben und dem Status „DRAFT" in der Datenbank abgelegt. Der Assistent wird geschlossen und der Benutzer zur Produktübersicht weitergeleitet. Beim Abbrechen gibt es zwei Fälle: Wurde in keinem Feld etwas geändert, wird der Assistent einfach geschlossen, und es werden keine Daten in der Produktübersicht gespeichert. Wurde mindestens ein Feld geändert, erscheint die Meldung „You have unsaved changes in your product configuration. Canceling will result in losing any changes you made". Bestätigt der Benutzer, wird der Assistent geschlossen und die Änderungen werden verworfen. Lehnt er ab, wird die Meldung geschlossen und er kehrt zum Assistenten zurück. Mit „Zurück" gelangt der Benutzer zur vorherigen Seite. Mit „Absenden" wird das Produkt mit allen konfigurierten Informationen in der Datenbank gespeichert, erhält den Status „Created" und wird in der Produktübersicht angezeigt.
+
+**Gestaltung**
+
+Die Oberfläche entspricht der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.

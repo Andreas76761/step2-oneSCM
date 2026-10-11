@@ -1,0 +1,33 @@
+# Batch 17 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 6 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Fahrzeuggruppen verwalten**
+
+Die Seite zur Verwaltung von Fahrzeuggruppen heißt künftig „Manage Vehicle Groups" und kommt ohne Tabs aus. Fahrzeuggruppen lassen sich über ein Suchfeld nach ihrem Namen durchsuchen. Die Suche wird entweder mit der Eingabetaste oder über die Schaltfläche „Suchen" gestartet; zu beiden Bedienelementen gibt es einen Tooltip. Zusätzlich stehen zwei Dropdown-Felder zur Verfügung: Im ersten wählen Sie ein Produkt aus. Es enthält nur Produkte, die mindestens eine Preisversion besitzen. Das zweite Dropdown für die Preisversion bleibt deaktiviert, bis ein Produkt ausgewählt wurde. Danach enthält es ausschließlich die Preisversionen des gewählten Produkts. Mit der X-Schaltfläche, die ebenfalls einen Tooltip besitzt, setzen Sie Suchfeld und Dropdowns zurück und leeren die Ergebnisliste. Die Suche nach Fahrzeuggruppen sowie das Verhalten des Preisversions-Dropdowns sind als Testfälle vorgesehen, die Umsetzung ist noch offen bzw. befindet sich in der Verwendung.
+
+Die Ergebnisse erscheinen als Karten. Jede Karte zeigt den Namen der Fahrzeuggruppe als Titel und darunter das Datum der letzten Änderung sowie das Kurzkürzel des Bearbeiters. Außerdem werden die beim Anlegen gespeicherten Filter als Labels angezeigt. Die Fußzeile links nennt das Produkt, in dem die Gruppe verwendet wird, und rechts ist zu sehen, ob die Gruppe einem Cluster zugeordnet ist. Wurde eine Fahrzeuggruppe ausgewählt oder neu angelegt, werden die gespeicherten Filter als Labels neben den Dropdowns dargestellt.
+
+**Fahrzeuggruppen in einem Ablauf anlegen**
+
+Bisher wurde eine Fahrzeuggruppe zunächst als Container mit Name und Beschreibung definiert, und die Baumuster mussten anschließend auf einer anderen Seite zugewiesen werden. Künftig geschieht dies in einem durchgängigen Prozess, damit keine Gruppe ohne Baureihen bleibt. Der Ablauf kann aus der Übersicht der Fahrzeuggruppen oder von der Seite „Cluster anlegen" gestartet werden.
+
+Im ersten Schritt aus der Übersicht geben Sie Name und Beschreibung wie bisher ein und wählen ein Produkt sowie eine Preisversion. Das Produkt bestimmt, in welchem Produkt die Gruppe verwendet werden kann, die Preisversion legt fest, in welcher Preisversion sie gilt. Auch hier enthält das Produkt-Dropdown nur Produkte mit Preisversion, und das Preisversions-Dropdown wird erst nach der Produktauswahl aktiv. Bei „Abbrechen" erscheint, falls ungespeicherte Änderungen an Name, Beschreibung, Produkt oder Preisversion vorliegen, ein Dialog, in dem Sie bestätigen, den Vorgang zu verlassen und Daten zu verlieren, oder zum Assistenten zurückkehren. Ohne ungespeicherte Änderungen führt „Abbrechen" direkt zur Liste der Fahrzeuggruppen. „Weiter" wird aktiv, sobald alle Pflichtfelder korrekt und mit den Mindestangaben gefüllt sind, und führt zur Zuweisung der Baureihen.
+
+Beim Start von der Seite „Cluster anlegen" gibt es im Dropdown für Fahrzeuggruppen eine neue Option zum Anlegen einer Gruppe. Die neu erstellte Gruppe wird automatisch dem Cluster zugewiesen, das gerade definiert wird. Name und Beschreibung funktionieren wie bisher. Bei „Abbrechen" erscheint der Bestätigungsdialog, wenn Name oder Beschreibung ungespeicherte Änderungen enthalten. Ohne Änderungen gelangen Sie zur Liste der Fahrzeuggruppen, und bei leeren Feldern direkt zurück zur vorherigen Seite „Cluster anlegen".
+
+Im zweiten Schritt weisen Sie Baureihen zu. Es stehen dieselben Filtermöglichkeiten wie auf der Übersichtsseite zur Verfügung. Die Suche nach Baureihen funktioniert mit Teilen der Baureihe und findet Treffer, die mit dem Suchbegriff beginnen, enden oder ihn enthalten. Mindestens drei numerische Zeichen sind erforderlich. Die Eingabetaste löst die Suche aus, sofern eine gültige Eingabe vorliegt, bzw. die Filterung, sobald mindestens ein Filter gesetzt ist. Die X-Schaltfläche löscht Suchbegriff, Filter und Ergebnisse; sie besitzt wie das Suchfeld einen Tooltip. Zusätzliche Filter lassen sich über „Show more filters" einblenden und über „Hide More Filters" wieder schließen. Die Filterlogik bleibt unverändert, die Ergebnisse werden paginiert angezeigt, die Spalten haben eine neue Reihenfolge, und die angewendeten Filter erscheinen als Labels. Baureihen, die bereits anderen Fahrzeuggruppen derselben Preisversion zugewiesen sind, werden in der gesamten Zeile ausgegraut. Die Auswahlbox entfällt, und „Weiter" wird aktiv, sobald ein Filter angewendet wurde.
+
+Im dritten Schritt, der Übersicht, sehen Sie oben eine Karte mit Gruppenname und Beschreibung und darunter die zuvor zugewiesenen Baureihen. Mit „Erstellen" wird die Fahrzeuggruppe angelegt.
+
+**Fahrzeugkilometerstand in Echtzeit**
+
+Bisher wurde der Kilometerstand nach Eingabe von Fahrgestellnummer und FRD manuell erfasst. Künftig wird er nach Eingabe von Fahrgestellnummer und FRD automatisch aus Fahrzeugdaten übernommen, damit die passenden Produkte anhand aktueller und genauer Informationen ermittelt werden. Nach der ersten Anfrage mit VIN/FIN wird, sofern verfügbar, der aktuellste Kilometerstand sowohl an die Vertragserstellung übermittelt als auch zur Ermittlung der infrage kommenden Produkte genutzt. Ein Kilometerstand je FIN/VIN kann zwei Wochen gespeichert und für die erste Antwort sowie die Produktermittlung verwendet werden. Nach Ablauf dieser Frist wird er bei einer neuen Anfrage aktualisiert. Zusätzlich wird der Zeitstempel der Erfassung mitgesendet. Der Abruf erfolgt erst, nachdem der Kunde den Vertrag unterschrieben bzw. bestätigt hat. Diese Funktion ist fertiggestellt.
+
+**Kraftstoffart aus VeDoc**
+
+Zuvor wurden keine Informationen zur Kraftstoffart gespeichert oder mit Produkten und Preisen übermittelt. Nun wird die Kraftstoffart des abgefragten Fahrzeugtyps ermittelt, gespeichert und bei der Bereitstellung von Produkten und Preisen an Stream2 gesendet.
+
+**Korrekturen bei Baumuster- und Fahrzeugtypfiltern**
+
+Eine Fehlerbehebung betrifft die Filterkriterien für Fahrzeugtypen im Backend. Da die Motor-Entität in das Fahrzeugtyp-Modell verschoben wurde, wurde der Bezugspfad für Motorbaureihe, Motorzylinder und Hochleistungsmotor auf „vehicleTypeModel.engine" angepasst. Ein weiteres Problem, bei dem die Suche nach Baumustern nicht funktionierte, ist ebenfalls geschlossen.

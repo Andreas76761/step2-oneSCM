@@ -1,0 +1,21 @@
+# Batch 246 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 4 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Steuerverwaltung: Übersicht der Steuerarten für einen Markt**
+
+Für jeden Markt muss eine Liste der Steuerarten festgelegt werden, die für diesen Markt verfügbar und anwendbar sind. Diese Liste wird von einem Administrator im Rahmen der Einführung eines Marktes definiert. Die so festgelegten Steuerarten dienen anschließend dazu, den einzelnen Arten konkrete Steuersätze und zusätzlich Gültigkeiten zuzuweisen. Hierfür gibt es auf der Seite „Tax Management" den neuen Reiter „Tax Type".
+
+Im Ausgangszustand ist kein Filter gesetzt. Alle Filterfelder sind leer, und die Tabelle zeigt sämtliche Ergebnisse an. Im Filterbereich kann nach folgenden Kriterien gesucht werden: Beim Feld „Name" wird in der Tabelle nach Einträgen gesucht, die das eingegebene Wort enthalten. Die Felder „Tax Category", „Customer Tax Classification" und „Type" sind Dropdown-Listen, die die in der Datenbank verfügbaren Werte enthalten. Änderungen oder Auswahlen in den Filterfeldern wirken sich nicht automatisch auf die Suchergebnisse aus. Erst ein Klick auf die Schaltfläche „Search" zeigt die Ergebnisse passend zu den gewählten Filteroptionen an. Die Schaltfläche „Reset" setzt die Filterauswahl auf den Ausgangszustand zurück, aktualisiert dabei jedoch nicht die Ergebnisse. Die Schaltfläche „Create Tax Type" wird in einem separaten Epic behandelt.
+
+Die Ergebnisse werden in einer Tabelle mit den Spalten Name, Tax Category, Customer Tax Classification, Type, Customer Classification und Actions angezeigt. Standardmäßig ist die Tabelle nach Name sortiert. Die Funktionen unter „Actions" werden in anderen Epics behandelt.
+
+Übersteigt die Zahl der Ergebnisse die maximale Anzahl an Einträgen pro Seite, werden die Ergebnisse auf mehrere Seiten verteilt, und Administratoren können zwischen den Seiten navigieren. Standardmäßig werden maximal 10 Datensätze pro Seite angezeigt. Über ein Dropdown lässt sich die Anzahl auf 10, 20, 30, 40 oder 50 Datensätze ändern. Der zuletzt gewählte Wert wird nicht dauerhaft gespeichert; nach einer Aktualisierung der Seite gilt wieder der Standardwert von 10 Datensätzen pro Seite. Die Gestaltung entspricht der Mercedes-Benz Workbench sowie dem vom Kunden validierten UI-Design.
+
+**Revenue Management: Gutschrift bei Kündigung eines Vertrags mit Händlerrabatt**
+
+Wird ein Vertrag unter Anwendung des Händlerrabatts („Dealer Discount") aktiviert, wird eine Händlerrechnung (DD) erstellt, die mit der Aktivierung des Vertrags in den Status „akzeptiert" wechselt. Beim nächsten Batch-Lauf von NacosE169 werden diese Rechnungen zur Buchung an Nacos gesendet. Nacos verarbeitet sie, und oneSCM erhält die Rückmeldung „F1 doc created".
+
+Fordert der Benutzer anschließend innerhalb der Kündigungsfrist die Kündigung des Vertrags an, soll das System automatisch eine Gutschrift für den Händler erstellen, um ihn zu entschädigen. Die Gutschrift hat denselben Nettobetrag wie die Rechnung. Sie wird im Reiter „Price Reduction" mit folgenden Angaben angelegt: Der Flow-Typ ist „External dealer discount", die oneSCM-Rechnungsnummer entspricht der oneSCM-Rechnungsnummer der Händlerrechnung, und die Verarbeitungsnummer ist leer (NULL). Als Dokumenttyp wird „Credit" verwendet, als Kundenrechnungstyp „(DD) Dealer Discount". Der Rechnungszeitraum reicht vom Startdatum bis zum Enddatum des Vertrags. Der Nettobetrag entspricht dem Betrag der Händlerrechnung. Rechnungsempfänger ist der Händler, unter dem der Vertrag angelegt und der Händlerrabatt angewendet wurde.
+
+Dieselbe Regelung war auch für den Fall vorgesehen, dass Mitarbeitende des Marktbetriebs (MO) die Händlerrechnung in oneSCM auf den Status „bezahlt" setzen und danach innerhalb der Kündigungsfrist die Vertragskündigung beantragt wird. Auch hier sollte das System automatisch eine Gutschrift mit denselben Angaben erstellen. Abweichend ist in diesem Fall, dass als Beginn und Ende des Rechnungszeitraums jeweils das Startdatum des Vertrags gelten sollte. Beide Anforderungen wurden nicht umgesetzt (Status „Cancelled") und stehen daher in dieser Form nicht zur Verfügung.

@@ -1,0 +1,23 @@
+# Batch 1146 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Preisversionen als neue Version speichern (in Entwicklung)**
+
+Künftig soll es möglich sein, eine bestehende Preisversion zu duplizieren, Änderungen daran vorzunehmen und sie als neue Preisversion zu speichern, etwa Preisversion 1.0 als Grundlage für eine Preisversion 2.0. Bisher sind Änderungen an Preisversionen zwar möglich, sie können aber nicht als neue Version gespeichert werden. Die Funktion soll den Aufwand für Anwender verringern und Zeit sparen. Nutzen können sie dieselben Rollen im Marktumfeld, die schon heute Preisversionen anlegen oder ändern dürfen.
+
+Für jede Preisversion in der Listenansicht steht dazu im Aktionsmenü (drei Punkte) die Option „Duplizieren“ zur Verfügung. Bei der Namensgebung bleibt es bei der bisherigen Vorgehensweise. Beim Duplizieren werden die vollständige Kostenstruktur der Deckungen, alle definierten Preiskomponenten sowie alle zugehörigen Cluster-Konfigurationen aus der Ursprungsversion in die neue Version übernommen. In der duplizierten Preisversion können Anwender den Namen der Preisversion, das Startdatum, die Inflation sowie die Kostenstruktur der Deckungen und technischen Optionen ändern. Als Vorgabe gilt jeweils der Wert der ursprünglichen Preisversion. Haben sich die Inflationseinstellungen in den Markteinstellungen geändert, wird dies übernommen und kann vom Anwender ausgewählt werden. Passt der Anwender die Kostenstruktur an, werden die Cluster-Preise zurückgesetzt, was durch ein Ausrufezeichen-Symbol kenntlich gemacht wird. Die zugehörigen Cluster der Originalversion bleiben erhalten, ihre Konfiguration lässt sich wie bisher ändern. Cluster-Konfigurationen und Preiskomponenten können in der neuen Version hinzugefügt, entfernt oder geändert werden, ohne dass sich dies auf die Originalversion auswirkt.
+
+**Zahlungsart Vorauszahlung und Nachzahlung auf Produktebene (abgeschlossen)**
+
+Die Zahlungsart wird nun auf Produktebene festgelegt. Die Anforderung stammt aus dem indischen und weiteren asiatischen Märkten und wurde als globale Standardfunktion definiert. Bisher erfolgte die Zahlung erst nach der Aktivierung des Vertrags, und die Zahlungsarten waren nicht am Produkt, sondern an Kundentyp und Markt gebunden. Künftig soll ein Vertrag erst nach Zahlungseingang aktiviert werden können, und Endkunden kann die Zahlung vor der Aktivierung angeboten oder vorgeschrieben werden. Die Festlegung auf Produktebene sorgt für einen klaren, einfachen Ansatz: Der Vertrag weiß, welche Zahlungsarten zur Auswahl angezeigt werden, und die Wahl im Angebotsablauf bestimmt den Erlösfluss. Betroffen sind die Rollen MPC, MO, Händler und Händler+.
+
+Die verfügbaren Zahlungsarten werden pro Markt in den Markteinstellungen definiert und in der Preisversion abgebildet. Zur Nachzahlung (Zahlung nach der Aktivierung) zählen Lastschrift (derzeit im Angebotsablauf mit IBAN und SEPA genutzt), Banküberweisung (neu eingeführt) und Kreditkarte (derzeit im Angebotsablauf genutzt). Zur Vorauszahlung (Zahlung vor der Aktivierung) zählt eine Liste von Zahlungsarten, die über M PAY, eine Schnittstelle der Revenue-Domäne, angeboten werden.
+
+In der Preisversion gibt es dafür einen neuen Konfigurationsschritt vor „Zahlung und Provisionen“. Die Auswahlliste enthält ausschließlich die Zahlungsarten, die in den Markteinstellungen des jeweiligen Marktes aktiviert sind, und es ist keine Zahlungsart vorausgewählt. Anwender können mehrere Zahlungsarten auswählen, mindestens eine ist erforderlich. Ein visueller Hinweis samt Tooltip unterscheidet zwischen Vorauszahlung (sofort bzw. vollständig) und Nachzahlung (nach Aktivierung).
+
+Die Auswahl bestimmt, welche Ratenzahlungsintervalle für den Verkaufszahlungsintervall-Zuschlag verfügbar sind. Bei Auswahl ausschließlich von Vorauszahlungsarten ist nur die Einmalzahlung möglich, die monatliche, vierteljährliche, halbjährliche und jährliche Ratenzahlung sind ausgegraut. Bei ausschließlicher Nachzahlung oder einer Mischung aus Vor- und Nachzahlung stehen alle Intervalle zur Verfügung (monatlich, vierteljährlich, halbjährlich, jährlich und einmalig). Beim Speichern der Preisversion werden die gewählten Zahlungsarten samt ihrer Einstufung als Vor- oder Nachzahlung an die Vertragsdomäne übermittelt. Änderungen sind nur in den dafür vorgesehenen Status der Preisversion erlaubt.
+
+**Produktlinienliste für Vans (in Verwendung)**
+
+Die Produktlinienliste für Vans soll aktualisiert werden. Die vorliegenden Angaben enthalten dazu keine weiteren Details.

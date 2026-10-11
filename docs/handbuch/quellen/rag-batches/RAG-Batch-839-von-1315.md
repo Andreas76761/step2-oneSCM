@@ -1,0 +1,25 @@
+# Batch 839 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kurzfristige Verlängerung (Short Term Extension)**
+
+Mit der neuen Funktion „Kurzfristige Verlängerung“ können Mitarbeitende der Market Operations (Rolle Market Operations/MPC) einen aktiven Vertrag um maximal sechs Monate verlängern. Typischer Anwendungsfall ist der Wunsch eines Kunden, den Vertrag bis zur Lieferung eines neuen Fahrzeugs zu verlängern. Die Verlängerung ist nur möglich, wenn der vorhandene Vertrag aktiv ist, das Produkt eine kurzfristige Verlängerung unterstützt (standardmäßig sind alle Produkte entsprechend angelegt), der Vertrag nicht vollständig durch Händler bzw. Kampagne bezahlt wurde und er nicht bereits um insgesamt sechs Monate verlängert wurde.
+
+Zum Start öffnen Sie den betreffenden Vertrag über die Startseite des Vertragsmanagements. Sind alle Voraussetzungen erfüllt, steht im Vertragsstatus die Option „Prolongation“ zur Verfügung; andernfalls ist sie ausgegraut. Die Auswahl startet einen zweistufigen Assistenten.
+
+Im ersten Schritt legen Sie die Eckdaten der Verlängerung fest. Die Verlängerungsart „Short Term“ und die Zahlungsart „Monthly“ sind fest vorgegeben und nicht änderbar. Die Laufzeit wählen Sie in einem Dropdown von einem bis sechs Monaten. Wurde der Vertrag bereits zuvor verlängert, werden nur noch die Optionen angeboten, die das Maximum von sechs Monaten nicht überschreiten. War der Vertrag zum Beispiel schon um zwei Monate verlängert, stehen nur noch ein bis vier Monate zur Auswahl. In diesem Fall erscheint zudem der Hinweis, um wie viele Monate der Vertrag noch verlängert werden kann. Bei Verträgen ohne frühere Verlängerung wird kein Hinweis angezeigt. Für die kurzfristige Verlängerung gilt derselbe Preis wie für den laufenden Vertrag. Mit „Weiter“ gelangen Sie zur Übersicht.
+
+Der zweite Schritt zeigt Übersicht und Bestätigung. Im Kopfbereich sehen Sie Vertragsnummer, Produktname, Produktbild und Produktbeschreibung. Darunter werden die Details der Verlängerung angezeigt: die Art der Verlängerung, die gewählte Laufzeit in Monaten und die Zahlungsart. Eine Vergleichstabelle stellt den bestehenden Vertrag dem Vertrag nach der Verlängerung gegenüber:
+
+Das Vertragsstart-Datum bleibt unverändert. Das geplante Vertragsende verschiebt sich um den Verlängerungszeitraum (zum Beispiel wird aus dem 31.01.2025 bei zwei Monaten der 31.03.2025). Die Vertragsdauer erhöht sich entsprechend (zum Beispiel von 36 auf 38 Monate). Die jährliche Fahrleistung wird neu berechnet, indem die Gesamtfahrleistung auf die verlängerte Laufzeit verteilt wird; bei 20.000 km pro Jahr, drei Jahren und zwei Monaten Verlängerung ergeben sich 18.947 km pro Jahr. Die Gesamtfahrleistung bleibt unverändert. Als Zahlungsart wird für die Verlängerung „Monthly“ angezeigt. Beim Betrag wird für Verträge mit Einmalzahlung der Gesamtbetrag des bisherigen Vertrags angezeigt, bei monatlicher Zahlung die monatliche Rate; nach der Verlängerung wird der Monatsbetrag ausgewiesen.
+
+Mit dem Häkchen bestätigen Sie die Verlängerung. Das System führt sie dann aus und zeigt die Meldung an, dass der Vertrag erfolgreich verlängert wurde. Außerdem wird der Kunde per E-Mail benachrichtigt. Es wird eine i155-Nachricht erzeugt, die das neue geplante Vertragsende enthält und an Vega übermittelt wird, und das Revenue Management wird informiert, damit die Rechnungen passend zur gewählten Zahlungsart erstellt werden. Zusätzlich zählt das System die Verlängerungen des Vertrags mit. Jede Verlängerung wird dokumentiert; insgesamt sind höchstens sechs Monate möglich, etwa fünf Verlängerungen um je einen Monat.
+
+Zur Bedienung: Mit „X“ brechen Sie den Verlängerungsvorgang ab, mit „<“ gehen Sie eine Seite zurück, und mit „>“ gelangen Sie zur nächsten Seite, sofern alle Pflichtfelder ausgefüllt sind. Sind Pflichtfelder nicht ausgefüllt, werden diese markiert, und die Schaltfläche „>“ bleibt aktiv. Die Oberfläche folgt den Vorgaben des Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.
+
+**Weitere Korrekturen im Vertragsmanagement**
+
+Im Rahmen dieses Releases wurden mehrere Fehler behoben. In der Registerkarte „Communications“ erschien beim Klick auf „Print Contract“ die Fehlermeldung „query did not return a unique result: 2“. Außerdem war ein Vertrag im Vertragsmanagement nicht sichtbar, nachdem ihn ein Benutzer mit der Rolle Dealer angelegt hatte. Beide Probleme sind behoben.
+
+Bei der Erzeugung der i155-Datei fehlten im Satz RC01 die Zähler für die Anzahl der gesendeten Satzarten (zum Beispiel der Typen 05, 10, 20, 15, 16, 17, 18 und 80). Dieser Fehler wurde ebenfalls bearbeitet und abgeschlossen. Zudem wurden die End-to-End-Tests für den Bereich Vertragsmanagement verbessert.

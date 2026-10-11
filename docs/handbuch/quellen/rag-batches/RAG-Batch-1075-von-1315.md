@@ -1,0 +1,21 @@
+# Batch 1075 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 14 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragserstellung (Contract Generation): Änderungen und Korrekturen**
+
+In der Vertragserstellung wurden mehrere Verbesserungen an der Benutzerführung und an der Prüflogik umgesetzt. Bei der Produktauswahl für fahrzeugbezogene Produkte wie Excellent begrenzt das eingegebene Datum der Erstzulassung nun die wählbaren Vertragslaufzeiten. Zuvor konnte auch für ein Fahrzeug, das vor mehr als einem Jahr zugelassen wurde, die Laufzeit von 12 Monaten ausgewählt werden. Da Excellent-Verträge stets mit der Erstzulassung des Fahrzeugs beginnen, lag die gesamte Vertragslaufzeit dann in der Vergangenheit, und die Vertragsanlage wurde erst abgelehnt, nachdem sämtliche Kunden- und Zahlungsinformationen erfasst waren. Künftig steht die Laufzeit von 12 Monaten in diesem Fall nicht mehr zur Auswahl, während die übrigen Laufzeiten weiterhin verfügbar bleiben.
+
+Auch die Anzeige in der Übersicht und Bestätigung wurde angepasst. Wurde in der Produktkonfiguration die Zahlungsart „Einmalzahlung“ gewählt, wird auf dieser Seite ausschließlich der Jahrespreis angezeigt; der Abschnitt mit dem Monatspreis entfällt. Außerdem wird das Bestätigungsdatum im Reiter „Produkt“ nur noch angezeigt, wenn der Vertrag aktiviert wurde. Bei nicht aktivierten Verträgen bleibt das Feld leer.
+
+Bei der Adresserfassung wurde ein Fehler behoben: Wenn ein Vorschlag der Adresssuche übernommen wurde, etwa bei der Eingabe „strasse des 17. Juni, Berlin“, erschien nach der automatischen Befüllung fälschlich eine Validierungsmeldung, die Straße sei ungültig. Bei der Übernahme eines Adressvorschlags erscheint im Feld „Straße“ nun keine Fehlermeldung mehr.
+
+Weitere Korrekturen betreffen die Eingabeprüfung und die Fehlermeldungen. Die Validierung von E-Mail-Adressen wurde so angepasst, dass auch Adressen mit unterschiedlichen Domains akzeptiert werden und nicht mehr fälschlich die Meldung „Email is not valid“ erscheint. Bei ungültigen Fahrzeugdaten, etwa einer unzulässigen Kombination aus Erstzulassungsdatum und Laufleistung, wurde zuvor ein leeres Fehlerfeld mit rotem Kreuz ohne Text angezeigt. Hier soll eine verständliche Meldung darüber informieren, was an der Eingabe nicht stimmt. In der Seite zur MO-Verifikationsprüfung wurde die Darstellung der laufenden Nummerierung (S.No) korrigiert, sodass die Einträge ordnungsgemäß mit 1, 2, 3, 4 usw. nummeriert werden. Zudem wurde ein Fehler beim Zuordnen der Produktdetails behoben, der beim Anlegen eines Vertrags mit einem neuen Kunden bis zur Seite „Bestätigung und Übersicht“ auftrat.
+
+Im Bereich Sammelrechnung wurde die Logik überprüft, da sich Sammelverträge für einen Kunden nicht anlegen ließen und der Export deshalb stets Einzelrechnungen statt gruppierter Rechnungen erzeugte. Im Fokus stand dabei der Standardwert des Kennzeichens für Sammelrechnungen, das bei Verträgen offenbar auf „false“ stand, obwohl „true“ als Standard erwartet wurde. Der korrekte Standardwert sollte mit den Product Ownern abgestimmt werden.
+
+Im Zusammenspiel mit dem Benachrichtigungsdienst wird bei der Vertragsbenachrichtigung künftig auf die Zahlungsdaten des Zahlers zurückgegriffen, wenn für den Kunden selbst keine Zahlungsdaten vorhanden sind. Bisher wurden ausschließlich die Zahlungsdaten des Kunden übermittelt, was dazu führte, dass Zahlungsdaten nicht gefunden wurden.
+
+Schließlich wurde ein Fehler in der Schnittstelle behoben: Wurde der Status eines Vertrags per Schnittstelle auf „CONFIRMED“ gesetzt, lieferte die anschließende Abfrage des Vertragsstatus einen Serverfehler (HTTP 500) statt des aktuellen Status.
+
+Mehrere weitere im Rahmen des Abnahmetests gemeldete Punkte wurden nicht umgesetzt und abgebrochen. Dazu zählen die Anzeige technischer Informationen in Tooltips im Bereich „Kunden- und Zahlungsinformationen“, die Meldung „Must not be null“ beim Fortfahren mit einem bestehenden Kunden sowie die fehlende Möglichkeit, bei einem bestehenden Kunden abweichende Zahlerdaten zu erfassen.

@@ -1,0 +1,17 @@
+# Batch 790 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 21 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Release-Hinweise Vertragsmanagement
+
+In der Suche des Vertragsmanagements und der Angebotsverwaltung wurde eine Einschränkung behoben: Bisher lieferte die Suche nach der Fahrgestellnummer nur dann ein Ergebnis, wenn der Suchbegriff dem Format entsprach, das in der Liste angezeigt wird. Wurde in der Liste beispielsweise die FIN angezeigt und mit der VIN gesucht (oder umgekehrt), blieb die Suche ohne Treffer. Angebote und Verträge lassen sich nun sowohl über die FIN als auch über die VIN finden. Außerdem wurde die Antwort der Schnittstelle zum Abruf von Verträgen (getContractsV2) um das Feld „mileageAtSalesDate“ erweitert.
+
+Bei den Massenaktionen im Vertragsmanagement wurden mehrere Verbesserungen umgesetzt. Nach der Durchführung einer Massenaktion werden keine fehlschlagenden Aktionsaufrufe mehr ausgelöst, und die Aktionsliste wird zurückgesetzt. Die Auswahlmöglichkeit „Alle auswählen/abwählen“ erscheint bei Massenaktionen nun immer an oberster Stelle. Zusätzlich wird bei der Eingabe des aktuellen Kilometerstands für die Vertragskündigung nun eine Fehlermeldung zur Feldvalidierung angezeigt, wenn die Eingabe ungültig ist.
+
+Die Oberfläche des Vertragsmanagements wurde hinsichtlich ihrer Konsistenz überprüft. Ebenso wurden die Fortschrittsanzeigen für laufende Aktionen bei privaten Kunden geprüft, und zwar für die Langzeitverlängerung (Prolongation), den Zahlerwechsel und die Vertragsübertragung.
+
+In den Vertragsdetails wurde das Feld „Enthaltene Anzahl an Reifen/Gebrauchtreifen“ in „Anzahl Reifen Gesamt/Verbrauch“ umbenannt.
+
+Im Bereich der automatisierten Qualitätssicherung wurde der Testfall zur Kündigung eines aktiven Vertrags abgeschlossen. Er prüft, dass das Kündigungsdatum auf den Vortag gesetzt wird, Kündigungsgrund und Kommentar gespeichert und validiert werden, der Vertragsstatus auf „Gekündigt“ wechselt, das reale Vertragsende dem Vortag entspricht und der Kündigungsvorgang samt Validierungen in der Historie protokolliert wird. Die Testfälle zur vorzeitigen Ablösung (Early Settlement), die unter anderem die Änderung des Zahlungsintervalls auf monatlich betrifft, sowie zur vorzeitigen Beendigung (Early Termination) sind noch nicht umgesetzt. Das Aussetzen und Wiederaktivieren von Verträgen mit anschließender Prüfung der Kundenrechnungen, sowohl für Privat- als auch für Gewerbekunden, befindet sich aktuell in der Anwendung.
+
+Nicht umgesetzt wurden folgende Vorhaben: Eine Sperre, die das Starten weiterer Aktionen (Prolongation, Zahlerwechsel, Übertragung) verhindert, solange eine andere Aktion läuft, wurde verworfen. Ebenso wurden die Korrektur doppelter Protokolleinträge bei der Vertragsaktivierung, die Behebung eines Zugriffsfehlers („Access denied“) beim Aufruf von getContractsV2 und die Analyse zu fehlenden Auftragsnummern bei Van-Verträgen eingestellt. Bei Letzterem war aufgefallen, dass für Rechnungen aus Verkaufskampagne, internem Händlerrabatt und Händlerprovision keine Auftragsnummer aus dem Vertrag an die Erlösverarbeitung übermittelt wurde, sodass diese Rechnungen im Status „Akzeptiert“ verblieben und nicht auf „Exportiert“ wechselten. Diese Punkte sind daher in der aktuellen Version nicht enthalten.

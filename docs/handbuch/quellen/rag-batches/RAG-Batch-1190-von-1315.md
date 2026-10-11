@@ -1,0 +1,15 @@
+# Batch 1190 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Gebührenverwaltung in der Preisversionierung (Contract Calculation)**
+
+Die Produkt- und Preisdefinition enthielt bisher den Abschnitt „Fees & Commissions". Dieser deckt Gebühren für die Bearbeitung von Kundenrechnungen ab, die vom Zahlungsintervall abhängen. Für sogenannte „Managed Contracts", insbesondere bei Geschäftskunden, gibt es ein weiteres Geschäftsmodell, das eine allgemeinere Gebühr für die Verwaltung von Serviceverträgen durch Mercedes-Benz erfordert. Solche Verträge enthalten in der Regel keine feste Leistungsabdeckung. Stattdessen gewähren sie dem Kunden bestimmte Rabatte auf Teile oder Arbeitsleistung oder bieten andere vorteilhafte Konditionen. Den einzelnen Werkstattauftrag bezahlt der Kunde weiterhin direkt zu einem reduzierten Preis. Für die Verwaltung des Vertrags in den SC-Systemen bei Mercedes-Benz zahlt der Kunde die sogenannte Vertragsverwaltungsgebühr (Contract Administration Fee). Unter bestimmten Umständen kann diese Verwaltungsgebühr sogar die einzige regelmäßige Rechnung sein, die der Kunde begleichen muss. Die Gebühr wird als Monatsbetrag erfasst und nach der Preisberechnung zum Netto-Kundenpreis addiert.
+
+Alle Gebühren sind künftig Bestandteil der Preisversionsdefinition und nicht mehr des Produkt-Setups. Dazu zählen die zahlungsabhängige Gebühr (für monatliche Raten und/oder Einmalzahlungen), die Provisionen und die neue Vertragsverwaltungsgebühr. Die Konfiguration ist für Anwender im Produkt-Setup (MPC) vorgesehen. Die Einrichtung einer Preisversion erfolgt in einem Assistenten mit drei Schritten.
+
+Im ersten Schritt legen Sie den Namen und das Startdatum der Preisversion fest und definieren die Kostenstruktur für die Leistungsabdeckungen. Zusätzlich werden dort zur Information auch die Verwaltungsgebühren angezeigt. Im zweiten Schritt wählen Sie die Branchenzuschläge aus. Im dritten Schritt wählen Sie die Vertragszahlungszeiträume und können die zahlungsabhängige Gebühr, die Provisionen sowie die Verwaltungsgebühren (Betrag pro Monat) einsehen und bearbeiten. Dieser Schritt entspricht dem früheren Schritt 7 der Produktanlage, der in die Preisversion verschoben wurde. Die Verwaltungsgebühr ist optional und wird nach allen übrigen Preisberechnungen korrekt zum Netto-Kundenpreis addiert.
+
+Wenn Sie eine neue Preisversion auf Basis einer bestehenden Version erstellen oder eine Preisversion duplizieren, werden alle Gebührenkonfigurationen mitkopiert.
+
+Weitere Arbeiten an der Preisverwaltung sind in Planung, aber noch nicht umgesetzt. Dazu gehören eine Überarbeitung des Schritts zur Definition der Preismatrix sowie der Import von Preisen von einem Produkt in ein anderes. Zu beiden Themen liegen derzeit keine näheren Angaben zum Funktionsumfang vor.

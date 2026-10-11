@@ -1,0 +1,32 @@
+# Batch 740 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Altteilsteuer-Datei (Schnittstelle E169) im Cost Management**
+
+Im Bereich Cost Management erzeugt oneSCM für die Altteilsteuer eine Datei im Format der Schnittstelle E169. Voraussetzung ist, dass die Altteilsteuer zuvor nach der dafür festgelegten Logik ermittelt wurde. Die Funktion ist neu und hat keinen Vorläufer. Sie wird als Plugin-Modul außerhalb der Microservices umgesetzt.
+
+Der Dateiname folgt dem Muster E169EXP_YYYYMMDD_HHmmss_FILENUMBER_SAP_SG_YYMM_Old_Part_Tax.dat. Die Datei besteht aus mehreren Satzarten, die jeweils eine feste Länge haben.
+
+**Satzart K (Kopfsatz der Lieferdatei, 96 Zeichen)**
+Dieser Satz enthält überwiegend feste Werte: Satzart „K“, Mandant „010“, Buchungskreis „0080“, Sendendes Werk „080“, Betriebsnummer des Rechnungsstellers „268“, Betrieb als zwei Leerzeichen, Subjekt „169“ und Schnittstellenbezeichnung „E169“. Anfang und Ende des Buchungszeitraums werden mit dem Exportdatum im Format YYYYMM befüllt, das Erstellungsdatum des Buchungsbelegs mit dem Exportdatum im Format YYYYMMDD. Das Verarbeitungsdatum bleibt leer (acht Leerzeichen). Die Anzahl der Datensätze umfasst alle Zeilen der Datei einschließlich des Satzes „K“. Die Dateinummer muss über alle SAP-Exporte aus dem System FMS21 eindeutig und lückenlos sein. Der dafür verwendete Zähler muss unabhängig vom regulären E169EXP-Batchjob geführt werden. Wird eine erzeugte, aber nicht an NACOS gesendete Datei gelöscht und für dieselbe Rechnung neu erzeugt, erhält das NACOS-Team als Sicherheitsmaßnahme eine Benachrichtigung. Dies kann manuell übersteuert werden, sodass die Datei dann verarbeitet wird. Ein weiteres Feld mit 30 Zeichen bleibt leer.
+
+**Satzart INIT (21 Zeichen)**
+Dieser Satz enthält ausschließlich feste Werte: die Satzart „INIT“, das sendende System „1SCM“ (ein rein technischer Begriff), die Datenart „1SCM“, die Betriebsnummer „268“ (Charter Way) und die Betriebsnummer des Rechnungsstellers „00“. „00“ steht für Servicevertrag; weitere Werte sind 04 für Miete und 09 für Fleetsite.
+
+**Satzart HEADER (62 Zeichen)**
+Der Satz enthält die Rechnungsidentifikationsnummer (Verarbeitungsnummer) und die Art des Geschäftsvorfalls, die aus dem Kundentyp stammt. „E“ steht für die reguläre Fakturierung (Rechnungen an Dritte) sowie externe Subventionen. Interne Subventionen laufen über die Schnittstelle E017. Die Datei wird halbautomatisch erzeugt, an das NACOS-Team gesendet und dort ebenfalls halbautomatisch verarbeitet. Der Auftragstyp bleibt leer, da er für oneSCM ohne Bedeutung ist. Die Betriebsnummer des Rechnungsstellers ist „268“. Die Betriebsnummer der Werkstatt legt fest, wohin die Buchung gehört und wo sie im Controlling sichtbar ist. Die korrekten Werte (zum Beispiel 00 für Servicevertrag, 03 für Garantie, 06 für SIVECO) müssen noch mit dem Fachbereich geklärt werden. Bestelldatum und Datum der Datenübergabe an SAP entsprechen dem Exportdatum im Format YYYYMMDD. Als Anlegender ist ein gültiger SAP-Benutzername verpflichtend, im Beispiel „SERINKE“. Dieser bestimmt die Kontaktdaten auf der Rechnung und den Drucker für den Rechnungsausdruck. Exporttyp und das abschließende Feld bleiben leer.
+
+**Satzarten HTXT01, HTXT02 und HTXT06**
+HTXT01 (255 Zeichen) enthält die Verarbeitungsnummer und den Kopftext der Buchung (238 Zeichen). Absätze werden durch das Trennzeichen „|“ gekennzeichnet. Der Beispieltext lautet sinngemäß: Gutgeschrieben wird die Altteilsteuer für den Buchungszeitraum. Sie ergibt sich aus der zum Leistungszeitraum gültigen Mehrwertsteuer auf 10 % der Differenz (60er Teil) zwischen dem aufbereiteten Tauschteil (80er Teil) und dem „alten“ Teil (70er Teil), das an das Logistik Center verkauft wird. HTXT02 (255 Zeichen) enthält die Verarbeitungsnummer und den Schlusstext aus dem Produkt (238 Zeichen), ebenfalls mit „|“ als Absatztrenner. HTXT06 (89 Zeichen) enthält die Verarbeitungsnummer sowie die linke und rechte Unterschrift der Rechnung (je 28 Zeichen, zum Beispiel „i.V. Kuester“ und „i.V. Rinke“), getrennt durch 16 Leerzeichen. Die Unterschriftstexte je Produkt müssen noch mit dem Fachbereich abgestimmt werden.
+
+**Satzart HDRPAR (199 Zeichen)**
+Dieser Satz enthält die Verarbeitungsnummer, den festen Wert „R00“ (aus dem FCM-Projekt) und den SAP-Debitor. Der Debitor ist die VEGA-Händler-ID aus den Partnerdaten (r10.DealerCode). Für Testzwecke dient die Dummy-ID 21714. Das restliche Feld (174 Zeichen) bleibt leer.
+
+**Satzart POS (167 Zeichen)**
+Der Positionssatz enthält die Verarbeitungsnummer und die Positionsnummer der Rechnung (Rechnungs- oder Gutschriftsnummer aus oneSCM), die händlerbezogen und für NACOS nicht erforderlich ist. Die Vertragsart wird wie im HEADER behandelt. Die SAP-Materialnummer ist fest „QEV111ABXB2Z“, der Fahrzeugtyp bleibt leer. Die FIN wird so an NACOS übergeben, wie sie für das Fahrzeug zutrifft. Die Kennzeichnung Rechnung oder Gutschrift ist „R“ für Rechnung und „G“ für Gutschrift. Bei RC60 und einer Teilenummer, die an den Stellen 114 bis 137 „60“ enthält, gilt: Löschkennzeichen 1 ergibt eine Rechnung (R), Löschkennzeichen 0 eine Gutschrift (G). Der Betrag ist der Nettowert. Die Steuer wird von FMS nur im Text angegeben und erst in NACOS tatsächlich ermittelt. Hinzu kommen die Währung (ISO-Code) und das Leistungsdatum, das aus dem Reparaturdatum (r10.repairDate) im Format ddMMyyyy übernommen wird. Die Felder für Sendende Kosten (nicht relevant), Sendeauftrag, Empfangskostenstelle, Empfangsauftrag und Leistungsart bleiben leer. Die Einheiten sind fest „1“, die Mengeneinheit „ST“ (Stück). Das Baumuster wird aus den Stellen 4 bis 10 der FIN abgeleitet.
+
+**Satzart PTXT01 (243 Zeichen)**
+Dieser Satz enthält die Verarbeitungsnummer, die Positionsnummer der Rechnung und einen Text mit dem festen Wert „Betreffende Antragsnummer“, gefolgt von der Antragsnummer (Claim Number) aus Satzart 20. Das restliche Feld bleibt leer.
+
+Weitere Details zu den Mapping-Regeln sind in der zugehörigen Confluence-Dokumentation „Old Part Tax Mapping rules“ hinterlegt.

@@ -1,0 +1,31 @@
+# Batch 241 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Validierungsfehler für NEMESIS (Revenue Management)**
+
+Geplant ist, dass oneSCM die Daten bereits vor dem Versand an NEMESIS prüft. NEMESIS validiert nach dem Empfang der Ereignisse die Daten und deren Beziehungen zueinander, wodurch fachliche Fehler entstehen. Die Analyse hat gezeigt, dass sich ein Teil dieser Fehler vermeiden lässt, wenn die Daten schon vorher validiert werden. Deshalb werden die Ereignisse Kunde, Vertrag, Umsatz und Kosten künftig geprüft, bevor sie erzeugt werden. Ist eine Validierung nicht erfüllt, wird das Ereignis nicht an NEMESIS gesendet. Stattdessen wird der Fehler in Datadog und in der Datenbank protokolliert und in der Benutzeroberfläche angezeigt. Die Validierung löst das Problem der Datengenauigkeit nicht selbst. Ein Benutzer muss die Daten in Vertrag, Kunde, Umsatz oder Kosten korrigieren. Dieses Vorhaben ist derzeit noch offen.
+
+Für den Second-Level-Support (Rolle Market Operation User) ist im Admin-Bereich unter NEMESIS ein eigener Abschnitt vorgesehen. Dort können die Fehler eingesehen und verwaltet werden. Nach der Korrektur der Daten kann das Ereignis erneut an NEMESIS gesendet werden. Der Abschnitt enthält vier Registerkarten, je eine für die Ereignisse Vertrag, Kunde, Umsatz und Kosten. Die Suchkriterien gelten für alle Registerkarten gemeinsam: Ein gewähltes Kriterium wird auf alle Registerkarten angewendet.
+
+Gesucht werden kann nach dem Datum des ersten Vorfalls (Einzelauswahl), nach der Vertragsnummer, nach der Fehlerart und nach dem Status. Das Feld für die Vertragsnummer ist ein Textfeld, das Buchstaben, Ziffern und den Schrägstrich zulässt. Es unterscheidet nicht zwischen Groß- und Kleinschreibung und unterstützt die unscharfe Suche. Die Fehlerart wird über eine Auswahlliste gewählt, die die in der Datenbank vorhandenen Fehlerarten enthält, zum Beispiel fachliche Fehler und Validierungsfehler. Der Status ist eine Mehrfachauswahl mit den in der Datenbanktabelle für Validierungsfehler vorhandenen Statuswerten. Änderungen in den Filterfeldern wirken sich nicht automatisch auf die Suchergebnisse aus. Erst mit „Search“ wird der Ergebnisbereich mit den gefilterten Datensätzen gefüllt. Mit „Cancel“ werden alle Änderungen verworfen.
+
+Der Ergebnisbereich besteht aus vier Registerkarten mit gleichem Aufbau, aber jeweils eigenen Inhalten. Angezeigt werden Kontrollkästchen, Vorfallsdatum, Fehlerart, Vertragsnummer, Fehlergrund und Status. Das Kontrollkästchen steht nur bei Fehlern mit dem Status „Unresolved“ zur Verfügung. Standardmäßig werden alle Fehler mit diesem Status angezeigt. Alle Spalten sind sortierbar, standardmäßig wird absteigend nach dem Vorfallsdatum sortiert, sodass der neueste Eintrag oben steht. Pro Seite werden standardmäßig 10 Einträge angezeigt; wählbar sind 10, 20, 30, 40 und 50.
+
+Die Aktion „Resend“ ist deaktiviert, solange kein Fehler (Vertrag) ausgewählt ist. Sie sendet für die ausgewählten Verträge alle vier Ereignisse (Kunde, Vertrag, Umsatz und Händlerrechnungen) mit den aktuellen Daten erneut. Sind mehrere Fehlerzeilen markiert, werden die eindeutigen Verträge ermittelt und für jeden alle Ereignisse erneut gesendet.
+
+Vor dem Erzeugen der Ereignisse gelten je Ereignisart Prüfregeln. Beim Vertragsereignis werden unter anderem folgende Punkte geprüft: Pflichtfelder wie Ländercode, Fahrgestellnummer (FIN), Vertrag, Kunden-ID, Start- und geplantes Enddatum, Kilometerstände, Vertragsstatus, Servicevertragstyp, Geschäftsbereiche, Produktlinie und Erstzulassungsdatum dürfen nicht leer sein. Der Ländercode muss einem gültigen Vega-Ländercode entsprechen. Die FIN darf höchstens 17 Zeichen lang sein und keine Sonderzeichen enthalten, die Fahrgestellnummer muss genau 17 Zeichen haben und ebenfalls frei von Sonderzeichen sein. Das geplante Enddatum muss nach dem Startdatum liegen, der geplante Endkilometerstand über dem Startkilometerstand. Datumsfelder werden auf das Format geprüft, Kunden-ID und Produktlinie müssen numerisch sein. Es darf nur der Status „agreed“ gesendet werden. Die Erstzulassung muss vor dem Vertragsbeginn liegen, und der Wert für den erworbenen Service darf nicht null sein. Für die Geschäftsbereiche ist „MERCEDES-BENZ CARS“ vorgesehen. Einige Regeln, etwa zur Rückversicherung und zur Vertragsdauer von mehr als 15 Jahren, sind noch nicht festgelegt.
+
+Beim Kundenereignis müssen Ländercode, Kunden-ID und Kundenname vorhanden sein, und der Ländercode muss ein gültiger Vega-Ländercode sein.
+
+Beim Umsatzereignis müssen unter anderem Ländercode, Vertrag, Währung, Fahrzeug-Zahlungsart und Chassisnummer angegeben sein. Der Ländercode muss gültig sein, die FIN und die Chassisnummer müssen 17 Zeichen lang und frei von Sonderzeichen sein, die Währung muss die lokale Währung sein. Das Kennzeichen für gebrauchte Fahrzeuge darf nur boolesche Werte enthalten, Gesamtumsatz und Subventionsbeträge müssen numerisch sein. Geprüft wird außerdem, ob Gesamtumsatz und Fahrzeugvertragspreis null sind, ob der Vertragspreis bei monatlicher Zahlung null ist und ob der Gesamtumsatz unter einem Schwellenwert liegt. Einzelne Regeln, etwa zu negativen Subventionsbeträgen, sind noch offen.
+
+Beim Kostenereignis muss das Reparaturdatum innerhalb der Vertragslaufzeit liegen.
+
+**Export-Typ in der E169-Exportdatei**
+
+Bisher war das Feld „Export type“ in der E169-Exportdatei fest auf „SG“ gesetzt. Es wird nun abhängig von der Rechnungsart befüllt: „EXTSUB“ steht für Händlerrabatte, „FEA“ für die Endabrechnung, „IF“ für internationale Forderungen und „SG“ für MPPI sowie MANU bei CompleteCare/Excellent. Diese Änderung ist umgesetzt.
+
+**Fehlerbehebung bei der Steuersatz-Anlage**
+
+Beim Versuch, einen Steuersatz mit denselben Daten erneut anzulegen, wurde der Statuscode 500 zurückgegeben. Dieser Punkt ist abgeschlossen.

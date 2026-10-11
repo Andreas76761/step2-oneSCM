@@ -1,0 +1,19 @@
+# Batch 656 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 23 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Globale Sammelrechnung auf Kundenebene**
+
+Bei der Vertragserstellung für einen neuen Kunden steht im Bereich „Preferences“ (dritter Schritt des Assistenten) der Schalter „Global Collective Invoices“ zur Verfügung. Das Feld zeigt einen Tooltip mit erläuterndem Text an. Standardmäßig ist der Schalter aktiviert, sobald ein neuer Vertrag für einen neuen Kunden angelegt wird, und der gewählte Wert ist im Bereich „Preferences“ sichtbar. In der Vorschau wird im Abschnitt „Collective Invoices“ der Wert „Included“ angezeigt, wenn der Schalter aktiviert wurde, und „Excluded“, wenn er deaktiviert wurde.
+
+Bei einem bestehenden Kunden ist der Schalter „Global Collective Invoices“ im zweiten Schritt des Vertragserstellungsassistenten deaktiviert, sofern der Kunde bereits einen bestätigten Vertrag hat.
+
+In der Kundenverwaltung ist das Feld „Global Collective Invoices“ zusammen mit dem ausgewählten Wert sichtbar. Die in der Vorschau gewählten Werte des Schalters werden in die Vertragsverwaltung übernommen. Eine Änderung des Werts wirkt sich auf künftige Servicever­träge aus, bestehende Verträge bleiben unberührt.
+
+**Weitere Verbesserungen und Korrekturen im Bereich Kunden- und Partnerverwaltung**
+
+Die Darstellung der Kundenverwaltung wurde in mehreren Punkten überarbeitet. Der Pin in der Google-Maps-Suche suggerierte eine Klickaktion, obwohl er nicht anklickbar ist; der blaue Kreis am Pin soll entfallen, sodass keine scheinbar klickbare Schaltfläche mehr angezeigt wird. Das Feld „Mercedes me“ wirkte bearbeitbar, obwohl es schreibgeschützt ist, und soll nun wie andere nicht bearbeitbare Felder dargestellt werden. Beim Aktualisieren eines Kunden aus der Vorschau erschien zudem eine unverständliche Erfolgsmeldung mit dem Platzhalter „{notification.who}“; dies wurde als Fehler behoben. Außerdem lieferte die Namenssuche in der Kundenverwaltung zu viele Treffer: Bei der Eingabe „Luci peter“ wurden alle Datensätze mit dem Namen „Luci“ angezeigt, erwartet wird jedoch nur der passende Datensatz.
+
+Auch bei der Vertragserstellung wurden Fehler behoben. Wenn ein Kunde angelegt wird, der weder in oneSCM noch bei Mercedes me existiert, und die Berechtigung zur Nutzung der Mercedes-me-Informationen aktiviert ist, erschien die Fehlermeldung „Could not read Mercedes Me data“. Das System soll prüfen, ob der Kunde bei Mercedes me vorhanden ist; falls nicht, soll die Schaltfläche „Continue“ aktiv bleiben, damit der Kunde in oneSCM angelegt und ein neues Mercedes-me-Profil erstellt werden kann. Dieselbe Fehlermeldung trat bei einem bestehenden Kunden auch bei deaktiviertem Schalter auf; erwartet wird der Wechsel zur Kundendetailseite mit vorausgefüllten Kundendaten. Wenn im Dialog bestehende Kundendaten eingegeben wurden und anschließend „Create New Customer“ gewählt wurde, wurden diese Daten fälschlich in die Kundeninformationsseite übernommen; die Seite soll in diesem Fall keine vorbefüllten Daten enthalten. Beim Erstellen eines Servicevertrags für einen bestehenden Kunden war der Bereich „Payment information“ deaktiviert, obwohl ein abweichender Zahler hinzugefügt werden können soll, unabhängig davon, ob dieser bereits Kunde ist.
+
+Schließlich wurde der CustomerExportJob korrigiert: Er enthielt bislang keine Daten neuer Kunden, wenn der Vertrag den Status „Waiting for Activation“ und der Kunde den Status „In Confirmation“ hatte. Die Details neuer Kunden sollen in der Exportdatei enthalten sein.

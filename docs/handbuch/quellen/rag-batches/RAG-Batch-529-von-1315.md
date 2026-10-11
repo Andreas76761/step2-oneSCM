@@ -1,0 +1,17 @@
+# Batch 529 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Mehrsprachigkeit: Übersetzungen für einzelne Märkte verwalten**
+
+Bisher werden die Übersetzungen der Oberflächenbezeichnungen zentral vom Entwicklungsteam gepflegt. Die Übersetzung beruht auf Excel-Dateien, und ihre Verarbeitung erfordert hohen Aufwand bei Entwicklung und Zentrale. Für einzelne Märkte ist es dadurch schwierig, lokalisierte Inhalte eigenständig anzupassen oder zu aktualisieren. Mit der Funktion „Market Translation" können Marktverantwortliche und Personen mit Lokalisierungsrollen die Übersetzungen der Oberflächenbezeichnungen direkt in der Webanwendung einsehen, bearbeiten und verwalten, ohne dass ein Eingriff durch Entwickler nötig ist. Das verringert die Abhängigkeit von der Entwicklung, beschleunigt marktspezifische Einführungen und Inhaltsaktualisierungen und stärkt die Übersetzungsqualität, weil die Verantwortung beim jeweiligen Markt liegt. Zudem schafft es die Grundlage für spätere automatisierte Übersetzungsabläufe, etwa die Anbindung von Crowdin.
+
+Die Funktion richtet sich an Marktverantwortliche und Lokalisierungsrollen, die Bezeichnungen für ihren Markt übersetzen und anpassen. Entwickler unterstützen das Übersetzungssystem und stellen den Abgleich zwischen Code und Übersetzungsspeicher sicher. Tester prüfen Übersetzungsgenauigkeit, Datenkonsistenz und Berechtigungen.
+
+Die Bezeichnungen und Meldungen werden zentral im Configuration Service verwaltet. Dies gilt sowohl für alle Meldungen des Backends als auch für alle Bezeichnungen des Frontends. Jeder Service lädt seine Meldungsquellen aus diesem zentralen Dienst. Neue Eigenschaften, die auf Service-Ebene hinzukommen, werden mit dem Configuration Service synchronisiert. Änderungen an Übersetzungen werden beim Start oder Neustart eines Services übernommen. Die Übersetzungsdaten werden dafür von statischen JSON-Dateien in einen strukturierten, dynamischen Datenspeicher (zum Beispiel eine Datenbank oder einen API-basierten Dienst) überführt. Nur autorisierte Rollen dürfen Übersetzungsdaten ändern oder hochladen. Die Darstellung lokalisierter Inhalte soll sich dabei nicht spürbar verzögern.
+
+Ursprünglich waren drei Ansätze vorgesehen: das Einblenden der Bezeichnungsvariablen per Schalter, die direkte Bearbeitung von Bezeichnungen in der Oberfläche sowie der Download und Upload von Übersetzungsdateien, einschließlich Validierung und Protokollierung bzw. Versionierung von Änderungen. Diese Teile sind im Ticket als durchgestrichen markiert und sollen über die Crowdin-Integration umgesetzt werden, nicht innerhalb dieser Funktion.
+
+**Lokalisierung nach Regionen (nicht umgesetzt)**
+
+Ein weiteres Vorhaben sollte neben der Sprache auch regionale Varianten (Locales) unterstützen, sodass sich etwa Englisch für en-US und en-GB unterscheiden lässt. Vorgesehen waren eine automatische oder manuelle Auswahl der Locale, die dauerhaft gespeichert wird, sowie ein Rückgriff auf die Basissprache, wenn eine Variante fehlt. Dieses Vorhaben wurde abgebrochen und steht daher nicht zur Verfügung. Derzeit gibt es weiterhin nur Sprachdateien.

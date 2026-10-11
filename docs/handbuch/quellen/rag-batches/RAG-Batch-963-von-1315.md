@@ -1,0 +1,21 @@
+# Batch 963 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**MMe QR-Code-Integration (Phase 2)**
+
+Im Suchdialog für Kunden ("Customer Search Modal") wird künftig eine Möglichkeit angeboten, einen QR-Code zu scannen. Damit stellt der Endkunde seine Mercedes-me-Profildaten (MMe) für oneSCM bereit. Die Funktion wird von Händlern genutzt, die dem Endkunden den QR-Code zur Verfügung stellen. Sie betrifft die Streams BS2 und BS3. Ziel ist die Authentifizierung des Kunden über sein Mercedes-me-Profil für die Zahlungsoption Kreditkarte (MPAY). Der Kunde identifiziert sich dabei mit seiner CIAM-ID und setzt anschließend seinen Zahlungsprozess fort.
+
+Bislang besteht ausschließlich eine Integration mit der Standard-Mercedes-me-Anwendung. Künftig wird der Suchdialog so geändert, dass er zunächst eine Startansicht zeigt, in der der Kunde seine Mercedes-me-Profildaten per QR-Code-Scan übermitteln kann. Die Auswahl "Search by Name" ist nur für Kunden ohne Mercedes-me-ID als Dropdown anklickbar. Wird ein Mercedes-me-Profil gefunden und existiert in oneSCM kein Duplikat, gelangt der Benutzer direkt zur Kundendetailseite. Die Kundendaten aus dem Mercedes-me-Profil werden dort vorausgefüllt.
+
+Technisch umfasst die Umsetzung die Integration mit dem Token Master sowie den neuen Ablauf im Suchdialog. Die Authentifizierung erfolgt über den OAuth-Device-Code-Ablauf. Zunächst wird eine Geräteautorisierung angefordert, wobei die Basic-Authorization-Angabe aus Client-ID und Client-Secret im Format Base64 mit Padding kodiert sein muss. Die Antwort enthält einen Device-Code und einen User-Code samt Verifizierungs-URL. Der Benutzer ruft die vollständige Verifizierungs-URL auf und autorisiert damit den Client. Danach kann das Gerät bzw. Skript mit dem Device-Code, dem Grant-Type für den Device-Code-Ablauf und den angeforderten Scopes (mindestens "openid") ein Token abrufen. Die Antwort enthält unter anderem ein Access-Token und ein ID-Token. Soll zusätzlich ein Refresh-Token ausgegeben werden, muss der Scope "offline_access" angefordert werden. In diesem Fall verlangt der Token Master eine Client-Authentifizierung.
+
+**Neuordnung der HQ-Konfigurationsseite im Admin-Bereich**
+
+Die HQ-Konfigurationsseite im Admin-Bereich wird neu strukturiert. Dabei sind Design und Grafiken gemäß Mercedes-Benz Workbench umzusetzen.
+
+In den Allgemeinen Einstellungen wird der Reiter "Market Configuration" in "Customer" umbenannt. Der Bereich "Customer and Operations Communication" erhält einen Tooltip. Dieser erklärt, dass die hinterlegte E-Mail-Adresse für die Support-Kommunikation mit dem Kunden sowie für operative und technische Benachrichtigungen von oneSCM an die Market Operations verwendet wird. Außerdem weist er darauf hin, eine Adresse zu verwenden, auf die das Market-Operations-Team Zugriff hat.
+
+Im Bereich "Timer & Reminders" werden die Felder in Gruppen zusammengefasst, und jedes Feld erhält einen Info-Tooltip. Die Gruppe "Customer Data Retention Period" enthält die Felder "Temporary Customer (Months)" und "Signed Customer (Years)". Unter "Customer Offer Reminders" stehen "First Reminder (Days)" und "Second Reminder (Days)". Dieselben beiden Felder gibt es auch unter "Contract End Date Reminders". Die Gruppe "Contract Withdrawal Period" enthält das Feld "Contract Withdrawal Period (Days)". Unter "Contract Timeouts" werden "Offer Validity (Days)", "Contract Activation Waiting Period (Days)", "Campaigns Grace Period Review (Days)", "Transfer Waiting Period (Days)", "Change Payer Waiting Period (Days)" und "Manual Contract Review Period (Days)" geführt. Die Felder zu DSS-Signaturlink, CAS-Antwort, SEPA-Validierung und SAP-Debitorennummer sind in der Zielstruktur durchgestrichen und entfallen damit.
+
+In den Feature-Einstellungen unter "Invoice Configuration" wird das Dropdown für die Währung entfernt. Die auf Marktebene definierte Währung wird stattdessen in den Allgemeinen Einstellungen unter "Format / Currency" festgelegt.

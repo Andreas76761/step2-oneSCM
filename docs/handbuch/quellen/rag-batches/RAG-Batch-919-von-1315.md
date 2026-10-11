@@ -1,0 +1,21 @@
+# Batch 919 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Nachweis für Steuerbefreiung (Tax Exempt Certificate)**
+
+Kunden, die eine Steuerbefreiung beantragen, müssen ihren Anspruch auf diesen Status nachweisen. Das System stellt sicher, dass das Steuerbefreiungszertifikat (Tax Exempt Certificate) manuell geprüft wird, bevor ein Vertrag aktiviert wird. So können nicht berechtigte Zertifikate nicht zu aktiven Serviceverträgen führen. Die Regelung gilt für alle Kundentypen und Divisionen (PC und VANs). Ein Kunde kann mehrere Verträge haben, von denen einige steuerbefreit sind und andere nicht. Jedem Servicevertrag ist genau ein Steuerbefreiungszertifikat zugeordnet. Die Gültigkeitsdauer des Zertifikats wird vom System nicht geprüft.
+
+Bei der Erstellung eines Vertragsangebots meldet sich der Nutzer an, wählt den Kundentyp, optional die Branche, und gibt die Fahrzeugkennung ein. Das System ermittelt die passenden Produkte, Konfigurationen und Preise. Nach der Produktkonfiguration folgt die Dublettenprüfung für Kunden. Bei einem bestehenden Kunden werden die vorhandenen Daten vorbelegt, bei einem neuen Kunden sind alle Pflichtfelder auszufüllen. Beantragt der Kunde eine Steuerbefreiung, wird die Steuerklassifizierung auf „Exempt“ gesetzt. Auf der Seite „Kundendaten“ muss dieses Feld für bestehende Kunden mit bestehenden Serviceverträgen editierbar sein.
+
+Auf der Übersichts- und Bestätigungsseite wird der Servicevertrag mit dem Status „Created“ angelegt und erhält eine Referenznummer. Der Zahlungsplan wird ohne Steuerwerte erzeugt, und unter der Steuerklassifizierung wird „Exempt“ angezeigt. Zusätzlich legt das System in den MO Checks eine neue Position an, und zwar mit der Kategorie „Document Check“, dem Namen „Tax Exempt Certificate“, dem Standardstatus „Not Ok“ und dem Grund „Missing Document“. Anschließend wählt der Vertriebsmitarbeiter die Signaturart, woraufhin die passende Meldung erscheint. Der Vertragsstatus wechselt auf „Waiting for Confirmation“. Sobald der Vertrag unterzeichnet ist und die CAS-Prüfung negativ ausfällt, wird er „Confirmed“ und danach „Waiting for Activation“.
+
+Für die manuelle Dokumentenprüfung lädt der Vertriebsmitarbeiter das Steuerbefreiungszertifikat in der Vertragsdetailansicht unter „Communication“ bzw. „Documents“ hoch. Als Dokumenttyp wählt er „Tax Exempt Certificate“. Das ist möglich, wenn der Vertrag mit der Steuerklassifizierung „Exempt“ den Status „Waiting for Confirmation“, „Confirmed“ oder „Waiting for Activation“ hat. Nach dem Upload setzt das System die MO-Checks-Position auf den Status „Pending“ mit dem Grund „Tax Exempt Certificate must be confirmed!“. Ein Hyperlink führt direkt zum entsprechenden Dokumentenbereich der Vertragsdetailansicht.
+
+Anschließend prüft MO/MPC das Zertifikat manuell. Ist es konform, klickt MO auf „Thumbs Up“ und gibt eine Begründung ein. Die Position wechselt dann auf „Ok“ mit dem Grund „Tax Exempt Certificate confirmed“, und der Aktivierungsprozess kann fortgesetzt werden. Ist das Zertifikat nicht konform, klickt MO auf „Thumbs Down“ und erfasst den Ablehnungsgrund. Die Position wechselt auf „Not Ok“ mit dem Grund „Tax Exempt Certificate not compliant“. Der Vertrag kann dann nicht aktiviert werden und soll den Status „Rejected“ erhalten. Ob dieser Statuswechsel automatisch durch das System oder manuell erfolgt, ist in den vorliegenden Angaben noch nicht geklärt.
+
+Sind alle MO Checks in Ordnung, aktiviert das System den Servicevertrag, erzeugt den i155 und benachrichtigt die Microservices Revenue und Nemesis. Fordert ein Kunde keine Steuerbefreiung an, zeigt die MO-Checks-Position automatisch „Not applicable“ an. Bei der Gestaltung der Oberfläche sind die Vorgaben der Mercedes-Benz Workbench einzuhalten.
+
+**BRABUS: Upgrade der Java-Version von 17 auf 21**
+
+Für BRABUS wurde die Java-Version von 17 auf 21 angehoben. Weitere Angaben, etwa zu Zielverhalten oder Auswirkungen, liegen nicht vor.

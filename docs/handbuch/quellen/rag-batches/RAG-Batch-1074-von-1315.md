@@ -1,0 +1,15 @@
+# Batch 1074 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 14 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragserstellung (Contract Generation): Behobene Fehler und Verbesserungen**
+
+In der Vertragserstellung wurden mehrere Probleme im Assistenten behoben, mit dem neue Verträge angelegt werden. Beim Anlegen eines Vertrags trat gelegentlich ein Fehler auf, weil beim Aktualisieren des Vertragsstatus ein interner Serverfehler (Fehler 500) zurückgegeben wurde. Auch bei der Erstellung eines neuen Vertrags mit einer bestimmten Fahrgestellnummer und einer Laufleistung von 50.000 km erschien ein Fehler 500, da die Abfrage kein eindeutiges Ergebnis lieferte. Beide Fälle wurden korrigiert.
+
+Im zweiten Schritt des Assistenten wurde die Schaltfläche „Weiter“ überarbeitet. Zuvor erschien dort teilweise die Fehlermeldung „The selected price is no longer available.“, wenn der Anwender zum nächsten Schritt wechseln wollte. Auch dieses Verhalten wurde behoben.
+
+Verbessert wurde außerdem die Behandlung von Halter- und Zahlerdaten. Wenn ein bestehender Kunde als Halter und ein anderer bestehender Kunde als abweichender Zahler hinterlegt wurde, gingen Änderungen an den Halterdaten beim Klick auf „Weiter“ verloren. Das zeigte sich auf der Übersichtsseite im dritten Schritt und beim Zurücknavigieren, wo die Kundendaten zurückgesetzt wurden. Diese Änderungen werden nun korrekt gespeichert. Ebenso war es zuvor nicht möglich, den Halter zugleich als abweichenden Zahler anzugeben. Zudem waren nach dem Zurücknavigieren die Zahlerangaben und der Schalter für einen abweichenden Zahler deaktiviert, sowohl bei neuen als auch bei bestehenden Kunden. Bei neuen Kunden müssen alle Felder bearbeitbar sein, und dies wurde entsprechend korrigiert. Außerdem wurde das Feld für den Kundennamen angeglichen, sodass es in der Vertragserstellung und in der Vertragsverwaltung übereinstimmend gekennzeichnet ist. Für jeden Benutzer bzw. Zahler wird nun die jeweilige Vertragsliste übermittelt.
+
+Bei der Eingabe der Fahrzeugdaten wurden zwei Punkte korrigiert. Wenn die Laufleistung ungültig war und die Eingabe mit der Eingabetaste bestätigt wurde, zeigte die Fehlermeldung bei einem erneuten ungültigen Wert weiterhin die zuerst eingegebene Kilometerzahl an. Die Meldung wird nun unabhängig davon korrekt angezeigt, ob die Eingabetaste oder die Maus verwendet wird. Außerdem wird das Datum der Erstzulassung (FRD) nach Eingabe der Fahrgestellnummer automatisch gefüllt. Es konnte jedoch über Bereiche außerhalb des Datumsfelds geändert werden. Das Datum soll nur dann änderbar sein, wenn zur Fahrgestellnummer kein Wert geliefert wird.
+
+Schließlich wird beim Ablehnen eines Vertrags im Status „Waiting for activation“ nun eine Ablehnungs-E-Mail an den Kunden gesendet. Diese E-Mail wird in der Vertragserstellung im Reiter „Documents & Communication“ unter „Notification“ als „Rejection Email“ angezeigt, ähnlich wie die Bestätigungs-E-Mail.

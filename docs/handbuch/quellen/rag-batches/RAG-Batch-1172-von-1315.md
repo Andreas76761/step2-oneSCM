@@ -1,0 +1,23 @@
+# Batch 1172 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Automatische Benennung von Fahrzeuggruppen (VANS)**
+
+Für VANS steht eine optionale, systemgenerierte Benennung von Fahrzeuggruppen zur Verfügung. Sie sorgt für einheitliche Namenskonventionen und mehr Komfort bei der Pflege von Fahrzeuggruppen. Die Funktion richtet sich an MPC und Händler. Die Namen sollen einfach, kurz und leicht verständlich sein. Sie können entweder automatisch auf Basis der gewählten Fahrzeugfilter erzeugt oder manuell vergeben werden.
+
+Auf der Seite „Vehicle Group Setup“ steht dazu ein Schalter mit der Bezeichnung „Enable System-Generated Vehicle Group Name & Description“ zur Verfügung. Der erklärende Hilfetext lautet: „The name and description will be generated based on the selected vehicle group filters and will be displayed and editable on the final overview page.“ Standardmäßig ist der Schalter deaktiviert. Wird er aktiviert, sind die Felder für den Namen und die Details der Fahrzeuggruppe auf dieser Seite deaktiviert, und das System erzeugt Name und Beschreibung automatisch aus den gewählten Filtern. Auch bei aktivierter Funktion können Name und Beschreibung auf der Übersichtsseite vor der endgültigen Bestätigung überschrieben und bearbeitet werden. Ist der Schalter nicht aktiviert, bleibt das bisherige Verhalten bestehen: Name und Beschreibung werden manuell eingegeben, ohne automatische Erzeugung.
+
+Die Beschreibung enthält eine lesbare Aufstellung der gewählten Filterattribute, etwa alle ausgewählten Baureihennamen sowie weitere relevante Filterattribute. Das Beschreibungsfeld bietet Platz für 1500 Zeichen. Wählt ein Benutzer im Modul zur Vertragserstellung eine Fahrzeuggruppe aus, wird zusätzlich die zugehörige ausführliche Beschreibung angezeigt.
+
+Der Name folgt einer festen Struktur aus Abkürzungen und Codes. Es erscheinen nur relevante Filter, die nicht leer (Null) sind. Die Reihenfolge der Bestandteile lautet: Klasse, Baureihe, SA-Code, Aufbauart, Motorleistung, zulässiges Gesamtgewicht, Antriebsformel und Motortyp.
+
+Bei der Klasse werden bei Einzelauswahl folgende Codes verwendet: X, T und V bleiben unverändert, Vito wird zu VT, Viano zu VN, Citan zu C und Sprinter zu S. Bei Mehrfachauswahl steht „CL M“. Bei der Baureihe wird bei Einzelauswahl die Baureihennummer verwendet, zum Beispiel 910; bei Mehrfachauswahl steht „SR M“. Beim SA-Code wird bei Einzelauswahl der Code selbst verwendet, zum Beispiel ZG2; bei Mehrfachauswahl steht „SA M“.
+
+Für die Aufbauart gelten bei Einzelauswahl diese Codes: Panel Van = PV, Tourer = TR, Luxury Tourer = LT, Tourer/Mixito = TM, V-Klasse / V-Klasse Marco Polo = VC, Crew Chassis = CC, Chassis = CH, Passenger Van = PS, Powerhead = PH und „Not Applicable“ = Null. Bei Mehrfachauswahl steht „CN M“.
+
+Bei der Motorleistung wird der PS-Wert mit dem Suffix „PS“ verwendet, sofern vorhanden; andernfalls der kW-Wert mit dem Suffix „KW“. Beispiele für Einzelauswahl: Elektromotor 90 KW wird zu 90KW, M 200.73 13 LA 96 KW (131PS) zu 131PS, OM 608 DE 15 LA 70KW (95PS) zu 95PS, M 200.73 13 LA 75 KW (102PS) zu 102PS, OM 608 DE 15 LA 55 KW (75PS) zu 75PS und OM 608 DE 15 LA 85KW (116PS) zu 116PS. „Not Applicable“ ergibt Null. Bei Mehrfachauswahl steht „EP M“.
+
+Beim zulässigen Gesamtgewicht gilt K = x1000: 3.000 kg werden zu 3K, 3.500 kg zu 3.5K, 4.100 kg zu 4.1K und 5.000 kg zu 5K. Bei Mehrfachauswahl steht „MTW M“. Die Antriebsformel wird je nach Auswahl als RW (4X2 Hinterradantrieb), FW (4X2 Vorderradantrieb) oder AW (4X4 Allradantrieb) angegeben. Der Motortyp erhält stets das Präfix „MT“: bei Einzelauswahl MT B, MT D oder MT E, bei Mehrfachauswahl „MT M“.
+
+Ein Beispiel: Eine Fahrzeuggruppe mit der Klasse Sprinter, der Baureihe 910, dem SA-Code ZG2, der Aufbauart Panel Van, der Motorleistung OM 608 DE 15 LA 85KW (116PS), dem zulässigen Gesamtgewicht 3.500 kg, der Antriebsformel RWD und dem Motortyp D erhält den Namen „S 910 ZG2 PV 116PS 3.5K RW MT D“. Die zugehörige Beschreibung lautet: Class (CL): Sprinter; Series (SR): 910; SA Code (SA): ZG2; Construction (CN): Panel Van; Engine Power (EP): OM 608 DE 15 LA 85KW (116PS); Max Total Weight (MTW) & (K = x1000): 3500 kg; Drive Formula (DF): 2X2 RWD; Motor Type (MT): D.

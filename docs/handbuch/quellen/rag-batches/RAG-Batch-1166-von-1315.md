@@ -1,0 +1,21 @@
+# Batch 1166 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vier-Augen-Freigabe bei der Kampagnenerstellung**
+
+In allen Märkten durchläuft jede neu angelegte oder bearbeitete Kampagne einen verpflichtenden Vier-Augen-Freigabeprozess. Das System stellt dadurch sicher, dass mindestens zwei verschiedene Benutzer eine Kampagne prüfen, bevor sie aktiviert wird. Die Funktion richtet sich an MO und MPC. Sie ermöglicht kontrollierte Prüfungen, schützt vor unautorisierten Änderungen und hält alle Aktionen und Entscheidungen in einem Protokoll fest, das Compliance und Nachvollziehbarkeit unterstützt.
+
+Der Prozess kennt zwei Rollen. Der Requester ist der Benutzer, der eine Kampagne erstellt, bearbeitet oder zur Prüfung einreicht. Der Reviewer (im System auch als Approver bezeichnet) prüft und genehmigt die Kampagne. Ein Reviewer darf im jeweiligen Schritt nicht dieselbe Person wie der Requester sein. Die Rollen wechseln dynamisch: Wer die jeweils letzte Aktion durchführt (erstellen, bearbeiten oder einreichen), wird zum Requester für den nächsten Schritt. Die nächste handelnde Person wird zum Reviewer. Sobald diese gehandelt hat, wird sie wiederum zum Requester für den folgenden Schritt. Diese Kette setzt sich bis zur endgültigen Freigabe fort, sodass die Aufgabentrennung gewahrt bleibt.
+
+Der Ablauf beginnt damit, dass der Requester eine Kampagne erstellt oder bearbeitet und sie auf der Übersichtsseite über die Schaltfläche „Submit for Review“ einreicht. Reviewer erkennen zu prüfende Kampagnen an einem blauen Punkt neben dem Kampagnennamen. Sie öffnen über das Aktionsmenü die Bearbeitungsansicht und prüfen die Kampagne dort. Anschließend gibt es zwei Möglichkeiten: Der Reviewer klickt auf „Approve“, womit der Vier-Augen-Prozess abgeschlossen ist. Oder er bearbeitet die Kampagne; dann wechselt die Schaltfläche „Approve“ zu „Submit for Review“, und er reicht die Kampagne erneut ein. Dies wiederholt sich, bis die Kampagne genehmigt ist.
+
+In der Kampagnenübersicht gibt es mehrere Neuerungen. Über die neue Aktion „Review Log“ (das Symbol mit den drei Punkten) lässt sich das vollständige Protokoll der Vier-Augen-Freigabe einsehen, mit Statusänderungen, Benutzer-IDs und Zeitstempeln. Die Spalte „Status“ verhält sich wie folgt: Solange die Kampagne nicht zur Prüfung eingereicht wurde, steht dort „-“. Nach dem Einreichen und während des gesamten Freigabeprozesses lautet der Status „In Review“. Nach der Freigabe wechselt der Status in den passenden Lebenszyklusstatus: Active, Upcoming, Finished oder Deactivated. Der Status „Upcoming“ soll dabei in „Ready“ umbenannt werden.
+
+Auch das Gültigkeitsdatum wird angepasst. „Validity From“ bleibt bis zur Freigabe vorläufig und wird in der Übersicht als „TBC“ angezeigt, obwohl das Datum bei der Einrichtung eingegeben wurde. Während der Prüfung lautet das Format „TBC - TT.MM.JJJJ“. Nach der Freigabe erscheint „TT.MM.JJJJ - TT.MM.JJJJ (+ XY days)“. Liegt das Datum „Validity From“ zum Zeitpunkt der Freigabe in der Vergangenheit, wird es auf das Freigabedatum gesetzt. Andernfalls bleibt es wie ursprünglich festgelegt.
+
+Für bereits produktiv vorhandene Kampagnen gilt Folgendes: Geplante (Scheduled) Kampagnen werden auf den Status „In Review“ zurückgesetzt. Nach ihrer Freigabe zeigt die Statusspalte je nach Startdatum „Ready“ oder „Active“ an. Aktive Kampagnen sowie beendete oder deaktivierte Kampagnen behalten ihren Status unverändert. Als aktiv gilt eine Kampagne, wenn ihr Gültigkeitsbeginn heute oder in der Vergangenheit liegt und die Statusspalte „Active“ anzeigt.
+
+**Umschalter in der Preismatrix für Preis pro Kilometer bei Laufleistungs-/Laufzeitprodukten**
+
+Zu dieser Funktion liegen keine Informationen vor, die für das Benutzerhandbuch verwendet werden können. Das zugrunde liegende Ticket enthält nur leere Vorlagenfelder und wurde abgebrochen. Die Funktion wurde daher nicht umgesetzt und sollte im Benutzerhandbuch nicht beschrieben werden.

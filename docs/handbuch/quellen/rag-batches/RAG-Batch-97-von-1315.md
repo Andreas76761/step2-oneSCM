@@ -1,0 +1,17 @@
+# Batch 97 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Revenue Management
+
+Im Bereich Revenue Management wurde ein Fehler behoben: Beim Ändern der Zahlungsmethode trat zuvor ein interner Fehler auf. Dieser Vorgang funktioniert nun wie vorgesehen.
+
+Der Fehler beim Import, durch den ein Schadenscode doppelt angelegt wurde, wird nicht weiterverfolgt. Dazu gibt es daher keine Änderung.
+
+Derzeit befindet sich zudem ein neues Dokument zur Abrechnung am Vertragsende oder bei vorzeitiger Beendigung in Vorbereitung (Status: in Refinement, noch nicht verfügbar). Die Planung sieht vor, dass für Leasing- und Nicht-Leasing-Verträge ein manuell erstellbares Dokument vom Typ MDCR (Manual Financial Document Contract Review) angeboten wird. Es soll den Endabrechnungsbetrag eines Vertrags festhalten, beispielsweise bei Kilometerüberschreitung, bei vorzeitiger Fahrzeugrückgabe oder bei einer Vertragsstrafe für vorzeitige Beendigung. Die Berechnung des Betrags erfolgt weiterhin außerhalb von oneSCM. Das System dient lediglich dazu, den bereits berechneten Betrag zu erfassen und zu exportieren.
+
+Erstellt werden soll das Dokument von berechtigten Benutzern (MO/MPC) im Bereich der Finanzdokumente eines Vertrags. Eine neue Rolle wird dafür nicht eingeführt; es gelten die bestehenden Berechtigungen für die manuelle Dokumenterstellung. Bei der Erstellung wählt der Benutzer, ob das Dokument als Rechnung oder als Gutschrift angelegt wird. Als Dokumentempfänger wird der Eigentümer bzw. Zahler des Vertrags ausgewählt, die SAP-Debitorennummer wird automatisch übernommen und kann nicht bearbeitet werden. Optional kann auf ein Referenzdokument verwiesen werden, wobei MDCR-Dokumente im Status „FI Doc created“ und später (z. B. bezahlt oder Mahnstufen) zur Auswahl stehen. Das Belegdatum muss zwischen dem Vertragsbeginn und dem heutigen Tag liegen. Der Kundendokumenttyp ist stets MDCR.
+
+Das Dokument enthält genau eine Position. Dort erfasst der Benutzer den manuell berechneten Nettobetrag als Pflichtangabe sowie einen Positionstext mit höchstens 255 Zeichen, der die Berechnung beschreibt, etwa „12.500 km gefahren − 10.000 km vereinbart = 2.500 km × 0,15 EUR/km = 375,00 EUR“. Die Steuerklassifizierung wird mit der des gewählten Eigentümers bzw. Zahlers vorbelegt, der Steuerbetrag wird automatisch berechnet. Netto-, Steuer- und Gesamtbetrag werden nicht editierbar angezeigt. Die Felder „Dokument von“ und „Dokument bis“ sind optional, da ein solches Dokument keinen Abrechnungszeitraum darstellt; falls angegeben, müssen die Daten zwischen Vertragsbeginn und heute liegen.
+
+Das Dokument durchläuft den üblichen Dokumentenlebenszyklus (Erstellt, Akzeptiert, Exportiert, FI-Dokument erstellt, Bezahlt bzw. Mahnstufe) und wird über den Standard-Batchjob E169/CoFiCo/SWT exportiert. In der Exportdatei ist der Positionstext befüllt, der Kopftext bleibt leer. Bei Leasingverträgen (Vertriebskanal Leasing und Dokumenttyp MDCR) wird das Dokument zusätzlich per API an MBLD übermittelt; MDCR-Dokumente von Nicht-Leasingverträgen werden nie an MBLD gesendet. Die Dokumente sind außerdem auf der Seite „Finanzdokumente“ sichtbar.

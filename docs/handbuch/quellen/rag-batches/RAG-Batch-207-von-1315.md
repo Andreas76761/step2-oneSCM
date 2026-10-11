@@ -1,0 +1,21 @@
+# Batch 207 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management: Rechnungsprüfung, technisches Feedback und Rückmeldungen aus oneERP**
+
+Im Bereich Revenue Management wurden zwei Fehler im Admin-Bereich behoben. Zum einen war die Frontend-Logik der Rechnungsansicht für Administratoren fehlerhaft und funktioniert nun wieder wie vorgesehen. Zum anderen lieferte die Abfrage des Kontostands für Benutzer mit der Rolle Händler fälschlicherweise den Fehler 403 (Zugriff verweigert); auch dieses Problem ist behoben.
+
+Ein größeres Vorhaben betrifft das technische Feedback zur Schnittstelle zwischen SWT und oneSCM (CoFiCo). Ziel ist es, dass oneSCM vom Finanzsystem (FI-System) eine Rückmeldung erhält, ob die gesendeten Daten grundsätzlich verarbeitbar sind. Dadurch sollen Transparenz und Genauigkeit der Daten in oneSCM sowie die Robustheit des Prozesses steigen, damit sich Verzögerungen im Fehlerfall minimieren. Dieses Vorhaben befindet sich derzeit im Status „Blocked BAT Testing“, ist also noch nicht abgeschlossen.
+
+Das FI-System stellt die Rückmeldung als CSV-Datei in einem S3-Ordner bereit (Pfad: ENV/MARKET_CODE/SWT/Incoming/INTERFACE). Die Datei enthält ab Position 1 bis 16 die Verarbeitungsnummer und ab Position 16 die Fehlermeldung. Die Verarbeitungsnummer wird von oneSCM vergeben und identifiziert, welche Rechnungen betroffen sind. Das ist wichtig, da bei Sammelrechnungen mehrere oneSCM-Rechnungen betroffen sein können. Als mögliche Fehler sind vorgesehen: Kunde existiert nicht, Konto ist für Buchungen gesperrt, HSN-Code ist falsch, Steuercode ist falsch und Kostenstellenreferenz ist unbekannt.
+
+Erhält oneSCM eine solche Fehlermeldung, ordnet das System sie anhand der Verarbeitungsnummer der jeweiligen Rechnung zu und trägt sie in der Spalte „Reason“ der Rechnung ein. Der Status der Rechnung wird auf „Error“ gesetzt.
+
+Ist der Fehler behoben, öffnet der Benutzer den Admin-Bereich und wählt dort „Invoices“. Er sucht die fehlerhafte Rechnung, wählt in der Spalte „Actions“ die Option „Confirm Fixes“, ändert den Status über eine Auswahlliste von „Error“ auf „Accepted“, gibt einen Grund an und bestätigt. Dabei werden die Verarbeitungsnummer und das Übertragungsdatum an das FI-System von der Rechnung entfernt. Die Benutzerkennung der bestätigenden Person und der angegebene Grund werden im Änderungsprotokoll („Modification Log“) der Rechnung festgehalten. Beim nächsten Lauf des Export-Batchjobs erzeugt das System eine neue Verarbeitungsnummer und ein neues Übertragungsdatum und sendet die Rechnung erneut an das FI-System.
+
+Zwei weitere Prüfungen, die das FI-System üblicherweise durchführt, wurden bewusst nicht als Rückmeldung berücksichtigt: die Dublettenprüfung anhand des CDS-Zählers im Dateikopf „F“ und die Plausibilitätsprüfung der Dateieinträge. Diese Validierungen sollen in oneSCM selbst erfolgen, damit entsprechende Fehler im FI-System gar nicht erst auftreten, und werden in einem separaten Vorhaben behandelt.
+
+Offen ist noch das Vorhaben zu den oneERP-Rückmeldungen für die Schnittstellen E174 und E167. Bislang gibt es dafür keine Rückmeldungen, weshalb der Rechnungsstatus nach „Exported“ bzw. „FI_DOC_CREATED“ stehen bleibt. Geplant sind zusätzliche Rückmeldungen, um auch für diese Schnittstellen einen Status zu erhalten. Vorrangig soll die FI-Dokumentnummer zurückgemeldet werden, um sicherzustellen, dass die Buchung erfolgt ist. Vorgesehen sind dafür eine Dateistruktur mit Mapping zu oneSCM sowie eine dateibasierte CFT/Axway-Anbindung. Das Ziel sind höhere Transparenz und bessere Datenqualität; die Verarbeitung läuft automatisch im Hintergrund.
+
+Das Vorhaben „Yearly Payment – Customers Fiscal Year“ wurde abgebrochen. Die vorliegenden Angaben enthalten keine inhaltliche Beschreibung, daher gibt es dazu keine Funktion, die im Handbuch beschrieben werden könnte.

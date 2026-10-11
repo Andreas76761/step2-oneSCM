@@ -1,0 +1,23 @@
+# Batch 856 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Statusverwaltung von Serviceverträgen im Contract Management**
+
+Das Contract Management von oneSCM bietet drei Funktionen, mit denen sich der Status eines Servicevertrags steuern lässt: das reguläre Auslaufen eines Vertrags, die Sperrung (Suspendierung) und die Wiederaktivierung. Alle drei Funktionen sind für Market Operations User vorgesehen und wirken sich darauf aus, ob ein Kunde den Servicevertrag in der Werkstatt nutzen kann.
+
+**Reguläres Auslaufen eines Vertrags**
+
+Ein aktiver Servicevertrag läuft automatisch ab, sobald das Vertragsende oder die vereinbarte Laufleistung erreicht ist, je nachdem, welches Ereignis zuerst eintritt. Maßgeblich sind dabei das im Attribut „Contract Duration“ hinterlegte Vertragsenddatum und die im Attribut „Planned Total Mileage“ angegebene Laufleistung. Wird eine der beiden Grenzen erreicht, wechselt der Status des Vertrags automatisch von „Active“ auf „Expired“. Der Kunde kann den Vertrag danach nicht mehr in der Werkstatt verwenden. Der Status „Expired“ wird überall angezeigt, wo der Vertragsstatus dargestellt wird. Der Kunde erhält per E-Mail eine Benachrichtigung über das Vertragsende. Das System Vega wird über die Datei I155 mit dem Status „101“ informiert. Die Statusänderung wird außerdem im Reiter „History“ des Vertrags dokumentiert. Nicht Bestandteil des Mindestumfangs (MVP) sind das Auslaufen aufgrund eines Kontingents sowie die Wiederaktivierung eines abgelaufenen Vertrags innerhalb einer Frist, die auf Ebene der Zentrale oder des Marktes konfiguriert werden kann. Diese Punkte sind für einen späteren Ausbau vorgesehen.
+
+**Sperrung eines Vertrags**
+
+Ein Market Operations User kann einen aktiven Servicevertrag manuell sperren, damit der Kunde ihn in der Werkstatt nicht mehr nutzen kann. Voraussetzung ist, dass sich der Vertrag im Status „Active“ befindet. Der Einstieg erfolgt über die Vertragsdetailseite und dort über die Schaltfläche „Status“. Während der Sperrung werden alle weiteren aktiven Servicerverträge desselben Kunden angezeigt. Der Anwender kann jeden dieser Verträge auswählen und gleichzeitig sperren. Dabei muss ein Grund angegeben werden, der für alle gemeinsam gesperrten Verträge übernommen werden kann. Nach der Sperrung steht für die betroffenen Verträge die Aktion „Reactivate“ zur Verfügung, während „Suspend“ nicht mehr angeboten wird, da der Vertrag bereits gesperrt ist. Der Status „Suspended“ wird überall angezeigt, wo der Vertragsstatus dargestellt wird. Vega wird über die Datei I155 mit dem Statuscode „002“ informiert, der im Statusmodell von Vega dem Status „locked“ entspricht. Die Sperrung wird in der Änderungshistorie des Vertrags festgehalten. Optional kann der Kunde per E-Mail über die Sperrung seiner Verträge informiert werden.
+
+**Wiederaktivierung eines Vertrags**
+
+Ein gesperrter Servicevertrag kann von einem Market Operations User manuell wieder aktiviert werden, sodass der Kunde ihn erneut in der Werkstatt nutzen kann. Voraussetzung ist, dass sich der Vertrag im Status „Suspended“ befindet. Auch hier erfolgt der Einstieg über die Vertragsdetailseite und die Schaltfläche „Status“. Im Verlauf der Wiederaktivierung werden alle weiteren gesperrten Servicerverträge desselben Kunden angezeigt, die sich einzeln auswählen und gemeinsam wieder aktivieren lassen. Auch hier ist ein Grund zwingend anzugeben, der für alle gleichzeitig wieder aktivierten Verträge übernommen werden kann. Nach der Wiederaktivierung steht für die Verträge wieder die Aktion „Suspend“ zur Verfügung, während „Reactivate“ nicht mehr angeboten wird, da der Vertrag bereits wieder aktiv ist. Der Status „Active“ wird überall angezeigt, wo der Vertragsstatus dargestellt wird. Vega wird über die Datei I155 mit dem Statuscode „001“ informiert, der im Statusmodell von Vega dem Status „active“ entspricht. Die Wiederaktivierung wird in der Änderungshistorie des Vertrags dokumentiert. Optional kann der Kunde per E-Mail über die Wiederaktivierung informiert werden.
+
+**Hinweis zur Schnittstelle zu Vega**
+
+Alle drei Statusänderungen werden über die Datei I155 an Vega übermittelt. Ist diese Datei nicht verfügbar, erhält Vega die zuletzt vorgenommenen Änderungen an den Verträgen nicht. Dies kann sich auf die Abrechnung bzw. Geltendmachung von Ansprüchen aus den Verträgen auswirken.

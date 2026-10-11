@@ -1,0 +1,23 @@
+# Batch 277 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Statusverlauf von Rechnungspositionen im Admin-Bereich**
+
+Benutzer der Market Operation können im Admin-Bereich für eine ausgewählte Rechnung den Verlauf der Statusänderungen einsehen. Damit sich der Status jederzeit nachvollziehen lässt, wird jede Statusänderung einer Rechnung protokolliert. Das Protokoll enthält für jede Änderung vier Angaben. Das Änderungsdatum entspricht dem UTC-Zeitstempel der Aktion im Format TT.MM.JJJJ HH:mm:ss UTC. Unter „Modified by" wird festgehalten, wer die Änderung vorgenommen hat: Erfolgt sie durch einen Batch-Job, wird dessen Benutzername gespeichert. Ist sie die Folge einer Benutzeraktion, etwa dem Anlegen einer manuellen Rechnung, dem Freigeben einer Rechnung oder dem Bestätigen von Korrekturen, wird der Benutzername der handelnden Person gespeichert. „Old Value" zeigt den Statuswert vor der Änderung; wurde die Rechnung über einen Zahlungsplan erzeugt, lautet der alte Status „-". „New Value" zeigt den Statuswert nach der Änderung. Als Grund („Reason") wird bei einer Änderung durch einen Batch-Job „Automatic Change due to Batch Execution." gespeichert. Bei einer Benutzeraktion, die eine Begründung erfordert, wird diese Begründung gespeichert. Erfordert die Aktion keine Begründung, wird „-" gespeichert und angezeigt.
+
+Den Statusverlauf rufen Sie auf, indem Sie im Admin-Bereich „Invoices" auswählen und dann entweder auf den Status der Rechnung klicken oder in der Spalte „Action" die Option „History" wählen. Beide Wege öffnen ein Popup mit einer Tabelle und einer Schaltfläche „Back". Alle Spalten der Tabelle sind sortierbar; standardmäßig ist der Inhalt nach dem Änderungsdatum sortiert, wobei die neuesten Einträge oben stehen. Das Popup ist groß genug, um zehn Einträge darzustellen. Enthält die Tabelle mehr als zehn Einträge, wird der Inhalt scrollbar. Mit der Schaltfläche „Back" oder dem „X" schließen Sie das Popup und kehren zur Kundenrechnungstabelle zurück. Gestaltung und Grafiken entsprechen der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.
+
+**Batch-Job-Verwaltung: Job deaktivieren**
+
+Administratoren können einen Job deaktivieren, sodass er inaktiv wird und zum geplanten Datum und zur geplanten Uhrzeit nicht mehr ausgeführt wird. Das ist erforderlich, wenn ein übergreifendes Problem mit dem Job besteht, das gelöst werden muss, bevor er wieder nach Zeitplan laufen soll.
+
+Dazu suchen Sie in der Jobliste einen Job mit dem Status „Enabled" und wählen in der Spalte „Action" die Option „Disable". Diese Option steht ausschließlich für Jobs mit dem Status „Enabled" zur Verfügung. Anschließend erscheint ein Bestätigungs-Popup mit dem Titel „Disable" und dem Text: „Are you sure you want to Disable this job? This action will make the job inactive and will not run at the scheduled date and time until it will be enabled again manually. Please confirm that you would like to disable the job." Mit „Cancel" schließen Sie die Bestätigungsmeldung und gelangen zurück zur Jobtabelle. Mit „Disable" ändern Sie den Jobstatus auf „Disabled", der Job wird zum geplanten Zeitpunkt nicht mehr ausgeführt, die Meldung wird geschlossen und Sie kehren zur Batch-Job-Tabelle zurück. Gestaltung und Grafiken entsprechen der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.
+
+**Batch-Job-Verwaltung: Run Now**
+
+Administratoren können einen Job manuell auslösen, woraufhin er sofort zu laufen beginnt. Das wird benötigt, wenn die Ausführung eines Jobs fehlgeschlagen ist und er erneut gestartet werden muss.
+
+Dazu suchen Sie den Job in der Jobliste und wählen in der Spalte „Action" die Option „Run Now". Es erscheint ein Bestätigungs-Popup mit dem Titel „Run Now" und dem Text: „Are you sure you want to start this job now? Please confirm that you would like to run the batch job now. This action cannot be undone." Mit „Cancel" schließen Sie die Bestätigungsmeldung und kehren zur Jobtabelle zurück. Mit „Run Now" lösen Sie den Batch-Job aus, die Meldung wird geschlossen und Sie werden zur Rechnungstabelle weitergeleitet.
+
+Während ein Batch-Job läuft, gilt eine Einschränkung: Befindet sich derselbe Batch bereits in Ausführung, ist die Option „Run Now" deaktiviert. Ein Tooltip weist darauf hin, dass der Batch bereits läuft und nicht erneut ausgelöst werden kann. Gestaltung und Grafiken entsprechen der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.

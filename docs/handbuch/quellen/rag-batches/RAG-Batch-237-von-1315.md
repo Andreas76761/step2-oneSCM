@@ -1,0 +1,21 @@
+# Batch 237 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 13 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management – Änderungen und Verbesserungen**
+
+Im Bereich Revenue Management wurde eine Plausibilitätsprüfung für den Export und Import von E169-Dateien eingeführt. Market-Operation-Anwender können damit kontrollieren, ob die Summe der an NACOS gesendeten Rechnungen mit der Summe in der zurückgelieferten Feedback-Datei übereinstimmt. Dafür gibt es im Admin-Bereich auf der Seite „Financial Control" den neuen Reiter „E169 Checks".
+
+Voraussetzung ist, dass der E169-Export nach Export-Typ in getrennte Dateien aufgeteilt wird. Der Batch-Job NACOSInvE169EXP erzeugt beim Lauf für jeden Export-Typ (zum Beispiel SG, EXTSUB oder IF) eine eigene E169-Datei, wobei der Typ im Dateinamen enthalten ist. Berücksichtigt werden sollen zudem neue Typen wie FEA und EXTSER.
+
+Der Reiter bietet folgende Suchkriterien: Dateityp und Status (jeweils als Auswahlliste mit den in der Datenbank verfügbaren Werten), Exportdatum und Importdatum (jeweils per Datumsauswahl). Als weitere Filter stehen der Dateiname (Textfeld mit Buchstaben a–z und Ziffern 0–9, ohne Beachtung der Groß-/Kleinschreibung, mit unscharfer Suche) und die Prüfung („Check") als Auswahlliste zur Verfügung. Mit „Search" wird der Ergebnisbereich mit den gefilterten Datensätzen gefüllt, mit „Cancel" werden alle Änderungen verworfen. Änderungen an den Filtern wirken sich nicht automatisch auf die Suchergebnisse aus.
+
+Der Ergebnisbereich zeigt Dateiname, Dateityp, Status, Exportdatum, Importdatum, Gesamtsumme Export, Gesamtsumme Import und das Prüfergebnis. Als Dateitypen gibt es Kundenrechnungen (SG), internationale Rechnungen (IF), Händlerrabatte (EXTSUB), Händlerprovisionen (EXTSER) und Old Part Tax. Der Status zeigt an, ob die E169-Datei erzeugt wurde („Exported"), ob die Datei zwischen Export und Import steht („Import Pending") oder ob die Feedback-Datei in oneSCM verarbeitet wurde („Imported"). Das Exportdatum ist das Erzeugungsdatum der Datei, das Importdatum das Datum, an dem das E169-Feedback eingelesen wurde.
+
+Die Gesamtsumme Export wird aus der Exportdatei berechnet. Dabei werden alle Positionszeilen berücksichtigt, unabhängig davon, ob es sich um eine Rechnung oder eine Gutschrift handelt. Summiert werden die Werte des Satztyps POS an den Positionen 76 bis 88 (Nettobetrag), geteilt durch 100. Die Gesamtsumme Import wird aus der Importdatei berechnet. Zeilen mit der FI-Rechnungsnummer 888888888, die einen Fehler kennzeichnet, bleiben unberücksichtigt. Summiert werden die Werte an den Positionen 73 bis 83 (Nettobetrag), geteilt durch 100. Stimmen beide Summen überein, lautet die Prüfung „OK", andernfalls „Not OK". Alle Spalten der Tabelle sind sortierbar. Standardmäßig wird nach Exportdatum sortiert, das neueste zuerst. Pro Seite werden zunächst 10 Einträge angezeigt, wählbar sind 10, 20, 30, 40 und 50.
+
+Auf der Seite „Download file" der Batch-Jobs wurde der Massen-Download verbessert. HQ- und Admin-Anwender öffnen im Admin-Bereich unter „Batch Job" über das Aktionsmenü („...") die Ansicht „View". Auf der Seite „Batch Job Console Files" gibt es nun am Anfang jeder Zeile ein Kontrollkästchen sowie die Schaltflächen „Download" und „Back". Das Kästchen in der Kopfzeile bei „File Name" wählt alle Zeilen gleichzeitig aus. „Download" lädt die ausgewählten Dateien auf das Gerät des Anwenders herunter: Bei mehreren Dateien als ZIP-Archiv, bei nur einer Datei soll diese nicht gezippt werden. „Back" führt zurück zur Übersicht der Batch Job Console.
+
+Außerdem wurden die URLs für NEMESIS angepasst: oneSCM Dev nutzt NEMESIS Dev, oneSCM Int und Pre-Prod nutzen NEMESIS Quality.
+
+Darüber hinaus wurden mehrere Fehler im Revenue Management behoben. Dazu gehören ein falscher Mehrwertsteuersatz bei Produkten, nicht erzeugte Händlerrabatt-Rechnungen, ein Fehler im Health Check, eine nicht funktionierende Rechnungssuche im Admin-Bereich sowie eine fehlerhafte Dateistruktur beim E174-Export. Ebenso wurde ein Webclient-Fehler bei NEMESIS in der Vorproduktionsumgebung behoben.

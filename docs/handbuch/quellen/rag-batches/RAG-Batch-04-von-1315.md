@@ -1,0 +1,17 @@
+# Batch 4 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 24 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vehicle Management – Neuerungen und Korrekturen**
+
+Die technische Basis des Vehicle Management wurde modernisiert: Die zugrunde liegende Java-Version wurde von Version 17 auf Version 21 angehoben. Darüber hinaus wurden mehrere Fehler behoben, die zuvor zu Störungen im laufenden Betrieb geführt haben. Dazu zählen ein unerwarteter Fehler in einem zeitgesteuerten Task der Vehicle-Management-App sowie ein Fehler beim Batch-Job „i155". Behoben wurde außerdem ein Problem, durch das der Testendpunkt für Fahrzeuge das Datum der Erstzulassung nicht zurücksetzte, wenn dieses leer war. Ebenfalls korrigiert wurde ein interner Serverfehler, der bei der Suche über die Auftragsnummer als Kennung auftrat. Auch die extrem lange Ladezeit im Vertragsmanagement von rund fünf Minuten wurde beseitigt.
+
+Bei der Erfassung von Baumustern werden nun auch Baumuster mit sieben und acht Stellen akzeptiert, die zuvor nicht zulässig waren.
+
+Verbessert wurde zudem die Mehrsprachigkeit im Bereich der Industry Codes: In der Erstellungsstrecke war die Übersetzung für die Sprache Deutsch zunächst nicht korrekt und wurde nachgebessert. Hintergrund ist die Anforderung, dass Märkte in der Erstellung von Coverage Codes und Industry Codes entsprechend der gewählten Sprache dargestellt werden, sodass etwa bei deutscher Spracheinstellung „Germany" als „Deutschland" erscheint. Dafür liefert das Backend die Marktcodes, anhand derer das Frontend die Märkte unter anderem in der Marktspalte der Tabellen, in der Ansicht und der Zusammenfassung sowie im zweiten Schritt der Erstellung übersetzt.
+
+Im Zusammenhang mit der Qualitätssicherung wurden zudem Produktanlage-Verbesserungen und verbleibende Restarbeiten abgeschlossen. Außerdem wurden automatisierte End-to-End-Testfälle für Fahrzeug- und Produktmanagement erstellt, die sowohl Smoke- als auch Sanity-Abläufe abdecken und sich an den wichtigsten Abläufen des Teams orientieren. Ein fehlgeschlagener automatisierter End-to-End-Testlauf im Produktmanagement wurde ebenfalls bearbeitet.
+
+Angepasst wurde auch die Benennung im Assistenten zur Erstellung von Blueprints: Der dritte Schritt heißt nun „Overview & Confirmation". Damit entspricht er der Bezeichnung, die in anderen Assistenten der Anwendung für den letzten Schritt verwendet wird, und sorgt für eine einheitliche Benennung in der gesamten Anwendung.
+
+Folgende Punkte befinden sich noch in Planung bzw. Prüfung: Geplant ist, in der Fahrzeuggruppierung für Vans in der SA-Code-Liste künftig auch den Namen des SA-Codes anzuzeigen, sofern dieser im angebundenen Backend-System verfügbar ist. Steht dort nur Englisch zur Verfügung, ist das ausreichend, da diese Ansicht ausschließlich von Marktnutzern verwendet wird. Für die Vorauswahl der Preisversion bei Produkten in der Verwaltung von Fahrzeuggruppen für Pkw und Vans gilt als Prüfziel: Eine aktuelle Preisversion wird vorausgewählt, auch wenn zusätzlich eine zukünftige Preisversion existiert. Eine ausschließlich zukünftige Preisversion wird nicht vorausgewählt, und abgelaufene Preisversionen werden nicht unter den Preisversionen angezeigt.

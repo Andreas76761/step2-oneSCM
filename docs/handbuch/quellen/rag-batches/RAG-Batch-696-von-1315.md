@@ -1,0 +1,23 @@
+# Batch 696 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Prüfung des Zählerwerts beim Import von I156-Schadensmeldungen (Contingent-Schadencodes)**
+
+Beim Import von Schadensmeldungen über die Schnittstelle I156 prüft oneSCM nun zusätzlich den Zählerwert (Kontingentverbrauch) von Schadencodes, die im Kontingentbereich (Reiter „Contingent“) des Admin-Bereichs hinterlegt sind. Die Prüfung gilt sowohl für den automatischen VEGA-Push als auch für den manuellen Upload per Cross File Transfer (CFT). Beide Wege verhalten sich dabei identisch, auch bei der Protokollierung und der Anzeige auf der Statistikseite.
+
+Die Prüfung greift, wenn ein Schadencode des Datensatztyps 20 einer Meldung im Reiter „Contingent“ mit einer Anzahl der Nutzungen (Number of Usages) größer null konfiguriert ist und das Beendigungskriterium des Vertrags den Wert „Contingent“ hat. In diesem Fall muss die Meldung in der I156-Datei einen Zählerwert größer null enthalten. Ist der Zähler null, wird die Meldung übersprungen und nicht als Werkstattrechnung importiert. Ist der Zähler größer null und liegt innerhalb des konfigurierten Rahmens, wird die Meldung normal weiterverarbeitet. Ist der Schadencode nicht in der Kontingenttabelle hinterlegt oder beträgt die Anzahl der Nutzungen null, findet keine Zählerprüfung statt, unabhängig vom Zählerwert. Enthält eine Meldung mehrere Schadencodes und bei mindestens einem kontingentierten Code ist der Zähler null, wird die gesamte Meldung übersprungen; der Skip-Grund nennt den auslösenden Schadencode.
+
+Zusätzlich werden Meldungen übersprungen, wenn der Zählerwert vom konfigurierten Wert abweicht (größer oder kleiner) oder wenn der übermittelte Kontingentzähler größer ist als die auf dem Vertrag verbleibenden Nutzungen. Übersprungene Meldungen beeinträchtigen den Import der übrigen Meldungen derselben Datei nicht; dieser läuft ungestört weiter.
+
+**Ablauf des Imports**
+
+Nach dem Empfang wird die Datei zunächst geparst und strukturell validiert (Datei-Zeitstempel und Anzahl der Datensatztypen). Anschließend folgt je Meldung die Dublettenprüfung: Existiert bereits eine Meldung mit derselben VEGA-Antragsnummer, Entscheidungsnummer und demselben Zeitstempel, wird sie übersprungen. Danach wird geprüft, ob der referenzierte Vertrag in oneSCM existiert; andernfalls wird die Meldung ebenfalls übersprungen. Als nächster Schritt folgt die neue Zählerprüfung für Contingent-Schadencodes. Meldungen, die alle Prüfungen bestehen, werden als Werkstattrechnungen gespeichert, und ein Contingent-Count-Event aktualisiert die Verbrauchsverfolgung. Zuvor wurde die Kontingentkonfiguration beim I156-Import nicht berücksichtigt, sodass Meldungen mit Zähler null unbemerkt importiert wurden und einen Verbrauch von null Einheiten erzeugten.
+
+**Protokollierung in Datadog**
+
+Für jede übersprungene Meldung wird ein eigener strukturierter Protokolleintrag in Datadog geschrieben. Er enthält die VEGA-Antragsnummer, den Schadencode, den Coverage-Code, die Vertragsnummer und den Grund des Überspringens, zum Beispiel: „Claim skipped – Damage code [X] has Number of Usages configured but counter value in I156 is zero.“ Entsprechende Meldungen gibt es für Zählerwerte, die größer oder kleiner als der konfigurierte Wert sind, sowie für Zählerwerte, die die verbleibenden Nutzungen des Vertrags übersteigen.
+
+**Anzeige auf der Statistik-/Import-Übersichtsseite**
+
+Die bestehende Statistik- bzw. Import-Übersichtsseite zeigt weiterhin die Summen für empfangene, importierte und übersprungene Meldungen sowie die Gründe für bereits bekannte Skip-Szenarien. Sie wurde um Meldungen erweitert, die wegen der Zählerprüfung übersprungen wurden. Für jede dieser Meldungen werden die VEGA-Antragsnummer (Meldungsreferenz), die Vertragsnummer, die Fahrgestellnummer, der Status und der Grund angezeigt. Der Grund lautet etwa „Damage code [X] has Number of Usages maintained but counter in I156 is zero“ bzw. der Hinweis, dass der Zählerwert kleiner oder größer als der konfigurierte Wert ist. Die Summen für empfangene, importierte und übersprungene Meldungen berücksichtigen diese Fälle korrekt. So haben Market Operations und Finance Administrators jederzeit eigenständig Einblick in die Skip-Ereignisse.

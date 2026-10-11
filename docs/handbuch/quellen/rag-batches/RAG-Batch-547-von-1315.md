@@ -1,0 +1,13 @@
+# Batch 547 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 15 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Im Bereich DevOps wurden mehrere Verbesserungen an der Infrastruktur und an den Abläufen rund um Bereitstellung und Release umgesetzt, die den stabilen Betrieb von oneSCM unterstützen.
+
+Auf der Anwenderseite wurde ein Problem behoben, bei dem Benutzer eine Händlerdatei (Dealership-Datei) nicht hochladen konnten. Außerdem wurden Fehler im Zusammenhang mit der Datenquelle des Bastion-Hosts sowie mit Mount-Problemen korrigiert. Auch die sogenannten Wrapper-Module wurden überarbeitet, sodass die zuvor aufgetretenen Probleme in diesem Bereich beseitigt sind. Eine separate Untersuchung zu einer Wrapper-Modul-Inkompatibilität wurde nicht weiterverfolgt und abgebrochen. Ebenso wurde die Bearbeitung eines Fehlers beim Ändern der Sprache im Benutzerprofil abgebrochen; dieser Punkt ist daher in dieser Release-Runde nicht behoben.
+
+Für die Bereitstellung der Anwendungen wurden die Dockerfiles überarbeitet und korrigiert. Dazu gehörte die Aktualisierung der Dockerfiles für zwei Anwendungen sowie die Anpassung der Anwendungen des deutschen Marktes (de-market) auf einen schreibgeschützten Betrieb (Read-only). Der Workflow zur kontinuierlichen Validierung der Infrastruktur als Code (IaC) wurde ebenfalls repariert.
+
+Auch der Release-Prozess selbst wurde verbessert. So wird die Versionsnummer bei einem Major Release auf dem Release-Branch nun korrekt gesetzt, und die automatische Aktualisierung der Version in Jira wird wieder zuverlässig ausgelöst. Das Setzen von Tags nach einem Release wurde abgeschlossen. Zudem wurde ein Timeout-Fehler in den automatisierten Browsertests (Selenium-TimeoutException, bei dem eine Nachricht des Renderers nicht rechtzeitig empfangen wurde) behoben.
+
+Darüber hinaus wurden zwei Integrationen neu eingeführt. Zum einen ist DataDog nun mit Jira verbunden: In den Umgebungen Preprod und Prod wird bei einem Fehler oder beim Stoppen der Anwendung automatisch ein Bug-Ticket in Jira angelegt. Zum anderen wurde der SecretsManager in die Module integriert. Er ersetzt die bisherige manuelle Anlage von Zugangsdaten für Datenbanken, Anwendungsprofilen und ähnlichen Angaben. Bei der Bereitstellung einer Anwendung wird dabei automatisch ein Profil im Format „Anwendungsname-aws“ erzeugt, das zu einem späteren Zeitpunkt aktualisiert werden kann.

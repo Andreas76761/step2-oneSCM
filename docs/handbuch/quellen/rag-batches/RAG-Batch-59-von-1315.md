@@ -1,0 +1,15 @@
+# Batch 59 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Im Bereich Revenue Management steht ein neuer manuell erstellbarer Finanzbeleg zur Verfügung: das MDCR (Manual Financial Document Contract Review). Er dient dazu, die finanzielle Position eines Vertrags abzuschließen, entweder zum Vertragsende oder bei vorzeitiger Beendigung. Der Beleg ist sowohl für Leasing- als auch für Nicht-Leasing-Verträge nutzbar und bildet eine Schlussabrechnung ab, also eine Rechnung oder eine Gutschrift. Sie gleicht die Differenz zwischen dem tatsächlich Verbrauchten bzw. Geschuldeten und dem Vertraglich Vereinbarten aus. Typische Beispiele sind eine Mehrkilometerabrechnung bei einem Servicevertrag, der Endsaldo bei vorzeitiger Fahrzeugrückgabe in einem Leasingvertrag oder eine Vertragsstrafe bei vorzeitiger Beendigung.
+
+Die Berechnung des Betrags erfolgt weiterhin außerhalb von oneSCM, da jede Vertragsart und jeder Markt eigene Regeln hat, zum Beispiel Preis pro Kilometer, Prozentsätze für Vertragsstrafen, Kilometerobergrenzen oder Datenbankberechnungen im Leasing. oneSCM automatisiert diese Berechnung nicht, sondern bietet einen einheitlichen, klar definierten Belegtyp sowie einen Erstellungs- und Exportprozess, um den bereits berechneten Betrag zu erfassen und zu exportieren.
+
+Der MDCR wird von Benutzern der Rollen MO und MPC im Bereich der Finanzbelege eines Vertrags angelegt, sobald sie den Abrechnungsbetrag extern ermittelt haben. Es wird keine neue Rolle eingeführt; es gelten die bestehenden Berechtigungen für die manuelle Belegerstellung. Beim Anlegen wählen Sie, ob der MDCR als Rechnung (Belastung des Kunden) oder als Gutschrift (Erstattung an den Kunden) erstellt wird. Für Gutschriften gibt es dabei keine Einschränkung. Sie erfassen manuell den extern berechneten Nettobetrag sowie einen Positionstext, der die Berechnung beschreibt, beispielsweise „12.500 km gefahren − 10.000 km vereinbart = 2.500 km × 0,15 EUR/km = 375,00 EUR". Die Felder für den Rechnungszeitraum („Beleg von“ und „Beleg bis“) sind optional, da ein MDCR keinen Abrechnungszeitraum darstellt.
+
+Der MDCR durchläuft den üblichen Belegstatus-Ablauf (Erstellt → Akzeptiert → Exportiert → FI-Beleg erstellt usw.) und wird über den Standard-Exportjob E169/CoFiCo exportiert. Der Positionstext wird dabei in die exportierte Position der Exportdatei übernommen.
+
+Für Verträge von MBLD gilt zusätzlich: MDCR-Belege werden anhand des Vertriebskanals Leasing und des Belegtyps MDCR ausgewählt und per API an MBLD übermittelt. MDCR-Belege von Nicht-Leasing-Verträgen werden nicht an MBLD gesendet.
+
+Mit dieser Neuerung entfallen die bisher uneinheitlich benannten, ad hoc erstellten manuellen Belege für Vertragsende und vorzeitige Beendigung. Zudem ist durch die klaren Routing-Regeln sichergestellt, dass Endsalden aus dem Leasing zuverlässig bei MBLD ankommen.

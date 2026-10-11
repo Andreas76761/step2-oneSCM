@@ -1,0 +1,17 @@
+# Batch 902 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Unterstützung der VERSO-Auftrags-ID in der Massenerstellung**
+
+Die Massenerstellung von Verträgen unterstützt nun die VERSO-Auftrags-ID (VERSO order ID) als gültige Fahrzeugkennung. Vertriebsmitarbeitende können damit neben den bisherigen Kennungen eine weitere Möglichkeit nutzen, um Endkunden einen Einstieg in das Onboarding anzubieten. Die Massenerstellung folgt dabei derselben Logik wie die Erstellung eines einzelnen Vertrags. Die Fahrzeugdaten werden anhand der angegebenen Kennung abgerufen, wobei ausschließlich fahrzeugbezogene Daten berücksichtigt werden. Es gelten dieselben Rollen wie im bisherigen Ablauf.
+
+Voraussetzung für die Nutzung ist, dass der Kundentyp „Flottenkunde“ ist und die Massenerstellung für das ausgewählte Produkt aktiviert wurde. Die VERSO-Auftrags-ID wird sowohl beim Start der Massenerstellung als auch in der Liste der zu validierenden Fahrzeuge als Kennung akzeptiert. Ihr Format muss den Validierungsregeln der Benutzeroberfläche entsprechen. Zudem steht die VERSO-Auftrags-ID für den Sonderfall der Massenerstellung zur Verfügung.
+
+Der Ablauf gestaltet sich wie folgt: Sie starten den Vertragserstellungsprozess und rufen die passenden Produkte ab. Anschließend wählen Sie ein Produkt aus und konfigurieren es. Ist für das konfigurierte Produkt die Massenerstellung aktiviert, wählen Sie die Option „Massenerstellung“. Wurde der Prozess mit einer VERSO-Auftrags-ID gestartet, wird die aus ihr ermittelte Auftragsnummer als Referenzfahrzeug für die Validierung herangezogen. In der Fahrzeugtabelle der Massenerstellung können Sie die Einträge nun mit der VERSO-Auftrags-ID als Kennung befüllen. Die Benutzeroberfläche prüft dabei sofort, ob das Format der eingegebenen ID korrekt ist. Entspricht es den Vorgaben, wird die ID als gültige Kennung akzeptiert.
+
+Sobald die Fahrzeuge in der Tabelle erfasst sind, werden alle Fahrzeuge, auch die mit VERSO-Auftrags-ID, zur Validierung an den Fahrzeug-Microservice und den Produkt-Microservice übermittelt. War die Validierung erfolgreich, werden die Fahrzeuge als gültig markiert und sind für die Massenerstellung zugelassen. Schlägt sie für ein Fahrzeug fehl, wird dieses als ungültig gekennzeichnet. Sie müssen den Eintrag dann korrigieren oder löschen, bevor Sie fortfahren können.
+
+Nachdem Sie die finale Fahrzeugliste bestätigt haben, gelangen Sie zu den Kunden- und Zahlungsinformationen, einschließlich der Prüfung auf doppelte Kunden. Danach geht es mit der Massenerstellung der Servicevereinbarungen weiter. Diese werden für alle Fahrzeuge der Liste erzeugt, unabhängig davon, ob sie über Fahrgestellnummer, Auftragsnummer (einschließlich VERSO) oder Deal-ID identifiziert wurden. Für alle Verträge kommt dieselbe Vertragsdokumentvorlage zum Einsatz.
+
+Die Aktivierung folgt dem bestehenden Aktivierungsablauf für VERSO-Auftrags-IDs, einschließlich der dafür vorgesehenen Logik und Prüfungen für Auftragsnummern (VERSO). Bei der Aktivierung eines Vertrags, der mit einer VERSO-Auftrags-ID erstellt wurde, erhält der Kunde eine Aktivierungsbenachrichtigung. Diese enthält die VERSO-Auftrags-ID bzw. die zugehörige Auftragsnummer sowie, sofern verfügbar, die dem Fahrzeug im Verlauf der Bearbeitung zugewiesene Fahrgestellnummer.

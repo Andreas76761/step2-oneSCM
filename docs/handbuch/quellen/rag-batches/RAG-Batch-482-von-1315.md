@@ -1,0 +1,23 @@
+# Batch 482 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Unverbindliche Preisinformation als PDF-Dokument**
+
+Im Rahmen der Vertragserstellung steht Ihnen eine unverbindliche Preisinformation als PDF-Dokument zur Verfügung. Sie können sie herunterladen, ausdrucken oder per E-Mail an Ihren Kunden senden. Das Dokument eignet sich für Situationen, in denen ein Kunde einen Servicevertrag abschließen möchte und zunächst ein Angebot mit einer Preisindikation sehen will. Dies gilt für den Normalfall, in dem der Kunde das Fahrzeug bereits besitzt, ebenso wie für Fahrzeuge, die noch nicht produziert sind und keine verfügbare Fahrgestellnummer haben, sowie für Fahrzeuge, die der Markt für den eigenen Bestand bestellt hat.
+
+**Wann die Preisinformation verfügbar ist**
+
+Die Preisinformation können Sie an drei Stellen im Ablauf der Vertragserstellung erzeugen. Zunächst starten Sie auf der Startseite der Vertragserstellung einen neuen Vertrag, wählen die gewünschte Ablaufart (Fahrgestellnummer verfügbar, Build to Stock oder Fahrgestellnummer nicht verfügbar) und erfassen die Fahrzeugdaten mit allen Pflichtfeldern. Anschließend werden aus der Vertragskalkulation die Fahrzeuginformationen sowie die passenden Produkte mit Preisen und Beschreibungen angezeigt. Bereits ab diesem Zeitpunkt können Sie das Dokument erzeugen. Ein zweiter Zeitpunkt ergibt sich, nachdem Sie ein Produkt konfiguriert haben, also Laufzeit, Jahreslaufleistung und Zahlungsintervall festgelegt wurden. Der dritte Zeitpunkt ist erreicht, wenn Sie unter dem Zahlungsintervall den Link für den Händlerrabatt aktiviert und einen Händlerrabatt ausgewählt haben.
+
+**Inhalt des Dokuments**
+
+Das Dokument enthält jeweils die Daten, die zum Zeitpunkt der Erzeugung in der Oberfläche verfügbar sind. Dazu gehören die Fahrzeugdaten, die Produktdaten und der Servicepreis aus der Vertragskalkulation. Nach der Konfiguration kommen die Zahlungsbedingungen entsprechend den gewählten Optionen hinzu, nach der Auswahl eines Händlerrabatts zusätzlich dieser Rabatt. Der Aufbau passt sich der Datenlage an: Sind bestimmte Angaben noch nicht vorhanden, werden entsprechende Bereiche mit Platzhaltern dargestellt oder ausgelassen. Bei jeder erneuten Erzeugung wird das Dokument aktualisiert und gibt den aktuellen Stand Ihrer Eingaben und Änderungen wieder.
+
+Der angezeigte Preis ist stets der Endpreis. Wurden Rabatte oder Kampagnen angewendet, erscheint nur der resultierende Endpreis, der im Dokument grün hervorgehoben ist.
+
+Kopf- und Fußzeile entsprechen den MB-Standards und werden über die Vorlagenverwaltung bereitgestellt. Der Kopfbereich enthält den festen Text „Price Information“, das Datum der Dokumenterzeugung, den Namen des Service-Vertragsprodukts aus der Produktverwaltung sowie die Angaben zum Verkäufer aus Alice. Es folgen ein Bild und eine Beschreibung, die bei der Anlage des Produkts in der Produktverwaltung hinterlegt wurden. Der Hauptteil enthält die im Vertragserstellungs-Assistenten verfügbaren Informationen, abhängig vom jeweiligen Auslösepunkt. Außerdem werden die Deckungscodes mit ihren Beschreibungen aus der Produktverwaltung aufgeführt; benötigt wird dabei nur die Beschreibung, nicht der Code selbst. Am Ende steht ein fest hinterlegter Hinweistext. Er besagt, dass die Preisinformation Änderungen unterliegt, nur zu Diskussionszwecken dient und kein rechtsverbindliches Angebot oder keine Vereinbarung darstellt. Verbindliche Zusagen setzen einen vollständig ausgefertigten, schriftlichen Vertrag voraus, der von den berechtigten Vertretern beider Parteien unterzeichnet ist. Für Rückfragen wird auf die Kontaktaufnahme verwiesen.
+
+**Drucken, Herunterladen und Versenden**
+
+Im ersten Schritt des Vertragserstellungs-Assistenten stehen Ihnen drei Aktionen zur Verfügung. Wenn Sie das Dokument drucken, öffnet sich Ihr Druckmodul. Beim Herunterladen wird das Dokument als PDF gespeichert. Wenn Sie es per E-Mail versenden, öffnet sich ein Fenster, in dem Sie Vorname, Nachname und E-Mail-Adresse des Kunden angeben müssen. Alle drei Felder sind Pflichtfelder. Das System prüft die E-Mail-Adresse nach der Eingabe und verlangt dabei unter anderem ein @-Zeichen. Anschließend wird die E-Mail an den Kunden gesendet.
