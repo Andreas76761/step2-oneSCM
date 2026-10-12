@@ -1,0 +1,25 @@
+# Batch 748 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 15 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kostenmanagement**
+
+Für das Kostenmanagement wurde untersucht, wie sich Garantie- und Kulanzdaten aus dem System Vega über die Warranty & Goodwill Claim Service API abrufen lassen. Da es sich um ein völlig neues Themenfeld handelt, gab es keinen Vorgängerzustand. Als Eingabe dient die Fahrzeug-Identnummer (FIN). Wird stattdessen die VIN verwendet, wird sie zunächst über VeDOC validiert, um die zugehörige FIN zu ermitteln. Erst mit der FIN erfolgt der Aufruf der API. Als Ergebnis werden Claim-Daten aus Vega geliefert; die genauen Felder wurden im Rahmen von Business Stream 4 (Stand 13.04.2023) festgelegt.
+
+Die API kann keine Daten zu Altteilsteuern (Old Part Taxes) erfassen oder erzeugen. Dafür wird die Datei i156 genutzt, die wöchentlich von Vega bereitgestellt wird und auch als Alternative zur API dient. Offen blieb die Frage, ob API und i156 gemeinsam genutzt werden sollten oder ob es sinnvoller ist, ausschließlich die i156-Daten zu verarbeiten und in der Datenbank zu speichern. Eine Dokumentation zur API lag nicht vor. Ist die API oder der Service nicht verfügbar, können keine Daten angezeigt werden.
+
+**Vertragsmanagement**
+
+Im Vertragsmanagement wurden mehrere Verbesserungen und Korrekturen umgesetzt. Beim Export auslaufender Verträge gibt es nun eine zusätzliche Prüfung des Markenfelds. Leasingverträge lassen sich über die oneSCM-Retail-Oberfläche kündigen; das zuvor bestehende Problem, dass die Kündigung bei Leasingverträgen nicht möglich war, ist damit behoben. Bei der Vertragsverlängerung fehlte in den Vertragsdokumenten der Family Tag für Zusatzdeckungen, die im Ablauf hinzugefügt wurden; auch dies wurde korrigiert. Außerdem werden technische Optionen des komplexen Produkts nicht mehr fälschlich im Bereich „Reifendetails“ des Vertrags angezeigt.
+
+Derzeit in Prüfung befindet sich die Korrektur eines falschen Preises für die optionale Reifendeckung, die bereits im Vertrag enthalten ist, bei der Langzeitverlängerung. Ebenfalls bei der Langzeitverlängerung sollen bereits hinzugefügte optionale Deckungen im Schritt „Deckungen“ vorausgewählt sein, wenn „Open Setup“ gewählt wird; dies ist vorgemerkt.
+
+Weitere bekannte Punkte sind noch nicht umgesetzt: Auf der Registerkarte „Zahlung“ wird der Preis der Produktoption nicht mit dem im Sonderfall-Ablauf genehmigten Wert aktualisiert. Zudem wird bei der Abfrage der Fahrzeugkilometer zwar eine Erfolgsmeldung angezeigt, der Kilometerstand erscheint aber nicht in der Kilometerhistorie. Für Vertriebsmitarbeitende ist geplant, Verträge nach selbst erstellten Verträgen filtern zu können, und zwar sowohl im Angebots- als auch im Vertragsmanagement. Einige Aktivierungsprobleme bei einzelnen Verträgen werden aktuell analysiert. Fälle zur Eingabe von FRD und Kennzeichen sowie zu einem Leasingvertrag mit sechs Monaten Laufzeit wurden geschlossen bzw. abgebrochen.
+
+**Optimierung der Vertragszahlungen**
+
+Geplant ist eine Optimierung der neun Schnittstellen rund um Zahlungen zu einem Vertrag. Sie betreffen Zahlungsart und -details, Zahlungsintervall, den digitalen Zahlungslink samt Status, die Zahlungsreferenz sowie Abfragen zu Zahlern und zur Berechtigung. Die externe Schnittstelle bleibt unverändert; verbessert wird die dahinterliegende Umsetzung. Nutzen sollen dies Kundinnen und Kunden, die über den digitalen Zahlungslink zahlen, Händler und MPC-Nutzer bei Änderungen von Zahlungsart oder -intervall, Market-Operations-Nutzer bei der Korrektur von Zahlungsreferenzen sowie Revenue Management, das auf Zahlungsänderungen reagiert.
+
+Jeder Zahlungsvorgang soll vollständig oder gar nicht ausgeführt werden. Besonders die Aktualisierung des digitalen Zahlungsstatus wird zu einem einzigen Vorgang zusammengefasst. Bisher läuft sie in drei getrennten Transaktionen ab, sodass ein Vertrag als bezahlt erfasst, aber nicht aktiviert sein kann, wenn ein späterer Schritt fehlschlägt. Künftig wird der Zahlungsstatus entweder erfasst und der Vertrag aktiviert, oder keines von beidem. Zahlungsereignisse werden zuverlässig über den Outbox-Mechanismus veröffentlicht, sodass sie Revenue Management genau einmal erreichen; ein fehlgeschlagenes Veröffentlichen wird sichtbar und erneut versucht. Datenbankeinträge und Ereignisse entsprechen weiterhin dem bisherigen Verhalten.
+
+Die Einführung erfolgt schrittweise nach Märkten: zuerst SK, dann CZ und GR, danach IN und KR, anschließend CH und zuletzt DE. Ein Endpunkt wird für einen Markt erst freigegeben, wenn der Vergleich der neuen mit der bisherigen Umsetzung, durchgeführt von AQA, keine Abweichungen zeigt. Ergänzend sind gezielte Fehlersimulationen in einer Testumgebung vorgesehen. Da die Zahlungsaktivierung den Statusautomaten berührt, greift dieser Schritt bis zur Umsetzung des entsprechenden Vorhabens auf die bestehende Implementierung zurück.

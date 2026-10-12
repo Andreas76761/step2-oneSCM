@@ -1,0 +1,21 @@
+# Batch 413 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 22 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Dokumente und Kommunikation**
+
+Im Bereich Dokumente und Kommunikation wurden mehrere Verbesserungen und Fehlerbehebungen umgesetzt, die die Vertragsdokumente, die Benachrichtigungen und die digitale Signatur betreffen.
+
+Die Vorschau von Verträgen als PDF öffnet sich wieder zuverlässig, ohne dass eine Fehlermeldung erscheint. Auch bei kurzzeitigen Unterbrechungen der Internetverbindung werden keine Fehler mehr angezeigt. Nachdem ein Dokument digital signiert wurde, steht das signierte PDF im Reiter „Vertragskommunikation“ zur Verfügung. Außerdem werden Beträge im Zahlungsplan eines Servicevertrags jetzt mit Komma statt Dezimalpunkt dargestellt. Weitere Korrekturen betrafen die Anzeige der Signaturen im Vertrags-PDF, den im Vertragsdokument (Status „Erstellt“) angezeigten Zahlungsplan sowie die Darstellung der Division, die bei der Vorschau von Vorlagen zuvor in Großbuchstaben erschien.
+
+Die internen Benachrichtigungen für den Anwendungsfall Kulanzfrist (Grace Period) wurden neu gestaltet. Ziel ist ein standardisierter, einheitlicher Ablauf für alle internen Benachrichtigungen in oneSCM. Wenn ein Händler bei der Vertragserstellung eine Kampagne mit Kulanzfrist auswählt, eine Begründung in einem Textfeld erfasst und die Anfrage absendet, wird der Benachrichtigungsablauf ausgelöst. Der zuständige MPC-Benutzer erhält daraufhin eine Benachrichtigung über das Glockensymbol. Über das sich öffnende Seitenpanel gelangt er zur Kulanzfrist-Benachrichtigung. Liegt mehr als eine solche Benachrichtigung vor, wird er zur Vertragsübersicht weitergeleitet, in der die betroffenen Verträge mit blauen Punkten markiert sind. Bei genau einer Benachrichtigung öffnet sich direkt der entsprechende Vertrag, in dem die Anfrage genehmigt oder abgelehnt werden kann. Der Händler wird anschließend intern über die Entscheidung informiert. Für diese Funktion benötigt der MPC-Benutzer Rechte in der Vertragserstellung. Benachrichtigungen werden nach einer bestimmten Zeit ohne Aktion gelöscht (derzeit nach 7 Tagen, einstellbar in der Vertragserstellung) und aktualisiert bzw. überschrieben, wenn sich das Produkt des Vertrags ändert. Zudem ist die Benachrichtigung in den Vertragsablauf integriert.
+
+Im Zusammenhang mit dieser Funktion wurden zudem Fehler behoben: Die Begründung der Kulanzkampagne wird in der Rabattanfrage angezeigt, und im Dialog zur Rabattanfrage erscheint neben dem Datum auch die Uhrzeit.
+
+**Noch offene Punkte**
+
+Einige Themen sind noch in Bearbeitung. Bei einer Übertragung (Transfer) eines Servicevertrags soll künftig keine automatische E-Mail an den Endkunden versendet werden, wenn der Status „Suspendiert“ aus dem Transfer stammt. Dazu sowie zum Übertragen eines Vertrags mit monatlicher Zahlung und der Prüfung des E-Mail-Versands stehen noch manuelle Tests aus. Ebenfalls offen ist eine Master-Vorlage für Servicevertrags-Übertragungen im Template Management, die MPC-Benutzer je nach Marktanforderung nutzen und anpassen können. Darüber hinaus ist noch offen, dass MO/MPC-Benutzer die E-Mail-Vorlage für Änderungsanfragen versenden können, die von Endkunden initiiert wurden. Manuelle Tests stehen außerdem für die neuen Funktionen der digitalen Signatur (DSS, Stufe 2) sowie für die Vertragsvorlage (PDF-Vorschau) in Abhängigkeit von der Verfügbarkeit der funktionalen Anforderungsspezifikation aus.
+
+**Nicht weiterverfolgte Punkte**
+
+Nicht weiterverfolgt werden unter anderem der Upload bzw. die Erstellung von Signaturen im Template Management, der E-Mail-Versand bei Vorlagen, die an mehreren Stellen verwendet werden, die fehlende Aktivierungs-E-Mail bei der Ergänzung fehlender Vertragsinformationen sowie die Anzeige des Zahlungsplans im Vertragsvorschlag bzw. in der Aktivierung. Ebenfalls eingestellt wurde die Meldung, dass der Händler keine Bestätigung oder Ablehnung vom MPC bei Kulanzfrist-Kampagnen erhält.

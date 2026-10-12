@@ -1,0 +1,21 @@
+# Batch 161 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Cross File Transfer: Zusammenlegung der Seiten und Statistik für Schnittstelle I156**
+
+Im Admin-Bereich steht die Seite „Cross File Transfer" künftig als eine gemeinsame Seite zur Verfügung. Sie enthält zwei Reiter: „Cross File Transfer" entspricht der bisherigen Seite „Cross File Transfer – Monitoring", „Files Upload" entspricht der bisherigen Seite „Cross File Transfer – File Upload". Der Inhalt des Reiters „Files Upload" bleibt unverändert gegenüber der früheren Upload-Seite. Die beiden bisherigen Einzelseiten sind im Admin-Bereich nicht mehr als eigenständige Menüpunkte verfügbar. Die Funktion steht Benutzern mit der Rolle ADMIN zur Verfügung.
+
+Im Reiter „Cross File Transfer" wird zusätzlich zu den bisherigen Inhalten eine neue Spalte „Total Number of Items" angezeigt, und zwar vor der Spalte „Status". Für Einträge der Schnittstelle I156 mit dem Status „Completed" enthält sie die Anzahl der Claims aus der hochgeladenen Datei und in Klammern die Anzahl der übersprungenen Claims, zum Beispiel „1000 (450 skipped)". Bei Einträgen der Schnittstelle I156 mit dem Status „Skipped" oder „Failed" wird nur die Anzahl der Claims aus der Datei angezeigt. Kann die Datei nicht gelesen werden, steht dort „N/A". Bei Einträgen anderer Schnittstellen wird „N/A" (oder ein Strich) angezeigt.
+
+In der Spalte „Actions" erscheint für jeden Eintrag das Symbol „…". Bei Einträgen anderer Schnittstellen als I156 steht über dieses Symbol wie bisher nur die Option „Details" zur Verfügung. Bei Einträgen der Schnittstelle I156 stehen zwei Optionen zur Auswahl: „Details", dessen Funktion unverändert bleibt, und „Statistics".
+
+Wird „Statistics" gewählt, öffnet sich eine neue Seite mit den Details des jeweiligen Uploads. Der Seitentitel lautet „File" gefolgt vom Dateinamen. Zur Filterung stehen die Felder „Contract Number", „Workshop Invoice Number" und „Chassis Number" als Texteingaben bereit sowie das Feld „Status" als Dropdown mit allen Statuswerten, in dem mehrere Einträge gleichzeitig ausgewählt werden können. Mit den Schaltflächen „Search" und „Reset" wird die Suche ausgeführt bzw. zurückgesetzt. Die Ergebnistabelle zeigt die Spalten „Contract No.", „Workshop Invoice No.", „Chassis Number", „Status", „Reason" und „Old Part Tax" mit den Werten Yes bzw. No. Jede Spalte lässt sich auf- oder absteigend sortieren. Die Werte in „Contract No." und „Workshop Invoice No." sind Links, die zur jeweiligen Vertragsseite bzw. Rechnungsseite führen.
+
+**SWT- und CoFiCo-Export: Finance System Document Code**
+
+In den Exportdateien für SWT und CoFiCo wird an der Position „Finance System Document Code" künftig der Wert eingetragen, der unter „Tax Management → Tax Rate → FI Tax Code" hinterlegt ist. Der Wert wird dabei mit führenden Nullen aufgefüllt, bis der vorgesehene Platz gefüllt ist.
+
+**Nemesis: Anbindung weiterer Märkte (Indien)**
+
+Nemesis wird für den Markt Indien freigeschaltet. Der Ablauf entspricht vollständig dem des deutschen Markts (DE). Dies gilt für alle vier Ereignisarten: Customer, Revenue, Cost und Contract. Verarbeitung, Mapping, Statuslogik und Validierungen sind identisch zu Deutschland. Unterschiede gibt es nur bei zwei Kennungen: Für Ereignisse aus Indien wird der Company Code 1414 und der Country Code 82536 verwendet. Wird ein Ereignis im Markt Indien ausgelöst, erscheint es in Nemesis mit denselben Abläufen, Prüfungen und Statusübergängen wie im deutschen Markt. Revenue-Ereignisse senden die korrekten Werte für Indien bereits; dieselbe Funktionsweise gilt nun auch für Customer-Ereignisse und den Contract-Stammdatensatz. Für weitere Märkte sollen Country Code und Company Code künftig dynamisch ermittelt und an Nemesis übergeben werden. Die Funktion richtet sich an MPC- und HQ-Benutzer.

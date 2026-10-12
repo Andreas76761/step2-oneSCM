@@ -1,0 +1,13 @@
+# Batch 337 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 9 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Im Bereich Reporting wurden mehrere Verbesserungen an der Datenverarbeitung und an der Bedienung umgesetzt.
+
+Ein zentrales Thema war die Vorbereitung eines Delta-Lake-Ansatzes. Bisher wird bei jeder neuen Eingangsdatei das komplette Unified Data Model ersetzt und anschließend die gesamte Information in den Datenprodukten bereitgestellt. Ziel des Delta-Lake-Setups ist es, dass beim Eintreffen einer neuen Datei nur die Daten in den Delta Lake übernommen werden, die sich gegenüber dem bestehenden Datenbestand im Unified Data Model geändert haben. Die Datenprodukte können weiterhin als vollständige Dateien bereitgestellt werden, enthalten dann aber zusätzliche Delta-Informationen. Dadurch lassen sich bestehende Datenprodukte sowohl als Vollladung als auch als Delta nutzen. Die Delta-Daten werden versioniert und für jeden Zeitpunkt, zu dem Änderungen eintreffen (zum Beispiel täglich), vorgehalten. Konsumenten können so wählen, welche Version des Deltas sie beziehen möchten. Als Abnahmekriterien galten, dass kein Datenverlust auftritt und die Bereitstellung der Daten schneller erfolgt als im bisherigen Verfahren.
+
+Darüber hinaus wurden Fehler in der Dateiverarbeitung behoben. Der CFT-Job führt nun auch dann genau einmal aus, wenn dieselbe Datei erneut eintrifft. Zudem wurde das Problem behoben, dass Quelldateien nach erfolgreicher Parse- und Transformationsausführung nicht korrekt gelöscht wurden. Außerdem wurden die Duplikate in den Vertragsdaten für alle Märkte entfernt.
+
+In der Oberfläche wurden die Filter in Schritt 2 der Fahrzeuggruppenerstellung angepasst. Bei Filtern mit mehr als zwei Optionen sind nun nach dem Schließen und erneuten Öffnen des Filters, wenn bereits einzelne Einträge ausgewählt wurden, wieder alle möglichen Optionen sichtbar und auswählbar.
+
+Einige weitere geplante Vorhaben im Reporting wurden nicht umgesetzt und eingestellt. Dazu gehören die verarbeitungsbezogene Delta-Verarbeitung des ETL-Ladevorgangs, die Erstellung zusätzlicher Datenprodukte getrennt nach Divisionen (nur PKW, nur Vans oder beides), Datenqualitätsregeln für das Unified Data Model sowie die Historisierung des Vertragsstatus. Diese Funktionen stehen daher nicht zur Verfügung.

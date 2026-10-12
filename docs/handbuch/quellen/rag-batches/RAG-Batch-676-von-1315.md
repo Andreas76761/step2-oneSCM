@@ -1,0 +1,17 @@
+# Batch 676 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 10 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Partnerverwaltung: Stammdaten, Import und Pflege**
+
+Im Bereich Customer & Partner Management lassen sich Partner in oneSCM verwalten, suchen, bearbeiten und löschen. Die Partnersuche bietet die Filter Name, Partnertyp, Partnernummer und Postleitzahl. Über weitere Filter kann zusätzlich nach Stadt, SAP-Debitoren-/Kreditorennummer, USt-IdNr., VEGA-ID, GSSN-Outlet, Outlet-ID und Status eingegrenzt werden. Eine aktuelle Suche kann jederzeit zurückgesetzt werden. Partner können erfolgreich bearbeitet werden, wobei die Eingabefelder validiert werden und der Vorgang abgebrochen werden kann. Ebenso können Partner gelöscht werden. Das Feld „FI-Partnerstatus“ ist inzwischen kein Pflichtfeld mehr, sondern optional.
+
+In der Kundenvorschau lässt sich prüfen, ob die Kundenfelder aktualisiert werden können und ob die Vorschau einen Abschnitt zu Servicekontrakten enthält. Beide Funktionen sind im Einsatz.
+
+Ursprünglich waren für die Partnerdaten drei Erweiterungen geplant, die jedoch nicht umgesetzt wurden und daher im aktuellen Funktionsumfang nicht enthalten sind.
+
+Die erste betraf den automatischen Import von Händlerdaten aus GSSN+ für den Markt DE per Batch-Job. Vorgesehen war, ausschließlich aktive Händler (Attribut „dcxgssnoutletactive = true“) mit einer GSSN-Company-Outlet-ID zu importieren, die mit „D“ beginnt. Nicht vorhandene Händler sollten neu angelegt, bereits vorhandene aktualisiert werden. Der Abgleich war monatlich geplant. Übernommen werden sollten unter anderem Firmenname, Adresse, VEGA-ID, verschiedene GSSN-Outlet-Kennungen, der Kennzeichen „Intern“ und der Partnerstatus. Bei Telefonnummer, E-Mail, USt-IdNr. und Sprache war die Zuordnung der Quellfelder noch offen.
+
+Die zweite betraf den automatischen Import von Ansprechpartnern aus Alice, dem Administrationswerkzeug, in dem Benutzerdaten und Rechte verwaltet werden. Beim Login in oneSCM sollte ein Benutzer mit vorhandener Benutzer-ID in Alice neu angelegt oder, falls er bereits existiert, mit den Alice-Daten synchronisiert werden. Zu synchronisieren waren Vorname, Nachname, Benutzer-ID als Pflichtfeld an erster Stelle, Telefon/Mobil, E-Mail, Sprache und Ansprechpartnerrolle. Das Feld „Anzeigename“ sollte entfallen. Existiert die Benutzer-ID in Alice nicht, sollte die Meldung erscheinen: „No valid dealer/workshop was assigned to user {user name/ID} in GSSN. Please contact your system administrator“. Ansprechpartner ohne Benutzer-ID in Alice sollten keinem Partner zugeordnet werden können.
+
+Die dritte betraf das manuelle Hinzufügen von Ansprechpartnern durch MPC- oder HQ-Benutzer, etwa wenn ein Händler dies anfragt. Dafür sollten Benutzer-ID des Vertriebsmitarbeiters und Händlerdaten wie die GSSN-Outlet-ID bekannt sein. Im Admin-Bereich unter Partner Management sollte der Partner gesucht, bearbeitet und über „Add contact person“ ein Ansprechpartner mit seiner Benutzer-ID ergänzt werden. Die Daten sollten anschließend per API-Aufruf an Alice übermittelt und dort geprüft werden. Fehlte ein gültiger Eintrag, sollte eine entsprechende Fehlermeldung erscheinen.

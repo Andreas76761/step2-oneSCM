@@ -1,0 +1,21 @@
+# Batch 564 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Kundendatenmodell für die Schweiz und Tschechien
+
+Das bestehende Kundendatenmodell wird angepasst, damit länderspezifische Steuer- und Unternehmenskennungen für die Schweiz (CH) und Tschechien (CZ) korrekt erfasst, validiert und gespeichert werden können. Bisher unterstützt das Datenmodell die für diese beiden Länder erforderlichen Kennungen und deren Zuordnung nicht. Die Anpassung umfasst sowohl die Formate und die Validierung als auch die Zuordnung der Felder des Kundendatenmodells.
+
+Für Tschechien werden die Umsatzsteuer-Identifikationsnummer (DIČ) und die Steuernummer (IČO) berücksichtigt. Die DIČ wird im Systemfeld vatNumber abgelegt und besteht aus 10 bis 12 Zeichen, wobei das Länderkürzel CZ am Anfang steht (Beispiel: CZ00514152). Die IČO wird im Systemfeld taxNumber1 abgelegt und besteht aus 8 bis 10 Zeichen, die ausschließlich Ziffern sein dürfen. Für die Zahlungsarten gilt in Tschechien folgende Zuordnung: Kreditkarte mit dem Code M, Lastschrift mit dem Code P und Überweisung mit dem Code B. Für alle drei Zahlungsarten wird die Zahlungsbedingung FB30 verwendet.
+
+Für die Schweiz wird die Umsatzsteuernummer (MWST-Nummer) ebenfalls im Systemfeld vatNumber abgelegt. Sie folgt dem Grundformat CHE-XXX.XXX.XXX mit einem sprachregionsabhängigen Zusatz: MWST in den deutschsprachigen Kantonen (z. B. CHE-123.456.789 MWST), TVA in den französischsprachigen Kantonen (z. B. CHE-123.456.789 TVA) und IVA in den italienischsprachigen Kantonen (z. B. CHE-123.456.789 IVA). Die Validierung akzeptiert alle drei Varianten, ohne dass eine Einschränkung nach Kanton oder Sprachregion erfolgt. Ein Feld für die Steuernummer ist für die Schweiz nicht vorgesehen und wird nicht aktiviert oder angezeigt.
+
+Neu hinzu kommt für die Schweiz das Feld UID (Unternehmens-Identifikationsnummer). Dabei handelt es sich um die eindeutige, neunstellige Kennung, die jedem aktiven Unternehmen in der Schweiz zugewiesen wird. Das Format lautet CHE, gefolgt von einem Bindestrich und neun Ziffern, die durch Punkte getrennt sind (z. B. CHE-123.456.789). Für die Zuordnung im Export wird taxNumber1 verwendet.
+
+In der Suchmaske werden MWST-Nr. und UID in einem gemeinsamen Eingabefeld erfasst („MWST-Nr. / UID“). Anhand des Wertes, nämlich ob der Zusatz am Ende vorhanden ist oder nicht, bestimmt das System, ob es sich um eine MWST-Nummer oder eine UID handelt. Das Feld ist für gewerbliche Kunden ein Pflichtfeld. Für gewerbliche Kunden aus dem staatlichen Bereich ist es optional, analog zur Regelung in Deutschland.
+
+Bei der Eingabe von MWST-Nummer und UID wird zudem eine einheitliche, zusammenhängende Schreibweise der Zahlen zugelassen, zum Beispiel CHE102823912. In der Benutzeroberfläche können die Werte mit oder ohne Trennzeichen eingegeben werden. Leerzeichen, Bindestriche und Punkte dienen der besseren Lesbarkeit, etwa auf Rechnungen. An das Finanzsystem (CoFiCo) werden die Werte jedoch als durchgehende Zeichenfolge übermittelt, beispielsweise CHE123456789MWST. Die UID wird ohne Punkte übergeben. Die MWST-Nummer wird so übermittelt, wie sie vom Händler eingegeben wurde.
+
+Die Umsetzung gilt als abgeschlossen, wenn die DIČ und die IČO für Tschechien korrekt zugeordnet und nach den bestätigten Formaten validiert werden, die MWST-Nummer für die Schweiz korrekt zugeordnet ist und die Validierung alle drei Varianten (MWST, TVA und IVA) akzeptiert, für die Schweiz kein Feld für die Steuernummer erforderlich ist oder angezeigt wird und das UID-Feld einem geeigneten Systemfeld zugeordnet ist und nach dem korrekten Format validiert wird.
+
+Hinweis: Diese Funktion befindet sich derzeit im Status „Blocked BAT Testing“. Das ebenfalls in den Rohdaten enthaltene Vorhaben zur Ablösung von Zahlungsobjekten auf Kundenebene vom Vertrag enthält bislang nur eine leere Vorlage ohne inhaltliche Angaben und kann daher noch nicht beschrieben werden.

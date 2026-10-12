@@ -1,0 +1,27 @@
+# Batch 280 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Steuerverwaltung (Tax Management) im Bereich Revenue Management**
+
+Die Steuerverwaltung finden Sie im Menü unter dem Bereich „Admin". Sie bietet MPC-Anwendern einen zentralen Ort, um die Steuerinformationen eines bestimmten Marktes einzusehen und zu verwalten. Beim Aufruf der Seite ist zunächst kein Filter gesetzt, alle Filterfelder sind leer und die Ergebnistabelle zeigt keine Treffer an.
+
+Im Filterbereich können Sie nach dem Namen (Suche nach enthaltenem Text), nach der Steuerklassifizierung und nach der Finanzdokument-Definition suchen. Die beiden letztgenannten Felder sind Dropdown-Listen, die die in der Datenbank verfügbaren Werte anbieten. Änderungen an den Filterfeldern wirken sich nicht automatisch auf die Ergebnisse aus. Erst mit einem Klick auf die Schaltfläche „Search for Tax" werden die Ergebnisse anhand der gewählten Filter angezeigt. Die Schaltfläche „Reset" setzt alle Filterauswahlen auf den Ausgangszustand zurück, also auf leere Felder. Die angezeigten Ergebnisse werden dabei nicht aktualisiert.
+
+Die Ergebnisse erscheinen in einer Tabelle mit den Spalten Name, Financial System Document Code, Financial Document Definition, Financial Tax Classification Code, Customer Tax Classification, Customer Classification, Tax Factor, Tax Type, Gültigkeit und Aktionen. Die Gültigkeit wird im Format TT.MM.JJJJ - TT.MM.JJJJ dargestellt und setzt sich aus „Valid from" und „Valid to" zusammen. Übersteigt die Trefferzahl die maximale Anzahl an Einträgen pro Seite, werden die Ergebnisse auf mehrere Seiten verteilt, zwischen denen Sie wechseln können. Standardmäßig werden 10 Einträge pro Seite angezeigt. Über ein Dropdown können Sie alternativ 10, 20, 30, 40 oder 50 Einträge wählen. Die zuletzt gewählte Anzahl wird nicht gespeichert und nach einer Aktualisierung der Seite wieder auf 10 zurückgesetzt. Zusätzlich steht eine Schnittstelle (API) zur Verfügung, die alle Steuerfaktoren für den zugewiesenen Markt des Benutzers zurückgibt. Die Gestaltung entspricht der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.
+
+**Neue Steuerklassifizierung anlegen**
+
+Um einen neuen Steuercode zu erstellen, öffnen Sie die Seite „Tax Management" und klicken auf die Schaltfläche „Create Tax Code". Es erscheint eine Seite mit folgenden Feldern:
+
+Der Name ist ein Pflichtfeld, ein Textfeld mit mindestens 3 und höchstens 50 Zeichen; Sonderzeichen sind erlaubt. Der Financial System Document Code ist ebenfalls ein Pflichtfeld und besteht aus genau 2 Zeichen, nämlich Buchstaben (A-Z) oder Ziffern (0-9). Die Financial Document Definition wählen Sie als Pflichtangabe aus einem Dropdown mit den Werten „Invoice" und „Credit Note". Der Financial Tax Classification Code ist ein Pflichtfeld mit einem Dropdown, das auf den im Mandanten möglichen Werten basiert. Für Deutschland (MVP-Umfang) sind dies „0: Exempt (0%)" und „1: Standard (19%)". Zulässig sind nur positive Zahlen von 0 bis 99. Die Customer Tax Classification ist ein Pflichtfeld und hängt vom Financial Tax Classification Code ab: Sie wird aus dem dort gewählten Wert, der die Beschreibung enthält, automatisch vorbelegt. Mögliche Werte sind Standard, Exempt und Reduced; für Deutschland (MVP-Umfang) Standard und Exempt.
+
+Die Customer Classification wählen Sie aus einem Dropdown; verfügbar ist „Debitor", nach dem MVP kommt „Creditor" hinzu. Beim Customer Tax Type steht „VAT" zur Auswahl, nach dem MVP zusätzlich „Luxury Tax" und „Insurance Tax". Der Tax Factor ist ein Pflichtfeld, in das Sie eine Zahl mit zwei Dezimalstellen zwischen 0 und 1 eingeben. „Valid from" und „Valid to" sind Pflichtfelder und erwarten jeweils ein Datum.
+
+Die Schaltfläche „Create" ist ausgegraut, solange nicht alle Pflichtfelder ausgefüllt sind. Mit einem Klick darauf wird die Steuerklassifizierung angelegt, Sie werden zur Tabelle der Steuerklassifizierungen weitergeleitet, und der neue Steuercode erscheint dort in der Liste. Wenn Sie „Cancel" wählen und noch nichts in das Formular eingegeben haben, gelangen Sie direkt zur Tabelle zurück. Haben Sie bereits Angaben gemacht, erscheint ein Bestätigungsdialog. Mit „Cancel" schließen Sie den Dialog und bleiben auf der Erstellungsseite; mit „Proceed" schließen Sie den Dialog, verwerfen die Änderungen und beenden den Vorgang.
+
+Nach erfolgreicher Anlage erscheint die Meldung „Tax Classification <TAX_CODE_NAME> was successfully created". Kann die Steuerklassifizierung nicht angelegt werden, erscheint die Fehlermeldung „Tax Classification <TAX_CODE_NAME> could not be created." Diese Fehlermeldung enthält eine Schaltfläche „Close" und bleibt sichtbar, bis Sie sie schließen. Auch hier gelten die Mercedes-Benz Workbench und das vom Kunden validierte UI-Design.
+
+**Anpassungen in der Übersicht aus dem Sprint-Demo-Feedback**
+
+Aufgrund des Feedbacks aus der Sprint-Demo wurden in einer Übersichtstabelle mehrere Änderungen vorgenommen. Die Spalte „Workshop Invoice Status" wird in der Oberfläche nicht mehr angezeigt. „Workshop Invoice Number" heißt nun „Vega Claim Number", „Approve" heißt „Accepted", „Dealer Name" heißt „Dealer Name / Workshop Name", und „Total Accepted Invoice Amount" heißt „Total Claim Amount".

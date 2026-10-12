@@ -1,0 +1,13 @@
+# Batch 756 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 9 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Contract Management**
+
+Die Funktion „Änderung der Bezahlmethode abbrechen" wurde nicht umgesetzt; das zugehörige Vorhaben wurde eingestellt. Geplant war, dass Mitarbeitende der Market Operations (MO) einen laufenden Änderungsprozess der Bezahlmethode abbrechen können, den ein Kunde über das Customer Access Centre (CAC) angestoßen hat. Der Abbruch sollte möglich sein, solange der Prozess noch nicht abgeschlossen ist, etwa wenn ein Kunde nicht reagiert oder seine Meinung ändert. Für Anwenderinnen und Anwender bedeutet das: Eine solche Abbruchmöglichkeit steht derzeit nicht zur Verfügung. Ein einmal gestarteter Prozess kann nicht kontrolliert gestoppt werden, sondern läuft bis zum Abschluss oder bis zum Zeitablauf.
+
+Fertiggestellt wurden dagegen mehrere Anpassungen an Frontend und Backend. Nach der Aktivierung eines Vertrags in den Baumuster-Abläufen BTO und BTS wird nun der Abschnitt zur Prolongation bereitgestellt. Im Frontend wurden Übersetzungen für Sonderfälle ergänzt. Außerdem wurde im Zuge der Produkthistorisierung die neue Version der Schnittstelle zum Anlegen einer Produktversion eingebunden. Zudem wurde ein Fehler behoben, bei dem Preise in Lieferantendokumenten als „null" übermittelt wurden.
+
+Die Widerrufsfrist bei der Vertragskündigung wurde ebenfalls überarbeitet. Bisher konnte in den Markteinstellungen eine Widerrufsfrist in Tagen festgelegt werden, auf die fest hinterlegt zusätzlich fünf Arbeitstage Puffer aufgeschlagen wurden. So hatten die Market Operations fünf Arbeitstage Zeit, auf einen Widerruf des Kunden zu reagieren. Die Zielsetzung sah vor, diesen Puffer als eigenen, konfigurierbaren Wert in die Markteinstellungen aufzunehmen. Der Wert soll auch 0 zulassen, als Standardwert sind sieben Arbeitstage vorgesehen. Das zugehörige Ticket ist geschlossen.
+
+Weitere Tickets wurden ohne Umsetzung geschlossen oder abgebrochen. Dazu zählen eine Meldung, dass eine USt-IdNr. in zwei Fällen nicht durch VIES validiert wurde, sowie ein Fehler, bei dem das Bearbeiten eines aktiven Vertrags eine Fehlermeldung „Bad Request" auslöste. Zu diesem Fehler liegen keine weiteren Angaben vor. Ein zusätzliches Ticket mit einer reinen Vertragskennung als Titel wurde ebenfalls geschlossen; Details dazu enthalten die Unterlagen nicht.

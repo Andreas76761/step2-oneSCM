@@ -1,0 +1,17 @@
+# Batch 51 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Manuelle Abschlussdokumente für Vertragsende und vorzeitige Vertragsbeendigung (MDCR)
+
+Im Modul Revenue steht ein neuer Dokumenttyp für die finanzielle Abschlussabrechnung eines Vertrags zur Verfügung. Er dient dazu, die finanzielle Position eines Vertrags am Vertragsende oder bei vorzeitiger Beendigung abzuschließen, und kann sowohl für Leasingverträge als auch für Nicht-Leasingverträge verwendet werden. Ein solches Dokument bildet eine finale Abrechnung ab, entweder als Rechnung bzw. Belastung oder als Gutschrift bzw. Erstattung. Es gleicht die Differenz zwischen dem tatsächlich Verbrauchten oder Geschuldeten und dem vertraglich Vereinbarten aus. Typische Beispiele sind eine Mehrkilometer-Abrechnung bei einem Servicevertrag, der Endsaldo bei vorzeitiger Fahrzeugrückgabe im Leasingvertrag oder eine Vertragsstrafe bei vorzeitiger Beendigung.
+
+Die Berechnung des Betrags erfolgt außerhalb von oneSCM, da jeder Vertragstyp und jeder Markt eigene Regeln hat, etwa Preis pro Kilometer, Strafprozentsatz, Kilometerobergrenzen oder Datenbankberechnungen im Leasing. Die Funktion automatisiert die Berechnung nicht. Sie bietet Revenue einen einheitlichen, klar definierten Dokumenttyp sowie einen Erstellungs- und Exportprozess, um den bereits berechneten Betrag zu erfassen und zu exportieren.
+
+Das Dokument wird im Bereich der Finanzdokumente eines Vertrags manuell erstellt, und zwar von Benutzern der Rollen MO bzw. MPC, nachdem sie den Abrechnungsbetrag extern ermittelt haben. Es wird keine neue Rolle eingeführt. Die Erstellung nutzt die bestehenden Berechtigungen für die manuelle Dokumenterstellung. Bei der Erstellung wählt der Benutzer, ob das Dokument als Rechnung (Belastung des Kunden) oder als Gutschrift (Erstattung an den Kunden) angelegt wird. Für Gutschriften gibt es keine Einschränkung. Der Benutzer erfasst manuell den extern berechneten Nettobetrag sowie einen Positionstext, der die Berechnung beschreibt, zum Beispiel: „12.500 km gefahren − 10.000 km vereinbart = 2.500 km × 0,15 EUR/km = 375,00 EUR“. Die Rechnungszeitraumfelder „Dokument von“ und „Dokument bis“ sind bei diesem Dokumenttyp optional, da er keinen Abrechnungszeitraum darstellt.
+
+Das Dokument durchläuft den üblichen Dokumentenlebenszyklus (Erstellt, Akzeptiert, Exportiert, FI-Dokument erstellt usw.) und wird über den Standard-Exportjob E169/CoFiCo exportiert. Dabei wird der Positionstext in die exportierte Position der Exportdatei übernommen.
+
+Für MBLD-Verträge gilt zusätzlich: Dokumente dieses Typs werden anhand des Vertriebskanals Leasing und des Dokumenttyps MDCR ausgewählt und per API an MBLD übermittelt. Dokumente von Nicht-Leasingverträgen werden nicht an MBLD gesendet.
+
+Hintergrund ist, dass Vertragsende und vorzeitige Beendigung häufige Ereignisse sind, für die bisher uneinheitlich benannte, manuell erstellte Dokumente verwendet wurden. Das führte zu Unklarheit zwischen den Teams, welcher Dokumenttyp eine Schlussabrechnung darstellt. Da MBLD bei Leasingverträgen ein verpflichtender nachgelagerter Empfänger ist, sorgen die klaren Routing-Regeln dafür, dass Endsaldo-Daten aus dem Leasing zuverlässig dorthin gelangen. Die manuelle Erstellung baut auf der bereits vorhandenen Funktion für Kundenrechnungen und Gutschriften im Bereich der Finanzdokumente eines Vertrags auf.

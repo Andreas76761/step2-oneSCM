@@ -1,0 +1,45 @@
+# Batch 1230 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Produkt- und Preisbereitstellung in der Vertragskalkulation**
+
+Bisher basierte die Bereitstellung von Produkten und Preisen in der Vertragskalkulation auf Testdaten. Mit der neuen Funktion ermittelt das System auf eine API-Anfrage hin die passenden Produkte und Preise anhand der übergebenen Anfrageparameter. Die Anfrage kann sowohl von internen oneSCM-Prozessen als auch von externen Anfragenden gestellt werden. Die Antwort kann je nach Produktdefinition und Anfrageparametern Informationen zu mehreren Produkten und mehreren Preisfeldern enthalten.
+
+**Anfrageparameter**
+
+Zur Identifikation des Fahrzeugs ist entweder die Fahrgestellnummer (chassisVIN) oder das Baumuster (chassisBM) anzugeben; jeweils einer der beiden Werte ist verpflichtend, sofern der andere nicht übermittelt wird. Ebenfalls verpflichtend sind die Vertriebsebene (salesLevel) und der Markt (marketTenant), aus dem der Vertrag erzeugt wird. Für die Vertriebsebene sind die Werte 1 (Zentrale bzw. Market Performance Center), 2 (Handel) und 3 (Direktvertrieb an Kunden) zulässig.
+
+Optional können das Datum der Erstzulassung, der aktuelle Kilometerstand, ein Vertriebskanal und die steuerliche Klassifizierung des Kunden übermittelt werden. Fehlt die Erstzulassung, wird das aktuelle Datum verwendet; fehlt der Kilometerstand, wird 0 angenommen. Ohne steuerliche Klassifizierung wird der Standard-Mehrwertsteuersatz des Marktes angewendet, andernfalls wird der anzuwendende Satz aus der Steuerverwaltung ermittelt.
+
+Zusätzlich lässt sich die Anfrage eingrenzen: über ein gewünschtes Produkt (Produkt-ID) für das Preisfeld eines einzelnen Produkts sowie über die gewünschte Gesamtlaufleistung in Kilometern, die gewünschte Gesamtlaufzeit in Monaten und das gewünschte Kontingent (Anzahl Services) für einen einzelnen Preiswert. Mit dem gewünschten Zahlungsintervall („Monthly“ oder „OneTime“) wird das Preisfeld für ein bestimmtes Zahlungsintervall angefordert.
+
+**Ablauf der Berechnung**
+
+Zunächst werden die Fahrzeuginformationen ermittelt. Abhängig von den übergebenen Parametern werden sie durch Abfragen bei den Informationen zu bestehenden Serviceverträgen, bei DSB (Servicehistorie des Fahrzeugs) und bei VeDoc (Auflösung der VIN in die FIN) angereichert. Wird nur das Baumuster übergeben, erfolgt direkt die Suche nach berechtigten Produkten.
+
+Anschließend wird der anwendbare Steuersatz bestimmt, entweder anhand der übergebenen steuerlichen Klassifizierung oder über den aktuell gültigen Standardsteuersatz.
+
+Danach werden die berechtigten Produkte und das gültige Basispreisfeld ermittelt. Die Berechtigung hängt von der Fahrzeuggruppe, der übergebenen Vertriebsebene und den Fahrzeuginformationen (Erstzulassungsdatum, aktueller Kilometerstand) ab. Berücksichtigt werden nur aktuell gültige und veröffentlichte Produkte. Ein Produkt wird nicht angezeigt, wenn keine gültige, aktive Preisversion vorliegt. Eine mögliche Ausnahme für Testzwecke ist vorgesehen.
+
+Für jedes Produkt werden dann die berechtigten Preispunkte bestimmt. Diese müssen innerhalb der minimalen und maximalen Grenzen für Fahrzeugalter bzw. Laufzeit sowie für die Fahrzeuglaufleistung liegen. Außerdem müssen sie mindestens dem aktuellen Fahrzeugalter (auf Basis der Erstzulassung) und dem aktuellen Kilometerstand entsprechen.
+
+Im nächsten Schritt werden je Produkt zusätzliche Aufschläge ermittelt. Hat ein Produkt einen zahlungsabhängigen Aufschlag für monatliche Zahlung definiert, etwa 0,50 EUR pro Monat, werden die möglichen Laufzeiten mit diesem Betrag multipliziert. Daraus ergibt sich eine Liste von Aufschlagspreispunkten, zum Beispiel (24 Monate, 12,00 EUR), (36 Monate, 18,00 EUR) und (48 Monate, 24,00 EUR). Administrationsgebühren, ob fest oder laufzeitabhängig, gehören nicht zum Umfang des MVP. Ebenso sind Rabatte und Kampagnen nicht Teil des MVP und noch offen.
+
+Anschließend werden die zahlungsabhängigen Preise je Produkt berechnet. Dies geschieht für jedes erlaubte Zahlungsintervall und für jeden relevanten Preispunkt. Der zahlungsabhängige Aufschlag wird angewendet, sofern das Intervall nicht „OneTime“ ist. Danach werden die Zwischensummen für den Kunden (netto, Steuer und brutto) mit dem ermittelten Steuersatz berechnet. Ist das Intervall nicht „OneTime“, werden zusätzlich die auf das Zahlungsintervall bezogenen Kundenpreise berechnet; bei monatlicher Zahlung wird der Nettopreis durch die Laufzeit in Monaten geteilt. Anschließend werden die Gesamtbeträge neu berechnet, indem die intervallbezogenen Preise mit der Anzahl der Monate pro Zahlungsintervall multipliziert werden. Je erlaubtem Zahlungsintervall wird so ein Preisfeld zurückgegeben, das die Gesamtbeträge (netto, Steuer, brutto) und die intervallbezogenen Beträge (netto, Steuer, brutto) enthält. Bei „OneTime“ sind Gesamtbeträge und intervallbezogene Beträge identisch und enthalten keine zahlungsabhängigen Aufschläge.
+
+**Zusätzliche Prüfung des Erstzulassungsdatums**
+
+Zur Verbesserung der Datenqualität wird das von der Vertragserstellung übermittelte Erstzulassungsdatum zur übergebenen FIN geprüft. Existiert in VeDoc ein Erstzulassungsdatum, das mit dem übermittelten übereinstimmt, wird normal fortgefahren. Existiert keines, wird das vom Kunden angegebene Datum gespeichert und ebenfalls fortgefahren. Weicht das in VeDoc hinterlegte Datum vom übermittelten ab, wird das Datum des Systems verwendet und die Abweichung an die Fachabteilung „Operations“ gemeldet, damit das Datum manuell geprüft wird. Anpassungen hierzu werden zu einem späteren Zeitpunkt festgelegt.
+
+**Aufbau der Antwort**
+
+Die Antwort richtet sich nach den Anfrageparametern. Auf Fahrzeugebene enthält sie Sparte (zum Beispiel Pkw), Marke (zum Beispiel Mercedes-Benz) und Verkaufsbezeichnung (zum Beispiel C200). Darunter folgt die Liste der berechtigten Produkte mit Produktname (zum Beispiel CompleteCare), Produktbezeichnung, Produktbild, Systemcode des Produkts für die Schadensabwicklung (zum Beispiel P_EXC) und den Produktumfängen als Liste, etwa (P001, MAINTEN, „Maintenance“). Die Produktverwendung ist nicht Teil des MVP.
+
+Je Produkt gibt es eine oder mehrere Konfigurationen mit dem Zahlungsintervall (OneTime und/oder Monthly, je nach Produktdefinition), der Währung nach ISO 4217 (zum Beispiel EUR) sowie der Definition der beiden Dimensionen des Preisfelds: die erste Dimension in Monaten, Jahren oder gesamt, die zweite in Laufleistung oder Anzahl der Services. Die Preise enthalten die Werte der Preispunkt-Dimensionen (zum Beispiel 36 Monate und 60000 km), die zahlungsintervallbezogenen Preise mit Netto-, Steuer- und Bruttobetrag (zum Beispiel 55,97, 10,63 und 66,61) sowie die Gesamtpreise mit Netto-, Steuer- und Bruttobetrag (zum Beispiel 2014,92, 382,68 und 2397,96). Zusätzlich wird ein Kennzeichen für eine Abweichung beim Erstzulassungsdatum ausgegeben. Eine Vorauswahlkennzeichnung ist nicht Teil des MVP. Die Ebenen Produkt, Konfiguration und Preise können in der Antwort mehrfach vorkommen.
+
+Die Anfrage kann auf ein einzelnes Produkt oder sogar auf einen einzelnen Preispunkt eingegrenzt werden, wenn alle optionalen Angaben übermittelt werden. Enthält die Anfrage nur ein Produkt oder nur eine Kombination aus Laufzeit und Laufleistung, wird das Preisfeld auf die angefragte Kombination reduziert und kann dann auch nur einen einzigen Preispunkt enthalten.
+
+**Verhalten des Systems**
+
+oneSCM liefert Produkte und Preise auf Basis der übermittelten Fahrzeugdaten (VIN/FIN) oder des übermittelten Baumusters. Ist nach den Anfrageparametern kein Produkt oder kein Preis anwendbar, gibt das System eine entsprechende Meldung aus. Werden nur Pflichtangaben übermittelt, erhält der Anfragende eine Liste aller berechtigten Produkte mit einem vollständigen Preisfeld je möglichem Zahlungsintervall für alle Laufleistungs- und Laufzeitdimensionen. Für ein angefragtes Produkt mit gewünschtem Zahlungsintervall und einer Kombination aus Laufzeit und Laufleistung wird genau ein Preispunkt geliefert, vorausgesetzt, diese Kombination existiert in der Produktdefinition. Bei weiteren Eingrenzungen, etwa bei einem Erstzulassungsdatum in der Vergangenheit, einem Kilometerstand größer 0, einer bestimmten steuerlichen Klassifizierung (zum Beispiel befreit) oder fehlender Angabe zu Produkt, Zahlungsintervall oder Steuerklassifizierung, erhält der Anfragende eine Liste der berechtigten Produkte mit jeweils reduziertem Preisfeld. Für jeden Preispunkt enthält die Antwort sowohl Gesamtbeträge als auch zahlungsintervallbezogene Beträge, jeweils netto, Steuer und brutto. Beide stimmen bei „OneTime“ überein und unterscheiden sich nur bei „Monthly“.

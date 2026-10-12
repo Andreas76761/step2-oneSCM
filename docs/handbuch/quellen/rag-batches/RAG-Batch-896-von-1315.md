@@ -1,0 +1,15 @@
+# Batch 896 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Produkt- und Preisversion im Vertrag**
+
+Bei der Erstellung eines Vertrags fragt das Vertragssystem beim Produktsystem die Produktkonfiguration und die Preise ab. Die Antwort des Produktsystems enthält dabei zwei Angaben: die Produktversion, also die Version der verwendeten Produktkonfiguration, und die Preisversion, also die Version der verwendeten Preismatrix. Beide Werte werden direkt im Vertrag gespeichert. Damit verweist ein Vertrag immer auf genau die Produktkonfiguration und den Preisstand, die bei seiner Erstellung gültig waren. Abweichungen, die durch spätere Änderungen an Produkten oder Preisen entstehen könnten, werden so vermieden. Die Logik gilt für alle erstellten Verträge, unabhängig von den verwendeten Identifikatoren, der Kundenart oder der Division.
+
+Die gespeicherten Versionen können auf Vertragsebene nicht manuell geändert werden. Bei allen weiteren Abfragen an das Produktsystem, etwa bei Produktprüfungen, übermittelt das Vertragssystem die gespeicherte Produktversion und Preisversion mit. So ist die Konsistenz zwischen Vertrag und Produkt- bzw. Preisdefinition über den gesamten Vertragslebenszyklus hinweg sichergestellt, einschließlich der Prolongationen und Validierungsabläufe.
+
+Wird eine Verlängerung (Prolongation) gestartet, sowohl als Kurzzeit- als auch als Langzeitverlängerung, sendet das Vertragssystem die aktuell gespeicherte Produkt- und Preisversion an das Produktsystem. Das Produktsystem wertet die Produktkonfiguration aus und entscheidet, ob die Verlängerung mit den ursprünglichen Versionen aus der Vertragserstellung fortgeführt wird oder ob aktualisierte Produkt- und Preisversionen auf Basis der aktuellen Produktkonfiguration verwendet werden. Werden die ursprünglichen Versionen zurückgegeben, setzt der Vertrag diese unverändert fort. Werden neue Versionen zurückgegeben, etwa eine neue Produktversion und eine neue Preisversion, aktualisiert das Vertragssystem den Vertrag entsprechend. Die neuen Versionen gelten dann als aktive Versionen für alle folgenden Vertragsvorgänge, und das Vertragssystem verwendet bei weiteren Aufrufen an das Produktsystem stets die zuletzt gespeicherten Versionen.
+
+Alle früheren Produkt- und Preisversionen eines Vertrags bleiben in der Datenbank erhalten. Dadurch bleibt die Entwicklung der Vertragspreise nachvollziehbar und prüfbar, und es existiert eine historische Aufzeichnung für Auditzwecke. Für weitere Operationen werden jedoch ausschließlich die jeweils aktuellen Versionen herangezogen, nicht die Versionen aus der Historie.
+
+Die Anbindung über den EDGE-Service wurde um die beschriebenen Parameter erweitert. Dies betrifft die Vertragserstellung sowie die Vertragsverlängerungen (Kurzzeit und Langzeit) und berücksichtigt die Anforderungen für MBLD-Service-Verträge.

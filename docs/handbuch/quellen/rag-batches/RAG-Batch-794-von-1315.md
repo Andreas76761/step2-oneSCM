@@ -1,0 +1,17 @@
+# Batch 794 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 12 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Im Bereich Vertragsmanagement wurden mehrere Verbesserungen umgesetzt, die den Umgang mit Verträgen, Dokumenten und Kundenkommunikation betreffen.
+
+Die Bezeichnungen der E-Mail-Vorlagen im Bereich Kommunikation, Reiter E-Mail, wurden vereinheitlicht und verständlicher gestaltet. Die Statusmails erscheinen nun unter den folgenden Namen: Short Term Prolongation, Long Term Prolongation, Transfer, Change Payer For Payer, Change Payer For Holder, Reactivation, Early Termination, Expiration, Rejection, Cancellation, Suspension, Activation und Confirmation. Zusätzlich heißen die weiteren Vorlagen jetzt DSS, Updating und Informing for Prolongation.
+
+Auch beim Hochladen von Dokumenten gibt es eine Änderung. Wenn Sie in der Vertragsdetailansicht im Reiter Kommunikation die Schaltfläche zum Hochladen wählen, können Sie im angezeigten Fenster den Dokumenttyp auswählen. Die Auswahlmöglichkeiten „Novation Document + SEPA Mandate“ und „Novation Document“ wurden entfernt. Zur Verfügung stehen nun Service Contract + SEPA Mandate, Terms and Conditions, SEPA Document, Vehicle Registration Document, Company Registration, Tax Exempt Certificate sowie Other Documents.
+
+Neu ist außerdem die automatische Behandlung abgelaufener Kreditkarten. Sie gilt für Verträge im Status „Aktiv“ oder „Suspendiert“, bei denen die Kreditkarte als Zahlungsmethode hinterlegt ist. Meldet der Bereich Revenue dem Vertragsmanagement, dass die zu einem Vertrag gehörende Kreditkarte abgelaufen ist, setzt das System einen aktiven Vertrag auf „Suspendiert“. War der Vertrag bereits suspendiert, bleibt er in diesem Status. Der Kunde erhält dazu eine E-Mail auf Basis der Suspendierungsvorlage, es wird eine i155 erzeugt, und der Bereich Historie wird mit dem Grund „Payment Method Invalid“ ergänzt. Zusätzlich wird eine interne Benachrichtigung an MO gesendet. Der Vertrag bleibt suspendiert, bis eine weitere Entscheidung getroffen wird, das geplante Vertragsende erreicht ist oder der Vertrag aufgrund der Laufleistung abläuft.
+
+Aktualisiert der Kunde seine Kreditkarte und sind offene Zahlungen beglichen, teilt Revenue dem Vertragsmanagement dies mit und übermittelt die neue Asset-ID sowie die NTR, die auf Vertragsebene gespeichert werden. Das System setzt den Vertrag daraufhin wieder auf „Aktiv“, sendet dem Kunden eine E-Mail mit der Reaktivierungsvorlage, erzeugt eine i155 und trägt in der Historie den Grund „Payment Method Update“ ein. Auch hierüber wird MO intern benachrichtigt.
+
+Darüber hinaus wurden Fehler behoben. Die Bezeichnung der optionalen Deckungen (Optional Coverages) im Service-Angebotsdokument wurde korrigiert. Ebenso wurde die Sortierung nach Produktname auf der Startseite des Vertragsmanagements korrigiert, und die Kündigungsdaten, die während des erlaubten Kündigungszeitraums angezeigt werden, sind nun richtig.
+
+Schließlich wurden die durchgängigen Abläufe zur Reaktivierung eines suspendierten Vertrags (für Privat- und Geschäftskunden) sowie zur Suspendierung eines aktiven Vertrags mit Prüfung des Zahlungsplans durch automatisierte Tests abgesichert.

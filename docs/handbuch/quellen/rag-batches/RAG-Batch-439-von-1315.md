@@ -1,0 +1,33 @@
+# Batch 439 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**System-interne Benachrichtigungen**
+
+Das System versendet automatisch Benachrichtigungen zu Vorgängen, die Aufmerksamkeit erfordern, damit Benutzer der Marktorganisation (Market Operation) sie prüfen und bearbeiten können. Der Benutzer, der den Vorgang ausgelöst hat, erhält dazu keine Benachrichtigung. Ziel ist ein direkter Freigabeablauf, der auf Benachrichtigungen zwischen den Benutzern beruht. Das Benachrichtigungscenter wird derzeit für zwei Anwendungsfälle genutzt: für manuell erstellte Rechnungen oberhalb eines Schwellenwerts und für Kampagnen mit Kulanzzeit (Grace Period), die beim Verkauf eines Servicevertrags in der Vertragserstellung angeboten werden.
+
+**Manuell erstellte Rechnungen**
+
+Eine Benachrichtigung entsteht, wenn ein Benutzer der Marktorganisation manuell eine Rechnung vom Typ MANU anlegt, die sich im Status „Created“ befindet und deren Betrag über dem Schwellenwert liegt. Dieser Schwellenwert ist vorerst ein Platzhalterwert von 100 Euro und muss bei Bedarf vom jeweiligen Markt festgelegt werden. Der Benutzer, der die Rechnung manuell erstellt hat, darf diese Rechnung nicht selbst freigeben.
+
+In der Navigationsleiste sehen Benutzer der Marktorganisation ein Glockensymbol mit der Anzahl offener Benachrichtigungen. Die Zahl steigt bis 9; bei mehr als 9 Benachrichtigungen wird „9+“ angezeigt. Ein Klick auf die Glocke öffnet auf der rechten Seite das Benachrichtigungscenter. Es zeigt, welche Benachrichtigungen bearbeitet werden müssen, und jede Benachrichtigung ist mit der passenden Seite verlinkt, um die Freigabe einfach und nachvollziehbar zu machen. Das Center lässt sich über das X schließen, wodurch der Benutzer zur vorherigen Ansicht zurückkehrt. Benachrichtigungen, die eine Aktion erfordern, sind mit einem blauen Punkt gekennzeichnet. Sobald eine Benachrichtigung durch eine Aktion wie Freigabe oder Ablehnung erledigt ist, wird sie dort nicht mehr angezeigt.
+
+Ist genau eine Rechnung freizugeben, lautet die Meldung „Please approve invoice #Rechnungsnummer“ und verweist mit dem Text „Go to invoices“ auf die Seite dieser Rechnung. Dort stehen zusätzlich Symbole zum Ablehnen und Freigeben zur Verfügung, die beim Darüberfahren einen Tooltip anzeigen. Außerdem gibt es einen Link zur Vertragsnummer, der zur entsprechenden Vertragsseite im Vertragsmanagement führt. Über die Zurück-Schaltfläche gelangt der Benutzer zur vorherigen Seite, und die Benachrichtigung bleibt gültig, solange weder Freigabe noch Ablehnung erfolgt ist.
+
+Sind mehrere Rechnungen freizugeben, lautet die Meldung „Please approve multiple invoices“ und verweist auf die Rechnungsübersicht. Diese ist bereits gefiltert und zeigt nur Rechnungen, die manuell erstellt wurden, sich im Status „Created“ befinden, den Schwellenwert überschreiten und bei denen noch keine Freigabe oder Ablehnung erfolgt ist. Rechnungen, die eine Aktion erfordern, sind mit einem blauen Punkt markiert. Für eine so markierte Rechnung stehen in der Übersicht nur die Aktionen „View“, „Edit“ und „History“ zur Verfügung. Ein Klick auf die markierte Benachrichtigung führt den Benutzer zur Rechnungsseite, auf der er ablehnen oder freigeben kann.
+
+Wird eine Rechnung abgelehnt oder freigegeben, wird die Rechnungshistorie um die durchgeführte Aktion ergänzt, der blaue Punkt an der Rechnung verschwindet, die Benachrichtigung wird entfernt und der Zähler am Glockensymbol aktualisiert. Benachrichtigungen bleiben bestehen, bis die zugehörige Aktion abgeschlossen ist.
+
+**Kampagnen mit Kulanzzeit bei der Vertragserstellung**
+
+Dieser Ablauf beginnt in der Vertragserstellung. Der Benutzer startet auf der Einstiegsseite einen neuen Vertrag und wählt den gewünschten Ablauf: verfügbare Fahrgestellnummer, Build to Stock oder nicht verfügbare Fahrgestellnummer. Anschließend gibt er die Fahrzeugdaten ein und füllt alle Pflichtfelder aus. Das System ruft die Vertragskalkulation auf, fordert Fahrzeuginformationen und passende Produkte an und zeigt die Antwort mit Fahrzeuginformationen sowie verfügbaren Produkten, Preisen und Beschreibungen an. Der Benutzer wählt ein Produkt und konfiguriert Laufzeit, Jahresfahrleistung und Zahlungsintervall. Danach aktiviert er unter dem Zahlungsintervall den Link für den Händlerrabatt und wählt einen Händlerrabatt aus. Es ist zu prüfen, dass keine Marktkampagnen angewendet werden. Ist das der Fall, werden alle Kampagnen mit verfügbarer Kulanzzeit angezeigt, und der Benutzer wählt eine davon aus. Er trägt in einem Textfeld eine Begründung ein und klickt auf „Submit“, was den Benachrichtigungsablauf auslöst.
+
+Beim Absenden der Anfrage wird eine Benachrichtigung an den MPC gesendet. Mit ihr werden folgende Daten übermittelt und gespeichert: der Name des Händlers, Datum und Uhrzeit des Versands (systemseitig erzeugt), Kampagnenname, Kampagnengültigkeit, Kulanzzeit in Tagen, Fahrgestellnummer, Kennzeichen und die Begründung aus der Anfrage des Händlers. Der Händler sieht anschließend die Hinweismeldung, dass die Anfrage übermittelt wurde, der zuständige Markt informiert ist und eine Antwort auf die Anfrage geben wird.
+
+Der MPC-Benutzer sieht die Benachrichtigung nach einem Klick auf das Glockensymbol im Benachrichtigungscenter, wo sie mit der passenden Seite verlinkt ist. Ein Klick auf die Benachrichtigung öffnet ein Popup mit allen Details, in dem der MPC die Anfrage freigeben oder ablehnen kann.
+
+Bei einer Freigabe erhält der Händler eine neue Benachrichtigung mit dem Inhalt, dass die Kulanzzeit-Kampagne mit dem jeweiligen Namen für den jeweiligen Vertrag genehmigt wurde. Zusätzlich erhält er aktualisierte Vertragsdetails und einen aktualisierten Zahlungsplan. Bei einer Ablehnung erhält der Händler eine Benachrichtigung, dass die Kulanzzeit-Kampagne für den Vertrag nicht genehmigt wurde. In beiden Fällen wird die Vertragserstellung darüber informiert, ob die Anfrage genehmigt oder abgelehnt wurde. Der gesamte Ablauf folgt dem dokumentierten Prozess, und die Benachrichtigungen sind verlinkt, sodass Händler und MPC einfach zwischen den Seiten wechseln können.
+
+**Ausblick**
+
+Für die Zukunft sind erweiterte Funktionen vorgesehen, darunter die Zuweisung von Vorgängen und der Abschluss des Bearbeitungskreislaufs.

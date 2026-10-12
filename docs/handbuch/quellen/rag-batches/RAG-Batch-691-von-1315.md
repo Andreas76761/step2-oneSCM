@@ -1,0 +1,23 @@
+# Batch 691 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Stornierung von Verkaufsprovisionsrechnungen (Cost Management)**
+
+Im Bereich Dealer Commission wird künftig die Möglichkeit bereitgestellt, eine bereits erstellte Verkaufsprovisionsrechnung (SCOM-Rechnung) für einen Händler zu stornieren. Dabei wird eine entsprechende SCOM-Gutschrift zur ursprünglichen Provisionsrechnung erzeugt. Dies ist insbesondere dann erforderlich, wenn eine Händlerprovision rückgängig gemacht werden muss, nachdem die Widerrufsfrist der ursprünglichen Rechnung abgelaufen ist. Die Stornierung erfolgt immer eins zu eins: Es wird genau eine Originalrechnung ausgewählt, und dazu wird genau eine Gutschrift erstellt. Der Betrag wird von der Originalrechnung übernommen und kann nicht geändert werden.
+
+Die neue Aktion trägt den Namen „Reverse“ und steht im bestehenden Reiter bzw. Aktionsmenü von Dealer Commission zur Verfügung. Eine neue Seitenstruktur ist nicht erforderlich. Genutzt wird sie von Anwendern der Rollen MO und MPC, die die Stornierung einer geeigneten Händlerprovisionsrechnung auslösen und freigeben. Es gibt keine neue Benutzerrolle, es werden die vorhandenen Berechtigungen für Dealer Commission und Finanzbelege verwendet.
+
+Die Aktion „Reverse“ ist nur für SCOM-Rechnungen verfügbar, die mindestens den Status „Exported“ erreicht haben, also auch bei den Status „FI Doc Created“, „Processed“, „Paid“ und den Mahnstufen. Zudem muss die Widerrufsfrist abgelaufen sein. Solange eine Rechnung innerhalb der Widerrufsfrist noch den Status „Planned“ oder „Accepted“ hat, wird die Aktion ausgeblendet oder deaktiviert. In diesem Zeitraum kann die Rechnung weiterhin über das bestehende Verfahren der Vertrags- bzw. Stornierungslogik behandelt werden, eine Stornogutschrift ist dann nicht nötig. Ist eine Rechnung zwar exportiert, aber noch nicht bis „FI Doc Created“ bzw. zum jeweiligen Endstatus „Processed“ gelangt, ist „Reverse“ ebenfalls nicht verfügbar, und der Anwender wird darauf hingewiesen, dass der Finanzbeleg zuerst erstellt bzw. verarbeitet werden muss.
+
+Im Stornoformular werden der Händler sowie die Finanzinformationen der Originalrechnung übernommen und schreibgeschützt angezeigt. Auch der Stornobetrag ist schreibgeschützt und entspricht dem Betrag der Originalrechnung. Das Belegdatum wird gemäß der vereinbarten Konfiguration mit dem aktuellen Datum vorbelegt. Editierbar ist der Positionstext der Rechnung, in dem der Anwender die Begründung für die Stornierung beliebig erfassen kann; dieser Text wird mit der Gutschrift gespeichert. Ein Kopftext ist für die SCOM-Stornierung nicht erforderlich.
+
+Die neu erstellte gutschrift verweist auf die Nummer bzw. den Beleg der ursprünglichen oneSCM-Rechnung. Die Originalrechnung bleibt unverändert und wird weder verändert noch gelöscht, sie wird mit der Stornogutschrift verknüpft. Der Anwender reicht die Stornierung zur Freigabe ein. Dabei gelten die jeweiligen Vier-Augen- bzw. Schwellenwertregeln des Marktes: Die Gutschrift wird nur dann automatisch akzeptiert, wenn die konfigurierte Regel dies zulässt, andernfalls bleibt sie im Status „Created“, bis ein berechtigter Anwender sie freigibt.
+
+Anschließend durchläuft die Gutschrift den normalen Lebenszyklus von Finanzbelegen: Created, Accepted, Exported, FI Doc Created bzw. Processed und schließlich Paid bzw. Mahnstufen. Der Export erfolgt über die Schnittstelle, die zum ursprünglichen Provisionsablauf passt. Dabei wird E167 für die jeweilige interne Route ohne Gutschriftsverfahren (Non-Self-Billing), E168 für die jeweilige Self-Billing-Route und E169 dort verwendet, wo der bestehende Ablauf für externe Händler dies erfordert. Der Statuswechsel nach dem Export richtet sich nach der Rückmeldung der Schnittstelle, sobald der zuständige Export-Batchjob gelaufen ist.
+
+Eine Originalrechnung kann über die Standardaktion „Reverse“ nur einmal storniert werden, es sei denn, es existiert eine ausdrücklich freigegebene Regel für Folgestornierungen. Hat eine Rechnung bereits eine Stornogutschrift, ist „Reverse“ nicht mehr verfügbar, und die bestehende Verknüpfung zur Gutschrift wird zur Nachvollziehbarkeit angezeigt.
+
+**Weitere Korrekturen im Cost Management**
+
+Behoben wurde ein Fehler, durch den die Kennzahl „Sum of All Paid Commissions“ als negative Zahl gespeichert wurde. Ebenfalls behoben wurde ein Problem bei CoFiCo und SWT, durch das manuell erstellte Werkstattbelege nicht in den Status „Processed“ überführt wurden.

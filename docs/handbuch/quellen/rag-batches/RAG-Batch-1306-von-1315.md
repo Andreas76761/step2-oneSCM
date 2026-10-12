@@ -1,0 +1,19 @@
+# Batch 1306 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 21 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Architektur und technische Grundlagen
+
+In der Domäne Architektur wurden zuletzt mehrere Themen umgesetzt, die vor allem die technische Basis und die Qualitätssicherung von oneSCM betreffen. Für die Kundenanwendung „Customer Self Service“ werden nun die Lizenzen aller in der Benutzeroberfläche verwendeten Drittanbieter-Pakete angezeigt. Alle Benutzer finden dazu in der Fußzeile einen Link „Licenses“. Ein Klick darauf öffnet ein Pop-up, das sämtliche Drittanbieter-Lizenzen auflistet. Zuvor wurden keine solchen Lizenzen angezeigt.
+
+Abgeschlossen wurden außerdem Arbeiten rund um den Markt. Für Märkte wurden Sicherheitsbereiche (Security Scopes) eingeführt. Beim Hochladen von Marktdokumenten wurde die Umsetzung angepasst: Der Aufruf an die Dokumentenverwaltung erfolgt künftig direkt aus dem Frontend. Dadurch entfällt die zyklische Abhängigkeit zwischen Dokumentenverwaltung und Konfigurationsservice. Der Konfigurationsservice im Backend erhält im Anschluss an den Upload die Angaben zum Dokument (ID, Name und Version) und speichert sie in der Tabelle der Marktdokumente. Hierfür wurde eine zweite Version der Schnittstelle bereitgestellt. Zudem wurde die Rolle „NACOS“ mit den zugehörigen Berechtigungen entfernt, ebenso die zugehörige Download-Seite. Eine Feldüberschrift in den Markteinstellungen wurde korrigiert.
+
+Im Bereich Rechnungen wurde die Erstellung von Werkstattrechnungen technisch überarbeitet. Für alle drei Formulare der Seite zur Erstellung einer Werkstattrechnung wird nun ein Formular-Service anstelle des bisherigen Stores (ngrx) verwendet. Der Ablauf bei der Erstellung bleibt dabei unverändert. Behoben wurden zudem zwei Fehler: Bei der Kilometerstandshistorie wird der zuletzt bekannte Kilometerstand nun auch dann korrekt aktualisiert, wenn Rechnungen mit demselben Datum erstellt werden. Außerdem wurden die fehlerhafte Darstellung und die fehlende Berechnung in der Dateistruktur der ausgehenden Rechnungsstellung an SWT korrigiert.
+
+Weitere Korrekturen betrafen Probleme, die inzwischen geschlossen sind. Dazu gehören eine abweichende Prüfung der Umsatzsteuer-Identifikationsnummer (in der Anwendung als fehlerhaft bewertet, im VIES-Dienst im Web jedoch als gültig), Benutzer aus Madrid, die bei den Nutzungsbedingungen hängen blieben, sowie wiederkehrende Frontend-Fehler im Produktivsystem im Zusammenhang mit einer Verletzung der Content-Security-Policy (connect-src).
+
+Für die Testautomatisierung wurde die bestehende Architektur um eine Geschäftsebene erweitert. Ein zusätzliches Paket „flows“ fasst mehrere Schritte zusammen und erleichtert das Schreiben umfangreicherer Tests. Diese Flows sollen in allen bestehenden Tests verwendet werden. Auch die Architekturthemen der Programminkremente PI9 und PI10 sowie die Testumsetzung der Vertragserstellung mit Händlerrabatt sind abgeschlossen.
+
+Bekannte Einschränkung: Beim Zurücksetzen von Filtern werden die Einstellungen für Sortierfeld (sortBy) und Sortierreihenfolge (orderBy) nicht auf ihre Standardwerte zurückgesetzt. Erwartet wird, dass beide Werte auf den Standard zurückgehen. Dieses Verhalten tritt in der gesamten Anwendung auf und ist derzeit noch offen.
+
+Noch nicht begonnen ist der Assistent zur Marktanlage mit dem Schwerpunkt Vertragserstellung und -verwaltung, der sich im Backlog befindet. Nicht weiterverfolgt werden die Prüfung einer Nutzung von GitHub Pages mit Allure, die Fehlerbehandlung für CFT sowie der Anwendungsfall, dass sich ein Benutzer in einen noch nicht konfigurierten Markt einloggt, um diesen zu konfigurieren.

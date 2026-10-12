@@ -1,0 +1,13 @@
+# Batch 1025 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Status „Warten auf Aktivierung" (Waiting for Activation)**
+
+Sobald ein Kunde einen Vertrag bestätigt hat, wird dieser nicht mehr unmittelbar aktiv gesetzt. Stattdessen führt das System vor der Aktivierung gezielte Prüfungen durch, um sicherzustellen, dass alle Daten vollständig und stimmig sind. Der Vertrag erhält dazu den Status „Waiting for Activation". Dieser Status bedeutet, dass der Vertrag vom Kunden bestätigt wurde und der Aktivierungsprozess zwar gestartet wurde, aber noch nicht abgeschlossen ist. Ein typisches Beispiel ist der Fall, dass die Finanzsystem-ID noch vom Finanzsystem bereitgestellt werden muss.
+
+Der Status folgt auf den Status „Confirmed". Von „Waiting for Activation" aus kann ein Vertrag entweder in den Status „Active" oder in den Status „Activation Failed" wechseln. Die Statusänderung lässt sich nicht durch Manipulation der Schnittstellen (APIs) herbeiführen. Das Backend validiert die Antwort des Kundenstammdaten-Managements (Customer Data Management) und setzt den Status anschließend selbst. Damit ist ausgeschlossen, dass ein Vertrag ohne Prüfung im Backend auf „Active" gesetzt wird.
+
+Nach der Bestätigung durch den Kunden erhält dieser zunächst die Mitteilung, dass der Vertrag angelegt wurde und die Freigabe durch Mercedes-Benz aussteht. Anschließend wartet das System auf die Antwort aus dem Bereich Customer Data Management. Sind eine SAP-Debitorennummer zugewiesen und die Gültigkeit des SEPA-Mandats in Ordnung, wechselt der Vertrag in den Status „Active". Ist keine SAP-Debitorennummer zugewiesen oder ist die Gültigkeit des SEPA-Mandats nicht in Ordnung, bleibt der Vertrag im Status „Waiting for Activation". Der Kunde wird über den jeweiligen Vertragsstatus benachrichtigt.
+
+Für den MVP gelten folgende Besonderheiten: Die Domäne Customer & Partner sendet zunächst nur Dummy-Daten. Antwortet die Domäne Customer & Partner nicht, bleibt der Vertrag so lange im Status „Waiting for Activation", bis eine Antwort vorliegt. Sendet die Domäne Daten und sind alle automatisierten Prüfungen in Ordnung, wird die Nacos-Prüfung als erfolgreich markiert und der Vertrag auf „Active" gesetzt. Sendet die Domäne Daten, die automatisierte FRD-Prüfung fällt jedoch negativ aus, wird die Nacos-Prüfung ebenfalls als erfolgreich markiert, der Vertrag bleibt aber im Status „Waiting for Activation".

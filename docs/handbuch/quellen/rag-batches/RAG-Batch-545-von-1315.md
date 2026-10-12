@@ -1,0 +1,19 @@
+# Batch 545 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 24 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**DevOps: Infrastruktur, CI/CD und Betrieb**
+
+Im Bereich DevOps wurden in diesem Release zahlreiche Verbesserungen an Infrastruktur, Build- und Deployment-Prozessen sowie an Überwachung und Sicherheit abgeschlossen.
+
+Ein Schwerpunkt lag auf den CI/CD-Prozessen. Die Abläufe wurden insgesamt überarbeitet und erweitert. Durch eine neue Abstraktionsschicht in einem eigenen Repository werden die Workflows nun automatisch in allen Repositories aktualisiert und versioniert; das End-to-End-Repository ist davon ausgenommen. Behoben wurde ein Fehler, bei dem beim Start eines Workflows für einen bestimmten Branch stets der Main-Branch abgerufen wurde statt des gewählten Branches. Außerdem wurden Korrekturen am Dockerfile für UI-Tests, an einem Problem beim Release des oneSCM-Frontends sowie am Deployment auf AWS ECS vorgenommen. Ein Fehler, durch den der S3-Event-Trigger nicht funktionierte, wurde ebenfalls behoben.
+
+Die Infrastruktur wurde aktualisiert und weiterentwickelt. Dazu gehören Updates der Infrastruktur-Abhängigkeiten, Anpassungen der Einstellungen des RDS-Moduls sowie eine Überarbeitung des Markets-Moduls. Dieses löst nun eine zirkuläre Abhängigkeit für den Cluster auf und ist mit mehreren Services kompatibel, sowohl innerhalb als auch außerhalb des State. Zudem wurde die Konfiguration der Target Groups in den Modulen angepasst: Das Attribut „target group arn“ darf beim Typ „authenticate-oidc“ nicht angegeben werden und musste daher entfernt werden. Für die Dateiverarbeitung wurde die Anwendung File Scanner mit der CFT-Überwachung verbunden, sodass bei Dateibearbeitungen durch CFT entsprechende Ereignisse veröffentlicht werden. Für den File Scanner wurden außerdem Laufzeitzertifikate importiert. Für wichtige Kafka-Topics wurde eine Sicherung über einen MSK Connector umgesetzt. Dabei wurde untersucht, welche Topics gesichert werden müssen und wie häufig, und es wird ein dedizierter Bucket genutzt.
+
+Im Bereich Sicherheit wurde die Schwachstelle bei GitHub Secrets behoben. Alle Secrets auf Organisationsebene wurden auf Repository-Ebene migriert, da sie zuvor für jedes Repository, gegebenenfalls auch für öffentliche, verfügbar waren. Vor dem Go-Live wurden Schwachstellen bereinigt: Die Infrastruktur wurde aufgeräumt, und eine Lambda-Funktion extrahiert Schwachstellen und sendet sie an Teams. Für ECR werden automatisierte Benachrichtigungen bei hohen und kritischen Schwachstellen verschickt.
+
+Zur Überwachung wurde Datadog für die Produktivumgebung integriert und konfiguriert. Dabei wurde auch das Nachrichtenformat angepasst und die Ereignisberichte aus Datadog wurden analysiert. Zusätzlich wurden Monitore für Anomalien im Frontend eingerichtet. Die Vorproduktionsumgebung wurde unterstützt und überwacht.
+
+Zur Vorbereitung des Produktivbetriebs wurde der Produktions-Account eingerichtet. Dazu gehörten die Bereitstellung der Infrastruktur, die Erstellung von Zertifikaten, Secrets, Anwendungsprofilen und Datenbanken sowie die Anpassung der CI/CD-Prozesse. Ein Last- und Stresstest für Anwendungen und Infrastruktur prüfte Skalierung, Load Balancer, Anwendungen, Datenbankanfragen und Netzwerk mit dem Ziel, die maximalen Belastungsgrenzen zu ermitteln. Zudem wurden Disaster-Recovery-Szenarien simuliert: Nach der Fertigstellung der Produktivumgebung wurde alles zerstört und neu bereitgestellt, um die für einen Rollback benötigte Zeit zu messen.
+
+Ein Ticket zum Import der I156-Datei, bei dem eine Datei im dedizierten Kosten-Bucket in einen falschen Ordner verschoben wurde, wurde geschlossen. Die geplante Umbenennung aller Microservices wurde abgebrochen und nicht umgesetzt.

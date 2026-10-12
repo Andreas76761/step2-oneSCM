@@ -1,0 +1,17 @@
+# Batch 150 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 11 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management: Änderungen und Verbesserungen**
+
+Für die Anbindung an oneERP wurden die Exporttypen überarbeitet. Sie richten sich nun nach Produktlinie und Belegart. Bei den Pkw-Produkten (PC) gilt für Verträge der Typen MPPI und MANU: Excellent wird mit „S“, Compact mit „SW“, CompactPlus mit „SN“, Advance mit „SG“ und Tire mit „TC“ exportiert. Für Basic ist in der Vorgabe noch kein Wert festgelegt („?“). Internationale Schadensfälle (IWSN) erhalten den Exporttyp „IF“, Händlerrabatte (DD und MDD) „ESUB“, Händlerprovisionen (SCOM) „ESER“ und Vertragsprüfungen (FDCR, BDCR) „FEA“. Erstattungsrechnungen werden mit „RI“ exportiert.
+
+Bei den Transportern (VAN) werden Complete mit „S“, Maintenance mit „SW“, MaintenancePlus mit „SMWT“, Select Plus mit „SN“, Tire mit „TC“, Extended Warranty mit „SG“ und Wear&Tear mit „SWT“ exportiert. Comfort wird für VAN Deutschland nicht verwendet. Internationale Schadensfälle, Händlerrabatte, Händlerprovisionen und Vertragsprüfungen verwenden dieselben Typen wie bei den Pkw („IF“, „ESUB“, „ESER“, „FEA“). Manuelle Erstattungsrechnungen erhalten „RI“. Für den Bereich MBLD gelten folgende Typen: Advance / Select Plus „LA“, Basic „LB“, Classic „LCL“, Compact / Maintenance „LCO“, Excellent / Complete „LE“, Compact Plus „LCP“, Tire „LT“, MaintenancePlus „LMWT“ und Wear&Tear „LWT“. Vertragsprüfungen werden mit „LFEA“ und manuelle Erstattungsrechnungen mit „LRI“ exportiert.
+
+Zusätzlich wurde die Betriebsstättennummer (Establishment) für Transporter anhand der Produktlinie angepasst. Für Werk 268 gilt: Complete „00“, Select Plus „01“, Maintenance „02“, Extended Warranty „03“, MaintenancePlus „04“, Tire „07“ und Wear/Tear „08“. Für die Produktlinie SIVECO ist „05“ hinterlegt. Für die Produktlinie mit der Beschreibung „Extend Antriebsstranggarantie Van“ ist „06“ vorgesehen; hier war laut Vorgabe noch eine Klärung mit oneERP nötig. Bei den Pkw-Produkten gelten „3C“ für Advance, „4C“ für CompactPlus und „7C“ für Tire.
+
+Die Textbausteine für Transporter-Produktlinien wurden überarbeitet. Dies betrifft zunächst das Produkt ServiceCare ASG+Wartung (Blueprint: Maintenance + Extended Warranty, Produktlinie SelectPlus). Der Textbaustein HTXT01 bleibt für SelectPlus leer. Der Textbaustein PTXT01 wurde an die übrigen Produkte angeglichen und gilt für alle Transporter-Produkte. Die Kontaktdaten wurden so angepasst, dass sie den Transporter-Bereich widerspiegeln. HTXT02 enthält den Hinweis, dass das Kundenmanagement bei Fragen zur Abrechnung oder zum Vertrag telefonisch oder per E-Mail erreichbar ist. Außerdem wird auf die Möglichkeit hingewiesen, Rechnungen und Gutschriften künftig elektronisch über eine Registrierung auf der E-Invoicing-Website zu erhalten. Für Select Plus lautet der Exporttyp nun „SN“ statt bisher „SP“.
+
+Der Download mehrerer Dateien wurde verbessert. Zuvor ließen sich mehrere Dateien teils nicht gemeinsam herunterladen. Beim Export mehrerer Dateien als ZIP-Archiv wurde zudem die Leistung optimiert, insbesondere bei Exporten mit einer Größe von mehr als 130 MB.
+
+Darüber hinaus wurde die Erzeugung von Nemesis-Events für ausgewählte und nicht ausgewählte Produkte in den Markteinstellungen für Transporter geprüft. Die entsprechenden Prüfungen für Pkw befinden sich derzeit noch in der Überprüfung.

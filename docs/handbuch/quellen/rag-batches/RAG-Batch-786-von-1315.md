@@ -1,0 +1,25 @@
+# Batch 786 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragsverwaltung für MBLD-Verträge über den Edge Service: Kündigung, Sperrung, Reaktivierung und vorzeitige Beendigung**
+
+Nutzer von MBLD können ihre Verträge nach der Aktivierung über den Edge Service verwalten. Das System verarbeitet die eingehenden Anfragen nach denselben Regeln wie bei Retail-Verträgen, berücksichtigt aber einige besondere Abläufe. Die Funktionen stehen für Leasingverträge sowohl über die Benutzeroberfläche als auch über die API zur Verfügung. Bei erfolgreicher Verarbeitung wird in allen Fällen die Vertragshistorie aktualisiert, der Vertrag in die nächste i155-Datei aufgenommen und eine Erfolgsmeldung per API an MBLD zurückgegeben. Eine E-Mail an den Kunden wird bei keiner dieser Aktionen versendet.
+
+**Kündigung eines aktiven Vertrags**
+
+Eine Kündigung kann für einen aktivierten Servicevertrag angefordert werden, jeweils nur für einen einzelnen Vertrag. Mehrere Verträge lassen sich nicht mit derselben Anfrage kündigen. Das System prüft, ob der Vertrag existiert und der Vertragstyp Leasing vorliegt. Außerdem muss die Anfrage innerhalb des in den Markteinstellungen definierten Kündigungszeitraums liegen, und es muss wie bei Retail ein Kündigungsgrund angegeben sein. MO-Pufferfristen werden nicht berücksichtigt, da der Vorgang automatisch abläuft. Liegt die Anfrage außerhalb des erlaubten Zeitraums oder gibt es einen offenen Schadensfall zum Fahrzeug, wird in der Antwort eine Fehlermeldung zurückgegeben. Das Gleiche gilt, wenn eine der übrigen Prüfungen nicht erfüllt ist; die Kündigung wird dann nicht verarbeitet. Sind alle Bedingungen erfüllt, wird die Kündigung automatisch und ohne manuelles Eingreifen durchgeführt.
+
+**Sperrung eines aktiven Vertrags**
+
+Eine Sperrung kann für einen einzelnen oder für mehrere aktive Servicevorgänge gleichzeitig angefordert werden. Das System prüft, ob der Vertragstyp Leasing und der Vertragsstatus Aktiv vorliegt. Werden mehrere Verträge in einer Anfrage übermittelt, müssen alle zum selben Kunden gehören und diese Bedingungen erfüllen. Erfüllen einzelne Verträge die Voraussetzungen nicht, wird eine Fehlermeldung zurückgegeben und keiner der Verträge gesperrt. Der Sperrgrund muss wie bei Retail in der Anfrage enthalten sein, Kommentare sind optional. Fehlen Pflichtfelder, wird die Sperrung ebenfalls nicht durchgeführt und eine Fehlermeldung zurückgegeben.
+
+**Reaktivierung eines gesperrten Vertrags**
+
+Eine Reaktivierung kann für einen einzelnen oder mehrere gesperrte Verträge in einer Anfrage erfolgen. Voraussetzung sind der Vertragstyp Leasing und der Vertragsstatus Gesperrt. Bei mehreren Verträgen müssen alle zum selben Kunden gehören und diese Kriterien erfüllen. Andernfalls wird eine Fehlermeldung zurückgegeben und die Reaktivierung nicht durchgeführt. Der Reaktivierungsgrund ist ein Pflichtfeld in Form einer Texteingabe, wie bei Retail. Fehlt er oder ein anderes Pflichtfeld, wird die Anfrage mit einer Fehlermeldung abgelehnt.
+
+**Vorzeitige Beendigung eines Vertrags**
+
+Eine vorzeitige Beendigung kann für einen oder mehrere aktive oder gesperrte Verträge angefordert werden. Das System prüft den Vertragstyp Leasing sowie den Status Aktiv oder Gesperrt. Für jedes Fahrzeug muss der Kilometerstand zum Beendigungszeitpunkt angegeben werden. Er darf nicht unter dem zuletzt bekannten Kilometerstand liegen. Das Beendigungsdatum darf nicht in der Zukunft liegen. Zulässig ist ein Datum ab heute bis zu 90 Tage zurück, wobei es mindestens einen Tag nach der Aktivierung liegen muss. Bei FRD-bezogenen Produkten gilt dafür FRD+1, bei nicht FRD-bezogenen Produkten, etwa Contingent, das Aktivierungsdatum+1. Bei mehreren Verträgen in einer Anfrage müssen alle zum selben Kunden gehören, Leasingverträge mit Status Aktiv oder Gesperrt sein sowie gültige Kilometerstände und Beendigungsdaten aufweisen. Erfüllt ein Vertrag die Voraussetzungen nicht, wird eine Fehlermeldung zurückgegeben und keine vorzeitige Beendigung durchgeführt. Der Beendigungsgrund muss wie bei Retail angegeben werden, Kommentare sind optional. Fehlen Pflichtfelder, wird die Anfrage mit einer Fehlermeldung abgelehnt.
+
+Bei erfolgreicher vorzeitiger Beendigung enthält die i155-Datei im Feld RC05 an den Positionen 107 bis 114 das Eliminierungsdatum, also das in der Anfrage gewählte Wirksamkeitsdatum. An den Positionen 140 bis 147 steht das Datum, an dem der Beendigungsprozess ausgelöst wurde. Revenue/Nemesis wird über das Wirksamkeitsdatum der vorzeitigen Beendigung und das Auslösedatum des Prozesses informiert. Ab dem Auslösedatum beginnt die Berechnung für den Wechsel des Vertragsstatus auf „Geschlossen“. Sie basiert auf dem in den Markteinstellungen definierten Zeitraum („Vertrag nach vorzeitiger Beendigung schließen“). Nach Ablauf dieses Zeitraums wird der Status auf „Geschlossen“ gesetzt, die Vertragshistorie erneut aktualisiert und eine i155-Datei erzeugt.

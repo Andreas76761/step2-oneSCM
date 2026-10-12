@@ -1,0 +1,19 @@
+# Batch 247 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 4 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management: Stornierung der Händlerrechnung bei Vertragsstornierung**
+
+Kundinnen und Kunden, die einen Servicevertrag online abgeschlossen haben, besitzen ein Widerrufsrecht. In der Europäischen Union beträgt die Widerrufsfrist 14 Tage. Innerhalb dieser Frist kann der Vertrag ohne Angabe von Gründen widerrufen werden. Wurde beim Vertrag ein Händlerrabatt gewährt und wird der Vertrag widerrufen, richten sich die erforderlichen Schritte nach dem Status der zugehörigen Händlerrechnung.
+
+Ist die Händlerrechnung noch nicht an das FI-System exportiert worden, befindet sie sich im Status „Accepted“. Bei der Aktivierung eines Vertrags mit Händlerrabatt wird die Händlerrechnung (DD) erzeugt und geht mit der Aktivierung in diesen Status über. In diesem Fall wird die Rechnung direkt storniert, ohne dass weitere Maßnahmen nötig sind. Der Rechnungsstatus wechselt von „Accepted“ auf „Cancelled“.
+
+Wurde die Rechnung bereits exportiert (Status „Exported“ oder „FI Doc Created“), wird sie beim nächsten Batchlauf von NacosE169 zur Buchung an Nacos übergeben. Nacos verarbeitet sie, und oneSCM erhält die Rückmeldung „FI Doc created“. Der Prozess in Nacos ist manuell, da keine eigene Rückmeldung darüber erfolgt, ob die Rechnung vom Kunden beglichen wurde (Status „Paid“). Das MO-Team muss daher beurteilen, ob eine Gutschrift erstellt werden muss. Da Gutschriften genehmigungspflichtig sind, ist dieser Schritt durch eine Freigabe abgedeckt. Wird der Vertrag innerhalb der Widerrufsfrist storniert, erstellt das System automatisch eine Gutschrift über den Händlerrabatt, die dem Händler den Betrag der Rechnung in gleicher Nettohöhe zurückerstattet.
+
+Die Gutschrift wird im Reiter „Price reduction“ mit folgenden Angaben angelegt: Als Flow-Typ gilt „External/internal dealer discount“. Die oneSCM-Rechnungsnummer entspricht der Nummer der ursprünglichen Rechnung, die Verarbeitungsnummer bleibt leer (NULL). Der Dokumenttyp ist „Credit“, der Kundenrechnungstyp „(DD) Dealer Discount“. Der Rechnungszeitraum reicht vom Startdatum bis zum Enddatum des Vertrags. Der Nettobetrag entspricht dem Betrag der Händlerrechnung. Rechnungsempfänger ist der Händler, unter dem der Vertrag angelegt und der Händlerrabatt angewendet wurde.
+
+Eine weitere Variante betrifft Rechnungen im Status „Paid“. Auch hier wird die Rechnung nach der Aktivierung beim nächsten Batchlauf von NacosE169 an Nacos übergeben, und oneSCM erhält die Rückmeldung „FI doc created“. Setzen MO-Anwender den Status der Rechnung anschließend in oneSCM auf „Paid“ und wird der Vertrag innerhalb der Widerrufsfrist storniert, erstellt das System automatisch eine Gutschrift in gleicher Nettohöhe. Die Angaben entsprechen der oben beschriebenen Gutschrift, wobei als Flow-Typ „External dealer discount“ verwendet wird.
+
+**Eindeutige oneSCM-Rechnungsnummern für Revenue und Cost**
+
+Bisher wird die oneSCM-Rechnungsnummer sowohl im Cost Management als auch im Revenue Management verwendet, ist aber nicht eindeutig. Bei einer eingehenden Rückmeldung ist dadurch schwer zu entscheiden, welche Rechnung aktualisiert werden soll. Künftig gibt es nur noch einen gemeinsamen Nummernkreis. Rechnungen aus dem Revenue Management folgen dem Muster 0YYXXXXXXX, Rechnungen aus dem Cost Management dem Muster 1YYXXXXXXX. Die erste Ziffer kennzeichnet den Bereich (0 für Revenue, 1 für Cost), YY steht für das aktuelle Jahr (etwa 24 für 2024 oder 25 für 2025), und XXXXXXX ist eine fortlaufende Nummer. Ist deren Höchstwert von 9999999 erreicht, wechselt das Muster auf 2YYXXXXXXX für Revenue und 3YYXXXXXXX für Cost.

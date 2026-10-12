@@ -1,0 +1,27 @@
+# Batch 998 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Zahlungsplan-Erstellung**
+
+Bei der Vertragserstellung werden künftig zwei Arten von Zahlungsplänen unterschieden, da die Produktauswahl und der Produktvergleich von der Vertragserstellung entkoppelt sind. Bisher wurde beim Erreichen des Status „Created" das Revenue Management aufgerufen. Der von dort gelieferte Zahlungsplan wurde im Vertrag sowie auf der Seite „Overview & Confirmation" angezeigt.
+
+Der Simulations-Zahlungsplan entsteht, wenn der Händler ein Produkt auswählt und konfiguriert. Ist in der Produktkonfiguration kein Erstzulassungsdatum (FRD) enthalten, wird der aktuelle Tag als Startdatum des Zahlungsplans gesetzt. Das Enddatum ergibt sich aus dem aktuellen Tag zuzüglich der gewählten Vertragslaufzeit. Dies gilt für die Abläufe Build to Stock, Deal-ID und Bestellnummer sowie für Produkte, deren Startdatum das FRD ist. Ist hingegen ein FRD in der Produktkonfiguration enthalten, dient das FRD als Startdatum, und das Ende des Zahlungsplans ergibt sich aus dem FRD zuzüglich der gewählten Vertragslaufzeit. Dies gilt für Produkte, bei denen das FRD dem Vertragsbeginn entspricht.
+
+Der tatsächliche Zahlungsplan wird erzeugt, wenn bei der Vertragserstellung noch kein FRD vorlag und der Vertrag für ein Produkt abgeschlossen wurde, dessen Startdatum sich am FRD orientiert. In diesem Fall wird bei der Aktivierung des Vertrags das FRD des Fahrzeugs abgerufen und der endgültige Zahlungsplan erstellt. Das FRD bildet das Startdatum, das Enddatum ergibt sich aus dem FRD zuzüglich der Vertragslaufzeit beziehungsweise dem geplanten Vertragsende. Der aktualisierte Zahlungsplan wird zusammen mit der Aktivierungs-E-Mail versendet. Lag das FRD bereits bei der Vertragserstellung vor, ist kein weiterer Zahlungsplan nötig, da er mit dem Simulations-Zahlungsplan identisch ist.
+
+**Statuswechsel von „Created" zu „Confirmed" im Zusammenspiel mit DSS**
+
+Bisher wechselte ein Vertrag von „Created" zu „Confirmed", sobald der Benutzer die Seite „Overview & Confirmation" bestätigte und damit DSS auslöste. Künftig bleibt der Vertrag im Status „Created", bis die DSS-Signatur bestätigt ist. Die DSS-Signatur kann nur ausgelöst werden, wenn zwei Bedingungen erfüllt sind: Der Vertrag befindet sich im Status „Created", und das Ereignis wird in der Oberfläche über „Overview & Confirmation" mit dem Bestätigungsbutton und der Auswahl der Signaturart ausgelöst. Die Methode „Drucken und Unterschreiben" ist vorerst ausgenommen. Die Erfassung der Unterschrift über den Ausdruck des Dokuments ist bis auf Weiteres nicht Teil dieser Funktion.
+
+Für die Wartezeit auf die Signatur ist ein Zeitraum von 30 Tagen vorgesehen. Wird DSS beispielsweise 15 Tage nach Erreichen des Status „Created" ausgelöst und der Kunde unterschreibt nicht innerhalb der folgenden 15 Tage, also bis 30 Tage nach der Erstellung, soll der Vertrag abgelehnt und die DSS-Signatur verworfen werden. Diese Wartezeit muss marktspezifisch konfigurierbar sein. Nach dem Auslösen der Bestätigung erscheint der Vertrag auf der Startseite der Vertragserstellung mit dem Status „Created".
+
+Zu beachten ist die Abhängigkeit vom DSS-System, etwa bei Ausfall oder Wegfall des Systems. Zudem nutzen manche Märkte keine DSS-Produkte oder haben keine rechtliche Pflicht zur Vertragsunterschrift, etwa wenn DSS nicht verwendet wird oder die Funktion deaktiviert ist.
+
+**Fahrgestellnummer bei Bestellnummer und Deal-ID**
+
+Wird die Vertragserstellung über den Ablauf Build to Order oder mit einer Deal-ID gestartet, ruft die Vertragserstellung anhand einer eindeutigen Nummer das Vehicle Management auf, um Fahrgestellnummer und Baumuster abzufragen. Das Vehicle Management holt diese Daten über die Order-API und OTR. Ist die Fahrgestellnummer verfügbar, wird sie gemeinsam mit dem Baumuster zurückgegeben und der Prozess fortgesetzt. Ist sie nicht verfügbar, wird nur das Baumuster übermittelt, und der Prozess läuft bis zur Bestätigung des Vertrags weiter. Bisher wurde die Fahrgestellnummer im Build-to-Order-Fall erst erfasst, nachdem das Fahrzeug an den Endkunden ausgeliefert und zugelassen war.
+
+Künftig fragt das Vehicle Management die fehlende Fahrgestellnummer mehrfach ab, wozu ein Mechanismus für wiederholte Aufrufe bzw. ein Scheduler erforderlich ist. Sobald die Nummer vorliegt, wird sie an die Vertragserstellung übermittelt und in den Vertrag übernommen. Danach kann die Vertragsaktivierung fortgesetzt werden, um die fehlenden Daten wie FRD und Kennzeichen zu erfassen.
+
+Wichtig: Der Händler darf nicht als erstes Eingabesystem für eine Fahrgestellnummer dienen, die zu einer Bestellnummer oder Deal-ID gehört. Die Fahrgestellnummer muss vom Vehicle Management aus den verfügbaren Schnittstellen bezogen werden. Solange sie nicht vorliegt, ist die Aktivierung des Vertrags gesperrt. Händler oder Marktorganisation können bei einem Vertrag im Status „Created" fehlende Informationen ergänzen, allerdings ausschließlich FRD und Kennzeichen. Die Fahrgestellnummer wird vom Backend erfasst.

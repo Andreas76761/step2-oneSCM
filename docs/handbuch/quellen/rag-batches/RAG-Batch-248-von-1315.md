@@ -1,0 +1,25 @@
+# Batch 248 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragsverlängerung (Prolongation) im Revenue Management**
+
+Für einen Vertrag steht bisher die Option „Short term extension" (kurzfristige Verlängerung) zur Verfügung. Dadurch werden im Revenue Management zusätzliche Rechnungen für den Verlängerungszeitraum erstellt. Zusätzlich dazu gibt es auf Vertragsebene nun die Option „Prolongation" (auch Long term extension genannt). Bei einer Prolongation gilt für den verlängerten Zeitraum ein neuer Preis. Abhängig vom Stichtag (Effective Date) können auch bereits bestehende Rechnungen betroffen sein. Aus Sicht des Revenue Managements bedeutet eine Prolongation, dass für den verlängerten Zeitraum ein neuer Zahlungsplan erzeugt wird. Das Effective Date ist dabei der entscheidende Faktor und entspricht dem Beginn der nächsten Rechnungsperiode.
+
+Das Zahlungsintervall der Prolongation kann monatlich (Monthly) oder einmalig (One-Time) sein. Zusammen mit dem Zahlungsintervall des Vertrags ergeben sich vier Fälle.
+
+Ist der Vertrag monatlich und die Prolongation ebenfalls monatlich, benötigt die Vertragsberechnung den bereits vom Kunden bezahlten Betrag aus dem bestehenden Vertrag sowie das Effective Date der Prolongation. Als bereits bezahlt gelten alle Rechnungen des Zahlungsplans mit dem Status Accepted, Exported, FI Document Created, Paid On-Time oder Paid Overdue. Das Contract Management übermittelt die neuen Monatsraten und das Effective Date. Ab dem Effective Date werden die bestehenden Rechnungen angepasst und für den verlängerten Zeitraum neue Rechnungen mit dem neuen Betrag erstellt.
+
+Ist der Vertrag monatlich und die Prolongation einmalig, werden die Rechnungen im Status Planned gelöscht und es wird nur eine Rechnung für den verbleibenden Zeitraum erstellt. Befinden sich alle Rechnungen des Zahlungsplans im Status Planned, werden alle gelöscht und es wird eine einzige Rechnung für den gesamten Vertragszeitraum (Vertrag plus Prolongation) erzeugt. Der Rechnungsbetrag ergibt sich aus der Differenz zwischen dem neuen Gesamtpreis des Vertrags und den bereits bezahlten Rechnungen. Wurde mindestens eine Rechnung bezahlt, beginnt die Einmalrechnung mit dem Effective Date.
+
+Ist der Vertrag einmalig und die Prolongation monatlich, gilt für das Effective Date dieselbe Regel wie bei monatlichen Verträgen. Befindet sich die Einmalrechnung im Status Planned, wird sie gelöscht, und es werden monatliche Rechnungen für den verbleibenden Zeitraum des Vertrags (Vertrag plus Prolongation) erzeugt. Ist die Einmalrechnung bereits bezahlt, werden die Summe der bezahlten Rechnungen und das Effective Date an das Contract Management gesendet. Von dort wird der Monatsbetrag für den verbleibenden Zeitraum zurückgemeldet.
+
+Sind sowohl Vertrag als auch Prolongation einmalig und die Einmalrechnung befindet sich im Status Planned, wird die bestehende Rechnung entsprechend dem verbleibenden Vertragszeitraum (Vertrag plus Prolongation) angepasst. Ist die Rechnung bereits bezahlt, werden die Summe der bezahlten Rechnung und das Effective Date an das Contract Management gesendet. Von dort kommt der Betrag für den verbleibenden Zeitraum zurück, und auf dieser Grundlage wird eine neue Rechnung erstellt.
+
+Eine Prolongation kann während der Vertragslaufzeit oder in der Karenzzeit (Grace Period) nach Ablauf (Expiration) oder Kündigung (Termination) erfolgen.
+
+Zur Veranschaulichung dienen zwei Beispiele. Im ersten Beispiel liegt das Effective Date am Vertragsende. Der Vertrag läuft 12 Monate (01.10.2023 bis 30.09.2024) bei einem Preis von 1.000 EUR pro Monat. Das Effective Date der Prolongation ist der 01.10.2024. Es ist stets der Tag nach dem Vertragsende. Nach Definition ist eine Prolongation nach Vertragsende nicht möglich. Der neue Gesamtpreis beträgt 12.000 plus 13.000 EUR für die Prolongation, verteilt auf 12 plus 12, also 24 Monate. Der neue Monatspreis liegt bei 1.083,33 EUR.
+
+Im zweiten Beispiel liegt das Effective Date während der Vertragslaufzeit. Bei gleichem Ausgangsvertrag ist das Effective Date der 15.02.2024. Der neue Gesamtpreis beträgt wiederum 12.000 plus 13.000 EUR. Die Berechnung bezieht sich auf 7 Monate Restlaufzeit des Vertrags plus 12 Monate Prolongation, also 19 Monate. Bei 25.000 EUR ergibt sich ein neuer Monatspreis von 1.052,63 EUR.
+
+Die Beträge und das Effective Date für den zusätzlichen Zeitraum stellt das Contract Management bereit. Übermittelt werden der Nettobetrag, der Bruttobetrag, das Effective Date, die Zahlungsperiode, die Zahlungsart (monatlich oder einmalig) sowie das Effective Date bezogen auf den Beginn der nächsten Rechnungsperiode.

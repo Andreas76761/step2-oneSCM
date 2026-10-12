@@ -1,0 +1,13 @@
+# Batch 401 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 12 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Dokumente und Kommunikation – Änderungen und Neuerungen**
+
+Im Bereich Dokumente und Kommunikation wurden mehrere Fehler behoben, die sich auf die Vorlagenverwaltung und den Versand von Benachrichtigungen auswirkten. In der Vorlagenverwaltung wurde ein Problem bei der Erstellung von Allgemeinen Geschäftsbedingungen (AGB) korrigiert: Dort wurde zuvor ein ungültiges Datumsformat gemeldet. Zudem war es zeitweise nicht möglich, eine AGB-Vorlage anzulegen; auch dieses Problem ist behoben. Darüber hinaus wird der Händler nun benachrichtigt, nachdem eine Kampagnenanfrage bearbeitet wurde. Dies war zuvor nicht der Fall. Außerdem wurde die fehlerhafte Darstellung des Rechnungsbetrags in der E-Mail zur Kurzzeitverlängerung bei Monatsverträgen korrigiert.
+
+Neu ist die interne Benachrichtigung bei Statuswechsel auf „Gesperrt" (Suspended). Das System informiert Benutzer der Rollen MO und MPC im Rahmen des internen Benachrichtigungsablaufs über diesen Status, damit sie umgehend reagieren und notwendige Maßnahmen ergreifen können. Ein Statuswechsel auf „Suspended" kann an zwei Stellen entstehen: durch die manuelle Aktion „Suspend" in der Vertragsverwaltung oder durch den Batch-Job mit dem FI-System. In beiden Fällen werden MO- bzw. MPC-Benutzer benachrichtigt.
+
+Für kommende Versionen sind weitere Funktionen vorgesehen, die sich derzeit noch im offenen Status befinden. Beim Anlegen einer AGB-Vorlage sollen die Felder der Erstellungsseite künftig automatisch mit den Daten aus dem Produkt vorbelegt werden. Im Bereich Benachrichtigungen sind außerdem folgende Neuerungen geplant: ein Master-E-Mail-Template für die langfristige Vertragsverlängerung, eine interne Benachrichtigung für die Karenzzeit (Grace Period) sowie Master-E-Mail-Templates, mit denen Zahlungspflichtige und Halter per E-Mail informiert werden, wenn sich bei einem aktiven Vertrag der Zahlungspflichtige ändert. Benutzer sollen dafür entsprechende Benachrichtigungsvorlagen erstellen können.
+
+Nicht weiterverfolgt werden die Untersuchung zur Bereitstellung der Servicekarte in Apple Wallet bzw. Google Wallet, bei der geklärt werden sollte, wie Kunden einen aktiven Servicevertrag in ihre eigene Wallet übernehmen können, sowie die Aufgabenzuweisung per E-Mail in Outlook. Beide Vorhaben wurden abgebrochen.

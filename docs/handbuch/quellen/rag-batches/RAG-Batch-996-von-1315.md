@@ -1,0 +1,15 @@
+# Batch 996 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Händlerprovision im Vertragserstellungsprozess und in der Vertragsübersicht**
+
+Bisher wurde die Händlerprovision im System nicht berücksichtigt. Mit der neuen Funktion können Händler nun einsehen, welche Provision sie für einen verkauften Vertrag erhalten. Damit sollen sie zusätzlich motiviert werden, mehr Serviceverträge zu verkaufen. Die Provisionshöhe wird dabei bewusst nur indirekt angezeigt, sodass der Kunde sie nicht zufällig zu sehen bekommt und der Händler sie dennoch jederzeit einsehen kann.
+
+Die Händlerprovision dient dazu, für Produkte Provisionen festzulegen und Händler so zum Verkauf von Serviceverträgen zu bewegen. Voraussetzung ist, dass die Provisionen für die Produkte zuvor in Stream 1 definiert wurden. Die Höhe der Provision richtet sich nach dem Produkt und der Laufzeit, die der Händler verkauft. Der Betrag wird vom Stream „Contract Calculation“ übermittelt und in der Benutzeroberfläche als indirekte Information dargestellt, die sich nur durch einen Klick einblenden lässt.
+
+Im Modul „Contract Generation“ gehen Sie unter „Contract Offering“ vor: Geben Sie die Fahrzeugdaten ein und wählen Sie eine der angezeigten Produktkarten aus. In der detaillierten Produktansicht erscheint neben dem Zahlungsintervall ein zusätzlicher Reiter mit der Bezeichnung „Dealer Information“. Wählen Sie zunächst die Produktkonfiguration aus und prüfen Sie, ob der Reiter am unteren Seitenrand angezeigt wird. Klicken Sie auf den Reiter „Dealer Information“, erscheint ein Schalter, der zunächst auf „OFF“ steht und mit dem Text „Display Dealer information on this section“ beschriftet ist. Schalten Sie ihn auf „ON“, wird der Text „Commission for the current product configuration <Provisionsbetrag> EUR.“ angezeigt. Der Provisionsbetrag stammt dabei aus „Contract Calculation“. Anschließend fahren Sie mit den Kunden- und Zahlungsinformationen fort. Der übrige Ablauf entspricht dem bisherigen Prozess der Vertragserstellung, und der Vertrag erreicht den Status „Confirmed/Waiting for Activation“.
+
+Auch nach der Vertragserstellung ist die Provision einsehbar. Öffnen Sie dazu unter „Contract Generation“ im Bereich „Offer Management“ einen Vertrag mit Provision aus der Liste. In der Übersicht finden Sie im Reiter „Payment“ das neue Feld „Dealer Commission“. Es zeigt den Provisionsbetrag an, der bereits bei der Vertragserstellung angezeigt wurde. Dies gilt für Verträge im Status „Confirmed“ oder „Waiting for Activation“.
+
+Die Anzeige funktioniert sowohl bei Provisionen, die in Stream 1 als Prozentwert definiert sind, als auch bei Provisionen als Festbetrag. In beiden Fällen wird nach Auswahl der Vertragslaufzeit im Reiter zur Produktauswahl der Reiter „Dealer Information“ angezeigt, und bei aktiviertem Schalter erscheint die Meldung mit dem Provisionsbetrag.

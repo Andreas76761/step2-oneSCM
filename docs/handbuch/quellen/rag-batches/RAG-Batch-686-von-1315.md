@@ -1,0 +1,17 @@
+# Batch 686 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kunden anlegen (Customer Data – Create Customer)**
+
+Auf der Seite „Customer Data“ im Bereich Customer & Partner Management steht Benutzern der Rolle Market Operation die Schaltfläche „Create Customer“ zur Verfügung. Ein Klick darauf öffnet eine neue Seite, auf der die Daten eines neuen Kunden erfasst werden. Diese Funktion ist neu eingeführt worden; einen Vorgängerzustand gibt es nicht.
+
+Die Seite „Create Customer“ gliedert sich in drei Hauptbereiche: Kunde, Adresse und Zahlungsdetails. Die Informationen können zugunsten besserer Performance in drei verschiedenen Tabellen gespeichert werden. Erfasst werden unter anderem Identifikationsdaten (Name bzw. Firmenname, E-Mail-Adresse, MercedesMe ID, Mandant/Markt), Kontaktdaten (Telefonnummer, E-Mail, Sprache mit den Optionen DE, EN, FR, PL und ES) und Adressdaten (Adresstyp, Straße, Hausnummer, zweite Adresszeile, Postleitzahl, Ort, Land sowie optional die Region). Hinzu kommen die Einwilligung zur Erhebung, Verarbeitung und Nutzung der Daten nach DSGVO, Marketingpräferenzen (E-Mail, Telefon, InCar/MMe, Benachrichtigungen), Zahlungsdetails (Bankname, Kontoinhaber, IBAN, BIC, Währung, FI-System Bank ID, Direct-Debit-Code, Gültigkeit des SEPA-Mandats), steuerliche und rechtliche Angaben (Steuerklassifizierung und -code, private USt-ID, Handelsregisternummer, Rechtsform), die Partnerklassifizierung (Partnertyp und Rolle im Vertrag, etwa Halter, Nutzer oder Zahler) sowie die bevorzugte Werkstatt bzw. der bevorzugte Händler. Die FI-System-Partnernummer und der FI-System-Partnerstatus werden nicht manuell erfasst, sondern nach der Synchronisation mit dem FI-System befüllt. Pflichtfelder sind in der Oberfläche mit einem Stern („*“) gekennzeichnet und müssen mit gültigen Daten gefüllt werden.
+
+Die Schaltfläche „Create“ ist zunächst deaktiviert und wird erst aktiv, sobald alle Pflichtfelder mit gültigen Daten ausgefüllt sind. Sie befindet sich unten rechts auf der Seite. Sind eingegebene Daten ungültig, erscheint unterhalb des betreffenden Feldes eine Fehlermeldung.
+
+Mit einem Klick auf „Create“ schließt der Benutzer die Anlage der Kundendaten ab. Wurde der Kunde erfolgreich angelegt, erscheint eine Erfolgsmeldung mit dem Text „The customer was added with Customer Number XXXXXXXXXX“. Diese Hinweismeldung (Toast) wird 15 Sekunden lang angezeigt und verschwindet danach automatisch. Schlägt die Anlage fehl, erscheint die Fehlermeldung „Something went wrong, and we could not create your customer. Please try again.“ Diese Meldung enthält eine Schaltfläche „Close“ und bleibt so lange sichtbar, bis der Benutzer sie schließt.
+
+Über die Schaltfläche „Cancel“ kann die Anlage abgebrochen werden. Der Benutzer erhält dann die Rückfrage „Are you sure you want to lose all modifications? The modifications you have made will not be updated and they will be lost“ und kann fortfahren oder abbrechen. Wählt er „Fortfahren“, wird er automatisch zur Ergebnisseite weitergeleitet. Wählt er „Abbrechen“, kehrt er zur Seite „Create Customer“ zurück, wo die bereits eingegebenen Informationen weiterhin vorhanden sind.
+
+Die Gestaltung der Oberfläche folgt der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.

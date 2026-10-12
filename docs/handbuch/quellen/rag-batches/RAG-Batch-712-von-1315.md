@@ -1,0 +1,21 @@
+# Batch 712 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Korrektur des Provisionsempfängers bei Händlerprovisionen**
+
+Händlerprovisionen werden von oneSCM bei der Vertragsaktivierung automatisch erzeugt. Wurde dabei versehentlich ein falscher Händler hinterlegt, lässt sich dies nun korrigieren. Die manuelle Anlage einer Händlerprovision ist ausschließlich für den Fall vorgesehen, dass die Rechnung für einen falschen Händler erstellt wurde. Die Funktion ermöglicht es dem Market Operations (MO), eine bestehende Rechnung zu korrigieren, indem der Händler geändert wird. Neue Rechnungen für einen anderen Händler mit abweichenden Beträgen können nicht angelegt werden, da sich sonst der im Vertrag vereinbarte Betrag verändern würde.
+
+Zur Korrektur navigiert der MO im Vertrag auf den Reiter „Payment" und dort auf den Reiter „Händlerprovision". Unabhängig vom Status bietet jede Rechnung in der Spalte „Action" die Option „Correction". Mit deren Auswahl öffnet sich eine neue Seite „Edit". Das Feld „Document Type" ist mit „Credit Note" vorbelegt, ein Pflichtfeld und nicht änderbar. Die „Partner Number (VEGA ID)" ist ein editierbares Pflichtfeld, das fünfstellige numerische Eingaben akzeptiert. Der „Invoice Recipient" und die „SAP Debtor Number" sind Pflichtfelder, nicht änderbar und werden anhand der eingegebenen VEGA-ID automatisch mit dem Händlernamen bzw. der SAP-Debitorennummer des betreffenden Partners befüllt. Die „Invoice Reference" ist nicht änderbar und wird, sofern vorhanden, mit der FI-Systemrechnungsnummer der korrigierten Rechnung befüllt. Der „Invoice Type" ist mit „SCOM" vorbelegt und nicht änderbar. Das „Invoice Date" wird über eine Datumsauswahl erfasst. Der „Invoice Header Text" ist ein optionales mehrzeiliges Textfeld. „Net Amount", „Tax Amount" und „Total Amount" werden als reine Anzeigewerte dargestellt und entsprechen den Beträgen der zu korrigierenden Rechnung. Die „Invoice Positions" sind ebenfalls nicht änderbar und stimmen mit denen der ursprünglichen Rechnung überein.
+
+Bei der Eingabe gelten Validierungen und Einschränkungen: Die VEGA-ID muss einem gültigen Händler entsprechen. Das Rechnungsdatum darf weder in der Zukunft noch außerhalb der Vertragslaufzeit liegen. Beträge und Positionen können im Rahmen der Korrektur nicht geändert werden.
+
+Das Verhalten nach dem Anlegen der Korrektur (Schaltfläche „Create") hängt vom Status der ursprünglichen Händlerprovision ab. Befindet sie sich im Status „Planned" oder „Accepted", wird die ursprüngliche Rechnung automatisch storniert und als Änderungsgrund in der Historie „Change Dealer" vermerkt. Zusätzlich wird eine neue Gutschrift für den neuen Händler im Status „Created" mit denselben Beträgen erstellt. Dabei wird in der Historie der Änderungsgrund „Change Dealer for invoice oneSCM_Invoice_number" vermerkt.
+
+Befindet sich die Händlerprovision im Status „Exported", „FI Document Created" oder „Paid", wird automatisch eine Korrekturrechnung für den ursprünglichen Händler im Status „Accepted" angelegt. Auch hier wird als Änderungsgrund „Change Dealer for invoice oneSCM_Invoice_number" in der Historie festgehalten, wobei die oneSCM-Rechnungsnummer der korrigierten Händlerprovision angegeben wird. Außerdem wird eine neue Gutschrift für den neuen Händler im Status „Created" mit denselben Beträgen erzeugt, ebenfalls mit dem Änderungsgrund „Change Dealer for invoice oneSCM_Invoice_number". Für diese Fälle gilt zudem der Hinweis, dass Händlerprovisionen nicht in das Mahnverfahren gelangen, da die Auszahlung der Provision über den Self-Billing-Prozess ausgelöst wird.
+
+Die neu erstellte Händlerprovision im Status „Created" muss von einem anderen MO-Benutzer geprüft und freigegeben werden.
+
+**Damage Code: Anzeige der Gesamtanzahl der Schadencodes**
+
+In der Tabelle der Schadencodes wurden bislang nur 10.000 Einträge angezeigt, auch wenn sich in der Datenbank mehr Einträge befanden. Künftig wird in der Oberfläche die Gesamtanzahl der in der Datenbank vorhandenen Codes angezeigt, sodass erkennbar ist, wie viele Einträge tatsächlich vorhanden sind.

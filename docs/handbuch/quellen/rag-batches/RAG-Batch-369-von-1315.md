@@ -1,0 +1,17 @@
+# Batch 369 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 26 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Dokumente und Kommunikation**
+
+In diesem Release wurden im Bereich Dokumente und Kommunikation mehrere Verbesserungen und Fehlerbehebungen umgesetzt. Für gewerbliche Kunden wird die Branche, die im Rahmen der Vertragserstellung ausgewählt wurde, nun auf den betroffenen Dokumenten angezeigt. Das gilt für den Vertragsvorschlag und die Vertragsbestätigung, auch in der Entwurfsversion, sofern die Variable „industry“ in die jeweilige Dokumentvorlage eingefügt wurde. Zudem wurde die Vorschau der Dokumentvorlagen für alle Kunden erweitert. Im Bereich der Technischen Spezifikationen werden oberhalb der Angaben zu Reifengröße und Reifentyp nun die Felder Wetterprofil, Stahlfelge und Radgröße angezeigt. Die Vorschau-Standardwerte lauten „Sommer/Winter“ für das Wetterprofil, „Inklusive“ für die Stahlfelge und „195/65 R17“ für die Radgröße. Diese Erweiterung gilt für Vertragsvorschlag, Vertragsbestätigung, Übernahmevorschlag, Übernahmebestätigung, Preisinformation, Information zur Prolongation und Prolongation.
+
+Die Vorlage für das SEPA-Mandat wurde im Hinblick auf die Angaben zum Kontoinhaber angepasst. In der deutschen Fassung werden nun Zahlungspflichtiger, Umsatzsteuer-ID/Steuernummer, Adresse und E-Mail-Adresse ausgegeben, in der englischen Fassung entsprechend Debtor's name, VAT ID/Tax number, Address und E-mail. Außerdem wurden die Längenvalidierungen angepasst: Dokumentnamen und Benachrichtigungsnamen dürfen jeweils maximal 128 Zeichen lang sein, der Betreff einer Benachrichtigung maximal 256 Zeichen.
+
+Die Gültigkeitsdauer eines Vorschlags kann in den Markteinstellungen aufgrund von Einschränkungen des DSS auf höchstens 95 Tage festgelegt werden.
+
+Mehrere Fehler wurden behoben. Für gewerbliche Kunden wird die Bestätigungs-E-Mail nun korrekt versendet. Ein Fehler, bei dem die Prolongations-E-Mail mehrfach versendet wurde und der Vertrag im Status „Prolongation in Bearbeitung“ verblieb, wurde korrigiert. Ebenso wurde das Problem behoben, dass ein Flyout beim Navigieren geöffnet blieb und falsch positioniert war. Hochgeladene und signierte Vorschlagsdokumente werden wieder korrekt dargestellt und nicht mehr abgeschnitten. Darüber hinaus lässt sich eine E-Mail erneut versenden, auch wenn in der Vorlage ursprünglich keine Division ausgewählt war. Der DSS-Link für die Vor-Ort-Variante wird zudem nicht mehr schon beim Öffnen der Kommunikationsseite aus dem Angebotsmanagement geladen, sondern erst, wenn der Nutzer den Link tatsächlich aufruft.
+
+Im Zusammenhang mit der automatisierten Qualitätssicherung wurde der Schritt entfernt, in dem die PDF-Datei aus der E-Mail geprüft wurde. Die Anpassung der PDF-Prüfung, sodass sie vor dem Hochladen erfolgt, ist noch offen.
+
+Bekannte Einschränkung: Wird die Mobilnummer der Kontaktperson vor der Signatur geändert und die DSS-Signatur erneut ausgelöst, wird der DSS-Einmalcode derzeit noch an die alte Mobilnummer gesendet. Gewünscht ist der Versand an die aktualisierte Nummer; dieser Punkt befindet sich im Backlog.

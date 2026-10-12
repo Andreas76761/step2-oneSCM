@@ -1,0 +1,23 @@
+# Batch 951 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Contract Generation: Anzeige kompatibler Produkte bei überschrittenen Grenzwerten**
+
+Bisher wurden nach Eingabe einer Kennung und weiterer Fahrzeugdaten unter Umständen keine Produkte angezeigt, und die Benutzerinnen und Benutzer wurden lediglich aufgefordert, es mit anderen Kombinationen erneut zu versuchen. Mit der neuen Funktion zeigt das System nun alle potenziell passenden Produkte zur eingegebenen Kennung an, auch solche, die bei geänderten Parametern verfügbar wären. Auswählen lassen sich jedoch ausschließlich Produkte, die zur Kennung tatsächlich passen.
+
+Sie melden sich in der Anwendung an und starten ein Vertragsangebot für eine beliebige Kundenart. Als Kennung können Sie die Fahrgestellnummer (mit oder ohne FRD), die BM6 oder die Auftragsnummer verwenden. Sobald die Kennung und weitere vorhandene Angaben wie FRD, Laufleistung oder Kennzeichen erfasst sind, ruft das System die Produkte ab und zeigt alle in Frage kommenden Produkte an. Sind Produkte mit der Kennung und/oder der Laufleistung und/oder der FRD kompatibel, können Sie diese auswählen und mit der Konfiguration fortfahren.
+
+Passt ein Produkt zur Fahrgestellnummer, BM6 oder Auftragsnummer, ist aber wegen Laufleistung, Fahrzeugalter oder bereits durchgeführter Services nicht zulässig, wird es ausgegraut dargestellt. Es kann weder ausgewählt noch weiterverwendet werden, und es erscheint der Hinweis „Product Unavailable“. Fahren Sie mit der Maus über ein ausgegrautes Produkt, werden die enthaltenen Leistungen sowie der Grund angezeigt, warum das Produkt nicht auswählbar ist. Eine Schaltfläche „Learn more“ ist dafür nicht vorgesehen.
+
+Als Gründe und zugehörige Hinweise sind folgende Fälle definiert. Überschreitet das Fahrzeugalter (bei FRD-basierter Prüfung) das für das Produkt zulässige Höchstalter, wird darauf hingewiesen, dass die Kennung keine Ergebnisse geliefert hat. Sie sollen Ihre Eingabe prüfen und ggf. anpassen, eine gültige Fahrgestellnummer, Auftragsnummer oder einen gültigen Modellcode eingeben oder alternativ die FRD des Fahrzeugs prüfen. Entsprechend gilt bei überschrittener maximaler Laufleistung der Hinweis, alternativ die Laufleistung zu prüfen. Ist im DSB ein Service für das Fahrzeug erfasst, lautet der Hinweis, alternativ die durchgeführten Services zu prüfen. Wurden Services durchgeführt, die nicht den Mercedes-Benz-Standards entsprechen, wird empfohlen, die Reihenfolge der durchgeführten Services zu prüfen. Wird die Kennung nicht erkannt, erhalten Sie die Meldung, dass die Kennung nicht erkannt werden konnte, mit der Bitte, die Eingabe zu prüfen und eine gültige Fahrgestellnummer, Auftragsnummer oder einen gültigen Modellcode einzugeben.
+
+Zusätzlich werden Fahrzeuge berücksichtigt, die vom Abschluss eines Servicevertrags ausgeschlossen sind. Dafür erscheint jeweils die Meldung „This vehicle is excluded from buying a service contract“ mit einem Fehlercode: „Error V“ bei gesperrten, „Error 3“ bei gestohlenen, „Error 2“ bei verschrotteten und „Error 8“ bei Totalschaden-Fahrzeugen.
+
+Die Funktion steht den Rollen Dealer, MO, MPC und KAM zur Verfügung. Die Gestaltung muss den Vorgaben der Mercedes-Benz Workbench entsprechen.
+
+**Market Settings: Externe Dokumente**
+
+Im Bereich „Market Settings“ unter „Documents“ konnten bisher vier Dokumenttypen hinterlegt werden: Terms of Use, oneSCM Guideline, Imprint und Privacy Policy. Zusätzlich stehen nun zwei weitere Felder zur Verfügung: „Privacy Policy - External Use“ und „General Legal Notice“. Damit lassen sich Dokumente für die externe Nutzung ergänzen, und Sie können sowohl externe als auch interne Dokumente hochladen, die in der jeweiligen externen bzw. internen Anwendung verwendet werden.
+
+Die „Privacy Policy - External Use“ wird in der externen Anwendung (Customer Account Center) verwendet und unterscheidet sich von der bisherigen Privacy Policy. Die „General Legal Notice“ ist ein Dokument, das ausschließlich in externen Anwendungen genutzt wird. Für die neuen Felder gelten dieselben Regeln wie für die bestehenden Felder des Bereichs. Sobald die Dokumente hochgeladen, anhand dieser Regeln geprüft und die Einstellung gespeichert wurde, übernimmt Stream 4 die weitere Verwendung der Dokumente.

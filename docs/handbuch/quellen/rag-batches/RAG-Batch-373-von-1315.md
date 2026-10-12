@@ -1,0 +1,19 @@
+# Batch 373 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 40 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Documents & Communications**
+
+Im Bereich Documents & Communications wurden mehrere Verbesserungen und Erweiterungen rund um Dokumentvorlagen, Benachrichtigungen und die Antragserfassung umgesetzt bzw. vorbereitet.
+
+Für die Antragserfassung werden Dokumentvorlagen bereitgestellt, die nach Nutzungsart (gewerblich oder Privatgebrauch), Produktvariante (Komplett oder G&W) und Sprache (Deutsch oder Englisch) unterschieden werden. Sie umfassen das Angebot bzw. Preisangebot, das Erinnerungsschreiben, das Schreiben bei abgelaufenem Angebot sowie den Antrag selbst. Die Vorlage für das gewerbliche Angebot in der Variante Komplett (Deutsch) befindet sich derzeit in der Prüfung. Die übrigen Vorlagen sind noch offen.
+
+In der Vorlagenverwaltung (Template Management) wurden für die Divisionen PC, VAN und „Ohne Division“ jeweils Kopfzeilen- und Fußzeilenvorlagen sowie Vorlagen für das SEPA-Mandat mit neu hinzugefügten Feldern angelegt. Diese Vorlagen sind bereits im Einsatz. Zusätzlich wurden die Steuernummer und die zugehörige Druckvariable in der Vorlagenverwaltung geprüft. Das betrifft sowohl das Erstellen neuer Vorlagen (Dokumentvorlagen für Vertrag und SEPA-Mandat sowie E-Mail-Vorlagen) als auch das Bearbeiten bestehender Vorlagen. Für das Bearbeiten ist Voraussetzung, dass die jeweiligen Dokument- bzw. E-Mail-Vorlagen bereits angelegt wurden. Diese Prüfungen sind abgeschlossen (Status „Reviewed“).
+
+Auch der Benachrichtigungsablauf bei Sonderfallanfragen wurde validiert und ist im Einsatz. Voraussetzung ist, dass ein Händler eine Sonderfallanfrage gestellt hat. Geprüft wurden folgende Abläufe: die Genehmigung oder Ablehnung durch einen MPC-Benutzer, der Fall, dass ein MPC-Benutzer die Anfrage genehmigt oder ablehnt, nachdem sie von einem anderen MPC-Benutzer bearbeitet wurde, sowie der Fall, dass ein MPC-Benutzer die Anfrage bearbeitet und die Benachrichtigung an die weiteren MPC-Benutzer weitergegeben wird.
+
+Darüber hinaus wurden Korrekturen vorgenommen: Das Modal zum Hochladen von Dokumenten im Bereich Dokumente und Benachrichtigungen bleibt nach dem erfolgreichen Upload nicht mehr geöffnet. Das Flyout bleibt nun korrekt an der Kopfzeile der Anwendung haften. Das Problem, dass ein DMS-Dokument nicht erstellt werden konnte, wurde anhand der UI-Testergebnisse bearbeitet und ist abgeschlossen.
+
+Nicht weiterverfolgt wurde die geplante Anpassung, die Auswahl im Produkt-Dropdown auch dann zu erlauben, wenn die Allgemeinen Geschäftsbedingungen bereits veröffentlicht sind. Dieses Vorhaben wurde abgebrochen. Ebenfalls geschlossen wurde das Thema des erneuten Versands von DSS-E-Mails.
+
+Geschlossen wurde zudem das Vorhaben zu Benachrichtigungen für die Massenanlage. Vorgesehen war, dass Benutzer der Rollen Dealer +, Dealer, MPC und MO, die einen Massenanlageprozess gestartet haben, vom System benachrichtigt werden, sobald der Upload bzw. die Validierung ihrer Fahrzeugliste abgeschlossen ist. Hintergrund ist, dass Upload und Validierung einige Zeit dauern können und Benutzer währenddessen andere Tätigkeiten ausführen oder die Seite verlassen können. Die Benachrichtigungen sollten über das bereits vorhandene Glockensymbol angezeigt werden, wobei dieselben Zählregeln gelten (9+). Vorgesehen waren zwei Meldungen: „Vehicle list has been validated“ für einzelne Benachrichtigungen, mit einem Link zur Seite „Add multiple vehicles“, auf der die validierten Fahrzeuge einsehbar sind, sowie „Multiple Mass Draft have been created“ für mehrere Benachrichtigungen, mit einem Link zur Seite mit den Massenentwurf-Ergebnissen. Benachrichtigt werden sollte ausschließlich der Benutzer, der den Massenanlageprozess gestartet hat.

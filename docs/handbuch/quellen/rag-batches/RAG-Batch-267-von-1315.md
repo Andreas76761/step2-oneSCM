@@ -1,0 +1,30 @@
+# Batch 267 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertriebskampagnen-Export an NACOS (Revenue Management)**
+
+Subsidien, die der Vertriebsbereich für Servicevereinbarungen gewährt, werden im Rahmen der Vertragserzeugung ermittelt und an das FI-System übergeben. Dort werden auf Basis dieser Daten die notwendigen Buchungen im Controlling-Modul vorgenommen. Die Buchungsinformationen werden an NACOS in einer festgelegten Dateistruktur mit zugehörigen Regeln übermittelt. Die Datei trägt vorläufig die Bezeichnung EXXX (Platzhalter, da der endgültige Name noch mit den NACOS-Kollegen abgestimmt wird). Es handelt sich um eine Textdatei mit UTF-8-Kodierung. Der Dateiname folgt dem Muster EXXX_YYYYMMDD_HHmmSS_CDS-Counter_YYMM.dat; der S3-Ordnerpfad steht noch nicht fest.
+
+Die Datei wird einmal pro Monat erzeugt und an NACOS gesendet. Bei einem höheren Subventionsvolumen führt das Market-Operations-Team den Job mehrfach aus, was auch beim Jahresabschluss regelmäßig der Fall ist. Der Startzeitpunkt des Batch-Jobs ist konfigurierbar; für das MVP ist zunächst die Ausführung zum Monatsende vorgesehen. Der Job durchsucht alle Rechnungsanforderungen mit dem Status „Accepted“ und dem zugehörigen Rechnungstyp (derzeit Platzhalter XXX) und nimmt diese in die Datei auf. Sobald die Informationen in der Datei gespeichert und die Datei erfolgreich in den AWS-Bucket übertragen wurde, wechseln die Rechnungen in den Status „Exported“.
+
+Eine Verarbeitungsnummer wird für diesen Anwendungsfall nicht zwingend benötigt, da das Dateiformat abweicht. Damit Auswertungen im Admin-Bereich möglich bleiben, wird dennoch eine Verarbeitungsnummer vergeben; sie erscheint nicht in der Datei. Ebenso erhält die erzeugte Rechnung weiterhin eine interne oneSCM-Rechnungsnummer, die jedoch nicht in die Datei übernommen wird. Ob für diesen Fall eine Rückmeldedatei benötigt wird, soll noch mit den NACOS-Kollegen geklärt werden.
+
+Die Datei besteht aus mehreren Satzarten mit jeweils eigenem Zweck. Die Felder sind mit Tabulator getrennt, mit Ausnahme des K-Satzes. Der K-Satz bildet die erste Zeile und enthält den Control-Data-Set-Counter, wobei jede Schnittstelle einen eigenen Zähler benötigt. Außerdem enthält er überwiegend feste Werte: Mandant 010, Buchungskreis 0080, Werk 080, Niederlassungsnummer des Rechnungsstellers 268, die Schnittstellenbezeichnung EXXX sowie ein leeres Feld für die Operation (zwei Leerzeichen). Beginn und Ende des Buchungszeitraums (Format JJJJMM) und das Erstellungsdatum des Buchungsbelegs (Format JJJJMMTT) entsprechen dem Exportdatum, also dem Zeitpunkt der Dateierzeugung. Das Verarbeitungsdatum bleibt leer (acht Leerzeichen). Die Anzahl der Datensätze der Lieferdatei umfasst auch die K-Zeile selbst.
+
+Der Satz der Art 0 (Ordneranlage) enthält allgemeine Daten für SAP, zum Beispiel den Schnittstellennamen EXXX-SC, das FI-System-Mandat 010 und den Benutzernamen SAPBATCH. Anhand dieser Angaben wird das richtige SAP-System für die Buchungsdaten bestimmt. Das Startdatum bleibt leer, und das Kennzeichen XKEEP ist mit X belegt, damit die gesendete Batch-Input-Datei nach der Verarbeitung erhalten bleibt.
+
+Der Satz der Art 1 (Kopfdaten) enthält allgemeine Informationen, die für jede Buchungszeile gelten. Dazu zählen der Transaktionscode FB01, das Herkunftskennzeichen EXXX, die Belegart SA, der Buchungskreis 0080 und die Währung EUR. Belegdatum und Buchungsdatum entsprechen dem Exportdatum im Format JJJJMMTT. Der Kopftext lautet „SC Sales Subsidies_MM_YYYY“. Eine Mehrwertsteuerberechnung findet nicht statt, das entsprechende Kennzeichen bleibt leer. Dieses Dateiformat gilt nur für Deutschland. Die Belegnummer wird nur bei externer Belegnummernvergabe befüllt, die Referenzbelegnummer bleibt leer.
+
+Der Satz der Art 2 (Segmentdaten) enthält die individuellen Daten je Zeile, wobei jede Zeile eine Subvention für eine Servicevereinbarung darstellt. Jede Subvention erzeugt zwei Zeilen: eine Sollbuchung mit Buchungsschlüssel 40 und eine Habenbuchung mit Buchungsschlüssel 50, jeweils nach dem Muster Soll an Haben. Der Subventionsbetrag ergibt sich aus dem Rechnungsbetrag; Steuerbeträge und Steuerkennzeichen bleiben leer. Der Geschäftsbereich lautet bei 40 „269V“ und bei 50 „268V“. Das Sachkonto ist 45520150. Als Zuordnungsnummer und als Kundenauftragsreferenz wird die Auftragsnummer des Fahrzeugs eingetragen; die zugehörige Schnittstelle zu GO für BTO/BTS-Fahrzeuge ist noch offen (Stream 2). Der Positionstext besteht bei 40 aus der Aktionsnummer, bei 50 aus Aktionsnummer, Produktbeschreibung und Zuordnungsnummer. Das Profitcenter entspricht bei 40 der Kostenstelle aus der Kampagne (für Tests kann 269-0603 verwendet werden). Bei 50 ergibt es sich aus der Mapping-Tabelle. Der SD-Standardbereich ist bei 40 „03“ und bei 50 „36“, der Erlösbereich bei 40 „269060“ und bei 50 gemäß Mapping-Tabelle, die Geschäftsart bei 40 „000“ und bei 50 „340“. Das Baumuster bezieht sich auf das Fahrzeug. Die Provisionskomponente wird beim Anlegen der Kampagne festgelegt, dient Controlling-Zwecken und bezieht sich auf die erstellte Kampagne; hierfür soll ein Feld in der Kampagne bereitgestellt werden. Die Umsatzart ist IP, die Segmentnummer 0, die Schnittstelle EXXX. Alle übrigen Felder sind feste Werte, überwiegend mit dem Platzhalter „/“. Ob an der Stelle der Materialnummer die FIN/VIN eingetragen wird, ist noch zu klären.
+
+Für die Habenbuchungen (50) werden Buchungsfiliale, Profitcenter und Erlösbereich anhand des Produkts bestimmt:
+
+Excellent: Buchungsfiliale 268/00, Profitcenter 268-0036, Erlösbereich 268000.
+Select Plus: 268/01, 268-0136, 268010.
+Select: 268/02, 268-0236, 268020.
+Best Basic: 268/03, 268-0336, 268030.
+Extend Plus: 268/03, 268-0336, 268030.
+Extend: 268/06, 268-0636, 268060.
+
+Weitere Details zur Dateistruktur sind in Confluence dokumentiert.

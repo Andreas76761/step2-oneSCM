@@ -1,0 +1,17 @@
+# Batch 323 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 17 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Reporting**
+
+Im Bereich Reporting wurde die Bereitstellung der Data Products erweitert. Bisher wurden bei jedem neuen CFT-Dateieingang das vollständige Unified Data Model und das Data Product neu aufgebaut. Dieser Aufbau erfolgt einmal pro Monat, und die Bereitstellung startet, sobald alle benötigten Dateien aller Legacy-Märkte vorliegen und importiert sind. Das bisherige Format der Data Products sind einfache Parquet-Dateien. Zusätzlich werden die Data Products nun auch im Delta-Table-Format bereitgestellt. Dies gilt für alle implementierten Data Products mit Ausnahme von Cost Van. Die Delta-Variante liegt in neuen Ordnern, zusätzlich zum bestehenden Parquet-Format, und ist in der Ordnerstruktur des jeweiligen Data Products abgelegt. Schlägt ein Job fehl, darf es zu keinen teilweisen Aktualisierungen des Data Products kommen. Außerdem wurden Möglichkeiten untersucht, die Delta-Tabelle des Data Products inkrementell zu aktualisieren, sodass künftig nur noch Änderungen statt eines vollständigen Ladevorgangs verarbeitet werden. Der durchgängige Ablauf der zusätzlichen Delta-Tabellenerstellung für Data Product, Coverage-Tabelle und Coverage-Typ wird noch validiert; dieser Punkt ist derzeit offen.
+
+Für das Van Cost Data Product wurde die Datenausgabe angepasst. Bisher waren die Kundendaten in den Data Products für Privatkunden (iCON/ASSET) sowie für alle Kunden von SIRIUS-Verträgen anonymisiert. Da für das Van-HQ-Kostenreporting der Kundenname zwingend benötigt wird, wird dieser für SIRIUS-Verträge nun in allen Fällen bereitgestellt. Die Änderung betrifft ausschließlich das Van Cost Data Product.
+
+Darüber hinaus wurden mehrere Fehler in den Reporting-Daten behoben. Dazu zählen ein leeres Feld damage_sequ_number_pk in der Schadenspositionstabelle, ein falscher Inhalt im Feld damage_sequ_number_pk der Kosten-Schadenspositionstabelle sowie das für alle Verträge leere Feld acc_handling_amt. Ebenfalls korrigiert wurden ein falsches Format beim Unterschriftsdatum und fehlerhafte Inhalte für den Markt GB in den Spalten der Data Products.
+
+Auch die technische Basis wurde verbessert. Es wurden Korrekturen am Data-Product-Job für die Quelltabellenbezeichnung (source_table_name) sowie an der UDM-Lambda-Funktion vorgenommen, und zwar für den DEFAULT-Markt und für das Setzen von Parametern. Zudem wurden die DynamoDB-Enum-Werte und die Umgebungsvariable der UDM-Lambda-Funktion für ISP angepasst. Fehler bei den S3-Lifecycle-Richtlinien im Infrastruktur-Deployment sowie eine S3-Lifecycle-Regel zum Löschen abgelaufener Objekt-Markierungen wurden ebenfalls behoben.
+
+Im DevOps-Bereich lässt sich die Reporting-Infrastruktur (IaC) nun nicht mehr nur für den Main-Branch bereitstellen. Der Workflow ist so flexibel gestaltet, dass auch ein Branch oder Tag aus dem Reporting-Glue-Repository für das Deployment gewählt werden kann, etwa um einen Cherry-Pick oder eine andere Version zu verwenden.
+
+Zwei geplante Vorhaben wurden nicht umgesetzt und abgebrochen: die Zusammenführung der Terraform-State-Dateien für Integration und Produktion zu einer einzigen Datei im Reporting-AWS-Account sowie die Einführung einer durchgängigen Nachverfolgbarkeit per Trace-ID in den bestehenden ETL-Workflows.

@@ -1,0 +1,25 @@
+# Batch 670 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Adressprüfung und Ländervorbelegung**
+
+Bei der Erfassung einer Kundenadresse prüft oneSCM die eingegebenen Daten automatisch über die Google Address Validation API. Die automatische Prüfung soll die Genauigkeit und Effizienz erhöhen, die Compliance unterstützen und die Qualität des Vertragserstellungs- und Vertragsverwaltungsprozesses verbessern. Zudem verringert sie das Risiko menschlicher Fehler und sorgt für eine einheitliche Validierung aller geprüften Daten. Validiert werden die Felder Land, Postleitzahl, Ort, Straße und Hausnummer. Die Prüfung wird bei der Vertragserstellung angefordert, sobald die Adresse eines Kunden eingegeben wird, sowie im Bereich Kunden- und Partnerverwaltung, wenn eine Adresse erfasst wird oder Market-Operation-Benutzer Änderungen an Kundenadressen vornehmen. Die Validierung selbst erfolgt in der Domäne Customer & Partner, die das Ergebnis an die anfragenden Bereiche zurückmeldet.
+
+Im Zuge der Adressprüfung wurde die Reihenfolge der Adressfelder im Vertragsassistenten und in der Kunden- und Partnerverwaltung angepasst. Sie lautet nun: Land (vorbelegt), Postleitzahl, Ort, Straße, Hausnummer und Adresszeile 2. Um die Vertragserstellung fortzusetzen, müssen alle Pflichtfelder der Adresse validiert sein.
+
+Der Ablauf bei der Eingabe gestaltet sich wie folgt: Beim Ausfüllen der Pflichtfelder ist das Land bereits auf Deutschland, das Land des Mandanten, gesetzt. Wird ein Ort fehlerhaft geschrieben, wird er korrigiert. Ist der Ort ungültig, erscheint eine Hinweismeldung (Toast), die zur Eingabe eines gültigen Ortsnamens auffordert. Nach erfolgreicher Prüfung des Ortes wird die Postleitzahl eingegeben; ist sie ungültig, fordert eine entsprechende Meldung zur Eingabe einer gültigen Postleitzahl auf. Ist die Postleitzahl gültig oder plausibel, folgt die Prüfung des Ortsnamens, und bei Gültigkeit oder Plausibilität anschließend die Eingabe des Straßennamens. Ein ungültiger Straßenname führt ebenfalls zu einer Aufforderung, einen gültigen Namen einzugeben. Ist die Straße gültig oder plausibel, wird die Hausnummer eingegeben. Kann die Hausnummer weder bestätigt noch als plausibel eingestuft werden, erscheint eine Meldung mit der Bitte um Eingabe einer gültigen Hausnummer. Ist sie nicht bestätigt, aber plausibel, fragt ein Pop-up den Benutzer, ob die eingegebene Hausnummer korrekt ist. Bestätigt der Benutzer sie, wird der Wert übernommen und der Vorgang mit den Zahlungsdetails fortgesetzt. Bestätigt er sie nicht, wird er per Meldung aufgefordert, eine gültige Hausnummer einzugeben.
+
+Das Land wird bei der Anlage eines neuen Kunden oder Vertrags automatisch anhand des Mandanten vorbelegt, an dem sich der Benutzer anmeldet. Meldet sich beispielsweise ein Händler aus Deutschland am deutschen Mandanten an, ist Deutschland als Land im Adressfeld voreingestellt; bei einem spanischen Händler am spanischen Mandanten ist es entsprechend Spanien. Händler- und MPC-Benutzer können das vorbelegte Land weiterhin ändern und ein anderes verfügbares Land auswählen. Im MVP wird zunächst Deutschland unterstützt.
+
+**IBAN-Validierung und SEPA-Mandat**
+
+Beim Anlegen eines Kunden wird die IBAN nun bereits im Frontend geprüft. Gibt der Benutzer Kleinbuchstaben ein, werden diese automatisch in Großbuchstaben umgewandelt, da Kleinbuchstaben in einer IBAN nicht zulässig sind. Für die Gültigkeit des SEPA-Mandats gelten zudem Prüfungen: Das Datum muss in der Zukunft liegen und dem vorgesehenen Datumsformat entsprechen.
+
+Darüber hinaus wurde ein Fehler im Frontend behoben, der die Pflichtangabe des Kundentyps beim Anlegen eines Kunden betraf.
+
+**Kundendaten aus der Nacos-Eingangsdatei**
+
+Die Kundendaten in oneSCM sollen um zwei Attribute aus dem Finanzsystem NACOS ergänzt werden: die SAP-Debitorennummer und die SEPA-Mandats-ID, die in oneSCM als Direct Debit Code bezeichnet wird. Da die Arbeitsweise der Eingangsdatei aus NACOS für PI2 zeitlich noch nicht definiert werden kann, erzeugt die Kundenverwaltung zunächst Platzhalterwerte für die SAP-Debitorennummer und den Direct Debit Code und stellt sie der Domäne Contract Generation bereit.
+
+Ist einem Vertrag ein Kunde zugeordnet (Kunde im Status „In Confirmation“, Vertrag im Status „Confirmed“), dient der Erhalt von Direct Debit Code und SAP-Debitorennummer als Auslöser für die Vertragsaktivierung. Die Kundenverwaltung stellt sicher, dass ein entsprechender Trigger gesendet wird und der Vertrag dadurch aktiv wird. Erreicht der Vertrag anschließend den Status „Active“, wechselt auch der Kundendatensatz von „In Confirmation“ zu „Active“.

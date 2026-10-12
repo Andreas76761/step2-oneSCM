@@ -1,0 +1,17 @@
+# Batch 895 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Erweiterte Produktprüfungen bei Zuweisung einer Fahrgestellnummer**
+
+Verträge können nun auch dann angelegt werden, wenn zunächst noch keine Fahrgestellnummer vorliegt. Als Identifikator stehen dafür die VerSO-ID, die Bestellnummer, die Deal-ID oder das Baumuster zur Verfügung. Der Vertriebsmitarbeiter wählt im Ablauf der Vertragserstellung den Kunden aus, gibt einen dieser Identifikatoren samt zugehöriger Informationen ein, ruft die verfügbaren Produkte ab, wählt die gewünschten Produkte aus und konfiguriert sie. Anschließend erstellt er das Angebot. Die dabei gewählte Produktkonfiguration und der Preis werden gespeichert, damit sie später für Prüfungen abgerufen werden können. Die Funktion gilt für alle Kundentypen und alle Divisionen und funktioniert sowohl bei einzeln angelegten Verträgen als auch bei Verträgen, die über die Massenanlage erstellt wurden.
+
+Hintergrund ist ein typisches Szenario aus der Praxis: Ein Fahrzeug wird zunächst mit einer bestimmten Antriebsart bestellt, zum Beispiel als Benziner. Während der Produktion ändert der Kunde die Antriebsart, etwa auf Hybrid. Dadurch ergeben sich ein anderes Baumuster und eine andere Fahrgestellkonfiguration. Da der Vertrag unter Umständen bereits auf Basis der ursprünglichen Konfiguration existiert, prüft das System die Verträglichkeit erneut, sobald die endgültige Fahrgestellnummer vorliegt.
+
+Der Vertrag durchläuft seinen Lebenszyklus, bis er den Status „Bestätigt“ erreicht hat beziehungsweise bei baumusterbasierten Abläufen den Status „Angelegt“. Die Fahrgestellnummer kann in dieser Phase zu einem späteren Zeitpunkt zugewiesen werden. Sobald dies geschieht, startet das System automatisch die Verträglichkeitsprüfungen.
+
+Dabei werden vier Punkte geprüft. Weicht der Modellcode des Fahrzeugs vom Modellcode im Vertrag ab, überschreibt das System den Modellcode im Vertrag mit dem des Fahrzeugs. Weicht das Produkt, das zur Fahrgestellnummer gehört, vom Produkt im Servicevertrag ab, wird der Vertrag abgelehnt. Ebenso wird der Vertrag abgelehnt, wenn die Konfiguration des Fahrzeugs nicht mit der Konfiguration im Servicevertrag übereinstimmt oder wenn der Preis des Produkts vom Preis im Servicevertrag abweicht. In diesen drei Fällen wird zusätzlich die Vertragshistorie aktualisiert, wobei der jeweilige Grund vermerkt wird (Produkt, Konfiguration oder Preis der Fahrgestellnummer stimmt nicht mit dem Servicevertrag überein), und der Kunde wird benachrichtigt.
+
+Wenn alle Prüfungen erfolgreich bestanden sind, kann die Aktualisierung von FRD und Kennzeichen vorgenommen werden. Das System erstellt einen aktualisierten Zahlungsplan, setzt den Aktivierungsablauf fort, aktiviert den Vertrag, erzeugt das Dokument i155 und benachrichtigt die Systeme Nemesis und Revenue.
+
+Dieselbe Prüflogik gilt auch für Abläufe in MBLD – Edge. Wird dort bei der Vertragsaktivierung eine Fahrgestellnummer zugewiesen, führt das System die gleichen Verträglichkeitsprüfungen aus.

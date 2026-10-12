@@ -1,0 +1,19 @@
+# Batch 219 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management: monatliche Zahlung von Serviceverträgen per Kreditkarte (MPay)**
+
+Für den indischen Markt wurde im Einzelhandel die Möglichkeit geschaffen, einen Servicevertrag im Autohaus abzuschließen und monatlich per Kreditkarte zu bezahlen. Als Zahlungsdienstleister dient MPay, der interne Zahlungsanbieter von Mercedes-Benz. Indien ist der erste Markt, in dem MPay eingesetzt wird. Der Umfang dieser ersten Ausbaustufe (MVP) soll zeigen, dass sich ein monatlich zu zahlender Vertrag mit MPay per Kreditkarte begleichen lässt. Der Ablauf der Vertragserstellung entspricht zunächst dem der Einmalzahlung. Für Verträge des indischen Marktes ist die Zahlungsart Kreditkarte vorgesehen. Der bestehende Ablauf der Vertragserstellung bleibt unverändert, angepasst werden lediglich der Kundenbereich und die Kennzeichnung des Marktes.
+
+Bei der Aktivierung eines Vertrags aus dem indischen Einzelhandel wird ein Zahlungslink erzeugt. Dieser steht im Bereich „Zahlung" als Link und ausschließlich für den indischen Markt zusätzlich als QR-Code zur Verfügung. Der Kunde bezahlt damit die erste Rechnung des Vertrags, und der Betrag der Transaktion entspricht dem Bruttobetrag der ersten infrage kommenden Rechnung. Nach erfolgreicher Zahlung (Status „Settled") steht der Link für keine weitere Transaktion mehr zur Verfügung. In der Rechnungstabelle wird für den indischen Markt zusätzlich die Spalte „MPay-Status" angezeigt.
+
+Für alle weiteren Rechnungen erzeugt oneSCM jeden Monat selbst eine Transaktion und bucht den Betrag von der Karte ab. Der Kunde muss dafür keine Kartendaten erneut eingeben, da diese bei MPay hinterlegt sind. Die Karte wird über eine Asset-ID identifiziert, die gemeinsam mit einer pro Vertrag erzeugten Referenz-ID (UUID) im Bereich Revenue gespeichert wird. Der Zahlungslink und die erste Zahlung werden über die Hosted Payment Page (HPP) abgewickelt, die monatlichen Transaktionen und deren Statusbehandlung über die Global Payment Platform (GPP). Die Transaktion für eine monatliche Rechnung wird angestoßen, sobald die Rechnung den Status „Accepted" hat. Zuvor wird der 3DS-Status geprüft: Lautet er „Auth3ds2", kann die Transaktion erstellt werden. Andernfalls wird ein neuer Zahlungslink erzeugt, und der Kunde muss seine Kreditkartendaten erneut eingeben. Die Händlerreferenz (merchantReference) wird von oneSCM generiert, der Betrag entspricht dem Bruttobetrag der Rechnung.
+
+Den Status jeder Transaktion erhält oneSCM über das Benachrichtigungssystem der GPP, für das alle Ereignisse abonniert werden; die Zuordnung erfolgt anhand der Händlerreferenz. Eine Rechnung wird unabhängig vom Transaktionsstatus an das FI-System exportiert. Hat die Rechnung den Status „Exported" und die Transaktion den Status „CAPTURED", wird die Rechnung auf „Paid" gesetzt. Dies gilt sowohl für die erste als auch für die monatlichen Rechnungen.
+
+Kann eine Transaktion nicht durchgeführt werden, hängt das weitere Vorgehen vom Grund ab. Bei unzureichender Deckung wird der Einzug nach 24 Stunden und anschließend nach einer Woche erneut versucht. Ist die Karte abgelaufen, wird in Revenue ein neuer Zahlungslink mit dem Betrag 0 erzeugt und die Asset-ID aktualisiert.
+
+**Weitere Hinweise**
+
+Die Störung des Jobs SAPInvE169EXP im Bereich Backend wurde abgeschlossen. Die geplante Erweiterung der manuellen Rechnungserstellung wurde nicht umgesetzt, das entsprechende Vorhaben wurde abgebrochen.

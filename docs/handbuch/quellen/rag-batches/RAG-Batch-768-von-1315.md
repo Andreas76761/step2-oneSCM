@@ -1,0 +1,51 @@
+# Batch 768 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Regelmäßige Vertragsprüfung (Regular Contract Review)**
+
+Mit der regelmäßigen Vertragsprüfung können Market Owner (MO) und Market Product Coordinators (MPC) Prüfprofile für die Laufleistung konfigurieren und ausführen. Verträge, deren Laufleistung die geplante Laufleistung überschreitet oder unterschreitet, lassen sich so anhand vordefinierter Toleranzregeln und Prüfzeiträume systematisch erkennen und überwachen.
+
+**Voraussetzungen**
+
+Damit ein Vertrag geprüft werden kann, müssen folgende Pflichtattribute vorhanden sein: Vertragsbeginn, geplantes Vertragsende, geplante Laufleistung, Kilometerstand bei Vertragsbeginn, Produkt, Kundentyp und Vertriebskanal. Für das Fahrzeug müssen Kilometerstände in der Fahrzeug-Laufleistungshistorie vorliegen, und zwar aus einer der Quellen MIC, VEGA, manuelle Eingabe, Hochrechnung (Projection) oder Kilometerstand zum Verkaufsdatum. Geprüft werden nur Verträge im Status „Active“ oder „Suspended“. Außerdem muss ein Prüfprofil angelegt sein, denn die Prüfung wird durch einen geplanten Batch-Job auf Basis der Profilkonfiguration ausgelöst. Ein Produkt kann mehrere Regular-Review-Profile haben, aber nur ein einzelnes Final-Review-Profil. Mehrere Final-Review-Profile für ein Produkt sind nur möglich, wenn sie sich beispielsweise durch den Vertriebskanal unterscheiden (etwa Profil 1 für Produkt A und Vertriebskanal „Leasing“, Profil 2 für Produkt A und Vertriebskanal „Standalone“). Versucht ein MPC, ein weiteres Final-Review-Profil für ein bereits zugeordnetes Produkt anzulegen, verhindert das System dies und zeigt eine Fehlermeldung an.
+
+**Aufbau der Profilverwaltung**
+
+Der MPC findet die Funktion unter „Market Settings / Contract Review Profiles“. Dort stehen drei Reiter zur Verfügung. Der erste Reiter ist der Standardeinstieg und listet alle angelegten Prüfprofile auf. Der zweite Reiter „Regular Review“ ist neu. Der dritte Reiter, bisher „Operative Review“, heißt künftig „Final Review“. Dort ändert sich nur die Reihenfolge der Felder, die Funktionalität bleibt gleich. Das gilt auch für das Anlegen eines Final-Profils im ersten Reiter.
+
+**Regular-Review-Profil anlegen**
+
+Beim Anlegen eines Profils vom Typ „Regular“ wählt der MPC zunächst die Division (PC oder VAN, Einzelauswahl), die Anwendungsbereiche (Leasing, Standalone, Finance, Mehrfachauswahl), die Kundentypen (Mehrfachauswahl aus allen in oneSCM verfügbaren Typen) und die Produkte (Mehrfachauswahl aus allen zum Zeitpunkt der Anlage oder Bearbeitung verfügbaren Produkten). Außerdem vergibt er einen Profilnamen und wählt den Zeitraum „Yearly“ oder „Quarterly“ (Einzelauswahl) sowie ein Datum.
+
+Das Datumsfeld ist zunächst ausgegraut und wird erst aktiv, wenn ein Zeitraum gewählt wurde. Es lässt nur das heutige oder ein zukünftiges Datum zu. Bei „Yearly“ ist das gewählte Datum der jährliche Ausführungstermin. Beim Ausführungsdatum 31.01.2027 folgen also der 31.01.2028, der 31.01.2029 und so weiter. Bei „Quarterly“ gilt das gewählte Datum als Startdatum, die folgenden Quartalstermine berechnet das System automatisch. Für den 31.01.2027 sind das beispielsweise der 30.04.2027, der 31.07.2027 und der 31.10.2027. Zusätzlich wählt der MPC die Gruppierung: nach Kunden-ID oder nach Gruppen-ID. Die Gruppen-ID gibt es nur bei Verträgen, die per Massenanlage erstellt wurden.
+
+Im Bereich „Define Tolerance and Approvals“ erscheint zunächst ein Platzhalter mit dem Kilometer-Symbol und dem Text „No Tolerances and Approvals to be defined – You need to fill in the required information from the inputs above“. Erst wenn alle Pflichtfelder ausgefüllt sind, werden die passenden Felder für Toleranzen und Genehmigungen abhängig vom gewählten Prüftyp angezeigt. Dort definiert der MPC das Vertragsalter in Monaten (nur ganze Zahlen von 1 bis 120). Ein Info-Symbol „i“ zeigt beim Darüberfahren den Hinweis „Only contracts above this age will be considered for review“. Außerdem wählt der MPC Übermileage, Untermileage oder beides (Mehrfachauswahl) und erfasst jeweils einen Toleranzwert, standardmäßig in Prozent. Ungültige Eingaben beim Vertragsalter werden mit einer Validierungsmeldung abgelehnt, und die Speichern-Schaltfläche bleibt deaktiviert.
+
+In der Fußzeile bricht das „X“ die gesamte Konfiguration ab. Zuvor erscheint eine Sicherheitsabfrage: „Are you sure you want to cancel the Profile Creation – all the configurations will be permanently lost“. Bei „YES“ wird alles verworfen, bei „NO“ kehrt der Nutzer mit allen Eingaben zur Profilanlage zurück. Das Häkchen („Check“) speichert das Profil und ist erst aktiv, wenn alle Pflichtfelder ausgefüllt sind. Nach dem Speichern ersetzt die Schaltfläche „Edit“ das Häkchen und ermöglicht das Bearbeiten des Profils wie bei den Final-Review-Profilen. Das neue Profil erscheint anschließend in der Profilliste im ersten Reiter.
+
+**Ausführung durch den Batch-Job**
+
+Zum konfigurierten Termin führt das System die Prüfung aus. Der Batch-Job ermittelt die prüfbaren Verträge, ruft die Kilometerstände ab, berechnet die theoretische Laufleistung und die Abweichung, vergleicht diese mit der Toleranz und legt einen Eintrag in der Tabelle „Regular Review“ an.
+
+Zunächst wird der letzte Kilometerstand des Vertrags abgerufen. Ist er nicht älter als 30 Tage, wird der Wert verwendet. Andernfalls erzeugt das System automatisch eine Laufleistungs-Hochrechnung und speichert den Wert in der Laufleistungshistorie auf Vertragsebene; als Quelle wird dann „Projection“ angezeigt. Ist der letzte Kilometerstand größer als 0, läuft die Prüfung. Andernfalls wird der Vertrag übersprungen, es entsteht kein Eintrag, und er wird erst beim nächsten Prüftermin wieder berücksichtigt. Dasselbe gilt für Verträge ohne Kilometerstand aus einer gültigen Quelle. Verträge mit anderen Status als „Active“ oder „Suspended“ werden nicht geprüft.
+
+Die Berechnung erfolgt in folgenden Schritten: Die tägliche geplante Laufleistung ergibt sich aus der jährlichen Fahrzeuglaufleistung laut Vertrag geteilt durch 365. Dann werden die Tage zwischen Vertragsbeginn und Beobachtungsdatum gezählt. Die theoretische Laufleistung ist der Kilometerstand bei Vertragsbeginn plus die tägliche geplante Laufleistung multipliziert mit den vergangenen Tagen. Die absolute Abweichung ist der erfasste tatsächliche Kilometerstand minus die theoretische Laufleistung. Die prozentuale Abweichung ist die absolute Abweichung geteilt durch die theoretische Laufleistung. Der Wert wird in der Spalte „Mileage Deviation In Percentage“ der Tabelle „Regular Review“ eingetragen.
+
+Ein Beispiel: Ein Vertrag beginnt am 02.01.2025 mit einem Kilometerstand von 10.000 km bei einer jährlichen Fahrzeuglaufleistung von 20.000 km. Am 14.02.2026 wird ein Stand von 40.000 km erfasst. Die tägliche geplante Laufleistung beträgt 55 km, zwischen Vertragsbeginn und Erfassungsdatum liegen 408 Tage. Die theoretische Laufleistung beträgt damit 32.356 km, die absolute Abweichung 7.644 km und die prozentuale Abweichung 24 %. Bei einer Toleranz von 20 % liegt die zulässige Abweichung bei 6.471 km.
+
+**Reiter „Regular Review“: Ergebnisse einsehen**
+
+Der Reiter „Regular Review“ zeigt die Ergebnisse der durchgeführten Prüfungen. Im Kopfbereich lässt sich nach Division, Produkt, Kundentyp und Vertriebskanal filtern. Weitere Filteroptionen sind verfügbar, und die Anzahl der angezeigten Datensätze kann auf 10, 20, 30, 40 oder 50 eingestellt werden. Die Anzeige „Results x by y“ nennt die Zahl der angezeigten Einträge im Verhältnis zur Gesamtzahl. Die Lupe startet die Suche mit den eingegebenen Filterwerten, das „X“ setzt die Filter zurück.
+
+Die Tabelle enthält folgende Spalten:
+
+Die Referenznummer des Vertrags wird als Hyperlink dargestellt und führt zur Vertragsdetailansicht. Es folgen Vertragsbeginn und geplantes Vertragsende, jeweils im Format der Market Settings, sowie der Produktname. Der Profilname wird ebenfalls als Hyperlink angezeigt und führt zur Profilkonfiguration. Danach stehen der Prüfzeitraum des Profils und das Datum der letzten Prüfung (ebenfalls im Format der Market Settings). Der Status ist standardmäßig „Pending“. Weitere Spalten sind Kundentyp und Vertriebskanal sowie der Kilometerstand bei Vertragsbeginn und die geplante Laufleistung bei Vertragsende, beide aus dem Vertrag übernommen. Die erwartete aktuelle Laufleistung entspricht der theoretischen Laufleistung. Die tatsächliche aktuelle Laufleistung ist der aus der Fahrzeug-Laufleistungshistorie verwendete Wert. Die Laufleistungsquelle nennt die für die Prüfung genutzte Quelle (Projection, MIC, Vega oder manuelle Eingabe). Hinzu kommen die prozentuale Abweichung sowie die aus dem Profil übernommenen Toleranzen für Über- und Unterlaufleistung. Die letzte Spalte enthält die Aktionen.
+
+Über die Aktionen lässt sich der Status eines Eintrags ändern. Zur Auswahl stehen „Pending“ (orange, Standard), „Acknowledged“ (grau), „Customer Notified“ (blau) und „Prolongation Offer Sent“ (grün). Der Status kann beliebig oft gewechselt werden, die Änderung wird sofort mit der passenden Farbe angezeigt.
+
+Die Sortierung der Ergebnisse folgt einer festen Logik. Zunächst werden die Verträge nach Abweichung sortiert, von der größten zur kleinsten. Danach werden sie nach dem gewählten Gruppierungsparameter zusammengefasst: Alle Verträge derselben Kunden-ID oder derselben Gruppen-ID erscheinen direkt nacheinander. Andere Felder wie Status oder Datum der letzten Prüfung beeinflussen die Standardsortierung nicht. So werden Verträge mit der höchsten Abweichung priorisiert, während zusammengehörige Verträge eines Kunden oder einer Gruppe für die operative Bearbeitung und Entscheidungsfindung gemeinsam sichtbar bleiben. Für Prüfzwecke oder spätere Weiterentwicklungen werden in der Datenbank alle letzten Prüfungen vorgehalten.
+
+**Hinweise zu Risiken**
+
+Veraltete Laufleistungsdaten können zu falschen Abweichungen führen; in diesem Fall greift der Hochrechnungsmechanismus. Fehlen Laufleistungsdaten, kann die Prüfung unvollständig sein; der Vertrag wird dann bis zum nächsten Prüfzyklus übersprungen.

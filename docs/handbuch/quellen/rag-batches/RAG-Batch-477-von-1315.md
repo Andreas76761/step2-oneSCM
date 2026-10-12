@@ -1,0 +1,19 @@
+# Batch 477 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 9 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kopfzeilen-Vorlagen erstellen**
+
+Im Bereich Documents & Communications lassen sich Kopfzeilen-Vorlagen (Header) anlegen, die anschließend bei der Erstellung von E-Mail-Vorlagen verwendet werden können. Dazu melden Sie sich mit Ihren Zugangsdaten an, wechseln auf den Reiter „Notification“ und wählen dort „Create Templates“ und anschließend „Header“. Sie gelangen auf die Seite zur Vorlagenerstellung, auf der Sie das Template Setup und die Template Details mit den jeweiligen Parametern ausfüllen und danach das Template Design gestalten. Kopfzeilen-Vorlagen sind vom Typ STATIC, sodass keine Print-Variablen benötigt werden. Nach der Erstellung stehen sie abhängig von ihren Parametern im Dropdown-Bereich des WYSIWYG-Editors zur Wiederverwendung zur Verfügung.
+
+Pflichtfelder sind der Template-Name, der Markt und das Gültig-ab-Datum. Der Template-Name ist ein Eingabefeld mit höchstens 56 Zeichen; gibt der Benutzer mehr Zeichen ein, soll eine Fehlermeldung erscheinen. Der Markt ist ein Dropdown, dessen Werte von der Benutzerrolle abhängen und das mit „Germany“ vorbelegt ist. Das Datum „Valid From“ legt fest, ab wann die Vorlage aktiv ist und im Prozess verwendet wird. Es wird im Format TT.MM.JJJJ eingegeben, Datumswerte in der Vergangenheit sind nicht zulässig, nur das aktuelle und zukünftige Daten. Anhand des Datums werden die Vorlagen im Dropdown in der Reihenfolge des nächstliegenden Datums angezeigt. Optional sind Division (im MVP-Umfang PC, also Passenger Car; VAN folgt nach dem MVP), Marke (im MVP-Umfang Mercedes-Benz; Smart folgt nach dem MVP) und Sprache (abhängig von der Benutzerrolle des Marktes; im MVP Englisch).
+
+Den Inhalt gestalten Sie im WYSIWYG-Editor. Er ist gemäß dem Mercedes-Benz-Styleguide für E-Mails formatiert (Schriftart nach Punkt 5). Sie können Inhalte direkt eintippen oder Text bzw. Bilder einfügen.
+
+Zum Abschluss stehen drei Schaltflächen zur Verfügung. Mit „Publish“ wird die Vorlage erstellt. Mit „Save as Draft“ wird sie 30 Tage als Entwurf gespeichert und kann in dieser Zeit bearbeitet werden; danach wird sie gelöscht. Beim Speichern als Entwurf erscheint eine Toast-Meldung. Mindestvoraussetzung dafür ist der Template-Name. Lassen Sie das Feld leer, vergibt das System automatisch einen fortlaufenden Namen („Template 1“, „Template 2“ usw.), sodass das Speichern als Entwurf trotzdem möglich ist. Mit „Cancel“ werden Sie, sobald Daten in einem Feld oder im Editor eingegeben wurden, vor einem Datenverlust gewarnt. Wählen Sie in der Warnung „Cancel“, wird der Dialog geschlossen und die eingegebenen Daten bleiben erhalten. Wählen Sie „Proceed“, werden die Daten nicht gespeichert und Sie kehren zur vorherigen Seite zurück. Wurden keine Daten eingegeben, gelangen Sie direkt zur vorherigen Seite. Dasselbe Verhalten beim Abbrechen gilt auch für die Erstellung von Block-Vorlagen.
+
+**Weitere Hinweise zu E-Mail-Vorlagen und Verträgen**
+
+Bei der Erstellung von E-Mail-Vorlagen gilt für den E-Mail-Betreff eine Obergrenze von 75 Zeichen. Bei Überschreitung ist eine Validierungsmeldung vorgesehen. Zuvor wurde diese Meldung nicht angezeigt, und es konnten mehr als 75 Zeichen eingegeben werden; dieser Fehler wurde behoben.
+
+In der Vorschau des Servicevertrags als PDF fehlten zudem die Angaben zur Zahlungsadresse (Payer), die beim Erzeugen des Vertrags eingetragen wurden. Auch dieser Punkt wurde abgeschlossen.

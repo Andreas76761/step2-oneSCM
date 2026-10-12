@@ -1,0 +1,2526 @@
+[
+ {
+  "nr": 23,
+  "key": "23",
+  "kind": "Kapitel",
+  "chs": [
+   23
+  ],
+  "slug": "FAQ_Troubleshooting_und_Support",
+  "title": "FAQ, Troubleshooting and Support",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Chapter 23 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "FAQ and known errors",
+   "Classify the issue",
+   "Prepare support case",
+   "Contact support",
+   "Check workaround"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "You find **frequent questions per process phase** and **known errors by market and release**, distinguish **usage question, data deviation and incident**, compile the **information for a support case**, and know the **support and escalation paths** and **confirmed workarounds** (Chapters 23.1 to 23.6)."
+      ],
+      "h": 1.73,
+      "size": 9,
+      "shot": "FAQ overview",
+      "shotH": 1.15,
+      "img": "img/badge_23.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Topics at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "23.1 – 23.3 Classify",
+          "bullets": [
+           "Frequently asked questions by process phase",
+           "Known errors by market and release",
+           "Usage question, data deviation and incident"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "23.4 – 23.6 Report and resolve",
+          "bullets": [
+           "Information for a support case",
+           "Support and escalation paths",
+           "Confirmed workarounds and result check"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.73,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_23.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_23.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "First search the **FAQ per process phase** (23.1) and the **known errors** for your market and release (23.2).",
+         [
+          "Classify your issue (23.3):",
+          "**Usage question**: handbook and Quick Guide",
+          "**Data deviation**: leading system and business department (Chapter 16.2)",
+          "**Incident**: support case"
+         ],
+         [
+          "Compile the **information for the support case** (23.4):",
+          "Reference number, VIN, market, division, role",
+          "Time, step, error message, screenshot"
+         ]
+        ]
+       }
+      ],
+      "h": 2.08,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Unconfirmed workarounds can damage contracts and data.~~ Use only the solutions documented in Chapter 23.6.",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Use the **support and escalation paths** (23.5): Vans service contract help via **sc-van@mercedes-benz.com**; further paths per market.",
+         "Apply only **confirmed workarounds** and check the **result** (23.6)."
+        ]
+       }
+      ],
+      "h": 0.61,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**All roles**: self-help via FAQ and workarounds",
+         "**Dealer/MO**: support case with complete details",
+         "**Support/Customer Management**: processing and escalation"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Reference number, market, division and role known",
+         "Screenshot without personal data (Chapter 16.1)",
+         "Handbook chapter for the process step checked"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  FAQ and known errors checked",
+         "☐  Issue classified",
+         "☐  Support information complete",
+         "☐  Workaround confirmed, result checked"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "If information is incorrect, Customer Management will contact you; incorrect applications are rejected.",
+         "During contract creation for MBIL, the product query can end with a server error; repeat the query and report the case (23.2).",
+         "Training material, videos and FAQ are available in the RetailPortal."
+        ]
+       }
+      ],
+      "h": 1.44,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "How long after first registration can a service contract be concluded?",
+        "Up to 12 months and/or a maximum of 50,000 km, provided the vehicle has not yet had a service (exception: company and demonstration vehicles with a previous owner)."
+       ],
+       [
+        "Can a service package be concluded for demonstration vehicles?",
+        "Demonstration and company vehicles count as used vehicles; only a pure maintenance package is possible for them."
+       ],
+       [
+        "Can a person other than the registered keeper conclude the contract?",
+        "No, contract holder and registered keeper must be identical."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.83,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "**Vans service contract help**: __sc-van@mercedes-benz.com__",
+         "__oneSCM RetailPortal__ – System news and training material.",
+         "__Ticket-to-chapter mapping__ – Appendix E.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D)."
+        ]
+       }
+      ],
+      "h": 1.47,
+      "size": 9
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "nr": "A.1",
+  "key": "A1",
+  "kind": "Anhang",
+  "chs": [
+   1,
+   3
+  ],
+  "slug": "Glossar_und_Abkuerzungen",
+  "title": "Appendix A.1: Glossary and Abbreviations",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix A.1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Look up term",
+   "Resolve abbreviation",
+   "Use term group",
+   "Use consistently",
+   "Report addition"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **glossary** explains the terms and **abbreviations** of the oneSCM handbook consistently, from ALICE to ZB II. This guide shows how to **use** and **cite** the glossary and submit **additions**."
+      ],
+      "h": 1.4,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_A1.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Term groups",
+          "bullets": [
+           "Roles: Dealer, MO, Market, HQ, KAM",
+           "Transactions: price information, quote, application, contract",
+           "Identifiers: VIN, OTR deal ID, VerSO order ID, model series"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Systems and documents",
+          "bullets": [
+           "Systems: ALICE, OTR, VEGA, oneERP, NEMESIS, MPay, DATIX",
+           "Documents: ZB I, ZB II, SEPA mandate, price information",
+           "Status: application, signature, contract, invoice, payment status"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.73,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_A1.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_A1.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Look up the term in the **glossary**; entries are sorted alphabetically and name the chapter in which the term is introduced.",
+         "Distinguish **abbreviation** (e.g. MO) from **long form** (Market Operation); the handbook gives the long form at first occurrence.",
+         "Use the **term groups** (roles, transactions, identifiers, systems, documents, status) to find related terms."
+        ]
+       }
+      ],
+      "h": 1.42,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~The term \"contract holder\" is not the same as \"payer\" or \"user\".~~ Roles on the contract are defined separately (Chapter 4.4); use the glossary terms exactly.",
+      "h": 0.67,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Use the **glossary terms** in tickets, comments and training, not local paraphrases.",
+         "If a term is missing or a definition is contradictory, enter it in the **clarification register** (Appendix F, Chapter 16.7)."
+        ]
+       }
+      ],
+      "h": 0.76,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**All roles**: look up terms",
+         "**Editorial team**: maintain and approve glossary",
+         "**Market**: local terms and language variants"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Handbook or online help open",
+         "Term or abbreviation from the process context",
+         "Additions via the clarification register (Appendix F)"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Term found in glossary",
+         "☐  Long form and abbreviation known",
+         "☐  Chapter reference checked",
+         "☐  Missing term reported"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The glossary is part of the export and the online help (Chapter 3).",
+         "Language variants of the terms are documented per market (Chapter 20).",
+         "System abbreviations are explained in the profiles in Chapter 19."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Where do I find the meaning of \"MO\"?",
+        "In the glossary under M: Market Operation, the role for business review and activation (Chapter 9)."
+       ],
+       [
+        "May I use my own abbreviations?",
+        "In tickets and comments, please use glossary terms only; propose new terms via the clarification register."
+       ],
+       [
+        "Is the glossary also available in English?",
+        "Language variants depend on the market (Chapter 20); see the note in the glossary."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Glossary__ – Appendix A with terms and abbreviations.",
+         "__Sources and clarification register__ – Appendix F.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Glossary"
+ },
+ {
+  "nr": "B.1",
+  "key": "B1",
+  "kind": "Anhang",
+  "chs": [
+   4,
+   5,
+   6,
+   7,
+   8,
+   9
+  ],
+  "slug": "Alltagschecklisten",
+  "title": "Appendix B.1: Everyday Checklists",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix B.1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Determine process phase",
+   "Select checklist",
+   "Work through check items",
+   "Clarify open items",
+   "Document result"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **everyday checklists** summarize, per process phase, the check items that must be met before the next step: from the **quote** through **application and signature** to **activation** and **contract management**."
+      ],
+      "h": 1.4,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_B1.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Contract process checklists",
+          "bullets": [
+           "Before the quote (Chapters 4 and 5)",
+           "Before saving the application (Chapter 6)",
+           "Before the signature (Chapter 7)",
+           "Before the activation check (Chapters 8 and 9)"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Operation and maintenance checklists",
+          "bullets": [
+           "Before contract changes (Chapter 10)",
+           "Before handover to Finance (Chapter 11)",
+           "Before publishing product and price (Chapter 14)",
+           "Before approvals at HQ level (Chapter 15)"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.76,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_B1.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_B1.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Select the **checklist of the process phase** your transaction is in (process map, Chapter 3.4).",
+         "Work through the **check items** in order; each item refers to the chapter with the description.",
+         "Mark open items and clarify them **before** the next step, not afterwards."
+        ]
+       }
+      ],
+      "h": 1.42,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~A completed checklist does not replace the system check.~~ Validation rules (Chapter 6.4) and MO Checks (Chapter 9) apply regardless of the checklist.",
+      "h": 0.67,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "For MO reviews, document the checklist result in the **check status** (Chapter 9.3).",
+         "If a check item is missing, report it via the **clarification register** (Appendix F)."
+        ]
+       }
+      ],
+      "h": 0.61,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Dealer**: checklists before quote, application and signature",
+         "**MO**: review checklist before approval",
+         "**Market/HQ**: checklists before publication and approval"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Relevant process chapter is known",
+         "Reference number or transaction at hand",
+         "Checklist in the current handbook version"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Appropriate checklist selected",
+         "☐  All check items worked through",
+         "☐  Open items clarified before the next step",
+         "☐  Missing check items reported"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The checklists correspond to the \"Checklist before completion\" sections in the chapters' Quick Guides.",
+         "Checklists are supplemented with local items per market (Chapter 20).",
+         "Practical examples for the checklists are in Appendix I.1."
+        ]
+       }
+      ],
+      "h": 1.28,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Are the checklists binding?",
+        "They are working aids; the binding rules are the process rules of the chapters and the system checks."
+       ],
+       [
+        "Are the checklists available for printing?",
+        "Yes, Appendix B.1 is included as a print version in the handbook export (Chapter 16.5)."
+       ],
+       [
+        "How are checklists updated?",
+        "With each release via the change overview (Chapter 22.4)."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Everyday checklists__ – Appendix B.1.",
+         "__Practical examples__ – Appendix I.1.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Checklists"
+ },
+ {
+  "nr": "C.1",
+  "key": "C1",
+  "kind": "Anhang",
+  "chs": [
+   3,
+   6,
+   7,
+   8,
+   9,
+   10
+  ],
+  "slug": "Prozessdiagramme",
+  "title": "Appendix C.1: Process Diagrams",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix C.1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Open process map",
+   "Select sub-process",
+   "Read handovers",
+   "Note decisions",
+   "Use transition module"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **process diagrams** show the **process map**, the **sub-processes** from quote to contract end and the **handovers** between roles and systems. This guide explains how to **read** the diagrams and **apply** them to your transaction."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_C1.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Diagrams",
+          "bullets": [
+           "Process map (overall process)",
+           "Sub-processes: quote, application, signature, activation",
+           "Management, termination, billing",
+           "Market and HQ maintenance processes"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Symbols",
+          "bullets": [
+           "Rectangle: process step with chapter reference",
+           "Diamond: decision or check",
+           "Arrow: handover, labeled with status",
+           "Color: role that performs the step"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.61,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_C1.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_C1.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Start with the **process map** and find the phase of your transaction.",
+         "Open the **sub-process diagram** of the phase; each step names the chapter.",
+         "Read the **handovers** on the arrows: Which status must be reached, which role takes over?"
+        ]
+       }
+      ],
+      "h": 1.12,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Diagrams show the standard process.~~ Country and division deviations (Chapters 20 and 21) are documented only there, not in the diagram.",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Note the **decisions** (diamonds): special approval, MO Check and rejection lead to alternative paths.",
+         "Use the **transition modules** (T6-7 to T15-16) to move between chapters."
+        ]
+       }
+      ],
+      "h": 0.76,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**All roles**: read diagrams and classify the transaction",
+         "**Training**: use diagrams as an introduction",
+         "**HQ**: maintain and approve diagrams"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Basic knowledge of the process map (Chapter 3.4)",
+         "Role and process phase known",
+         "Diagram symbols (legend) read"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Phase found in the process map",
+         "☐  Sub-process read",
+         "☐  Handovers and status understood",
+         "☐  Alternative paths known"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The diagrams are shown in the dashboard as a click path.",
+         "Status transitions in detail are in Appendix D.",
+         "Diagrams are reviewed with each release (Chapter 22)."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Which diagram do I need for application creation?",
+        "Sub-process application (Chapter 6) with transition T6-7 to signature."
+       ],
+       [
+        "What do the colors mean?",
+        "The role that performs the step: Dealer, MO, Market, HQ or system."
+       ],
+       [
+        "Can I export diagrams?",
+        "Yes, via the handbook export (Chapter 16.5)."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.38,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Process diagrams__ – Appendix C.1.",
+         "__Role/status/scope matrices__ – Appendix D.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Process diagrams"
+ },
+ {
+  "nr": "D.1",
+  "key": "D1",
+  "kind": "Anhang",
+  "chs": [
+   2,
+   8,
+   9
+  ],
+  "slug": "Rollen_Status_Scopematrizen",
+  "title": "Appendix D.1: Role/Status/Scope Matrices",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix D.1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Check role matrix",
+   "Read status matrix",
+   "Compare scope",
+   "Request permission",
+   "Report deviation"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **matrices** show which **role** may perform which action, which **status transitions** are permitted and which **scope** (market, division, dealership) applies to visibility and editing."
+      ],
+      "h": 1.35,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_D1.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Matrices",
+          "bullets": [
+           "Role matrix: action per role (Dealer, MO, Market, HQ)",
+           "Status matrix: permitted transitions per object (application, signature, contract)",
+           "Scope matrix: visibility per market, division and dealership"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Application",
+          "bullets": [
+           "Before an action: May my role do this?",
+           "For status questions: Which transition is possible?",
+           "If visibility is missing: Does the scope match?"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.73,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_D1.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_D1.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Check in the **role matrix** whether your role may perform the desired action.",
+         "Read in the **status matrix** which transition is permitted from which status (Chapter 8.2).",
+         "Check in the **scope matrix** whether market, division and dealership of the transaction match your access (Chapter 2.4)."
+        ]
+       }
+      ],
+      "h": 1.27,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~The matrices are the binding reference for authorizations and status transitions.~~ A transition visible in the system but not documented must be reported, not used.",
+      "h": 0.67,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "If a permission is missing, request the role via ALICE (Chapter 2.3); if a transition is missing, a new contract or support is required.",
+         "Report deviations between matrix and system via the clarification register (Appendix F)."
+        ]
+       }
+      ],
+      "h": 0.76,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**All roles**: look up own permissions and status transitions",
+         "**MO/Market**: status matrix for reviews and changes",
+         "**HQ**: maintain matrices"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Role and scope of own access known (Chapter 2)",
+         "Current status of the transaction known",
+         "Matrix in current version"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Role may perform the action",
+         "☐  Status transition is permitted",
+         "☐  Scope matches the transaction",
+         "☐  Deviation reported"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "Application, signature and contract status are separate matrices (Chapter 3.8).",
+         "Scope restrictions explain why transactions are missing from the search (Chapter 3.2).",
+         "The matrices are the basis of role training (Chapter 17)."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Why can't I activate an application?",
+        "Activation is reserved for the MO or the system; see role matrix and Chapter 8.4."
+       ],
+       [
+        "Which transitions exist from \"rejected\"?",
+        "Resubmission after correction (Chapter 8.7); see status matrix."
+       ],
+       [
+        "Why can't I see contracts of another dealership?",
+        "The scope limits visibility to your dealership and market."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Role/status/scope matrices__ – Appendix D.1.",
+         "__ALICE – authorization management__ – Chapter 19.16.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Matrices"
+ },
+ {
+  "nr": "E.1",
+  "key": "E1",
+  "kind": "Anhang",
+  "chs": [
+   16,
+   22,
+   23
+  ],
+  "slug": "Ticket_zu_Kapitel_Zuordnung",
+  "title": "Appendix E.1: Ticket-to-Chapter Mapping",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix E.1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Find ticket",
+   "Find chapter",
+   "Read status",
+   "State chapter in ticket",
+   "Check before training"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **ticket-to-chapter mapping** links requirements, errors and clarifications (tickets) to the **handbook chapters** they affect. This lets you find the chapter for a ticket and the open tickets for a chapter."
+      ],
+      "h": 1.4,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_E1.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Mapping",
+          "bullets": [
+           "Ticket → chapter: Which chapters does the ticket change?",
+           "Chapter → tickets: Which tickets are open?",
+           "Status: open, in progress, implemented, rejected"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Benefit",
+          "bullets": [
+           "Release preparation (Chapter 22)",
+           "Known errors per market and release (Chapter 23.2)",
+           "Evidence of sources (Chapter 16.6)"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.73,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_E1.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_E1.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Find the **ticket** in the mapping table; the row names chapter, status and release.",
+         "Conversely: find the **chapter** and check which tickets are open or in progress.",
+         "Read the **status**: Only implemented tickets are part of the functional baseline (Chapter 22.1)."
+        ]
+       }
+      ],
+      "h": 1.27,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~An open ticket does not change the valid process.~~ Until implementation and documentation, the current version of the handbook chapter applies.",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "For a new ticket, state the **affected chapter** so that the mapping remains complete.",
+         "Before training sessions, check the chapter's open tickets (Chapter 22.3)."
+        ]
+       }
+      ],
+      "h": 0.61,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Editorial team/HQ**: maintain mapping",
+         "**Support**: assign tickets to the chapter",
+         "**All roles**: look up ticket status for a topic"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Ticket number or chapter known",
+         "Access to the ticket system",
+         "Version control per Chapter 16.6"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Ticket assigned to chapter",
+         "☐  Status checked",
+         "☐  Release known",
+         "☐  Open tickets checked before training"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The mapping is the basis of the change overview (Chapter 22.4).",
+         "Market-related tickets are also listed in Chapter 23.2.",
+         "Ticket references belong in the clarification register (Appendix F)."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Where do I find all tickets for Chapter 7?",
+        "In the mapping, filtered by chapter; status and release are given per row."
+       ],
+       [
+        "Who maintains the mapping?",
+        "Editorial team and HQ as part of version control (Chapter 16.6)."
+       ],
+       [
+        "How do I report a new ticket?",
+        "Via the support path (Chapter 23.5), stating the chapter."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Ticket-to-chapter mapping__ – Appendix E.1.",
+         "__Release information__ – Chapter 22.4.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Ticket mapping"
+ },
+ {
+  "nr": "F.1",
+  "key": "F1",
+  "kind": "Anhang",
+  "chs": [
+   15,
+   16,
+   22
+  ],
+  "slug": "Quellen_und_Klaerungsregister",
+  "title": "Appendix F.1: Sources and Clarification Register",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix F.1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Check source",
+   "Identify contradiction",
+   "Create entry",
+   "Assign role",
+   "Adopt decision"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **source index** substantiates every handbook statement; the **clarification register** collects **contradictions, gaps and open questions** with status and owners. This guide shows how to **use** both and create **entries**."
+      ],
+      "h": 1.4,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_F1.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Sources",
+          "bullets": [
+           "Source type: system documentation, ticket, business decision, test",
+           "Evidence status: confirmed, open, contradictory",
+           "Version reference (Chapter 16.6)"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Clarification register",
+          "bullets": [
+           "Entry: chapter, statement, contradiction or gap",
+           "Status: open, under clarification, decided",
+           "Responsible role and due date"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.58,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_F1.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_F1.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "For a statement, check the **source** in the source index and its **evidence status**.",
+         "If you find a **contradiction** or a **gap**, create an entry in the **clarification register**: chapter, statement, observation, source.",
+         "Assign the entry to the **responsible role** (Market, HQ, MO) and set the status to \"open\"."
+        ]
+       }
+      ],
+      "h": 1.42,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~No change to the handbook without a source.~~ Statements without confirmed evidence are marked as open and must not be used in training (Chapter 16.4).",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Track the **decision**; the result is adopted into the chapter and the source is updated.",
+         "Before releases, check the chapter's open entries (Chapter 22)."
+        ]
+       }
+      ],
+      "h": 0.61,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**All roles**: report contradictions and gaps",
+         "**Editorial team**: keep register, maintain sources",
+         "**HQ/Market**: decide clarifications"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Chapter and statement concerned",
+         "Source or ticket reference, if available",
+         "Access to the register"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Source and evidence status checked",
+         "☐  Entry created in full",
+         "☐  Responsible role set",
+         "☐  Decision adopted into chapter"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The register is required reading before releases and training.",
+         "Data protection: no personal data in entries (Chapter 16.1).",
+         "Ticket references link the register and the mapping (Appendix E)."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "What is the difference between a source and a ticket?",
+        "The source substantiates a statement; the ticket describes a change or an error. Both are referenced."
+       ],
+       [
+        "Who decides a clarification?",
+        "The responsible role; for Blueprint questions, HQ (Chapter 15.4)."
+       ],
+       [
+        "How long does an entry stay open?",
+        "Until the decision; open entries are reviewed before each release."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.68,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Sources and clarification register__ – Appendix F.1.",
+         "__Ticket-to-chapter mapping__ – Appendix E.1.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Clarification register"
+ },
+ {
+  "nr": "G.1",
+  "key": "G1",
+  "kind": "Anhang",
+  "chs": [
+   16
+  ],
+  "slug": "Bildverzeichnis_und_Nachweise",
+  "title": "Appendix G.1: Figure Index and Evidence",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix G.1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Find figure",
+   "Check release",
+   "Check evidence",
+   "Capture new figure",
+   "Maintain index"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **figure index** lists all **screenshots and graphics** of the handbook with chapter, system, release and **evidence**. This guide shows how figures are **found**, **checked** and **newly captured**."
+      ],
+      "h": 1.4,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_G1.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Index",
+          "bullets": [
+           "Figure number, title, chapter",
+           "System and screen",
+           "Release and capture date"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Evidence",
+          "bullets": [
+           "Test environment or production system",
+           "Anonymized data",
+           "Approval by business department"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.28,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_G1.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_G1.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Find the figure in the **figure index** by number or chapter.",
+         "Check **release and date**: A figure from an older release may differ from the current screen.",
+         "Check the **evidence**: environment, anonymized data, approval."
+        ]
+       }
+      ],
+      "h": 1.12,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Screenshots with real customer, vehicle or bank data must not go into the handbook.~~ Use the test data catalog and redact any remaining data (Chapter 16.1).",
+      "h": 0.67,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "For a **new figure**: capture the screen with test data (Appendix I.3), assign chapter and release, obtain approval.",
+         "Replace outdated figures and update the index (Chapter 16.6)."
+        ]
+       }
+      ],
+      "h": 0.61,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**All roles**: assign figures to a chapter and release",
+         "**Editorial team**: maintain figure index",
+         "**Market**: supply local figure variants"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Figure number or chapter known",
+         "Release the figure refers to",
+         "Safe sample data in the figure (Chapter 16.1)"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Figure found and release checked",
+         "☐  Evidence complete",
+         "☐  Data anonymized",
+         "☐  Index updated"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The Quick Guides contain process images; screenshots follow from the figure index.",
+         "Figures may differ per market (Chapter 20).",
+         "The index is part of the export (Chapter 16.5)."
+        ]
+       }
+      ],
+      "h": 1.28,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Where do the images in the Quick Guides come from?",
+        "Currently they are drawn process images; screenshots are added from the figure index."
+       ],
+       [
+        "May I use a screenshot from the production system?",
+        "Only with test data or fully anonymized and with approval (Chapter 16.1)."
+       ],
+       [
+        "How do I report an outdated figure?",
+        "Via the clarification register with figure number and release (Appendix F)."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Figure index and evidence__ – Appendix G.1.",
+         "__Test data catalog__ – Appendix I.3.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Figure index"
+ },
+ {
+  "nr": "H.1",
+  "key": "H1",
+  "kind": "Anhang",
+  "chs": [
+   17
+  ],
+  "slug": "Wissenschecks_und_Loesungen",
+  "title": "Appendix H.1: Knowledge Checks and Solutions",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix H.1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Read chapter",
+   "Answer questions",
+   "Compare solutions",
+   "Follow up",
+   "Document evidence"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **knowledge checks** test understanding per chapter with questions on process, roles and status; the **solutions** explain the correct answer with a chapter reference. This guide shows their use in **training** and **self-study**."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_H1.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Structure",
+          "bullets": [
+           "Questions per chapter with difficulty level",
+           "Question types: multiple choice, matching, case example",
+           "Solutions with rationale and chapter reference"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Use",
+          "bullets": [
+           "Self-study after the chapter",
+           "Training: introduction and wrap-up",
+           "Evidence for handover to operations (Chapter 17.4)"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.73,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_H1.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_H1.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Read the chapter and Quick Guide before starting the **knowledge check**.",
+         "Answer the questions **without aids**; case examples refer to the practical examples in Appendix I.1.",
+         "Compare with the **solutions** and read the rationale with **chapter reference**."
+        ]
+       }
+      ],
+      "h": 1.12,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Knowledge checks do not replace an authorization.~~ Access to oneSCM is granted via ALICE (Chapter 2.3), regardless of the training result.",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Review the chapter sections for questions answered incorrectly.",
+         "Trainers document the result as **training evidence** (Chapter 17.4)."
+        ]
+       }
+      ],
+      "h": 0.46,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Learners**: self-check after the chapter",
+         "**Trainers**: knowledge checks in training sessions (Chapter 17.4)",
+         "**Editorial team**: maintain and approve questions"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Chapter and Quick Guide read",
+         "Access to the knowledge checks (handbook or training material)",
+         "Time for about ten questions per chapter"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Chapter read",
+         "☐  Knowledge check completed without aids",
+         "☐  Solutions and rationales read",
+         "☐  Weak points followed up"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "Questions are reviewed with each release (Chapter 22.3).",
+         "Local variants of the questions exist per market (Chapter 20).",
+         "Solutions contain no personal sample data (Chapter 16.1)."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "How many questions does a knowledge check have?",
+        "About ten per chapter, depending on the chapter's scope."
+       ],
+       [
+        "Is there a minimum score?",
+        "The market sets this for its training (Chapter 17.4)."
+       ],
+       [
+        "Can I repeat the knowledge check?",
+        "Yes, as often as you like; it serves as a self-check."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Knowledge checks and solutions__ – Appendix H.1.",
+         "__Practical examples__ – Appendix I.1.",
+         "__oneSCM RetailPortal__ – System news and training material.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D)."
+        ]
+       }
+      ],
+      "h": 1.47,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Knowledge checks"
+ },
+ {
+  "nr": "I.1",
+  "key": "I1",
+  "kind": "Anhang",
+  "chs": [
+   5,
+   6,
+   7,
+   8,
+   9,
+   10
+  ],
+  "slug": "Praxisbeispiele_entlang_des_Vertragsprozesses",
+  "title": "Appendix I.1: Practical Examples along the Contract Process",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix I.1 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Select example",
+   "Run in training system",
+   "Compare checkpoints",
+   "Report deviation",
+   "Use for training"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **practical examples** walk through end-to-end cases from **quote** to **termination**: business customer with collective invoice, private customer with e-signature, KAM-managed key account with special case, tyre contract. This guide shows how to **follow** the examples and use them in **training**."
+      ],
+      "h": 1.73,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_I1.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Examples",
+          "bullets": [
+           "Example 1: Business customer, collective invoice, signature by e-mail",
+           "Example 2: Private customer, e-signature via QR code",
+           "Example 3: KAM-managed key account with special case request",
+           "Example 4: Tyre contract (Chapter 13)"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "End-to-end phases",
+          "bullets": [
+           "Quote and application (Chapters 5 and 6)",
+           "Payment and signature (Chapter 7)",
+           "Review and activation (Chapters 8 and 9)",
+           "Change and termination (Chapter 10)"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.91,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_I1.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_I1.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Select the **example** that matches your role and customer group.",
+         "Carry out the steps in the **training system** with the specified **test data** (Appendix I.3).",
+         "At each **checkpoint**, compare your status with the status documented in the example."
+        ]
+       }
+      ],
+      "h": 1.27,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~Run practical examples only in the training or test system.~~ In the production system, real applications are created and reviewed by Customer Management.",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "In case of deviations, check the chapter and clarification register; report new deviations (Appendix F).",
+         "Use the examples for **knowledge checks** (Appendix H) and calculation examples (Appendix I.2)."
+        ]
+       }
+      ],
+      "h": 0.76,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Dealer**: examples for quote, application, signature",
+         "**MO**: examples for review and rejection",
+         "**Trainers**: examples as practice cases"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Test environment or training system",
+         "Test data from Appendix I.3",
+         "Chapters 4 to 10 read"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Appropriate example selected",
+         "☐  Run with test data in the training system",
+         "☐  Status compared at checkpoints",
+         "☐  Deviations reported"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "Example 1 corresponds to the case in the Vans template \"Application creation and management\".",
+         "Division differences are marked in the examples (Chapter 21).",
+         "Checkpoints correspond to the checklists in Appendix B."
+        ]
+       }
+      ],
+      "h": 1.28,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Which example suits Vans dealers?",
+        "Example 1 (business customer) and Example 2 (private customer), both with Vans identifiers."
+       ],
+       [
+        "Are there examples of rejections?",
+        "Yes, Example 3 contains a special case request with rejection and resubmission."
+       ],
+       [
+        "Where does the test data come from?",
+        "From the test data catalog in Appendix I.3."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.38,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Practical examples__ – Appendix I.1.",
+         "__Test data catalog__ – Appendix I.3.",
+         "__Calculation examples__ – Appendix I.2.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D)."
+        ]
+       }
+      ],
+      "h": 1.47,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Practical examples"
+ },
+ {
+  "nr": "I.2",
+  "key": "I2",
+  "kind": "Anhang",
+  "chs": [
+   11,
+   14
+  ],
+  "slug": "Rechenbeispiele_und_Finanzbezug",
+  "title": "Appendix I.2: Calculation Examples and Finance Reference",
+  "stand": "11.10.2026",
+  "footer": "**Note**: This Quick Guide summarizes Appendix I.2 of the oneSCM handbook. Details, screenshots and evidence can be found in the handbook.",
+  "flow": [
+   "Read input data",
+   "Recalculate payment plan",
+   "Apply discount",
+   "Check final settlement",
+   "Compare with system"
+  ],
+  "pages": [
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Purpose and benefit",
+      "items": [
+       "The **calculation examples** show how **price, payment interval, term and mileage** affect the payment plan, **final settlement** and **refund**, and how **discounts and campaigns** take effect. This guide explains the examples step by step."
+      ],
+      "h": 1.56,
+      "size": 9,
+      "shot": "Introduction to the topic",
+      "shotH": 1.15,
+      "img": "img/badge_I2.png"
+     },
+     {
+      "type": "note",
+      "text": "References to handbook chapters and systems are highlighted; e-mail addresses are provided as links.",
+      "blue": true,
+      "h": 0.36,
+      "size": 9
+     },
+     {
+      "type": "overview",
+      "title": "Contents at a glance",
+      "cols": [
+       {
+        "sections": [
+         {
+          "head": "Examples",
+          "bullets": [
+           "Payment plan: one-off versus monthly",
+           "Term and mileage: effect on the price",
+           "Campaign and dealer discount in the quote",
+           "Early termination: final settlement and refund"
+          ]
+         }
+        ]
+       },
+       {
+        "sections": [
+         {
+          "head": "Finance reference",
+          "bullets": [
+           "Invoicing (Chapter 11.1)",
+           "Price components and Cost Unit Split (Chapter 14.14)",
+           "Posting in NEMESIS, payment via MPay (Chapter 19)"
+          ]
+         }
+        ]
+       }
+      ],
+      "h": 1.76,
+      "size": 9
+     },
+     {
+      "type": "image",
+      "path": "img/landscape_I2.png",
+      "h": 1.32
+     }
+    ],
+    "right": [
+     {
+      "type": "image",
+      "path": "img/flow_I2.png",
+      "h": 1.05
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "steps": [
+         "Read the example's **input data**: product, term, mileage, payment interval.",
+         "Follow the **payment plan**: total price, number and amount of installments, due dates.",
+         "Apply the **campaign or discount** and check the effect on the payment plan."
+        ]
+       }
+      ],
+      "h": 1.27,
+      "size": 9,
+      "title": "How to proceed"
+     },
+     {
+      "type": "warn",
+      "text": "~~The calculation examples use sample prices.~~ Only the market's price version and the price information from oneSCM are binding.",
+      "h": 0.52,
+      "size": 9
+     },
+     {
+      "type": "steps",
+      "items": [
+       {
+        "start": 4,
+        "steps": [
+         "Recalculate the **final settlement** for early termination: used share, refund, correction (Chapter 11.6).",
+         "Compare your result with the **price information** (PDF) from the system (Chapter 5.6)."
+        ]
+       }
+      ],
+      "h": 0.76,
+      "size": 9
+     }
+    ]
+   },
+   {
+    "left": [
+     {
+      "type": "card",
+      "title": "Roles and prerequisites",
+      "items": [
+       {
+        "head": "Roles involved"
+       },
+       {
+        "bullets": [
+         "**Dealer**: explain payment plan and price information",
+         "**Finance department**: final settlement and corrections",
+         "**Market**: price components and factors (Chapters 14.9, 14.14)"
+        ]
+       },
+       "",
+       {
+        "head": "Prerequisites"
+       },
+       {
+        "bullets": [
+         "Product and configuration of the sample contract",
+         "Market's price version known",
+         "Chapter 11 read"
+        ]
+       }
+      ],
+      "h": 2.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Checklist before completion",
+      "items": [
+       {
+        "bullets": [
+         "☐  Input data understood",
+         "☐  Payment plan recalculated",
+         "☐  Discount effect checked",
+         "☐  Final settlement followed"
+        ]
+       }
+      ],
+      "h": 1.31,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Notes and pitfalls",
+      "items": [
+       {
+        "bullets": [
+         "The payment interval can later only be changed to \"one-off\" (Chapter 6).",
+         "Refunds are handled by the Finance department (Chapter 11.6).",
+         "Factor limits and clusters are described in Chapter 14.9."
+        ]
+       }
+      ],
+      "h": 1.11,
+      "size": 9
+     }
+    ],
+    "right": [
+     {
+      "type": "faq",
+      "qa": [
+       [
+        "Why does my result differ from the price information?",
+        "Check price version, campaign conditions and rounding rules; in case of doubt, the system applies."
+       ],
+       [
+        "How is the refund calculated?",
+        "Pro rata by term and mileage per Chapter 11.6; the example shows the steps."
+       ],
+       [
+        "Does the example apply to Cars and Vans?",
+        "The calculation logic does; prices differ per division (Chapter 21.3)."
+       ]
+      ],
+      "title": "Frequently asked questions and answers",
+      "h": 1.53,
+      "size": 9
+     },
+     {
+      "type": "card",
+      "title": "Important links and contacts",
+      "items": [
+       {
+        "bullets": [
+         "__Calculation examples and finance reference__ – Appendix I.2.",
+         "__Invoice, payment, costs__ – Chapter 11.",
+         "__oneSCM Handbook__ – Complete chapters with screenshots, role, status and scope matrices (Appendix D).",
+         "**Support and escalation** – Report a support case with reference number, market, division and screenshot (Chapters 23.4 and 23.5)."
+        ]
+       }
+      ],
+      "h": 1.63,
+      "size": 9
+     }
+    ]
+   }
+  ],
+  "sub": "Calculation examples"
+ }
+]

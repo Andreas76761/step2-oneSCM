@@ -1,0 +1,13 @@
+# Batch 1038 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Produktanzeige in der Vertragserstellung**
+
+Nachdem Sie im Vertragserstellungs-Assistenten die Fahrzeugdaten eingegeben haben, zeigt das System die für das jeweilige Fahrzeug verfügbaren Produkte an. Damit können Sie die passenden Produkte konfigurieren und anschließend einen Servicevertrag erzeugen. Der Bereich erscheint nur, wenn die vorherigen Schritte vollständig bestätigt wurden. Dazu gehören die Fahrgestellnummer (FIN/VIN), das Datum der Erstzulassung und die Laufleistung. Das Kennzeichen kann optional angegeben werden. Anschließend werden die Felder Marke, Division und Verkaufsbezeichnung angezeigt, die nicht bearbeitet werden können.
+
+Die Produktbeschreibungen und Preise stammen aus der Produkt- und Preisbereitstellung von OneSCM und richten sich nach den eingegebenen Fahrzeugdaten. Für jedes Produkt wird der niedrigste verfügbare Preis angezeigt. Dieser ergibt sich aus der kürzesten Laufzeit in Kombination mit der niedrigsten Laufleistung. Er wird aus dem Preis der Vertragskalkulation multipliziert mit dem Faktor 1,19 berechnet. Im MVP steht dieser Faktor für 19 % Mehrwertsteuer im deutschen Markt. Die Preisberechnung und -verwaltung liegt in der Verantwortung der Domäne „Contract Calculation“. Künftig soll die Berechnung der Bruttopreise ausschließlich dort erfolgen, damit nicht jeder Verbraucher die Endkundenpreise selbst berechnen muss. Das vermeidet Mehraufwand und Inkonsistenzen. Die Preise werden in Euro angezeigt.
+
+Im MVP steht eine Produktlinie zur Verfügung, die den Namen „Excellent“ trägt. Zu jedem Produkt sehen Sie den Preis, die Beschreibung der Produktlinie und die Hauptabdeckung. Zur Hauptabdeckung zählen Wartung, allgemeiner Verschleiß, Fahrzeugverschleiß, Teilegarantie und Restgarantie. Über die Schaltfläche „Select“ wählen Sie ein Produkt zur Konfiguration aus. Die Gestaltung folgt dem Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.
+
+Wenn Sie auf „Cancel“ klicken, erscheint ein Hinweis, dass ungespeicherte Änderungen verloren gehen und nicht übernommen werden, und Sie werden gefragt, ob Sie fortfahren möchten. Wählen Sie im Hinweisfenster „Cancel“, kehren Sie zur aktuellen Seite zurück. Wählen Sie „Proceed“, gelangen Sie zur Startseite. Die Schaltfläche „Next“ ist ausgegraut und damit nicht verfügbar, bis das Produkt konfiguriert und der Preis entsprechend erzeugt wurde. Danach führt sie Sie zur nächsten Seite „Customer information“.

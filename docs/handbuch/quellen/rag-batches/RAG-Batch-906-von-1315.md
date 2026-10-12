@@ -1,0 +1,19 @@
+# Batch 906 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Angebotserstellung mit Verso Order ID**
+
+Für die Erstellung eines Preisangebots und eines Servicevertrags kann nun die Verso Order ID als zentrale Kennung verwendet werden. Dadurch können Kunden einen Servicevertrag für ihr neu gekauftes Fahrzeug abschließen. Die Verso Order ID ist ein eindeutiger, von VERSO erzeugter Code, zum Beispiel 675506378906. Sie gilt für alle Kundentypen, Branchen, Verkäufer und Bereiche (VAN/PC). Voraussetzung ist, dass der Verso Order ID eine Auftragsnummer (Order Number) zugeordnet ist.
+
+Zu Beginn startet der Benutzer nach der Anmeldung ein Vertragsangebot. Er wählt den Kundentyp und optional eine Branche und gibt die Verso Order ID als Kennung ein. Die Eingabe wird bereits im Frontend geprüft: Die Verso Order ID muss numerisch sein und genau 12 Zeichen lang haben. Entspricht sie diesen Regeln nicht, erscheint die Fehlermeldung „Enter a valid Chassis Number, Order Number, Model Code, Deal ID or Verso Order ID“, und der Benutzer kann nicht fortfahren. Dieselbe Meldung erscheint, wenn der Verso Order ID keine Auftragsnummer zugeordnet ist; auch dann wird der Ablauf blockiert.
+
+Besteht die Verso Order ID die Prüfung, ruft das System den Fahrzeug-Microservice auf, um die Fahrzeugdaten abzurufen, sowie den Produkt-Microservice, um passende Produkte, Konfigurationen und Preise zu ermitteln. Anschließend werden die verfügbaren Produkte angezeigt. Der Benutzer kann Kampagnen (sofern vorhanden), optionale Deckungen und den Händlerrabatt konfigurieren. Auf Basis der gewählten Produktkonfiguration wird ein Zahlungsplan erstellt. Danach prüft das System auf doppelte Kunden und erfasst Kunden- und Zahlungsdaten, sofern diese noch nicht vorliegen.
+
+Die Übersichts- und Bestätigungsseite verhält sich wie bei der Verwendung der Auftragsnummer als Kennung. Sobald die Übersicht erreicht ist, wird der Vertrag angelegt und eine Referenznummer vergeben. Die Auftragsnummer wird mit dem Wert befüllt, der zur Verso Order ID übermittelt wurde. Nicht verfügbare Informationen werden als „Not yet Available“ angezeigt. In der Übersicht kann der Benutzer die Eingaben bestätigen, den Vorgang über „X“ abbrechen, eine Vorschau des Vertragsangebots im Entwurf ansehen, zum vorherigen Schritt mit den Kunden- und Zahlungsdaten zurückgehen oder Felder über „Edit“ bearbeiten, sofern diese Funktion aktiviert ist. Bestätigt der Benutzer, wird er in einem Dialog aufgefordert, die Unterschriftsart zu wählen. Nach der Auswahl erscheint die zugehörige Meldung, und der Vertragsstatus wechselt auf „Waiting for Confirmation“. Sobald die Unterschrift erfasst ist und die CAS-Prüfung negativ ausfällt, wird der Status auf „Confirmed“ gesetzt.
+
+Enthält die Auftragsnummer eine Fahrgestellnummer, wird der Vertrag automatisch aktualisiert, sobald der Fahrzeug-Microservice das Fahrgestell liefert. Auf der Startseite der Angebotsverwaltung wird dann die Schaltfläche „Update“ aktiviert. Klickt der Benutzer darauf, öffnet sich ein Dialog zur Erfassung von Erstzulassungsdatum (FRD) und Kennzeichen; danach wird der Aktivierungsprozess fortgesetzt. Enthält die Auftragsnummer keine Fahrgestellnummer, bleibt die Schaltfläche „Update“ deaktiviert, bis der Fahrzeug-Microservice das Fahrgestell bereitstellt. Sind alle erforderlichen Daten (Kennzeichen, FRD) erfasst und alle Prüfungen erfolgreich, erzeugt das System i155 und benachrichtigt den Revenue-Microservice sowie Nemesis.
+
+**Hinweis zum Sonderfall-Kennzeichen pro Produkt**
+
+Die geplante Funktion, in der Vertragserstellung ein Sonderfall-Kennzeichen pro Produkt zu berücksichtigen, wurde nicht umgesetzt und abgebrochen. Sie ist daher nicht Bestandteil des Releases.

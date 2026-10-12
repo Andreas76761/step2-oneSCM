@@ -1,0 +1,23 @@
+# Batch 1030 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Automatisierte Fahrzeugprüfungen bei der Vertragserstellung**
+
+Bei der Vertragserstellung führt das System automatische Prüfungen der Fahrzeugdaten durch. Sie stellen sicher, dass die Fahrzeuginformationen mit den Eingaben übereinstimmen, die zu Beginn validiert wurden und auf deren Grundlage die Produktoptionen angezeigt wurden. Die Prüfungen erhöhen Genauigkeit, Effizienz und Regelkonformität, verbessern die Qualität des Vertragserstellungs- und Vertragsverwaltungsprozesses und verringern das Risiko menschlicher Fehler.
+
+Die Prüfungen laufen nach dem zweiten Schritt des Vertragsgenerierungs-Assistenten, wenn Sie auf „Weiter“ klicken. Zu diesem Zeitpunkt wurde noch keine Vertragsnummer vergeben und der Vertrag hat noch nicht den Status „CREATED“. Sind alle Prüfungen erfolgreich, vergibt das System die Vertragsnummer und setzt den Status auf „CREATED“. Schlägt eine Prüfung fehl, erscheint eine entsprechende Hinweismeldung (Toast Message). Der Vertrag wird dann nicht erstellt und es wird keine Vertragsnummer vergeben.
+
+Voraussetzung ist, dass die Eingaben zuvor formal validiert wurden. Die Fahrgestellnummer darf maximal 17 alphanumerische Großbuchstaben bzw. Zeichen enthalten. Das Datum der Erstzulassung (FRD) muss ein gültiges Datumsformat haben. Der Kilometerstand muss numerisch sein und darf bis zu neun Zeichen umfassen. Anhand des aus der Fahrgestellnummer ermittelten Baumusters (BM6), der Erstzulassung und des Kilometerstands werden die Produktoptionen angezeigt.
+
+Geprüft werden drei Merkmale. Zunächst wird kontrolliert, ob die dem Vertrag zugeordnete Fahrgestellnummer (FIN/VIN) mit der im ersten Schritt des Assistenten eingegebenen übereinstimmt. Ist das nicht der Fall, erscheint die Meldung „Please enter a valid Chassis Number“ und der Vorgang wird nicht fortgesetzt. Danach wird geprüft, ob die Erstzulassung mit dem zu Beginn eingegebenen Datum übereinstimmt. Bei Abweichung erscheint die Meldung „Please enter a valid First Registration Date“ und der Vorgang wird gestoppt. Für den MVP gilt zusätzlich, dass die Erstzulassung zum Zeitpunkt der Vertragserstellung nicht älter als vier Monate sein darf. Schließlich wird geprüft, ob der Kilometerstand mit dem anfangs eingegebenen übereinstimmt. Bei Abweichung erscheint die Meldung „Please enter a valid Mileage“ und der Vorgang wird gestoppt. Für den MVP darf der Kilometerstand höchstens 10.000 km betragen.
+
+Ohne diese automatischen Prüfungen drohen fehlerhafte Daten, Compliance- und Audit-Probleme (Nachweise der Prüfungen wären schwer zu erbringen), Sicherheitsrisiken durch mögliche Datenmanipulation während der Vertragserstellung, finanzielle Verluste durch Preis- oder Abrechnungsfehler, Reputationsschäden durch unvollständige oder irreführende Vertragsinformationen sowie ein hoher manueller Prüfaufwand.
+
+**Generierung der Vertragsnummer**
+
+Die Vertragsnummer wird vergeben, sobald der Vertrag nach erfolgreichen automatischen Prüfungen den Status „Created“ erhält. Bisher bestand die Nummer aus acht alphanumerischen Zeichen: dem Ländercode nach ISO 3166 ALPHA-2 (zum Beispiel DE für Deutschland), der Markenzuordnung (P für Passenger Cars, V für Van, S für Smart), dem Produkttyp (A für Advance, C für Compact, E für Excellent) und einer vierstelligen, automatisch hochgezählten Nummer aus Buchstaben und Ziffern (zum Beispiel 001A).
+
+Die neue Vertragsnummer besteht aus drei Teilen. Der erste Teil umfasst acht alphanumerische Zeichen aus Buchstaben und Ziffern, ist eindeutig und wird automatisch hochgezählt, und zwar mit zufälliger Generierung. Beispiele sind 0000001A oder X780002T. Dieser Teil wird an das Finanzsystem übermittelt. Es folgt ein Schrägstrich als Trennzeichen. Der dritte Teil besteht aus sechs alphanumerischen Zeichen, die den Vertragstyp bestimmen und in OneSCM verwendet werden: Ländercode nach ISO 3166 ALPHA-2, die letzten zwei Ziffern des aktuellen Jahres (zum Beispiel 23), die Markenzuordnung (P, V oder S) und der Produkttyp (A, C oder E). Die vollständige Vertragsnummer lautet zum Beispiel 0000001A/DE23PE, wobei nur der Teil 0000001A an die Finanzsysteme gesendet wird.
+
+Die Vertragsnummer wirkt sich auf die Erzeugung der Schnittstelle i155 (RC05, Positionen 13 bis 27) aus. Die vollständige Vertragsnummer wird an alle Domänen und externen Systeme übermittelt, mit Ausnahme von NACOS.
