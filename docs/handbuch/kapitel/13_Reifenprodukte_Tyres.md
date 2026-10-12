@@ -113,7 +113,7 @@ Quellen: Batch 899.7, 924.2, 929.4, 937.3, 1064.4, 1093.3, 1100.3, 1119.2, 1173.
 1. Wählen Sie aus den passenden Produkten den komplexen Servicevertrag mit Reifenoption.
 2. Konfigurieren Sie Vertragslaufzeit, jährliche Laufleistung und Zahlungsintervall.
 3. Fügen Sie optional technische Optionen zum Servicevertrag hinzu und wählen Sie anschließend optional die Deckungen des Servicevertrags.
-4. Wählen Sie die Reifenoption aus. Die Optionen zeigen den Produktnamen und eine Beschreibung statt des VEGA-Codes. Genau eine Option ist ausgewählt. Die übrigen Optionen bleiben auswählbar, und Sie wechseln jederzeit zwischen ihnen. Die Auswahl ist nicht verpflichtend.
+4. Wählen Sie die Reifenoption aus. Die Optionen zeigen den Produktnamen und eine Beschreibung statt des VEGA-Codes. Genau eine Option ist ausgewählt. Die übrigen Optionen bleiben auswählbar, und Sie wechseln beliebig oft zwischen ihnen. Die Auswahl ist nicht verpflichtend.
 5. Prüfen Sie die Attribute der gewählten Option. Bei einer begrenzten Option ist die Anzahl der Reifen mit dem empfohlenen Wert vorbelegt, den der Produkt-Microservice berechnet. Sie ändern den Wert innerhalb des zulässigen Bereichs. Bei einer unbegrenzten Option entfällt die Reifenanzahl.
 6. Wählen Sie Wetterprofil, Stahlfelge und Radgröße. Wenn Sie eine Reifenoption wählen, müssen diese Angaben ausgefüllt sein.
 7. Wählen Sie optional die Deckungen der Reifenoption. Es stehen nur die Deckungen zur Verfügung, die auf Produktebene definiert sind.
