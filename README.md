@@ -15,6 +15,7 @@ Grundlage ist das Projektpaket in [`reference/`](reference/) (Masterprompt v1.0 
 | [docs/04-offene-entscheidungen.md](docs/04-offene-entscheidungen.md) | Widersprüche im Auftrag und P0-Entscheidungen samt vorläufiger Annahme |
 | [docs/05-datenmodell.md](docs/05-datenmodell.md) | Datenmodell und zentrale Regeln |
 | [docs/06-plan-onescm-metadaten.md](docs/06-plan-onescm-metadaten.md) | Plan oneSCM_Metadaten: RAG über DOCX, PPTX, HTML, PDF, MP4 (Entwurf, offene Entscheidungen M-01 … M-10) |
+| [docs/07-bestehende-artefakte.md](docs/07-bestehende-artefakte.md) | Entscheidungsvorlage: Funktionen und Daten aus bestehenden Artefakten (Handbuch, oneSCM, Releaseletter) |
 | [docs/adr/](docs/adr/README.md) | Architecture Decision Records |
 | [docs/traceability.md](docs/traceability.md) | Traceability-Matrix (generiert) |
 | [docs/lasttest-semantik.md](docs/lasttest-semantik.md) | Lasttest der semantischen Suche mit 50 000 Textabschnitten |
