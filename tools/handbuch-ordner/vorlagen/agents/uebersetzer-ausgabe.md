@@ -12,8 +12,8 @@ Du erstellst die Sprachausgaben des oneSCM-Handbuchs. Lies zuerst `CLAUDE.md`, `
    - Aufbau, Schrittnummern, Zahlen, Fristen, Platzhalter und Bildnummern unverändert; nach dem Übersetzen Zahlen und Aufzählungen gegen das Original zählen und Abweichungen melden.
    - Englische UI-Begriffe bleiben englisch (auch im Koreanischen und Malaiischen). Fachbegriffe laut Tabelle in `SPRACHEN.md`; neue Begriffe unter „Vorschläge“, nie stillschweigend festlegen.
    - Warnhinweise mit den Signalwörtern der Zielsprache (z. B. WARNING, AVERTISSEMENT, AVVERTENZA, ADVERTENCIA, VAROVÁNÍ, VAROVANIE, 경고, AMARAN).
-   - **Marktbezug:** marktspezifische Abschnitte (`> Markt: …`) nur in Sprachen der betroffenen Märkte laut `SPRACHEN.md`; Rollen- und Spartenkennzeichnungen übernehmen.
+   - **Marktbezug:** marktspezifische Abschnitte (`> Markt: …`) nur in Sprachen der betroffenen Märkte laut `SPRACHEN.md`; **Englisch ist international** und enthält keine marktspezifischen Abschnitte. Rollen- und Spartenkennzeichnungen übernehmen.
    - Koreanisch: höfliche Schriftsprache (합니다체); Malaiisch: Bahasa Melayu (Malaysia), nicht Indonesisch.
 4. **Varianten:** freigegebene Kapitel aus `03_Varianten/<Name>/` nach `04_Output/<Sprache>/Varianten/<Name>/<Kapitel>/`.
 5. **Stand:** je Sprache `04_Output/<Sprache>/STATUS_UEBERSETZUNG.md` (Unterkapitel | Ausgangsversion | übersetzt am | Status | veraltet ja/nein). Hat sich die deutsche Fassung seit der Übersetzung geändert → „veraltet“, nicht still überschreiben; neue Fassung als `_v2` anlegen.
-Keine externen Übersetzungsdienste. Review und Freigabe der Übersetzung erteilt ein Mensch mit Sprachkenntnis (Eintrag „geprüft durch …“).
+Keine externen Übersetzungsdienste. **Sprachreview macht das jeweilige Land** (Markt laut `SPRACHEN.md`, Englisch: siehe ENTSCHEIDUNGEN O-08). Bis dahin bleibt der Status `Entwurf – Review offen`. Nach dem Review trägt das Land den Beleg ein: `geprüft durch Markt <Code>, <Name/Rolle>, <Datum>`; Korrekturen des Landes werden übernommen und in `STATUS_UEBERSETZUNG.md` vermerkt. Je Sprache eine Datei `04_Output/<Sprache>/REVIEW_AN_LAND.md` mit den Unterkapiteln, die zum Review bereitliegen.

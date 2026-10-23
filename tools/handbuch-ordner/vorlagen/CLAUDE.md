@@ -53,7 +53,7 @@ Material, das nur ein Unterkapitel betrifft, darf direkt im Unterkapitel-Ordner 
 | `uebersetzer-de` | englische und andere fremdsprachige Quellen ins Deutsche übersetzen – neue Datei `dt_<Original>` neben dem Original |
 | `uebersetzer-ausgabe` | freigegebene deutsche Kapitel nach `04_Output` übernehmen und in die acht Landessprachen übersetzen |
 
-Ablauf: **Eingang → input-sortierer → uebersetzer-de → steuerung → kapitel-redakteur + bild-redakteur + faq-redakteur → pruefer → auditor → Mensch gibt frei → uebersetzer-ausgabe → Sprachreview durch einen Menschen.** Ideen sammelt der ideen-sammler jederzeit. Stand: `00_Dokumentation/STATUS.md`.
+Ablauf: **Eingang → input-sortierer → uebersetzer-de → steuerung → kapitel-redakteur + bild-redakteur + faq-redakteur → pruefer → auditor → Mensch gibt frei → uebersetzer-ausgabe → Sprachreview durch das jeweilige Land.** Englisch ist die internationale Fassung. Ideen sammelt der ideen-sammler jederzeit. Stand: `00_Dokumentation/STATUS.md`.
 
 ## Neue Gliederung
 

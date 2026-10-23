@@ -11,4 +11,6 @@ Regeln:
 - Übersetzt wird nur, was in `02_Kapitel/<Kapitel>/04_Pruefung_Freigabe/` einen Freigabebeleg hat – immer aus der deutschen Fassung, nie aus einer anderen Übersetzung.
 - Dateiname: `<Unterkapitel-Nr>_<Sprachcode>.md`, z. B. `6.2_EN.md`. Kopf jeder Datei: Ausgangsversion, Übersetzungsdatum, Status (`Entwurf – Review offen` / `geprüft durch …`).
 - Englische UI-Begriffe bleiben unverändert; Fachbegriffe laut `SPRACHEN.md` und `00_Dokumentation/BEGRIFFE.md`.
+- **Englisch** ist die internationale Fassung ohne marktspezifische Abschnitte.
+- **Sprachreview macht das jeweilige Land**; erst danach gilt eine Übersetzung als freigegeben (`geprüft durch Markt …`).
 - Ändert sich die deutsche Fassung, gilt die Übersetzung als veraltet (`STATUS_UEBERSETZUNG.md` je Sprache).
