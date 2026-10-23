@@ -38,6 +38,10 @@ APP_ROLLEN = {'dealer': 'Dealer', 'market': 'Markt', 'mo': 'MO', 'hq': 'HQ'}
 APP_SPARTEN = {'car': 'Pkw', 'van': 'Van', 'truck': 'Truck', 'bus': 'Bus'}
 MARKTUMFANG = {'blueprint': 'Blueprint (marktübergreifend)', 'markets': 'ausgewählte Märkte'}
 STEUER_ROLLEN = ['Dealer', 'MO', 'Markt', 'HQ', 'IT']
+# Ausgabesprachen: Hauptsprache Deutsch, dazu die Landessprachen (Ordner 04_Output/<Sprache>/<Kapitel>)
+SPRACHEN = ['01_Deutsch_DE', '02_Englisch_EN', '03_Französisch_FR', '04_Italienisch_IT', '05_Spanisch_ES',
+            '06_Tschechisch_CS', '07_Slowakisch_SK', '08_Koreanisch_KO', '09_Malaiisch_MS']
+OUTPUT = '04_Output'
 ARBEITSORDNER = ['01_Quellen', '02_Entwurf', '03_Bilder', '04_Pruefung_Freigabe', '05_Audit', '06_FAQ', '07_Ideenspeicher', '08_Steuerung']
 # Anhänge und Vorspann haben in der Gesamtgliederung keinen Eintrag der Ebene 1
 GRUPPEN = {
@@ -199,6 +203,12 @@ def kapitel_baum(modell, basis: str, unterkapitel_arbeitsordner: bool = False, r
     return ordner, dateien
 
 
+def output_ordner(modell, unterpfad: str = '') -> set:
+    """04_Output/<Sprache>/[<unterpfad>/]<Kapitel> – Ausgabe je Sprache und Kapitel."""
+    vor = f'/{unterpfad}' if unterpfad else ''
+    return {f"{OUTPUT}/{sp}{vor}/{kap['ordner']}" for sp in SPRACHEN for kap in modell}
+
+
 def gliederung_dateien(modell, basis: str, name: str):
     """CSV, Markdown und Status-Übersicht einer Gliederung."""
     puffer = io.StringIO()
@@ -262,6 +272,9 @@ def vorlagen_dateien(stand: str, gliederung_name: str):
 def gesamt(modell, stand: str, gliederung_name: str, gliederung_daten: bytes, unterkapitel_arbeitsordner: bool):
     ordner, dateien = kapitel_baum(modell, '02_Kapitel', unterkapitel_arbeitsordner)
     ordner |= {'01_Input/01_Eingang', '01_Input/02_Zugeordnet', '01_Input/03_Ausgeschlossen', '03_Varianten', '00_Dokumentation/Gliederung/App'}
+    ordner |= output_ordner(modell)
+    dateien[f'{OUTPUT}/README.md'] = (VORLAGEN / 'Output_README.md').read_text(encoding='utf-8')
+    dateien[f'{OUTPUT}/SPRACHEN.md'] = (VORLAGEN / 'SPRACHEN.md').read_text(encoding='utf-8')
     dateien.update(vorlagen_dateien(stand, gliederung_name))
     csv_t, md_t, status_t = gliederung_dateien(modell, '02_Kapitel', gliederung_name)
     dateien['00_Dokumentation/Gliederung/Gliederung.csv'] = csv_t
@@ -409,6 +422,7 @@ def main():
         modell = lies_gliederung(a.gliederung)
         o, d = kapitel_baum(modell, '02_Kapitel', a.unterkapitel_arbeitsordner)
         bericht += ['', f'## Gesamtgliederung `{a.gliederung.name}` → 02_Kapitel', '']
+        o |= output_ordner(modell)
         abgleich(ziel, o, d, ['02_Kapitel'], bericht)
     if a.app:
         zuordnung_datei = ziel / '00_Dokumentation' / 'Gliederung' / 'App' / 'zuordnung.json'
@@ -434,6 +448,7 @@ def main():
             (ziel / '00_Dokumentation' / 'Gliederung' / 'App' / f'{name}_v{info["versionNo"]}.json').write_text(json.dumps(export, ensure_ascii=False, indent=2), encoding='utf-8')
             (ziel / '00_Dokumentation' / 'Gliederung' / 'App' / f'{name}.md').write_text(md_t, encoding='utf-8')
             bericht += ['', f"## App-Gliederung „{info['name']}“ (v{info['versionNo']}) → {basis}", '']
+            o |= output_ordner(modell, f'Varianten/{name}')
             abgleich(ziel, o, d, [basis], bericht)
         zuordnung_datei.write_text(json.dumps(zuordnung, ensure_ascii=False, indent=2), encoding='utf-8')
     if not (a.gliederung or a.app):

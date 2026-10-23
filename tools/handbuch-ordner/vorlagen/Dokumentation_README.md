@@ -4,11 +4,13 @@
 
 1. **Dateien ablegen:** neue Unterlagen nach `01_Input/01_Eingang/` (DOCX, PPTX, PDF, HTML, XLSX, MP4 mit Untertitel, Bilder).
 2. **Sortieren:** „input-sortierer: Eingang verarbeiten“ – Raw-Jahr (2023–2027), Kapitel, Unterkapitel; Datenschutzfunde und Unsicheres unter „Zu entscheiden“ in `INPUT_PROTOKOLL.md`.
-3. **Steuern:** „steuerung: Kapitel 6“ – wer braucht was (Dealer, MO, Markt, HQ, IT), was ist markt- oder spartenspezifisch.
-4. **Schreiben:** „kapitel-redakteur: Unterkapitel 6.2“, „bild-redakteur: Kapitel 6“, „faq-redakteur: Kapitel 6“.
-5. **Prüfen:** „pruefer: Kapitel 6“ – Bericht in `04_Pruefung_Freigabe/`.
-6. **Audit:** „auditor: Kapitel 6“ – Kennzahlen und Nachweise in `05_Audit/`.
-7. **Freigeben:** ein Mensch legt den Freigabebeleg (Name, Datum, Version) in `04_Pruefung_Freigabe/` ab.
+3. **Übersetzen:** „uebersetzer-de: Kapitel 6“ – englische Quellen erhalten eine deutsche Fassung `dt_<Original>` daneben.
+4. **Steuern:** „steuerung: Kapitel 6“ – wer braucht was (Dealer, MO, Markt, HQ, IT), was ist markt- oder spartenspezifisch.
+5. **Schreiben:** „kapitel-redakteur: Unterkapitel 6.2“, „bild-redakteur: Kapitel 6“, „faq-redakteur: Kapitel 6“.
+6. **Prüfen:** „pruefer: Kapitel 6“ – Bericht in `04_Pruefung_Freigabe/`.
+7. **Audit:** „auditor: Kapitel 6“ – Kennzahlen und Nachweise in `05_Audit/`.
+8. **Freigeben:** ein Mensch legt den Freigabebeleg (Name, Datum, Version) in `04_Pruefung_Freigabe/` ab.
+9. **Ausgeben:** „uebersetzer-ausgabe: Kapitel 6, alle Sprachen“ – deutsche Endfassung und acht Übersetzungen in `04_Output/<Sprache>/<Kapitel>/`; danach Sprachreview durch einen Menschen.
 
 Ideen jederzeit: „ideen-sammler: Idee für Kapitel 9 – …“.
 

@@ -8,7 +8,8 @@ Aufbau:
 - `01_Input/` – `01_Eingang`, `02_Zugeordnet`, `03_Ausgeschlossen`
 - `02_Kapitel/<Kapitel>/` – Gesamtgliederung; je Kapitel `KAPITEL.md`, acht Arbeitsordner und je Unterkapitel ein Ordner mit `UNTERKAPITEL.md`
 - `03_Varianten/<Gliederung>/` – dieselbe Struktur je App-Gliederung, mit `VARIANTE.md` (Rollen, Sparten, Märkte)
-- `CLAUDE.md`, `.claude/agents/` (9 Agenten) und `.claude/settings.json` (WebFetch/WebSearch gesperrt – Daten bleiben lokal)
+- `04_Output/<Sprache>/<Kapitel>/` – freigegebene Fassung in Deutsch (Hauptsprache) und acht Landessprachen (EN, FR, IT, ES, CS, SK, KO, MS); Varianten unter `<Sprache>/Varianten/<Name>/`
+- `CLAUDE.md`, `.claude/agents/` (11 Agenten) und `.claude/settings.json` (WebFetch/WebSearch gesperrt – Daten bleiben lokal)
 
 Die acht Arbeitsordner je Kapitel:
 
@@ -23,7 +24,7 @@ Die acht Arbeitsordner je Kapitel:
 | `07_Ideenspeicher` | | ideen-sammler |
 | `08_Steuerung` | `01_Dealer`, `02_MO`, `03_Markt`, `04_HQ`, `05_IT`, `06_Marktspezifisch`, `07_Spartenspezifisch` | steuerung |
 
-Dazu `gliederungs-pfleger` für den Abgleich.
+Dazu `gliederungs-pfleger` für den Abgleich, `uebersetzer-de` (fremdsprachige Quellen → `dt_<Original>`) und `uebersetzer-ausgabe` (freigegebene Kapitel → `04_Output` in neun Sprachen).
 
 ```bash
 pip install openpyxl

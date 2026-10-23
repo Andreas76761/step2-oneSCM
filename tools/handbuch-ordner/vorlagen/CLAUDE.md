@@ -1,6 +1,6 @@
 # oneSCM Benutzerhandbuch – Arbeitsordner {{STAND}}
 
-Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesamtgliederung `00_Dokumentation/Gliederung/{{GLIEDERUNG}}` (Kapitel 1–23, Vorspann V, Anhänge A–I, Übergangstexte T). Gliederungen aus der App (Varianten je Rolle, Sparte, Markt) liegen unter `03_Varianten/`.
+Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesamtgliederung `00_Dokumentation/Gliederung/{{GLIEDERUNG}}` (Kapitel 1–23, Vorspann V, Anhänge A–I, Übergangstexte T). Gliederungen aus der App (Varianten je Rolle, Sparte, Markt) liegen unter `03_Varianten/`, die Sprachausgaben unter `04_Output/`. **Hauptsprache ist Deutsch**; fremdsprachige Quellen werden als `dt_`-Datei übersetzt.
 
 ## Grundregeln (verbindlich)
 
@@ -9,7 +9,8 @@ Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesam
 3. **Nichts löschen.** Verschieben oder als ersetzt markieren. Gliederungsordner werden nie umbenannt oder entfernt, nur gemeldet.
 4. **Datenschutz:** Namen, E-Mail, Telefon, FIN/VIN, Kennzeichen, User-IDs, GSSN von Personen und Kundendaten vor jeder Weiterverarbeitung melden; in Entwürfen, FAQ und Bildern nur anonymisiert.
 5. **Status nie vorwegnehmen:** Rollen, Scope (Pkw/Van, Markt, Release) und Freigaben bleiben „?“ bzw. „Vorschlag“, bis ein Beleg vorliegt. Freigaben erteilt nur ein Mensch.
-6. **Neuere Quelle schlägt ältere nicht automatisch.** Widersprechen sich `Raw_2025` und `Raw_2026`, beide Aussagen mit Jahr nennen und als Widerspruch melden.
+6. **Übersetzungen sind kein Original.** `dt_`-Dateien und Sprachausgaben tragen ihre Herkunft im Kopf; Belege nennen immer auch das Original.
+7. **Neuere Quelle schlägt ältere nicht automatisch.** Widersprechen sich `Raw_2025` und `Raw_2026`, beide Aussagen mit Jahr nennen und als Widerspruch melden.
 
 ## Aufbau
 
@@ -19,6 +20,7 @@ Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesam
 | `01_Input/` | `01_Eingang` (neue Dateien), `02_Zugeordnet` (Originale), `03_Ausgeschlossen` |
 | `02_Kapitel/<Kapitel>/` | Gesamtgliederung: `KAPITEL.md`, acht Arbeitsordner, je Unterkapitel ein Ordner mit `UNTERKAPITEL.md` |
 | `03_Varianten/<Gliederung>/` | dieselbe Struktur für jede Gliederung aus der App, dazu `VARIANTE.md` und `STATUS.md` |
+| `04_Output/<Sprache>/<Kapitel>/` | freigegebene Fassung je Sprache: `01_Deutsch_DE`, `02_Englisch_EN`, `03_Französisch_FR`, `04_Italienisch_IT`, `05_Spanisch_ES`, `06_Tschechisch_CS`, `07_Slowakisch_SK`, `08_Koreanisch_KO`, `09_Malaiisch_MS`; Varianten unter `<Sprache>/Varianten/<Name>/` |
 
 ### Die acht Arbeitsordner je Kapitel
 
@@ -48,8 +50,10 @@ Material, das nur ein Unterkapitel betrifft, darf direkt im Unterkapitel-Ordner 
 | `faq-redakteur` | Fragen sammeln und nur mit Beleg beantworten, je Rolle und Sparte |
 | `ideen-sammler` | Ideen, Verbesserungen und Zukünftiges festhalten, nie ungefragt in den Entwurf übernehmen |
 | `steuerung` | Inhalte den Rollen Dealer, MO, Markt, HQ, IT sowie markt- oder spartenspezifischen Themen zuordnen |
+| `uebersetzer-de` | englische und andere fremdsprachige Quellen ins Deutsche übersetzen – neue Datei `dt_<Original>` neben dem Original |
+| `uebersetzer-ausgabe` | freigegebene deutsche Kapitel nach `04_Output` übernehmen und in die acht Landessprachen übersetzen |
 
-Ablauf: **Eingang → input-sortierer → steuerung → kapitel-redakteur + bild-redakteur + faq-redakteur → pruefer → auditor → Mensch gibt frei.** Ideen sammelt der ideen-sammler jederzeit. Stand: `00_Dokumentation/STATUS.md`.
+Ablauf: **Eingang → input-sortierer → uebersetzer-de → steuerung → kapitel-redakteur + bild-redakteur + faq-redakteur → pruefer → auditor → Mensch gibt frei → uebersetzer-ausgabe → Sprachreview durch einen Menschen.** Ideen sammelt der ideen-sammler jederzeit. Stand: `00_Dokumentation/STATUS.md`.
 
 ## Neue Gliederung
 
