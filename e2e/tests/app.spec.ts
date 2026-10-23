@@ -2163,3 +2163,44 @@ test('[T-256] Einlesen: PowerPoint und PDF mit Fundstelle je Folie und Seite, Bi
   await expect(where).toContainText('Gliederungsstelle: 13 Reifenprodukte – Tyres');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-259] Quellen je Überschrift: Baum je Datei, zusammengeführt über Dateien, Sprung zu den Chunks mit Überschriftenfilter und Teilstücken', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const fm = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n';
+  const long = Array.from({ length: 18 }, (_, i) => `E2E Satz ${i + 1} erklärt, wie Sie die Laufzeit eines Vertrags im Contract Management verlängern und prüfen.`).join(' ');
+  const upload = async (name: string, text: string) => {
+    const res = await request.post('/api/v1/imports', { headers: { 'X-User-Id': 'u-admin' }, multipart: { file: { name, mimeType: 'text/markdown', buffer: Buffer.from(text) } } });
+    expect(res.status()).toBe(202);
+    const id = (await res.json()).id;
+    await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: { 'X-User-Id': 'u-admin' } })).json()).status).toBe('completed');
+  };
+  await upload('e2e-hd-handbuch.md', `${fm}# E2E Laufzeit\n\n## 1.1 E2E Laufzeit verlängern\n\n${long}\n\n### E2E Fristen\n\nE2E Fristen beachten.\n`);
+  await upload('e2e-hd-schulung.md', `${fm}# E2E Schulung\n\n## E2E Laufzeit verlängern\n\nE2E In der Schulung verlängern Sie über Aktionen.\n`);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Quellen je Überschrift' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Quellen je Überschrift' })).toBeVisible();
+  await page.getByRole('list', { name: 'Dateien' }).getByRole('button', { name: /e2e-hd-handbuch\.md/ }).click();
+  await expect(page.getByText('1.1 E2E Laufzeit verlängern', { exact: true })).toBeVisible();
+  await page.getByText('1.1 E2E Laufzeit verlängern', { exact: true }).click(); // aufklappen
+  await expect(page.getByText('E2E Fristen', { exact: true })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  await page.getByLabel('Zusammengeführt je Überschrift').check();
+  await page.getByLabel('Überschrift suchen').fill('E2E Laufzeit verlängern');
+  const group = page.getByRole('region', { name: /E2E Laufzeit verlängern/ });
+  await expect(group).toContainText('2 Dateien');
+  await expect(group).toContainText('e2e-hd-handbuch.md');
+  await expect(group).toContainText('e2e-hd-schulung.md');
+  expect(await axe()).toEqual([]);
+
+  await group.getByRole('link', { name: 'Chunks' }).click();
+  await expect(page.getByLabel('Nach Überschrift filtern')).toHaveValue('E2E Laufzeit verlängern');
+  await expect(page.getByText(/in \d Teilstücken für Suche und Antworten/)).toBeVisible();
+  await expect(page.getByText('E2E In der Schulung verlängern Sie über Aktionen.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+});

@@ -88,3 +88,4 @@
 | [ADR-084](ADR-084-gliederung-wissen.md) | Gliederungs-Vorschlag je Chunk, Kapitel ↔ Quellen, Wissensnotizen, Ausschlussliste, Zielkapitel je Dopplung | akzeptiert, umgesetzt |
 | [ADR-085](ADR-085-bilder-ausgabe.md) | Bildarchiv mit Bildnummer, Versionen und Platzhaltern; Quick Guide, One Pager, Lesefassung, Übergänge | akzeptiert, umgesetzt |
 | [ADR-086](ADR-086-pptx-pdf-fundstellen.md) | PowerPoint und PDF einlesen, Fundstelle je Chunk, Bild → Gliederungsstelle aus dem Folientext | akzeptiert, umgesetzt |
+| [ADR-087](ADR-087-teilstuecke-ueberschriften.md) | Teilstücke langer Chunks (300–800 Zeichen, 1 Satz Überlappung) und Quellen je Überschrift | akzeptiert, umgesetzt |

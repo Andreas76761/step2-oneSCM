@@ -161,6 +161,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.37 Stand nach Etappe 35 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Teilstücke langer Chunks 300–800 Zeichen mit 1 Satz Überlappung, ohne E-02 zu ändern (M3, NFR-83) | ✅ ([ADR-087](adr/ADR-087-teilstuecke-ueberschriften.md)) |
+| Quellen je Überschrift (je Datei, zusammengeführt), Filter „Überschrift“ (M3, NFR-84) | ✅ ([ADR-087](adr/ADR-087-teilstuecke-ueberschriften.md)) |
+| Offen | Etappen M4 (formatübergreifende Dopplungen), M5 (Fragen über alle Quellen mit Teilstücken), M6 (Video, OCR), M7 (Antwortqualität) |
+
 ## 1.36 Stand nach Etappe 34 (23.10.2026)
 
 | Punkt | Ergebnis |

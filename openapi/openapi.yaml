@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.34.0
+  version: 0.35.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3823,12 +3823,13 @@ paths:
   /metadata/chunks:
     get:
       operationId: listMetadataChunks
-      summary: 'Chunks der aktuellen Quelldateien mit Überschrift, Fundstelle und Labels; Suche und Filter; Gliederungs-Vorschläge für Chunks ohne Gliederungspunkt (ADR-079, ADR-084)'
+      summary: 'Chunks der aktuellen Quelldateien mit Überschrift, Fundstelle und Labels; Suche und Filter; Gliederungs-Vorschläge für Chunks ohne Gliederungspunkt; Teilstücke langer Chunks (parts, ADR-079, ADR-084, ADR-087)'
       tags: [Metadaten]
-      x-requirements: [NFR-67, NFR-77]
+      x-requirements: [NFR-67, NFR-77, NFR-83, NFR-84]
       x-extension: true
       parameters:
         - { name: q, in: query, schema: { type: string }, description: 'Teiltreffer im Text' }
+        - { name: heading, in: query, schema: { type: string }, description: 'Teiltreffer in Kapitel, Unterkapitel oder tieferer Überschrift (M3)' }
         - { name: labels, in: query, schema: { type: string }, description: 'Label-IDs, kommagetrennt – alle müssen zugewiesen sein' }
         - { name: unlabeled, in: query, schema: { type: boolean } }
         - { name: noOutline, in: query, schema: { type: boolean }, description: 'nur Chunks ohne Gliederungspunkt (F-13)' }
@@ -4428,3 +4429,40 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Übergang (Standard)' }
         '403': { $ref: '#/components/responses/Problem' }
+  /metadata/headings/documents:
+    get:
+      operationId: listHeadingDocuments
+      summary: 'Quellen je Überschrift (ADR-087, M3): Dateien der aktuellen Revisionen mit Anzahl Überschriften und Chunks'
+      tags: [Metadaten]
+      x-requirements: [NFR-84]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ documentId, path, format, chunks, headings }]' }
+  /metadata/headings/documents/{documentId}:
+    get:
+      operationId: getHeadingTree
+      summary: 'Überschriftenbaum einer Datei mit Chunk-Vorschau und Fundstelle je Chunk'
+      tags: [Metadaten]
+      x-requirements: [NFR-84]
+      x-extension: true
+      parameters: [{ name: documentId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ documentId, path, format, chunks, tree: [{ title, level, chunks, children }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/headings/merged:
+    get:
+      operationId: listMergedHeadings
+      summary: 'Alle Quellen zusammengeführt je Überschrift (Nummerierung und Formatierung ignoriert); mehrfach vorkommende zuerst'
+      tags: [Metadaten]
+      x-requirements: [NFR-84]
+      x-extension: true
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: multi, in: query, schema: { type: boolean }, description: 'nur Überschriften aus mehreren Dateien' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, limit, offset, multiFiles, items: [{ key, title, files, chunks, sources: [{ documentId, path, format, headingPath, chunks }] }] }' }

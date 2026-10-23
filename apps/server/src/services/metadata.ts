@@ -1,5 +1,6 @@
 // oneSCM_Metadaten (ADR-079, ADR-080): vordefinierte Labels, Chunks mit Fundstelle und Labels, gespeicherte Fragen und Antworten.
 // Chunks sind die Textabschnitte der aktuellen Quellrevisionen (text_snippets); entfernte Quelldateien bleiben außen vor.
+import { chunkParts } from '../domain/chunking.js';
 import { audit, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson, type Db, type Row } from '../db.js';
 import { LABEL_CATALOG, LABEL_CODE_RE, LABEL_GROUP_CODES, LABEL_GROUPS, LABEL_LANGUAGES } from '../domain/metadataLabels.js';
@@ -150,7 +151,7 @@ export async function labelsBy(ctx: Ctx, table: 'metadata_chunk_labels' | 'metad
 /** Format der Quelldatei: aus der Revision (markdown | html | docx …), sonst aus der Endung */
 /** Dateiendungen je Format (Filter in SQL) */
 const FORMAT_EXT: Record<string, string[]> = { markdown: ['md', 'markdown'], html: ['html', 'htm'], docx: ['docx'], pptx: ['pptx'], pdf: ['pdf'], mp4: ['mp4'] };
-const formatOf = (sourceFormat: string | null, path: string) => {
+export const formatOf = (sourceFormat: string | null, path: string) => {
   if (sourceFormat === 'jira') return 'jira'; // Ticket aus einem Jira-Export (ADR-081), gespeichert als Markdown
   const ext = /\.([a-z0-9]+)$/i.exec(path)?.[1]?.toLowerCase();
   if (ext === 'md' || ext === 'markdown') return 'markdown';
@@ -163,6 +164,8 @@ export const chunkDto = (r: Row, labels: ReturnType<typeof shortLabel>[]) => ({
   revisionId: r.revision_id, revisionNo: Number(r.revision_no), chapter: r.chapter_title, subchapter: r.subchapter_title ?? null,
   headingPath: parseJson<string[]>(r.heading_path, []), kind: r.kind, text: r.text,
   lineStart: Number(r.line_start), lineEnd: Number(r.line_end), locator: parseJson<Record<string, unknown> | null>(r.locator, null), labels,
+  // Teilstücke langer Chunks für Suche und Antworten (ADR-087); leer = Chunk bleibt ganz
+  chars: String(r.text).length, parts: chunkParts(r.text, r.kind),
 });
 
 export const CHUNK_FROM = `FROM text_snippets s
@@ -171,12 +174,18 @@ export const CHUNK_FROM = `FROM text_snippets s
   JOIN chapters c ON c.id = s.chapter_id
   LEFT JOIN subchapters sc ON sc.id = s.subchapter_id`;
 
-export async function listChunks(ctx: Ctx, opts: { q?: string; labelIds?: string[]; unlabeled?: boolean; noOutline?: boolean; documentId?: string; format?: string; limit?: number; offset?: number } = {}) {
+export async function listChunks(ctx: Ctx, opts: { q?: string; heading?: string; labelIds?: string[]; unlabeled?: boolean; noOutline?: boolean; documentId?: string; format?: string; limit?: number; offset?: number } = {}) {
   const where = ['d.project_id = ?', 'r.is_current = 1', 'd.removed_at IS NULL'];
   const params: unknown[] = [ctx.projectId];
   if (opts.q?.trim()) {
     where.push(`LOWER(s.text) LIKE ? ESCAPE '\\'`);
     params.push(likePattern(opts.q));
+  }
+  // Überschrift (M3): Kapitel, Unterkapitel oder tiefere Überschrift enthält den Text
+  if (opts.heading?.trim()) {
+    where.push(`(LOWER(c.title) LIKE ? ESCAPE '\\' OR LOWER(sc.title) LIKE ? ESCAPE '\\' OR LOWER(s.heading_path) LIKE ? ESCAPE '\\')`);
+    const like = likePattern(opts.heading);
+    params.push(like, like, like);
   }
   if (opts.format === 'jira') where.push("r.source_format = 'jira'");
   else if (opts.format) {

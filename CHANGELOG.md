@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.35.0 – Etappe 35 (23.10.2026)
+
+### Hinzugefügt
+- **Teilstücke langer Chunks (ADR-087, M3):** Chunks über 800 Zeichen werden für Suche und Antworten an Satzgrenzen in Teilstücke von 300–800 Zeichen mit einem Satz Überlappung geteilt; die Textabschnitte selbst bleiben unverändert (E-02).
+- **Quellen je Überschrift:** neue Seite unter oneSCM_Metadaten – je Datei als Überschriftenbaum oder alle Quellen zusammengeführt je Überschrift.
+- **Filter „Überschrift“** in der Chunk-Liste.
+- Tests T-257, T-258, E2E T-259 (axe); Anforderungen NFR-83, NFR-84.
+
 ## 0.34.0 – Etappe 34 (23.10.2026)
 
 ### Hinzugefügt

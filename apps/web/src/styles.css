@@ -809,3 +809,16 @@ div.reader-lang-note p { margin: 0; }
 .ia-thumb { display: inline-block; width: 96px; height: 60px; object-fit: contain; background: var(--surface-2); border: 1px solid var(--border); flex: none; }
 .ia-thumb.ia-preview { width: 100%; height: auto; max-height: 260px; }
 .ia-meta { display: block; }
+
+/* Quellen je Überschrift (ADR-087) */
+.hd-tree { list-style: none; padding-left: 1rem; margin: 4px 0; }
+.hd-tree > li > details > summary { cursor: pointer; padding: 2px 0; }
+.hd-chunks { list-style: none; padding-left: 1rem; margin: 4px 0; }
+.hd-chunks li { padding: 3px 0; border-bottom: 1px dashed var(--border); }
+.hd-group + .hd-group { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 8px; }
+.hd-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.hd-source { border: 1px solid var(--border); border-radius: 6px; padding: 8px; background: var(--surface-2); }
+.md-parts { margin: 4px 0 8px; }
+.md-parts ol { margin: 4px 0; padding-left: 1.4rem; }
+.hd-open { margin: 2px 0 2px 1rem; }
+.hd-open a, .hd-group h3 a { display: inline-block; min-height: 24px; min-width: 24px; padding: 2px 0; line-height: 20px; }

@@ -114,7 +114,7 @@ Gestaltung wie die bestehende App (Karten, Tabellen, Dunkelmodus, WCAG 2.2 AA).
 |---|---|---|
 | M1 ✅ | Datenmodell (Chunk-Fundstelle, Labels, gespeicherte Fragen), 100 vordefinierte Labels, ADR-079, Menübereich | Chunks labeln, Fragen und Antworten speichern, Labelkatalog |
 | M2 ✅ | Extraktoren PPTX und PDF (Text), DOCX/HTML erweitert um Fundstellen; Seite „Einlesen“ – umgesetzt in Etappe 34 ([ADR-086](adr/ADR-086-pptx-pdf-fundstellen.md)) | alle Textformate einlesbar |
-| M3 | Chunking je Überschrift, Seite „Quellen je Überschrift“ und „Chunks“ mit Labels | Daten sichtbar und labelbar |
+| M3 ✅ | Chunking je Überschrift, Seite „Quellen je Überschrift“ und „Chunks“ mit Labels – Rest umgesetzt in Etappe 35 ([ADR-087](adr/ADR-087-teilstuecke-ueberschriften.md)): Teilstücke statt Umbau der Textabschnitte | Daten sichtbar und labelbar |
 | M4 | Indexierung, Seite „Dopplungen“ (formatübergreifend) | Dublettensuche |
 | M5 | Fragen mit Belegen über alle Quellen, Fragen & Antworten speichern mit Labels | RAG nutzbar |
 | M6 | MP4-Transkription, Bildbeschreibung/OCR (nach M-04/M-05) | Video und Bilder durchsuchbar |

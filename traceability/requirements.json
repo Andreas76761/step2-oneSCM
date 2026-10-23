@@ -929,5 +929,23 @@
     "documentation": [
       "docs/adr/ADR-086-pptx-pdf-fundstellen.md"
     ]
+  },
+  {
+    "id": "NFR-83",
+    "title": "Teilstücke langer Chunks: 300–800 Zeichen an Satzgrenzen, 1 Satz Überlappung, Tabellen/Listen ganz; Textabschnitte unverändert (E-02)",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-087-teilstuecke-ueberschriften.md"
+    ]
+  },
+  {
+    "id": "NFR-84",
+    "title": "Quellen je Überschrift: Baum je Datei und Zusammenführung gleicher Überschriften über Dateien; Filter „Überschrift“ in der Chunk-Liste",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-087-teilstuecke-ueberschriften.md"
+    ]
   }
 ]

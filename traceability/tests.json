@@ -1737,5 +1737,34 @@
       "NFR-81",
       "NFR-82"
     ]
+  },
+  {
+    "id": "T-257",
+    "title": "Teilstücke langer Chunks: 300–800 Zeichen an Satzgrenzen, 1 Satz Überlappung, Tabellen und Listen bleiben ganz (Einheit)",
+    "file": "apps/server/test/stage35.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-83"
+    ]
+  },
+  {
+    "id": "T-258",
+    "title": "Quellen je Überschrift: Baum je Datei, zusammengeführt über Dateien, Filter nach Überschrift, Teilstücke im Chunk",
+    "file": "apps/server/test/stage35.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-83",
+      "NFR-84"
+    ]
+  },
+  {
+    "id": "T-259",
+    "title": "Quellen je Überschrift in der Oberfläche, Sprung zu den Chunks mit Überschriftenfilter und Teilstücken (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-83",
+      "NFR-84"
+    ]
   }
 ]

@@ -7,6 +7,7 @@ import {
 import { exportAccessMatrix, getAccessMatrix, importAccessMatrix, setAccessCell } from '../services/accessMatrix.js';
 import { exportDomainMap, getDomainMap, setDomainLink } from '../services/domainMap.js';
 import { listChunksWithSuggestions, outlineCoverage, outlineSources } from '../services/metadataOutline.js';
+import { headingDocuments, headingTree, mergedHeadings } from '../services/metadataHeadings.js';
 import { list, num, userOf } from './helpers.js';
 
 type P<T extends string> = { Params: Record<T, string> };
@@ -28,12 +29,12 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.patch<P<'labelId'> & { Body: any }>('/metadata/labels/:labelId', async (req) => updateLabel(req.ctx, req.params.labelId, req.body ?? {}, userOf(req.ctx, req, 'admin')));
 
   // ENTSCHEIDUNG(M-09): Chunks lesen mit `read`, labeln mit `edit`
-  app.get<{ Querystring: { q?: string; labels?: string; unlabeled?: string; noOutline?: string; documentId?: string; format?: string; limit?: string; offset?: string } }>('/metadata/chunks', async (req) => {
+  app.get<{ Querystring: { q?: string; heading?: string; labels?: string; unlabeled?: string; noOutline?: string; documentId?: string; format?: string; limit?: string; offset?: string } }>('/metadata/chunks', async (req) => {
     userOf(req.ctx, req);
     const q = req.query;
     // mit Gliederungs-Vorschlägen für Chunks ohne Gliederungspunkt (F-13, ADR-084)
     return listChunksWithSuggestions(req.ctx, {
-      q: q.q, labelIds: list(q.labels), unlabeled: q.unlabeled === 'true', noOutline: q.noOutline === 'true', documentId: q.documentId || undefined, format: q.format || undefined,
+      q: q.q, heading: q.heading || undefined, labelIds: list(q.labels), unlabeled: q.unlabeled === 'true', noOutline: q.noOutline === 'true', documentId: q.documentId || undefined, format: q.format || undefined,
       limit: num(q.limit), offset: num(q.offset),
     });
   });
@@ -42,6 +43,13 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<P<'labelId'> & { Querystring: { minScore?: string } }>('/metadata/outline/:labelId', async (req) => {
     userOf(req.ctx, req);
     return outlineSources(req.ctx, req.params.labelId, { minScore: req.query.minScore ? Number(req.query.minScore) : undefined });
+  });
+  // Quellen je Überschrift (M3, ADR-087): je Datei als Baum oder zusammengeführt je Überschrift
+  app.get('/metadata/headings/documents', async (req) => (userOf(req.ctx, req), headingDocuments(req.ctx)));
+  app.get<P<'documentId'>>('/metadata/headings/documents/:documentId', async (req) => (userOf(req.ctx, req), headingTree(req.ctx, req.params.documentId)));
+  app.get<{ Querystring: { q?: string; multi?: string; limit?: string; offset?: string } }>('/metadata/headings/merged', async (req) => {
+    userOf(req.ctx, req);
+    return mergedHeadings(req.ctx, { q: req.query.q, multi: req.query.multi === 'true', limit: num(req.query.limit), offset: num(req.query.offset) });
   });
   app.post<{ Body: any }>('/metadata/chunks/labels', async (req) => setChunkLabels(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit')));
 

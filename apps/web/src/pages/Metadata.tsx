@@ -179,6 +179,8 @@ export function MetadataChunksPage() {
   const { labels, groups } = useLabels(true);
   const all = labels.data ?? [];
   const [q, setQ] = useState('');
+  // Überschrift (M3): auch über den Link aus „Quellen je Überschrift“ (?heading=…)
+  const [heading, setHeading] = useState(() => new URLSearchParams(window.location.search).get('heading') ?? '');
   const [format, setFormat] = useState('');
   const [filterLabels, setFilterLabels] = useState<string[]>([]);
   const [unlabeled, setUnlabeled] = useState(false);
@@ -187,7 +189,7 @@ export function MetadataChunksPage() {
   const [view, setView] = useState<'table' | 'headings'>('headings');
   const [selected, setSelected] = useState<string[]>([]);
   const [bulkLabel, setBulkLabel] = useState('');
-  const path = `/metadata/chunks${qs({ q: q.trim() || undefined, format, labels: filterLabels.join(',') || undefined, unlabeled: unlabeled || undefined, noOutline: noOutline || undefined, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE })}`;
+  const path = `/metadata/chunks${qs({ q: q.trim() || undefined, heading: heading.trim() || undefined, format, labels: filterLabels.join(',') || undefined, unlabeled: unlabeled || undefined, noOutline: noOutline || undefined, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE })}`;
   const chunks = useLoad<{ total: number; items: any[] }>(path, [path]);
   const items = chunks.data?.items ?? [];
   const resetPage = <T,>(fn: (v: T) => void) => (v: T) => {
@@ -233,6 +235,13 @@ export function MetadataChunksPage() {
       ))}
     </div>
   );
+  // Teilstücke langer Chunks (ADR-087): für Suche und Antworten, der Chunk selbst bleibt unverändert
+  const parts = (c: any) => c.parts?.length > 0 && (
+    <details className="md-parts small">
+      <summary>{c.chars} Zeichen – in {c.parts.length} Teilstücken für Suche und Antworten</summary>
+      <ol>{c.parts.map((p: any) => <li key={p.no}>{p.overlap && <span className="muted">… {p.overlap} </span>}{p.text}</li>)}</ol>
+    </details>
+  );
   const addOne = (c: any) => canEdit && <LabelSelect labels={all} groups={groups} lang={lang} value="" exclude={c.labels.map((l: Label) => l.id)} ariaLabel={`Label für Chunk #${c.seq} hinzufügen`} placeholder="+ Label …" onChange={(id) => id && change([c.id], { add: [id] })} />;
 
   return (
@@ -240,6 +249,7 @@ export function MetadataChunksPage() {
       <Card>
         <div className="filters">
           <label className="grow"><span className="sr-only">Suche im Text</span><input type="search" placeholder="Im Text suchen …" value={q} onChange={(e) => resetPage(setQ)(e.target.value)} aria-label="Im Text suchen" /></label>
+          <label><span className="sr-only">Überschrift</span><input type="search" placeholder="Überschrift …" value={heading} onChange={(e) => resetPage(setHeading)(e.target.value)} aria-label="Nach Überschrift filtern" /></label>
           <select value={format} onChange={(e) => resetPage(setFormat)(e.target.value)} aria-label="Format">
             <option value="">Alle Formate</option>
             {Object.keys(FORMAT_LABEL).map((f) => <option key={f} value={f}>{formatText(f)}</option>)}
@@ -280,7 +290,7 @@ export function MetadataChunksPage() {
                   <td>#{c.seq}</td>
                   <td className="small">{formatText(c.format)}<br />{c.path}<br /><span className="muted">{locatorText(c)}</span></td>
                   <td className="small">{headingText(c)}</td>
-                  <td className="md-text">{c.text}</td>
+                  <td className="md-text">{c.text}{parts(c)}</td>
                   <td>{chunkLabels(c)}{addOne(c)}{suggest(c)}</td>
                 </tr>
               ))}
@@ -298,6 +308,7 @@ export function MetadataChunksPage() {
                     {c.headingPath.length > 0 && <span className="muted"> · {c.headingPath.join(' › ')}</span>}
                   </div>
                   <p className="md-text">{c.text}</p>
+                  {parts(c)}
                   <div>{chunkLabels(c)}{addOne(c)}</div>
                   {suggest(c)}
                 </article>
