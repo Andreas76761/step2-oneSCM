@@ -868,16 +868,11 @@ export function PrintPage() {
   // „Seite X von Y“ in der Druck-Sprache: Text und Zähler als CSS-content-Liste
   const pageOf = t('pageOf').split(/(\{page\}|\{pages\})/).filter(Boolean)
     .map((part) => (part === '{page}' ? 'counter(page)' : part === '{pages}' ? 'counter(pages)' : JSON.stringify(part))).join(' ');
-  useEffect(() => {
-    // Kopf-/Fußzeile der gedruckten Seiten: @page-Randboxen erben keine Variablen, daher als eigener Stilblock
-    // Deckblatt ohne Kopfzeile: die :first-Regel muss nach der allgemeinen stehen, sonst gewinnt Chrome die spätere
-    const style = document.createElement('style');
-    style.dataset.printHeader = '';
-    const footer = lay?.footerText ? ` @bottom-left { content: ${JSON.stringify(lay.footerText)}; font-size: 9pt; color: #555; }` : '';
-    style.textContent = `@page { @top-center { content: ${JSON.stringify(header)}; }${footer} @bottom-right { content: ${pageOf}; } } @page :first { @top-center { content: none; } @bottom-left { content: none; } }`;
-    document.head.appendChild(style);
-    return () => style.remove();
-  }, [header, lay?.footerText, pageOf]);
+  // Kopf-/Fußzeile der gedruckten Seiten: @page-Randboxen erben keine Variablen, daher als eigener Stilblock.
+  // Mitgerendert statt per Effekt in <head> geschrieben – so passt er immer zum angezeigten Stand (Rolle, Sprache, Layout).
+  // Deckblatt ohne Kopfzeile: die :first-Regel muss nach der allgemeinen stehen, sonst gewinnt Chrome die spätere
+  const footerCss = lay?.footerText ? ` @bottom-left { content: ${JSON.stringify(lay.footerText)}; font-size: 9pt; color: #555; }` : '';
+  const pageCss = `@page { @top-center { content: ${JSON.stringify(header)}; }${footerCss} @bottom-right { content: ${pageOf}; } } @page :first { @top-center { content: none; } @bottom-left { content: none; } }`;
   // Glossar-Anhang: nur Begriffe, die im gedruckten Text vorkommen
   const usedGlossary = useMemo(() => {
     if (!glossary.data?.length || !printed.length) return [];
@@ -893,6 +888,7 @@ export function PrintPage() {
         <Link className="btn" to="/lesen">← Leseransicht</Link>
         <button className="btn primary" disabled={!ready} onClick={() => void print()}>🖨️ Drucken / als PDF speichern</button>
       </span>}>
+      <style data-print-header="">{pageCss}</style>
       <ErrorBox error={error ?? chapters.error ?? projects.error ?? releases.error ?? layout.error} />
       <div className="filters no-print" role="group" aria-label="Was drucken?">
         <label className="inline">Handbuch
