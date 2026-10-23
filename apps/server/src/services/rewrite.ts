@@ -2,7 +2,7 @@
 // Ablauf: Vorschlag anfordern → automatische Satzprüfung → Redaktion übernimmt oder verwirft.
 // Übernommene Vorschläge werden als eigener Modus `ai_rewritten` mit Satz-Evidenz gespeichert.
 import { imageRefs } from '../domain/media.js';
-import { audit, getSettings, type Ctx } from '../context.js';
+import { audit, getSettings, privacyNames, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
 import {
@@ -82,8 +82,9 @@ export async function proposeRewrite(ctx: Ctx, blockId: string, input: { instruc
   if (privacy.length) throw unprocessable('Übertragung gesperrt: offene Datenschutzbefunde zu den Quellen dieses Absatzes.', { findings: privacy.map((f) => f.seq) });
   const sourceRows = await db.all(`SELECT id, seq, text FROM text_snippets WHERE id IN (${marks}) ORDER BY seq`, ...snippetIds);
   // … und keine personenbezogenen Daten, die nur im (manuell bearbeiteten) Absatz stehen
-  const sourceHits = new Set(detectPrivacy(sourceRows.map((s) => s.text).join('\n')).map((h) => h.match));
-  const ownHits = detectPrivacy(b.text).filter((h) => !sourceHits.has(h.match));
+  const names = await privacyNames(db);
+  const sourceHits = new Set(detectPrivacy(sourceRows.map((s) => s.text).join('\n'), { names }).map((h) => h.match));
+  const ownHits = detectPrivacy(b.text, { names }).filter((h) => !sourceHits.has(h.match));
   if (ownHits.length) throw unprocessable('Übertragung gesperrt: Der Absatz enthält mögliche personenbezogene Daten.', { hits: ownHits });
 
   const sources: RewriteSource[] = sourceRows.map((s, i) => ({ label: `S${i + 1}`, snippetId: s.id, seq: s.seq, text: s.text }));

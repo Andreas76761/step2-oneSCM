@@ -1,6 +1,6 @@
 // Schreibstil (ADR-040): Regelprüfung für freien Text, Kapitelabsätze und Textschnipsel; Umformulierung in professionellen
 // Stil bzw. ins Präsens über den eingerichteten KI-Dienst – ohne KI mit den automatischen Regelkorrekturen.
-import { audit, getSettings, type Ctx, type User } from '../context.js';
+import { audit, getSettings, privacyNames, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
 import { sha256 } from '../domain/similarity.js';
@@ -187,7 +187,7 @@ export async function rewriteText(ctx: Ctx, input: { text?: unknown; mode?: unkn
     method = 'rules';
   } else {
     // Keine personenbezogenen Daten an externe Dienste (wie bei der KI-Umformulierung, ADR-013)
-    const hits = provider.external ? detectPrivacy(text) : [];
+    const hits = provider.external ? detectPrivacy(text, { names: await privacyNames(ctx.db) }) : [];
     if (hits.length) throw unprocessable('Übertragung gesperrt: Der Text enthält mögliche personenbezogene Daten.', { hits });
     const payload = {
       task: 'style', mode, text, terminology: opts.terms.map((t) => ({ preferred: t.preferred, avoid: t.avoid })),

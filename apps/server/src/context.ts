@@ -75,6 +75,11 @@ export async function getSettings(db: Db): Promise<Settings> {
   return out as Settings;
 }
 
+/** Gepflegte Klarnamen für die Datenschutzprüfung (Einstellungen → Datenschutz), auch vor externen Diensten. */
+export async function privacyNames(db: Db): Promise<string[]> {
+  return (await getSettings(db)).privacy?.names ?? [];
+}
+
 export async function saveSettings(db: Db, patch: Partial<Settings>) {
   await db.tx(async () => {
     for (const [key, value] of Object.entries(patch)) {

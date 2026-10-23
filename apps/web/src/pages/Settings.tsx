@@ -7,14 +7,19 @@ export function SettingsPage() {
   const { ref, notify } = useApp();
   const s = useLoad<any>('/settings');
   const [draft, setDraft] = useState<any | null>(null);
-  useEffect(() => setDraft(s.data ? structuredClone(s.data) : null), [s.data]);
+  // Namensliste roh bearbeiten (Leerzeichen, neue Zeilen); bereinigt wird erst beim Speichern
+  const [namesText, setNamesText] = useState('');
+  useEffect(() => {
+    setDraft(s.data ? structuredClone(s.data) : null);
+    setNamesText((s.data?.privacy?.names ?? []).join('\n'));
+  }, [s.data]);
   if (!draft) return <Page title="Einstellungen"><ErrorBox error={s.error} /></Page>;
   const a = draft.analysis;
   const setA = (k: string, v: unknown) => setDraft({ ...draft, analysis: { ...a, [k]: v } });
 
   const save = async () => {
     try {
-      await put('/settings', { analysis: draft.analysis, import: draft.import, readability: draft.readability, rewrite: draft.rewrite, semantic: draft.semantic, privacy: draft.privacy });
+      await put('/settings', { analysis: draft.analysis, import: draft.import, readability: draft.readability, rewrite: draft.rewrite, semantic: draft.semantic, privacy: { names: namesText.split('\n').map((x) => x.trim()).filter(Boolean) } });
       notify('Einstellungen gespeichert.');
       s.reload();
     } catch (e) {
@@ -83,7 +88,7 @@ export function SettingsPage() {
         </Card>
         <Card title="Datenschutz: Namensliste">
           <label className="block">Zusätzliche Klarnamen, einer je Zeile (z. B. Bearbeiter aus Jira-Exporten)
-            <textarea id="privacy-names" rows={4} value={(draft.privacy?.names ?? []).join('\n')} onChange={(e) => setDraft({ ...draft, privacy: { names: e.target.value.split('\n').map((x: string) => x.trim()).filter(Boolean) } })} />
+            <textarea id="privacy-names" rows={4} value={namesText} onChange={(e) => setNamesText(e.target.value)} />
           </label>
           <p className="small muted">Die Datenschutzprüfung meldet außerdem E-Mail, Telefon, IBAN, Fahrgestellnummer, Kennzeichen, Benutzerkennung, Straßenadresse und Namen hinter Feldern wie „Autor:“ oder „Assignee:“. Treffer blockieren Freigabe und Export.</p>
         </Card>

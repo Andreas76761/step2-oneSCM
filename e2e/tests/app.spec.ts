@@ -13,10 +13,10 @@ test('[T-201] Navigation, Import einer MD-Datei und Quellenliste', async ({ page
   // Selteneres liegt unter „Weitere“ (ADR-053)
   await nav.getByRole('button', { name: 'Weitere' }).click();
   for (const item of NAV) {
-    await nav.getByRole('link', { name: item }).click();
+    await nav.getByRole('link', { name: item, exact: true }).click();
     await expect(page.getByRole('heading', { level: 1 }).first()).toHaveText(item);
   }
-  await nav.getByRole('link', { name: 'Quellen' }).click();
+  await nav.getByRole('link', { name: 'Quellen', exact: true }).click();
   await page.getByTestId('file-input').setInputFiles({
     name: 'e2e_hinweis.md',
     mimeType: 'text/markdown',
@@ -548,7 +548,7 @@ test('[T-221] Navigation einklappbar, Stammdaten: Inhaltsverzeichnis anlegen, Dr
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
   await page.getByRole('button', { name: 'Navigation einklappen' }).click();
   await expect(nav.getByText('Quellen', { exact: true })).toBeHidden();
-  await expect(nav.getByRole('link', { name: 'Quellen' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Quellen', exact: true })).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: 'Navigation ausklappen' }).click();
   await expect(nav.getByText('Quellen', { exact: true })).toBeVisible();
@@ -709,7 +709,7 @@ test('[T-222] Varianten-Handbuch aus dem Draft Manual, Varianten-Export, Suche, 
   await expect(page.getByRole('cell', { name: 'Import aus CSV' })).toBeVisible();
 
   // Quellen: vollständiger Stand als Option beim Import
-  await nav.getByRole('link', { name: 'Quellen' }).click();
+  await nav.getByRole('link', { name: 'Quellen', exact: true }).click();
   await expect(page.getByLabel(/vollständige Stand/)).not.toBeChecked();
 });
 

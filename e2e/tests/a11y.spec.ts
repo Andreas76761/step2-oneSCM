@@ -93,6 +93,6 @@ test('[T-209] Tastatur: Sprunglink, Absatz per Tastatur auswählen, Fokus im Dia
   await expect(nav).toBeHidden();
   await page.getByRole('button', { name: '☰ Menü' }).click();
   await expect(nav).toBeVisible();
-  await nav.getByRole('link', { name: /Quellen/ }).click();
+  await nav.getByRole('link', { name: 'Quellen', exact: true }).click();
   await expect(nav).toBeHidden();
 });

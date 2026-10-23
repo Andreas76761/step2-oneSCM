@@ -1,6 +1,6 @@
 // Mehrsprachigkeit (ADR-020): Übersetzungen freigegebener deutscher Kapitelversionen je Zielsprache.
 // KI-Übersetzung je Absatz mit Satz-Zuordnung zur deutschen Quelle, manuelle Nachbearbeitung, Freigabe je Sprache.
-import { audit, type Ctx } from '../context.js';
+import { audit, privacyNames, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
 import { CHAPTER_SECTIONS } from '../domain/reference.js';
@@ -172,10 +172,11 @@ export async function runMachineTranslation(ctx: Ctx, id: string, actor: string)
     const prompt = buildTranslatePrompt({ language: t.language, kind, sentences, terms: terms.map((x) => ({ preferred: x.preferred })) });
     return parseTranslateResponse((await provider.complete(prompt)).text);
   };
+  const names = provider.external ? await privacyNames(ctx.db) : [];
   let failed = 0;
   for (const b of blocks) {
     // keine personenbezogenen Daten an externe Dienste (wie bei der Umformulierung, ADR-013)
-    if (provider.external && detectPrivacy(b.source_text).length) {
+    if (provider.external && detectPrivacy(b.source_text, { names }).length) {
       await ctx.db.run('UPDATE translation_blocks SET issues = ? WHERE id = ?', json(['empty']), b.id);
       continue;
     }

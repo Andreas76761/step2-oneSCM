@@ -94,6 +94,15 @@ describe('Etappe 28', () => {
       expect(await findings()).toEqual([]);
       expect((await call('PUT', '/settings', { privacy: { names: [' Kowalski ', 'Kowalski'] } })).json.privacy.names).toEqual(['Kowalski']);
       expect((await call('POST', '/privacy/check', { text: 'Frau Kowalski' })).json.hits).toEqual([{ kind: 'name', match: 'Ko…ki' }]);
+      // gepflegte Namen sperren die Übertragung an externe Dienste schon vor der Analyse (noch kein Befund)
+      const embedded: string[] = [];
+      const localEmb = built.ctx.embeddings;
+      built.ctx.embeddings = { ...localEmb, id: 'openai', external: true, embed: (t: string[]) => (embedded.push(...t), localEmb.embed(t)) } as any;
+      expect((await call('GET', `/search/semantic?q=${encodeURIComponent('Antrag Rückruf')}`)).status).toBe(200);
+      expect(embedded.length).toBeGreaterThan(0);
+      expect(embedded.join('')).not.toContain('Kowalski');
+      expect((await call('POST', '/assistant/ask', { question: 'Wer ruft Frau Kowalski zurück?' })).status).toBe(422);
+      built.ctx.embeddings = localEmb;
       await call('POST', '/quality/analysis');
       await built.ctx.jobs.idle();
       expect((await findings()).map((f) => [f.subtype, f.severity])).toEqual([['name', 'blocker']]);
