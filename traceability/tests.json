@@ -1766,5 +1766,35 @@
       "NFR-83",
       "NFR-84"
     ]
+  },
+  {
+    "id": "T-260",
+    "title": "Abschnittstext formatneutral normalisieren, Unterschiede wortweise (Einheit)",
+    "file": "apps/server/test/stage36.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-85",
+      "NFR-86"
+    ]
+  },
+  {
+    "id": "T-261",
+    "title": "Dubletten über Formate: Folie und PDF-Abschnitt exakt gleich, ähnliche Fassung ab 85 %, nur geänderte Dateien neu, Entscheidung überlebt erneutes Einlesen",
+    "file": "apps/server/test/stage36.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-85",
+      "NFR-86"
+    ]
+  },
+  {
+    "id": "T-262",
+    "title": "Dubletten über alle Formate in der Oberfläche: Unterschiede zeigen, führende Fassung festlegen (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-85",
+      "NFR-86"
+    ]
   }
 ]

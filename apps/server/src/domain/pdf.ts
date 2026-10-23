@@ -5,7 +5,7 @@
 // gemeldet – Texterkennung folgt mit M6.
 import { finalize, marker, type LocatedMarkdown } from './pptx.js';
 
-interface Line { page: number; y: number; x: number; right: number; size: number; text: string; bold: boolean }
+interface Line { page: number; y: number; x: number; right: number; size: number; text: string; bold: boolean; parts?: { x: number; w: number; s: string }[] }
 
 const BULLET_RE = /^([•▪◦●○■□➢►‣⁃–-])\s*/;
 const NUM_RE = /^(\d{1,2})[.)]\s+/;
@@ -48,10 +48,10 @@ async function readLines(doc: any): Promise<{ lines: Line[]; empty: number[] }> 
       if (it.str === '' && !it.hasEOL) continue;
       // neue Zeile bei anderer Grundlinie
       if (!cur || Math.abs(cur.y - y) > Math.max(2, size * 0.4)) {
-        if (cur?.text.trim()) pageLines.push(cur);
-        cur = { page: p, y, x, right: x + (it.width ?? 0), size: it.str.trim() ? size : 0, text: '', bold: false };
+        if (cur?.parts?.some((q) => q.s.trim())) pageLines.push(cur);
+        cur = { page: p, y, x, right: x + (it.width ?? 0), size: it.str.trim() ? size : 0, text: '', bold: false, parts: [] };
       }
-      cur.text += it.str;
+      cur.parts!.push({ x, w: it.width ?? 0, s: it.str });
       if (it.str.trim()) {
         if (!cur.size || size > cur.size) cur.size = size;
         cur.x = Math.min(cur.x, x);
@@ -59,9 +59,20 @@ async function readLines(doc: any): Promise<{ lines: Line[]; empty: number[] }> 
         cur.bold ||= /bold|black|heavy|semibold/i.test(font);
       }
     }
-    if (cur?.text.trim()) pageLines.push(cur);
+    if (cur?.parts?.some((q) => q.s.trim())) pageLines.push(cur);
     if (!pageLines.length) empty.push(p);
-    lines.push(...pageLines.map((l) => ({ ...l, text: l.text.replace(/\s+/g, ' ').trim() })));
+    // Textstücke einer Zeile nach Position zusammensetzen – manche Erzeuger schreiben z. B. die Nummer „1.“ erst nach dem Text
+    lines.push(...pageLines.map(({ parts, ...l }) => {
+      const sorted = [...(parts ?? [])].sort((a, b) => a.x - b.x);
+      let text = '';
+      let end = -Infinity;
+      for (const q of sorted) {
+        if (text && !/\s$/.test(text) && !/^\s/.test(q.s) && q.x - end > l.size * 0.15) text += ' ';
+        text += q.s;
+        if (q.s) end = Math.max(end, q.x + q.w);
+      }
+      return { ...l, text: text.replace(/\s+/g, ' ').trim() };
+    }));
     page.cleanup?.();
   }
   return { lines, empty };

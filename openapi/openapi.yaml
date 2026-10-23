@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.35.0
+  version: 0.36.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -4466,3 +4466,72 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ total, limit, offset, multiFiles, items: [{ key, title, files, chunks, sources: [{ documentId, path, format, headingPath, chunks }] }] }' }
+  /metadata/duplicates:
+    get:
+      operationId: listSectionDuplicates
+      summary: 'Dubletten über alle Formate je Abschnitt (ADR-088, M4): exakt gleich oder ab 85 % ähnlich, mit Entscheidung; Kennzahlen'
+      tags: [Metadaten]
+      x-requirements: [NFR-85]
+      x-extension: true
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [open, decided, all], default: open } }
+        - { name: crossFormat, in: query, schema: { type: boolean } }
+        - { name: minScore, in: query, schema: { type: number } }
+        - { name: q, in: query, schema: { type: string }, description: 'Teiltreffer in Pfad oder Überschrift' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, limit, offset, items: [{ id, score, kind, crossFormat, shared, a, b, decision }], summary: { sections, pairs, exact, near, crossFormat, open, decided, groups } }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /metadata/duplicates/groups:
+    get:
+      operationId: listSectionDuplicateGroups
+      summary: 'Gruppen offener Dubletten (über Paare verbunden), z. B. dieselbe Folie in PowerPoint, PDF und Word'
+      tags: [Metadaten]
+      x-requirements: [NFR-85]
+      x-extension: true
+      parameters: [{ name: crossFormat, in: query, schema: { type: boolean } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ sections, formats, pairs, maxScore }]' }
+  /metadata/duplicates/rebuild:
+    post:
+      operationId: rebuildSectionDuplicates
+      summary: 'Abschnitte und Paare des ganzen Bestands neu berechnen; Entscheidungen bleiben (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-85]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ sections, pairs }' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/duplicates/{duplicateId}:
+    get:
+      operationId: getSectionDuplicate
+      summary: 'Paar nebeneinander mit wortweisem Unterschied und den Chunks beider Seiten'
+      tags: [Metadaten]
+      x-requirements: [NFR-86]
+      x-extension: true
+      parameters: [{ name: duplicateId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ …Paar, textA, textB, diff: [{ op, text }], chunksA, chunksB }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/duplicates/{duplicateId}/decision:
+    put:
+      operationId: decideSectionDuplicate
+      summary: 'Führende Fassung (a | b), kein Duplikat oder zurücksetzen – gilt je Inhaltspaar und überlebt erneutes Einlesen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-86]
+      x-extension: true
+      parameters: [{ name: duplicateId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [decision], properties: { decision: { type: string, enum: [leading, not_duplicate, open] }, leading: { type: string, enum: [a, b] }, note: { type: [string, 'null'], maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Paar mit Entscheidung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }

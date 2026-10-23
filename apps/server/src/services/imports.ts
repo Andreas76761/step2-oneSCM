@@ -8,6 +8,7 @@ import { classifySnippet } from '../domain/classify.js';
 import { CONVERTIBLE, docxToMarkdown, embedDataImages, headingLocators, htmlHeadingIds, htmlToMarkdown } from '../domain/convert.js';
 import { pdfToMarkdown } from '../domain/pdf.js';
 import { suggestImageOutline } from './imageArchive.js';
+import { refreshDuplicates } from './metadataDuplicates.js';
 import { pptxToMarkdown, type LocatedMarkdown } from '../domain/pptx.js';
 import { chapterOf, headingKey, parseMarkdown } from '../domain/markdown.js';
 import { issueToMarkdown, parseJira } from '../domain/jira.js';
@@ -255,6 +256,12 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
     }
   }
   await insertMany(ctx, 'import_items (id, import_id, path, sha256, status, message, revision_id, position)', items);
+
+  // Dubletten je Abschnitt (ADR-088): nur Dateien mit neuer Revision oder als entfernt markiert neu berechnen
+  const changedDocs = (await db.all(
+    'SELECT DISTINCT document_id AS id FROM source_revisions WHERE import_id = ? UNION SELECT id FROM source_documents WHERE removed_in_import = ?', importId, importId,
+  )).map((r) => r.id as string);
+  if (changedDocs.length) await refreshDuplicates(ctx, changedDocs).catch((e) => ctx.log('Dubletten-Abgleich fehlgeschlagen', { importId, error: (e as Error).message }));
 
   // Bilder zählen nicht als Dokumente: schlagen alle Dokumente fehl, ist der Import fehlgeschlagen
   const status = stats.failed === 0 ? 'completed' : stats.failed === stats.files - mediaItems.size ? 'failed' : 'completed_with_errors';

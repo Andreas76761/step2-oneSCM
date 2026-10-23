@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.36.0 – Etappe 36 (23.10.2026)
+
+### Hinzugefügt
+- **Dubletten über alle Formate (ADR-088, M4):** gleiche und ähnliche Abschnitte (ab 85 %) über Dateien und Formate hinweg, z. B. dieselbe Folie als PowerPoint und PDF; Paare und Gruppen, Unterschiede wortweise markiert.
+- **Nach jedem Import** werden nur geänderte Dateien neu berechnet; „Neu berechnen“ baut alles neu auf.
+- **Entscheidung** „A/B führend“ oder „kein Duplikat“ je Inhaltspaar – bleibt bei erneutem Einlesen erhalten.
+- Seite „Dubletten (alle Formate)“ unter oneSCM_Metadaten; Migration `042_section_duplicates.sql`; Tests T-260, T-261, E2E T-262 (axe); Anforderungen NFR-85, NFR-86.
+
+### Behoben
+- PDF: Textstücke einer Zeile werden nach Position zusammengesetzt – nummerierte Listen (Nummer nach dem Text geschrieben) werden richtig erkannt.
+
 ## 0.35.0 – Etappe 35 (23.10.2026)
 
 ### Hinzugefügt

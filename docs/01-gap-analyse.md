@@ -161,6 +161,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.38 Stand nach Etappe 36 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Dubletten je Abschnitt über alle Formate, exakt und ab 85 %, Gruppen (M4, NFR-85) | ✅ ([ADR-088](adr/ADR-088-dubletten-formatuebergreifend.md)) |
+| Nach jedem Import nur geänderte Dateien; Entscheidung führende Fassung / kein Duplikat mit Unterschieden (NFR-86) | ✅ ([ADR-088](adr/ADR-088-dubletten-formatuebergreifend.md)) |
+| Offen | Etappen M5 (Fragen über alle Quellen mit Teilstücken), M6 (Video, OCR), M7 (Antwortqualität) |
+
 ## 1.37 Stand nach Etappe 35 (23.10.2026)
 
 | Punkt | Ergebnis |

@@ -2204,3 +2204,43 @@ test('[T-259] Quellen je Überschrift: Baum je Datei, zusammengeführt über Dat
   await expect(page.getByText('E2E In der Schulung verlängern Sie über Aktionen.')).toBeVisible();
   expect(await axe()).toEqual([]);
 });
+
+test('[T-262] Dubletten über alle Formate: Markdown und HTML mit gleichem Abschnitt, Unterschiede zeigen, führende Fassung festlegen', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const steps = ['E2E Öffnen Sie die Vertragssuche im Contract Management und suchen Sie den Vertrag', 'E2E Wählen Sie den Vertrag aus und prüfen Sie die Laufzeit und den Kunden', 'E2E Klicken Sie auf Beenden und bestätigen Sie die Kündigung mit Speichern'];
+  const adm = { 'X-User-Id': 'u-admin' };
+  const upload = async (name: string, mimeType: string, text: string) => {
+    const res = await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name, mimeType, buffer: Buffer.from(text) } } });
+    expect(res.status()).toBe(202);
+    const id = (await res.json()).id;
+    await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
+  };
+  await upload('e2e-dp-schulung.md', 'text/markdown', `---\nroles: [all]\ndivisions: [all]\n---\n# E2E Schulung Kündigung\n\n## E2E Vertrag kündigen\n\n${steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n`);
+  await upload('e2e-dp-handbuch.html', 'text/html', `<html><head><title>E2E Handbuch Kündigung</title></head><body><h2>E2E Vertrag kündigen</h2><ul>${steps.map((s) => `<li>${s}</li>`).join('')}</ul></body></html>`);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Dubletten (alle Formate)' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Dubletten über alle Formate' })).toBeVisible();
+  await page.getByLabel('nur formatübergreifend').check();
+  const pair = page.getByRole('article', { name: 'Dublette E2E Vertrag kündigen' });
+  await expect(pair).toContainText('exakt gleich');
+  await expect(pair).toContainText('formatübergreifend');
+  await expect(pair).toContainText('e2e-dp-schulung.md');
+  await expect(pair).toContainText('e2e-dp-handbuch.html');
+  await pair.getByRole('button', { name: 'Unterschiede zeigen' }).click();
+  await expect(pair.getByLabel('Unterschiede')).toContainText('E2E Klicken Sie auf Beenden');
+  expect(await axe()).toEqual([]);
+
+  const handbookSide = (await pair.locator('.dp-side').first().textContent())?.includes('e2e-dp-handbuch.html') ? 'A' : 'B';
+  await pair.getByRole('button', { name: `${handbookSide} führend` }).click();
+  await expect(page.getByText(`${handbookSide} ist die führende Fassung.`)).toBeVisible();
+  await expect(page.getByRole('article', { name: 'Dublette E2E Vertrag kündigen' })).toHaveCount(0); // nicht mehr offen
+  await page.getByLabel('Status').selectOption('decided');
+  const decided = page.getByRole('article', { name: 'Dublette E2E Vertrag kündigen' });
+  await expect(decided.locator('.dp-leading')).toContainText('e2e-dp-handbuch.html');
+  expect(await axe()).toEqual([]);
+});

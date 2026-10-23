@@ -7,6 +7,7 @@ import {
 import { exportAccessMatrix, getAccessMatrix, importAccessMatrix, setAccessCell } from '../services/accessMatrix.js';
 import { exportDomainMap, getDomainMap, setDomainLink } from '../services/domainMap.js';
 import { listChunksWithSuggestions, outlineCoverage, outlineSources } from '../services/metadataOutline.js';
+import { decideDuplicate, duplicateGroups, getDuplicate, listDuplicates, refreshDuplicates } from '../services/metadataDuplicates.js';
 import { headingDocuments, headingTree, mergedHeadings } from '../services/metadataHeadings.js';
 import { list, num, userOf } from './helpers.js';
 
@@ -51,6 +52,16 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
     userOf(req.ctx, req);
     return mergedHeadings(req.ctx, { q: req.query.q, multi: req.query.multi === 'true', limit: num(req.query.limit), offset: num(req.query.offset) });
   });
+  // Dubletten über alle Formate je Abschnitt (M4, ADR-088)
+  app.get<{ Querystring: { crossFormat?: string; status?: string; minScore?: string; q?: string; limit?: string; offset?: string } }>('/metadata/duplicates', async (req) => {
+    userOf(req.ctx, req);
+    const q = req.query;
+    return listDuplicates(req.ctx, { crossFormat: q.crossFormat === 'true', status: q.status || undefined, minScore: q.minScore ? Number(q.minScore) : undefined, q: q.q, limit: num(q.limit), offset: num(q.offset) });
+  });
+  app.get<{ Querystring: { crossFormat?: string } }>('/metadata/duplicates/groups', async (req) => (userOf(req.ctx, req), duplicateGroups(req.ctx, { crossFormat: req.query.crossFormat === 'true' })));
+  app.post('/metadata/duplicates/rebuild', async (req) => (userOf(req.ctx, req, 'edit'), refreshDuplicates(req.ctx)));
+  app.get<P<'duplicateId'>>('/metadata/duplicates/:duplicateId', async (req) => (userOf(req.ctx, req), getDuplicate(req.ctx, req.params.duplicateId)));
+  app.put<P<'duplicateId'> & { Body: any }>('/metadata/duplicates/:duplicateId/decision', async (req) => decideDuplicate(req.ctx, req.params.duplicateId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
   app.post<{ Body: any }>('/metadata/chunks/labels', async (req) => setChunkLabels(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit')));
 
   // Gespeicherte Fragen und Antworten: lesen mit `read`, speichern, ändern, löschen mit `edit`

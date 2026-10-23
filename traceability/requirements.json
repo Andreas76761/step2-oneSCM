@@ -947,5 +947,23 @@
     "documentation": [
       "docs/adr/ADR-087-teilstuecke-ueberschriften.md"
     ]
+  },
+  {
+    "id": "NFR-85",
+    "title": "Dubletten je Abschnitt über alle Formate (exakt und ab 85 % Ähnlichkeit, lokal), Gruppen; nach jedem Import nur geänderte Dateien neu berechnet",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-088-dubletten-formatuebergreifend.md"
+    ]
+  },
+  {
+    "id": "NFR-86",
+    "title": "Dubletten nebeneinander mit wortweise markierten Unterschieden; Entscheidung führende Fassung oder kein Duplikat je Inhaltspaar, bleibt bei erneutem Einlesen erhalten",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-088-dubletten-formatuebergreifend.md"
+    ]
   }
 ]

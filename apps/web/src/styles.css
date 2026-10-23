@@ -822,3 +822,12 @@ div.reader-lang-note p { margin: 0; }
 .md-parts ol { margin: 4px 0; padding-left: 1.4rem; }
 .hd-open { margin: 2px 0 2px 1rem; }
 .hd-open a, .hd-group h3 a { display: inline-block; min-height: 24px; min-width: 24px; padding: 2px 0; line-height: 20px; }
+
+/* Dubletten über alle Formate (ADR-088) */
+.dp-pair { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.dp-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+.dp-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.dp-side { background: var(--surface-2); border-radius: 6px; padding: 6px 8px; border-left: 4px solid var(--border); }
+.dp-side.dp-leading { border-left-color: var(--ok, #15803d); }
+.dp-diff del { background: var(--danger-bg); text-decoration: line-through; }
+.dp-diff ins { background: var(--info-bg); text-decoration: underline; }
