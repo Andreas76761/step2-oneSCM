@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.39.0 – Etappe 39 (23.10.2026)
+
+### Hinzugefügt
+- **Antwortqualität (ADR-091, M7):** unter „oneSCM_Metadaten › Antwortqualität“ Testfragensätze mit erwarteten Quellen (Pfad, optional Überschrift), Stichworten und Lückenfragen – aus CSV, Excel, JSON, aus gespeicherten Fragen & Antworten oder von Hand.
+- **Prüflauf** stellt jede Testfrage wie eine Frage an alle Quellen und misst: bestanden, Treffer@1/@3/@6, MRR, Beleg richtig, Stichwort-Abdeckung, Lücken richtig, Zeit je Frage – ohne Einträge im Frageprotokoll.
+- **Verlauf und Vergleich** mit dem vorigen Lauf (Änderung je Kennzahl, neu bestanden/durchgefallen), Ergebnis je Frage mit Antwort und gefundenen Stellen, Export als Excel/CSV/JSON.
+- „Frage an alle Quellen“ liefert zusätzlich die gefundenen Stellen in Rangfolge (`retrieved`).
+- Migration `046_answer_quality.sql`; Tests T-275 … T-277, E2E T-278 (axe); Anforderungen NFR-92, NFR-93.
+
 ## 0.38.0 – Etappe 38 (23.10.2026)
 
 ### Hinzugefügt

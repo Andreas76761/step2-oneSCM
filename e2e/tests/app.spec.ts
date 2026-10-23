@@ -2337,3 +2337,36 @@ test('[T-274] Einlesen: Untertitel mit Zeitmarke je Chunk, Video ohne Transkript
   await expect(page.getByText('bei 00:07').first()).toBeVisible();
   expect(await axe()).toEqual([]);
 });
+
+test('[T-278] Antwortqualität: Testfragen einlesen, Prüflauf mit Kennzahlen, nicht bestandene Fragen, Testfrage ergänzen', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const csv = 'Frage;Erwartete Quelle;Keine Antwort\r\nE2E Welche Zollvorschriften gelten für Raumschiffe auf dem Mars?;;ja\r\nE2E Wie kündige ich einen Vertrag?;e2e-gibt-es-nicht.md;\r\n';
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Antwortqualität', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Antwortqualität' })).toBeVisible();
+  await page.getByTestId('eval-input').setInputFiles({ name: 'e2e-testfragen.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await expect(page.getByText('2 Testfragen aus „e2e-testfragen.csv“ eingelesen.')).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Testfragen' })).toContainText('Lückenfrage');
+  expect(await axe()).toEqual([]);
+
+  await page.getByRole('button', { name: 'Prüflauf starten' }).click();
+  await expect(page.getByText('Prüflauf fertig: 1 von 2 Testfragen bestanden.')).toBeVisible({ timeout: 30000 });
+  const kpis = page.getByRole('group', { name: 'Kennzahlen' });
+  await expect(kpis).toContainText('50 %');
+  await page.getByLabel('nur nicht bestanden').check();
+  const results = page.getByRole('table', { name: 'Ergebnisse' });
+  await expect(results).toContainText('E2E Wie kündige ich einen Vertrag?');
+  await expect(results).not.toContainText('Raumschiffe');
+  expect(await axe()).toEqual([]);
+
+  // Testfrage ergänzen
+  await page.getByLabel('Frage', { exact: true }).fill('E2E Was ist eine Lückenfrage auf dem Jupiter?');
+  await page.getByLabel('Lückenfrage (keine Antwort erwartet)').check();
+  await page.getByRole('button', { name: 'Testfrage hinzufügen' }).click();
+  await expect(page.getByRole('table', { name: 'Testfragen' })).toContainText('E2E Was ist eine Lückenfrage auf dem Jupiter?');
+  expect(await axe()).toEqual([]);
+});

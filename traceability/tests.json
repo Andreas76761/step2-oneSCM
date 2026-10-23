@@ -1909,5 +1909,44 @@
       "NFR-90",
       "NFR-91"
     ]
+  },
+  {
+    "id": "T-275",
+    "title": "Bewertung je Testfrage und Kennzahlen: Treffer@k, MRR, Beleg, Stichworte, Lückenfragen; Einlesen aus Tabelle und JSON (Einheit)",
+    "file": "apps/server/test/stage39.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-92",
+      "NFR-93"
+    ]
+  },
+  {
+    "id": "T-276",
+    "title": "Testfragensatz aus CSV, Prüflauf mit Kennzahlen, Korrektur, zweiter Lauf mit Vergleich, Export; kein Eintrag im Frageprotokoll",
+    "file": "apps/server/test/stage39.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-92",
+      "NFR-93"
+    ]
+  },
+  {
+    "id": "T-277",
+    "title": "Testfragen aus gespeicherten Fragen & Antworten: erwartete Quelle aus den Belegen; leerer Satz und JSON-Fehler",
+    "file": "apps/server/test/stage39.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-92"
+    ]
+  },
+  {
+    "id": "T-278",
+    "title": "Antwortqualität: Testfragen einlesen, Prüflauf mit Kennzahlen, nicht bestandene Fragen, Testfrage ergänzen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-92",
+      "NFR-93"
+    ]
   }
 ]

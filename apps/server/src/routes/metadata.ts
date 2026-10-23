@@ -13,6 +13,9 @@ import { answerCatalog, deleteCatalog, exportCatalog, getCatalog, importCatalog,
 import { decideDuplicate, duplicateGroups, getDuplicate, listDuplicates, refreshDuplicates } from '../services/metadataDuplicates.js';
 import { headingDocuments, headingTree, mergedHeadings } from '../services/metadataHeadings.js';
 import { toolStatus } from '../services/mediaTools.js';
+import {
+  addEvalItem, createEvalSet, deleteEvalItem, deleteEvalSet, exportEvalRun, getEvalRun, getEvalSet, importEvalSet, listEvalSets, runEval, updateEvalItem,
+} from '../services/metadataQuality.js';
 import { list, num, userOf } from './helpers.js';
 
 type P<T extends string> = { Params: Record<T, string> };
@@ -85,6 +88,45 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Querystring: { format?: string; q?: string; labels?: string; language?: string } }>('/metadata/qa/export', async (req, reply) => {
     userOf(req.ctx, req);
     const f = await exportQa(req.ctx, req.query.format ?? 'csv', { q: req.query.q, labelIds: list(req.query.labels), language: req.query.language || undefined });
+    reply.header('Content-Type', f.contentType).header('Content-Disposition', `attachment; filename="${f.fileName}"`);
+    return f.data;
+  });
+  // Antwortqualität (ADR-091): Testfragensätze, Prüfläufe mit Kennzahlen, Vergleich, Export
+  app.get('/metadata/eval-sets', async (req) => (userOf(req.ctx, req), listEvalSets(req.ctx)));
+  app.post<{ Body: any }>('/metadata/eval-sets', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    if (!req.isMultipart()) return createEvalSet(req.ctx, req.body ?? {}, user);
+    const file = await req.file();
+    if (!file) throw badRequest('Feld „file“ fehlt.');
+    const data = await file.toBuffer();
+    if (data.length > 10 * 1024 * 1024) throw badRequest('Datei größer als 10 MB.');
+    return importEvalSet(req.ctx, { fileName: file.filename, data, name: (file.fields as any)?.name?.value }, user);
+  });
+  app.get<P<'setId'>>('/metadata/eval-sets/:setId', async (req) => (userOf(req.ctx, req), getEvalSet(req.ctx, req.params.setId)));
+  app.delete<P<'setId'>>('/metadata/eval-sets/:setId', async (req, reply) => {
+    await deleteEvalSet(req.ctx, req.params.setId, userOf(req.ctx, req, 'edit'));
+    reply.code(204);
+  });
+  app.post<P<'setId'> & { Body: any }>('/metadata/eval-sets/:setId/items', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    return addEvalItem(req.ctx, req.params.setId, req.body ?? {}, user);
+  });
+  app.patch<P<'itemId'> & { Body: any }>('/metadata/eval-items/:itemId', async (req) => updateEvalItem(req.ctx, req.params.itemId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.delete<P<'itemId'>>('/metadata/eval-items/:itemId', async (req, reply) => {
+    await deleteEvalItem(req.ctx, req.params.itemId, userOf(req.ctx, req, 'edit'));
+    reply.code(204);
+  });
+  app.post<P<'setId'>>('/metadata/eval-sets/:setId/runs', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    return runEval(req.ctx, req.params.setId, user);
+  });
+  app.get<P<'runId'>>('/metadata/eval-runs/:runId', async (req) => (userOf(req.ctx, req), getEvalRun(req.ctx, req.params.runId)));
+  app.get<P<'runId'> & { Querystring: { format?: string } }>('/metadata/eval-runs/:runId/export', async (req, reply) => {
+    userOf(req.ctx, req);
+    const f = await exportEvalRun(req.ctx, req.params.runId, req.query.format ?? 'xlsx');
     reply.header('Content-Type', f.contentType).header('Content-Disposition', `attachment; filename="${f.fileName}"`);
     return f.data;
   });

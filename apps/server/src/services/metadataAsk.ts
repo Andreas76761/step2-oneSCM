@@ -20,7 +20,7 @@ export const CANDIDATES = 20;
 export const PASSAGES = 6;
 /** Mindestrelevanz eines Belegs: Anteil der Inhaltswörter der Frage bzw. deutliche Bedeutungsähnlichkeit */
 export const MIN_KEYWORDS = 0.3;
-const MIN_SIMILARITY = 0.6;
+export const MIN_SIMILARITY = 0.6;
 const MAX_UNITS = 20000;
 const FORMATS = ['markdown', 'html', 'docx', 'pptx', 'pdf', 'mp4', 'subtitles', 'jira'];
 
@@ -81,7 +81,8 @@ function rerank(question: string, c: { score: number; text: string; headingPath:
   return 0.6 * c.score + 0.25 * head + 0.15 * bigram;
 }
 
-export async function askSources(ctx: Ctx, input: any, user: User) {
+/** `log: false` für Prüfläufe (ADR-091): keine Einträge im Frageprotokoll, der Lauf selbst wird protokolliert */
+export async function askSources(ctx: Ctx, input: any, user: User, opts: { log?: boolean } = {}) {
   const question = String(input?.question ?? '').trim();
   if (question.length < 3 || question.length > 500) throw badRequest('Frage mit 3 bis 500 Zeichen erforderlich.');
   const language = input?.language === 'en' ? 'en' : 'de';
@@ -146,7 +147,7 @@ export async function askSources(ctx: Ctx, input: any, user: User) {
   const number = new Map(cited.map((l, i) => [l, i + 1]));
   const answer = sentences.map((s) => ({ text: s.text, sources: s.sources.map((l) => number.get(l)!).filter(Boolean) }));
   const id = newId('mask');
-  await ctx.db.tx(async () => {
+  if (opts.log !== false) await ctx.db.tx(async () => {
     await ctx.db.run(
       'INSERT INTO metadata_ask_log (id, project_id, user_id, question, filters, mode, answer, sources, provider, model, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       id, ctx.projectId, user.id, question, json(filters), mode, json(answer), json(sources), mode === 'llm' ? ctx.llm!.id : null, mode === 'llm' ? ctx.llm!.model : null, now(),
@@ -155,6 +156,8 @@ export async function askSources(ctx: Ctx, input: any, user: User) {
   });
   return {
     id, question, language, filters, mode, answer, sources, notice, dropped, candidates: ranked.length, searched: all.length,
+    // alle gefundenen Stellen in Rangfolge (auch nicht zitierte) – für die Trefferquote (ADR-091)
+    retrieved: ranked.map((u, i) => ({ rank: i + 1, snippetId: u.snippetId, documentId: u.documentId, path: u.path, format: u.format, headingPath: u.headingPath, locator: u.locator, lineStart: u.lineStart, score: Math.round(u.score * 100) / 100 })),
     // Antworttext mit Belegnummern, z. B. zum Speichern als Frage & Antwort
     answerText: answer.map((s) => `${s.text}${s.sources.length ? ` [${s.sources.join(', ')}]` : ''}`).join(' '),
   };

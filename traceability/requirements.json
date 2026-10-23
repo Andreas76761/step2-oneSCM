@@ -1010,5 +1010,23 @@
     "documentation": [
       "docs/adr/ADR-090-video-untertitel-ocr.md"
     ]
+  },
+  {
+    "id": "NFR-92",
+    "title": "Testfragensätze mit erwarteten Quellen, Stichworten und Lückenfragen – aus CSV, Excel, JSON, gespeicherten Fragen & Antworten oder von Hand",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-091-antwortqualitaet.md"
+    ]
+  },
+  {
+    "id": "NFR-93",
+    "title": "Prüflauf über „Frage an alle Quellen“ mit Kennzahlen (bestanden, Treffer@1/@3/@6, MRR, Beleg richtig, Stichworte, Lücken richtig), Vergleich mit dem vorigen Lauf und Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-091-antwortqualitaet.md"
+    ]
   }
 ]

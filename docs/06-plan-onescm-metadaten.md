@@ -118,7 +118,7 @@ Gestaltung wie die bestehende App (Karten, Tabellen, Dunkelmodus, WCAG 2.2 AA).
 | M4 ✅ | Indexierung, Seite „Dopplungen“ (formatübergreifend) – umgesetzt in Etappe 36 ([ADR-088](adr/ADR-088-dubletten-formatuebergreifend.md)) | Dublettensuche |
 | M5 ✅ | Fragen mit Belegen über alle Quellen, Fragen & Antworten speichern mit Labels – umgesetzt in Etappe 37 ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) | RAG nutzbar |
 | M6 ✅ | MP4-Transkription, Bildbeschreibung/OCR (nach M-04/M-05) – umgesetzt in Etappe 38 mit lokalen Werkzeugen, Untertiteln und Standbildern ([ADR-090](adr/ADR-090-video-untertitel-ocr.md)) | Video und Bilder durchsuchbar |
-| M7 | Qualität: Testfragen mit erwarteten Quellen, Kennzahlen (Trefferquote), Feinschliff | messbare Antwortqualität |
+| M7 ✅ | Qualität: Testfragen mit erwarteten Quellen, Kennzahlen (Trefferquote), Feinschliff – umgesetzt in Etappe 39 ([ADR-091](adr/ADR-091-antwortqualitaet.md)) | messbare Antwortqualität |
 
 Jede Etappe endet mit Tests, Traceability, Changelog und Pull Request.
 

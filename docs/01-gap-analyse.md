@@ -178,6 +178,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Standbilder bei Änderung mit rotem Rahmen (F-26) und Texterkennung gescannter PDF-Seiten, nur lokale Werkzeuge (NFR-91) | ✅ ([ADR-090](adr/ADR-090-video-untertitel-ocr.md)) |
 | Offen | Etappe M7 (Antwortqualität); lokale Werkzeuge (whisper.cpp, Tesseract, ffmpeg) im Betrieb einrichten |
 
+## 1.41 Stand nach Etappe 39 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Testfragensätze mit erwarteten Quellen, Stichworten und Lückenfragen (M7, NFR-92) | ✅ ([ADR-091](adr/ADR-091-antwortqualitaet.md)) |
+| Prüfläufe mit Trefferquote, MRR, Beleg, Lücken richtig, Vergleich und Export (NFR-93) | ✅ ([ADR-091](adr/ADR-091-antwortqualitaet.md)) |
+| Offen | Plan M1–M7 abgeschlossen; Testfragen aus Wissens-Check und Lückenanalyse (D-08) einlesen und erste Prüfläufe mit echten Quellen; lokale Werkzeuge im Betrieb einrichten |
+
 ## 1.38 Stand nach Etappe 36 (23.10.2026)
 
 | Punkt | Ergebnis |

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.38.0
+  version: 0.39.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -4587,6 +4587,137 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ qaId, saved: { answer, sources, savedAt }, current, changes: { sourcesAdded, sourcesRemoved, sourcesKept, answerChanged, diff } }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-sets:
+    get:
+      operationId: listEvalSets
+      summary: 'Testfragensätze (Antwortqualität, ADR-091) mit Anzahl Fragen, Prüfläufen und letztem Lauf'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, name, origin, fileName, questions, runs, lastRun, createdAt }]' }
+    post:
+      operationId: createEvalSet
+      summary: 'Testfragensatz anlegen: JSON { name, items?, fromQa?: { labelIds? } } oder multipart „file“ (CSV, Excel, JSON) mit Spalten Frage, Erwartete Quelle, Erwartete Überschrift, Stichworte, Keine Antwort (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, required: [name], properties: { name: { type: string }, items: { type: array, items: { type: object, properties: { question: { type: string, minLength: 3, maxLength: 500 }, expected: { type: array, items: { oneOf: [{ type: string }, { type: object, properties: { path: { type: string }, heading: { type: string } } }] } }, keywords: { type: array, items: { type: string } }, expectNoAnswer: { type: boolean }, note: { type: string } } } }, fromQa: { type: object, properties: { labelIds: { type: array, items: { type: string } } } } } } }
+          multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary }, name: { type: string } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Testfragensatz mit Fragen und Läufen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-sets/{setId}:
+    get:
+      operationId: getEvalSet
+      summary: 'Testfragensatz mit Fragen und den letzten 50 Prüfläufen'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, name, origin, items: [{ id, position, question, expected, keywords, expectNoAnswer, note, qaId }], runs }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteEvalSet
+      summary: 'Testfragensatz mit allen Prüfläufen löschen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-sets/{setId}/items:
+    post:
+      operationId: addEvalItem
+      summary: 'Testfrage ergänzen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { question: { type: string, minLength: 3, maxLength: 500 }, expected: { type: array, items: { oneOf: [{ type: string }, { type: object, properties: { path: { type: string }, heading: { type: string } } }] } }, keywords: { type: array, items: { type: string } }, expectNoAnswer: { type: boolean }, note: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Testfragensatz' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-sets/{setId}/runs:
+    post:
+      operationId: runEval
+      summary: 'Prüflauf: jede Testfrage wie eine Frage an alle Quellen stellen und bewerten – Kennzahlen, Ergebnis je Frage, Vergleich mit dem vorigen Lauf; nicht im Frageprotokoll (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, metrics: { questions, passed, passRate, hitAt1, hitAt3, hitAt6, mrr, citedRate, answeredRate, keywordCoverage, noAnswerAccuracy, avgMs }, config, results, compare }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-items/{itemId}:
+    patch:
+      operationId: updateEvalItem
+      summary: 'Testfrage ändern (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { question: { type: string, minLength: 3, maxLength: 500 }, expected: { type: array, items: { oneOf: [{ type: string }, { type: object, properties: { path: { type: string }, heading: { type: string } } }] } }, keywords: { type: array, items: { type: string } }, expectNoAnswer: { type: boolean }, note: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Testfrage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteEvalItem
+      summary: 'Testfrage entfernen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'entfernt' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-runs/{runId}:
+    get:
+      operationId: getEvalRun
+      summary: 'Prüflauf mit Kennzahlen, Ergebnis je Frage (Rang, Beleg, Stichworte, Antwort, gefundene Stellen) und Vergleich mit dem vorigen Lauf'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: runId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, setId, metrics, config, results, compare: { previousRunId, delta, improved, regressed } | null }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-runs/{runId}/export:
+    get:
+      operationId: exportEvalRun
+      summary: 'Prüflauf exportieren: Excel (Kennzahlen und Ergebnisse), CSV oder JSON'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: runId, in: path, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [xlsx, csv, json], default: xlsx } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
   /metadata/question-sets:
     get:
