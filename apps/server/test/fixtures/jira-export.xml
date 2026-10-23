@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="0.92">
+<channel>
+<title>Jira</title>
+<item>
+  <title>[ONESCM-10263] Vertragsvorschau als PDF erzeugen</title>
+  <key id="1">ONESCM-10263</key>
+  <summary>Vertragsvorschau als PDF erzeugen</summary>
+  <type id="10">Test</type>
+  <priority id="3">Medium</priority>
+  <status id="1">Reviewed</status>
+  <resolution id="-1">Unresolved</resolution>
+  <project id="1" key="ONESCM">DOT ONESCM</project>
+  <assignee username="d7abcde">Max Mustermann</assignee>
+  <reporter username="d7xyz">Erika Musterfrau</reporter>
+  <created>Mon, 5 Feb 2024 10:15:00 +0100</created>
+  <updated>Tue, 6 Feb 2024 09:00:00 +0100</updated>
+  <component>8 - Documents &amp; Communications</component>
+  <labels><label>automated</label><label>secondary_flow</label></labels>
+  <description>&lt;h2&gt;Current State&lt;/h2&gt;&lt;p&gt;Die Vorschau fehlt. Rückfragen an max.mustermann@firma.de.&lt;/p&gt;&lt;h2&gt;Target State&lt;/h2&gt;&lt;ul&gt;&lt;li&gt;PDF wird erzeugt&lt;/li&gt;&lt;/ul&gt;</description>
+  <issuelinks>
+    <issuelinktype id="1"><name>Relates</name>
+      <outwardlinks description="relates to"><issuelink><issuekey id="2">ONESCM-14533</issuekey></issuelink></outwardlinks>
+    </issuelinktype>
+  </issuelinks>
+  <customfields>
+    <customfield id="customfield_1"><customfieldname>Epic Link</customfieldname><customfieldvalues><customfieldvalue>ONESCM-8703</customfieldvalue></customfieldvalues></customfield>
+  </customfields>
+  <comments><comment author="d7abcde">Bitte bis Freitag – Max</comment></comments>
+</item>
+<item>
+  <title>[ONESCM-772] Fahrzeuggruppen pflegen</title>
+  <key id="3">ONESCM-772</key>
+  <summary>Fahrzeuggruppen pflegen</summary>
+  <type id="11">Story</type>
+  <status id="2">In Use</status>
+  <component>6 - Vehicle Management</component>
+  <fixVersion>PI14</fixVersion>
+  <description>&lt;p&gt;Der Markt pflegt Fahrzeuggruppen unter Product Management.&lt;/p&gt;</description>
+</item>
+</channel>
+</rss>

@@ -82,3 +82,4 @@
 | [ADR-078](ADR-078-weitere-sprachen.md) | Alle Projektsprachen vollständig beschriftet | akzeptiert, umgesetzt |
 | [ADR-079](ADR-079-onescm-metadaten.md) | oneSCM_Metadaten: Labels, Chunks und gespeicherte Fragen und Antworten | akzeptiert, umgesetzt |
 | [ADR-080](ADR-080-katalog-onescm-datenschutz.md) | Labelkatalog nach echtem oneSCM, erweiterte Datenschutzprüfung | akzeptiert, umgesetzt |
+| [ADR-081](ADR-081-jira-update-zugriff.md) | Jira-Import als Datei, Update-Eingang, Zugriffsmatrix | akzeptiert, umgesetzt |

@@ -31,6 +31,7 @@ import { integrationRoutes } from './routes/integrations.js';
 import { contextHelpRoutes, publicHelpRoutes } from './routes/contextHelp.js';
 import { masterDataRoutes } from './routes/masterData.js';
 import { metadataRoutes } from './routes/metadata.js';
+import { sourceUpdateRoutes } from './routes/sourceUpdates.js';
 import { seedMetadataLabels } from './services/metadata.js';
 import { styleRoutes } from './routes/style.js';
 import { APP_VERSION } from './version.js';
@@ -252,6 +253,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
       metadataRoutes(api, ctx);
+      sourceUpdateRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

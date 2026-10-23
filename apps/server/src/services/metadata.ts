@@ -151,6 +151,7 @@ async function labelsBy(ctx: Ctx, table: 'metadata_chunk_labels' | 'metadata_qa_
 /** Dateiendungen je Format (Filter in SQL) */
 const FORMAT_EXT: Record<string, string[]> = { markdown: ['md', 'markdown'], html: ['html', 'htm'], docx: ['docx'], pptx: ['pptx'], pdf: ['pdf'], mp4: ['mp4'] };
 const formatOf = (sourceFormat: string | null, path: string) => {
+  if (sourceFormat === 'jira') return 'jira'; // Ticket aus einem Jira-Export (ADR-081), gespeichert als Markdown
   const ext = /\.([a-z0-9]+)$/i.exec(path)?.[1]?.toLowerCase();
   if (ext === 'md' || ext === 'markdown') return 'markdown';
   if (ext === 'htm') return 'html';
@@ -177,10 +178,11 @@ export async function listChunks(ctx: Ctx, opts: { q?: string; labelIds?: string
     where.push(`LOWER(s.text) LIKE ? ESCAPE '\\'`);
     params.push(likePattern(opts.q));
   }
-  if (opts.format) {
+  if (opts.format === 'jira') where.push("r.source_format = 'jira'");
+  else if (opts.format) {
     const exts = FORMAT_EXT[opts.format];
-    if (!exts) throw badRequest(`format muss eines von ${Object.keys(FORMAT_EXT).join(', ')} sein.`);
-    where.push(`(${exts.map(() => 'LOWER(d.path) LIKE ?').join(' OR ')})`);
+    if (!exts) throw badRequest(`format muss eines von ${[...Object.keys(FORMAT_EXT), 'jira'].join(', ')} sein.`);
+    where.push(`(${exts.map(() => 'LOWER(d.path) LIKE ?').join(' OR ')})`, "r.source_format <> 'jira'");
     params.push(...exts.map((e) => `%.${e}`));
   }
   if (opts.documentId) {

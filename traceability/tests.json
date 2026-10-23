@@ -1531,5 +1531,43 @@
     "requirements": [
       "NFR-70"
     ]
+  },
+  {
+    "id": "T-214",
+    "title": "Jira-Import als Datei: XML- und CSV-Export, je Ticket eine Quelle unter jira/, Felder und Verknüpfungen, ohne Personenfelder, Text pseudonymisiert, erneuter Import nur bei Änderung",
+    "file": "apps/server/test/stage29.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-71"
+    ]
+  },
+  {
+    "id": "T-215",
+    "title": "Update-Eingang: geänderte, entfallene und neue Quellabschnitte je Absatz; Text übernehmen, Quelle aktualisieren, ergänzen, entfernen, verwerfen; nur Entwürfe änderbar",
+    "file": "apps/server/test/stage29.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-72"
+    ]
+  },
+  {
+    "id": "T-216",
+    "title": "Zugriffsmatrix Rolle × Menüpunkt: Stufen V, L, –, ? mit Beleg, Pflege mit Bearbeitungsrecht, CSV-Import mit Namen oder Codes, Export ohne Formel-Einschleusung",
+    "file": "apps/server/test/stage29.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-73"
+    ]
+  },
+  {
+    "id": "T-238",
+    "title": "Jira-Export einlesen, Quellenänderungen absatzweise übernehmen, Zugriffsmatrix mit Beleg pflegen (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-71",
+      "NFR-72",
+      "NFR-73"
+    ]
   }
 ]

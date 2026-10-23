@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.29.0 – Etappe 29 (23.10.2026)
+
+### Hinzugefügt
+- **Jira-Import als Datei (ADR-081, F-01):** XML- und CSV-Exporte, je Ticket eine Quelle unter `jira/` mit Feldern, Beschreibung, Akzeptanzkriterien und Verknüpfungen; ohne Personenfelder und Kommentare, Text pseudonymisiert; Format „Jira-Ticket“ in oneSCM_Metadaten.
+- **Quellenänderungen (ADR-081, F-05):** geänderte, entfallene und neue Quellabschnitte je Kapitelabsatz mit Gegenüberstellung; Text übernehmen, nur Quelle aktualisieren, ergänzen, entfernen oder verwerfen – nur an Entwürfen.
+- **Zugriffsmatrix (ADR-081, F-06):** Rolle × Menüpunkt mit V/L/–/? und Beleg, CSV-Import und -Export.
+- Migration `036_source_updates_access.sql`; Tests T-214 … T-216, E2E T-238 (axe); Anforderungen NFR-71 … NFR-73.
+
 ## 0.28.0 – Etappe 28 (23.10.2026)
 
 ### Geändert

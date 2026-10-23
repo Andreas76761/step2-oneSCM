@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.28.0
+  version: 0.29.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -368,7 +368,7 @@ paths:
   /imports:
     post:
       operationId: createImport
-      summary: ZIP-, Markdown-, HTML- (Confluence-Export) oder Word-Datei importieren (HTML/Word werden in Markdown umgewandelt, ADR-022)
+      summary: 'ZIP-, Markdown-, HTML- (Confluence-Export), Word-Datei oder Jira-Export (XML/CSV, je Ticket eine Quelle unter jira/, ADR-081) importieren (HTML/Word werden in Markdown umgewandelt, ADR-022)'
       tags: [Import]
       x-requirements: [US-001, US-002, US-003, US-004, NFR-09, NFR-14, NFR-23]
       parameters:
@@ -3915,3 +3915,80 @@ paths:
         '204': { description: 'Gelöscht' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /source-updates:
+    get:
+      operationId: listSourceUpdates
+      summary: 'Update-Eingang: Kapitelabsätze mit geänderter, entfallener oder neuer Quelle, je Absatz mit altem und neuem Quellabschnitt (ADR-081)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-72]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ summary: { total, changed, unchanged, removed, added, chapters, regenerate }, items: [{ id, kind: changed | unchanged | removed | added, chapterId, chapter, versionId, versionNo, versionStatus, editable, blockId, blockText, section, path, old: { snippetId, text, revisionNo, headingPath } | null, new: { … } | null, similarity }] }' }
+  /source-updates/decisions:
+    post:
+      operationId: decideSourceUpdate
+      summary: 'Änderung übernehmen (replace), nur Quelle aktualisieren (relink), neuen Abschnitt ergänzen (append), entfallene Quelle entfernen (remove) oder verwerfen (dismiss); Änderungen nur an Entwürfen (Berechtigung edit, ADR-081)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-72]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [blockId, action], properties: { blockId: { type: string }, oldSnippetId: { type: [string, 'null'] }, newSnippetId: { type: [string, 'null'] }, action: { type: string, enum: [replace, relink, append, remove, dismiss] }, reason: { type: string, maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ action, block }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/access-matrix:
+    get:
+      operationId: getAccessMatrix
+      summary: 'Zugriffsmatrix: Rollen × Menüpunkte (Labels) mit Stufe V, L, -, ? und Beleg (ADR-081)'
+      tags: [Metadaten]
+      x-requirements: [NFR-73]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ roles: [{ id, code, nameDe, nameEn }], navigation: [...], cells: [{ roleId, navId, level, evidence, updatedBy, updatedAt }], summary: { cells, V, L, none, open, withEvidence } }' }
+  /metadata/access-matrix/cells:
+    put:
+      operationId: setAccessMatrixCell
+      summary: 'Stufe und Beleg eines Feldes setzen (Berechtigung edit, ADR-081)'
+      tags: [Metadaten]
+      x-requirements: [NFR-73]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [roleId, navId, level], properties: { roleId: { type: string }, navId: { type: string }, level: { type: string, enum: [V, L, '-', '?'] }, evidence: { type: [string, 'null'], maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Matrix wie GET' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/access-matrix/import:
+    post:
+      operationId: importAccessMatrix
+      summary: 'CSV übernehmen: erste Spalte Menüpunkt (Code, UI-Begriff oder deutscher Name), je Rolle eine Spalte, optional „Beleg“; leere Felder bleiben (Berechtigung edit, ADR-081)'
+      tags: [Metadaten]
+      x-requirements: [NFR-73]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [csv], properties: { csv: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ written, unknownNavigation, unknownRoles, errors }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/access-matrix/export:
+    get:
+      operationId: exportAccessMatrix
+      summary: 'Zugriffsmatrix als CSV im Importformat (ADR-081)'
+      tags: [Metadaten]
+      x-requirements: [NFR-73]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'text/csv' }

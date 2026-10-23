@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { del, patch, post, qs } from '../api';
-import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { del, patch, post, put, qs } from '../api';
+import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 // oneSCM_Metadaten (ADR-079): Übersicht, Chunks mit Labels, gespeicherte Fragen und Antworten, Labelkatalog
 
@@ -95,8 +95,8 @@ function LabelMulti({ labels, groups, lang, selected, onChange, ariaLabel }: { l
   );
 }
 
-const FORMAT_LABEL: Record<string, string> = { markdown: 'Markdown', html: 'HTML', docx: 'Word', pptx: 'PowerPoint', pdf: 'PDF', mp4: 'Video' };
-const FORMAT_ICON: Record<string, string> = { markdown: '📝', html: '🌐', docx: '📄', pptx: '📊', pdf: '📕', mp4: '🎬' };
+const FORMAT_LABEL: Record<string, string> = { markdown: 'Markdown', html: 'HTML', docx: 'Word', pptx: 'PowerPoint', pdf: 'PDF', mp4: 'Video', jira: 'Jira-Ticket' };
+const FORMAT_ICON: Record<string, string> = { markdown: '📝', html: '🌐', docx: '📄', pptx: '📊', pdf: '📕', mp4: '🎬', jira: '🎫' };
 const formatText = (f: string) => `${FORMAT_ICON[f] ?? '📁'} ${FORMAT_LABEL[f] ?? f}`;
 
 /** Fundstelle lesbar: Seite, Folie, Zeitmarke oder Zeilen */
@@ -528,6 +528,113 @@ export function MetadataLabelsPage() {
           </Card>
         );
       })}
+    </Page>
+  );
+}
+
+// ---------------------------------------------------------------- Zugriffsmatrix (ADR-081, F-06)
+
+const LEVEL_TEXT: Record<string, string> = { V: 'V – nutzt/bearbeitet', L: 'L – liest', '-': '– kein Zugriff', '?': '? offen' };
+
+export function AccessMatrixPage() {
+  const { notify } = useApp();
+  const { canEdit } = useMe();
+  const [lang, setLang] = useLabelLang();
+  const m = useLoad<any>('/metadata/access-matrix');
+  const [sel, setSel] = useState<{ roleId: string; navId: string } | null>(null);
+  const [evidence, setEvidence] = useState('');
+  const [csv, setCsv] = useState('');
+  const [result, setResult] = useState<any | null>(null);
+  const cell = (roleId: string, navId: string) => m.data?.cells.find((c: any) => c.roleId === roleId && c.navId === navId);
+  const save = async (roleId: string, navId: string, level: string, ev?: string | null) => {
+    try {
+      m.setData(await put('/metadata/access-matrix/cells', { roleId, navId, level, evidence: ev !== undefined ? ev : cell(roleId, navId)?.evidence ?? null }));
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const choose = (roleId: string, navId: string) => {
+    setSel({ roleId, navId });
+    setEvidence(cell(roleId, navId)?.evidence ?? '');
+  };
+  const d = m.data;
+  const selRole = d?.roles.find((r: any) => r.id === sel?.roleId);
+  const selNav = d?.navigation.find((n: any) => n.id === sel?.navId);
+  return (
+    <Page title="Zugriffsmatrix" subtitle="Welche Rolle nutzt welchen Menüpunkt in oneSCM – mit Beleg je Eintrag" actions={<LangSwitch lang={lang} onChange={setLang} />}>
+      <ErrorBox error={m.error} />
+      {d && (
+        <div className="stat-row">
+          <div className="stat"><span className="muted small">Felder</span><strong>{d.summary.cells}</strong></div>
+          <div className="stat"><span className="muted small">V / L</span><strong>{d.summary.V} / {d.summary.L}</strong></div>
+          <div className="stat"><span className="muted small">kein Zugriff</span><strong>{d.summary.none}</strong></div>
+          <div className="stat"><span className="muted small">offen</span><strong>{d.summary.open}</strong></div>
+        </div>
+      )}
+      <Card title="Matrix" actions={<DownloadButton href="/api/v1/metadata/access-matrix/export" name="zugriffsmatrix.csv" className="btn small">CSV exportieren</DownloadButton>}>
+        <p className="small muted">V = nutzt/bearbeitet · L = liest · – = kein Zugriff · ? = offen (Beleg fehlt). {canEdit ? 'Feld anklicken, Stufe wählen, Beleg darunter eintragen.' : ''}</p>
+        {!d?.navigation.length ? <Empty>Keine Menüpunkte im Labelkatalog.</Empty> : (
+          <div className="am-wrap">
+            <table className="table am-table">
+              <thead><tr><th scope="col">Menüpunkt</th>{d.roles.map((r: any) => <th key={r.id} scope="col" className="am-role">{nameOf(r, lang)}</th>)}</tr></thead>
+              <tbody>
+                {d.navigation.map((n: any) => (
+                  <tr key={n.id}>
+                    <th scope="row" className="small">{nameOf(n, lang)}</th>
+                    {d.roles.map((r: any) => {
+                      const c = cell(r.id, n.id);
+                      const lv = c?.level ?? '?';
+                      const active = sel?.roleId === r.id && sel?.navId === n.id;
+                      return (
+                        <td key={r.id} className={`am-cell am-${lv === '-' ? 'none' : lv === '?' ? 'open' : lv}${active ? ' am-active' : ''}`} title={c?.evidence ? `Beleg: ${c.evidence}` : 'ohne Beleg'}>
+                          {canEdit ? (
+                            <select value={lv} aria-label={`${nameOf(n, lang)} – ${nameOf(r, lang)}`} onFocus={() => choose(r.id, n.id)} onChange={(e) => save(r.id, n.id, e.target.value)}>
+                              {Object.keys(LEVEL_TEXT).map((k) => <option key={k} value={k}>{k === '-' ? '–' : k}</option>)}
+                            </select>
+                          ) : <span>{lv === '-' ? '–' : lv}</span>}
+                          {c?.evidence && <span className="am-dot" aria-hidden="true">•</span>}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {canEdit && sel && selRole && selNav && (
+          <div className="filters am-evidence">
+            <span className="small"><strong>{nameOf(selNav, lang)}</strong> · {nameOf(selRole, lang)}: {LEVEL_TEXT[cell(sel.roleId, sel.navId)?.level ?? '?']}</span>
+            <label className="grow"><span className="sr-only">Beleg</span><input value={evidence} placeholder="Beleg, z. B. Navigation_oneSCM_Version3.docx, S. 4" aria-label="Beleg für das gewählte Feld" onChange={(e) => setEvidence(e.target.value)} /></label>
+            <button className="btn small primary" onClick={async () => { await save(sel.roleId, sel.navId, cell(sel.roleId, sel.navId)?.level ?? '?', evidence); notify('Beleg gespeichert.'); }}>Beleg speichern</button>
+          </div>
+        )}
+      </Card>
+      {canEdit && (
+        <Card title="Aus CSV übernehmen">
+          <p className="small muted">Erste Spalte: Menüpunkt (Code, englischer UI-Begriff oder deutscher Name). Weitere Spalten: je Rolle (Code oder Name) V, L, – oder ?. Optional Spalte „Beleg“. Leere Felder bleiben unverändert. Trennzeichen Komma oder Semikolon.</p>
+          <label className="block">CSV-Datei <input type="file" accept=".csv,text/csv" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setCsv(await f.text()); }} /></label>
+          <label className="block">oder Inhalt einfügen <textarea id="am-csv" rows={4} value={csv} onChange={(e) => setCsv(e.target.value)} aria-label="CSV-Inhalt" /></label>
+          <button className="btn primary" disabled={!csv.trim()} onClick={async () => {
+            try {
+              const r = await post('/metadata/access-matrix/import', { csv });
+              setResult(r);
+              notify(`${r.written} Felder übernommen.`);
+              m.reload();
+            } catch (e) {
+              notify(errorText(e), 'error');
+            }
+          }}>Übernehmen</button>
+          {result && (
+            <ul className="small">
+              <li>{result.written} Felder übernommen</li>
+              {result.unknownNavigation.length > 0 && <li>Unbekannte Menüpunkte: {result.unknownNavigation.join(', ')}</li>}
+              {result.unknownRoles.length > 0 && <li>Unbekannte Rollen: {result.unknownRoles.join(', ')}</li>}
+              {result.errors.map((x: string) => <li key={x}>{x}</li>)}
+            </ul>
+          )}
+        </Card>
+      )}
     </Page>
   );
 }

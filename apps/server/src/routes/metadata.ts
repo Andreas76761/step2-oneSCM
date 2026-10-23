@@ -4,6 +4,7 @@ import type { Ctx } from '../context.js';
 import {
   createLabel, createQa, deleteQa, getQa, labelGroups, listChunks, listLabels, listQa, metadataOverview, setChunkLabels, updateLabel, updateQa,
 } from '../services/metadata.js';
+import { exportAccessMatrix, getAccessMatrix, importAccessMatrix, setAccessCell } from '../services/accessMatrix.js';
 import { list, num, userOf } from './helpers.js';
 
 type P<T extends string> = { Params: Record<T, string> };
@@ -47,5 +48,15 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.delete<P<'qaId'>>('/metadata/qa/:qaId', async (req, reply) => {
     await deleteQa(req.ctx, req.params.qaId, userOf(req.ctx, req, 'edit'));
     reply.code(204);
+  });
+
+  // Zugriffsmatrix Rolle × Menüpunkt (ADR-081, F-06): lesen mit `read`, pflegen und importieren mit `edit`
+  app.get('/metadata/access-matrix', async (req) => (userOf(req.ctx, req), getAccessMatrix(req.ctx)));
+  app.put<{ Body: any }>('/metadata/access-matrix/cells', async (req) => setAccessCell(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.post<{ Body: any }>('/metadata/access-matrix/import', async (req) => importAccessMatrix(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.get('/metadata/access-matrix/export', async (req, reply) => {
+    userOf(req.ctx, req);
+    reply.header('Content-Type', 'text/csv; charset=utf-8').header('Content-Disposition', 'attachment; filename="zugriffsmatrix.csv"');
+    return exportAccessMatrix(req.ctx);
   });
 }

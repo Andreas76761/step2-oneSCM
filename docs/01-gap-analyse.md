@@ -161,6 +161,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.31 Stand nach Etappe 29 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Jira-Import als Datei (NFR-71) | ✅ XML/CSV, je Ticket eine Quelle, ohne Personenfelder ([ADR-081](adr/ADR-081-jira-update-zugriff.md)) |
+| Update-Eingang (NFR-72) | ✅ geänderte, entfallene, neue Quellabschnitte absatzweise übernehmen ([ADR-081](adr/ADR-081-jira-update-zugriff.md)) |
+| Zugriffsmatrix (NFR-73) | ✅ Rolle × Menüpunkt mit Beleg, CSV-Import/-Export ([ADR-081](adr/ADR-081-jira-update-zugriff.md)) |
+| Offen | Releaseletter aus Tickets (F-02), Release-Abgleich (F-03), weitere Funktionen aus docs/07, Etappen M2–M7 |
+
 ## 1.30 Stand nach Etappe 28 (23.10.2026)
 
 Umfang vom Auftraggeber am 23.10.2026 festgelegt: Empfehlungen der Entscheidungsvorlage ([07](07-bestehende-artefakte.md)) übernommen, Start mit Labelkatalog und Datenschutz.

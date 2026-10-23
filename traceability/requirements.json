@@ -821,5 +821,32 @@
     "documentation": [
       "docs/adr/ADR-080-katalog-onescm-datenschutz.md"
     ]
+  },
+  {
+    "id": "NFR-71",
+    "title": "Jira-Export (XML, CSV) als Datei importieren: je Ticket eine Quelle mit Feldern, Beschreibung, Akzeptanzkriterien und Verknüpfungen, ohne Personenfelder und Kommentare, pseudonymisiert",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-081-jira-update-zugriff.md"
+    ]
+  },
+  {
+    "id": "NFR-72",
+    "title": "Update-Eingang: geänderte, entfallene und neue Quellabschnitte je Kapitelabsatz anzeigen und absatzweise übernehmen, ergänzen, entfernen oder verwerfen; nur Entwürfe änderbar",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-081-jira-update-zugriff.md"
+    ]
+  },
+  {
+    "id": "NFR-73",
+    "title": "Zugriffsmatrix Rolle × Menüpunkt mit Stufe und Beleg pflegen, aus CSV übernehmen und exportieren",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-081-jira-update-zugriff.md"
+    ]
   }
 ]

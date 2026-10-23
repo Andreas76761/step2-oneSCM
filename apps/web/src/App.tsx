@@ -52,7 +52,9 @@ const ReaderPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m
 const MetadataOverviewPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataOverviewPage })));
 const MetadataChunksPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataChunksPage })));
 const MetadataQaPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataQaPage })));
+const AccessMatrixPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.AccessMatrixPage })));
 const MetadataLabelsPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataLabelsPage })));
+const SourceUpdatesPage = lazy(() => import('./pages/SourceUpdates').then((m) => ({ default: m.SourceUpdatesPage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
@@ -63,10 +65,12 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/metadaten', label: 'Übersicht', icon: '🧠' },
     { to: '/metadaten/chunks', label: 'Chunks', icon: '🧱' },
     { to: '/metadaten/fragen', label: 'Fragen & Antworten', icon: '💡' },
+    { to: '/metadaten/zugriffsmatrix', label: 'Zugriffsmatrix', icon: '🔐' },
     { to: '/metadaten/labels', label: 'Labels', icon: '🏷' },
   ] },
   { id: 'sammeln', label: '1 Sammeln', items: [
     { to: '/quellen', label: 'Quellen', icon: '📥' },
+    { to: '/quellenaenderungen', label: 'Quellenänderungen', icon: '🔄' },
     { to: '/cluster', label: 'Textcluster', icon: '🧩' },
     { to: '/widersprueche', label: 'Widersprüche', icon: '⚖️' },
     { to: '/dopplungen', label: 'Dopplungen', icon: '📑' },
@@ -395,8 +399,10 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/metadaten" element={<MetadataOverviewPage />} />
             <Route path="/metadaten/chunks" element={<MetadataChunksPage />} />
             <Route path="/metadaten/fragen" element={<MetadataQaPage />} />
+            <Route path="/metadaten/zugriffsmatrix" element={<AccessMatrixPage />} />
             <Route path="/metadaten/labels" element={<MetadataLabelsPage />} />
             <Route path="/quellen" element={<SourcesPage />} />
+            <Route path="/quellenaenderungen" element={<SourceUpdatesPage />} />
             <Route path="/cluster" element={<ClustersPage />} />
             <Route path="/widersprueche" element={<ContradictionsPage />} />
             <Route path="/dopplungen" element={<DuplicatesPage />} />

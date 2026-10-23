@@ -181,7 +181,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
 export const DEFAULT_SETTINGS = {
   // ENTSCHEIDUNG(E-01)
   import: {
-    allowedExtensions: ['.md', '.markdown', '.zip', '.html', '.htm', '.docx'],
+    allowedExtensions: ['.md', '.markdown', '.zip', '.html', '.htm', '.docx', '.xml', '.csv'],
     maxUploadBytes: Number(process.env.UPLOAD_MAX_BYTES ?? 50 * 1024 * 1024),
     maxZipFiles: Number(process.env.ZIP_MAX_FILES ?? 5000),
     maxEntryBytes: 20 * 1024 * 1024,

@@ -734,3 +734,25 @@ div.reader-lang-note p { margin: 0; }
 .md-excerpt { border-left: 3px solid var(--border); margin: 6px 0; padding: 4px 10px; }
 .md-archived-toggle { display: block; margin: 0 0 8px; }
 .md-chunk select { max-width: 280px; }
+
+/* Update-Eingang (ADR-081) */
+.su-item { border-top: 1px solid var(--border); padding: 10px 0; }
+.su-item:first-of-type { border-top: 0; }
+.su-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.su-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 6px 0; }
+.su-grid > div { min-width: 0; }
+.su-removed { text-decoration: line-through; opacity: 0.8; }
+
+/* Zugriffsmatrix (ADR-081) */
+.am-wrap { overflow-x: auto; max-width: 100%; }
+.am-table th[scope="row"] { white-space: nowrap; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+.am-role { font-size: 12px; white-space: nowrap; }
+.am-cell { text-align: center; padding: 2px 4px; position: relative; }
+.am-cell select { min-width: 48px; font-size: 12px; padding: 2px; }
+.am-V { background: var(--ok-bg, rgba(21, 128, 61, 0.14)); }
+.am-L { background: var(--info-bg); }
+.am-none { color: var(--muted); }
+.am-open select, .am-open span { color: var(--muted); }
+.am-active { outline: 2px solid var(--primary); outline-offset: -2px; }
+.am-dot { position: absolute; top: 0; right: 3px; font-size: 12px; color: var(--primary); }
+.am-evidence { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }

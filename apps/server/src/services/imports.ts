@@ -6,6 +6,7 @@ import { json, newId, now, parseJson, type Row } from '../db.js';
 import { classifySnippet } from '../domain/classify.js';
 import { CONVERTIBLE, docxToMarkdown, embedDataImages, htmlToMarkdown } from '../domain/convert.js';
 import { chapterOf, headingKey, parseMarkdown } from '../domain/markdown.js';
+import { issueToMarkdown, parseJira } from '../domain/jira.js';
 import { MEDIA_EXT, resolveRelative, rewriteImages } from '../domain/media.js';
 import { normalizedHash, sha256 } from '../domain/similarity.js';
 import { finishConnectionImport } from './connections.js';
@@ -21,9 +22,13 @@ interface Entry {
   skipped?: string;
   /** Bilddatei im ZIP (ADR-029) – wird als Medium abgelegt, nicht als Dokument */
   media?: boolean;
+  /** Ticket aus einem Jira-Export (ADR-081): bereits umgewandelt */
+  jira?: { markdown: Buffer; original: Buffer };
 }
 
 const MD_EXT = ['.md', '.markdown'];
+// Jira-Exporte (ADR-081): je Ticket ein Dokument unter jira/<Schlüssel>.md
+const JIRA_EXT = ['.xml', '.csv'];
 
 /**
  * `snapshot` (nur ZIP): die Datei ist der vollständige Stand ihrer Herkunft – Dokumente derselben Herkunft (Upload bzw.
@@ -45,7 +50,7 @@ export async function createImport(ctx: Ctx, fileName: string, data: Buffer, act
   await ctx.db.tx(async () => {
     await ctx.db.run(
       'INSERT INTO imports (id, project_id, file_name, kind, sha256, byte_size, status, created_by, created_at, origin, snapshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : CONVERTIBLE[ext] ?? 'md', hash, data.length, 'queued', actor, now(), opts.origin ?? 'upload', opts.snapshot && ext === '.zip' ? 1 : 0,
+      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : JIRA_EXT.includes(ext) ? 'jira' : CONVERTIBLE[ext] ?? 'md', hash, data.length, 'queued', actor, now(), opts.origin ?? 'upload', opts.snapshot && ext === '.zip' ? 1 : 0,
     );
     await audit(ctx, actor, 'import.created', 'import', id, { fileName, sha256: hash, ...(opts.snapshot && ext === '.zip' ? { snapshot: true } : {}) });
     // Persistenter Job: Originaldatei liegt im Object-Store, der Job kennt nur die Import-ID
@@ -72,9 +77,26 @@ export async function failImportJob(ctx: Ctx, payload: { importId: string }, err
   await finishConnectionImport(ctx, payload.importId, 'failed', error);
 }
 
+/** Jira-Export in je ein Dokument pro Ticket zerlegen; kein Jira-Export → Fehler für diese Datei */
+function jiraEntries(p: string, data: Buffer, names: string[], maxTickets: number, inZip = false): Entry[] {
+  const issues = parseJira(p, data);
+  // im ZIP sind andere XML-/CSV-Dateien (z. B. Anhänge eines Confluence-Exports) kein Fehler, sondern werden übersprungen
+  if (!issues && inZip) return [{ path: p, skipped: 'Kein Jira-Export – übersprungen' }];
+  if (!issues) return [{ path: p, error: 'Kein Jira-Export erkannt (XML-Export oder CSV mit den Spalten „Issue key“ und „Summary“ erwartet)' }];
+  if (!issues.length) return [{ path: p, skipped: 'Jira-Export ohne Tickets – übersprungen' }];
+  if (issues.length > maxTickets) return [{ path: p, error: `Jira-Export enthält ${issues.length} Tickets, erlaubt sind ${maxTickets}.` }];
+  return issues.map((i) => {
+    const { markdown, original } = issueToMarkdown(i, { names });
+    return { path: `jira/${i.key}.md`, data: Buffer.from(markdown, 'utf8'), jira: { markdown: Buffer.from(markdown, 'utf8'), original: Buffer.from(original, 'utf8') } };
+  });
+}
+
 async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<Entry[]> {
-  const settings = (await getSettings(ctx.db)).import;
-  if (!fileName.toLowerCase().endsWith('.zip')) return [{ path: path.basename(fileName), data }];
+  const all = await getSettings(ctx.db);
+  const settings = all.import;
+  const lower = fileName.toLowerCase();
+  if (JIRA_EXT.includes(path.extname(lower))) return jiraEntries(path.basename(fileName), data, all.privacy.names, settings.maxZipFiles);
+  if (!lower.endsWith('.zip')) return [{ path: path.basename(fileName), data }];
   const zip = await JSZip.loadAsync(data);
   const files = Object.values(zip.files).filter((f) => !f.dir);
   if (files.length > settings.maxZipFiles) throw badRequest(`ZIP enthält ${files.length} Dateien, erlaubt sind ${settings.maxZipFiles}.`);
@@ -84,7 +106,8 @@ async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<En
     if (p.startsWith('__MACOSX/') || path.basename(p).startsWith('.')) continue;
     const ext = path.extname(p).toLowerCase();
     const media = !!MEDIA_EXT[ext];
-    if (!media && !MD_EXT.includes(ext) && !(CONVERTIBLE[ext] && settings.allowedExtensions.includes(ext))) {
+    const jira = JIRA_EXT.includes(ext) && settings.allowedExtensions.includes(ext);
+    if (!media && !jira && !MD_EXT.includes(ext) && !(CONVERTIBLE[ext] && settings.allowedExtensions.includes(ext))) {
       out.push({ path: p, skipped: 'Kein unterstütztes Format – übersprungen' });
       continue;
     }
@@ -97,6 +120,7 @@ async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<En
     try {
       const buf = await f.async('nodebuffer');
       if (buf.length > settings.maxEntryBytes) out.push({ path: p, error: `Datei größer als ${settings.maxEntryBytes} Bytes` });
+      else if (jira) out.push(...jiraEntries(p, buf, all.privacy.names, settings.maxZipFiles, true));
       else out.push({ path: p, data: buf, media });
     } catch (e) {
       out.push({ path: p, error: `Entpacken fehlgeschlagen: ${(e as Error).message}` });
@@ -155,7 +179,9 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
       } else if (entry.error) {
         throw new Error(entry.error);
       } else {
-        const converted = await convertEntry(ctx, entry.path, entry.data!, images);
+        const converted = entry.jira
+          ? { markdown: entry.jira.markdown, original: { format: 'jira' as const, data: entry.jira.original }, warnings: [] as string[], skip: undefined }
+          : await convertEntry(ctx, entry.path, entry.data!, images);
         if (converted.skip) {
           item.status = 'skipped';
           item.message = converted.skip;
@@ -242,7 +268,7 @@ async function reviveDocument(ctx: Ctx, documentId: string) {
 }
 
 interface Original {
-  format: 'html' | 'docx';
+  format: 'html' | 'docx' | 'jira';
   data: Buffer;
 }
 
@@ -473,6 +499,7 @@ export async function getRevisionRaw(ctx: Ctx, revisionId: string) {
 const ORIGINAL_TYPES: Record<string, string> = {
   html: 'text/plain; charset=utf-8', // nie als HTML ausliefern (keine Skriptausführung)
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  jira: 'application/json; charset=utf-8', // Ticketfelder ohne Personenfelder (ADR-081)
 };
 
 /** Originaldatei einer umgewandelten Revision (HTML, Word) */

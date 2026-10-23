@@ -1854,3 +1854,47 @@ test('[T-237] oneSCM_Metadaten: Übersicht, Chunks je Überschrift labeln und fi
   expect(await axe()).toEqual([]);
   await page.getByLabel('Sprache der Labels').selectOption('de');
 });
+
+test('[T-238] Jira-Export einlesen, Quellenänderungen absatzweise übernehmen, Zugriffsmatrix mit Beleg pflegen', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+  const upload = async (name: string, content: string, mimeType = 'text/markdown') =>
+    expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name, mimeType, buffer: Buffer.from(content) } } })).status()).toBe(202);
+
+  // Jira-CSV: je Ticket eine Quelle unter jira/
+  await upload('e2e_jira.csv', 'Summary,Issue key,Issue Type,Status,Description\n"E2E Antrag speichern",E2E-101,Story,Done,"h2. Ziel\n* Antrag speichern"\n', 'text/csv');
+  await expect.poll(async () => (await (await request.get('/api/v1/sources', { headers: h })).json()).some((d: any) => d.path === 'jira/E2E-101.md')).toBe(true);
+
+  // Kapitel aus Revision 1, dann Revision 2 mit geändertem Wortlaut
+  const fm = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n';
+  await upload('e2e_update.md', `${fm}# 12. E2E-Update\n\n## 12.1 Zweck\n\nDie Übersicht wird monatlich aktualisiert.\n`);
+  let ch: any;
+  await expect.poll(async () => (ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '12. E2E-Update'))).toBeTruthy();
+  expect((await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).ok()).toBe(true);
+  await upload('e2e_update.md', `${fm}# 12. E2E-Update\n\n## 12.1 Zweck\n\nDie Übersicht wird täglich aktualisiert.\n`);
+  await expect.poll(async () => (await (await request.get('/api/v1/source-updates', { headers: h })).json()).summary.changed).toBeGreaterThan(0);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Quellenänderungen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Quellenänderungen' })).toBeVisible();
+  const item = page.getByRole('article', { name: /Geändert: e2e_update\.md/ });
+  await expect(item).toContainText('täglich');
+  expect(await axe()).toEqual([]);
+  await item.getByRole('button', { name: 'Neuen Text übernehmen' }).click();
+  await expect(page.getByText('Neuer Wortlaut übernommen.')).toBeVisible();
+  await expect(page.getByRole('article', { name: /Geändert: e2e_update\.md/ })).toHaveCount(0);
+
+  // Zugriffsmatrix: Stufe wählen, Beleg speichern
+  await page.goto('/metadaten/zugriffsmatrix');
+  const sel = page.getByLabel('Vertragserstellung › MO Checks – MO (Market Operation)');
+  await sel.focus();
+  await sel.selectOption('V');
+  await page.getByLabel('Beleg für das gewählte Feld').fill('E2E Navigation V3');
+  await page.getByRole('button', { name: 'Beleg speichern' }).click();
+  await expect(page.getByText('Beleg gespeichert.')).toBeVisible();
+  await expect(sel).toHaveValue('V');
+  expect(await axe()).toEqual([]);
+});
