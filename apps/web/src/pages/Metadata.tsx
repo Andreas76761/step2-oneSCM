@@ -2,6 +2,7 @@ import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { del, patch, post, put, qs } from '../api';
 import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { InlineMd } from '../components/InlineMd';
 
 // oneSCM_Metadaten (ADR-079): Übersicht, Chunks mit Labels, gespeicherte Fragen und Antworten, Labelkatalog
 
@@ -115,11 +116,12 @@ const headingText = (c: { chapter?: string; subchapter?: string | null; headingP
 
 const STEPS = [
   { no: '①', title: 'Ablage', text: 'Dateien hochladen (einzeln oder als ZIP); identische Dateien werden erkannt.', stage: 'M1', ready: true, to: '/quellen' },
-  { no: '②', title: 'Extraktion', text: 'Markdown, HTML und Word heute; PowerPoint und PDF in M2, Video und Bilder in M6.', stage: 'M2', ready: false },
-  { no: '③', title: 'Chunking', text: 'Textabschnitte je Überschrift mit Fundstelle.', stage: 'M3', ready: true, to: '/metadaten/chunks' },
-  { no: '④', title: 'Indexierung', text: 'Volltext- und semantischer Index, Dopplungen über alle Formate.', stage: 'M4', ready: false, to: '/dopplungen' },
-  { no: '⑤', title: 'Fragestellung', text: 'Fragen an alle Quellen, Antwort nur aus den gefundenen Chunks.', stage: 'M5', ready: false },
+  { no: '②', title: 'Extraktion', text: 'Markdown, HTML, Word, PowerPoint und PDF (mit Texterkennung), Untertitel und Video mit Zeitmarke, Jira-Exporte.', stage: 'M2', ready: true, to: '/metadaten/einlesen' },
+  { no: '③', title: 'Chunking', text: 'Textabschnitte je Überschrift mit Fundstelle (Zeile, Folie, Seite, Zeitmarke), lange Abschnitte in Teilstücken.', stage: 'M3', ready: true, to: '/metadaten/chunks' },
+  { no: '④', title: 'Indexierung', text: 'Volltext- und semantischer Index, Dubletten je Abschnitt über alle Formate.', stage: 'M4', ready: true, to: '/metadaten/dubletten' },
+  { no: '⑤', title: 'Fragestellung', text: 'Fragen an alle Quellen, Antwort nur aus den gefundenen Chunks mit Beleg je Satz.', stage: 'M5', ready: true, to: '/metadaten/fragen' },
   { no: '⑥', title: 'Ausgabe', text: 'Antwort mit Quelldatei und Auszug; Fragen und Antworten mit Labels speichern.', stage: 'M1', ready: true, to: '/metadaten/fragen' },
+  { no: '⑦', title: 'Qualität', text: 'Testfragen mit erwarteten Quellen, Trefferquote und Verlauf; Wissenslücken an Fachleute.', stage: 'M7', ready: true, to: '/metadaten/qualitaet' },
 ];
 
 export function MetadataOverviewPage() {
@@ -341,14 +343,14 @@ function AskResult({ r }: { r: any }) {
       {r.notice && <p className="alert small">{r.notice}</p>}
       {r.answer.length > 0 && (
         <p className="md-text">
-          {r.answer.map((s: any, i: number) => <span key={i}>{s.text}{s.sources.map((n: number) => <sup key={n}><a href={`#beleg-${r.id}-${n}`} aria-label={`Beleg ${n}`}>[{n}]</a></sup>)} </span>)}
+          {r.answer.map((s: any, i: number) => <span key={i}><InlineMd text={s.text} />{s.sources.map((n: number) => <sup key={n}><a href={`#beleg-${r.id}-${n}`} aria-label={`Beleg ${n}`}>[{n}]</a></sup>)} </span>)}
         </p>
       )}
       <p className="small muted">{r.mode === 'llm' ? 'Antwort aus den Belegen formuliert, jeder Satz geprüft' : r.mode === 'extractive' ? 'Passende Sätze aus den Belegen (ohne KI)' : ''}{r.dropped ? ` · ${r.dropped} unbelegte Sätze verworfen` : ''} · {r.searched} Abschnitte durchsucht</p>
       {r.sources.map((s: any) => (
         <blockquote key={s.n} id={`beleg-${r.id}-${s.n}`} className="md-excerpt small">
           <strong>[{s.n}] {s.path}</strong> · {s.headingPath.join(' › ') || '–'} · <span className="muted">{locatorText(s)}{s.part ? ` · Teilstück ${s.part} von ${s.parts}` : ''}</span>
-          <div>{s.text}</div>
+          <div><InlineMd text={s.text} /></div>
         </blockquote>
       ))}
     </div>

@@ -25,6 +25,10 @@ Vor dem Schreiben gelten Stil und Ton aus `06_II_Stil_und_Design` und die Sprach
 
 Ideen jederzeit: „ideen-sammler: Idee für Kapitel 9 – …“.
 
+## Mit der App arbeiten
+
+Quellen in der App einlesen, Fragen mit Belegen beantworten, Testfragen prüfen, Wissenslücken an Fachleute geben und Screenshots verwalten: `App/APP.md`. Testfragen aus Wissens-Check und Lückenanalyse gehören in `App/TESTFRAGEN.csv`, ausgefüllte Befragungen in `App/Befragungen/`, Exporte der App in `App/Exporte/`.
+
 ## Neue Gliederungen
 
 | Fall | Aufruf (im Projektordner) |
@@ -46,6 +50,7 @@ Der Abgleich legt nur Fehlendes an (Kapitel mit acht Arbeitsordnern, Unterkapite
 | `AUDIT_GESAMT.md`, `FAQ_GESAMT.md`, `IDEEN_GESAMT.md`, `STEUERUNG_GESAMT.md` | Gesamtlisten der Agenten |
 | `ENTSCHEIDUNGEN.md`, `BEGRIFFE.md` | Entscheidungen, verbindliche Schreibweisen |
 | `INPUT_PROTOKOLL.md`, `GLIEDERUNG_ABGLEICH.md` | Protokolle |
+| `App/` | Arbeit mit der App: `APP.md`, `TESTFRAGEN.csv`, `Befragungen/`, `Exporte/` |
 | `Werkzeuge/` | `handbuch_struktur.py` mit Vorlagen für Ordner und Agenten |
 
 ## Voraussetzungen auf dem Rechner
@@ -53,3 +58,4 @@ Der Abgleich legt nur Fehlendes an (Kapitel mit acht Arbeitsordnern, Unterkapite
 - Claude Code (Desktop-App oder `claude` im Terminal), im Ordner `{{STAND}}` gestartet.
 - Python 3.9+ mit `openpyxl`, `python-docx`, `python-pptx`, `pypdf` (`pip install openpyxl python-docx python-pptx pypdf`).
 - Optional für Videos: Untertiteldatei (SRT/VTT) neben das MP4 legen oder ein lokales Whisper installieren.
+- Optional: die App oneSCM Handbook Studio (Windows-Paket mit `start.cmd`, ohne Installation) – siehe `App/APP.md`.

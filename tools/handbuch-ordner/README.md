@@ -4,7 +4,7 @@
 
 Aufbau:
 
-- `00_Dokumentation/` – Arbeitsweise, Gliederungen (Excel, CSV, Markdown, App-Exporte), Status, Entscheidungen, Begriffe, Gesamtlisten (Audit, FAQ, Ideen, Steuerung), `Werkzeuge/` (dieses Skript mit Vorlagen)
+- `00_Dokumentation/` – Arbeitsweise, Gliederungen (Excel, CSV, Markdown, App-Exporte), Status, Entscheidungen, Begriffe, Gesamtlisten (Audit, FAQ, Ideen, Steuerung), `App/` (Arbeit mit der App: `APP.md`, `TESTFRAGEN.csv`, `Befragungen/`, `Exporte/`), `Werkzeuge/` (dieses Skript mit Vorlagen)
 - `01_Input/` – `01_Eingang`, `02_Zugeordnet`, `03_Ausgeschlossen`
 - `02_Kapitel/<Kapitel>/` – Gesamtgliederung; je Kapitel `KAPITEL.md`, acht Arbeitsordner und je Unterkapitel ein Ordner mit `UNTERKAPITEL.md`
 - `03_Varianten/<Gliederung>/` – dieselbe Struktur je App-Gliederung, mit `VARIANTE.md` (Rollen, Sparten, Märkte)

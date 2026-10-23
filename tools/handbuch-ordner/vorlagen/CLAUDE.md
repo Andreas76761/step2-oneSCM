@@ -68,6 +68,10 @@ Ablauf: **Eingang → input-sortierer → uebersetzer-de → steuerung → kapit
 
 Neue Gesamtgliederung (Excel) oder neue Gliederung in der App (Stammdaten › Inhaltsverzeichnis): „gliederungs-pfleger: Gliederungen abgleichen“. Er ruft `00_Dokumentation/Werkzeuge/handbuch_struktur.py abgleich` auf, legt fehlende Ordner und neue Agenten an und meldet Umbenanntes oder Entfallenes in `00_Dokumentation/GLIEDERUNG_ABGLEICH.md`.
 
+## App (oneSCM Handbook Studio)
+
+Die lokale App unter `http://localhost:3000` liest die Quellen ein (Fundstelle je Chunk: Seite, Folie, Zeitmarke), beantwortet Fragen mit Belegen und misst die Antwortqualität mit `00_Dokumentation/App/TESTFRAGEN.csv`. Antworten aus der Expertenbefragung (Label „Prüfen“) sind **kein Beleg** – im Entwurf nur als `[offen: …]`. Ablauf und Ablage: `00_Dokumentation/App/APP.md`.
+
 ## Begriffe und offene Entscheidungen
 
 - Schreibweise: **oneSCM**, **Servicevertrag**, **Antrag (Proposal)**, **MO Checks / MO-Prüfungen**. Englische UI-Begriffe in „…“ mit deutschem Handbuchbegriff.

@@ -2250,7 +2250,7 @@ test('[T-266] Frage an alle Quellen: Antwort mit Belegen, als Frage & Antwort ü
   const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
     .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
   const adm = { 'X-User-Id': 'u-admin' };
-  const res = await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name: 'e2e-ask.md', mimeType: 'text/markdown', buffer: Buffer.from('---\nroles: [all]\ndivisions: [all]\n---\n# E2E Fragen\n\n## E2E Garantie verlängern\n\nE2E Eine Garantieverlängerung beantragen Sie im Menü Garantie über Verlängern.\n') } } });
+  const res = await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name: 'e2e-ask.md', mimeType: 'text/markdown', buffer: Buffer.from('---\nroles: [all]\ndivisions: [all]\n---\n# E2E Fragen\n\n## E2E Garantie verlängern\n\nE2E Eine Garantieverlängerung beantragen Sie im Menü Garantie über **Verlängern**.\n') } } });
   const id = (await res.json()).id;
   await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
 
@@ -2265,6 +2265,9 @@ test('[T-266] Frage an alle Quellen: Antwort mit Belegen, als Frage & Antwort ü
   await expect(answer).toContainText('E2E Eine Garantieverlängerung beantragen Sie im Menü Garantie über Verlängern.');
   await expect(answer.getByRole('link', { name: 'Beleg 1' })).toBeVisible();
   await expect(answer).toContainText('[1] e2e-ask.md');
+  // Markdown im Beleg erscheint formatiert, nicht als Sternchen
+  await expect(answer).not.toContainText('**');
+  await expect(answer.locator('strong', { hasText: 'Verlängern' }).first()).toBeVisible();
   expect(await axe()).toEqual([]);
 
   await page.getByRole('button', { name: 'Als Frage & Antwort übernehmen' }).click();

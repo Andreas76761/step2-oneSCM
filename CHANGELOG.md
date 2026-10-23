@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.41.1 – Abschluss (23.10.2026)
+
+### Behoben
+- Antworten und Belegauszüge unter „Fragen & Antworten“, „Rückfragen“ und „Antwortqualität“ zeigen Markdown formatiert (fett, kursiv, Code, Bild als „[Bild: …]“) statt Sternchen.
+- Übersicht oneSCM_Metadaten: Schritte ② Extraktion, ④ Indexierung, ⑤ Fragestellung als verfügbar, neu ⑦ Qualität.
+
+### Verbessert
+- **Leistung (ADR-094):** Dubletten-Abgleich mit Präfix-Filter (Ergebnis unverändert) und nur für geänderte Abschnitte; Zwischenspeicher für Wortstämme bei der Frage an alle Quellen – Import von 2 000 Dokumenten 33 statt 44 s, Frage an alle Quellen p50 160 statt 328 ms, Prüflauf 30 Fragen 4,5 statt 9,4 s ([Lasttest](docs/lasttest-metadaten.md)).
+
+### Hinzugefügt
+- **Installationspaket** (`tools/paket/paket.sh`): Windows-x64-Paket offline mit Node.js portable und allen Abhängigkeiten (Start per `start.cmd`), universelles Paket für Linux/macOS/Windows mit Installationsskript, jeweils mit fiktiven Beispieldaten und Sicherungsskript.
+- **Dokumentation:** [08 Installation und Betrieb](docs/08-installation-betrieb.md), [09 Benutzerdokumentation](docs/09-benutzerdokumentation.md), [Lasttest](docs/lasttest-metadaten.md); Lastskript `apps/server/scripts/perf-metadata.mjs`.
+- **Handbuch-Arbeitsordner:** `00_Dokumentation/App/` mit Anleitung zur App, Vorlage `TESTFRAGEN.csv` und Ablage für Befragungen und Exporte; der Abgleich ergänzt sie in bestehenden Ordnern.
+
 ## 0.41.0 – Etappe 41 (23.10.2026)
 
 ### Hinzugefügt

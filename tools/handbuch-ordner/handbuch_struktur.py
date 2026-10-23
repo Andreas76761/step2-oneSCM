@@ -364,6 +364,8 @@ def vorlagen_dateien(stand: str, gliederung_name: str):
         '00_Dokumentation/IDEEN_GESAMT.md': '# Ideenspeicher – Gesamtliste\n\n| Nr. | Idee | Kapitel | Art | Status | Entscheidung |\n|---|---|---|---|---|---|\n',
         '00_Dokumentation/STEUERUNG_GESAMT.md': lies('STEUERUNG_GESAMT.md'),
         '01_Input/README.md': lies('Input_README.md'),
+        '00_Dokumentation/App/APP.md': lies('APP.md'),
+        '00_Dokumentation/App/TESTFRAGEN.csv': '\ufeff' + lies('TESTFRAGEN.csv'),  # BOM: Excel erkennt UTF-8
     }
     stand_agenten = {}
     for a in sorted((VORLAGEN / 'agents').glob('*.md')):
@@ -382,7 +384,8 @@ def vorlagen_dateien(stand: str, gliederung_name: str):
 
 def gesamt(modell, stand: str, gliederung_name: str, gliederung_daten: bytes, unterkapitel_arbeitsordner: bool):
     ordner, dateien = kapitel_baum(modell, '02_Kapitel', unterkapitel_arbeitsordner)
-    ordner |= {'01_Input/01_Eingang', '01_Input/02_Zugeordnet', '01_Input/03_Ausgeschlossen', '03_Varianten', '00_Dokumentation/Gliederung/App'}
+    ordner |= {'01_Input/01_Eingang', '01_Input/02_Zugeordnet', '01_Input/03_Ausgeschlossen', '03_Varianten', '00_Dokumentation/Gliederung/App',
+               '00_Dokumentation/App/Exporte', '00_Dokumentation/App/Befragungen'}
     ordner |= output_ordner(modell)
     h_o, h_d = hauptordner()
     ordner |= h_o
@@ -559,6 +562,10 @@ def main():
     abgleich(ziel, h_o, h_d, [], bericht)
     bericht += ['', '## Vorlagen (CLAUDE.md, Arbeitsweise, Output)', '']
     vorlagen_neu(ziel, bericht)
+    # Arbeit mit der App (ab App-Version 0.41): Ordner und Vorlagen ergänzen, Vorhandenes bleibt
+    bericht += ['', '## App (00_Dokumentation/App)', '']
+    app_d = {k: v for k, v in vorlagen_dateien(ziel.name, '').items() if k.startswith('00_Dokumentation/App/')}
+    abgleich(ziel, {'00_Dokumentation/App/Exporte', '00_Dokumentation/App/Befragungen'}, app_d, [], bericht)
     if a.gliederung:
         modell = lies_gliederung(a.gliederung)
         o, d = kapitel_baum(modell, '02_Kapitel', a.unterkapitel_arbeitsordner)

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, del, post } from '../api';
 import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { InlineMd } from '../components/InlineMd';
 
 // oneSCM_Metadaten › Antwortqualität (ADR-091, M7): Testfragen mit erwarteten Quellen, Prüflauf mit Kennzahlen, Verlauf
 
@@ -204,7 +205,7 @@ export function AnswerQualityPage() {
                       {x.question}
                       <details className="small">
                         <summary>Antwort und gefundene Stellen</summary>
-                        <p>{x.answerText ?? x.notice ?? '–'}</p>
+                        <p><InlineMd text={x.answerText ?? x.notice ?? '–'} /></p>
                         <ol>{x.retrieved.map((f: any) => <li key={f.rank}>{f.path}{f.headingPath.length ? ` › ${f.headingPath.join(' › ')}` : ''} <span className="muted">({f.score})</span></li>)}</ol>
                       </details>
                     </td>

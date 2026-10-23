@@ -58,12 +58,39 @@ export function parseAssistantResponse(raw: string): { text: string; sources: st
   }));
 }
 
+/** Stämme und 5-Zeichen-Präfixe je Text – zwischengespeichert (LRU), da „Frage an alle Quellen“ jeden Abschnitt je Frage bewertet */
+const TERM_CACHE_MAX = 60_000;
+const termCache = new Map<string, { stems: Set<string>; prefixes: Set<string> }>();
+function termsOf(text: string) {
+  const hit = termCache.get(text);
+  if (hit) {
+    termCache.delete(text);
+    termCache.set(text, hit);
+    return hit;
+  }
+  const stems = new Set(tokenize(text));
+  const v = { stems, prefixes: new Set([...stems].filter((t) => t.length >= 5).map((t) => t.slice(0, 5))) };
+  termCache.set(text, v);
+  if (termCache.size > TERM_CACHE_MAX) termCache.delete(termCache.keys().next().value!);
+  return v;
+}
+
+const questionCache = new Map<string, string[]>();
+function questionTerms(question: string) {
+  let q = questionCache.get(question);
+  if (!q) {
+    q = [...new Set(tokenize(question).filter((t) => t.length >= 3))];
+    if (questionCache.size >= 500) questionCache.clear();
+    questionCache.set(question, q);
+  }
+  return q;
+}
+
 /** Anteil der Inhaltswörter der Frage, die im Text vorkommen (Stämme und 5-Zeichen-Präfixe) */
 export function keywordScore(question: string, text: string): number {
-  const q = [...new Set(tokenize(question).filter((t) => t.length >= 3))];
+  const q = questionTerms(question);
   if (!q.length) return 0;
-  const stems = new Set(tokenize(text));
-  const prefixes = new Set([...stems].filter((t) => t.length >= 5).map((t) => t.slice(0, 5)));
+  const { stems, prefixes } = termsOf(text);
   return q.filter((t) => stems.has(t) || (t.length >= 5 && prefixes.has(t.slice(0, 5)))).length / q.length;
 }
 

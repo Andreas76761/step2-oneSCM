@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, del, post } from '../api';
 import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { InlineMd } from '../components/InlineMd';
 
 // oneSCM_Metadaten › Rückfragen (ADR-089): Fragenkatalog einlesen und alle Fragen mit Belegen aus den Quellen beantworten
 
@@ -133,12 +134,12 @@ export function QuestionCatalogPage() {
               {items.filter((i: any) => (i.chapter ?? '(ohne Kapitel)') === ch).map((i: any) => (
                 <article key={i.id} className="qc-item" aria-label={`Frage ${i.position}`}>
                   <p><strong>{i.position}. {i.question}</strong> <span className={`tag small ${STATUS[i.status]?.[1] ?? ''}`}>{STATUS[i.status]?.[0] ?? i.status}</span>{i.qaId && <span className="tag small">gespeichert</span>}</p>
-                  {i.answer.length > 0 && <p className="md-text small">{i.answer.map((s: any, k: number) => <span key={k}>{s.text}{s.sources.map((n: number) => <sup key={n}>[{n}]</sup>)} </span>)}</p>}
+                  {i.answer.length > 0 && <p className="md-text small">{i.answer.map((s: any, k: number) => <span key={k}><InlineMd text={s.text} />{s.sources.map((n: number) => <sup key={n}>[{n}]</sup>)} </span>)}</p>}
                   {i.notice && !i.answer.length && <p className="small muted">{i.notice}</p>}
                   {i.sources.length > 0 && (
                     <details className="small">
                       <summary>{i.sources.length} Belege</summary>
-                      {i.sources.map((s: any) => <blockquote key={s.n} className="md-excerpt"><strong>[{s.n}] {s.path}</strong> · {s.headingPath.join(' › ') || '–'} · <span className="muted">{where(s)}</span><div>{s.text}</div></blockquote>)}
+                      {i.sources.map((s: any) => <blockquote key={s.n} className="md-excerpt"><strong>[{s.n}] {s.path}</strong> · {s.headingPath.join(' › ') || '–'} · <span className="muted">{where(s)}</span><div><InlineMd text={s.text} /></div></blockquote>)}
                     </details>
                   )}
                   {canEdit && i.status === 'answered' && !i.qaId && <button className="btn small" onClick={() => void take(i.id)}>Als Frage & Antwort speichern</button>}

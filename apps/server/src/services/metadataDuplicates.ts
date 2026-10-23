@@ -81,7 +81,7 @@ export async function refreshDuplicates(ctx: Ctx, documentIds?: string[]) {
   const byHash = new Map<string, string[]>();
   for (const s of sections) byHash.set(s.norm_hash, [...(byHash.get(s.norm_hash) ?? []), s.id]);
   for (const ids of byHash.values()) for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) add(ids[i], ids[j], 1, 'exact', []);
-  for (const p of new TfidfEngine().pairs(sections.map((s) => ({ id: s.id, text: s.text })), NEAR_THRESHOLD)) {
+  for (const p of new TfidfEngine().pairs(sections.map((s) => ({ id: s.id, text: s.text })), NEAR_THRESHOLD, { involving: changed })) {
     if (byId.get(p.a)!.norm_hash !== byId.get(p.b)!.norm_hash) add(p.a, p.b, p.score, 'near', p.sharedTerms);
   }
   await ctx.db.tx(async () => {
