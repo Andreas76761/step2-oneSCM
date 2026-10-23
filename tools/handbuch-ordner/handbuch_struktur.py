@@ -1,0 +1,446 @@
+#!/usr/bin/env python3
+"""Arbeitsordner für das oneSCM-Handbuch aus einer Gliederung erzeugen und abgleichen.
+
+Je Kapitel acht Arbeitsordner:
+  01_Quellen (Raw_2023 … Raw_2027), 02_Entwurf, 03_Bilder, 04_Pruefung_Freigabe,
+  05_Audit, 06_FAQ, 07_Ideenspeicher, 08_Steuerung (Dealer, MO, Markt, HQ, IT, Marktspezifisch, Spartenspezifisch)
+und je Unterkapitel ein Ordner mit UNTERKAPITEL.md. Dazu CLAUDE.md, .claude/agents und .claude/settings.json.
+
+Befehle:
+  zip       <Gliederung.xlsx|.json> <Ziel.zip> [--stand 23102026]
+            vollständiger Arbeitsordner als ZIP (Excel-Matrix der Gesamtgliederung oder JSON-Export einer App-Gliederung)
+  abgleich  <Arbeitsordner> [--gliederung Datei.xlsx|.json] [--app http://localhost:3000 --projekt p_default (--token … | --benutzer u-admin)]
+            legt nur Fehlendes an (Ordner, Vorlagendateien, neue Agenten), löscht und überschreibt nichts,
+            und schreibt 00_Dokumentation/GLIEDERUNG_ABGLEICH.md. Gliederungen aus der App landen unter 03_Varianten/<Name>/.
+
+Benötigt Python 3.9+, für Excel zusätzlich openpyxl. Der App-Abgleich nutzt nur die lokale App-Adresse.
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import io
+import json
+import re
+import sys
+import urllib.request
+import zipfile
+from datetime import date, datetime
+from pathlib import Path
+
+HIER = Path(__file__).resolve().parent
+VORLAGEN = HIER / 'vorlagen'
+RAW_JAHRE = ['Raw_2023', 'Raw_2024', 'Raw_2025', 'Raw_2026', 'Raw_2027']
+STEUERUNG = ['01_Dealer', '02_MO', '03_Markt', '04_HQ', '05_IT', '06_Marktspezifisch', '07_Spartenspezifisch']
+# Rollen der App (Gliederungen) → Rollen der Steuerung; IT kennt die App nicht
+APP_ROLLEN = {'dealer': 'Dealer', 'market': 'Markt', 'mo': 'MO', 'hq': 'HQ'}
+APP_SPARTEN = {'car': 'Pkw', 'van': 'Van', 'truck': 'Truck', 'bus': 'Bus'}
+MARKTUMFANG = {'blueprint': 'Blueprint (marktübergreifend)', 'markets': 'ausgewählte Märkte'}
+STEUER_ROLLEN = ['Dealer', 'MO', 'Markt', 'HQ', 'IT']
+ARBEITSORDNER = ['01_Quellen', '02_Entwurf', '03_Bilder', '04_Pruefung_Freigabe', '05_Audit', '06_FAQ', '07_Ideenspeicher', '08_Steuerung']
+# Anhänge und Vorspann haben in der Gesamtgliederung keinen Eintrag der Ebene 1
+GRUPPEN = {
+    'V': '00_Vorspann',
+    'A': 'Anhang_A_Glossar_und_Abkürzungen',
+    'B': 'Anhang_B_Alltagschecklisten',
+    'C': 'Anhang_C_Prozessdiagramme',
+    'D': 'Anhang_D_Rollen-_Status-_und_Scopematrizen',
+    'E': 'Anhang_E_Ticket-zu-Kapitel-Zuordnung',
+    'F': 'Anhang_F_Quellen_und_Klärungsregister',
+    'G': 'Anhang_G_Bildverzeichnis_und_Nachweise',
+    'H': 'Anhang_H_Wissenschecks_und_Lösungen',
+    'I': 'Anhang_I_Praxisbeispiele_Rechenbeispiele_Testdaten',
+}
+
+
+def ordnername(titel: str, laenge: int = 60) -> str:
+    """Windows-taugliche Ordnernamen: ohne verbotene Zeichen, Kommas und Klammerzusätze, Leerzeichen → _, gekürzt an Wortgrenze."""
+    t = re.sub(r'\[[^\]]*\]', '', titel)
+    t = re.sub(r'[\\/:*?"<>|,;]', '', t).replace('–', '-').strip()
+    t = re.sub(r'\s+', ' ', t)
+    if len(t) > laenge:
+        t = t[:laenge].rsplit(' ', 1)[0]
+    return t.replace(' ', '_').strip('._-')
+
+
+# ---------------------------------------------------------------- Gliederung lesen → einheitliches Modell
+# Modell: [{key, ordner, titel, meta, unter: [{nr, titel, meta, punkte: [{nr, titel, meta}]}], uebergaenge: [{nr, titel, text, meta}]}]
+# meta: {pkw, van, kriterium, notiz}
+
+LEER = {'pkw': '', 'van': '', 'kriterium': '', 'notiz': ''}
+
+
+def lies_excel(pfad: Path):
+    import openpyxl
+    ws = openpyxl.load_workbook(pfad, read_only=True).worksheets[0]
+    zeilen = list(ws.iter_rows(values_only=True))
+    kopf = list(zeilen[0])
+    s = {k: kopf.index(k) for k in ['Kapitel', 'Thema', 'Ebene', '1 Pkw', '2 Van', 'Abschlusskriterium', 'Text / Übergang', 'Notizen / Nachweisbedarf']}
+    kapitel: dict[str, dict] = {}
+    for z in zeilen[1:]:
+        if z[s['Kapitel']] is None:
+            continue
+        nr, titel, ebene = str(z[s['Kapitel']]).strip(), str(z[s['Thema']]).strip(), int(z[s['Ebene']])
+        meta = {'pkw': z[s['1 Pkw']] or '', 'van': z[s['2 Van']] or '', 'kriterium': z[s['Abschlusskriterium']] or '', 'notiz': z[s['Notizen / Nachweisbedarf']] or ''}
+        k = nr[1:].split('-')[0] if nr.startswith('T') else nr.split('.')[0]  # Übergang T6-7 gehört zu Kapitel 6
+        kap = kapitel.setdefault(k, {'key': k, 'ordner': None if k.isdigit() else GRUPPEN.get(k, f'Anhang_{k}'), 'titel': '', 'meta': dict(LEER), 'unter': [], 'uebergaenge': []})
+        if ebene == 1:
+            kap.update(ordner=f'{int(k):02d}_{ordnername(titel)}', titel=titel, meta=meta)
+        elif ebene == 2:
+            kap['unter'].append({'nr': nr, 'titel': titel, 'meta': meta, 'punkte': []})
+        elif ebene == 3:
+            kap['unter'][-1]['punkte'].append({'nr': nr, 'titel': titel, 'meta': meta})
+        elif ebene == 0:
+            kap['uebergaenge'].append({'nr': nr, 'titel': titel, 'text': z[s['Text / Übergang']] or '', 'meta': meta})
+    rang = lambda k: (0, 0) if k == 'V' else (1, int(k)) if k.isdigit() else (2, ord(k[0]))
+    return [kapitel[k] for k in sorted(kapitel, key=rang)]
+
+
+def lies_app_json(daten: dict):
+    """JSON-Export einer Gliederung aus der App (GET /outlines/{id}/export?format=json): zwei Ebenen, Nummern aus der Reihenfolge."""
+    if daten.get('format') != 'onescm-outline':
+        raise ValueError('Kein Gliederungsexport der App (format onescm-outline erwartet).')
+    modell = []
+    for i, c in enumerate(daten.get('nodes', []), 1):
+        meta = {**LEER, 'notiz': c.get('description') or ''}
+        unter = [{'nr': f'{i}.{j}', 'titel': s['title'], 'meta': {**LEER, 'notiz': s.get('description') or ''}, 'punkte': []}
+                 for j, s in enumerate(c.get('children', []), 1)]
+        modell.append({'key': str(i), 'ordner': f'{i:02d}_{ordnername(c["title"])}', 'titel': c['title'], 'meta': meta, 'unter': unter, 'uebergaenge': []})
+    return modell
+
+
+def lies_gliederung(pfad: Path):
+    if pfad.suffix.lower() == '.json':
+        return lies_app_json(json.loads(pfad.read_text(encoding='utf-8')))
+    return lies_excel(pfad)
+
+
+# ---------------------------------------------------------------- Soll-Struktur
+
+def sparten(m) -> str:
+    if not (m['pkw'] or m['van']):
+        return 'offen'
+    return m['pkw'] if m['pkw'] == m['van'] else f"Pkw: {m['pkw']} · Van: {m['van']}"
+
+
+def uordner(u) -> str:
+    return f"{u['nr']}_{ordnername(u['titel'])}"
+
+
+def kapitel_baum(modell, basis: str, unterkapitel_arbeitsordner: bool = False, rollen_rahmen: set | None = None):
+    """Ordner und Vorlagendateien unterhalb von basis (z. B. 02_Kapitel oder 03_Varianten/Dealer_Van).
+    rollen_rahmen: Rollen einer Variante – andere Rollen sind dort außerhalb des Rahmens (–)."""
+    stufe = lambda r: '?' if not rollen_rahmen or r in rollen_rahmen or r == 'IT' else '– (Variante)'
+    ordner: set[str] = set()
+    dateien: dict[str, str] = {}
+
+    def arbeitsordner(pfad: str, unterkapitel: list):
+        for a in ARBEITSORDNER:
+            ordner.add(f'{pfad}/{a}')
+        for r in RAW_JAHRE:
+            ordner.add(f'{pfad}/01_Quellen/{r}')
+        for s in STEUERUNG:
+            ordner.add(f'{pfad}/08_Steuerung/{s}')
+        dateien[f'{pfad}/01_Quellen/QUELLEN.md'] = ('# Quellen\n\nOriginale nach Jahr des Dokumentstands in `Raw_2023` … `Raw_2027`.\n\n'
+                                                   '| Datei | Raw-Jahr | SHA-256 | Fundstelle | Unterkapitel | Sicherheit | zugeordnet am |\n|---|---|---|---|---|---|---|\n')
+        dateien[f'{pfad}/03_Bilder/BILDER.md'] = '# Bildverzeichnis\n\n| Nummer | Datei | Unterkapitel | Alternativtext | Bildunterschrift | Quelle | Anonymisierung | Status |\n|---|---|---|---|---|---|---|---|\n'
+        dateien[f'{pfad}/05_Audit/AUDIT.md'] = ('# Audit\n\n| Datum | Prüfgegenstand | Quellen­abdeckung % | Aussagen belegt/gesamt | Pflichtkriterien bestanden/gesamt | Kritische Befunde | Ergebnis | Bericht |\n'
+                                               '|---|---|---|---|---|---|---|---|\n')
+        dateien[f'{pfad}/06_FAQ/FAQ.md'] = '# Häufige Fragen\n\n| Nr. | Frage | Antwort | Quelle | Rolle | Sparte/Markt | Status |\n|---|---|---|---|---|---|---|\n'
+        dateien[f'{pfad}/07_Ideenspeicher/IDEEN.md'] = '# Ideenspeicher\n\n| Nr. | Datum | Idee | Herkunft | Betrifft | Art | Status | Entscheidung |\n|---|---|---|---|---|---|---|---|\n'
+        zeilen = ['# Steuerung', '', 'Wer braucht welchen Inhalt? **V** = nutzt/bearbeitet · **L** = liest · **–** = nicht relevant · **?** = offen (Beleg fehlt).',
+                  'Markt- und spartenspezifische Inhalte: Markt-Code bzw. Pkw/Van eintragen, Material in `06_Marktspezifisch` bzw. `07_Spartenspezifisch`.', '',
+                  '| Unterkapitel | Dealer | MO | Markt | HQ | IT | Marktspezifisch | Spartenspezifisch | Beleg |', '|---|---|---|---|---|---|---|---|---|']
+        rollen = ' | '.join(stufe(r) for r in STEUER_ROLLEN)
+        zeilen += [f"| {u['nr']} {u['titel']} | {rollen} | – | {sparten(u['meta'])} | |" for u in unterkapitel] or [f'| (Kapitel) | {rollen} | – | – | |']
+        dateien[f'{pfad}/08_Steuerung/STEUERUNG.md'] = '\n'.join(zeilen) + '\n'
+
+    for kap in modell:
+        kpfad = f"{basis}/{kap['ordner']}"
+        arbeitsordner(kpfad, kap['unter'])
+        z = [f"# {kap['ordner'].replace('_', ' ')}", '', f"**Sparten:** {sparten(kap['meta'])}", '']
+        if kap['meta']['kriterium']:
+            z += [f"**Abschlusskriterium:** {kap['meta']['kriterium']}", '']
+        if kap['meta']['notiz']:
+            z += [f"**Nachweisbedarf:** {kap['meta']['notiz']}", '']
+        z += ['## Unterkapitel', ''] + [f"- {u['nr']} {u['titel']}" + (f" ({len(u['punkte'])} Punkte)" if u['punkte'] else '') for u in kap['unter']]
+        if kap['uebergaenge']:
+            z += ['', '## Übergangstexte', '']
+            for t in kap['uebergaenge']:
+                z += [f"### {t['nr']} {t['titel']}", '', t['text'] or '[offen]', '', f"*Abschlusskriterium:* {t['meta']['kriterium']}", '']
+        z += ['', '## Arbeitsordner', '', '| Ordner | Inhalt | Agent |', '|---|---|---|',
+              '| 01_Quellen | Raw_2023 … Raw_2027, QUELLEN.md | input-sortierer |',
+              '| 02_Entwurf | Entwürfe je Unterkapitel | kapitel-redakteur |',
+              '| 03_Bilder | Bilder, BILDER.md | bild-redakteur |',
+              '| 04_Pruefung_Freigabe | Prüfberichte, Freigabebelege | pruefer, Mensch |',
+              '| 05_Audit | Audit-Berichte, AUDIT.md | auditor |',
+              '| 06_FAQ | Fragen mit belegter Antwort, FAQ.md | faq-redakteur |',
+              '| 07_Ideenspeicher | Ideen, Verbesserungen, Zukünftiges, IDEEN.md | ideen-sammler |',
+              '| 08_Steuerung | Rollen Dealer/MO/Markt/HQ/IT, Markt- und Spartenspezifisches, STEUERUNG.md | steuerung |', '', '## Notizen', '']
+        dateien[f'{kpfad}/KAPITEL.md'] = '\n'.join(z)
+        for u in kap['unter']:
+            upfad = f'{kpfad}/{uordner(u)}'
+            ordner.add(upfad)
+            if unterkapitel_arbeitsordner:
+                arbeitsordner(upfad, [u])
+            uz = [f"# {u['nr']} {u['titel']}", '', f"**Sparten:** {sparten(u['meta'])}", '']
+            if u['meta']['kriterium']:
+                uz += [f"**Abschlusskriterium:** {u['meta']['kriterium']}", '']
+            if u['meta']['notiz']:
+                uz += [f"**Nachweisbedarf:** {u['meta']['notiz']}", '']
+            uz += ['## Punkte (Ebene 3)', '']
+            for p in u['punkte']:
+                uz += [f"### {p['nr']} {p['titel']}", '', f"- Nachweisbedarf: {p['meta']['notiz'] or '–'}", f"- Abschlusskriterium: {p['meta']['kriterium'] or '–'}", '']
+            if not u['punkte']:
+                uz += ['(keine Punkte der Ebene 3 hinterlegt)', '']
+            uz += ['## Notizen', '']
+            dateien[f'{upfad}/UNTERKAPITEL.md'] = '\n'.join(uz)
+    return ordner, dateien
+
+
+def gliederung_dateien(modell, basis: str, name: str):
+    """CSV, Markdown und Status-Übersicht einer Gliederung."""
+    puffer = io.StringIO()
+    w = csv.writer(puffer, delimiter=';')
+    w.writerow(['Kapitel', 'Thema', 'Ebene', 'Ordner', 'Pkw', 'Van', 'Abschlusskriterium', 'Notiz'])
+    md = [f'# Gliederung: {name}', '']
+    status = [f'# Status je Unterkapitel ({name})', '', '| Nr. | Unterkapitel | Quellen | Entwurf | Bilder | Prüfung | Audit | FAQ | Steuerung | Freigabe |', '|---|---|---|---|---|---|---|---|---|---|']
+    for kap in modell:
+        kp = f"{basis}/{kap['ordner']}"
+        m = kap['meta']
+        w.writerow([kap['key'], kap['titel'] or kap['ordner'], 1, kp, m['pkw'], m['van'], m['kriterium'], m['notiz']])
+        md.append(f"## {kap['ordner']}" + (f" – {kap['titel']}" if kap['titel'] else ''))
+        for u in kap['unter']:
+            up = f'{kp}/{uordner(u)}'
+            w.writerow([u['nr'], u['titel'], 2, up, u['meta']['pkw'], u['meta']['van'], u['meta']['kriterium'], u['meta']['notiz']])
+            md.append(f"- **{u['nr']} {u['titel']}**")
+            status.append(f"| {u['nr']} | {u['titel']} | – | – | – | – | – | – | – | – |")
+            for p in u['punkte']:
+                w.writerow([p['nr'], p['titel'], 3, up, p['meta']['pkw'], p['meta']['van'], p['meta']['kriterium'], p['meta']['notiz']])
+                md.append(f"  - {p['nr']} {p['titel']}")
+        for t in kap['uebergaenge']:
+            w.writerow([t['nr'], t['titel'], 0, kp, '', '', t['meta']['kriterium'], t['meta']['notiz']])
+            md.append(f"- Übergang **{t['nr']}** {t['titel']}")
+        md.append('')
+    legende = '\n\nLegende: – offen · ✎ in Arbeit · ✓ erledigt · ⚠ blockiert\n'
+    return '﻿' + puffer.getvalue(), '\n'.join(md), '\n'.join(status) + legende
+
+
+def vorlagen_dateien(stand: str, gliederung_name: str):
+    """Wurzel- und Dokumentationsdateien sowie die Agenten aus vorlagen/."""
+    ersetze = lambda t: t.replace('{{STAND}}', stand).replace('{{GLIEDERUNG}}', gliederung_name)
+    lies = lambda n: ersetze((VORLAGEN / n).read_text(encoding='utf-8'))
+    d = {
+        'CLAUDE.md': lies('CLAUDE.md'),
+        '.claude/settings.json': lies('settings.json'),
+        '00_Dokumentation/README.md': lies('Dokumentation_README.md'),
+        '00_Dokumentation/ENTSCHEIDUNGEN.md': lies('ENTSCHEIDUNGEN.md'),
+        '00_Dokumentation/BEGRIFFE.md': lies('BEGRIFFE.md'),
+        '00_Dokumentation/INPUT_PROTOKOLL.md': '# Input-Protokoll\n\n| Datum | Datei | SHA-256 | Raw-Jahr | Ergebnis | Kapitel/Unterkapitel | Begründung |\n|---|---|---|---|---|---|---|\n\n## Zu entscheiden\n\n',
+        '00_Dokumentation/AUDIT_GESAMT.md': '# Audit – Gesamtübersicht\n\n| Kapitel | letztes Audit | Quellenabdeckung % | Belegquote % | Kritische Befunde | Ergebnis |\n|---|---|---|---|---|---|\n',
+        '00_Dokumentation/FAQ_GESAMT.md': '# Häufige Fragen – Gesamtliste\n\n| Nr. | Frage | Kapitel | Rolle | Status |\n|---|---|---|---|---|\n',
+        '00_Dokumentation/IDEEN_GESAMT.md': '# Ideenspeicher – Gesamtliste\n\n| Nr. | Idee | Kapitel | Art | Status | Entscheidung |\n|---|---|---|---|---|---|\n',
+        '00_Dokumentation/STEUERUNG_GESAMT.md': lies('STEUERUNG_GESAMT.md'),
+        '01_Input/README.md': lies('Input_README.md'),
+    }
+    stand_agenten = {}
+    for a in sorted((VORLAGEN / 'agents').glob('*.md')):
+        inhalt = a.read_text(encoding='utf-8')
+        d[f'.claude/agents/{a.name}'] = inhalt
+        stand_agenten[a.name] = hashlib.sha256(inhalt.encode()).hexdigest()
+    # gelieferter Stand: der Abgleich ersetzt später nur Agenten, die seitdem niemand geändert hat
+    d['.claude/agents/.vorlagen.json'] = json.dumps(stand_agenten, indent=2)
+    # Werkzeug selbst mitliefern, damit der Abgleich lokal läuft
+    d['00_Dokumentation/Werkzeuge/handbuch_struktur.py'] = (HIER / 'handbuch_struktur.py').read_text(encoding='utf-8')
+    for v in sorted(VORLAGEN.rglob('*')):
+        if v.is_file():
+            d[f'00_Dokumentation/Werkzeuge/vorlagen/{v.relative_to(VORLAGEN).as_posix()}'] = v.read_text(encoding='utf-8')
+    return d
+
+
+def gesamt(modell, stand: str, gliederung_name: str, gliederung_daten: bytes, unterkapitel_arbeitsordner: bool):
+    ordner, dateien = kapitel_baum(modell, '02_Kapitel', unterkapitel_arbeitsordner)
+    ordner |= {'01_Input/01_Eingang', '01_Input/02_Zugeordnet', '01_Input/03_Ausgeschlossen', '03_Varianten', '00_Dokumentation/Gliederung/App'}
+    dateien.update(vorlagen_dateien(stand, gliederung_name))
+    csv_t, md_t, status_t = gliederung_dateien(modell, '02_Kapitel', gliederung_name)
+    dateien['00_Dokumentation/Gliederung/Gliederung.csv'] = csv_t
+    dateien['00_Dokumentation/Gliederung/Gliederung.md'] = md_t
+    dateien['00_Dokumentation/STATUS.md'] = status_t
+    dateien['03_Varianten/README.md'] = ('# Varianten aus der App\n\nJede Gliederung, die in der App unter Stammdaten › Inhaltsverzeichnis angelegt wird, '
+                                         'erhält hier einen eigenen Ordner mit derselben Kapitelstruktur. Anlegen mit:\n\n'
+                                         '`python 00_Dokumentation/Werkzeuge/handbuch_struktur.py abgleich . --app http://localhost:3000`\n')
+    bin_dateien = {f'00_Dokumentation/Gliederung/{gliederung_name}': gliederung_daten}
+    return ordner, dateien, bin_dateien
+
+
+# ---------------------------------------------------------------- ZIP
+
+def schreibe_zip(ziel: Path, wurzel: str, ordner, dateien, bin_dateien):
+    alle = set(ordner)
+    for p in list(dateien) + list(bin_dateien):
+        teile = p.split('/')[:-1]
+        alle.update('/'.join(teile[:i]) for i in range(1, len(teile) + 1))
+    with zipfile.ZipFile(ziel, 'w', zipfile.ZIP_DEFLATED) as z:
+        for o in sorted(alle):
+            z.writestr(f'{wurzel}/{o}/', '')
+        for p, t in sorted(dateien.items()):
+            z.writestr(f'{wurzel}/{p}', t.encode('utf-8'))
+        for p, b in sorted(bin_dateien.items()):
+            z.writestr(f'{wurzel}/{p}', b)
+    return alle
+
+
+# ---------------------------------------------------------------- Abgleich mit einem bestehenden Ordner
+
+def app_gliederungen(adresse: str, projekt: str, token: str | None, benutzer: str | None):
+    """Neueste Version jeder Gliederung der App mit JSON-Export."""
+    kopf = {'X-Project-Id': projekt, 'Accept': 'application/json'}
+    if token:
+        kopf['Authorization'] = f'Bearer {token}'
+    elif benutzer:
+        kopf['X-User-Id'] = benutzer
+
+    def hole(pfad):
+        with urllib.request.urlopen(urllib.request.Request(adresse.rstrip('/') + '/api/v1' + pfad, headers=kopf), timeout=30) as r:
+            return json.loads(r.read().decode('utf-8'))
+    try:
+        liste = hole('/outlines')
+    except OSError as e:
+        sys.exit(f'App unter {adresse} nicht erreichbar oder Anmeldung abgelehnt ({e}). Läuft die App? Stimmen --projekt und --token/--benutzer?')
+    for o in (x for x in liste['items'] if x.get('latest')):
+        yield o, hole(f"/outlines/{o['id']}/export?format=json")
+
+
+def agenten_aktualisieren(ziel: Path, bericht: list):
+    """Neue Agenten anlegen; vorhandene nur ersetzen, wenn sie seit der letzten Lieferung unverändert sind."""
+    stand_datei = ziel / '.claude' / 'agents' / '.vorlagen.json'
+    try:
+        alt = json.loads(stand_datei.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        alt = {}
+    neu_stand = {}
+    for a in sorted((VORLAGEN / 'agents').glob('*.md')):
+        inhalt = a.read_text(encoding='utf-8')
+        h = hashlib.sha256(inhalt.encode()).hexdigest()
+        neu_stand[a.name] = h
+        pfad = ziel / '.claude' / 'agents' / a.name
+        if not pfad.exists():
+            pfad.parent.mkdir(parents=True, exist_ok=True)
+            pfad.write_text(inhalt, encoding='utf-8')
+            bericht.append(f'- Agent neu: `{a.name}`')
+            continue
+        jetzt = hashlib.sha256(pfad.read_bytes()).hexdigest()
+        if jetzt == h or alt.get(a.name) == h:
+            continue  # schon aktuell, oder Vorlage seit der letzten Lieferung unverändert (eigene Anpassungen bleiben)
+        if alt.get(a.name) == jetzt:
+            pfad.write_text(inhalt, encoding='utf-8')
+            bericht.append(f'- Agent aktualisiert: `{a.name}`')
+        else:
+            # Endung .neu statt .md: Claude Code lädt die Datei nicht als zweiten Agenten
+            (pfad.parent / f'{a.name}.neu').write_text(inhalt, encoding='utf-8')
+            bericht.append(f'- Agent `{a.name}` wurde von Hand geändert und die Vorlage ist neu – neue Fassung als `{a.name}.neu` abgelegt, bitte zusammenführen')
+    stand_datei.write_text(json.dumps(neu_stand, indent=2), encoding='utf-8')
+
+
+def abgleich(ziel: Path, soll_ordner, soll_dateien, basis_liste, bericht: list):
+    """Fehlendes anlegen; Vorhandenes nie überschreiben; Ordner, die die Gliederung nicht mehr kennt, nur melden."""
+    neu_o = neu_d = 0
+    for o in sorted(soll_ordner):
+        p = ziel / o
+        if not p.exists():
+            p.mkdir(parents=True, exist_ok=True)
+            neu_o += 1
+    for rel, inhalt in sorted(soll_dateien.items()):
+        p = ziel / rel
+        if not p.exists():
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(inhalt, encoding='utf-8')
+            neu_d += 1
+    bericht.append(f'- {neu_o} Ordner und {neu_d} Dateien neu angelegt')
+    for basis in basis_liste:
+        soll = {o.split('/')[len(basis.split('/'))] for o in soll_ordner if o.startswith(basis + '/')}
+        soll_u = {o for o in soll_ordner if o.startswith(basis + '/') and o.count('/') == basis.count('/') + 2}
+        b = ziel / basis
+        if not b.exists():
+            continue
+        for k in sorted(x for x in b.iterdir() if x.is_dir()):
+            if k.name not in soll:
+                bericht.append(f'- ⚠ `{basis}/{k.name}` steht nicht mehr in der Gliederung (umbenannt oder entfallen) – nicht verändert')
+                continue
+            for u in sorted(x for x in k.iterdir() if x.is_dir() and x.name not in ARBEITSORDNER):
+                if f'{basis}/{k.name}/{u.name}' not in soll_u:
+                    bericht.append(f'- ⚠ `{basis}/{k.name}/{u.name}` steht nicht mehr in der Gliederung – nicht verändert')
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest='befehl', required=True)
+    z = sub.add_parser('zip', help='vollständigen Arbeitsordner als ZIP erzeugen')
+    z.add_argument('gliederung', type=Path)
+    z.add_argument('ziel', type=Path)
+    z.add_argument('--stand', default=date.today().strftime('%d%m%Y'))
+    z.add_argument('--unterkapitel-arbeitsordner', action='store_true', help='die acht Arbeitsordner auch in jedem Unterkapitel anlegen')
+    g = sub.add_parser('abgleich', help='bestehenden Arbeitsordner ergänzen')
+    g.add_argument('ordner', type=Path)
+    g.add_argument('--gliederung', type=Path, help='Gesamtgliederung (Excel) oder App-Export (JSON) für 02_Kapitel')
+    g.add_argument('--app', help='Adresse der lokalen App, z. B. http://localhost:3000 – alle Gliederungen nach 03_Varianten')
+    g.add_argument('--projekt', default='p_default')
+    g.add_argument('--token', help='API-Token der App (Integrationen › API-Tokens, Berechtigung read)')
+    g.add_argument('--benutzer', help='Demo-Benutzer der App, z. B. u-admin (nur Demo-Modus)')
+    g.add_argument('--unterkapitel-arbeitsordner', action='store_true')
+    a = ap.parse_args()
+
+    if a.befehl == 'zip':
+        modell = lies_gliederung(a.gliederung)
+        ordner, dateien, bin_d = gesamt(modell, a.stand, a.gliederung.name, a.gliederung.read_bytes(), a.unterkapitel_arbeitsordner)
+        alle = schreibe_zip(a.ziel, a.stand, ordner, dateien, bin_d)
+        laengster = max((f'{a.stand}/{p}' for p in dateien), key=len)
+        print(f"{len(modell)} Kapitel, {sum(len(k['unter']) for k in modell)} Unterkapitel, {len(alle)} Ordner, {len(dateien) + len(bin_d)} Dateien → {a.ziel}")
+        print(f'längster Pfad ({len(laengster)} Zeichen relativ): {laengster}')
+        return
+
+    ziel = a.ordner.resolve()
+    if not (ziel / 'CLAUDE.md').exists():
+        sys.exit(f'{ziel} ist kein Handbuch-Arbeitsordner (CLAUDE.md fehlt).')
+    bericht = [f'# Gliederungsabgleich {datetime.now():%d.%m.%Y %H:%M}', '']
+    agenten_aktualisieren(ziel, bericht)
+    if a.gliederung:
+        modell = lies_gliederung(a.gliederung)
+        o, d = kapitel_baum(modell, '02_Kapitel', a.unterkapitel_arbeitsordner)
+        bericht += ['', f'## Gesamtgliederung `{a.gliederung.name}` → 02_Kapitel', '']
+        abgleich(ziel, o, d, ['02_Kapitel'], bericht)
+    if a.app:
+        zuordnung_datei = ziel / '00_Dokumentation' / 'Gliederung' / 'App' / 'zuordnung.json'
+        zuordnung_datei.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            zuordnung = json.loads(zuordnung_datei.read_text(encoding='utf-8'))
+        except (OSError, ValueError):
+            zuordnung = {}
+        for info, export in app_gliederungen(a.app, a.projekt, a.token, a.benutzer):
+            # Ordner je Gliederungsfamilie: bleibt bei Umbenennung oder neuer Version in der App derselbe
+            name = zuordnung.setdefault(info['familyId'], ordnername(info['name']) or info['familyId'])
+            basis = f'03_Varianten/{name}'
+            modell = lies_app_json(export)
+            app_rollen = [APP_ROLLEN[r] for r in info.get('roles') or [] if r in APP_ROLLEN]
+            o, d = kapitel_baum(modell, basis, a.unterkapitel_arbeitsordner, set(app_rollen) if app_rollen and 'all' not in (info.get('roles') or []) else None)
+            csv_t, md_t, status_t = gliederung_dateien(modell, basis, info['name'])
+            sparten_txt = ', '.join(APP_SPARTEN.get(x, x) for x in info.get('divisions') or [] if x not in ('all', 'unconfirmed')) or 'alle'
+            maerkte = ', '.join(info.get('markets') or []) or MARKTUMFANG.get(info.get('marketScope'), info.get('marketScope') or 'alle')
+            d[f'{basis}/VARIANTE.md'] = (f"# Variante: {info['name']}\n\n- Version in der App: {info['versionNo']}\n- Rollen: {', '.join(app_rollen) or 'alle'}\n"
+                                         f"- Sparten: {sparten_txt}\n- Märkte: {maerkte}\n- Beschreibung: {info.get('description') or '–'}\n\n"
+                                         'Die Variante ist der Rahmen für Steuerung und Entwürfe; die Datei wird beim Abgleich nicht überschrieben.\n')
+            d[f'{basis}/STATUS.md'] = status_t
+            (ziel / '00_Dokumentation' / 'Gliederung' / 'App' / f'{name}_v{info["versionNo"]}.json').write_text(json.dumps(export, ensure_ascii=False, indent=2), encoding='utf-8')
+            (ziel / '00_Dokumentation' / 'Gliederung' / 'App' / f'{name}.md').write_text(md_t, encoding='utf-8')
+            bericht += ['', f"## App-Gliederung „{info['name']}“ (v{info['versionNo']}) → {basis}", '']
+            abgleich(ziel, o, d, [basis], bericht)
+        zuordnung_datei.write_text(json.dumps(zuordnung, ensure_ascii=False, indent=2), encoding='utf-8')
+    if not (a.gliederung or a.app):
+        bericht += ['', 'Nur Agenten abgeglichen (weder --gliederung noch --app angegeben).']
+    (ziel / '00_Dokumentation' / 'GLIEDERUNG_ABGLEICH.md').write_text('\n'.join(bericht) + '\n', encoding='utf-8')
+    print('\n'.join(bericht))
+
+
+if __name__ == '__main__':
+    main()
