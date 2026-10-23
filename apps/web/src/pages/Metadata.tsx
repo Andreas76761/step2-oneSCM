@@ -328,7 +328,78 @@ export function MetadataChunksPage() {
 
 // ---------------------------------------------------------------- Fragen und Antworten
 
-const EMPTY_QA = { question: '', answer: '', language: 'de' as Lang, note: '', labelIds: [] as string[], sources: [] as any[] };
+const EMPTY_QA = { question: '', answer: '', language: 'de' as Lang, note: '', labelIds: [] as string[], sources: [] as any[], filters: null as any, askId: null as string | null };
+
+// ---------------------------------------------------------------- Fragen über alle Quellen (M5, ADR-089)
+
+const DIFF_PART = (o: { op: string; text: string }, i: number) => (o.op === '=' ? <span key={i}>{o.text}</span> : o.op === '-' ? <del key={i}>{o.text}</del> : <ins key={i}>{o.text}</ins>);
+
+/** Antwort mit Belegnummern und den Belegen darunter */
+function AskResult({ r }: { r: any }) {
+  return (
+    <div className="ask-result" role="region" aria-label="Antwort mit Belegen">
+      {r.notice && <p className="alert small">{r.notice}</p>}
+      {r.answer.length > 0 && (
+        <p className="md-text">
+          {r.answer.map((s: any, i: number) => <span key={i}>{s.text}{s.sources.map((n: number) => <sup key={n}><a href={`#beleg-${r.id}-${n}`} aria-label={`Beleg ${n}`}>[{n}]</a></sup>)} </span>)}
+        </p>
+      )}
+      <p className="small muted">{r.mode === 'llm' ? 'Antwort aus den Belegen formuliert, jeder Satz geprüft' : r.mode === 'extractive' ? 'Passende Sätze aus den Belegen (ohne KI)' : ''}{r.dropped ? ` · ${r.dropped} unbelegte Sätze verworfen` : ''} · {r.searched} Abschnitte durchsucht</p>
+      {r.sources.map((s: any) => (
+        <blockquote key={s.n} id={`beleg-${r.id}-${s.n}`} className="md-excerpt small">
+          <strong>[{s.n}] {s.path}</strong> · {s.headingPath.join(' › ') || '–'} · <span className="muted">{locatorText(s)}{s.part ? ` · Teilstück ${s.part} von ${s.parts}` : ''}</span>
+          <div>{s.text}</div>
+        </blockquote>
+      ))}
+    </div>
+  );
+}
+
+function AskCard({ canEdit, onTake }: { canEdit: boolean; onTake: (r: any) => void }) {
+  const { notify } = useApp();
+  const docs = useLoad<any[]>('/metadata/headings/documents');
+  const { labels, groups } = useLabels(false);
+  const [lang] = useLabelLang();
+  const [question, setQuestion] = useState('');
+  const [format, setFormat] = useState('');
+  const [documentId, setDocumentId] = useState('');
+  const [heading, setHeading] = useState('');
+  const [labelIds, setLabelIds] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<any | null>(null);
+  const ask = async () => {
+    setBusy(true);
+    try {
+      setResult(await post('/metadata/ask', { question, filters: { ...(format ? { format } : {}), ...(documentId ? { documentId } : {}), ...(heading.trim() ? { heading: heading.trim() } : {}), ...(labelIds.length ? { labelIds } : {}) } }));
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Card title="Frage an alle Quellen">
+      <label className="block">Ihre Frage <textarea rows={2} value={question} maxLength={500} onChange={(e) => setQuestion(e.target.value)} placeholder="z. B. Wie kündige ich einen Vertrag?" /></label>
+      <div className="filters" role="group" aria-label="Quellen eingrenzen">
+        <select value={format} onChange={(e) => setFormat(e.target.value)} aria-label="Nur Format">
+          <option value="">alle Formate</option>
+          {['markdown', 'html', 'docx', 'pptx', 'pdf', 'jira'].map((f) => <option key={f} value={f}>{formatText(f)}</option>)}
+        </select>
+        <select value={documentId} onChange={(e) => setDocumentId(e.target.value)} aria-label="Nur Datei">
+          <option value="">alle Dateien</option>
+          {(docs.data ?? []).map((d) => <option key={d.documentId} value={d.documentId}>{d.path}</option>)}
+        </select>
+        <label><span className="sr-only">Nur unter Überschrift</span><input type="search" value={heading} placeholder="Überschrift …" aria-label="Nur unter Überschrift" onChange={(e) => setHeading(e.target.value)} /></label>
+        <LabelMulti labels={labels.data ?? []} groups={groups} lang={lang} selected={labelIds} onChange={setLabelIds} ariaLabel="Nur Chunks mit Label" />
+      </div>
+      <div className="row-actions">
+        <button className="btn primary" disabled={busy || question.trim().length < 3} onClick={() => void ask()}>{busy ? 'Suche …' : 'Fragen'}</button>
+        {result && canEdit && result.answer.length > 0 && <button className="btn" onClick={() => onTake(result)}>Als Frage & Antwort übernehmen</button>}
+      </div>
+      {result && <AskResult r={result} />}
+    </Card>
+  );
+}
 
 export function MetadataQaPage() {
   const { notify } = useApp();
@@ -346,9 +417,24 @@ export function MetadataQaPage() {
   const [sourceQ, setSourceQ] = useState('');
   const found = useLoad<{ items: any[] }>(sourceQ.trim().length >= 2 ? `/metadata/chunks${qs({ q: sourceQ.trim(), limit: 8 })}` : null, [sourceQ]);
   const [open, setOpen] = useState<string | null>(null);
+  const [reask, setReask] = useState<Record<string, any>>({});
+  const runReask = async (id: string) => {
+    try {
+      const r = await post(`/metadata/qa/${id}/reask`, {});
+      setReask({ ...reask, [id]: r });
+      setOpen(id);
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const take = (r: any) => {
+    setEditId(null);
+    setForm({ ...EMPTY_QA, question: r.question, answer: r.answerText, sources: r.sources.map((s: any) => ({ ...s, id: s.snippetId })), filters: r.filters, askId: r.id });
+    notify('Antwort übernommen – Labels ergänzen und speichern.');
+  };
 
   const save = async () => {
-    const body = { question: form.question, answer: form.answer, language: form.language, note: form.note || null, labelIds: form.labelIds, snippetIds: form.sources.map((s) => s.snippetId ?? s.id) };
+    const body = { question: form.question, answer: form.answer, language: form.language, note: form.note || null, labelIds: form.labelIds, snippetIds: form.sources.map((s) => s.snippetId ?? s.id), ...(editId ? {} : { filters: form.filters ?? undefined, askId: form.askId ?? undefined }) };
     try {
       if (editId) await patch(`/metadata/qa/${editId}`, body);
       else await post('/metadata/qa', body);
@@ -375,15 +461,16 @@ export function MetadataQaPage() {
   };
   const startEdit = (x: any) => {
     setEditId(x.id);
-    setForm({ question: x.question, answer: x.answer, language: x.language, note: x.note ?? '', labelIds: x.labels.map((l: Label) => l.id), sources: x.sources });
+    setForm({ question: x.question, answer: x.answer, language: x.language, note: x.note ?? '', labelIds: x.labels.map((l: Label) => l.id), sources: x.sources, filters: x.filters, askId: x.askId });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <Page title="Fragen & Antworten" subtitle="Fragen und Antworten mit Quelldatei, Fundstelle und Auszug speichern und mit Labels ordnen" actions={<LangSwitch lang={lang} onChange={setLang} />}>
+    <Page title="Fragen & Antworten" subtitle="Fragen an alle Quellen mit Belegen, Antworten mit Quelldatei, Fundstelle und Auszug speichern und mit Labels ordnen" actions={<LangSwitch lang={lang} onChange={setLang} />}>
+      <AskCard canEdit={canEdit} onTake={take} />
       {canEdit && (
         <Card title={editId ? 'Frage und Antwort bearbeiten' : 'Frage und Antwort speichern'}>
-          <p className="small muted">Die Fragemaske mit automatischer Antwort aus allen Quellen folgt in Etappe M5; Antworten lassen sich schon jetzt mit Quellen und Labels festhalten.</p>
+          {form.askId && <p className="small muted">Aus der Frage an alle Quellen übernommen – der Rahmen der Frage wird für „Erneut fragen“ mitgespeichert.</p>}
           <label className="block">Frage <textarea rows={2} value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} aria-label="Frage" /></label>
           <label className="block">Antwort <textarea rows={4} value={form.answer} onChange={(e) => setForm({ ...form, answer: e.target.value })} aria-label="Antwort" /></label>
           <div className="filters">
@@ -422,7 +509,9 @@ export function MetadataQaPage() {
           {editId && <button className="btn" onClick={() => { setEditId(null); setForm(EMPTY_QA); }}>Abbrechen</button>}
         </Card>
       )}
-      <Card title={`Gespeichert (${list.data?.length ?? 0})`}>
+      <Card title={`Gespeichert (${list.data?.length ?? 0})`} actions={<span className="row-actions">
+        {(['csv', 'xlsx', 'json'] as const).map((f) => <DownloadButton key={f} className="btn small" href={`/api/v1/metadata/qa/export${qs({ format: f, q: q.trim() || undefined, language, labels: filterLabels.join(',') || undefined })}`} name={`fragen-antworten.${f}`}>⬇ {f.toUpperCase()}</DownloadButton>)}
+      </span>}>
         <div className="filters">
           <label className="grow"><span className="sr-only">Suche in Fragen und Antworten</span><input type="search" placeholder="In Fragen und Antworten suchen …" value={q} onChange={(e) => setQ(e.target.value)} aria-label="In Fragen und Antworten suchen" /></label>
           <select value={language} onChange={(e) => setLanguage(e.target.value)} aria-label="Sprache filtern">
@@ -448,6 +537,7 @@ export function MetadataQaPage() {
                     <td>{x.sources.length}</td>
                     <td className="small">{x.updatedBy}, {new Date(x.updatedAt).toLocaleString('de-DE')}</td>
                     <td className="row-actions">
+                      <button className="btn small" onClick={() => void runReask(x.id)}>Erneut fragen</button>
                       {canEdit && <button className="btn small" onClick={() => startEdit(x)}>Bearbeiten</button>}
                       {canEdit && <button className="btn small danger" onClick={() => remove(x.id)}>Löschen</button>}
                     </td>
@@ -457,6 +547,14 @@ export function MetadataQaPage() {
                       <td colSpan={6}>
                         <p className="md-text">{x.answer}</p>
                         {x.note && <p className="small muted">Notiz: {x.note}</p>}
+                        {reask[x.id] && (
+                          <section className="ask-compare" aria-label="Vergleich mit dem neuen Stand">
+                            <h4>Neuer Stand vom {new Date().toLocaleString('de-DE')}</h4>
+                            <p className="small">{reask[x.id].changes.answerChanged ? 'Antwort geändert' : 'Antwort unverändert'} · Belege: {reask[x.id].changes.sourcesAdded.length} neu, {reask[x.id].changes.sourcesRemoved.length} entfallen, {reask[x.id].changes.sourcesKept.length} gleich</p>
+                            {reask[x.id].changes.answerChanged && <p className="md-text small dp-diff">{reask[x.id].changes.diff.map(DIFF_PART)}</p>}
+                            <AskResult r={reask[x.id].current} />
+                          </section>
+                        )}
                         {x.sources.map((s: any, i: number) => (
                           <blockquote key={s.snippetId} className="md-excerpt small">
                             <strong>[{i + 1}] {s.path}</strong> · {s.headingPath.join(' › ') || '–'} · <span className="muted">{locatorText(s)}</span>

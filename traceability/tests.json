@@ -1796,5 +1796,43 @@
       "NFR-85",
       "NFR-86"
     ]
+  },
+  {
+    "id": "T-263",
+    "title": "Frage an alle Quellen: nur aus den Auszügen, Datei und Überschrift je Auszug, Daten statt Anweisung (Einheit)",
+    "file": "apps/server/test/stage37.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-87"
+    ]
+  },
+  {
+    "id": "T-264",
+    "title": "Fragen mit Belegen über PDF und Markdown: Filter, Teilstücke, Speichern mit Rahmen, erneut fragen mit Vergleich, Export CSV/Excel/JSON",
+    "file": "apps/server/test/stage37.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-87",
+      "NFR-88"
+    ]
+  },
+  {
+    "id": "T-265",
+    "title": "Ohne KI-Dienst: extraktive Antwort aus den Belegen",
+    "file": "apps/server/test/stage37.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-87"
+    ]
+  },
+  {
+    "id": "T-266",
+    "title": "Frage an alle Quellen in der Oberfläche: Antwort mit Belegen, übernehmen, erneut fragen, Export (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-87",
+      "NFR-88"
+    ]
   }
 ]

@@ -282,6 +282,7 @@ async function qaDto(ctx: Ctx, rows: Row[]) {
   const labels = await labelsBy(ctx, 'metadata_qa_labels', 'qa_id', rows.map((r) => r.id));
   return rows.map((r) => ({
     id: r.id, question: r.question, answer: r.answer, language: r.language, sources: parseJson<QaSource[]>(r.sources, []), note: r.note ?? null,
+    filters: parseJson<Record<string, unknown> | null>(r.filters, null), askId: r.ask_id ?? null,
     labels: labels.get(r.id) ?? [], createdBy: r.created_by, createdAt: r.created_at, updatedBy: r.updated_by, updatedAt: r.updated_at,
   }));
 }
@@ -316,7 +317,7 @@ async function replaceQaLabels(ctx: Ctx, qaId: string, labelIds: string[]) {
   for (const l of labelIds) await ctx.db.run('INSERT INTO metadata_qa_labels (qa_id, label_id) VALUES (?, ?)', qaId, l);
 }
 
-export async function createQa(ctx: Ctx, input: { question?: string; answer?: string; language?: string; snippetIds?: unknown; labelIds?: unknown; note?: string }, user: User) {
+export async function createQa(ctx: Ctx, input: { question?: string; answer?: string; language?: string; snippetIds?: unknown; labelIds?: unknown; note?: string; filters?: unknown; askId?: string }, user: User) {
   const question = cleanText(input.question, 'question', 2000);
   const answer = cleanText(input.answer, 'answer', 20000);
   const language = cleanLanguage(input.language);
@@ -325,8 +326,11 @@ export async function createQa(ctx: Ctx, input: { question?: string; answer?: st
   const id = newId('qa');
   await ctx.db.tx(async () => {
     await ctx.db.run(
-      'INSERT INTO metadata_qa (id, project_id, question, answer, language, sources, note, created_by, created_at, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO metadata_qa (id, project_id, question, answer, language, sources, note, created_by, created_at, updated_by, updated_at, filters, ask_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       id, ctx.projectId, question, answer, language, json(sources), input.note?.trim().slice(0, 2000) || null, user.id, now(), user.id, now(),
+      // Rahmen der Frage (ADR-089) für „erneut fragen“; nur bekannte Filter
+      input.filters && typeof input.filters === 'object' ? json(Object.fromEntries(Object.entries(input.filters as Record<string, unknown>).filter(([k]) => ['format', 'documentId', 'heading', 'labelIds'].includes(k)))) : null,
+      typeof input.askId === 'string' && input.askId ? input.askId.slice(0, 80) : null,
     );
     await replaceQaLabels(ctx, id, labelIds);
     await audit(ctx, user.id, 'metadata.qa.created', 'metadata_qa', id, { question, labelIds, sources: sources.length });

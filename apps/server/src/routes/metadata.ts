@@ -7,6 +7,7 @@ import {
 import { exportAccessMatrix, getAccessMatrix, importAccessMatrix, setAccessCell } from '../services/accessMatrix.js';
 import { exportDomainMap, getDomainMap, setDomainLink } from '../services/domainMap.js';
 import { listChunksWithSuggestions, outlineCoverage, outlineSources } from '../services/metadataOutline.js';
+import { askSources, exportQa, reaskQa } from '../services/metadataAsk.js';
 import { decideDuplicate, duplicateGroups, getDuplicate, listDuplicates, refreshDuplicates } from '../services/metadataDuplicates.js';
 import { headingDocuments, headingTree, mergedHeadings } from '../services/metadataHeadings.js';
 import { list, num, userOf } from './helpers.js';
@@ -74,6 +75,15 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
     reply.code(201);
     return createQa(req.ctx, req.body ?? {}, user);
   });
+  // Fragen über alle Quellen (M5, ADR-089): fragen mit `read`, speichern mit `edit`
+  app.post<{ Body: any }>('/metadata/ask', async (req) => askSources(req.ctx, req.body ?? {}, userOf(req.ctx, req)));
+  app.get<{ Querystring: { format?: string; q?: string; labels?: string; language?: string } }>('/metadata/qa/export', async (req, reply) => {
+    userOf(req.ctx, req);
+    const f = await exportQa(req.ctx, req.query.format ?? 'csv', { q: req.query.q, labelIds: list(req.query.labels), language: req.query.language || undefined });
+    reply.header('Content-Type', f.contentType).header('Content-Disposition', `attachment; filename="${f.fileName}"`);
+    return f.data;
+  });
+  app.post<P<'qaId'>>('/metadata/qa/:qaId/reask', async (req) => reaskQa(req.ctx, req.params.qaId, userOf(req.ctx, req)));
   app.get<P<'qaId'>>('/metadata/qa/:qaId', async (req) => (userOf(req.ctx, req), getQa(req.ctx, req.params.qaId)));
   app.patch<P<'qaId'> & { Body: any }>('/metadata/qa/:qaId', async (req) => updateQa(req.ctx, req.params.qaId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
   app.delete<P<'qaId'>>('/metadata/qa/:qaId', async (req, reply) => {

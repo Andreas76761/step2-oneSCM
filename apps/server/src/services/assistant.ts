@@ -75,7 +75,7 @@ async function approvedPassages(ctx: Ctx, opts: { language: string; role?: strin
 }
 
 /** Vektoren je Text-Hash (dauerhaft zwischengespeichert, modellbezogen) */
-async function embedTexts(ctx: Ctx, texts: string[]): Promise<Float32Array[]> {
+export async function embedTexts(ctx: Ctx, texts: string[]): Promise<Float32Array[]> {
   const model = ctx.embeddings.model;
   const hashes = texts.map((t) => sha256(t));
   const known = new Map<string, Float32Array>();

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.37.0 – Etappe 37 (23.10.2026)
+
+### Hinzugefügt
+- **Frage an alle Quellen (ADR-089, M5):** unter „oneSCM_Metadaten › Fragen & Antworten“ – hybride Suche über Chunks und Teilstücke, eingrenzbar nach Format, Datei, Überschrift und Label; Antwort nur aus den sechs besten Belegen, jeder Satz mit Beleg [n] (KI mit Satzprüfung, sonst extraktiv).
+- **Als Frage & Antwort übernehmen** mit dem Rahmen der Frage; **Erneut fragen** vergleicht mit dem gespeicherten Stand (Belege neu/entfallen/gleich, Antwort wortweise).
+- **Export** der gespeicherten Fragen und Antworten als CSV, Excel oder JSON.
+- Migration `043_metadata_ask.sql`; Tests T-263 … T-265, E2E T-266 (axe); Anforderungen NFR-87, NFR-88.
+
 ## 0.36.0 – Etappe 36 (23.10.2026)
 
 ### Hinzugefügt

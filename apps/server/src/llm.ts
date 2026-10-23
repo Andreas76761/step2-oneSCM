@@ -134,6 +134,12 @@ export class DemoProvider implements LlmProvider {
       const sentences = extractiveAnswer(qa.question, qa.passages.map((p) => ({ label: p.id, text: p.text, chapter: p.chapter, section: p.section })));
       return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
     }
+    // Fragen über alle Quellen (ADR-089): ebenso extraktiv aus den Auszügen
+    const ex = data as unknown as { question?: string; excerpts?: { id: string; text: string; heading: string }[] };
+    if (ex.question && ex.excerpts) {
+      const sentences = extractiveAnswer(ex.question, ex.excerpts.map((p) => ({ label: p.id, text: p.text, chapter: p.heading, section: '' })));
+      return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
+    }
     // Schreibstil (ADR-040): automatische Regelkorrekturen statt echter Umformulierung
     const st = data as unknown as { task?: string; mode?: string; text?: string; terminology?: { preferred: string; avoid: string[] }[]; phrases?: StylePhrase[] };
     if (st.task === 'style' && typeof st.text === 'string') {

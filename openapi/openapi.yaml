@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.36.0
+  version: 0.37.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3879,7 +3879,7 @@ paths:
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [question, answer], properties: { question: { type: string, maxLength: 2000 }, answer: { type: string, maxLength: 20000 }, language: { type: string, enum: [de, en], default: de }, snippetIds: { type: array, items: { type: string }, maxItems: 20 }, labelIds: { type: array, items: { type: string } }, note: { type: string, maxLength: 2000 } } } } }
+        content: { application/json: { schema: { type: object, required: [question, answer], properties: { question: { type: string, maxLength: 2000 }, answer: { type: string, maxLength: 20000 }, language: { type: string, enum: [de, en], default: de }, snippetIds: { type: array, items: { type: string }, maxItems: 20 }, labelIds: { type: array, items: { type: string } }, note: { type: string, maxLength: 2000 }, filters: { type: object, description: 'Rahmen der Frage (format, documentId, heading, labelIds) für „erneut fragen“ (ADR-089)' }, askId: { type: string } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: '{ id, question, answer, language: de | en, sources: [{ snippetId, path, headingPath, locator, lineStart, lineEnd, excerpt }], note, labels: [{ id, code, group, nameDe, nameEn, archived }], createdBy, createdAt, updatedBy, updatedAt }' }
@@ -4534,4 +4534,47 @@ paths:
         '200': { description: 'Paar mit Entscheidung' }
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/ask:
+    post:
+      operationId: askMetadataSources
+      summary: 'Frage an alle eingelesenen Quellen (ADR-089, M5): hybride Suche über Chunks und Teilstücke, Top 20 → Neugewichtung → Top 6 Belege; Antwort nur aus den Belegen, jeder Satz mit Beleg (KI mit Satzprüfung, sonst extraktiv; Berechtigung read)'
+      tags: [Metadaten]
+      x-requirements: [NFR-87]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, language: { type: string, enum: [de, en], default: de }, filters: { type: object, properties: { format: { type: string, enum: [markdown, html, docx, pptx, pdf, jira] }, documentId: { type: string }, heading: { type: string }, labelIds: { type: array, items: { type: string } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, question, filters, mode: llm | extractive | none, answer: [{ text, sources: [n] }], answerText, sources: [{ n, snippetId, part, parts, path, format, headingPath, locator, text, score }], notice, dropped, candidates, searched }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /metadata/qa/export:
+    get:
+      operationId: exportMetadataQa
+      summary: 'Gespeicherte Fragen und Antworten als CSV (Semikolon, UTF-8 mit BOM), Excel oder JSON – Filter wie in der Liste'
+      tags: [Metadaten]
+      x-requirements: [NFR-88]
+      x-extension: true
+      parameters:
+        - { name: format, in: query, schema: { type: string, enum: [csv, xlsx, json], default: csv } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: labels, in: query, schema: { type: string } }
+        - { name: language, in: query, schema: { type: string, enum: [de, en] } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /metadata/qa/{qaId}/reask:
+    post:
+      operationId: reaskMetadataQa
+      summary: 'Gespeicherte Frage im gleichen Rahmen erneut stellen und mit dem gespeicherten Stand vergleichen (Belege neu, entfallen, gleich; Antwort wortweise)'
+      tags: [Metadaten]
+      x-requirements: [NFR-88]
+      x-extension: true
+      parameters: [{ name: qaId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ qaId, saved: { answer, sources, savedAt }, current, changes: { sourcesAdded, sourcesRemoved, sourcesKept, answerChanged, diff } }' }
         '404': { $ref: '#/components/responses/Problem' }

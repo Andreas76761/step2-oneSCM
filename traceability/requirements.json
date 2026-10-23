@@ -965,5 +965,23 @@
     "documentation": [
       "docs/adr/ADR-088-dubletten-formatuebergreifend.md"
     ]
+  },
+  {
+    "id": "NFR-87",
+    "title": "Frage an alle Quellen: hybride Suche über Chunks und Teilstücke mit Filtern (Format, Datei, Überschrift, Label), Top 20 → Neugewichtung → Top 6; Antwort nur aus den Belegen mit Beleg je Satz, ohne KI extraktiv",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-089-fragen-alle-quellen.md"
+    ]
+  },
+  {
+    "id": "NFR-88",
+    "title": "Frage & Antwort mit Rahmen speichern, erneut fragen mit Vergleich zum gespeicherten Stand, Export CSV/Excel/JSON",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-089-fragen-alle-quellen.md"
+    ]
   }
 ]

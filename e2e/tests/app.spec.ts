@@ -2244,3 +2244,38 @@ test('[T-262] Dubletten über alle Formate: Markdown und HTML mit gleichem Absch
   await expect(decided.locator('.dp-leading')).toContainText('e2e-dp-handbuch.html');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-266] Frage an alle Quellen: Antwort mit Belegen, als Frage & Antwort übernehmen, erneut fragen, Export', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  const res = await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name: 'e2e-ask.md', mimeType: 'text/markdown', buffer: Buffer.from('---\nroles: [all]\ndivisions: [all]\n---\n# E2E Fragen\n\n## E2E Garantie verlängern\n\nE2E Eine Garantieverlängerung beantragen Sie im Menü Garantie über Verlängern.\n') } } });
+  const id = (await res.json()).id;
+  await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Fragen & Antworten' }).click();
+  await page.getByLabel('Ihre Frage').fill('Wie beantrage ich eine E2E Garantieverlängerung?');
+  await page.getByLabel('Nur Format').selectOption('markdown');
+  await page.getByRole('button', { name: 'Fragen', exact: true }).click();
+  const answer = page.getByRole('region', { name: 'Antwort mit Belegen' });
+  await expect(answer).toContainText('E2E Eine Garantieverlängerung beantragen Sie im Menü Garantie über Verlängern.');
+  await expect(answer.getByRole('link', { name: 'Beleg 1' })).toBeVisible();
+  await expect(answer).toContainText('[1] e2e-ask.md');
+  expect(await axe()).toEqual([]);
+
+  await page.getByRole('button', { name: 'Als Frage & Antwort übernehmen' }).click();
+  await expect(page.getByLabel('Frage', { exact: true })).toHaveValue('Wie beantrage ich eine E2E Garantieverlängerung?');
+  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByText('Frage und Antwort angelegt.')).toBeVisible();
+  const row = page.getByRole('row', { name: /Wie beantrage ich eine E2E Garantieverlängerung/ });
+  await row.getByRole('button', { name: 'Erneut fragen' }).click();
+  const compare = page.getByRole('region', { name: 'Vergleich mit dem neuen Stand' });
+  await expect(compare).toContainText('Antwort unverändert');
+  await expect(compare).toContainText('0 neu, 0 entfallen'); // Belege wie beim Speichern (andere E2E-Daten können weitere liefern)
+  await expect(page.getByRole('button', { name: '⬇ XLSX' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+});

@@ -161,6 +161,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.39 Stand nach Etappe 37 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Fragen über alle Quellen mit hybrider Suche, Filtern und Belegen je Satz (M5, NFR-87) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
+| Speichern mit Rahmen, erneut fragen mit Vergleich, Export CSV/Excel/JSON (NFR-88) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
+| Offen | Etappen M6 (Video, OCR) und M7 (Antwortqualität) |
+
 ## 1.38 Stand nach Etappe 36 (23.10.2026)
 
 | Punkt | Ergebnis |
