@@ -73,6 +73,8 @@ export interface MediaToolsConfig {
   transcribeCmd: string | null;
   /** Texterkennung, z. B. „tesseract {input} stdout -l deu+eng“ – Text auf der Standardausgabe */
   ocrCmd: string | null;
+  /** Texterkennung mit Wortpositionen (TSV wie Tesseract), z. B. „tesseract {input} stdout -l deu+eng tsv“; ohne Angabe aus ocrCmd abgeleitet, wenn es Tesseract ist (ADR-095) */
+  ocrBoxesCmd: string | null;
   /** ffmpeg für Standbilder aus Videos (F-26); null = keine Standbilder */
   ffmpeg: string | null;
   timeoutMs: number;
@@ -191,7 +193,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     help: { embedOrigins: parseOrigins(process.env.HELP_EMBED_ORIGINS), ...overrides.help },
     git: { allowFile: process.env.GIT_ALLOW_FILE === '1', timeoutMs: Number(process.env.GIT_TIMEOUT_MS ?? 120_000), ...overrides.git },
     mediaTools: {
-      transcribeCmd: process.env.TRANSCRIBE_CMD?.trim() || null, ocrCmd: process.env.OCR_CMD?.trim() || null,
+      transcribeCmd: process.env.TRANSCRIBE_CMD?.trim() || null, ocrCmd: process.env.OCR_CMD?.trim() || null, ocrBoxesCmd: process.env.OCR_BOXES_CMD?.trim() || null,
       ffmpeg: process.env.FFMPEG_PATH?.trim() || null, timeoutMs: Number(process.env.MEDIA_TOOL_TIMEOUT_MS ?? 30 * 60_000), ...overrides.mediaTools,
     },
   };

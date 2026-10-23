@@ -9,12 +9,17 @@ import { pickVariant, variantKey, type VariantImage, type VariantTarget } from '
 import { imageRefs } from '../domain/media.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { storeMedia } from './media.js';
+import { ocrBoxesCommand } from './mediaTools.js';
+import { queueRedaction, redactionDto } from './imageRedaction.js';
 import { suggestOutline } from '../domain/outlineSuggest.js';
 import { outlineProfiles } from './metadataOutline.js';
 
 const ROLES = ['dealer', 'market', 'mo', 'hq', 'all'];
 const DIVISIONS = ['car', 'van', 'all']; // nur Pkw und Van (Entscheidung 23.10.2026)
 const LANG_RE = /^[a-z]{2}$/;
+// Labelgruppen, die einem Bild zugeordnet werden können (ADR-095); Sprache und Rollen sind eigene Merkmale
+export const IMAGE_LABEL_GROUPS = ['domain', 'role', 'outline', 'navigation', 'content', 'division', 'customer', 'system', 'quality'];
+const MAX_LABELS = 50;
 const MARKET_RE = /^[A-Z]{2}$/;
 // Prüfregeln (F-20)
 const MIN_WIDTH = 600;          // Screenshots darunter sind im Druck kaum lesbar
@@ -32,6 +37,7 @@ async function bases(ctx: Ctx) {
     `SELECT m.* FROM media_assets m WHERE m.project_id = ?
        AND NOT EXISTS (SELECT 1 FROM media_versions v WHERE v.project_id = m.project_id AND v.sha = m.sha256 AND v.version_no > 1)
        AND NOT EXISTS (SELECT 1 FROM media_assets p WHERE p.project_id = m.project_id AND p.png_sha = m.sha256)
+       AND NOT EXISTS (SELECT 1 FROM media_redactions x WHERE x.project_id = m.project_id AND x.redacted_sha = m.sha256)
      ORDER BY m.created_at, m.sha256`, ctx.projectId,
   );
 }
@@ -107,6 +113,18 @@ async function item(ctx: Ctx, base: Row, nav: Map<string, Row>) {
   // Herkunft aus einer Folie mit Gliederungs-Vorschlag (F-25) und übernommener Gliederungspunkt
   const src = await ctx.db.get('SELECT * FROM media_context WHERE project_id = ? AND sha = ?', ctx.projectId, base.sha256);
   const ol = meta?.outline_label_id ? await ctx.db.get('SELECT id, code, name_de FROM metadata_labels WHERE id = ?', meta.outline_label_id) : null;
+  // mehrere Labels und Kapitel je Bild (ADR-095)
+  const labels = await ctx.db.all(
+    `SELECT l.id, l.code, l.label_group, l.name_de, l.name_en FROM media_labels x JOIN metadata_labels l ON l.id = x.label_id
+     WHERE x.project_id = ? AND x.base_sha = ? ORDER BY l.label_group, l.position`, ctx.projectId, base.sha256,
+  );
+  const assigned = await ctx.db.all(
+    `SELECT c.id, c.key, c.title FROM media_chapters x JOIN chapters c ON c.id = x.chapter_id
+     WHERE x.project_id = ? AND x.base_sha = ? ORDER BY c.position`, ctx.projectId, base.sha256,
+  );
+  // Datenschutz im Bild: Stand der aktuellen Fassung
+  const red = redactionDto(await ctx.db.get('SELECT * FROM media_redactions WHERE project_id = ? AND sha = ?', ctx.projectId, current), current,
+    ['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(cur.mime) && !!ocrBoxesCommand(ctx.config.mediaTools));
   // Varianten derselben Maske (F-22)
   const group = meta?.variant_group ? await ctx.db.all(
     `SELECT m.*, a.title FROM media_meta m JOIN media_assets a ON a.project_id = m.project_id AND a.sha256 = m.base_sha
@@ -119,6 +137,11 @@ async function item(ctx: Ctx, base: Row, nav: Map<string, Row>) {
   const own = { sha: base.sha256, language: meta?.language ?? null, roles: parseJson<string[]>(meta?.roles, []), divisions: parseJson<string[]>(meta?.divisions, []), markets: parseJson<string[]>(meta?.markets, []) };
   const twin = variants.find((v) => variantKey(v) === variantKey(own));
   const checks = checksFor(cur, meta ?? { placeholder: 0 }, use, base.title ?? null);
+  const found = red.regions.filter((r) => r.source === 'ocr').length;
+  if (found && (!red.enabled || red.regions.some((r) => r.source === 'ocr' && !r.active))) {
+    checks.push({ rule: 'privacy_visible', severity: 'warning', message: `${red.enabled ? 'Einzelne erkannte Stellen' : `${found} erkannte Stelle(n)`} mit personenbezogenen Daten ${red.enabled ? 'sind' : 'sind wieder'} sichtbar – Unkenntlichmachung ${red.enabled ? 'teilweise ausgeschaltet' : 'rückgängig gemacht'}.` });
+  } else if (red.enabled && red.active) checks.push({ rule: 'privacy_redacted', severity: 'info', message: `${red.active} Stelle(n) mit personenbezogenen Daten unkenntlich gemacht – das Original bleibt erhalten.` });
+  if (red.status === 'failed') checks.push({ rule: 'privacy_unchecked', severity: 'warning', message: `Texterkennung für den Datenschutz fehlgeschlagen: ${red.error ?? 'unbekannt'}` });
   if (twin) checks.push({ rule: 'variant_duplicate', severity: 'warning', message: `Gleiche Merkmale wie die Variante ${twin.imageNo} – Sprache, Rolle, Sparte oder Markt unterscheiden.` });
   return {
     sha: base.sha256, imageNo: imageNumber(Number(meta?.image_no ?? 0)), title: base.title ?? null, mime: cur.mime, width: cur.width ?? null, height: cur.height ?? null, byteSize: Number(cur.byte_size),
@@ -126,9 +149,12 @@ async function item(ctx: Ctx, base: Row, nav: Map<string, Row>) {
     language: meta?.language ?? null, roles: parseJson<string[]>(meta?.roles, []), divisions: parseJson<string[]>(meta?.divisions, []), markets: parseJson<string[]>(meta?.markets, []),
     release: meta?.release ?? null, navigation: n ? { id: n.id, nameDe: n.name_de, nameEn: n.name_en } : null,
     outline: ol ? { id: ol.id, code: ol.code, nameDe: ol.name_de } : null,
+    labels: labels.map((l) => ({ id: l.id, code: l.code, group: l.label_group, nameDe: l.name_de, nameEn: l.name_en })),
+    chapters: assigned.map((c) => ({ id: c.id, key: c.key, title: c.title })),
+    redaction: { enabled: red.enabled, status: red.status, regions: red.regions.length, active: red.active, available: red.available, redactedSha: red.redactedSha },
     source: src ? { path: src.source_path, slide: src.slide == null ? null : Number(src.slide), slideTitle: src.slide_title ?? null, suggestions: parseJson<any[]>(src.suggestions, []) } : null,
     versions: (versions.length ? versions : [{ sha: base.sha256, version_no: 1, note: null, created_by: null, created_at: base.created_at }])
-      .map((v) => ({ sha: v.sha, versionNo: Number(v.version_no), note: v.note ?? null, createdBy: v.created_by ?? null, createdAt: v.created_at, url: `/api/v1/media/${v.sha}?original=1` })),
+      .map((v) => ({ sha: v.sha, versionNo: Number(v.version_no), note: v.note ?? null, createdBy: v.created_by ?? null, createdAt: v.created_at, url: `/api/v1/media/${v.sha}?original=1`, originalUrl: `/api/v1/media/${v.sha}?original=1&unredacted=1` })),
     usedIn: use.chapters, sourceUses: use.snippets,
     variantGroup: meta?.variant_group ?? null, variants,
     checks,
@@ -136,15 +162,17 @@ async function item(ctx: Ctx, base: Row, nav: Map<string, Row>) {
   };
 }
 
-export async function listImageArchive(ctx: Ctx, opts: { q?: string } = {}) {
+export async function listImageArchive(ctx: Ctx, opts: { q?: string; labelId?: string; chapterId?: string } = {}) {
   const rows = await bases(ctx);
   await ensureNumbers(ctx, rows);
   const nav = new Map((await ctx.db.all("SELECT id, name_de, name_en FROM metadata_labels WHERE project_id = ? AND label_group = 'navigation'", ctx.projectId)).map((r) => [r.id, r]));
   let items = await Promise.all(rows.map((r) => item(ctx, r, nav)));
   if (opts.q?.trim()) {
     const q = opts.q.trim().toLowerCase();
-    items = items.filter((i) => `${i.imageNo} ${i.title ?? ''} ${i.navigation?.nameDe ?? ''} ${i.release ?? ''}`.toLowerCase().includes(q));
+    items = items.filter((i) => `${i.imageNo} ${i.title ?? ''} ${i.navigation?.nameDe ?? ''} ${i.release ?? ''} ${i.labels.map((l) => l.nameDe).join(' ')}`.toLowerCase().includes(q));
   }
+  if (opts.labelId) items = items.filter((i) => i.labels.some((l) => l.id === opts.labelId) || i.navigation?.id === opts.labelId);
+  if (opts.chapterId) items = items.filter((i) => i.chapters.some((c) => c.id === opts.chapterId) || i.usedIn.some((c: any) => c.chapterId === opts.chapterId));
   items.sort((a, b) => a.imageNo.localeCompare(b.imageNo));
   const count = (sev: string) => items.filter((i) => i.checks.some((c) => c.severity === sev)).length;
   return { items, summary: { images: items.length, placeholders: items.filter((i) => i.placeholder).length, withErrors: count('error'), withWarnings: count('warning'), versioned: items.filter((i) => i.versions.length > 1).length } };
@@ -185,10 +213,52 @@ export async function updateImageMeta(ctx: Ctx, sha: string, input: any, user: U
     if (input.outlineLabelId !== null && !(await ctx.db.get("SELECT 1 FROM metadata_labels WHERE id = ? AND project_id = ? AND label_group = 'outline'", input.outlineLabelId, ctx.projectId))) throw badRequest('outlineLabelId ist kein Punkt der Gesamtgliederung dieses Projekts.');
     set('outline_label_id', input.outlineLabelId);
   }
+  // mehrere Labels (Domäne, Rolle, Gliederung …) und Kapitel je Bild (ADR-095): jeweils die vollständige Liste
+  let labelIds: string[] | undefined;
+  if (input.labelIds !== undefined) {
+    labelIds = cleanList(input.labelIds, (x) => x.length > 0 && x.length <= 80, 'labelIds');
+    if (labelIds.length > MAX_LABELS) throw badRequest(`Höchstens ${MAX_LABELS} Labels je Bild.`);
+    const ok = labelIds.length ? await ctx.db.all(
+      `SELECT id, label_group FROM metadata_labels WHERE project_id = ? AND id IN (${labelIds.map(() => '?').join(', ')})`, ctx.projectId, ...labelIds,
+    ) : [];
+    const bad = labelIds.filter((id) => !ok.some((l) => l.id === id && IMAGE_LABEL_GROUPS.includes(l.label_group)));
+    if (bad.length) throw badRequest(`labelIds: ${bad.join(', ')} ist kein Label dieses Projekts.`);
+    // Gliederungspunkt für Archiv und Vorschläge (F-25) mitführen: erster Gliederungs-Label oder keiner
+    if (input.outlineLabelId === undefined) {
+      const outlines = labelIds.filter((id) => ok.find((l) => l.id === id)?.label_group === 'outline');
+      const meta = await ctx.db.get('SELECT outline_label_id FROM media_meta WHERE project_id = ? AND base_sha = ?', ctx.projectId, base.sha256);
+      if (!outlines.includes(meta?.outline_label_id)) set('outline_label_id', outlines[0] ?? null);
+    }
+  } else if (input.outlineLabelId === null) {
+    // Gliederungspunkt entfernt (bisherige Schnittstelle): auch als Label entfernen
+    const meta = await ctx.db.get('SELECT outline_label_id FROM media_meta WHERE project_id = ? AND base_sha = ?', ctx.projectId, base.sha256);
+    const have = (await ctx.db.all('SELECT label_id FROM media_labels WHERE project_id = ? AND base_sha = ?', ctx.projectId, base.sha256)).map((r) => r.label_id as string);
+    if (meta?.outline_label_id && have.includes(meta.outline_label_id)) labelIds = have.filter((id) => id !== meta.outline_label_id);
+  } else if (input.outlineLabelId) {
+    // Gliederungspunkt allein gesetzt (bisherige Schnittstelle): als Label ergänzen
+    const have = (await ctx.db.all('SELECT label_id FROM media_labels WHERE project_id = ? AND base_sha = ?', ctx.projectId, base.sha256)).map((r) => r.label_id as string);
+    if (!have.includes(input.outlineLabelId)) labelIds = [...have, input.outlineLabelId];
+  }
+  let chapterIds: string[] | undefined;
+  if (input.chapterIds !== undefined) {
+    chapterIds = cleanList(input.chapterIds, (x) => x.length > 0 && x.length <= 80, 'chapterIds');
+    if (chapterIds.length > MAX_LABELS) throw badRequest(`Höchstens ${MAX_LABELS} Kapitel je Bild.`);
+    const ok = chapterIds.length ? await ctx.db.all(`SELECT id FROM chapters WHERE project_id = ? AND id IN (${chapterIds.map(() => '?').join(', ')})`, ctx.projectId, ...chapterIds) : [];
+    const bad = chapterIds.filter((id) => !ok.some((c) => c.id === id));
+    if (bad.length) throw badRequest(`chapterIds: ${bad.join(', ')} ist kein Kapitel dieses Projekts.`);
+  }
   const title = input.title === undefined ? undefined : input.title === null ? null : String(input.title).trim().slice(0, 300) || null;
   await ctx.db.tx(async () => {
     if (sets.length) await ctx.db.run(`UPDATE media_meta SET ${sets.join(', ')}, updated_by = ?, updated_at = ? WHERE project_id = ? AND base_sha = ?`, ...vals, user.id, now(), ctx.projectId, base.sha256);
     if (title !== undefined) await ctx.db.run('UPDATE media_assets SET title = ? WHERE project_id = ? AND sha256 = ?', title, ctx.projectId, base.sha256);
+    if (labelIds) {
+      await ctx.db.run('DELETE FROM media_labels WHERE project_id = ? AND base_sha = ?', ctx.projectId, base.sha256);
+      for (const id of labelIds) await ctx.db.run('INSERT INTO media_labels (project_id, base_sha, label_id, created_by, created_at) VALUES (?, ?, ?, ?, ?)', ctx.projectId, base.sha256, id, user.id, now());
+    }
+    if (chapterIds) {
+      await ctx.db.run('DELETE FROM media_chapters WHERE project_id = ? AND base_sha = ?', ctx.projectId, base.sha256);
+      for (const id of chapterIds) await ctx.db.run('INSERT INTO media_chapters (project_id, base_sha, chapter_id, created_by, created_at) VALUES (?, ?, ?, ?, ?)', ctx.projectId, base.sha256, id, user.id, now());
+    }
     await audit(ctx, user.id, 'image.meta_updated', 'media', base.sha256, { ...input });
   });
   return getItem(ctx, base.sha256);
@@ -212,6 +282,7 @@ export async function addImageVersion(ctx: Ctx, sha: string, data: Buffer, fileN
     await ctx.db.run('UPDATE media_meta SET placeholder = 0, updated_by = ?, updated_at = ? WHERE project_id = ? AND base_sha = ?', user.id, now(), ctx.projectId, base.sha256);
     await audit(ctx, user.id, 'image.version_added', 'media', base.sha256, { sha: m.sha, note });
   });
+  await queueRedaction(ctx, m.sha, m.mime);
   return getItem(ctx, base.sha256);
 }
 
@@ -293,8 +364,16 @@ export async function suggestImageOutline(ctx: Ctx, images: { sha: string; slide
  * Deckungsmatrix (ADR-092, F-30): Stellen × Sprache/Rolle/Sparte. Stelle = Reiter/Menüpunkt des Bildes (Navigations-
  * Label) bzw. Kapitel, in dem es verwendet wird. Sprachen aus dem Projekt, sonst aus den Bildern (mindestens de).
  */
+/** Kapitel eines Bildes: verwendet im Text oder zugeordnet (ADR-095) */
+function chapterPlaces(i: { usedIn: any[]; chapters: { id: string; title: string }[] }) {
+  const m = new Map<string, { key: string; label: string }>();
+  for (const c of i.usedIn) m.set(c.chapterId, { key: c.chapterId, label: c.title });
+  for (const c of i.chapters) if (!m.has(c.id)) m.set(c.id, { key: c.id, label: c.title });
+  return m.size ? [...m.values()] : [{ key: '-', label: '(in keinem Kapitel)' }];
+}
+
 export async function imageCoverageMatrix(ctx: Ctx, opts: { rows?: string; dims?: string[] } = {}) {
-  const by = opts.rows === 'chapter' ? 'chapter' : opts.rows === 'variant' ? 'variant' : 'navigation';
+  const by = opts.rows === 'chapter' ? 'chapter' : opts.rows === 'variant' ? 'variant' : opts.rows === 'outline' ? 'outline' : 'navigation';
   const dims = (opts.dims?.length ? opts.dims : MATRIX_DIMS).filter((d): d is MatrixDim => (MATRIX_DIMS as string[]).includes(d));
   if (!dims.length) throw badRequest(`dims: eine oder mehrere aus ${MATRIX_DIMS.join(', ')}.`);
   const { items } = await listImageArchive(ctx);
@@ -315,7 +394,10 @@ export async function imageCoverageMatrix(ctx: Ctx, opts: { rows?: string; dims?
       ? [{ key: i.variantGroup ?? i.sha, label: maskLabel(i.variantGroup ?? i.sha) }]
       : by === 'navigation'
       ? [i.navigation ? { key: i.navigation.id, label: i.navigation.nameDe } : { key: '-', label: '(ohne Reiter)' }]
-      : i.usedIn.length ? i.usedIn.map((c: any) => ({ key: c.chapterId, label: c.title })) : [{ key: '-', label: '(in keinem Kapitel)' }],
+      : by === 'outline'
+      // je Gliederungspunkt (ADR-095): alle Gliederungs-Labels des Bildes
+      ? (i.labels.some((l) => l.group === 'outline') ? i.labels.filter((l) => l.group === 'outline').map((l) => ({ key: l.id, label: `${l.code.replace(/^outline\./, '')} ${l.nameDe}`.trim() })) : [{ key: '-', label: '(ohne Gliederungspunkt)' }])
+      : chapterPlaces(i),
   }));
   return { rowsBy: by, ...coverageMatrix(images, dims, languages) };
 }
@@ -323,7 +405,7 @@ export async function imageCoverageMatrix(ctx: Ctx, opts: { rows?: string; dims?
 export async function exportCoverageMatrix(ctx: Ctx, format: string, opts: Parameters<typeof imageCoverageMatrix>[1]) {
   if (!['csv', 'xlsx'].includes(format)) throw badRequest('format muss csv oder xlsx sein.');
   const m = await imageCoverageMatrix(ctx, opts);
-  const header = [m.rowsBy === 'chapter' ? 'Kapitel' : m.rowsBy === 'variant' ? 'Maske (Variantengruppe)' : 'Reiter/Menüpunkt', 'Bilder', 'Lücken', ...m.columns.map((c) => c.label)];
+  const header = [m.rowsBy === 'chapter' ? 'Kapitel' : m.rowsBy === 'variant' ? 'Maske (Variantengruppe)' : m.rowsBy === 'outline' ? 'Gliederungspunkt' : 'Reiter/Menüpunkt', 'Bilder', 'Lücken', ...m.columns.map((c) => c.label)];
   const cell = (c: (typeof m.rows)[number]['cells'][number]) => (c.count ? c.images.join(', ') : c.placeholders ? `Platzhalter: ${c.images.join(', ')}` : '–');
   const rows = m.rows.map((r) => [r.label, String(r.images), String(r.gaps), ...r.cells.map(cell)]);
   const date = now().slice(0, 10);

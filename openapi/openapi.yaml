@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.41.1
+  version: 0.42.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -2007,11 +2007,13 @@ paths:
       parameters:
         - { name: mediaSha, in: path, required: true, schema: { type: string, pattern: '^[a-f0-9]{64}$' } }
         - { name: original, in: query, required: false, schema: { type: string, enum: ['1'] }, description: 'genau diese Fassung statt der neuesten' }
+        - { name: unredacted, in: query, required: false, schema: { type: string, enum: ['1'] }, description: 'Original ohne Unkenntlichmachung (ADR-095) – nur mit Berechtigung edit; sonst wird bei eingeschalteter Unkenntlichmachung die verpixelte Kopie geliefert' }
         - { name: If-None-Match, in: header, required: false, schema: { type: string } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Bilddaten, content: { image/png: {}, image/jpeg: {}, image/gif: {}, image/webp: {} }' }
         '304': { description: 'unverändert (ETag passt)' }
+        '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
     patch:
       operationId: setMediaTitle
@@ -4317,9 +4319,11 @@ paths:
       x-extension: true
       parameters:
         - { name: q, in: query, required: false, schema: { type: string } }
+        - { name: labelId, in: query, required: false, schema: { type: string }, description: 'nur Bilder mit diesem Label (ADR-095)' }
+        - { name: chapterId, in: query, required: false, schema: { type: string }, description: 'nur Bilder, die diesem Kapitel zugeordnet sind oder darin verwendet werden (ADR-095)' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ items: [{ sha, imageNo, title, currentSha, placeholder, language, roles, divisions, markets, release, navigation, outline, source: { path, slide, slideTitle, suggestions }, versions, usedIn, sourceUses, checks }], summary: { images, placeholders, withErrors, withWarnings, versioned } }' }
+        '200': { description: '{ items: [{ sha, imageNo, title, currentSha, placeholder, language, roles, divisions, markets, release, navigation, outline, labels: [{ id, code, group, nameDe, nameEn }], chapters: [{ id, key, title }], redaction: { enabled, status, regions, active, available, redactedSha }, source: { path, slide, slideTitle, suggestions }, versions (url, originalUrl), usedIn, sourceUses, checks }], summary: { images, placeholders, withErrors, withWarnings, versioned } }' }
   /image-archive/coverage:
     get:
       operationId: getImageCoverage
@@ -4372,17 +4376,57 @@ paths:
   /image-archive/{mediaSha}:
     patch:
       operationId: updateImageMeta
-      summary: 'Merkmale, Bildunterschrift und Gliederungsstelle eines Bildes ändern – den Vorschlag aus der Folie übernimmt die Redaktion hier (Berechtigung edit, F-20, F-25)'
+      summary: 'Merkmale, Bildunterschrift, Gliederungsstelle, Labels und Kapitel eines Bildes ändern – den Vorschlag aus der Folie übernimmt die Redaktion hier (Berechtigung edit, F-20, F-25, ADR-095)'
       tags: [Medien]
-      x-requirements: [NFR-79, NFR-82]
+      x-requirements: [NFR-79, NFR-82, NFR-100]
       x-extension: true
       parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, properties: { title: { type: [string, 'null'] }, language: { type: [string, 'null'], pattern: '^[a-z]{2}$' }, roles: { type: array, items: { type: string } }, divisions: { type: array, items: { type: string, enum: [car, van, all] } }, markets: { type: array, items: { type: string, pattern: '^[A-Z]{2}$' } }, release: { type: [string, 'null'] }, navLabelId: { type: [string, 'null'] }, outlineLabelId: { type: [string, 'null'], description: 'Punkt der Gesamtgliederung (label_group outline)' } } } } }
+        content: { application/json: { schema: { type: object, properties: { title: { type: [string, 'null'] }, language: { type: [string, 'null'], pattern: '^[a-z]{2}$' }, roles: { type: array, items: { type: string } }, divisions: { type: array, items: { type: string, enum: [car, van, all] } }, markets: { type: array, items: { type: string, pattern: '^[A-Z]{2}$' } }, release: { type: [string, 'null'] }, navLabelId: { type: [string, 'null'] }, outlineLabelId: { type: [string, 'null'], description: 'Punkt der Gesamtgliederung (label_group outline)' }, labelIds: { type: array, maxItems: 50, items: { type: string }, description: 'vollständige Liste der Labels (Domäne, Rolle, Gliederung …); der erste Gliederungs-Label wird Gliederungsstelle' }, chapterIds: { type: array, maxItems: 50, items: { type: string }, description: 'vollständige Liste der zugeordneten Kapitel' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Bild' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-archive/{mediaSha}/redaction:
+    get:
+      operationId: getImageRedaction
+      summary: 'Datenschutz im Bild (ADR-095): erkannte und manuelle Stellen einer Fassung, Schalter, Stand der Texterkennung'
+      tags: [Medien]
+      x-requirements: [NFR-99]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string }, description: 'genau diese Fassung (z. B. currentSha)' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ sha, available, status: none|done|unavailable|failed, error, enabled, regions: [{ id, x, y, w, h (relativ), kind, label (maskiert), source: ocr|manual, active }], active, redactedSha, detectedAt }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateImageRedaction
+      summary: 'Unkenntlichmachung an/aus (rückgängig), einzelne Stellen an/aus, manuelle Stellen hinzufügen oder entfernen; das Original bleibt unverändert (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-99]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { enabled: { type: boolean }, regions: { type: array, items: { type: object, required: [id, active], properties: { id: { type: string }, active: { type: boolean } } } }, add: { type: array, items: { type: object, required: [x, y, w, h], properties: { x: { type: number }, y: { type: number }, w: { type: number }, h: { type: number } } } }, remove: { type: array, items: { type: string } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Stand wie GET' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-archive/{mediaSha}/redaction/detect:
+    post:
+      operationId: detectImageRedaction
+      summary: 'Erkennung (erneut) ausführen: lokale Texterkennung mit Wortpositionen, Datenschutzprüfung je Zeile; manuelle Stellen bleiben (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-99]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Stand wie GET' }
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }

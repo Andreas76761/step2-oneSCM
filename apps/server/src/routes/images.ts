@@ -3,13 +3,18 @@ import type { FastifyInstance } from 'fastify';
 import { audit, getSettings, type Ctx } from '../context.js';
 import { badRequest, Problem } from '../problem.js';
 import { addImageVersion, createPlaceholder, exportCoverageMatrix, imageCoverage, imageCoverageMatrix, linkVariant, listImageArchive, unlinkVariant, updateImageMeta } from '../services/imageArchive.js';
+import { detectRedaction, getRedaction, updateRedaction } from '../services/imageRedaction.js';
 import { createClickpath, deleteClickpath, getClickpath, listClickpaths, updateClickpath } from '../services/clickpaths.js';
 import { userOf } from './helpers.js';
 
 type P = { Params: { mediaSha: string } };
 
 export function imageRoutes(app: FastifyInstance, _ctx: Ctx) {
-  app.get<{ Querystring: { q?: string } }>('/image-archive', async (req) => (userOf(req.ctx, req), listImageArchive(req.ctx, { q: req.query.q })));
+  app.get<{ Querystring: { q?: string; labelId?: string; chapterId?: string } }>('/image-archive', async (req) => (userOf(req.ctx, req), listImageArchive(req.ctx, { q: req.query.q, labelId: req.query.labelId, chapterId: req.query.chapterId })));
+  // Datenschutz im Bild (ADR-095): je Fassung; das Original bleibt, ausgeliefert wird bei „an“ die verpixelte Kopie
+  app.get<P>('/image-archive/:mediaSha/redaction', async (req) => (userOf(req.ctx, req), getRedaction(req.ctx, req.params.mediaSha)));
+  app.post<P>('/image-archive/:mediaSha/redaction/detect', async (req) => detectRedaction(req.ctx, req.params.mediaSha, userOf(req.ctx, req, 'edit').id));
+  app.patch<P & { Body: any }>('/image-archive/:mediaSha/redaction', async (req) => updateRedaction(req.ctx, req.params.mediaSha, req.body ?? {}, userOf(req.ctx, req, 'edit')));
   app.get('/image-archive/coverage', async (req) => (userOf(req.ctx, req), imageCoverage(req.ctx)));
   // Varianten einer Maske (ADR-093, F-22)
   app.post<P & { Body: any }>('/image-archive/:mediaSha/variants', async (req) => linkVariant(req.ctx, req.params.mediaSha, req.body ?? {}, userOf(req.ctx, req, 'edit')));

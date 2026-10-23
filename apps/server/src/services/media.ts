@@ -53,9 +53,17 @@ export async function currentSha(ctx: Ctx, sha: string): Promise<string> {
   return (v?.sha as string | undefined) ?? sha;
 }
 
-export async function getMedia(ctx: Ctx, requested: string, opts: { exact?: boolean } = {}): Promise<MediaFile> {
+/**
+ * Bild ausliefern. `exact` liefert genau diese Fassung statt der neuesten; ist für die Fassung die Unkenntlichmachung
+ * eingeschaltet (ADR-095), kommt die verpixelte Kopie – das Original nur mit `unredacted` (Bearbeitungsrecht).
+ */
+export async function getMedia(ctx: Ctx, requested: string, opts: { exact?: boolean; unredacted?: boolean } = {}): Promise<MediaFile> {
   if (!/^[a-f0-9]{64}$/.test(requested)) throw notFound(`Bild ${requested}`);
-  const sha = opts.exact ? requested : await currentSha(ctx, requested);
+  let sha = opts.exact ? requested : await currentSha(ctx, requested);
+  if (!opts.unredacted) {
+    const red = await ctx.db.get('SELECT redacted_sha FROM media_redactions WHERE project_id = ? AND sha = ? AND enabled = 1 AND redacted_sha IS NOT NULL', ctx.projectId, sha);
+    if (red) sha = red.redacted_sha;
+  }
   const r = await ctx.db.get('SELECT * FROM media_assets WHERE project_id = ? AND sha256 = ?', ctx.projectId, sha);
   if (!r) throw notFound(`Bild ${sha}`);
   const m: MediaFile = { sha, mime: r.mime, data: await ctx.store.get(r.storage_key), width: r.width ?? null, height: r.height ?? null };
@@ -103,7 +111,12 @@ export function inlineMedia(md: string, media: Map<string, MediaFile>) {
 }
 
 export async function listMedia(ctx: Ctx) {
-  const rows = await ctx.db.all('SELECT * FROM media_assets WHERE project_id = ? ORDER BY created_at DESC LIMIT 500', ctx.projectId);
+  // verpixelte Kopien (ADR-095) sind keine eigenen Bilder
+  const rows = await ctx.db.all(
+    `SELECT * FROM media_assets m WHERE project_id = ?
+       AND NOT EXISTS (SELECT 1 FROM media_redactions x WHERE x.project_id = m.project_id AND x.redacted_sha = m.sha256)
+     ORDER BY created_at DESC LIMIT 500`, ctx.projectId,
+  );
   return rows.map((r) => ({
     sha256: r.sha256, mime: r.mime, byteSize: r.byte_size, width: r.width ?? null, height: r.height ?? null,
     originalName: r.original_name ?? null, importId: r.import_id ?? null, createdAt: r.created_at, url: `/api/v1/media/${r.sha256}`, pngSha: r.png_sha ?? null,

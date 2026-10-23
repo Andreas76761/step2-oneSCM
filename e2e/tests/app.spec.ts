@@ -2459,3 +2459,61 @@ test('[T-287] Bildarchiv: Varianten einer Maske verknüpfen, Klickstrecke aus Sc
   await expect(page.getByRole('button', { name: 'Klickstrecke aktualisieren' })).toBeVisible();
   expect(await axe()).toEqual([]);
 });
+
+test('[T-291] Bildarchiv: Stelle im Bild unkenntlich machen und rückgängig, mehrere Labels (Domäne, Gliederung) und Kapitel je Bild', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'x-user-id': 'u-admin' };
+  const up = await request.post('/api/v1/media', { headers: h, multipart: { file: { name: 'kunde.png', mimeType: 'image/png', buffer: png(640, 360, [180, 40, 40]) } } });
+  expect(up.status()).toBe(201);
+  const sha = (await up.json()).sha256;
+  await request.patch(`/api/v1/image-archive/${sha}`, { headers: h, data: { title: 'E2E Kundendaten' } });
+  expect((await request.post('/api/v1/metadata/labels', { headers: h, data: { group: 'domain', code: 'domain.e2e-vertraege', nameDe: 'E2E Verträge', nameEn: 'E2E contracts' } })).status()).toBe(201);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Bildarchiv', exact: true }).click();
+  await page.getByRole('list', { name: 'Bilder' }).getByRole('button', { name: /E2E Kundendaten/ }).click();
+  const privacy = page.getByRole('region', { name: 'Datenschutz im Bild' });
+  await expect(privacy).toContainText('Keine Texterkennung eingerichtet');
+
+  // Stelle ohne Maus angeben → unkenntlich
+  await privacy.getByText('Stelle markieren: im Bild mit der Maus ziehen oder hier in Prozent angeben').click();
+  await privacy.getByLabel('von links %').fill('10');
+  await privacy.getByLabel('von oben %').fill('10');
+  await privacy.getByLabel('Breite %').fill('40');
+  await privacy.getByLabel('Höhe %').fill('15');
+  await privacy.getByRole('button', { name: 'Übernehmen' }).click();
+  await privacy.getByRole('button', { name: 'Stelle unkenntlich machen' }).click();
+  await expect(privacy).toContainText('1 Stelle(n) unkenntlich gemacht');
+  expect(await axe()).toEqual([]);
+  // rückgängig und wieder an
+  await privacy.getByLabel('Personenbezogene Daten unkenntlich machen').click();
+  await expect(privacy).toContainText('Unkenntlichmachung ist ausgeschaltet');
+  await privacy.getByLabel('Personenbezogene Daten unkenntlich machen').click();
+  await expect(privacy).toContainText('1 Stelle(n) unkenntlich gemacht');
+
+  // Labels und Kapitel
+  const labels = page.getByRole('region', { name: 'Labels und Kapitel' });
+  const pickFirst = async (name: string, text?: string) => {
+    const select = labels.getByRole('combobox', { name, exact: true });
+    const value = await select.evaluate((el, t) => [...(el as HTMLSelectElement).options].find((o) => o.value && (!t || o.text.includes(t)))?.value ?? '', text);
+    expect(value).not.toBe('');
+    await select.selectOption(value);
+  };
+  await pickFirst('Domäne hinzufügen', 'E2E Verträge');
+  await expect(labels).toContainText('E2E Verträge');
+  await pickFirst('Gliederung hinzufügen');
+  await expect(page.getByText('Label hinzugefügt.').last()).toBeVisible();
+  await pickFirst('Gliederung hinzufügen');
+  await pickFirst('Kapitel hinzufügen');
+  await expect(page.getByText('Kapitel zugeordnet.')).toBeVisible();
+  await expect.poll(async () => {
+    const it = (await (await request.get('/api/v1/image-archive', { headers: h })).json()).items.find((i: any) => i.sha === sha);
+    return [it.labels.filter((l: any) => l.group === 'outline').length, it.labels.filter((l: any) => l.group === 'domain').length, it.chapters.length, it.redaction.active];
+  }).toEqual([2, 1, 1, 1]);
+  await labels.getByRole('button', { name: 'E2E Verträge entfernen' }).click();
+  await expect(labels.getByRole('button', { name: 'E2E Verträge entfernen' })).toHaveCount(0);
+  expect(await axe()).toEqual([]);
+});

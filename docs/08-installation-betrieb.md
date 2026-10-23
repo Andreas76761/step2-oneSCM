@@ -1,6 +1,6 @@
 # 08 Installation und Betrieb
 
-Stand: Version 0.41 (23.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
+Stand: Version 0.42 (23.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
 
 ## 1. Welche Installation passt?
 
@@ -72,6 +72,7 @@ Alle Einstellungen sind Umgebungsvariablen; die vollständige Liste steht im REA
 | `TRANSCRIBE_CMD` | – | lokale Transkription von Videos, z. B. whisper.cpp |
 | `FFMPEG_PATH` | – | ffmpeg für Standbilder aus Videos |
 | `OCR_CMD` | – | lokale Texterkennung gescannter PDF-Seiten, z. B. Tesseract |
+| `OCR_BOXES_CMD` | aus `OCR_CMD` abgeleitet | Texterkennung mit Wortpositionen für den Datenschutz im Bild; bei Tesseract genügt `OCR_CMD` (die App hängt `tsv` an) |
 
 Beispiel (PowerShell) für lokale Werkzeuge vor dem Start:
 
@@ -82,7 +83,7 @@ $env:TRANSCRIBE_CMD = 'C:\Tools\whisper\whisper-cli.exe -m C:\Tools\whisper\ggml
 .\start.ps1
 ```
 
-Die Seite „oneSCM_Metadaten › Einlesen“ zeigt, welche Werkzeuge eingerichtet sind.
+Die Seite „oneSCM_Metadaten › Einlesen“ zeigt, welche Werkzeuge eingerichtet sind – auch „Datenschutz im Bild“. Ohne Texterkennung markieren Sie Stellen in Bildern von Hand.
 
 ## 6. Sicherung, Wiederherstellung, Aktualisierung
 

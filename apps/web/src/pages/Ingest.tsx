@@ -21,6 +21,7 @@ const TOOLS: [string, string, string][] = [
   ['transcribe', 'Transkription von Videos', 'TRANSCRIBE_CMD'],
   ['stills', 'Standbilder aus Videos', 'FFMPEG_PATH'],
   ['ocr', 'Texterkennung gescannter PDF-Seiten', 'OCR_CMD'],
+  ['redact', 'Datenschutz im Bild (Namen, User-ID, Adresse, FIN unkenntlich)', 'OCR_BOXES_CMD bzw. OCR_CMD mit Tesseract'],
 ];
 const STATUS: Record<string, string> = { imported: 'eingelesen', identical: 'unverändert', skipped: 'übersprungen', failed: 'Fehler', media: 'Bild', removed: 'entfernt' };
 

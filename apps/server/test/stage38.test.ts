@@ -87,7 +87,7 @@ describe('Etappe 38', () => {
     const built = await build('video');
     const call = client(built);
     try {
-      expect((await call('GET', '/metadata/media-tools', undefined, 'u-leser')).json).toEqual({ transcribe: false, ocr: false, stills: false });
+      expect((await call('GET', '/metadata/media-tools', undefined, 'u-leser')).json).toEqual({ transcribe: false, ocr: false, stills: false, redact: false });
       const z = new JSZip();
       z.file('schulung/vertraege.mp4', Buffer.from('kein echtes Video'));
       z.file('schulung/vertraege.vtt', VTT);
@@ -140,7 +140,7 @@ describe('Etappe 38', () => {
     });
     const call = client(built);
     try {
-      expect((await call('GET', '/metadata/media-tools', undefined, 'u-leser')).json).toEqual({ transcribe: true, ocr: true, stills: true });
+      expect((await call('GET', '/metadata/media-tools', undefined, 'u-leser')).json).toEqual({ transcribe: true, ocr: true, stills: true, redact: false });
       const scan = await renderPdf({ content: [{ image: frame([20, 20, 100, 40]).toDataURL('image/png'), width: 300 }] });
       const z = new JSZip();
       z.file('schulung/reifen.mp4', Buffer.from('Video Reifen'));

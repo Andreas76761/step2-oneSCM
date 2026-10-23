@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.41 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.42 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -48,7 +48,9 @@ Stand: Version 0.41 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
   - **Neue Fassung** (Datei oder Strg+V) ersetzt das Bild überall; **Platzhalter** reservieren eine Nummer.
   - **Varianten einer Maske** verknüpfen: Export, Releases und Übersetzungen zeigen automatisch die Fassung in passender Sprache, Rolle, Sparte und Markt.
   - **Klickstrecke aus Screenshots:** Stationen aus Archivbildern, parallele Wege 3a/3b; das Ergebnis liegt als Bild im Archiv.
-  - **Bildabdeckung je Kapitel** und **Deckungsmatrix** (je Reiter, Maske oder Kapitel × Sprache/Rolle/Sparte) zeigen fehlende Bilder.
+  - **Datenschutz im Bild:** Namen, User-IDs, Adressen, FIN und weitere personenbezogene Daten werden nach dem Einlesen automatisch erkannt (lokale Texterkennung) und verpixelt – im Archiv, im Export und in Übersetzungen. Mit dem Schalter „Personenbezogene Daten unkenntlich machen“ machen Sie es rückgängig oder wieder an; einzelne Stellen schalten Sie in der Liste aus. Eigene Stellen ziehen Sie mit der Maus im Bild auf (oder geben sie in Prozent an) und bestätigen mit „Stelle unkenntlich machen“. Das Original bleibt unverändert; „Original ansehen“ und der Download „Original (ohne Unkenntlichmachung)“ gibt es nur mit dem Recht *Bearbeiten*.
+  - **Labels und Kapitel:** je Bild mehrere Labels (Domäne, Rolle, Gliederung, weitere) und Kapitel über „+ hinzufügen“, entfernen mit ×. Die Sprache pflegen Sie unter „Merkmale“.
+  - **Bildabdeckung je Kapitel** und **Deckungsmatrix** (je Reiter, Maske, Kapitel oder Gliederungspunkt × Sprache/Rolle/Sparte) zeigen fehlende Bilder.
 
 ## 5. Prüfen
 
@@ -71,8 +73,8 @@ Stand: Version 0.41 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 
 1. **Wissen aufbauen:** Einlesen → Chunks mit Labels → Fragen & Antworten → Antwortqualität prüfen → Lücken in die Expertenbefragung → Antworten als Frage & Antwort (Label „Prüfen“) → später durch Quellen belegen.
 2. **Kapitel erstellen:** Quellen einlesen → Qualitätsanalyse (Widersprüche, Dopplungen) → Kapitelgenerator oder Kapitel-Assistent → Kapitelwerkstatt → Anleitungs-Check → Freigabe → Export/Veröffentlichung.
-3. **Screenshots pflegen:** Bild ins Archiv (oder Platzhalter) → Merkmale → Varianten verknüpfen → Klickstrecke → Deckungsmatrix auf Lücken prüfen → neue Fassung bei neuem Release.
+3. **Screenshots pflegen:** Bild ins Archiv (oder Platzhalter) → Datenschutz im Bild prüfen (erkannte Stellen, ggf. eigene Stellen) → Merkmale, Labels und Kapitel → Varianten verknüpfen → Klickstrecke → Deckungsmatrix auf Lücken prüfen → neue Fassung bei neuem Release.
 
 ## 8. Datenschutz
 
-Personenbezogene Daten (Namen, E-Mail, FIN, Kennzeichen …) erkennt die Datenschutzprüfung; sie gehen nie an externe Dienste. Fragen mit personenbezogenen Daten werden bei externem KI-Dienst nicht gestellt. Befragungen erfassen Fachbereich oder Rolle, keine Personennamen.
+Personenbezogene Daten (Namen, E-Mail, FIN, Kennzeichen …) erkennt die Datenschutzprüfung – in Texten und, mit eingerichteter Texterkennung, auch in Bildern; dort werden sie verpixelt, das Original bleibt erhalten. Die Daten gehen nie an externe Dienste. Gesichter und Unterschriften erkennt die App nicht – markieren Sie sie als eigene Stelle. Fragen mit personenbezogenen Daten werden bei externem KI-Dienst nicht gestellt. Befragungen erfassen Fachbereich oder Rolle, keine Personennamen.

@@ -65,6 +65,11 @@ function findRaw(text: string, opts: PrivacyOptions = {}): RawHit[] {
   return hits;
 }
 
+/** Treffer mit Position (Zeichen) und maskiertem Wert – z. B. um Fundstellen in Bildern unkenntlich zu machen (ADR-095) */
+export function privacySpans(text: string, opts: PrivacyOptions = {}) {
+  return findRaw(text, opts).map((h) => ({ kind: h.kind, start: h.start, end: h.end, match: mask(h.value) }));
+}
+
 export function detectPrivacy(text: string, opts: PrivacyOptions = {}): PrivacyHit[] {
   return findRaw(text, opts).map((h) => ({ kind: h.kind, match: mask(h.value) }));
 }

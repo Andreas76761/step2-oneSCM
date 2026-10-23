@@ -10,15 +10,16 @@ const ROLES = [['dealer', 'Dealer'], ['market', 'Markt'], ['mo', 'MO'], ['hq', '
 const DIVISIONS = [['car', 'Pkw'], ['van', 'Van'], ['all', 'Pkw und Van']];
 const SEV: Record<string, string> = { error: 'sev-high', warning: 'sev-medium', info: '' };
 
-function Thumb({ sha, alt, large }: { sha: string; alt: string; large?: boolean }) {
+/** `rev` wechselt, wenn sich die ausgelieferte Fassung ändert (z. B. Unkenntlichmachung an/aus) */
+function Thumb({ sha, alt, large, rev = '', query }: { sha: string; alt: string; large?: boolean; rev?: string; query?: string }) {
   const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
-    mediaUrl(sha).then((u) => alive && setUrl(u), () => undefined);
+    mediaUrl(sha, query ?? (rev ? `v=${rev.slice(0, 12)}` : '')).then((u) => alive && setUrl(u), () => undefined);
     return () => {
       alive = false;
     };
-  }, [sha]);
+  }, [sha, rev, query]);
   return url ? <img className={`ia-thumb${large ? ' ia-preview' : ''}`} src={url} alt={alt} loading="lazy" /> : <span className="ia-thumb" aria-hidden="true" />;
 }
 
@@ -120,11 +121,12 @@ export function ImageArchivePage() {
               {list.data.items.map((i: any) => (
                 <li key={i.sha}>
                   <button type="button" aria-current={i.sha === sel} onClick={() => setSel(i.sha)}>
-                    <Thumb sha={i.currentSha} alt="" />
+                    <Thumb sha={i.currentSha} alt="" rev={i.redaction?.redactedSha ?? ''} />
                     <span>
                       <strong>{i.imageNo}</strong> {i.title ?? <span className="muted">ohne Bildunterschrift</span>}
                       {i.placeholder && <span className="tag sev-medium">Platzhalter</span>}
                       {i.versions.length > 1 && <span className="tag">Fassung {i.versions.length}</span>}
+                      {i.redaction?.enabled && i.redaction.active > 0 && <span className="tag">unkenntlich</span>}
                       <span className="small muted ia-meta">{i.width && i.height ? `${i.width}×${i.height}` : i.mime} · {i.usedIn.length} Kapitel{i.sourceUses ? ` · ${i.sourceUses} Quellen` : ''}</span>
                       {i.checks.filter((c: any) => c.severity !== 'info').map((c: any) => <span key={c.rule} className={`tag small ${SEV[c.severity]}`}>{c.rule}</span>)}
                     </span>
@@ -137,7 +139,7 @@ export function ImageArchivePage() {
         <div>
           {item && form ? (
             <Card title={<>{item.imageNo} <span className="muted small">{item.title}</span></>}>
-              <Thumb sha={item.currentSha} alt={item.title ?? item.imageNo} large />
+              <RedactionPanel item={item} canEdit={canEdit} onChange={reload} />
               {item.checks.length > 0 && (
                 <ul className="rl-findings" aria-label="Prüfregeln">
                   {item.checks.map((c: any) => <li key={c.rule}><span className={`tag small ${SEV[c.severity]}`}>{c.severity === 'error' ? 'Fehler' : c.severity === 'warning' ? 'Warnung' : 'Info'}</span> {c.message}</li>)}
@@ -145,6 +147,7 @@ export function ImageArchivePage() {
               )}
               {item.usedIn.length > 0 && <p className="small">Verwendet in: {item.usedIn.map((c: any, n: number) => <span key={c.chapterId}>{n > 0 && ', '}<Link to={`/werkstatt/${c.chapterId}`}>{c.title}</Link></span>)}</p>}
               <p className="small">Einbinden: <code>{`![${item.title ?? 'Alternativtext'}](media:${item.sha})`}</code></p>
+              <ImageLabels item={item} canEdit={canEdit} onChange={reload} />
               {/* F-25: Gliederungsstelle – Vorschlag aus dem Folientext, übernommen nur von Hand */}
               <section className="ia-outline" aria-label="Gliederungsstelle">
                 <p className="small"><strong>Gliederungsstelle:</strong> {item.outline ? item.outline.nameDe : <span className="muted">nicht zugeordnet</span>}
@@ -226,7 +229,8 @@ export function ImageArchivePage() {
                 {item.versions.map((v: any) => (
                   <li key={v.sha}>
                     Fassung {v.versionNo}{v.sha === item.currentSha && <span className="tag">aktuell</span>} · {new Date(v.createdAt).toLocaleDateString('de-DE')}{v.createdBy ? ` · ${v.createdBy}` : ''}{v.note ? ` – ${v.note}` : ''}{' '}
-                    <DownloadButton className="btn link" href={v.url} name={`${item.imageNo}-v${v.versionNo}`}>Original</DownloadButton>
+                    <DownloadButton className="btn link" href={v.url} name={`${item.imageNo}-v${v.versionNo}`}>Herunterladen</DownloadButton>
+                    {canEdit && <> · <DownloadButton className="btn link" href={v.originalUrl} name={`${item.imageNo}-v${v.versionNo}-original`}>Original (ohne Unkenntlichmachung)</DownloadButton></>}
                   </li>
                 ))}
               </ol>
@@ -300,7 +304,7 @@ function CoverageMatrix() {
       {(['xlsx', 'csv'] as const).map((f) => <DownloadButton key={f} className="btn small" href={`/api/v1/image-archive/coverage-matrix/export?${query}&format=${f}`} name={`deckungsmatrix.${f}`}>⬇ {f.toUpperCase()}</DownloadButton>)}
     </span>}>
       <div className="filters">
-        <label>Zeilen <select value={rows} onChange={(e) => setRows(e.target.value)}><option value="navigation">je Reiter/Menüpunkt</option><option value="variant">je Maske (Varianten)</option><option value="chapter">je Kapitel</option></select></label>
+        <label>Zeilen <select value={rows} onChange={(e) => setRows(e.target.value)}><option value="navigation">je Reiter/Menüpunkt</option><option value="variant">je Maske (Varianten)</option><option value="chapter">je Kapitel</option><option value="outline">je Gliederungspunkt</option></select></label>
         <fieldset className="inline">
           <legend className="small">Spalten</legend>
           {Object.entries(DIM_LABEL).map(([d, l]) => <label key={d} className="small"><input type="checkbox" checked={dims.includes(d)} onChange={() => toggle(d)} /> {DIM_CHOICE[d]}</label>)}
@@ -315,7 +319,7 @@ function CoverageMatrix() {
           </p>
           <div className="table-wrap" role="region" aria-label="Deckungsmatrix" tabIndex={0}>
             <table className="table compact matrix">
-              <thead><tr><th>{rows === 'chapter' ? 'Kapitel' : rows === 'variant' ? 'Maske' : 'Reiter/Menüpunkt'}</th><th>Bilder</th>{m.data.columns.map((c: any) => <th key={c.key}>{c.label}</th>)}</tr></thead>
+              <thead><tr><th>{rows === 'chapter' ? 'Kapitel' : rows === 'variant' ? 'Maske' : rows === 'outline' ? 'Gliederungspunkt' : 'Reiter/Menüpunkt'}</th><th>Bilder</th>{m.data.columns.map((c: any) => <th key={c.key}>{c.label}</th>)}</tr></thead>
               <tbody>
                 {m.data.rows.map((r: any) => (
                   <tr key={r.key}>
@@ -432,5 +436,207 @@ function ClickpathBuilder({ images, onDone }: { images: any[]; onDone: () => voi
         </div>
       )}
     </Card>
+  );
+}
+
+const KIND: Record<string, string> = { email: 'E-Mail', phone: 'Telefon', iban: 'IBAN', vin: 'FIN', plate: 'Kennzeichen', user_id: 'User-ID', address: 'Adresse', name: 'Name', manual: 'manuell' };
+type Box = { x: number; y: number; w: number; h: number };
+
+/**
+ * Datenschutz im Bild (ADR-095): erkannte Stellen (Name, User-ID, Adresse, FIN …) werden verpixelt ausgeliefert.
+ * Unkenntlichmachung an/aus, je Stelle an/aus, eigene Stellen per Ziehen mit der Maus; das Original bleibt erhalten.
+ */
+function RedactionPanel({ item, canEdit, onChange }: { item: any; canEdit: boolean; onChange: () => void }) {
+  const { notify } = useApp();
+  const sha = item.currentSha;
+  const r = useLoad<any>(`/image-archive/${sha}/redaction`, [sha]);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const [drag, setDrag] = useState<{ start: { x: number; y: number }; box: Box } | null>(null);
+  const [pending, setPending] = useState<Box | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    setShowOriginal(false);
+    setPending(null);
+  }, [sha]);
+  const d = r.data;
+  const raster = !['image/svg+xml'].includes(item.mime);
+  const send = async (body: object, msg: string) => {
+    setBusy(true);
+    try {
+      await patch(`/image-archive/${sha}/redaction`, body);
+      notify(msg);
+      setPending(null);
+      r.reload();
+      onChange();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const detect = async () => {
+    setBusy(true);
+    try {
+      const x = await post(`/image-archive/${sha}/redaction/detect`, {});
+      notify(x.status === 'done' ? `${x.regions.filter((g: any) => g.source === 'ocr').length} Stelle(n) erkannt.` : x.status === 'unavailable' ? 'Keine Texterkennung eingerichtet – Stellen bitte von Hand markieren.' : `Texterkennung fehlgeschlagen: ${x.error ?? ''}`, x.status === 'failed' ? 'error' : undefined);
+      r.reload();
+      onChange();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const rel = (e: React.PointerEvent<HTMLDivElement>) => {
+    const b = e.currentTarget.getBoundingClientRect();
+    return { x: Math.min(Math.max((e.clientX - b.left) / b.width, 0), 1), y: Math.min(Math.max((e.clientY - b.top) / b.height, 0), 1) };
+  };
+  const editable = canEdit && raster && !busy;
+  const boxStyle = (g: Box) => ({ left: `${g.x * 100}%`, top: `${g.y * 100}%`, width: `${g.w * 100}%`, height: `${g.h * 100}%` });
+  const regions: any[] = d?.regions ?? [];
+  return (
+    <section className="ia-redact" aria-label="Datenschutz im Bild">
+      <div
+        className={`ia-redact-stage${editable ? ' editable' : ''}`}
+        onPointerDown={editable ? (e) => {
+          const p = rel(e);
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setDrag({ start: p, box: { ...p, w: 0, h: 0 } });
+        } : undefined}
+        onPointerMove={drag ? (e) => {
+          const p = rel(e);
+          setDrag({ ...drag, box: { x: Math.min(p.x, drag.start.x), y: Math.min(p.y, drag.start.y), w: Math.abs(p.x - drag.start.x), h: Math.abs(p.y - drag.start.y) } });
+        } : undefined}
+        onPointerUp={drag ? () => {
+          if (drag.box.w > 0.005 && drag.box.h > 0.005) setPending(drag.box);
+          setDrag(null);
+        } : undefined}
+      >
+        <Thumb sha={sha} alt={item.title ?? item.imageNo} large rev={d?.redactedSha ?? item.redaction?.redactedSha ?? ''} query={showOriginal ? 'original=1&unredacted=1' : undefined} />
+        {canEdit && regions.map((g) => <span key={g.id} className={`ia-box${g.active && d?.enabled ? ' on' : ''}${g.source === 'manual' ? ' manual' : ''}`} style={boxStyle(g)} aria-hidden="true"><span>{g.id}</span></span>)}
+        {(drag || pending) && <span className="ia-box new" style={boxStyle(drag?.box ?? pending!)} aria-hidden="true" />}
+      </div>
+      <ErrorBox error={r.error} />
+      {d && (
+        <>
+          <p className="small">
+            <strong>Datenschutz im Bild:</strong>{' '}
+            {!raster ? <span className="muted">nur für Rasterbilder (PNG, JPEG, WebP, GIF).</span>
+              : d.enabled && d.active ? <>{d.active} Stelle(n) unkenntlich gemacht – ausgeliefert und exportiert wird die verpixelte Fassung, das Original bleibt erhalten.</>
+              : regions.length ? <span className="sev-medium">Unkenntlichmachung ist ausgeschaltet – das Original ist sichtbar.</span>
+              : d.status === 'done' ? <>Keine personenbezogenen Daten erkannt.</>
+              : d.status === 'failed' ? <span className="sev-medium">Texterkennung fehlgeschlagen: {d.error}</span>
+              : d.available ? <span className="muted">Noch nicht geprüft.</span>
+              : <span className="muted">Keine Texterkennung eingerichtet (OCR_CMD bzw. OCR_BOXES_CMD) – Stellen von Hand markieren.</span>}
+          </p>
+          {canEdit && raster && (
+            <div className="filters">
+              <label className="small"><input type="checkbox" checked={d.enabled} disabled={busy || !regions.length} onChange={(e) => void send({ enabled: e.target.checked }, e.target.checked ? 'Unkenntlichmachung eingeschaltet.' : 'Rückgängig gemacht – das Original wird wieder gezeigt.')} /> Personenbezogene Daten unkenntlich machen</label>
+              <label className="small"><input type="checkbox" checked={showOriginal} onChange={(e) => setShowOriginal(e.target.checked)} /> Original ansehen</label>
+              {d.available && <button type="button" className="btn small" disabled={busy} onClick={() => void detect()}>{d.status === 'done' ? 'Erneut erkennen' : 'Jetzt erkennen'}</button>}
+            </div>
+          )}
+          {canEdit && regions.length > 0 && (
+            <ul className="small ia-regions" aria-label="Stellen">
+              {regions.map((g) => (
+                <li key={g.id}>
+                  <label><input type="checkbox" checked={g.active} disabled={busy} onChange={(e) => void send({ regions: [{ id: g.id, active: e.target.checked }] }, `Stelle ${g.id} ${e.target.checked ? 'unkenntlich' : 'sichtbar'}.`)} /> {g.id} · {KIND[g.kind] ?? g.kind}{g.source === 'ocr' ? ` „${g.label}“` : ''}</label>
+                  {g.source === 'manual' && <button type="button" className="btn link small" disabled={busy} aria-label={`Stelle ${g.id} entfernen`} onClick={() => void send({ remove: [g.id] }, `Stelle ${g.id} entfernt.`)}>entfernen</button>}
+                </li>
+              ))}
+            </ul>
+          )}
+          {editable && (pending ? (
+            <p className="small">Neue Stelle markiert.{' '}
+              <button type="button" className="btn small primary" onClick={() => void send({ add: [pending], enabled: true }, 'Stelle hinzugefügt und unkenntlich gemacht.')}>Stelle unkenntlich machen</button>{' '}
+              <button type="button" className="btn small ghost" onClick={() => setPending(null)}>Verwerfen</button></p>
+          ) : <ManualRegion onAdd={setPending} />)}
+        </>
+      )}
+    </section>
+  );
+}
+
+/** Stelle ohne Maus angeben (Prozent vom Bild) – Alternative zum Ziehen */
+function ManualRegion({ onAdd }: { onAdd: (b: Box) => void }) {
+  const [v, setV] = useState({ x: '', y: '', w: '', h: '' });
+  const n = (k: keyof typeof v) => Number(v[k].replace(',', '.')) / 100;
+  const ok = (['x', 'y', 'w', 'h'] as const).every((k) => v[k].trim() && Number.isFinite(n(k))) && n('w') > 0 && n('h') > 0;
+  return (
+    <details className="small">
+      <summary>Stelle markieren: im Bild mit der Maus ziehen oder hier in Prozent angeben</summary>
+      <div className="filters">
+        {([['x', 'von links %'], ['y', 'von oben %'], ['w', 'Breite %'], ['h', 'Höhe %']] as const).map(([k, l]) => (
+          <label key={k}>{l} <input inputMode="decimal" size={4} value={v[k]} onChange={(e) => setV({ ...v, [k]: e.target.value })} /></label>
+        ))}
+        <button type="button" className="btn small" disabled={!ok} onClick={() => onAdd({ x: n('x'), y: n('y'), w: n('w'), h: n('h') })}>Übernehmen</button>
+      </div>
+    </details>
+  );
+}
+
+const LABEL_GROUPS: [string, string][] = [['domain', 'Domäne'], ['role', 'Rolle'], ['outline', 'Gliederung']];
+const OTHER_GROUPS = ['navigation', 'content', 'division', 'customer', 'system', 'quality'];
+
+/** Mehrere Labels (Domäne, Rolle, Gliederung, weitere) und Kapitel je Bild (ADR-095); Sprache steht unter „Merkmale“ */
+function ImageLabels({ item, canEdit, onChange }: { item: any; canEdit: boolean; onChange: () => void }) {
+  const { notify } = useApp();
+  const all = useLoad<any[]>('/metadata/labels');
+  const chapters = useLoad<any[]>('/chapters');
+  const labelIds: string[] = item.labels.map((l: any) => l.id);
+  const chapterIds: string[] = item.chapters.map((c: any) => c.id);
+  const send = async (body: object, msg: string) => {
+    try {
+      await patch(`/image-archive/${item.sha}`, body);
+      notify(msg);
+      onChange();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const groups: [string, string, string[]][] = [...LABEL_GROUPS.map(([g, t]) => [g, t, [g]] as [string, string, string[]]), ['other', 'Weitere Labels', OTHER_GROUPS]];
+  const chip = (id: string, text: string, onRemove: () => void) => (
+    <span key={id} className="tag ia-chip">{text}{canEdit && <button type="button" className="btn link small" aria-label={`${text} entfernen`} onClick={onRemove}>×</button>}</span>
+  );
+  return (
+    <section className="ia-labels" aria-label="Labels und Kapitel">
+      <h3>Labels und Kapitel</h3>
+      <ErrorBox error={all.error ?? chapters.error} />
+      <dl className="ia-label-groups small">
+        <dt>Sprache</dt>
+        <dd>{item.language ? <span className="tag">{item.language.toUpperCase()}</span> : <span className="muted">nicht angegeben (unter Merkmale)</span>}</dd>
+        {groups.map(([key, title, gs]) => {
+          const mine = item.labels.filter((l: any) => gs.includes(l.group));
+          const free = (all.data ?? []).filter((l: any) => gs.includes(l.group) && !labelIds.includes(l.id));
+          if (key === 'other' && !mine.length && !free.length) return null;
+          return (
+            <div key={key} className="ia-label-row">
+              <dt>{title}</dt>
+              <dd>
+                {mine.map((l: any) => chip(l.id, l.nameDe, () => void send({ labelIds: labelIds.filter((x) => x !== l.id) }, `${l.nameDe} entfernt.`)))}
+                {!mine.length && <span className="muted">– </span>}
+                {canEdit && free.length > 0 && (
+                  <select aria-label={`${title} hinzufügen`} value="" onChange={(e) => e.target.value && void send({ labelIds: [...labelIds, e.target.value] }, 'Label hinzugefügt.')}>
+                    <option value="">+ hinzufügen</option>
+                    {free.map((l: any) => <option key={l.id} value={l.id}>{key === 'other' ? `${l.group}: ` : ''}{l.nameDe}</option>)}
+                  </select>
+                )}
+              </dd>
+            </div>
+          );
+        })}
+        <dt>Kapitel</dt>
+        <dd>
+          {item.chapters.map((c: any) => chip(c.id, c.title, () => void send({ chapterIds: chapterIds.filter((x) => x !== c.id) }, `${c.title} entfernt.`)))}
+          {!item.chapters.length && <span className="muted">– </span>}
+          {canEdit && (chapters.data ?? []).some((c: any) => !chapterIds.includes(c.id)) && (
+            <select aria-label="Kapitel hinzufügen" value="" onChange={(e) => e.target.value && void send({ chapterIds: [...chapterIds, e.target.value] }, 'Kapitel zugeordnet.')}>
+              <option value="">+ hinzufügen</option>
+              {(chapters.data ?? []).filter((c: any) => !chapterIds.includes(c.id)).map((c: any) => <option key={c.id} value={c.id}>{c.title}</option>)}
+            </select>
+          )}
+        </dd>
+      </dl>
+    </section>
   );
 }

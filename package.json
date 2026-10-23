@@ -1,6 +1,6 @@
 {
   "name": "onescm-handbook-studio",
-  "version": "0.41.1",
+  "version": "0.42.0",
   "private": true,
   "description": "oneSCM Handbook Studio – revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen",
   "workspaces": [

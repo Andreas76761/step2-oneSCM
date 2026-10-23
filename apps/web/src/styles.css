@@ -846,3 +846,18 @@ div.reader-lang-note p { margin: 0; }
 .matrix td.cov-gap { background: var(--danger-bg, #fdecee); color: var(--danger, #9f1239); }
 .clickpath-steps { padding-left: 0; list-style: none; }
 .clickpath-steps > li { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+
+/* Datenschutz im Bild (ADR-095) */
+.ia-redact-stage { position: relative; display: block; line-height: 0; touch-action: none; }
+.ia-redact-stage.editable { cursor: crosshair; }
+.ia-redact-stage .ia-thumb.ia-preview { max-height: none; }
+.ia-box { position: absolute; border: 2px dashed var(--muted, #64748b); pointer-events: none; line-height: 1; }
+.ia-box.on { border: 2px solid #c2410c; }
+.ia-box.manual { border-color: #7c3aed; }
+.ia-box.new { border: 2px solid #2563eb; background: rgba(37, 99, 235, 0.15); }
+.ia-box > span { position: absolute; top: -1.2em; left: -2px; font-size: 0.7rem; background: var(--surface, #fff); color: var(--text, #111); padding: 0 2px; }
+.ia-regions { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; }
+.ia-label-groups { display: grid; grid-template-columns: max-content 1fr; gap: 0.35rem 0.75rem; align-items: center; margin: 0 0 0.75rem; }
+.ia-label-groups dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; }
+.ia-label-row { display: contents; }
+.ia-chip { display: inline-flex; align-items: center; gap: 0.2rem; }

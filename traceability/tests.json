@@ -2034,5 +2034,43 @@
       "NFR-97",
       "NFR-98"
     ]
+  },
+  {
+    "id": "T-288",
+    "title": "Wortpositionen aus der Texterkennung → Stellen mit Name, User-ID, FIN und Adresse; Feldbezeichnung bleibt lesbar (Einheit)",
+    "file": "apps/server/test/stage42.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-99"
+    ]
+  },
+  {
+    "id": "T-289",
+    "title": "Screenshot einlesen → automatisch unkenntlich; ausschalten zeigt das Original, einzelne und manuelle Stellen; Original nur mit Bearbeitungsrecht",
+    "file": "apps/server/test/stage42.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-99"
+    ]
+  },
+  {
+    "id": "T-290",
+    "title": "Mehrere Labels (Domäne, Rolle, Gliederung) und Kapitel je Bild, Filter, Deckungsmatrix je Gliederungspunkt; ohne Texterkennung nur manuell",
+    "file": "apps/server/test/stage42.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-100",
+      "NFR-99"
+    ]
+  },
+  {
+    "id": "T-291",
+    "title": "Bildarchiv: Stelle im Bild unkenntlich machen und rückgängig, mehrere Labels (Domäne, Gliederung) und Kapitel je Bild",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-99",
+      "NFR-100"
+    ]
   }
 ]

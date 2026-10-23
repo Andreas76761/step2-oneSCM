@@ -17,6 +17,7 @@ import { MEDIA_EXT, resolveRelative, rewriteImages } from '../domain/media.js';
 import { normalizedHash, sha256 } from '../domain/similarity.js';
 import { finishConnectionImport } from './connections.js';
 import { storeMedia } from './media.js';
+import { queueRedaction } from './imageRedaction.js';
 import { extractStills, ocrImage, transcribe } from './mediaTools.js';
 import { contextsFromFrontMatter } from './contextHelp.js';
 import { badRequest, conflict, notFound, Problem } from '../problem.js';
@@ -194,6 +195,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   for (const entry of entries.filter((e) => e.media && e.data)) {
     try {
       const m = await storeMedia(ctx, entry.data!, path.posix.basename(entry.path), importId);
+      await queueRedaction(ctx, m.sha, m.mime);
       mediaByPath.set(entry.path, m.sha);
       mediaItems.set(entry.path, { status: 'media', message: `Bild ${m.mime}${m.width ? `, ${m.width}×${m.height}` : ''}`, sha: m.sha });
     } catch (e) {
@@ -359,7 +361,11 @@ async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: I
   }
   const title = path.basename(filePath, path.extname(filePath));
   const settings = (await getSettings(ctx.db)).import;
-  const embed = async (buf: Buffer, name: string) => (await storeMedia(ctx, buf, name, images?.importId ?? null)).sha;
+  const embed = async (buf: Buffer, name: string) => {
+    const m = await storeMedia(ctx, buf, name, images?.importId ?? null);
+    await queueRedaction(ctx, m.sha, m.mime); // Datenschutz im Bild (ADR-095)
+    return m.sha;
+  };
   // Fundstellen (ADR-086): Folie bzw. Seite; bei HTML und Word der Abschnitt (Anker der Überschrift)
   if (format === 'mp4' || format === 'vtt' || format === 'srt') return convertMedia(ctx, format, title, data, embed, sidecar);
   if (format === 'pptx' || format === 'pdf') {

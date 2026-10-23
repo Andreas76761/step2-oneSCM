@@ -1073,5 +1073,23 @@
     "documentation": [
       "docs/adr/ADR-093-varianten-klickstrecke.md"
     ]
+  },
+  {
+    "id": "NFR-99",
+    "title": "Personenbezogene Daten in Bildern (Namen, User-ID, Adresse, FIN …) per lokaler Texterkennung erkennen und verpixelt ausliefern; an/aus und je Stelle umschaltbar, manuelle Stellen; Original bleibt erhalten und ist nur mit Bearbeitungsrecht abrufbar",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-095-datenschutz-bild-labels.md"
+    ]
+  },
+  {
+    "id": "NFR-100",
+    "title": "Mehrere Labels (Domäne, Rolle, Gliederung, weitere) und Kapitel je Bild; Filter im Bildarchiv, Deckungsmatrix je Gliederungspunkt",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-095-datenschutz-bild-labels.md"
+    ]
   }
 ]

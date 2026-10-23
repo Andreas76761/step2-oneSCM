@@ -96,3 +96,4 @@
 | [ADR-092](ADR-092-punktmodell-befragung-deckung.md) | Punktmodell Muss/Soll im Anleitungs-Check (F-08), Expertenbefragung zu Wissenslücken (F-16), Deckungsmatrix der Bilder (F-30) | akzeptiert, umgesetzt |
 | [ADR-093](ADR-093-varianten-klickstrecke.md) | Varianten einer Maske mit passender Fassung je Ausgabe (F-22), Klickstrecke aus Screenshots mit parallelen Wegen 3a/3b (F-24) | akzeptiert, umgesetzt |
 | [ADR-094](ADR-094-leistung-installationspaket.md) | Leistung bei großen Beständen (Präfix-Filter für Dubletten, Zwischenspeicher für Wortstämme) und Installationspaket für Windows offline und Linux/macOS | akzeptiert, umgesetzt |
+| [ADR-095](ADR-095-datenschutz-bild-labels.md) | Datenschutz im Bild (Namen, User-ID, Adresse, FIN verpixelt, an/aus, Original bleibt), mehrere Labels und Kapitel je Bild | akzeptiert, umgesetzt |

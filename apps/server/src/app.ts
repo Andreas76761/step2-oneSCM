@@ -54,6 +54,7 @@ import { failAnalysisJob, runAnalysis } from './services/analysis.js';
 import { failImportJob, runImportJob } from './services/imports.js';
 import { failBatch, runBatch } from './services/rewriteBatch.js';
 import { assertParamsInProject, resolveProject, withProject } from './services/projects.js';
+import { runRedactionJob } from './services/imageRedaction.js';
 import { seedTerminology } from './services/terminology.js';
 import { createObjectStore } from './storage.js';
 import { initTracing, registerTracing, traceDb, traceEmbeddings, traceLlm } from './tracing.js';
@@ -124,6 +125,11 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     if (await archived(c)) return failMachineTranslation(c, p.translationId, ARCHIVED);
     await runMachineTranslation(c, p.translationId, p.actor);
   }, async (p, err) => failMachineTranslation(await translationCtx(p), p.translationId, err));
+  // Datenschutz im Bild (ADR-095): Erkennung nach dem Ablegen eines Screenshots
+  jobs.register('image-redact', async (p) => {
+    const c = withProject(ctx, p.projectId);
+    if (!(await archived(c))) await runRedactionJob(c, p.sha);
+  });
   jobs.register('notify', async (p) => deliverNotification(ctx, p.notificationId));
   jobs.register('semantic-index', async (p) => {
     const c = withProject(ctx, p.projectId);

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.42.0 – Etappe 42 (23.10.2026)
+
+### Hinzugefügt
+- **Datenschutz im Bild (ADR-095):** Namen, User-IDs, Adressen, FIN und weitere personenbezogene Daten in Screenshots werden per lokaler Texterkennung erkannt und verpixelt ausgeliefert – im Bildarchiv, in Exporten, Releases und Übersetzungen. Unkenntlichmachung an/aus (rückgängig), je Stelle an/aus, eigene Stellen mit der Maus ziehen; das Original bleibt erhalten und ist nur mit Bearbeitungsrecht abrufbar (`?unredacted=1`). Neue Einstellung `OCR_BOXES_CMD` (sonst aus Tesseract-`OCR_CMD` abgeleitet).
+- **Mehrere Labels und Kapitel je Bild:** Domäne, Rolle, Gliederung und weitere Labels sowie Kapitel je Bild; Filter im Bildarchiv, Deckungsmatrix „je Gliederungspunkt“.
+- Migration `049_image_redaction_labels.sql`; Tests T-288 … T-290, E2E T-291 (axe); Anforderungen NFR-99, NFR-100.
+
 ## 0.41.1 – Abschluss (23.10.2026)
 
 ### Behoben

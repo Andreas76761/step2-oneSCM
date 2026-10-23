@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.44 Stand nach Etappe 42 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Namen, User-ID, Adresse, FIN in Bildern erkennen und verpixeln; an/aus, je Stelle, manuelle Stellen; Original bleibt (NFR-99) | ✅ ([ADR-095](adr/ADR-095-datenschutz-bild-labels.md)) |
+| Mehrere Labels (Domäne, Rolle, Gliederung …) und Kapitel je Bild, Filter, Deckungsmatrix je Gliederungspunkt (NFR-100) | ✅ ([ADR-095](adr/ADR-095-datenschutz-bild-labels.md)) |
+| Offen | Gesichter/Unterschriften nur manuell; optional F-10, F-11; später F-19, F-31; fastify-Hinweis „low“ |
+
 ## 1.43 Stand nach Etappe 41 (23.10.2026)
 
 | Punkt | Ergebnis |

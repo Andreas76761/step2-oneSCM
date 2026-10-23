@@ -5,6 +5,7 @@ import { badRequest } from '../problem.js';
 import { createImport, getImport, restoreDocument, getRevisionOriginal, getRevisionRaw, listImports, listSources } from '../services/imports.js';
 import { getSnippet, patchSnippet, searchSnippets } from '../services/snippets.js';
 import { getMedia, listMedia, storeMedia } from '../services/media.js';
+import { queueRedaction } from '../services/imageRedaction.js';
 import { audit, getSettings } from '../context.js';
 import { Problem } from '../problem.js';
 import { num, userOf } from './helpers.js';
@@ -45,10 +46,12 @@ export function sourceRoutes(app: FastifyInstance, _ctx: Ctx) {
 
   // Bilder & Medien (ADR-029)
   app.get('/media', async (req) => (userOf(req.ctx, req), listMedia(req.ctx)));
-  app.get<{ Params: { mediaSha: string }; Querystring: { original?: string } }>('/media/:mediaSha', async (req, reply) => {
-    userOf(req.ctx, req);
+  app.get<{ Params: { mediaSha: string }; Querystring: { original?: string; unredacted?: string } }>('/media/:mediaSha', async (req, reply) => {
+    // ?unredacted=1: Original ohne Unkenntlichmachung (ADR-095) – nur mit Bearbeitungsrecht
+    const unredacted = req.query.unredacted === '1';
+    userOf(req.ctx, req, unredacted ? 'edit' : undefined);
     // aktuelle Fassung (ADR-085): eine neue Fassung ersetzt das Bild überall; ?original=1 liefert genau diese Fassung
-    const m = await getMedia(req.ctx, req.params.mediaSha, { exact: req.query.original === '1' });
+    const m = await getMedia(req.ctx, req.params.mediaSha, { exact: req.query.original === '1', unredacted });
     // Inhalt kann durch eine neue Fassung wechseln → mit ETag revalidieren statt „immutable“; privat (projektgebunden)
     const etag = `"${m.sha}"`;
     reply.header('ETag', etag).header('Cache-Control', 'private, no-cache').header('X-Content-Type-Options', 'nosniff')
@@ -66,6 +69,7 @@ export function sourceRoutes(app: FastifyInstance, _ctx: Ctx) {
     const max = (await getSettings(req.ctx.db)).import.maxEntryBytes;
     if (data.length > max) throw new Problem(413, 'Content Too Large', `Bild überschreitet ${max} Bytes.`);
     const m = await storeMedia(req.ctx, data, file.filename);
+    await queueRedaction(req.ctx, m.sha, m.mime);
     await audit(req.ctx, user.id, 'media.uploaded', 'media', m.sha, { fileName: file.filename, mime: m.mime, byteSize: data.length });
     reply.code(201);
     return { sha256: m.sha, mime: m.mime, width: m.width, height: m.height, url: `/api/v1/media/${m.sha}`, markdown: `![Alternativtext](media:${m.sha})` };

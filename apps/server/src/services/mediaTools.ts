@@ -8,6 +8,7 @@ import path from 'node:path';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import type { MediaToolsConfig } from '../config.js';
 import { selectChanges, toGray } from '../domain/frames.js';
+import { parseOcrTsv, type OcrWord } from '../domain/imageRedaction.js';
 import { timeLabel, type Still } from '../domain/subtitles.js';
 
 /** Befehl in Argumente zerlegen (Anführungszeichen erlaubt), Platzhalter je Argument ersetzen */
@@ -34,7 +35,17 @@ async function withTemp<T>(fn: (dir: string) => Promise<T>): Promise<T> {
   }
 }
 
-export const toolStatus = (cfg: MediaToolsConfig) => ({ transcribe: !!cfg.transcribeCmd, ocr: !!cfg.ocrCmd, stills: !!cfg.ffmpeg });
+/**
+ * Befehl für Texterkennung mit Wortpositionen (ADR-095): OCR_BOXES_CMD, sonst aus OCR_CMD abgeleitet, wenn das Tesseract
+ * ist (Konfiguration „tsv“ am Ende liefert je Wort Position und Größe).
+ */
+export function ocrBoxesCommand(cfg: MediaToolsConfig): string | null {
+  if (cfg.ocrBoxesCmd) return cfg.ocrBoxesCmd;
+  if (cfg.ocrCmd && /tesseract/i.test(cfg.ocrCmd) && /\bstdout\b/.test(cfg.ocrCmd)) return `${cfg.ocrCmd.replace(/\s+(txt|tsv|hocr)\s*$/i, '')} tsv`;
+  return null;
+}
+
+export const toolStatus = (cfg: MediaToolsConfig) => ({ transcribe: !!cfg.transcribeCmd, ocr: !!cfg.ocrCmd, stills: !!cfg.ffmpeg, redact: !!ocrBoxesCommand(cfg) });
 
 /** Transkription eines Videos als WebVTT; null, wenn nicht eingerichtet */
 export async function transcribe(cfg: MediaToolsConfig, video: Buffer, lang = 'de'): Promise<string | null> {
@@ -108,5 +119,19 @@ export async function ocrImage(cfg: MediaToolsConfig, png: Buffer, lang = 'deu+e
     const [cmd, ...args] = commandArgs(cfg.ocrCmd!, { input, output: path.join(dir, 'text'), lang });
     const stdout = await run(cmd, args, { cwd: dir, timeoutMs: cfg.timeoutMs });
     return stdout.trim() || ((await fs.readFile(path.join(dir, 'text.txt'), 'utf8').catch(() => '')).trim());
+  });
+}
+
+/** Wörter mit Position (Pixel) aus einem Bild; null, wenn keine Texterkennung mit Wortpositionen eingerichtet ist */
+export async function ocrWords(cfg: MediaToolsConfig, image: Buffer, ext = 'png', lang = 'deu+eng'): Promise<OcrWord[] | null> {
+  const template = ocrBoxesCommand(cfg);
+  if (!template) return null;
+  return withTemp(async (dir) => {
+    const input = path.join(dir, `bild.${ext}`);
+    await fs.writeFile(input, image);
+    const [cmd, ...args] = commandArgs(template, { input, output: path.join(dir, 'text'), lang });
+    const stdout = await run(cmd, args, { cwd: dir, timeoutMs: cfg.timeoutMs });
+    const tsv = stdout.includes('\t') ? stdout : await fs.readFile(path.join(dir, 'text.tsv'), 'utf8').catch(() => '');
+    return parseOcrTsv(tsv);
   });
 }
