@@ -1974,3 +1974,56 @@ test('[T-243] Release-Abgleich und Releaseletter: Tickets je Release, Letter erz
   await expect(page.getByText('Begriff „Release Preview PDF“ angelegt.')).toBeVisible();
   expect(await axe()).toEqual([]);
 });
+
+test('[T-247] Wissensnotiz als Quelle, Gliederungs-Vorschlag übernehmen, Kapitel ↔ Quellen, Zielkapitel je Dopplung, Ausschlussliste', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // Wissensnotiz → eigene Quelle
+  await nav.getByRole('link', { name: 'Wissensnotizen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Wissensnotizen' })).toBeVisible();
+  await page.getByLabel('Frage bzw. Titel').fill('E2E Wie kündige ich einen Vertrag in der Vertragsverwaltung?');
+  await page.getByLabel('Erkenntnis').fill('E2E Kündigen Sie den Vertrag in der Vertragsverwaltung über Beenden; Verträge im Alltag verwalten Sie dort.');
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Notiz gespeichert und als Quelle eingelesen.')).toBeVisible();
+  await expect(page.getByText(/Revision 1 · \d+ Chunks/)).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Chunks: Vorschlag übernehmen (nie automatisch)
+  await nav.getByRole('link', { name: 'Chunks', exact: true }).click();
+  await page.getByLabel('Im Text suchen').fill('E2E Kündigen Sie');
+  await page.getByLabel('nur ohne Gliederungspunkt').check();
+  const suggestion = page.getByRole('button', { name: /^10 Verträge im Alltag verwalten für Chunk #\d+ übernehmen$/ });
+  await expect(suggestion).toBeVisible();
+  await suggestion.click();
+  await expect(page.getByText('1 Zuordnung(en) hinzugefügt.')).toBeVisible();
+
+  // Kapitel ↔ Quellen
+  await nav.getByRole('link', { name: 'Kapitel ↔ Quellen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Kapitel ↔ Quellen' })).toBeVisible();
+  await page.getByRole('list', { name: 'Gliederungspunkte' }).getByRole('button', { name: /^10 Verträge im Alltag verwalten/ }).click();
+  await expect(page.getByRole('region', { name: 'Quellen' })).toContainText('E2E Kündigen Sie den Vertrag');
+  expect(await axe()).toEqual([]);
+
+  // Dopplungen: Spalte Zielkapitel
+  await nav.getByRole('link', { name: 'Dopplungen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Dopplungen' })).toBeVisible();
+  const target = page.getByLabel(/^Zielkapitel für Dopplung #\d+$/).first();
+  if (await target.count()) {
+    await target.selectOption({ label: '11 Rechnung, Zahlung, Kosten und Auswertungen' });
+    await expect(page.getByText('Zielkapitel gesetzt – beide Textabschnitte sind dem Gliederungspunkt zugeordnet.')).toBeVisible();
+  }
+  expect(await axe()).toEqual([]);
+
+  // Einstellungen: Ausschlussliste
+  await page.goto('/einstellungen');
+  await page.getByLabel('Nicht einlesen – ein Muster je Zeile (z. B. *.tmp, ~$*, Archiv/**)').fill('*.tmp\nArchiv/**');
+  await page.getByRole('button', { name: 'Speichern' }).first().click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
+  await page.getByLabel('Nicht einlesen – ein Muster je Zeile (z. B. *.tmp, ~$*, Archiv/**)').fill('');
+  await page.getByRole('button', { name: 'Speichern' }).first().click();
+});

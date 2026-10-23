@@ -161,6 +161,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.34 Stand nach Etappe 32 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Gliederungs-Vorschlag je Chunk, Kapitel ↔ Quellen, Zielkapitel je Dopplung (F-13, F-14, F-18, NFR-77) | ✅ ([ADR-084](adr/ADR-084-gliederung-wissen.md)) |
+| Wissensnotizen, Ausschlussliste (F-15, F-17, NFR-78) | ✅ ([ADR-084](adr/ADR-084-gliederung-wissen.md)) |
+| Offen | Bilder und Ausgabe (F-20 … F-30), Etappen M2 (PPTX/PDF, Beispieldateien nötig) bis M7 |
+
 ## 1.33 Stand nach Etappe 31 (23.10.2026)
 
 | Punkt | Ergebnis |

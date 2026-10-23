@@ -185,6 +185,8 @@ export const DEFAULT_SETTINGS = {
     maxUploadBytes: Number(process.env.UPLOAD_MAX_BYTES ?? 50 * 1024 * 1024),
     maxZipFiles: Number(process.env.ZIP_MAX_FILES ?? 5000),
     maxEntryBytes: 20 * 1024 * 1024,
+    // Ausschlussliste „nicht einlesen“ (ADR-084, F-17)
+    excludePatterns: [] as string[],
   },
   // ENTSCHEIDUNG(E-05, E-07)
   analysis: {

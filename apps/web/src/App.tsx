@@ -58,6 +58,8 @@ const MetadataLabelsPage = lazy(() => import('./pages/Metadata').then((m) => ({ 
 const SourceUpdatesPage = lazy(() => import('./pages/SourceUpdates').then((m) => ({ default: m.SourceUpdatesPage })));
 const TicketReleasesPage = lazy(() => import('./pages/ReleaseLetters').then((m) => ({ default: m.TicketReleasesPage })));
 const ReleaseLettersPage = lazy(() => import('./pages/ReleaseLetters').then((m) => ({ default: m.ReleaseLettersPage })));
+const OutlineSourcesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.OutlineSourcesPage })));
+const KnowledgeNotesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.KnowledgeNotesPage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
@@ -67,6 +69,8 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   { id: 'metadaten', label: 'oneSCM_Metadaten', items: [
     { to: '/metadaten', label: 'Übersicht', icon: '🧠' },
     { to: '/metadaten/chunks', label: 'Chunks', icon: '🧱' },
+    { to: '/metadaten/kapitel-quellen', label: 'Kapitel ↔ Quellen', icon: '📚' },
+    { to: '/metadaten/wissensnotizen', label: 'Wissensnotizen', icon: '🗒' },
     { to: '/metadaten/fragen', label: 'Fragen & Antworten', icon: '💡' },
     { to: '/metadaten/zugriffsmatrix', label: 'Zugriffsmatrix', icon: '🔐' },
     { to: '/metadaten/zuordnung', label: 'Zuordnung', icon: '🧩' },
@@ -407,6 +411,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/metadaten/fragen" element={<MetadataQaPage />} />
             <Route path="/metadaten/zugriffsmatrix" element={<AccessMatrixPage />} />
             <Route path="/metadaten/zuordnung" element={<DomainMapPage />} />
+            <Route path="/metadaten/kapitel-quellen" element={<OutlineSourcesPage />} />
+            <Route path="/metadaten/wissensnotizen" element={<KnowledgeNotesPage />} />
             <Route path="/release-abgleich" element={<TicketReleasesPage />} />
             <Route path="/releaseletter" element={<ReleaseLettersPage />} />
             <Route path="/metadaten/labels" element={<MetadataLabelsPage />} />

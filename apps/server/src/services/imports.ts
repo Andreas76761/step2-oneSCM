@@ -3,6 +3,7 @@ import JSZip from 'jszip';
 import path from 'node:path';
 import { audit, getSettings, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
+import { compileExclusions } from '../domain/exclude.js';
 import { classifySnippet } from '../domain/classify.js';
 import { CONVERTIBLE, docxToMarkdown, embedDataImages, htmlToMarkdown } from '../domain/convert.js';
 import { chapterOf, headingKey, parseMarkdown } from '../domain/markdown.js';
@@ -60,6 +61,27 @@ export async function createImport(ctx: Ctx, fileName: string, data: Buffer, act
   return getImport(ctx, id);
 }
 
+/**
+ * Interne Quelle sofort einlesen (ohne Jobqueue), z. B. Wissensnotizen (ADR-084): gleiche Pipeline wie ein Upload,
+ * damit Chunks, Bilder, Revisionen und Audit identisch entstehen. Nur für kleine, von der App erzeugte Dateien.
+ */
+export async function importNow(ctx: Ctx, fileName: string, data: Buffer, actor: string, origin: string) {
+  const ext = path.extname(fileName).toLowerCase();
+  const hash = sha256(data);
+  await ctx.store.put(`uploads/${hash}`, data);
+  const id = newId('imp');
+  await ctx.db.tx(async () => {
+    await ctx.db.run(
+      'INSERT INTO imports (id, project_id, file_name, kind, sha256, byte_size, status, created_by, created_at, origin, snapshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
+      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : 'md', hash, data.length, 'queued', actor, now(), origin,
+    );
+    await audit(ctx, actor, 'import.created', 'import', id, { fileName, sha256: hash, origin });
+  });
+  await processImport(ctx, id, fileName, data);
+  await refreshSearchIndex(ctx).catch(() => undefined);
+  return getImport(ctx, id);
+}
+
 /** Job-Handler: verarbeitet einen Import. Idempotent – ein erneuter Lauf nach Abbruch liefert dasselbe Ergebnis. */
 export async function runImportJob(ctx: Ctx, payload: { importId: string }) {
   const imp = await ctx.db.get('SELECT file_name, sha256 FROM imports WHERE id = ?', payload.importId);
@@ -95,7 +117,15 @@ async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<En
   const all = await getSettings(ctx.db);
   const settings = all.import;
   const lower = fileName.toLowerCase();
-  if (JIRA_EXT.includes(path.extname(lower))) return jiraEntries(path.basename(fileName), data, all.privacy.names, settings.maxZipFiles);
+  // Ausschlussliste (F-17): ausgeschlossene Dateien erscheinen als „übersprungen“ mit dem zutreffenden Muster
+  const excluded = compileExclusions(settings.excludePatterns ?? []);
+  const skip = (p: string) => {
+    const hit = excluded(p);
+    return hit ? { path: p, skipped: `Ausgeschlossen (Ausschlussliste: „${hit}“) – übersprungen` } : null;
+  };
+  const filter = (entries: Entry[]) => entries.map((e) => (e.data || e.jira ? skip(e.path) ?? e : e));
+  if (skip(path.basename(fileName))) return [skip(path.basename(fileName))!];
+  if (JIRA_EXT.includes(path.extname(lower))) return filter(jiraEntries(path.basename(fileName), data, all.privacy.names, settings.maxZipFiles));
   if (!lower.endsWith('.zip')) return [{ path: path.basename(fileName), data }];
   const zip = await JSZip.loadAsync(data);
   const files = Object.values(zip.files).filter((f) => !f.dir);
@@ -104,6 +134,11 @@ async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<En
   for (const f of files) {
     const p = f.name.replace(/\\/g, '/').replace(/^\/+/, '');
     if (p.startsWith('__MACOSX/') || path.basename(p).startsWith('.')) continue;
+    const ex = skip(p);
+    if (ex) {
+      out.push(ex);
+      continue;
+    }
     const ext = path.extname(p).toLowerCase();
     const media = !!MEDIA_EXT[ext];
     const jira = JIRA_EXT.includes(ext) && settings.allowedExtensions.includes(ext);
@@ -120,7 +155,7 @@ async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<En
     try {
       const buf = await f.async('nodebuffer');
       if (buf.length > settings.maxEntryBytes) out.push({ path: p, error: `Datei größer als ${settings.maxEntryBytes} Bytes` });
-      else if (jira) out.push(...jiraEntries(p, buf, all.privacy.names, settings.maxZipFiles, true));
+      else if (jira) out.push(...filter(jiraEntries(p, buf, all.privacy.names, settings.maxZipFiles, true)));
       else out.push({ path: p, data: buf, media });
     } catch (e) {
       out.push({ path: p, error: `Entpacken fehlgeschlagen: ${(e as Error).message}` });

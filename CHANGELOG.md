@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.32.0 – Etappe 32 (23.10.2026)
+
+### Hinzugefügt
+- **Gliederungs-Vorschlag je Chunk (ADR-084, F-13):** bis zu drei Punkte der Gesamtgliederung mit Trefferwert und Treffer-Wörtern, nie automatisch übernommen; Filter „nur ohne Gliederungspunkt“.
+- **Kapitel ↔ Quellen (F-14):** je Gliederungspunkt das Handbuchkapitel links und die zugeordneten Quellen rechts – „im Handbuch“ oder „nicht verwendet“ –, dazu Vorschläge.
+- **Wissensnotizen (F-15):** Frage, Erkenntnis und Screenshot als eigene Quelle mit Revisionen, Rollen und Sparten; personenbezogene Daten abgewiesen oder pseudonymisiert.
+- **Ausschlussliste „nicht einlesen“ (F-17)** in den Einstellungen; ausgeschlossene Dateien erscheinen im Import als übersprungen.
+- **Zielkapitel je Dopplung (F-18):** „zusammenführen in …“ ordnet beide Textabschnitte dem Gliederungspunkt zu.
+- Migration `039_knowledge_notes.sql`; Tests T-244 … T-246, E2E T-247 (axe); Anforderungen NFR-77, NFR-78.
+
 ## 0.31.0 – Etappe 31 (23.10.2026)
 
 ### Hinzugefügt

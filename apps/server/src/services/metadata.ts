@@ -56,7 +56,7 @@ const labelDto = (r: Row) => ({
   ...(r.chunk_count !== undefined ? { chunkCount: Number(r.chunk_count), qaCount: Number(r.qa_count) } : {}),
   updatedBy: r.updated_by, updatedAt: r.updated_at,
 });
-const shortLabel = (r: Row) => ({ id: r.id, code: r.code, group: r.label_group, nameDe: r.name_de, nameEn: r.name_en, archived: !!r.archived_at });
+export const shortLabel = (r: Row) => ({ id: r.id, code: r.code, group: r.label_group, nameDe: r.name_de, nameEn: r.name_en, archived: !!r.archived_at });
 
 export function labelGroups() {
   return LABEL_GROUPS.map((g) => ({ ...g }));
@@ -133,7 +133,7 @@ async function checkLabels(ctx: Ctx, ids: unknown, opts: { forAssign: boolean })
   return list;
 }
 
-async function labelsBy(ctx: Ctx, table: 'metadata_chunk_labels' | 'metadata_qa_labels', key: 'snippet_id' | 'qa_id', ids: string[]) {
+export async function labelsBy(ctx: Ctx, table: 'metadata_chunk_labels' | 'metadata_qa_labels', key: 'snippet_id' | 'qa_id', ids: string[]) {
   const map = new Map<string, ReturnType<typeof shortLabel>[]>();
   if (!ids.length) return map;
   for (let i = 0; i < ids.length; i += 200) {
@@ -158,20 +158,20 @@ const formatOf = (sourceFormat: string | null, path: string) => {
   return ext ?? sourceFormat ?? 'markdown';
 };
 
-const chunkDto = (r: Row, labels: ReturnType<typeof shortLabel>[]) => ({
+export const chunkDto = (r: Row, labels: ReturnType<typeof shortLabel>[]) => ({
   id: r.id, seq: Number(r.seq), documentId: r.document_id, path: r.path, fileName: r.file_name, format: formatOf(r.source_format, r.path),
   revisionId: r.revision_id, revisionNo: Number(r.revision_no), chapter: r.chapter_title, subchapter: r.subchapter_title ?? null,
   headingPath: parseJson<string[]>(r.heading_path, []), kind: r.kind, text: r.text,
   lineStart: Number(r.line_start), lineEnd: Number(r.line_end), locator: parseJson<Record<string, unknown> | null>(r.locator, null), labels,
 });
 
-const CHUNK_FROM = `FROM text_snippets s
+export const CHUNK_FROM = `FROM text_snippets s
   JOIN source_revisions r ON r.id = s.revision_id
   JOIN source_documents d ON d.id = r.document_id
   JOIN chapters c ON c.id = s.chapter_id
   LEFT JOIN subchapters sc ON sc.id = s.subchapter_id`;
 
-export async function listChunks(ctx: Ctx, opts: { q?: string; labelIds?: string[]; unlabeled?: boolean; documentId?: string; format?: string; limit?: number; offset?: number } = {}) {
+export async function listChunks(ctx: Ctx, opts: { q?: string; labelIds?: string[]; unlabeled?: boolean; noOutline?: boolean; documentId?: string; format?: string; limit?: number; offset?: number } = {}) {
   const where = ['d.project_id = ?', 'r.is_current = 1', 'd.removed_at IS NULL'];
   const params: unknown[] = [ctx.projectId];
   if (opts.q?.trim()) {
@@ -196,6 +196,8 @@ export async function listChunks(ctx: Ctx, opts: { q?: string; labelIds?: string
     params.push(id);
   }
   if (opts.unlabeled) where.push('NOT EXISTS (SELECT 1 FROM metadata_chunk_labels x WHERE x.snippet_id = s.id)');
+  // ohne Gliederungspunkt (F-13): Kandidaten für Gliederungs-Vorschläge
+  if (opts.noOutline) where.push("NOT EXISTS (SELECT 1 FROM metadata_chunk_labels x JOIN metadata_labels l ON l.id = x.label_id WHERE x.snippet_id = s.id AND l.label_group = 'outline')");
   const limit = Math.min(Math.max(Math.trunc(opts.limit ?? 50), 1), 200);
   const offset = Math.max(Math.trunc(opts.offset ?? 0), 0);
   const total = await ctx.db.get<{ n: number }>(`SELECT COUNT(*) AS n ${CHUNK_FROM} WHERE ${where.join(' AND ')}`, ...params);

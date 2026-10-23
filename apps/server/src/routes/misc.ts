@@ -6,6 +6,7 @@ import { RULE_LABELS } from '../domain/contradictions.js';
 import {
   BLOCK_MODES, CHAPTER_SECTIONS, DECISIONS, DIVISIONS, EVIDENCE_STATUSES, FINDING_TYPES, PERMISSIONS, ROLES, SEVERITIES,
 } from '../domain/reference.js';
+import { cleanExcludePatterns, MAX_EXCLUDE_PATTERNS } from '../domain/exclude.js';
 import { detectPrivacy, pseudonymize } from '../domain/privacy.js';
 import { badRequest } from '../problem.js';
 import { CONTENT_TYPES, createExport, downloadExport, listExports } from '../services/exports.js';
@@ -92,6 +93,11 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
     if (names !== undefined) {
       if (!Array.isArray(names) || names.length > 1000 || names.some((n: unknown) => typeof n !== 'string' || !n.trim() || n.length > 100)) throw badRequest('privacy.names muss eine Liste von höchstens 1000 Namen (je 1–100 Zeichen) sein.');
       body.privacy = { names: [...new Set(names.map((n: string) => n.trim()))] };
+    }
+    if (body.import?.excludePatterns !== undefined) {
+      const patterns = cleanExcludePatterns(body.import.excludePatterns);
+      if (!patterns) throw badRequest(`import.excludePatterns muss eine Liste von höchstens ${MAX_EXCLUDE_PATTERNS} Mustern (je höchstens 200 Zeichen) sein.`);
+      body.import = { ...body.import, excludePatterns: patterns };
     }
     const mins = body.rewrite?.minSupport;
     if (mins !== undefined && (typeof mins !== 'number' || mins < 0.1 || mins > 1)) throw badRequest('rewrite.minSupport muss eine Zahl zwischen 0,1 und 1 sein.');

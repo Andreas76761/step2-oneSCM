@@ -775,3 +775,17 @@ div.reader-lang-note p { margin: 0; }
 /* Releaseletter (ADR-083) */
 .rl-findings { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
 .rl-findings > li { border-left: 3px solid var(--border); padding: 4px 8px; }
+/* Gliederungs-Vorschlag, Kapitel ↔ Quellen, Wissensnotizen (ADR-084) */
+.md-suggest { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+.md-suggest-item { display: inline-flex; align-items: center; gap: 4px; border: 1px dashed var(--border); border-radius: 6px; padding: 2px 6px; }
+.oq-layout { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 12px; align-items: start; }
+.oq-list { list-style: none; padding: 0; margin: 0; max-height: 70vh; overflow: auto; }
+.oq-list li button { width: 100%; text-align: left; display: flex; justify-content: space-between; gap: 6px; padding: 4px 6px; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; border-radius: 6px; min-height: 28px; }
+.oq-list li button[aria-current="true"] { background: var(--info-bg); font-weight: 600; }
+.oq-list li button:focus-visible { outline: 3px solid var(--focus, #f59e0b); }
+.oq-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.oq-cols > section { min-width: 0; }
+.oq-block { border-left: 3px solid var(--border); padding: 2px 8px; margin: 6px 0; }
+.oq-chunk { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin: 6px 0; }
+.oq-chunk.used { border-left: 3px solid var(--ok, #15803d); }
+@media (max-width: 900px) { .oq-layout, .oq-cols { grid-template-columns: 1fr; } }

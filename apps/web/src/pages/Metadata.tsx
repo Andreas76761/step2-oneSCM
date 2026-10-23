@@ -181,11 +181,12 @@ export function MetadataChunksPage() {
   const [format, setFormat] = useState('');
   const [filterLabels, setFilterLabels] = useState<string[]>([]);
   const [unlabeled, setUnlabeled] = useState(false);
+  const [noOutline, setNoOutline] = useState(false);
   const [page, setPage] = useState(1);
   const [view, setView] = useState<'table' | 'headings'>('headings');
   const [selected, setSelected] = useState<string[]>([]);
   const [bulkLabel, setBulkLabel] = useState('');
-  const path = `/metadata/chunks${qs({ q: q.trim() || undefined, format, labels: filterLabels.join(',') || undefined, unlabeled: unlabeled || undefined, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE })}`;
+  const path = `/metadata/chunks${qs({ q: q.trim() || undefined, format, labels: filterLabels.join(',') || undefined, unlabeled: unlabeled || undefined, noOutline: noOutline || undefined, limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE })}`;
   const chunks = useLoad<{ total: number; items: any[] }>(path, [path]);
   const items = chunks.data?.items ?? [];
   const resetPage = <T,>(fn: (v: T) => void) => (v: T) => {
@@ -219,6 +220,18 @@ export function MetadataChunksPage() {
   const toggle = (id: string) => setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
 
   const chunkLabels = (c: any) => c.labels.map((l: Label) => <LabelTag key={l.id} label={l} lang={lang} groups={groups} onRemove={canEdit ? () => change([c.id], { remove: [l.id] }) : undefined} />);
+  // Gliederungs-Vorschlag (F-13): nur Vorschlag mit Trefferwert, übernommen wird von Hand
+  const suggest = (c: any) => c.outlineSuggestions?.length > 0 && (
+    <div className="md-suggest small">
+      <span className="muted">Gliederung, Vorschlag:</span>
+      {c.outlineSuggestions.map((s: any) => (
+        <span key={s.labelId} className="md-suggest-item" title={`Treffer: ${s.matched.join(', ')}`}>
+          {s.name} <span className="muted">({Math.round(s.score * 100)} %)</span>
+          {canEdit && <button className="btn small" aria-label={`${s.name} für Chunk #${c.seq} übernehmen`} onClick={() => change([c.id], { add: [s.labelId] })}>Übernehmen</button>}
+        </span>
+      ))}
+    </div>
+  );
   const addOne = (c: any) => canEdit && <LabelSelect labels={all} groups={groups} lang={lang} value="" exclude={c.labels.map((l: Label) => l.id)} ariaLabel={`Label für Chunk #${c.seq} hinzufügen`} placeholder="+ Label …" onChange={(id) => id && change([c.id], { add: [id] })} />;
 
   return (
@@ -231,6 +244,7 @@ export function MetadataChunksPage() {
             {Object.keys(FORMAT_LABEL).map((f) => <option key={f} value={f}>{formatText(f)}</option>)}
           </select>
           <label className="small"><input type="checkbox" checked={unlabeled} onChange={(e) => resetPage(setUnlabeled)(e.target.checked)} /> nur ohne Label</label>
+          <label className="small"><input type="checkbox" checked={noOutline} onChange={(e) => resetPage(setNoOutline)(e.target.checked)} /> nur ohne Gliederungspunkt</label>
           <select value={view} onChange={(e) => setView(e.target.value as 'table' | 'headings')} aria-label="Ansicht">
             <option value="headings">Je Überschrift</option>
             <option value="table">Tabelle</option>
@@ -266,7 +280,7 @@ export function MetadataChunksPage() {
                   <td className="small">{formatText(c.format)}<br />{c.path}<br /><span className="muted">{locatorText(c)}</span></td>
                   <td className="small">{headingText(c)}</td>
                   <td className="md-text">{c.text}</td>
-                  <td>{chunkLabels(c)}{addOne(c)}</td>
+                  <td>{chunkLabels(c)}{addOne(c)}{suggest(c)}</td>
                 </tr>
               ))}
             </tbody>
@@ -284,6 +298,7 @@ export function MetadataChunksPage() {
                   </div>
                   <p className="md-text">{c.text}</p>
                   <div>{chunkLabels(c)}{addOne(c)}</div>
+                  {suggest(c)}
                 </article>
               ))}
             </section>

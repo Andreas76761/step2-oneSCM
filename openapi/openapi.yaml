@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.31.0
+  version: 0.32.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3816,14 +3816,15 @@ paths:
   /metadata/chunks:
     get:
       operationId: listMetadataChunks
-      summary: 'Chunks der aktuellen Quelldateien mit Überschrift, Fundstelle und Labels; Suche und Filter (ADR-079)'
+      summary: 'Chunks der aktuellen Quelldateien mit Überschrift, Fundstelle und Labels; Suche und Filter; Gliederungs-Vorschläge für Chunks ohne Gliederungspunkt (ADR-079, ADR-084)'
       tags: [Metadaten]
-      x-requirements: [NFR-67]
+      x-requirements: [NFR-67, NFR-77]
       x-extension: true
       parameters:
         - { name: q, in: query, schema: { type: string }, description: 'Teiltreffer im Text' }
         - { name: labels, in: query, schema: { type: string }, description: 'Label-IDs, kommagetrennt – alle müssen zugewiesen sein' }
         - { name: unlabeled, in: query, schema: { type: boolean } }
+        - { name: noOutline, in: query, schema: { type: boolean }, description: 'nur Chunks ohne Gliederungspunkt (F-13)' }
         - { name: documentId, in: query, schema: { type: string } }
         - { name: format, in: query, schema: { type: string }, description: 'markdown | html | docx | pptx | pdf | mp4' }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
@@ -4180,3 +4181,122 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'text/markdown bzw. application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
         '400': { $ref: '#/components/responses/Problem' }
+  /metadata/outline-coverage:
+    get:
+      operationId: getOutlineCoverage
+      summary: 'Je Punkt der Gesamtgliederung: zugeordnete Chunks, davon im Handbuch verwendet, offene Vorschläge, Ordner (ADR-084, F-13/F-14)'
+      tags: [Metadaten]
+      x-requirements: [NFR-77]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chunks, unassigned, minScore, items: [{ id, code, nameDe, nameEn, folder, chunks, used, suggestions }] }' }
+  /metadata/outline/{labelId}:
+    get:
+      operationId: getOutlineSources
+      summary: 'Kapitel ↔ Quellen: Handbuchkapitel (gleicher Titel oder über Quellen) und zugeordnete Chunks mit „im Handbuch verwendet“, dazu Vorschläge – nie automatisch übernommen (ADR-084, F-14)'
+      tags: [Metadaten]
+      x-requirements: [NFR-77]
+      x-extension: true
+      parameters:
+        - { name: labelId, in: path, required: true, schema: { type: string } }
+        - { name: minScore, in: query, required: false, schema: { type: number, minimum: 0.1, maximum: 1, default: 0.25 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ outline, handbook: [{ chapterId, title, match, version, blocks, fromAssigned }], chunks: [… usedInHandbook], suggestions: [… score, matched], summary }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /knowledge-notes:
+    get:
+      operationId: listKnowledgeNotes
+      summary: 'Wissensnotizen mit Quelle, Revisionen und Chunks (ADR-084, F-15)'
+      tags: [Metadaten]
+      x-requirements: [NFR-78]
+      x-extension: true
+      parameters:
+        - { name: includeRemoved, in: query, required: false, schema: { type: boolean } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, question, insight, roles, divisions, confirmed, image, path, status, documentId, revisions, chunks, … }]' }
+    post:
+      operationId: createKnowledgeNote
+      summary: 'Notiz als eigene Quelle wissensnotizen/<id>.md einlesen; Screenshot mit Pflicht-Alternativtext; personenbezogene Daten werden abgewiesen oder pseudonymisiert (Berechtigung edit, ADR-084)'
+      tags: [Metadaten]
+      x-requirements: [NFR-78]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [question, insight], properties: { question: { type: string, minLength: 5, maxLength: 300 }, insight: { type: string, minLength: 5, maxLength: 20000 }, roles: { type: array, items: { type: string, enum: [dealer, market, mo, hq, all] } }, divisions: { type: array, items: { type: string, enum: [car, van, all] } }, confirmed: { type: boolean }, image: { type: object, properties: { name: { type: string }, data: { type: string, description: 'Base64 oder Data-URL, bis 5 MB' } } }, imageAlt: { type: string }, pseudonymize: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Notiz' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /knowledge-notes/{noteId}:
+    patch:
+      operationId: updateKnowledgeNote
+      summary: 'Notiz ändern – neue Revision derselben Quelle; image null entfernt den Screenshot (Berechtigung edit, ADR-084)'
+      tags: [Metadaten]
+      x-requirements: [NFR-78]
+      x-extension: true
+      parameters: [{ name: noteId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Notiz' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: removeKnowledgeNote
+      summary: 'Notiz entfernen – die Quelle gilt als entfernt, Historie bleibt (Berechtigung edit, ADR-084)'
+      tags: [Metadaten]
+      x-requirements: [NFR-78]
+      x-extension: true
+      parameters: [{ name: noteId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'entfernt' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /duplicate-targets:
+    get:
+      operationId: listDuplicateTargets
+      summary: 'Zielkapitel je Dopplung (Gliederungspunkt) oder Vorschlag (ADR-084, F-18)'
+      tags: [Qualität]
+      x-requirements: [NFR-77]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ findingId, target: { labelId, code, nameDe, note, decidedBy, decidedAt } | null, suggestion | null }]' }
+  /duplicate-targets/{findingId}:
+    put:
+      operationId: setDuplicateTarget
+      summary: 'Zielkapitel setzen; beide Textabschnitte erhalten das Gliederungs-Label (Berechtigung edit, ADR-084)'
+      tags: [Qualität]
+      x-requirements: [NFR-77]
+      x-extension: true
+      parameters: [{ name: findingId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [outlineLabelId], properties: { outlineLabelId: { type: string }, note: { type: [string, 'null'], maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Zielkapitel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: removeDuplicateTarget
+      summary: 'Zielkapitel entfernen; Label-Zuordnungen bleiben (Berechtigung edit, ADR-084)'
+      tags: [Qualität]
+      x-requirements: [NFR-77]
+      x-extension: true
+      parameters: [{ name: findingId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'entfernt' }
+        '404': { $ref: '#/components/responses/Problem' }

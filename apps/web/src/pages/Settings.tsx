@@ -9,9 +9,11 @@ export function SettingsPage() {
   const [draft, setDraft] = useState<any | null>(null);
   // Namensliste roh bearbeiten (Leerzeichen, neue Zeilen); bereinigt wird erst beim Speichern
   const [namesText, setNamesText] = useState('');
+  const [excludeText, setExcludeText] = useState('');
   useEffect(() => {
     setDraft(s.data ? structuredClone(s.data) : null);
     setNamesText((s.data?.privacy?.names ?? []).join('\n'));
+    setExcludeText((s.data?.import?.excludePatterns ?? []).join('\n'));
   }, [s.data]);
   if (!draft) return <Page title="Einstellungen"><ErrorBox error={s.error} /></Page>;
   const a = draft.analysis;
@@ -19,7 +21,7 @@ export function SettingsPage() {
 
   const save = async () => {
     try {
-      await put('/settings', { analysis: draft.analysis, import: draft.import, readability: draft.readability, rewrite: draft.rewrite, semantic: draft.semantic, privacy: { names: namesText.split('\n').map((x) => x.trim()).filter(Boolean) } });
+      await put('/settings', { analysis: draft.analysis, import: { ...draft.import, excludePatterns: excludeText.split('\n').map((x) => x.trim()).filter(Boolean) }, readability: draft.readability, rewrite: draft.rewrite, semantic: draft.semantic, privacy: { names: namesText.split('\n').map((x) => x.trim()).filter(Boolean) } });
       notify('Einstellungen gespeichert.');
       s.reload();
     } catch (e) {
@@ -81,6 +83,10 @@ export function SettingsPage() {
           <label className="block">Erlaubte Endungen <input value={draft.import.allowedExtensions.join(', ')} onChange={(e) => setDraft({ ...draft, import: { ...draft.import, allowedExtensions: e.target.value.split(',').map((x: string) => x.trim()).filter(Boolean) } })} /></label>
           <label className="block">Max. Uploadgröße (MB) <input type="number" value={Math.round(draft.import.maxUploadBytes / 1048576)} onChange={(e) => setDraft({ ...draft, import: { ...draft.import, maxUploadBytes: Number(e.target.value) * 1048576 } })} /></label>
           <label className="block">Max. Dateien je ZIP <input type="number" value={draft.import.maxZipFiles} onChange={(e) => setDraft({ ...draft, import: { ...draft.import, maxZipFiles: Number(e.target.value) } })} /></label>
+          <label className="block">Nicht einlesen – ein Muster je Zeile (z. B. *.tmp, ~$*, Archiv/**)
+            <textarea id="exclude-patterns" rows={3} value={excludeText} onChange={(e) => setExcludeText(e.target.value)} />
+          </label>
+          <p className="small muted">* steht für beliebige Zeichen, ** für beliebige Ordner. Ausgeschlossene Dateien erscheinen im Import als „übersprungen“ mit dem Muster.</p>
         </Card>
         <Card title="Lesbarkeit">
           <label className="block">Max. Wörter je Satz <input type="number" value={draft.readability.maxSentenceWords} onChange={(e) => setDraft({ ...draft, readability: { maxSentenceWords: Number(e.target.value) } })} /></label>

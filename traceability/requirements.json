@@ -875,5 +875,23 @@
     "documentation": [
       "docs/adr/ADR-083-releaseletter-lektorat.md"
     ]
+  },
+  {
+    "id": "NFR-77",
+    "title": "Gliederungs-Vorschlag je Chunk mit Trefferwert (nie automatisch), Kapitel ↔ Quellen je Gliederungspunkt, Zielkapitel je Dopplung",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-084-gliederung-wissen.md"
+    ]
+  },
+  {
+    "id": "NFR-78",
+    "title": "Wissensnotizen als eigene Quelle mit Screenshot und Revisionen; Ausschlussliste „nicht einlesen“ beim Import",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-084-gliederung-wissen.md"
+    ]
   }
 ]

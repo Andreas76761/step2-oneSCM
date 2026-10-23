@@ -1615,5 +1615,43 @@
       "NFR-75",
       "NFR-76"
     ]
+  },
+  {
+    "id": "T-244",
+    "title": "Ausschlussliste „nicht einlesen“: Muster für Dateinamen und Ordner, im ZIP und als Einzeldatei, Pflege nur durch die Administration",
+    "file": "apps/server/test/stage32.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-78"
+    ]
+  },
+  {
+    "id": "T-245",
+    "title": "Gliederungs-Vorschlag je Chunk mit Trefferwert (nie automatisch), Übersicht je Gliederungspunkt, Kapitel ↔ Quellen zweispaltig",
+    "file": "apps/server/test/stage32.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-77"
+    ]
+  },
+  {
+    "id": "T-246",
+    "title": "Wissensnotizen als eigene Quelle mit Screenshot und Revisionen, Datenschutz; Zielkapitel je Dopplung",
+    "file": "apps/server/test/stage32.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-77",
+      "NFR-78"
+    ]
+  },
+  {
+    "id": "T-247",
+    "title": "Wissensnotiz, Gliederungs-Vorschlag übernehmen, Kapitel ↔ Quellen, Zielkapitel, Ausschlussliste in der Oberfläche (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-77",
+      "NFR-78"
+    ]
   }
 ]
