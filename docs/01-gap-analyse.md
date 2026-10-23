@@ -161,6 +161,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.35 Stand nach Etappe 33 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Bildarchiv: Bildnummer, Merkmale, Prüfregeln, Bildabdeckung, Versionen, Platzhalter, Zwischenablage (F-20, F-21, F-23, NFR-79) | ✅ ([ADR-085](adr/ADR-085-bilder-ausgabe.md)) |
+| Quick Guide, One Pager, Lesefassung, Wasserzeichen, Übergänge „Weiter mit …“ (F-27, F-28, F-29, NFR-80) | ✅ ([ADR-085](adr/ADR-085-bilder-ausgabe.md)) |
+| Offen | F-22, F-24, F-30 (optional), F-25 mit M2, F-26 mit M6; Etappen M2 (PPTX/PDF, Beispieldateien nötig) bis M7 |
+
 ## 1.34 Stand nach Etappe 32 (23.10.2026)
 
 | Punkt | Ergebnis |

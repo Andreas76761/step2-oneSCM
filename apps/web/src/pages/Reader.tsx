@@ -243,6 +243,59 @@ function Marked({ text, words }: { text: string; words: string[] }) {
   return <>{text.split(re).map((p, i) => (i % 2 ? <mark key={i}>{p}</mark> : p))}</>;
 }
 
+/**
+ * „Weiter mit …“ am Kapitelende (ADR-085, F-29): gepflegter Übergangstext und Folgekapitel; die Redaktion pflegt beides hier.
+ * Ohne Eintrag gilt das nächste Kapitel der Reihenfolge (Schaltfläche unten).
+ */
+function Transition({ chapterId, canEdit, chapters, withQ }: { chapterId: string; canEdit: boolean; chapters: { id: string; title: string }[]; withQ: (id: string) => string }) {
+  const { t } = useReaderText();
+  const { notify } = useApp();
+  const tr = useLoad<any>(`/chapter-transitions/${chapterId}`, [chapterId]);
+  const [edit, setEdit] = useState<{ nextChapterId: string; text: string } | null>(null);
+  useEffect(() => setEdit(null), [chapterId]);
+  const d = tr.data;
+  const next = d?.next && chapters.find((c) => c.id === d.next.chapterId);
+  const save = async (body: any, method: 'PUT' | 'DELETE') => {
+    try {
+      await api(method, `/chapter-transitions/${chapterId}`, method === 'PUT' ? body : undefined);
+      notify(method === 'PUT' ? 'Übergang gespeichert.' : 'Übergang entfernt – es gilt das nächste Kapitel.');
+      setEdit(null);
+      tr.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  if (!d) return null;
+  return (
+    <>
+      {d.explicit && next && (
+        <aside className="reader-transition" aria-label={t('continueWith')}>
+          <Link to={withQ(next.id)}><strong>{t('continueWith')} „{next.title}“</strong> →</Link>
+          {d.text && <p className="small" lang="de">{d.text}</p>}
+        </aside>
+      )}
+      {canEdit && !edit && <p className="no-print" lang="de"><button type="button" className="btn small ghost" onClick={() => setEdit({ nextChapterId: d.nextChapterId ?? '', text: d.text ?? '' })}>{d.explicit ? 'Übergang bearbeiten' : 'Übergang „Weiter mit …“ pflegen'}</button></p>}
+      {canEdit && edit && (
+        <fieldset className="reader-transition-edit no-print" lang="de">
+          <legend>Übergang zum nächsten Kapitel</legend>
+          <label className="block">Folgekapitel
+            <select value={edit.nextChapterId} onChange={(e) => setEdit({ ...edit, nextChapterId: e.target.value })}>
+              <option value="">nächstes Kapitel der Reihenfolge</option>
+              {chapters.filter((c) => c.id !== chapterId).map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+            </select>
+          </label>
+          <label className="block">Übergangstext <input value={edit.text} maxLength={500} placeholder="z. B. Nach dem Anlegen prüft MO den Antrag." onChange={(e) => setEdit({ ...edit, text: e.target.value })} /></label>
+          <div className="row-actions">
+            <button type="button" className="btn primary small" onClick={() => save({ nextChapterId: edit.nextChapterId || null, text: edit.text || null }, 'PUT')}>Speichern</button>
+            {d.explicit && <button type="button" className="btn small" onClick={() => save(null, 'DELETE')}>Entfernen</button>}
+            <button type="button" className="btn small ghost" onClick={() => setEdit(null)}>Abbrechen</button>
+          </div>
+        </fieldset>
+      )}
+    </>
+  );
+}
+
 /** „Siehe auch“ und passende häufige Fragen unter einem Kapitel (ADR-069); Redaktion pflegt Verweise direkt hier */
 function Related({ chapterId, drafts, lang, canEdit, chapters, withQ }: { chapterId: string; drafts: boolean; lang: string; canEdit: boolean; chapters: { id: string; title: string }[]; withQ: (id: string) => string }) {
   const { notify } = useApp();
@@ -646,6 +699,7 @@ export function ReaderPage() {
               <div lang={uiLang}><ChapterNote chapterId={current.id} note={bookmarkNote} onSaved={() => mine.reload()} /></div>
               <LanguageNote version={version.data} chapterId={current.id} requested={translationRequested} onRequested={() => mine.reload()} />
               <ChapterContent version={version.data} />
+              <Transition chapterId={current.id} canEdit={canEdit} chapters={list.map((c) => ({ id: c.id, title: titleOf(c.id, c.title) }))} withQ={withQ} />
               <Related chapterId={current.id} drafts={drafts} lang={lang} canEdit={canEdit} chapters={list.map((c) => ({ id: c.id, title: titleOf(c.id, c.title) }))} withQ={withQ} />
               <Feedback chapterId={current.id} versionId={version.data.id} />
               <div className="row-actions reader-nav no-print">
@@ -742,6 +796,8 @@ export function PrintPage() {
   // „Siehe auch“ und FAQ für alle gedruckten Kapitel – Standardhandbuch oder die Kapitel der gewählten Variante (ADR-072)
   const related = useLoad<Record<string, any>>(`/reader/related?drafts=${drafts}${lang !== 'de' ? `&lang=${lang}` : ''}${outlineId ? `&outline=${encodeURIComponent(outlineId)}` : ''}`, [outlineId, drafts, lang]);
   const layout = useLoad<any>('/layout');
+  // gepflegte Übergänge „Weiter mit …“ (F-29); gedruckt nur, wenn das Folgekapitel mitgedruckt wird
+  const transitions = useLoad<any[]>('/chapter-transitions');
   const [versions, setVersions] = useState<any[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const setParam = (k: string, v: string) => {
@@ -770,6 +826,12 @@ export function PrintPage() {
     const r = related.data?.[chapterId];
     return r ? [...r.manual, ...r.automatic].filter((x: any) => numberOf.has(x.chapterId)) : [];
   };
+  const transitionOf = (chapterId: string) => {
+    const tr = transitions.data?.find((x) => x.chapterId === chapterId);
+    return tr?.next && numberOf.has(tr.next.chapterId) ? { ...tr, n: numberOf.get(tr.next.chapterId)! } : null;
+  };
+  // Wasserzeichen „ENTWURF“ (F-28), sobald ein gedrucktes Kapitel nicht freigegeben ist
+  const hasDrafts = drafts && printed.some((v) => v.status !== 'approved');
   const printedFaq = (() => {
     const seen = new Map<string, any>();
     for (const v of printed) for (const f of related.data?.[v.chapterId]?.faq ?? []) if (!seen.has(f.id)) seen.set(f.id, f);
@@ -796,7 +858,7 @@ export function PrintPage() {
     preloadMarkdown().then(() => setMarkdownReady(true), () => setMarkdownReady(true));
   }, []);
   useEffect(() => setLogoDone(false), [layout.data?.logoSha]);
-  const ready = !!versions && !!projects.data && !!releases.data && !!layout.data && !!outlines.data && (!!related.data || !!related.error) && markdownReady && (!layout.data?.logoSha || logoDone);
+  const ready = !!versions && !!projects.data && !!releases.data && !!layout.data && !!outlines.data && (!!related.data || !!related.error) && (!!transitions.data || !!transitions.error) && markdownReady && (!layout.data?.logoSha || logoDone);
   const print = async () => {
     // letzte Absicherung: warten, bis kein Text mehr auf den Renderer wartet (höchstens 3 s)
     for (let i = 0; i < 60 && document.querySelector('.print-book .md-pending'); i++) await new Promise((r) => setTimeout(r, 50));
@@ -857,7 +919,8 @@ export function PrintPage() {
       <p className="small muted no-print">Tipp: Im Druckdialog „Als PDF speichern“ wählen. Das Handbuch beginnt mit einem Deckblatt{lay?.companyName || lay?.logoSha ? ' im Firmen-Layout' : ''}; jedes Kapitel beginnt auf einer neuen Seite, unten steht „Seite X von Y“. Mit einer Rolle erscheinen nur allgemeine und für diese Rolle bestimmte Inhalte.</p>
       {!versions ? <p className="muted">Lade …</p> : !printed.length ? <Empty>{versions.length && role ? `Keine Inhalte für die Rolle „${roleLabel}“.` : 'Noch keine freigegebenen Kapitel.'}</Empty> : (
         <ReaderTextProvider lang={lang}>
-        <div className="print-book" lang={rt.uiLang} style={accent ? ({ '--print-accent': accent } as React.CSSProperties) : undefined}>
+        {hasDrafts && <div className="print-watermark" aria-hidden="true">{t('draftWatermark')}</div>}
+        <div className={`print-book${hasDrafts ? ' print-draft' : ''}`} lang={rt.uiLang} style={accent ? ({ '--print-accent': accent } as React.CSSProperties) : undefined}>
           <section className="print-cover" aria-label={t('cover')}>
             {lay?.logoSha && <Logo sha={lay.logoSha} alt={`Logo ${lay.companyName ?? ''}`.trim()} onDone={() => setLogoDone(true)} />}
             <p className="print-cover-kicker">{lay?.companyName ? `${lay.companyName} · ` : ''}{t('manual')}</p>
@@ -885,6 +948,10 @@ export function PrintPage() {
               <h2 className="reader-title">{numbered(n + 1, v.title)}{v.status !== 'approved' && <span className="tag small">{t('draft')}</span>}</h2>
               {v.fallback && <p className="small muted">{v.fallback === 'outdated' ? t('printOutdated') : t('printMissing')}</p>}
               <ChapterContent version={v} role={role || undefined} />
+              {transitionOf(v.chapterId) && (() => {
+                const tr = transitionOf(v.chapterId)!;
+                return <p className="print-transition"><a href={`#k-${printed[tr.n - 1].id}`}><strong>{t('continueWith')}</strong> {t('chapterN', { n: tr.n })} {t('quote', { x: tr.next.title.replace(/^\d+(\.\d+)*\.?\s+/, '') })}</a>{tr.text && <> – <span lang="de">{tr.text}</span></>}</p>;
+              })()}
               {seeAlso(v.chapterId).length > 0 && (
                 <p className="print-see"><strong>{t('printSeeAlso')}</strong> {seeAlso(v.chapterId).map((x: any, i: number) => (
                   <span key={x.chapterId}>{i > 0 && '; '}<a href={`#k-${printed[numberOf.get(x.chapterId)! - 1].id}`}>{t('chapterN', { n: numberOf.get(x.chapterId)! })} {t('quote', { x: x.title.replace(/^\d+(\.\d+)*\.?\s+/, '') })}</a></span>

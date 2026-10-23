@@ -692,6 +692,17 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .term-lang { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 4px 0; }
 .reader-lang-note { background: var(--warn-bg); border-radius: 8px; padding: 6px 10px; }
 .print-see { font-size: 0.95em; border-top: 1px solid var(--border); margin-top: 12px; padding-top: 6px; }
+/* Übergang „Weiter mit …“ (ADR-085, F-29) */
+.reader-transition { border-left: 4px solid var(--primary, #1f6feb); background: var(--surface-2); padding: 8px 12px; margin: 16px 0 8px; border-radius: 4px; }
+.reader-transition p { margin: 4px 0 0; }
+.reader-transition-edit { border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin: 8px 0; }
+.print-transition { font-size: 0.95em; margin-top: 12px; }
+/* Wasserzeichen „ENTWURF“ beim Druck mit Entwürfen (F-28): fest positioniert → auf jeder gedruckten Seite */
+.print-watermark { display: none; }
+@media print {
+  .print-watermark { display: block; position: fixed; top: 40%; left: 0; right: 0; text-align: center; transform: rotate(-30deg); font-size: 110pt; font-weight: 700; letter-spacing: 0.1em; color: rgba(180, 0, 0, 0.1); z-index: 0; pointer-events: none; }
+  .print-draft { position: relative; z-index: 1; }
+}
 .bookmark-list li { border-bottom: 1px solid var(--border); padding: 10px 0; display: grid; gap: 6px; }
 .bookmark-list textarea { width: 100%; }
 .bookmark-note { font-style: italic; }
@@ -789,3 +800,12 @@ div.reader-lang-note p { margin: 0; }
 .oq-chunk { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin: 6px 0; }
 .oq-chunk.used { border-left: 3px solid var(--ok, #15803d); }
 @media (max-width: 900px) { .oq-layout, .oq-cols { grid-template-columns: 1fr; } }
+
+/* Bildarchiv (ADR-085) */
+.ia-list { list-style: none; margin: 0; padding: 0; max-height: 70vh; overflow: auto; }
+.ia-list li + li { border-top: 1px solid var(--border); }
+.ia-list button { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; padding: 8px 4px; color: inherit; font: inherit; cursor: pointer; }
+.ia-list button[aria-current='true'] { background: var(--surface-2); outline: 2px solid var(--primary); outline-offset: -2px; }
+.ia-thumb { display: inline-block; width: 96px; height: 60px; object-fit: contain; background: var(--surface-2); border: 1px solid var(--border); flex: none; }
+.ia-thumb.ia-preview { width: 100%; height: auto; max-height: 260px; }
+.ia-meta { display: block; }

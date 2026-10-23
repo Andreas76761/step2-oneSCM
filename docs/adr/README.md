@@ -86,3 +86,4 @@
 | [ADR-082](ADR-082-zuordnung-domaene-ordner.md) | Zuordnung Domäne → Gliederungspunkt → Ordner, Menüpunkte Contract Management 3.1–3.5 | akzeptiert, umgesetzt |
 | [ADR-083](ADR-083-releaseletter-lektorat.md) | Releaseletter und Release-Abgleich aus Jira-Tickets, Warnhinweis-Schema, Übersetzungsprüfung, feste Übersetzungen | akzeptiert, umgesetzt |
 | [ADR-084](ADR-084-gliederung-wissen.md) | Gliederungs-Vorschlag je Chunk, Kapitel ↔ Quellen, Wissensnotizen, Ausschlussliste, Zielkapitel je Dopplung | akzeptiert, umgesetzt |
+| [ADR-085](ADR-085-bilder-ausgabe.md) | Bildarchiv mit Bildnummer, Versionen und Platzhaltern; Quick Guide, One Pager, Lesefassung, Übergänge | akzeptiert, umgesetzt |

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.32.0
+  version: 0.33.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -362,6 +362,9 @@ components:
         format: { type: string, enum: [md, html, pdf, docx, json], default: md, description: 'docx: Word mit Formatvorlagen und Firmen-Layout (ADR-038)' }
         outlineId: { type: string, description: 'Handbuch-Variante (ADR-034): freigegebene Kapitel dieser Gliederung, Filter aus ihrer Variante' }
         appendices: { type: boolean, description: 'Verzeichnisse (Abkürzungen, Glossar, Bildverzeichnis, FAQ) anhängen; Standard bei Varianten: true' }
+        profile: { type: string, enum: [full, quickguide, onepager], default: full, description: 'Ausgabeprofil (ADR-085, F-27): Quick Guide = Voraussetzungen, Schritte, Ergebnis, Warnungen; One Pager = Zweck kurz, Schritte, Warnungen; Kapitel ohne Schritte entfallen' }
+        reading: { type: boolean, default: false, description: 'Lesefassung (F-28): ohne Badges, Versionszeile und Abschnitt „Quellen- und Freigabestatus“' }
+        transitions: { type: boolean, description: '„Weiter mit …“ am Kapitelende (F-29, nur profile full): fehlt = gepflegte Übergänge, true = zusätzlich automatisch das nächste exportierte Kapitel, false = keine' }
 security:
   - oidcBearer: []
   - demoUser: []
@@ -1694,7 +1697,7 @@ paths:
       operationId: createExport
       summary: Freigegebene Kapitel rollen-/sparten-/markt-/releasegefiltert exportieren
       tags: [Export]
-      x-requirements: [US-010, US-012, US-014]
+      x-requirements: [US-010, US-012, US-014, NFR-80]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExportRequest' } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -1997,14 +2000,18 @@ paths:
   /media/{mediaSha}:
     get:
       operationId: getMedia
-      summary: Bild ausliefern (nur eigenes Projekt, nosniff, unveränderlich zwischenspeicherbar)
+      summary: 'Bild ausliefern (nur eigenes Projekt, nosniff) – die neueste Fassung (ADR-085), mit ?original=1 genau die angefragte; ETag = Kennung der Fassung, Cache-Control private, no-cache'
       tags: [Medien]
-      x-requirements: [NFR-16]
+      x-requirements: [NFR-16, NFR-79]
       x-extension: true
-      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string, pattern: '^[a-f0-9]{64}$' } }]
+      parameters:
+        - { name: mediaSha, in: path, required: true, schema: { type: string, pattern: '^[a-f0-9]{64}$' } }
+        - { name: original, in: query, required: false, schema: { type: string, enum: ['1'] }, description: 'genau diese Fassung statt der neuesten' }
+        - { name: If-None-Match, in: header, required: false, schema: { type: string } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Bilddaten, content: { image/png: {}, image/jpeg: {}, image/gif: {}, image/webp: {} }' }
+        '304': { description: 'unverändert (ETag passt)' }
         '404': { $ref: '#/components/responses/Problem' }
     patch:
       operationId: setMediaTitle
@@ -4300,3 +4307,124 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '204': { description: 'entfernt' }
         '404': { $ref: '#/components/responses/Problem' }
+  /image-archive:
+    get:
+      operationId: listImageArchive
+      summary: 'Bildarchiv (ADR-085, F-20): feste Bildnummer, Merkmale, Fassungen, Verwendung und Prüfregeln je Bild; q sucht in Nummer, Titel, Menüpunkt, Release'
+      tags: [Medien]
+      x-requirements: [NFR-79]
+      x-extension: true
+      parameters:
+        - { name: q, in: query, required: false, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ sha, imageNo, title, currentSha, placeholder, language, roles, divisions, markets, release, navigation, versions, usedIn, sourceUses, checks }], summary: { images, placeholders, withErrors, withWarnings, versioned } }' }
+  /image-archive/coverage:
+    get:
+      operationId: getImageCoverage
+      summary: 'Bildabdeckung je Kapitel (F-20): Bilder, Platzhalter, fehlende Alternativtexte, Schrittabsätze mit Bild in der neuesten Version'
+      tags: [Medien]
+      x-requirements: [NFR-79]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ chapterId, title, status, images, placeholders, missingAlt, stepBlocks, stepBlocksWithImage, coverage }], summary }' }
+  /image-archive/placeholders:
+    post:
+      operationId: createImagePlaceholder
+      summary: 'Platzhalterbild (F-21) mit reservierter nächster Bildnummer anlegen (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-79]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [title], properties: { title: { type: string, minLength: 3, maxLength: 200 }, roles: { type: array, items: { type: string, enum: [dealer, market, mo, hq, all] } }, divisions: { type: array, items: { type: string, enum: [car, van, all] } }, navLabelId: { type: string }, release: { type: string }, language: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Bild mit markdown zum Einfügen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /image-archive/{mediaSha}:
+    patch:
+      operationId: updateImageMeta
+      summary: 'Merkmale und Bildunterschrift eines Bildes ändern (Berechtigung edit, F-20)'
+      tags: [Medien]
+      x-requirements: [NFR-79]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { title: { type: [string, 'null'] }, language: { type: [string, 'null'], pattern: '^[a-z]{2}$' }, roles: { type: array, items: { type: string } }, divisions: { type: array, items: { type: string, enum: [car, van, all] } }, markets: { type: array, items: { type: string, pattern: '^[A-Z]{2}$' } }, release: { type: [string, 'null'] }, navLabelId: { type: [string, 'null'] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Bild' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-archive/{mediaSha}/versions:
+    post:
+      operationId: addImageVersion
+      summary: 'Neue Fassung hochladen (F-21): ersetzt das Bild überall, frühere Fassungen bleiben über ?original=1 abrufbar; hebt einen Platzhalter auf (multipart file, optional note; Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-79]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary }, note: { type: string, maxLength: 300 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Bild mit allen Fassungen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+  /chapter-transitions:
+    get:
+      operationId: listChapterTransitions
+      summary: 'Gepflegte Übergänge „Weiter mit …“ (ADR-085, F-29)'
+      tags: [Kapitel]
+      x-requirements: [NFR-80]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ chapterId, explicit, text, nextChapterId, next: { chapterId, title } }]' }
+  /chapter-transitions/{chapterId}:
+    get:
+      operationId: getChapterTransition
+      summary: 'Übergang eines Kapitels; ohne Eintrag das nächste Kapitel derselben Gliederung'
+      tags: [Kapitel]
+      x-requirements: [NFR-80]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chapterId, explicit, text, nextChapterId, next }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: setChapterTransition
+      summary: 'Übergangstext und optional ein anderes Folgekapitel setzen (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-80]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { nextChapterId: { type: [string, 'null'] }, text: { type: [string, 'null'], maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Übergang' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteChapterTransition
+      summary: 'Übergang entfernen – es gilt wieder das nächste Kapitel (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-80]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Übergang (Standard)' }
+        '403': { $ref: '#/components/responses/Problem' }

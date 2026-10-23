@@ -16,6 +16,9 @@ export function ExportPage() {
   const [market, setMarket] = useState('');
   const [release, setRelease] = useState('');
   const [format, setFormat] = useState('md');
+  const [profile, setProfile] = useState('full');
+  const [reading, setReading] = useState(false);
+  const [transitions, setTransitions] = useState(true);
   const [result, setResult] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const t = (l: string[], s: (v: string[]) => void, c: string) => s(l.includes(c) ? l.filter((x) => x !== c) : [...l, c]);
@@ -24,7 +27,7 @@ export function ExportPage() {
   const run = async () => {
     setError(null);
     try {
-      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, format, ...(outline ? { outlineId, appendices } : {}) });
+      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, format, profile, reading, transitions, ...(outline ? { outlineId, appendices } : {}) });
       setResult(r);
       notify(`Export erstellt (${r.chapters} Kapitel).`);
       history.reload();
@@ -61,6 +64,17 @@ export function ExportPage() {
             <label>Markt <select value={market} onChange={(e) => setMarket(e.target.value)}><option value="">alle</option>{ref?.markets.map((m) => <option key={m.code}>{m.code}</option>)}</select></label>
             <label>Release <select value={release} onChange={(e) => setRelease(e.target.value)}><option value="">alle</option>{ref?.releases.map((m) => <option key={m.code}>{m.code}</option>)}</select></label>
             <label>Format <select value={format} onChange={(e) => setFormat(e.target.value)}><option value="md">Markdown</option><option value="html">HTML (druckfähig)</option><option value="pdf">PDF</option><option value="docx">Word (.docx)</option><option value="json">JSON</option></select></label>
+          </div>
+          <div className="form-row">
+            <label>Ausgabe
+              <select value={profile} onChange={(e) => setProfile(e.target.value)}>
+                <option value="full">Vollständig</option>
+                <option value="quickguide">Quick Guide – Voraussetzungen, Schritte, Ergebnis, Warnungen</option>
+                <option value="onepager">One Pager – Zweck kurz, Schritte, Warnungen</option>
+              </select>
+            </label>
+            <label className="inline"><input type="checkbox" checked={reading} onChange={(e) => setReading(e.target.checked)} /> Lesefassung (ohne Rollen-/Sparten-Badges, Versionszeile und Quellenstatus)</label>
+            {profile === 'full' && <label className="inline"><input type="checkbox" checked={transitions} onChange={(e) => setTransitions(e.target.checked)} /> „Weiter mit …“ am Kapitelende</label>}
           </div>
           <button className="btn primary" onClick={run}>Export erstellen</button>
           <ErrorBox error={error} />

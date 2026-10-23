@@ -34,6 +34,8 @@ import { metadataRoutes } from './routes/metadata.js';
 import { sourceUpdateRoutes } from './routes/sourceUpdates.js';
 import { releaseLetterRoutes } from './routes/releaseLetters.js';
 import { knowledgeRoutes } from './routes/knowledge.js';
+import { transitionRoutes } from './routes/transitions.js';
+import { imageRoutes } from './routes/images.js';
 import { seedMetadataLabels } from './services/metadata.js';
 import { seedDomainLinks } from './services/domainMap.js';
 import { styleRoutes } from './routes/style.js';
@@ -262,6 +264,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       sourceUpdateRoutes(api, ctx);
       releaseLetterRoutes(api, ctx);
       knowledgeRoutes(api, ctx);
+      imageRoutes(api, ctx);
+      transitionRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

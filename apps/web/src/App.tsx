@@ -60,6 +60,7 @@ const TicketReleasesPage = lazy(() => import('./pages/ReleaseLetters').then((m) 
 const ReleaseLettersPage = lazy(() => import('./pages/ReleaseLetters').then((m) => ({ default: m.ReleaseLettersPage })));
 const OutlineSourcesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.OutlineSourcesPage })));
 const KnowledgeNotesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.KnowledgeNotesPage })));
+const ImageArchivePage = lazy(() => import('./pages/ImageArchive').then((m) => ({ default: m.ImageArchivePage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
@@ -89,6 +90,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: '✏️' },
     { to: '/draft-manual', label: 'Draft Manual', icon: '📝' },
     { to: '/bilder', label: 'Bilder', icon: '🎨' },
+    { to: '/bildarchiv', label: 'Bildarchiv', icon: '🗂' },
   ] },
   { id: 'pruefen', label: '3 Prüfen', items: [
     { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: '🔍' },
@@ -433,6 +435,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/vergleich/:chapterId" element={<ComparePage />} />
             <Route path="/freigabe" element={<ApprovalPage />} />
             <Route path="/export" element={<ExportPage />} />
+            <Route path="/bildarchiv" element={<ImageArchivePage />} />
             <Route path="/veroeffentlichung" element={<ReleasesPage />} />
             <Route path="/uebersetzungen" element={<TranslationsPage />} />
             <Route path="/aufgaben" element={<InboxPage onRead={reloadUnread} />} />

@@ -107,3 +107,11 @@ export function mediaUrl(sha: string): Promise<string> {
   }
   return mediaCache.get(key)!;
 }
+
+/** Nach einer neuen Fassung (ADR-085): zwischengespeicherte Objekt-URL verwerfen, damit die neue Fassung erscheint */
+export function forgetMedia(sha: string) {
+  const key = `${currentProjectId()}/${sha}`;
+  const p = mediaCache.get(key);
+  mediaCache.delete(key);
+  p?.then((u) => URL.revokeObjectURL(u), () => undefined);
+}

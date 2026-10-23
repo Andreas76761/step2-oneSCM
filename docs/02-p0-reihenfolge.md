@@ -41,6 +41,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **30** ✅ | Zuordnung Domäne → Gliederungspunkt → Ordner, Menüpunkte Contract Management 3.1–3.5, vier Steuerungsordner im Arbeitsordner (ADR-082) | 127 Server-Tests grün auf SQLite und PostgreSQL |
 | **31** ✅ | Release-Abgleich, Releaseletter mit Prüfregeln, Warnhinweis-Schema, Übersetzungsprüfung, feste Übersetzungen (ADR-083) | 129 Server-Tests grün auf SQLite und PostgreSQL |
 | **32** ✅ | Gliederungs-Vorschlag je Chunk, Kapitel ↔ Quellen, Wissensnotizen, Ausschlussliste, Zielkapitel je Dopplung (ADR-084) | 132 Server-Tests grün auf SQLite und PostgreSQL |
+| **33** ✅ | Bildarchiv mit Bildnummer, Merkmalen, Prüfregeln, Versionen und Platzhaltern; Zwischenablage; Quick Guide, One Pager, Lesefassung, Übergänge (ADR-085) | 135 Server-Tests grün auf SQLite und PostgreSQL |
 | **28** ✅ | Labelkatalog nach echtem oneSCM, erweiterte Datenschutzprüfung mit Pseudonymisierung (ADR-080) | 123 Server-Tests grün auf SQLite und PostgreSQL |
 | **27** ✅ | oneSCM_Metadaten M1: 100 vordefinierte Labels, Chunks je Überschrift labeln, Fragen und Antworten mit Quellen speichern (ADR-079) | 121 Server-Tests grün auf SQLite und PostgreSQL, 78 E2E-Tests (T-202 und T-231 scheitern in dieser Umgebung auch ohne die Änderung) |
 | **22** ✅ | Druck je Variante und Rolle im Firmen-Layout (ADR-065); Suche und Glossar beim Lesen (ADR-066); Vorlagen duplizieren, exportieren, importieren (ADR-067); schnelles Laden (ADR-068) | 108 Server- und 73 E2E-Tests grün auf SQLite und PostgreSQL |

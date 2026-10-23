@@ -1653,5 +1653,42 @@
       "NFR-77",
       "NFR-78"
     ]
+  },
+  {
+    "id": "T-248",
+    "title": "Bildarchiv: feste Bildnummer, Merkmale, Prüfregeln; neue Fassung ersetzt das Bild überall, Original bleibt abrufbar (ETag/304); Platzhalter mit reservierter Nummer",
+    "file": "apps/server/test/stage33.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-79"
+    ]
+  },
+  {
+    "id": "T-249",
+    "title": "Ausgabeprofile Quick Guide und One Pager, Lesefassung ohne Badges, Versionszeile und Quellenstatus (Einheit)",
+    "file": "apps/server/test/stage33.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-80"
+    ]
+  },
+  {
+    "id": "T-250",
+    "title": "„Weiter zu Kapitel …“: Übergang pflegen, Standard = nächstes Kapitel, im Export; Profile und Lesefassung im Export",
+    "file": "apps/server/test/stage33.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-80"
+    ]
+  },
+  {
+    "id": "T-251",
+    "title": "Bildarchiv mit Platzhalter und Fassung aus der Zwischenablage, „Weiter mit …“ in Leseransicht und Druck, Wasserzeichen, Quick Guide als Lesefassung (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-79",
+      "NFR-80"
+    ]
   }
 ]

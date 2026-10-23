@@ -1463,6 +1463,9 @@ test('[T-232] Leseransicht: Suche mit Hervorhebung, Glossar-Erklärungen; Druck 
   await expect(glossary).toContainText('Dealer-Management-System');
   // Kopf-/Fußzeile schreibt ein Effekt nach dem Rendern – daher warten statt einmal lesen
   const header = () => page.locator('style[data-print-header]').textContent();
+  // Rolle muss noch gewählt sein (grenzt ab: verlorene Auswahl oder veraltete Kopfzeile)
+  await expect(page).toHaveURL(/rolle=dealer/);
+  await expect(cover).toContainText('für Dealer');
   await expect.poll(header).toContain('für Dealer');
   await expect.poll(header).toContain('Nur intern');
   expect(await axe()).toEqual([]);
@@ -2026,4 +2029,86 @@ test('[T-247] Wissensnotiz als Quelle, Gliederungs-Vorschlag übernehmen, Kapite
   await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
   await page.getByLabel('Nicht einlesen – ein Muster je Zeile (z. B. *.tmp, ~$*, Archiv/**)').fill('');
   await page.getByRole('button', { name: 'Speichern' }).first().click();
+});
+
+test('[T-251] Bildarchiv: Platzhalter, Merkmale, neue Fassung aus der Zwischenablage; „Weiter mit …“ in Leseransicht und Druck, Wasserzeichen ENTWURF, Quick Guide als Lesefassung', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const make = async (title: string, approve: boolean) => {
+    const c = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: {
+      title, purpose: `Mit dieser Anleitung bearbeiten Sie ${title}.`, steps: ['Öffnen Sie **Verträge › Übersicht**', 'Klicken Sie auf **Bearbeiten**'], result: 'Die Änderung ist gespeichert.',
+    } })).json();
+    if (approve) {
+      expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/submit`, { headers: red, data: {} })).ok()).toBe(true);
+      expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+    }
+    return c;
+  };
+  const a = await make('E2E Übergang A', true);
+  await make('E2E Übergang B', true);
+  await make('E2E Übergang Entwurf', false);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // Bildarchiv: Platzhalter reserviert eine Nummer, Merkmale pflegen
+  await nav.getByRole('link', { name: 'Bildarchiv' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Bildarchiv' })).toBeVisible();
+  await page.getByLabel('Was soll das Bild zeigen?').fill('E2E Platzhalter Vertragsliste');
+  await page.getByRole('button', { name: 'Platzhalter anlegen' }).click();
+  await expect(page.getByText(/^Platzhalter B-\d{4} angelegt\.$/)).toBeVisible();
+  await expect(page.getByText(/^!\[E2E Platzhalter Vertragsliste\]\(media:[a-f0-9]{64}\)$/)).toHaveCount(2); // Einbinden + Hinweis nach dem Anlegen
+  await page.getByLabel('Sprache').fill('de');
+  await page.getByRole('button', { name: 'Merkmale speichern' }).click();
+  await expect(page.getByText(/^B-\d{4} gespeichert\.$/)).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Strg+V: Screenshot aus der Zwischenablage wird neue Fassung, Platzhalter entfällt
+  await page.evaluate((b64) => {
+    const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    dt.items.add(new File([bin], 'image.png', { type: 'image/png' }));
+    document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true }));
+  }, png(900, 500, [20, 110, 200]).toString('base64'));
+  await expect(page.getByText(/^B-\d{4}: Fassung 2 hochgeladen – ersetzt das Bild überall\.$/)).toBeVisible();
+  const entry = page.getByRole('list', { name: 'Bilder' }).getByRole('button', { name: /E2E Platzhalter Vertragsliste/ });
+  await expect(entry).toContainText('Fassung 2');
+  await expect(entry.locator('.tag', { hasText: 'Platzhalter' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Bildabdeckung je Kapitel' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Leseransicht: Übergang pflegen und anzeigen
+  await page.goto(`/lesen/${a.chapterId}`);
+  const article = page.getByRole('article', { name: 'E2E Übergang A' });
+  await article.getByRole('button', { name: 'Übergang „Weiter mit …“ pflegen' }).click();
+  await article.getByLabel('Folgekapitel').selectOption({ label: 'E2E Übergang B' });
+  await article.getByLabel('Übergangstext').fill('Danach prüfen Sie die Änderung.');
+  await article.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Übergang gespeichert.')).toBeVisible();
+  const aside = article.getByRole('complementary', { name: 'Weiter mit' });
+  await expect(aside).toContainText('Weiter mit „E2E Übergang B“');
+  await expect(aside).toContainText('Danach prüfen Sie die Änderung.');
+  expect(await axe()).toEqual([]);
+
+  // Druck mit Entwürfen: Übergang am Kapitelende, Wasserzeichen ENTWURF nur im Druck
+  await page.goto('/lesen/druck?entwuerfe=1');
+  await expect(page.getByRole('article', { name: 'E2E Übergang A' }).locator('.print-transition')).toContainText('Danach prüfen Sie die Änderung.');
+  await expect(page.locator('.print-watermark')).toBeHidden();
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('.print-watermark')).toBeVisible();
+  await expect(page.locator('.print-watermark')).toHaveText('ENTWURF');
+  await page.emulateMedia({ media: 'screen' });
+
+  // Export: Quick Guide als Lesefassung
+  await nav.getByRole('link', { name: 'Export', exact: true }).click();
+  await page.getByRole('checkbox', { name: /E2E Übergang A/ }).check();
+  await page.getByLabel('Ausgabe').selectOption('quickguide');
+  await page.getByRole('checkbox', { name: /^Lesefassung/ }).check();
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByRole('button', { name: /onescm-handbuch-quickguide-lesefassung-\d{4}-\d{2}-\d{2}\.md herunterladen/ })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Exportvorschau' })).toContainText('Quick Guide');
+  expect(await axe()).toEqual([]);
 });

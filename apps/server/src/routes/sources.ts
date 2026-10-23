@@ -43,12 +43,16 @@ export function sourceRoutes(app: FastifyInstance, _ctx: Ctx) {
 
   // Bilder & Medien (ADR-029)
   app.get('/media', async (req) => (userOf(req.ctx, req), listMedia(req.ctx)));
-  app.get<{ Params: { mediaSha: string } }>('/media/:mediaSha', async (req, reply) => {
+  app.get<{ Params: { mediaSha: string }; Querystring: { original?: string } }>('/media/:mediaSha', async (req, reply) => {
     userOf(req.ctx, req);
-    const m = await getMedia(req.ctx, req.params.mediaSha);
-    // Inhaltsadressiert → unveränderlich; privat (projektgebunden), nie als etwas anderes als Bild interpretieren
-    reply.header('Content-Type', m.mime).header('X-Content-Type-Options', 'nosniff').header('Cache-Control', 'private, max-age=31536000, immutable')
+    // aktuelle Fassung (ADR-085): eine neue Fassung ersetzt das Bild überall; ?original=1 liefert genau diese Fassung
+    const m = await getMedia(req.ctx, req.params.mediaSha, { exact: req.query.original === '1' });
+    // Inhalt kann durch eine neue Fassung wechseln → mit ETag revalidieren statt „immutable“; privat (projektgebunden)
+    const etag = `"${m.sha}"`;
+    reply.header('ETag', etag).header('Cache-Control', 'private, no-cache').header('X-Content-Type-Options', 'nosniff')
       .header('Content-Security-Policy', "default-src 'none'; sandbox");
+    if (req.headers['if-none-match'] === etag) return reply.code(304).send();
+    reply.header('Content-Type', m.mime);
     return m.data;
   });
   app.post('/media', async (req, reply) => {

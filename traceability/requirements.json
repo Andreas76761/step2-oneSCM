@@ -893,5 +893,23 @@
     "documentation": [
       "docs/adr/ADR-084-gliederung-wissen.md"
     ]
+  },
+  {
+    "id": "NFR-79",
+    "title": "Bildarchiv: feste Bildnummer, Merkmale, Prüfregeln und Bildabdeckung je Kapitel; neue Fassung ersetzt das Bild überall, Original bleibt; Platzhalter mit reservierter Nummer; Screenshot aus der Zwischenablage",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-085-bilder-ausgabe.md"
+    ]
+  },
+  {
+    "id": "NFR-80",
+    "title": "Ausgabeprofile Quick Guide und One Pager, Lesefassung ohne Quellenbezüge, Wasserzeichen „Entwurf“ im Druck, Übergänge „Weiter mit …“ in Leseransicht, Druck und Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-085-bilder-ausgabe.md"
+    ]
   }
 ]

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.33.0 – Etappe 33 (23.10.2026)
+
+### Hinzugefügt
+- **Bildarchiv (ADR-085, F-20):** feste Bildnummer B-0001 …, Merkmale (Sprache, Rollen, Sparten, Märkte, Release, Reiter), Prüfregeln je Bild und Bildabdeckung je Kapitel.
+- **Bildversionen und Platzhalter (F-21):** eine neue Fassung ersetzt das Bild überall, das Original bleibt über `?original=1` abrufbar; Platzhalterbild mit reservierter Nummer.
+- **Screenshot aus der Zwischenablage (F-23):** Strg+V oder Schaltfläche im Screenshot-Editor (danach zuschneiden) und im Bildarchiv.
+- **Quick Guide und One Pager (F-27)** als Ausgabeprofil im Export, für alle Formate und je Variante.
+- **Lesefassung (F-28)** ohne Badges, Versionszeile und Quellenstatus; Wasserzeichen „ENTWURF“ beim Druck mit Entwürfen.
+- **„Weiter mit …“ (F-29):** Übergangstext und Folgekapitel je Kapitel in Leseransicht, Druck und Export.
+- Migration `040_image_archive.sql`; Tests T-248 … T-250, E2E T-251 (axe); Anforderungen NFR-79, NFR-80.
+
+### Geändert
+- `GET /media/{sha}` liefert die neueste Fassung mit `ETag` und `Cache-Control: private, no-cache` statt `immutable`.
+
 ## 0.32.0 – Etappe 32 (23.10.2026)
 
 ### Hinzugefügt

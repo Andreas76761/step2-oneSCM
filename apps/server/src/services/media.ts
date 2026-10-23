@@ -41,12 +41,25 @@ export async function storeMedia(ctx: Ctx, input: Buffer, originalName: string |
   return { sha, ...info };
 }
 
-export async function getMedia(ctx: Ctx, sha: string): Promise<MediaFile> {
-  if (!/^[a-f0-9]{64}$/.test(sha)) throw notFound(`Bild ${sha}`);
+/**
+ * Aktuelle Fassung eines Bildes (ADR-085, F-21): Texte verweisen auf irgendeine Fassung; ausgeliefert und exportiert
+ * wird immer die neueste. Ohne Versionen ist es das Bild selbst.
+ */
+export async function currentSha(ctx: Ctx, sha: string): Promise<string> {
+  const v = await ctx.db.get(
+    `SELECT c.sha FROM media_versions v JOIN media_versions c ON c.project_id = v.project_id AND c.base_sha = v.base_sha
+     WHERE v.project_id = ? AND v.sha = ? ORDER BY c.version_no DESC LIMIT 1`, ctx.projectId, sha,
+  );
+  return (v?.sha as string | undefined) ?? sha;
+}
+
+export async function getMedia(ctx: Ctx, requested: string, opts: { exact?: boolean } = {}): Promise<MediaFile> {
+  if (!/^[a-f0-9]{64}$/.test(requested)) throw notFound(`Bild ${requested}`);
+  const sha = opts.exact ? requested : await currentSha(ctx, requested);
   const r = await ctx.db.get('SELECT * FROM media_assets WHERE project_id = ? AND sha256 = ?', ctx.projectId, sha);
   if (!r) throw notFound(`Bild ${sha}`);
   const m: MediaFile = { sha, mime: r.mime, data: await ctx.store.get(r.storage_key), width: r.width ?? null, height: r.height ?? null };
-  if (r.png_sha) m.fallback = await getMedia(ctx, r.png_sha).catch(() => null);
+  if (r.png_sha) m.fallback = await getMedia(ctx, r.png_sha, { exact: true }).catch(() => null);
   return m;
 }
 
