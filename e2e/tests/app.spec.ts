@@ -2279,3 +2279,33 @@ test('[T-266] Frage an alle Quellen: Antwort mit Belegen, als Frage & Antwort ü
   await expect(page.getByRole('button', { name: '⬇ XLSX' })).toBeVisible();
   expect(await axe()).toEqual([]);
 });
+
+test('[T-269] Rückfragen: Fragenkatalog aus einer HTML-App einlesen, alle mit Belegen beantworten, als Frage & Antwort speichern', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  const res = await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name: 'e2e-rf.md', mimeType: 'text/markdown', buffer: Buffer.from('---\nroles: [all]\ndivisions: [all]\n---\n# E2E Rückfragen\n\n## E2E Wartungspaket\n\nE2E Ein Wartungspaket buchen Sie im Angebot über Pakete hinzufügen.\n') } } });
+  const id = (await res.json()).id;
+  await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
+  const app = '<html><body><script>const FRAGEN = [{ kapitel: "E2E Kapitel 6", frage: "Wie buche ich ein E2E Wartungspaket?" }, { kapitel: "E2E Kapitel 20", frage: "Welche Zollregeln gelten für Quarkfahrzeuge?" }];</script><div id="app"></div></body></html>';
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Rückfragen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Rückfragen' })).toBeVisible();
+  await page.getByTestId('catalog-input').setInputFiles({ name: 'e2e-review-cockpit.html', mimeType: 'text/html', buffer: Buffer.from(app) });
+  await expect(page.getByText('2 Fragen aus „e2e-review-cockpit.html“ eingelesen.')).toBeVisible();
+  await page.getByRole('button', { name: 'Alle mit Belegen beantworten' }).click();
+  await expect(page.getByText(/^1 von 2 Fragen mit Belegen beantwortet\.$/)).toBeVisible();
+  const ok = page.getByRole('region', { name: 'E2E Kapitel 6' });
+  await expect(ok).toContainText('E2E Ein Wartungspaket buchen Sie im Angebot über Pakete hinzufügen.');
+  await expect(ok).toContainText('beantwortet');
+  await expect(page.getByRole('region', { name: 'E2E Kapitel 20' })).toContainText('keine Aussage in den Quellen');
+  expect(await axe()).toEqual([]);
+  await ok.getByRole('button', { name: 'Als Frage & Antwort speichern' }).click();
+  await expect(page.getByText('Als Frage & Antwort gespeichert.')).toBeVisible();
+  await expect(ok.getByText('gespeichert', { exact: true })).toBeVisible();
+  expect(await axe()).toEqual([]);
+});

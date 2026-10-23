@@ -60,6 +60,7 @@ const TicketReleasesPage = lazy(() => import('./pages/ReleaseLetters').then((m) 
 const ReleaseLettersPage = lazy(() => import('./pages/ReleaseLetters').then((m) => ({ default: m.ReleaseLettersPage })));
 const OutlineSourcesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.OutlineSourcesPage })));
 const KnowledgeNotesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.KnowledgeNotesPage })));
+const QuestionCatalogPage = lazy(() => import('./pages/QuestionCatalog').then((m) => ({ default: m.QuestionCatalogPage })));
 const MetaDuplicatesPage = lazy(() => import('./pages/MetaDuplicates').then((m) => ({ default: m.MetaDuplicatesPage })));
 const HeadingsPage = lazy(() => import('./pages/Headings').then((m) => ({ default: m.HeadingsPage })));
 const IngestPage = lazy(() => import('./pages/Ingest').then((m) => ({ default: m.IngestPage })));
@@ -79,6 +80,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/metadaten/kapitel-quellen', label: 'Kapitel ↔ Quellen', icon: '📚' },
     { to: '/metadaten/wissensnotizen', label: 'Wissensnotizen', icon: '🗒' },
     { to: '/metadaten/fragen', label: 'Fragen & Antworten', icon: '💡' },
+    { to: '/metadaten/rueckfragen', label: 'Rückfragen', icon: '❓' },
     { to: '/metadaten/zugriffsmatrix', label: 'Zugriffsmatrix', icon: '🔐' },
     { to: '/metadaten/zuordnung', label: 'Zuordnung', icon: '🧩' },
     { to: '/metadaten/labels', label: 'Labels', icon: '🏷' },
@@ -424,6 +426,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/metadaten/einlesen" element={<IngestPage />} />
             <Route path="/metadaten/ueberschriften" element={<HeadingsPage />} />
             <Route path="/metadaten/dubletten" element={<MetaDuplicatesPage />} />
+            <Route path="/metadaten/rueckfragen" element={<QuestionCatalogPage />} />
             <Route path="/release-abgleich" element={<TicketReleasesPage />} />
             <Route path="/releaseletter" element={<ReleaseLettersPage />} />
             <Route path="/metadaten/labels" element={<MetadataLabelsPage />} />

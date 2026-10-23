@@ -1834,5 +1834,33 @@
       "NFR-87",
       "NFR-88"
     ]
+  },
+  {
+    "id": "T-267",
+    "title": "Fragenkatalog einlesen: HTML-App (Daten im Skript, Tabelle, Überschriften), CSV, JSON, Text – mit Kapitel, ohne Doppelungen (Einheit)",
+    "file": "apps/server/test/stage37.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-89"
+    ]
+  },
+  {
+    "id": "T-268",
+    "title": "Fragenkatalog: einlesen, alle mit Belegen beantworten, Frage ohne Aussage markieren, als Frage & Antwort übernehmen, exportieren",
+    "file": "apps/server/test/stage37.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-87",
+      "NFR-89"
+    ]
+  },
+  {
+    "id": "T-269",
+    "title": "Rückfragen in der Oberfläche: HTML-App einlesen, mit Belegen beantworten, speichern (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-89"
+    ]
   }
 ]

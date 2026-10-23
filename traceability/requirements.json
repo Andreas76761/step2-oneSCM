@@ -983,5 +983,14 @@
     "documentation": [
       "docs/adr/ADR-089-fragen-alle-quellen.md"
     ]
+  },
+  {
+    "id": "NFR-89",
+    "title": "Rückfragen: Fragenkatalog aus HTML-App, CSV, JSON oder Text einlesen (mit Kapitel), alle Fragen mit Belegen beantworten, Status je Frage, als Frage & Antwort speichern, Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-089-fragen-alle-quellen.md"
+    ]
   }
 ]

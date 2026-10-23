@@ -1,6 +1,7 @@
 // oneSCM_Metadaten (ADR-079): Labels, Chunks mit Labels, gespeicherte Fragen und Antworten
 import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
+import { badRequest } from '../problem.js';
 import {
   createLabel, createQa, deleteQa, getQa, labelGroups, listChunks, listLabels, listQa, metadataOverview, setChunkLabels, updateLabel, updateQa,
 } from '../services/metadata.js';
@@ -8,6 +9,7 @@ import { exportAccessMatrix, getAccessMatrix, importAccessMatrix, setAccessCell 
 import { exportDomainMap, getDomainMap, setDomainLink } from '../services/domainMap.js';
 import { listChunksWithSuggestions, outlineCoverage, outlineSources } from '../services/metadataOutline.js';
 import { askSources, exportQa, reaskQa } from '../services/metadataAsk.js';
+import { answerCatalog, deleteCatalog, exportCatalog, getCatalog, importCatalog, itemToQa, listCatalogs } from '../services/questionCatalog.js';
 import { decideDuplicate, duplicateGroups, getDuplicate, listDuplicates, refreshDuplicates } from '../services/metadataDuplicates.js';
 import { headingDocuments, headingTree, mergedHeadings } from '../services/metadataHeadings.js';
 import { list, num, userOf } from './helpers.js';
@@ -82,6 +84,42 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
     const f = await exportQa(req.ctx, req.query.format ?? 'csv', { q: req.query.q, labelIds: list(req.query.labels), language: req.query.language || undefined });
     reply.header('Content-Type', f.contentType).header('Content-Disposition', `attachment; filename="${f.fileName}"`);
     return f.data;
+  });
+  // Fragenkatalog (Rückfragen) einlesen und mit Belegen beantworten (ADR-089)
+  app.get('/metadata/question-sets', async (req) => (userOf(req.ctx, req), listCatalogs(req.ctx)));
+  app.post<{ Body: any }>('/metadata/question-sets', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    let input: { name?: string; fileName?: string; data: string };
+    if (req.isMultipart()) {
+      const file = await req.file();
+      if (!file) throw badRequest('Feld „file“ fehlt.');
+      const buf = await file.toBuffer();
+      if (buf.length > 10 * 1024 * 1024) throw badRequest('Datei größer als 10 MB.');
+      input = { fileName: file.filename, data: buf.toString('utf8'), name: (file.fields as any)?.name?.value };
+    } else {
+      const b = (req.body ?? {}) as any;
+      if (typeof b.text !== 'string') throw badRequest('text (Fragen, eine je Zeile) oder eine Datei ist Pflicht.');
+      input = { fileName: typeof b.fileName === 'string' ? b.fileName : 'fragen.txt', data: b.text.slice(0, 2_000_000), name: b.name };
+    }
+    reply.code(201);
+    return importCatalog(req.ctx, input, user);
+  });
+  app.get<P<'setId'>>('/metadata/question-sets/:setId', async (req) => (userOf(req.ctx, req), getCatalog(req.ctx, req.params.setId)));
+  app.post<P<'setId'> & { Body: any }>('/metadata/question-sets/:setId/answer', async (req) => answerCatalog(req.ctx, req.params.setId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.get<P<'setId'> & { Querystring: { format?: string } }>('/metadata/question-sets/:setId/export', async (req, reply) => {
+    userOf(req.ctx, req);
+    const f = await exportCatalog(req.ctx, req.params.setId, req.query.format ?? 'xlsx');
+    reply.header('Content-Type', f.contentType).header('Content-Disposition', `attachment; filename="${encodeURIComponent(f.fileName)}"`);
+    return f.data;
+  });
+  app.delete<P<'setId'>>('/metadata/question-sets/:setId', async (req, reply) => {
+    await deleteCatalog(req.ctx, req.params.setId, userOf(req.ctx, req, 'edit'));
+    reply.code(204);
+  });
+  app.post<P<'itemId'> & { Body: any }>('/metadata/question-items/:itemId/qa', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    return itemToQa(req.ctx, req.params.itemId, req.body ?? {}, user);
   });
   app.post<P<'qaId'>>('/metadata/qa/:qaId/reask', async (req) => reaskQa(req.ctx, req.params.qaId, userOf(req.ctx, req)));
   app.get<P<'qaId'>>('/metadata/qa/:qaId', async (req) => (userOf(req.ctx, req), getQa(req.ctx, req.params.qaId)));

@@ -130,7 +130,7 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
 68. **PowerPoint und PDF (ADR-086):** Unter „oneSCM_Metadaten › Einlesen“ ziehen Sie mehrere Dateien auf einmal hinein. Jeder Chunk zeigt seine Fundstelle (Folie, Seite oder Abschnitt). Bilder aus Folien bekommen im Bildarchiv einen Vorschlag für die Gliederungsstelle, den Sie von Hand übernehmen.
 69. **Quellen je Überschrift (ADR-087):** Unter „oneSCM_Metadaten › Quellen je Überschrift“ sehen Sie je Datei den Überschriftenbaum oder alle Dateien zusammengeführt je Überschrift. Lange Chunks zeigen ihre Teilstücke für Suche und Antworten.
 70. **Dubletten über alle Formate (ADR-088):** Unter „oneSCM_Metadaten › Dubletten (alle Formate)“ stehen gleiche und ähnliche Abschnitte aus allen Dateien nebeneinander – mit markierten Unterschieden. Legen Sie die führende Fassung fest oder markieren Sie „kein Duplikat“.
-71. **Frage an alle Quellen (ADR-089):** Unter „oneSCM_Metadaten › Fragen & Antworten“ fragen Sie alle eingelesenen Quellen – wahlweise nur ein Format, eine Datei, eine Überschrift oder Chunks mit Label. Jeder Satz der Antwort nennt seinen Beleg. Übernehmen Sie die Antwort, stellen Sie sie später erneut und exportieren Sie die Liste als CSV, Excel oder JSON.
+71. **Frage an alle Quellen (ADR-089):** Unter „oneSCM_Metadaten › Fragen & Antworten“ fragen Sie alle eingelesenen Quellen – wahlweise nur ein Format, eine Datei, eine Überschrift oder Chunks mit Label. Jeder Satz der Antwort nennt seinen Beleg. Übernehmen Sie die Antwort, stellen Sie sie später erneut und exportieren Sie die Liste als CSV, Excel oder JSON. Unter „Rückfragen“ lesen Sie einen ganzen Fragenkatalog ein (z. B. aus einem Review-Cockpit) und lassen alle Fragen mit Belegen beantworten.
 
 ### Import
 

@@ -12,8 +12,10 @@ Der Handbuch-Assistent (ADR-026) beantwortet Fragen nur aus dem freigegebenen Ha
 - **Antwort:** mit KI-Dienst nur aus den Belegen (eigene Anweisung „nur aus den Auszügen“, Widersprüche benennen), jeder Satz wird wie bei der KI-Umformulierung gegen die zitierten Belege geprüft; unbelegte Sätze werden verworfen. Ohne KI oder ohne belegte Sätze: extraktive Antwort aus den passendsten Sätzen. Personenbezogene Daten gehen nie an externe Dienste. Jede Frage wird protokolliert (`metadata_ask_log`), KI-Antworten zusätzlich im Audit.
 - **Speichern:** „Als Frage & Antwort übernehmen“ füllt die vorhandene Maske (ADR-079); der Rahmen der Frage (Filter) und die Frage-ID werden mitgespeichert.
 - **Erneut fragen:** dieselbe Frage im gleichen Rahmen neu stellen; Vergleich mit dem gespeicherten Stand – Belege neu, entfallen, gleich und die Antwort wortweise.
+- **Mindestrelevanz:** Ein Beleg muss mindestens 30 % der Inhaltswörter der Frage enthalten oder deutlich ähnlich sein (Kosinus ≥ 0,6) – ein einzelnes gemeinsames Wort ist kein Beleg. Fragen ohne passende Stelle bleiben ohne Antwort („keine Aussage in den Quellen“).
+- **Fragenkatalog (Rückfragen):** Fragen aus einer Datei einlesen – HTML-App (sichtbarer Text, Tabellen mit Spalte „Frage“/„Kapitel“ und Datenobjekte im Skript wie `{ kapitel, frage }`; nichts wird ausgeführt), CSV, JSON oder Text mit „## Kapitel“ –, ohne Doppelungen, höchstens 500 Fragen. „Alle mit Belegen beantworten“ stellt jede Frage wie eine einzelne Frage an alle Quellen; Status je Frage: beantwortet, keine Aussage, nicht gefragt (z. B. personenbezogene Daten bei externem Dienst). Beantwortete Fragen lassen sich als Frage & Antwort speichern; Export als Excel, CSV oder JSON mit Kapitel, Frage, Antwort und Belegen. Die Fragen liegen nur in der Datenbank der App.
 - **Export:** gespeicherte Fragen und Antworten als CSV (Semikolon, UTF-8 mit BOM, Formeln entschärft), Excel oder JSON – mit den Filtern der Liste.
 
 ## Folgen
-- Migration `043_metadata_ask.sql`; Tests T-263 … T-265, E2E T-266; Anforderungen NFR-87, NFR-88.
+- Migrationen `043_metadata_ask.sql`, `044_question_catalog.sql`; Tests T-263 … T-265, T-267, T-268, E2E T-266, T-269; Anforderungen NFR-87 … NFR-89.
 - Die Antwortqualität (Testfragen mit erwarteten Quellen, Trefferquote) misst M7.

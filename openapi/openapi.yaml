@@ -4578,3 +4578,96 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ qaId, saved: { answer, sources, savedAt }, current, changes: { sourcesAdded, sourcesRemoved, sourcesKept, answerChanged, diff } }' }
         '404': { $ref: '#/components/responses/Problem' }
+  /metadata/question-sets:
+    get:
+      operationId: listQuestionSets
+      summary: 'Fragenkataloge (Rückfragen, ADR-089) mit Anzahl Fragen und beantworteten'
+      tags: [Metadaten]
+      x-requirements: [NFR-89]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, name, fileName, questions, answered, createdBy, createdAt, answeredAt }]' }
+    post:
+      operationId: importQuestionSet
+      summary: 'Fragenkatalog einlesen: multipart „file“ (HTML-App, CSV, JSON, Text) oder JSON { text, name } – Fragen mit Kapitel, ohne Doppelungen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-89]
+      x-extension: true
+      requestBody:
+        required: true
+        content:
+          multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary }, name: { type: string } } } }
+          application/json: { schema: { type: object, required: [text], properties: { text: { type: string }, name: { type: string }, fileName: { type: string } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Katalog mit Fragen und Kennzahlen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/question-sets/{setId}:
+    get:
+      operationId: getQuestionSet
+      summary: 'Fragenkatalog mit allen Fragen, Status, Antworten und Belegen'
+      tags: [Metadaten]
+      x-requirements: [NFR-89]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, name, items: [{ id, position, chapter, question, status, mode, answer, answerText, sources, notice, qaId }], summary }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteQuestionSet
+      summary: 'Fragenkatalog mit Antworten löschen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-89]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/question-sets/{setId}/answer:
+    post:
+      operationId: answerQuestionSet
+      summary: 'Alle (bzw. nur offene) Fragen mit Belegen aus den Quellen beantworten (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-87, NFR-89]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { onlyOpen: { type: boolean }, filters: { type: object } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Katalog mit Antworten' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/question-sets/{setId}/export:
+    get:
+      operationId: exportQuestionSet
+      summary: 'Fragenkatalog mit Antworten und Belegen als Excel, CSV oder JSON'
+      tags: [Metadaten]
+      x-requirements: [NFR-89]
+      x-extension: true
+      parameters:
+        - { name: setId, in: path, required: true, schema: { type: string } }
+        - { name: format, in: query, schema: { type: string, enum: [xlsx, csv, json], default: xlsx } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/question-items/{itemId}/qa:
+    post:
+      operationId: questionItemToQa
+      summary: 'Beantwortete Frage aus dem Katalog als Frage & Antwort mit Belegen speichern (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-88, NFR-89]
+      x-extension: true
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { labelIds: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Frage & Antwort' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }

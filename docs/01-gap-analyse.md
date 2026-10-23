@@ -167,6 +167,7 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 |---|---|
 | Fragen über alle Quellen mit hybrider Suche, Filtern und Belegen je Satz (M5, NFR-87) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
 | Speichern mit Rahmen, erneut fragen mit Vergleich, Export CSV/Excel/JSON (NFR-88) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
+| Rückfragen: Fragenkatalog einlesen und mit Belegen beantworten (NFR-89) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
 | Offen | Etappen M6 (Video, OCR) und M7 (Antwortqualität) |
 
 ## 1.38 Stand nach Etappe 36 (23.10.2026)

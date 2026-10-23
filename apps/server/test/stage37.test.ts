@@ -4,6 +4,7 @@ import JSZip from 'jszip';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { buildSourcesPrompt } from '../src/domain/assistant.js';
+import { parseQuestionCatalog } from '../src/domain/questionCatalog.js';
 import { renderPdf } from '../src/services/render.js';
 import { client, FM, importFile } from './api-helpers.js';
 import { freshDatabase, tempDir } from './helpers.js';
@@ -97,4 +98,68 @@ describe('Etappe 37', () => {
       await built.app.close();
     }
   });
+
+  it('[T-267] Fragenkatalog einlesen: HTML-App (Daten im Skript, Tabelle, Überschriften), CSV, JSON, Text – mit Kapitel, ohne Doppelungen (Einheit)', () => {
+    const html = `<html><head><style>.x{}</style><script>
+      const DATA = [{ kapitel: "3 Vertrag anlegen", frage: "Wer darf einen Vertrag anlegen?" }, { kapitel: "3 Vertrag anlegen", frage: 'Welche Felder sind Pflicht?' },
+        { kapitel: "10 Verträge verwalten", frage: "Wie kündige ich einen Vertrag?", status: "offen" }, { titel: "Kein Satz" }];
+      alert("Soll das ausgeführt werden?");
+    </script></head><body><h2>11 Rechnung</h2><p>Wann wird die Rechnung erstellt?</p><p>Hinweis ohne Frage.</p>
+      <table><tr><th>Kapitel</th><th>Frage</th></tr><tr><td>12 Kampagnen</td><td>Welche Kampagnen gelten für Van?</td></tr></table>
+      <p>Wie kündige ich einen Vertrag?</p></body></html>`;
+    const q = parseQuestionCatalog('review.html', html);
+    expect(q).toEqual([
+      { chapter: '3 Vertrag anlegen', question: 'Wer darf einen Vertrag anlegen?' },
+      { chapter: '3 Vertrag anlegen', question: 'Welche Felder sind Pflicht?' },
+      { chapter: '10 Verträge verwalten', question: 'Wie kündige ich einen Vertrag?' },
+      { chapter: '12 Kampagnen', question: 'Welche Kampagnen gelten für Van?' },
+      { chapter: '11 Rechnung', question: 'Wann wird die Rechnung erstellt?' },
+    ]);
+    expect(parseQuestionCatalog('f.csv', '﻿Kapitel;Frage\n"3 Anlegen";"Wer legt an?"\n4;"Was heißt ""MO""?"')).toEqual([{ chapter: '3 Anlegen', question: 'Wer legt an?' }, { chapter: '4', question: 'Was heißt "MO"?' }]);
+    expect(parseQuestionCatalog('f.json', JSON.stringify({ fragen: [{ kapitel: 'A', frage: 'Gilt das für Pkw?' }, 'Und für Van?'] }))).toEqual([{ chapter: 'A', question: 'Gilt das für Pkw?' }, { chapter: null, question: 'Und für Van?' }]);
+    expect(parseQuestionCatalog('f.txt', '## Kapitel 5\n1. Wie lege ich ein Produkt an?\n- Kein Fragesatz\n')).toEqual([{ chapter: 'Kapitel 5', question: 'Wie lege ich ein Produkt an?' }]);
+    expect(() => parseQuestionCatalog('f.json', '{kaputt')).toThrow('Keine gültige JSON-Datei');
+  });
+
+  it('[T-268] Fragenkatalog: einlesen, alle mit Belegen beantworten, Frage ohne Aussage markieren, als Frage & Antwort übernehmen, exportieren', async () => {
+    const built = await build('katalog');
+    const call = client(built);
+    try {
+      await importFile(built, 'k.md', `${FM}# Verträge verwalten\n\n## Vertrag kündigen\n\nUm einen Vertrag zu kündigen, klicken Sie in der Vertragsdetailansicht auf Beenden.\n`);
+      expect((await call('POST', '/metadata/question-sets', { text: 'Wie kündige ich?' }, 'u-leser')).status).toBe(403);
+      expect((await call('POST', '/metadata/question-sets', { text: 'keine Frage hier' }, 'u-redaktion')).status).toBe(400);
+      const boundary = '----k' + Math.random().toString(16).slice(2);
+      const html = '<html><body><h2>10 Verträge verwalten</h2><p>Wie kündige ich einen Vertrag?</p><h2>20 Länder</h2><p>Welche Zollvorschriften gelten in Brasilien?</p></body></html>';
+      const payload = Buffer.from(`--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="review.html"\r\nContent-Type: text/html\r\n\r\n${html}\r\n--${boundary}--\r\n`);
+      const up = await built.app.inject({ method: 'POST', url: '/api/v1/metadata/question-sets', payload, headers: { 'content-type': `multipart/form-data; boundary=${boundary}`, 'x-user-id': 'u-redaktion' } });
+      expect(up.statusCode).toBe(201);
+      const set = up.json();
+      expect(set).toMatchObject({ name: 'review', summary: { questions: 2, open: 2, chapters: 2 } });
+      const done = (await call('POST', `/metadata/question-sets/${set.id}/answer`, {}, 'u-redaktion')).json;
+      expect(done.summary).toMatchObject({ answered: 1, noAnswer: 1, open: 0 });
+      const ok = done.items.find((i: any) => i.chapter === '10 Verträge verwalten');
+      expect(ok).toMatchObject({ status: 'answered', mode: 'llm' });
+      expect(ok.sources[0]).toMatchObject({ n: 1, path: 'k.md' });
+      expect(ok.answerText).toContain('Beenden');
+      const no = done.items.find((i: any) => i.chapter === '20 Länder');
+      expect(no.status).toBe('no_answer');
+      expect((await call('POST', `/metadata/question-items/${no.id}/qa`, {}, 'u-redaktion')).status).toBe(400);
+      const qa = (await call('POST', `/metadata/question-items/${ok.id}/qa`, {}, 'u-redaktion')).json;
+      expect(qa).toMatchObject({ question: 'Wie kündige ich einen Vertrag?', note: 'Aus Fragenkatalog „review“, 10 Verträge verwalten' });
+      expect(qa.sources).toHaveLength(1);
+      const xlsx = await call('GET', `/metadata/question-sets/${set.id}/export?format=xlsx`, undefined, 'u-leser');
+      const wb = new ExcelJS.Workbook();
+      await wb.xlsx.load(xlsx.raw as any);
+      const ws = wb.getWorksheet('Rückfragen')!;
+      expect(ws.getRow(2).getCell(3).value).toBe('Wie kündige ich einen Vertrag?');
+      expect(String(ws.getRow(2).getCell(6).value)).toContain('[1] k.md, Z. ');
+      expect(ws.getRow(3).getCell(4).value).toBe('keine Aussage in den Quellen');
+      expect((await call('GET', '/metadata/question-sets', undefined, 'u-leser')).json[0]).toMatchObject({ questions: 2, answered: 1 });
+      expect((await call('DELETE', `/metadata/question-sets/${set.id}`, undefined, 'u-redaktion')).status).toBe(204);
+      expect((await call('GET', `/metadata/question-sets/${set.id}`)).status).toBe(404);
+    } finally {
+      await built.app.close();
+    }
+  });
 });
+

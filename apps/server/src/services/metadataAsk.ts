@@ -18,6 +18,9 @@ import { CHUNK_FROM, formatOf, listQa } from './metadata.js';
 
 export const CANDIDATES = 20;
 export const PASSAGES = 6;
+/** Mindestrelevanz eines Belegs: Anteil der Inhaltswörter der Frage bzw. deutliche Bedeutungsähnlichkeit */
+export const MIN_KEYWORDS = 0.3;
+const MIN_SIMILARITY = 0.6;
 const MAX_UNITS = 20000;
 const FORMATS = ['markdown', 'html', 'docx', 'pptx', 'pdf', 'jira'];
 
@@ -98,8 +101,9 @@ export async function askSources(ctx: Ctx, input: any, user: User) {
     const order = all.map((_, i) => i).sort((a, b) => kwAll[b] - kwAll[a]);
     const pool = (all.length <= 400 ? order : order.slice(0, 200)).map((i) => ({ ...all[i], kw: kwAll[i] }));
     const [qv, ...pv] = await embedTexts(ctx, [question, ...pool.map((u) => `${u.headingPath.join(' – ')}: ${u.context ? `${u.context} ` : ''}${u.text}`)]);
-    const scored = pool.map((u, i) => ({ ...u, score: 0.5 * Math.max(0, dot(qv, pv[i])) + 0.5 * u.kw }))
-      .filter((u) => u.kw > 0 || u.score >= 0.3).sort((a, b) => b.score - a.score).slice(0, CANDIDATES);
+    // ein einzelnes gemeinsames Wort („gelten“) ist noch kein Beleg: Mindestanteil der Fragewörter oder deutliche Ähnlichkeit
+    const scored = pool.map((u, i) => ({ ...u, sim: Math.max(0, dot(qv, pv[i])) })).map((u) => ({ ...u, score: 0.5 * u.sim + 0.5 * u.kw }))
+      .filter((u) => u.kw >= MIN_KEYWORDS || u.sim >= MIN_SIMILARITY).sort((a, b) => b.score - a.score).slice(0, CANDIDATES);
     // 2. Neugewichtung der Top 20 → Top 6
     ranked = scored.map((u) => ({ ...u, score: rerank(question, u) })).sort((a, b) => b.score - a.score).slice(0, PASSAGES);
   }

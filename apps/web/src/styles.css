@@ -835,3 +835,8 @@ div.reader-lang-note p { margin: 0; }
 .ask-result { margin-top: 10px; }
 .ask-result sup a { text-decoration: none; padding: 0 1px; }
 .ask-compare { border-top: 1px dashed var(--border); margin-top: 8px; padding-top: 6px; }
+
+/* Rückfragen (ADR-089) */
+.qc-chapter + .qc-chapter { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 6px; }
+.qc-item { padding: 6px 0; border-bottom: 1px dashed var(--border); }
+.qc-item p { margin: 2px 0; }
