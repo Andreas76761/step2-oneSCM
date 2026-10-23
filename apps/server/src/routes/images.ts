@@ -2,7 +2,8 @@
 import type { FastifyInstance } from 'fastify';
 import { audit, getSettings, type Ctx } from '../context.js';
 import { badRequest, Problem } from '../problem.js';
-import { addImageVersion, createPlaceholder, exportCoverageMatrix, imageCoverage, imageCoverageMatrix, listImageArchive, updateImageMeta } from '../services/imageArchive.js';
+import { addImageVersion, createPlaceholder, exportCoverageMatrix, imageCoverage, imageCoverageMatrix, linkVariant, listImageArchive, unlinkVariant, updateImageMeta } from '../services/imageArchive.js';
+import { createClickpath, deleteClickpath, getClickpath, listClickpaths, updateClickpath } from '../services/clickpaths.js';
 import { userOf } from './helpers.js';
 
 type P = { Params: { mediaSha: string } };
@@ -10,6 +11,22 @@ type P = { Params: { mediaSha: string } };
 export function imageRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Querystring: { q?: string } }>('/image-archive', async (req) => (userOf(req.ctx, req), listImageArchive(req.ctx, { q: req.query.q })));
   app.get('/image-archive/coverage', async (req) => (userOf(req.ctx, req), imageCoverage(req.ctx)));
+  // Varianten einer Maske (ADR-093, F-22)
+  app.post<P & { Body: any }>('/image-archive/:mediaSha/variants', async (req) => linkVariant(req.ctx, req.params.mediaSha, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.delete<P>('/image-archive/:mediaSha/variants', async (req) => unlinkVariant(req.ctx, req.params.mediaSha, userOf(req.ctx, req, 'edit')));
+  // Klickstrecke aus Screenshots (ADR-093, F-24)
+  app.get('/image-clickpaths', async (req) => (userOf(req.ctx, req), listClickpaths(req.ctx)));
+  app.post<{ Body: any }>('/image-clickpaths', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    return createClickpath(req.ctx, req.body ?? {}, user);
+  });
+  app.get<{ Params: { clickpathId: string } }>('/image-clickpaths/:clickpathId', async (req) => (userOf(req.ctx, req), getClickpath(req.ctx, req.params.clickpathId)));
+  app.put<{ Params: { clickpathId: string }; Body: any }>('/image-clickpaths/:clickpathId', async (req) => updateClickpath(req.ctx, req.params.clickpathId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.delete<{ Params: { clickpathId: string } }>('/image-clickpaths/:clickpathId', async (req, reply) => {
+    await deleteClickpath(req.ctx, req.params.clickpathId, userOf(req.ctx, req, 'edit'));
+    reply.code(204);
+  });
   // Deckungsmatrix (ADR-092, F-30): Stelle × Sprache/Rolle/Sparte
   app.get<{ Querystring: { rows?: string; dims?: string } }>('/image-archive/coverage-matrix', async (req) => (userOf(req.ctx, req), imageCoverageMatrix(req.ctx, { rows: req.query.rows, dims: req.query.dims?.split(',').filter(Boolean) })));
   app.get<{ Querystring: { rows?: string; dims?: string; format?: string } }>('/image-archive/coverage-matrix/export', async (req, reply) => {

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.41.0 – Etappe 41 (23.10.2026)
+
+### Hinzugefügt
+- **Varianten einer Maske (ADR-093, F-22):** Bilder derselben Maske im Bildarchiv verknüpfen; Export, Handbuch-Varianten, Releases und Übersetzungen zeigen je Verweis die Fassung mit passender Sprache, Rolle, Sparte und Markt. Prüfregel für doppelte Varianten, Deckungsmatrix „je Maske“.
+- **Klickstrecke aus Screenshots (F-24):** Stationen aus Bildern des Archivs, parallele Wege als 3a/3b, gezeichnet als PNG mit Nummern, Beschriftungen und Pfeilen; im Bildarchiv abgelegt, Änderungen als neue Fassung – alle Verweise folgen.
+- Migration `048_variants_clickpaths.sql`; Tests T-284 … T-286, E2E T-287 (axe); Anforderungen NFR-97, NFR-98.
+
 ## 0.40.0 – Etappe 40 (23.10.2026)
 
 ### Hinzugefügt

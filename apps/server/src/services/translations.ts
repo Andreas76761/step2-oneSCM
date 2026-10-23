@@ -16,6 +16,7 @@ import { getChapterVersion } from './chapters.js';
 import { notifyTranslationReady } from './translationRequests.js';
 import { renderHtml, renderMarkdown, type ExportChapter } from './exports.js';
 import { loadMedia } from './media.js';
+import { applyVariants } from './imageArchive.js';
 import { preserveImages } from '../domain/media.js';
 
 /** Übersetzt werden Absätze mit Text; Lückenhinweise und erzeugte Statusangaben nicht */
@@ -261,7 +262,7 @@ export async function exportTranslation(ctx: Ctx, id: string, format: string) {
   if (!['md', 'html'].includes(format)) throw badRequest('format muss md oder html sein.');
   const src = await getChapterVersion(ctx, t.chapterVersionId);
   const byBlock = new Map(t.sections.flatMap((s) => s.blocks).map((b) => [b.blockId, b]));
-  const chapter: ExportChapter = {
+  const [chapter] = await applyVariants<ExportChapter>(ctx, [{
     title: t.title ?? src.title,
     versionNo: src.versionNo,
     approvedAt: t.approvedAt ?? src.approvedAt,
@@ -269,7 +270,7 @@ export async function exportTranslation(ctx: Ctx, id: string, format: string) {
       code: s.code, title: SECTION_TITLES[t.language]?.[s.code] ?? s.title,
       blocks: s.blocks.filter((b) => byBlock.get(b.id)?.text).map((b) => ({ ...b, text: byBlock.get(b.id)!.text! })),
     })),
-  };
+  }], { language: t.language }); // Bildvarianten in der Zielsprache (ADR-093)
   const heading = `oneSCM – ${LANGUAGES[t.language] ?? t.language}${t.status === 'approved' ? '' : ' (Entwurf)'}`;
   const media = await loadMedia(ctx, chapter.sections.flatMap((s) => s.blocks.map((b) => b.text as string)));
   const body = format === 'md'

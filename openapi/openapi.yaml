@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.40.0
+  version: 0.41.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -4337,7 +4337,7 @@ paths:
       tags: [Medien]
       x-requirements: [NFR-96]
       x-extension: true
-      parameters: [{ name: rows, in: query, schema: { type: string, enum: [navigation, chapter], default: navigation } }, { name: dims, in: query, description: 'Kommagetrennt: language, role, division', schema: { type: string } }]
+      parameters: [{ name: rows, in: query, schema: { type: string, enum: [navigation, variant, chapter], default: navigation } }, { name: dims, in: query, description: 'Kommagetrennt: language, role, division', schema: { type: string } }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ rowsBy, dims, languages, columns: [{ key, label }], rows: [{ key, label, images, cells: [{ key, count, placeholders, images }], gaps, placeholderOnly, unassigned }], summary }' }
@@ -4349,7 +4349,7 @@ paths:
       tags: [Medien]
       x-requirements: [NFR-96]
       x-extension: true
-      parameters: [{ name: rows, in: query, schema: { type: string, enum: [navigation, chapter], default: navigation } }, { name: dims, in: query, description: 'Kommagetrennt: language, role, division', schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [xlsx, csv], default: xlsx } }]
+      parameters: [{ name: rows, in: query, schema: { type: string, enum: [navigation, variant, chapter], default: navigation } }, { name: dims, in: query, description: 'Kommagetrennt: language, role, division', schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [xlsx, csv], default: xlsx } }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Datei' }
@@ -4384,6 +4384,94 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Bild' }
         '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-archive/{mediaSha}/variants:
+    post:
+      operationId: linkImageVariant
+      summary: 'Bild mit einer Variante derselben Maske verknüpfen (F-22); Gruppen werden zusammengeführt (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-97]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [withSha], properties: { withSha: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Bild mit variantGroup und variants' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: unlinkImageVariant
+      summary: 'Bild aus seiner Variantengruppe lösen (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-97]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Bild' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-clickpaths:
+    get:
+      operationId: listClickpaths
+      summary: 'Klickstrecken aus Screenshots (F-24)'
+      tags: [Medien]
+      x-requirements: [NFR-98]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, title, steps, perRow, baseSha, … }]' }
+    post:
+      operationId: createClickpath
+      summary: 'Klickstrecke aus Bildern des Archivs zeichnen (PNG mit Nummern, parallele Wege 3a/3b) und im Bildarchiv ablegen (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-98]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [title, steps], properties: { title: { type: string, minLength: 3, maxLength: 120 }, perRow: { type: integer, minimum: 2, maximum: 6, default: 4 }, steps: { type: array, minItems: 2, maxItems: 12, items: { type: object, properties: { alternatives: { type: array, minItems: 1, maxItems: 3, items: { type: object, required: [sha], properties: { sha: { type: string }, caption: { type: string, maxLength: 80 } } } } } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, title, steps, perRow, baseSha, alt, markdown, url, createdBy, createdAt, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /image-clickpaths/{clickpathId}:
+    get:
+      operationId: getClickpath
+      summary: 'Klickstrecke mit Alternativtext und Markdown zum Einbinden'
+      tags: [Medien]
+      x-requirements: [NFR-98]
+      x-extension: true
+      parameters: [{ name: clickpathId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, title, steps, perRow, baseSha, alt, markdown, url, createdBy, createdAt, updatedBy, updatedAt }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: updateClickpath
+      summary: 'Klickstrecke ändern: neu zeichnen als neue Fassung desselben Bildes – Verweise in Kapiteln folgen (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-98]
+      x-extension: true
+      parameters: [{ name: clickpathId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { title: { type: string, minLength: 3, maxLength: 120 }, perRow: { type: integer, minimum: 2, maximum: 6, default: 4 }, steps: { type: array, minItems: 2, maxItems: 12, items: { type: object, properties: { alternatives: { type: array, minItems: 1, maxItems: 3, items: { type: object, required: [sha], properties: { sha: { type: string }, caption: { type: string, maxLength: 80 } } } } } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, title, steps, perRow, baseSha, alt, markdown, url, createdBy, createdAt, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteClickpath
+      summary: 'Definition löschen; das Bild bleibt im Archiv (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-98]
+      x-extension: true
+      parameters: [{ name: clickpathId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
   /image-archive/{mediaSha}/versions:

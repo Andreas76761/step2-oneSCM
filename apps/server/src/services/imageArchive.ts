@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs';
 import { audit, type Ctx, type User } from '../context.js';
 import { json, now, parseJson, type Row } from '../db.js';
 import { coverageMatrix, MATRIX_DIMS, type MatrixDim, type MatrixImage } from '../domain/imageMatrix.js';
+import { pickVariant, variantKey, type VariantImage, type VariantTarget } from '../domain/imageVariants.js';
 import { imageRefs } from '../domain/media.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { storeMedia } from './media.js';
@@ -106,6 +107,19 @@ async function item(ctx: Ctx, base: Row, nav: Map<string, Row>) {
   // Herkunft aus einer Folie mit Gliederungs-Vorschlag (F-25) und übernommener Gliederungspunkt
   const src = await ctx.db.get('SELECT * FROM media_context WHERE project_id = ? AND sha = ?', ctx.projectId, base.sha256);
   const ol = meta?.outline_label_id ? await ctx.db.get('SELECT id, code, name_de FROM metadata_labels WHERE id = ?', meta.outline_label_id) : null;
+  // Varianten derselben Maske (F-22)
+  const group = meta?.variant_group ? await ctx.db.all(
+    `SELECT m.*, a.title FROM media_meta m JOIN media_assets a ON a.project_id = m.project_id AND a.sha256 = m.base_sha
+     WHERE m.project_id = ? AND m.variant_group = ? AND m.base_sha <> ? ORDER BY m.image_no`, ctx.projectId, meta.variant_group, base.sha256,
+  ) : [];
+  const variants = group.map((g) => ({
+    sha: g.base_sha, imageNo: imageNumber(Number(g.image_no)), title: g.title ?? null, language: g.language ?? null,
+    roles: parseJson<string[]>(g.roles, []), divisions: parseJson<string[]>(g.divisions, []), markets: parseJson<string[]>(g.markets, []), placeholder: !!Number(g.placeholder),
+  }));
+  const own = { sha: base.sha256, language: meta?.language ?? null, roles: parseJson<string[]>(meta?.roles, []), divisions: parseJson<string[]>(meta?.divisions, []), markets: parseJson<string[]>(meta?.markets, []) };
+  const twin = variants.find((v) => variantKey(v) === variantKey(own));
+  const checks = checksFor(cur, meta ?? { placeholder: 0 }, use, base.title ?? null);
+  if (twin) checks.push({ rule: 'variant_duplicate', severity: 'warning', message: `Gleiche Merkmale wie die Variante ${twin.imageNo} – Sprache, Rolle, Sparte oder Markt unterscheiden.` });
   return {
     sha: base.sha256, imageNo: imageNumber(Number(meta?.image_no ?? 0)), title: base.title ?? null, mime: cur.mime, width: cur.width ?? null, height: cur.height ?? null, byteSize: Number(cur.byte_size),
     currentSha: current, url: `/api/v1/media/${current}`, placeholder: !!Number(meta?.placeholder ?? 0),
@@ -116,7 +130,8 @@ async function item(ctx: Ctx, base: Row, nav: Map<string, Row>) {
     versions: (versions.length ? versions : [{ sha: base.sha256, version_no: 1, note: null, created_by: null, created_at: base.created_at }])
       .map((v) => ({ sha: v.sha, versionNo: Number(v.version_no), note: v.note ?? null, createdBy: v.created_by ?? null, createdAt: v.created_at, url: `/api/v1/media/${v.sha}?original=1` })),
     usedIn: use.chapters, sourceUses: use.snippets,
-    checks: checksFor(cur, meta ?? { placeholder: 0 }, use, base.title ?? null),
+    variantGroup: meta?.variant_group ?? null, variants,
+    checks,
     createdAt: base.created_at,
   };
 }
@@ -279,7 +294,7 @@ export async function suggestImageOutline(ctx: Ctx, images: { sha: string; slide
  * Label) bzw. Kapitel, in dem es verwendet wird. Sprachen aus dem Projekt, sonst aus den Bildern (mindestens de).
  */
 export async function imageCoverageMatrix(ctx: Ctx, opts: { rows?: string; dims?: string[] } = {}) {
-  const by = opts.rows === 'chapter' ? 'chapter' : 'navigation';
+  const by = opts.rows === 'chapter' ? 'chapter' : opts.rows === 'variant' ? 'variant' : 'navigation';
   const dims = (opts.dims?.length ? opts.dims : MATRIX_DIMS).filter((d): d is MatrixDim => (MATRIX_DIMS as string[]).includes(d));
   if (!dims.length) throw badRequest(`dims: eine oder mehrere aus ${MATRIX_DIMS.join(', ')}.`);
   const { items } = await listImageArchive(ctx);
@@ -287,9 +302,18 @@ export async function imageCoverageMatrix(ctx: Ctx, opts: { rows?: string; dims?
   const projectLangs = parseJson<string[]>(project?.languages, []);
   const languages = projectLangs.length ? projectLangs : [...new Set(['de', ...items.map((i) => i.language).filter((l): l is string => !!l)])].sort();
   if (dims.includes('language') && dims.length === 3 && languages.length > 6) throw badRequest('Zu viele Spalten – bitte weniger Merkmale wählen.');
+  const first = new Map<string, (typeof items)[number]>();
+  for (const i of items) if (!first.has(i.variantGroup ?? i.sha)) first.set(i.variantGroup ?? i.sha, i);
+  const maskLabel = (key: string) => {
+    const f = first.get(key)!;
+    return `${f.imageNo} ${f.title ?? ''}`.trim();
+  };
   const images: MatrixImage[] = items.map((i) => ({
     imageNo: i.imageNo, title: i.title, language: i.language, roles: i.roles, divisions: i.divisions, placeholder: i.placeholder,
-    places: by === 'navigation'
+    places: by === 'variant'
+      // je Maske (F-22): Variantengruppe, sonst das Bild allein; Name nach dem ersten Bild der Gruppe
+      ? [{ key: i.variantGroup ?? i.sha, label: maskLabel(i.variantGroup ?? i.sha) }]
+      : by === 'navigation'
       ? [i.navigation ? { key: i.navigation.id, label: i.navigation.nameDe } : { key: '-', label: '(ohne Reiter)' }]
       : i.usedIn.length ? i.usedIn.map((c: any) => ({ key: c.chapterId, label: c.title })) : [{ key: '-', label: '(in keinem Kapitel)' }],
   }));
@@ -299,7 +323,7 @@ export async function imageCoverageMatrix(ctx: Ctx, opts: { rows?: string; dims?
 export async function exportCoverageMatrix(ctx: Ctx, format: string, opts: Parameters<typeof imageCoverageMatrix>[1]) {
   if (!['csv', 'xlsx'].includes(format)) throw badRequest('format muss csv oder xlsx sein.');
   const m = await imageCoverageMatrix(ctx, opts);
-  const header = [m.rowsBy === 'chapter' ? 'Kapitel' : 'Reiter/Menüpunkt', 'Bilder', 'Lücken', ...m.columns.map((c) => c.label)];
+  const header = [m.rowsBy === 'chapter' ? 'Kapitel' : m.rowsBy === 'variant' ? 'Maske (Variantengruppe)' : 'Reiter/Menüpunkt', 'Bilder', 'Lücken', ...m.columns.map((c) => c.label)];
   const cell = (c: (typeof m.rows)[number]['cells'][number]) => (c.count ? c.images.join(', ') : c.placeholders ? `Platzhalter: ${c.images.join(', ')}` : '–');
   const rows = m.rows.map((r) => [r.label, String(r.images), String(r.gaps), ...r.cells.map(cell)]);
   const date = now().slice(0, 10);
@@ -319,4 +343,72 @@ export async function exportCoverageMatrix(ctx: Ctx, format: string, opts: Param
   }
   ws.columns.forEach((c, i) => (c.width = i === 0 ? 36 : i < 3 ? 8 : 16));
   return { fileName: `deckungsmatrix-${date}.xlsx`, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', data: Buffer.from(await wb.xlsx.writeBuffer()) };
+}
+
+// ---------- Varianten einer Maske (ADR-093, F-22) ----------
+
+/** Bild mit einem anderen Bild derselben Maske verknüpfen; bestehende Gruppen werden zusammengeführt */
+export async function linkVariant(ctx: Ctx, sha: string, input: any, user: User) {
+  const a = await baseOf(ctx, sha);
+  const b = await baseOf(ctx, String(input?.withSha ?? ''));
+  if (a.sha256 === b.sha256) throw badRequest('Ein Bild ist nicht seine eigene Variante.');
+  await ensureNumbers(ctx, [a, b]);
+  const ma = await ctx.db.get('SELECT variant_group FROM media_meta WHERE project_id = ? AND base_sha = ?', ctx.projectId, a.sha256);
+  const mb = await ctx.db.get('SELECT variant_group FROM media_meta WHERE project_id = ? AND base_sha = ?', ctx.projectId, b.sha256);
+  const group = ma?.variant_group ?? mb?.variant_group ?? a.sha256;
+  await ctx.db.tx(async () => {
+    if (mb?.variant_group && mb.variant_group !== group) await ctx.db.run('UPDATE media_meta SET variant_group = ? WHERE project_id = ? AND variant_group = ?', group, ctx.projectId, mb.variant_group);
+    await ctx.db.run(`UPDATE media_meta SET variant_group = ?, updated_by = ?, updated_at = ? WHERE project_id = ? AND base_sha IN (?, ?)`, group, user.id, now(), ctx.projectId, a.sha256, b.sha256);
+    await audit(ctx, user.id, 'image.variant_linked', 'media', a.sha256, { with: b.sha256, group });
+  });
+  return getItem(ctx, a.sha256);
+}
+
+/** Bild aus seiner Variantengruppe lösen; bleibt nur ein Bild übrig, endet die Gruppe */
+export async function unlinkVariant(ctx: Ctx, sha: string, user: User) {
+  const a = await baseOf(ctx, sha);
+  const m = await ctx.db.get('SELECT variant_group FROM media_meta WHERE project_id = ? AND base_sha = ?', ctx.projectId, a.sha256);
+  if (!m?.variant_group) throw badRequest('Das Bild gehört zu keiner Variantengruppe.');
+  await ctx.db.tx(async () => {
+    await ctx.db.run('UPDATE media_meta SET variant_group = NULL, updated_by = ?, updated_at = ? WHERE project_id = ? AND base_sha = ?', user.id, now(), ctx.projectId, a.sha256);
+    const rest = await ctx.db.all('SELECT base_sha FROM media_meta WHERE project_id = ? AND variant_group = ?', ctx.projectId, m.variant_group);
+    if (rest.length === 1) await ctx.db.run('UPDATE media_meta SET variant_group = NULL WHERE project_id = ? AND variant_group = ?', ctx.projectId, m.variant_group);
+    else if (rest.length && m.variant_group === a.sha256) {
+      // Kennung der Gruppe war dieses Bild: auf das nächste Mitglied umstellen
+      await ctx.db.run('UPDATE media_meta SET variant_group = ? WHERE project_id = ? AND variant_group = ?', rest[0].base_sha, ctx.projectId, m.variant_group);
+    }
+    await audit(ctx, user.id, 'image.variant_unlinked', 'media', a.sha256, { group: m.variant_group });
+  });
+  return getItem(ctx, a.sha256);
+}
+
+/**
+ * Bildverweise auf die passende Variante umstellen (Export, Übersetzung): je Verweis die Fassung der Maske, die zu
+ * Sprache, Rolle, Sparte und Markt der Ausgabe passt. Verweise ohne Variantengruppe bleiben unverändert.
+ */
+export async function variantSwapper(ctx: Ctx, target: VariantTarget) {
+  const rows = await ctx.db.all('SELECT * FROM media_meta WHERE project_id = ? AND variant_group IS NOT NULL', ctx.projectId);
+  if (!rows.length) return (text: string) => text;
+  const img = (r: Row): VariantImage => ({ sha: r.base_sha, language: r.language ?? null, roles: parseJson<string[]>(r.roles, []), divisions: parseJson<string[]>(r.divisions, []), markets: parseJson<string[]>(r.markets, []) });
+  const byBase = new Map(rows.map((r) => [r.base_sha as string, r]));
+  const groups = new Map<string, VariantImage[]>();
+  for (const r of rows) groups.set(r.variant_group, [...(groups.get(r.variant_group) ?? []), img(r)]);
+  // spätere Fassungen gehören zu ihrem Basis-Bild
+  const versionBase = new Map((await ctx.db.all('SELECT sha, base_sha FROM media_versions WHERE project_id = ?', ctx.projectId)).map((v) => [v.sha as string, v.base_sha as string]));
+  const cache = new Map<string, string>();
+  const swap = (sha: string) => {
+    if (cache.has(sha)) return cache.get(sha)!;
+    const r = byBase.get(versionBase.get(sha) ?? sha);
+    const out = r ? pickVariant(img(r), groups.get(r.variant_group)!, target) : sha;
+    const res = r && out === r.base_sha ? sha : out; // unverändert: genau die verwendete Fassung behalten
+    cache.set(sha, res);
+    return res;
+  };
+  return (text: string) => text.replace(/\(media:([a-f0-9]{64})\)/g, (_all, sha: string) => `(media:${swap(sha)})`);
+}
+
+/** Kapitel (Abschnitte mit Absätzen) mit den passenden Bildvarianten für eine Ausgabe */
+export async function applyVariants<C extends { sections: { blocks: { text: string }[] }[] }>(ctx: Ctx, chapters: C[], target: VariantTarget): Promise<C[]> {
+  const swap = await variantSwapper(ctx, target);
+  return chapters.map((ch) => ({ ...ch, sections: ch.sections.map((s) => ({ ...s, blocks: s.blocks.map((b) => (b.text?.includes('media:') ? { ...b, text: swap(b.text) } : b)) })) }));
 }

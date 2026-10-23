@@ -49,6 +49,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **38** ✅ | M6: Untertitel und Video mit Zeitmarke, lokale Transkription, Standbilder bei Änderung (F-26), Texterkennung gescannter PDF-Seiten (ADR-090) | 152 Server-Tests grün auf SQLite und PostgreSQL |
 | **39** ✅ | M7: Antwortqualität – Testfragen mit erwarteten Quellen, Prüfläufe mit Trefferquote und MRR, Vergleich, Export (ADR-091) | 155 Server-Tests grün auf SQLite und PostgreSQL |
 | **40** ✅ | Optional: Punktmodell Muss/Soll (F-08), Expertenbefragung zu Wissenslücken (F-16), Deckungsmatrix der Bilder (F-30) (ADR-092) | 159 Server-Tests grün auf SQLite und PostgreSQL |
+| **41** ✅ | Optional: Varianten einer Maske mit passender Fassung je Ausgabe (F-22), Klickstrecke aus Screenshots mit 3a/3b (F-24) (ADR-093) | 162 Server-Tests grün auf SQLite und PostgreSQL |
 | **28** ✅ | Labelkatalog nach echtem oneSCM, erweiterte Datenschutzprüfung mit Pseudonymisierung (ADR-080) | 123 Server-Tests grün auf SQLite und PostgreSQL |
 | **27** ✅ | oneSCM_Metadaten M1: 100 vordefinierte Labels, Chunks je Überschrift labeln, Fragen und Antworten mit Quellen speichern (ADR-079) | 121 Server-Tests grün auf SQLite und PostgreSQL, 78 E2E-Tests (T-202 und T-231 scheitern in dieser Umgebung auch ohne die Änderung) |
 | **22** ✅ | Druck je Variante und Rolle im Firmen-Layout (ADR-065); Suche und Glossar beim Lesen (ADR-066); Vorlagen duplizieren, exportieren, importieren (ADR-067); schnelles Laden (ADR-068) | 108 Server- und 73 E2E-Tests grün auf SQLite und PostgreSQL |

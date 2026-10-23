@@ -94,3 +94,4 @@
 | [ADR-090](ADR-090-video-untertitel-ocr.md) | Video, Untertitel (Zeitmarke je Absatz), Standbilder bei Änderung mit rotem Rahmen, Texterkennung gescannter PDF-Seiten – nur lokale Werkzeuge | akzeptiert, umgesetzt |
 | [ADR-091](ADR-091-antwortqualitaet.md) | Antwortqualität: Testfragen mit erwarteten Quellen, Prüfläufe mit Treffer@k, MRR, Beleg, Lückenfragen, Vergleich und Export | akzeptiert, umgesetzt |
 | [ADR-092](ADR-092-punktmodell-befragung-deckung.md) | Punktmodell Muss/Soll im Anleitungs-Check (F-08), Expertenbefragung zu Wissenslücken (F-16), Deckungsmatrix der Bilder (F-30) | akzeptiert, umgesetzt |
+| [ADR-093](ADR-093-varianten-klickstrecke.md) | Varianten einer Maske mit passender Fassung je Ausgabe (F-22), Klickstrecke aus Screenshots mit parallelen Wegen 3a/3b (F-24) | akzeptiert, umgesetzt |

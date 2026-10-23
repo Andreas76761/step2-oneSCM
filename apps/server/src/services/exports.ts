@@ -12,6 +12,7 @@ import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices
 import { DEFAULT_LAYOUT, resolveLayout, type ResolvedLayout } from './layout.js';
 import { renderDocx } from './docx.js';
 import { transitionsFor } from './transitions.js';
+import { applyVariants } from './imageArchive.js';
 
 type Media = Map<string, MediaFile>;
 
@@ -346,6 +347,8 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   const next = profile === 'full' && input.transitions !== false ? await transitionsFor(ctx, chapters, input.transitions === true) : undefined;
   const raw = chapters;
   chapters = shapeChapters(raw, filter, { profile, reading: input.reading, next });
+  // Varianten einer Maske (ADR-093, F-22): passende Fassung je Rolle, Sparte und Markt; das Handbuch ist deutsch
+  chapters = await applyVariants(ctx, chapters, { language: 'de', roles: filter.roles, divisions: filter.divisions, market: filter.market });
   const baseTitle = outline ? outline.name : profile === 'full' ? undefined : 'oneSCM Benutzerhandbuch';
   const extras: ExportExtras = {
     title: baseTitle && profile !== 'full' ? `${baseTitle} – ${PROFILE_LABEL[profile]}` : baseTitle,

@@ -1996,5 +1996,43 @@
       "NFR-95",
       "NFR-96"
     ]
+  },
+  {
+    "id": "T-284",
+    "title": "Variante wählen nach Sprache, Rolle, Sparte, Markt; Nummern 3a/3b und Alternativtext der Klickstrecke (Einheit)",
+    "file": "apps/server/test/stage41.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-97",
+      "NFR-98"
+    ]
+  },
+  {
+    "id": "T-285",
+    "title": "Varianten einer Maske verknüpfen, doppelte Merkmale melden, passende Fassung im Export und in der Übersetzung, Deckungsmatrix je Maske",
+    "file": "apps/server/test/stage41.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-97"
+    ]
+  },
+  {
+    "id": "T-286",
+    "title": "Klickstrecke aus Screenshots: Bild mit Nummern und parallelen Schritten, im Archiv, Änderung als neue Fassung",
+    "file": "apps/server/test/stage41.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-98"
+    ]
+  },
+  {
+    "id": "T-287",
+    "title": "Bildarchiv: Varianten einer Maske verknüpfen, Klickstrecke aus Screenshots mit parallelem Weg erstellen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-97",
+      "NFR-98"
+    ]
   }
 ]

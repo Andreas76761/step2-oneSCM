@@ -1055,5 +1055,23 @@
     "documentation": [
       "docs/adr/ADR-092-punktmodell-befragung-deckung.md"
     ]
+  },
+  {
+    "id": "NFR-97",
+    "title": "Varianten einer Maske verknüpfen; Export, Handbuch-Varianten, Releases und Übersetzungen zeigen die Fassung mit passender Sprache, Rolle, Sparte und Markt; doppelte Varianten werden gemeldet (F-22)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-093-varianten-klickstrecke.md"
+    ]
+  },
+  {
+    "id": "NFR-98",
+    "title": "Klickstrecke aus Screenshots mit parallelen Wegen 3a/3b als Bild im Archiv, Alternativtext erzeugt, Änderung als neue Fassung (F-24)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-093-varianten-klickstrecke.md"
+    ]
   }
 ]

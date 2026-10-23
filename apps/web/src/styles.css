@@ -844,3 +844,5 @@ div.reader-lang-note p { margin: 0; }
 .matrix td.cov-ok { background: var(--ok-bg, #e7f6ea); }
 .matrix td.cov-ph { background: var(--warn-bg); }
 .matrix td.cov-gap { background: var(--danger-bg, #fdecee); color: var(--danger, #9f1239); }
+.clickpath-steps { padding-left: 0; list-style: none; }
+.clickpath-steps > li { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }

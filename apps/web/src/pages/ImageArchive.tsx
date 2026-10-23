@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { api, forgetMedia, mediaUrl, patch, post } from '../api';
+import { api, del, forgetMedia, mediaUrl, patch, post, put } from '../api';
 import { readClipboardImage, usePasteImage } from '../components/clipboard';
 import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
@@ -177,6 +177,50 @@ export function ImageArchivePage() {
                 </fieldset>
                 {canEdit && <button className="btn primary" onClick={save}>Merkmale speichern</button>}
               </fieldset>
+              {/* F-22: Varianten derselben Maske – im Export und in Übersetzungen wird die passende Fassung eingesetzt */}
+              <section aria-label="Varianten dieser Maske">
+                <h3>Varianten dieser Maske</h3>
+                {item.variants.length ? (
+                  <ul className="small">
+                    {item.variants.map((v: any) => (
+                      <li key={v.sha}>
+                        <button type="button" className="btn link" onClick={() => setSel(v.sha)}>{v.imageNo}</button> {v.title ?? ''}
+                        <span className="muted"> · {[v.language?.toUpperCase(), v.roles.join('/'), v.divisions.join('/'), v.markets.join('/')].filter(Boolean).join(' · ') || 'ohne Merkmale'}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : <p className="small muted">Keine Varianten verknüpft.</p>}
+                {canEdit && (
+                  <div className="filters">
+                    <label className="grow">Variante verknüpfen
+                      <select value="" onChange={async (e) => {
+                        const v = e.target.value;
+                        if (!v) return;
+                        try {
+                          await post(`/image-archive/${item.sha}/variants`, { withSha: v });
+                          notify('Variante verknüpft.');
+                          reload();
+                        } catch (err) {
+                          notify(errorText(err), 'error');
+                        }
+                      }}>
+                        <option value="">– Bild wählen –</option>
+                        {(list.data?.items ?? []).filter((x: any) => x.sha !== item.sha && !item.variants.some((v: any) => v.sha === x.sha)).map((x: any) => <option key={x.sha} value={x.sha}>{x.imageNo} {x.title ?? ''}</option>)}
+                      </select>
+                    </label>
+                    {item.variantGroup && <button type="button" className="btn small ghost" onClick={async () => {
+                      try {
+                        await del(`/image-archive/${item.sha}/variants`);
+                        notify('Aus der Variantengruppe gelöst.');
+                        reload();
+                      } catch (err) {
+                        notify(errorText(err), 'error');
+                      }
+                    }}>Aus Gruppe lösen</button>}
+                  </div>
+                )}
+                <p className="small muted">Im Export und in Übersetzungen wird je Verweis die Variante mit passender Sprache, Rolle, Sparte und Markt eingesetzt.</p>
+              </section>
               <h3>Fassungen</h3>
               <ol className="small">
                 {item.versions.map((v: any) => (
@@ -212,6 +256,7 @@ export function ImageArchivePage() {
               {made && <p className="small">In den Text einfügen: <code>{made}</code></p>}
             </Card>
           )}
+          {canEdit && <ClickpathBuilder images={list.data?.items ?? []} onDone={reload} />}
         </div>
       </div>
       <Card title="Bildabdeckung je Kapitel">
@@ -255,7 +300,7 @@ function CoverageMatrix() {
       {(['xlsx', 'csv'] as const).map((f) => <DownloadButton key={f} className="btn small" href={`/api/v1/image-archive/coverage-matrix/export?${query}&format=${f}`} name={`deckungsmatrix.${f}`}>⬇ {f.toUpperCase()}</DownloadButton>)}
     </span>}>
       <div className="filters">
-        <label>Zeilen <select value={rows} onChange={(e) => setRows(e.target.value)}><option value="navigation">je Reiter/Menüpunkt</option><option value="chapter">je Kapitel</option></select></label>
+        <label>Zeilen <select value={rows} onChange={(e) => setRows(e.target.value)}><option value="navigation">je Reiter/Menüpunkt</option><option value="variant">je Maske (Varianten)</option><option value="chapter">je Kapitel</option></select></label>
         <fieldset className="inline">
           <legend className="small">Spalten</legend>
           {Object.entries(DIM_LABEL).map(([d, l]) => <label key={d} className="small"><input type="checkbox" checked={dims.includes(d)} onChange={() => toggle(d)} /> {DIM_CHOICE[d]}</label>)}
@@ -270,7 +315,7 @@ function CoverageMatrix() {
           </p>
           <div className="table-wrap" role="region" aria-label="Deckungsmatrix" tabIndex={0}>
             <table className="table compact matrix">
-              <thead><tr><th>{rows === 'chapter' ? 'Kapitel' : 'Reiter/Menüpunkt'}</th><th>Bilder</th>{m.data.columns.map((c: any) => <th key={c.key}>{c.label}</th>)}</tr></thead>
+              <thead><tr><th>{rows === 'chapter' ? 'Kapitel' : rows === 'variant' ? 'Maske' : 'Reiter/Menüpunkt'}</th><th>Bilder</th>{m.data.columns.map((c: any) => <th key={c.key}>{c.label}</th>)}</tr></thead>
               <tbody>
                 {m.data.rows.map((r: any) => (
                   <tr key={r.key}>
@@ -289,6 +334,102 @@ function CoverageMatrix() {
           </div>
           <p className="small muted">Bilder für „alle“ Rollen bzw. Sparten decken jede Rolle bzw. Sparte ab. Merkmale pflegen Sie oben je Bild.</p>
         </>
+      )}
+    </Card>
+  );
+}
+
+type Station = { alternatives: { sha: string; caption: string }[] };
+
+/** Klickstrecke aus Screenshots (ADR-093, F-24): Stationen aus Bildern des Archivs, parallele Wege als 3a/3b */
+function ClickpathBuilder({ images, onDone }: { images: any[]; onDone: () => void }) {
+  const { notify } = useApp();
+  const saved = useLoad<any[]>('/image-clickpaths');
+  const [editId, setEditId] = useState<string | null>(null);
+  const [title, setTitle] = useState('');
+  const [perRow, setPerRow] = useState(4);
+  const empty = (): Station => ({ alternatives: [{ sha: '', caption: '' }] });
+  const [steps, setSteps] = useState<Station[]>([empty(), empty()]);
+  const [result, setResult] = useState<any>(null);
+  const setAlt = (i: number, k: number, patchAlt: Partial<{ sha: string; caption: string }>) =>
+    setSteps(steps.map((s, n) => (n === i ? { alternatives: s.alternatives.map((a, m) => (m === k ? { ...a, ...patchAlt } : a)) } : s)));
+  const move = (i: number, d: number) => {
+    const next = [...steps];
+    [next[i], next[i + d]] = [next[i + d], next[i]];
+    setSteps(next);
+  };
+  const label = (i: number, k: number) => (steps[i].alternatives.length > 1 ? `${i + 1}${String.fromCharCode(97 + k)}` : String(i + 1));
+  const ready = title.trim().length >= 3 && steps.length >= 2 && steps.every((s) => s.alternatives.every((a) => a.sha));
+  const submit = async () => {
+    try {
+      const body = { title, perRow, steps };
+      const r = editId ? await put<any>(`/image-clickpaths/${editId}`, body) : await post<any>('/image-clickpaths', body);
+      forgetMedia(r.baseSha); // neue Fassung unter derselben Adresse
+      notify(editId ? 'Klickstrecke aktualisiert – neue Fassung im Bildarchiv.' : 'Klickstrecke im Bildarchiv abgelegt.');
+      setResult(r);
+      setEditId(r.id);
+      saved.reload();
+      onDone();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const load = (c: any) => {
+    setEditId(c.id);
+    setTitle(c.title);
+    setPerRow(c.perRow);
+    setSteps(c.steps);
+    setResult(null);
+  };
+  return (
+    <Card title="Klickstrecke aus Screenshots">
+      <p className="small muted">Stationen aus Bildern des Archivs, nummeriert und mit Pfeilen verbunden. Mehrere Bilder einer Station sind parallele Wege (3a, 3b). Das Ergebnis liegt als Bild im Archiv; Änderungen werden eine neue Fassung.</p>
+      {(saved.data?.length ?? 0) > 0 && (
+        <label className="block small">Gespeicherte Klickstrecke bearbeiten
+          <select value={editId ?? ''} onChange={(e) => { const c = saved.data!.find((x) => x.id === e.target.value); if (c) load(c); else { setEditId(null); setTitle(''); setSteps([empty(), empty()]); } }}>
+            <option value="">– neu –</option>
+            {saved.data!.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+          </select>
+        </label>
+      )}
+      <div className="filters">
+        <label className="grow">Titel der Klickstrecke <input value={title} maxLength={120} placeholder="z. B. Vertrag anlegen" onChange={(e) => setTitle(e.target.value)} /></label>
+        <label>Stationen je Zeile <select value={perRow} onChange={(e) => setPerRow(Number(e.target.value))}>{[2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n}</option>)}</select></label>
+      </div>
+      <ol className="clickpath-steps" aria-label="Stationen">
+        {steps.map((s, i) => (
+          <li key={i}>
+            {s.alternatives.map((a, k) => (
+              <div key={k} className="filters">
+                <span className="tag">{label(i, k)}</span>
+                <label>Bild für {label(i, k)}
+                  <select value={a.sha} onChange={(e) => setAlt(i, k, { sha: e.target.value })}>
+                    <option value="">– Bild wählen –</option>
+                    {images.map((x: any) => <option key={x.sha} value={x.sha}>{x.imageNo} {x.title ?? ''}</option>)}
+                  </select>
+                </label>
+                <label className="grow">Beschriftung {label(i, k)} <input value={a.caption} maxLength={80} placeholder="z. B. Neu anlegen" onChange={(e) => setAlt(i, k, { caption: e.target.value })} /></label>
+                {s.alternatives.length > 1 && <button type="button" className="btn small ghost" aria-label={`Weg ${label(i, k)} entfernen`} onClick={() => setSteps(steps.map((x, n) => (n === i ? { alternatives: x.alternatives.filter((_, m) => m !== k) } : x)))}>✕</button>}
+              </div>
+            ))}
+            <div className="row-actions">
+              {s.alternatives.length < 3 && <button type="button" className="btn small" onClick={() => setSteps(steps.map((x, n) => (n === i ? { alternatives: [...x.alternatives, { sha: '', caption: '' }] } : x)))}>+ paralleler Weg</button>}
+              {i > 0 && <button type="button" className="btn small ghost" aria-label={`Station ${i + 1} nach oben`} onClick={() => move(i, -1)}>↑</button>}
+              {i < steps.length - 1 && <button type="button" className="btn small ghost" aria-label={`Station ${i + 1} nach unten`} onClick={() => move(i, 1)}>↓</button>}
+              {steps.length > 2 && <button type="button" className="btn small ghost" aria-label={`Station ${i + 1} entfernen`} onClick={() => setSteps(steps.filter((_, n) => n !== i))}>Station entfernen</button>}
+            </div>
+          </li>
+        ))}
+      </ol>
+      <div className="row-actions">
+        {steps.length < 12 && <button type="button" className="btn" onClick={() => setSteps([...steps, empty()])}>+ Station</button>}
+        <button type="button" className="btn primary" disabled={!ready} onClick={() => void submit()}>{editId ? 'Klickstrecke aktualisieren' : 'Klickstrecke erstellen'}</button>
+      </div>
+      {result && (
+        <div>
+          <Thumb sha={result.baseSha} alt={result.alt} large />
+          <p className="small">In den Text einfügen: <code>{result.markdown}</code></p>
+        </div>
       )}
     </Card>
   );

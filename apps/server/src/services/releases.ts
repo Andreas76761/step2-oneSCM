@@ -12,6 +12,7 @@ import { resolveLayout, type ResolvedLayout } from './layout.js';
 import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
 import { escapeHtml, markdownToHtml, type ImageSource } from './render.js';
 import { inlineMedia, loadMedia, type MediaFile } from './media.js';
+import { applyVariants } from './imageArchive.js';
 import { MIME_EXT } from '../domain/media.js';
 import { projectLanguages, translatedChapter } from './translations.js';
 import { LANGUAGES } from '../domain/translate.js';
@@ -240,6 +241,8 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
     const vf = variantFilter(outline);
     return { roles: vf.roles, divisions: vf.divisions, market: vf.market, blueprint: vf.blueprint, markets: vf.markets };
   })() : {};
+  // Bildvarianten (ADR-093): deutsche Fassung passend zu Rolle, Sparte und Markt der Variante
+  chapters.splice(0, chapters.length, ...(await applyVariants(ctx, chapters, { language: 'de', roles: filter.roles, divisions: filter.divisions, market: filter.market })));
   const appendices = outline ? await appendicesFor(ctx, outline, visible(chapters, filter)) : null;
   const notes = input.notes?.trim() || null;
   // Freigegebene Übersetzungen genau der veröffentlichten Kapitelversionen (ADR-021)
@@ -253,7 +256,10 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
     }
     const translated = list.filter(Boolean).length;
     if (!translated) continue;
-    translations.set(lang, list);
+    // Bildvarianten in der Sprache der Übersetzung (ADR-093)
+    const swapped = await applyVariants(ctx, list.filter((c): c is ExportChapter => !!c), { language: lang, roles: filter.roles, divisions: filter.divisions, market: filter.market });
+    let k = 0;
+    translations.set(lang, list.map((c) => (c ? swapped[k++] : null)));
     languages.push({ language: lang, translated, total: list.length, markdownKey: `releases/${id}/handbuch-${lang}.md` });
   }
   const allTexts = [chapters, ...[...translations.values()].map((l) => l.filter((c): c is ExportChapter => !!c))]

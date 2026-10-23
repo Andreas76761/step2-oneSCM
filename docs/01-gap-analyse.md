@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.43 Stand nach Etappe 41 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Varianten einer Maske mit passender Fassung in Export, Release und Übersetzung (F-22, NFR-97) | ✅ ([ADR-093](adr/ADR-093-varianten-klickstrecke.md)) |
+| Klickstrecke aus Screenshots mit parallelen Wegen 3a/3b, neue Fassung bei Änderung (F-24, NFR-98) | ✅ ([ADR-093](adr/ADR-093-varianten-klickstrecke.md)) |
+| Offen | optional F-10, F-11; später F-19, F-31; fastify-Hinweis „low“ |
+
 ## 1.38 Stand nach Etappe 36 (23.10.2026)
 
 | Punkt | Ergebnis |

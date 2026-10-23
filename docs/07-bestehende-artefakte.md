@@ -104,9 +104,9 @@ Status gegenüber der App: **neu** = gibt es nicht, **teilweise** = Ansatz vorha
 |---|---|---|---|---|---|---|
 | F-20 | Labels für Bilder (Sprache, Rolle, Sparte, Markt, Version, Reiter) + Bildprüfregeln + Bildabdeckung je Kapitel | Screenarchiv | teilweise | M | übernehmen | |
 | F-21 | Bildversionen: Original bleibt, neue Fassung ersetzt das Bild überall; Platzhalterbild mit reservierter Nummer | Screenarchiv, DokuPress | teilweise | M | übernehmen | |
-| F-22 | Varianten einer Maske verknüpfen (Sprache/Rolle/Sparte/Markt) | Screenarchiv | neu | M | optional | |
+| F-22 | Varianten einer Maske verknüpfen (Sprache/Rolle/Sparte/Markt) | Screenarchiv | neu | M | optional | umgesetzt in Etappe 41 (ADR-093) |
 | F-23 | Screenshot aus der Zwischenablage einfügen mit Zuschnitt | Screenarchiv | teilweise | S | übernehmen | |
-| F-24 | Klickstrecke aus Screenshots (parallele Schritte 3a/3b) | Screenarchiv | teilweise | M | optional | |
+| F-24 | Klickstrecke aus Screenshots (parallele Schritte 3a/3b) | Screenarchiv | teilweise | M | optional | umgesetzt in Etappe 41 (ADR-093) |
 | F-25 | Bild → Gliederungsstelle über den Folientext beim PPTX-Import | Screenarchiv | geplant (M2) | S | in M2 | |
 | F-26 | Video → Einzelbilder mit Änderungserkennung und roten Rahmen, lokal | Screenarchiv, Screenshot-Studio | neu | M | übernommen in Etappe 38 (ADR-090, ffmpeg lokal) | |
 | F-27 | Ausgabe „Quick Guide“ und „One Pager“ je Variante | Struktur, Screenarchiv | teilweise | M | übernehmen | |

@@ -2414,3 +2414,45 @@ test('[T-283] Expertenbefragung beantworten und übernehmen, Punktmodell Muss/So
   await expect(page.getByRole('region', { name: 'Deckungsmatrix' }).or(page.getByText('Noch keine Bilder im Archiv.'))).toBeVisible();
   expect(await axe()).toEqual([]);
 });
+
+test('[T-287] Bildarchiv: Varianten einer Maske verknüpfen, Klickstrecke aus Screenshots mit parallelem Weg erstellen', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const pick = async (label: string, text: string) => {
+    const select = page.getByRole('combobox', { name: label, exact: true });
+    const value = await select.evaluate((el, t) => [...(el as HTMLSelectElement).options].find((o) => o.text.includes(t))?.value ?? '', text);
+    expect(value).not.toBe('');
+    await select.selectOption(value);
+  };
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Bildarchiv', exact: true }).click();
+  for (const t of ['E2E Maske Liste DE', 'E2E Maske Liste EN', 'E2E Maske Kopieren']) {
+    await page.getByLabel('Was soll das Bild zeigen?').fill(t);
+    await page.getByRole('button', { name: 'Platzhalter anlegen' }).click();
+    await expect(page.getByText(/^Platzhalter B-\d{4} angelegt\.$/).last()).toBeVisible();
+  }
+  // aktuelles Bild: „E2E Maske Kopieren“ – mit der deutschen Liste verknüpfen
+  await pick('Variante verknüpfen', 'E2E Maske Liste DE');
+  await expect(page.getByText('Variante verknüpft.')).toBeVisible();
+  const variants = page.getByRole('region', { name: 'Varianten dieser Maske' });
+  await expect(variants).toContainText('E2E Maske Liste DE');
+  await expect(variants.getByRole('button', { name: 'Aus Gruppe lösen' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Klickstrecke: 1 Liste, 2a Liste EN / 2b Kopieren
+  await page.getByLabel('Titel der Klickstrecke').fill('E2E Vertrag anlegen');
+  await pick('Bild für 1', 'E2E Maske Liste DE');
+  await page.getByLabel('Beschriftung 1').fill('Vertragsliste öffnen');
+  await pick('Bild für 2', 'E2E Maske Liste EN');
+  await page.getByRole('button', { name: '+ paralleler Weg' }).nth(1).click();
+  await pick('Bild für 2b', 'E2E Maske Kopieren');
+  await page.getByLabel('Beschriftung 2a').fill('Neu');
+  await page.getByLabel('Beschriftung 2b').fill('Kopieren');
+  await page.getByRole('button', { name: 'Klickstrecke erstellen' }).click();
+  await expect(page.getByText('Klickstrecke im Bildarchiv abgelegt.')).toBeVisible({ timeout: 20000 });
+  await expect(page.getByText('Klickstrecke E2E Vertrag anlegen: 1 Vertragsliste öffnen → 2a Neu oder 2b Kopieren', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Klickstrecke aktualisieren' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+});
