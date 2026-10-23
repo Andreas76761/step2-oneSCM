@@ -54,6 +54,8 @@ export async function seedMetadataLabels(db: Db, projectId: string) {
 const labelDto = (r: Row) => ({
   id: r.id, code: r.code, group: r.label_group, nameDe: r.name_de, nameEn: r.name_en, description: r.description ?? null,
   position: Number(r.position), origin: r.origin, archived: !!r.archived_at,
+  // Version und Historie (ADR-096)
+  validFrom: r.valid_from ?? null, validUntil: r.valid_until ?? null, replacedBy: r.replaced_by ?? null, inHistory: !!r.history_at,
   ...(r.chunk_count !== undefined ? { chunkCount: Number(r.chunk_count), qaCount: Number(r.qa_count) } : {}),
   updatedBy: r.updated_by, updatedAt: r.updated_at,
 });
@@ -104,7 +106,7 @@ export async function createLabel(ctx: Ctx, input: { code?: string; group?: stri
   return labelDto((await ctx.db.get('SELECT * FROM metadata_labels WHERE id = ?', id))!);
 }
 
-export async function updateLabel(ctx: Ctx, id: string, input: { nameDe?: string; nameEn?: string; description?: string | null; position?: number; archived?: boolean }, user: User) {
+export async function updateLabel(ctx: Ctx, id: string, input: { nameDe?: string; nameEn?: string; description?: string | null; position?: number; archived?: boolean; validFrom?: string | null }, user: User) {
   const r = await ctx.db.get('SELECT * FROM metadata_labels WHERE id = ? AND project_id = ?', id, ctx.projectId);
   if (!r) throw notFound(`Label ${id}`);
   const nameDe = input.nameDe !== undefined ? cleanName(input.nameDe, 'nameDe') : r.name_de;
@@ -113,9 +115,15 @@ export async function updateLabel(ctx: Ctx, id: string, input: { nameDe?: string
   if (input.position !== undefined && (!Number.isInteger(input.position) || input.position < 1)) throw badRequest('position muss eine ganze Zahl ≥ 1 sein.');
   const position = input.position ?? r.position;
   const archivedAt = input.archived === undefined ? r.archived_at : input.archived ? r.archived_at ?? now() : null;
+  if (r.history_at && input.archived === false) throw badRequest('Das Label ist in der Historie – holen Sie es unter „Kapitelsteuerung › Historie“ zurück.');
+  let validFrom = r.valid_from ?? null;
+  if (input.validFrom !== undefined) {
+    validFrom = input.validFrom === null || input.validFrom === '' ? null : String(input.validFrom).trim();
+    if (validFrom && !/^[\p{L}\d][\p{L}\d .,/_-]{0,39}$/u.test(validFrom)) throw badRequest('validFrom: Version oder Release mit bis zu 40 Zeichen, z. B. „2026.3“.');
+  }
   await ctx.db.tx(async () => {
-    await ctx.db.run('UPDATE metadata_labels SET name_de = ?, name_en = ?, description = ?, position = ?, archived_at = ?, updated_by = ?, updated_at = ? WHERE id = ?',
-      nameDe, nameEn, description, position, archivedAt, user.id, now(), id);
+    await ctx.db.run('UPDATE metadata_labels SET name_de = ?, name_en = ?, description = ?, position = ?, archived_at = ?, valid_from = ?, updated_by = ?, updated_at = ? WHERE id = ?',
+      nameDe, nameEn, description, position, archivedAt, validFrom, user.id, now(), id);
     await audit(ctx, user.id, 'metadata.label.updated', 'metadata_label', id, { code: r.code, nameDe, nameEn, archived: !!archivedAt });
   });
   return labelDto((await ctx.db.get('SELECT * FROM metadata_labels WHERE id = ?', id))!);

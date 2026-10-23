@@ -11,3 +11,5 @@ Du pflegst die häufigen Fragen des oneSCM-Handbuchs. Lies zuerst `CLAUDE.md` un
 4. **Ablage:** `06_FAQ/FAQ.md` (Nr. `FAQ-<Kapitel>-<lfd.>` | Frage | Antwort | Quelle | Rolle | Sparte/Markt | Status: offen/beantwortet/geprüft). Doppelte Fragen zusammenführen, nie löschen (als „zusammengeführt mit …“ kennzeichnen).
 5. **Gesamtliste** `00_Dokumentation/FAQ_GESAMT.md` aktualisieren. Offene Fragen, die ein Experte beantworten muss, als eigene Liste „Experten fragen“ am Ende.
 Datenschutz: keine echten Namen, Kunden oder Fahrzeugdaten in Fragen oder Antworten.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

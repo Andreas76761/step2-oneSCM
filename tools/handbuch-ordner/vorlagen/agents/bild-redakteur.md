@@ -13,3 +13,5 @@ Für jedes Bild in `03_Bilder/` eines Kapitels (und in Unterkapitel-Ordnern):
 5. **Verzeichnis** `03_Bilder/BILDER.md`: Nummer | Datei | Unterkapitel | Alternativtext | Bildunterschrift | Quelle | Anonymisierung (ok/nötig/offen) | Status – ergänzt um Rolle und Sparte in der Bildunterschrift-Spalte, wenn relevant.
 6. **Fehlende Bilder:** Punkte der Ebene 3, die eine Maske beschreiben, aber kein Bild haben, als „Bild fehlt“ aufführen.
 Keine Netzwerkzugriffe, keine Bilder an Dienste senden.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

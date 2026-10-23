@@ -8,6 +8,8 @@ import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { assertIdsInProject } from './projects.js';
 import { systemNotice } from './collaboration.js';
 import { guidanceGateChecks } from './guidanceBase.js';
+import { mentions, mergeInstructions } from '../domain/chapterInstruction.js';
+import { instructionOf, subchapterInstructions } from './structure.js';
 import { snippetScope, variantSnippetRefs } from './variantSnippets.js';
 import { checkDecider, clearWorkflowSql, recordApproval, startWorkflow, workflowState } from './workflow.js';
 
@@ -20,7 +22,7 @@ export async function listChapters(ctx: Ctx, opts: { outlineFamilyId?: string; o
     ? await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? ORDER BY CASE WHEN outline_family_id IS NULL THEN 0 ELSE 1 END, outline_family_id, position, title', ctx.projectId)
     : opts.outlineFamilyId
     ? await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id = ? ORDER BY position, title', ctx.projectId, opts.outlineFamilyId)
-    : await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id IS NULL ORDER BY position, title', ctx.projectId);
+    : await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id IS NULL AND history_at IS NULL ORDER BY position, title', ctx.projectId);
   // outlineId: Inhalte der Variantenkapitel an dieser Gliederungsversion messen
   return Promise.all(chapters.map((c) => chapterSummary(ctx, opts.outlineId && c.outline_family_id ? { ...c, outline_id: opts.outlineId } : c)));
 }
@@ -47,9 +49,11 @@ async function chapterSummary(ctx: Ctx, c: Row) {
     title: c.title,
     position: c.position,
     outlineFamilyId: c.outline_family_id ?? null,
+    validFrom: c.valid_from ?? null,
+    inHistory: !!c.history_at,
     subchapters: c.outline_family_id
       ? (await variantSnippetRefs(ctx, c)).subchapters
-      : await db.all('SELECT id, title, position FROM subchapters WHERE chapter_id = ? ORDER BY position', c.id),
+      : await db.all('SELECT id, title, position, valid_from AS "validFrom" FROM subchapters WHERE chapter_id = ? AND history_at IS NULL ORDER BY position', c.id),
     snippetCount: counts.total ?? 0,
     confirmedSnippetCount: counts.confirmed ?? 0,
     openFindings: findings.filter((f) => f.status === 'open' || f.status === 'deferred').length,
@@ -153,11 +157,32 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
   const gate = await gateForChapter(ctx, chapterId, 'generate');
   if (!gate.passed) throw conflict('Generierung blockiert: offene Blocker-Befunde müssen zuerst geklärt werden.', { gate });
 
-  const snippets = await loadGenSnippets(ctx, chapterId);
+  // Kapitelanweisung (ADR-096) mit Vorrang: ausgeschlossene Themen kommen nicht in den Entwurf
+  const chapterInstruction = instructionOf(chapter);
+  const subInstructions = await subchapterInstructions(ctx, chapterId);
+  const subOf = new Map((await ctx.db.all('SELECT id, subchapter_id FROM text_snippets WHERE chapter_id = ?', chapterId)).map((r) => [r.id as string, r.subchapter_id as string | null]));
+  const all = await loadGenSnippets(ctx, chapterId);
+  const excludedByInstruction: { snippetId: string; topic: string }[] = [];
+  const snippets = all.filter((s) => {
+    const sub = subOf.get(s.id);
+    const ins = mergeInstructions(chapterInstruction, sub ? subInstructions.get(sub) : null);
+    const topic = ins.excluded.find((t) => mentions(s.text, t));
+    if (topic) excludedByInstruction.push({ snippetId: s.id, topic });
+    return !topic;
+  });
   if (!snippets.some((s) => CONFIRMED_EVIDENCE.includes(s.evidenceStatus))) {
-    throw unprocessable('Keine bestätigten Quellen (source_confirmed/manually_confirmed) in diesem Kapitel – es wird nichts generiert.');
+    throw unprocessable(excludedByInstruction.length
+      ? 'Keine bestätigten Quellen außerhalb der laut Kapitelanweisung ausgeschlossenen Themen – es wird nichts generiert.'
+      : 'Keine bestätigten Quellen (source_confirmed/manually_confirmed) in diesem Kapitel – es wird nichts generiert.');
   }
   const result = generateChapter(chapter.title, snippets);
+  // wichtige Themen ohne bestätigte Quelle werden als Lücke sichtbar
+  const usedTexts = snippets.filter((s) => result.usedSnippetIds.includes(s.id)).map((s) => s.text);
+  const allTopics = [...new Set([...chapterInstruction.topics, ...[...subInstructions.values()].flatMap((i) => i.topics)])];
+  const missingTopics = allTopics.filter((t) => !usedTexts.some((x) => mentions(x, t)));
+  for (const t of missingTopics) {
+    result.blocks.push({ section: 'purpose', kind: 'gap', text: `Laut Kapitelanweisung wichtig, aber ohne bestätigte Quelle: „${t}“.`, sourceIds: [], roles: [], divisions: [], market: null, release: null, scopeStatus: 'unconfirmed' } as any);
+  }
   const { db } = ctx;
   const versionId = newId('cv');
   const currentIds = new Set(snippets.map((s) => s.id));
@@ -213,9 +238,12 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
       }, actor, 'generiert');
     }
     await normalizePositions(ctx, versionId);
-    await audit(ctx, actor, 'chapter.generated', 'chapter_version', versionId, { chapterId, gaps: result.gaps, used: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, carried: carried.length });
+    await audit(ctx, actor, 'chapter.generated', 'chapter_version', versionId, { chapterId, gaps: result.gaps, used: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, carried: carried.length, excludedByInstruction: excludedByInstruction.length, missingTopics });
   });
-  return { ...(await getChapterVersion(ctx, versionId)), generation: { gaps: result.gaps, usedSnippets: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated } };
+  return {
+    ...(await getChapterVersion(ctx, versionId)),
+    generation: { gaps: result.gaps, usedSnippets: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, excludedByInstruction, missingTopics },
+  };
 }
 
 const MANUAL_MODES = ['manually_edited', 'locked', 'needs_regeneration', 'ai_rewritten'];

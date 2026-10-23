@@ -1091,5 +1091,32 @@
     "documentation": [
       "docs/adr/ADR-095-datenschutz-bild-labels.md"
     ]
+  },
+  {
+    "id": "NFR-101",
+    "title": "Kapitelanweisung je Kapitel und Unterkapitel (worauf es ankommt, wichtige Themen, nicht beschreiben) mit Vorrang für Generator, KI-Vorschläge, Anleitungs-Check und Agenten im Arbeitsordner (ANWEISUNG.md); fehlende Kapitel und Unterkapitel ergänzen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-096-kapitelsteuerung-historie.md"
+    ]
+  },
+  {
+    "id": "NFR-102",
+    "title": "Version („gültig ab“) an Kapiteln, Unterkapiteln und Labels, sichtbar im Output (auch in der Lesefassung)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-096-kapitelsteuerung-historie.md"
+    ]
+  },
+  {
+    "id": "NFR-103",
+    "title": "Veraltete Funktionen (Kapitel, Unterkapitel, Labels) durch neue ablösen: Historie mit gültig von–bis und Nachfolger, nicht mehr im Handbuch, Anhang „Historie“, Zuordnungen übertragbar, zurückholbar",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-096-kapitelsteuerung-historie.md"
+    ]
   }
 ]

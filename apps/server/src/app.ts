@@ -36,6 +36,7 @@ import { releaseLetterRoutes } from './routes/releaseLetters.js';
 import { knowledgeRoutes } from './routes/knowledge.js';
 import { transitionRoutes } from './routes/transitions.js';
 import { imageRoutes } from './routes/images.js';
+import { structureRoutes } from './routes/structure.js';
 import { seedMetadataLabels } from './services/metadata.js';
 import { seedDomainLinks } from './services/domainMap.js';
 import { styleRoutes } from './routes/style.js';
@@ -271,6 +272,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       releaseLetterRoutes(api, ctx);
       knowledgeRoutes(api, ctx);
       imageRoutes(api, ctx);
+      structureRoutes(api, ctx);
       transitionRoutes(api, ctx);
     },
     { prefix: '/api/v1' },

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.43.0 – Etappe 43 (23.10.2026)
+
+### Hinzugefügt
+- **Kapitelsteuerung (ADR-096):** je Kapitel und Unterkapitel eine Kapitelanweisung (worauf es ankommt, wichtige Themen, nicht beschreiben) mit Vorrang: Der Generator lässt Quellen zu ausgeschlossenen Themen weg und meldet wichtige Themen ohne Quelle als Lücke, KI-Vorschläge erhalten die Anweisung, der Anleitungs-Check prüft sie, die Werkstatt zeigt sie oben.
+- **Fehlende Kapitel und Unterkapitel ergänzen** – eingelesene Quellen mit gleicher Überschrift werden zugeordnet.
+- **Version „gültig ab“** an Kapiteln, Unterkapiteln und Labels; im Export unter der Kapitelüberschrift, auch in der Lesefassung.
+- **Veraltete Funktionen ablösen:** Kapitel, Unterkapitel und Labels durch einen Nachfolger ersetzen; das Alte kommt in die Historie (gültig von–bis), erscheint nicht mehr im Handbuch, aber im Anhang „Historie: abgelöste Funktionen“; Label-Zuordnungen übertragbar; zurückholen möglich.
+- **Arbeitsordner:** `ANWEISUNG.md` je Kapitel und Unterkapitel, Grundregel 8 in `CLAUDE.md`, alle Agenten lesen die Anweisung mit Vorrang; `abgleich --app` übernimmt die Anweisungen aus der App (eigene Angaben bleiben, App-Fassung als `.neu`).
+- Migration `050_chapter_instructions_history.sql`; Tests T-292 … T-294, E2E T-295 (axe); Anforderungen NFR-101 … NFR-103.
+
 ## 0.42.0 – Etappe 42 (23.10.2026)
 
 ### Hinzugefügt

@@ -8,6 +8,7 @@ import { escapeHtml, markdownToHtml, markdownToPdf, renderPdf } from './render.j
 import { assertIdsInProject } from './projects.js';
 import { dataUri, inlineMedia, loadMedia, type MediaFile } from './media.js';
 import { appendixHtmlSections, appendixMarkdown, appendixPdf } from './appendixRender.js';
+import { historyAppendix } from './structure.js';
 import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
 import { DEFAULT_LAYOUT, resolveLayout, type ResolvedLayout } from './layout.js';
 import { renderDocx } from './docx.js';
@@ -116,7 +117,11 @@ export function visible(chapters: ExportChapter[], f: ExportFilter) {
   }));
 }
 
-const versionLine = (ch: ExportChapter) => ((ch as any).hideVersion ? '' : `Freigegebene Version ${ch.versionNo}${ch.approvedAt ? ` vom ${ch.approvedAt.slice(0, 10)}` : ''}`);
+// Version der Funktion („gültig ab“, ADR-096) steht auch in der Lesefassung; die Freigabeversion nicht
+const versionLine = (ch: ExportChapter) => [
+  (ch as any).hideVersion ? '' : `Freigegebene Version ${ch.versionNo}${ch.approvedAt ? ` vom ${ch.approvedAt.slice(0, 10)}` : ''}`,
+  (ch as any).validFrom ? `Gültig ab ${(ch as any).validFrom}` : '',
+].filter(Boolean).join(' · ');
 
 const firstSentences = (text: string, n: number) => text.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ0-9„"])/).slice(0, n).join(' ');
 
@@ -304,6 +309,12 @@ export async function renderDocxExport(chapters: ExportChapter[], f: ExportFilte
   })), { title: extras.title ?? 'oneSCM Benutzerhandbuch', filterLine: filterDescription(f), media, layout: extras.layout ?? NO_LAYOUT, appendices: extras.appendices });
 }
 
+/** Ohne Verzeichnisse: nur die Historie abgelöster Funktionen (ADR-096), sofern vorhanden */
+async function historyOnly(ctx: Ctx): Promise<Appendices | null> {
+  const history = await historyAppendix(ctx);
+  return history.length ? { abbreviations: [], glossary: [], images: [], faq: [], history } : null;
+}
+
 export async function createExport(ctx: Ctx, input: ExportInput, actor: string) {
   const format = input.format ?? 'md';
   if (!(EXPORT_FORMATS as readonly string[]).includes(format)) throw badRequest(`format muss eines von ${EXPORT_FORMATS.join(', ')} sein.`);
@@ -314,14 +325,15 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
     ? input.chapterIds
     : (outline
       ? await ctx.db.all("SELECT DISTINCT chapter_id, c.position FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id = ? AND c.outline_node_key IN (SELECT node_key FROM outline_nodes WHERE outline_id = ? AND level = 1) AND v.status = 'approved' ORDER BY c.position", ctx.projectId, outline.family_id, outline.id)
-      : await ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id IS NULL AND v.status = 'approved'", ctx.projectId)
+      // abgelöste Kapitel (Historie, ADR-096) gehören nicht mehr ins Handbuch
+      : await ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id IS NULL AND c.history_at IS NULL AND v.status = 'approved'", ctx.projectId)
     ).map((r) => r.chapter_id as string);
 
   const blockers: { chapterId: string; checks: unknown }[] = [];
   const skipped: { chapterId: string; reason: string }[] = [];
   let chapters: any[] = [];
   for (const cid of chapterIds) {
-    const chapter = await ctx.db.get('SELECT id, title, position FROM chapters WHERE id = ?', cid);
+    const chapter = await ctx.db.get('SELECT id, title, position, valid_from FROM chapters WHERE id = ?', cid);
     if (!chapter) throw notFound(`Kapitel ${cid}`);
     const gate = await gateForChapter(ctx, cid, 'export');
     if (!gate.passed) blockers.push({ chapterId: cid, checks: gate.checks.filter((c) => !c.passed) });
@@ -330,7 +342,7 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
       skipped.push({ chapterId: cid, reason: `Kapitel „${chapter.title}“ hat keine freigegebene Version.` });
       continue;
     }
-    chapters.push({ ...(await getChapterVersion(ctx, v.id)), position: chapter.position });
+    chapters.push({ ...(await getChapterVersion(ctx, v.id)), position: chapter.position, validFrom: chapter.valid_from ?? null });
   }
   if (blockers.length) throw conflict('Export blockiert: offene Blocker- oder Datenschutzbefunde.', { blockers });
   chapters.sort((a, b) => a.position - b.position);
@@ -354,7 +366,7 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
     title: baseTitle && profile !== 'full' ? `${baseTitle} – ${PROFILE_LABEL[profile]}` : baseTitle,
     reading: !!input.reading,
     layout: format === 'pdf' || format === 'html' || format === 'docx' ? await resolveLayout(ctx) : undefined,
-    appendices: (input.appendices ?? !!outline) ? await appendicesFor(ctx, outline, visible(raw, filter)) : null,
+    appendices: (input.appendices ?? !!outline) ? await appendicesFor(ctx, outline, visible(raw, filter)) : await historyOnly(ctx),
   };
   // Bilder der sichtbaren Absätze (ADR-029) – eingebettet, damit die Datei eigenständig bleibt
   const media = format === 'json' ? new Map() : await loadMedia(ctx, visible(chapters, filter).flatMap((ch) => ch.sections.flatMap((s) => s.blocks.map((b: any) => b.text as string))));

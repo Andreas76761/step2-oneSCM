@@ -14,3 +14,5 @@ Je Unterkapitel des angegebenen Kapitels:
 6. **Verständlichkeit und Ton:** Schritte nummeriert, eine Handlung je Schritt, Sätze ≤ 25 Wörter, Präsens, aktiv, Anrede „Sie“, Warnhinweise nach Schema; Bilder mit nummerierten Callouts und Alternativtext laut `06_II_Stil_und_Design/STIL_UND_DESIGN.md`.
 7. **FAQ:** Antworten in `06_FAQ/FAQ.md` belegt und widerspruchsfrei zum Entwurf.
 Bericht: `04_Pruefung_Freigabe/<Unterkapitel-Nr>_Pruefbericht_<JJJJ-MM-TT>.md` – Ergebnis (freigabefähig / nachbessern / blockiert), Befunde (kritisch, Warnung, Hinweis) mit Fundstelle und Vorschlag. Danach die Zeile in `STATUS.md` aktualisieren und den auditor vormerken. Die Freigabe erteilt nur ein Mensch.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

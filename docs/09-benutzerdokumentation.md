@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.42 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.43 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -39,6 +39,10 @@ Stand: Version 0.42 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 
 ## 4. Schreiben
 
+- **Kapitelsteuerung:** je Kapitel und Unterkapitel eine kurze **Kapitelanweisung** – „Worauf es ankommt“, „Wichtige Themen“ (je Zeile eines, müssen vorkommen) und „Nicht beschreiben“. Sie gilt mit Vorrang: Der Kapitelgenerator lässt Quellen zu „Nicht beschreiben“ weg und meldet wichtige Themen ohne Quelle als Lücke, KI-Vorschläge und Anleitungs-Check beachten sie, die Werkstatt zeigt sie oben. Quellenbindung und Datenschutz gehen ihr vor.
+  - **Fehlendes Kapitel oder Unterkapitel ergänzen:** Titel eingeben (mit Nummer wird es danach eingeordnet), optional „gültig ab“. Später eingelesene Quellen mit derselben Überschrift gehören dazu.
+  - **Gültig ab:** Version bzw. Release je Kapitel, Unterkapitel und Label (Label unter „Labels: Version und Ablösen“, Administration). Steht im Export unter der Kapitelüberschrift.
+  - **Veraltete Funktion ablösen:** Nachfolger neu anlegen oder vorhandenen wählen, „Nachfolger gültig ab“ und Hinweis eintragen → „Ablösen und in die Historie legen“. Das Alte erscheint nicht mehr im Handbuch, sondern im Anhang „Historie: abgelöste Funktionen“ (gültig von–bis, ersetzt durch). Bei Labels können Chunks, Fragen & Antworten und Bilder übertragen werden. „Zurückholen“ macht es rückgängig.
 - **Kapitel-Assistent:** neues Kapitel aus Zweck, Voraussetzungen, Schritten und Ergebnis – mit Kapitelvorlagen.
 - **Kapitelgenerator:** Kapitel aus den bestätigten Quellen erzeugen; Lücken werden markiert.
 - **Kapitelwerkstatt:** Absätze bearbeiten, verschieben, KI-Vorschläge (mit Beleg je Satz) annehmen, Anleitungs-Check und Schreibstil direkt im Kapitel.
@@ -72,7 +76,7 @@ Stand: Version 0.42 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 ## 7. Typische Arbeitsabläufe
 
 1. **Wissen aufbauen:** Einlesen → Chunks mit Labels → Fragen & Antworten → Antwortqualität prüfen → Lücken in die Expertenbefragung → Antworten als Frage & Antwort (Label „Prüfen“) → später durch Quellen belegen.
-2. **Kapitel erstellen:** Quellen einlesen → Qualitätsanalyse (Widersprüche, Dopplungen) → Kapitelgenerator oder Kapitel-Assistent → Kapitelwerkstatt → Anleitungs-Check → Freigabe → Export/Veröffentlichung.
+2. **Kapitel erstellen:** Kapitelanweisung festlegen (Kapitelsteuerung) → Quellen einlesen → Qualitätsanalyse (Widersprüche, Dopplungen) → Kapitelgenerator oder Kapitel-Assistent → Kapitelwerkstatt → Anleitungs-Check → Freigabe → Export/Veröffentlichung.
 3. **Screenshots pflegen:** Bild ins Archiv (oder Platzhalter) → Datenschutz im Bild prüfen (erkannte Stellen, ggf. eigene Stellen) → Merkmale, Labels und Kapitel → Varianten verknüpfen → Klickstrecke → Deckungsmatrix auf Lücken prüfen → neue Fassung bei neuem Release.
 
 ## 8. Datenschutz

@@ -19,3 +19,5 @@ Regeln:
 - Vorhandene Entwürfe nicht überschreiben: neue Fassung `_Entwurf_vN.md`, Änderungen oben zusammenfassen.
 - Bilder nur aus `03_Bilder/` mit Nummer. Fragen, die beim Schreiben auffallen → Hinweis an faq-redakteur; Ideen → ideen-sammler; nach dem Entwurf den sprach-lektor vormerken (je ein Eintrag am Ende des Entwurfs unter „Weitergegeben“).
 Am Ende: belegte Punkte, offene Punkte, genutzte Quellen mit Jahr.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

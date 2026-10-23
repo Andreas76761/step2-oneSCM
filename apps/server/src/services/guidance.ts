@@ -9,6 +9,8 @@ import { getChapterVersion, insertBlock, normalizePositions } from './chapters.j
 import { assertIdsInProject } from './projects.js';
 import { applyChapterTexts } from './style.js';
 import { getGuidanceSettings, knownAcronyms, SKIP_SECTIONS } from './guidanceBase.js';
+import { checkAgainst, isEmpty } from '../domain/chapterInstruction.js';
+import { instructionFor } from './structure.js';
 
 const SECTION_TITLE = new Map<string, string>(CHAPTER_SECTIONS.map((s) => [s.code, s.title]));
 
@@ -20,7 +22,16 @@ export async function chapterGuidance(ctx: Ctx, versionId: string) {
   })));
   const a = analyzeGuidance(blocks, { knownAcronyms: await knownAcronyms(ctx), levels: (await getGuidanceSettings(ctx)).levels });
   const where = new Map(blocks.map((b) => [b.id, SECTION_TITLE.get(b.section) ?? b.section]));
+  // Kapitelanweisung (ADR-096): ausgeschlossene Themen im Text, wichtige Themen fehlen – zusätzlich zum Punktwert
+  const ins = await instructionFor(ctx, v.chapterId);
+  const subs = await ctx.db.all('SELECT instruction_topics, instruction_excluded FROM subchapters WHERE chapter_id = ? AND history_at IS NULL', v.chapterId);
+  for (const s of subs) {
+    ins.topics.push(...JSON.parse(s.instruction_topics ?? '[]').filter((t: string) => !ins.topics.includes(t)));
+    ins.excluded.push(...JSON.parse(s.instruction_excluded ?? '[]').filter((t: string) => !ins.excluded.includes(t)));
+  }
+  const instruction = isEmpty(ins) ? null : { ...ins, ...checkAgainst(ins, blocks.filter((b) => b.kind !== 'gap')), excludedMentioned: checkAgainst(ins, blocks.filter((b) => b.kind !== 'gap')).excludedMentioned.map((m) => ({ ...m, section: where.get(m.blockId) ?? null })) };
   return {
+    instruction,
     versionId: v.id, chapterId: v.chapterId, title: v.title, versionNo: v.versionNo, status: v.status, editable: v.status === 'draft',
     ...a, checks: a.checks.map((c) => ({ ...c, items: c.items.map((i) => ({ ...i, section: i.blockId ? where.get(i.blockId) ?? null : null })) })),
   };

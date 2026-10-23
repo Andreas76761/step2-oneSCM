@@ -101,6 +101,13 @@ export function GuidancePanel({ versionId, canEdit, onChanged }: { versionId: st
   };
   return (
     <div className="guide">
+      {d.instruction && (
+        <section className={`alert ${d.instruction.ok ? 'ok' : 'warning'}`} aria-label="Prüfung gegen die Kapitelanweisung">
+          <strong>Kapitelanweisung:</strong> {d.instruction.ok ? 'eingehalten.' : null}
+          {d.instruction.excludedMentioned.length > 0 && <div className="small">Nicht beschreiben, kommt aber vor: {d.instruction.excludedMentioned.map((m: any) => `„${m.topic}“${m.section ? ` (${m.section})` : ''}`).join(', ')}</div>}
+          {d.instruction.topicsMissing.length > 0 && <div className="small">Wichtige Themen fehlen: {d.instruction.topicsMissing.map((t: string) => `„${t}“`).join(', ')}</div>}
+        </section>
+      )}
       <div className="guide-head">
         <ScoreMeter score={d.score} />
         <p className="small">{d.passed} von {d.total} Punkten erfüllt{!d.editable && ' · freigegebene oder eingereichte Versionen sind schreibgeschützt'}</p>

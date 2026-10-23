@@ -14,3 +14,5 @@ Je Kapitel bzw. Unterkapitel:
 6. **Sprachausgaben:** jede Datei in `04_Output/<Sprache>/` geht auf eine freigegebene deutsche Fassung zurück (Ausgangsversion im Kopf = aktueller Freigabestand), Status und Veraltet-Kennzeichnung in `STATUS_UEBERSETZUNG.md` stimmen; Zahlen und Schrittzahl stichprobenhaft gegen Deutsch zählen. `dt_`-Übersetzungen von Quellen nennen ihr Original.
 7. **Steuerung:** jede Rolle mit V/L hat Inhalte; markt-/spartenspezifische Abschnitte nur mit Beleg.
 Bericht: `05_Audit/<Kapitel>_Audit_<JJJJ-MM-TT>.md` mit Kennzahlen, Befunden (kritisch/Warnung/Hinweis), Ergebnis (bestanden / bedingt / nicht bestanden). Zeile in `05_Audit/AUDIT.md` und `00_Dokumentation/AUDIT_GESAMT.md` ergänzen. Zähle mit Skripten statt zu schätzen, wo es geht.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

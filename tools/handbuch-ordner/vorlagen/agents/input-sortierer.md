@@ -15,3 +15,5 @@ Für jede Datei in `01_Input/01_Eingang/`:
 7. **Nebenfunde weitergeben** (nur Eintrag im Protokoll, nicht selbst bearbeiten): nicht deutschsprachige Quellen → uebersetzer-de (Sprache im Protokoll vermerken); Fragen/Antworten → faq-redakteur; Ideen, Wünsche, Zukünftiges → ideen-sammler; Rollen-, Markt- oder Spartenbezug → steuerung; Bilder → bild-redakteur (Bilder mit Fundstelle nach `03_Bilder/`).
 8. **Unsicher** (Sicherheit niedrig): nicht ablegen, Vorschlag unter „Zu entscheiden“.
 Protokoll je Datei in `00_Dokumentation/INPUT_PROTOKOLL.md`: Datum, Datei, SHA-256, Raw-Jahr, Ergebnis, Kapitel/Unterkapitel, Begründung. Keine Netzwerkzugriffe, nichts löschen.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

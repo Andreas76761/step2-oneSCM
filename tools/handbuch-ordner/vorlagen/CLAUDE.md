@@ -11,6 +11,7 @@ Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesam
 5. **Status nie vorwegnehmen:** Rollen, Scope (Pkw/Van, Markt, Release) und Freigaben bleiben „?“ bzw. „Vorschlag“, bis ein Beleg vorliegt. Freigaben erteilt nur ein Mensch.
 6. **Übersetzungen sind kein Original.** `dt_`-Dateien und Sprachausgaben tragen ihre Herkunft im Kopf; Belege nennen immer auch das Original.
 7. **Neuere Quelle schlägt ältere nicht automatisch.** Widersprechen sich `Raw_2025` und `Raw_2026`, beide Aussagen mit Jahr nennen und als Widerspruch melden.
+8. **Kapitelanweisung hat Vorrang.** Vor jeder Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und – falls vorhanden – des Unterkapitels lesen und befolgen; sie geht allen anderen Arbeitsanweisungen vor, nur die Regeln 1–4 gehen ihr vor. Themen unter „Nicht beschreiben“ weglassen (auch nicht als Hinweis); fehlt zu einem „Wichtigen Thema“ der Beleg: `[offen: Thema – Beleg fehlt]`. Die Anweisung pflegt ein Mensch – in der Datei oder in der App (Kapitelsteuerung, Übernahme per Abgleich).
 
 ## Aufbau
 
@@ -18,7 +19,7 @@ Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesam
 |---|---|
 | `00_Dokumentation/` | Arbeitsweise, Gliederungen (Excel, CSV, Markdown, App-Exporte), Status, Entscheidungen, Begriffe, Gesamtlisten (Audit, FAQ, Ideen, Steuerung), Werkzeuge |
 | `01_Input/` | `01_Eingang` (neue Dateien), `02_Zugeordnet` (Originale), `03_Ausgeschlossen` |
-| `02_Kapitel/<Kapitel>/` | Gesamtgliederung: `KAPITEL.md`, acht Arbeitsordner, je Unterkapitel ein Ordner mit `UNTERKAPITEL.md` |
+| `02_Kapitel/<Kapitel>/` | Gesamtgliederung: `KAPITEL.md`, `ANWEISUNG.md` (Kapitelanweisung), acht Arbeitsordner, je Unterkapitel ein Ordner mit `UNTERKAPITEL.md` und `ANWEISUNG.md` |
 | `03_Varianten/<Gliederung>/` | dieselbe Struktur für jede Gliederung aus der App, dazu `VARIANTE.md` und `STATUS.md` |
 | `04_Output/<Sprache>/<Kapitel>/` | freigegebene Fassung je Sprache: `01_Deutsch_DE`, `02_Englisch_EN`, `03_Französisch_FR`, `04_Italienisch_IT`, `05_Spanisch_ES`, `06_Tschechisch_CS`, `07_Slowakisch_SK`, `08_Koreanisch_KO`, `09_Malaiisch_MS`; Varianten unter `<Sprache>/Varianten/<Name>/` |
 | `05_I_Output/<Produkt>/` | **I Output** – fertige Produkte mit Screenshots: `01_Handbuch`, `02_Releaseletter`, `03_QuickGuide`, `04_Schulungsmaterial`, `05_Interne_Dokumente`, `06_Videos`, `07_Grafiken`, `08_Prozesse`; je Produkt `PRODUKT.md`, `01_Entwurf`, `02_Screens`, `03_Final/<Sprache>` |
@@ -64,9 +65,13 @@ Material, das nur ein Unterkapitel betrifft, darf direkt im Unterkapitel-Ordner 
 
 Ablauf: **Eingang → input-sortierer → uebersetzer-de → steuerung → kapitel-redakteur + bild-redakteur + faq-redakteur → sprach-lektor → pruefer → auditor → Mensch gibt frei → uebersetzer-ausgabe → Sprachreview durch das jeweilige Land.** Produkte: **freigegebene Kapitel → ausgabe-produzent → sprach-lektor + stil-designer → Mensch gibt frei → uebersetzer-ausgabe → Länderreview.** Englisch ist die internationale Fassung. Ideen sammelt der ideen-sammler jederzeit. Stand: `00_Dokumentation/STATUS.md`.
 
-## Neue Gliederung
+## Neue Gliederung, fehlende Kapitel, abgelöste Funktionen
 
 Neue Gesamtgliederung (Excel) oder neue Gliederung in der App (Stammdaten › Inhaltsverzeichnis): „gliederungs-pfleger: Gliederungen abgleichen“. Er ruft `00_Dokumentation/Werkzeuge/handbuch_struktur.py abgleich` auf, legt fehlende Ordner und neue Agenten an und meldet Umbenanntes oder Entfallenes in `00_Dokumentation/GLIEDERUNG_ABGLEICH.md`.
+
+- **Fehlende Kapitel oder Unterkapitel** ergänzen Sie in der Gliederung (Excel) oder in der App (Kapitelsteuerung bzw. Inhaltsverzeichnis) und gleichen danach ab – der Ordner entsteht mit `KAPITEL.md`/`UNTERKAPITEL.md` und leerer `ANWEISUNG.md`.
+- **Version:** „gültig ab“ (Release) steht in der App je Kapitel, Unterkapitel und Label und erscheint im Output.
+- **Abgelöste Funktionen** (z. B. Menüpunkt ersetzt) legt die App in die Historie; sie erscheinen nicht mehr im Handbuch, sondern im Anhang „Historie: abgelöste Funktionen“. Im Arbeitsordner wird nichts gelöscht: der alte Kapitel- bzw. Unterkapitelordner bleibt, der Abgleich meldet ihn als entfallen.
 
 ## App (oneSCM Handbook Studio)
 

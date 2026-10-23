@@ -2072,5 +2072,44 @@
       "NFR-99",
       "NFR-100"
     ]
+  },
+  {
+    "id": "T-292",
+    "title": "Kapitelanweisung: Themen erkennen, bereinigen, Kapitel und Unterkapitel zusammenführen, Prüfung, Markdown, KI-Anfrage (Einheit)",
+    "file": "apps/server/test/stage43.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-101"
+    ]
+  },
+  {
+    "id": "T-293",
+    "title": "Fehlende Kapitel und Unterkapitel ergänzen, Anweisung setzen; Generator lässt ausgeschlossene Themen weg und meldet fehlende wichtige Themen; Anleitungs-Check",
+    "file": "apps/server/test/stage43.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-101"
+    ]
+  },
+  {
+    "id": "T-294",
+    "title": "Version an Labels und Kapiteln im Output; veraltete Funktion ablösen → Historie (nicht im Handbuch, Anhang „Historie“), Zuordnungen übertragen, zurückholen",
+    "file": "apps/server/test/stage43.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-102",
+      "NFR-103"
+    ]
+  },
+  {
+    "id": "T-295",
+    "title": "Kapitelsteuerung: Kapitel und Unterkapitel ergänzen, Kapitelanweisung mit Version, Anzeige in der Werkstatt, Unterkapitel ablösen → Historie und zurückholen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-101",
+      "NFR-102",
+      "NFR-103"
+    ]
   }
 ]

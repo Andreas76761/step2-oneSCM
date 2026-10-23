@@ -195,6 +195,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.45 Stand nach Etappe 43 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Kapitelanweisung je Kapitel und Unterkapitel mit Vorrang für Generator, KI, Check, Agenten; Kapitel ergänzen (NFR-101) | ✅ ([ADR-096](adr/ADR-096-kapitelsteuerung-historie.md)) |
+| Version „gültig ab“ an Kapiteln, Unterkapiteln, Labels im Output (NFR-102) | ✅ |
+| Abgelöste Funktionen in der Historie, Anhang „Historie“, zurückholbar (NFR-103) | ✅ |
+| Offen | Anweisung für Handbuch-Varianten nur über die Quellkapitel; optional F-10, F-11; später F-19, F-31 |
+
 ## 1.44 Stand nach Etappe 42 (23.10.2026)
 
 | Punkt | Ergebnis |

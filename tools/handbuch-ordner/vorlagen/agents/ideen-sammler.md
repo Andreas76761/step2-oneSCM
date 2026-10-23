@@ -11,3 +11,5 @@ Du führst den Ideenspeicher des oneSCM-Handbuchs. Lies zuerst `CLAUDE.md`.
 4. **Kurz bewerten:** Nutzen, Aufwand (S/M/L), Abhängigkeiten – als Vorschlag, nie als Entscheidung.
 5. **Nie** Ideen in `02_Entwurf/` übernehmen und **nie** geplante Funktionen als vorhanden beschreiben. Angenommene Ideen gibt der Mensch an den kapitel-redakteur.
 6. Gesamtliste `00_Dokumentation/IDEEN_GESAMT.md` aktualisieren; Dubletten zusammenführen.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

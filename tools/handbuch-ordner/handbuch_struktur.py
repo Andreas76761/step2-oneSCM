@@ -4,7 +4,8 @@
 Je Kapitel acht Arbeitsordner:
   01_Quellen (Raw_2023 … Raw_2027), 02_Entwurf, 03_Bilder, 04_Pruefung_Freigabe,
   05_Audit, 06_FAQ, 07_Ideenspeicher, 08_Steuerung (Dealer, MO, Markt, HQ, IT, Marktspezifisch, Spartenspezifisch)
-und je Unterkapitel ein Ordner mit UNTERKAPITEL.md. Dazu CLAUDE.md, .claude/agents und .claude/settings.json.
+und je Unterkapitel ein Ordner mit UNTERKAPITEL.md. Je Kapitel und Unterkapitel eine ANWEISUNG.md (Kapitelanweisung,
+gilt mit Vorrang für die Agenten). Dazu CLAUDE.md, .claude/agents und .claude/settings.json.
 Hauptordner zur Steuerung: 05_I_Output (Produkte), 06_II_Stil_und_Design, 07_III_Grammatik_Synonyme_Fehlerliste, 08_IV_Translation.
 
 Befehle:
@@ -13,6 +14,8 @@ Befehle:
   abgleich  <Arbeitsordner> [--gliederung Datei.xlsx|.json] [--app http://localhost:3000 --projekt p_default (--token … | --benutzer u-admin)]
             legt nur Fehlendes an (Ordner, Hauptordner 05–08, Vorlagendateien, neue Agenten), löscht und überschreibt nichts
             (abweichende Vorlagen als <Datei>.neu daneben), und schreibt 00_Dokumentation/GLIEDERUNG_ABGLEICH.md. Gliederungen aus der App landen unter 03_Varianten/<Name>/.
+            Mit --app werden auch die Kapitelanweisungen aus der App (Kapitelsteuerung) in ANWEISUNG.md der Kapitel unter 02_Kapitel übernommen –
+            nur wenn die Datei fehlt oder noch leer ist; sonst als ANWEISUNG.md.neu.
 
 Benötigt Python 3.9+, für Excel zusätzlich openpyxl. Der App-Abgleich nutzt nur die lokale App-Adresse.
 """
@@ -169,6 +172,23 @@ def uordner(u) -> str:
     return f"{u['nr']}_{ordnername(u['titel'])}"
 
 
+def anweisung(titel: str, text: str = '', wichtig: list | None = None, nicht: list | None = None, gueltig_ab: str | None = None) -> str:
+    """Kapitelanweisung (ADR-096) – gleiche Form wie der Export der App; leere Abschnitte mit [offen]."""
+    z = [f'# Anweisung: {titel}', '',
+         '> Gilt mit hohem Vorrang für alle Arbeiten an diesem Kapitel bzw. Unterkapitel. Vorrang haben nur die Grundregeln (Daten lokal, nichts erfinden, nichts löschen, Datenschutz).', '']
+    if gueltig_ab:
+        z += [f'**Gültig ab:** {gueltig_ab}', '']
+    z += ['## Worauf es ankommt', '', text.strip() or '[offen]', '']
+    z += ['## Wichtige Themen (müssen vorkommen)', ''] + ([f'- {t}' for t in wichtig] if wichtig else ['- [offen]']) + ['']
+    z += ['## Nicht beschreiben', ''] + ([f'- {t}' for t in nicht] if nicht else ['- [offen]']) + ['']
+    return '\n'.join(z)
+
+
+def anweisung_leer(inhalt: str) -> bool:
+    """Vorlage ohne eigene Angaben (alle drei Abschnitte [offen])"""
+    return inhalt.count('[offen]') >= 3 and '## Worauf es ankommt\n\n[offen]' in inhalt
+
+
 def kapitel_baum(modell, basis: str, unterkapitel_arbeitsordner: bool = False, rollen_rahmen: set | None = None):
     """Ordner und Vorlagendateien unterhalb von basis (z. B. 02_Kapitel oder 03_Varianten/Dealer_Van).
     rollen_rahmen: Rollen einer Variante – andere Rollen sind dort außerhalb des Rahmens (–)."""
@@ -220,6 +240,7 @@ def kapitel_baum(modell, basis: str, unterkapitel_arbeitsordner: bool = False, r
               '| 07_Ideenspeicher | Ideen, Verbesserungen, Zukünftiges, IDEEN.md | ideen-sammler |',
               '| 08_Steuerung | Rollen Dealer/MO/Markt/HQ/IT, Markt- und Spartenspezifisches, STEUERUNG.md | steuerung |', '', '## Notizen', '']
         dateien[f'{kpfad}/KAPITEL.md'] = '\n'.join(z)
+        dateien[f'{kpfad}/ANWEISUNG.md'] = anweisung(kap['ordner'].replace('_', ' '))
         for u in kap['unter']:
             upfad = f'{kpfad}/{uordner(u)}'
             ordner.add(upfad)
@@ -237,6 +258,7 @@ def kapitel_baum(modell, basis: str, unterkapitel_arbeitsordner: bool = False, r
                 uz += ['(keine Punkte der Ebene 3 hinterlegt)', '']
             uz += ['## Notizen', '']
             dateien[f'{upfad}/UNTERKAPITEL.md'] = '\n'.join(uz)
+            dateien[f'{upfad}/ANWEISUNG.md'] = anweisung(f"{u['nr']} {u['titel']}")
     return ordner, dateien
 
 
@@ -442,6 +464,64 @@ def app_gliederungen(adresse: str, projekt: str, token: str | None, benutzer: st
         yield o, hole(f"/outlines/{o['id']}/export?format=json")
 
 
+def app_anweisungen(adresse: str, projekt: str, token: str | None, benutzer: str | None):
+    """Kapitelanweisungen der App (GET /structure/instructions/export); None bei älterer App ohne Kapitelsteuerung."""
+    kopf = {'X-Project-Id': projekt, 'Accept': 'application/json'}
+    if token:
+        kopf['Authorization'] = f'Bearer {token}'
+    elif benutzer:
+        kopf['X-User-Id'] = benutzer
+    try:
+        with urllib.request.urlopen(urllib.request.Request(adresse.rstrip('/') + '/api/v1/structure/instructions/export', headers=kopf), timeout=30) as r:
+            daten = json.loads(r.read().decode('utf-8'))
+    except OSError:
+        return None
+    return daten if daten.get('format') == 'onescm-instructions' else None
+
+
+def nummer(titel: str) -> str | None:
+    """Kapitel- bzw. Unterkapitelnummer am Anfang („7. …“ → 7, „07_…“ → 7, „7.1 …“ → 7.1)"""
+    m = re.match(r'^\s*0*(\d+(?:\.\d+)*)[._\s]', titel + ' ')
+    return '.'.join(str(int(x)) for x in m.group(1).split('.')) if m else None
+
+
+def anweisungen_abgleichen(ziel: Path, daten: dict, bericht: list):
+    """Anweisungen der App in 02_Kapitel/<Kapitel>/ANWEISUNG.md und <Unterkapitel>/ANWEISUNG.md – Zuordnung über die Nummer.
+    Fehlt die Datei oder ist sie noch leer, wird sie geschrieben; eigene Angaben bleiben, die App-Fassung kommt als .neu daneben."""
+    basis = ziel / '02_Kapitel'
+    if not basis.exists():
+        return
+    kap_ordner = {nummer(k.name): k for k in basis.iterdir() if k.is_dir() and nummer(k.name)}
+    neu = abweichend = 0
+
+    def schreibe(pfad: Path, inhalt: str):
+        nonlocal neu, abweichend
+        if not pfad.exists() or anweisung_leer(pfad.read_text(encoding='utf-8')):
+            if not pfad.exists() or pfad.read_text(encoding='utf-8') != inhalt:
+                pfad.write_text(inhalt, encoding='utf-8')
+                neu += 1
+        elif pfad.read_text(encoding='utf-8') != inhalt:
+            n = pfad.with_name('ANWEISUNG.md.neu')
+            if not n.exists() or n.read_text(encoding='utf-8') != inhalt:
+                n.write_text(inhalt, encoding='utf-8')
+                abweichend += 1
+                bericht.append(f'- `{pfad.relative_to(ziel)}` hat eigene Angaben und weicht von der App ab – App-Fassung als `ANWEISUNG.md.neu`, bitte zusammenführen')
+
+    leer = lambda i: not ((i.get('text') or '').strip() or i.get('topics') or i.get('excluded'))
+    for c in daten.get('chapters', []):
+        k = kap_ordner.get(nummer(c['title']) or '')
+        if not k:
+            continue
+        if not leer(c['instruction']):
+            schreibe(k / 'ANWEISUNG.md', c['markdown'])
+        unter = {nummer(u.name): u for u in k.iterdir() if u.is_dir() and nummer(u.name) and '.' in (nummer(u.name) or '')}
+        for s in c.get('subchapters', []):
+            u = unter.get(nummer(s['title']) or '')
+            if u and not leer(s['instruction']):
+                schreibe(u / 'ANWEISUNG.md', s['markdown'])
+    bericht.append(f'- {neu} Kapitelanweisungen aus der App übernommen' + (f', {abweichend} abweichend (.neu)' if abweichend else ''))
+
+
 def agenten_aktualisieren(ziel: Path, bericht: list):
     """Neue Agenten anlegen; vorhandene nur ersetzen, wenn sie seit der letzten Lieferung unverändert sind."""
     stand_datei = ziel / '.claude' / 'agents' / '.vorlagen.json'
@@ -599,6 +679,13 @@ def main():
             o |= output_ordner(modell, f'Varianten/{name}')
             abgleich(ziel, o, d, [basis], bericht)
         zuordnung_datei.write_text(json.dumps(zuordnung, ensure_ascii=False, indent=2), encoding='utf-8')
+        # Kapitelanweisungen (App ab 0.43, Kapitelsteuerung) für die Gesamtgliederung unter 02_Kapitel
+        anw = app_anweisungen(a.app, a.projekt, a.token, a.benutzer)
+        bericht += ['', '## Kapitelanweisungen aus der App → 02_Kapitel', '']
+        if anw is None:
+            bericht.append('- App liefert keine Kapitelanweisungen (ältere Version oder keine Berechtigung)')
+        else:
+            anweisungen_abgleichen(ziel, anw, bericht)
     if not (a.gliederung or a.app):
         bericht += ['', 'Nur Agenten, Hauptordner und Vorlagen abgeglichen (weder --gliederung noch --app angegeben).']
     (ziel / '00_Dokumentation' / 'GLIEDERUNG_ABGLEICH.md').write_text('\n'.join(bericht) + '\n', encoding='utf-8')

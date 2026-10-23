@@ -2517,3 +2517,50 @@ test('[T-291] Bildarchiv: Stelle im Bild unkenntlich machen und rückgängig, me
   await expect(labels.getByRole('button', { name: 'E2E Verträge entfernen' })).toHaveCount(0);
   expect(await axe()).toEqual([]);
 });
+
+test('[T-295] Kapitelsteuerung: Kapitel und Unterkapitel ergänzen, Kapitelanweisung mit Version, Anzeige in der Werkstatt, Unterkapitel ablösen → Historie und zurückholen', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Kapitelsteuerung', exact: true }).click();
+  await page.getByLabel('Titel des Kapitels').fill('9. E2E Vertrag kündigen');
+  await page.getByLabel('Gültig ab (neues Kapitel)').fill('2026.3');
+  await page.getByRole('button', { name: 'Kapitel ergänzen' }).click();
+  await expect(page.getByText('Kapitel „9. E2E Vertrag kündigen“ ergänzt.')).toBeVisible();
+  const editor = page.getByRole('group', { name: 'Anweisung bearbeiten' });
+  await editor.getByLabel('Worauf es ankommt (kurze Anleitung)').fill('Nur die Sicht des Händlers beschreiben.');
+  await editor.getByLabel('Wichtige Themen (je Zeile eines – müssen vorkommen)').fill('Kündigungsgrund\nKündigungsfrist');
+  await editor.getByLabel('Nicht beschreiben (je Zeile eines)').fill('Storno');
+  await page.getByRole('button', { name: 'Anweisung speichern' }).click();
+  await expect(page.getByText('Anweisung gespeichert.')).toBeVisible();
+  const tree = page.getByRole('list', { name: 'Kapitel' });
+  await expect(tree.getByRole('listitem').filter({ hasText: '9. E2E Vertrag kündigen' }).first()).toContainText('ab 2026.3');
+  await page.getByLabel('Fehlendes Unterkapitel').fill('9.1 E2E Kündigung erfassen');
+  await page.getByRole('button', { name: 'Unterkapitel ergänzen' }).click();
+  await expect(page.getByText('Unterkapitel „9.1 E2E Kündigung erfassen“ ergänzt.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Anweisung in der Werkstatt
+  await page.getByRole('link', { name: 'Zur Werkstatt' }).click();
+  const banner = page.getByRole('complementary', { name: 'Kapitelanweisung' });
+  await expect(banner).toContainText('Nur die Sicht des Händlers beschreiben.');
+  await expect(banner).toContainText('Nicht beschreiben: Storno.');
+  await page.goBack();
+
+  // Unterkapitel ablösen → Historie, zurückholen
+  await tree.getByRole('button', { name: '9.1 E2E Kündigung erfassen' }).click();
+  await page.getByLabel('Titel des Nachfolgers').fill('9.1 E2E Kündigung anlegen');
+  await page.getByLabel('Nachfolger gültig ab').fill('2026.4');
+  await page.getByRole('button', { name: 'Ablösen und in die Historie legen' }).click();
+  await expect(page.getByText('„9.1 E2E Kündigung erfassen“ in die Historie gelegt – ersetzt durch „9.1 E2E Kündigung anlegen“.')).toBeVisible();
+  const row = page.getByRole('row').filter({ hasText: '9.1 E2E Kündigung erfassen' });
+  await expect(row).toContainText('9.1 E2E Kündigung anlegen');
+  await expect(row).toContainText('bis 2026.4');
+  await expect(tree).not.toContainText('9.1 E2E Kündigung erfassen');
+  expect(await axe()).toEqual([]);
+  await row.getByRole('button', { name: 'Zurückholen' }).click();
+  await expect(page.getByText('„9.1 E2E Kündigung erfassen“ aus der Historie zurückgeholt.')).toBeVisible();
+  await expect(tree).toContainText('9.1 E2E Kündigung erfassen');
+});

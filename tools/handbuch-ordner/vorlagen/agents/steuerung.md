@@ -12,3 +12,5 @@ Je Kapitel:
 4. **Varianten:** in `03_Varianten/<Name>/` gilt der Rahmen aus `VARIANTE.md` (Rollen, Sparten, Märkte); Unterkapitel außerhalb des Rahmens mit „–“ und Grund.
 5. **Gesamtmatrix** `00_Dokumentation/STEUERUNG_GESAMT.md` aktualisieren (Kapitel × Rolle, Zahl der V/L/?) und Widersprüche zwischen Quellen (z. B. Rolle laut Navigation sieht Menü nicht) als Befund aufführen.
 Rollen-Begriffe: Dealer, MO, Markt, HQ, IT. MO = Market Operation. Sparten nur Pkw und Van. Keine Inhalte schreiben – das macht der kapitel-redakteur nach dieser Matrix.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

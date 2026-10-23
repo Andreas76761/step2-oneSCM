@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.42.0
+  version: 0.43.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3810,15 +3810,15 @@ paths:
       operationId: updateMetadataLabel
       summary: 'Label umbenennen (Deutsch, Englisch), Beschreibung, Reihenfolge, ausblenden oder wieder einblenden (Berechtigung admin, ADR-079)'
       tags: [Metadaten]
-      x-requirements: [NFR-66]
+      x-requirements: [NFR-66, NFR-102]
       x-extension: true
       parameters: [{ name: labelId, in: path, required: true, schema: { type: string } }]
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, properties: { nameDe: { type: string, maxLength: 120 }, nameEn: { type: string, maxLength: 120 }, description: { type: [string, 'null'] }, position: { type: integer, minimum: 1 }, archived: { type: boolean } } } } }
+        content: { application/json: { schema: { type: object, properties: { nameDe: { type: string, maxLength: 120 }, nameEn: { type: string, maxLength: 120 }, description: { type: [string, 'null'] }, position: { type: integer, minimum: 1 }, archived: { type: boolean, description: 'Labels in der Historie (ADR-096) lassen sich nur über „Zurückholen“ wieder einblenden' }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release; ADR-096)' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ id, code, group, nameDe, nameEn, description, position, origin: catalog | custom, archived, updatedBy, updatedAt }' }
+        '200': { description: '{ id, code, group, nameDe, nameEn, description, position, origin: catalog | custom, archived, validFrom, validUntil, replacedBy, inHistory, updatedBy, updatedAt }' }
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
@@ -4458,6 +4458,139 @@ paths:
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /structure:
+    get:
+      operationId: getStructure
+      summary: 'Kapitelsteuerung (ADR-096): Kapitel und Unterkapitel der Quellen mit Kapitelanweisung und Version; history=true zeigt auch Abgelöstes'
+      tags: [Kapitel]
+      x-requirements: [NFR-101, NFR-102]
+      x-extension: true
+      parameters: [{ name: history, in: query, required: false, schema: { type: string, enum: ['true', 'false'] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chapters: [{ id, key, title, position, snippets, instruction: { text, topics, excluded }, validFrom, validUntil, replacedBy, inHistory, subchapters: [...] }], summary: { chapters, subchapters, withInstruction } }' }
+  /structure/chapters:
+    post:
+      operationId: createStructureChapter
+      summary: 'Fehlendes Kapitel ergänzen – Schlüssel wie beim Import, später eingelesene Quellen mit gleicher Überschrift gehören dazu (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-101]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [title], properties: { afterId: { type: string, description: 'einordnen nach diesem Kapitel' }, title: { type: string, minLength: 3, maxLength: 160 }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release)' }, instruction: { type: [string, 'null'], maxLength: 2000, description: 'worauf es ankommt' }, topics: { type: array, maxItems: 30, items: { type: string }, description: 'wichtige Themen (müssen vorkommen)' }, excluded: { type: array, maxItems: 30, items: { type: string }, description: 'Themen, die nicht beschrieben werden' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Kapitel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /structure/chapters/{chapterId}:
+    patch:
+      operationId: updateStructureChapter
+      summary: 'Titel, Kapitelanweisung und Version eines Kapitels ändern (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-101, NFR-102]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { title: { type: string, minLength: 3, maxLength: 160 }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release)' }, instruction: { type: [string, 'null'], maxLength: 2000, description: 'worauf es ankommt' }, topics: { type: array, maxItems: 30, items: { type: string }, description: 'wichtige Themen (müssen vorkommen)' }, excluded: { type: array, maxItems: 30, items: { type: string }, description: 'Themen, die nicht beschrieben werden' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Kapitel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /structure/chapters/{chapterId}/subchapters:
+    post:
+      operationId: createStructureSubchapter
+      summary: 'Fehlendes Unterkapitel ergänzen (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-101]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [title], properties: { title: { type: string, minLength: 3, maxLength: 160 }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release)' }, instruction: { type: [string, 'null'], maxLength: 2000, description: 'worauf es ankommt' }, topics: { type: array, maxItems: 30, items: { type: string }, description: 'wichtige Themen (müssen vorkommen)' }, excluded: { type: array, maxItems: 30, items: { type: string }, description: 'Themen, die nicht beschrieben werden' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Unterkapitel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /structure/subchapters/{subchapterId}:
+    patch:
+      operationId: updateStructureSubchapter
+      summary: 'Titel, Anweisung (ergänzt die des Kapitels) und Version eines Unterkapitels ändern (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-101, NFR-102]
+      x-extension: true
+      parameters: [{ name: subchapterId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { title: { type: string, minLength: 3, maxLength: 160 }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release)' }, instruction: { type: [string, 'null'], maxLength: 2000, description: 'worauf es ankommt' }, topics: { type: array, maxItems: 30, items: { type: string }, description: 'wichtige Themen (müssen vorkommen)' }, excluded: { type: array, maxItems: 30, items: { type: string }, description: 'Themen, die nicht beschrieben werden' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Unterkapitel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapters/{chapterId}/instruction:
+    get:
+      operationId: getChapterInstruction
+      summary: 'Gültige Kapitelanweisung (Werkstatt, Agenten): Kapitel und je Unterkapitel'
+      tags: [Kapitel]
+      x-requirements: [NFR-101]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chapterId, chapter: { text, topics, excluded }, subchapters: [{ id, title, instruction }] }' }
+  /structure/replace:
+    post:
+      operationId: replaceStructureItem
+      summary: 'Veraltete Funktion ablösen: Kapitel, Unterkapitel (Berechtigung edit) oder Label (admin) durch einen vorhandenen oder neuen Nachfolger; das Alte gilt bis zur Version des Neuen, kommt in die Historie und erscheint nicht mehr im Handbuch'
+      tags: [Kapitel]
+      x-requirements: [NFR-103]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [kind, id], properties: { kind: { type: string, enum: [chapter, subchapter, label] }, id: { type: string }, replacementId: { type: string }, newTitle: { type: string }, validFrom: { type: [string, 'null'], description: 'gültig ab des Nachfolgers = gültig bis des Alten' }, note: { type: [string, 'null'], maxLength: 500 }, moveAssignments: { type: boolean, description: 'nur Labels: Chunks, Fragen & Antworten und Bilder übertragen' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ replaced: { kind, id }, successor: { id, title }, moved, history }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /structure/history:
+    get:
+      operationId: listStructureHistory
+      summary: 'Historie abgelöster Funktionen (Art, Titel, gültig von–bis, Nachfolger, Hinweis, übertragene Zuordnungen)'
+      tags: [Kapitel]
+      x-requirements: [NFR-103]
+      x-extension: true
+      parameters: [{ name: restored, in: query, required: false, schema: { type: string, enum: ['true', 'false'] }, description: 'auch zurückgeholte Einträge' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, kind, kindLabel, itemId, title, parentTitle, replacedBy, validFrom, validUntil, note, moved, createdBy, createdAt, restoredAt }] }' }
+  /structure/history/{historyId}/restore:
+    post:
+      operationId: restoreStructureItem
+      summary: 'Aus der Historie zurückholen (Ablösung rückgängig; Labels: Berechtigung admin, sonst edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-103]
+      x-extension: true
+      parameters: [{ name: historyId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /structure/instructions/export:
+    get:
+      operationId: exportChapterInstructions
+      summary: 'Kapitelanweisungen als JSON mit Markdown je Kapitel und Unterkapitel (format onescm-instructions) – für ANWEISUNG.md im Arbeitsordner'
+      tags: [Kapitel]
+      x-requirements: [NFR-101]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ format: onescm-instructions, chapters: [{ title, validFrom, instruction, markdown, subchapters }] }' }
   /image-clickpaths:
     get:
       operationId: listClickpaths

@@ -128,6 +128,7 @@ export function WorkshopPage() {
           </div>
         </header>
         <ErrorBox error={version.error} />
+        {chapterId && <InstructionBanner chapterId={chapterId} />}
         {!v && <Empty>Für dieses Kapitel gibt es noch keine generierte Version.</Empty>}
         {styleOn && styleData.data && (
           <p className="small" role="status">
@@ -817,5 +818,26 @@ function SaveTemplateButton({ versionId, title }: { versionId: string; title: st
         </Modal>
       )}
     </>
+  );
+}
+
+/** Kapitelanweisung (ADR-096) oben in der Werkstatt – mit Vorrang für Generator und KI-Vorschläge */
+function InstructionBanner({ chapterId }: { chapterId: string }) {
+  const r = useLoad<any>(`/chapters/${chapterId}/instruction`, [chapterId]);
+  const c = r.data?.chapter;
+  const subs = (r.data?.subchapters ?? []).filter((s: any) => s.instruction.text || s.instruction.topics.length || s.instruction.excluded.length);
+  if (!c || (!c.text && !c.topics.length && !c.excluded.length && !subs.length)) return null;
+  const part = (i: any) => (
+    <>
+      {i.text && <span>{i.text} </span>}
+      {i.topics.length > 0 && <span><strong>Wichtig:</strong> {i.topics.join(', ')}. </span>}
+      {i.excluded.length > 0 && <span><strong>Nicht beschreiben:</strong> {i.excluded.join(', ')}.</span>}
+    </>
+  );
+  return (
+    <aside className="alert info ws-instruction" aria-label="Kapitelanweisung">
+      <strong>Kapitelanweisung:</strong> {part(c)} <Link to="/kapitelsteuerung" className="small">bearbeiten</Link>
+      {subs.length > 0 && <ul className="small">{subs.map((s: any) => <li key={s.id}><em>{s.title}:</em> {part(s.instruction)}</li>)}</ul>}
+    </aside>
   );
 }

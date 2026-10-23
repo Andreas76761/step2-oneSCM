@@ -67,6 +67,7 @@ const MetaDuplicatesPage = lazy(() => import('./pages/MetaDuplicates').then((m) 
 const HeadingsPage = lazy(() => import('./pages/Headings').then((m) => ({ default: m.HeadingsPage })));
 const IngestPage = lazy(() => import('./pages/Ingest').then((m) => ({ default: m.IngestPage })));
 const ImageArchivePage = lazy(() => import('./pages/ImageArchive').then((m) => ({ default: m.ImageArchivePage })));
+const StructurePage = lazy(() => import('./pages/Structure').then((m) => ({ default: m.StructurePage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
@@ -97,6 +98,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/dopplungen', label: 'Dopplungen', icon: '📑' },
   ] },
   { id: 'schreiben', label: '2 Schreiben', items: [
+    { to: '/kapitelsteuerung', label: 'Kapitelsteuerung', icon: '🎛' },
     { to: '/kapitel-assistent', label: 'Kapitel-Assistent', icon: '🧭' },
     { to: '/generator', label: 'Kapitelgenerator', icon: '⚙️' },
     { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: '✏️' },
@@ -454,6 +456,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/freigabe" element={<ApprovalPage />} />
             <Route path="/export" element={<ExportPage />} />
             <Route path="/bildarchiv" element={<ImageArchivePage />} />
+            <Route path="/kapitelsteuerung" element={<StructurePage />} />
             <Route path="/veroeffentlichung" element={<ReleasesPage />} />
             <Route path="/uebersetzungen" element={<TranslationsPage />} />
             <Route path="/aufgaben" element={<InboxPage onRead={reloadUnread} />} />

@@ -18,3 +18,5 @@ Werkzeug: `00_Dokumentation/Werkzeuge/handbuch_struktur.py` (Python 3.9+, für E
 4. Bei geänderten Punkten der Ebene 3: `UNTERKAPITEL.md` nicht überschreiben, sondern die Änderung unter „Notizen“ ergänzen.
 5. Neue Kapitel in `00_Dokumentation/STATUS.md` bzw. `03_Varianten/<Name>/STATUS.md` aufnehmen, wenn sie fehlen, und den Agenten `steuerung` für die neuen Kapitel vormerken.
 6. Zusammenfassung: angelegt, unverändert, zu entscheiden.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

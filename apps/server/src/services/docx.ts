@@ -1,6 +1,7 @@
 // Word-Export (ADR-038): .docx mit Formatvorlagen (Titel, Überschrift 1–3), Inhaltsverzeichnis-Feld, Tabellen, Bildern,
 // Kopf- und Fußzeile mit Seitenzahl sowie optionaler Firmenvorlage (Formatvorlagen aus .dotx/.docx).
 // Markdown wird über dieselben Tokens wie beim PDF übersetzt; eingebettetes HTML erscheint als Text, Links nur http(s)/mailto.
+import { HISTORY_TITLE, historySpan } from './appendixRender.js';
 import {
   AlignmentType, BorderStyle, Document, ExternalHyperlink, Footer, Header, ImageRun, LevelFormat, Packer, PageBreak, PageNumber, Paragraph,
   ShadingType, Table, TableCell, TableOfContents, TableRow, TextRun, WidthType, type IStylesOptions, type ParagraphChild,
@@ -136,6 +137,10 @@ function appendixDocx(a: Appendices, c: Ctx, heading: (text: string, level: 1 | 
       out.push(new Paragraph({ children: [new TextRun({ text: f.question, bold: true })], spacing: { before: 120 } }));
       out.push(...blocks(marked.lexer(f.answer), c));
     }
+  }
+  if (a.history?.length) {
+    out.push(heading(HISTORY_TITLE, 1));
+    out.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [row(['Art', 'Funktion', 'gültig', 'ersetzt durch', 'Hinweis'], true), ...a.history.map((h) => row([h.kind, h.title, historySpan(h), h.replacedBy ?? '–', h.note ?? '']))] }));
   }
   return out;
 }

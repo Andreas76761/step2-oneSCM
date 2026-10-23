@@ -6,7 +6,7 @@ Aufbau:
 
 - `00_Dokumentation/` – Arbeitsweise, Gliederungen (Excel, CSV, Markdown, App-Exporte), Status, Entscheidungen, Begriffe, Gesamtlisten (Audit, FAQ, Ideen, Steuerung), `App/` (Arbeit mit der App: `APP.md`, `TESTFRAGEN.csv`, `Befragungen/`, `Exporte/`), `Werkzeuge/` (dieses Skript mit Vorlagen)
 - `01_Input/` – `01_Eingang`, `02_Zugeordnet`, `03_Ausgeschlossen`
-- `02_Kapitel/<Kapitel>/` – Gesamtgliederung; je Kapitel `KAPITEL.md`, acht Arbeitsordner und je Unterkapitel ein Ordner mit `UNTERKAPITEL.md`
+- `02_Kapitel/<Kapitel>/` – Gesamtgliederung; je Kapitel `KAPITEL.md`, `ANWEISUNG.md` (Kapitelanweisung: worauf es ankommt, wichtige Themen, was nicht beschrieben wird – gilt mit Vorrang für alle Agenten), acht Arbeitsordner und je Unterkapitel ein Ordner mit `UNTERKAPITEL.md` und `ANWEISUNG.md`
 - `03_Varianten/<Gliederung>/` – dieselbe Struktur je App-Gliederung, mit `VARIANTE.md` (Rollen, Sparten, Märkte)
 - `04_Output/<Sprache>/<Kapitel>/` – freigegebene Fassung in Deutsch (Hauptsprache) und acht Landessprachen (EN, FR, IT, ES, CS, SK, KO, MS); Varianten unter `<Sprache>/Varianten/<Name>/`
 - `05_I_Output/<Produkt>/` – **I Output**: fertige Produkte mit Screenshots (`01_Handbuch`, `02_Releaseletter`, `03_QuickGuide`, `04_Schulungsmaterial`, `05_Interne_Dokumente`, `06_Videos`, `07_Grafiken`, `08_Prozesse`), je Produkt `PRODUKT.md`, `01_Entwurf`, `02_Screens`, `03_Final/<Sprache>` (Master `01_Deutsch_DE`)
@@ -52,3 +52,7 @@ Expand-Archive -Path "$HOME\Downloads\Handbuch_23102026.zip" -DestinationPath "C
 ```
 
 Die Gliederung selbst liegt nicht im Repository.
+
+## Kapitelanweisung (`ANWEISUNG.md`)
+
+Je Kapitel und Unterkapitel legt das Skript eine `ANWEISUNG.md` an (Abschnitte „Worauf es ankommt“, „Wichtige Themen“, „Nicht beschreiben“, leer mit `[offen]`). Alle Agenten lesen sie vor der Arbeit und befolgen sie mit Vorrang; nur die Grundregeln 1–4 in `CLAUDE.md` gehen vor. Gepflegt wird sie entweder direkt in der Datei oder in der App unter **2 Schreiben › Kapitelsteuerung**: `abgleich --app …` übernimmt die Anweisungen der App in `02_Kapitel` (Zuordnung über die Kapitel- bzw. Unterkapitelnummer). Eine Datei mit eigenen Angaben wird nie überschrieben – weicht die App ab, liegt deren Fassung als `ANWEISUNG.md.neu` daneben.

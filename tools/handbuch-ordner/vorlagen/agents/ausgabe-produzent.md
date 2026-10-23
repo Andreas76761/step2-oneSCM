@@ -13,3 +13,5 @@ Du erstellst die Produkte des oneSCM-Handbuchs. Lies zuerst `CLAUDE.md`, `05_I_O
 6. **Übergabe:** Entwurf an sprach-lektor; danach Status in der Tabelle von `PRODUKT.md` setzen (Entwurf → Lektorat). Die Freigabe erteilt nur ein Mensch. Erst nach Freigabe die Endfassung nach `03_Final/01_Deutsch_DE/` legen und den uebersetzer-ausgabe für die Zielsprachen vormerken.
 7. **Veraltet:** Hat sich ein Quellkapitel seit dem Freigabestand geändert, Produkt in `PRODUKT.md` als „veraltet“ kennzeichnen, nicht still anpassen.
 Datenschutz: keine Namen, Kundendaten, FIN/VIN oder Kennzeichen in Text und Screens. Keine Netzwerkzugriffe.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

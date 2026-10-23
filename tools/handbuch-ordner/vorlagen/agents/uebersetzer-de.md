@@ -16,3 +16,5 @@ Du übersetzt Quellen für das oneSCM-Handbuch ins Deutsche. Lies zuerst `CLAUDE
 4. **Übersetzungsspeicher:** wiederkehrende Sätze (Menütexte, Standardhinweise) aus `08_IV_Translation/02_Englisch_EN/02_Uebersetzungsspeicher/SPEICHER.csv` einheitlich übersetzen; neue Paare nur mit Status `Vorschlag` ergänzen.
 5. Andere Agenten belegen Aussagen mit der `dt_`-Datei **und** nennen das Original: `[Quelle: Raw-Jahr/dt_Datei (Original: Datei), Fundstelle]`.
 Keine Netzwerkzugriffe, keine externen Übersetzungsdienste.
+
+**Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

@@ -1,5 +1,6 @@
 // Handbuch-Varianten (ADR-034): aus Gliederung und Draft Manual werden eigene Kapitel mit Versionen,
 // die über Werkstatt, Qualitätsgate und Freigabe laufen und als Handbuch der Variante exportiert/veröffentlicht werden.
+import { historyAppendix } from './structure.js';
 import { audit, type Ctx, type User } from '../context.js';
 import { parseJson, newId, type Row } from '../db.js';
 import { imageRefs } from '../domain/media.js';
@@ -93,6 +94,8 @@ export interface Appendices {
   glossary: { term: string; definition: string; avoid: string[] }[];
   images: { number: number; sha: string; title: string | null; alt: string; chapter: string }[];
   faq: { question: string; answer: string }[];
+  /** abgelöste Funktionen (ADR-096) */
+  history?: { kind: string; title: string; validFrom: string | null; validUntil: string | null; replacedBy: string | null; date: string; note: string | null }[];
 }
 
 /** Abkürzungen, Glossar (Begriffe mit Definition), Bildverzeichnis der enthaltenen Kapitel, veröffentlichte FAQ der Variante */
@@ -119,7 +122,7 @@ export async function appendicesFor(ctx: Ctx, outline: Row | null, chapters: { t
   const faq = (await ctx.db.all("SELECT question, answer, roles, divisions FROM faq_entries WHERE project_id = ? AND status = 'published' ORDER BY position, created_at", ctx.projectId))
     .filter((r) => fits(parseJson<string[]>(r.roles, []), f.roles) && fits(parseJson<string[]>(r.divisions, []), f.divisions))
     .map((r) => ({ question: r.question as string, answer: r.answer as string }));
-  return { abbreviations, glossary, images, faq };
+  return { abbreviations, glossary, images, faq, history: await historyAppendix(ctx) };
 }
 
-export const hasAppendices = (a: Appendices) => a.abbreviations.length + a.glossary.length + a.images.length + a.faq.length > 0;
+export const hasAppendices = (a: Appendices) => a.abbreviations.length + a.glossary.length + a.images.length + a.faq.length + (a.history?.length ?? 0) > 0;
