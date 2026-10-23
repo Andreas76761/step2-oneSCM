@@ -18,6 +18,7 @@ Grundlage ist das Projektpaket in [`reference/`](reference/) (Masterprompt v1.0 
 | [docs/07-bestehende-artefakte.md](docs/07-bestehende-artefakte.md) | Entscheidungsvorlage: Funktionen und Daten aus bestehenden Artefakten (Handbuch, oneSCM, Releaseletter) |
 | [docs/08-installation-betrieb.md](docs/08-installation-betrieb.md) | **Installation und Betrieb:** Windows-Paket (offline), universelles Paket, Container, Einstellungen, Sicherung, Fehlerbehebung |
 | [docs/09-benutzerdokumentation.md](docs/09-benutzerdokumentation.md) | **Benutzerdokumentation:** alle Menüpunkte, Arbeitsabläufe, Datenschutz |
+| [docs/10-offene-funktionen.md](docs/10-offene-funktionen.md) | **Offene Funktionen:** Abgleich mit den oneSCM-Artefakten (Stand v0.43) – Grammatik, Sprachstil, Übersetzung und Weiteres, mit Aufwand, Empfehlung und Vorschlag für die nächsten Etappen |
 | [docs/adr/](docs/adr/README.md) | Architecture Decision Records |
 | [docs/traceability.md](docs/traceability.md) | Traceability-Matrix (generiert) |
 | [docs/lasttest-semantik.md](docs/lasttest-semantik.md) | Lasttest der semantischen Suche mit 50 000 Textabschnitten |
