@@ -81,3 +81,4 @@
 | [ADR-077](ADR-077-faq-uebersetzen.md) | Häufige Fragen übersetzen | akzeptiert, umgesetzt |
 | [ADR-078](ADR-078-weitere-sprachen.md) | Alle Projektsprachen vollständig beschriftet | akzeptiert, umgesetzt |
 | [ADR-079](ADR-079-onescm-metadaten.md) | oneSCM_Metadaten: Labels, Chunks und gespeicherte Fragen und Antworten | akzeptiert, umgesetzt |
+| [ADR-080](ADR-080-katalog-onescm-datenschutz.md) | Labelkatalog nach echtem oneSCM, erweiterte Datenschutzprüfung | akzeptiert, umgesetzt |

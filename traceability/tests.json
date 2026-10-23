@@ -520,7 +520,7 @@
   },
   {
     "id": "T-209",
-    "title": "UI: Tastaturbedienung, Fokusführung, schmale Bildschirme",
+    "title": "Label-Katalog: vordefinierte Labels je Gruppe (Deutsch, Englisch), auch in neuen Projekten; Pflege nur durch die Administration",
     "file": "e2e/tests/a11y.spec.ts",
     "level": "e2e",
     "requirements": [
@@ -1477,7 +1477,7 @@
   },
   {
     "id": "T-209",
-    "title": "Label-Katalog: 100 vordefinierte Labels in sechs Gruppen (Deutsch, Englisch), auch in neuen Projekten; Pflege nur durch die Administration",
+    "title": "Label-Katalog: vordefinierte Labels je Gruppe (Deutsch, Englisch), auch in neuen Projekten; Pflege nur durch die Administration",
     "file": "apps/server/test/stage27.test.ts",
     "level": "api",
     "requirements": [
@@ -1510,7 +1510,26 @@
     "requirements": [
       "NFR-66",
       "NFR-67",
-      "NFR-68"
+      "NFR-68",
+      "NFR-69"
+    ]
+  },
+  {
+    "id": "T-212",
+    "title": "Labelkatalog nach echtem oneSCM: Gesamtgliederung, Menü der Oberfläche, Rollen (MO = Market Operation), nur Pkw und Van; ältere Katalog-Labels werden ausgeblendet, Zuordnungen und Anpassungen bleiben",
+    "file": "apps/server/test/stage28.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-69"
+    ]
+  },
+  {
+    "id": "T-213",
+    "title": "Datenschutz: FIN, Kennzeichen, Benutzerkennung, Adresse, Namen aus Metadaten und Namensliste; Pseudonymisierung; Prüf-Endpunkt; Namensliste wirkt in der Analyse",
+    "file": "apps/server/test/stage28.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-70"
     ]
   }
 ]

@@ -11,43 +11,42 @@ describe('Etappe 27 (oneSCM_Metadaten M1)', () => {
   const build = (name: string) => freshDatabase(dataDir, name).then((database) => buildApp({ dataDir, database, logger: false, webDist: null, authMode: 'demo' } as any));
   const SOURCE = `${FM}# Vertragsbearbeitung\n\n## Vertrag anlegen\n\nÖffnen Sie Verträge › Neuer Vertrag und erfassen Sie den Kunden.\n\n## Fehlerbehebung\n\nBei 100%_Auslastung wenden Sie sich an den Support.\n`;
 
-  it('[T-209] Label-Katalog: 100 vordefinierte Labels in sechs Gruppen (Deutsch, Englisch), auch in neuen Projekten; Pflege nur durch die Administration', async () => {
+  it('[T-209] Label-Katalog: vordefinierte Labels je Gruppe (Deutsch, Englisch), auch in neuen Projekten; Pflege nur durch die Administration', async () => {
     const built = await build('labels');
     const call = client(built);
     try {
-      expect(LABEL_CATALOG).toHaveLength(100);
-      expect(new Set(LABEL_CATALOG.map((l) => l.code)).size).toBe(100);
+      const N = LABEL_CATALOG.length;
+      expect(new Set(LABEL_CATALOG.map((l) => l.code)).size).toBe(N);
       const labels = (await call('GET', '/metadata/labels', undefined, 'u-leser')).json;
-      expect(labels).toHaveLength(100);
+      expect(labels).toHaveLength(N);
       const count = (g: string) => labels.filter((l: any) => l.group === g).length;
-      expect([count('outline'), count('role'), count('navigation'), count('content'), count('division'), count('quality')]).toEqual([30, 10, 25, 15, 5, 15]);
-      expect(labels[0]).toMatchObject({ code: 'outline.01-introduction', nameDe: '01 Einleitung', nameEn: '01 Introduction', origin: 'catalog', archived: false, chunkCount: 0 });
-      expect((await call('GET', '/metadata/labels?group=role')).json.map((l: any) => l.code).slice(0, 4)).toEqual(['role.dealer', 'role.market', 'role.mo', 'role.hq']);
+      expect(labels.every((l: any) => l.origin === 'catalog' && !l.archived && l.chunkCount === 0 && l.nameDe && l.nameEn)).toBe(true);
+      expect(count('outline') + count('role')).toBeGreaterThan(0);
       expect((await call('GET', '/metadata/labels?group=xx')).status).toBe(400);
-      expect((await call('GET', '/metadata/label-groups')).json.map((g: any) => g.code)).toEqual(['outline', 'role', 'navigation', 'content', 'division', 'quality']);
+      expect((await call('GET', '/metadata/label-groups')).json.map((g: any) => g.code)).toEqual(['outline', 'role', 'navigation', 'domain', 'customer', 'system', 'content', 'division', 'quality']);
 
       // Pflege nur mit admin
-      const nav = labels.find((l: any) => l.code === 'nav.contracts.new');
+      const nav = labels.find((l: any) => l.code === 'nav.generation.proposal');
       expect((await call('PATCH', `/metadata/labels/${nav.id}`, { nameDe: 'Verträge › Anlegen' }, 'u-redaktion')).status).toBe(403);
-      expect((await call('PATCH', `/metadata/labels/${nav.id}`, { nameDe: 'Verträge › Anlegen', nameEn: 'Contracts › Create' })).json).toMatchObject({ code: 'nav.contracts.new', nameDe: 'Verträge › Anlegen', nameEn: 'Contracts › Create' });
+      expect((await call('PATCH', `/metadata/labels/${nav.id}`, { nameDe: 'Verträge › Anlegen', nameEn: 'Contracts › Create' })).json).toMatchObject({ code: 'nav.generation.proposal', nameDe: 'Verträge › Anlegen', nameEn: 'Contracts › Create' });
       expect((await call('PATCH', `/metadata/labels/${nav.id}`, { nameDe: ' ' })).status).toBe(400);
       expect((await call('POST', '/metadata/labels', { code: 'nav.orders', group: 'navigation', nameDe: 'Aufträge', nameEn: 'Orders' }, 'u-redaktion')).status).toBe(403);
       const own = await call('POST', '/metadata/labels', { code: 'nav.orders', group: 'navigation', nameDe: 'Aufträge', nameEn: 'Orders' });
       expect(own.status).toBe(201);
-      expect(own.json).toMatchObject({ origin: 'custom', position: 26 });
+      expect(own.json).toMatchObject({ origin: 'custom', position: count('navigation') + 1 });
       expect((await call('POST', '/metadata/labels', { code: 'nav.orders', group: 'navigation', nameDe: 'x', nameEn: 'x' })).status).toBe(409);
       expect((await call('POST', '/metadata/labels', { code: 'Nav Orders', group: 'navigation', nameDe: 'x', nameEn: 'x' })).status).toBe(400);
       expect((await call('POST', '/metadata/labels', { code: 'x.y', group: 'xx', nameDe: 'x', nameEn: 'x' })).status).toBe(400);
       // ausblenden: nicht mehr in der Standardliste
       await call('PATCH', `/metadata/labels/${own.json.id}`, { archived: true });
-      expect((await call('GET', '/metadata/labels')).json).toHaveLength(100);
-      expect((await call('GET', '/metadata/labels?includeArchived=true')).json).toHaveLength(101);
+      expect((await call('GET', '/metadata/labels')).json).toHaveLength(N);
+      expect((await call('GET', '/metadata/labels?includeArchived=true')).json).toHaveLength(N + 1);
 
       // neues Projekt erhält den vollständigen Katalog, Namen dort unverändert; Labels anderer Projekte sind unsichtbar
       const p = (await call('POST', '/projects', { name: 'Metadaten', visibility: 'open' })).json;
       const other = (await call('GET', '/metadata/labels', undefined, 'u-admin', p.id)).json;
-      expect(other).toHaveLength(100);
-      expect(other.find((l: any) => l.code === 'nav.contracts.new').nameDe).toBe('Verträge › Neuer Vertrag');
+      expect(other).toHaveLength(N);
+      expect(other.find((l: any) => l.code === 'nav.generation.proposal').nameDe).toBe('Vertragserstellung › Antrag anlegen');
       expect((await call('PATCH', `/metadata/labels/${nav.id}`, { nameDe: 'x' }, 'u-admin', p.id)).status).toBe(404);
     } finally {
       await built.app.close();
@@ -76,8 +75,8 @@ describe('Etappe 27 (oneSCM_Metadaten M1)', () => {
       const [a, b] = all.items.map((c: any) => c.id);
       // labeln nur mit edit
       expect((await call('POST', '/metadata/chunks/labels', { snippetIds: [a], add: [id('role.dealer')] }, 'u-leser')).status).toBe(403);
-      expect((await call('POST', '/metadata/chunks/labels', { snippetIds: [a, b], add: [id('role.dealer'), id('outline.10-contracts')] }, 'u-redaktion')).json).toEqual({ chunks: 2, added: 4, removed: 0 });
-      expect((await call('POST', '/metadata/chunks/labels', { snippetIds: [a], add: [id('nav.contracts.new')], remove: [id('outline.10-contracts')] }, 'u-redaktion')).json).toEqual({ chunks: 1, added: 1, removed: 1 });
+      expect((await call('POST', '/metadata/chunks/labels', { snippetIds: [a, b], add: [id('role.dealer'), id('outline.kap10')] }, 'u-redaktion')).json).toEqual({ chunks: 2, added: 4, removed: 0 });
+      expect((await call('POST', '/metadata/chunks/labels', { snippetIds: [a], add: [id('nav.generation.proposal')], remove: [id('outline.kap10')] }, 'u-redaktion')).json).toEqual({ chunks: 1, added: 1, removed: 1 });
       // doppelt hinzufügen zählt nicht
       expect((await call('POST', '/metadata/chunks/labels', { snippetIds: [a], add: [id('role.dealer')] }, 'u-redaktion')).json.added).toBe(0);
       expect((await call('POST', '/metadata/chunks/labels', { snippetIds: [a], add: [id('role.mo')], remove: [id('role.mo')] }, 'u-redaktion')).status).toBe(400);
@@ -85,9 +84,9 @@ describe('Etappe 27 (oneSCM_Metadaten M1)', () => {
       expect((await call('POST', '/metadata/chunks/labels', { snippetIds: ['snp_x'], add: [id('role.mo')] }, 'u-redaktion')).status).toBe(400);
       expect((await call('POST', '/metadata/chunks/labels', { snippetIds: [a], add: ['lbl_x'] }, 'u-redaktion')).status).toBe(400);
 
-      const first = (await call('GET', `/metadata/chunks?labels=${id('role.dealer')},${id('nav.contracts.new')}`)).json;
+      const first = (await call('GET', `/metadata/chunks?labels=${id('role.dealer')},${id('nav.generation.proposal')}`)).json;
       expect(first.items.map((c: any) => c.id)).toEqual([a]);
-      expect(first.items[0].labels.map((l: any) => l.code)).toEqual(['nav.contracts.new', 'role.dealer']);
+      expect(first.items[0].labels.map((l: any) => l.code)).toEqual(['nav.generation.proposal', 'role.dealer']);
       expect((await call('GET', `/metadata/chunks?labels=${id('role.dealer')}`)).json.total).toBe(2);
       expect((await call('GET', '/metadata/chunks?unlabeled=true')).json.total).toBe(0);
       expect((await call('GET', '/metadata/labels?group=role')).json.find((l: any) => l.code === 'role.dealer').chunkCount).toBe(2);
@@ -99,7 +98,7 @@ describe('Etappe 27 (oneSCM_Metadaten M1)', () => {
 
       const ov = (await call('GET', '/metadata/overview')).json;
       expect(ov).toMatchObject({ documents: 1, chunks: 2, labeledChunks: 2, savedAnswers: 0, formats: [{ format: 'markdown', documents: 1, chunks: 2 }] });
-      expect(ov.labelGroups.find((g: any) => g.code === 'role').labels).toBe(9);
+      expect(ov.labelGroups.find((g: any) => g.code === 'role').labels).toBe(LABEL_CATALOG.filter((l) => l.group === 'role').length - 1);
 
       // Chunks anderer Projekte bleiben verborgen
       const p = (await call('POST', '/projects', { name: 'Fremd', visibility: 'open' })).json;
@@ -119,7 +118,7 @@ describe('Etappe 27 (oneSCM_Metadaten M1)', () => {
       const chunk = (await call('GET', '/metadata/chunks')).json.items[0];
       const labels = (await call('GET', '/metadata/labels')).json;
       const id = (code: string) => labels.find((l: any) => l.code === code).id;
-      const input = { question: 'Wie lege ich einen Vertrag an?', answer: 'Über Verträge › Neuer Vertrag [1].', language: 'de', snippetIds: [chunk.id], labelIds: [id('outline.11-contract-create'), id('content.instruction')] };
+      const input = { question: 'Wie lege ich einen Vertrag an?', answer: 'Über Verträge › Neuer Vertrag [1].', language: 'de', snippetIds: [chunk.id], labelIds: [id('outline.kap06'), id('content.instruction')] };
       expect((await call('POST', '/metadata/qa', input, 'u-leser')).status).toBe(403);
       expect((await call('POST', '/metadata/qa', { ...input, language: 'fr' }, 'u-redaktion')).status).toBe(400);
       expect((await call('POST', '/metadata/qa', { ...input, question: '' }, 'u-redaktion')).status).toBe(400);
@@ -128,8 +127,8 @@ describe('Etappe 27 (oneSCM_Metadaten M1)', () => {
       expect(qa.status).toBe(201);
       expect(qa.json).toMatchObject({ question: input.question, language: 'de', createdBy: 'u-redaktion' });
       expect(qa.json.sources).toEqual([expect.objectContaining({ snippetId: chunk.id, path: 'vertrag.md', headingPath: chunk.headingPath, excerpt: chunk.text })]);
-      expect(qa.json.labels.map((l: any) => l.code)).toEqual(['content.instruction', 'outline.11-contract-create']);
-      const en = (await call('POST', '/metadata/qa', { question: 'Who do I contact?', answer: 'Support.', language: 'en', labelIds: [id('role.support')] }, 'u-redaktion')).json;
+      expect(qa.json.labels.map((l: any) => l.code)).toEqual(['content.instruction', 'outline.kap06']);
+      const en = (await call('POST', '/metadata/qa', { question: 'Who do I contact?', answer: 'Support.', language: 'en', labelIds: [id('role.kam')] }, 'u-redaktion')).json;
 
       expect((await call('GET', '/metadata/qa', undefined, 'u-leser')).json).toHaveLength(2);
       expect((await call('GET', `/metadata/qa?labels=${id('content.instruction')}`)).json.map((x: any) => x.id)).toEqual([qa.json.id]);

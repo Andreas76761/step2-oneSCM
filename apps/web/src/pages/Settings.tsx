@@ -14,7 +14,7 @@ export function SettingsPage() {
 
   const save = async () => {
     try {
-      await put('/settings', { analysis: draft.analysis, import: draft.import, readability: draft.readability, rewrite: draft.rewrite, semantic: draft.semantic });
+      await put('/settings', { analysis: draft.analysis, import: draft.import, readability: draft.readability, rewrite: draft.rewrite, semantic: draft.semantic, privacy: draft.privacy });
       notify('Einstellungen gespeichert.');
       s.reload();
     } catch (e) {
@@ -80,6 +80,12 @@ export function SettingsPage() {
         <Card title="Lesbarkeit">
           <label className="block">Max. Wörter je Satz <input type="number" value={draft.readability.maxSentenceWords} onChange={(e) => setDraft({ ...draft, readability: { maxSentenceWords: Number(e.target.value) } })} /></label>
           <p className="small muted">Begriffe werden seit Etappe 3 unter <Link to="/terminologie">Terminologie</Link> gepflegt.</p>
+        </Card>
+        <Card title="Datenschutz: Namensliste">
+          <label className="block">Zusätzliche Klarnamen, einer je Zeile (z. B. Bearbeiter aus Jira-Exporten)
+            <textarea id="privacy-names" rows={4} value={(draft.privacy?.names ?? []).join('\n')} onChange={(e) => setDraft({ ...draft, privacy: { names: e.target.value.split('\n').map((x: string) => x.trim()).filter(Boolean) } })} />
+          </label>
+          <p className="small muted">Die Datenschutzprüfung meldet außerdem E-Mail, Telefon, IBAN, Fahrgestellnummer, Kennzeichen, Benutzerkennung, Straßenadresse und Namen hinter Feldern wie „Autor:“ oder „Assignee:“. Treffer blockieren Freigabe und Export.</p>
         </Card>
         <LayoutCard />
         <Card title="KI-Umformulierung">

@@ -6,6 +6,7 @@ import { RULE_LABELS } from '../domain/contradictions.js';
 import {
   BLOCK_MODES, CHAPTER_SECTIONS, DECISIONS, DIVISIONS, EVIDENCE_STATUSES, FINDING_TYPES, PERMISSIONS, ROLES, SEVERITIES,
 } from '../domain/reference.js';
+import { detectPrivacy, pseudonymize } from '../domain/privacy.js';
 import { badRequest } from '../problem.js';
 import { CONTENT_TYPES, createExport, downloadExport, listExports } from '../services/exports.js';
 import { optimizationOverview } from '../services/insights.js';
@@ -87,11 +88,27 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
     if (sem?.embeddingThreshold !== undefined && (typeof sem.embeddingThreshold !== 'number' || sem.embeddingThreshold < 0.3 || sem.embeddingThreshold > 1)) throw badRequest('semantic.embeddingThreshold muss zwischen 0,3 und 1 liegen.');
     if (sem?.annThreshold !== undefined && (!Number.isInteger(sem.annThreshold) || sem.annThreshold < 0)) throw badRequest('semantic.annThreshold muss eine ganze Zahl ≥ 0 sein.');
     if (sem?.annEfSearch !== undefined && (!Number.isInteger(sem.annEfSearch) || sem.annEfSearch < 10 || sem.annEfSearch > 5000)) throw badRequest('semantic.annEfSearch muss zwischen 10 und 5000 liegen.');
+    const names = body.privacy?.names;
+    if (names !== undefined) {
+      if (!Array.isArray(names) || names.length > 1000 || names.some((n: unknown) => typeof n !== 'string' || !n.trim() || n.length > 100)) throw badRequest('privacy.names muss eine Liste von höchstens 1000 Namen (je 1–100 Zeichen) sein.');
+      body.privacy = { names: [...new Set(names.map((n: string) => n.trim()))] };
+    }
     const mins = body.rewrite?.minSupport;
     if (mins !== undefined && (typeof mins !== 'number' || mins < 0.1 || mins > 1)) throw badRequest('rewrite.minSupport muss eine Zahl zwischen 0,1 und 1 sein.');
     await saveSettings(req.ctx.db, body);
     await audit(req.ctx.db, user.id, 'settings.updated', 'settings', 'project', body);
     return getSettings(req.ctx.db);
+  });
+
+  // Datenschutzprüfung eines Textes (ADR-080, F-04): Treffer maskiert, optional pseudonymisierter Text; nichts wird gespeichert
+  app.post<{ Body: { text?: unknown; pseudonymize?: unknown } }>('/privacy/check', async (req) => {
+    userOf(req.ctx, req);
+    const text = req.body?.text;
+    if (typeof text !== 'string' || !text.trim()) throw badRequest('text ist Pflicht.');
+    if (text.length > 200_000) throw badRequest('text ist zu lang (max. 200 000 Zeichen).');
+    const names = (await getSettings(req.ctx.db)).privacy.names;
+    const hits = detectPrivacy(text, { names });
+    return { hits, ...(req.body?.pseudonymize === true ? { pseudonymized: pseudonymize(text, { names }) } : {}) };
   });
 
   app.get('/reference', async (req) => {

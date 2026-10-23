@@ -1814,12 +1814,12 @@ test('[T-237] oneSCM_Metadaten: Übersicht, Chunks je Überschrift labeln und fi
   const chunk = page.locator('article.md-chunk').first();
   await expect(chunk).toBeVisible();
   const seq = (await chunk.locator('strong').first().textContent())!.trim();
-  await chunk.getByLabel(`Label für Chunk ${seq} hinzufügen`).selectOption({ label: 'Prüfung › MO-Check' });
+  await chunk.getByLabel(`Label für Chunk ${seq} hinzufügen`).selectOption({ label: 'Vertragserstellung › MO Checks' });
   await expect(page.getByText('1 Zuordnung(en) hinzugefügt.')).toBeVisible();
-  await expect(chunk.locator('.md-label', { hasText: 'Prüfung › MO-Check' })).toBeVisible();
+  await expect(chunk.locator('.md-label', { hasText: 'Vertragserstellung › MO Checks' })).toBeVisible();
   expect(await axe()).toEqual([]);
   await page.getByLabel('Im Text suchen').fill('');
-  await page.getByLabel('Nach Label filtern').selectOption({ label: 'Prüfung › MO-Check' });
+  await page.getByLabel('Nach Label filtern').selectOption({ label: 'Vertragserstellung › MO Checks' });
   await expect(page.locator('article.md-chunk')).toHaveCount(1);
   // gesammelt labeln in der Tabellenansicht
   await page.getByLabel('Ansicht').selectOption('table');
@@ -1849,8 +1849,8 @@ test('[T-237] oneSCM_Metadaten: Übersicht, Chunks je Überschrift labeln und fi
   // Labelkatalog: 30 Gliederungslabels, englische Namen, Zähler
   await page.goto('/metadaten/labels');
   await page.getByLabel('Sprache der Labels').selectOption('en');
-  await expect(page.getByRole('heading', { name: /Manual outline \(30\)/ })).toBeVisible();
-  await expect(page.getByRole('row', { name: /Prüfung › MO-Check.*Review › MO check/ })).toContainText('1');
+  await expect(page.getByRole('heading', { name: /Manual outline \(33\)/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: /Vertragserstellung › MO Checks.*Contract Generation › MO Checks/ })).toContainText('1');
   expect(await axe()).toEqual([]);
   await page.getByLabel('Sprache der Labels').selectOption('de');
 });

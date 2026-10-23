@@ -161,6 +161,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.30 Stand nach Etappe 28 (23.10.2026)
+
+Umfang vom Auftraggeber am 23.10.2026 festgelegt: Empfehlungen der Entscheidungsvorlage ([07](07-bestehende-artefakte.md)) übernommen, Start mit Labelkatalog und Datenschutz.
+
+| Punkt | Ergebnis |
+|---|---|
+| Labelkatalog nach echtem oneSCM (NFR-69) | ✅ 153 Labels in neun Gruppen, Abgleich bestehender Projekte ([ADR-080](adr/ADR-080-katalog-onescm-datenschutz.md)) |
+| Erweiterte Datenschutzprüfung (NFR-70) | ✅ FIN, Kennzeichen, Benutzerkennung, Adresse, Namen, Namensliste, Pseudonymisierung ([ADR-080](adr/ADR-080-katalog-onescm-datenschutz.md)) |
+| Offen | übrige Funktionen aus docs/07 (Jira-Import, Releaseletter, Update-Eingang, Zugriffsmatrix …) und Etappen M2–M7 |
+
 ## 1.29 Stand nach Etappe 27 (23.10.2026)
 
 Umfang vom Auftraggeber am 23.10.2026 festgelegt: oneSCM_Metadaten nach Plan [06](06-plan-onescm-metadaten.md), Etappe M1; Annahmen M-01 … M-10 übernommen, Daten bleiben lokal, 100 vordefinierte Labels, Deutsch und Englisch.

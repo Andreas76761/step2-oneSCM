@@ -1,4 +1,4 @@
-// oneSCM_Metadaten (ADR-079, Etappe M1): vordefinierte Labels, Chunks mit Fundstelle und Labels, gespeicherte Fragen und Antworten.
+// oneSCM_Metadaten (ADR-079, ADR-080): vordefinierte Labels, Chunks mit Fundstelle und Labels, gespeicherte Fragen und Antworten.
 // Chunks sind die Textabschnitte der aktuellen Quellrevisionen (text_snippets); entfernte Quelldateien bleiben außen vor.
 import { audit, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson, type Db, type Row } from '../db.js';
@@ -12,19 +12,40 @@ const likePattern = (q: string) => `%${q.trim().toLowerCase().replace(/[\\%_]/g,
 const MAX_SOURCES = 20;
 const EXCERPT_CHARS = 600;
 
-/** Katalog in ein Projekt übernehmen; bestehende Labels (auch umbenannte oder ausgeblendete) bleiben unverändert. */
+/**
+ * Katalog in ein Projekt übernehmen (ADR-080). Fehlende Katalog-Labels werden angelegt. Von niemandem bearbeitete
+ * Katalog-Labels (updated_by = system) folgen dem aktuellen Katalog: Namen, Beschreibung und Reihenfolge werden
+ * angeglichen; Labels früherer Katalogstände werden ausgeblendet, Zuordnungen bleiben erhalten.
+ * Von der Administration bearbeitete oder eigene Labels bleiben unverändert.
+ */
 export async function seedMetadataLabels(db: Db, projectId: string) {
-  const existing = new Set((await db.all<{ code: string }>('SELECT code FROM metadata_labels WHERE project_id = ?', projectId)).map((r) => r.code));
   // Position je Gruppe in Katalogreihenfolge (Gliederung = Kapitelfolge)
-  const missing = LABEL_CATALOG.map((l) => ({ ...l, position: LABEL_CATALOG.filter((x) => x.group === l.group).indexOf(l) + 1 })).filter((l) => !existing.has(l.code));
-  if (!missing.length) return;
+  const soll = new Map(LABEL_CATALOG.map((l) => [l.code, { ...l, position: LABEL_CATALOG.filter((x) => x.group === l.group).indexOf(l) + 1 }]));
+  const rows = await db.all('SELECT * FROM metadata_labels WHERE project_id = ?', projectId);
+  const vorhanden = new Map(rows.map((r) => [r.code, r]));
+  const neu = [...soll.values()].filter((l) => !vorhanden.has(l.code));
+  const angleichen = rows.filter((r) => {
+    if (r.origin !== 'catalog' || r.updated_by !== 'system') return false;
+    const l = soll.get(r.code);
+    if (!l) return !r.archived_at;
+    return r.name_de !== l.nameDe || r.name_en !== l.nameEn || (r.description ?? null) !== (l.description ?? null) || Number(r.position) !== l.position || r.label_group !== l.group || !!r.archived_at;
+  });
+  if (!neu.length && !angleichen.length) return;
   await db.tx(async () => {
-    for (const l of missing) {
+    for (const l of neu) {
       await db.run(
         `INSERT INTO metadata_labels (id, project_id, code, label_group, name_de, name_en, description, position, origin, archived_at, updated_by, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, NULL, ?, 'catalog', NULL, 'system', ?) ON CONFLICT (project_id, code) DO NOTHING`,
-        newId('lbl'), projectId, l.code, l.group, l.nameDe, l.nameEn, l.position, now(),
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'catalog', NULL, 'system', ?) ON CONFLICT (project_id, code) DO NOTHING`,
+        newId('lbl'), projectId, l.code, l.group, l.nameDe, l.nameEn, l.description ?? null, l.position, now(),
       );
+    }
+    for (const r of angleichen) {
+      const l = soll.get(r.code);
+      if (!l) await db.run('UPDATE metadata_labels SET archived_at = ?, updated_at = ? WHERE id = ?', now(), now(), r.id);
+      else {
+        await db.run('UPDATE metadata_labels SET label_group = ?, name_de = ?, name_en = ?, description = ?, position = ?, archived_at = NULL, updated_at = ? WHERE id = ?',
+          l.group, l.nameDe, l.nameEn, l.description ?? null, l.position, now(), r.id);
+      }
     }
   });
 }

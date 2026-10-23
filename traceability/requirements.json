@@ -803,5 +803,23 @@
       "docs/adr/ADR-079-onescm-metadaten.md",
       "docs/06-plan-onescm-metadaten.md"
     ]
+  },
+  {
+    "id": "NFR-69",
+    "title": "oneSCM_Metadaten: Labelkatalog nach echtem oneSCM (Gesamtgliederung, Menü der Oberfläche, Rollen, Domänen, Kundengruppen, Systeme, nur Pkw und Van); Abgleich bestehender Projekte ohne Verlust von Zuordnungen und Anpassungen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-080-katalog-onescm-datenschutz.md"
+    ]
+  },
+  {
+    "id": "NFR-70",
+    "title": "Datenschutzprüfung erkennt zusätzlich Fahrgestellnummer, Kennzeichen, Benutzerkennung, Adresse, Namen aus Metadaten und Namensliste; Pseudonymisierung ohne Rückgabe von Klarwerten",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-080-katalog-onescm-datenschutz.md"
+    ]
   }
 ]

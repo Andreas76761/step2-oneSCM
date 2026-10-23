@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.28.0 – Etappe 28 (23.10.2026)
+
+### Geändert
+- **Labelkatalog nach echtem oneSCM (ADR-080):** 153 Labels in neun Gruppen – Gesamtgliederung (Vorspann, Kapitel 1–23, Anhänge A–I), 34 Menüpunkte der Oberfläche (UI-Begriff englisch, Handbuchbegriff deutsch), Rollen mit MO = Market Operation, neu Fachdomäne, Kundengruppe und Systeme; Sparten nur Pkw und Van. Bestehende Projekte werden abgeglichen: Labels früherer Katalogstände werden ausgeblendet, Zuordnungen und Anpassungen der Administration bleiben.
+
+### Hinzugefügt
+- **Erweiterte Datenschutzprüfung (ADR-080, F-04):** Fahrgestellnummer, Kfz-Kennzeichen, Benutzerkennung, Straßenadresse, Namen hinter Metadatenfeldern und aus einer Namensliste (Einstellungen › Datenschutz); Pseudonymisierung und Prüf-Endpunkt `POST /privacy/check`.
+- Entscheidungen vom 23.10.2026 in docs/04 und docs/07; Tests T-212, T-213; Anforderungen NFR-69, NFR-70; keine Migration.
+
 ## 0.27.0 – Etappe 27 (23.10.2026)
 
 ### Hinzugefügt

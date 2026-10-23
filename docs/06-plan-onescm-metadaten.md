@@ -131,7 +131,7 @@ Jede Etappe endet mit Tests, Traceability, Changelog und Pull Request.
 | M-03 | Embeddings lokal oder als Dienst? | lokal (Standard `local`, oder ein lokal betriebenes Embedding-Modell) |
 | M-04 | MP4: Transkription lokal oder Cloud? Untertitel? | lokal mit whisper.cpp; vorhandene Untertitel (SRT/VTT) bevorzugt |
 | M-05 | Bilder: Alternativtext, OCR oder KI-Bildbeschreibung? | Alternativtext + lokale OCR für gescannte Seiten |
-| M-06 | Labels: feste Liste oder frei? | **vordefiniert: 100 Labels** in sechs Gruppen – Handbuch-Gliederung (30), Rollen (10), Navigation im System (25), Inhaltstyp (15), Sparte (5), Qualität und Status (15); gemeinsam für Chunks und Fragen/Antworten; Pflege durch die Administration |
+| M-06 | Labels: feste Liste oder frei? | **vordefiniert** – seit Etappe 28 153 Labels in neun Gruppen nach echtem oneSCM ([ADR-080](adr/ADR-080-katalog-onescm-datenschutz.md)); ursprünglich 100 Labels in sechs Gruppen – Handbuch-Gliederung (30), Rollen (10), Navigation im System (25), Inhaltstyp (15), Sparte (5), Qualität und Status (15); gemeinsam für Chunks und Fragen/Antworten; Pflege durch die Administration |
 | M-07 | Dublette: ab welcher Ähnlichkeit? Formatübergreifend? | ≥ 85 %, formatübergreifend |
 | M-08 | Mengengerüst, Sprachen? | < 2 000 Dateien, < 10 GB; **Deutsch und Englisch** |
 | M-09 | Wer darf einlesen, labeln, fragen? | `edit` einlesen, labeln, Antworten speichern; `read` lesen und fragen; `admin` Labels pflegen |

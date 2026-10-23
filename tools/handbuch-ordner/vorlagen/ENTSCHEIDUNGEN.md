@@ -14,6 +14,7 @@
 | 23.10.2026 | MO = Market Operation (O-01) |
 | 23.10.2026 | Sparten nur Pkw und Van; Truck und Bus entfallen (O-02) |
 | 23.10.2026 | Anrede im Handbuch: „Sie“ (O-03) |
+| 23.10.2026 | Funktionen und Daten aus bestehenden Artefakten nach Empfehlung (docs/07 der App, Entscheidungsseite) (O-05) |
 | 23.10.2026 | Ausgabesprachen: Deutsch, Englisch, Französisch, Italienisch, Spanisch, Tschechisch, Slowakisch, Koreanisch (Südkorea), Malaiisch (Malaysia) |
 
 ## Offen
@@ -22,4 +23,3 @@
 |---|---|---|
 | O-04 | Wer erteilt die Freigabe je Kapitel (Name/Rolle)? | – |
 | O-09 | Ansprechperson für das Sprachreview je Land (Name/Rolle) | – |
-| O-05 | Welche Funktionen aus bestehenden Artefakten übernehmen? | siehe Entscheidungsvorlage in der App (docs/07) |
