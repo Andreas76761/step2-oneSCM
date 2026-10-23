@@ -857,5 +857,23 @@
     "documentation": [
       "docs/adr/ADR-082-zuordnung-domaene-ordner.md"
     ]
+  },
+  {
+    "id": "NFR-75",
+    "title": "Release-Abgleich und Releaseletter aus Jira-Tickets: Tickets je Release, Bug = intern, Releaseletter nur aus Ticketfakten mit festen Guardrails, Prüfregeln Ticket ↔ Letter mit Urteil, Freigabe, Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-083-releaseletter-lektorat.md"
+    ]
+  },
+  {
+    "id": "NFR-76",
+    "title": "Warnhinweise nach Schema prüfen, Übersetzungen auf Platzhalter, Struktur, Signalwörter und feste Begriffsübersetzungen prüfen, Begriffskandidaten aus Tickets",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-083-releaseletter-lektorat.md"
+    ]
   }
 ]

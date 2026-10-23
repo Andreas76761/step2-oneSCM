@@ -106,3 +106,16 @@ export function signalWordsMissing(source: string, translated: string, language:
     return all.indexOf(w) === i && hay.split(w.toLocaleUpperCase(language)).length - 1 < need;
   });
 }
+
+/** Feste deutsche Signalwörter am Zeilenanfang durch die der Zielsprache ersetzen (Demo-Übersetzung, Vorschläge) */
+export function translateSignalWords(text: string, language: string): string {
+  const target = SIGNAL_WORDS[language];
+  if (!target) return text;
+  return text.split('\n').map((line) => {
+    const m = line.match(SIGNAL_RE);
+    const level = m && !(m[1] !== 'HINWEIS' && m[1].toUpperCase() === 'HINWEIS' && !SYMBOL.test(m[0])) ? levelOf(m[1]) : null;
+    if (!m || !level) return line;
+    const at = (m.index ?? 0) + m[0].indexOf(m[1]);
+    return line.slice(0, at) + target[level] + line.slice(at + m[1].length);
+  }).join('\n');
+}

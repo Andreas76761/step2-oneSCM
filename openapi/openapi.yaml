@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.30.0
+  version: 0.31.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -44,6 +44,7 @@ tags:
   - name: Schreibstil
   - name: Bilder
   - name: Metadaten
+  - name: Releaseletter
   - name: System
 components:
   securitySchemes:
@@ -4032,3 +4033,150 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'text/csv' }
+  /terminology/candidates:
+    get:
+      operationId: listTermCandidates
+      summary: 'Begriffskandidaten aus Jira-Tickets: mehrteilige Fachbegriffe, die in mehreren Tickets vorkommen und noch nicht in der Terminologie stehen (ADR-083, F-12)'
+      tags: [System]
+      x-requirements: [NFR-76]
+      x-extension: true
+      parameters:
+        - { name: minTickets, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 20, default: 2 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ term, tickets, occurrences, examples }]' }
+  /ticket-releases:
+    get:
+      operationId: listTicketReleases
+      summary: 'Release-Abgleich: Jira-Tickets je Release (Lösungsversion, sonst PI TBD) mit Statusgruppe, Einordnung Handbuch-Kandidat oder intern (Bug), Änderungen zum vorigen Import und Kapitelbezug (ADR-083, F-03)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters:
+        - { name: release, in: query, required: false, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ releases: [{ label, tickets, manual, internal, unknown, done, gaps, changed }], tickets: [{ key, summary, type, status, statusBucket, manualClass, release, chapters, gap, isNew, changes }], statusLabels, classLabels }' }
+  /ticket-releases/match:
+    post:
+      operationId: matchTicketList
+      summary: 'Ticketliste eines Releases gegen die eingelesenen Tickets abgleichen (ADR-083, F-03)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [keys], properties: { keys: { oneOf: [{ type: string }, { type: array, items: { type: string } }] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, loaded, missing }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /release-letters:
+    get:
+      operationId: listReleaseLetters
+      summary: 'Releaseletter des Projekts (ohne Text) mit letztem Prüfurteil (ADR-083, F-02)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, title, release, ticketKeys, language, audience, country, division, origin, status, verdict, verdictLabel, … }]' }
+    post:
+      operationId: createReleaseLetter
+      summary: 'Releaseletter aus den Tickets eines Releases oder einer Ticketliste erzeugen – nur Ticketfakten, feste Guardrails (Berechtigung edit, ADR-083, F-02)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { release: { type: string }, keys: { oneOf: [{ type: string }, { type: array, items: { type: string } }] }, title: { type: string, maxLength: 200 }, language: { type: string, enum: [de, en] }, audience: { type: string, enum: [mgmt, biz, it, end] }, country: { type: string, pattern: '^[A-Za-z]{2}$' }, division: { type: string, enum: [car, van, all] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Releaseletter mit text und check { verdict, verdictLabel, verdictText, findings, counts, pii, coverage, phantoms, missingTickets, ticketsNotLoaded }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /release-letters/import:
+    post:
+      operationId: importReleaseLetter
+      summary: 'Vorhandenen Releaseletter (z. B. aus Dify) einfügen und gegen die Tickets prüfen; Umfang aus keys oder aus dem Text (Berechtigung edit, ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 200000 }, keys: { oneOf: [{ type: string }, { type: array, items: { type: string } }] }, title: { type: string }, language: { type: string, enum: [de, en] }, audience: { type: string, enum: [mgmt, biz, it, end] }, country: { type: string }, division: { type: string, enum: [car, van, all] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Releaseletter wie bei POST /release-letters' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /release-letters/{letterId}:
+    get:
+      operationId: getReleaseLetter
+      summary: 'Releaseletter mit Text und aktueller Prüfung gegen die Tickets (ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters: [{ name: letterId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Releaseletter mit text und check' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateReleaseLetter
+      summary: 'Text oder Titel eines Entwurfs ändern; erneut prüfen (Berechtigung edit, ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters: [{ name: letterId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { text: { type: string }, title: { type: string, maxLength: 200 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Releaseletter mit text und check' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteReleaseLetter
+      summary: 'Entwurf löschen (Berechtigung edit); freigegebene Releaseletter bleiben erhalten (ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters: [{ name: letterId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /release-letters/{letterId}/approve:
+    post:
+      operationId: approveReleaseLetter
+      summary: 'Freigeben (Berechtigung approve): nicht bei „Nicht freigeben“, bei „Bedingt freigeben“ nur mit Begründung (ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters: [{ name: letterId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: false
+        content: { application/json: { schema: { type: object, properties: { reason: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Releaseletter (status approved)' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /release-letters/{letterId}/export:
+    get:
+      operationId: exportReleaseLetter
+      summary: 'Releaseletter als Markdown oder Word (ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters:
+        - { name: letterId, in: path, required: true, schema: { type: string } }
+        - { name: format, in: query, required: false, schema: { type: string, enum: [md, docx], default: md } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'text/markdown bzw. application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
+        '400': { $ref: '#/components/responses/Problem' }

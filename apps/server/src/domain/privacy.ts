@@ -31,7 +31,7 @@ const USER_ID = /\b(?:User[- ]?ID|UserID|Benutzer[- ]?(?:ID|kennung|name)|Login|
 // Straße mit Hausnummer, optional mit PLZ und Ort
 const ADDRESS = /\b[A-ZÄÖÜ][a-zäöüß]+(?:straße|strasse|str\.|weg|allee|platz|gasse|ring|damm)\s+\d{1,4}\s?[a-z]?\b(?:\s*,\s*\d{5}\s+[A-ZÄÖÜ][a-zäöüß]+)?/g;
 // Personenname nach einer Metadaten-Bezeichnung (Jira, Word-Eigenschaften, Kontakte)
-const NAME_FIELD = /\b(?:Autor(?:in)?|Bearbeiter(?:in)?|Verfasser(?:in)?|Ansprechpartner(?:in)?|Kontaktperson|Assignee|Reporter|Author|Created by|Responsible PO|(?:Export )?[Ee]rstellt von)\s*[:=]?\s*([A-ZÄÖÜ][a-zäöüß]+(?:[ -][A-ZÄÖÜ][a-zäöüß]+){1,2})/g;
+const NAME_FIELD = /\b(?:Autor(?:in)?|Bearbeiter(?:in)?|Verfasser(?:in)?|Ansprechpartner(?:in)?|Kontaktperson|Assignee|Reporter|Author|Created by|Prepared by|Exported by|Responsible PO|(?:Export )?[Ee]rstellt von)\s*[:=]?\s*([A-ZÄÖÜ][a-zäöüß]+(?:[ -][A-ZÄÖÜ][a-zäöüß]+){1,2})/g;
 
 const mask = (s: string) => (s.length <= 4 ? '****' : `${s.slice(0, 2)}…${s.slice(-2)}`);
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

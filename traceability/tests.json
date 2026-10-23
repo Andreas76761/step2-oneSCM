@@ -1587,5 +1587,33 @@
     "requirements": [
       "NFR-74"
     ]
+  },
+  {
+    "id": "T-241",
+    "title": "Release-Abgleich und Releaseletter aus Jira-Tickets: Releases, Bug = intern, Lücken, Änderungen, Ticketliste, Letter mit Guardrails, Prüfregeln und Urteil, Freigabe, Export",
+    "file": "apps/server/test/stage31.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-75"
+    ]
+  },
+  {
+    "id": "T-242",
+    "title": "Warnhinweis-Schema, Platzhalter- und Strukturvergleich beim Übersetzen, feste Übersetzungen, Begriffskandidaten aus Tickets, neue Ausgabesprachen",
+    "file": "apps/server/test/stage31.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-76"
+    ]
+  },
+  {
+    "id": "T-243",
+    "title": "Release-Abgleich und Releaseletter in der Oberfläche, fremden Letter prüfen, Begriffskandidaten (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-75",
+      "NFR-76"
+    ]
   }
 ]

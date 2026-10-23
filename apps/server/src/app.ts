@@ -32,6 +32,7 @@ import { contextHelpRoutes, publicHelpRoutes } from './routes/contextHelp.js';
 import { masterDataRoutes } from './routes/masterData.js';
 import { metadataRoutes } from './routes/metadata.js';
 import { sourceUpdateRoutes } from './routes/sourceUpdates.js';
+import { releaseLetterRoutes } from './routes/releaseLetters.js';
 import { seedMetadataLabels } from './services/metadata.js';
 import { seedDomainLinks } from './services/domainMap.js';
 import { styleRoutes } from './routes/style.js';
@@ -258,6 +259,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       translationRoutes(api, ctx);
       metadataRoutes(api, ctx);
       sourceUpdateRoutes(api, ctx);
+      releaseLetterRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

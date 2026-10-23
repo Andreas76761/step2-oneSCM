@@ -56,6 +56,8 @@ const AccessMatrixPage = lazy(() => import('./pages/Metadata').then((m) => ({ de
 const DomainMapPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.DomainMapPage })));
 const MetadataLabelsPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataLabelsPage })));
 const SourceUpdatesPage = lazy(() => import('./pages/SourceUpdates').then((m) => ({ default: m.SourceUpdatesPage })));
+const TicketReleasesPage = lazy(() => import('./pages/ReleaseLetters').then((m) => ({ default: m.TicketReleasesPage })));
+const ReleaseLettersPage = lazy(() => import('./pages/ReleaseLetters').then((m) => ({ default: m.ReleaseLettersPage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
@@ -97,6 +99,8 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/export', label: 'Export', icon: '📤' },
     { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
     { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
+    { to: '/release-abgleich', label: 'Release-Abgleich', icon: '🎯' },
+    { to: '/releaseletter', label: 'Releaseletter', icon: '📰' },
   ] },
 ];
 const NAV_MORE: NavItem[] = [
@@ -403,6 +407,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/metadaten/fragen" element={<MetadataQaPage />} />
             <Route path="/metadaten/zugriffsmatrix" element={<AccessMatrixPage />} />
             <Route path="/metadaten/zuordnung" element={<DomainMapPage />} />
+            <Route path="/release-abgleich" element={<TicketReleasesPage />} />
+            <Route path="/releaseletter" element={<ReleaseLettersPage />} />
             <Route path="/metadaten/labels" element={<MetadataLabelsPage />} />
             <Route path="/quellen" element={<SourcesPage />} />
             <Route path="/quellenaenderungen" element={<SourceUpdatesPage />} />

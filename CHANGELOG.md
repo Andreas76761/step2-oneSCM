@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.31.0 – Etappe 31 (23.10.2026)
+
+### Hinzugefügt
+- **Release-Abgleich (ADR-083, F-03):** Jira-Tickets je Release mit Statusgruppe, Einordnung „Benutzerhandbuch-Kandidat“ oder „Intern / Bug“, Kapitelbezug („fehlt“), Änderungen seit dem letzten Import und Abgleich einer Ticketliste.
+- **Releaseletter (ADR-083, F-02):** aus den Tickets eines Releases erzeugt – nur Ticketfakten, feste Guardrails, Deutsch oder Englisch, vier Zielgruppen; eingefügte Letter (z. B. aus Dify) werden mit denselben Regeln geprüft; Urteil „Nicht freigeben“, „Bedingt freigeben“, „Freigabe möglich“; Freigabe, Export als Markdown und Word.
+- **Warnhinweis-Schema (F-07)** im Anleitungs-Check; **Übersetzungsprüfung (F-09)** mit Platzhaltern, Struktur, Fettung und Signalwörtern; **feste Übersetzungen und Begriffskandidaten aus Tickets (F-12)**.
+- Zielsprachen Slowakisch, Koreanisch und Malaiisch.
+- Migration `038_release_letters.sql`; Tests T-241, T-242, E2E T-243 (axe); Anforderungen NFR-75, NFR-76.
+
+### Geändert
+- Englische UI-Begriffe für Contract Management 3.1–3.5 und die Domänenzuordnung sind bestätigt (ADR-082).
+- Die Datenschutzprüfung erkennt Namen auch hinter „Prepared by“ und „Exported by“.
+
 ## 0.30.0 – Etappe 30 (23.10.2026)
 
 ### Hinzugefügt

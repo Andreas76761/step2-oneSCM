@@ -1,6 +1,6 @@
 # 7. Bestehende Artefakte: was existiert, was eingebunden werden kann
 
-> **Status: entschieden am 23.10.2026.** Ausgewertet wurden 22 eigene claude.ai-Artefakte zu Handbuch, oneSCM und Releaseletter (nur gelesen, nichts geändert). Der Auftraggeber hat MO = Market Operation, Anrede „Sie“ und nur Pkw/Van festgelegt und für alle übrigen Punkte die Empfehlungen übernommen: „übernehmen“ = Ja, „optional“/„später“ = Später, D-10 später aus den Originaldateien. Die Auswahl je Punkt steht auf der [Entscheidungsseite](https://claude.ai/artifact/VuADyUkwMWfknavaEuHmWJ). Umgesetzt in Etappe 28: D-01 … D-05 und F-04 ([ADR-080](adr/ADR-080-katalog-onescm-datenschutz.md)).
+> **Status: entschieden am 23.10.2026.** Ausgewertet wurden 22 eigene claude.ai-Artefakte zu Handbuch, oneSCM und Releaseletter (nur gelesen, nichts geändert). Der Auftraggeber hat MO = Market Operation, Anrede „Sie“ und nur Pkw/Van festgelegt und für alle übrigen Punkte die Empfehlungen übernommen: „übernehmen“ = Ja, „optional“/„später“ = Später, D-10 später aus den Originaldateien. Die Auswahl je Punkt steht auf der [Entscheidungsseite](https://claude.ai/artifact/VuADyUkwMWfknavaEuHmWJ). Umgesetzt in Etappe 28: D-01 … D-05 und F-04 ([ADR-080](adr/ADR-080-katalog-onescm-datenschutz.md)). Etappe 29: F-01, F-05, F-06, D-06 … D-08 ([ADR-081](adr/ADR-081-jira-update-zugriff.md)). Etappe 31: F-02, F-03, F-07, F-09, F-12 ([ADR-083](adr/ADR-083-releaseletter-lektorat.md)).
 > Aufwand: **S** ≤ 1 Tag, **M** 2–4 Tage, **L** ≥ 1 Woche.
 
 ## 7.1 Ausgewertete Artefakte

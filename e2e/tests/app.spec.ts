@@ -1926,3 +1926,51 @@ test('[T-239] Zuordnung: Domäne zu Gliederungspunkt, Menüpunkt und Ordner; Unt
   await page.getByRole('button', { name: 'Zuordnen zu Contract Management' }).click();
   await expect(cm).toContainText('12_Geschäftskunden_Kampagnen_und_Sonderfälle');
 });
+
+test('[T-243] Release-Abgleich und Releaseletter: Tickets je Release, Letter erzeugen und prüfen, fremden Letter prüfen, Begriffskandidaten', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+  const csv = [
+    'Summary,Issue key,Issue Type,Status,Component/s,Fix Version/s,Created,Description',
+    '"E2E Release Preview PDF",E2ERL-1,Story,Fertig,Documents & Communications,E2E-PI1,2026-02-05T10:00:00.000+0100,"Target State: The Release Preview PDF is shown."',
+    '"E2E Release crash",E2ERL-2,Bug,Fertig,Documents & Communications,E2E-PI1,2026-02-06T10:00:00.000+0100,"The Release Preview PDF no longer crashes."',
+  ].join('\n');
+  expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name: 'e2e_release.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) } } })).status()).toBe(202);
+  await expect.poll(async () => (await (await request.get('/api/v1/ticket-releases', { headers: h })).json()).releases.some((r: any) => r.label === 'E2E-PI1')).toBe(true);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Release-Abgleich' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Release-Abgleich' })).toBeVisible();
+  await page.getByRole('button', { name: 'E2E-PI1' }).click();
+  await expect(page.getByRole('row', { name: /E2ERL-2/ })).toContainText('Intern / Bug');
+  await page.getByLabel('Ticketnummern (eine je Zeile oder durch Komma getrennt)').fill('E2ERL-1\nE2ERL-9');
+  await page.getByRole('button', { name: 'Abgleichen' }).click();
+  await expect(page.getByRole('status')).toContainText('Es fehlen: E2ERL-9');
+  expect(await axe()).toEqual([]);
+
+  // Releaseletter aus dem Release
+  await page.getByRole('row', { name: /E2E-PI1/ }).getByRole('link', { name: 'Releaseletter' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Releaseletter' })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Release', exact: true })).toHaveValue('E2E-PI1');
+  await page.getByRole('button', { name: 'Erzeugen' }).click();
+  await expect(page.getByText('Releaseletter erzeugt.')).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Freigabe möglich' })).toBeVisible();
+  await expect(page.getByLabel('Text (Markdown)')).toHaveValue(/oneSCM Consolidated Release E2E-PI1 – 06 Feb 2026/);
+  expect(await axe()).toEqual([]);
+
+  // Fremder Letter mit erfundenem Ticket und Laufdatum
+  await page.getByLabel('Text des Releaseletters').fill('Release E2E-PI1 vom 23 Oct 2026: E2ERL-1 und E2ERL-7.');
+  await page.getByRole('button', { name: 'Einfügen und prüfen' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Nicht freigeben' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Befunde' })).toContainText('Phantom-Tickets (Halluzination)');
+  await expect(page.getByRole('button', { name: 'Freigeben' })).toBeDisabled();
+
+  // Begriffskandidaten aus den Tickets
+  await page.goto('/terminologie');
+  await page.getByRole('button', { name: 'Release Preview PDF als Begriff anlegen' }).click();
+  await expect(page.getByText('Begriff „Release Preview PDF“ angelegt.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+});

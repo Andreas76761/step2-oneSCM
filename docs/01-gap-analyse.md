@@ -161,6 +161,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.33 Stand nach Etappe 31 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Release-Abgleich (F-03) | ✅ Tickets je Release, Bug = intern, Kapitelbezug, Änderungen, Ticketliste ([ADR-083](adr/ADR-083-releaseletter-lektorat.md)) |
+| Releaseletter (F-02, NFR-75) | ✅ aus Tickets mit Guardrails, Prüfregeln und Urteil, auch für eingefügte Letter ([ADR-083](adr/ADR-083-releaseletter-lektorat.md)) |
+| Warnhinweis-Schema, Übersetzungsprüfung, feste Übersetzungen (F-07, F-09, F-12, NFR-76) | ✅ ([ADR-083](adr/ADR-083-releaseletter-lektorat.md)) |
+| Offen | KI-Formulierung des Letters mit lokalem Modell (optional); weitere Funktionen aus docs/07 (F-13 ff.); Etappen M2–M7 |
+
 ## 1.32 Stand nach Etappe 30 (23.10.2026)
 
 | Punkt | Ergebnis |

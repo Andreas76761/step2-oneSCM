@@ -84,3 +84,4 @@
 | [ADR-080](ADR-080-katalog-onescm-datenschutz.md) | Labelkatalog nach echtem oneSCM, erweiterte Datenschutzprüfung | akzeptiert, umgesetzt |
 | [ADR-081](ADR-081-jira-update-zugriff.md) | Jira-Import als Datei, Update-Eingang, Zugriffsmatrix | akzeptiert, umgesetzt |
 | [ADR-082](ADR-082-zuordnung-domaene-ordner.md) | Zuordnung Domäne → Gliederungspunkt → Ordner, Menüpunkte Contract Management 3.1–3.5 | akzeptiert, umgesetzt |
+| [ADR-083](ADR-083-releaseletter-lektorat.md) | Releaseletter und Release-Abgleich aus Jira-Tickets, Warnhinweis-Schema, Übersetzungsprüfung, feste Übersetzungen | akzeptiert, umgesetzt |

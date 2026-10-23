@@ -2,6 +2,7 @@
 // Adapter: Anthropic Claude (Messages API), OpenAI-kompatible Chat-API (OpenAI, Azure, vLLM, Ollama …) und ein
 // Demo-Anbieter ohne Netzwerkzugriff (nur für Demo und Tests). Standard: keine Anbindung.
 import { extractiveAnswer } from './domain/assistant.js';
+import { translateSignalWords } from './domain/warnings.js';
 import { extractPromptData } from './domain/rewrite.js';
 import { parseStructure } from './domain/diagrams.js';
 import { autoFix, PRESENT_RULES, type StylePhrase } from './domain/style.js';
@@ -149,7 +150,8 @@ export class DemoProvider implements LlmProvider {
       const tag = `[${tr.targetLanguage.toUpperCase()}]`;
       const sentences = tr.sentences.map((s) => {
         const marker = s.text.match(/^\s*(?:\d+\.|[-*])\s+/)?.[0] ?? '';
-        return { text: `${marker}${tag} ${s.text.slice(marker.length)}`, sources: [s.n] };
+        // feste Bestandteile wie eine echte Übersetzung: Signalwörter der Zielsprache (ADR-083)
+        return { text: `${marker}${tag} ${translateSignalWords(s.text.slice(marker.length), tr.targetLanguage!)}`, sources: [s.n] };
       });
       return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
     }

@@ -225,6 +225,7 @@ const OWNER_SQL: Record<string, string> = {
   deliveryId: 'SELECT s.project_id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id WHERE d.id = ?',
   labelId: 'SELECT project_id FROM metadata_labels WHERE id = ?',
   qaId: 'SELECT project_id FROM metadata_qa WHERE id = ?',
+  letterId: 'SELECT project_id FROM release_letters WHERE id = ?',
   batchId: 'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?',
 };
 
