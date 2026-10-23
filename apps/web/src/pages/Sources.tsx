@@ -83,11 +83,11 @@ export function SourcesPage() {
               void upload(e.dataTransfer.files[0]);
             }}
           >
-            <input type="file" accept=".zip,.md,.markdown,.html,.htm,.docx,.xml,.csv" data-testid="file-input" disabled={busy} onChange={(e) => void upload(e.target.files?.[0] ?? undefined)} />
-            <span>{busy ? 'Import läuft …' : 'ZIP-, Markdown-, HTML- oder Word-Datei hierher ziehen oder auswählen'}</span>
+            <input type="file" accept=".zip,.md,.markdown,.html,.htm,.docx,.pptx,.pdf,.xml,.csv" data-testid="file-input" disabled={busy} onChange={(e) => void upload(e.target.files?.[0] ?? undefined)} />
+            <span>{busy ? 'Import läuft …' : 'ZIP-, Markdown-, HTML-, Word-, PowerPoint- oder PDF-Datei hierher ziehen oder auswählen'}</span>
           </label>
           <label className="inline small"><input type="checkbox" checked={snapshot} onChange={(e) => setSnapshot(e.target.checked)} /> ZIP ist der vollständige Stand – fehlende Dateien als entfernt markieren</label>
-          <Decision id="E-01">Erlaubt sind .md, .markdown, .zip sowie Confluence-/HTML-Export und Word (.docx), die in Markdown umgewandelt werden (Original bleibt erhalten), sowie Jira-Exporte als XML oder CSV – je Ticket eine Quelle unter jira/, ohne Personenfelder; Grenzen unter Einstellungen. Identische Inhalte (gleicher Pfad, gleicher SHA-256) erzeugen keine neue Revision.</Decision>
+          <Decision id="E-01">Erlaubt sind .md, .markdown, .zip sowie Confluence-/HTML-Export, Word (.docx), PowerPoint (.pptx) und PDF, die in Markdown umgewandelt werden – mit Fundstelle je Folie, Seite bzw. Abschnitt (Original bleibt erhalten), sowie Jira-Exporte als XML oder CSV – je Ticket eine Quelle unter jira/, ohne Personenfelder; Grenzen unter Einstellungen. Identische Inhalte (gleicher Pfad, gleicher SHA-256) erzeugen keine neue Revision.</Decision>
         </Card>
         <Card title="Importprotokoll">
           <ErrorBox error={imports.error} />

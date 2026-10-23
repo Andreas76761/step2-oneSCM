@@ -911,5 +911,23 @@
     "documentation": [
       "docs/adr/ADR-085-bilder-ausgabe.md"
     ]
+  },
+  {
+    "id": "NFR-81",
+    "title": "PowerPoint und PDF lokal einlesen (Folien mit Titel, Aufzählungen, Tabellen, Bildern, Notizen; PDF-Textebene mit Überschriften, Absätzen, Listen, ohne Kopf-/Fußzeilen); Fundstelle je Chunk als Folie, Seite oder Abschnitt; Seite „Einlesen“",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-086-pptx-pdf-fundstellen.md"
+    ]
+  },
+  {
+    "id": "NFR-82",
+    "title": "Bild aus einer Folie mit Gliederungs-Vorschlag aus Folientext und Alternativtext, nur von Hand übernommen (F-25)",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-086-pptx-pdf-fundstellen.md"
+    ]
   }
 ]

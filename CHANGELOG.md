@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.34.0 – Etappe 34 (23.10.2026)
+
+### Hinzugefügt
+- **PowerPoint einlesen (ADR-086, M2):** je Folie ein Abschnitt mit Titel, Aufzählungen mit Ebenen, Tabellen, Bildern mit Alternativtext und Sprechernotizen; ausgeblendete Folien entfallen.
+- **PDF einlesen (M2):** Textebene lokal mit pdf.js; Überschriften aus Lesezeichen bzw. Schriftgröße, Absätze und Listen, ohne wiederholte Kopf-/Fußzeilen und Seitenzahlen; Seiten ohne Textebene werden gemeldet.
+- **Fundstelle je Chunk:** Folie, Seite bzw. Abschnitt (Anker der Überschrift bei HTML und Word).
+- **Bild → Gliederungsstelle (F-25):** Vorschlag aus Folientext und Alternativtext, im Bildarchiv von Hand übernehmen; Folientitel als Bildunterschrift.
+- **Seite „Einlesen“** unter oneSCM_Metadaten: mehrere Dateien auf einmal mit Ergebnis je Datei.
+- Migration `041_slides_pages.sql`; Tests T-252 … T-255, E2E T-256 (axe); Anforderungen NFR-81, NFR-82; Abhängigkeit `pdfjs-dist`.
+
+### Geändert
+- `.pptx` und `.pdf` sind erlaubte Importformate (auch in gespeicherten Einstellungen mit der bisherigen Standardliste); Originale werden nur als Download mit `nosniff` und `sandbox` ausgeliefert.
+
 ## 0.33.0 – Etappe 33 (23.10.2026)
 
 ### Hinzugefügt

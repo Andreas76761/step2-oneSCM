@@ -105,6 +105,7 @@ function locatorText(c: { locator: Record<string, unknown> | null; lineStart: nu
   if (l.page) return `Seite ${l.page}`;
   if (l.slide) return `Folie ${l.slide}`;
   if (l.time) return `bei ${l.time}`;
+  if (l.anchor) return `Abschnitt #${l.anchor}`;
   return c.lineStart === c.lineEnd ? `Zeile ${c.lineStart}` : `Zeilen ${c.lineStart}–${c.lineEnd}`;
 }
 const headingText = (c: { chapter?: string; subchapter?: string | null; headingPath: string[] }) =>

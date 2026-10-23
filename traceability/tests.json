@@ -1690,5 +1690,52 @@
       "NFR-79",
       "NFR-80"
     ]
+  },
+  {
+    "id": "T-252",
+    "title": "PowerPoint: je Folie ein Abschnitt mit Fundstelle, Ebenen, Tabelle, Bild mit Alternativtext, Notizen; ausgeblendete Folien entfallen (Einheit)",
+    "file": "apps/server/test/stage34.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-81"
+    ]
+  },
+  {
+    "id": "T-253",
+    "title": "PDF: Überschriften nach Schriftgröße, Absätze, Liste, Fundstelle je Seite; Kopf-/Fußzeilen und Seitenzahlen entfallen (Einheit)",
+    "file": "apps/server/test/stage34.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-81"
+    ]
+  },
+  {
+    "id": "T-254",
+    "title": "Einlesen über die API: Fundstelle je Chunk (Folie, Seite, Abschnitt), Bild mit Gliederungs-Vorschlag aus dem Folientext (F-25), nur von Hand übernommen",
+    "file": "apps/server/test/stage34.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-81",
+      "NFR-82"
+    ]
+  },
+  {
+    "id": "T-255",
+    "title": "Abschnitts-Anker für HTML und Word (Einheit)",
+    "file": "apps/server/test/stage34.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-81"
+    ]
+  },
+  {
+    "id": "T-256",
+    "title": "Einlesen von PowerPoint und PDF in der Oberfläche mit Fundstelle, Gliederungs-Vorschlag im Bildarchiv übernehmen (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-81",
+      "NFR-82"
+    ]
   }
 ]

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.33.0
+  version: 0.34.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -372,9 +372,9 @@ paths:
   /imports:
     post:
       operationId: createImport
-      summary: 'ZIP-, Markdown-, HTML- (Confluence-Export), Word-Datei oder Jira-Export (XML/CSV, je Ticket eine Quelle unter jira/, ADR-081) importieren (HTML/Word werden in Markdown umgewandelt, ADR-022)'
+      summary: 'ZIP-, Markdown-, HTML- (Confluence-Export), Word-, PowerPoint- oder PDF-Datei oder Jira-Export (XML/CSV, je Ticket eine Quelle unter jira/, ADR-081) importieren (HTML/Word/PowerPoint/PDF werden in Markdown umgewandelt, ADR-022, ADR-086; Fundstelle je Chunk: Folie, Seite oder Abschnitt)'
       tags: [Import]
-      x-requirements: [US-001, US-002, US-003, US-004, NFR-09, NFR-14, NFR-23]
+      x-requirements: [US-001, US-002, US-003, US-004, NFR-09, NFR-14, NFR-23, NFR-81]
       parameters:
         - { name: snapshot, in: query, schema: { type: boolean }, description: 'ZIP ist der vollständige Stand – fehlende Dateien derselben Herkunft werden als entfernt markiert (ADR-036)' }
       requestBody:
@@ -4318,7 +4318,7 @@ paths:
         - { name: q, in: query, required: false, schema: { type: string } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ items: [{ sha, imageNo, title, currentSha, placeholder, language, roles, divisions, markets, release, navigation, versions, usedIn, sourceUses, checks }], summary: { images, placeholders, withErrors, withWarnings, versioned } }' }
+        '200': { description: '{ items: [{ sha, imageNo, title, currentSha, placeholder, language, roles, divisions, markets, release, navigation, outline, source: { path, slide, slideTitle, suggestions }, versions, usedIn, sourceUses, checks }], summary: { images, placeholders, withErrors, withWarnings, versioned } }' }
   /image-archive/coverage:
     get:
       operationId: getImageCoverage
@@ -4347,14 +4347,14 @@ paths:
   /image-archive/{mediaSha}:
     patch:
       operationId: updateImageMeta
-      summary: 'Merkmale und Bildunterschrift eines Bildes ändern (Berechtigung edit, F-20)'
+      summary: 'Merkmale, Bildunterschrift und Gliederungsstelle eines Bildes ändern – den Vorschlag aus der Folie übernimmt die Redaktion hier (Berechtigung edit, F-20, F-25)'
       tags: [Medien]
-      x-requirements: [NFR-79]
+      x-requirements: [NFR-79, NFR-82]
       x-extension: true
       parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, properties: { title: { type: [string, 'null'] }, language: { type: [string, 'null'], pattern: '^[a-z]{2}$' }, roles: { type: array, items: { type: string } }, divisions: { type: array, items: { type: string, enum: [car, van, all] } }, markets: { type: array, items: { type: string, pattern: '^[A-Z]{2}$' } }, release: { type: [string, 'null'] }, navLabelId: { type: [string, 'null'] } } } } }
+        content: { application/json: { schema: { type: object, properties: { title: { type: [string, 'null'] }, language: { type: [string, 'null'], pattern: '^[a-z]{2}$' }, roles: { type: array, items: { type: string } }, divisions: { type: array, items: { type: string, enum: [car, van, all] } }, markets: { type: array, items: { type: string, pattern: '^[A-Z]{2}$' } }, release: { type: [string, 'null'] }, navLabelId: { type: [string, 'null'] }, outlineLabelId: { type: [string, 'null'], description: 'Punkt der Gesamtgliederung (label_group outline)' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Bild' }

@@ -6,6 +6,8 @@ import { json, now, parseJson, type Row } from '../db.js';
 import { imageRefs } from '../domain/media.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { storeMedia } from './media.js';
+import { suggestOutline } from '../domain/outlineSuggest.js';
+import { outlineProfiles } from './metadataOutline.js';
 
 const ROLES = ['dealer', 'market', 'mo', 'hq', 'all'];
 const DIVISIONS = ['car', 'van', 'all']; // nur Pkw und Van (Entscheidung 23.10.2026)
@@ -99,11 +101,16 @@ async function item(ctx: Ctx, base: Row, nav: Map<string, Row>) {
   const shas = versions.length ? versions.map((v) => v.sha as string) : [base.sha256 as string];
   const use = await usage(ctx, shas);
   const n = nav.get(meta?.nav_label_id);
+  // Herkunft aus einer Folie mit Gliederungs-Vorschlag (F-25) und übernommener Gliederungspunkt
+  const src = await ctx.db.get('SELECT * FROM media_context WHERE project_id = ? AND sha = ?', ctx.projectId, base.sha256);
+  const ol = meta?.outline_label_id ? await ctx.db.get('SELECT id, code, name_de FROM metadata_labels WHERE id = ?', meta.outline_label_id) : null;
   return {
     sha: base.sha256, imageNo: imageNumber(Number(meta?.image_no ?? 0)), title: base.title ?? null, mime: cur.mime, width: cur.width ?? null, height: cur.height ?? null, byteSize: Number(cur.byte_size),
     currentSha: current, url: `/api/v1/media/${current}`, placeholder: !!Number(meta?.placeholder ?? 0),
     language: meta?.language ?? null, roles: parseJson<string[]>(meta?.roles, []), divisions: parseJson<string[]>(meta?.divisions, []), markets: parseJson<string[]>(meta?.markets, []),
     release: meta?.release ?? null, navigation: n ? { id: n.id, nameDe: n.name_de, nameEn: n.name_en } : null,
+    outline: ol ? { id: ol.id, code: ol.code, nameDe: ol.name_de } : null,
+    source: src ? { path: src.source_path, slide: src.slide == null ? null : Number(src.slide), slideTitle: src.slide_title ?? null, suggestions: parseJson<any[]>(src.suggestions, []) } : null,
     versions: (versions.length ? versions : [{ sha: base.sha256, version_no: 1, note: null, created_by: null, created_at: base.created_at }])
       .map((v) => ({ sha: v.sha, versionNo: Number(v.version_no), note: v.note ?? null, createdBy: v.created_by ?? null, createdAt: v.created_at, url: `/api/v1/media/${v.sha}?original=1` })),
     usedIn: use.chapters, sourceUses: use.snippets,
@@ -156,6 +163,10 @@ export async function updateImageMeta(ctx: Ctx, sha: string, input: any, user: U
   if (input.navLabelId !== undefined) {
     if (input.navLabelId !== null && !(await ctx.db.get("SELECT 1 FROM metadata_labels WHERE id = ? AND project_id = ? AND label_group = 'navigation'", input.navLabelId, ctx.projectId))) throw badRequest('navLabelId ist kein Menüpunkt dieses Projekts.');
     set('nav_label_id', input.navLabelId);
+  }
+  if (input.outlineLabelId !== undefined) {
+    if (input.outlineLabelId !== null && !(await ctx.db.get("SELECT 1 FROM metadata_labels WHERE id = ? AND project_id = ? AND label_group = 'outline'", input.outlineLabelId, ctx.projectId))) throw badRequest('outlineLabelId ist kein Punkt der Gesamtgliederung dieses Projekts.');
+    set('outline_label_id', input.outlineLabelId);
   }
   const title = input.title === undefined ? undefined : input.title === null ? null : String(input.title).trim().slice(0, 300) || null;
   await ctx.db.tx(async () => {
@@ -242,4 +253,21 @@ export async function imageCoverage(ctx: Ctx) {
     coverage: c.steps ? Math.round((c.stepsWithImage / c.steps) * 100) : c.images.size ? 100 : 0,
   }));
   return { items, summary: { chapters: items.length, withoutImages: items.filter((i) => !i.images).length, withPlaceholders: items.filter((i) => i.placeholders).length } };
+}
+
+/**
+ * F-25: Bilder aus einer Folie bekommen einen Gliederungs-Vorschlag aus dem Text ihrer Folie und – falls noch keine
+ * Bildunterschrift gepflegt ist – den Folientitel als Bildunterschrift. Übernommen wird der Vorschlag nur von Hand.
+ */
+export async function suggestImageOutline(ctx: Ctx, images: { sha: string; slide: number; title: string; text: string }[], sourcePath: string) {
+  const profiles = await outlineProfiles(ctx);
+  for (const im of images) {
+    const suggestions = profiles.length ? suggestOutline(profiles, { text: im.text, headings: [im.title], labelIds: [] }) : [];
+    await ctx.db.run(
+      `INSERT INTO media_context (project_id, sha, source_path, slide, slide_title, suggestions, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (project_id, sha) DO UPDATE SET source_path = excluded.source_path, slide = excluded.slide, slide_title = excluded.slide_title, suggestions = excluded.suggestions, updated_at = excluded.updated_at`,
+      ctx.projectId, im.sha, sourcePath, im.slide, im.title.slice(0, 300), json(suggestions), now(),
+    );
+    await ctx.db.run("UPDATE media_assets SET title = ? WHERE project_id = ? AND sha256 = ? AND (title IS NULL OR title = '')", im.title.slice(0, 300), ctx.projectId, im.sha);
+  }
 }

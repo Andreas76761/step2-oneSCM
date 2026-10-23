@@ -5,7 +5,10 @@ import { audit, getSettings, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { compileExclusions } from '../domain/exclude.js';
 import { classifySnippet } from '../domain/classify.js';
-import { CONVERTIBLE, docxToMarkdown, embedDataImages, htmlToMarkdown } from '../domain/convert.js';
+import { CONVERTIBLE, docxToMarkdown, embedDataImages, headingLocators, htmlHeadingIds, htmlToMarkdown } from '../domain/convert.js';
+import { pdfToMarkdown } from '../domain/pdf.js';
+import { suggestImageOutline } from './imageArchive.js';
+import { pptxToMarkdown, type LocatedMarkdown } from '../domain/pptx.js';
 import { chapterOf, headingKey, parseMarkdown } from '../domain/markdown.js';
 import { issueToMarkdown, parseJira } from '../domain/jira.js';
 import { MEDIA_EXT, resolveRelative, rewriteImages } from '../domain/media.js';
@@ -221,7 +224,9 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
           item.status = 'skipped';
           item.message = converted.skip;
         } else {
-          const res = await storeRevision(ctx, importId, entry.path, converted.markdown, converted.original, cache);
+          const res = await storeRevision(ctx, importId, entry.path, converted.markdown, converted.original, cache, converted.locators);
+          // F-25: Bilder einer Folie → Gliederungs-Vorschlag aus dem Folientext (nie automatisch übernommen)
+          if (converted.images?.length) await suggestImageOutline(ctx, converted.images, entry.path);
           const warning = [res.warning, ...converted.warnings].filter(Boolean).join('; ');
           item.status = res.identical ? 'identical' : 'imported';
           item.revisionId = res.revisionId;
@@ -303,7 +308,7 @@ async function reviveDocument(ctx: Ctx, documentId: string) {
 }
 
 interface Original {
-  format: 'html' | 'docx' | 'jira';
+  format: 'html' | 'docx' | 'pptx' | 'pdf' | 'jira';
   data: Buffer;
 }
 
@@ -317,7 +322,9 @@ const missingWarning = (missing: string[]) =>
   missing.length ? [`Bild nicht gefunden: ${[...new Set(missing)].slice(0, 5).join(', ')}${missing.length > 5 ? ' …' : ''}`] : [];
 
 /** Markdown direkt übernehmen, HTML/Word umwandeln (ADR-022). Die Originaldatei wird zusätzlich aufbewahrt. */
-async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: ImageResolver): Promise<{ markdown: Buffer; original?: Original; warnings: string[]; skip?: string }> {
+type ConvertedEntry = { markdown: Buffer; original?: Original; warnings: string[]; skip?: string; locators?: LocatedMarkdown['locators']; images?: LocatedMarkdown['images'] };
+
+async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: ImageResolver): Promise<ConvertedEntry> {
   const format = CONVERTIBLE[path.extname(filePath).toLowerCase()];
   const fromZip = (target: string) => {
     const p = resolveRelative(filePath, target);
@@ -332,10 +339,14 @@ async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: I
   const title = path.basename(filePath, path.extname(filePath));
   const settings = (await getSettings(ctx.db)).import;
   const embed = async (buf: Buffer, name: string) => (await storeMedia(ctx, buf, name, images?.importId ?? null)).sha;
-  const res = format === 'html'
-    ? htmlToMarkdown(await embedDataImages(decodeHtml(data), embed), title, { resolve: fromZip })
-    : await docxToMarkdown(data, title, settings.maxEntryBytes * 5, embed);
-  return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.warnings, skip: res.skip };
+  // Fundstellen (ADR-086): Folie bzw. Seite; bei HTML und Word der Abschnitt (Anker der Überschrift)
+  if (format === 'pptx' || format === 'pdf') {
+    const res = format === 'pptx' ? await pptxToMarkdown(data, title, settings.maxEntryBytes * 5, embed) : await pdfToMarkdown(data, title);
+    return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.warnings, skip: res.skip, locators: res.locators, images: res.images };
+  }
+  const html = format === 'html' ? await embedDataImages(decodeHtml(data), embed) : null;
+  const res = html !== null ? htmlToMarkdown(html, title, { resolve: fromZip }) : await docxToMarkdown(data, title, settings.maxEntryBytes * 5, embed);
+  return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.warnings, skip: res.skip, locators: headingLocators(res.markdown, html !== null ? htmlHeadingIds(html) : undefined) };
 }
 
 /** HTML-Zeichensatz: UTF-8 (Standard), sonst laut meta charset (Windows-1252/ISO-8859-1 älterer Exporte) */
@@ -359,7 +370,7 @@ interface StructureCache {
 }
 const newCache = (): StructureCache => ({ chapters: new Map(), subs: new Map() });
 
-async function storeRevision(ctx: Ctx, importId: string, filePath: string, data: Buffer, original?: Original, cache: StructureCache = newCache()) {
+async function storeRevision(ctx: Ctx, importId: string, filePath: string, data: Buffer, original?: Original, cache: StructureCache = newCache(), locators: LocatedMarkdown['locators'] = []) {
   const { db } = ctx;
   const text = decoder.decode(data);
   const hash = sha256(data);
@@ -433,10 +444,14 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
       const sub = b.subchapterTitle ? await subFor(b.chapterTitle, b.subchapterTitle) : null;
       const cls = classifySnippet({ text: b.text, headings: [b.chapterTitle ?? '', b.subchapterTitle ?? '', ...b.headingPath], path: filePath, frontMatter: parsed.frontMatter });
       const snippetId = newId('sn');
+      // Fundstelle: letzte Markierung bis zum Beginn des Absatzes (Folie, Seite, Abschnitt)
+      let locator: LocatedMarkdown['locators'][number]['locator'] | null = null;
+      for (const l of locators) if (l.line <= b.lineStart) locator = l.locator;
       snippetRows.push([
         snippetId, seq++, revisionId, chapter.id, sub?.id ?? null, json(b.headingPath), b.position, b.lineStart, b.lineEnd, b.kind, b.text,
         sha256(b.text), normalizedHash(b.text), cls.evidenceStatus, cls.market?.code ?? null, cls.release?.code ?? null,
         (cls.market?.status ?? 'confirmed') === 'confirmed' && (cls.release?.status ?? 'confirmed') === 'confirmed' ? 'confirmed' : 'unconfirmed', created,
+        locator ? json(locator) : null,
       ]);
       for (const r of cls.roles) roleRows.push([snippetId, r.code, r.score, r.method, r.modelVersion, r.evidenceStatus, r.evidence]);
       for (const d of cls.divisions) divisionRows.push([snippetId, d.code, d.score, d.method, d.modelVersion, d.evidenceStatus, d.evidence]);
@@ -445,7 +460,7 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
       snippetCount++;
     }
     await insertMany(ctx, `text_snippets (id, seq, revision_id, chapter_id, subchapter_id, heading_path, position, line_start, line_end, kind, text, text_hash, norm_hash,
-      evidence_status, market_code, release_code, scope_status, created_at)`, snippetRows);
+      evidence_status, market_code, release_code, scope_status, created_at, locator)`, snippetRows);
     await insertMany(ctx, 'snippet_roles', roleRows);
     await insertMany(ctx, 'snippet_divisions', divisionRows);
     for (const m of markets) await db.run('INSERT INTO markets (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', m, m);
@@ -535,6 +550,8 @@ const ORIGINAL_TYPES: Record<string, string> = {
   html: 'text/plain; charset=utf-8', // nie als HTML ausliefern (keine Skriptausführung)
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   jira: 'application/json; charset=utf-8', // Ticketfelder ohne Personenfelder (ADR-081)
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  pdf: 'application/pdf',
 };
 
 /** Originaldatei einer umgewandelten Revision (HTML, Word) */

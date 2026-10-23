@@ -70,7 +70,7 @@ Bilder: Alternativtext aus der Quelle; optional **Bildbeschreibung per KI** (M-0
 
 ## 6.4 Oberfläche (Menüpunkt „oneSCM_Metadaten“)
 
-Umgesetzt in M1: **Übersicht**, **Chunks** (je Überschrift oder Tabelle, Labels einzeln und gesammelt), **Fragen & Antworten** (speichern mit Quellen und Labels) und **Labels**. Seit Etappe 32 (vorgezogen aus M3/M4): **Gliederungs-Vorschlag je Chunk**, **Kapitel ↔ Quellen**, **Wissensnotizen**, Zielkapitel je Dopplung und Ausschlussliste ([ADR-084](adr/ADR-084-gliederung-wissen.md)). Seit Etappe 33: **Bildarchiv** mit Bildnummer, Merkmalen, Versionen und Platzhaltern sowie Quick Guide, One Pager und Lesefassung ([ADR-085](adr/ADR-085-bilder-ausgabe.md)). Eingelesen wird bis M2 über „Quellen“, Dopplungen zeigt bis M4 die vorhandene Seite „Dopplungen“.
+Umgesetzt in M1: **Übersicht**, **Chunks** (je Überschrift oder Tabelle, Labels einzeln und gesammelt), **Fragen & Antworten** (speichern mit Quellen und Labels) und **Labels**. Seit Etappe 32 (vorgezogen aus M3/M4): **Gliederungs-Vorschlag je Chunk**, **Kapitel ↔ Quellen**, **Wissensnotizen**, Zielkapitel je Dopplung und Ausschlussliste ([ADR-084](adr/ADR-084-gliederung-wissen.md)). Seit Etappe 33: **Bildarchiv** mit Bildnummer, Merkmalen, Versionen und Platzhaltern sowie Quick Guide, One Pager und Lesefassung ([ADR-085](adr/ADR-085-bilder-ausgabe.md)). Etappe 34 = **M2**: **Einlesen** von PowerPoint und PDF mit Fundstelle je Folie bzw. Seite ([ADR-086](adr/ADR-086-pptx-pdf-fundstellen.md)). Eingelesen wird bis M2 über „Quellen“, Dopplungen zeigt bis M4 die vorhandene Seite „Dopplungen“.
 
 | Seite | Inhalt |
 |---|---|
@@ -113,7 +113,7 @@ Gestaltung wie die bestehende App (Karten, Tabellen, Dunkelmodus, WCAG 2.2 AA).
 | Etappe | Inhalt | Ergebnis |
 |---|---|---|
 | M1 ✅ | Datenmodell (Chunk-Fundstelle, Labels, gespeicherte Fragen), 100 vordefinierte Labels, ADR-079, Menübereich | Chunks labeln, Fragen und Antworten speichern, Labelkatalog |
-| M2 | Extraktoren PPTX und PDF (Text), DOCX/HTML erweitert um Fundstellen; Seite „Einlesen“ | alle Textformate einlesbar |
+| M2 ✅ | Extraktoren PPTX und PDF (Text), DOCX/HTML erweitert um Fundstellen; Seite „Einlesen“ – umgesetzt in Etappe 34 ([ADR-086](adr/ADR-086-pptx-pdf-fundstellen.md)) | alle Textformate einlesbar |
 | M3 | Chunking je Überschrift, Seite „Quellen je Überschrift“ und „Chunks“ mit Labels | Daten sichtbar und labelbar |
 | M4 | Indexierung, Seite „Dopplungen“ (formatübergreifend) | Dublettensuche |
 | M5 | Fragen mit Belegen über alle Quellen, Fragen & Antworten speichern mit Labels | RAG nutzbar |

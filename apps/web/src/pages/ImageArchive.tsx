@@ -61,6 +61,15 @@ export function ImageArchivePage() {
       notify(errorText(e), 'error');
     }
   };
+  const setOutline = async (outlineLabelId: string | null) => {
+    try {
+      await patch(`/image-archive/${item.sha}`, { outlineLabelId });
+      notify(outlineLabelId ? 'Gliederungsstelle übernommen.' : 'Gliederungsstelle gelöst.');
+      reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
   const upload = async (file: File | undefined) => {
     if (!file || !item) return;
     try {
@@ -136,6 +145,16 @@ export function ImageArchivePage() {
               )}
               {item.usedIn.length > 0 && <p className="small">Verwendet in: {item.usedIn.map((c: any, n: number) => <span key={c.chapterId}>{n > 0 && ', '}<Link to={`/werkstatt/${c.chapterId}`}>{c.title}</Link></span>)}</p>}
               <p className="small">Einbinden: <code>{`![${item.title ?? 'Alternativtext'}](media:${item.sha})`}</code></p>
+              {/* F-25: Gliederungsstelle – Vorschlag aus dem Folientext, übernommen nur von Hand */}
+              <section className="ia-outline" aria-label="Gliederungsstelle">
+                <p className="small"><strong>Gliederungsstelle:</strong> {item.outline ? item.outline.nameDe : <span className="muted">nicht zugeordnet</span>}
+                  {item.outline && canEdit && <> <button type="button" className="btn small ghost" onClick={() => void setOutline(null)}>Lösen</button></>}</p>
+                {item.source && <p className="small muted">Aus {item.source.path}{item.source.slide ? `, Folie ${item.source.slide}` : ''}{item.source.slideTitle ? ` „${item.source.slideTitle}“` : ''}</p>}
+                {item.source?.suggestions?.filter((x: any) => x.labelId !== item.outline?.id).map((x: any) => (
+                  <p key={x.labelId} className="small">Vorschlag: {x.name} <span className="muted">({Math.round(x.score * 100)} % · {x.matched.join(', ')})</span>{' '}
+                    {canEdit && <button type="button" className="btn small" aria-label={`${x.name} als Gliederungsstelle übernehmen`} onClick={() => void setOutline(x.labelId)}>Übernehmen</button>}</p>
+                ))}
+              </section>
               <fieldset disabled={!canEdit}>
                 <legend>Merkmale</legend>
                 <label className="block">Bildunterschrift (Bildverzeichnis) <input value={form.title} maxLength={300} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>

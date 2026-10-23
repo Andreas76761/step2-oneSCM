@@ -161,6 +161,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.36 Stand nach Etappe 34 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| PowerPoint und PDF einlesen, Fundstelle je Folie, Seite bzw. Abschnitt, Seite „Einlesen“ (M2, NFR-81) | ✅ ([ADR-086](adr/ADR-086-pptx-pdf-fundstellen.md)) |
+| Bild → Gliederungsstelle über den Folientext (F-25, NFR-82) | ✅ ([ADR-086](adr/ADR-086-pptx-pdf-fundstellen.md)) |
+| Offen | Feinabstimmung mit echten PPTX-/PDF-Beispieldateien; F-22, F-24, F-30 (optional); Etappen M3 (Rest) bis M7, F-26 mit M6 |
+
 ## 1.35 Stand nach Etappe 33 (23.10.2026)
 
 | Punkt | Ergebnis |

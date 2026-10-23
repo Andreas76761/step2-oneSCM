@@ -37,7 +37,9 @@ export function sourceRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Params: { revisionId: string } }>('/source-revisions/:revisionId/original', async (req, reply) => {
     userOf(req.ctx, req);
     const o = await getRevisionOriginal(req.ctx, req.params.revisionId);
-    reply.header('Content-Type', o.contentType).header('Content-Disposition', `attachment; filename="${encodeURIComponent(o.fileName)}"`);
+    // immer als Download, nie im Browser ausführen (PDF kann Skripte enthalten)
+    reply.header('Content-Type', o.contentType).header('Content-Disposition', `attachment; filename="${encodeURIComponent(o.fileName)}"`)
+      .header('X-Content-Type-Options', 'nosniff').header('Content-Security-Policy', "default-src 'none'; sandbox");
     return o.data;
   });
 

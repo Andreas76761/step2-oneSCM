@@ -2112,3 +2112,54 @@ test('[T-251] Bildarchiv: Platzhalter, Merkmale, neue Fassung aus der Zwischenab
   await expect(page.getByRole('region', { name: 'Exportvorschau' })).toContainText('Quick Guide');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-256] Einlesen: PowerPoint und PDF mit Fundstelle je Folie und Seite, Bild mit Gliederungs-Vorschlag aus dem Folientext übernehmen', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const { default: JSZip } = await import('jszip');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const ns = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+  const rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const p = (t: string) => `<a:p><a:r><a:t>${t}</a:t></a:r></a:p>`;
+  const sp = (ph: string, paras: string[]) => `<p:sp><p:nvSpPr><p:cNvPr id="2" name="F"/><p:cNvSpPr/><p:nvPr><p:ph ${ph}/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/>${paras.join('')}</p:txBody></p:sp>`;
+  const z = new JSZip();
+  z.file('ppt/presentation.xml', `<p:presentation ${ns}><p:sldIdLst><p:sldId id="256" r:id="rId1"/><p:sldId id="257" r:id="rId2"/></p:sldIdLst></p:presentation>`);
+  z.file('ppt/_rels/presentation.xml.rels', `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${rel}/slide" Target="slides/slide1.xml"/><Relationship Id="rId2" Type="${rel}/slide" Target="slides/slide2.xml"/></Relationships>`);
+  z.file('ppt/slides/slide1.xml', `<p:sld ${ns}><p:cSld><p:spTree>${sp('type="ctrTitle"', [p('E2E Reifenschulung')])}</p:spTree></p:cSld></p:sld>`);
+  z.file('ppt/slides/slide2.xml', `<p:sld ${ns}><p:cSld><p:spTree>${sp('type="title"', [p('E2E Reifenprodukte anlegen')])}${sp('idx="1"', [p('E2E Öffnen Sie Produkte › Tyres'), p('E2E Wählen Sie das Reifenpaket')])}<p:pic><p:nvPicPr><p:cNvPr id="4" name="Bild" descr="E2E Maske Reifenprodukte"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rId9"/></p:blipFill><p:spPr/></p:pic></p:spTree></p:cSld></p:sld>`);
+  z.file('ppt/slides/_rels/slide2.xml.rels', `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId9" Type="${rel}/image" Target="../media/image1.png"/></Relationships>`);
+  z.file('ppt/media/image1.png', png(900, 500, [30, 120, 60]));
+  const stream = 'BT /F1 24 Tf 50 780 Td (E2E Vertraege kuendigen) Tj ET\nBT /F1 12 Tf 50 740 Td (E2E Kuendigen Sie den Vertrag ueber Beenden.) Tj ET';
+  const pdfFile = `%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n4 0 obj<</Length ${stream.length}>>stream\n${stream}\nendstream endobj\n5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF`;
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Einlesen', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Einlesen' })).toBeVisible();
+  await page.getByTestId('ingest-input').setInputFiles([
+    { name: 'e2e-reifen.pptx', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', buffer: await z.generateAsync({ type: 'nodebuffer' }) },
+    { name: 'e2e-vertraege.pdf', mimeType: 'application/pdf', buffer: Buffer.from(pdfFile, 'latin1') },
+  ]);
+  const results = page.getByRole('list', { name: 'Eingelesene Dateien' });
+  await expect(results.getByText('fertig', { exact: true })).toHaveCount(2, { timeout: 20000 });
+  await expect(results).toContainText('e2e-reifen.pptx');
+  expect(await axe()).toEqual([]);
+
+  // Chunks mit Fundstelle Folie bzw. Seite
+  await page.getByRole('link', { name: 'Zu den Chunks →' }).click();
+  await page.getByLabel('Im Text suchen').fill('E2E Wählen Sie das Reifenpaket');
+  await expect(page.getByText('Folie 2').first()).toBeVisible();
+  await page.getByLabel('Im Text suchen').fill('E2E Kuendigen Sie');
+  await expect(page.getByText('Seite 1').first()).toBeVisible();
+
+  // Bildarchiv: Bild aus Folie 2 mit Vorschlag, von Hand übernehmen
+  await nav.getByRole('link', { name: 'Bildarchiv' }).click();
+  await page.getByRole('list', { name: 'Bilder' }).getByRole('button', { name: /E2E Reifenprodukte anlegen/ }).click();
+  const where = page.getByRole('region', { name: 'Gliederungsstelle' });
+  await expect(where).toContainText('Aus e2e-reifen.pptx, Folie 2');
+  await where.getByRole('button', { name: '13 Reifenprodukte – Tyres als Gliederungsstelle übernehmen' }).click();
+  await expect(page.getByText('Gliederungsstelle übernommen.')).toBeVisible();
+  await expect(where).toContainText('Gliederungsstelle: 13 Reifenprodukte – Tyres');
+  expect(await axe()).toEqual([]);
+});
