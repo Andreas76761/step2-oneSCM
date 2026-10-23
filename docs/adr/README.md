@@ -83,3 +83,4 @@
 | [ADR-079](ADR-079-onescm-metadaten.md) | oneSCM_Metadaten: Labels, Chunks und gespeicherte Fragen und Antworten | akzeptiert, umgesetzt |
 | [ADR-080](ADR-080-katalog-onescm-datenschutz.md) | Labelkatalog nach echtem oneSCM, erweiterte Datenschutzprüfung | akzeptiert, umgesetzt |
 | [ADR-081](ADR-081-jira-update-zugriff.md) | Jira-Import als Datei, Update-Eingang, Zugriffsmatrix | akzeptiert, umgesetzt |
+| [ADR-082](ADR-082-zuordnung-domaene-ordner.md) | Zuordnung Domäne → Gliederungspunkt → Ordner, Menüpunkte Contract Management 3.1–3.5 | akzeptiert, umgesetzt |

@@ -5,13 +5,14 @@ Je Kapitel acht Arbeitsordner:
   01_Quellen (Raw_2023 … Raw_2027), 02_Entwurf, 03_Bilder, 04_Pruefung_Freigabe,
   05_Audit, 06_FAQ, 07_Ideenspeicher, 08_Steuerung (Dealer, MO, Markt, HQ, IT, Marktspezifisch, Spartenspezifisch)
 und je Unterkapitel ein Ordner mit UNTERKAPITEL.md. Dazu CLAUDE.md, .claude/agents und .claude/settings.json.
+Hauptordner zur Steuerung: 05_I_Output (Produkte), 06_II_Stil_und_Design, 07_III_Grammatik_Synonyme_Fehlerliste, 08_IV_Translation.
 
 Befehle:
   zip       <Gliederung.xlsx|.json> <Ziel.zip> [--stand 23102026]
             vollständiger Arbeitsordner als ZIP (Excel-Matrix der Gesamtgliederung oder JSON-Export einer App-Gliederung)
   abgleich  <Arbeitsordner> [--gliederung Datei.xlsx|.json] [--app http://localhost:3000 --projekt p_default (--token … | --benutzer u-admin)]
-            legt nur Fehlendes an (Ordner, Vorlagendateien, neue Agenten), löscht und überschreibt nichts,
-            und schreibt 00_Dokumentation/GLIEDERUNG_ABGLEICH.md. Gliederungen aus der App landen unter 03_Varianten/<Name>/.
+            legt nur Fehlendes an (Ordner, Hauptordner 05–08, Vorlagendateien, neue Agenten), löscht und überschreibt nichts
+            (abweichende Vorlagen als <Datei>.neu daneben), und schreibt 00_Dokumentation/GLIEDERUNG_ABGLEICH.md. Gliederungen aus der App landen unter 03_Varianten/<Name>/.
 
 Benötigt Python 3.9+, für Excel zusätzlich openpyxl. Der App-Abgleich nutzt nur die lokale App-Adresse.
 """
@@ -42,6 +43,42 @@ STEUER_ROLLEN = ['Dealer', 'MO', 'Markt', 'HQ', 'IT']
 SPRACHEN = ['01_Deutsch_DE', '02_Englisch_EN', '03_Französisch_FR', '04_Italienisch_IT', '05_Spanisch_ES',
             '06_Tschechisch_CS', '07_Slowakisch_SK', '08_Koreanisch_KO', '09_Malaiisch_MS']
 OUTPUT = '04_Output'
+# Hauptordner zur Steuerung (I–IV); Nummern 05–08, damit der Explorer sie nach 04_Output sortiert
+AUSGABE = '05_I_Output'
+STIL = '06_II_Stil_und_Design'
+LEKTORAT = '07_III_Grammatik_Synonyme_Fehlerliste'
+TRANSLATION = '08_IV_Translation'
+# Produktarten in 05_I_Output: Ordner → (Produkt, Zweck, Zielgruppe/Rollen, Format, Qualitätskriterien)
+PRODUKTE = {
+    '01_Handbuch': ('Handbuch', 'vollständige Referenz und Anleitung zu oneSCM, gesetzt aus den freigegebenen Kapiteln',
+                    'alle Rollen (Dealer, MO, Markt, HQ, IT) je nach Lesepfad', 'DOCX/PDF nach Word-Vorlage; je Kapitel oder gesamt',
+                    ['alle enthaltenen Unterkapitel freigegeben', 'Inhaltsverzeichnis und Abbildungsverzeichnis vollständig', 'Querverweise geprüft']),
+    '02_Releaseletter': ('Releaseletter', 'Anwender über Änderungen eines Release informieren',
+                         'alle Rollen, je Änderung die betroffene Rolle, Sparte (Pkw/Van) und Markt', 'DOCX/PDF oder E-Mail-Text, 1–2 Seiten je Release',
+                         ['je Änderung: Was – Für wen – Ab wann – Verweis aufs Handbuch', 'nur produktiv verfügbare Funktionen', 'Release-Nummer und Datum belegt']),
+    '03_QuickGuide': ('QuickGuide', 'die wichtigsten Abläufe einer Rolle auf einen Blick',
+                      'je QuickGuide eine Rolle (Dealer, MO, Markt, HQ)', 'PDF, 1–2 Seiten, je Rolle eine Datei',
+                      ['nur Schritte und Screens', 'jeder Schritt im Handbuch belegt', 'Callout-Nummern = Schrittnummern']),
+    '04_Schulungsmaterial': ('Schulungsmaterial', 'Schulungen und Selbstlernen zu oneSCM',
+                             'Trainerinnen und Trainer, neue Anwendende je Rolle', 'PPTX nach PowerPoint-Vorlage, Übungen und Lösungen als DOCX',
+                             ['Lernziel je Modul', 'Übungen mit Testdaten (keine Echtdaten)', 'Wissenscheck mit Lösungen (Anhang H)']),
+    '05_Interne_Dokumente': ('Interne Dokumente', 'Unterlagen für Redaktion, HQ und IT (z. B. Redaktionsleitfaden, Klärungslisten)',
+                             'Redaktion, HQ, IT', 'DOCX/Markdown',
+                             ['Zielgruppe und Vertraulichkeit im Kopf', 'Abkürzungen im Glossar', 'nicht für Anwendende veröffentlichen']),
+    '06_Videos': ('Videos', 'Abläufe in oneSCM als kurze Bildschirmvideos zeigen',
+                  'Anwendende je Rolle', 'Drehbuch (DOCX), Sprechertext, Untertitel (SRT/VTT); MP4 2–5 Minuten',
+                  ['Sprechertext synchron zu den Schritten', 'Untertitel vorhanden', 'nur anonymisierte Testdaten im Bild']),
+    '07_Grafiken': ('Grafiken', 'Zusammenhänge und Abläufe als Schaubild oder Infografik',
+                    'alle Rollen', 'SVG/PNG, Quelldatei mitliefern',
+                    ['Beschriftung nach STIL_UND_DESIGN.md', 'Alternativtext', 'Farben nicht als einziger Informationsträger']),
+    '08_Prozesse': ('Prozesse', 'Geschäftsprozesse rund um oneSCM aus Sicht der Rollen beschreiben',
+                    'MO, Markt, HQ, IT; Dealer für ihre Schritte', 'Prozessbeschreibung (DOCX), Diagramm (BPMN/SVG)',
+                    ['jede Rolle und jede Übergabe benannt', 'Abgleich mit Anhang C (Prozessdiagramme)', 'Status- und Rollenbegriffe wie im Handbuch']),
+}
+PRODUKT_ORDNER = ['01_Entwurf', '02_Screens', '03_Final']
+STIL_ORDNER = ['01_Designvorschlaege', '02_Tonalitaet', '03_Vorlagen', '04_Bildsprache_Screenshots']
+LEKTORAT_ORDNER = ['01_Grammatik', '02_Synonyme', '03_Fehlerliste']
+TRANSLATION_ORDNER = ['01_Glossar', '02_Uebersetzungsspeicher', '03_Laenderreview']
 ARBEITSORDNER = ['01_Quellen', '02_Entwurf', '03_Bilder', '04_Pruefung_Freigabe', '05_Audit', '06_FAQ', '07_Ideenspeicher', '08_Steuerung']
 # Anhänge und Vorspann haben in der Gesamtgliederung keinen Eintrag der Ebene 1
 GRUPPEN = {
@@ -209,6 +246,80 @@ def output_ordner(modell, unterpfad: str = '') -> set:
     return {f"{OUTPUT}/{sp}{vor}/{kap['ordner']}" for sp in SPRACHEN for kap in modell}
 
 
+def fachbegriffe() -> dict:
+    """Tabelle „Fachbegriffe je Sprache“ aus SPRACHEN.md: {Code: [(Deutsch, Übersetzung)]} – Startwerte der Glossare."""
+    zeilen = [z for z in (VORLAGEN / 'SPRACHEN.md').read_text(encoding='utf-8').split('## Fachbegriffe je Sprache', 1)[-1].splitlines() if z.startswith('|')]
+    if len(zeilen) < 2:
+        return {}
+    kopf = [c.strip() for c in zeilen[0].strip('|').split('|')]
+    begriffe: dict[str, list] = {}
+    for z in zeilen[2:]:
+        zellen = [c.strip() for c in z.strip('|').split('|')]
+        for code, wert in zip(kopf[1:], zellen[1:]):
+            if wert:
+                begriffe.setdefault(code, []).append((zellen[0], wert))
+    return begriffe
+
+
+def hauptordner():
+    """Die vier Hauptordner zur Steuerung: I Output, II Stil und Design, III Grammatik/Synonyme/Fehlerliste, IV Translation.
+    Unabhängig von der Gliederung – zip und abgleich legen sie immer an."""
+    lies = lambda n: (VORLAGEN / n).read_text(encoding='utf-8')
+    ordner: set[str] = set()
+    dateien: dict[str, str] = {}
+    # I Output: je Produktart Entwurf, Screens, Endfassung je Sprache (01_Deutsch_DE = Master)
+    dateien[f'{AUSGABE}/README.md'] = lies('Ausgabe_README.md')
+    for p, (name, zweck, zielgruppe, form, kriterien) in PRODUKTE.items():
+        ordner.update(f'{AUSGABE}/{p}/{o}' for o in PRODUKT_ORDNER)
+        ordner.update(f'{AUSGABE}/{p}/03_Final/{sp}' for sp in SPRACHEN)
+        dateien[f'{AUSGABE}/{p}/PRODUKT.md'] = '\n'.join([
+            f'# {name}', '', f'**Zweck:** {zweck}', '', f'**Zielgruppe/Rollen:** {zielgruppe}', '',
+            '**Quellen:** ausschließlich freigegebene Kapitel aus `02_Kapitel` (bzw. `03_Varianten`) – je Datei Kapitel/Unterkapitel und Freigabestand '
+            '(Datum, Version) in der Statustabelle angeben. Screens aus `03_Bilder` der Kapitel, aufbereitet nach `06_II_Stil_und_Design/STIL_UND_DESIGN.md`.', '',
+            f'**Format:** {form}', '', '**Stil:** `06_II_Stil_und_Design/STIL_UND_DESIGN.md`, Ton laut `06_II_Stil_und_Design/02_Tonalitaet/TONALITAET.md`; '
+            'Sprache laut `07_III_Grammatik_Synonyme_Fehlerliste/`.', '',
+            '## Qualitätskriterien', '', *[f'- {k}' for k in kriterien],
+            '- keine personenbezogenen Daten in Text und Screens', '- Lektorat ohne offene Fehler in `FEHLERLISTE.csv`',
+            '- Anrede „Sie“, UI-Begriffe englisch in „…“ mit deutschem Handbuchbegriff', '',
+            '## Ablage', '', '| Ordner | Inhalt |', '|---|---|',
+            '| `01_Entwurf/` | Entwürfe `<Kurzname>_Entwurf_vN.<ext>` |', '| `02_Screens/` | Screenshots dieses Produkts |',
+            '| `03_Final/01_Deutsch_DE/` | freigegebener deutscher Master |',
+            '| `03_Final/<Sprache>/` | Übersetzungen über `08_IV_Translation`, erst nach dem Länderreview freigegeben |', '',
+            '## Status', '', 'Status: Entwurf · Lektorat · freigegeben · übersetzt · veraltet (ein Quellkapitel hat sich geändert).', '',
+            '| Datei | Version | Quellen (Kapitel, Freigabestand) | Status | Lektorat | Freigabe (Datum) | Sprachen | Anmerkung |',
+            '|---|---|---|---|---|---|---|---|', ''])
+    # II Stil und Design
+    ordner.update(f'{STIL}/{o}' for o in STIL_ORDNER)
+    dateien[f'{STIL}/STIL_UND_DESIGN.md'] = lies('STIL_UND_DESIGN.md')
+    dateien[f'{STIL}/02_Tonalitaet/TONALITAET.md'] = lies('TONALITAET.md')
+    # III Grammatik, Synonyme, Fehlerliste (CSV in UTF-8 mit BOM für Excel)
+    ordner.update(f'{LEKTORAT}/{o}' for o in LEKTORAT_ORDNER)
+    dateien[f'{LEKTORAT}/README.md'] = lies('Lektorat_README.md')
+    dateien[f'{LEKTORAT}/01_Grammatik/GRAMMATIK.md'] = lies('GRAMMATIK.md')
+    dateien[f'{LEKTORAT}/02_Synonyme/SYNONYME.csv'] = lies('SYNONYME.csv')
+    dateien[f'{LEKTORAT}/03_Fehlerliste/FEHLERLISTE.csv'] = lies('FEHLERLISTE.csv')
+    dateien[f'{LEKTORAT}/03_Fehlerliste/FEHLERLISTE.md'] = lies('FEHLERLISTE.md')
+    # IV Translation: je Zielsprache (alle Sprachen außer der Hauptsprache Deutsch)
+    dateien[f'{TRANSLATION}/TRANSLATION.md'] = lies('TRANSLATION.md')
+    begriffe = fachbegriffe()
+    for sp in SPRACHEN[1:]:
+        code = sp.rsplit('_', 1)[-1]
+        ordner.update(f'{TRANSLATION}/{sp}/{o}' for o in TRANSLATION_ORDNER)
+        glossar = io.StringIO()
+        w = csv.writer(glossar, delimiter=';', lineterminator='\n')
+        w.writerow(['Deutsch', code, 'Kontext', 'Status', 'Quelle'])
+        w.writerows([de, ziel, '', 'bestätigt', '04_Output/SPRACHEN.md'] for de, ziel in begriffe.get(code, []))
+        dateien[f'{TRANSLATION}/{sp}/01_Glossar/GLOSSAR.csv'] = '﻿' + glossar.getvalue()
+        dateien[f'{TRANSLATION}/{sp}/02_Uebersetzungsspeicher/SPEICHER.csv'] = f'﻿Nr;Deutsch;{code};Datei;Ausgangsversion;Datum;Status\n'
+        land = ('alle Länder gemeinsam (Redaktion führt zusammen)' if code == 'EN'
+                else 'das jeweilige Land laut `04_Output/SPRACHEN.md`')
+        dateien[f'{TRANSLATION}/{sp}/03_Laenderreview/REVIEW.md'] = (
+            f'# Länderreview {sp}\n\nReview durch {land}. Status: bereit · im Review · Korrektur · geprüft · veraltet.\n'
+            'Ansprechperson je Land ist noch offen (O-09) – bis dahin nur das Reviewer-Land eintragen.\n\n'
+            '| Datei/Kapitel | Sprache | Reviewer-Land | Status | Datum | Anmerkung |\n|---|---|---|---|---|---|\n')
+    return ordner, dateien
+
+
 def gliederung_dateien(modell, basis: str, name: str):
     """CSV, Markdown und Status-Übersicht einer Gliederung."""
     puffer = io.StringIO()
@@ -273,6 +384,9 @@ def gesamt(modell, stand: str, gliederung_name: str, gliederung_daten: bytes, un
     ordner, dateien = kapitel_baum(modell, '02_Kapitel', unterkapitel_arbeitsordner)
     ordner |= {'01_Input/01_Eingang', '01_Input/02_Zugeordnet', '01_Input/03_Ausgeschlossen', '03_Varianten', '00_Dokumentation/Gliederung/App'}
     ordner |= output_ordner(modell)
+    h_o, h_d = hauptordner()
+    ordner |= h_o
+    dateien.update(h_d)
     dateien[f'{OUTPUT}/README.md'] = (VORLAGEN / 'Output_README.md').read_text(encoding='utf-8')
     dateien[f'{OUTPUT}/SPRACHEN.md'] = (VORLAGEN / 'SPRACHEN.md').read_text(encoding='utf-8')
     dateien.update(vorlagen_dateien(stand, gliederung_name))
@@ -356,6 +470,27 @@ def agenten_aktualisieren(ziel: Path, bericht: list):
     stand_datei.write_text(json.dumps(neu_stand, indent=2), encoding='utf-8')
 
 
+def vorlagen_neu(ziel: Path, bericht: list):
+    """Arbeitsweise-Dateien (CLAUDE.md, Arbeitsweise, Output-README) nie überschreiben: weicht die Vorlage ab, neue Fassung als <Datei>.neu daneben."""
+    try:
+        gliederung = re.search(r'00_Dokumentation/Gliederung/([^`]+)`', (ziel / 'CLAUDE.md').read_text(encoding='utf-8')).group(1)
+    except (OSError, AttributeError):
+        gliederung = '<Gliederung>'
+    vorlagen = vorlagen_dateien(ziel.name, gliederung)
+    vorlagen[f'{OUTPUT}/README.md'] = (VORLAGEN / 'Output_README.md').read_text(encoding='utf-8')
+    for rel in ['CLAUDE.md', '00_Dokumentation/README.md', f'{OUTPUT}/README.md']:
+        p, inhalt = ziel / rel, vorlagen[rel]
+        if not p.exists():
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(inhalt, encoding='utf-8')
+            bericht.append(f'- Vorlage neu: `{rel}`')
+        elif p.read_text(encoding='utf-8') != inhalt:
+            neu = p.with_name(p.name + '.neu')
+            if not neu.exists() or neu.read_text(encoding='utf-8') != inhalt:
+                neu.write_text(inhalt, encoding='utf-8')
+                bericht.append(f'- `{rel}` weicht von der aktuellen Vorlage ab – neue Fassung als `{rel}.neu` abgelegt, bitte zusammenführen')
+
+
 def abgleich(ziel: Path, soll_ordner, soll_dateien, basis_liste, bericht: list):
     """Fehlendes anlegen; Vorhandenes nie überschreiben; Ordner, die die Gliederung nicht mehr kennt, nur melden."""
     neu_o = neu_d = 0
@@ -418,6 +553,12 @@ def main():
         sys.exit(f'{ziel} ist kein Handbuch-Arbeitsordner (CLAUDE.md fehlt).')
     bericht = [f'# Gliederungsabgleich {datetime.now():%d.%m.%Y %H:%M}', '']
     agenten_aktualisieren(ziel, bericht)
+    # Hauptordner I–IV hängen nicht von der Gliederung ab: bei jedem Abgleich ergänzen
+    bericht += ['', f'## Hauptordner {AUSGABE}, {STIL}, {LEKTORAT}, {TRANSLATION}', '']
+    h_o, h_d = hauptordner()
+    abgleich(ziel, h_o, h_d, [], bericht)
+    bericht += ['', '## Vorlagen (CLAUDE.md, Arbeitsweise, Output)', '']
+    vorlagen_neu(ziel, bericht)
     if a.gliederung:
         modell = lies_gliederung(a.gliederung)
         o, d = kapitel_baum(modell, '02_Kapitel', a.unterkapitel_arbeitsordner)
@@ -452,7 +593,7 @@ def main():
             abgleich(ziel, o, d, [basis], bericht)
         zuordnung_datei.write_text(json.dumps(zuordnung, ensure_ascii=False, indent=2), encoding='utf-8')
     if not (a.gliederung or a.app):
-        bericht += ['', 'Nur Agenten abgeglichen (weder --gliederung noch --app angegeben).']
+        bericht += ['', 'Nur Agenten, Hauptordner und Vorlagen abgeglichen (weder --gliederung noch --app angegeben).']
     (ziel / '00_Dokumentation' / 'GLIEDERUNG_ABGLEICH.md').write_text('\n'.join(bericht) + '\n', encoding='utf-8')
     print('\n'.join(bericht))
 

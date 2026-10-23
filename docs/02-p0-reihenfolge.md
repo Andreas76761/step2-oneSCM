@@ -38,6 +38,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **25** ✅ | Leseransicht in der Lesesprache (ADR-074); Übersetzung anfordern (ADR-075); Notizen direkt im Kapitel (ADR-076) | 116 Server- und 76 E2E-Tests grün auf SQLite und PostgreSQL |
 | **26** ✅ | Häufige Fragen übersetzen (ADR-077); alle Projektsprachen vollständig beschriftet (ADR-078) | 118 Server- und 77 E2E-Tests grün auf SQLite und PostgreSQL |
 | **29** ✅ | Jira-Import als Datei, Update-Eingang, Zugriffsmatrix (ADR-081) | 126 Server-Tests grün auf SQLite und PostgreSQL |
+| **30** ✅ | Zuordnung Domäne → Gliederungspunkt → Ordner, Menüpunkte Contract Management 3.1–3.5, vier Steuerungsordner im Arbeitsordner (ADR-082) | 127 Server-Tests grün auf SQLite und PostgreSQL |
 | **28** ✅ | Labelkatalog nach echtem oneSCM, erweiterte Datenschutzprüfung mit Pseudonymisierung (ADR-080) | 123 Server-Tests grün auf SQLite und PostgreSQL |
 | **27** ✅ | oneSCM_Metadaten M1: 100 vordefinierte Labels, Chunks je Überschrift labeln, Fragen und Antworten mit Quellen speichern (ADR-079) | 121 Server-Tests grün auf SQLite und PostgreSQL, 78 E2E-Tests (T-202 und T-231 scheitern in dieser Umgebung auch ohne die Änderung) |
 | **22** ✅ | Druck je Variante und Rolle im Firmen-Layout (ADR-065); Suche und Glossar beim Lesen (ADR-066); Vorlagen duplizieren, exportieren, importieren (ADR-067); schnelles Laden (ADR-068) | 108 Server- und 73 E2E-Tests grün auf SQLite und PostgreSQL |

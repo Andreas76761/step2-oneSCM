@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.30.0 – Etappe 30 (23.10.2026)
+
+### Hinzugefügt
+- **Zuordnung (ADR-082):** neue Seite „oneSCM_Metadaten › Zuordnung“ – je Fachdomäne die Gliederungspunkte mit Kapitelordner (`02_Kapitel/…`) und Unterordnern aus einer wählbaren Gliederung, die Menüpunkte und Vorschläge aus gelabelten Chunks; übernehmen, lösen, zuordnen; CSV-Export.
+- **Contract Management 3.1–3.5** als eigene Menüpunkte im Labelkatalog (Navigation 39, Katalog 158 Labels).
+- **Arbeitsordner:** vier Hauptordner zur Steuerung – `05_I_Output` (Handbuch, Releaseletter, QuickGuide, Schulungsmaterial, interne Dokumente, Videos, Grafiken, Prozesse), `06_II_Stil_und_Design`, `07_III_Grammatik_Synonyme_Fehlerliste`, `08_IV_Translation` – mit neuen Agenten.
+- Migration `037_domain_map.sql`; Tests T-240, E2E T-239 (axe); Anforderung NFR-74.
+
+### Korrigiert
+- Gepflegte Klarnamen sperren die Übertragung an externe Dienste schon vor der ersten Analyse; die Namensliste lässt sich wieder normal eintippen (Review PR 28).
+
 ## 0.29.0 – Etappe 29 (23.10.2026)
 
 ### Hinzugefügt

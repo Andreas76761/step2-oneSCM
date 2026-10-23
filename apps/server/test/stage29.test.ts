@@ -142,8 +142,8 @@ describe('Etappe 29', () => {
       const m = (await call('GET', '/metadata/access-matrix', undefined, 'u-leser')).json;
       expect(m.roles.map((r: any) => r.code)).not.toContain('role.all');
       expect(m.roles.length).toBe(10);
-      expect(m.navigation.length).toBe(34);
-      expect(m.summary).toMatchObject({ cells: 340, V: 0, L: 0, none: 0, open: 340 });
+      expect(m.navigation.length).toBe(39);
+      expect(m.summary).toMatchObject({ cells: 390, V: 0, L: 0, none: 0, open: 390 });
       const role = (c: string) => m.roles.find((r: any) => r.code === c).id;
       const nav = (c: string) => m.navigation.find((n: any) => n.code === c).id;
       const cell = { roleId: role('role.mo'), navId: nav('nav.generation.mo-checks'), level: 'V', evidence: 'Navigation_oneSCM_Version3.docx, Rolle MO' };
@@ -151,7 +151,7 @@ describe('Etappe 29', () => {
       expect((await call('PUT', '/metadata/access-matrix/cells', { ...cell, level: 'Z' }, 'u-redaktion')).status).toBe(400);
       expect((await call('PUT', '/metadata/access-matrix/cells', { ...cell, roleId: nav('nav.mainpage') }, 'u-redaktion')).status).toBe(400);
       const after = (await call('PUT', '/metadata/access-matrix/cells', cell, 'u-redaktion')).json;
-      expect(after.summary).toMatchObject({ V: 1, open: 339, withEvidence: 1 });
+      expect(after.summary).toMatchObject({ V: 1, open: 389, withEvidence: 1 });
       expect(after.cells[0]).toMatchObject({ level: 'V', evidence: 'Navigation_oneSCM_Version3.docx, Rolle MO', updatedBy: 'u-redaktion' });
 
       // CSV: Menüpunkt als UI-Begriff, deutscher Name oder Code; Rollen als Name oder Code; leere Felder ändern nichts

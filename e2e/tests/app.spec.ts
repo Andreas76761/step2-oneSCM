@@ -1898,3 +1898,31 @@ test('[T-238] Jira-Export einlesen, Quellenänderungen absatzweise übernehmen, 
   await expect(sel).toHaveValue('V');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-239] Zuordnung: Domäne zu Gliederungspunkt, Menüpunkt und Ordner; Unterordner aus einer Gliederung; Zuordnung lösen und ergänzen', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+  expect((await request.post('/api/v1/outlines', { headers: h, data: { name: 'E2E Gesamtgliederung', nodes: [{ title: 'Verträge im Alltag verwalten', children: [{ title: 'Vertrag suchen und ändern' }] }] } })).ok()).toBe(true);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Zuordnung', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Zuordnung' })).toBeVisible();
+  const cm = page.getByRole('region', { name: 'Gliederungspunkte zu Contract Management' });
+  await expect(cm).toContainText('02_Kapitel/10_Verträge_im_Alltag_verwalten');
+  await expect(page.getByRole('region', { name: 'Menüpunkte zu Contract Management' })).toContainText('Vertragsverwaltung › Dokumente und Kommunikation');
+  await page.getByLabel('Unterordner aus Gliederung').selectOption({ label: 'E2E Gesamtgliederung (v1)' });
+  await expect(cm).toContainText('10.1_Vertrag_suchen_und_ändern');
+  await expect(page.getByText('05_I_Output')).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // lösen und wieder zuordnen
+  await cm.getByRole('button', { name: '12 Geschäftskunden, Kampagnen und Sonderfälle von Contract Management lösen' }).click();
+  await expect(page.getByText('Zuordnung entfernt.')).toBeVisible();
+  await expect(cm).not.toContainText('12_Geschäftskunden');
+  await page.getByLabel('Gliederungs- oder Menüpunkt für Contract Management').selectOption({ label: '12 Geschäftskunden, Kampagnen und Sonderfälle' });
+  await page.getByRole('button', { name: 'Zuordnen zu Contract Management' }).click();
+  await expect(cm).toContainText('12_Geschäftskunden_Kampagnen_und_Sonderfälle');
+});

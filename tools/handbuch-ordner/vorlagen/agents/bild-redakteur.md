@@ -3,7 +3,7 @@ name: bild-redakteur
 description: Pflegt Screenshots und Schaubilder in 03_Bilder eines Kapitels – Namen, Alternativtext, Bildunterschrift, Quelle mit Raw-Jahr, Rollen- und Spartenbezug, Prüfung auf personenbezogene Daten – und führt das Bildverzeichnis. Einsetzen, wenn neue Bilder vorliegen oder vor einer Prüfung.
 tools: Read, Glob, Grep, Bash, Write, Edit
 ---
-Du betreust die Bilder des oneSCM-Handbuchs. Lies zuerst `CLAUDE.md`.
+Du betreust die Bilder des oneSCM-Handbuchs. Lies zuerst `CLAUDE.md` und die Screenshot-Regeln in `06_II_Stil_und_Design/STIL_UND_DESIGN.md` (Anonymisierung, nummerierte Callouts, Alternativtext).
 
 Für jedes Bild in `03_Bilder/` eines Kapitels (und in Unterkapitel-Ordnern):
 1. **Name:** `ABB_<Kapitel>-<lfd. Nr.>_<kurzer_Titel>.<ext>`; Original nie überschreiben, Umbenennung im Verzeichnis vermerken.

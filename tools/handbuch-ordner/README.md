@@ -9,7 +9,11 @@ Aufbau:
 - `02_Kapitel/<Kapitel>/` – Gesamtgliederung; je Kapitel `KAPITEL.md`, acht Arbeitsordner und je Unterkapitel ein Ordner mit `UNTERKAPITEL.md`
 - `03_Varianten/<Gliederung>/` – dieselbe Struktur je App-Gliederung, mit `VARIANTE.md` (Rollen, Sparten, Märkte)
 - `04_Output/<Sprache>/<Kapitel>/` – freigegebene Fassung in Deutsch (Hauptsprache) und acht Landessprachen (EN, FR, IT, ES, CS, SK, KO, MS); Varianten unter `<Sprache>/Varianten/<Name>/`
-- `CLAUDE.md`, `.claude/agents/` (11 Agenten) und `.claude/settings.json` (WebFetch/WebSearch gesperrt – Daten bleiben lokal)
+- `05_I_Output/<Produkt>/` – **I Output**: fertige Produkte mit Screenshots (`01_Handbuch`, `02_Releaseletter`, `03_QuickGuide`, `04_Schulungsmaterial`, `05_Interne_Dokumente`, `06_Videos`, `07_Grafiken`, `08_Prozesse`), je Produkt `PRODUKT.md`, `01_Entwurf`, `02_Screens`, `03_Final/<Sprache>` (Master `01_Deutsch_DE`)
+- `06_II_Stil_und_Design/` – **II**: `STIL_UND_DESIGN.md`, `01_Designvorschlaege`, `02_Tonalitaet/TONALITAET.md`, `03_Vorlagen`, `04_Bildsprache_Screenshots`
+- `07_III_Grammatik_Synonyme_Fehlerliste/` – **III**: `01_Grammatik/GRAMMATIK.md`, `02_Synonyme/SYNONYME.csv` (mit offenen Terminologiefragen), `03_Fehlerliste/FEHLERLISTE.csv` und `FEHLERLISTE.md`
+- `08_IV_Translation/` – **IV**: `TRANSLATION.md`, je Zielsprache `01_Glossar/GLOSSAR.csv`, `02_Uebersetzungsspeicher/SPEICHER.csv`, `03_Laenderreview/REVIEW.md`
+- `CLAUDE.md`, `.claude/agents/` (14 Agenten) und `.claude/settings.json` (WebFetch/WebSearch gesperrt – Daten bleiben lokal)
 
 Die acht Arbeitsordner je Kapitel:
 
@@ -24,7 +28,11 @@ Die acht Arbeitsordner je Kapitel:
 | `07_Ideenspeicher` | | ideen-sammler |
 | `08_Steuerung` | `01_Dealer`, `02_MO`, `03_Markt`, `04_HQ`, `05_IT`, `06_Marktspezifisch`, `07_Spartenspezifisch` | steuerung |
 
-Dazu `gliederungs-pfleger` für den Abgleich, `uebersetzer-de` (fremdsprachige Quellen → `dt_<Original>`) und `uebersetzer-ausgabe` (freigegebene Kapitel → `04_Output` in neun Sprachen).
+Dazu `gliederungs-pfleger` für den Abgleich, `uebersetzer-de` (fremdsprachige Quellen → `dt_<Original>`) und `uebersetzer-ausgabe` (freigegebene Kapitel → `04_Output`, Produkte → `05_I_Output/<Produkt>/03_Final/<Sprache>`, mit Glossar, Übersetzungsspeicher und Länderreview aus `08_IV_Translation`) sowie für die Hauptordner `ausgabe-produzent` (I), `stil-designer` (II) und `sprach-lektor` (III).
+
+`04_Output` und `05_I_Output`: `04_Output` enthält den Handbuchtext je Sprache und Kapitel, `05_I_Output` die fertigen Produkte nach Art mit deutschem Master. Übersetzt wird immer aus dem deutschen Master über `08_IV_Translation` – Kapitel nach `04_Output/<Sprache>/`, Produkte nach `05_I_Output/<Produkt>/03_Final/<Sprache>/`.
+
+Die Hauptordner hängen nicht von der Gliederung ab; ihre Namen und Unterordner stehen als Konstanten im Skript (`AUSGABE`, `STIL`, `LEKTORAT`, `TRANSLATION`, `PRODUKTE`, …), die Textvorlagen in `vorlagen/`. Die Glossare starten mit der Tabelle „Fachbegriffe je Sprache“ aus `vorlagen/SPRACHEN.md`.
 
 ```bash
 pip install openpyxl
@@ -35,7 +43,7 @@ python3 handbuch_struktur.py abgleich <Ordner> --gliederung neue_Gliederung.xlsx
 python3 handbuch_struktur.py abgleich <Ordner> --app http://localhost:3000 --projekt p_default --token <API-Token>
 ```
 
-Der Abgleich legt nur Fehlendes an, löscht und überschreibt nichts und meldet Umbenanntes oder Entfallenes in `00_Dokumentation/GLIEDERUNG_ABGLEICH.md`. Agenten, die seit der Lieferung niemand geändert hat, bringt er auf den Stand der Vorlagen; geänderte bleiben, die neue Vorlage liegt als `<name>.md.neu` daneben. Der Ordner einer App-Gliederung bleibt über Umbenennungen und neue Versionen gleich (`Gliederung/App/zuordnung.json`).
+Der Abgleich legt nur Fehlendes an – die Hauptordner `05`–`08` bei jedem Aufruf, auch ohne `--gliederung`/`--app` –, löscht und überschreibt nichts und meldet Umbenanntes oder Entfallenes in `00_Dokumentation/GLIEDERUNG_ABGLEICH.md`. Agenten, die seit der Lieferung niemand geändert hat, bringt er auf den Stand der Vorlagen; geänderte bleiben, die neue Vorlage liegt als `<name>.md.neu` daneben. Weichen `CLAUDE.md`, `00_Dokumentation/README.md` oder `04_Output/README.md` von der aktuellen Vorlage ab, liegt die neue Fassung als `<Datei>.neu` daneben. Der Ordner einer App-Gliederung bleibt über Umbenennungen und neue Versionen gleich (`Gliederung/App/zuordnung.json`).
 
 Entpacken unter Windows mit PowerShell (behält Umlaute in Ordnernamen):
 

@@ -848,5 +848,14 @@
     "documentation": [
       "docs/adr/ADR-081-jira-update-zugriff.md"
     ]
+  },
+  {
+    "id": "NFR-74",
+    "title": "Zuordnung Fachdomäne → Gliederungspunkt, Menüpunkt und Ordner des Arbeitsordners anzeigen und pflegen, Unterordner aus einer Gliederung, CSV-Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-082-zuordnung-domaene-ordner.md"
+    ]
   }
 ]

@@ -638,3 +638,130 @@ export function AccessMatrixPage() {
     </Page>
   );
 }
+
+// Zuordnung Domäne → Gliederungspunkt → Ordner (ADR-082)
+export function DomainMapPage() {
+  const { notify } = useApp();
+  const { canEdit } = useMe();
+  const [lang, setLang] = useLabelLang();
+  const [outlineId, setOutlineId] = useState('');
+  const outlines = useLoad<{ items: any[] }>('/outlines');
+  const m = useLoad<any>(`/metadata/domain-map${qs({ outlineId: outlineId || undefined })}`);
+  const [add, setAdd] = useState<Record<string, string>>({});
+  const link = async (domainId: string, targetId: string, linked: boolean, msg: string) => {
+    try {
+      await put('/metadata/domain-map/links', { domainId, targetId, linked });
+      notify(msg);
+      m.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const d = m.data;
+  const origin = (t: any) => (t.suggested ? <span className="tag sev-low" title="Chunks tragen beide Labels">Vorschlag · {t.chunks} Chunks</span>
+    : <span className="tag">{t.origin === 'catalog' ? 'Katalog' : 'manuell'}{t.chunks ? ` · ${t.chunks} Chunks` : ''}</span>);
+  const free = (domain: any) => [...(d?.outline ?? []), ...(d?.navigation ?? [])]
+    .filter((t: any) => ![...domain.outline, ...domain.navigation].some((x: any) => x.id === t.id && x.linked));
+  return (
+    <Page title="Zuordnung" subtitle="Welche Fachdomäne gehört zu welchem Gliederungspunkt, Menüpunkt und Ordner im Arbeitsordner" actions={<LangSwitch lang={lang} onChange={setLang} />}>
+      <ErrorBox error={m.error ?? outlines.error} />
+      {d && (
+        <div className="stat-row">
+          <div className="stat"><span className="muted small">Domänen</span><strong>{d.summary.domains}</strong></div>
+          <div className="stat"><span className="muted small">Zuordnungen</span><strong>{d.summary.links}</strong></div>
+          <div className="stat"><span className="muted small">Vorschläge aus Chunks</span><strong>{d.summary.suggestions}</strong></div>
+          <div className="stat"><span className="muted small">Gliederungspunkte ohne Domäne</span><strong>{d.withoutDomain.length}</strong></div>
+        </div>
+      )}
+      <Card title="Ordnerbasis" actions={<DownloadButton href={`/api/v1/metadata/domain-map/export${qs({ outlineId: outlineId || undefined })}`} name="zuordnung-domaene-ordner.csv" className="btn small">CSV exportieren</DownloadButton>}>
+        <div className="filters">
+          <label>Unterordner aus Gliederung
+            <select value={outlineId} onChange={(e) => setOutlineId(e.target.value)}>
+              <option value="">– nur Kapitelordner –</option>
+              {(outlines.data?.items ?? []).filter((o: any) => o.latest).map((o: any) => <option key={o.id} value={o.id}>{o.name} (v{o.versionNo})</option>)}
+            </select>
+          </label>
+        </div>
+        <p className="small muted">
+          Kapitelordner wie im Arbeitsordner (<code>02_Kapitel/…</code>, Werkzeug <code>handbuch_struktur.py</code>). Unterordner erscheinen, wenn Sie eine Gliederung der App wählen, deren Kapitel
+          die Titel der Gesamtgliederung tragen (Stammdaten › Inhaltsverzeichnis).
+          {d?.subfolderSource && <> Gewählt: <strong>{d.subfolderSource.name}</strong> – {d.subfolderSource.matched} von {d.subfolderSource.chapters} Kapiteln zugeordnet.</>}
+        </p>
+      </Card>
+      <div className="dm-grid">
+        {(d?.domains ?? []).map((dom: any) => (
+          <Card key={dom.id} title={<>🧩 {nameOf(dom, lang)}</>}>
+            <section aria-label={`Gliederungspunkte zu ${nameOf(dom, lang)}`}>
+              <h3 className="small muted">Gliederungspunkte und Ordner</h3>
+              {!dom.outline.length ? <Empty>Noch kein Gliederungspunkt zugeordnet.</Empty> : (
+                <ul className="dm-list">
+                  {dom.outline.map((o: any) => (
+                    <li key={o.id} className={o.suggested ? 'dm-suggested' : ''}>
+                      <div className="dm-head"><strong>{nameOf(o, lang)}</strong> {origin(o)}
+                        {canEdit && (o.suggested
+                          ? <button className="btn small" onClick={() => link(dom.id, o.id, true, 'Vorschlag übernommen.')}>Übernehmen</button>
+                          : <button className="btn small ghost" aria-label={`${nameOf(o, lang)} von ${nameOf(dom, lang)} lösen`} onClick={() => link(dom.id, o.id, false, 'Zuordnung entfernt.')}>Lösen</button>)}
+                      </div>
+                      <code className="dm-path">📁 {o.folder}</code>
+                      {o.subfolders?.length ? (
+                        <ul className="dm-sub small">{o.subfolders.map((s: any) => <li key={s.folder}><code>📂 {s.folder.split('/').pop()}</code></li>)}</ul>
+                      ) : o.subfolders ? <div className="small muted">keine Unterkapitel in der gewählten Gliederung</div> : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+            <section aria-label={`Menüpunkte zu ${nameOf(dom, lang)}`}>
+              <h3 className="small muted">Menüpunkte</h3>
+              <div className="dm-tags">
+                {dom.navigation.map((n: any) => (
+                  <span key={n.id} className={`tag ${n.suggested ? 'sev-low' : ''}`} title={n.suggested ? `Vorschlag aus ${n.chunks} Chunks` : n.origin === 'catalog' ? 'Katalog' : 'manuell'}>
+                    🧭 {nameOf(n, lang)}
+                    {canEdit && (n.suggested
+                      ? <button className="dm-x" aria-label={`${nameOf(n, lang)} übernehmen`} onClick={() => link(dom.id, n.id, true, 'Vorschlag übernommen.')}>＋</button>
+                      : <button className="dm-x" aria-label={`${nameOf(n, lang)} von ${nameOf(dom, lang)} lösen`} onClick={() => link(dom.id, n.id, false, 'Zuordnung entfernt.')}>×</button>)}
+                  </span>
+                ))}
+                {!dom.navigation.length && <span className="small muted">keine</span>}
+              </div>
+            </section>
+            {canEdit && (
+              <div className="filters">
+                <label className="grow"><span className="sr-only">Zuordnen</span>
+                  <select value={add[dom.id] ?? ''} aria-label={`Gliederungs- oder Menüpunkt für ${nameOf(dom, lang)}`} onChange={(e) => setAdd({ ...add, [dom.id]: e.target.value })}>
+                    <option value="">Gliederungs- oder Menüpunkt wählen …</option>
+                    <optgroup label="Gliederung">{free(dom).filter((t: any) => t.code.startsWith('outline.')).map((t: any) => <option key={t.id} value={t.id}>{nameOf(t, lang)}</option>)}</optgroup>
+                    <optgroup label="Navigation">{free(dom).filter((t: any) => t.code.startsWith('nav.')).map((t: any) => <option key={t.id} value={t.id}>{nameOf(t, lang)}</option>)}</optgroup>
+                  </select>
+                </label>
+                <button className="btn small primary" aria-label={`Zuordnen zu ${nameOf(dom, lang)}`} disabled={!add[dom.id]} onClick={async () => { await link(dom.id, add[dom.id], true, 'Zugeordnet.'); setAdd({ ...add, [dom.id]: '' }); }}>Zuordnen</button>
+              </div>
+            )}
+          </Card>
+        ))}
+      </div>
+      {d && (
+        <Card title="Gliederungspunkte ohne Domäne">
+          <p className="small muted">Querschnittskapitel wie Einführung, Rollout oder Anhänge brauchen nicht unbedingt eine Fachdomäne.</p>
+          <div className="dm-tags">
+            {d.outline.filter((o: any) => d.withoutDomain.includes(o.id)).map((o: any) => <span key={o.id} className="tag" title={o.folder}>🗂 {nameOf(o, lang)}</span>)}
+          </div>
+        </Card>
+      )}
+      {d && (
+        <Card title="Ordner im Arbeitsordner">
+          <div className="su-grid">
+            <div>
+              <h3 className="small muted">Je Kapitel (und Unterkapitel)</h3>
+              <ul className="small">{d.workFolders.map((f: string) => <li key={f}><code>{f}</code></li>)}</ul>
+            </div>
+            <div>
+              <h3 className="small muted">Hauptordner zur Steuerung</h3>
+              <ul className="small">{d.controlFolders.map((f: any) => <li key={f.folder}><code>{f.folder}</code> – {f.description}</li>)}</ul>
+            </div>
+          </div>
+        </Card>
+      )}
+    </Page>
+  );
+}

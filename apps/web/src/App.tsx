@@ -53,6 +53,7 @@ const MetadataOverviewPage = lazy(() => import('./pages/Metadata').then((m) => (
 const MetadataChunksPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataChunksPage })));
 const MetadataQaPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataQaPage })));
 const AccessMatrixPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.AccessMatrixPage })));
+const DomainMapPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.DomainMapPage })));
 const MetadataLabelsPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataLabelsPage })));
 const SourceUpdatesPage = lazy(() => import('./pages/SourceUpdates').then((m) => ({ default: m.SourceUpdatesPage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
@@ -66,6 +67,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/metadaten/chunks', label: 'Chunks', icon: '🧱' },
     { to: '/metadaten/fragen', label: 'Fragen & Antworten', icon: '💡' },
     { to: '/metadaten/zugriffsmatrix', label: 'Zugriffsmatrix', icon: '🔐' },
+    { to: '/metadaten/zuordnung', label: 'Zuordnung', icon: '🧩' },
     { to: '/metadaten/labels', label: 'Labels', icon: '🏷' },
   ] },
   { id: 'sammeln', label: '1 Sammeln', items: [
@@ -400,6 +402,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/metadaten/chunks" element={<MetadataChunksPage />} />
             <Route path="/metadaten/fragen" element={<MetadataQaPage />} />
             <Route path="/metadaten/zugriffsmatrix" element={<AccessMatrixPage />} />
+            <Route path="/metadaten/zuordnung" element={<DomainMapPage />} />
             <Route path="/metadaten/labels" element={<MetadataLabelsPage />} />
             <Route path="/quellen" element={<SourcesPage />} />
             <Route path="/quellenaenderungen" element={<SourceUpdatesPage />} />

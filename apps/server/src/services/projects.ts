@@ -12,6 +12,7 @@ import { getRoleTemplate } from './roleTemplates.js';
 import { badRequest, conflict, forbidden, notFound, Problem } from '../problem.js';
 import { seedTerminology } from './terminology.js';
 import { seedMetadataLabels } from './metadata.js';
+import { seedDomainLinks } from './domainMap.js';
 import { LANGUAGES } from '../domain/translate.js';
 
 export type Visibility = 'open' | 'restricted';
@@ -110,6 +111,7 @@ export async function createProject(ctx: Ctx, input: { name?: string; descriptio
     await db.run('INSERT INTO projects (id, name, description, visibility, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?)', id, name, input.description?.trim() || null, visibility, user.id, now());
     await seedTerminology(db, id);
     await seedMetadataLabels(db, id);
+    await seedDomainLinks(db, id);
     await audit(withProject(ctx, id), user.id, 'project.created', 'project', id, { name, visibility });
   });
   const p = await projectRow(ctx, id);

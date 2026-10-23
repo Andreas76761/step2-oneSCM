@@ -5,6 +5,7 @@ import {
   createLabel, createQa, deleteQa, getQa, labelGroups, listChunks, listLabels, listQa, metadataOverview, setChunkLabels, updateLabel, updateQa,
 } from '../services/metadata.js';
 import { exportAccessMatrix, getAccessMatrix, importAccessMatrix, setAccessCell } from '../services/accessMatrix.js';
+import { exportDomainMap, getDomainMap, setDomainLink } from '../services/domainMap.js';
 import { list, num, userOf } from './helpers.js';
 
 type P<T extends string> = { Params: Record<T, string> };
@@ -51,6 +52,15 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
   });
 
   // Zugriffsmatrix Rolle × Menüpunkt (ADR-081, F-06): lesen mit `read`, pflegen und importieren mit `edit`
+  // Zuordnung Domäne → Gliederungspunkt → Ordner (ADR-082)
+  app.get<{ Querystring: { outlineId?: string } }>('/metadata/domain-map', async (req) => (userOf(req.ctx, req), getDomainMap(req.ctx, { outlineId: req.query.outlineId || undefined })));
+  app.put<{ Body: any }>('/metadata/domain-map/links', async (req) => setDomainLink(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.get<{ Querystring: { outlineId?: string } }>('/metadata/domain-map/export', async (req, reply) => {
+    userOf(req.ctx, req);
+    reply.header('Content-Type', 'text/csv; charset=utf-8').header('Content-Disposition', 'attachment; filename="zuordnung-domaene-ordner.csv"');
+    return exportDomainMap(req.ctx, { outlineId: req.query.outlineId || undefined });
+  });
+
   app.get('/metadata/access-matrix', async (req) => (userOf(req.ctx, req), getAccessMatrix(req.ctx)));
   app.put<{ Body: any }>('/metadata/access-matrix/cells', async (req) => setAccessCell(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit')));
   app.post<{ Body: any }>('/metadata/access-matrix/import', async (req) => importAccessMatrix(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit')));

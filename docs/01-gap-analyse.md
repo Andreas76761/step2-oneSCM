@@ -161,6 +161,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.32 Stand nach Etappe 30 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Menüpunkte Contract Management 3.1–3.5 | ✅ eigene Navigations-Labels, Zugriffsmatrix vollständig ([ADR-082](adr/ADR-082-zuordnung-domaene-ordner.md)) |
+| Zuordnung Domäne → Gliederung → Ordner (NFR-74) | ✅ Seite „Zuordnung“ mit Kapitel- und Unterordnern, Vorschlägen aus Chunks, CSV ([ADR-082](adr/ADR-082-zuordnung-domaene-ordner.md)) |
+| Steuerungsordner im Arbeitsordner | ✅ 05_I_Output, 06_II_Stil_und_Design, 07_III_Grammatik_Synonyme_Fehlerliste, 08_IV_Translation mit Agenten |
+| Offen | englische UI-Begriffe für 3.1–3.5 bestätigen; Domänenzuordnung fachlich prüfen; F-02, F-03, M2–M7 |
+
 ## 1.31 Stand nach Etappe 29 (23.10.2026)
 
 | Punkt | Ergebnis |

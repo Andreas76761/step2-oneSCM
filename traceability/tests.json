@@ -1569,5 +1569,23 @@
       "NFR-72",
       "NFR-73"
     ]
+  },
+  {
+    "id": "T-240",
+    "title": "Zuordnung Domäne → Gliederungspunkt → Ordner: Katalogvorschlag, Contract Management 3.1–3.5 als Menüpunkte, Unterordner aus einer App-Gliederung, Vorschläge aus Chunks, Pflege mit Bearbeitungsrecht, CSV",
+    "file": "apps/server/test/stage30.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-74"
+    ]
+  },
+  {
+    "id": "T-239",
+    "title": "Zuordnung: Domäne zu Gliederungspunkt, Menüpunkt und Ordner, Unterordner aus einer Gliederung, lösen und ergänzen (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-74"
+    ]
   }
 ]

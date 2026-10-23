@@ -17,7 +17,7 @@ describe('Etappe 28', () => {
     const call = client(built);
     try {
       const count = (g: string) => LABEL_CATALOG.filter((l) => l.group === g).length;
-      expect(['outline', 'role', 'navigation', 'domain', 'customer', 'system', 'content', 'division', 'quality'].map(count)).toEqual([33, 11, 34, 9, 5, 19, 22, 3, 17]);
+      expect(['outline', 'role', 'navigation', 'domain', 'customer', 'system', 'content', 'division', 'quality'].map(count)).toEqual([33, 11, 39, 9, 5, 19, 22, 3, 17]);
       const labels = (await call('GET', '/metadata/labels')).json;
       expect(labels).toHaveLength(LABEL_CATALOG.length);
       const by = (code: string) => labels.find((l: any) => l.code === code);

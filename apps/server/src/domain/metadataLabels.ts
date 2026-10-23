@@ -94,6 +94,12 @@ export const LABEL_CATALOG: CatalogLabel[] = [
     ['generation.mo-checks', 'Vertragserstellung › MO Checks', 'Contract Generation › MO Checks'],
     ['generation.special-cases', 'Vertragserstellung › Sonderfälle', 'Contract Generation › Special Cases'],
     ['contract-management', 'Vertragsverwaltung', 'Contract Management'],
+    // Unterpunkte 3.1–3.5 (Handbuch-Werkstatt V4, Menüstruktur); englische UI-Begriffe noch an der Oberfläche bestätigen
+    ['contract-management.search-change', 'Vertragsverwaltung › Vertrag suchen und ändern', 'Contract Management › Search and Change Contract', 'V4-Punkt 3.1; UI-Begriff unbestätigt'],
+    ['contract-management.suspend-reactivate', 'Vertragsverwaltung › Vertrag aussetzen und reaktivieren', 'Contract Management › Suspend and Reactivate Contract', 'V4-Punkt 3.2; UI-Begriff unbestätigt'],
+    ['contract-management.terminate-cancel', 'Vertragsverwaltung › Vertrag beenden, stornieren und kündigen', 'Contract Management › Terminate and Cancel Contract', 'V4-Punkt 3.3; UI-Begriff unbestätigt'],
+    ['contract-management.renewal', 'Vertragsverwaltung › Verlängerung, Folgevertrag und Neuvertrag', 'Contract Management › Extension, Follow-up and New Contract', 'V4-Punkt 3.4; UI-Begriff unbestätigt'],
+    ['contract-management.documents', 'Vertragsverwaltung › Dokumente und Kommunikation', 'Contract Management › Documents and Communication', 'V4-Punkt 3.5; UI-Begriff unbestätigt'],
     ['customer', 'Kundenverwaltung', 'Customer Management'],
     ['customer.private', 'Kundenverwaltung › Privatkunden', 'Customer Management › Private Customer'],
     ['customer.commercial', 'Kundenverwaltung › Geschäftskunden', 'Customer Management › Commercial Customer'],
@@ -207,6 +213,23 @@ export const LABEL_CATALOG: CatalogLabel[] = [
     ['not-relevant', 'Nicht relevant', 'Not relevant'],
   ]),
 ];
+
+/**
+ * Zuordnung Fachdomäne → Gliederungspunkte und Menüpunkte (ADR-082): Vorschlag des Katalogs, je Projekt änderbar.
+ * Schlüssel = Domänen-Code ohne Präfix, Werte = Label-Codes der Gruppen outline und navigation.
+ */
+export const DOMAIN_LINKS: Record<string, string[]> = {
+  'contract-calculation': ['outline.kap05', 'outline.kap06', 'outline.kap13', 'outline.kap14', 'nav.product.products-prices', 'nav.product.campaign', 'nav.market-settings.inflation', 'nav.generation.proposal'],
+  'contract-generation': ['outline.kap06', 'outline.kap07', 'outline.kap08', 'outline.kap09', 'nav.generation', 'nav.generation.proposal', 'nav.generation.proposal-management', 'nav.generation.mo-checks', 'nav.generation.special-cases'],
+  'contract-management': ['outline.kap10', 'outline.kap12', 'nav.contract-management', 'nav.contract-management.search-change', 'nav.contract-management.suspend-reactivate',
+    'nav.contract-management.terminate-cancel', 'nav.contract-management.renewal', 'nav.contract-management.documents'],
+  revenue: ['outline.kap11', 'nav.finance', 'nav.finance.fi-document', 'nav.finance.document-type', 'nav.finance.oneerp-checks'],
+  cost: ['outline.kap11', 'nav.international-workshop', 'nav.finance.financial-control'],
+  'customer-partner': ['outline.kap04', 'outline.kap12', 'nav.customer', 'nav.customer.private', 'nav.customer.commercial'],
+  vehicle: ['outline.kap05', 'nav.product.vehicle-groups', 'nav.product.vega-codes', 'nav.admin.vehicle-management'],
+  documents: ['outline.kap07', 'outline.kap10', 'outline.kap16', 'nav.template-management', 'nav.contract-management.documents'],
+  reporting: ['outline.kap11', 'outline.anhang-d', 'nav.finance.financial-control'],
+};
 
 /** Code für eigene Labels: Kleinbuchstaben, Ziffern, Punkt, Bindestrich */
 export const LABEL_CODE_RE = /^[a-z0-9][a-z0-9.-]{1,59}$/;

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.29.0
+  version: 0.30.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3989,6 +3989,46 @@ paths:
       tags: [Metadaten]
       x-requirements: [NFR-73]
       x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'text/csv' }
+  /metadata/domain-map:
+    get:
+      operationId: getDomainMap
+      summary: 'Zuordnung Fachdomäne → Gliederungspunkte, Menüpunkte und Ordner des Arbeitsordners; Vorschläge aus Chunks (ADR-082)'
+      tags: [Metadaten]
+      x-requirements: [NFR-74]
+      x-extension: true
+      parameters:
+        - { name: outlineId, in: query, required: false, schema: { type: string }, description: 'Gliederung der App, aus der die Unterordner je Kapitel kommen' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ domains: [{ id, code, nameDe, nameEn, outline: [{ id, code, nameDe, nameEn, folder, output, subfolders, linked, origin, chunks, suggested }], navigation: [...] }], outline, navigation, withoutDomain, workFolders, controlFolders, subfolderSource, summary: { domains, links, suggestions } }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/domain-map/links:
+    put:
+      operationId: setDomainLink
+      summary: 'Domäne einem Gliederungs- oder Menüpunkt zuordnen oder die Zuordnung lösen (Berechtigung edit, ADR-082)'
+      tags: [Metadaten]
+      x-requirements: [NFR-74]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [domainId, targetId, linked], properties: { domainId: { type: string }, targetId: { type: string }, linked: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ domainId, targetId, linked }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/domain-map/export:
+    get:
+      operationId: exportDomainMap
+      summary: 'Zuordnung als CSV: Domäne, Gliederungspunkt, Ordner, Unterordner, Menüpunkte (ADR-082)'
+      tags: [Metadaten]
+      x-requirements: [NFR-74]
+      x-extension: true
+      parameters:
+        - { name: outlineId, in: query, required: false, schema: { type: string } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'text/csv' }

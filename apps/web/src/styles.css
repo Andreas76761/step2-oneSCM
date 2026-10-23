@@ -756,3 +756,18 @@ div.reader-lang-note p { margin: 0; }
 .am-active { outline: 2px solid var(--primary); outline-offset: -2px; }
 .am-dot { position: absolute; top: 0; right: 3px; font-size: 12px; color: var(--primary); }
 .am-evidence { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; }
+/* Zuordnung Domäne → Gliederung → Ordner (ADR-082) */
+.dm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 12px; }
+.dm-list { list-style: none; padding: 0; margin: 4px 0 8px; display: grid; gap: 8px; }
+.dm-list > li { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+.dm-suggested { border-style: dashed !important; }
+.dm-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.dm-head .btn { margin-left: auto; }
+.dm-path { display: block; font-size: 12px; overflow-wrap: anywhere; margin-top: 2px; }
+.dm-sub { margin: 4px 0 0; padding-left: 18px; }
+.dm-sub code { overflow-wrap: anywhere; }
+.dm-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; min-width: 0; }
+.dm-tags .tag { max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; }
+.dm-x { margin-left: 4px; border: 0; background: none; cursor: pointer; font: inherit; color: inherit; padding: 0 2px; min-width: 24px; min-height: 24px; }
+.dm-x:hover, .dm-x:focus-visible { color: var(--primary); }
+@media (max-width: 480px) { .dm-grid { grid-template-columns: 1fr; } }

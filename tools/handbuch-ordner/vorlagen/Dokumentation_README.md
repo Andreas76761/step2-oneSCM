@@ -7,10 +7,21 @@
 3. **Übersetzen:** „uebersetzer-de: Kapitel 6“ – englische Quellen erhalten eine deutsche Fassung `dt_<Original>` daneben.
 4. **Steuern:** „steuerung: Kapitel 6“ – wer braucht was (Dealer, MO, Markt, HQ, IT), was ist markt- oder spartenspezifisch.
 5. **Schreiben:** „kapitel-redakteur: Unterkapitel 6.2“, „bild-redakteur: Kapitel 6“, „faq-redakteur: Kapitel 6“.
-6. **Prüfen:** „pruefer: Kapitel 6“ – Bericht in `04_Pruefung_Freigabe/`.
-7. **Audit:** „auditor: Kapitel 6“ – Kennzahlen und Nachweise in `05_Audit/`.
-8. **Freigeben:** ein Mensch legt den Freigabebeleg (Name, Datum, Version) in `04_Pruefung_Freigabe/` ab.
-9. **Ausgeben:** „uebersetzer-ausgabe: Kapitel 6, alle Sprachen“ – deutsche Endfassung und acht Übersetzungen in `04_Output/<Sprache>/<Kapitel>/`; danach Sprachreview durch einen Menschen.
+6. **Lektorat:** „sprach-lektor: Kapitel 6“ – Grammatik, Synonyme, Tonalität; Funde in `07_III_Grammatik_Synonyme_Fehlerliste/03_Fehlerliste/FEHLERLISTE.csv`.
+7. **Prüfen:** „pruefer: Kapitel 6“ – Bericht in `04_Pruefung_Freigabe/`.
+8. **Audit:** „auditor: Kapitel 6“ – Kennzahlen und Nachweise in `05_Audit/`.
+9. **Freigeben:** ein Mensch legt den Freigabebeleg (Name, Datum, Version) in `04_Pruefung_Freigabe/` ab.
+10. **Ausgeben:** „uebersetzer-ausgabe: Kapitel 6, alle Sprachen“ – deutsche Endfassung und acht Übersetzungen in `04_Output/<Sprache>/<Kapitel>/`, mit Glossar und Übersetzungsspeicher aus `08_IV_Translation`; danach Sprachreview durch das jeweilige Land (`08_IV_Translation/<Sprache>/03_Laenderreview/REVIEW.md`).
+
+Vor dem Schreiben gelten Stil und Ton aus `06_II_Stil_und_Design` und die Sprachregeln aus `07_III_Grammatik_Synonyme_Fehlerliste`.
+
+## Von freigegebenen Kapiteln zum Produkt (I Output)
+
+1. **Produkt wählen:** `05_I_Output/<Produkt>/PRODUKT.md` – Handbuch, Releaseletter, QuickGuide, Schulungsmaterial, Interne Dokumente, Videos, Grafiken, Prozesse.
+2. **Erstellen:** „ausgabe-produzent: QuickGuide Dealer“ – Entwurf in `01_Entwurf/`, Screens in `02_Screens/`.
+3. **Prüfen:** „sprach-lektor: 03_QuickGuide“ und „stil-designer: 03_QuickGuide prüfen“.
+4. **Freigeben:** ein Mensch trägt die Freigabe in `PRODUKT.md` ein; Endfassung in `03_Final/01_Deutsch_DE/`.
+5. **Übersetzen:** „uebersetzer-ausgabe: QuickGuide Dealer, alle Sprachen“ → `03_Final/<Sprache>/`, Länderreview über `08_IV_Translation`.
 
 Ideen jederzeit: „ideen-sammler: Idee für Kapitel 9 – …“.
 
@@ -22,7 +33,7 @@ Ideen jederzeit: „ideen-sammler: Idee für Kapitel 9 – …“.
 | neue oder geänderte Gliederung in der App | „gliederungs-pfleger: Gliederungen aus der App abgleichen“ |
 | direkt ohne Agent | `python 00_Dokumentation/Werkzeuge/handbuch_struktur.py abgleich . --app http://localhost:3000 --projekt p_default --token <API-Token>` |
 
-Der Abgleich legt nur Fehlendes an (Kapitel mit acht Arbeitsordnern, Unterkapitel, neue Agenten), löscht und überschreibt nichts und meldet Umbenanntes oder Entfallenes in `GLIEDERUNG_ABGLEICH.md`. Jede App-Gliederung erhält einen eigenen Ordner unter `03_Varianten/`; der Ordnername bleibt gleich, auch wenn die Gliederung in der App umbenannt oder neu versioniert wird. Das API-Token legt die Administration in der App unter Integrationen › API-Tokens an (Berechtigung read). Regelmäßig: den Aufruf in der Windows-Aufgabenplanung täglich einplanen.
+Der Abgleich legt nur Fehlendes an (Kapitel mit acht Arbeitsordnern, Unterkapitel, Hauptordner `05`–`08`, neue Agenten), löscht und überschreibt nichts – geänderte Vorlagen wie `CLAUDE.md` legt er als `CLAUDE.md.neu` daneben – und meldet Umbenanntes oder Entfallenes in `GLIEDERUNG_ABGLEICH.md`. Jede App-Gliederung erhält einen eigenen Ordner unter `03_Varianten/`; der Ordnername bleibt gleich, auch wenn die Gliederung in der App umbenannt oder neu versioniert wird. Das API-Token legt die Administration in der App unter Integrationen › API-Tokens an (Berechtigung read). Regelmäßig: den Aufruf in der Windows-Aufgabenplanung täglich einplanen.
 
 ## Dateien in diesem Ordner
 

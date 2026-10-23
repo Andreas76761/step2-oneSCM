@@ -1,0 +1,37 @@
+# IV Translation
+
+Steuerung aller Übersetzungen – lokal, ohne externe Übersetzungsdienste. Hier liegen Glossare, Übersetzungsspeicher und Länderreviews; die übersetzten Texte selbst liegen in `04_Output` (Kapitel) bzw. `05_I_Output/<Produkt>/03_Final/<Sprache>/` (Produkte).
+
+## Zwei Richtungen
+
+| Richtung | Ausgang | Ergebnis | Agent |
+|---|---|---|---|
+| **Quellen → Deutsch** | englische und andere fremdsprachige Quellen in `01_Quellen/Raw_*` | `dt_<Original>` neben dem Original | uebersetzer-de |
+| **Deutsch → Zielsprachen** | freigegebener deutscher Master | Kapitel: `04_Output/<Sprache>/<Kapitel>/<Nr>_<Code>.md` · Produkte: `05_I_Output/<Produkt>/03_Final/<Sprache>/` | uebersetzer-ausgabe |
+
+Übersetzt wird immer aus dem deutschen Master, nie aus einer anderen Übersetzung.
+
+## Je Zielsprache
+
+| Ordner/Datei | Inhalt |
+|---|---|
+| `01_Glossar/GLOSSAR.csv` | Fachbegriffe Deutsch → Zielsprache (Deutsch;Zielsprache;Kontext;Status;Quelle); Englisch dient auch für die Richtung Quellen → Deutsch |
+| `02_Uebersetzungsspeicher/SPEICHER.csv` | bestätigte Satzpaare (Nr;Deutsch;Zielsprache;Datei;Ausgangsversion;Datum;Status) – wiederkehrende Sätze gleich übersetzen |
+| `03_Laenderreview/REVIEW.md` | Dateien im Review mit Reviewer-Land, Status, Datum, Anmerkung |
+| `03_Laenderreview/` | Rückmeldungen der Länder als Datei `<Datei>_<Land>_<JJJJ-MM-TT>.<ext>` |
+
+Glossarbegriffe werden erst nach Bestätigung durch einen Menschen verbindlich (Status `Vorschlag` → `bestätigt`). Die Gesamttabelle der Fachbegriffe bleibt in `04_Output/SPRACHEN.md`.
+
+## Review
+
+- **Englisch ist die internationale Fassung** – ohne marktspezifische Abschnitte. Review durch **alle Länder gemeinsam**: jedes Land gibt Anmerkungen in `02_Englisch_EN/03_Laenderreview/REVIEW.md`, Widersprüche zwischen Ländern entscheidet die Redaktion; die Redaktion gibt frei.
+- **Alle anderen Sprachen:** Sprachreview durch das jeweilige Land (Märkte laut `04_Output/SPRACHEN.md`). Erst danach gilt eine Übersetzung als freigegeben.
+- Status in `REVIEW.md`: `bereit` → `im Review` → `Korrektur` → `geprüft` (bzw. `veraltet`, wenn sich der deutsche Master geändert hat).
+- **Offen (O-09):** Ansprechperson für das Sprachreview je Land. Bis zur Entscheidung steht in `REVIEW.md` nur das Reviewer-Land, keine Person.
+
+## Ablauf
+
+1. Mensch gibt das deutsche Kapitel bzw. Produkt frei.
+2. „uebersetzer-ausgabe: Kapitel 6, alle Sprachen“ – nutzt Glossar und Übersetzungsspeicher, legt die Übersetzung ab und trägt sie in `REVIEW.md` mit Status `bereit` ein.
+3. Das Land prüft; Korrekturen übernimmt der uebersetzer-ausgabe, bestätigte Sätze wandern in den Übersetzungsspeicher, neue Begriffe ins Glossar (Vorschlag).
+4. Status `geprüft` mit Datum und Reviewer-Land; im Kopf der Übersetzung `geprüft durch Markt <Code>, <Datum>`.
