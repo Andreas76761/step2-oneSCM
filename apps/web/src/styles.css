@@ -861,3 +861,5 @@ div.reader-lang-note p { margin: 0; }
 .ia-label-groups dd { margin: 0; display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; }
 .ia-label-row { display: contents; }
 .ia-chip { display: inline-flex; align-items: center; gap: 0.2rem; }
+.ia-label-groups select { max-width: 100%; min-width: 0; width: auto; }
+.ia-label-groups dd { min-width: 0; }
