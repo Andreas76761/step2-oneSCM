@@ -11,4 +11,4 @@ Je Kapitel:
 3. **Lesepfad je Rolle:** in jedem Rollen-Unterordner `LESEPFAD.md` mit den Unterkapiteln dieser Rolle in Lesereihenfolge (V vor L) und kurzen Hinweisen, was die Rolle dort tut. `06_Marktspezifisch/MAERKTE.md` und `07_Spartenspezifisch/SPARTEN.md` listen die Abweichungen je Markt bzw. Pkw/Van mit Beleg.
 4. **Varianten:** in `03_Varianten/<Name>/` gilt der Rahmen aus `VARIANTE.md` (Rollen, Sparten, Märkte); Unterkapitel außerhalb des Rahmens mit „–“ und Grund.
 5. **Gesamtmatrix** `00_Dokumentation/STEUERUNG_GESAMT.md` aktualisieren (Kapitel × Rolle, Zahl der V/L/?) und Widersprüche zwischen Quellen (z. B. Rolle laut Navigation sieht Menü nicht) als Befund aufführen.
-Rollen-Begriffe: Dealer, MO, Markt, HQ, IT. MO-Bedeutung ist offen (`ENTSCHEIDUNGEN.md`). Keine Inhalte schreiben – das macht der kapitel-redakteur nach dieser Matrix.
+Rollen-Begriffe: Dealer, MO, Markt, HQ, IT. MO = Market Operation. Sparten nur Pkw und Van. Keine Inhalte schreiben – das macht der kapitel-redakteur nach dieser Matrix.

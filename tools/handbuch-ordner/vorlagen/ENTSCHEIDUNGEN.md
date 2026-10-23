@@ -11,15 +11,15 @@
 | 23.10.2026 | Sprachreview macht das jeweilige Land; erst danach ist eine Übersetzung freigegeben |
 | 23.10.2026 | Märkte je Sprache laut `04_Output/SPRACHEN.md`: DE → DE/AT/CH, FR → FR/BE/CH, IT → IT/CH, ES → ES, CS → CZ, SK → SK, KO → KR, MS → MY (O-06) |
 | 23.10.2026 | Review Englisch: alle Länder gemeinsam – jedes Land gibt Anmerkungen, die Redaktion führt zusammen und gibt frei (O-08) |
+| 23.10.2026 | MO = Market Operation (O-01) |
+| 23.10.2026 | Sparten nur Pkw und Van; Truck und Bus entfallen (O-02) |
+| 23.10.2026 | Anrede im Handbuch: „Sie“ (O-03) |
 | 23.10.2026 | Ausgabesprachen: Deutsch, Englisch, Französisch, Italienisch, Spanisch, Tschechisch, Slowakisch, Koreanisch (Südkorea), Malaiisch (Malaysia) |
 
 ## Offen
 
 | Nr. | Frage | Vorschlag |
 |---|---|---|
-| O-01 | Steht MO für „Market Operation“ oder „Market Organisation“? | bis zur Klärung nur „MO“ |
-| O-02 | Gelten nur die Sparten Pkw und Van? | ja, laut Gliederung |
-| O-03 | Anrede im Handbuch: „Sie“ oder „du“? | „Sie“ |
 | O-04 | Wer erteilt die Freigabe je Kapitel (Name/Rolle)? | – |
 | O-09 | Ansprechperson für das Sprachreview je Land (Name/Rolle) | – |
 | O-05 | Welche Funktionen aus bestehenden Artefakten übernehmen? | siehe Entscheidungsvorlage in der App (docs/07) |

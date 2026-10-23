@@ -62,6 +62,6 @@ Neue Gesamtgliederung (Excel) oder neue Gliederung in der App (Stammdaten › In
 ## Begriffe und offene Entscheidungen
 
 - Schreibweise: **oneSCM**, **Servicevertrag**, **Antrag (Proposal)**, **MO Checks / MO-Prüfungen**. Englische UI-Begriffe in „…“ mit deutschem Handbuchbegriff.
-- Rollen der Steuerung: **Dealer, MO, Markt, HQ, IT**. Sparten laut Gliederung: **Pkw und Van**.
-- **Offen:** Steht MO für „Market Operation“ oder „Market Organisation“? Bis zur Klärung nur „MO“.
+- Rollen der Steuerung: **Dealer, MO, Markt, HQ, IT**. Sparten: **Pkw und Van**.
+- **MO = Market Operation** (Prüfung und Freigabe, MO Checks). Anrede: **„Sie“**. Sparten: **nur Pkw und Van** – Truck und Bus nicht verwenden.
 - Weitere offene Entscheidungen: `00_Dokumentation/ENTSCHEIDUNGEN.md`.

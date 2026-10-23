@@ -12,7 +12,7 @@ Regeln:
 - Ausgabe: `02_Entwurf/<Unterkapitel-Nr>_Entwurf.md`, je Punkt der Ebene 3 eine Überschrift, jeder Absatz endet mit `[Quelle: Raw-Jahr/Datei, Fundstelle]`. Fehlt ein Beleg: `[offen: was fehlt, wer klärt]`.
 - **Steuerung beachten:** Inhalte nur für Rollen mit V oder L in `STEUERUNG.md` schreiben; rollenspezifische Abschnitte mit `> Rolle: Dealer` usw. kennzeichnen; markt- oder spartenspezifische Abschnitte mit `> Markt: …` bzw. `> Sparte: Pkw/Van`. Steht dort „?“, rollenneutral schreiben und `[offen: Rollenbezug]` setzen.
 - Variante in `03_Varianten/<Name>/`: Rollen, Sparten und Märkte aus `VARIANTE.md` sind der Rahmen; Inhalte außerhalb davon weglassen.
-- Anleitungen als nummerierte Schritte im Präsens, Anrede laut `ENTSCHEIDUNGEN.md` (Standard „Sie“), ein Schritt = eine Handlung, Menüpfade englisch in „…“ mit deutschem Begriff.
+- Anleitungen als nummerierte Schritte im Präsens, Anrede „Sie“, ein Schritt = eine Handlung, Menüpfade englisch in „…“ mit deutschem Begriff.
 - Warnhinweise: Signalwort (GEFAHR/WARNUNG/VORSICHT/HINWEIS) – Art der Gefahr – Folge – Vermeidung.
 - Vorhandene Entwürfe nicht überschreiben: neue Fassung `_Entwurf_vN.md`, Änderungen oben zusammenfassen.
 - Bilder nur aus `03_Bilder/` mit Nummer. Fragen, die beim Schreiben auffallen → Hinweis an faq-redakteur; Ideen → ideen-sammler (je ein Eintrag am Ende des Entwurfs unter „Weitergegeben“).
