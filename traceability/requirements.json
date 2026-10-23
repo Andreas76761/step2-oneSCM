@@ -1028,5 +1028,32 @@
     "documentation": [
       "docs/adr/ADR-091-antwortqualitaet.md"
     ]
+  },
+  {
+    "id": "NFR-94",
+    "title": "Punktmodell im Anleitungs-Check: Muss-/Soll-Punkte je Prüfpunkt, je Projekt einstellbar, „alle Muss-Punkte“ als Bedingung für Einreichen und Freigabe (F-08)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-092-punktmodell-befragung-deckung.md"
+    ]
+  },
+  {
+    "id": "NFR-95",
+    "title": "Expertenbefragung zu Wissenslücken: Fragen aus Rückfragen, Prüfläufen oder von Hand, Antwort per Option und Freitext in der App oder per Excel, Übernahme als Frage & Antwort mit Label „Prüfen“ (F-16)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-092-punktmodell-befragung-deckung.md"
+    ]
+  },
+  {
+    "id": "NFR-96",
+    "title": "Deckungsmatrix der Bilder: Stelle (Reiter bzw. Kapitel) × Sprache/Rolle/Sparte mit Lücken und Platzhaltern, Export (F-30)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-092-punktmodell-befragung-deckung.md"
+    ]
   }
 ]

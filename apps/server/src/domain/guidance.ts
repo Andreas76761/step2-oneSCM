@@ -19,7 +19,20 @@ export interface GuidanceCheck {
   items: GuidanceItem[];
   /** Abschnitt fehlt: in der Oberfläche direkt einen Absatz dafür schreiben */
   addSection?: { section: string; kind: 'paragraph' | 'list'; placeholder: string };
+  /** Punktmodell (F-08): Muss- oder Soll-Punkt mit erreichten und möglichen Punkten */
+  level: GuidanceLevel;
+  points: number;
+  maxPoints: number;
 }
+
+/** Punktmodell (ADR-092, F-08): Muss-Punkte müssen erfüllt sein, Soll-Punkte zählen zur Punktzahl */
+export type GuidanceLevel = 'must' | 'should';
+export const LEVEL_POINTS: Record<GuidanceLevel, number> = { must: 10, should: 5 };
+export const DEFAULT_LEVELS: Record<GuidanceCode, GuidanceLevel> = {
+  purpose: 'must', prerequisites: 'should', steps: 'must', numbered: 'must', one_action: 'must', menu_bold: 'should',
+  result: 'should', step_count: 'should', abbreviations: 'should', long_paragraph: 'should', placeholders: 'must', warning_schema: 'must',
+};
+export const GUIDANCE_CODES = Object.keys(DEFAULT_LEVELS) as GuidanceCode[];
 
 export const GUIDANCE_LABEL: Record<GuidanceCode, string> = {
   purpose: 'Zweck beschrieben',
@@ -129,6 +142,8 @@ function boldMenuPaths(text: string): string {
 export interface GuidanceOptions {
   /** bekannte Abkürzungen (Stammdaten, Terminologie) in Großbuchstaben */
   knownAcronyms?: Set<string>;
+  /** Muss/Soll je Prüfpunkt (Projekteinstellung); fehlende Punkte nach DEFAULT_LEVELS */
+  levels?: Partial<Record<GuidanceCode, GuidanceLevel>>;
 }
 
 export function analyzeGuidance(blocks: GuidanceBlock[], opts: GuidanceOptions = {}) {
@@ -140,7 +155,10 @@ export function analyzeGuidance(blocks: GuidanceBlock[], opts: GuidanceOptions =
   const hasSteps = stepBlocks.some((b) => actionsIn(b) > 0) || content.some((b) => actionsIn(b) >= 2);
   const checks: GuidanceCheck[] = [];
   const add = (code: GuidanceCode, bad: 'warning' | 'info', failed: boolean, message: [string, string], hint: string, items: GuidanceItem[] = [], addSection?: GuidanceCheck['addSection']) =>
-    checks.push({ code, label: GUIDANCE_LABEL[code], openLabel: GUIDANCE_OPEN_LABEL[code], status: failed ? bad : 'ok', message: failed ? message[1] : message[0], hint, items: failed ? items : [], ...(failed && addSection ? { addSection } : {}) });
+    checks.push({
+      code, label: GUIDANCE_LABEL[code], openLabel: GUIDANCE_OPEN_LABEL[code], status: failed ? bad : 'ok', message: failed ? message[1] : message[0], hint, items: failed ? items : [], ...(failed && addSection ? { addSection } : {}),
+      level: opts.levels?.[code] ?? DEFAULT_LEVELS[code], points: failed ? 0 : LEVEL_POINTS[opts.levels?.[code] ?? DEFAULT_LEVELS[code]], maxPoints: LEVEL_POINTS[opts.levels?.[code] ?? DEFAULT_LEVELS[code]],
+    });
 
   add('purpose', 'warning', inSection('purpose').length === 0,
     ['Der Zweck des Kapitels ist beschrieben.', 'Es fehlt ein kurzer Einstieg: Wozu dient diese Anleitung?'],
@@ -293,5 +311,10 @@ export function analyzeGuidance(blocks: GuidanceBlock[], opts: GuidanceOptions =
 
   const penalty = checks.reduce((n, c) => n + (c.status === 'warning' ? 15 : c.status === 'info' ? 5 : 0), 0);
   const score = Math.max(0, 100 - penalty);
-  return { score, passed: checks.filter((c) => c.status === 'ok').length, total: checks.length, fixable: checks.reduce((n, c) => n + c.items.filter((i) => i.fix).length, 0), checks };
+  const mustOpen = checks.filter((c) => c.level === 'must' && c.status !== 'ok').map((c) => c.code);
+  return {
+    score, passed: checks.filter((c) => c.status === 'ok').length, total: checks.length, fixable: checks.reduce((n, c) => n + c.items.filter((i) => i.fix).length, 0), checks,
+    // Punktmodell (F-08): erreichte von möglichen Punkten; „erfüllt“ nur, wenn alle Muss-Punkte erfüllt sind
+    points: { achieved: checks.reduce((n, c) => n + c.points, 0), possible: checks.reduce((n, c) => n + c.maxPoints, 0) }, mustOpen, mustPassed: mustOpen.length === 0,
+  };
 }

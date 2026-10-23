@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.39.0
+  version: 0.40.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3150,25 +3150,25 @@ paths:
   /guidance/settings:
     get:
       operationId: guidanceSettings
-      summary: 'Mindestwert des Anleitungs-Checks für Einreichen und Freigabe (ADR-057)'
+      summary: 'Mindestwert des Anleitungs-Checks und Punktmodell Muss/Soll je Prüfpunkt für Einreichen und Freigabe (ADR-057, ADR-092)'
       tags: [Schreibstil]
-      x-requirements: [NFR-44]
+      x-requirements: [NFR-44, NFR-94]
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ minScore: integer | null }' }
+        '200': { description: '{ minScore: integer | null, levels: { <Prüfpunkt>: must | should }, requireMust: boolean, checks: [{ code, label, level, defaultLevel }] }' }
     put:
       operationId: updateGuidanceSettings
-      summary: 'Mindestwert setzen oder aufheben (Berechtigung admin, ADR-057)'
+      summary: 'Mindestwert, Muss/Soll je Prüfpunkt und „alle Muss-Punkte“ als Freigabebedingung setzen – nur angegebene Felder (Berechtigung admin, ADR-057, ADR-092)'
       tags: [Schreibstil]
-      x-requirements: [NFR-44]
+      x-requirements: [NFR-44, NFR-94]
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [minScore], properties: { minScore: { type: [integer, 'null'], minimum: 0, maximum: 100 } } } } }
+        content: { application/json: { schema: { type: object, properties: { minScore: { type: [integer, 'null'], minimum: 0, maximum: 100 }, levels: { type: object, additionalProperties: { type: string, enum: [must, should] } }, requireMust: { type: boolean } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ minScore }' }
+        '200': { description: 'Einstellungen wie GET' }
         '400': { $ref: '#/components/responses/Problem' }
   /feedback/insights:
     get:
@@ -4330,6 +4330,30 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ items: [{ chapterId, title, status, images, placeholders, missingAlt, stepBlocks, stepBlocksWithImage, coverage }], summary }' }
+  /image-archive/coverage-matrix:
+    get:
+      operationId: getImageCoverageMatrix
+      summary: 'Deckungsmatrix (F-30): Stelle (Reiter/Menüpunkt bzw. Kapitel) × Sprache/Rolle/Sparte – abgedeckt, nur Platzhalter, Lücke'
+      tags: [Medien]
+      x-requirements: [NFR-96]
+      x-extension: true
+      parameters: [{ name: rows, in: query, schema: { type: string, enum: [navigation, chapter], default: navigation } }, { name: dims, in: query, description: 'Kommagetrennt: language, role, division', schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ rowsBy, dims, languages, columns: [{ key, label }], rows: [{ key, label, images, cells: [{ key, count, placeholders, images }], gaps, placeholderOnly, unassigned }], summary }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /image-archive/coverage-matrix/export:
+    get:
+      operationId: exportImageCoverageMatrix
+      summary: 'Deckungsmatrix als Excel (farbig) oder CSV'
+      tags: [Medien]
+      x-requirements: [NFR-96]
+      x-extension: true
+      parameters: [{ name: rows, in: query, schema: { type: string, enum: [navigation, chapter], default: navigation } }, { name: dims, in: query, description: 'Kommagetrennt: language, role, division', schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [xlsx, csv], default: xlsx } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
   /image-archive/placeholders:
     post:
       operationId: createImagePlaceholder
@@ -4588,6 +4612,140 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ qaId, saved: { answer, sources, savedAt }, current, changes: { sourcesAdded, sourcesRemoved, sourcesKept, answerChanged, diff } }' }
         '404': { $ref: '#/components/responses/Problem' }
+  /metadata/surveys:
+    get:
+      operationId: listSurveys
+      summary: 'Expertenbefragungen (F-16) mit Zahl der Fragen, Antworten und Übernahmen'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, title, audience, origin, status, questions, answered, adopted, createdAt }]' }
+    post:
+      operationId: createSurvey
+      summary: 'Befragung anlegen: Fragen von Hand oder aus einem Fragenkatalog (ohne Aussage) bzw. Prüflauf (ohne Antwort); Antwortoptionen, Zielgruppe (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [title], properties: { title: { type: string }, audience: { type: string }, options: { type: array, items: { type: string } }, items: { type: array, items: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, context: { type: string }, options: { type: array, items: { type: string }, maxItems: 10 } } } }, from: { type: object, properties: { catalogId: { type: string }, evalRunId: { type: string } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Befragung mit Fragen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/surveys/{surveyId}:
+    get:
+      operationId: getSurvey
+      summary: 'Befragung mit Fragen, Optionen, Antworten und Status'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, title, audience, options, status, items: [{ id, position, question, context, options, choice, answerText, answeredBy, answeredAt, qaId, status }], summary }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: setSurveyStatus
+      summary: 'Befragung abschließen bzw. wieder öffnen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [status], properties: { status: { type: string, enum: [open, closed] } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Befragung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteSurvey
+      summary: 'Befragung mit Antworten löschen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/surveys/{surveyId}/items:
+    post:
+      operationId: addSurveyItem
+      summary: 'Frage ergänzen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, context: { type: string }, options: { type: array, items: { type: string }, maxItems: 10 } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Befragung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/surveys/{surveyId}/export:
+    get:
+      operationId: exportSurvey
+      summary: 'Befragung als Excel (Auswahlliste je Frage) oder CSV für Fachleute ohne App-Zugang'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [xlsx, csv], default: xlsx } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/surveys/{surveyId}/answers:
+    post:
+      operationId: importSurveyAnswers
+      summary: 'Ausgefüllte Excel- oder CSV-Datei einlesen: Zuordnung über ID bzw. Nr., Option geprüft (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ updated, skipped, errors: [{ row, message }], survey }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/survey-items/{itemId}/answer:
+    put:
+      operationId: answerSurveyItem
+      summary: 'Antwort einer Fachperson: Option und/oder Freitext; leer setzt zurück (Berechtigung read)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { choice: { type: [string, 'null'] }, text: { type: [string, 'null'] } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Frage mit Antwort' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/survey-items/{itemId}/qa:
+    post:
+      operationId: adoptSurveyItem
+      summary: 'Antwort als Frage & Antwort übernehmen – mit Label „Prüfen“, ohne Quellenbeleg (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { labelIds: { type: array, items: { type: string } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Frage & Antwort' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
   /metadata/eval-sets:
     get:
       operationId: listEvalSets

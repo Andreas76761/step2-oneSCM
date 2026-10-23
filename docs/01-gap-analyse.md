@@ -186,6 +186,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Prüfläufe mit Trefferquote, MRR, Beleg, Lücken richtig, Vergleich und Export (NFR-93) | ✅ ([ADR-091](adr/ADR-091-antwortqualitaet.md)) |
 | Offen | Plan M1–M7 abgeschlossen; Testfragen aus Wissens-Check und Lückenanalyse (D-08) einlesen und erste Prüfläufe mit echten Quellen; lokale Werkzeuge im Betrieb einrichten |
 
+## 1.42 Stand nach Etappe 40 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Punktmodell Muss/Soll im Anleitungs-Check, „alle Muss-Punkte“ als Freigabebedingung (F-08, NFR-94) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
+| Expertenbefragung zu Wissenslücken mit Excel hin und zurück, Übernahme mit Label „Prüfen“ (F-16, NFR-95) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
+| Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
+| Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
+
 ## 1.38 Stand nach Etappe 36 (23.10.2026)
 
 | Punkt | Ergebnis |

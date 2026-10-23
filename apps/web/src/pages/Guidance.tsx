@@ -104,6 +104,9 @@ export function GuidancePanel({ versionId, canEdit, onChanged }: { versionId: st
       <div className="guide-head">
         <ScoreMeter score={d.score} />
         <p className="small">{d.passed} von {d.total} Punkten erfüllt{!d.editable && ' · freigegebene oder eingereichte Versionen sind schreibgeschützt'}</p>
+        <p className="small" role="status">
+          Punktmodell: <strong>{d.points.achieved} von {d.points.possible} Punkten</strong> · {d.mustPassed ? <span className="tag">alle Muss-Punkte erfüllt</span> : <span className="tag sev-high">{d.mustOpen.length} Muss-{d.mustOpen.length === 1 ? 'Punkt' : 'Punkte'} offen</span>}
+        </p>
         {editable && oneFixPerBlock.length > 0 && (
           <button className="btn primary" disabled={busy} onClick={() => void applyAll()}>Alle Korrekturen übernehmen ({allFixesRounds})</button>
         )}
@@ -117,7 +120,7 @@ export function GuidancePanel({ versionId, canEdit, onChanged }: { versionId: st
               <div className="guide-row">
                 <span className={`guide-icon ${c.status}`} aria-hidden="true">{st.icon}</span>
                 <div className="guide-text">
-                  <strong>{c.label}</strong> <span className="sr-only">({st.label})</span>
+                  <strong>{c.label}</strong> <span className="sr-only">({st.label})</span> <span className={`tag small${c.level === 'must' ? ' must' : ''}`}>{c.level === 'must' ? 'Muss' : 'Soll'} · {c.points}/{c.maxPoints}</span>
                   <div className="small">{c.message}</div>
                 </div>
                 {c.status !== 'ok' && (
@@ -183,7 +186,10 @@ export function GuidancePage() {
                   <tr key={c.chapterId}>
                     <td>{c.title}<div className="small muted">Version {c.versionNo}</div></td>
                     <td><strong>{c.score}</strong> <span className="small muted">({c.passed}/{c.total})</span></td>
-                    <td>{c.open.length ? c.open.map((o: any) => <span key={o.code} className={`tag guide-tag ${o.status}`}>{o.status === 'warning' ? '! ' : 'i '}{o.label}</span>) : <span className="small">✓ alles erfüllt</span>}</td>
+                    <td>
+                      {c.open.length ? c.open.map((o: any) => <span key={o.code} className={`tag guide-tag ${o.status}`}>{o.status === 'warning' ? '! ' : 'i '}{o.level === 'must' ? 'Muss: ' : ''}{o.label}</span>) : <span className="small">✓ alles erfüllt</span>}
+                      <div className="small muted">{c.points.achieved}/{c.points.possible} Punkte{c.mustPassed ? '' : ' · Muss-Punkte offen'}</div>
+                    </td>
                     <td>{fbByChapter.get(c.chapterId) ? (() => { const f = fbByChapter.get(c.chapterId)!; return <span className="small" aria-label={`${f.helpful} hilfreich, ${f.notHelpful} nicht hilfreich, ${f.open} offen`}>👍 {f.helpful} · 👎 {f.notHelpful}{f.open ? ` · ${f.open} offen` : ''}</span>; })() : <span className="small muted">–</span>}</td>
                     <td><Link className="btn small" to={`/anleitungs-check/${c.versionId}`} aria-label={`${c.title} prüfen`}>Prüfen</Link></td>
                   </tr>
@@ -225,7 +231,44 @@ function GateSettings({ canAdmin }: { canAdmin: boolean }) {
           {value && ![60, 70, 80, 90, 100].includes(Number(value)) && <option value={value}>{value} von 100</option>}
         </select>
       </label>
-      {!canAdmin && <p className="small muted">Nur die Administration kann den Mindestwert ändern.</p>}
+      <h3 className="small">Punktmodell Muss/Soll</h3>
+      <p className="small">Muss-Punkte bringen 10, Soll-Punkte 5 Punkte. Mit „alle Muss-Punkte“ lassen sich Kapitel erst einreichen und freigeben, wenn kein Muss-Punkt offen ist.</p>
+      <label className="small"><input type="checkbox" disabled={!canAdmin} checked={s.data.requireMust} onChange={async (e) => {
+        const v = e.target.checked;
+        try {
+          await put('/guidance/settings', { requireMust: v });
+          notify(v ? 'Alle Muss-Punkte sind jetzt Bedingung für Einreichen und Freigabe.' : 'Muss-Punkte sind keine Freigabebedingung mehr.');
+          s.reload();
+        } catch (err) {
+          notify(errorText(err), 'error');
+        }
+      }} /> Alle Muss-Punkte als Bedingung für Einreichen und Freigabe</label>
+      <table className="table compact" aria-label="Muss- und Soll-Punkte">
+        <thead><tr><th>Prüfpunkt</th><th>Stufe</th></tr></thead>
+        <tbody>
+          {s.data.checks.map((c: any) => (
+            <tr key={c.code}>
+              <td>{c.label}</td>
+              <td>
+                <select aria-label={`Stufe für ${c.label}`} disabled={!canAdmin} value={c.level} onChange={async (e) => {
+                  const v = e.target.value;
+                  try {
+                    await put('/guidance/settings', { levels: { [c.code]: v } });
+                    s.reload();
+                  } catch (err) {
+                    notify(errorText(err), 'error');
+                  }
+                }}>
+                  <option value="must">Muss</option>
+                  <option value="should">Soll</option>
+                </select>
+                {c.level !== c.defaultLevel && <span className="small muted"> (Standard: {c.defaultLevel === 'must' ? 'Muss' : 'Soll'})</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {!canAdmin && <p className="small muted">Nur die Administration kann den Mindestwert und das Punktmodell ändern.</p>}
     </Card>
   );
 }
@@ -237,12 +280,12 @@ export function GuidanceSummaryLine({ versionId }: { versionId: string }) {
   if (!g.data) return null;
   const warnings = g.data.checks.filter((c: any) => c.status === 'warning');
   const min = s.data?.minScore ?? null;
-  const below = min !== null && g.data.score < min;
+  const below = (min !== null && g.data.score < min) || (!!s.data?.requireMust && !g.data.mustPassed);
   return (
     <div className={`guide-summary${below ? ' below' : ''}`} role="note">
-      <strong>Anleitungs-Check: {g.data.score} von 100</strong> <span className="small">({scoreLabel(g.data.score)}{min !== null ? ` · Freigabe ab ${min}` : ''})</span>
+      <strong>Anleitungs-Check: {g.data.score} von 100</strong> <span className="small">({scoreLabel(g.data.score)}{min !== null ? ` · Freigabe ab ${min}` : ''} · {g.data.points.achieved}/{g.data.points.possible} Punkte{g.data.mustPassed ? '' : `, ${g.data.mustOpen.length} Muss-Punkte offen`})</span>
       {warnings.length > 0 && <div className="small">! {warnings.map((c: any) => c.openLabel).join(' · ')}</div>}
-      {below && <div className="small"><strong>Unter dem Mindestwert – Einreichen und Freigabe sind gesperrt.</strong></div>}
+      {below && <div className="small"><strong>{min !== null && g.data.score < min ? 'Unter dem Mindestwert' : 'Muss-Punkte offen'} – Einreichen und Freigabe sind gesperrt.</strong></div>}
       <Link className="small" to={`/anleitungs-check/${versionId}`}>Checkliste öffnen →</Link>
     </div>
   );

@@ -14,6 +14,9 @@ import { decideDuplicate, duplicateGroups, getDuplicate, listDuplicates, refresh
 import { headingDocuments, headingTree, mergedHeadings } from '../services/metadataHeadings.js';
 import { toolStatus } from '../services/mediaTools.js';
 import {
+  addSurveyItem, adoptSurveyItem, answerSurveyItem, createSurvey, deleteSurvey, exportSurvey, getSurvey, importSurveyAnswers, listSurveys, setSurveyStatus,
+} from '../services/metadataSurveys.js';
+import {
   addEvalItem, createEvalSet, deleteEvalItem, deleteEvalSet, exportEvalRun, getEvalRun, getEvalSet, importEvalSet, listEvalSets, runEval, updateEvalItem,
 } from '../services/metadataQuality.js';
 import { list, num, userOf } from './helpers.js';
@@ -90,6 +93,44 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
     const f = await exportQa(req.ctx, req.query.format ?? 'csv', { q: req.query.q, labelIds: list(req.query.labels), language: req.query.language || undefined });
     reply.header('Content-Type', f.contentType).header('Content-Disposition', `attachment; filename="${f.fileName}"`);
     return f.data;
+  });
+  // Expertenbefragung zu Wissenslücken (ADR-092, F-16): antworten mit Recht „Lesen“, übernehmen mit „Bearbeiten“
+  app.get('/metadata/surveys', async (req) => (userOf(req.ctx, req), listSurveys(req.ctx)));
+  app.post<{ Body: any }>('/metadata/surveys', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    return createSurvey(req.ctx, req.body ?? {}, user);
+  });
+  app.get<P<'surveyId'>>('/metadata/surveys/:surveyId', async (req) => (userOf(req.ctx, req), getSurvey(req.ctx, req.params.surveyId)));
+  app.patch<P<'surveyId'> & { Body: any }>('/metadata/surveys/:surveyId', async (req) => setSurveyStatus(req.ctx, req.params.surveyId, (req.body as any)?.status, userOf(req.ctx, req, 'edit')));
+  app.delete<P<'surveyId'>>('/metadata/surveys/:surveyId', async (req, reply) => {
+    await deleteSurvey(req.ctx, req.params.surveyId, userOf(req.ctx, req, 'edit'));
+    reply.code(204);
+  });
+  app.post<P<'surveyId'> & { Body: any }>('/metadata/surveys/:surveyId/items', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    return addSurveyItem(req.ctx, req.params.surveyId, req.body ?? {}, user);
+  });
+  app.get<P<'surveyId'> & { Querystring: { format?: string } }>('/metadata/surveys/:surveyId/export', async (req, reply) => {
+    userOf(req.ctx, req);
+    const f = await exportSurvey(req.ctx, req.params.surveyId, req.query.format ?? 'xlsx');
+    reply.header('Content-Type', f.contentType).header('Content-Disposition', `attachment; filename="${encodeURIComponent(f.fileName)}"`);
+    return f.data;
+  });
+  app.post<P<'surveyId'>>('/metadata/surveys/:surveyId/answers', async (req) => {
+    const user = userOf(req.ctx, req, 'edit');
+    const file = req.isMultipart() ? await req.file() : undefined;
+    if (!file) throw badRequest('Feld „file“ (ausgefüllte Excel- oder CSV-Datei) fehlt.');
+    const data = await file.toBuffer();
+    if (data.length > 10 * 1024 * 1024) throw badRequest('Datei größer als 10 MB.');
+    return importSurveyAnswers(req.ctx, req.params.surveyId, { fileName: file.filename, data }, user);
+  });
+  app.put<P<'itemId'> & { Body: any }>('/metadata/survey-items/:itemId/answer', async (req) => answerSurveyItem(req.ctx, req.params.itemId, req.body ?? {}, userOf(req.ctx, req)));
+  app.post<P<'itemId'> & { Body: any }>('/metadata/survey-items/:itemId/qa', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    return adoptSurveyItem(req.ctx, req.params.itemId, req.body ?? {}, user);
   });
   // Antwortqualität (ADR-091): Testfragensätze, Prüfläufe mit Kennzahlen, Vergleich, Export
   app.get('/metadata/eval-sets', async (req) => (userOf(req.ctx, req), listEvalSets(req.ctx)));

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.40.0 – Etappe 40 (23.10.2026)
+
+### Hinzugefügt
+- **Punktmodell Muss/Soll im Anleitungs-Check (ADR-092, F-08):** jeder Prüfpunkt ist Muss (10 Punkte) oder Soll (5 Punkte), je Projekt umstellbar; „alle Muss-Punkte erfüllt“ wahlweise als Bedingung für Einreichen und Freigabe; Punkte und offene Muss-Punkte in Checkliste, Übersicht und Freigabe.
+- **Expertenbefragung zu Wissenslücken (F-16):** Fragen ohne Aussage aus Rückfragen oder Prüfläufen an Fachleute – Antwort per Option und Freitext in der App oder per Excel-Datei; Übernahme als Frage & Antwort mit Label „Prüfen“.
+- **Deckungsmatrix der Bilder (F-30):** Reiter/Menüpunkt bzw. Kapitel × Sprache/Rolle/Sparte im Bildarchiv – abgedeckt, nur Platzhalter, Lücke; Export als Excel oder CSV.
+- Migration `047_points_surveys.sql`; Tests T-279 … T-282, E2E T-283 (axe); Anforderungen NFR-94 … NFR-96.
+
 ## 0.39.0 – Etappe 39 (23.10.2026)
 
 ### Hinzugefügt

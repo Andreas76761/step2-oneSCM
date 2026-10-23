@@ -62,6 +62,7 @@ const OutlineSourcesPage = lazy(() => import('./pages/Knowledge').then((m) => ({
 const KnowledgeNotesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.KnowledgeNotesPage })));
 const QuestionCatalogPage = lazy(() => import('./pages/QuestionCatalog').then((m) => ({ default: m.QuestionCatalogPage })));
 const AnswerQualityPage = lazy(() => import('./pages/AnswerQuality').then((m) => ({ default: m.AnswerQualityPage })));
+const SurveysPage = lazy(() => import('./pages/Surveys').then((m) => ({ default: m.SurveysPage })));
 const MetaDuplicatesPage = lazy(() => import('./pages/MetaDuplicates').then((m) => ({ default: m.MetaDuplicatesPage })));
 const HeadingsPage = lazy(() => import('./pages/Headings').then((m) => ({ default: m.HeadingsPage })));
 const IngestPage = lazy(() => import('./pages/Ingest').then((m) => ({ default: m.IngestPage })));
@@ -83,6 +84,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/metadaten/fragen', label: 'Fragen & Antworten', icon: '💡' },
     { to: '/metadaten/rueckfragen', label: 'Rückfragen', icon: '❓' },
     { to: '/metadaten/qualitaet', label: 'Antwortqualität', icon: '🎯' },
+    { to: '/metadaten/befragung', label: 'Expertenbefragung', icon: '🧑‍🏫' },
     { to: '/metadaten/zugriffsmatrix', label: 'Zugriffsmatrix', icon: '🔐' },
     { to: '/metadaten/zuordnung', label: 'Zuordnung', icon: '🧩' },
     { to: '/metadaten/labels', label: 'Labels', icon: '🏷' },
@@ -430,6 +432,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/metadaten/dubletten" element={<MetaDuplicatesPage />} />
             <Route path="/metadaten/rueckfragen" element={<QuestionCatalogPage />} />
             <Route path="/metadaten/qualitaet" element={<AnswerQualityPage />} />
+            <Route path="/metadaten/befragung" element={<SurveysPage />} />
             <Route path="/release-abgleich" element={<TicketReleasesPage />} />
             <Route path="/releaseletter" element={<ReleaseLettersPage />} />
             <Route path="/metadaten/labels" element={<MetadataLabelsPage />} />

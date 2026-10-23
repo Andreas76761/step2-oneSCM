@@ -8,7 +8,7 @@ import { badRequest } from '../problem.js';
 import { getChapterVersion, insertBlock, normalizePositions } from './chapters.js';
 import { assertIdsInProject } from './projects.js';
 import { applyChapterTexts } from './style.js';
-import { knownAcronyms, SKIP_SECTIONS } from './guidanceBase.js';
+import { getGuidanceSettings, knownAcronyms, SKIP_SECTIONS } from './guidanceBase.js';
 
 const SECTION_TITLE = new Map<string, string>(CHAPTER_SECTIONS.map((s) => [s.code, s.title]));
 
@@ -18,7 +18,7 @@ export async function chapterGuidance(ctx: Ctx, versionId: string) {
   const blocks: GuidanceBlock[] = v.sections.filter((s) => !SKIP_SECTIONS.has(s.code)).flatMap((s) => s.blocks.map((b: any) => ({
     id: b.id as string, section: s.code, kind: b.kind as string, text: b.text as string, versionNo: b.versionNo as number, locked: b.mode === 'locked',
   })));
-  const a = analyzeGuidance(blocks, { knownAcronyms: await knownAcronyms(ctx) });
+  const a = analyzeGuidance(blocks, { knownAcronyms: await knownAcronyms(ctx), levels: (await getGuidanceSettings(ctx)).levels });
   const where = new Map(blocks.map((b) => [b.id, SECTION_TITLE.get(b.section) ?? b.section]));
   return {
     versionId: v.id, chapterId: v.chapterId, title: v.title, versionNo: v.versionNo, status: v.status, editable: v.status === 'draft',
@@ -41,13 +41,15 @@ export async function guidanceSummary(ctx: Ctx) {
      WHERE c.project_id = ? AND c.outline_family_id IS NULL AND v.version_no = (SELECT MAX(x.version_no) FROM generated_chapter_versions x WHERE x.chapter_id = c.id)`, ctx.projectId,
   );
   const known = await knownAcronyms(ctx);
+  const { levels } = await getGuidanceSettings(ctx);
   const out = [];
   for (const v of versions) {
     const rows = await ctx.db.all('SELECT id, section_code, kind, text, version_no, mode FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NULL ORDER BY position', v.version_id);
-    const a = analyzeGuidance(rows.filter((b) => !SKIP_SECTIONS.has(b.section_code)).map((b) => ({ id: b.id, section: b.section_code, kind: b.kind, text: b.text, versionNo: b.version_no, locked: b.mode === 'locked' })), { knownAcronyms: known });
+    const a = analyzeGuidance(rows.filter((b) => !SKIP_SECTIONS.has(b.section_code)).map((b) => ({ id: b.id, section: b.section_code, kind: b.kind, text: b.text, versionNo: b.version_no, locked: b.mode === 'locked' })), { knownAcronyms: known, levels });
     out.push({
       chapterId: v.chapter_id as string, title: v.title as string, versionId: v.version_id as string, versionNo: Number(v.version_no), status: v.status as string,
-      score: a.score, passed: a.passed, total: a.total, fixable: a.fixable, open: a.checks.filter((c) => c.status !== 'ok').map((c) => ({ code: c.code, label: GUIDANCE_OPEN_LABEL[c.code], status: c.status })),
+      score: a.score, passed: a.passed, total: a.total, fixable: a.fixable, open: a.checks.filter((c) => c.status !== 'ok').map((c) => ({ code: c.code, label: GUIDANCE_OPEN_LABEL[c.code], status: c.status, level: c.level })),
+      points: a.points, mustPassed: a.mustPassed,
     });
   }
   out.sort((x, y) => x.score - y.score || x.title.localeCompare(y.title));

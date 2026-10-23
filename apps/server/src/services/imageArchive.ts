@@ -1,8 +1,10 @@
 // Bildarchiv (ADR-085, F-20, F-21): je Bild eine feste Bildnummer (B-0001 …), Merkmale (Sprache, Rollen, Sparten, Märkte,
 // Release, Reiter), Versionen – eine neue Fassung ersetzt das Bild überall, das Original bleibt abrufbar – und
 // Platzhalterbilder mit reservierter Nummer. Prüfregeln je Bild und Bildabdeckung je Kapitel.
+import ExcelJS from 'exceljs';
 import { audit, type Ctx, type User } from '../context.js';
 import { json, now, parseJson, type Row } from '../db.js';
+import { coverageMatrix, MATRIX_DIMS, type MatrixDim, type MatrixImage } from '../domain/imageMatrix.js';
 import { imageRefs } from '../domain/media.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { storeMedia } from './media.js';
@@ -270,4 +272,51 @@ export async function suggestImageOutline(ctx: Ctx, images: { sha: string; slide
     );
     await ctx.db.run("UPDATE media_assets SET title = ? WHERE project_id = ? AND sha256 = ? AND (title IS NULL OR title = '')", im.title.slice(0, 300), ctx.projectId, im.sha);
   }
+}
+
+/**
+ * Deckungsmatrix (ADR-092, F-30): Stellen × Sprache/Rolle/Sparte. Stelle = Reiter/Menüpunkt des Bildes (Navigations-
+ * Label) bzw. Kapitel, in dem es verwendet wird. Sprachen aus dem Projekt, sonst aus den Bildern (mindestens de).
+ */
+export async function imageCoverageMatrix(ctx: Ctx, opts: { rows?: string; dims?: string[] } = {}) {
+  const by = opts.rows === 'chapter' ? 'chapter' : 'navigation';
+  const dims = (opts.dims?.length ? opts.dims : MATRIX_DIMS).filter((d): d is MatrixDim => (MATRIX_DIMS as string[]).includes(d));
+  if (!dims.length) throw badRequest(`dims: eine oder mehrere aus ${MATRIX_DIMS.join(', ')}.`);
+  const { items } = await listImageArchive(ctx);
+  const project = await ctx.db.get('SELECT languages FROM projects WHERE id = ?', ctx.projectId);
+  const projectLangs = parseJson<string[]>(project?.languages, []);
+  const languages = projectLangs.length ? projectLangs : [...new Set(['de', ...items.map((i) => i.language).filter((l): l is string => !!l)])].sort();
+  if (dims.includes('language') && dims.length === 3 && languages.length > 6) throw badRequest('Zu viele Spalten – bitte weniger Merkmale wählen.');
+  const images: MatrixImage[] = items.map((i) => ({
+    imageNo: i.imageNo, title: i.title, language: i.language, roles: i.roles, divisions: i.divisions, placeholder: i.placeholder,
+    places: by === 'navigation'
+      ? [i.navigation ? { key: i.navigation.id, label: i.navigation.nameDe } : { key: '-', label: '(ohne Reiter)' }]
+      : i.usedIn.length ? i.usedIn.map((c: any) => ({ key: c.chapterId, label: c.title })) : [{ key: '-', label: '(in keinem Kapitel)' }],
+  }));
+  return { rowsBy: by, ...coverageMatrix(images, dims, languages) };
+}
+
+export async function exportCoverageMatrix(ctx: Ctx, format: string, opts: Parameters<typeof imageCoverageMatrix>[1]) {
+  if (!['csv', 'xlsx'].includes(format)) throw badRequest('format muss csv oder xlsx sein.');
+  const m = await imageCoverageMatrix(ctx, opts);
+  const header = [m.rowsBy === 'chapter' ? 'Kapitel' : 'Reiter/Menüpunkt', 'Bilder', 'Lücken', ...m.columns.map((c) => c.label)];
+  const cell = (c: (typeof m.rows)[number]['cells'][number]) => (c.count ? c.images.join(', ') : c.placeholders ? `Platzhalter: ${c.images.join(', ')}` : '–');
+  const rows = m.rows.map((r) => [r.label, String(r.images), String(r.gaps), ...r.cells.map(cell)]);
+  const date = now().slice(0, 10);
+  if (format === 'csv') {
+    const esc = (v: string) => `"${(/^[=+\-@\t\r]/.test(v) ? `'${v}` : v).replace(/"/g, '""')}"`;
+    return { fileName: `deckungsmatrix-${date}.csv`, contentType: 'text/csv; charset=utf-8', data: Buffer.from(`﻿${[header.map(esc).join(';'), ...rows.map((r) => r.map(esc).join(';'))].join('\r\n')}`, 'utf8') };
+  }
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Deckungsmatrix');
+  ws.addRow(header).font = { bold: true };
+  for (const r of m.rows) {
+    const row = ws.addRow([r.label, r.images, r.gaps, ...r.cells.map(cell)]);
+    r.cells.forEach((c, i) => {
+      // Lücke rot, nur Platzhalter gelb, abgedeckt grün
+      row.getCell(4 + i).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: c.count ? 'FFD9F2D9' : c.placeholders ? 'FFFFF2CC' : 'FFF8D7DA' } };
+    });
+  }
+  ws.columns.forEach((c, i) => (c.width = i === 0 ? 36 : i < 3 ? 8 : 16));
+  return { fileName: `deckungsmatrix-${date}.xlsx`, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', data: Buffer.from(await wb.xlsx.writeBuffer()) };
 }

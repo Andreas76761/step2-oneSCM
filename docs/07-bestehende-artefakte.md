@@ -80,7 +80,7 @@ Status gegenüber der App: **neu** = gibt es nicht, **teilweise** = Ansatz vorha
 | F-05 | **Update-Eingang:** geänderte Quelle → Absatz-Diff (ersetzen, ergänzen, löschen) im Posteingang | DokuPress | teilweise | M | übernehmen – größte Lücke laut DokuPress-Audit | |
 | F-06 | Zugriffsstufe je Rolle und Menüpunkt (V/L/–) als Matrix | V4 | teilweise | M | übernehmen (mit D-02) | |
 | F-07 | Warnhinweis-Schema (Signalwort + Gefahr + Folge + Vermeidung) als Prüfregel, feste Signalwörter je Sprache | Checkliste | neu | S | übernehmen | |
-| F-08 | Punktmodell Muss/Soll im Anleitungs-Check | Checkliste | teilweise | S | optional | |
+| F-08 | Punktmodell Muss/Soll im Anleitungs-Check | Checkliste | teilweise | S | optional | umgesetzt in Etappe 40 (ADR-092) |
 | F-09 | Platzhalter- und Strukturvergleich bei Übersetzungen | Checkliste | teilweise | S | übernehmen | |
 | F-10 | Vier Prüferprofile (fachlich, Redaktion, Compliance, Endanwender) mit lokalem Modell | Ticket-Cockpit | teilweise | M | optional | |
 | F-11 | Lokale Grammatikprüfung (LanguageTool, selbst betrieben) | DokuPress-Konzept | neu | M | optional | |
@@ -93,7 +93,7 @@ Status gegenüber der App: **neu** = gibt es nicht, **teilweise** = Ansatz vorha
 | F-13 | Automatischer Gliederungs-Vorschlag je Chunk mit Trefferwert (nie automatisch bestätigt) | Struktur und Klickstrecke | geplant (Label-Agent) | M | übernehmen in M3 | |
 | F-14 | Handbuch ↔ Quellen zweispaltig je Kapitel | V4, Wissenssuche | geplant (M3) | S | in M3 | |
 | F-15 | Wissensnotizen (Frage, Erkenntnis, Screenshot) als eigene Quelle | Wissenssuche | neu | M | übernehmen | |
-| F-16 | Expertenbefragung zu Wissenslücken (Optionen + Freitext → Antwort mit Label „Prüfen“) | Wissens-Check | teilweise | M | optional | |
+| F-16 | Expertenbefragung zu Wissenslücken (Optionen + Freitext → Antwort mit Label „Prüfen“) | Wissens-Check | teilweise | M | optional | umgesetzt in Etappe 40 (ADR-092) |
 | F-17 | Ausschlussliste „nicht einlesen“ für den Eingangsordner | Wissenssuche | neu | S | übernehmen in M2 | |
 | F-18 | Zielkapitel je Dopplung („zusammenführen in Kapitel X“) | V4 | teilweise | S | übernehmen in M4 | |
 | F-19 | Textbausteine (Single Sourcing) für wiederkehrende Absätze | V4 | teilweise | L | später | |
@@ -112,7 +112,7 @@ Status gegenüber der App: **neu** = gibt es nicht, **teilweise** = Ansatz vorha
 | F-27 | Ausgabe „Quick Guide“ und „One Pager“ je Variante | Struktur, Screenarchiv | teilweise | M | übernehmen | |
 | F-28 | Lesefassung ohne Quellenbezüge; Wasserzeichen „Entwurf“ im Druck | V4, DokuPress | teilweise | S | übernehmen | |
 | F-29 | Klickstrecke/Übergangskapitel im Lesen („weiter zu Kapitel …“) | Struktur und Klickstrecke | neu | S | übernehmen | |
-| F-30 | Deckungsmatrix Stelle × Sprache/Rolle/Sparte | Screenarchiv | teilweise | M | optional | |
+| F-30 | Deckungsmatrix Stelle × Sprache/Rolle/Sparte | Screenarchiv | teilweise | M | optional | umgesetzt in Etappe 40 (ADR-092) |
 | F-31 | Translation Memory | DokuPress-Audit | neu | L | später | |
 
 ## 7.5 Nicht übernehmen

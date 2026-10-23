@@ -1948,5 +1948,53 @@
       "NFR-92",
       "NFR-93"
     ]
+  },
+  {
+    "id": "T-279",
+    "title": "Punktmodell Muss/Soll (F-08) und Deckungsmatrix Stelle × Sprache/Rolle/Sparte (F-30) (Einheit)",
+    "file": "apps/server/test/stage40.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-94",
+      "NFR-96"
+    ]
+  },
+  {
+    "id": "T-280",
+    "title": "Muss/Soll je Projekt einstellbar, „alle Muss-Punkte“ als Freigabebedingung, Punkte in der Übersicht",
+    "file": "apps/server/test/stage40.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-94"
+    ]
+  },
+  {
+    "id": "T-281",
+    "title": "Deckungsmatrix über die API: Reiter bzw. Kapitel × Sprache/Rolle/Sparte, Platzhalter, Lücken, Export",
+    "file": "apps/server/test/stage40.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-96"
+    ]
+  },
+  {
+    "id": "T-282",
+    "title": "Expertenbefragung zu Wissenslücken (F-16): aus Fragenkatalog und Prüflauf, antworten mit Option und Freitext, Excel hin und zurück, Übernahme mit Label „Prüfen“",
+    "file": "apps/server/test/stage40.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-95"
+    ]
+  },
+  {
+    "id": "T-283",
+    "title": "Expertenbefragung beantworten und übernehmen, Punktmodell Muss/Soll im Anleitungs-Check, Deckungsmatrix im Bildarchiv",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-94",
+      "NFR-95",
+      "NFR-96"
+    ]
   }
 ]

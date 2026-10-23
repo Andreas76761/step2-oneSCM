@@ -2,7 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import { audit, getSettings, type Ctx } from '../context.js';
 import { badRequest, Problem } from '../problem.js';
-import { addImageVersion, createPlaceholder, imageCoverage, listImageArchive, updateImageMeta } from '../services/imageArchive.js';
+import { addImageVersion, createPlaceholder, exportCoverageMatrix, imageCoverage, imageCoverageMatrix, listImageArchive, updateImageMeta } from '../services/imageArchive.js';
 import { userOf } from './helpers.js';
 
 type P = { Params: { mediaSha: string } };
@@ -10,6 +10,14 @@ type P = { Params: { mediaSha: string } };
 export function imageRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Querystring: { q?: string } }>('/image-archive', async (req) => (userOf(req.ctx, req), listImageArchive(req.ctx, { q: req.query.q })));
   app.get('/image-archive/coverage', async (req) => (userOf(req.ctx, req), imageCoverage(req.ctx)));
+  // Deckungsmatrix (ADR-092, F-30): Stelle × Sprache/Rolle/Sparte
+  app.get<{ Querystring: { rows?: string; dims?: string } }>('/image-archive/coverage-matrix', async (req) => (userOf(req.ctx, req), imageCoverageMatrix(req.ctx, { rows: req.query.rows, dims: req.query.dims?.split(',').filter(Boolean) })));
+  app.get<{ Querystring: { rows?: string; dims?: string; format?: string } }>('/image-archive/coverage-matrix/export', async (req, reply) => {
+    userOf(req.ctx, req);
+    const f = await exportCoverageMatrix(req.ctx, req.query.format ?? 'xlsx', { rows: req.query.rows, dims: req.query.dims?.split(',').filter(Boolean) });
+    reply.header('Content-Type', f.contentType).header('Content-Disposition', `attachment; filename="${f.fileName}"`);
+    return f.data;
+  });
   app.patch<P & { Body: any }>('/image-archive/:mediaSha', async (req) => updateImageMeta(req.ctx, req.params.mediaSha, req.body ?? {}, userOf(req.ctx, req, 'edit')));
   app.post<{ Body: any }>('/image-archive/placeholders', async (req, reply) => {
     const user = userOf(req.ctx, req, 'edit');

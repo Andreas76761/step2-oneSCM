@@ -2370,3 +2370,47 @@ test('[T-278] Antwortqualität: Testfragen einlesen, Prüflauf mit Kennzahlen, n
   await expect(page.getByRole('table', { name: 'Testfragen' })).toContainText('E2E Was ist eine Lückenfrage auf dem Jupiter?');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-283] Expertenbefragung beantworten und übernehmen, Punktmodell Muss/Soll im Anleitungs-Check, Deckungsmatrix im Bildarchiv', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // Expertenbefragung: anlegen, Frage ergänzen, beantworten, übernehmen
+  await nav.getByRole('link', { name: 'Expertenbefragung', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Expertenbefragung' })).toBeVisible();
+  await page.getByLabel('Titel', { exact: true }).fill('E2E Lücken Zoll');
+  await page.getByLabel('Zielgruppe (Fachbereich oder Rolle)').fill('Fachbereich Zoll');
+  await page.getByRole('button', { name: 'Befragung anlegen' }).click();
+  await expect(page.getByText('Befragung „E2E Lücken Zoll“ mit 0 Fragen angelegt.')).toBeVisible();
+  await page.getByLabel('Frage ergänzen').fill('E2E Welche Zollvorschriften gelten in Brasilien?');
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  const q = page.getByRole('article', { name: 'Frage 1' });
+  await expect(q).toContainText('E2E Welche Zollvorschriften gelten in Brasilien?');
+  await q.getByLabel('Teilweise').check();
+  await q.getByLabel('Freitext (Erläuterung, Quelle, Ansprechstelle)').fill('E2E Es gelten die Einfuhrregeln des Landes.');
+  await q.getByRole('button', { name: 'Antwort speichern' }).click();
+  await expect(q.getByText('beantwortet', { exact: true })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await q.getByRole('button', { name: 'Als Frage & Antwort übernehmen' }).click();
+  await expect(page.getByText('Als Frage & Antwort mit Label „Prüfen“ übernommen.')).toBeVisible();
+  await expect(q.getByText('übernommen', { exact: true })).toBeVisible();
+
+  // Punktmodell: Stufen je Prüfpunkt sichtbar (nur ansehen – Einstellungen bleiben unverändert)
+  await nav.getByRole('link', { name: 'Anleitungs-Check', exact: true }).click();
+  const levels = page.getByRole('table', { name: 'Muss- und Soll-Punkte' });
+  await expect(levels.getByLabel('Stufe für Zweck beschrieben')).toHaveValue('must');
+  await expect(levels.getByLabel('Stufe für Ergebnis beschrieben')).toHaveValue('should');
+  await expect(page.getByLabel('Alle Muss-Punkte als Bedingung für Einreichen und Freigabe')).not.toBeChecked();
+  expect(await axe()).toEqual([]);
+
+  // Deckungsmatrix
+  await nav.getByRole('link', { name: 'Bildarchiv', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Deckungsmatrix' })).toBeVisible();
+  await page.getByLabel('je Rolle').check();
+  await expect(page.getByRole('region', { name: 'Deckungsmatrix' }).or(page.getByText('Noch keine Bilder im Archiv.'))).toBeVisible();
+  expect(await axe()).toEqual([]);
+});

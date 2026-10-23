@@ -93,3 +93,4 @@
 | [ADR-089](ADR-089-fragen-alle-quellen.md) | Fragen über alle Quellen mit Belegen (hybride Suche, Top 20 → Top 6), erneut fragen, Export | akzeptiert, umgesetzt |
 | [ADR-090](ADR-090-video-untertitel-ocr.md) | Video, Untertitel (Zeitmarke je Absatz), Standbilder bei Änderung mit rotem Rahmen, Texterkennung gescannter PDF-Seiten – nur lokale Werkzeuge | akzeptiert, umgesetzt |
 | [ADR-091](ADR-091-antwortqualitaet.md) | Antwortqualität: Testfragen mit erwarteten Quellen, Prüfläufe mit Treffer@k, MRR, Beleg, Lückenfragen, Vergleich und Export | akzeptiert, umgesetzt |
+| [ADR-092](ADR-092-punktmodell-befragung-deckung.md) | Punktmodell Muss/Soll im Anleitungs-Check (F-08), Expertenbefragung zu Wissenslücken (F-16), Deckungsmatrix der Bilder (F-30) | akzeptiert, umgesetzt |

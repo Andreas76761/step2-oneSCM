@@ -234,6 +234,62 @@ export function ImageArchivePage() {
           </table>
         )}
       </Card>
+      <CoverageMatrix />
     </Page>
+  );
+}
+
+const DIM_LABEL: Record<string, string> = { language: 'Sprache', role: 'Rolle', division: 'Sparte' };
+// eindeutige Beschriftung neben dem Merkmalsfeld „Sprache“ des Bildes
+const DIM_CHOICE: Record<string, string> = { language: 'je Sprachfassung', role: 'je Rolle', division: 'je Sparte' };
+
+/** Deckungsmatrix (ADR-092, F-30): Stelle × Sprache/Rolle/Sparte – wo fehlt die passende Bildfassung? */
+function CoverageMatrix() {
+  const [rows, setRows] = useState('navigation');
+  const [dims, setDims] = useState<string[]>(['language', 'division']);
+  const query = `rows=${rows}&dims=${dims.join(',')}`;
+  const m = useLoad<any>(dims.length ? `/image-archive/coverage-matrix?${query}` : null, [query]);
+  const toggle = (d: string) => setDims((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]));
+  return (
+    <Card title="Deckungsmatrix" actions={dims.length > 0 && <span className="row-actions">
+      {(['xlsx', 'csv'] as const).map((f) => <DownloadButton key={f} className="btn small" href={`/api/v1/image-archive/coverage-matrix/export?${query}&format=${f}`} name={`deckungsmatrix.${f}`}>⬇ {f.toUpperCase()}</DownloadButton>)}
+    </span>}>
+      <div className="filters">
+        <label>Zeilen <select value={rows} onChange={(e) => setRows(e.target.value)}><option value="navigation">je Reiter/Menüpunkt</option><option value="chapter">je Kapitel</option></select></label>
+        <fieldset className="inline">
+          <legend className="small">Spalten</legend>
+          {Object.entries(DIM_LABEL).map(([d, l]) => <label key={d} className="small"><input type="checkbox" checked={dims.includes(d)} onChange={() => toggle(d)} /> {DIM_CHOICE[d]}</label>)}
+        </fieldset>
+      </div>
+      <ErrorBox error={m.error} />
+      {!dims.length ? <Empty>Wählen Sie mindestens ein Merkmal.</Empty> : !m.data ? null : !m.data.rows.length ? <Empty>Noch keine Bilder im Archiv.</Empty> : (
+        <>
+          <p className="small">
+            {m.data.summary.covered} von {m.data.summary.cells} Feldern abgedeckt ({m.data.summary.coverage} %) · <span className="tag sev-high">{m.data.summary.gaps} Lücken</span> · {m.data.summary.placeholderOnly} nur mit Platzhalter
+            {m.data.summary.unassigned > 0 && <> · {m.data.summary.unassigned} Bilder ohne Angabe zu {dims.map((d) => DIM_LABEL[d]).join('/')} (keiner Spalte zugeordnet)</>}
+          </p>
+          <div className="table-wrap" role="region" aria-label="Deckungsmatrix" tabIndex={0}>
+            <table className="table compact matrix">
+              <thead><tr><th>{rows === 'chapter' ? 'Kapitel' : 'Reiter/Menüpunkt'}</th><th>Bilder</th>{m.data.columns.map((c: any) => <th key={c.key}>{c.label}</th>)}</tr></thead>
+              <tbody>
+                {m.data.rows.map((r: any) => (
+                  <tr key={r.key}>
+                    <th scope="row">{r.label}</th>
+                    <td>{r.images}</td>
+                    {r.cells.map((c: any, i: number) => (
+                      <td key={c.key} className={c.count ? 'cov-ok' : c.placeholders ? 'cov-ph' : 'cov-gap'} title={c.images.join(', ')}>
+                        {c.count ? `✓ ${c.count}` : c.placeholders ? 'Platzhalter' : '–'}
+                        <span className="sr-only">{c.count ? ' abgedeckt' : c.placeholders ? ' nur Platzhalter' : ' Lücke'} – {m.data.columns[i].label}</span>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="small muted">Bilder für „alle“ Rollen bzw. Sparten decken jede Rolle bzw. Sparte ab. Merkmale pflegen Sie oben je Bild.</p>
+        </>
+      )}
+    </Card>
   );
 }

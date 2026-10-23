@@ -7,7 +7,7 @@ import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, ROLE
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { assertIdsInProject } from './projects.js';
 import { systemNotice } from './collaboration.js';
-import { guidanceGateCheck } from './guidanceBase.js';
+import { guidanceGateChecks } from './guidanceBase.js';
 import { snippetScope, variantSnippetRefs } from './variantSnippets.js';
 import { checkDecider, clearWorkflowSql, recordApproval, startWorkflow, workflowState } from './workflow.js';
 
@@ -134,12 +134,12 @@ export async function gateForChapter(ctx: Ctx, chapterId: string, purpose: 'gene
   const findings = await chapterFindings(ctx, chapterId);
   const active = versionId ? await activeBlocks(ctx, versionId) : [];
   const result = evaluateGate(active.map(gateBlock), findings, { purpose });
-  // Anleitungs-Check als Freigabebedingung, wenn im Projekt ein Mindestwert eingestellt ist (ADR-057)
+  // Anleitungs-Check als Freigabebedingung, wenn im Projekt ein Mindestwert bzw. „alle Muss-Punkte“ eingestellt ist (ADR-057, ADR-092)
   // Handbuch-Varianten (outline_family_id) sind ausgenommen (ADR-057)
   const isVariant = !!(await ctx.db.get('SELECT outline_family_id FROM chapters WHERE id = ?', chapterId))?.outline_family_id;
   if (purpose === 'approve' && versionId && !isVariant) {
-    const check = await guidanceGateCheck(ctx, active.map((b) => ({ id: b.id as string, section: b.section as string, kind: b.kind as string, text: b.text as string, versionNo: b.versionNo as number, mode: b.mode as string })));
-    if (check) {
+    const checks = await guidanceGateChecks(ctx, active.map((b) => ({ id: b.id as string, section: b.section as string, kind: b.kind as string, text: b.text as string, versionNo: b.versionNo as number, mode: b.mode as string })));
+    for (const check of checks) {
       result.checks.push(check);
       result.passed = result.passed && check.passed;
     }
