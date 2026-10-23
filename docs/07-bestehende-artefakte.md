@@ -108,7 +108,7 @@ Status gegenüber der App: **neu** = gibt es nicht, **teilweise** = Ansatz vorha
 | F-23 | Screenshot aus der Zwischenablage einfügen mit Zuschnitt | Screenarchiv | teilweise | S | übernehmen | |
 | F-24 | Klickstrecke aus Screenshots (parallele Schritte 3a/3b) | Screenarchiv | teilweise | M | optional | |
 | F-25 | Bild → Gliederungsstelle über den Folientext beim PPTX-Import | Screenarchiv | geplant (M2) | S | in M2 | |
-| F-26 | Video → Einzelbilder mit Änderungserkennung und roten Rahmen, lokal | Screenarchiv, Screenshot-Studio | neu | M | übernehmen in M6 | |
+| F-26 | Video → Einzelbilder mit Änderungserkennung und roten Rahmen, lokal | Screenarchiv, Screenshot-Studio | neu | M | übernommen in Etappe 38 (ADR-090, ffmpeg lokal) | |
 | F-27 | Ausgabe „Quick Guide“ und „One Pager“ je Variante | Struktur, Screenarchiv | teilweise | M | übernehmen | |
 | F-28 | Lesefassung ohne Quellenbezüge; Wasserzeichen „Entwurf“ im Druck | V4, DokuPress | teilweise | S | übernehmen | |
 | F-29 | Klickstrecke/Übergangskapitel im Lesen („weiter zu Kapitel …“) | Struktur und Klickstrecke | neu | S | übernehmen | |
@@ -127,7 +127,7 @@ Ticket-Graph, Trend/Burndown, Prozessbild- und Klickanleitungs-Designs des Cockp
 | Dify (`api.dify.ai`), OpenAI gpt-4o | Generator, Prüfer | nein | Logik in die App, lokales Modell (M-02) |
 | Claude (`sample`) | Cockpit, Screenarchiv, Screenshot-Studio | nein | lokales Modell |
 | n8n | Prüfer | nur intern | nicht nötig (Webhooks/API-Tokens, ADR-028) |
-| Tesseract (Sprachdaten per CDN) | Cockpit | nur mit lokal abgelegten Daten | in M6 lokal ablegen |
+| Tesseract (Sprachdaten per CDN) | Cockpit | nur mit lokal abgelegten Daten | umgesetzt in Etappe 38: Tesseract lokal über `OCR_CMD` (ADR-090) |
 | **Confluence Cloud** | **bereits in der App** (ADR-028) | nein | klären, ob abschalten oder nur für bestimmte Projekte |
 
 ## 7.7 Fragen an den Auftraggeber

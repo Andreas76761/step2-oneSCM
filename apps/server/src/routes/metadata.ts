@@ -12,11 +12,14 @@ import { askSources, exportQa, reaskQa } from '../services/metadataAsk.js';
 import { answerCatalog, deleteCatalog, exportCatalog, getCatalog, importCatalog, itemToQa, listCatalogs } from '../services/questionCatalog.js';
 import { decideDuplicate, duplicateGroups, getDuplicate, listDuplicates, refreshDuplicates } from '../services/metadataDuplicates.js';
 import { headingDocuments, headingTree, mergedHeadings } from '../services/metadataHeadings.js';
+import { toolStatus } from '../services/mediaTools.js';
 import { list, num, userOf } from './helpers.js';
 
 type P<T extends string> = { Params: Record<T, string> };
 
 export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
+  // Lokale Werkzeuge für Video und Texterkennung (ADR-090): nur ob eingerichtet, keine Befehle
+  app.get('/metadata/media-tools', async (req) => (userOf(req.ctx, req), toolStatus(req.ctx.config.mediaTools)));
   app.get('/metadata/overview', async (req) => (userOf(req.ctx, req), metadataOverview(req.ctx)));
 
   // ENTSCHEIDUNG(M-06): Labels vordefiniert; lesen mit `read`, pflegen nur mit `admin`

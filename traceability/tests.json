@@ -1862,5 +1862,52 @@
     "requirements": [
       "NFR-89"
     ]
+  },
+  {
+    "id": "T-270",
+    "title": "Untertitel (WebVTT, SRT): Formatierung entfernt, Kapitelmarken als Abschnitte, Zeitmarke je Absatz, Standbilder an ihrer Zeit (Einheit)",
+    "file": "apps/server/test/stage38.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-90"
+    ]
+  },
+  {
+    "id": "T-271",
+    "title": "Standbilder nur bei sichtbarer Änderung mit Bereich, Befehlsvorlage ohne Shell (Einheit)",
+    "file": "apps/server/test/stage38.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-91"
+    ]
+  },
+  {
+    "id": "T-272",
+    "title": "Video mit Untertiteln daneben, einzelne Untertitel, Video ohne Werkzeug übersprungen; Fundstelle Zeitmarke, Formatfilter, Werkzeugstatus",
+    "file": "apps/server/test/stage38.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-90"
+    ]
+  },
+  {
+    "id": "T-273",
+    "title": "Lokale Werkzeuge: Transkription, Standbilder mit rotem Rahmen (F-26), Texterkennung gescannter PDF-Seiten",
+    "file": "apps/server/test/stage38.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-90",
+      "NFR-91"
+    ]
+  },
+  {
+    "id": "T-274",
+    "title": "Einlesen: Untertitel mit Zeitmarke je Chunk, Video ohne Transkription übersprungen, Status der lokalen Werkzeuge",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-90",
+      "NFR-91"
+    ]
   }
 ]

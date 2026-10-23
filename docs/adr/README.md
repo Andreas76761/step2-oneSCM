@@ -91,3 +91,4 @@
 | [ADR-087](ADR-087-teilstuecke-ueberschriften.md) | Teilstücke langer Chunks (300–800 Zeichen, 1 Satz Überlappung) und Quellen je Überschrift | akzeptiert, umgesetzt |
 | [ADR-088](ADR-088-dubletten-formatuebergreifend.md) | Dubletten über alle Formate je Abschnitt, inkrementell nach jedem Import, Entscheidung führende Fassung / kein Duplikat | akzeptiert, umgesetzt |
 | [ADR-089](ADR-089-fragen-alle-quellen.md) | Fragen über alle Quellen mit Belegen (hybride Suche, Top 20 → Top 6), erneut fragen, Export | akzeptiert, umgesetzt |
+| [ADR-090](ADR-090-video-untertitel-ocr.md) | Video, Untertitel (Zeitmarke je Absatz), Standbilder bei Änderung mit rotem Rahmen, Texterkennung gescannter PDF-Seiten – nur lokale Werkzeuge | akzeptiert, umgesetzt |

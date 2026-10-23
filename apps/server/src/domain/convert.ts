@@ -5,7 +5,9 @@ import mammoth from 'mammoth';
 import TurndownService from 'turndown';
 import { escapeAlt } from './media.js';
 
-export const CONVERTIBLE: Record<string, 'html' | 'docx' | 'pptx' | 'pdf'> = { '.html': 'html', '.htm': 'html', '.docx': 'docx', '.pptx': 'pptx', '.pdf': 'pdf' };
+export const CONVERTIBLE: Record<string, 'html' | 'docx' | 'pptx' | 'pdf' | 'mp4' | 'vtt' | 'srt'> = {
+  '.html': 'html', '.htm': 'html', '.docx': 'docx', '.pptx': 'pptx', '.pdf': 'pdf', '.mp4': 'mp4', '.vtt': 'vtt', '.srt': 'srt',
+};
 
 export interface Converted {
   markdown: string;

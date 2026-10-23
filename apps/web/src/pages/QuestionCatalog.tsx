@@ -8,7 +8,7 @@ import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad
 const STATUS: Record<string, [string, string]> = {
   open: ['offen', ''], answered: ['beantwortet', ''], no_answer: ['keine Aussage in den Quellen', 'sev-medium'], blocked: ['nicht gefragt', 'sev-high'],
 };
-const where = (s: any) => (s.locator?.page ? `Seite ${s.locator.page}` : s.locator?.slide ? `Folie ${s.locator.slide}` : s.lineStart === s.lineEnd ? `Zeile ${s.lineStart}` : `Zeilen ${s.lineStart}–${s.lineEnd}`);
+const where = (s: any) => (s.locator?.page ? `Seite ${s.locator.page}` : s.locator?.slide ? `Folie ${s.locator.slide}` : s.locator?.time ? `bei ${s.locator.time}` : s.lineStart === s.lineEnd ? `Zeile ${s.lineStart}` : `Zeilen ${s.lineStart}–${s.lineEnd}`);
 
 export function QuestionCatalogPage() {
   const { notify } = useApp();

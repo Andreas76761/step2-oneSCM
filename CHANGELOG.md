@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.38.0 – Etappe 38 (23.10.2026)
+
+### Hinzugefügt
+- **Untertitel und Video einlesen (ADR-090, M6):** `.vtt` und `.srt` mit Abschnitten je Kapitelmarke bzw. 2 Minuten und Zeitmarke je Absatz als Fundstelle („bei 01:31“); `.mp4` mit Untertiteln gleichen Namens im ZIP oder mit lokaler Transkription (`TRANSCRIBE_CMD`, z. B. whisper.cpp).
+- **Standbilder bei Änderung (F-26):** mit ffmpeg (`FFMPEG_PATH`) alle 2 s verglichen, behalten nur Bilder mit sichtbarer Änderung, geänderter Bereich rot umrahmt, an ihrer Zeitmarke im Text.
+- **Texterkennung gescannter PDF-Seiten** mit lokalem Werkzeug (`OCR_CMD`, z. B. Tesseract), gekennzeichnet „bitte prüfen“.
+- Seite „Einlesen“ zeigt die Formate Video und Untertitel und den Status der lokalen Werkzeuge; Formatfilter „Video“ und „Untertitel“ in Chunks und Fragen.
+- Werkzeuge nur über Umgebungsvariablen, ohne Shell, mit Zeitlimit (`MEDIA_TOOL_TIMEOUT_MS`); Daten verlassen den Rechner nicht.
+- Migration `045_media_tools.sql`; Tests T-270 … T-273, E2E T-274 (axe); Anforderungen NFR-90, NFR-91.
+
 ## 0.37.0 – Etappe 37 (23.10.2026)
 
 ### Hinzugefügt

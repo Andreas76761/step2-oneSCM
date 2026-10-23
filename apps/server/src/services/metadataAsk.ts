@@ -22,7 +22,7 @@ export const PASSAGES = 6;
 export const MIN_KEYWORDS = 0.3;
 const MIN_SIMILARITY = 0.6;
 const MAX_UNITS = 20000;
-const FORMATS = ['markdown', 'html', 'docx', 'pptx', 'pdf', 'jira'];
+const FORMATS = ['markdown', 'html', 'docx', 'pptx', 'pdf', 'mp4', 'subtitles', 'jira'];
 
 export interface AskFilters { format?: string; documentId?: string; heading?: string; labelIds?: string[] }
 
@@ -188,7 +188,7 @@ export async function exportQa(ctx: Ctx, format: string, opts: Parameters<typeof
   if (format === 'json') return { fileName: `fragen-antworten-${date}.json`, contentType: 'application/json; charset=utf-8', data: Buffer.from(JSON.stringify(items, null, 2), 'utf8') };
   const rows = items.map((q) => ({
     Frage: q.question, Antwort: q.answer, Sprache: q.language, Labels: q.labels.map((l) => l.nameDe).join('; '),
-    Quellen: q.sources.map((s: any) => `${s.path}${s.locator?.page ? ` S. ${s.locator.page}` : s.locator?.slide ? ` Folie ${s.locator.slide}` : ` Z. ${s.lineStart}`}`).join('; '),
+    Quellen: q.sources.map((s: any) => `${s.path}${s.locator?.page ? ` S. ${s.locator.page}` : s.locator?.slide ? ` Folie ${s.locator.slide}` : s.locator?.time ? ` bei ${s.locator.time}` : ` Z. ${s.lineStart}`}`).join('; '),
     Notiz: q.note ?? '', 'Erstellt von': q.createdBy, 'Erstellt am': q.createdAt, 'Geändert am': q.updatedAt,
   }));
   const header = ['Frage', 'Antwort', 'Sprache', 'Labels', 'Quellen', 'Notiz', 'Erstellt von', 'Erstellt am', 'Geändert am'] as const;

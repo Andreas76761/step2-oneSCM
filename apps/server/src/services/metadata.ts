@@ -150,12 +150,13 @@ export async function labelsBy(ctx: Ctx, table: 'metadata_chunk_labels' | 'metad
 
 /** Format der Quelldatei: aus der Revision (markdown | html | docx …), sonst aus der Endung */
 /** Dateiendungen je Format (Filter in SQL) */
-const FORMAT_EXT: Record<string, string[]> = { markdown: ['md', 'markdown'], html: ['html', 'htm'], docx: ['docx'], pptx: ['pptx'], pdf: ['pdf'], mp4: ['mp4'] };
+const FORMAT_EXT: Record<string, string[]> = { markdown: ['md', 'markdown'], html: ['html', 'htm'], docx: ['docx'], pptx: ['pptx'], pdf: ['pdf'], mp4: ['mp4'], subtitles: ['vtt', 'srt'] };
 export const formatOf = (sourceFormat: string | null, path: string) => {
   if (sourceFormat === 'jira') return 'jira'; // Ticket aus einem Jira-Export (ADR-081), gespeichert als Markdown
   const ext = /\.([a-z0-9]+)$/i.exec(path)?.[1]?.toLowerCase();
   if (ext === 'md' || ext === 'markdown') return 'markdown';
   if (ext === 'htm') return 'html';
+  if (ext === 'vtt' || ext === 'srt') return 'subtitles'; // Untertitel (ADR-090)
   return ext ?? sourceFormat ?? 'markdown';
 };
 

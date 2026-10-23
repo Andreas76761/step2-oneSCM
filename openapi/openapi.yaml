@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.37.0
+  version: 0.38.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3834,7 +3834,7 @@ paths:
         - { name: unlabeled, in: query, schema: { type: boolean } }
         - { name: noOutline, in: query, schema: { type: boolean }, description: 'nur Chunks ohne Gliederungspunkt (F-13)' }
         - { name: documentId, in: query, schema: { type: string } }
-        - { name: format, in: query, schema: { type: string }, description: 'markdown | html | docx | pptx | pdf | mp4' }
+        - { name: format, in: query, schema: { type: string }, description: 'markdown | html | docx | pptx | pdf | mp4 | subtitles | jira' }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
         - { name: offset, in: query, schema: { type: integer, minimum: 0 } }
       responses:
@@ -4429,6 +4429,16 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Übergang (Standard)' }
         '403': { $ref: '#/components/responses/Problem' }
+  /metadata/media-tools:
+    get:
+      operationId: getMediaTools
+      summary: 'Lokale Werkzeuge (ADR-090, M6): ob Transkription, Standbilder und Texterkennung eingerichtet sind – ohne Befehle'
+      tags: [Metadaten]
+      x-requirements: [NFR-90, NFR-91]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ transcribe, ocr, stills } (jeweils boolean)' }
   /metadata/headings/documents:
     get:
       operationId: listHeadingDocuments
@@ -4544,7 +4554,7 @@ paths:
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, language: { type: string, enum: [de, en], default: de }, filters: { type: object, properties: { format: { type: string, enum: [markdown, html, docx, pptx, pdf, jira] }, documentId: { type: string }, heading: { type: string }, labelIds: { type: array, items: { type: string } } } } } } } }
+        content: { application/json: { schema: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, language: { type: string, enum: [de, en], default: de }, filters: { type: object, properties: { format: { type: string, enum: [markdown, html, docx, pptx, pdf, mp4, subtitles, jira] }, documentId: { type: string }, heading: { type: string }, labelIds: { type: array, items: { type: string } } } } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ id, question, filters, mode: llm | extractive | none, answer: [{ text, sources: [n] }], answerText, sources: [{ n, snippetId, part, parts, path, format, headingPath, locator, text, score }], notice, dropped, candidates, searched }' }

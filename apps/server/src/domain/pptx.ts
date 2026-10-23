@@ -7,7 +7,7 @@ import JSZip from 'jszip';
 import type { EmbedImage } from './convert.js';
 import { escapeAlt } from './media.js';
 
-export type Locator = { page?: number; slide?: number; anchor?: string };
+export type Locator = { page?: number; slide?: number; anchor?: string; time?: string };
 /** Markdown mit Fundstellen: ab Zeile `line` (1-basiert) gilt `locator` */
 export interface LocatedMarkdown {
   markdown: string;

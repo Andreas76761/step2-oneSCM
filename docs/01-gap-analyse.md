@@ -170,6 +170,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Rückfragen: Fragenkatalog einlesen und mit Belegen beantworten (NFR-89) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
 | Offen | Etappen M6 (Video, OCR) und M7 (Antwortqualität) |
 
+## 1.40 Stand nach Etappe 38 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Untertitel und Video mit Zeitmarke je Absatz, Text aus Untertiteln oder lokaler Transkription (M6, NFR-90) | ✅ ([ADR-090](adr/ADR-090-video-untertitel-ocr.md)) |
+| Standbilder bei Änderung mit rotem Rahmen (F-26) und Texterkennung gescannter PDF-Seiten, nur lokale Werkzeuge (NFR-91) | ✅ ([ADR-090](adr/ADR-090-video-untertitel-ocr.md)) |
+| Offen | Etappe M7 (Antwortqualität); lokale Werkzeuge (whisper.cpp, Tesseract, ffmpeg) im Betrieb einrichten |
+
 ## 1.38 Stand nach Etappe 36 (23.10.2026)
 
 | Punkt | Ergebnis |

@@ -83,7 +83,7 @@ export function SourcesPage() {
               void upload(e.dataTransfer.files[0]);
             }}
           >
-            <input type="file" accept=".zip,.md,.markdown,.html,.htm,.docx,.pptx,.pdf,.xml,.csv" data-testid="file-input" disabled={busy} onChange={(e) => void upload(e.target.files?.[0] ?? undefined)} />
+            <input type="file" accept=".zip,.md,.markdown,.html,.htm,.docx,.pptx,.pdf,.mp4,.vtt,.srt,.xml,.csv" data-testid="file-input" disabled={busy} onChange={(e) => void upload(e.target.files?.[0] ?? undefined)} />
             <span>{busy ? 'Import läuft …' : 'ZIP-, Markdown-, HTML-, Word-, PowerPoint- oder PDF-Datei hierher ziehen oder auswählen'}</span>
           </label>
           <label className="inline small"><input type="checkbox" checked={snapshot} onChange={(e) => setSnapshot(e.target.checked)} /> ZIP ist der vollständige Stand – fehlende Dateien als entfernt markieren</label>

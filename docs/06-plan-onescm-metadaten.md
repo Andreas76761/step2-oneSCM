@@ -117,7 +117,7 @@ Gestaltung wie die bestehende App (Karten, Tabellen, Dunkelmodus, WCAG 2.2 AA).
 | M3 ✅ | Chunking je Überschrift, Seite „Quellen je Überschrift“ und „Chunks“ mit Labels – Rest umgesetzt in Etappe 35 ([ADR-087](adr/ADR-087-teilstuecke-ueberschriften.md)): Teilstücke statt Umbau der Textabschnitte | Daten sichtbar und labelbar |
 | M4 ✅ | Indexierung, Seite „Dopplungen“ (formatübergreifend) – umgesetzt in Etappe 36 ([ADR-088](adr/ADR-088-dubletten-formatuebergreifend.md)) | Dublettensuche |
 | M5 ✅ | Fragen mit Belegen über alle Quellen, Fragen & Antworten speichern mit Labels – umgesetzt in Etappe 37 ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) | RAG nutzbar |
-| M6 | MP4-Transkription, Bildbeschreibung/OCR (nach M-04/M-05) | Video und Bilder durchsuchbar |
+| M6 ✅ | MP4-Transkription, Bildbeschreibung/OCR (nach M-04/M-05) – umgesetzt in Etappe 38 mit lokalen Werkzeugen, Untertiteln und Standbildern ([ADR-090](adr/ADR-090-video-untertitel-ocr.md)) | Video und Bilder durchsuchbar |
 | M7 | Qualität: Testfragen mit erwarteten Quellen, Kennzahlen (Trefferquote), Feinschliff | messbare Antwortqualität |
 
 Jede Etappe endet mit Tests, Traceability, Changelog und Pull Request.

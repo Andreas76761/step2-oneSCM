@@ -2,7 +2,7 @@
 // Überschriften: aus den Lesezeichen, sonst aus der Schriftgröße (größer als der Fließtext). Zeilen werden zu Absätzen
 // zusammengefügt, eingerückte bzw. mit Aufzählungszeichen beginnende Zeilen zu Listenpunkten. Kopf- und Fußzeilen,
 // die sich auf vielen Seiten wiederholen, und Seitenzahlen entfallen. Seiten ohne Textebene (gescannt) werden
-// gemeldet – Texterkennung folgt mit M6.
+// mit lokaler Texterkennung gelesen (OCR_CMD, ADR-090), sonst gemeldet.
 import { finalize, marker, type LocatedMarkdown } from './pptx.js';
 
 interface Line { page: number; y: number; x: number; right: number; size: number; text: string; bold: boolean; parts?: { x: number; w: number; s: string }[] }
@@ -90,7 +90,24 @@ function repeated(lines: Line[], pages: number) {
   return new Set([...count].filter(([, s]) => s.size >= Math.max(3, pages / 2)).map(([k]) => k));
 }
 
-export async function pdfToMarkdown(data: Buffer, fallbackTitle: string): Promise<LocatedMarkdown> {
+/** Texterkennung einer gerenderten Seite (PNG) – lokal (ADR-090); null = nicht eingerichtet */
+export type OcrFn = (png: Buffer) => Promise<string | null>;
+
+/** Seite ohne Textebene rendern (doppelte Auflösung) und per Texterkennung lesen */
+async function ocrPage(doc: any, p: number, ocr: OcrFn): Promise<string | null> {
+  const { createCanvas } = await import('@napi-rs/canvas');
+  const page = await doc.getPage(p);
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+  const g = canvas.getContext('2d');
+  g.fillStyle = '#ffffff';
+  g.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext: g as any, viewport, canvas: canvas as any }).promise;
+  page.cleanup?.();
+  return ocr(Buffer.from(await canvas.encode('png')));
+}
+
+export async function pdfToMarkdown(data: Buffer, fallbackTitle: string, opts: { ocr?: OcrFn } = {}): Promise<LocatedMarkdown> {
   const { getDocument } = await loadPdfJs();
   let doc: any;
   try {
@@ -101,13 +118,33 @@ export async function pdfToMarkdown(data: Buffer, fallbackTitle: string): Promis
   }
   try {
     const warnings: string[] = [];
-    const { lines: all, empty } = await readLines(doc);
+    const { lines: textLines, empty } = await readLines(doc);
     const meta = await doc.getMetadata().catch(() => null);
     const docTitle = String(meta?.info?.Title ?? '').trim();
-    if (empty.length) warnings.push(`Seite ohne Textebene (gescannt?) – Texterkennung folgt mit M6: ${empty.slice(0, 10).join(', ')}${empty.length > 10 ? ' …' : ''}`);
-    const rep = repeated(all, doc.numPages);
-    const lines = all.filter((l) => !PAGE_NO_RE.test(l.text) && !rep.has(`${Math.round(l.y / 4)}|${norm(l.text).replace(/\d+/g, '#')}`));
-    if (!lines.length) return { markdown: '', warnings, locators: [], skip: empty.length ? 'PDF ohne Textebene (gescannt) – Texterkennung folgt mit M6, übersprungen' : 'PDF ohne Text – übersprungen' };
+    const rep = repeated(textLines, doc.numPages);
+    let lines = textLines.filter((l) => !PAGE_NO_RE.test(l.text) && !rep.has(`${Math.round(l.y / 4)}|${norm(l.text).replace(/\d+/g, '#')}`));
+    // Seiten ohne Textebene (gescannt): lokale Texterkennung, falls eingerichtet (ADR-090); erkannter Text als Fließtext
+    const recognized: number[] = [];
+    if (empty.length && opts.ocr) {
+      const size = lines.length ? Math.min(...lines.map((l) => l.size)) : 12;
+      const x = lines.length ? Math.min(...lines.map((l) => l.x)) : 50;
+      for (const p of empty.slice(0, 200)) {
+        const text = await ocrPage(doc, p, opts.ocr).catch(() => null);
+        if (!text?.trim()) continue;
+        recognized.push(p);
+        let y = 800;
+        for (const raw of text.split(/\r?\n/)) {
+          if (!raw.trim()) { y -= size * 2.5; continue; } // Leerzeile = neuer Absatz
+          lines.push({ page: p, y, x, right: x + raw.length * size * 0.5, size, text: raw.replace(/\s+/g, ' ').trim(), bold: false });
+          y -= size * 1.2;
+        }
+      }
+      lines = lines.sort((a, b) => a.page - b.page); // stabil: Reihenfolge innerhalb der Seite bleibt
+    }
+    const missing = empty.filter((p) => !recognized.includes(p));
+    if (recognized.length) warnings.push(`Seite per Texterkennung gelesen (bitte prüfen): ${recognized.slice(0, 10).join(', ')}${recognized.length > 10 ? ' …' : ''}`);
+    if (missing.length) warnings.push(`Seite ohne Textebene (gescannt?)${opts.ocr ? ' – Texterkennung ohne Ergebnis' : ' – Texterkennung nicht eingerichtet (OCR_CMD)'}: ${missing.slice(0, 10).join(', ')}${missing.length > 10 ? ' …' : ''}`);
+    if (!lines.length) return { markdown: '', warnings, locators: [], skip: empty.length ? `PDF ohne Textebene (gescannt)${opts.ocr ? '' : ' – Texterkennung nicht eingerichtet (OCR_CMD)'}, übersprungen` : 'PDF ohne Text – übersprungen' };
 
     // Fließtextgröße = häufigste Größe nach Zeichen; größere (bzw. fett und eigenständig) = Überschrift
     const bySize = new Map<number, number>();

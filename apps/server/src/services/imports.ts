@@ -10,12 +10,14 @@ import { pdfToMarkdown } from '../domain/pdf.js';
 import { suggestImageOutline } from './imageArchive.js';
 import { refreshDuplicates } from './metadataDuplicates.js';
 import { pptxToMarkdown, type LocatedMarkdown } from '../domain/pptx.js';
+import { subtitlesToMarkdown } from '../domain/subtitles.js';
 import { chapterOf, headingKey, parseMarkdown } from '../domain/markdown.js';
 import { issueToMarkdown, parseJira } from '../domain/jira.js';
 import { MEDIA_EXT, resolveRelative, rewriteImages } from '../domain/media.js';
 import { normalizedHash, sha256 } from '../domain/similarity.js';
 import { finishConnectionImport } from './connections.js';
 import { storeMedia } from './media.js';
+import { extractStills, ocrImage, transcribe } from './mediaTools.js';
 import { contextsFromFrontMatter } from './contextHelp.js';
 import { badRequest, conflict, notFound, Problem } from '../problem.js';
 import { refreshSearchIndex } from './searchIndex.js';
@@ -200,6 +202,15 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
     }
   }
   const images: ImageResolver = { byPath: mediaByPath, importId };
+  // Untertitel neben einem Video (gleicher Name, .vtt/.srt) gehören zum Video und werden mit ihm eingelesen (ADR-090)
+  const sidecars = new Map<string, Entry>();
+  const byPath = new Map(entries.map((e) => [e.path, e]));
+  for (const e of entries.filter((x) => x.data && path.extname(x.path).toLowerCase() === '.mp4')) {
+    const base = e.path.slice(0, -4);
+    const sub = [`${base}.vtt`, `${base}.srt`, `${base}.VTT`, `${base}.SRT`].map((p) => byPath.get(p)).find((x) => x?.data);
+    if (sub) sidecars.set(e.path, sub);
+  }
+  const sidecarOf = new Map([...sidecars].map(([video, sub]) => [sub.path, video]));
 
   for (const entry of entries) {
     stats.files++;
@@ -215,12 +226,15 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
       if (entry.skipped) {
         item.status = 'skipped';
         item.message = entry.skipped;
+      } else if (sidecarOf.has(entry.path)) {
+        item.status = 'skipped';
+        item.message = `Untertitel zum Video ${path.posix.basename(sidecarOf.get(entry.path)!)} – mit dem Video eingelesen`;
       } else if (entry.error) {
         throw new Error(entry.error);
       } else {
         const converted = entry.jira
           ? { markdown: entry.jira.markdown, original: { format: 'jira' as const, data: entry.jira.original }, warnings: [] as string[], skip: undefined }
-          : await convertEntry(ctx, entry.path, entry.data!, images);
+          : await convertEntry(ctx, entry.path, entry.data!, images, sidecars.get(entry.path));
         if (converted.skip) {
           item.status = 'skipped';
           item.message = converted.skip;
@@ -315,7 +329,7 @@ async function reviveDocument(ctx: Ctx, documentId: string) {
 }
 
 interface Original {
-  format: 'html' | 'docx' | 'pptx' | 'pdf' | 'jira';
+  format: 'html' | 'docx' | 'pptx' | 'pdf' | 'jira' | 'mp4' | 'vtt' | 'srt';
   data: Buffer;
 }
 
@@ -331,7 +345,7 @@ const missingWarning = (missing: string[]) =>
 /** Markdown direkt übernehmen, HTML/Word umwandeln (ADR-022). Die Originaldatei wird zusätzlich aufbewahrt. */
 type ConvertedEntry = { markdown: Buffer; original?: Original; warnings: string[]; skip?: string; locators?: LocatedMarkdown['locators']; images?: LocatedMarkdown['images'] };
 
-async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: ImageResolver): Promise<ConvertedEntry> {
+async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: ImageResolver, sidecar?: Entry): Promise<ConvertedEntry> {
   const format = CONVERTIBLE[path.extname(filePath).toLowerCase()];
   const fromZip = (target: string) => {
     const p = resolveRelative(filePath, target);
@@ -347,13 +361,42 @@ async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: I
   const settings = (await getSettings(ctx.db)).import;
   const embed = async (buf: Buffer, name: string) => (await storeMedia(ctx, buf, name, images?.importId ?? null)).sha;
   // Fundstellen (ADR-086): Folie bzw. Seite; bei HTML und Word der Abschnitt (Anker der Überschrift)
+  if (format === 'mp4' || format === 'vtt' || format === 'srt') return convertMedia(ctx, format, title, data, embed, sidecar);
   if (format === 'pptx' || format === 'pdf') {
-    const res = format === 'pptx' ? await pptxToMarkdown(data, title, settings.maxEntryBytes * 5, embed) : await pdfToMarkdown(data, title);
+    // Gescannte Seiten: lokale Texterkennung, sofern eingerichtet (ADR-090)
+    const tools = ctx.config.mediaTools;
+    const ocr = tools?.ocrCmd ? (png: Buffer) => ocrImage(tools, png) : undefined;
+    const res = format === 'pptx' ? await pptxToMarkdown(data, title, settings.maxEntryBytes * 5, embed) : await pdfToMarkdown(data, title, { ocr });
     return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.warnings, skip: res.skip, locators: res.locators, images: res.images };
   }
   const html = format === 'html' ? await embedDataImages(decodeHtml(data), embed) : null;
   const res = html !== null ? htmlToMarkdown(html, title, { resolve: fromZip }) : await docxToMarkdown(data, title, settings.maxEntryBytes * 5, embed);
   return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.warnings, skip: res.skip, locators: headingLocators(res.markdown, html !== null ? htmlHeadingIds(html) : undefined) };
+}
+
+/**
+ * Video und Untertitel (ADR-090, M6): Untertitel direkt; Video mit mitgelieferten Untertiteln, sonst lokaler Transkription.
+ * Standbilder mit sichtbarer Änderung (F-26) kommen als Bilder an ihre Zeitmarke. Fundstelle je Absatz: Zeitmarke.
+ */
+async function convertMedia(ctx: Ctx, format: 'mp4' | 'vtt' | 'srt', title: string, data: Buffer, embed: (buf: Buffer, name: string) => Promise<string>, sidecar?: Entry): Promise<ConvertedEntry> {
+  const warnings: string[] = [];
+  let subtitles: string | null;
+  if (format !== 'mp4') subtitles = decoder.decode(data.subarray(data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf ? 3 : 0));
+  else if (sidecar?.data) {
+    subtitles = decoder.decode(sidecar.data);
+    warnings.push(`Text aus ${path.posix.basename(sidecar.path)}`);
+  } else {
+    subtitles = await transcribe(ctx.config.mediaTools, data);
+    if (!subtitles) return { markdown: Buffer.alloc(0), warnings, skip: 'Video ohne Untertitel – Transkription nicht eingerichtet (TRANSCRIBE_CMD), übersprungen' };
+    warnings.push('Text per Transkription erstellt (bitte prüfen)');
+  }
+  const stills = format !== 'mp4' ? [] : await extractStills(ctx.config.mediaTools, data, embed).catch((e) => {
+    warnings.push(`Standbilder nicht erstellt: ${(e as Error).message}`);
+    return [];
+  });
+  if (stills.length) warnings.push(`${stills.length} Standbilder`);
+  const res = subtitlesToMarkdown(subtitles, title, stills);
+  return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.skip ? [] : warnings, skip: res.skip, locators: res.locators };
 }
 
 /** HTML-Zeichensatz: UTF-8 (Standard), sonst laut meta charset (Windows-1252/ISO-8859-1 älterer Exporte) */
@@ -559,6 +602,9 @@ const ORIGINAL_TYPES: Record<string, string> = {
   jira: 'application/json; charset=utf-8', // Ticketfelder ohne Personenfelder (ADR-081)
   pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   pdf: 'application/pdf',
+  mp4: 'video/mp4',
+  vtt: 'text/plain; charset=utf-8',
+  srt: 'text/plain; charset=utf-8',
 };
 
 /** Originaldatei einer umgewandelten Revision (HTML, Word) */

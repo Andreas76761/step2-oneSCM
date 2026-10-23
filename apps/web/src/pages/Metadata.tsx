@@ -95,8 +95,8 @@ function LabelMulti({ labels, groups, lang, selected, onChange, ariaLabel }: { l
   );
 }
 
-const FORMAT_LABEL: Record<string, string> = { markdown: 'Markdown', html: 'HTML', docx: 'Word', pptx: 'PowerPoint', pdf: 'PDF', mp4: 'Video', jira: 'Jira-Ticket' };
-const FORMAT_ICON: Record<string, string> = { markdown: '📝', html: '🌐', docx: '📄', pptx: '📊', pdf: '📕', mp4: '🎬', jira: '🎫' };
+const FORMAT_LABEL: Record<string, string> = { markdown: 'Markdown', html: 'HTML', docx: 'Word', pptx: 'PowerPoint', pdf: 'PDF', mp4: 'Video', subtitles: 'Untertitel', jira: 'Jira-Ticket' };
+const FORMAT_ICON: Record<string, string> = { markdown: '📝', html: '🌐', docx: '📄', pptx: '📊', pdf: '📕', mp4: '🎬', subtitles: '💬', jira: '🎫' };
 const formatText = (f: string) => `${FORMAT_ICON[f] ?? '📁'} ${FORMAT_LABEL[f] ?? f}`;
 
 /** Fundstelle lesbar: Seite, Folie, Zeitmarke oder Zeilen */
@@ -383,7 +383,7 @@ function AskCard({ canEdit, onTake }: { canEdit: boolean; onTake: (r: any) => vo
       <div className="filters" role="group" aria-label="Quellen eingrenzen">
         <select value={format} onChange={(e) => setFormat(e.target.value)} aria-label="Nur Format">
           <option value="">alle Formate</option>
-          {['markdown', 'html', 'docx', 'pptx', 'pdf', 'jira'].map((f) => <option key={f} value={f}>{formatText(f)}</option>)}
+          {['markdown', 'html', 'docx', 'pptx', 'pdf', 'mp4', 'subtitles', 'jira'].map((f) => <option key={f} value={f}>{formatText(f)}</option>)}
         </select>
         <select value={documentId} onChange={(e) => setDocumentId(e.target.value)} aria-label="Nur Datei">
           <option value="">alle Dateien</option>

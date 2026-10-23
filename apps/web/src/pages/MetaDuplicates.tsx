@@ -6,7 +6,7 @@ import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../comp
 
 const ICON: Record<string, string> = { markdown: '📝', html: '🌐', docx: '📄', pptx: '📊', pdf: '📕', mp4: '🎬', jira: '🎫' };
 const LABEL: Record<string, string> = { markdown: 'Markdown', html: 'HTML', docx: 'Word', pptx: 'PowerPoint', pdf: 'PDF', mp4: 'Video', jira: 'Jira' };
-const where = (s: any) => (s.locator?.page ? `Seite ${s.locator.page}` : s.locator?.slide ? `Folie ${s.locator.slide}` : s.locator?.anchor ? `Abschnitt #${s.locator.anchor}` : '');
+const where = (s: any) => (s.locator?.page ? `Seite ${s.locator.page}` : s.locator?.slide ? `Folie ${s.locator.slide}` : s.locator?.time ? `bei ${s.locator.time}` : s.locator?.anchor ? `Abschnitt #${s.locator.anchor}` : '');
 
 function Side({ s, side, leading }: { s: any; side: string; leading: boolean }) {
   return (

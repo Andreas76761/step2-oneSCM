@@ -10,11 +10,18 @@ const FORMATS = [
   ['🌐', 'HTML / Confluence-Export', '.html, .htm', 'Abschnitt (Anker der Überschrift)'],
   ['📄', 'Word', '.docx', 'Abschnitt (Überschrift)'],
   ['📊', 'PowerPoint', '.pptx', 'Folie – Titel, Aufzählungen, Tabellen, Bilder, Sprechernotizen'],
-  ['📕', 'PDF', '.pdf', 'Seite – Überschriften aus Lesezeichen bzw. Schriftgröße; gescannte Seiten erst mit M6'],
+  ['📕', 'PDF', '.pdf', 'Seite – Überschriften aus Lesezeichen bzw. Schriftgröße; gescannte Seiten per Texterkennung'],
+  ['🎬', 'Video', '.mp4', 'Zeitmarke – Text aus mitgelieferten Untertiteln (gleicher Name) oder Transkription, Standbilder bei Änderung'],
+  ['💬', 'Untertitel', '.vtt, .srt', 'Zeitmarke – Abschnitte je Kapitelmarke bzw. 2 Minuten'],
   ['🎫', 'Jira-Export', '.xml, .csv', 'Ticket'],
   ['🗜', 'ZIP', '.zip', 'alle Dateien darin, Bilder werden mit abgelegt'],
 ];
-const ACCEPT = '.zip,.md,.markdown,.html,.htm,.docx,.pptx,.pdf,.xml,.csv';
+const ACCEPT = '.zip,.md,.markdown,.html,.htm,.docx,.pptx,.pdf,.mp4,.vtt,.srt,.xml,.csv';
+const TOOLS: [string, string, string][] = [
+  ['transcribe', 'Transkription von Videos', 'TRANSCRIBE_CMD'],
+  ['stills', 'Standbilder aus Videos', 'FFMPEG_PATH'],
+  ['ocr', 'Texterkennung gescannter PDF-Seiten', 'OCR_CMD'],
+];
 const STATUS: Record<string, string> = { imported: 'eingelesen', identical: 'unverändert', skipped: 'übersprungen', failed: 'Fehler', media: 'Bild', removed: 'entfernt' };
 
 type Run = { name: string; importId?: string; status: string; items: any[]; error?: string };
@@ -24,6 +31,7 @@ export function IngestPage() {
   const me = useLoad<{ permissions: string[] }>('/me');
   const canEdit = !!me.data?.permissions.some((p) => p === 'edit' || p === 'admin');
   const settings = useLoad<any>('/settings');
+  const tools = useLoad<Record<string, boolean>>('/metadata/media-tools');
   const [runs, setRuns] = useState<Run[]>([]);
   const [busy, setBusy] = useState(false);
   const allowed: string[] = settings.data?.import?.allowedExtensions ?? [];
@@ -41,8 +49,9 @@ export function IngestPage() {
         fd.append('file', files[i]);
         const imp = await api<any>('POST', '/imports', fd);
         let cur = imp;
-        for (let n = 0; n < 120 && ['queued', 'processing'].includes(cur.status); n++) {
-          await new Promise((r) => setTimeout(r, 500));
+        // Videos mit Transkription brauchen länger: bis 30 Minuten warten
+        for (let n = 0; n < 1800 && ['queued', 'processing'].includes(cur.status); n++) {
+          await new Promise((r) => setTimeout(r, n < 60 ? 500 : 1000));
           cur = await get<any>(`/imports/${imp.id}`);
         }
         update(i, { importId: imp.id, status: cur.status, items: cur.items ?? [] });
@@ -76,6 +85,12 @@ export function IngestPage() {
               })}
             </tbody>
           </table>
+          <h3 className="small">Lokale Werkzeuge</h3>
+          <ul className="small" aria-label="Lokale Werkzeuge">
+            {TOOLS.map(([k, label, env]) => (
+              <li key={k}>{label}: {tools.data?.[k] ? <span className="tag">eingerichtet</span> : <span className="tag sev-medium">nicht eingerichtet</span>} <span className="muted">(<code>{env}</code>, Betrieb)</span></li>
+            ))}
+          </ul>
         </Card>
       </div>
       <Card title="Ergebnis">

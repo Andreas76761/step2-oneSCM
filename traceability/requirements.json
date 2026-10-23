@@ -992,5 +992,23 @@
     "documentation": [
       "docs/adr/ADR-089-fragen-alle-quellen.md"
     ]
+  },
+  {
+    "id": "NFR-90",
+    "title": "Untertitel (WebVTT, SRT) und Video (MP4) einlesen: Text aus Untertiteln gleichen Namens oder lokaler Transkription, Abschnitte je Kapitelmarke bzw. 2 Minuten, Zeitmarke je Absatz als Fundstelle",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-090-video-untertitel-ocr.md"
+    ]
+  },
+  {
+    "id": "NFR-91",
+    "title": "Standbilder aus Videos nur bei sichtbarer Änderung mit rot markiertem Bereich (F-26) und Texterkennung gescannter PDF-Seiten – nur lokale Werkzeuge, ohne Shell, mit Zeitlimit",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-090-video-untertitel-ocr.md"
+    ]
   }
 ]

@@ -2309,3 +2309,31 @@ test('[T-269] Rückfragen: Fragenkatalog aus einer HTML-App einlesen, alle mit B
   await expect(ok.getByText('gespeichert', { exact: true })).toBeVisible();
   expect(await axe()).toEqual([]);
 });
+
+test('[T-274] Einlesen: Untertitel mit Zeitmarke je Chunk, Video ohne Transkription übersprungen, Status der lokalen Werkzeuge', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const vtt = 'WEBVTT\n\nKapitel-1\n00:00:00.000 --> 00:00:03.000\nE2E Lieferung planen\n\n00:00:07.000 --> 00:00:11.000\nE2E Den Liefertermin planen Sie in der Auftragsansicht.\n';
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Einlesen', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Einlesen' })).toBeVisible();
+  const tools = page.getByRole('list', { name: 'Lokale Werkzeuge' });
+  await expect(tools).toContainText('Transkription von Videos: nicht eingerichtet');
+  await expect(page.getByRole('cell', { name: '.vtt, .srt', exact: true })).toBeVisible();
+  await page.getByTestId('ingest-input').setInputFiles([
+    { name: 'e2e-lieferung.vtt', mimeType: 'text/vtt', buffer: Buffer.from(vtt) },
+    { name: 'e2e-film.mp4', mimeType: 'video/mp4', buffer: Buffer.from('E2E kein Video') },
+  ]);
+  const results = page.getByRole('list', { name: 'Eingelesene Dateien' });
+  await expect(results.getByText('fertig', { exact: true })).toHaveCount(2, { timeout: 20000 });
+  await expect(results).toContainText('Video ohne Untertitel – Transkription nicht eingerichtet (TRANSCRIBE_CMD), übersprungen');
+  expect(await axe()).toEqual([]);
+
+  await page.getByRole('link', { name: 'Zu den Chunks →' }).click();
+  await page.getByLabel('Im Text suchen').fill('E2E Den Liefertermin planen');
+  await expect(page.getByText('bei 00:07').first()).toBeVisible();
+  expect(await axe()).toEqual([]);
+});

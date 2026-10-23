@@ -110,7 +110,7 @@ export async function deleteCatalog(ctx: Ctx, id: string, user: User) {
 }
 
 const STATUS: Record<string, string> = { open: 'offen', answered: 'beantwortet', no_answer: 'keine Aussage in den Quellen', blocked: 'nicht gefragt' };
-const where = (s: any) => `${s.path}${s.locator?.page ? `, S. ${s.locator.page}` : s.locator?.slide ? `, Folie ${s.locator.slide}` : `, Z. ${s.lineStart}`}`;
+const where = (s: any) => `${s.path}${s.locator?.page ? `, S. ${s.locator.page}` : s.locator?.slide ? `, Folie ${s.locator.slide}` : s.locator?.time ? `, bei ${s.locator.time}` : `, Z. ${s.lineStart}`}`;
 
 export async function exportCatalog(ctx: Ctx, id: string, format: string) {
   if (!['csv', 'xlsx', 'json'].includes(format)) throw badRequest('format muss csv, xlsx oder json sein.');

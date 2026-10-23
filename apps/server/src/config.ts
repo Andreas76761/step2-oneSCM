@@ -60,6 +60,22 @@ export interface AppConfig {
   integrations: { allowInsecure: boolean };
   /** Kontexthilfe (ADR-030): Ursprünge, die die öffentliche Hilfe einbetten dürfen (frame-ancestors) */
   help: { embedOrigins: string[] };
+  /** Lokale Werkzeuge für Video und Texterkennung (ADR-090, M6) */
+  mediaTools: MediaToolsConfig;
+}
+
+/**
+ * Lokale Werkzeuge (ADR-090): Befehle mit Platzhaltern {input}, {output}, {lang}; ausgeführt ohne Shell.
+ * Nur über Umgebungsvariablen (Betrieb), nie über die Oberfläche. null = nicht eingerichtet.
+ */
+export interface MediaToolsConfig {
+  /** Transkription, z. B. „whisper-cli -m /models/ggml-base.bin -l de -ovtt -of {output} -f {input}“ – erzeugt {output}.vtt */
+  transcribeCmd: string | null;
+  /** Texterkennung, z. B. „tesseract {input} stdout -l deu+eng“ – Text auf der Standardausgabe */
+  ocrCmd: string | null;
+  /** ffmpeg für Standbilder aus Videos (F-26); null = keine Standbilder */
+  ffmpeg: string | null;
+  timeoutMs: number;
 }
 
 export type EngineSetting = 'auto' | 'exact' | 'hnsw' | 'pgvector';
@@ -174,6 +190,10 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     integrations: { allowInsecure: process.env.INTEGRATIONS_ALLOW_INSECURE === '1', ...overrides.integrations },
     help: { embedOrigins: parseOrigins(process.env.HELP_EMBED_ORIGINS), ...overrides.help },
     git: { allowFile: process.env.GIT_ALLOW_FILE === '1', timeoutMs: Number(process.env.GIT_TIMEOUT_MS ?? 120_000), ...overrides.git },
+    mediaTools: {
+      transcribeCmd: process.env.TRANSCRIBE_CMD?.trim() || null, ocrCmd: process.env.OCR_CMD?.trim() || null,
+      ffmpeg: process.env.FFMPEG_PATH?.trim() || null, timeoutMs: Number(process.env.MEDIA_TOOL_TIMEOUT_MS ?? 30 * 60_000), ...overrides.mediaTools,
+    },
   };
 }
 
@@ -181,7 +201,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
 export const DEFAULT_SETTINGS = {
   // ENTSCHEIDUNG(E-01)
   import: {
-    allowedExtensions: ['.md', '.markdown', '.zip', '.html', '.htm', '.docx', '.xml', '.csv', '.pptx', '.pdf'],
+    allowedExtensions: ['.md', '.markdown', '.zip', '.html', '.htm', '.docx', '.xml', '.csv', '.pptx', '.pdf', '.mp4', '.vtt', '.srt'],
     maxUploadBytes: Number(process.env.UPLOAD_MAX_BYTES ?? 50 * 1024 * 1024),
     maxZipFiles: Number(process.env.ZIP_MAX_FILES ?? 5000),
     maxEntryBytes: 20 * 1024 * 1024,
