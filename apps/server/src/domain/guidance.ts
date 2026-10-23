@@ -2,11 +2,12 @@
 // Geprüft wird der Aufbau einer Handlungsanleitung (Zweck → Voraussetzungen → nummerierte Schritte → Ergebnis) und die
 // Form der Schritte (eine Handlung je Schritt, Menüpfade hervorgehoben, Abkürzungen erklärt). Rein regelbasiert, ohne KI.
 import { segmentSentences } from './style.js';
+import { checkWarning, WARNING_PART_LABEL } from './warnings.js';
 
 export interface GuidanceBlock { id: string; section: string; kind: string; text: string; versionNo: number; locked?: boolean }
 export interface GuidanceFix { blockId: string; versionNo: number; text: string; kind?: string; label: string }
 export interface GuidanceItem { blockId: string | null; excerpt: string; fix?: GuidanceFix }
-export type GuidanceCode = 'purpose' | 'prerequisites' | 'steps' | 'numbered' | 'one_action' | 'menu_bold' | 'result' | 'step_count' | 'abbreviations' | 'long_paragraph' | 'placeholders';
+export type GuidanceCode = 'purpose' | 'prerequisites' | 'steps' | 'numbered' | 'one_action' | 'menu_bold' | 'result' | 'step_count' | 'abbreviations' | 'long_paragraph' | 'placeholders' | 'warning_schema';
 export interface GuidanceCheck {
   code: GuidanceCode;
   label: string;
@@ -32,6 +33,7 @@ export const GUIDANCE_LABEL: Record<GuidanceCode, string> = {
   abbreviations: 'Abkürzungen erklärt',
   long_paragraph: 'Kurze Absätze',
   placeholders: 'Keine Platzhalter',
+  warning_schema: 'Warnhinweise nach Schema',
 };
 
 /** Kurzbezeichnung eines offenen Punkts (Übersichten) */
@@ -47,6 +49,7 @@ export const GUIDANCE_OPEN_LABEL: Record<GuidanceCode, string> = {
   abbreviations: 'Abkürzungen unerklärt',
   long_paragraph: 'Lange Absätze',
   placeholders: 'Platzhalter „…“ offen',
+  warning_schema: 'Warnhinweis unvollständig',
 };
 
 const MAX_STEPS = 10;
@@ -274,6 +277,19 @@ export function analyzeGuidance(blocks: GuidanceBlock[], opts: GuidanceOptions =
   add('placeholders', 'warning', placeholders.length > 0,
     ['Alle Platzhalter sind ausgefüllt.', `${placeholders.length} ${placeholders.length === 1 ? 'Absatz enthält' : 'Absätze enthalten'} noch Platzhalter „…“.`],
     'Ersetzen Sie „…“ durch die konkreten Menüpunkte, Felder und Begriffe Ihrer Aufgabe.', placeholders);
+
+  // Warnhinweise (ADR-083, F-07): Signalwort + Gefahr + Folge + Vermeidung – nur, wenn das Kapitel welche enthält
+  const warnings = content.filter((b) => b.kind !== 'code' && b.kind !== 'table').map((b) => ({ b, w: checkWarning(b.text, { kind: b.kind }) })).filter((x) => x.w);
+  if (warnings.length) {
+    const open = warnings.filter((x) => x.w!.missing.length);
+    add('warning_schema', 'warning', open.length > 0,
+      [`${warnings.length} ${warnings.length === 1 ? 'Warnhinweis folgt' : 'Warnhinweise folgen'} dem Schema.`, `${open.length} ${open.length === 1 ? 'Warnhinweis ist' : 'Warnhinweise sind'} unvollständig.`],
+      'Schema: festes Signalwort (GEFAHR, WARNUNG, VORSICHT – nur bei Personenschaden; HINWEIS bei Sachschaden oder Datenverlust) + Art und Quelle der Gefahr + Folge bei Nichtbeachtung + Maßnahme zur Vermeidung.',
+      open.map(({ b, w }) => ({
+        blockId: b.id, excerpt: `${excerpt(b.text, 60)} – fehlt: ${w!.missing.map((x) => WARNING_PART_LABEL[x]).join(', ')}`,
+        ...(w!.fixed && !b.locked ? { fix: { blockId: b.id, versionNo: b.versionNo, text: w!.fixed, label: 'Festes Signalwort setzen' } } : {}),
+      })));
+  }
 
   const penalty = checks.reduce((n, c) => n + (c.status === 'warning' ? 15 : c.status === 'info' ? 5 : 0), 0);
   const score = Math.max(0, 100 - penalty);

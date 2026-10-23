@@ -452,7 +452,10 @@ export function PlanningPage() {
 
 const TR_LABEL: Record<string, string> = { missing: 'fehlt', draft: 'Entwurf', approved: 'freigegeben', outdated: 'veraltet' };
 const TR_ICON: Record<string, string> = { missing: '–', draft: '✎', approved: '✓', outdated: '⚠' };
-const ISSUE_LABEL: Record<string, string> = { empty: 'leer', numbers_changed: 'Zahlen abweichend', structure_changed: 'Aufzählung abweichend', no_sources: 'ohne Quellsatz', unknown_source: 'unbekannter Quellsatz', uncovered_source: 'Satz fehlt' };
+const ISSUE_LABEL: Record<string, string> = {
+  empty: 'leer', numbers_changed: 'Zahlen abweichend', structure_changed: 'Aufbau abweichend', no_sources: 'ohne Quellsatz', unknown_source: 'unbekannter Quellsatz', uncovered_source: 'Satz fehlt',
+  placeholders_changed: 'Platzhalter abweichend', formatting_changed: 'Fettung abweichend', signal_word_missing: 'Signalwort fehlt', term_translation: 'Begriff nicht wie vorgegeben',
+};
 
 /** Übersetzungen eines FAQ-Eintrags (ADR-077): je Projektsprache von Hand oder als KI-Vorschlag, dann freigeben */
 function FaqTranslations({ faqId, question, canEdit, onChanged }: { faqId: string; question: string; canEdit: boolean; onChanged: () => void }) {

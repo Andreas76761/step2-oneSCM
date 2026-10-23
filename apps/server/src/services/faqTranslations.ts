@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { audit, type Ctx, type User } from '../context.js';
 import { json, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
+import { fixedTranslations } from './terminology.js';
 import { buildTranslatePrompt, checkTranslation, LANGUAGES, parseTranslateResponse, splitSentences, TRANSLATION_ISSUE_LABELS, type TranslationIssue } from '../domain/translate.js';
 import { badRequest, conflict, notFound, Problem } from '../problem.js';
 
@@ -84,7 +85,8 @@ export async function saveFaqTranslation(ctx: Ctx, faqId: string, lang: string, 
   const source = await sourceOf(ctx, faqId);
   await targetLanguage(ctx, lang);
   const text = fields(input);
-  const issues = [...new Set([...checkTranslation(String(source.question), text.question), ...checkTranslation(String(source.answer), text.answer)])];
+  const opts = { language: lang, terms: await fixedTranslations(ctx) };
+  const issues = [...new Set([...checkTranslation(String(source.question), text.question, null, opts), ...checkTranslation(String(source.answer), text.answer, null, opts)])];
   await ctx.db.tx(async () => {
     await upsert(ctx, source, lang, text, 'manual', issues, user);
     await audit(ctx, user.id, 'faq.translation_saved', 'faq', faqId, { language: lang });
@@ -102,11 +104,12 @@ export async function machineFaqTranslation(ctx: Ctx, faqId: string, lang: strin
   const a = String(source.answer);
   // keine personenbezogenen Daten an externe Dienste (ADR-013)
   if (provider.external && detectPrivacy(`${q}\n${a}`).length) throw badRequest('Der Eintrag enthält personenbezogene Daten und wird nicht an den externen KI-Dienst gesendet.');
-  const terms = (await ctx.db.all("SELECT preferred FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId)).map((x) => ({ preferred: String(x.preferred) }));
+  const fixed = await fixedTranslations(ctx);
+  const terms = fixed.map((x) => ({ preferred: x.preferred, fixed: x.translations[lang] ?? null }));
   const run = async (text: string, kind: string) => {
     const out = parseTranslateResponse((await provider.complete(buildTranslatePrompt({ language: lang, kind, sentences: splitSentences(text, kind), terms }))).text);
     const joined = out.map((s) => s.text).filter(Boolean).join(/^\s*(\d+\.|[-*])\s+/m.test(text) ? '\n' : ' ');
-    return { text: joined, issues: checkTranslation(text, joined, out) };
+    return { text: joined, issues: checkTranslation(text, joined, out, { language: lang, terms: fixed }) };
   };
   let tq: Awaited<ReturnType<typeof run>>;
   let ta: Awaited<ReturnType<typeof run>>;

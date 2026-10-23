@@ -3,6 +3,7 @@
 import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Db } from '../db.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
+import type { FixedTerm } from '../domain/translate.js';
 import { projectLanguages } from './translations.js';
 
 export interface Term {
@@ -57,6 +58,58 @@ export async function listTerms(ctx: Ctx, opts: { includeRetired?: boolean } = {
     ctx.projectId,
   );
   return rows.map(toTerm);
+}
+
+/** Begriffe mit fester Übersetzung je Sprache (F-12, ADR-083) für Übersetzungsanfrage und -prüfung */
+export async function fixedTranslations(ctx: Ctx): Promise<FixedTerm[]> {
+  const rows = await ctx.db.all("SELECT preferred, translations FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId);
+  return rows.map((r) => ({
+    preferred: String(r.preferred),
+    translations: Object.fromEntries(Object.entries(parseJson<Record<string, { term?: string }>>(r.translations, {})).map(([l, v]) => [l, v?.term?.trim() ?? '']).filter(([, v]) => v)),
+  }));
+}
+
+// Begriffskandidaten aus Jira-Tickets (F-12, ADR-083): mehrteilige Fachbegriffe in Großschreibung („Contract Preview PDF“),
+// die in mindestens zwei Tickets vorkommen und noch nicht in der Terminologie stehen. Nur Vorschläge – angelegt wird von Hand.
+const CANDIDATE = /(?<![\p{L}\d])(?:\p{Lu}[\p{Ll}\d]+|\p{Lu}{2,}[\p{Ll}]*)(?:[ -](?:\p{Lu}[\p{Ll}\d]+|\p{Lu}{2,}[\p{Ll}]*|&)){1,3}(?![\p{L}\d])/gu;
+const LEADING = new Set(['The', 'A', 'An', 'When', 'If', 'In', 'On', 'As', 'For', 'With', 'And', 'Or', 'To', 'From', 'After', 'Before', 'Given', 'Then', 'This', 'All',
+  'Der', 'Die', 'Das', 'Ein', 'Eine', 'Wenn', 'Im', 'Bei', 'Und', 'Oder', 'Mit', 'Für', 'Nach', 'Vor', 'Als', 'Auf', 'Aus', 'Zum', 'Zur', 'Beim', 'Ist', 'Sind']);
+const FIELD_WORDS = new Set(['Typ', 'Status', 'Priorität', 'Komponente', 'Lösungsversion', 'Beschreibung', 'Akzeptanzkriterien', 'Verknüpfte Tickets', 'Jira-Tickets', 'PI TBD']);
+
+export async function termCandidates(ctx: Ctx, opts: { minTickets?: number } = {}) {
+  const min = Math.max(1, Math.min(20, Math.trunc(opts.minTickets ?? 2) || 2));
+  const rows = await ctx.db.all(
+    `SELECT d.path, s.text FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
+     WHERE d.project_id = ? AND r.is_current = 1 AND d.removed_at IS NULL AND r.source_format = 'jira'`,
+    ctx.projectId,
+  );
+  const known = new Set<string>();
+  for (const t of await ctx.db.all('SELECT preferred, avoid, translations FROM terminology_terms WHERE project_id = ?', ctx.projectId)) {
+    known.add(String(t.preferred).toLowerCase());
+    for (const a of parseJson<string[]>(t.avoid, [])) known.add(a.toLowerCase());
+    for (const v of Object.values(parseJson<Record<string, { term?: string }>>(t.translations, {}))) if (v?.term) known.add(v.term.toLowerCase());
+  }
+  const found = new Map<string, { term: string; tickets: Set<string>; count: number }>();
+  for (const r of rows) {
+    const ticket = String(r.path).replace(/^jira\//, '').replace(/\.md$/, '');
+    // Feldtabelle und Überschriften der Ticketvorlage gehören nicht dazu
+    const text = String(r.text).split('\n').filter((l) => !/^\s*(\||#)/.test(l)).join('\n').replace(/\[[^\]]*\d+\]/g, ' ');
+    for (const m of text.matchAll(CANDIDATE)) {
+      const parts = m[0].split(/ (?=\S)/);
+      while (parts.length && LEADING.has(parts[0])) parts.shift();
+      const term = parts.join(' ').replace(/\s*&$/, '');
+      if (term.split(' ').length < 2 || FIELD_WORDS.has(term) || known.has(term.toLowerCase())) continue;
+      const key = term.toLowerCase();
+      const e = found.get(key) ?? { term, tickets: new Set<string>(), count: 0 };
+      e.tickets.add(ticket);
+      e.count++;
+      found.set(key, e);
+    }
+  }
+  return [...found.values()].filter((e) => e.tickets.size >= min)
+    .sort((a, b) => b.tickets.size - a.tickets.size || b.count - a.count || a.term.localeCompare(b.term))
+    .slice(0, 200)
+    .map((e) => ({ term: e.term, tickets: e.tickets.size, occurrences: e.count, examples: [...e.tickets].sort().slice(0, 5) }));
 }
 
 async function getTerm(ctx: Ctx, id: string) {

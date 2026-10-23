@@ -94,12 +94,12 @@ export const LABEL_CATALOG: CatalogLabel[] = [
     ['generation.mo-checks', 'Vertragserstellung › MO Checks', 'Contract Generation › MO Checks'],
     ['generation.special-cases', 'Vertragserstellung › Sonderfälle', 'Contract Generation › Special Cases'],
     ['contract-management', 'Vertragsverwaltung', 'Contract Management'],
-    // Unterpunkte 3.1–3.5 (Handbuch-Werkstatt V4, Menüstruktur); englische UI-Begriffe noch an der Oberfläche bestätigen
-    ['contract-management.search-change', 'Vertragsverwaltung › Vertrag suchen und ändern', 'Contract Management › Search and Change Contract', 'V4-Punkt 3.1; UI-Begriff unbestätigt'],
-    ['contract-management.suspend-reactivate', 'Vertragsverwaltung › Vertrag aussetzen und reaktivieren', 'Contract Management › Suspend and Reactivate Contract', 'V4-Punkt 3.2; UI-Begriff unbestätigt'],
-    ['contract-management.terminate-cancel', 'Vertragsverwaltung › Vertrag beenden, stornieren und kündigen', 'Contract Management › Terminate and Cancel Contract', 'V4-Punkt 3.3; UI-Begriff unbestätigt'],
-    ['contract-management.renewal', 'Vertragsverwaltung › Verlängerung, Folgevertrag und Neuvertrag', 'Contract Management › Extension, Follow-up and New Contract', 'V4-Punkt 3.4; UI-Begriff unbestätigt'],
-    ['contract-management.documents', 'Vertragsverwaltung › Dokumente und Kommunikation', 'Contract Management › Documents and Communication', 'V4-Punkt 3.5; UI-Begriff unbestätigt'],
+    // Unterpunkte 3.1–3.5 (Handbuch-Werkstatt V4, Menüstruktur); englische UI-Begriffe bestätigt am 23.10.2026
+    ['contract-management.search-change', 'Vertragsverwaltung › Vertrag suchen und ändern', 'Contract Management › Search and Change Contract', 'V4-Punkt 3.1'],
+    ['contract-management.suspend-reactivate', 'Vertragsverwaltung › Vertrag aussetzen und reaktivieren', 'Contract Management › Suspend and Reactivate Contract', 'V4-Punkt 3.2'],
+    ['contract-management.terminate-cancel', 'Vertragsverwaltung › Vertrag beenden, stornieren und kündigen', 'Contract Management › Terminate and Cancel Contract', 'V4-Punkt 3.3'],
+    ['contract-management.renewal', 'Vertragsverwaltung › Verlängerung, Folgevertrag und Neuvertrag', 'Contract Management › Extension, Follow-up and New Contract', 'V4-Punkt 3.4'],
+    ['contract-management.documents', 'Vertragsverwaltung › Dokumente und Kommunikation', 'Contract Management › Documents and Communication', 'V4-Punkt 3.5'],
     ['customer', 'Kundenverwaltung', 'Customer Management'],
     ['customer.private', 'Kundenverwaltung › Privatkunden', 'Customer Management › Private Customer'],
     ['customer.commercial', 'Kundenverwaltung › Geschäftskunden', 'Customer Management › Commercial Customer'],

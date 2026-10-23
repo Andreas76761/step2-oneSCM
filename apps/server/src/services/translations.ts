@@ -1,5 +1,6 @@
 // Mehrsprachigkeit (ADR-020): Übersetzungen freigegebener deutscher Kapitelversionen je Zielsprache.
 // KI-Übersetzung je Absatz mit Satz-Zuordnung zur deutschen Quelle, manuelle Nachbearbeitung, Freigabe je Sprache.
+import { fixedTranslations } from './terminology.js';
 import { audit, privacyNames, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
@@ -122,7 +123,8 @@ export async function editTranslationBlock(ctx: Ctx, id: string, input: { text?:
   assertDraft(await row(ctx, b.translation_id));
   const text = input.text?.trim() ?? '';
   if (!text) throw badRequest('Text ist Pflicht.');
-  const issues = checkTranslation(b.source_text, text, null);
+  const t = await row(ctx, b.translation_id);
+  const issues = checkTranslation(b.source_text, text, null, { language: t.language, terms: await fixedTranslations(ctx) });
   await ctx.db.tx(async () => {
     await ctx.db.run("UPDATE translation_blocks SET text = ?, sentences = NULL, issues = ?, mode = 'edited', updated_by = ?, updated_at = ? WHERE id = ?", text, json(issues), actor, now(), id);
     await audit(ctx, actor, 'translation.block_edited', 'translation', b.translation_id, { blockId: b.block_id, issues });
@@ -163,13 +165,14 @@ export async function runMachineTranslation(ctx: Ctx, id: string, actor: string)
     return;
   }
   await ctx.db.run("UPDATE translations SET job_status = 'processing' WHERE id = ?", id);
-  const terms = await ctx.db.all("SELECT preferred FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId);
+  const fixed = await fixedTranslations(ctx);
+  const terms = fixed.map((x) => ({ preferred: x.preferred, fixed: x.translations[t.language] ?? null }));
   const blocks = await ctx.db.all(
     "SELECT tb.*, b.kind FROM translation_blocks tb JOIN content_blocks b ON b.id = tb.block_id WHERE tb.translation_id = ? AND tb.mode = 'pending'",
     id,
   );
   const call = async (sentences: string[], kind: string) => {
-    const prompt = buildTranslatePrompt({ language: t.language, kind, sentences, terms: terms.map((x) => ({ preferred: x.preferred })) });
+    const prompt = buildTranslatePrompt({ language: t.language, kind, sentences, terms });
     return parseTranslateResponse((await provider.complete(prompt)).text);
   };
   const names = provider.external ? await privacyNames(ctx.db) : [];
@@ -184,7 +187,7 @@ export async function runMachineTranslation(ctx: Ctx, id: string, actor: string)
     try {
       const out = await call(sentences, b.kind);
       const text = preserveImages(b.source_text, out.map((s) => s.text).filter(Boolean).join(b.kind === 'list' || /^\s*(\d+\.|[-*])\s+/m.test(b.source_text) ? '\n' : ' '));
-      const issues = checkTranslation(b.source_text, text, out);
+      const issues = checkTranslation(b.source_text, text, out, { language: t.language, terms: fixed });
       await ctx.db.run(
         "UPDATE translation_blocks SET text = ?, sentences = ?, issues = ?, mode = 'machine', provider = ?, model = ?, updated_by = ?, updated_at = ? WHERE id = ?",
         text, json(out), json(issues), provider.id, provider.model, actor, now(), b.id,
