@@ -80,3 +80,4 @@
 | [ADR-076](ADR-076-notiz-im-kapitel.md) | Notizen direkt im Kapitel | akzeptiert, umgesetzt |
 | [ADR-077](ADR-077-faq-uebersetzen.md) | Häufige Fragen übersetzen | akzeptiert, umgesetzt |
 | [ADR-078](ADR-078-weitere-sprachen.md) | Alle Projektsprachen vollständig beschriftet | akzeptiert, umgesetzt |
+| [ADR-079](ADR-079-onescm-metadaten.md) | oneSCM_Metadaten: Labels, Chunks und gespeicherte Fragen und Antworten | akzeptiert, umgesetzt |

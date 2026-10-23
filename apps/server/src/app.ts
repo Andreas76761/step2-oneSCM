@@ -30,6 +30,8 @@ import { assistantRoutes } from './routes/assistant.js';
 import { integrationRoutes } from './routes/integrations.js';
 import { contextHelpRoutes, publicHelpRoutes } from './routes/contextHelp.js';
 import { masterDataRoutes } from './routes/masterData.js';
+import { metadataRoutes } from './routes/metadata.js';
+import { seedMetadataLabels } from './services/metadata.js';
 import { styleRoutes } from './routes/style.js';
 import { APP_VERSION } from './version.js';
 import { deliverWebhook, failWebhookDelivery } from './services/webhooks.js';
@@ -73,6 +75,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
   const db = traceDb(await openDb(config.database));
   await seedReferenceData(db, config.authMode);
   await seedTerminology(db, DEFAULT_PROJECT_ID);
+  // Label-Katalog (ADR-079): neue Katalog-Labels erscheinen auch in bestehenden Projekten
+  for (const p of await db.all<{ id: string }>('SELECT id FROM projects')) await seedMetadataLabels(db, p.id);
   const jobs = new JobQueue(db, { onError: (type, err) => app.log.error({ err }, `Job ${type} fehlgeschlagen`) });
   const ctx: Ctx = {
     db,
@@ -247,6 +251,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       styleRoutes(api, ctx);
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
+      metadataRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

@@ -49,11 +49,22 @@ const PrintPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.
 const ReaderBookmarksPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderBookmarksPage })));
 const ReaderFaqPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderFaqPage })));
 const ReaderPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderPage })));
+const MetadataOverviewPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataOverviewPage })));
+const MetadataChunksPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataChunksPage })));
+const MetadataQaPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataQaPage })));
+const MetadataLabelsPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataLabelsPage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
 type NavItem = { to: string; label: string; icon: string };
 const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
+  // oneSCM_Metadaten (ADR-079): Quellen einlesen, je Überschrift labeln und befragen
+  { id: 'metadaten', label: 'oneSCM_Metadaten', items: [
+    { to: '/metadaten', label: 'Übersicht', icon: '🧠' },
+    { to: '/metadaten/chunks', label: 'Chunks', icon: '🧱' },
+    { to: '/metadaten/fragen', label: 'Fragen & Antworten', icon: '💡' },
+    { to: '/metadaten/labels', label: 'Labels', icon: '🏷' },
+  ] },
   { id: 'sammeln', label: '1 Sammeln', items: [
     { to: '/quellen', label: 'Quellen', icon: '📥' },
     { to: '/cluster', label: 'Textcluster', icon: '🧩' },
@@ -307,7 +318,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
               <div key={g.id} role="group" aria-labelledby={`nav-h-${g.id}`} className="nav-section">
                 <span id={`nav-h-${g.id}`} className="nav-heading">{g.label}</span>
                 {g.items.map((n) => (
-                  <NavLink key={n.to} to={n.to} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
+                  // Übersicht nur bei genauer Übereinstimmung aktiv, wenn Unterseiten eigene Einträge haben
+                  <NavLink key={n.to} to={n.to} end={g.items.some((o) => o.to.startsWith(`${n.to}/`))} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
                     <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
                   </NavLink>
                 ))}
@@ -380,6 +392,10 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/lesen/lesezeichen" element={<ReaderBookmarksPage />} />
             <Route path="/rueckmeldungen" element={<FeedbackPage />} />
             <Route path="/lesen/:chapterId" element={<ReaderPage />} />
+            <Route path="/metadaten" element={<MetadataOverviewPage />} />
+            <Route path="/metadaten/chunks" element={<MetadataChunksPage />} />
+            <Route path="/metadaten/fragen" element={<MetadataQaPage />} />
+            <Route path="/metadaten/labels" element={<MetadataLabelsPage />} />
             <Route path="/quellen" element={<SourcesPage />} />
             <Route path="/cluster" element={<ClustersPage />} />
             <Route path="/widersprueche" element={<ContradictionsPage />} />

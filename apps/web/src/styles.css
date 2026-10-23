@@ -710,3 +710,27 @@ div.reader-lang-note p { margin: 0; }
 .faq-translations li { margin: 6px 0; }
 .faq-tr-edit { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 6px 0; }
 .faq-tr-edit textarea, .faq-tr-edit input { width: 100%; }
+
+/* oneSCM_Metadaten (ADR-079) */
+.md-label { border-left: 4px solid var(--border); display: inline-flex; align-items: center; gap: 2px; }
+.md-label.md-archived { opacity: 0.7; font-style: italic; }
+.md-remove { background: none; border: 0; padding: 0 2px; margin-left: 2px; cursor: pointer; color: var(--text); font: inherit; min-width: 24px; min-height: 24px; }
+.md-remove:focus-visible { outline: 3px solid var(--focus, #f59e0b); }
+.md-multi { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.md-bulk { border-top: 1px solid var(--border); padding-top: 8px; margin-bottom: 0; }
+.md-text { white-space: pre-wrap; margin: 4px 0; }
+.md-heading-group { margin-bottom: 16px; }
+.md-heading-group h3 { font-size: 1rem; margin: 8px 0; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.md-chunk { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 6px 0; background: var(--surface); }
+.md-chunk-head { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.md-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.md-steps li { display: flex; gap: 10px; align-items: flex-start; }
+.md-step-no { font-size: 1.3rem; line-height: 1; }
+.md-sources { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 8px 0; }
+.md-sources input { width: 100%; }
+.md-source { display: flex; gap: 6px; align-items: center; }
+.md-found { list-style: none; padding: 0; margin: 6px 0 0; }
+.md-found li { margin: 4px 0; }
+.md-excerpt { border-left: 3px solid var(--border); margin: 6px 0; padding: 4px 10px; }
+.md-archived-toggle { display: block; margin: 0 0 8px; }
+.md-chunk select { max-width: 280px; }

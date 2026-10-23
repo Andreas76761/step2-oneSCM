@@ -1,0 +1,51 @@
+// oneSCM_Metadaten (ADR-079): Labels, Chunks mit Labels, gespeicherte Fragen und Antworten
+import type { FastifyInstance } from 'fastify';
+import type { Ctx } from '../context.js';
+import {
+  createLabel, createQa, deleteQa, getQa, labelGroups, listChunks, listLabels, listQa, metadataOverview, setChunkLabels, updateLabel, updateQa,
+} from '../services/metadata.js';
+import { list, num, userOf } from './helpers.js';
+
+type P<T extends string> = { Params: Record<T, string> };
+
+export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
+  app.get('/metadata/overview', async (req) => (userOf(req.ctx, req), metadataOverview(req.ctx)));
+
+  // ENTSCHEIDUNG(M-06): Labels vordefiniert; lesen mit `read`, pflegen nur mit `admin`
+  app.get('/metadata/label-groups', async (req) => (userOf(req.ctx, req), labelGroups()));
+  app.get<{ Querystring: { group?: string; includeArchived?: string } }>('/metadata/labels', async (req) => {
+    userOf(req.ctx, req);
+    return listLabels(req.ctx, { group: req.query.group || undefined, includeArchived: req.query.includeArchived === 'true' });
+  });
+  app.post<{ Body: any }>('/metadata/labels', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'admin');
+    reply.code(201);
+    return createLabel(req.ctx, req.body ?? {}, user);
+  });
+  app.patch<P<'labelId'> & { Body: any }>('/metadata/labels/:labelId', async (req) => updateLabel(req.ctx, req.params.labelId, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+
+  // ENTSCHEIDUNG(M-09): Chunks lesen mit `read`, labeln mit `edit`
+  app.get<{ Querystring: { q?: string; labels?: string; unlabeled?: string; documentId?: string; format?: string; limit?: string; offset?: string } }>('/metadata/chunks', async (req) => {
+    userOf(req.ctx, req);
+    const q = req.query;
+    return listChunks(req.ctx, { q: q.q, labelIds: list(q.labels), unlabeled: q.unlabeled === 'true', documentId: q.documentId || undefined, format: q.format || undefined, limit: num(q.limit), offset: num(q.offset) });
+  });
+  app.post<{ Body: any }>('/metadata/chunks/labels', async (req) => setChunkLabels(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+
+  // Gespeicherte Fragen und Antworten: lesen mit `read`, speichern, ändern, löschen mit `edit`
+  app.get<{ Querystring: { q?: string; labels?: string; language?: string } }>('/metadata/qa', async (req) => {
+    userOf(req.ctx, req);
+    return listQa(req.ctx, { q: req.query.q, labelIds: list(req.query.labels), language: req.query.language || undefined });
+  });
+  app.post<{ Body: any }>('/metadata/qa', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    return createQa(req.ctx, req.body ?? {}, user);
+  });
+  app.get<P<'qaId'>>('/metadata/qa/:qaId', async (req) => (userOf(req.ctx, req), getQa(req.ctx, req.params.qaId)));
+  app.patch<P<'qaId'> & { Body: any }>('/metadata/qa/:qaId', async (req) => updateQa(req.ctx, req.params.qaId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
+  app.delete<P<'qaId'>>('/metadata/qa/:qaId', async (req, reply) => {
+    await deleteQa(req.ctx, req.params.qaId, userOf(req.ctx, req, 'edit'));
+    reply.code(204);
+  });
+}

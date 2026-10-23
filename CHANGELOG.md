@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.27.0 – Etappe 27 (23.10.2026)
+
+### Hinzugefügt
+- **oneSCM_Metadaten, Etappe M1 (ADR-079):** eigener Bereich in der Navigation mit Übersicht (Quelldateien und Chunks je Format, Ablauf Ablage → Ausgabe), **Chunks** (je Überschrift oder als Tabelle, Fundstelle, Suche, Filter nach Format, Labels und „ohne Label“, einzeln und gesammelt labeln), **Fragen & Antworten** (mit Quell-Chunks samt Auszug, Labels, Sprache Deutsch/Englisch, Notiz) und **Labels**.
+- **100 vordefinierte Labels** in sechs Gruppen, Deutsch und Englisch: Handbuch-Gliederung (30), Rollen (10), Navigation im System (25), Inhaltstyp (15), Sparte (5), Qualität und Status (15); Pflege, Ausblenden und eigene Labels durch die Administration; jedes Projekt erhält den Katalog.
+- Plan [docs/06-plan-onescm-metadaten.md](docs/06-plan-onescm-metadaten.md) mit den Entscheidungen M-01 … M-10 (Daten bleiben lokal) und Entwicklungs-Agenten unter `.claude/agents/`.
+- Migration `035_metadata.sql`; Tests T-209 … T-211, E2E T-237 (axe); Anforderungen NFR-66 … NFR-68.
+
+### Geändert
+- Navigation: Übersichtseinträge sind nur auf der eigenen Seite markiert, wenn Unterseiten eigene Einträge haben.
+
 ## 0.26.0 – Etappe 26 (27.09.2026)
 
 ### Hinzugefügt

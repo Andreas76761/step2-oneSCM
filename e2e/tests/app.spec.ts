@@ -1794,3 +1794,63 @@ test('[T-236] Häufige Fragen übersetzen und freigeben, KI-Vorschlag; FAQ-Seite
   await expect(page.getByRole('region', { name: 'Strona tytułowa' })).toContainText('Podręcznik użytkownika');
   await expect.poll(() => page.locator('style[data-print-header]').textContent()).toContain('"Strona " counter(page) " z " counter(pages)');
 });
+
+test('[T-237] oneSCM_Metadaten: Übersicht, Chunks je Überschrift labeln und filtern, Frage und Antwort mit Quelle und Labels speichern, Labelkatalog auf Englisch', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  // Übersicht: Demo-Quellen je Format, sechs Labelgruppen
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Übersicht' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'oneSCM_Metadaten' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '📝 Markdown' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Navigation im System' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Chunks je Überschrift: einen Chunk labeln, danach nach dem Label filtern
+  await page.goto('/metadaten/chunks');
+  await page.getByLabel('Im Text suchen').fill('MO-Check');
+  const chunk = page.locator('article.md-chunk').first();
+  await expect(chunk).toBeVisible();
+  const seq = (await chunk.locator('strong').first().textContent())!.trim();
+  await chunk.getByLabel(`Label für Chunk ${seq} hinzufügen`).selectOption({ label: 'Prüfung › MO-Check' });
+  await expect(page.getByText('1 Zuordnung(en) hinzugefügt.')).toBeVisible();
+  await expect(chunk.locator('.md-label', { hasText: 'Prüfung › MO-Check' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Im Text suchen').fill('');
+  await page.getByLabel('Nach Label filtern').selectOption({ label: 'Prüfung › MO-Check' });
+  await expect(page.locator('article.md-chunk')).toHaveCount(1);
+  // gesammelt labeln in der Tabellenansicht
+  await page.getByLabel('Ansicht').selectOption('table');
+  await page.getByLabel('Alle auf dieser Seite auswählen').check();
+  await page.getByLabel('Label für die Auswahl').selectOption({ label: 'MO (Market Operation)' });
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await expect(page.getByText('1 Zuordnung(en) hinzugefügt.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Frage und Antwort mit Quelle und Labels speichern
+  await page.goto('/metadaten/fragen');
+  await page.getByLabel('Frage', { exact: true }).fill('E2E Wer führt den MO-Check durch?');
+  await page.getByLabel('Antwort', { exact: true }).fill('Die Market Operation prüft den Vertrag im MO-Check [1].');
+  await page.getByLabel('Label zur Antwort hinzufügen').selectOption({ label: 'MO (Market Operation)' });
+  await page.getByLabel('Chunk als Quelle suchen').fill('MO-Check');
+  await page.locator('.md-found li button').first().click();
+  await expect(page.locator('.md-source')).toHaveCount(1);
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByText('Frage und Antwort angelegt.')).toBeVisible();
+  const row = page.getByRole('row', { name: /E2E Wer führt den MO-Check durch\?/ });
+  await row.getByRole('button', { name: /E2E Wer führt/ }).click();
+  await expect(page.locator('.md-excerpt')).toHaveCount(1);
+  await expect(row.locator('.md-label', { hasText: 'MO (Market Operation)' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Labelkatalog: 30 Gliederungslabels, englische Namen, Zähler
+  await page.goto('/metadaten/labels');
+  await page.getByLabel('Sprache der Labels').selectOption('en');
+  await expect(page.getByRole('heading', { name: /Manual outline \(30\)/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: /Prüfung › MO-Check.*Review › MO check/ })).toContainText('1');
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Sprache der Labels').selectOption('de');
+});

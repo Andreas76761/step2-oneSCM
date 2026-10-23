@@ -1,7 +1,7 @@
 # 6. Plan: oneSCM_Metadaten – RAG über alle Quelldateien
 
-> **Status: Entwurf vom 23.10.2026, wartet auf Entscheidungen M-01 … M-10 (Abschnitt 6.7).**
-> Keine offene Entscheidung wird ohne den Auftraggeber getroffen. Vorläufige Annahmen sind als *Annahme* gekennzeichnet.
+> **Status: entschieden am 23.10.2026, Etappe M1 umgesetzt (v0.27.0, [ADR-079](adr/ADR-079-onescm-metadaten.md)).**
+> Der Auftraggeber hat die Annahmen M-01 … M-10 übernommen, mit drei Änderungen: Die Daten bleiben lokal, die Labels sind vordefiniert (100 Stück, darunter ein Gliederungsvorschlag für das Handbuch, Rollen und die Navigation im System), Sprachen sind Deutsch und Englisch (Abschnitt 6.7). Im Code sind die Stellen mit `ENTSCHEIDUNG(M-xx)` markiert.
 
 ## 6.1 Ziel
 
@@ -20,7 +20,7 @@ Ein eigener Bereich **„oneSCM_Metadaten“** in der App. Er liest Dateien im F
 | Assistent mit Quellen je Satz, Prüfung der Belege | `services/assistant.ts`, `domain/assistant.ts`, `llm.ts` | RAG-Antwort; heute nur über **freigegebene Kapitel** → wird auf **Quellen-Chunks** erweitert |
 | Berechtigungen, Projekte, Audit, Jobqueue | `auth.ts`, `jobs.ts`, `audit_events` | unverändert |
 
-**Annahme:** oneSCM_Metadaten wird als **Modul innerhalb der bestehenden App** gebaut (eigenes Projekt bzw. eigener Menüpunkt), nicht als zweite App. Das spart etwa die Hälfte des Aufwands (siehe M-01).
+**Entscheidung (M-01):** oneSCM_Metadaten ist ein **Modul innerhalb der bestehenden App** (eigener Bereich in der Navigation), keine zweite App.
 
 ## 6.3 Ablauf (Pipeline)
 
@@ -50,7 +50,7 @@ Bilder: Alternativtext aus der Quelle; optional **Bildbeschreibung per KI** (M-0
 
 ### ③ Chunking
 - Grundlage bleibt die Überschriftenstruktur: H1 → Kapitel, H2 → Unterkapitel, tiefer → `heading_path`.
-- **Annahme:** Zielgröße 300–800 Zeichen, lange Absätze an Satzgrenzen geteilt, 1 Satz Überlappung; Tabellen und Listen bleiben ganz.
+- Zielgröße 300–800 Zeichen, lange Absätze an Satzgrenzen geteilt, 1 Satz Überlappung; Tabellen und Listen bleiben ganz.
 - Jeder Chunk speichert: Quelldatei, Revision, Überschriftenpfad, Fundstelle (Seite/Folie/Zeitmarke/Zeile), Format, Text, Hash, Labels.
 
 ### ④ Indexierung
@@ -69,6 +69,8 @@ Bilder: Alternativtext aus der Quelle; optional **Bildbeschreibung per KI** (M-0
 - **„Frage & Antwort speichern“** mit Labels, Notiz und Bewertung; Liste aller gespeicherten Fragen und Antworten, filterbar und als CSV/Excel/JSON exportierbar.
 
 ## 6.4 Oberfläche (Menüpunkt „oneSCM_Metadaten“)
+
+Umgesetzt in M1: **Übersicht**, **Chunks** (je Überschrift oder Tabelle, Labels einzeln und gesammelt), **Fragen & Antworten** (speichern mit Quellen und Labels) und **Labels**. Eingelesen wird bis M2 über „Quellen“, Dopplungen zeigt bis M4 die vorhandene Seite „Dopplungen“.
 
 | Seite | Inhalt |
 |---|---|
@@ -110,7 +112,7 @@ Gestaltung wie die bestehende App (Karten, Tabellen, Dunkelmodus, WCAG 2.2 AA).
 
 | Etappe | Inhalt | Ergebnis |
 |---|---|---|
-| M1 | Datenmodell (Chunk-Fundstelle, Labels, gespeicherte Fragen), ADR, Menüpunkt | leere Seiten, Migration |
+| M1 ✅ | Datenmodell (Chunk-Fundstelle, Labels, gespeicherte Fragen), 100 vordefinierte Labels, ADR-079, Menübereich | Chunks labeln, Fragen und Antworten speichern, Labelkatalog |
 | M2 | Extraktoren PPTX und PDF (Text), DOCX/HTML erweitert um Fundstellen; Seite „Einlesen“ | alle Textformate einlesbar |
 | M3 | Chunking je Überschrift, Seite „Quellen je Überschrift“ und „Chunks“ mit Labels | Daten sichtbar und labelbar |
 | M4 | Indexierung, Seite „Dopplungen“ (formatübergreifend) | Dublettensuche |
@@ -120,17 +122,17 @@ Gestaltung wie die bestehende App (Karten, Tabellen, Dunkelmodus, WCAG 2.2 AA).
 
 Jede Etappe endet mit Tests, Traceability, Changelog und Pull Request.
 
-## 6.7 Offene Entscheidungen
+## 6.7 Entscheidungen (23.10.2026)
 
-| ID | Frage | Annahme bis zur Entscheidung |
+| ID | Frage | Entscheidung |
 |---|---|---|
 | M-01 | Modul in der bestehenden App oder eigenständige App? | Modul in der bestehenden App |
-| M-02 | Welcher KI-Dienst für Antworten (Anthropic Claude, Azure OpenAI, lokal)? Dürfen Inhalte die eigene Umgebung verlassen? | Anthropic Claude, falls erlaubt; sonst nur extraktive Antworten |
-| M-03 | Embeddings: lokal (ohne Netz, schwächer bei Synonymen) oder Dienst (z. B. Voyage/OpenAI/Azure)? | lokal, Dienst umschaltbar |
-| M-04 | MP4: Transkription lokal (whisper.cpp, langsamer) oder Cloud-Dienst? Gibt es Untertitel (SRT/VTT)? | lokal mit whisper.cpp; vorhandene Untertitel bevorzugt |
-| M-05 | Bilder: nur Alternativtext oder OCR bzw. KI-Bildbeschreibung? Gescannte PDFs vorhanden? | Alternativtext + OCR für gescannte Seiten |
-| M-06 | Labels: feste Liste oder frei? Beispiele? | frei + verwaltete Liste, getrennt für Chunks und Fragen/Antworten |
+| M-02 | Welcher KI-Dienst für Antworten? Dürfen Inhalte die eigene Umgebung verlassen? | **Daten bleiben lokal.** Antworten extraktiv oder über ein lokal betriebenes, OpenAI-kompatibles Sprachmodell (z. B. Ollama, `LLM_PROVIDER=openai` mit lokaler `LLM_BASE_URL`); keine Cloud-Dienste |
+| M-03 | Embeddings lokal oder als Dienst? | lokal (Standard `local`, oder ein lokal betriebenes Embedding-Modell) |
+| M-04 | MP4: Transkription lokal oder Cloud? Untertitel? | lokal mit whisper.cpp; vorhandene Untertitel (SRT/VTT) bevorzugt |
+| M-05 | Bilder: Alternativtext, OCR oder KI-Bildbeschreibung? | Alternativtext + lokale OCR für gescannte Seiten |
+| M-06 | Labels: feste Liste oder frei? | **vordefiniert: 100 Labels** in sechs Gruppen – Handbuch-Gliederung (30), Rollen (10), Navigation im System (25), Inhaltstyp (15), Sparte (5), Qualität und Status (15); gemeinsam für Chunks und Fragen/Antworten; Pflege durch die Administration |
 | M-07 | Dublette: ab welcher Ähnlichkeit? Formatübergreifend? | ≥ 85 %, formatübergreifend |
-| M-08 | Mengengerüst: Anzahl Dateien, Gesamtgröße, Videolänge, Sprachen? | < 2 000 Dateien, < 10 GB, Deutsch/Englisch |
-| M-09 | Wer darf einlesen, labeln, fragen? Vertrauliche Inhalte? | vorhandene Berechtigungen (`edit` einlesen/labeln, `read` fragen) |
-| M-10 | Betrieb: lokal, Docker oder Kubernetes? | wie bisher (Docker/Helm) |
+| M-08 | Mengengerüst, Sprachen? | < 2 000 Dateien, < 10 GB; **Deutsch und Englisch** |
+| M-09 | Wer darf einlesen, labeln, fragen? | `edit` einlesen, labeln, Antworten speichern; `read` lesen und fragen; `admin` Labels pflegen |
+| M-10 | Betrieb? | wie bisher (Docker/Helm) |

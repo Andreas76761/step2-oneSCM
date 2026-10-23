@@ -773,5 +773,35 @@
     "documentation": [
       "docs/adr/ADR-078-weitere-sprachen.md"
     ]
+  },
+  {
+    "id": "NFR-66",
+    "title": "oneSCM_Metadaten: 100 vordefinierte Labels in sechs Gruppen (Handbuch-Gliederung, Rollen, Navigation im System, Inhaltstyp, Sparte, Qualität) auf Deutsch und Englisch; Pflege durch die Administration",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-079-onescm-metadaten.md",
+      "docs/06-plan-onescm-metadaten.md"
+    ]
+  },
+  {
+    "id": "NFR-67",
+    "title": "oneSCM_Metadaten: Chunks aller Quelldateien je Überschrift mit Fundstelle anzeigen, filtern und einzeln oder gesammelt labeln",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-079-onescm-metadaten.md",
+      "docs/06-plan-onescm-metadaten.md"
+    ]
+  },
+  {
+    "id": "NFR-68",
+    "title": "oneSCM_Metadaten: Fragen und Antworten mit Quelldatei, Fundstelle, Auszug und Labels speichern, filtern, ändern und löschen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-079-onescm-metadaten.md",
+      "docs/06-plan-onescm-metadaten.md"
+    ]
   }
 ]

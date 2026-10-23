@@ -161,6 +161,17 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.29 Stand nach Etappe 27 (23.10.2026)
+
+Umfang vom Auftraggeber am 23.10.2026 festgelegt: oneSCM_Metadaten nach Plan [06](06-plan-onescm-metadaten.md), Etappe M1; Annahmen M-01 … M-10 übernommen, Daten bleiben lokal, 100 vordefinierte Labels, Deutsch und Englisch.
+
+| Punkt | Ergebnis |
+|---|---|
+| Vordefinierte Labels (NFR-66) | ✅ 100 Labels in sechs Gruppen (Gliederung, Rollen, Navigation, Inhaltstyp, Sparte, Qualität), Deutsch/Englisch, Pflege durch die Administration ([ADR-079](adr/ADR-079-onescm-metadaten.md)) |
+| Chunks je Überschrift labeln (NFR-67) | ✅ Ansicht je Überschrift und Tabelle, Fundstelle, Filter, Einzel- und Sammel-Labeln ([ADR-079](adr/ADR-079-onescm-metadaten.md)) |
+| Fragen und Antworten speichern (NFR-68) | ✅ mit Quell-Chunks samt Auszug, Labels, Sprache, Notiz ([ADR-079](adr/ADR-079-onescm-metadaten.md)) |
+| Offen für M2 … M7 | PowerPoint, PDF und Video einlesen, Fundstellen je Seite/Folie/Zeitmarke, Dopplungen über alle Formate, automatische Antworten aus allen Quellen, Qualitätsmessung |
+
 ## 1.28 Stand nach Etappe 26 (27.09.2026)
 
 Umfang vom Auftraggeber am 27.09.2026 festgelegt: Häufige Fragen übersetzen, weitere Sprachen vollständig.

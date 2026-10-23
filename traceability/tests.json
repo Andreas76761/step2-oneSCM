@@ -1474,5 +1474,43 @@
       "NFR-64",
       "NFR-65"
     ]
+  },
+  {
+    "id": "T-209",
+    "title": "Label-Katalog: 100 vordefinierte Labels in sechs Gruppen (Deutsch, Englisch), auch in neuen Projekten; Pflege nur durch die Administration",
+    "file": "apps/server/test/stage27.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-66"
+    ]
+  },
+  {
+    "id": "T-210",
+    "title": "Chunks je Überschrift mit Fundstelle anzeigen, filtern und labeln (einzeln und gesammelt), Übersicht je Format",
+    "file": "apps/server/test/stage27.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-67"
+    ]
+  },
+  {
+    "id": "T-211",
+    "title": "Fragen und Antworten mit Quellen (Datei, Überschrift, Auszug) und Labels speichern, filtern, ändern, löschen",
+    "file": "apps/server/test/stage27.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-68"
+    ]
+  },
+  {
+    "id": "T-237",
+    "title": "oneSCM_Metadaten: Übersicht, Chunks je Überschrift labeln und filtern, Frage und Antwort mit Quelle und Labels speichern, Labelkatalog auf Englisch (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-66",
+      "NFR-67",
+      "NFR-68"
+    ]
   }
 ]

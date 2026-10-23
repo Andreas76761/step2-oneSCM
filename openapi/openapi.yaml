@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.26.0
+  version: 0.27.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -43,6 +43,7 @@ tags:
   - name: Suche
   - name: Schreibstil
   - name: Bilder
+  - name: Metadaten
   - name: System
 components:
   securitySchemes:
@@ -3731,3 +3732,172 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'OK' }
+  /metadata/overview:
+    get:
+      operationId: metadataOverview
+      summary: 'oneSCM_Metadaten: Quelldateien und Chunks je Format, gelabelte Chunks, gespeicherte Antworten, Labels je Gruppe (ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-67]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ documents, chunks, labeledChunks, savedAnswers, formats: [{ format, documents, chunks }], labelGroups: [{ code, nameDe, nameEn, icon, color, labels }] }' }
+  /metadata/label-groups:
+    get:
+      operationId: listMetadataLabelGroups
+      summary: 'Labelgruppen: Handbuch-Gliederung, Rollen, Navigation im System, Inhaltstyp, Sparte, Qualität und Status (ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ code, nameDe, nameEn, icon, color }]' }
+  /metadata/labels:
+    get:
+      operationId: listMetadataLabels
+      summary: 'Vordefinierte Labels (100 aus dem Katalog, Deutsch und Englisch) mit Anzahl der Chunks und Antworten (ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      parameters:
+        - { name: group, in: query, schema: { type: string, enum: [outline, role, navigation, content, division, quality] } }
+        - { name: includeArchived, in: query, schema: { type: boolean }, description: 'auch ausgeblendete Labels' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, code, group, nameDe, nameEn, description, position, origin: catalog | custom, archived, updatedBy, updatedAt } + chunkCount, qaCount]' }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createMetadataLabel
+      summary: 'Eigenes Label ergänzen (Berechtigung admin, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [code, group, nameDe, nameEn], properties: { code: { type: string, pattern: '^[a-z0-9][a-z0-9.-]{1,59}$' }, group: { type: string, enum: [outline, role, navigation, content, division, quality] }, nameDe: { type: string, maxLength: 120 }, nameEn: { type: string, maxLength: 120 }, description: { type: string, maxLength: 1000 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, code, group, nameDe, nameEn, description, position, origin: catalog | custom, archived, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/labels/{labelId}:
+    patch:
+      operationId: updateMetadataLabel
+      summary: 'Label umbenennen (Deutsch, Englisch), Beschreibung, Reihenfolge, ausblenden oder wieder einblenden (Berechtigung admin, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      parameters: [{ name: labelId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { nameDe: { type: string, maxLength: 120 }, nameEn: { type: string, maxLength: 120 }, description: { type: [string, 'null'] }, position: { type: integer, minimum: 1 }, archived: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, code, group, nameDe, nameEn, description, position, origin: catalog | custom, archived, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/chunks:
+    get:
+      operationId: listMetadataChunks
+      summary: 'Chunks der aktuellen Quelldateien mit Überschrift, Fundstelle und Labels; Suche und Filter (ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-67]
+      x-extension: true
+      parameters:
+        - { name: q, in: query, schema: { type: string }, description: 'Teiltreffer im Text' }
+        - { name: labels, in: query, schema: { type: string }, description: 'Label-IDs, kommagetrennt – alle müssen zugewiesen sein' }
+        - { name: unlabeled, in: query, schema: { type: boolean } }
+        - { name: documentId, in: query, schema: { type: string } }
+        - { name: format, in: query, schema: { type: string }, description: 'markdown | html | docx | pptx | pdf | mp4' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, limit, offset, items: [{ id, seq, documentId, path, fileName, format, revisionId, revisionNo, chapter, subchapter, headingPath, kind, text, lineStart, lineEnd, locator, labels }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /metadata/chunks/labels:
+    post:
+      operationId: setMetadataChunkLabels
+      summary: 'Labels für einen oder mehrere Chunks hinzufügen und entfernen (höchstens 500, Berechtigung edit, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-67]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [snippetIds], properties: { snippetIds: { type: array, items: { type: string }, maxItems: 500 }, add: { type: array, items: { type: string } }, remove: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chunks, added, removed }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/qa:
+    get:
+      operationId: listMetadataQa
+      summary: 'Gespeicherte Fragen und Antworten mit Quellen und Labels (ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-68]
+      x-extension: true
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: labels, in: query, schema: { type: string }, description: 'Label-IDs, kommagetrennt – alle müssen zugewiesen sein' }
+        - { name: language, in: query, schema: { type: string, enum: [de, en] } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, question, answer, language: de | en, sources: [{ snippetId, path, headingPath, locator, lineStart, lineEnd, excerpt }], note, labels: [{ id, code, group, nameDe, nameEn, archived }], createdBy, createdAt, updatedBy, updatedAt }]' }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createMetadataQa
+      summary: 'Frage und Antwort mit Quell-Chunks (Auszug wird mitgespeichert) und Labels speichern (Berechtigung edit, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-68]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [question, answer], properties: { question: { type: string, maxLength: 2000 }, answer: { type: string, maxLength: 20000 }, language: { type: string, enum: [de, en], default: de }, snippetIds: { type: array, items: { type: string }, maxItems: 20 }, labelIds: { type: array, items: { type: string } }, note: { type: string, maxLength: 2000 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, question, answer, language: de | en, sources: [{ snippetId, path, headingPath, locator, lineStart, lineEnd, excerpt }], note, labels: [{ id, code, group, nameDe, nameEn, archived }], createdBy, createdAt, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/qa/{qaId}:
+    get:
+      operationId: getMetadataQa
+      summary: 'Gespeicherte Frage und Antwort (ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-68]
+      x-extension: true
+      parameters: [{ name: qaId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, question, answer, language: de | en, sources: [{ snippetId, path, headingPath, locator, lineStart, lineEnd, excerpt }], note, labels: [{ id, code, group, nameDe, nameEn, archived }], createdBy, createdAt, updatedBy, updatedAt }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateMetadataQa
+      summary: 'Frage, Antwort, Sprache, Quellen, Labels oder Notiz ändern (Berechtigung edit, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-68]
+      x-extension: true
+      parameters: [{ name: qaId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { question: { type: string }, answer: { type: string }, language: { type: string, enum: [de, en] }, snippetIds: { type: array, items: { type: string } }, labelIds: { type: array, items: { type: string } }, note: { type: [string, 'null'] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, question, answer, language: de | en, sources: [{ snippetId, path, headingPath, locator, lineStart, lineEnd, excerpt }], note, labels: [{ id, code, group, nameDe, nameEn, archived }], createdBy, createdAt, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteMetadataQa
+      summary: 'Gespeicherte Frage und Antwort löschen (Berechtigung edit, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-68]
+      x-extension: true
+      parameters: [{ name: qaId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'Gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
