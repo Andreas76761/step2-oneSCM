@@ -1,6 +1,7 @@
 // oneSCM_Metadaten (ADR-079, ADR-080): vordefinierte Labels, Chunks mit Fundstelle und Labels, gespeicherte Fragen und Antworten.
 // Chunks sind die Textabschnitte der aktuellen Quellrevisionen (text_snippets); entfernte Quelldateien bleiben außen vor.
 import { chunkParts } from '../domain/chunking.js';
+import { cachedOverview, touchMetadata } from './metadataCache.js';
 import { audit, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson, type Db, type Row } from '../db.js';
 import { LABEL_CATALOG, LABEL_CODE_RE, LABEL_GROUP_CODES, LABEL_GROUPS, LABEL_LANGUAGES } from '../domain/metadataLabels.js';
@@ -142,6 +143,7 @@ export async function deleteLabel(ctx: Ctx, id: string, user: User) {
   };
   await ctx.db.tx(async () => {
     await ctx.db.run('DELETE FROM metadata_chunk_labels WHERE label_id = ?', id);
+    touchMetadata(ctx.projectId);
     await ctx.db.run('DELETE FROM metadata_qa_labels WHERE label_id = ?', id);
     await ctx.db.run('DELETE FROM media_labels WHERE label_id = ?', id);
     await ctx.db.run('DELETE FROM metadata_label_links WHERE domain_label_id = ? OR target_label_id = ?', id, id);
@@ -275,6 +277,7 @@ export async function setChunkLabels(ctx: Ctx, input: { snippetIds?: unknown; ad
       }
       for (const l of remove) removed += (await ctx.db.run('DELETE FROM metadata_chunk_labels WHERE snippet_id = ? AND label_id = ?', s, l)).changes;
     }
+    touchMetadata(ctx.projectId);
     await audit(ctx, user.id, 'metadata.chunk_labels.changed', 'text_snippet', snippetIds.length === 1 ? snippetIds[0] : `${snippetIds.length} Chunks`, { snippetIds, add, remove, added, removed });
   });
   return { chunks: snippetIds.length, added, removed };
@@ -410,24 +413,30 @@ export async function deleteQa(ctx: Ctx, id: string, user: User) {
 
 // ---------------------------------------------------------------- Übersicht
 
-export async function metadataOverview(ctx: Ctx) {
+async function overviewCounts(ctx: Ctx) {
   const docs = await ctx.db.all(
     `SELECT d.path, r.source_format, (SELECT COUNT(*) FROM text_snippets s WHERE s.revision_id = r.id) AS chunks
      FROM source_documents d JOIN source_revisions r ON r.document_id = d.id AND r.is_current = 1
      WHERE d.project_id = ? AND d.removed_at IS NULL`, ctx.projectId,
   );
-  const formats = new Map<string, { documents: number; chunks: number }>();
-  for (const d of docs) {
-    const f = formatOf(d.source_format, d.path);
-    const cur = formats.get(f) ?? { documents: 0, chunks: 0 };
-    formats.set(f, { documents: cur.documents + 1, chunks: cur.chunks + Number(d.chunks) });
-  }
   // je aktuellem Chunk ein Blick in den Primärschlüssel der Labels – seit TRIAGE trägt jeder Chunk rund zwölf Labels,
   // ein Join über alle Zuordnungen mit COUNT(DISTINCT) wurde bei 12 000 Chunks zur halben Sekunde (Lasttest Etappe 49)
   const labeled = await ctx.db.get<{ n: number }>(
     `SELECT COUNT(*) AS n FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
      WHERE d.project_id = ? AND r.is_current = 1 AND d.removed_at IS NULL AND EXISTS (SELECT 1 FROM metadata_chunk_labels x WHERE x.snippet_id = s.id)`, ctx.projectId,
   );
+  return { docs: docs.map((d) => ({ path: d.path as string, source_format: d.source_format as string, chunks: Number(d.chunks) })), labeled: Number(labeled?.n ?? 0) };
+}
+
+export async function metadataOverview(ctx: Ctx) {
+  // teuer bei vielen Chunks (Lasttest Etappe 49): Dokumente, Chunks und gelabelte Chunks – zwischengespeichert (ADR-107)
+  const { docs, labeled } = await cachedOverview(ctx.projectId, () => overviewCounts(ctx));
+  const formats = new Map<string, { documents: number; chunks: number }>();
+  for (const d of docs) {
+    const f = formatOf(d.source_format, d.path);
+    const cur = formats.get(f) ?? { documents: 0, chunks: 0 };
+    formats.set(f, { documents: cur.documents + 1, chunks: cur.chunks + Number(d.chunks) });
+  }
   const labels = await ctx.db.all<{ label_group: string; n: number }>(
     'SELECT label_group, COUNT(*) AS n FROM metadata_labels WHERE project_id = ? AND archived_at IS NULL GROUP BY label_group', ctx.projectId,
   );
@@ -436,7 +445,7 @@ export async function metadataOverview(ctx: Ctx) {
   return {
     documents: docs.length,
     chunks,
-    labeledChunks: Number(labeled?.n ?? 0),
+    labeledChunks: labeled,
     savedAnswers: Number(qa?.n ?? 0),
     formats: [...formats.entries()].map(([format, v]) => ({ format, ...v })).sort((a, b) => a.format.localeCompare(b.format)),
     labelGroups: LABEL_GROUPS.map((g) => ({ ...g, labels: Number(labels.find((l) => l.label_group === g.code)?.n ?? 0) })),

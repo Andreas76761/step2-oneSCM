@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.54.0 – Etappe 54 (24.10.2026)
+
+### Hinzugefügt
+- **Textbausteine (ADR-107, W-11, Single Sourcing):** wiederkehrende Absätze einmal pflegen – Kennung, Art, Fassungen mit Notiz; als gesperrten, verknüpften Absatz in Kapitel einfügen; Verwendung je Kapitel mit „aktuell“/„veraltet“; neue Fassung mit einem Klick in die Entwürfe der Kapitel übernehmen (freigegebene Versionen bleiben, eingereichte werden übersprungen); gleiche, noch nicht verknüpfte Absätze verknüpfen; wiederkehrende Absätze als Kandidaten; eigener Text löst die Verknüpfung. Kennzeichen in der Werkstatt.
+- **Übersicht oneSCM_Metadaten schneller:** teure Zählungen je Projekt höchstens 30 s zwischengespeichert, bei Import, Labeln, TRIAGE und Entfernen sofort verworfen (offener Punkt aus dem Lasttest der Etappe 49).
+- Seite „Textbausteine“ (auch in der Barrierefreiheitsprüfung); Tests T-341 … T-343, E2E T-344 (axe); Anforderungen NFR-138, NFR-139; Migration 060.
+
+### Geändert
+- E2E T-291 wartet nach jedem Hinzufügen eines Labels auf die neu geladene Liste (Wettlauf in CI unter Node 22).
+
 ## 0.53.0 – Etappe 53 (24.10.2026)
 
 ### Hinzugefügt

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.53.0
+  version: 0.54.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -2999,6 +2999,104 @@ paths:
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
         '502': { $ref: '#/components/responses/Problem' }
+  /text-modules:
+    get:
+      operationId: listTextModules
+      summary: 'Textbausteine (ADR-107, W-11, Single Sourcing) mit Fassung, Zahl der verknüpften und der veralteten Kapitel'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [active, retired] } }
+        - { name: q, in: query, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, key, title, kind, versionNo, status, text, chapters, outdatedChapters }]' }
+    post:
+      operationId: createTextModule
+      summary: 'Textbaustein anlegen (Kennung aus dem Titel, wenn leer; Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [title, text], properties: { title: { type: string, maxLength: 120 }, key: { type: string, maxLength: 60 }, kind: { type: string, enum: [paragraph, list, note, tip, warning, table] }, text: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Textbaustein mit Fassungen, Verwendung und Kandidaten' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'Kennung schon vergeben' }
+  /text-modules/candidates:
+    get:
+      operationId: textModuleCandidates
+      summary: 'Wiederkehrende Absätze: gleicher Text (ab 8 Wörtern) in mindestens zwei Kapiteln, noch ohne Textbaustein'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ text, kind, chapters: [{ chapterId, title }] }]' }
+  /text-modules/{id}:
+    get:
+      operationId: getTextModule
+      summary: 'Textbaustein mit Fassungen, Verwendung je Kapitel (aktuell/veraltet) und Kapiteln mit gleichem, noch nicht verknüpftem Text'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ …, versions, usage: [{ chapterId, title, versionId, versionNo, status, blocks, outdated }], candidates }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateTextModule
+      summary: 'Titel, Art, Status (active/retired) oder Text ändern; geänderter Text = neue Fassung mit Notiz (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { title: { type: string }, kind: { type: string }, status: { type: string, enum: [active, retired] }, text: { type: string }, note: { type: string, maxLength: 300 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Textbaustein' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /text-modules/{id}/insert:
+    post:
+      operationId: insertTextModule
+      summary: 'Textbaustein als gesperrten, verknüpften Absatz am Ende eines Abschnitts einfügen – in den Entwurf des Kapitels, bei freigegebener Version in eine Kopie (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [chapterId, section], properties: { chapterId: { type: string }, section: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ blockId, versionId, module }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'Textbaustein abgelegt oder Kapitel zur Freigabe eingereicht' }
+  /text-modules/{id}/propagate:
+    post:
+      operationId: propagateTextModule
+      summary: 'Aktuelle Fassung in die Kapitel übernehmen: veraltete verknüpfte Absätze, mit adopt auch Absätze mit gleichem Text; je Kapitel in einen Entwurf, eingereichte Kapitel werden übersprungen (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { chapterIds: { type: array, items: { type: string } }, adopt: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ version, updated: [{ chapterId, title, versionId, blocks }], skipped: [{ chapterId, title, reason }], module }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /style/tone:
     get:
       operationId: getStyleTone

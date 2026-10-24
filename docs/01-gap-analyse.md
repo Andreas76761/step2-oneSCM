@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.56 Stand nach Etappe 54 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Textbausteine mit Fassungen, Verwendung, Aktualisieren in Entwürfen, Kandidaten aus wiederkehrenden Absätzen (W-11, NFR-138) | ✅ ([ADR-107](adr/ADR-107-textbausteine-uebersicht.md)) |
+| Übersicht oneSCM_Metadaten mit Zwischenspeicher (NFR-139, Lasttest Etappe 49) | ✅ |
+| Offen – Entscheidung des Auftraggebers | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09 |
+
 ## 1.55 Stand nach Etappe 53 (24.10.2026)
 
 | Punkt | Ergebnis |

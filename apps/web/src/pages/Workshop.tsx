@@ -232,6 +232,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
         <DivisionBadges codes={b.divisions.filter((d: string) => d !== 'all')} />
         {b.market && <span className="tag">Markt {b.market}</span>}
         {b.release && <span className="tag">Release {b.release}</span>}
+        {b.moduleId && <span className="tag" title="Absatz aus einem Textbaustein – gepflegt unter „Textbausteine“; eigener Text löst die Verknüpfung">🧩 Textbaustein F{b.moduleVersion}</span>}
         <span className="small muted">{b.sources.length ? `${b.sources.length} Quelle(n)` : b.justification ? 'manuell begründet' : 'ohne Evidenz'} · v{b.versionNo}</span>
       </div>
       {mode === 'edit' ? (

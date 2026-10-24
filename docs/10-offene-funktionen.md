@@ -75,7 +75,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | W-08 | **Interne Kommentare**, die nie exportiert werden; Drei-Spalten-Editor (Stand, Verbesserungen, neu) | Ticket-Cockpit v3.0 | teilweise (Diskussion je Absatz, Versionsvergleich) | S | **umgesetzt in Etappe 51 (ADR-104)** |
 | W-09 | **Zukunfts-Inhalte:** eingebaut, aber erst ab Release X veröffentlicht | DokuPress | teilweise („gültig ab“ seit v0.43, ohne Ausblenden) | S | **umgesetzt in Etappe 49 (ADR-102)** |
 | W-10 | **Zwischenbilder** für kurze Zustände (Menü, Dialog) aus Videos | Screenshot-Studio | teilweise (Standbilder bei Änderung) | S | **umgesetzt in Etappe 53 (ADR-106)** |
-| W-11 | **Textbausteine (Single Sourcing)** | Werkstatt V4 (F-19) | offen | L | später |
+| W-11 | **Textbausteine (Single Sourcing)** | Werkstatt V4 (F-19) | offen | L | **umgesetzt in Etappe 54 (ADR-107)** |
 | W-12 | **Vier Prüferprofile** (fachlich, Redaktion, Compliance, Endanwender) mit lokalem Modell | Ticket-Cockpit (F-10) | teilweise | M | **umgesetzt in Etappe 52 (ADR-105)** |
 
 ## 10.6 Vorschlag für die nächsten Etappen
@@ -95,7 +95,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 6. **Etappe 51 – Überarbeitung: Word zurücklesen, KI-Lektorat, interne Kommentare (✅ umgesetzt, ADR-104):** W-06, G-07, W-08.
 7. **Etappe 52 – Textvarianten und Prüferprofile (✅ umgesetzt, ADR-105):** S-05, W-12.
 8. **Etappe 53 – Vorher/Nachher, PowerPoint und BPMN, Zwischenbilder (✅ umgesetzt, ADR-106):** W-05, W-07, W-10.
-9. **Danach je nach Entscheidung:** G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen); später W-11 (Textbausteine).
+9. **Etappe 54 – Textbausteine, schnellere Übersicht (✅ umgesetzt, ADR-107):** W-11.
+10. **Danach nur nach Entscheidung des Auftraggebers:** G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen), Schreibweise offener Begriffe (S-04), O-09.
 
 ## 10.7 Offene Entscheidungen
 

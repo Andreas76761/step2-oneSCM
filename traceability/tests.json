@@ -2562,5 +2562,41 @@
       "NFR-135",
       "NFR-136"
     ]
+  },
+  {
+    "id": "T-341",
+    "title": "Zwischenspeicher der Übersicht: höchstens 30 s, sofort verworfen bei Änderungen (Einheit)",
+    "file": "apps/server/test/stage54.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-139"
+    ]
+  },
+  {
+    "id": "T-342",
+    "title": "Übersicht oneSCM_Metadaten bleibt nach Import und Labeln aktuell",
+    "file": "apps/server/test/stage54.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-139"
+    ]
+  },
+  {
+    "id": "T-343",
+    "title": "Textbausteine: anlegen, wiederkehrenden Absatz verknüpfen, einfügen, neue Fassung in Entwürfe übernehmen, eingereichte Kapitel überspringen, eigener Text löst die Verknüpfung, ablegen",
+    "file": "apps/server/test/stage54.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-138"
+    ]
+  },
+  {
+    "id": "T-344",
+    "title": "Textbausteine in der Oberfläche: wiederkehrenden Absatz übernehmen, verknüpfen, neue Fassung in Kapitel übernehmen – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-138"
+    ]
   }
 ]

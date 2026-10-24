@@ -78,3 +78,7 @@ Gleiche Umgebung und gleiches Skript. Das Skript wartet jetzt auf die TRIAGE nac
 - **Bildarchiv und Deckungsmatrix** wachsen mit der Zahl der Textabschnitte (Verwendung je Bild wird im Text gesucht) – bei sehr großen Beständen ein Kandidat für einen Verwendungsindex.
 - Lasttest mit PostgreSQL und echten Quellen (PowerPoint, PDF, Video) steht aus – dafür werden echte Beispieldateien gebraucht.
 - Seit Etappe 47 läuft nach jedem Import die TRIAGE: Bei großen Importen ist der Bestand erst danach vollständig gelabelt (12 000 Chunks ≈ 7 s).
+
+## Etappe 54 – Übersicht mit Zwischenspeicher
+
+- Die teuren Zählungen der Übersicht (Dokumente, Chunks je Format, gelabelte Chunks) werden je Projekt höchstens 30 s zwischengespeichert und bei Import, Labeln, TRIAGE und Entfernen sofort verworfen (ADR-107). Wiederholte Aufrufe ohne Änderung kosten damit nur noch die günstigen Zählungen der Labelgruppen und Antworten.

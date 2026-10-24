@@ -3050,3 +3050,39 @@ test('[T-340] Vorher/Nachher mit Schieberegler und Gegenüberstellung im Archiv,
   await expect(page.getByText(/PowerPoint-Präsentation erstellt/)).toBeVisible();
   await expect(page.getByRole('button', { name: /\.pptx herunterladen/ })).toBeVisible();
 });
+
+test('[T-344] Textbausteine: wiederkehrenden Absatz übernehmen, verknüpfen, neue Fassung in Kapitel übernehmen – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const result = 'Der Auftrag erscheint danach in der Übersicht der offenen Aufträge mit dem Status Neu.';
+  for (const t of ['E2E Baustein Auftrag anlegen', 'E2E Baustein Auftrag kopieren']) {
+    const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: t, purpose: `Mit dieser Anleitung ${t.endsWith('anlegen') ? 'legen' : 'kopieren'} Sie einen Auftrag.`, steps: ['Öffnen Sie **Aufträge**', 'Klicken Sie auf **Neu**'], result } })).json();
+    expect(ch.versionId).toBeTruthy();
+  }
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Textbausteine' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Textbausteine' })).toBeVisible();
+  const cand = page.getByRole('list', { name: 'Wiederkehrende Absätze' }).getByRole('listitem').filter({ hasText: 'offenen Aufträge mit dem Status Neu' });
+  await expect(cand).toContainText('in 2 Kapiteln');
+  await cand.getByRole('button', { name: 'Als Textbaustein anlegen' }).click();
+  await expect(page.getByText(/Textbaustein „.+“ angelegt\./)).toBeVisible();
+  await page.getByRole('button', { name: 'Gleiche Absätze verknüpfen (2)' }).click();
+  await expect(page.getByText('2 Kapitel verknüpft und aktualisiert.')).toBeVisible();
+  const usage = page.getByRole('region', { name: 'Verwendung' });
+  await expect(usage).toContainText('E2E Baustein Auftrag anlegen');
+  await expect(usage.getByText('aktuell')).toHaveCount(2);
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Text des Bausteins (Markdown)').fill(result.replace('Status Neu', 'Status **Neu**'));
+  await page.getByLabel('Änderungsnotiz').fill('Status hervorgehoben');
+  await page.getByRole('button', { name: 'Neue Fassung speichern' }).click();
+  await expect(page.getByText('Neue Fassung 2 gespeichert.')).toBeVisible();
+  await expect(usage.getByText(/veraltet/)).toHaveCount(2);
+  await page.getByRole('button', { name: 'In Kapitel aktualisieren (2)' }).click();
+  await expect(page.getByText('Fassung 2 in 2 Kapitel übernommen.')).toBeVisible();
+  await expect(usage.getByText('aktuell')).toHaveCount(2);
+  expect(await axe()).toEqual([]);
+});

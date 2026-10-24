@@ -3,6 +3,7 @@
 // der aktuellen Gliederung vor – auch neue Unterkapitel mit der Kennung „neu“. Labels werden direkt gesetzt (Herkunft
 // triage, menschliche Zuordnungen bleiben), Verschiebungen und neue Unterkapitel sind Vorschläge zum Übernehmen.
 import { audit, getSettings, type Ctx, type User } from '../context.js';
+import { touchMetadata } from './metadataCache.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { headingKey } from '../domain/markdown.js';
 import { DEFAULT_DETAIL_LEVELS, DETAIL_LEVELS, REQUIRED_GROUPS, type RequiredGroup } from '../domain/metadataLabels.js';
@@ -260,6 +261,7 @@ export async function runTriage(ctx: Ctx, input: { scope?: unknown; importId?: s
               if (l) ids.push(l.id);
             }
             const old = have.filter((a) => a.group === g && a.origin === 'triage').map((a) => a.labelId);
+            touchMetadata(ctx.projectId);
             if (old.length) await ctx.db.run(`DELETE FROM metadata_chunk_labels WHERE snippet_id = ? AND label_id IN (${old.map(() => '?').join(',')})`, c.id, ...old);
             for (const id of ids) {
               await ctx.db.run(

@@ -293,6 +293,9 @@ export interface BlockInput {
   comment: string | null;
   /** Satz-Evidenz eines übernommenen KI-Vorschlags (ADR-013) */
   sentences?: Sentence[] | null;
+  /** Textbaustein und dessen Fassung (ADR-107, W-11) */
+  moduleId?: string | null;
+  moduleVersion?: number | null;
 }
 
 export interface Sentence {
@@ -304,9 +307,10 @@ export async function insertBlock(ctx: Ctx, versionId: string, b: BlockInput, ac
   const id = newId('cb');
   const { db } = ctx;
   await db.run(
-    `INSERT INTO content_blocks (id, chapter_version_id, lineage_id, section_code, position, kind, text, mode, market_code, release_code, scope_status, justification, comment, sentence_sources, version_no, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-    id, versionId, b.lineageId, b.section, b.position, b.kind, b.text, b.mode, b.market, b.release, b.scopeStatus, b.justification, b.comment, b.sentences ? json(b.sentences) : null, now(),
+    `INSERT INTO content_blocks (id, chapter_version_id, lineage_id, section_code, position, kind, text, mode, market_code, release_code, scope_status, justification, comment, sentence_sources, module_id, module_version, version_no, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+    id, versionId, b.lineageId, b.section, b.position, b.kind, b.text, b.mode, b.market, b.release, b.scopeStatus, b.justification, b.comment, b.sentences ? json(b.sentences) : null,
+    b.moduleId ?? null, b.moduleId ? b.moduleVersion ?? null : null, now(),
   );
   for (const r of b.roles) await db.run('INSERT INTO content_block_roles VALUES (?, ?) ON CONFLICT DO NOTHING', id, r);
   for (const d of b.divisions) await db.run('INSERT INTO content_block_divisions VALUES (?, ?) ON CONFLICT DO NOTHING', id, d);
@@ -327,6 +331,7 @@ export async function blockDto(ctx: Ctx, b: Row) {
     id: b.id, chapterVersionId: b.chapter_version_id, lineageId: b.lineage_id, section: b.section_code, position: b.position, kind: b.kind, text: b.text, mode: b.mode,
     market: b.market_code, release: b.release_code, scopeStatus: b.scope_status, justification: b.justification, comment: b.comment, versionNo: b.version_no,
     deletedAt: b.deleted_at, updatedAt: b.updated_at,
+    moduleId: (b.module_id ?? null) as string | null, moduleVersion: b.module_version == null ? null : Number(b.module_version),
     sentences: parseJson<Sentence[] | null>(b.sentence_sources, null),
     roles: (await db.all('SELECT role_code FROM content_block_roles WHERE block_id = ? ORDER BY role_code', b.id)).map((r) => r.role_code as string),
     divisions: (await db.all('SELECT division_code FROM content_block_divisions WHERE block_id = ? ORDER BY division_code', b.id)).map((r) => r.division_code as string),
@@ -446,6 +451,8 @@ export async function patchBlock(ctx: Ctx, id: string, p: BlockPatch, actor: str
       upd('text', p.text);
       // Manuell geänderter Text: die Satz-Evidenz eines KI-Vorschlags gilt nicht mehr
       if (p.text !== b.text) upd('sentence_sources', null);
+      // eigener Text statt Textbaustein (ADR-107): die Verknüpfung wird gelöst
+      if (p.text !== b.text && b.module_id) (upd('module_id', null), upd('module_version', null));
     }
     if (p.section !== undefined) (upd('section_code', p.section), (changeType = 'moved'));
     if (p.position !== undefined) (upd('position', p.position), (changeType = p.text === undefined ? 'moved' : changeType));
@@ -482,6 +489,21 @@ export async function patchBlock(ctx: Ctx, id: string, p: BlockPatch, actor: str
     await audit(ctx, actor, `content_block.${changeType}`, 'content_block', id, { ...p, previousVersion: b.version_no });
   });
   return blockDto(ctx, await blockRow(ctx, id));
+}
+
+/**
+ * Text eines Textbausteins in einen verknüpften Absatz übernehmen (ADR-107, W-11) – auch in gesperrten Absätzen, mit
+ * Eintrag in der Absatzhistorie; nur in Entwürfen.
+ */
+export async function applyModuleText(ctx: Ctx, id: string, text: string, module: { id: string; version: number }, actor: string, reason: string) {
+  const b = await blockRow(ctx, id);
+  await assertEditable(ctx, b.chapter_version_id);
+  await ctx.db.tx(async () => {
+    await ctx.db.run('UPDATE content_blocks SET text = ?, sentence_sources = NULL, module_id = ?, module_version = ?, version_no = ?, updated_at = ? WHERE id = ?',
+      text, module.id, module.version, b.version_no + 1, now(), id);
+    await snapshot(ctx, id, b.version_no + 1, 'edited', actor, reason);
+    await audit(ctx, actor, 'content_block.module_applied', 'content_block', id, { moduleId: module.id, moduleVersion: module.version, previousVersion: b.version_no });
+  });
 }
 
 export async function createBlock(ctx: Ctx, versionId: string, p: BlockPatch & { text: string; section: string }, actor: string) {

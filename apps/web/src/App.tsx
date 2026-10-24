@@ -46,6 +46,7 @@ const GlossaryPage = lazy(() => import('./pages/MasterData').then((m) => ({ defa
 const ImageIndexPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.ImageIndexPage })));
 const PlanningPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.PlanningPage })));
 const GuidancePage = lazy(() => import('./pages/Guidance').then((m) => ({ default: m.GuidancePage })));
+const TextModulesPage = lazy(() => import('./pages/TextModules').then((m) => ({ default: m.TextModulesPage })));
 const BeforeAfterPage = lazy(() => import('./pages/BeforeAfter').then((m) => ({ default: m.BeforeAfterPage })));
 const TextVariantsPage = lazy(() => import('./pages/Audience').then((m) => ({ default: m.TextVariantsPage })));
 const ProfileReviewsPage = lazy(() => import('./pages/Audience').then((m) => ({ default: m.ProfileReviewsPage })));
@@ -129,6 +130,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/generator', label: 'Kapitelgenerator', icon: '⚙️' },
     { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: '✏️' },
     { to: '/draft-manual', label: 'Draft Manual', icon: '📝' },
+    { to: '/textbausteine', label: 'Textbausteine', icon: '🧩' },
     { to: '/bilder', label: 'Bilder', icon: '🎨' },
     { to: '/bildarchiv', label: 'Bildarchiv', icon: '🗂' },
     { to: '/vorher-nachher', label: 'Vorher/Nachher', icon: '↔️' },
@@ -498,6 +500,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/export" element={<ExportPage />} />
             <Route path="/bildarchiv" element={<ImageArchivePage />} />
             <Route path="/vorher-nachher" element={<BeforeAfterPage />} />
+            <Route path="/textbausteine" element={<TextModulesPage />} />
             <Route path="/kapitelsteuerung" element={<StructurePage />} />
             <Route path="/metadaten/triage" element={<TriagePage />} />
             <Route path="/metadaten/inhalte" element={<ContentDashboardPage />} />

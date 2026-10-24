@@ -2,6 +2,7 @@
 // Markdown-Quelle „wissensnotizen/<id>.md“ über die normale Importpipeline eingelesen – mit Revisionen, Chunks,
 // Bildern (Pflicht-Alternativtext), Rollen und Sparten. Personenbezogene Daten werden abgewiesen oder pseudonymisiert.
 import JSZip from 'jszip';
+import { touchMetadata } from './metadataCache.js';
 import { audit, privacyNames, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { escapeAlt, MIME_EXT, sniffImage } from '../domain/media.js';
@@ -149,6 +150,7 @@ export async function removeNote(ctx: Ctx, id: string, user: User) {
   await ctx.db.tx(async () => {
     await ctx.db.run("UPDATE knowledge_notes SET status = 'removed', updated_by = ?, updated_at = ? WHERE id = ?", user.id, now(), id);
     await ctx.db.run('UPDATE source_documents SET removed_at = ? WHERE project_id = ? AND path = ? AND removed_at IS NULL', now(), ctx.projectId, r.document_path);
+    touchMetadata(ctx.projectId);
     await audit(ctx, user.id, 'knowledge_note.removed', 'knowledge_note', id, {});
   });
 }

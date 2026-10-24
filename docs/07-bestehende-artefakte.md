@@ -96,7 +96,7 @@ Status gegenüber der App: **neu** = gibt es nicht, **teilweise** = Ansatz vorha
 | F-16 | Expertenbefragung zu Wissenslücken (Optionen + Freitext → Antwort mit Label „Prüfen“) | Wissens-Check | teilweise | M | optional | umgesetzt in Etappe 40 (ADR-092) |
 | F-17 | Ausschlussliste „nicht einlesen“ für den Eingangsordner | Wissenssuche | neu | S | übernehmen in M2 | |
 | F-18 | Zielkapitel je Dopplung („zusammenführen in Kapitel X“) | V4 | teilweise | S | übernehmen in M4 | |
-| F-19 | Textbausteine (Single Sourcing) für wiederkehrende Absätze | V4 | teilweise | L | später | |
+| F-19 | Textbausteine (Single Sourcing) für wiederkehrende Absätze | V4 | teilweise | L | **umgesetzt in Etappe 54 (ADR-107)** | |
 
 ### Bilder und Ausgabe
 

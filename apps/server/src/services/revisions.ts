@@ -183,7 +183,7 @@ export async function getBatch(ctx: Ctx, id: string) {
 }
 
 /** Entwurf des Kapitels: offener Entwurf, sonst Kopie der neuesten Version (freigegeben bleibt unverändert) */
-async function ensureDraft(ctx: Ctx, chapterId: string, actor: string) {
+export async function ensureDraft(ctx: Ctx, chapterId: string, actor: string) {
   const latest = await ctx.db.get('SELECT * FROM generated_chapter_versions WHERE chapter_id = ? AND status <> \'superseded\' ORDER BY version_no DESC LIMIT 1', chapterId);
   if (!latest) throw notFound(`Kapitel ${chapterId}`);
   if (latest.status === 'draft') return latest.id as string;
@@ -198,7 +198,7 @@ async function ensureDraft(ctx: Ctx, chapterId: string, actor: string) {
     const b = await blockDto(ctx, r);
     await insertBlock(ctx, id, {
       lineageId: b.lineageId, section: b.section, position: b.position, kind: b.kind, text: b.text, mode: b.mode, market: b.market, release: b.release, scopeStatus: b.scopeStatus,
-      justification: b.justification, comment: b.comment, roles: b.roles, divisions: b.divisions, sourceIds: b.sources.map((s) => s.snippetId), sentences: b.sentences ?? undefined,
+      justification: b.justification, comment: b.comment, roles: b.roles, divisions: b.divisions, sourceIds: b.sources.map((s) => s.snippetId), sentences: b.sentences ?? undefined, moduleId: b.moduleId, moduleVersion: b.moduleVersion,
     } as any, actor, `aus Version ${latest.version_no} übernommen (Änderungsvorschläge)`);
   }
   await normalizePositions(ctx, id);

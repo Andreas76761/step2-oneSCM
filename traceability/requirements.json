@@ -1428,5 +1428,23 @@
     "documentation": [
       "docs/adr/ADR-106-vorher-nachher-pptx-zwischenbilder.md"
     ]
+  },
+  {
+    "id": "NFR-138",
+    "title": "Textbausteine (Single Sourcing): Fassungen, Einfügen als verknüpfter Absatz, Verwendung je Kapitel, neue Fassung in Entwürfe übernehmen, wiederkehrende Absätze als Kandidaten, eigener Text löst die Verknüpfung",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-107-textbausteine-uebersicht.md"
+    ]
+  },
+  {
+    "id": "NFR-139",
+    "title": "Übersicht oneSCM_Metadaten mit Zwischenspeicher je Projekt (höchstens 30 s, bei Änderungen sofort verworfen)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-107-textbausteine-uebersicht.md"
+    ]
   }
 ]
