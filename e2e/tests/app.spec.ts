@@ -3440,7 +3440,16 @@ test('[T-375] Lesestil Handbuch-Kapitel: in den Einstellungen wählen, Leseransi
     await expect(page.getByRole('status').filter({ hasText: 'Layout gespeichert' })).toBeVisible();
   };
   await setStyle('Handbuch-Kapitel (Farben und Schriften der Designvorlage)');
-  await page.goto('/lesen');
+  const openChapter = async () => {
+    await page.goto('/lesen');
+    // erstes Kapitel aus „Inhalt“ (vorhanden auch ohne die vorigen Tests)
+    const toc = page.getByRole('navigation', { name: 'Inhaltsverzeichnis' });
+    await expect(toc.getByRole('heading', { name: 'Inhalt', exact: true })).toBeVisible();
+    if (await toc.getByText('Noch keine freigegebenen Kapitel').isVisible()) await toc.getByLabel('Entwürfe einblenden').check();
+    await toc.locator('h2:text-is("Inhalt") ~ ul a, h2:text-is("Inhalt") ~ ol a').first().click();
+    await expect(page.locator('.reader-section').first()).toBeVisible();
+  };
+  await openChapter();
   const styled = page.locator('.reading-fachdoku').first();
   await expect(styled).toBeVisible();
   // Überschriften der Abschnitte in der Hauptfarbe mit Balken (Standard der Vorlage #1f3a68)
@@ -3448,7 +3457,7 @@ test('[T-375] Lesestil Handbuch-Kapitel: in den Einstellungen wählen, Leseransi
   await expect(styled.locator('h3').first()).toHaveCSS('border-left-width', '4px');
   expect(await axe()).toEqual([]);
   await setStyle('Standard (Hausfarbe)');
-  await page.goto('/lesen');
+  await openChapter();
   await expect(page.locator('.reader-section').first()).toBeVisible();
   await expect(page.locator('.reading-fachdoku')).toHaveCount(0);
 });
