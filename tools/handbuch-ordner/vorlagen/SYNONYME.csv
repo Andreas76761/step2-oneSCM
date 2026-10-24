@@ -1,10 +1,10 @@
-﻿Bevorzugt;Vermeiden;Kontext;Sprache;Quelle;Status
-MO-Prüfungen / MO Checks;Marktprüfung;Prüfung und Freigabe durch Market Operation – zu klären: deutscher Handbuchbegriff „MO-Prüfungen“ im Fließtext oder UI-Begriff „MO Checks“ durchgängig;de;Terminologieklärung (Redaktion);offen
-Status FI-Beleg / Status FI-Dokument;;Finance – zu klären: welcher deutsche Begriff gilt und wie das Feld in der Oberfläche heißt;de;Terminologieklärung (Redaktion);offen
-Belegart / Dokumenttyp;;Finance – zu klären: einheitlicher Begriff für die Art des Buchungsbelegs;de;Terminologieklärung (Redaktion);offen
-Karenzzeit / Kulanzfrist-Kampagne;;UI-Begriff „Grace Period“ – zu klären: deutscher Handbuchbegriff und ob Karenzzeit und Kulanzfrist-Kampagne dasselbe meinen;de;Terminologieklärung (Redaktion);offen
-Nemesis / NEMESIS;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen
-VeDoc / VeDOC;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen
-CoFiCo / COFICO;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen
-oneERP / One-ERP;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen
-„Chassis Number“;;UI-Begriff – Widerspruch: Prüfregel V4 lehnt den Begriff ab, die Whitelist des Releaseletters schützt ihn – Regel oder Whitelist anpassen;en;Terminologieklärung (Redaktion);offen
+﻿Bevorzugt;Vermeiden;Kontext;Sprache;Quelle;Status;UI-Begriff erlaubt
+MO-Prüfungen;MO Checks, Marktprüfung;Prüfung und Freigabe durch Market Operation – entschieden am 24.10.2026: im Fließtext „MO-Prüfungen“, „MO Checks“ nur in Menüpfaden (Vertragserstellung › MO Checks) und als UI-Begriff in Anführungszeichen (in der App: „UI-Begriff erlaubt“);de;Entscheidung Auftraggeber 24.10.2026;entschieden;ja
+Status FI-Beleg / Status FI-Dokument;;Finance – zu klären: welcher deutsche Begriff gilt und wie das Feld in der Oberfläche heißt;de;Terminologieklärung (Redaktion);offen;
+Belegart / Dokumenttyp;;Finance – zu klären: einheitlicher Begriff für die Art des Buchungsbelegs;de;Terminologieklärung (Redaktion);offen;
+Karenzzeit / Kulanzfrist-Kampagne;;UI-Begriff „Grace Period“ – zu klären: deutscher Handbuchbegriff und ob Karenzzeit und Kulanzfrist-Kampagne dasselbe meinen;de;Terminologieklärung (Redaktion);offen;
+Nemesis / NEMESIS;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen;
+VeDoc / VeDOC;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen;
+CoFiCo / COFICO;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen;
+oneERP / One-ERP;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen;
+„Chassis Number“;;UI-Begriff – Widerspruch: Prüfregel V4 lehnt den Begriff ab, die Whitelist des Releaseletters schützt ihn – Regel oder Whitelist anpassen;en;Terminologieklärung (Redaktion);offen;

@@ -98,11 +98,12 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 9. **Etappe 54 – Textbausteine, schnellere Übersicht (✅ umgesetzt, ADR-107):** W-11.
 10. **Etappe 55 – LanguageTool lokal, Ansprechperson je Markt (✅ umgesetzt, ADR-108):** G-04, O-09 (Entscheidungen 24.10.2026).
 11. **Etappe 56 – Regelsätze, Benachrichtigung zum Länderreview (✅ umgesetzt, ADR-109):** S-06; Hinweis an Ansprechperson und Vertretung (offener Punkt aus Etappe 55).
-12. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 24.10.2026 keine Auswahl), Schreibweise offener Begriffe (S-04, entscheidet die Redaktion).
+12. **Etappe 57 – UI-Begriffe in der Terminologie (✅ umgesetzt, ADR-110):** „MO-Prüfungen“ im Fließtext, „MO Checks“ in Menüpfaden und Anführungszeichen (Entscheidung 24.10.2026); SYNONYME.csv übernehmen.
+13. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 24.10.2026 keine Auswahl), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 
 1. **LanguageTool:** entschieden am 24.10.2026 – lokal als Java-Dienst ohne Docker (G-04, umgesetzt in Etappe 55).
 2. **Sprachen:** de-CH und fr-CH entschieden am 24.10.2026. Offen: weitere Märkte (Hindi und Türkisch stehen in den Artefakten).
 3. **Übersetzungsbüros:** entschieden am 24.10.2026 – Austausch per XLIFF 1.2 und Excel (U-05, umgesetzt).
-4. **Schreibweise:** Wie lautet die Schreibweise der offenen Begriffe in `SYNONYME.csv`, z. B. „MO Checks“ oder „MO-Prüfungen“? Davon hängt S-04 ab.
+4. **Schreibweise:** „MO-Prüfungen“ im Fließtext, „MO Checks“ als UI-Begriff – entschieden am 24.10.2026 (ADR-110). Offen: Systemnamen (Nemesis, VeDoc, CoFiCo, oneERP – später nach Oberfläche), „Grace Period“, Status FI-Beleg, Belegart, „Chassis Number“ (Redaktion).

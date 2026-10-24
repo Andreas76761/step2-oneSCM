@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.56 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.57 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -108,6 +108,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
   - **Lesbarkeit** je Kapitel im Anleitungs-Check und im Schreibstil: Flesch, LIX, Ø Wörter je Satz, lange Sätze, Passiv mit Sollwerten der Zielgruppe.
   - **Tonalität:** Unter Schreibstil › Regeln › Tonalität legen Sie den Ton je Produktart (Vorgabe aus TONALITAET.md: Handbuch sachlich, Releaseletter und Quick Guide knapp, Schulung freundlich, Interne Dokumente formell) und je Rolle fest. Beim Prüfen wählen Sie Produktart und Rolle; die Regel „Tonalität“ meldet z. B. Werbesprache, Verkürzungen oder strenge Formulierungen, und die KI-Vorschläge treffen den gewählten Ton. Im Kapitel gilt das Rollenprofil für Absätze genau einer Rolle.
   - **Terminologie:** „nicht übersetzen“ – der Begriff steht in jeder Sprache unverändert (z. B. Begriffe der Oberfläche).
+  - **Terminologie:** „UI-Begriff erlaubt“ – die zu vermeidende Variante ist in Menüpfaden (**Vertragserstellung › MO Checks**) und in Anführungszeichen („MO Checks“) erlaubt; im Fließtext meldet die Stilprüfung sie und schlägt den bevorzugten Begriff vor (z. B. „MO-Prüfungen“). `SYNONYME.csv` aus dem Arbeitsordner lässt sich unter „Stammdaten › Glossar“ importieren; Zeilen mit Status „offen“ oder „Vorschlag“ werden übersprungen.
 - **Evidenz:** Herkunft jedes Absatzes.
 - **Freigabe:** einreichen, mehrstufig freigeben; das Qualitätsgate zeigt, was noch fehlt.
 

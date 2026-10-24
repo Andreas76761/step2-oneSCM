@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.59 Stand nach Etappe 57 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| „MO-Prüfungen“ im Fließtext, „MO Checks“ als UI-Begriff in Menüpfaden und Anführungszeichen (S-04, NFR-145; Entscheidung 24.10.2026) | ✅ ([ADR-110](adr/ADR-110-ui-begriffe-mo-pruefungen.md)) |
+| SYNONYME.csv in die Terminologie übernehmen, nur entschiedene Begriffe (NFR-145) | ✅ |
+| Offen | Schreibweise der Systemnamen (später nach Oberfläche); „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ (Redaktion); U-07 weitere Sprachen (ohne Auswahl) |
+
 ## 1.58 Stand nach Etappe 56 (24.10.2026)
 
 | Punkt | Ergebnis |

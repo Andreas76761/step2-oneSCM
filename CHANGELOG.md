@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.57.0 – Etappe 57 (24.10.2026)
+
+Entscheidung des Auftraggebers vom 24.10.2026 (S-04): „MO-Prüfungen“ im Fließtext, „MO Checks“ nur in Menüpfaden und als UI-Begriff in Anführungszeichen. Offen bleiben die Schreibweise der Systemnamen (später nach Oberfläche), der deutsche Begriff für „Grace Period“ (Redaktion) und U-07.
+
+### Hinzugefügt
+- **UI-Begriffe in der Terminologie (ADR-110):** Merkmal „UI-Begriff erlaubt“ je Begriff. Die zu vermeidenden Varianten werden nur im Fließtext gemeldet; erlaubt bleiben sie in Anführungszeichen, in fett gesetzten Menüpfaden und direkt am Trenner „›“. Pflege auf der Seite „Terminologie“; die KI-Umformulierung erhält einen entsprechenden Hinweis.
+- **SYNONYME.csv in die App übernehmen:** Der Glossar-Import der Stammdaten liest die Datei des Arbeitsordners (Spalte „Bevorzugt“, neue Spalte „UI-Begriff erlaubt“). Zeilen mit Status „offen“ oder „Vorschlag“ werden übersprungen und so gekennzeichnet.
+- Tests T-354, T-355, E2E T-356 (axe); Anforderung NFR-145; Migration 063.
+
+### Geändert
+- Vorlagen des Arbeitsordners: `SYNONYME.csv` („MO-Prüfungen“ entschieden, neue Spalte „UI-Begriff erlaubt“), `BEGRIFFE.md`, `CLAUDE.md`, Agent `sprach-lektor`.
+- Schreibstil: „MO Checks“ ist nicht mehr Beispiel für erlaubte Begriffe.
+
 ## 0.56.0 – Etappe 56 (24.10.2026)
 
 ### Hinzugefügt

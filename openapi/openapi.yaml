@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.56.0
+  version: 0.57.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -1065,7 +1065,7 @@ paths:
       operationId: createTerm
       summary: Begriff anlegen (bevorzugt, zu vermeiden, Definition)
       tags: [System]
-      x-requirements: [US-015]
+      x-requirements: [US-015, NFR-145]
       x-extension: true
       requestBody:
         required: true
@@ -1080,6 +1080,7 @@ paths:
                 definition: { type: [string, 'null'] }
                 translations: { type: object, description: 'Je Projektsprache { term, definition } fürs Glossar beim Lesen (ADR-071); andere Sprachen → 400', additionalProperties: { type: object, properties: { term: { type: string }, definition: { type: [string, "null"] } } } }
                 keepUntranslated: { type: boolean, description: 'nicht übersetzen (ADR-097): der Begriff steht in jeder Sprache unverändert' }
+                uiAllowed: { type: boolean, description: 'UI-Begriff (ADR-110, NFR-145): die zu vermeidenden Varianten bleiben in Menüpfaden (›) und Anführungszeichen erlaubt, z. B. „MO Checks“' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Angelegt }
@@ -1090,7 +1091,7 @@ paths:
       operationId: updateTerm
       summary: Begriff ändern oder ausmustern (status retired)
       tags: [System]
-      x-requirements: [US-015]
+      x-requirements: [US-015, NFR-145]
       x-extension: true
       parameters: [{ name: termId, in: path, required: true, schema: { type: string } }]
       requestBody:
@@ -1105,6 +1106,7 @@ paths:
                 definition: { type: [string, 'null'] }
                 translations: { type: object, description: 'Je Projektsprache { term, definition } fürs Glossar beim Lesen (ADR-071); andere Sprachen → 400', additionalProperties: { type: object, properties: { term: { type: string }, definition: { type: [string, "null"] } } } }
                 keepUntranslated: { type: boolean, description: 'nicht übersetzen (ADR-097): der Begriff steht in jeder Sprache unverändert' }
+                uiAllowed: { type: boolean, description: 'UI-Begriff (ADR-110, NFR-145): die zu vermeidenden Varianten bleiben in Menüpfaden (›) und Anführungszeichen erlaubt, z. B. „MO Checks“' }
                 status: { type: string, enum: [active, retired] }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -4076,9 +4078,9 @@ paths:
   /master-data/import:
     post:
       operationId: importMasterData
-      summary: 'Abkürzungen, Glossar oder FAQ aus CSV (; , Tab) oder Excel (.xlsx) importieren – Vorschau oder Übernahme (ADR-036)'
+      summary: 'Abkürzungen, Glossar oder FAQ aus CSV (; , Tab) oder Excel (.xlsx) importieren – Vorschau oder Übernahme (ADR-036); Glossar auch aus SYNONYME.csv des Arbeitsordners: nur entschiedene Zeilen, Spalte „UI-Begriff erlaubt“ (ADR-110)'
       tags: [Stammdaten]
-      x-requirements: [NFR-23]
+      x-requirements: [NFR-23, NFR-145]
       x-extension: true
       parameters:
         - { name: kind, in: query, required: true, schema: { type: string, enum: [abbreviations, glossary, faq] } }

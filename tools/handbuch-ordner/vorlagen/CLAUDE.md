@@ -98,8 +98,8 @@ Die lokale App unter `http://localhost:3000` liest die Quellen ein (Fundstelle j
 
 ## Begriffe und offene Entscheidungen
 
-- Schreibweise: **oneSCM**, **Servicevertrag**, **Antrag (Proposal)**, **MO Checks / MO-Prüfungen**. Englische UI-Begriffe in „…“ mit deutschem Handbuchbegriff.
+- Schreibweise: **oneSCM**, **Servicevertrag**, **Antrag (Proposal)**, **MO-Prüfungen** (im Fließtext; „MO Checks“ nur im Menüpfad und als UI-Begriff in „…“, entschieden 24.10.2026). Englische UI-Begriffe in „…“ mit deutschem Handbuchbegriff.
 - Rollen der Steuerung: **Dealer, MO, Markt, HQ, IT**. Sparten: **Pkw und Van**.
-- **MO = Market Operation** (Prüfung und Freigabe, MO Checks). Anrede: **„Sie“**. Sparten: **nur Pkw und Van** – Truck und Bus nicht verwenden.
-- Bevorzugte und zu vermeidende Begriffe: `07_III_Grammatik_Synonyme_Fehlerliste/02_Synonyme/SYNONYME.csv` – Begriffe mit Status `offen` (z. B. MO-Prüfungen/MO Checks, Status FI-Beleg/FI-Dokument, Nemesis/NEMESIS, „Chassis Number“) nicht selbst entscheiden.
+- **MO = Market Operation** (Prüfung und Freigabe, MO-Prüfungen). Anrede: **„Sie“**. Sparten: **nur Pkw und Van** – Truck und Bus nicht verwenden.
+- Bevorzugte und zu vermeidende Begriffe: `07_III_Grammatik_Synonyme_Fehlerliste/02_Synonyme/SYNONYME.csv` – Begriffe mit Status `offen` (z. B. Status FI-Beleg/FI-Dokument, Nemesis/NEMESIS, „Chassis Number“) nicht selbst entscheiden.
 - Weitere offene Entscheidungen: `00_Dokumentation/ENTSCHEIDUNGEN.md`.

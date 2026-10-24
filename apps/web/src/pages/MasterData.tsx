@@ -28,7 +28,7 @@ function useRun(reload: () => void) {
 // ---------- Import aus CSV/Excel (ADR-036) ----------
 
 const ACTION: Record<string, { label: string; cls: string }> = {
-  create: { label: 'neu', cls: 'st-approved' }, update: { label: 'aktualisieren', cls: 'st-in_review' }, unchanged: { label: 'unverändert', cls: '' }, error: { label: 'Fehler', cls: 'st-failed' },
+  create: { label: 'neu', cls: 'st-approved' }, update: { label: 'aktualisieren', cls: 'st-in_review' }, unchanged: { label: 'unverändert', cls: '' }, skipped: { label: 'übersprungen', cls: '' }, error: { label: 'Fehler', cls: 'st-failed' },
 };
 const COLUMNS: Record<string, string> = {
   abbreviations: 'Abkürzung; Bedeutung; Beschreibung', glossary: 'Begriff; Definition; Vermeiden', faq: 'Frage; Antwort; Rollen; Sparten; Status',
@@ -71,7 +71,7 @@ function MasterDataImport({ kind, onDone }: { kind: 'abbreviations' | 'glossary'
       </div>
       {result && (
         <>
-          <p className="small" role="status">{result.applied ? 'Übernommen' : 'Vorschau'}: {result.summary.rows} Zeilen · {result.summary.create} neu · {result.summary.update} aktualisieren · {result.summary.unchanged} unverändert · {result.summary.error} Fehler</p>
+          <p className="small" role="status">{result.applied ? 'Übernommen' : 'Vorschau'}: {result.summary.rows} Zeilen · {result.summary.create} neu · {result.summary.update} aktualisieren · {result.summary.unchanged} unverändert{result.summary.skipped ? ` · ${result.summary.skipped} übersprungen` : ''} · {result.summary.error} Fehler</p>
           <div className="table-wrap" role="region" aria-label="Importvorschau" tabIndex={0}>
             <table className="table compact">
               <thead><tr><th>Zeile</th><th>Eintrag</th><th>Aktion</th><th>Hinweis</th></tr></thead>

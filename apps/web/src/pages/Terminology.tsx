@@ -70,9 +70,11 @@ export function TerminologyPage() {
                     <td colSpan={2}>
                       {/* „Fix-Sprache“ (ADR-097, S-04): der Begriff bleibt in jeder Sprache unverändert, z. B. UI-Begriffe */}
                       <label className="small"><input type="checkbox" checked={!!edit.keepUntranslated} onChange={(e) => setEdit({ ...edit, keepUntranslated: e.target.checked })} /> nicht übersetzen (in allen Sprachen so schreiben)</label>
+                      {/* UI-Begriff (ADR-110): Varianten bleiben in Menüpfaden und Anführungszeichen erlaubt, z. B. „MO Checks“ */}
+                      <label className="small"><input type="checkbox" checked={!!edit.uiAllowed} onChange={(e) => setEdit({ ...edit, uiAllowed: e.target.checked })} /> zu Vermeidendes als UI-Begriff in Menüpfaden (›) und Anführungszeichen erlaubt</label>
                     </td>
                     <td className="row-actions">
-                      <button className="btn primary small" onClick={async () => (await save(() => patch(`/terminology/${t.id}`, { preferred: edit.preferred, avoid: list(edit.avoid), definition: edit.definition || null, translations: edit.translations, keepUntranslated: !!edit.keepUntranslated }), 'Begriff gespeichert.')) && setEdit(null)}>Speichern</button>
+                      <button className="btn primary small" onClick={async () => (await save(() => patch(`/terminology/${t.id}`, { preferred: edit.preferred, avoid: list(edit.avoid), definition: edit.definition || null, translations: edit.translations, keepUntranslated: !!edit.keepUntranslated, uiAllowed: !!edit.uiAllowed }), 'Begriff gespeichert.')) && setEdit(null)}>Speichern</button>
                       <button className="btn small" onClick={() => setEdit(null)}>Abbrechen</button>
                     </td>
                   </tr>
@@ -98,13 +100,13 @@ export function TerminologyPage() {
                   </Fragment>
                 ) : (
                   <tr key={t.id}>
-                    <td><strong>{t.preferred}</strong>{t.keepUntranslated && <span className="tag small" title="wird in keiner Sprache übersetzt">nicht übersetzen</span>}</td>
+                    <td><strong>{t.preferred}</strong>{t.keepUntranslated && <span className="tag small" title="wird in keiner Sprache übersetzt">nicht übersetzen</span>}{t.uiAllowed && <span className="tag small" title="Varianten in Menüpfaden und Anführungszeichen erlaubt">UI-Begriff erlaubt</span>}</td>
                     <td>{t.avoid.map((a: string) => <span key={a} className="tag">{a}</span>)}</td>
                     <td className="small">{t.definition ?? '–'}{Object.keys(t.translations ?? {}).map((c) => <span key={c} className="tag small" title={`${t.translations[c].term}: ${t.translations[c].definition ?? ''}`}>{c.toUpperCase()}</span>)}</td>
                     <td><Status s={t.status === 'active' ? 'confirmed' : 'superseded'} /></td>
                     <td className="small">{t.updatedBy}, {new Date(t.updatedAt).toLocaleString('de-DE')}</td>
                     <td className="row-actions">
-                      {t.status === 'active' && <button className="btn small" onClick={() => setEdit({ id: t.id, preferred: t.preferred, avoid: t.avoid.join(', '), definition: t.definition ?? '', translations: { ...(t.translations ?? {}) }, keepUntranslated: !!t.keepUntranslated })}>Bearbeiten</button>}
+                      {t.status === 'active' && <button className="btn small" onClick={() => setEdit({ id: t.id, preferred: t.preferred, avoid: t.avoid.join(', '), definition: t.definition ?? '', translations: { ...(t.translations ?? {}) }, keepUntranslated: !!t.keepUntranslated, uiAllowed: !!t.uiAllowed })}>Bearbeiten</button>}
                       <button className="btn small" onClick={() => save(() => patch(`/terminology/${t.id}`, { status: t.status === 'active' ? 'retired' : 'active' }), t.status === 'active' ? 'Begriff ausgemustert.' : 'Begriff reaktiviert.')}>
                         {t.status === 'active' ? 'Ausmustern' : 'Reaktivieren'}
                       </button>

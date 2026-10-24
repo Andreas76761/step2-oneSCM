@@ -3188,3 +3188,30 @@ test('[T-353] Regelsätze im Schreibstil einschalten, Vale-Stil einlesen, Fund i
   await expect(page.getByRole('heading', { name: 'Französisch: E2E Hinweis Länderreview' })).toBeVisible();
   expect(await axe()).toEqual([]);
 });
+
+test('[T-356] Terminologie: „MO-Prüfungen“ mit UI-Begriff „MO Checks“ – im Fließtext gemeldet, im Menüpfad erlaubt – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  const term = await (await request.post('/api/v1/terminology', { headers: adm, data: { preferred: 'MO-Prüfungen', avoid: ['MO Checks'] } })).json();
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.goto('/terminologie');
+  await page.getByRole('row', { name: /MO-Prüfungen/ }).getByRole('button', { name: 'Bearbeiten' }).click();
+  await page.getByRole('checkbox', { name: /als UI-Begriff in Menüpfaden/ }).check();
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Begriff gespeichert.')).toBeVisible();
+  await expect(page.getByRole('row', { name: /MO-Prüfungen/ }).getByText('UI-Begriff erlaubt')).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  await page.goto('/schreibstil');
+  await page.getByRole('textbox', { name: 'Text' }).fill('Die MO Checks laufen nachts. Öffnen Sie **Vertragserstellung › MO Checks**.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Stilwert' })).toContainText('Terminologie 1');
+  await page.getByRole('button', { name: /Automatisch korrigieren/ }).click();
+  await expect(page.getByRole('textbox', { name: 'Text' })).toHaveValue('Die MO-Prüfungen laufen nachts. Öffnen Sie **Vertragserstellung › MO Checks**.');
+  expect(await axe()).toEqual([]);
+  // aufräumen
+  expect((await request.patch(`/api/v1/terminology/${term.id}`, { headers: adm, data: { status: 'retired' } })).ok()).toBe(true);
+});

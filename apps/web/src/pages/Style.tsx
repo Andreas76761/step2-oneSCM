@@ -459,7 +459,7 @@ function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAd
               onChange={(e) => setD({ ...d, maxSentenceWords: e.target.value ? Number(e.target.value) : null })} />
           </label>
         </div>
-        <label className="block">Erlaubte Begriffe (werden nie als Fehler gemeldet, je Zeile einer – z. B. oneSCM, VIN, BTO, MO Checks)
+        <label className="block">Erlaubte Begriffe (werden nie als Fehler gemeldet, je Zeile einer – z. B. oneSCM, VIN, BTO)
           <textarea rows={4} disabled={ro} value={(d.allowed ?? []).join('\n')} onChange={(e) => setD({ ...d, allowed: e.target.value.split('\n') })} />
         </label>
         {!ro && (

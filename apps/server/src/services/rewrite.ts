@@ -91,8 +91,8 @@ export async function proposeRewrite(ctx: Ctx, blockId: string, input: { instruc
   if (ownHits.length) throw unprocessable('Übertragung gesperrt: Der Absatz enthält mögliche personenbezogene Daten.', { hits: ownHits });
 
   const sources: RewriteSource[] = sourceRows.map((s, i) => ({ label: `S${i + 1}`, snippetId: s.id, seq: s.seq, text: s.text }));
-  const terms = (await db.all("SELECT preferred, avoid FROM terminology_terms WHERE project_id = ? AND status = 'active' ORDER BY preferred", ctx.projectId))
-    .map((t) => ({ preferred: t.preferred as string, avoid: parseJson<string[]>(t.avoid, []) }));
+  const terms = (await db.all("SELECT preferred, avoid, ui_allowed FROM terminology_terms WHERE project_id = ? AND status = 'active' ORDER BY preferred", ctx.projectId))
+    .map((t) => ({ preferred: t.preferred as string, avoid: parseJson<string[]>(t.avoid, []), uiAllowed: !!Number(t.ui_allowed) }));
   const settings = await getSettings(db);
   if (!derivedFromSources(b.text, sources, settings.rewrite.minSupport)) {
     throw unprocessable('Absatz stammt nicht aus Quelltext (z. B. erzeugter Rollen- oder Statushinweis) und wird nicht umformuliert.');

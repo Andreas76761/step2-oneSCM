@@ -20,7 +20,7 @@ export interface RewriteInput {
   section: string;
   text: string;
   sources: RewriteSource[];
-  terms: { preferred: string; avoid: string[] }[];
+  terms: { preferred: string; avoid: string[]; uiAllowed?: boolean }[];
   instructions?: string;
   /** Kapitelanweisung der Redaktion (ADR-096): gilt mit Vorrang, aber nach den Regeln zur Quellenbindung */
   chapterInstruction?: { text: string | null; topics: string[]; excluded: string[] } | null;
@@ -68,7 +68,8 @@ export function buildRewritePrompt(input: RewriteInput) {
     section: input.section,
     paragraph: input.text,
     sources: input.sources.map((s) => ({ id: s.label, text: s.text })),
-    terminology: input.terms.map((t) => ({ preferred: t.preferred, avoid: t.avoid })),
+    // UI-Begriff (ADR-110): Varianten nur im Fließtext ersetzen, in Menüpfaden und Anführungszeichen stehen lassen
+    terminology: input.terms.map((t) => ({ preferred: t.preferred, avoid: t.avoid, ...(t.uiAllowed ? { avoidAllowedIn: 'Menüpfade (›) und Anführungszeichen' } : {}) })),
     ...(input.instructions?.trim() ? { editorNote: input.instructions.trim().slice(0, 500) } : {}),
     ...(input.tone ? { tone: input.tone.label, toneHint: input.tone.hint } : {}),
   };

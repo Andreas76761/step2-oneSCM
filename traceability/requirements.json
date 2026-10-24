@@ -1491,5 +1491,14 @@
     "documentation": [
       "docs/adr/ADR-109-regelsaetze-benachrichtigung.md"
     ]
+  },
+  {
+    "id": "NFR-145",
+    "title": "UI-Begriffe in der Terminologie: zu vermeidende Varianten (z. B. „MO Checks“) im Fließtext gemeldet, in Menüpfaden und Anführungszeichen erlaubt; SYNONYME.csv übernimmt nur entschiedene Begriffe",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-110-ui-begriffe-mo-pruefungen.md"
+    ]
   }
 ]

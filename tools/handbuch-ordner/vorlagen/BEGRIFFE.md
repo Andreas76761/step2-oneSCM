@@ -5,7 +5,7 @@
 | oneSCM | OneSCM, ONESCM, One SCM | Produktname |
 | Servicevertrag | Service Vertrag, Service-Vertrag | |
 | Antrag (Proposal) | Angebot (für Proposal) | Angebot = Kapitel 5 (Quote) |
-| MO Checks / MO-Prüfungen | Marktprüfung | |
+| MO-Prüfungen | MO Checks (im Fließtext), Marktprüfung | entschieden 24.10.2026: „MO Checks“ nur im Menüpfad (Vertragserstellung › MO Checks) und als UI-Begriff in „…“ |
 | Dealer | Händler (in UI-Bezug) | im Fließtext laut Entscheidung |
 
 ## UI-Begriffe (englisch, unverändert übernehmen)

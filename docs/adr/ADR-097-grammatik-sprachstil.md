@@ -44,7 +44,7 @@ Der Abgleich mit den oneSCM-Artefakten (docs/10) zeigte Lücken bei Grammatik un
 - **„Nicht übersetzen“ (Fix-Sprache):**
   - Ein Begriff der Terminologie kann so markiert werden; er gilt dann in jeder Projektsprache als feste Übersetzung = deutscher Begriff.
   - Die KI-Übersetzung erhält ihn als „X → X“, die Übersetzungsprüfung meldet Abweichungen.
-  - Welche Begriffe so behandelt werden (z. B. „MO Checks“), entscheidet die Redaktion; die offenen Begriffe aus `SYNONYME.csv` bleiben offen.
+  - Welche Begriffe so behandelt werden (z. B. „MO Checks“), entscheidet die Redaktion; die offenen Begriffe aus `SYNONYME.csv` bleiben offen (entschieden am 24.10.2026: „MO-Prüfungen“ im Fließtext, „MO Checks“ als UI-Begriff – ADR-110).
 - **Bildunterschriften:** höchstens 200 Zeichen und zwei Sätze, ohne Füller wie „Hier sieht man“ (Prüfregeln `caption_long`, `caption_sentences`, `caption_filler` im Bildarchiv). Platzhalter sind ausgenommen.
 - **Kapitelanweisung für Handbuch-Varianten:**
   - Variantenkapitel haben eine eigene Anweisung (Kapitelsteuerung, Auswahl „Gliederung“).

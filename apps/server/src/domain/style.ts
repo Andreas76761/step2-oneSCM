@@ -33,7 +33,8 @@ export interface StyleIssue {
 export interface StyleSentence { start: number; end: number; text: string; issues: StyleIssue[] }
 export interface StyleOptions {
   maxWords?: number;
-  terms?: { preferred: string; avoid: string[] }[];
+  /** Terminologie; `uiAllowed` (ADR-110): Varianten in Menüpfaden und Anführungszeichen erlaubt */
+  terms?: { preferred: string; avoid: string[]; uiAllowed?: boolean }[];
   /** ausgeschaltete Regeln (ADR-044) */
   disabled?: StyleRule[];
   phrases?: StylePhrase[];
@@ -146,6 +147,21 @@ const wordCount = (s: string) => [...s.replace(/^\s*(?:\d+\.|[-*])\s+/, '').matc
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Regelprüfung eines Textes */
+const QUOTED = /„[^“”"\n]*[“”"]|"[^"\n]*"|“[^”\n]*”|«[^»\n]*»|‚[^‘’\n]*[‘’]/g;
+
+/**
+ * Steht die Stelle in einem UI-Kontext (ADR-110)? In Anführungszeichen („MO Checks“), in einem fett gesetzten Menüpfad
+ * (**Vertragserstellung › MO Checks**) oder direkt an einem Trenner „›“ (Versand › MO Checks) – dort bleibt der Begriff
+ * der Oberfläche stehen.
+ */
+export function inUiContext(text: string, start: number, end: number): boolean {
+  const inside = (re: RegExp, cond: (x: string) => boolean = () => true) =>
+    [...text.matchAll(re)].some((m) => m.index! <= start && end <= m.index! + m[0].length && cond(m[0]));
+  if (inside(QUOTED)) return true;
+  if (inside(/\*\*[^*\n]+\*\*/g, (x) => x.includes('›'))) return true;
+  return /›[ \t]*$/.test(text.slice(Math.max(0, start - 4), start)) || /^[ \t]*›/.test(text.slice(end, end + 4));
+}
+
 export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences: StyleSentence[]; counts: Partial<Record<StyleRule, number>>; score: number } {
   const maxWords = opts.maxWords ?? 25;
   const lang = (opts.language ?? 'de').toLowerCase().slice(0, 2);
@@ -320,7 +336,7 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
     for (const [re, right] of ABBREVIATIONS) for (const m of t.matchAll(re)) add('abbreviation', 'info', `Abkürzung „${right}“ schreiben`, m.index!, m.index! + m[0].length, { replacement: right, label: `„${right}“` });
     for (const term of opts.terms ?? []) {
       for (const avoid of term.avoid) {
-        for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(avoid)}(?![\p{L}])`, 'giu'))) add('terminology', 'warning', `Terminologie: „${term.preferred}“ statt „${m[0]}“`, m.index!, m.index! + m[0].length, { replacement: term.preferred, label: `„${term.preferred}“` });
+        for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(avoid)}(?![\p{L}])`, 'giu'))) if (!term.uiAllowed || !inUiContext(t, m.index!, m.index! + m[0].length)) add('terminology', 'warning', `Terminologie: „${term.preferred}“ statt „${m[0]}“`, m.index!, m.index! + m[0].length, { replacement: term.preferred, label: `„${term.preferred}“` });
       }
     }
   }

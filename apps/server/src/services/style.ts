@@ -185,8 +185,8 @@ export async function setProjectLibraries(ctx: Ctx, input: { libraryIds?: unknow
 }
 
 async function options(ctx: Ctx, scope: { product?: Product; roles?: string[] } = {}) {
-  const terms = (await ctx.db.all("SELECT preferred, avoid FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId))
-    .map((t) => ({ preferred: t.preferred as string, avoid: parseJson<string[]>(t.avoid, []) }));
+  const terms = (await ctx.db.all("SELECT preferred, avoid, ui_allowed FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId))
+    .map((t) => ({ preferred: t.preferred as string, avoid: parseJson<string[]>(t.avoid, []), uiAllowed: !!Number(t.ui_allowed) }));
   const rules = await getStyleRules(ctx);
   const maxWords = rules.maxSentenceWords ?? Math.min(25, (await getSettings(ctx.db)).readability.maxSentenceWords);
   // Projektregeln und abonnierte Bibliotheken (ADR-050)

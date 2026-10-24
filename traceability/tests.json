@@ -2683,5 +2683,32 @@
       "NFR-143",
       "NFR-144"
     ]
+  },
+  {
+    "id": "T-354",
+    "title": "UI-Begriff: im Fließtext gemeldet, in Menüpfad und Anführungszeichen erlaubt, KI-Hinweis",
+    "file": "apps/server/test/stage57.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-145"
+    ]
+  },
+  {
+    "id": "T-355",
+    "title": "Terminologie: Merkmal UI-Begriff pflegen, Wirkung in der Stilprüfung, SYNONYME.csv übernehmen (nur entschiedene Zeilen)",
+    "file": "apps/server/test/stage57.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-145"
+    ]
+  },
+  {
+    "id": "T-356",
+    "title": "Terminologie „MO-Prüfungen“ mit UI-Begriff „MO Checks“ in der Oberfläche, Stilprüfung mit Korrektur – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-145"
+    ]
   }
 ]
