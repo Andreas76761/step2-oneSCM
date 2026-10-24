@@ -51,7 +51,7 @@ fs.writeFileSync(out, '%PDF-1.4\\n%' + /<title>([^<]*)<\\/title>/.exec(html)[1] 
     const built = await build('pdf', cfg);
     const call = client(built);
     try {
-      expect((await call('GET', '/design-templates')).json.map((t: any) => t.formats)).toEqual([['html', 'pdf'], ['html', 'pdf']]);
+      expect((await call('GET', '/design-templates')).json.map((t: any) => t.formats)).toEqual([['html', 'pdf', 'docx'], ['html', 'pdf', 'docx']]);
       const sample = await call('GET', '/design-templates/quickref/sample?format=pdf', undefined, 'u-leser');
       expect(sample.status).toBe(200);
       expect(sample.headers['content-type']).toBe('application/pdf');
@@ -71,7 +71,7 @@ fs.writeFileSync(out, '%PDF-1.4\\n%' + /<title>([^<]*)<\\/title>/.exec(html)[1] 
       const std = (await call('POST', '/exports', { format: 'pdf' }, 'u-redaktion')).json;
       expect((await call('GET', `/exports/${std.id}/download`)).raw.subarray(0, 5).toString()).toBe('%PDF-');
       expect(fs.existsSync(argsLog)).toBe(false);
-      expect((await call('POST', '/exports', { format: 'docx', design: 'fachdoku' }, 'u-redaktion')).json.detail).toBe('Designvorlagen gibt es für die Formate html und pdf.');
+      expect((await call('POST', '/exports', { format: 'md', design: 'fachdoku' }, 'u-redaktion')).json.detail).toBe('Designvorlagen gibt es für die Formate html, pdf und docx.');
     } finally {
       await built.app.close();
     }
@@ -91,7 +91,7 @@ fs.writeFileSync(out, '%PDF-1.4\\n%' + /<title>([^<]*)<\\/title>/.exec(html)[1] 
     const none = await build('ohne', { path: null, timeoutMs: 1000, noSandbox: false });
     const c3 = client(none);
     try {
-      expect((await c3('GET', '/design-templates')).json[0].formats).toEqual(['html']);
+      expect((await c3('GET', '/design-templates')).json[0].formats).toEqual(['html', 'docx']);
       const r = await c3('POST', '/exports', { format: 'pdf', design: 'quickref' }, 'u-redaktion');
       expect(r.status).toBe(400);
       expect(r.json.detail).toContain('PDF_BROWSER_PATH');

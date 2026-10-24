@@ -1536,5 +1536,14 @@
     "documentation": [
       "docs/adr/ADR-114-designvorlagen-anpassen.md"
     ]
+  },
+  {
+    "id": "NFR-150",
+    "title": "Designvorlagen als Word-Dokument: gleiche Inhalte wie HTML/PDF, Anpassung, Formatvorlagen für Navigation, Icons mit PNG-Ersatz, Kopf-/Fußzeilen mit Seitenfeldern; nummerierte Listen je Liste neu",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-115-designvorlagen-word.md"
+    ]
   }
 ]

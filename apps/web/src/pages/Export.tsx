@@ -1,4 +1,4 @@
-import { BookOpenIcon, CheckIcon, DownloadIcon, EyeIcon, FileTextIcon, InfoIcon, ZapIcon } from 'lucide-react';
+import { BookOpenIcon, CheckIcon, DownloadIcon, EyeIcon, FileTextIcon, FileTypeIcon, InfoIcon, ZapIcon } from 'lucide-react';
 import { Ico, OkMark } from '../components/icons';
 import { useState } from 'react';
 import { api, post } from '../api';
@@ -25,7 +25,9 @@ export function ExportPage() {
   const templates = useLoad<any[]>('/design-templates');
   // PDF im Design (ADR-113) nur mit lokalem Browser auf dem Server
   const pdfDesign = !!templates.data?.[0]?.formats?.includes('pdf');
-  const designable = format === 'html' || (format === 'pdf' && pdfDesign);
+  // Word im Design (ADR-115) immer, PDF nur mit lokalem Browser
+  const designable = format === 'html' || format === 'docx' || (format === 'pdf' && pdfDesign);
+  const withDesign = designable && design !== 'standard';
   const pickDesign = (id: string) => {
     setDesign(id);
     if (id === 'quickref') setProfile('quickguide');
@@ -44,7 +46,7 @@ export function ExportPage() {
   const run = async () => {
     setError(null);
     try {
-      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, asOf: asOf.trim() || undefined, format, profile, reading, ...(designable && design !== 'standard' ? { design } : {}), transitions, ...(review && format === 'docx' ? { reviewCopy: { criterion: criterion.trim() || undefined } } : {}), ...(outline ? { outlineId, appendices } : {}) });
+      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, asOf: asOf.trim() || undefined, format, profile, reading, ...(withDesign ? { design } : {}), transitions, ...(review && format === 'docx' && !withDesign ? { reviewCopy: { criterion: criterion.trim() || undefined } } : {}), ...(outline ? { outlineId, appendices } : {}) });
       setResult(r);
       notify(`Export erstellt (${r.chapters} Kapitel).`);
       history.reload();
@@ -117,7 +119,7 @@ export function ExportPage() {
             <label className="inline"><input type="checkbox" checked={reading} onChange={(e) => setReading(e.target.checked)} /> Lesefassung (ohne Rollen-/Sparten-Badges, Versionszeile und Quellenstatus)</label>
             {profile === 'full' && <label className="inline"><input type="checkbox" checked={transitions} onChange={(e) => setTransitions(e.target.checked)} /> „Weiter mit …“ am Kapitelende</label>}
           </div>
-          {format === 'docx' && (
+          {format === 'docx' && !withDesign && (
             <div className="form-row">
               <label className="inline"><input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} /> Prüffassung für Word (Lesefassung mit „Fertig, wenn …“ je Kapitel; geänderte Datei unter „Überarbeitung“ zurücklesen)</label>
               {review && <label>Fertig, wenn … <input value={criterion} onChange={(e) => setCriterion(e.target.value)} maxLength={300} size={50} placeholder="alle Schritte, Begriffe und Bildschirmtexte mit der aktuellen Oberfläche übereinstimmen." /></label>}
@@ -159,6 +161,7 @@ export function ExportPage() {
               <p className="small"><span className="page-format">{t.page}</span> {t.description}</p>
               <div className="actions">
                 <button className="btn" onClick={() => void showSample(t)}><Ico icon={EyeIcon} /> Muster ansehen</button>
+                <DownloadButton className="btn" href={`/api/v1/design-templates/${t.id}/sample?format=docx`} name={`muster-${t.id}.docx`}><Ico icon={FileTypeIcon} /> Muster als Word</DownloadButton>
                 {pdfDesign && <DownloadButton className="btn" href={`/api/v1/design-templates/${t.id}/sample?format=pdf`} name={`muster-${t.id}.pdf`}><Ico icon={DownloadIcon} /> Muster als PDF</DownloadButton>}
                 <button className="btn" onClick={() => { setFormat(pdfDesign ? 'pdf' : 'html'); pickDesign(t.id); }}><Ico icon={CheckIcon} /> Für den Export wählen</button>
               </div>

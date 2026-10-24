@@ -22,6 +22,7 @@ import { extractiveSummary } from '../domain/textVariants.js';
 import { transitionsFor } from './transitions.js';
 import { applyVariants } from './imageArchive.js';
 import { htmlToPdf, pdfBrowserAvailable } from './pdfBrowser.js';
+import { renderDesignDocx } from './designDocx.js';
 import { DESIGNS, normalizeTheme, renderDesign, type Design, type DesignChapter } from '../domain/designs.js';
 
 type Media = Map<string, MediaFile>;
@@ -444,7 +445,8 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   chapters.sort((a, b) => a.position - b.position);
   const design: Design = input.design ?? 'standard';
   if (!(DESIGNS as readonly string[]).includes(design)) throw badRequest(`design muss eines von ${DESIGNS.join(', ')} sein.`);
-  if (design !== 'standard' && format !== 'html' && format !== 'pdf') throw badRequest('Designvorlagen gibt es für die Formate html und pdf.');
+  if (design !== 'standard' && format !== 'html' && format !== 'pdf' && format !== 'docx') throw badRequest('Designvorlagen gibt es für die Formate html, pdf und docx.');
+  if (design !== 'standard' && input.reviewCopy) throw badRequest('Die Prüffassung gibt es nur im Standard-Design.');
   // PDF im Design (ADR-113) druckt ein lokaler Browser; ohne ihn bleibt HTML (im Browser als PDF speichern)
   if (design !== 'standard' && format === 'pdf' && !pdfBrowserAvailable(ctx.config.pdfBrowser)) {
     throw badRequest('PDF im Design braucht einen lokal installierten Chromium, Chrome oder Edge (PDF_BROWSER_PATH). Alternativ: Format html und im Browser als PDF speichern.');
@@ -489,6 +491,9 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   } else if (format === 'pdf') {
     data = await renderPdfExport(chapters, filter, media, extras);
     preview = null;
+  } else if (format === 'docx' && design !== 'standard') {
+    data = await renderDesignDocxExport(design, chapters, filter, media, { ...extras, title: outline?.name });
+    preview = null;
   } else if (format === 'docx') {
     data = await renderDocxExport(chapters, filter, media, extras, review ?? undefined);
     preview = null;
@@ -527,6 +532,17 @@ export function renderDesignExport(design: Exclude<Design, 'standard'>, chapters
     links: l.quickRefLinks, faq: extras.appendices?.faq, asOf: germanDay(now()), lang: htmlLang(extras.language ?? 'de'),
     md: (text) => markdownToHtml(text, images),
     // Anpassung der Vorlage (ADR-114)
+    theme: normalizeTheme(design, l.designThemes?.[design] ?? {}).theme,
+  });
+}
+/** Designvorlage als Word-Dokument (ADR-115): gleiche Inhalte, Marke und Anpassung wie HTML und PDF */
+export function renderDesignDocxExport(design: Exclude<Design, 'standard'>, chapters: ExportChapter[], f: ExportFilter, media: Media, extras: ExportExtras): Promise<Buffer> {
+  const l = extras.layout ?? NO_LAYOUT;
+  const list = visible(chapters, f) as DesignChapter[];
+  return renderDesignDocx(design, list, {
+    title: list.length === 1 && !extras.title ? list[0].title : extras.title ?? frameTexts(extras.language).manualTitle,
+    brand: l.companyName, productLine: l.productLine, logo: l.logo, docLabel: l.docLabel, footerText: l.footerText,
+    links: l.quickRefLinks, faq: extras.appendices?.faq, asOf: germanDay(now()), lang: htmlLang(extras.language ?? 'de'), media,
     theme: normalizeTheme(design, l.designThemes?.[design] ?? {}).theme,
   });
 }

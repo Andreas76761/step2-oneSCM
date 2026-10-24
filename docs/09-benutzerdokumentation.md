@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.62 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.63 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -122,6 +122,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
     - **Handbuch-Kapitel (Fachdokumentation):** A4 hoch, ausführlich.
   - Die Karte „Designvorlagen“ unten auf der Seite zeigt mit „Muster ansehen“ jede Vorlage mit fiktiven Inhalten. „Für den Export wählen“ stellt Format, Design und Profil ein.
   - **PDF im Design:** Ist auf dem Server ein Browser eingerichtet (Hinweis „PDF im Design ist eingerichtet“), wählen Sie Format PDF und das Design. Das PDF entsteht direkt, „Muster als PDF“ lädt das Muster herunter.
+  - **Word im Design:** Format Word (.docx) und das Design wählen; „Muster als Word“ lädt das Muster. Das Dokument hat Formatvorlagen (Überschrift 1/2) und lässt sich in Word weiterbearbeiten. Die Prüffassung gibt es nur im Standard-Design.
   - Sonst öffnen Sie die HTML-Datei im Browser und speichern sie über „Drucken → Als PDF speichern“. Kopf- und Fußzeilen mit Seitenzahl und Stand erscheinen dabei auf jeder Seite.
   - Marke, Logo und Fußzeile kommen aus **Einstellungen → Layout**. Dort gibt es auch „Zusatz unter der Marke“, „Dokumentart in der Kopfzeile“ und „Wichtige Links und Ansprechpartner“ (Markdown).
   - **Designvorlagen anpassen** (Einstellungen, Administration):

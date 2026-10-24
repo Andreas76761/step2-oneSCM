@@ -119,7 +119,7 @@ const plain = (md: string) => md.replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/\
 const listItems = (md: string) => md.split('\n').map((l) => /^\s*(?:\d+[.)]|[-*•])\s+(.*)$/.exec(l)?.[1]).filter((x): x is string => !!x).map(plain);
 const shorten = (s: string, n = 70) => (s.length > n ? `${s.slice(0, n - 1).replace(/\s+\S*$/, '')} …` : s);
 
-const BOX: Record<string, { cls: string; icon: DesignIcon; label: string }> = {
+export const BOX: Record<string, { cls: string; icon: DesignIcon; label: string }> = {
   note: { cls: 'info', icon: 'info', label: 'Hinweis' },
   tip: { cls: 'tip', icon: 'lightbulb', label: 'Tipp' },
   warning: { cls: 'warn', icon: 'triangle-alert', label: 'Warnung' },
@@ -139,6 +139,48 @@ const doc = (o: DesignOptions, css: string, body: string) => `<!doctype html>
 <style>${css}</style></head><body>
 ${body}
 </body></html>`;
+
+// ---------------------------------------------------------------- Gemeinsame Inhalte für HTML, PDF und Word (ADR-115)
+
+/** „Die Prozesse im Überblick“: je Kapitel mit Schritten die Schritte in Kurzform, bei mehreren Kapiteln römisch nummeriert */
+export function processOverview(chapters: DesignChapter[]): { title: string; steps: string[] }[] {
+  const multi = chapters.length > 1;
+  return chapters.map((c, i) => ({
+    title: `${multi ? `${roman(i)}. ` : ''}${c.title}`,
+    steps: c.sections.filter((s) => s.code === 'steps').flatMap((s) => s.blocks.flatMap((b) => listItems(b.text))).map((x) => shorten(x)),
+  })).filter((x) => x.steps.length);
+}
+
+/** Titel einer Karte im Quick Reference Guide: Schritte tragen den Kapitelnamen, sonst der Abschnitt */
+export const cardTitle = (chapters: DesignChapter[], i: number, s: DesignSection) => (s.code === 'steps' ? `${chapters.length > 1 ? `${roman(i)}. ` : ''}${chapters[i].title}` : s.title);
+
+export const hasInteractiveLinks = (chapters: DesignChapter[], o: Pick<DesignOptions, 'links'>) => chapters.some((c) => c.sections.some((s) => s.blocks.some((b) => /\]\(https?:/.test(b.text)))) || !!o.links;
+
+/** Icons der Karten je Abschnittsart */
+export const QR_ICON: Record<string, DesignIcon> = { prerequisites: 'shield-check', steps: 'list-ordered', result: 'circle-check', purpose: 'info' };
+
+/** Kopfzeile der Fachdokumentation in Großbuchstaben */
+export const fachdokuLabel = (chapters: DesignChapter[], o: Pick<DesignOptions, 'docLabel' | 'brand' | 'title'>) =>
+  `${o.docLabel || `${o.brand || 'oneSCM'} Fachdokumentation`} · ${chapters.length === 1 ? chapters[0].title : o.title}`.toUpperCase();
+export const fachdokuFooter = (o: Pick<DesignOptions, 'footerText' | 'brand'>) => o.footerText ?? `${o.brand || 'oneSCM'} · Fach- und Handbuchdokumentation`;
+
+/** Untertitel und Kennzahlen eines Kapitels (Abschnitte, Handlungsschritte, Version/Freigabe, Hinweise) */
+export function chapterFacts(c: DesignChapter): { sub: string; kpis: [DesignIcon, string, string][] } {
+  const blocks = c.sections.flatMap((s) => s.blocks);
+  const steps = c.sections.filter((s) => s.code === 'steps').flatMap((s) => s.blocks.flatMap((b) => listItems(b.text))).length;
+  const hints = blocks.filter((b) => ['note', 'tip', 'warning'].includes(b.kind)).length;
+  const purpose = c.sections.find((s) => s.code === 'purpose')?.blocks[0];
+  const sub = purpose ? shorten(plain(purpose.text), 140) : c.sections.map((s) => s.title).join(' · ');
+  return {
+    sub,
+    kpis: [
+      ['layers', String(c.sections.length), 'Abschnitte'],
+      ['list-ordered', String(steps), 'Handlungsschritte'],
+      ['shield-check', c.versionNo ? `V${c.versionNo}` : '–', c.approvedAt ? `Freigegeben am ${c.approvedAt.slice(8, 10)}.${c.approvedAt.slice(5, 7)}.${c.approvedAt.slice(0, 4)}` : 'Freigabestand'],
+      ['triangle-alert', String(hints), c.validFrom ? `Hinweise · gültig ab ${c.validFrom}` : 'Hinweise und Warnungen'],
+    ],
+  };
+}
 
 // ---------------------------------------------------------------- Quick Reference Guide
 
@@ -212,22 +254,18 @@ function qrBlock(b: DesignBlock, o: DesignOptions): string {
   return html;
 }
 
-const QR_ICON: Record<string, DesignIcon> = { prerequisites: 'shield-check', steps: 'list-ordered', result: 'circle-check', purpose: 'info' };
 
 export function renderQuickRef(chapters: DesignChapter[], o: DesignOptions): string {
   const t = o.theme ?? DEFAULT_THEMES.quickref;
-  const multi = chapters.length > 1;
   // Überblick über die Prozesse: Kapitel mit römischer Nummer, darunter die Schritte in Kurzform
-  const overview = chapters.some((c) => c.sections.some((s) => s.code === 'steps')) ? `<section class="qr-overview" aria-label="Überblick">
-<h2>${svgIcon('layers', 18)}Die Prozesse im Überblick</h2><div class="qr-ovcols">${chapters.map((c, i) => {
-    const steps = c.sections.filter((s) => s.code === 'steps').flatMap((s) => s.blocks.flatMap((b) => listItems(b.text)));
-    return steps.length ? `<h3>${multi ? `${roman(i)}. ` : ''}${esc(c.title)}</h3><ul>${steps.map((s) => `<li>${esc(shorten(s))}</li>`).join('')}</ul>` : '';
-  }).join('')}</div></section>` : '';
-  const hasLinks = chapters.some((c) => c.sections.some((s) => s.blocks.some((b) => /\]\(https?:/.test(b.text)))) || !!o.links;
+  const ov = processOverview(chapters);
+  const overview = ov.length ? `<section class="qr-overview" aria-label="Überblick">
+<h2>${svgIcon('layers', 18)}Die Prozesse im Überblick</h2><div class="qr-ovcols">${ov.map((x) => `<h3>${esc(x.title)}</h3><ul>${x.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>`).join('')}</div></section>` : '';
+  const hasLinks = hasInteractiveLinks(chapters, o);
   const cards: string[] = [];
   chapters.forEach((c, i) => {
     for (const s of c.sections) {
-      const title = s.code === 'steps' ? `${multi ? `${roman(i)}. ` : ''}${c.title}` : s.title;
+      const title = cardTitle(chapters, i, s);
       cards.push(`<section class="qr-card${s.blocks.length <= 2 && s.code !== 'steps' ? ' keep' : ''}"><h2>${svgIcon(QR_ICON[s.code] ?? 'file-text', 18)}${esc(title)}</h2>${s.blocks.map((b) => qrBlock(b, o)).join('\n')}</section>`);
     }
   });
@@ -253,7 +291,7 @@ const FD_CSS = (o: DesignOptions, label: string, t: DesignTheme) => `
 @page{size:A4;margin:18mm 16mm 16mm;
  @top-left{content:"${label.replace(/["\\]/g, '')}";font:700 8pt "Segoe UI",system-ui,sans-serif;letter-spacing:.04em;color:${t.primary};border-bottom:1.5px solid ${t.primary};vertical-align:bottom;padding-bottom:3mm}
  @top-right{content:"Seite " counter(page) " von " counter(pages);font:8pt "Segoe UI",system-ui,sans-serif;color:#1f2933;border-bottom:1.5px solid ${t.primary};vertical-align:bottom;padding-bottom:3mm}
- @bottom-left{content:"${(o.footerText ?? `${o.brand || 'oneSCM'} · Fach- und Handbuchdokumentation`).replace(/["\\]/g, '')}";font:7.5pt "Segoe UI",system-ui,sans-serif;color:#5f6b7a;border-top:1px solid #d9dee5;vertical-align:top;padding-top:2mm}
+ @bottom-left{content:"${fachdokuFooter(o).replace(/["\\]/g, '')}";font:7.5pt "Segoe UI",system-ui,sans-serif;color:#5f6b7a;border-top:1px solid #d9dee5;vertical-align:top;padding-top:2mm}
  @bottom-right{content:"${o.title.replace(/["\\]/g, '')}";font:7.5pt "Segoe UI",system-ui,sans-serif;color:#5f6b7a;border-top:1px solid #d9dee5;vertical-align:top;padding-top:2mm}}
 body{margin:0;font:9.5pt/1.55 ${FONTS[t.bodyFont]};color:var(--fd-ink);background:#fff;text-align:justify;hyphens:auto}
 .fd{max-width:210mm;margin:0 auto;padding:0}
@@ -314,26 +352,16 @@ function fdBlock(b: DesignBlock, o: DesignOptions): string {
 
 export function renderFachdoku(chapters: DesignChapter[], o: DesignOptions): string {
   const t = o.theme ?? DEFAULT_THEMES.fachdoku;
-  const label = `${o.docLabel || `${o.brand || 'oneSCM'} Fachdokumentation`} · ${chapters.length === 1 ? chapters[0].title : o.title}`.toUpperCase();
+  const label = fachdokuLabel(chapters, o);
   const parts = chapters.map((c, ci) => {
-    const blocks = c.sections.flatMap((s) => s.blocks);
-    const steps = c.sections.filter((s) => s.code === 'steps').flatMap((s) => s.blocks.flatMap((b) => listItems(b.text))).length;
-    const hints = blocks.filter((b) => ['note', 'tip', 'warning'].includes(b.kind)).length;
-    const purpose = c.sections.find((s) => s.code === 'purpose')?.blocks[0];
-    const sub = purpose ? shorten(plain(purpose.text), 140) : c.sections.map((s) => s.title).join(' · ');
-    const kpis: [DesignIcon, string, string][] = [
-      ['layers', String(c.sections.length), 'Abschnitte'],
-      ['list-ordered', String(steps), 'Handlungsschritte'],
-      ['shield-check', c.versionNo ? `V${c.versionNo}` : '–', c.approvedAt ? `Freigegeben am ${c.approvedAt.slice(8, 10)}.${c.approvedAt.slice(5, 7)}.${c.approvedAt.slice(0, 4)}` : 'Freigabestand'],
-      ['triangle-alert', String(hints), c.validFrom ? `Hinweise · gültig ab ${c.validFrom}` : 'Hinweise und Warnungen'],
-    ];
+    const { sub, kpis } = chapterFacts(c);
     const sections = c.sections.map((s, si) => `<section><h2>${si + 1}. ${esc(s.title)}</h2>${s.blocks.map((b) => fdBlock(b, o)).join('\n')}</section>`).join('\n');
     return `<article class="fd-chapter" data-title="${esc(c.title)}">
 <div class="fd-run"><b>${esc(label)}</b><span>Kapitel ${ci + 1} von ${chapters.length}</span></div>
 <div class="fd-titlerow${t.logo === 'left' ? ' logo-left' : ''}"><div><h1>${esc(c.title)}</h1><p class="fd-sub">${esc(sub)}</p></div>${ci === 0 && t.logo !== 'none' ? brandHtml(o, 'fd') : ''}</div>
 <div class="fd-kpis">${kpis.map(([ic, v, l]) => `<div class="fd-kpi"><div class="v">${svgIcon(ic, 16)}${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('')}</div>
 ${sections}
-<div class="fd-foot"><span>${esc(o.footerText ?? `${o.brand || 'oneSCM'} · Fach- und Handbuchdokumentation`)}</span><span>${esc(c.title)} · Stand ${esc(o.asOf)}</span></div>
+<div class="fd-foot"><span>${esc(fachdokuFooter(o))}</span><span>${esc(c.title)} · Stand ${esc(o.asOf)}</span></div>
 </article>`;
   });
   return doc(o, FD_CSS(o, label, t), `<main class="fd">\n${parts.join('\n')}\n</main>`);

@@ -3381,3 +3381,28 @@ test('[T-367] Designvorlagen anpassen: Farbe mit Kontrastprüfung, Schrift und L
   await expect(primary).toHaveValue('#1f3a68');
   await expect(card.getByRole('button', { name: 'Auf Standard zurücksetzen' })).toHaveCount(0);
 });
+
+test('[T-370] Designvorlagen als Word: Muster als Word, Export Word im Design ohne Prüffassung – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/export');
+  const card = page.locator('.card', { has: page.getByRole('heading', { name: 'Designvorlagen' }) });
+  const [sample] = await Promise.all([page.waitForEvent('download'), card.locator('.design-template', { hasText: 'Quick Reference Guide' }).getByRole('button', { name: 'Muster als Word' }).click()]);
+  expect(sample.suggestedFilename()).toBe('muster-quickref.docx');
+  expect(fs.readFileSync(await sample.path()).subarray(0, 2).toString()).toBe('PK');
+
+  await page.getByLabel('Format').selectOption('docx');
+  await expect(page.getByLabel(/Prüffassung für Word/)).toBeVisible();
+  await page.getByLabel('Design').selectOption('fachdoku');
+  // Prüffassung gibt es nur im Standard-Design
+  await expect(page.getByLabel(/Prüffassung für Word/)).toHaveCount(0);
+  await page.getByLabel('Ausgabe').selectOption('full');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByRole('status')).toContainText('Export erstellt');
+  await expect(page.getByText(/Word-Dokument erstellt/)).toBeVisible();
+  const [file] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /onescm-handbuch-fachdoku-.*\.docx herunterladen/ }).click()]);
+  expect(file.suggestedFilename()).toMatch(/^onescm-handbuch-fachdoku-\d{4}-\d{2}-\d{2}\.docx$/);
+  expect(fs.readFileSync(await file.path()).subarray(0, 2).toString()).toBe('PK');
+  expect(await axe()).toEqual([]);
+});

@@ -25,7 +25,10 @@ const IMG_TYPES: Record<string, 'png' | 'jpg' | 'gif'> = { 'image/png': 'png', '
 const decode = (s: string) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 const hex = (c: string) => c.replace('#', '').toUpperCase();
 
-interface Ctx { media: Map<string, MediaFile>; color: string }
+/** Nummerierte Listen je Dokument: eine Liste ab 1 beginnt neu, eine fortgesetzte (z. B. ab 6) zählt die vorige weiter */
+export interface ListState { next: number; last: number }
+export const newListState = (): ListState => ({ next: 1, last: 0 });
+interface Ctx { media: Map<string, MediaFile>; color: string; /** größte Bildbreite in px (Satzspiegel) */ maxWidth?: number; lists?: ListState; /** Bild in eigener Zeile (Designvorlagen) */ imageBreak?: boolean }
 
 function image(t: Tokens.Image, c: Ctx): ParagraphChild {
   const sha = /^media:([a-f0-9]{64})$/.exec(t.href)?.[1];
@@ -36,7 +39,7 @@ function image(t: Tokens.Image, c: Ctx): ParagraphChild {
   if (!m || (!type && !svgFallback)) return new TextRun({ text: `[Bild: ${t.text || 'ohne Alternativtext'}]`, italics: true });
   const w = m.width ?? svgFallback?.width ?? MAX_WIDTH;
   const h = m.height ?? svgFallback?.height ?? Math.round(w * 0.6);
-  const scale = Math.min(1, MAX_WIDTH / w);
+  const scale = Math.min(1, (c.maxWidth ?? MAX_WIDTH) / w);
   const transformation = { width: Math.round(w * scale), height: Math.round(h * scale) };
   const altText = { name: t.text || 'Bild', description: t.text || '', title: t.text || '' };
   if (svgFallback) return new ImageRun({ type: 'svg', data: m.data, fallback: { type: 'png', data: svgFallback.data }, transformation, altText });
@@ -52,7 +55,11 @@ function inline(tokens: Token[] | undefined, c: Ctx, style: { bold?: boolean; it
       case 'del': out.push(...inline((t as Tokens.Del).tokens, c, style)); break;
       case 'codespan': out.push(new TextRun({ text: decode((t as Tokens.Codespan).text), font: 'Consolas', ...style })); break;
       case 'br': out.push(new TextRun({ text: '', break: 1 })); break;
-      case 'image': out.push(image(t as Tokens.Image, c)); break;
+      case 'image':
+        if (c.imageBreak && out.length) out.push(new TextRun({ text: '', break: 1 }));
+        out.push(image(t as Tokens.Image, c));
+        if (c.imageBreak) out.push(new TextRun({ text: '', break: 1 }));
+        break;
       case 'link': {
         const l = t as Tokens.Link;
         const children = inline(l.tokens, c, style).filter((x): x is TextRun => x instanceof TextRun);
@@ -81,10 +88,16 @@ function blocks(tokens: Token[], c: Ctx, indent = 0): (Paragraph | Table)[] {
       case 'list': {
         const l = t as Tokens.List;
         const level = Math.min(Math.round(indent / 360), 3);
+        // eigene Zählung je Liste (Word-Instanz); Fortsetzung ab n > 1 behält die vorige
+        let instance: number | undefined;
+        if (l.ordered && c.lists) {
+          if (Number(l.start || 1) > 1 && c.lists.last) instance = c.lists.last;
+          else instance = c.lists.last = c.lists.next++;
+        }
         for (const item of l.items) {
           const [first, ...rest] = item.tokens;
           const head = first && (first.type === 'text' || first.type === 'paragraph') ? inline((first as Tokens.Text).tokens ?? [first], c) : [];
-          out.push(new Paragraph({ children: head, ...(l.ordered ? { numbering: { reference: 'onescm-numbered', level } } : { bullet: { level } }) }));
+          out.push(new Paragraph({ children: head, ...(l.ordered ? { numbering: { reference: 'onescm-numbered', level, ...(instance ? { instance } : {}) } } : { bullet: { level } }) }));
           out.push(...blocks(first && (first.type === 'text' || first.type === 'paragraph') ? rest : item.tokens, c, indent + 360));
         }
         break;
@@ -111,8 +124,8 @@ function blocks(tokens: Token[], c: Ctx, indent = 0): (Paragraph | Table)[] {
   return out;
 }
 
-export function markdownToDocx(md: string, media: Map<string, MediaFile>, color = '#1d63d8') {
-  return blocks(marked.lexer(md), { media, color });
+export function markdownToDocx(md: string, media: Map<string, MediaFile>, color = '#1d63d8', opts: { maxWidth?: number; lists?: ListState; imageBreak?: boolean } = {}) {
+  return blocks(marked.lexer(md), { media, color, ...opts });
 }
 
 function appendixDocx(a: Appendices, c: Ctx, heading: (text: string, level: 1 | 2) => Paragraph): (Paragraph | Table)[] {
@@ -156,7 +169,8 @@ export async function renderDocx(
 ): Promise<Buffer> {
   const { layout: l } = opts;
   const color = hex(l.primaryColor);
-  const c: Ctx = { media: opts.media, color: l.primaryColor };
+  const lists = newListState();
+  const c: Ctx = { media: opts.media, color: l.primaryColor, lists };
   const tpl = l.stylesXml && l.docxTemplate ? l.docxTemplate.styles : null;
   const heading = (text: string, level: 1 | 2 | 3) => {
     const style = tpl?.[`heading${level}`];
@@ -194,7 +208,7 @@ export async function renderDocx(
         const inner: (Paragraph | Table)[] = [];
         if (b.badges) inner.push(new Paragraph({ children: [new TextRun({ text: b.badges, size: 16, color: '334155' })] }));
         if (b.label) inner.push(new Paragraph({ children: [new TextRun({ text: b.label, bold: true })] }));
-        inner.push(...markdownToDocx(b.text, opts.media, l.primaryColor));
+        inner.push(...markdownToDocx(b.text, opts.media, l.primaryColor, { lists }));
         if (box) {
           children.push(new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },

@@ -2809,5 +2809,32 @@
     "requirements": [
       "NFR-149"
     ]
+  },
+  {
+    "id": "T-368",
+    "title": "Designvorlagen als Word: Querformat mit zwei Spalten bzw. Hochformat mit Kopfzeile, Inhalte, Icons, Anpassung, Formatvorlagen, Nummerierung je Liste",
+    "file": "apps/server/test/stage63.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-150"
+    ]
+  },
+  {
+    "id": "T-369",
+    "title": "Export und Muster als Word im Design; Prüffassung nur im Standard; Standard-Word nummeriert je Liste neu",
+    "file": "apps/server/test/stage63.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-150"
+    ]
+  },
+  {
+    "id": "T-370",
+    "title": "Muster als Word und Export Word im Design ohne Prüffassung in der Oberfläche – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-150"
+    ]
   }
 ]

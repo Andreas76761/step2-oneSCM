@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.63.0 – Etappe 63 (24.10.2026)
+
+### Hinzugefügt
+- **Designvorlagen als Word-Dokument (ADR-115):** `POST /exports` mit `format: docx` und `design`, Muster über `?format=docx`, Schaltfläche „Muster als Word“.
+  - **Quick Reference Guide:**
+    - A4 quer; Titelzeile mit Marke; darunter zwei Spalten mit „Die Prozesse im Überblick“ und Karten mit Rahmen in der Akzentfarbe.
+    - Warnbox mit Icon; Tipp, Links, häufige Fragen.
+    - Fußzeile „Hinweis: …“ und „STAND: … | Seite/Seiten“.
+  - **Handbuch-Kapitel:**
+    - Kopfzeile mit Dokumentart und „Seite n von N“.
+    - Überschrift 1 mit Untertitel, Kennzahlen-Karten, nummerierte Abschnitte als Überschrift 2 mit Balken.
+    - Hinweis-, Wichtig-, Warn- und Querverweis-Boxen; Fußzeile.
+  - Echte Formatvorlagen in Schrift und Farben der Anpassung (ADR-114); Lucide-Icons als SVG mit PNG-Ersatzdarstellung.
+- Gemeinsame Funktionen für Überblick, Kartentitel, Kennzahlen, Kopf- und Fußzeile – HTML, PDF und Word zeigen dieselben Inhalte.
+- Tests T-368 (Aufbau des Word-Dokuments), T-369 (API) und E2E T-370; Anforderung NFR-150.
+
+### Geändert
+- Word-Export allgemein: Nummerierte Listen zählen je Liste neu, eine fortgesetzte Liste (z. B. ab 6) zählt weiter. Bisher lief die Zählung über alle Listen des Dokuments.
+- Die Prüffassung gibt es nur im Standard-Design (400 mit Hinweis).
+- T-366 prüft das Audit-Protokoll ohne die nur in SQLite vorhandene Spalte `rowid` (scheiterte auf PostgreSQL).
+
 ## 0.62.0 – Etappe 62 (24.10.2026)
 
 Wahl des Auftraggebers vom 24.10.2026: Designvorlagen anpassbar machen.

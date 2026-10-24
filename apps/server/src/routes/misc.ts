@@ -15,7 +15,7 @@ import { translationStatus } from '../services/translations.js';
 import { buildMatrix, matrixCsv, matrixMarkdown, matrixXlsx } from '../services/traceability.js';
 import { globalSearch } from '../services/search.js';
 import { refreshSearchIndex } from '../services/searchIndex.js';
-import { designPreview, designSample, designSamplePdf, listDesignTemplates, resetDesignTheme, updateDesignTheme } from '../services/designTemplates.js';
+import { designPreview, designSample, designSampleDocx, designSamplePdf, listDesignTemplates, resetDesignTheme, updateDesignTheme } from '../services/designTemplates.js';
 import { deleteDocxTemplate, getLayout, updateLayout, uploadDocxTemplate } from '../services/layout.js';
 import { list, userOf } from './helpers.js';
 
@@ -35,6 +35,11 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Params: { id: string }; Querystring: { format?: string } }>('/design-templates/:id/sample', async (req, reply) => {
     userOf(req.ctx, req);
     // PDF im Design (ADR-113) mit lokalem Browser
+    // Word im Design (ADR-115)
+    if (req.query.format === 'docx') {
+      const docx = await designSampleDocx(req.ctx, req.params.id);
+      return reply.header('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document').header('Content-Disposition', `attachment; filename="muster-${req.params.id}.docx"`).send(docx);
+    }
     if (req.query.format === 'pdf') {
       const pdf = await designSamplePdf(req.ctx, req.params.id);
       return reply.header('Content-Type', 'application/pdf').header('Content-Disposition', `attachment; filename="muster-${req.params.id}.pdf"`).send(pdf);

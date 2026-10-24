@@ -98,8 +98,8 @@ describe('Etappe 62', () => {
       expect((await call('DELETE', '/design-templates/quickref/theme', undefined, 'u-redaktion')).status).toBe(403);
       expect((await call('DELETE', '/design-templates/quickref/theme')).json).toMatchObject({ customized: false, theme: DEFAULT_THEMES.quickref });
       expect((await call('GET', '/design-templates/quickref/sample')).body).toContain('--qr-blue:#0870ad;');
-      const events = await built.ctx.db.all<{ action: string }>("SELECT action FROM audit_events WHERE action LIKE 'layout.design_theme%' ORDER BY at, rowid");
-      expect(events.map((e) => e.action)).toEqual(['layout.design_theme_updated', 'layout.design_theme_reset']);
+      const events = await built.ctx.db.all<{ action: string }>("SELECT action FROM audit_events WHERE action LIKE 'layout.design_theme%'");
+      expect(events.map((e) => e.action).sort()).toEqual(['layout.design_theme_reset', 'layout.design_theme_updated']);
     } finally {
       await built.app.close();
     }

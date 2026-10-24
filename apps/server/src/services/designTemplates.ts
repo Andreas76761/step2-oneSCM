@@ -4,7 +4,9 @@ import type { Ctx, User } from '../context.js';
 import { DEFAULT_THEMES, DESIGN_INFO, normalizeTheme, renderDesign, THEME_CONTRAST, type Design, type DesignTheme } from '../domain/designs.js';
 import { SAMPLE_FACHDOKU, SAMPLE_QUICKREF, SAMPLE_SHA, sampleScreenshot } from '../domain/designSamples.js';
 import { badRequest, notFound, Problem } from '../problem.js';
-import { dataUri } from './media.js';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+import { renderDesignDocx } from './designDocx.js';
+import { dataUri, type MediaFile } from './media.js';
 import { getLayout, resolveLayout, saveDesignTheme, type Layout } from './layout.js';
 import { htmlToPdf, pdfBrowserAvailable } from './pdfBrowser.js';
 import { markdownToHtml } from './render.js';
@@ -26,10 +28,10 @@ function checkedTheme(id: TemplateId, input: unknown): DesignTheme {
   return theme;
 }
 
-/** Vorlagen mit Formaten (html immer, pdf nur mit lokalem Browser, ADR-113) und Anpassung (ADR-114) */
+/** Vorlagen mit Formaten (html und docx immer, pdf nur mit lokalem Browser, ADR-113, ADR-115) und Anpassung (ADR-114) */
 export async function listDesignTemplates(ctx: Ctx) {
   const l = await getLayout(ctx);
-  const formats = pdfBrowserAvailable(ctx.config.pdfBrowser) ? ['html', 'pdf'] : ['html'];
+  const formats = pdfBrowserAvailable(ctx.config.pdfBrowser) ? ['html', 'pdf', 'docx'] : ['html', 'docx'];
   return (Object.keys(DESIGN_INFO) as TemplateId[]).map((id) => ({
     id, ...DESIGN_INFO[id], formats, sampleUrl: `/api/v1/design-templates/${id}/sample`,
     theme: themeOf(l, id), defaultTheme: DEFAULT_THEMES[id], customized: !!l.designThemes?.[id], minContrast: THEME_CONTRAST,
@@ -52,6 +54,26 @@ export async function designSample(ctx: Ctx, rawId: string, draft?: DesignTheme)
 
 /** Vorschau mit ungespeicherter Anpassung (ADR-114) */
 export const designPreview = (ctx: Ctx, rawId: string, input: unknown) => designSample(ctx, rawId, checkedTheme(templateId(rawId), input));
+
+/** Bilder des Musters für Word: das neutrale Bildschirmfoto als PNG */
+export async function sampleMedia(): Promise<Map<string, MediaFile>> {
+  const svg = Buffer.from(sampleScreenshot().split(',')[1], 'base64');
+  const canvas = createCanvas(480, 270);
+  canvas.getContext('2d').drawImage(await loadImage(svg), 0, 0, 480, 270);
+  return new Map([[SAMPLE_SHA, { sha: SAMPLE_SHA, mime: 'image/png', data: canvas.toBuffer('image/png'), width: 480, height: 270 }]]);
+}
+
+/** Muster als Word-Dokument (ADR-115) */
+export async function designSampleDocx(ctx: Ctx, rawId: string): Promise<Buffer> {
+  const design = templateId(rawId);
+  const l = await resolveLayout(ctx);
+  const d = new Date();
+  const asOf = `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+  const common = { brand: l.companyName, productLine: l.productLine ?? 'Muster', logo: l.logo, asOf, media: await sampleMedia(), theme: themeOf(l, design) };
+  return design === 'quickref'
+    ? renderDesignDocx(design, SAMPLE_QUICKREF.chapters, { ...common, title: SAMPLE_QUICKREF.title, footerText: l.footerText ?? SAMPLE_QUICKREF.footer, links: l.quickRefLinks ?? SAMPLE_QUICKREF.links, faq: SAMPLE_QUICKREF.faq })
+    : renderDesignDocx(design, SAMPLE_FACHDOKU.chapters, { ...common, title: SAMPLE_FACHDOKU.title, footerText: l.footerText ?? SAMPLE_FACHDOKU.footer, docLabel: l.docLabel ?? SAMPLE_FACHDOKU.docLabel });
+}
 
 /** Muster als PDF (ADR-113) */
 export async function designSamplePdf(ctx: Ctx, id: string): Promise<Buffer> {
