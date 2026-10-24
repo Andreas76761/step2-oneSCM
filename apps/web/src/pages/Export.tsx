@@ -140,13 +140,15 @@ export function ExportPage() {
               )}
               {result.accessibility && (
                 <section className="pdf-a11y" aria-labelledby="pdf-a11y-h">
-                  <h3 id="pdf-a11y-h"><Ico icon={AccessibilityIcon} /> Barrierefreiheit (PDF)</h3>
+                  <h3 id="pdf-a11y-h"><Ico icon={AccessibilityIcon} /> Barrierefreiheit ({result.format === 'docx' ? 'Word' : result.format === 'pptx' ? 'PowerPoint' : 'PDF'})</h3>
                   <ul className="plain small">
                     {result.accessibility.checks.map((c: any) => (
                       <li key={c.id}>{c.ok === null ? <span className="muted">– </span> : <OkMark ok={c.ok} />} {c.label}{c.detail ? ` (${c.detail})` : ''}{c.ok === null ? ' – nicht prüfbar' : ''}</li>
                     ))}
                   </ul>
-                  {!result.accessibility.ok && <p className="small muted">Getaggte, barrierefreie PDFs entstehen mit einer Designvorlage und dem lokalen Browser (PDF im Design).</p>}
+                  {!result.accessibility.ok && (result.format === 'pdf'
+                    ? <p className="small muted">Getaggte, barrierefreie PDFs entstehen mit einer Designvorlage und dem lokalen Browser (PDF im Design).</p>
+                    : <p className="small muted">Ergänzen Sie fehlende Alternativtexte im Kapitel am Bild; Tabellen erhalten ihre Kopfzeile aus der ersten Markdown-Zeile.</p>)}
                 </section>
               )}
               {result.preview === null ? <p className="muted">{result.format === 'docx' ? 'Word-Dokument' : result.format === 'pptx' ? 'PowerPoint-Präsentation' : 'PDF'} erstellt ({Math.round(result.byteSize / 1024)} KB) – Vorschau nach dem Herunterladen.</p>

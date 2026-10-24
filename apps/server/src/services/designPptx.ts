@@ -11,6 +11,7 @@ import {
   type Design, type DesignBlock, type DesignChapter, type DesignOptions, type DesignTheme,
 } from '../domain/designs.js';
 import { markdownParagraphs, paginate, renderPptx, runs, SLIDE, xfrm, esc, type RunStyle, type Slide, type SlideImage, type SlideParagraph } from '../domain/pptxWriter.js';
+import { DECORATIVE_EXT } from '../domain/officeAccessibility.js';
 import { iconImage } from './designIconRaster.js';
 import type { MediaFile } from './media.js';
 
@@ -47,12 +48,14 @@ class Shapes {
   text(x: number, y: number, w: number, h: number, paras: Para[], o: { anchor?: 't' | 'ctr' | 'b'; fill?: string; line?: string; lineW?: number; geom?: 'rect' | 'roundRect'; radius?: number; inset?: number; name?: string } = {}) {
     const ins = o.inset ?? cm(0.15);
     const body = paras.length ? paras.map(paraXml).join('') : '<a:p><a:endParaRPr lang="de-DE"/></a:p>';
-    this.out.push(`<p:sp><p:nvSpPr><p:cNvPr id="${this.id++}" name="${esc(o.name ?? 'Text')}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr><p:spPr>${xfrm(x, y, w, h)}${this.geom(o.geom, o.radius)}${this.fill(o.fill)}${this.line(o.line, o.lineW)}</p:spPr>`
+    // Folientitel als Platzhalter „title“, damit Screenreader und die Barrierefreiheitsprüfung ihn finden (ADR-120)
+    const nv = o.name === 'Titel' ? '<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph type="title"/></p:nvPr>' : '<p:cNvSpPr txBox="1"/><p:nvPr/>';
+    this.out.push(`<p:sp><p:nvSpPr><p:cNvPr id="${this.id++}" name="${esc(o.name ?? 'Text')}"/>${nv}</p:nvSpPr><p:spPr>${xfrm(x, y, w, h)}${this.geom(o.geom, o.radius)}${this.fill(o.fill)}${this.line(o.line, o.lineW)}</p:spPr>`
       + `<p:txBody><a:bodyPr wrap="square" lIns="${ins}" tIns="${ins}" rIns="${ins}" bIns="${ins}" anchor="${o.anchor ?? 't'}"><a:normAutofit/></a:bodyPr><a:lstStyle/>${body}</p:txBody></p:sp>`);
   }
   pic(x: number, y: number, w: number, h: number, img: SlideImage) {
     this.images.push(img);
-    this.out.push(`<p:pic><p:nvPicPr><p:cNvPr id="${this.id++}" name="Bild" descr="${esc(img.alt)}"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>`
+    this.out.push(`<p:pic><p:nvPicPr>${img.decorative ? `<p:cNvPr id="${this.id++}" name="Icon" descr="">${DECORATIVE_EXT}</p:cNvPr>` : `<p:cNvPr id="${this.id++}" name="Bild" descr="${esc(img.alt)}"/>`}<p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr>`
       + `<p:blipFill><a:blip r:embed="rId${this.images.length + 1}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr>${xfrm(x, y, w, h)}<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`);
   }
   /** Bild in einen Rahmen einpassen (Seitenverhältnis bleibt) */
@@ -89,7 +92,7 @@ class Shapes {
 
 const iconPic = async (sh: Shapes, name: DesignIcon, color: string, x: number, y: number, size: number) => {
   const { png } = await iconImage(name, color);
-  sh.pic(x, y, size, size, { data: png, mime: 'image/png', width: 64, height: 64, alt: '' });
+  sh.pic(x, y, size, size, { data: png, mime: 'image/png', width: 64, height: 64, alt: '', decorative: true });
 };
 
 /** Inhalt eines Absatzes zerlegen: Bilder (media:…), Tabelle, Code, sonst Folienabsätze */

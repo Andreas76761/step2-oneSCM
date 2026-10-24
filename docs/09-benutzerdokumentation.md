@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.67 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.68 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -122,6 +122,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
     - **Handbuch-Kapitel (Fachdokumentation):** A4 hoch, ausführlich.
   - Die Karte „Designvorlagen“ unten auf der Seite zeigt mit „Muster ansehen“ jede Vorlage mit fiktiven Inhalten. „Für den Export wählen“ stellt Format, Design und Profil ein.
   - **Barrierefreiheit:** Nach jedem PDF-Export zeigt „Barrierefreiheit (PDF)“ neun Prüfungen: getaggt, Strukturbaum, Sprache, Titel, Fenstertitel, Lesezeichen, Überschriften, Alternativtexte, Tabellenköpfe. PDF im Design besteht sie; das Standard-PDF ist nicht getaggt. Eine vollständige PDF/UA-Prüfung erledigt ein Prüfwerkzeug wie PAC oder veraPDF.
+  - **Barrierefreiheit Word und PowerPoint:** Nach jedem Word- bzw. PowerPoint-Export zeigt „Barrierefreiheit (Word)“ bzw. „(PowerPoint)“: Titel, Sprache, Überschriften bzw. „Jede Folie mit Titel“, Bilder mit Alternativtext (Icons sind als dekorativ markiert und zählen nicht), Tabellen mit Kopfzeile. Fehlt ein Alternativtext, ergänzen Sie ihn im Kapitel am Bild.
   - **PDF im Design:** Ist auf dem Server ein Browser eingerichtet (Hinweis „PDF im Design ist eingerichtet“), wählen Sie Format PDF und das Design. Das PDF entsteht direkt, „Muster als PDF“ lädt das Muster herunter.
   - **Word im Design:** Format Word (.docx) und das Design wählen; „Muster als Word“ lädt das Muster. Das Dokument hat Formatvorlagen (Überschrift 1/2) und lässt sich in Word weiterbearbeiten. Die Prüffassung gibt es nur im Standard-Design.
   - **PowerPoint im Design:** Format PowerPoint (.pptx) und das Design wählen; „Muster als PowerPoint“ lädt das Muster. Der Foliensatz hat eine Titelfolie mit Überblick (Quick Reference Guide) bzw. Kennzahlen (Handbuch-Kapitel) und je Abschnitt eigene Folien; lange Inhalte laufen auf „(Fortsetzung)“ weiter.

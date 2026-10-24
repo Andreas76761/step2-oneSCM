@@ -3509,3 +3509,25 @@ test('[T-380] Kontexthilfe im Lesestil Handbuch-Kapitel: Farben, Balken, Box mit
   const violations = (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations.map((x) => `${x.id}: ${x.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
   expect(violations).toEqual([]);
 });
+
+test('[T-383] Barrierefreiheit Word und PowerPoint: Prüfbericht nach dem Export im Design ohne Befund – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/export');
+  await page.getByLabel('Ausgabe').selectOption('full');
+  await page.getByLabel('Format').selectOption('docx');
+  await page.getByLabel('Design').selectOption('fachdoku');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  const word = page.getByRole('region', { name: 'Barrierefreiheit (Word)' });
+  await expect(word).toBeVisible();
+  for (const label of ['Dokumentsprache angegeben (de-DE)', 'Überschriften als Formatvorlage', 'Bilder mit Alternativtext', 'Tabellen mit Kopfzeile']) await expect(word).toContainText(label);
+  await expect(word.locator('.ico.fail')).toHaveCount(0);
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Format').selectOption('pptx');
+  await page.getByLabel('Design').selectOption('quickref');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  const slides = page.getByRole('region', { name: 'Barrierefreiheit (PowerPoint)' });
+  await expect(slides).toContainText('Jede Folie mit Titel');
+  await expect(slides.locator('.ico.fail')).toHaveCount(0);
+});

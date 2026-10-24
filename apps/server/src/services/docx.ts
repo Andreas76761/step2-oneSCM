@@ -13,6 +13,7 @@ import { now } from '../db.js';
 import type { MediaFile } from './media.js';
 import type { ResolvedLayout } from './layout.js';
 import type { Appendices } from './variants.js';
+import { finishDocx } from '../domain/officeAccessibility.js';
 
 export interface DocxBlock { kind: string; text: string; badges: string; label: string | null }
 export interface DocxChapter { title: string; meta: string; /** Prüffassung (ADR-104, W-06): Zeile „Fertig, wenn: …“ */ criterion?: string | null; sections: { title: string; blocks: DocxBlock[] }[] }
@@ -257,5 +258,6 @@ export async function renderDocx(
       children,
     }],
   });
-  return Packer.toBuffer(doc);
+  // Sprache, dekorative Icons, eindeutige Bild-IDs (ADR-120)
+  return finishDocx(await Packer.toBuffer(doc));
 }

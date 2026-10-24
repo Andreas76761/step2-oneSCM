@@ -2,7 +2,7 @@
 // Fettdruck und Bildern. Ohne Fremdbibliothek; das Ergebnis liest der eigene PPTX-Import (domain/pptx) wieder ein.
 import JSZip from 'jszip';
 
-export interface SlideImage { data: Buffer; mime: string; width: number | null; height: number | null; alt: string }
+export interface SlideImage { data: Buffer; mime: string; width: number | null; height: number | null; alt: string; /** Schmuck (Icon): als „dekorativ“ markiert statt Alternativtext (ADR-120) */ decorative?: boolean }
 export interface SlideParagraph { text: string; bullet?: 'char' | 'num' | null; level?: number; /** Nummer aus dem Markdown – bleibt über Unterpunkte und Folgefolien erhalten */ num?: number }
 export type Slide =
   | { kind: 'title'; title: string; subtitle?: string }

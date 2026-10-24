@@ -1581,5 +1581,14 @@
     "documentation": [
       "docs/adr/ADR-119-kontexthilfe-lesestil.md"
     ]
+  },
+  {
+    "id": "NFR-155",
+    "title": "Barrierefreiheit für Word und PowerPoint: Prüfbericht nach dem Export (Titel, Sprache, Überschriften bzw. Folientitel, Alternativtexte, Tabellenköpfe); Icons dekorativ, Dokumentsprache, Folientitel als Platzhalter",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-120-barrierefreiheit-word-powerpoint.md"
+    ]
   }
 ]

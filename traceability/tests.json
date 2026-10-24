@@ -2926,5 +2926,32 @@
     "requirements": [
       "NFR-154"
     ]
+  },
+  {
+    "id": "T-381",
+    "title": "Prüfbericht Word und PowerPoint: Designvorlagen ohne Befund, Icons dekorativ, eindeutige Bild-IDs, Folientitel; Lücken (Alternativtext, Kopfzeile, Überschrift, Titel, Folientitel) werden erkannt",
+    "file": "apps/server/test/stage68.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-155"
+    ]
+  },
+  {
+    "id": "T-382",
+    "title": "Export als Word und PowerPoint im Standard und in beiden Designvorlagen mit Prüfbericht ohne Befund; Sprache de-DE",
+    "file": "apps/server/test/stage68.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-155"
+    ]
+  },
+  {
+    "id": "T-383",
+    "title": "Prüfbericht Barrierefreiheit (Word) und (PowerPoint) nach dem Export im Design ohne Befund – axe ohne Befund",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-155"
+    ]
   }
 ]

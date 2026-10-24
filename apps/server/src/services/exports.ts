@@ -23,6 +23,7 @@ import { transitionsFor } from './transitions.js';
 import { applyVariants } from './imageArchive.js';
 import { htmlToPdf, pdfBrowserAvailable } from './pdfBrowser.js';
 import { renderDesignDocx } from './designDocx.js';
+import { checkDocxAccessibility, checkPptxAccessibility } from '../domain/officeAccessibility.js';
 import { checkPdfAccessibility } from '../domain/pdfAccessibility.js';
 import { renderDesignPptx } from './designPptx.js';
 import { DESIGNS, normalizeTheme, renderDesign, type Design, type DesignChapter } from '../domain/designs.js';
@@ -523,8 +524,8 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
     id, ctx.projectId, json({ ...input, skipped, future, ...(review ? { review: visible(chapters, filter).map((ch: any) => ({ chapterId: ch.chapterId, versionId: ch.id, title: ch.title })), criterion: review.criterion } : {}) }), 'completed', format, key, fileName, actor, now(),
   );
   await audit(ctx, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped, future: future.length });
-  // Prüfbericht Barrierefreiheit für PDF (ADR-118)
-  const accessibility = format === 'pdf' ? checkPdfAccessibility(data) : undefined;
+  // Prüfbericht Barrierefreiheit für PDF (ADR-118), Word und PowerPoint (ADR-120)
+  const accessibility = format === 'pdf' ? checkPdfAccessibility(data) : format === 'docx' ? await checkDocxAccessibility(data) : format === 'pptx' ? await checkPptxAccessibility(data) : undefined;
   return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, asOf, future, downloadUrl: `/api/v1/exports/${id}/download`, preview, byteSize: data.length, ...(accessibility ? { accessibility } : {}) };
 }
 

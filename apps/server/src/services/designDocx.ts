@@ -14,6 +14,7 @@ import {
 } from '../domain/designs.js';
 import { markdownToDocx, newListState, type ListState } from './docx.js';
 import type { MediaFile } from './media.js';
+import { finishDocx } from '../domain/officeAccessibility.js';
 
 export interface DesignDocxOptions extends Omit<DesignOptions, 'md' | 'logo'> {
   media: Map<string, MediaFile>;
@@ -94,20 +95,21 @@ async function qrBlock(b: DesignBlock, o: DesignDocxOptions, t: DesignTheme): Pr
 }
 
 async function card(title: string, ic: DesignIcon, content: (Paragraph | Table)[], t: DesignTheme) {
-  const head = new Paragraph({ keepNext: true, spacing: { after: 100 }, children: [await icon(ic, t.primary, 16), new TextRun({ text: `  ${title}`, font: FONT[t.headingFont], size: 26, color: '1B1B1B' })] });
+  // Kartentitel als Überschrift 2: im Navigationsbereich und für Screenreader (ADR-120)
+  const head = new Paragraph({ heading: 'Heading2', keepNext: true, spacing: { after: 100 }, children: [await icon(ic, t.primary, 16), new TextRun({ text: `  ${title}`, font: FONT[t.headingFont], size: 26, bold: false, color: '1B1B1B' })] });
   const border = line(hex(t.accent), 12);
   return [box([head, ...content], { top: border, bottom: border, left: border, right: border }), gap(200)];
 }
 
 async function quickRefChildren(chapters: DesignChapter[], o: DesignDocxOptions, t: DesignTheme) {
-  const head = await titleRow(o, t, [new Paragraph({ children: [new TextRun({ text: o.title, font: FONT[t.headingFont], size: 50, color: '1B1B1B' })] })], { name: 30, mark: 34 });
+  const head = await titleRow(o, t, [new Paragraph({ heading: 'Heading1', spacing: { after: 0 }, children: [new TextRun({ text: o.title, font: FONT[t.headingFont], size: 50, bold: false, color: '1B1B1B' })] })], { name: 30, mark: 34 });
   const intro: (Paragraph | Table)[] = [...head];
   if (hasInteractiveLinks(chapters, o)) intro.push(new Paragraph({ spacing: { before: 80, after: 160 }, children: [await icon('mouse-pointer-click', t.primary, 14), new TextRun({ text: '  Dieses Dokument ist interaktiv – enthaltene Links können direkt geöffnet werden.', color: hex(t.primary), size: 20 })] }));
 
   const body: (Paragraph | Table)[] = [];
   const ov = processOverview(chapters);
   if (ov.length) {
-    body.push(new Paragraph({ keepNext: true, spacing: { after: 80 }, children: [await icon('layers', t.primary, 16), new TextRun({ text: '  Die Prozesse im Überblick', font: FONT[t.headingFont], size: 26 })] }));
+    body.push(new Paragraph({ heading: 'Heading2', keepNext: true, spacing: { before: 0, after: 80 }, children: [await icon('layers', t.primary, 16), new TextRun({ text: '  Die Prozesse im Überblick', font: FONT[t.headingFont], size: 26, bold: false, color: '1B1B1B' })] }));
     for (const x of ov) {
       body.push(new Paragraph({ keepNext: true, spacing: { before: 60 }, children: [new TextRun({ text: x.title, font: FONT[t.headingFont], size: 21, color: hex(t.warn) })] }));
       for (const s of x.steps) body.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: s, size: 19 })] }));
@@ -188,7 +190,10 @@ export async function renderDesignDocx(design: Exclude<Design, 'standard'>, chap
     default: {
       document: { run: { font: FONT[t.bodyFont], size: design === 'quickref' ? 20 : 19, color: '1F2933' } },
       heading1: { run: { font: FONT[t.headingFont], size: 42, bold: true, color: hex(t.primary) }, paragraph: { spacing: { after: 40 } } },
-      heading2: { run: { font: FONT[t.headingFont], size: 26, bold: true, color: hex(t.primary) }, paragraph: { spacing: { before: 280, after: 100 }, keepNext: true, border: { left: { style: BorderStyle.SINGLE, size: 24, color: hex(t.primary), space: 8 } } } },
+      // Quick Reference Guide: Kartentitel ohne Balken (der Rahmen ist die Karte)
+      heading2: design === 'quickref'
+        ? { run: { font: FONT[t.headingFont], size: 26, color: '1B1B1B' }, paragraph: { spacing: { before: 0, after: 100 }, keepNext: true } }
+        : { run: { font: FONT[t.headingFont], size: 26, bold: true, color: hex(t.primary) }, paragraph: { spacing: { before: 280, after: 100 }, keepNext: true, border: { left: { style: BorderStyle.SINGLE, size: 24, color: hex(t.primary), space: 8 } } } },
     },
   };
   const numbering = { config: [{ reference: 'onescm-numbered', levels: [0, 1, 2, 3].map((level) => ({ level, format: LevelFormat.DECIMAL, text: `%${level + 1}.`, alignment: AlignmentType.START, style: { paragraph: { indent: { left: 360 * (level + 1), hanging: 260 } } } })) }] };
@@ -231,5 +236,6 @@ export async function renderDesignDocx(design: Exclude<Design, 'standard'>, chap
       }],
     });
   }
-  return Packer.toBuffer(doc);
+  // Sprache, dekorative Icons, eindeutige Bild-IDs (ADR-120)
+  return finishDocx(await Packer.toBuffer(doc));
 }

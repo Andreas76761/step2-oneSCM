@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.68.0 – Etappe 68 (24.10.2026)
+
+### Hinzugefügt
+- **Barrierefreiheit für Word und PowerPoint (ADR-120):** Prüfbericht nach jedem Word- und PowerPoint-Export, wie beim PDF:
+  - Word: Titel, Sprache, Überschriften als Formatvorlage, Bilder mit Alternativtext, Tabellen mit Kopfzeile;
+  - PowerPoint: Titel, Sprache, jede Folie mit Titel, Bilder mit Alternativtext, Tabellen mit Kopfzeile.
+- Karte „Barrierefreiheit (Word)“ bzw. „(PowerPoint)“ auf der Seite „Export“ mit Hinweis zur Abhilfe.
+- Tests T-381, T-382 und E2E T-383; Anforderung NFR-155.
+
+### Geändert
+- Word-Exporte: Dokumentsprache Deutsch in den Standardformaten (auch mit Firmenvorlage), Icons als „dekorativ“ markiert, eindeutige Bild-IDs.
+- Quick Reference Guide als Word: Titel und Kartentitel sind Überschriften (Navigationsbereich), Aussehen unverändert.
+- Designvorlagen als PowerPoint: Folientitel als Titelplatzhalter, Icons als „dekorativ“ markiert.
+
 ## 0.67.0 – Etappe 67 (24.10.2026)
 
 ### Hinzugefügt
