@@ -69,7 +69,7 @@ export function TranslationMemoryPage() {
   const [q, setQ] = useState('');
   const [status, setStatus] = useState('');
   useEffect(() => {
-    if (!language && project.length) setLanguage(project[0]);
+    if (project.length) setLanguage((l) => l || project[0]);
   }, [project.length]);
   const path = language ? `/translation-memory?language=${encodeURIComponent(language)}&q=${encodeURIComponent(q)}${status ? `&status=${status}` : ''}` : null;
   const tm = useLoad<any>(path, [path]);
@@ -155,7 +155,7 @@ export function TranslationGlossaryPage() {
   const { project, name } = useLanguages();
   const [language, setLanguage] = useState('');
   useEffect(() => {
-    if (!language && project.length) setLanguage(project[0]);
+    if (project.length) setLanguage((l) => l || project[0]);
   }, [project.length]);
   const g = useLoad<any>(language ? `/translation-glossary?language=${encodeURIComponent(language)}` : null, [language]);
   const items: any[] = g.data?.items ?? [];
