@@ -113,3 +113,4 @@
 | [ADR-109](ADR-109-regelsaetze-benachrichtigung.md) | Zuschaltbare Regelsätze (Regelbasiertes Schreiben, Simplified Technical English, Vale-Stile); Benachrichtigung zum Länderreview | akzeptiert, umgesetzt |
 | [ADR-110](ADR-110-ui-begriffe-mo-pruefungen.md) | UI-Begriffe in der Terminologie („MO-Prüfungen“ im Fließtext, „MO Checks“ in Menüpfaden und Anführungszeichen); SYNONYME.csv übernehmen | akzeptiert, umgesetzt |
 | [ADR-111](ADR-111-icons-lucide.md) | Einheitliche SVG-Icons mit Lucide statt Emoji (Navigation, Startseite, Hauptschaltflächen) | akzeptiert, umgesetzt |
+| [ADR-112](ADR-112-designvorlagen.md) | Designvorlagen für den HTML-Export: Quick Reference Guide (A4 quer) und Handbuch-Kapitel (A4 hoch) mit Lucide-Icons, ohne Marke Dritter | akzeptiert, umgesetzt |

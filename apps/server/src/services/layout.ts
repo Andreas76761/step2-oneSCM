@@ -25,10 +25,17 @@ export interface Layout {
   footerText: string | null;
   confidentiality: string | null;
   docxTemplate: DocxTemplate | null;
+  /** Designvorlagen (ADR-112): Dokumentart in der Kopfzeile der Fachdokumentation, z. B. „oneSCM Fachdokumentation“ */
+  docLabel: string | null;
+  /** Zusatz unter der Marke, z. B. „für Van“ */
+  productLine: string | null;
+  /** Markdown für „Wichtige Links und Ansprechpartner“ im Quick Reference Guide */
+  quickRefLinks: string | null;
 }
 
 export const DEFAULT_LAYOUT: Layout = {
   companyName: null, primaryColor: '#1d63d8', logoSha: null, cover: false, coverSubtitle: null, headerText: null, footerText: null, confidentiality: null, docxTemplate: null,
+  docLabel: null, productLine: null, quickRefLinks: null,
 };
 
 /** Relative Leuchtdichte (WCAG 2.x) */
@@ -54,6 +61,14 @@ export async function updateLayout(ctx: Ctx, input: Partial<Layout>, user: User)
   if (input.headerText !== undefined) next.headerText = text(input.headerText, 160);
   if (input.footerText !== undefined) next.footerText = text(input.footerText, 160);
   if (input.confidentiality !== undefined) next.confidentiality = text(input.confidentiality, 200);
+  if (input.docLabel !== undefined) next.docLabel = text(input.docLabel, 80);
+  if (input.productLine !== undefined) next.productLine = text(input.productLine, 60);
+  if (input.quickRefLinks !== undefined) {
+    // Markdown (Zeilenumbrüche bleiben), höchstens 2 000 Zeichen
+    const v = input.quickRefLinks === null ? '' : String(input.quickRefLinks).replace(/\r\n?/g, '\n').trim();
+    if (v.length > 2000) throw badRequest('quickRefLinks: höchstens 2 000 Zeichen.');
+    next.quickRefLinks = v || null;
+  }
   if (input.cover !== undefined) {
     if (typeof input.cover !== 'boolean') throw badRequest('cover muss true oder false sein.');
     next.cover = input.cover;

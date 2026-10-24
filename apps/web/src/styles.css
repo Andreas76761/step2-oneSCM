@@ -915,3 +915,10 @@ div.reader-lang-note p { margin: 0; }
 .ico.fail { color: var(--danger); }
 .ico.filled { fill: currentColor; }
 .tag .ico { margin-right: 3px; }
+
+/* Designvorlagen (ADR-112) */
+.design-templates { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.design-template { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.design-template h3 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; gap: 6px; }
+.design-template .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.page-format { display: inline-block; border: 1px solid var(--border); border-radius: 999px; padding: 0 8px; margin-right: 4px; font-weight: 600; }

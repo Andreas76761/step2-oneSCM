@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.60.0 – Etappe 60 (24.10.2026)
+
+Wunsch des Auftraggebers vom 24.10.2026: Er hat zwei Muster geliefert (einen Quick Reference Guide und ein Handbuch-Kapitel) mit der Bitte, sie detailgetreu als Designvorlagen anzulegen und professionelle Icons zu nutzen.
+
+### Hinzugefügt
+- **Designvorlagen für den HTML-Export (ADR-112).** Der Parameter `design` von `POST /exports` gilt nur für das Format html.
+  - **Quick Reference Guide** (`quickref`, A4 quer):
+    - Kopf: Serifentitel, rechts die Marke mit Zusatz, darunter der Hinweis „Dieses Dokument ist interaktiv“.
+    - „Die Prozesse im Überblick“ mit römischen Nummern.
+    - Karten in zwei Spalten mit abgerundetem hellblauem Rahmen, nummerierten Schritten und Bildschirmfotos rechts.
+    - Rote Warnboxen; Hinweis und Tipp mit vorangestelltem Wort.
+    - Karten „Wichtige Links und Ansprechpartner“ und „Häufig gestellte Fragen und Antworten“.
+    - Fußzeile je Seite „Hinweis: …“ und „STAND: TT.MM.JJJJ | n/N“. Vorgabeprofil ist Quick Guide.
+  - **Handbuch-Kapitel** (`fachdoku`, A4 hoch):
+    - Kopfzeile je Seite mit Dokumentart in Großbuchstaben und „Seite n von N“.
+    - Titel in Dunkelblau mit Untertitel; vier Kennzahlen-Karten mit Icons.
+    - Nummerierte Abschnitte mit Balken; Tabellen mit grauem Kopf.
+    - Boxen für Hinweis, Wichtig, Warnung und Querverweis; Code- und Ablaufdarstellung; Fußzeile.
+- **Muster** je Vorlage mit fiktiven Inhalten (`GET /design-templates`, `GET /design-templates/:id/sample`). Sie zeigen Marke, Logo und Texte des Projekts.
+- Seite **Export**: Karte „Designvorlagen“ mit „Muster ansehen“ und „Für den Export wählen“ sowie die Auswahl „Design“ beim Format HTML.
+- **Firmen-Layout**: neue Felder „Zusatz unter der Marke“, „Dokumentart in der Kopfzeile“ und „Wichtige Links und Ansprechpartner“ (Markdown).
+- **Icons** in den Dokumenten: Lucide (ISC) als Inline-SVG. Das Skript `apps/server/scripts/gen-design-icons.mjs` erzeugt sie; der Server erhält dadurch keine neue Abhängigkeit.
+- Tests T-359 (Darstellung), T-360 (API) und E2E T-361 (Oberfläche; axe auch für die Muster); Anforderung NFR-147.
+
+### Geändert
+- Die Muster übernehmen keine Marke Dritter (kein Logo, kein Markenzeichen, keine Hausschrift). Ohne eigenes Logo erscheint ein neutrales Buchzeichen.
+- Farben der Muster für Kontrast nach WCAG AA leicht abgedunkelt (Blau der Links, Tabellenkopf, Ablauftext).
+- T-232 öffnet die Glossar-Erklärung erneut, falls der Klick während des Neuaufbaus nach „Markierung entfernen“ ins Leere geht (scheiterte einmal in CI unter Node 20).
+
 ## 0.59.0 – Etappe 59 (24.10.2026)
 
 ### Hinzugefügt

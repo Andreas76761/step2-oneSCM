@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.62 Stand nach Etappe 60 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Designvorlagen Quick Reference Guide (A4 quer) und Handbuch-Kapitel (A4 hoch) nach den gelieferten Mustern, mit Lucide-Icons, ohne Marke Dritter, Muster mit fiktiven Inhalten (NFR-147) | ✅ ([ADR-112](adr/ADR-112-designvorlagen.md)), T-359–T-361, axe ohne Befund auch für die Muster |
+| Offen | PDF direkt im Design (bis dahin: HTML im Browser als PDF speichern); S-04-Begriffe (Redaktion); U-07 |
+
 ## 1.61 Stand nach Etappe 59 (24.10.2026)
 
 | Punkt | Ergebnis |

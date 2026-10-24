@@ -21,6 +21,7 @@ import { DEFAULT_CRITERION } from '../domain/revision.js';
 import { extractiveSummary } from '../domain/textVariants.js';
 import { transitionsFor } from './transitions.js';
 import { applyVariants } from './imageArchive.js';
+import { DESIGNS, renderDesign, type Design, type DesignChapter } from '../domain/designs.js';
 
 type Media = Map<string, MediaFile>;
 
@@ -76,6 +77,8 @@ export interface ExportInput extends ExportFilter {
    * den Dokumenteigenschaften, damit die geänderte Datei zurückgelesen und den Kapitelversionen zugeordnet werden kann.
    */
   reviewCopy?: { criterion?: string } | boolean;
+  /** Designvorlage für HTML (ADR-112): standard, quickref (Quick Reference Guide, Standardprofil Quick Guide) oder fachdoku (Handbuch-Kapitel) */
+  design?: Design;
 }
 
 export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'docx', 'pptx', 'json'] as const;
@@ -438,7 +441,10 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   }
   if (blockers.length) throw conflict('Export blockiert: offene Blocker- oder Datenschutzbefunde.', { blockers });
   chapters.sort((a, b) => a.position - b.position);
-  const profile = input.profile ?? 'full';
+  const design: Design = input.design ?? 'standard';
+  if (!(DESIGNS as readonly string[]).includes(design)) throw badRequest(`design muss eines von ${DESIGNS.join(', ')} sein.`);
+  if (design !== 'standard' && format !== 'html') throw badRequest('Designvorlagen gibt es für das Format html (druckfähig, als PDF speicherbar).');
+  const profile = input.profile ?? (design === 'quickref' ? 'quickguide' : 'full');
   if (input.reviewCopy && format !== 'docx') throw badRequest('Die Prüffassung gibt es nur als Word-Datei (format docx).');
   const review = input.reviewCopy
     ? { exportId: newId('exp'), criterion: (typeof input.reviewCopy === 'object' && typeof input.reviewCopy.criterion === 'string' ? input.reviewCopy.criterion.trim().slice(0, 300) : '') || DEFAULT_CRITERION }
@@ -479,7 +485,7 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
     data = await renderPptxExport(chapters, filter, media, extras);
     preview = null;
   } else {
-    const text = format === 'md' ? renderMarkdown(chapters, filter, media, extras) : format === 'html' ? renderHtml(chapters, filter, media, extras)
+    const text = format === 'md' ? renderMarkdown(chapters, filter, media, extras) : format === 'html' ? (design === 'standard' ? renderHtml(chapters, filter, media, extras) : renderDesignExport(design, chapters, filter, media, { ...extras, title: outline?.name }))
       : JSON.stringify({ title: extras.title ?? null, filter, chapters: withoutComments(visible(chapters, filter)), appendices: extras.appendices ?? null }, null, 2);
     data = Buffer.from(text, 'utf8');
     // Vorschau für die UI immer als Markdown bzw. JSON (HTML wird dort nicht eingebettet)
@@ -489,7 +495,7 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   const id = review?.exportId ?? newId('exp');
   const key = `exports/${id}.${format}`;
   await ctx.store.put(key, data);
-  const suffix = (profile === 'full' ? '' : `-${profile}`) + (review ? '-pruefassung' : input.reading ? '-lesefassung' : '');
+  const suffix = (design === 'standard' ? '' : `-${design}`) + (profile === 'full' ? '' : `-${profile}`) + (review ? '-pruefassung' : input.reading ? '-lesefassung' : '');
   const fileName = `onescm-handbuch${suffix}-${now().slice(0, 10)}.${format}`;
   await ctx.db.run(
     'INSERT INTO exports (id, project_id, params, status, format, storage_key, file_name, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
@@ -498,6 +504,20 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   await audit(ctx, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped, future: future.length });
   return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, asOf, future, downloadUrl: `/api/v1/exports/${id}/download`, preview, byteSize: data.length };
 }
+
+/** Export in einer Designvorlage (ADR-112): sichtbare Abschnitte, Bilder eingebettet, Marke und Texte aus dem Firmen-Layout; Titel = Handbuchvariante, ein Kapitel oder „Benutzerhandbuch“ */
+export function renderDesignExport(design: Exclude<Design, 'standard'>, chapters: ExportChapter[], f: ExportFilter, media: Media, extras: ExportExtras): string {
+  const l = extras.layout ?? NO_LAYOUT;
+  const list = visible(chapters, f) as DesignChapter[];
+  const images = (sha: string) => (media.has(sha) ? dataUri(media.get(sha)!) : null);
+  return renderDesign(design, list, {
+    title: list.length === 1 && !extras.title ? list[0].title : extras.title ?? frameTexts(extras.language).manualTitle,
+    brand: l.companyName, productLine: l.productLine, logo: l.logo ? dataUri(l.logo) : null, docLabel: l.docLabel, footerText: l.footerText,
+    links: l.quickRefLinks, faq: extras.appendices?.faq, asOf: germanDay(now()), lang: htmlLang(extras.language ?? 'de'),
+    md: (text) => markdownToHtml(text, images),
+  });
+}
+const germanDay = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 
 export async function listExports(ctx: Ctx) {
   return (await ctx.db.all('SELECT * FROM exports WHERE project_id = ? ORDER BY created_at DESC', ctx.projectId)).map((e) => ({

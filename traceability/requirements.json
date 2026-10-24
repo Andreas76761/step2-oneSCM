@@ -1509,5 +1509,14 @@
     "documentation": [
       "docs/adr/ADR-111-icons-lucide.md"
     ]
+  },
+  {
+    "id": "NFR-147",
+    "title": "Designvorlagen für den HTML-Export: Quick Reference Guide (A4 quer, Karten in zwei Spalten, Überblick, Warnboxen, Links, FAQ) und Handbuch-Kapitel (A4 hoch, Kopf-/Fußzeile, Kennzahlen, nummerierte Abschnitte, Hinweisboxen); Icons als Inline-SVG, ohne Marke Dritter, Muster mit fiktiven Inhalten, barrierefrei",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-112-designvorlagen.md"
+    ]
   }
 ]

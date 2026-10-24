@@ -1440,8 +1440,11 @@ test('[T-232] Leseransicht: Suche mit Hervorhebung, Glossar-Erklärungen; Druck 
 
   // Glossar: Begriff und Abkürzung erklären sich per Klick, Esc schließt; Schritt-Kästchen behalten ihren Namen
   const term = article.getByRole('button', { name: 'Lieferschein', exact: true }).first();
-  await term.click();
-  await expect(page.getByRole('tooltip')).toHaveText('Lieferschein: Beleg, der eine Warensendung begleitet.');
+  // nach „Markierung entfernen“ rendert der Artikel neu – ein Klick in diesem Moment kann ins Leere gehen, daher erneut versuchen
+  await expect(async () => {
+    if ((await term.getAttribute('aria-expanded')) !== 'true') await term.click();
+    await expect(page.getByRole('tooltip')).toHaveText('Lieferschein: Beleg, der eine Warensendung begleitet.', { timeout: 1500 });
+  }).toPass();
   await expect(term).toHaveAttribute('aria-expanded', 'true');
   expect(await axe()).toEqual([]);
   await page.keyboard.press('Escape');
@@ -3266,4 +3269,46 @@ test('[T-358] Seiten ohne Emoji: Einlesen, Schreibstil, Optimierungen, Rückmeld
   await page.goto('/metadaten/einlesen');
   await expect(page.getByRole('cell', { name: 'Markdown', exact: true }).locator('svg.ico')).toBeVisible();
   expect(await axe()).toEqual([]);
+});
+
+test('[T-361] Designvorlagen: Quick Reference Guide und Handbuch-Kapitel als Muster ansehen, für den HTML-Export wählen, Felder im Firmen-Layout – barrierefrei', async ({ page, context }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async (p = page) => (await new AxeBuilder({ page: p }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/export');
+  const card = page.locator('.card', { has: page.getByRole('heading', { name: 'Designvorlagen' }) });
+  await expect(card.getByRole('heading', { name: 'Quick Reference Guide' })).toBeVisible();
+  await expect(card.getByRole('heading', { name: 'Handbuch-Kapitel (Fachdokumentation)' })).toBeVisible();
+  await expect(card.locator('h3 svg.ico')).toHaveCount(2);
+  expect(await axe()).toEqual([]);
+
+  // Muster öffnet sich als eigene Seite mit fiktiven Inhalten
+  const [qr] = await Promise.all([context.waitForEvent('page'), card.locator('.design-template', { hasText: 'Quick Reference Guide' }).getByRole('button', { name: 'Muster ansehen' }).click()]);
+  await qr.waitForLoadState();
+  await expect(qr.getByRole('heading', { level: 1 })).toHaveText('oneSCM – Servicevertrag anlegen und verwalten');
+  await expect(qr.getByRole('heading', { name: 'Die Prozesse im Überblick' })).toBeVisible();
+  await expect(qr.locator('.qr-warn').first()).toContainText('Zahlungsintervall');
+  expect(await axe(qr)).toEqual([]);
+  await qr.close();
+  const [fd] = await Promise.all([context.waitForEvent('page'), card.locator('.design-template', { hasText: 'Handbuch-Kapitel' }).getByRole('button', { name: 'Muster ansehen' }).click()]);
+  await fd.waitForLoadState();
+  await expect(fd.getByRole('heading', { level: 1 })).toHaveText('Kapitel 4: Vertragsberechnung');
+  await expect(fd.locator('.fd-kpi')).toHaveCount(4);
+  expect(await axe(fd)).toEqual([]);
+  await fd.close();
+
+  // Für den Export wählen: Format HTML, Design und Profil Quick Guide gesetzt
+  await card.locator('.design-template', { hasText: 'Quick Reference Guide' }).getByRole('button', { name: 'Für den Export wählen' }).click();
+  await expect(page.getByLabel('Format')).toHaveValue('html');
+  await expect(page.getByLabel('Design')).toHaveValue('quickref');
+  await expect(page.getByLabel('Ausgabe')).toHaveValue('quickguide');
+  await page.getByLabel('Format').selectOption('md');
+  await expect(page.getByLabel('Design')).toHaveCount(0);
+
+  // Firmen-Layout: neue Felder für die Designvorlagen
+  await page.goto('/einstellungen');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await expect(page.getByLabel('Zusatz unter der Marke')).toBeVisible();
+  await expect(page.getByLabel('Dokumentart in der Kopfzeile')).toBeVisible();
+  await expect(page.getByLabel(/Wichtige Links und Ansprechpartner/)).toBeVisible();
 });

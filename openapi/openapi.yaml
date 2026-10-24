@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.59.0
+  version: 0.60.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -367,6 +367,7 @@ components:
         reading: { type: boolean, default: false, description: 'Lesefassung (F-28): ohne Badges, Versionszeile und Abschnitt „Quellen- und Freigabestatus“' }
         transitions: { type: boolean, description: '„Weiter mit …“ am Kapitelende (F-29, nur profile full): fehlt = gepflegte Übergänge, true = zusätzlich automatisch das nächste exportierte Kapitel, false = keine' }
         asOf: { type: string, maxLength: 40, description: 'Stand (Release) für Zukunfts-Inhalte (ADR-102, W-09): Kapitel mit späterem „gültig ab“ werden ausgeblendet; Standard ist release' }
+        design: { type: string, enum: [standard, quickref, fachdoku], default: standard, description: 'Designvorlage (ADR-112, nur format html): quickref = Quick Reference Guide (A4 quer, Standardprofil quickguide), fachdoku = Handbuch-Kapitel im Stil einer Fachdokumentation (A4 hoch)' }
         reviewCopy:
           description: 'Prüffassung für Word (ADR-104, W-06, nur format docx): Lesefassung mit Zeile „Fertig, wenn: …“ je Kapitel und Exportkennung in den Dokumenteigenschaften; die geänderte Datei liest POST /revisions/word zurück'
           oneOf:
@@ -1708,10 +1709,11 @@ paths:
       operationId: createExport
       summary: Freigegebene Kapitel rollen-/sparten-/markt-/releasegefiltert exportieren
       tags: [Export]
-      x-requirements: [US-010, US-012, US-014, NFR-80, NFR-126]
+      x-requirements: [US-010, US-012, US-014, NFR-80, NFR-126, NFR-147]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExportRequest' } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '400': { description: 'ungültig, z. B. Designvorlage bei einem anderen Format als html' }
         '201': { description: 'Export erstellt; asOf und future: Kapitel mit späterem „gültig ab“ (ADR-102, W-09), nicht im Export' }
         '409': { description: 'Blockiert (offene Blocker-/Datenschutzbefunde), content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
     get:
@@ -2467,6 +2469,29 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ added, created, preview }' }
         '400': { description: 'Auswahl ungültig' }
+  /design-templates:
+    get:
+      operationId: listDesignTemplates
+      summary: 'Designvorlagen für den HTML-Export (ADR-112): Quick Reference Guide und Handbuch-Kapitel'
+      tags: [Export]
+      x-requirements: [NFR-147]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, name, description, page, sampleUrl }]' }
+  /design-templates/{id}/sample:
+    get:
+      operationId: getDesignTemplateSample
+      summary: 'Muster einer Designvorlage als HTML – fiktive Inhalte, Marke, Logo und Texte aus dem Firmen-Layout'
+      tags: [Export]
+      x-requirements: [NFR-147]
+      x-extension: true
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, enum: [quickref, fachdoku] } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'HTML', content: { text/html: { schema: { type: string } } } }
+        '404': { description: 'unbekannte Vorlage' }
   /layout:
     get:
       operationId: getLayout
@@ -2484,11 +2509,11 @@ paths:
       x-requirements: [NFR-25]
       x-extension: true
       requestBody:
-        content: { application/json: { schema: { type: object, properties: { companyName: { type: [string, 'null'] }, primaryColor: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }, logoSha: { type: [string, 'null'] }, cover: { type: boolean }, coverSubtitle: { type: [string, 'null'] }, headerText: { type: [string, 'null'] }, footerText: { type: [string, 'null'] }, confidentiality: { type: [string, 'null'] } } } } }
+        content: { application/json: { schema: { type: object, properties: { companyName: { type: [string, 'null'] }, primaryColor: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }, logoSha: { type: [string, 'null'] }, cover: { type: boolean }, coverSubtitle: { type: [string, 'null'] }, headerText: { type: [string, 'null'] }, footerText: { type: [string, 'null'] }, confidentiality: { type: [string, 'null'] }, docLabel: { type: [string, 'null'], maxLength: 80, description: 'Dokumentart in der Kopfzeile des Handbuch-Kapitels (ADR-112)' }, productLine: { type: [string, 'null'], maxLength: 60, description: 'Zusatz unter der Marke (ADR-112)' }, quickRefLinks: { type: [string, 'null'], maxLength: 2000, description: 'Markdown für „Wichtige Links und Ansprechpartner“ im Quick Reference Guide (ADR-112)' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Layout' }
-        '400': { description: 'ungültig (Farbe, Kontrast, Logo)' }
+        '400': { description: 'ungültig (Farbe, Kontrast, Logo, Länge)' }
   /layout/docx-template:
     post:
       operationId: uploadDocxTemplate

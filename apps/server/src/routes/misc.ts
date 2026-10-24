@@ -15,6 +15,7 @@ import { translationStatus } from '../services/translations.js';
 import { buildMatrix, matrixCsv, matrixMarkdown, matrixXlsx } from '../services/traceability.js';
 import { globalSearch } from '../services/search.js';
 import { refreshSearchIndex } from '../services/searchIndex.js';
+import { designSample, listDesignTemplates } from '../services/designTemplates.js';
 import { deleteDocxTemplate, getLayout, updateLayout, uploadDocxTemplate } from '../services/layout.js';
 import { list, userOf } from './helpers.js';
 
@@ -25,10 +26,16 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
     reply.code(201);
     return createExport(req.ctx, { chapterIds: list(b.chapterIds), roles: list(b.roles), divisions: list(b.divisions), market: b.market || null, release: b.release || null, format: b.format,
       outlineId: typeof b.outlineId === 'string' && b.outlineId ? b.outlineId : undefined, appendices: typeof b.appendices === 'boolean' ? b.appendices : undefined,
-      profile: b.profile || undefined, reading: b.reading === true, transitions: typeof b.transitions === 'boolean' ? b.transitions : undefined, asOf: typeof b.asOf === 'string' && b.asOf.trim() ? b.asOf : undefined,
+      profile: b.profile || undefined, design: b.design || undefined, reading: b.reading === true, transitions: typeof b.transitions === 'boolean' ? b.transitions : undefined, asOf: typeof b.asOf === 'string' && b.asOf.trim() ? b.asOf : undefined,
       reviewCopy: b.reviewCopy === true || (b.reviewCopy && typeof b.reviewCopy === 'object') ? (b.reviewCopy === true ? true : { criterion: typeof b.reviewCopy.criterion === 'string' ? b.reviewCopy.criterion : undefined }) : undefined }, user.id);
   });
   app.get('/exports', async (req) => (userOf(req.ctx, req), listExports(req.ctx)));
+  // Designvorlagen (ADR-112): Quick Reference Guide und Handbuch-Kapitel mit Muster
+  app.get('/design-templates', async (req) => (userOf(req.ctx, req), listDesignTemplates()));
+  app.get<{ Params: { id: string } }>('/design-templates/:id/sample', async (req, reply) => {
+    userOf(req.ctx, req);
+    return reply.header('Content-Type', 'text/html; charset=utf-8').send(await designSample(req.ctx, req.params.id));
+  });
   // Firmen-Layout (ADR-038): lesen für alle, ändern nur Administration
   app.get('/layout', async (req) => (userOf(req.ctx, req), getLayout(req.ctx)));
   app.put<{ Body: any }>('/layout', async (req) => updateLayout(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'admin')));

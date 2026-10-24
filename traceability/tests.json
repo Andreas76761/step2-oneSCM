@@ -2728,5 +2728,32 @@
     "requirements": [
       "NFR-146"
     ]
+  },
+  {
+    "id": "T-359",
+    "title": "Designvorlagen rendern: Quick Reference Guide und Handbuch-Kapitel (Seitenformat, Kopf-/Fußzeile, Überblick, Boxen, Icons, keine Skripte, Maskierung)",
+    "file": "apps/server/test/stage60.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-147"
+    ]
+  },
+  {
+    "id": "T-360",
+    "title": "Export html mit design quickref/fachdoku, Muster je Vorlage, Layoutfelder Zusatz/Dokumentart/Links, Prüfungen",
+    "file": "apps/server/test/stage60.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-147"
+    ]
+  },
+  {
+    "id": "T-361",
+    "title": "Designvorlagen in der Oberfläche: Muster ansehen, für den Export wählen, Layoutfelder – barrierefrei (auch die Muster)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-147"
+    ]
   }
 ]

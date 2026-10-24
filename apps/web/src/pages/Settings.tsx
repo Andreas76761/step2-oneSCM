@@ -191,6 +191,16 @@ function LayoutCard() {
         <label>Fußzeile <input value={d.footerText ?? ''} onChange={(e) => set('footerText', e.target.value)} placeholder="z. B. Nur für den internen Gebrauch" /></label>
       </div>
       <label className="block">Vertraulichkeitshinweis <input value={d.confidentiality ?? ''} onChange={(e) => set('confidentiality', e.target.value)} placeholder="z. B. VERTRAULICH" /></label>
+      <fieldset className="checks">
+        <legend>Designvorlagen (Quick Reference Guide, Handbuch-Kapitel)</legend>
+        <div className="form-row">
+          <label>Zusatz unter der Marke <input value={d.productLine ?? ''} onChange={(e) => set('productLine', e.target.value)} maxLength={60} placeholder="z. B. für Transporter" /></label>
+          <label>Dokumentart in der Kopfzeile <input value={d.docLabel ?? ''} onChange={(e) => set('docLabel', e.target.value)} maxLength={80} placeholder="z. B. oneSCM Fachdokumentation" /></label>
+        </div>
+        <label className="block">Wichtige Links und Ansprechpartner (Markdown, Quick Reference Guide)
+          <textarea rows={4} value={d.quickRefLinks ?? ''} onChange={(e) => set('quickRefLinks', e.target.value)} maxLength={2000} placeholder="- **Schulungsmaterial** – [hier](https://schulung.example.org)" />
+        </label>
+      </fieldset>
       <p className="small">Word-Vorlage: {tpl ? <><strong>{tpl.name}</strong> (Formatvorlagen: {[tpl.styles.title, tpl.styles.heading1, tpl.styles.heading2].filter(Boolean).join(', ') || 'keine erkannt'}) <button className="btn small" onClick={() => del('/layout/docx-template').then(() => (notify('Word-Vorlage entfernt.'), layout.reload())).catch((e) => notify(errorText(e), 'error'))}>Entfernen</button></> : 'keine – eigene Formatvorlagen in der Hausfarbe'}</p>
       <label className="block">Word-Vorlage hochladen (.dotx/.docx – übernommen werden die Formatvorlagen) <input type="file" accept=".dotx,.docx" onChange={(e) => void uploadTemplate(e.target.files?.[0])} /></label>
       <button className="btn primary" disabled={ratio < 4.5} onClick={save}>Layout speichern</button>
