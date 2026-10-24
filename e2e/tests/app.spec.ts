@@ -1609,8 +1609,12 @@ test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; 
   const article = page.getByRole('article', { name: 'E2E Print packing list' });
   await expect(article.getByText('Shipping › Shipments')).toBeVisible();
   await expect(article).toHaveAttribute('lang', 'en');
-  await article.getByRole('button', { name: 'packing list' }).first().click();
-  await expect(page.getByRole('tooltip')).toContainText('List of all parts in a shipment.');
+  // das englische Glossar lädt getrennt vom Text; ein Neuaufbau beim Nachladen kann die offene Erklärung schließen
+  await expect(async () => {
+    const term = article.getByRole('button', { name: 'packing list' }).first();
+    if ((await term.getAttribute('aria-expanded')) !== 'true') await term.click();
+    await expect(page.getByRole('tooltip')).toContainText('List of all parts in a shipment.', { timeout: 1000 });
+  }).toPass();
   await page.keyboard.press('Escape');
   // Beschriftungen der Leseransicht folgen der Sprache (ADR-074)
   const toc = page.getByRole('navigation', { name: 'Table of contents' });
@@ -3109,7 +3113,7 @@ test('[T-348] Ansprechperson je Markt mit Vertretung, Länderreview automatisch,
   await card.getByLabel('Markt', { exact: true }).fill('FR');
   await card.getByRole('combobox', { name: 'Ansprechperson', exact: true }).selectOption({ label: 'Fachprüfung (Demo)' });
   await card.getByRole('combobox', { name: 'Vertretung', exact: true }).selectOption({ label: 'Freigabe (Demo)' });
-  await card.getByRole('button', { name: 'Speichern' }).click();
+  await card.getByRole('button', { name: 'Ansprechperson speichern' }).click();
   await expect(page.getByText('Ansprechperson für FR gespeichert.')).toBeVisible();
   await expect(page.getByRole('region', { name: 'Ansprechpersonen je Markt' })).toContainText('Fachprüfung (Demo)');
   await expect(page.getByText(/nicht eingerichtet|verbunden|nicht erreichbar/).first()).toBeVisible();

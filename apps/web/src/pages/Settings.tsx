@@ -294,7 +294,7 @@ function MarketReviewersCard() {
         <label>Sprache <input value={f.language} size={6} maxLength={8} placeholder="alle" onChange={(e) => setF({ ...f, language: e.target.value.toLowerCase() })} /></label>
         {person(f.userId, 'Ansprechperson', (v) => setF({ ...f, userId: v }))}
         {person(f.deputyUserId, 'Vertretung', (v) => setF({ ...f, deputyUserId: v }), true)}
-        <button type="button" className="btn" disabled={f.market.length !== 2 || !f.userId} onClick={() => void save()}>Speichern</button>
+        <button type="button" className="btn" disabled={f.market.length !== 2 || !f.userId} onClick={() => void save()}>Ansprechperson speichern</button>
       </div>
     </Card>
   );
