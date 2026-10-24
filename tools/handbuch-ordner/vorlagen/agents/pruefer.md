@@ -15,4 +15,6 @@ Je Unterkapitel des angegebenen Kapitels:
 7. **FAQ:** Antworten in `06_FAQ/FAQ.md` belegt und widerspruchsfrei zum Entwurf.
 Bericht: `04_Pruefung_Freigabe/<Unterkapitel-Nr>_Pruefbericht_<JJJJ-MM-TT>.md` – Ergebnis (freigabefähig / nachbessern / blockiert), Befunde (kritisch, Warnung, Hinweis) mit Fundstelle und Vorschlag. Danach die Zeile in `STATUS.md` aktualisieren und den auditor vormerken. Die Freigabe erteilt nur ein Mensch.
 
+**Pipeline, Backlog, Intern (Grundregel 9):** Inhalte aus `09_Pipeline` und `10_Backlog` sind noch nicht produktiv und kein Beleg für das Handbuch; Inhalte aus `11_Intern` sind nie für Anwendende. Nicht in Entwürfe, `04_Output`, `05_I_Output` (außer `05_Interne_Dokumente` aus `11_Intern`) oder Übersetzungen übernehmen – erst nach der Übernahme eines produktiven Tickets (pipeline-redakteur) liegt die Dokumentation als Quelle in `01_Quellen`. Findet sich Pipeline- oder Intern-Inhalt in einem Entwurf oder Produkt, ist das ein kritischer Befund.
+
 **Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

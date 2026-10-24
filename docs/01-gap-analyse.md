@@ -195,6 +195,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.47 Stand nach Etappe 45 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Pipeline: Jira-Tickets in Bearbeitung je Gliederung mit Erstelldatum, Stream, Produktionsdatum, vorab dokumentiert, Übernahme wenn produktiv (NFR-108) | ✅ ([ADR-098](adr/ADR-098-pipeline-backlog-intern.md)) |
+| Backlog und Intern (Testing, Reporting, Systeme, Migration, Rollout, Other), nie im Handbuch (NFR-109) | ✅ |
+| Arbeitsordner `09_Pipeline`, `10_Backlog`, `11_Intern`, Grundregel 9, Agent pipeline-redakteur, Abgleich mit der App (NFR-110) | ✅ |
+| Offen | Feldnamen für Stream und Produktionsdatum im echten Jira-Export bestätigen; Übersetzung U-01 … U-10 (Etappe 46); G-04 (LanguageTool – Entscheidung) |
+
 ## 1.46 Stand nach Etappe 44 (24.10.2026)
 
 | Punkt | Ergebnis |
@@ -203,7 +212,7 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Englisch, Sprache je Regel, Prüfung der Übersetzungen, „nicht übersetzen“ (G-06, S-03, S-04, NFR-105) | ✅ |
 | Lesbarkeit mit Sollwerten je Zielgruppe, Bildunterschriften (S-01, S-08, NFR-106) | ✅ |
 | Kapitelanweisung für Handbuch-Varianten (W-01, NFR-107) | ✅ |
-| Offen | G-04 (LanguageTool lokal – Entscheidung), G-05, S-02, Übersetzung U-01 … U-10 (Etappe 45) |
+| Offen | G-04 (LanguageTool lokal – Entscheidung), G-05, S-02, Übersetzung U-01 … U-10 (damals für Etappe 45 geplant, jetzt Etappe 46) |
 
 ## 1.45 Stand nach Etappe 43 (23.10.2026)
 

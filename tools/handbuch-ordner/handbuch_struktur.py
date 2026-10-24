@@ -7,6 +7,8 @@ Je Kapitel acht Arbeitsordner:
 und je Unterkapitel ein Ordner mit UNTERKAPITEL.md. Je Kapitel und Unterkapitel eine ANWEISUNG.md (Kapitelanweisung,
 gilt mit Vorrang für die Agenten). Dazu CLAUDE.md, .claude/agents und .claude/settings.json.
 Hauptordner zur Steuerung: 05_I_Output (Produkte), 06_II_Stil_und_Design, 07_III_Grammatik_Synonyme_Fehlerliste, 08_IV_Translation.
+Bereiche außerhalb des Handbuchs: 09_Pipeline (Jira-Tickets in Bearbeitung, je Kapitel/Unterkapitel der Gesamtgliederung),
+10_Backlog (noch nicht begonnen) und 11_Intern (Testing, Reporting, Systeme, Migration, Rollout, Other).
 
 Befehle:
   zip       <Gliederung.xlsx|.json> <Ziel.zip> [--stand 23102026]
@@ -15,7 +17,8 @@ Befehle:
             legt nur Fehlendes an (Ordner, Hauptordner 05–08, Vorlagendateien, neue Agenten), löscht und überschreibt nichts
             (abweichende Vorlagen als <Datei>.neu daneben), und schreibt 00_Dokumentation/GLIEDERUNG_ABGLEICH.md. Gliederungen aus der App landen unter 03_Varianten/<Name>/.
             Mit --app werden auch die Kapitelanweisungen aus der App (Kapitelsteuerung) in ANWEISUNG.md der Kapitel unter 02_Kapitel übernommen –
-            nur wenn die Datei fehlt oder noch leer ist; sonst als ANWEISUNG.md.neu.
+            nur wenn die Datei fehlt oder noch leer ist; sonst als ANWEISUNG.md.neu. Ebenso die Einträge aus Pipeline, Backlog und
+            Intern der App als Dateien in 09_Pipeline, 10_Backlog und 11_Intern (von Hand geänderte Dateien bleiben, App-Fassung als .neu).
 
 Benötigt Python 3.9+, für Excel zusätzlich openpyxl. Der App-Abgleich nutzt nur die lokale App-Adresse.
 """
@@ -82,6 +85,20 @@ PRODUKT_ORDNER = ['01_Entwurf', '02_Screens', '03_Final']
 STIL_ORDNER = ['01_Designvorschlaege', '02_Tonalitaet', '03_Vorlagen', '04_Bildsprache_Screenshots']
 LEKTORAT_ORDNER = ['01_Grammatik', '02_Synonyme', '03_Fehlerliste']
 TRANSLATION_ORDNER = ['01_Glossar', '02_Uebersetzungsspeicher', '03_Laenderreview']
+# Bereiche außerhalb des Handbuchs (ADR-098): kommende Funktionen und Internes
+PIPELINE = '09_Pipeline'
+BACKLOG = '10_Backlog'
+INTERN = '11_Intern'
+OHNE_ZUORDNUNG = '00_Ohne_Zuordnung'
+INTERN_THEMEN = {
+    '01_Testing': ('Testing', 'Testkonzepte, Testfälle, Testdaten (nur anonymisiert), Ergebnisse'),
+    '02_Reporting': ('Reporting', 'Berichte, Kennzahlen, Auswertungen'),
+    '03_Systeme': ('Systeme', 'Systemlandschaft, Schnittstellen, Umgebungen'),
+    '04_Migration': ('Migration', 'Datenmigration, Altsysteme, Übernahmeregeln'),
+    '05_Rollout': ('Rollout', 'Rollout-Planung je Markt und Sparte, Kommunikation, Schulungstermine'),
+    '06_Other': ('Other', 'alles Interne, das in keinen der anderen Ordner passt'),
+}
+TICKET_KOPF = '| Ticket | Titel | Gliederung | Erstelldatum | Stream | Produktionsdatum | Status | Dokumentiert |\n|---|---|---|---|---|---|---|---|\n'
 ARBEITSORDNER = ['01_Quellen', '02_Entwurf', '03_Bilder', '04_Pruefung_Freigabe', '05_Audit', '06_FAQ', '07_Ideenspeicher', '08_Steuerung']
 # Anhänge und Vorspann haben in der Gesamtgliederung keinen Eintrag der Ebene 1
 GRUPPEN = {
@@ -342,6 +359,41 @@ def hauptordner():
     return ordner, dateien
 
 
+def bereiche(kapitel: list):
+    """Pipeline, Backlog und Intern. kapitel: [(Kapitelordner, [Unterkapitelordner])] der Gesamtgliederung –
+    die Pipeline hat dieselben Kapitel- und Unterkapitelordner wie 02_Kapitel."""
+    lies = lambda n: (VORLAGEN / n).read_text(encoding='utf-8')
+    ordner = {f'{PIPELINE}/{OHNE_ZUORDNUNG}'}
+    for k, unter in kapitel:
+        ordner.add(f'{PIPELINE}/{k}')
+        ordner.update(f'{PIPELINE}/{k}/{u}' for u in unter)
+    dateien = {
+        f'{PIPELINE}/README.md': lies('Pipeline_README.md'),
+        f'{PIPELINE}/PIPELINE.md': '# Pipeline – Übersicht\n\nTickets in Bearbeitung, noch nicht produktiv. Nach Produktionsdatum sortiert.\n\n' + TICKET_KOPF,
+        f'{BACKLOG}/README.md': lies('Backlog_README.md'),
+        f'{BACKLOG}/BACKLOG.md': '# Backlog – Übersicht\n\nTickets, deren Bearbeitung noch nicht begonnen hat.\n\n' + TICKET_KOPF,
+        f'{INTERN}/README.md': lies('Intern_README.md'),
+    }
+    for o, (name, inhalt) in INTERN_THEMEN.items():
+        ordner.add(f'{INTERN}/{o}')
+        dateien[f'{INTERN}/{o}/THEMA.md'] = (f'# Intern: {name}\n\n**Inhalt:** {inhalt}\n\n> Intern – nicht für das Handbuch, keine Veröffentlichung.\n\n'
+                                            '| Datei | Inhalt | Stand | Herkunft |\n|---|---|---|---|\n')
+    return ordner, dateien
+
+
+def kapitel_aus_modell(modell) -> list:
+    return [(kap['ordner'], [uordner(u) for u in kap['unter']]) for kap in modell]
+
+
+def kapitel_aus_ordner(ziel: Path) -> list:
+    """Kapitel- und Unterkapitelordner, wie sie in 02_Kapitel liegen (ohne Arbeitsordner)"""
+    basis = ziel / '02_Kapitel'
+    if not basis.exists():
+        return []
+    return [(k.name, sorted(u.name for u in k.iterdir() if u.is_dir() and u.name not in ARBEITSORDNER))
+            for k in sorted(x for x in basis.iterdir() if x.is_dir())]
+
+
 def gliederung_dateien(modell, basis: str, name: str):
     """CSV, Markdown und Status-Übersicht einer Gliederung."""
     puffer = io.StringIO()
@@ -412,6 +464,9 @@ def gesamt(modell, stand: str, gliederung_name: str, gliederung_daten: bytes, un
     h_o, h_d = hauptordner()
     ordner |= h_o
     dateien.update(h_d)
+    b_o, b_d = bereiche(kapitel_aus_modell(modell))
+    ordner |= b_o
+    dateien.update(b_d)
     dateien[f'{OUTPUT}/README.md'] = (VORLAGEN / 'Output_README.md').read_text(encoding='utf-8')
     dateien[f'{OUTPUT}/SPRACHEN.md'] = (VORLAGEN / 'SPRACHEN.md').read_text(encoding='utf-8')
     dateien.update(vorlagen_dateien(stand, gliederung_name))
@@ -534,6 +589,110 @@ def _anweisungen_in(ziel: Path, basis: Path, kapitel: list, bericht: list):
             if u and not leer(s['instruction']):
                 schreibe(u / 'ANWEISUNG.md', s['markdown'])
     return neu, abweichend
+
+
+def app_bereiche(adresse: str, projekt: str, token: str | None, benutzer: str | None):
+    """Pipeline, Backlog und Intern der App (GET /work-areas/export); None bei älterer App"""
+    kopf = {'X-Project-Id': projekt, 'Accept': 'application/json'}
+    if token:
+        kopf['Authorization'] = f'Bearer {token}'
+    elif benutzer:
+        kopf['X-User-Id'] = benutzer
+    try:
+        with urllib.request.urlopen(urllib.request.Request(adresse.rstrip('/') + '/api/v1/work-areas/export', headers=kopf), timeout=30) as r:
+            daten = json.loads(r.read().decode('utf-8'))
+    except OSError:
+        return None
+    return daten if daten.get('format') == 'onescm-work-areas' else None
+
+
+def _datum(iso: str | None) -> str:
+    return f'{iso[8:10]}.{iso[5:7]}.{iso[:4]}' if iso and re.match(r'^\d{4}-\d{2}-\d{2}$', iso) else (iso or '–')
+
+
+def _passend(basis: Path, titel: str | None, mit_punkt: bool):
+    """Ordner unter basis zum Titel: zuerst über die Nummer, sonst über den Ordnernamen"""
+    if not titel or not basis.exists():
+        return None
+    kandidaten = [x for x in basis.iterdir() if x.is_dir() and x.name not in ARBEITSORDNER]
+    n = nummer(titel)
+    if n:
+        for x in kandidaten:
+            if nummer(x.name) == n and (('.' in n) == mit_punkt):
+                return x
+    name = ordnername(re.sub(r'^\s*\d+(?:\.\d+)*\.?\s*', '', titel))
+    return next((x for x in kandidaten if name and x.name.endswith(name)), None)
+
+
+def bereiche_abgleichen(ziel: Path, daten: dict, bericht: list):
+    """Einträge der App als Dateien: Pipeline je Kapitel/Unterkapitel, Backlog, Intern je Thema. Eine Datei, die seit der
+    letzten Lieferung niemand geändert hat, wird aktualisiert; eine geänderte bleibt, die App-Fassung kommt als .neu daneben.
+    Wechselt ein Eintrag den Ort (z. B. Backlog → Pipeline), bleibt die alte Datei liegen und wird gemeldet."""
+    stand_datei = ziel / '00_Dokumentation' / 'App' / 'bereiche_stand.json'
+    try:
+        stand = json.loads(stand_datei.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        stand = {}
+    dateien_stand, orte = stand.get('dateien', {}), stand.get('orte', {})
+    zahl = {'neu': 0, 'aktualisiert': 0, 'abweichend': 0}
+    # leere Übersichten aus der Vorlage gelten als unverändert
+    vorlage = {rel: hashlib.sha256(t.encode()).hexdigest() for rel, t in bereiche([])[1].items()}
+
+    def schreibe(rel: str, inhalt: str):
+        p = ziel / rel
+        h = hashlib.sha256(inhalt.encode()).hexdigest()
+        if not p.exists():
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(inhalt, encoding='utf-8')
+            zahl['neu'] += 1
+        else:
+            jetzt = hashlib.sha256(p.read_bytes()).hexdigest()
+            if jetzt == h:
+                pass
+            elif dateien_stand.get(rel, vorlage.get(rel)) == jetzt:
+                p.write_text(inhalt, encoding='utf-8')
+                zahl['aktualisiert'] += 1
+            else:
+                n = p.with_name(p.name + '.neu')
+                if not n.exists() or n.read_text(encoding='utf-8') != inhalt:
+                    n.write_text(inhalt, encoding='utf-8')
+                    zahl['abweichend'] += 1
+                    bericht.append(f'- `{rel}` wurde von Hand geändert – App-Fassung als `{rel}.neu`, bitte zusammenführen')
+                return
+        dateien_stand[rel] = h
+
+    dateiname = lambda e: f"{e['jiraKey']}.md" if e.get('jiraKey') else f"{ordnername(e['title'], 40) or e['id']}.md"
+    zeilen = {PIPELINE: [], BACKLOG: []}
+    for e in daten.get('pipeline', []):
+        kap = _passend(ziel / PIPELINE, e.get('chapterTitle'), False)
+        unter = _passend(kap, e.get('subchapterTitle'), True) if kap else None
+        ordner = unter or kap or (ziel / PIPELINE / OHNE_ZUORDNUNG)
+        rel = (ordner / dateiname(e)).relative_to(ziel).as_posix()
+        if e.get('chapterTitle') and not kap:
+            bericht.append(f"- ⚠ `{e.get('jiraKey') or e['title']}`: Kapitel „{e['chapterTitle']}“ hat keinen Ordner in `{PIPELINE}` – abgelegt unter `{OHNE_ZUORDNUNG}`")
+        zeilen[PIPELINE].append((e, rel))
+    for e in daten.get('backlog', []):
+        zeilen[BACKLOG].append((e, f'{BACKLOG}/{dateiname(e)}'))
+    intern = [(e, f"{INTERN}/{e.get('topicFolder') or '06_Other'}/{dateiname(e)}") for e in daten.get('intern', [])]
+    for e, rel in zeilen[PIPELINE] + zeilen[BACKLOG] + intern:
+        alt = orte.get(e['id'])
+        if alt and alt != rel and (ziel / alt).exists():
+            bericht.append(f"- `{e.get('jiraKey') or e['title']}` liegt jetzt unter `{rel}` – die alte Datei `{alt}` bleibt (bitte als verschoben markieren, nicht löschen)")
+        schreibe(rel, e['markdown'])
+        orte[e['id']] = rel
+    for bereich, titel, text in [(PIPELINE, 'Pipeline', 'Tickets in Bearbeitung, noch nicht produktiv. Nach Produktionsdatum sortiert.'),
+                                 (BACKLOG, 'Backlog', 'Tickets, deren Bearbeitung noch nicht begonnen hat.')]:
+        z = [f'# {titel} – Übersicht', '', f'{text} Stand aus der App: {_datum((daten.get("exportedAt") or "")[:10])}.', '', TICKET_KOPF.rstrip('\n')]
+        for e, rel in zeilen[bereich]:
+            gl = ' › '.join(x for x in [e.get('chapterTitle'), e.get('subchapterTitle')] if x) or '[offen]'
+            z.append(f"| [{e.get('jiraKey') or '–'}]({Path(rel).relative_to(bereich).as_posix()}) | {e['title']} | {gl} | {_datum(e.get('createdOn'))} | "
+                     f"{e.get('stream') or '[offen]'} | {_datum(e.get('productionDate')) if e.get('productionDate') else '[offen]'} | {e.get('jiraStatus') or '–'} | "
+                     f"{'ja' if e.get('state') in ('documented', 'ready', 'live') else 'nein'}{' – produktiv, übernehmen?' if e.get('state') == 'ready' else ''} |")
+        schreibe(f'{bereich}/{bereich[3:].upper()}.md', '\n'.join(z) + '\n')
+    stand_datei.parent.mkdir(parents=True, exist_ok=True)
+    stand_datei.write_text(json.dumps({'dateien': dateien_stand, 'orte': orte}, ensure_ascii=False, indent=2), encoding='utf-8')
+    bericht.append(f"- Pipeline {len(zeilen[PIPELINE])}, Backlog {len(zeilen[BACKLOG])}, Intern {len(intern)} Einträge: "
+                   f"{zahl['neu']} Dateien neu, {zahl['aktualisiert']} aktualisiert, {zahl['abweichend']} abweichend (.neu)")
 
 
 def agenten_aktualisieren(ziel: Path, bericht: list):
@@ -666,6 +825,11 @@ def main():
         bericht += ['', f'## Gesamtgliederung `{a.gliederung.name}` → 02_Kapitel', '']
         o |= output_ordner(modell)
         abgleich(ziel, o, d, ['02_Kapitel'], bericht)
+    # Pipeline, Backlog, Intern: Kapitelordner der Pipeline folgen 02_Kapitel (auch nach einem Abgleich der Gesamtgliederung)
+    bereiche_bericht = ['', f'## Bereiche {PIPELINE}, {BACKLOG}, {INTERN}', '']
+    b_o, b_d = bereiche(kapitel_aus_ordner(ziel))
+    abgleich(ziel, b_o, b_d, [], bereiche_bericht)
+    bericht += bereiche_bericht
     if a.app:
         zuordnung_datei = ziel / '00_Dokumentation' / 'Gliederung' / 'App' / 'zuordnung.json'
         zuordnung_datei.parent.mkdir(parents=True, exist_ok=True)
@@ -700,6 +864,13 @@ def main():
             bericht.append('- App liefert keine Kapitelanweisungen (ältere Version oder keine Berechtigung)')
         else:
             anweisungen_abgleichen(ziel, anw, bericht, zuordnung)
+        # Pipeline, Backlog, Intern (App ab 0.45)
+        ber = app_bereiche(a.app, a.projekt, a.token, a.benutzer)
+        bericht += ['', f'## Pipeline, Backlog, Intern aus der App → {PIPELINE}, {BACKLOG}, {INTERN}', '']
+        if ber is None:
+            bericht.append('- App liefert keine Arbeitsbereiche (ältere Version oder keine Berechtigung)')
+        else:
+            bereiche_abgleichen(ziel, ber, bericht)
     if not (a.gliederung or a.app):
         bericht += ['', 'Nur Agenten, Hauptordner und Vorlagen abgeglichen (weder --gliederung noch --app angegeben).']
     (ziel / '00_Dokumentation' / 'GLIEDERUNG_ABGLEICH.md').write_text('\n'.join(bericht) + '\n', encoding='utf-8')

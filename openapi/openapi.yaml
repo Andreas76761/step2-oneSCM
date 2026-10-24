@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.44.0
+  version: 0.45.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -4465,7 +4465,7 @@ paths:
   /structure:
     get:
       operationId: getStructure
-      summary: 'Kapitelsteuerung (ADR-096): Kapitel und Unterkapitel der Quellen mit Kapitelanweisung und Version; history=true zeigt auch Abgelöstes'
+      summary: 'Kapitelsteuerung (ADR-096): Kapitel und Unterkapitel der Quellen mit Kapitelanweisung und Version; history=true zeigt auch Abgelöstes; pipeline = Tickets in Bearbeitung (ADR-098)'
       tags: [Kapitel]
       x-requirements: [NFR-101, NFR-102]
       x-extension: true
@@ -4474,7 +4474,7 @@ paths:
         - { name: outline, in: query, required: false, schema: { type: string }, description: 'Kapitel einer Handbuch-Variante (familyId, ADR-097)' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ chapters: [{ id, key, title, position, snippets, instruction: { text, topics, excluded }, validFrom, validUntil, replacedBy, inHistory, subchapters: [...] }], summary: { chapters, subchapters, withInstruction } }' }
+        '200': { description: '{ chapters: [{ id, key, title, position, snippets, pipeline, instruction: { text, topics, excluded }, validFrom, validUntil, replacedBy, inHistory, subchapters: [...] }], summary: { chapters, subchapters, withInstruction } }' }
   /structure/outlines:
     get:
       operationId: listStructureOutlines
@@ -4607,6 +4607,109 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ format: onescm-instructions, chapters: [{ title, validFrom, instruction, markdown, subchapters }], variants: [{ familyId, name, chapters }] }' }
+  /work-areas:
+    get:
+      operationId: listWorkItems
+      summary: 'Pipeline, Backlog, Intern (ADR-098): Einträge eines Bereichs; Pipeline zusätzlich je Kapitel und Unterkapitel der aktuellen Gliederung'
+      tags: [Kapitel]
+      x-requirements: [NFR-108, NFR-109]
+      x-extension: true
+      parameters:
+        - { name: area, in: query, required: false, schema: { type: string, enum: [pipeline, backlog, intern] } }
+        - { name: topic, in: query, required: false, schema: { type: string, enum: [testing, reporting, systems, migration, rollout, other] }, description: 'nur Intern' }
+        - { name: chapterId, in: query, required: false, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, area, topic, origin, jiraKey, title, jiraStatus, stream, createdOn, productionDate, chapterId, chapterTitle, subchapterId, subchapterTitle, chapterSource, text, documented, state, stateLabel }], groups: [{ chapterId, chapterTitle, items, subchapters: [{ id, title, items }] }], unassigned, counts, topicCounts, outline, ready }' }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createWorkItem
+      summary: 'Eigenen Eintrag anlegen – Pipeline, Backlog oder Intern (mit Thema); personenbezogene Daten werden abgewiesen oder pseudonymisiert (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-108, NFR-109]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [area, title], properties: { area: { type: string, enum: [pipeline, backlog, intern] }, topic: { type: [string, 'null'], enum: [testing, reporting, systems, migration, rollout, other, null] }, title: { type: string, minLength: 3, maxLength: 200 }, jiraKey: { type: [string, 'null'] }, stream: { type: [string, 'null'], maxLength: 80 }, createdOn: { type: [string, 'null'], description: 'TT.MM.JJJJ oder JJJJ-MM-TT' }, productionDate: { type: [string, 'null'], description: 'TT.MM.JJJJ oder JJJJ-MM-TT' }, chapterId: { type: [string, 'null'] }, subchapterId: { type: [string, 'null'] }, text: { type: string, maxLength: 50000, description: 'Vorab-Dokumentation (Markdown)' }, pseudonymize: { type: boolean } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Eintrag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /work-areas/sync-jira:
+    post:
+      operationId: syncWorkItemsFromJira
+      summary: 'Eingelesene Jira-Tickets einordnen: offen → Backlog, in Bearbeitung oder Produktionsdatum in der Zukunft → Pipeline mit Kapitelvorschlag; produktiv → „übernehmen“, abgebrochen; Bugs ohne Eintrag (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-108]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ tickets, created, updated, moved, ready, cancelled, skipped, …Pipeline }' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /work-areas/export:
+    get:
+      operationId: exportWorkAreas
+      summary: 'Pipeline, Backlog und Intern als JSON mit Markdown je Eintrag (format onescm-work-areas) – für 09_Pipeline, 10_Backlog und 11_Intern im Arbeitsordner'
+      tags: [Kapitel]
+      x-requirements: [NFR-110]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ format: onescm-work-areas, pipeline: [...], backlog: [...], intern: [{ …, topicFolder }], topics }' }
+  /work-areas/{id}:
+    get:
+      operationId: getWorkItem
+      summary: 'Eintrag aus Pipeline, Backlog oder Intern'
+      tags: [Kapitel]
+      x-requirements: [NFR-108, NFR-109]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Eintrag' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateWorkItem
+      summary: 'Eintrag ändern oder verschieben (Bereich, Thema, Gliederung, Stream, Produktionsdatum, Dokumentation); state cancelled bzw. zurück auf open (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-108, NFR-109]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { area: { type: string }, topic: { type: [string, 'null'] }, title: { type: string }, stream: { type: [string, 'null'] }, createdOn: { type: [string, 'null'] }, productionDate: { type: [string, 'null'] }, chapterId: { type: [string, 'null'] }, subchapterId: { type: [string, 'null'] }, text: { type: string }, state: { type: string, enum: [cancelled, open] }, pseudonymize: { type: boolean } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Eintrag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteWorkItem
+      summary: 'Eigenen Eintrag löschen – Jira-Einträge und übernommene Einträge bleiben (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-109]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /work-areas/{id}/go-live:
+    post:
+      operationId: workItemGoLive
+      summary: 'Produktiv: Vorab-Dokumentation als Quelle des Kapitels einlesen (H1 Kapitel, H2 Unterkapitel, Evidenz unbestätigt); Eintrag bleibt als „übernommen“ (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-108]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ item, importId, importStatus }' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
   /image-clickpaths:
     get:
       operationId: listClickpaths

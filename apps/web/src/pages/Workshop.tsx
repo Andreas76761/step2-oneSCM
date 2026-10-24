@@ -129,6 +129,7 @@ export function WorkshopPage() {
         </header>
         <ErrorBox error={version.error} />
         {chapterId && <InstructionBanner chapterId={chapterId} />}
+        {chapterId && <PipelineBanner chapterId={chapterId} />}
         {!v && <Empty>Für dieses Kapitel gibt es noch keine generierte Version.</Empty>}
         {styleOn && styleData.data && (
           <p className="small" role="status">
@@ -818,6 +819,20 @@ function SaveTemplateButton({ versionId, title }: { versionId: string; title: st
         </Modal>
       )}
     </>
+  );
+}
+
+/** Pipeline (ADR-098): Tickets dieses Kapitels in Bearbeitung – vorab dokumentiert, aber noch nicht produktiv */
+function PipelineBanner({ chapterId }: { chapterId: string }) {
+  const r = useLoad<any>(`/work-areas?area=pipeline&chapterId=${encodeURIComponent(chapterId)}`, [chapterId]);
+  const items = (r.data?.items ?? []).filter((i: any) => i.state !== 'cancelled' && i.state !== 'live');
+  if (!items.length) return null;
+  const ready = items.filter((i: any) => i.state === 'ready').length;
+  return (
+    <aside className="alert info ws-instruction" aria-label="Pipeline">
+      <strong>Pipeline:</strong> {items.length} Ticket{items.length === 1 ? '' : 's'} für dieses Kapitel in Bearbeitung ({items.map((i: any) => i.jiraKey ?? i.title).join(', ')}) – noch nicht produktiv, nicht ins Kapitel schreiben.
+      {ready > 0 && <> {ready} davon produktiv – übernehmen.</>} <Link to="/pipeline" className="small">zur Pipeline</Link>
+    </aside>
   );
 }
 

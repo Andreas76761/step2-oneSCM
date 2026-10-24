@@ -1,6 +1,6 @@
 # oneSCM Benutzerhandbuch – Arbeitsordner {{STAND}}
 
-Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesamtgliederung `00_Dokumentation/Gliederung/{{GLIEDERUNG}}` (Kapitel 1–23, Vorspann V, Anhänge A–I, Übergangstexte T). Gliederungen aus der App (Varianten je Rolle, Sparte, Markt) liegen unter `03_Varianten/`, die Sprachausgaben unter `04_Output/`. Gesteuert wird über vier Hauptordner: **I Output** (fertige Produkte), **II Stil und Design**, **III Grammatik, Synonyme, Fehlerliste** und **IV Translation**. **Hauptsprache ist Deutsch**; fremdsprachige Quellen werden als `dt_`-Datei übersetzt.
+Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesamtgliederung `00_Dokumentation/Gliederung/{{GLIEDERUNG}}` (Kapitel 1–23, Vorspann V, Anhänge A–I, Übergangstexte T). Gliederungen aus der App (Varianten je Rolle, Sparte, Markt) liegen unter `03_Varianten/`, die Sprachausgaben unter `04_Output/`. Gesteuert wird über vier Hauptordner: **I Output** (fertige Produkte), **II Stil und Design**, **III Grammatik, Synonyme, Fehlerliste** und **IV Translation**. Dazu drei Bereiche außerhalb des Handbuchs: **Pipeline** (Jira-Tickets in Bearbeitung, noch nicht produktiv – je Gliederungspunkt, vorab dokumentiert), **Backlog** (noch nicht begonnen) und **Intern** (Testing, Reporting, Systeme, Migration, Rollout, Other). **Hauptsprache ist Deutsch**; fremdsprachige Quellen werden als `dt_`-Datei übersetzt.
 
 ## Grundregeln (verbindlich)
 
@@ -12,6 +12,7 @@ Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesam
 6. **Übersetzungen sind kein Original.** `dt_`-Dateien und Sprachausgaben tragen ihre Herkunft im Kopf; Belege nennen immer auch das Original.
 7. **Neuere Quelle schlägt ältere nicht automatisch.** Widersprechen sich `Raw_2025` und `Raw_2026`, beide Aussagen mit Jahr nennen und als Widerspruch melden.
 8. **Kapitelanweisung hat Vorrang.** Vor jeder Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und – falls vorhanden – des Unterkapitels lesen und befolgen; sie geht allen anderen Arbeitsanweisungen vor, nur die Regeln 1–4 gehen ihr vor. Themen unter „Nicht beschreiben“ weglassen (auch nicht als Hinweis); fehlt zu einem „Wichtigen Thema“ der Beleg: `[offen: Thema – Beleg fehlt]`. Die Anweisung pflegt ein Mensch – in der Datei oder in der App (Kapitelsteuerung, Übernahme per Abgleich).
+9. **Pipeline, Backlog und Intern sind kein Handbuch.** Inhalte aus `09_Pipeline` und `10_Backlog` beschreiben Funktionen, die noch nicht produktiv sind; sie gehören nicht in Entwürfe, `04_Output`, `05_I_Output` oder Übersetzungen und sind kein Beleg. Produktiv ist ein Ticket erst, wenn es erledigt und das Produktionsdatum erreicht ist und ein Mensch das bestätigt – dann übernimmt der pipeline-redakteur die Dokumentation als Quelle in `01_Quellen`. Inhalte aus `11_Intern` sind nie für Anwendende (Ausnahme: `05_I_Output/05_Interne_Dokumente`).
 
 ## Aufbau
 
@@ -26,6 +27,9 @@ Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesam
 | `06_II_Stil_und_Design/` | **II Stil und Design** – `STIL_UND_DESIGN.md` (Layout, Typografie, Farben, Screenshots), `01_Designvorschlaege`, `02_Tonalitaet` (`TONALITAET.md`), `03_Vorlagen` (Word/PowerPoint), `04_Bildsprache_Screenshots` |
 | `07_III_Grammatik_Synonyme_Fehlerliste/` | **III** – `01_Grammatik/GRAMMATIK.md`, `02_Synonyme/SYNONYME.csv`, `03_Fehlerliste/FEHLERLISTE.csv` und `FEHLERLISTE.md` |
 | `08_IV_Translation/` | **IV Translation** – `TRANSLATION.md`; je Zielsprache `01_Glossar`, `02_Uebersetzungsspeicher`, `03_Laenderreview` (`REVIEW.md`) |
+| `09_Pipeline/<Kapitel>/<Unterkapitel>/` | **Pipeline** – Jira-Tickets in Bearbeitung, noch nicht produktiv, nach der aktuellen Gliederung; je Ticket `<Ticket>.md` mit Erstelldatum, Stream, Produktionsdatum und Vorab-Dokumentation; `00_Ohne_Zuordnung`, `PIPELINE.md` |
+| `10_Backlog/` | **Backlog** – Tickets, deren Bearbeitung noch nicht begonnen hat; `<Ticket>.md`, `BACKLOG.md` |
+| `11_Intern/` | **Intern** – `01_Testing`, `02_Reporting`, `03_Systeme`, `04_Migration`, `05_Rollout`, `06_Other`; je Thema `THEMA.md`; nie im Handbuch |
 
 **`04_Output` oder `05_I_Output`?** `04_Output` enthält den Handbuchtext je Sprache und Kapitel (Markdown je Unterkapitel). `05_I_Output` enthält die fertigen Produkte nach Art; Master ist Deutsch in `03_Final/01_Deutsch_DE`. Übersetzt wird immer aus dem deutschen Master über `08_IV_Translation`: Kapitel nach `04_Output/<Sprache>/`, Produkte nach `05_I_Output/<Produkt>/03_Final/<Sprache>/`.
 
@@ -62,8 +66,9 @@ Material, das nur ein Unterkapitel betrifft, darf direkt im Unterkapitel-Ordner 
 | `ausgabe-produzent` | **I:** fertige Produkte aus freigegebenen Kapiteln erstellen (Handbuch, Releaseletter, QuickGuide, Schulung, Interne Dokumente, Videos, Grafiken, Prozesse) |
 | `stil-designer` | **II:** Designvorschläge, Tonalität, Vorlagen und Screenshot-Regeln pflegen, Produkte auf Stil prüfen |
 | `sprach-lektor` | **III:** Grammatik, Synonyme und Tonalität prüfen, `FEHLERLISTE.csv` führen – ändert keine Texte |
+| `pipeline-redakteur` | **Pipeline, Backlog, Intern:** Jira-Tickets der Gliederung zuordnen, vorab dokumentieren, Übersichten führen, Übernahme produktiver Tickets vorbereiten; interne Themen ablegen |
 
-Ablauf: **Eingang → input-sortierer → uebersetzer-de → steuerung → kapitel-redakteur + bild-redakteur + faq-redakteur → sprach-lektor → pruefer → auditor → Mensch gibt frei → uebersetzer-ausgabe → Sprachreview durch das jeweilige Land.** Produkte: **freigegebene Kapitel → ausgabe-produzent → sprach-lektor + stil-designer → Mensch gibt frei → uebersetzer-ausgabe → Länderreview.** Englisch ist die internationale Fassung. Ideen sammelt der ideen-sammler jederzeit. Stand: `00_Dokumentation/STATUS.md`.
+Ablauf: **Eingang → input-sortierer → uebersetzer-de → steuerung → kapitel-redakteur + bild-redakteur + faq-redakteur → sprach-lektor → pruefer → auditor → Mensch gibt frei → uebersetzer-ausgabe → Sprachreview durch das jeweilige Land.** Produkte: **freigegebene Kapitel → ausgabe-produzent → sprach-lektor + stil-designer → Mensch gibt frei → uebersetzer-ausgabe → Länderreview.** Englisch ist die internationale Fassung. Kommende Funktionen: **Jira-Export → pipeline-redakteur (Backlog/Pipeline, vorab dokumentieren) → Ticket produktiv, Mensch bestätigt → Quelle in `01_Quellen` → kapitel-redakteur.** Ideen sammelt der ideen-sammler jederzeit. Stand: `00_Dokumentation/STATUS.md`.
 
 ## Neue Gliederung, fehlende Kapitel, abgelöste Funktionen
 
@@ -72,6 +77,10 @@ Neue Gesamtgliederung (Excel) oder neue Gliederung in der App (Stammdaten › In
 - **Fehlende Kapitel oder Unterkapitel** ergänzen Sie in der Gliederung (Excel) oder in der App (Kapitelsteuerung bzw. Inhaltsverzeichnis) und gleichen danach ab – der Ordner entsteht mit `KAPITEL.md`/`UNTERKAPITEL.md` und leerer `ANWEISUNG.md`.
 - **Version:** „gültig ab“ (Release) steht in der App je Kapitel, Unterkapitel und Label und erscheint im Output.
 - **Abgelöste Funktionen** (z. B. Menüpunkt ersetzt) legt die App in die Historie; sie erscheinen nicht mehr im Handbuch, sondern im Anhang „Historie: abgelöste Funktionen“. Im Arbeitsordner wird nichts gelöscht: der alte Kapitel- bzw. Unterkapitelordner bleibt, der Abgleich meldet ihn als entfallen.
+
+## Pipeline, Backlog, Intern
+
+In der App unter **Pipeline, Backlog, Intern**: „Aus Jira-Tickets abgleichen“ ordnet die eingelesenen Tickets nach Status ein (Backlog → Pipeline, sobald in Bearbeitung; erledigt mit Produktionsdatum in der Zukunft bleibt in der Pipeline) und schlägt den Gliederungspunkt vor. Dort wird die Dokumentation vorab geschrieben; „Ins Handbuch übernehmen“ liest sie als Quelle des Kapitels ein (Evidenz unbestätigt). Der Abgleich `abgleich --app …` schreibt die Einträge als Dateien nach `09_Pipeline`, `10_Backlog` und `11_Intern` – eigene Änderungen bleiben, die App-Fassung liegt dann als `.neu` daneben.
 
 ## App (oneSCM Handbook Studio)
 

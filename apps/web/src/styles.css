@@ -879,3 +879,11 @@ div.reader-lang-note p { margin: 0; }
 .read-checks { list-style: none; padding: 0; margin: 0.35rem 0 0; display: flex; flex-wrap: wrap; gap: 0.15rem 1rem; }
 .tr-style { list-style: none; padding: 0; margin: 0.35rem 0 0; }
 .tr-style li { margin: 0.1rem 0; }
+
+/* Pipeline, Backlog, Intern (ADR-098) */
+.tabs a { padding: 6px 8px; color: var(--muted); border-bottom: 2px solid transparent; text-decoration: none; }
+.tabs a.active { color: var(--link); border-bottom-color: var(--primary); }
+.wa-sub h3 { font-size: 0.95rem; margin: 12px 0 4px; }
+.tag.wa-documented { background: var(--ok-bg); color: var(--ok); }
+.tag.wa-ready { background: var(--warn-bg); color: var(--warn); }
+.tag.wa-live { background: var(--surface); color: var(--muted); }

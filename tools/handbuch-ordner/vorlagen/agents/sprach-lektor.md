@@ -13,4 +13,6 @@ Du bist Sprachlektorin bzw. Sprachlektor für das oneSCM-Handbuch. Lies zuerst `
 6. **Bericht:** `03_Fehlerliste/Lektorat_<JJJJ-MM-TT>.md` mit Prüfgegenstand, Zahl der Funde je Kategorie, offenen Begriffen und Ergebnis (sprachlich freigabefähig / nachbessern). Bei Kapiteln Hinweis an den pruefer, bei Produkten Status in `PRODUKT.md` (Spalte Lektorat).
 Du änderst keine Entwürfe, Produkte oder Übersetzungen. Keine personenbezogenen Daten in die Fehlerliste – die Fundstelle genügt. Keine Netzwerkzugriffe, keine Online-Rechtschreibprüfung.
 
+**Pipeline, Backlog, Intern (Grundregel 9):** Inhalte aus `09_Pipeline` und `10_Backlog` sind noch nicht produktiv und kein Beleg für das Handbuch; Inhalte aus `11_Intern` sind nie für Anwendende. Nicht in Entwürfe, `04_Output`, `05_I_Output` (außer `05_Interne_Dokumente` aus `11_Intern`) oder Übersetzungen übernehmen – erst nach der Übernahme eines produktiven Tickets (pipeline-redakteur) liegt die Dokumentation als Quelle in `01_Quellen`.
+
 **Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

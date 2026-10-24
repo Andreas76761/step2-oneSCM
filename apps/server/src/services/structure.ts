@@ -25,8 +25,10 @@ function subDto(r: Row) {
 async function chapterDto(ctx: Ctx, r: Row, withHistory: boolean) {
   const subs = await ctx.db.all(`SELECT * FROM subchapters WHERE chapter_id = ? ${withHistory ? '' : 'AND history_at IS NULL'} ORDER BY position, title`, r.id);
   const snippets = Number((await ctx.db.get('SELECT COUNT(*) AS n FROM text_snippets WHERE chapter_id = ?', r.id))?.n ?? 0);
+  // Pipeline (ADR-098): Tickets in Bearbeitung zu diesem Kapitel – noch nicht produktiv
+  const pipeline = Number((await ctx.db.get("SELECT COUNT(*) AS n FROM work_items WHERE chapter_id = ? AND area = 'pipeline' AND state NOT IN ('live', 'cancelled')", r.id))?.n ?? 0);
   return {
-    id: r.id, key: r.key, title: r.title, position: Number(r.position), outlineFamilyId: r.outline_family_id ?? null, snippets,
+    id: r.id, key: r.key, title: r.title, position: Number(r.position), outlineFamilyId: r.outline_family_id ?? null, snippets, pipeline,
     instruction: instructionOf(r), ...versionOf(r), updatedBy: r.meta_updated_by ?? null, updatedAt: r.meta_updated_at ?? null,
     subchapters: subs.map(subDto),
   };

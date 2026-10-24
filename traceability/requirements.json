@@ -1154,5 +1154,33 @@
     "documentation": [
       "docs/adr/ADR-097-grammatik-sprachstil.md"
     ]
+  },
+  {
+    "id": "NFR-108",
+    "title": "Pipeline: Jira-Tickets in Bearbeitung und noch nicht produktiv je Kapitel und Unterkapitel der aktuellen Gliederung mit Erstelldatum, Stream und Produktionsdatum<br>Vorab-Dokumentation<br>Übernahme ins Handbuch als Quelle, wenn produktiv",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-098-pipeline-backlog-intern.md"
+    ]
+  },
+  {
+    "id": "NFR-109",
+    "title": "Backlog (noch nicht begonnen) und Intern mit den Themen Testing, Reporting, Systeme, Migration, Rollout, Other – nie im Handbuch, Export oder Release",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-098-pipeline-backlog-intern.md"
+    ]
+  },
+  {
+    "id": "NFR-110",
+    "title": "Arbeitsordner mit 09_Pipeline (Unterordner nach der Gesamtgliederung), 10_Backlog und 11_Intern, Grundregel 9, Agent pipeline-redakteur, Abgleich mit der App",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-098-pipeline-backlog-intern.md",
+      "tools/handbuch-ordner/README.md"
+    ]
   }
 ]

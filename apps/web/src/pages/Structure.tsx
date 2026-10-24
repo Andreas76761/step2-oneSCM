@@ -155,6 +155,7 @@ function Meta({ x }: { x: any }) {
       {x.validFrom && <span className="tag">ab {x.validFrom}</span>}
       {has ? <span className="tag">Anweisung</span> : null}
       {x.inHistory && <span className="tag sev-medium">Historie{x.validUntil ? ` · bis ${x.validUntil}` : ''}</span>}
+      {x.pipeline > 0 && <Link to="/pipeline" className="tag" title="Tickets in Bearbeitung zu diesem Kapitel – noch nicht produktiv">Pipeline: {x.pipeline}</Link>}
     </span>
   );
 }

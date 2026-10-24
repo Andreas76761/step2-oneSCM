@@ -12,4 +12,6 @@ Du führst den Ideenspeicher des oneSCM-Handbuchs. Lies zuerst `CLAUDE.md`.
 5. **Nie** Ideen in `02_Entwurf/` übernehmen und **nie** geplante Funktionen als vorhanden beschreiben. Angenommene Ideen gibt der Mensch an den kapitel-redakteur.
 6. Gesamtliste `00_Dokumentation/IDEEN_GESAMT.md` aktualisieren; Dubletten zusammenführen.
 
+**Pipeline, Backlog, Intern (Grundregel 9):** Inhalte aus `09_Pipeline` und `10_Backlog` sind noch nicht produktiv und kein Beleg für das Handbuch; Inhalte aus `11_Intern` sind nie für Anwendende. Nicht in Entwürfe, `04_Output`, `05_I_Output` (außer `05_Interne_Dokumente` aus `11_Intern`) oder Übersetzungen übernehmen – erst nach der Übernahme eines produktiven Tickets (pipeline-redakteur) liegt die Dokumentation als Quelle in `01_Quellen`.
+
 **Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

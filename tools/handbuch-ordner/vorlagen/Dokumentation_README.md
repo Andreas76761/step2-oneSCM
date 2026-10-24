@@ -25,6 +25,13 @@ Vor dem Schreiben gelten Stil und Ton aus `06_II_Stil_und_Design` und die Sprach
 
 Ideen jederzeit: „ideen-sammler: Idee für Kapitel 9 – …“.
 
+## Kommende Funktionen und Internes (Pipeline, Backlog, Intern)
+
+1. **Jira-Export** (XML oder CSV, mit den Feldern Stream und Produktionsdatum) in der App einlesen und unter **Pipeline** „Aus Jira-Tickets abgleichen“ – oder im Ordner: „pipeline-redakteur: Jira-Export einordnen“.
+2. **Vorab dokumentieren:** „pipeline-redakteur: Pipeline Kapitel 6“ – Dokumentation in `09_Pipeline/<Kapitel>/<Unterkapitel>/<Ticket>.md`, nicht im Entwurf.
+3. **Produktiv:** Produktionsdatum erreicht, Ticket erledigt, ein Mensch bestätigt → „Ins Handbuch übernehmen“ in der App bzw. „pipeline-redakteur: ONESCM-123 übernehmen“ → Quelle in `01_Quellen`, dann der normale Ablauf ab Schritt 4.
+4. **Intern:** Testing, Reporting, Systeme, Migration, Rollout und Sonstiges nach `11_Intern/<Thema>/` – nie in Handbuch, Output oder Übersetzung.
+
 ## Mit der App arbeiten
 
 Quellen in der App einlesen, Fragen mit Belegen beantworten, Testfragen prüfen, Wissenslücken an Fachleute geben und Screenshots verwalten: `App/APP.md`. Testfragen aus Wissens-Check und Lückenanalyse gehören in `App/TESTFRAGEN.csv`, ausgefüllte Befragungen in `App/Befragungen/`, Exporte der App in `App/Exporte/`.
@@ -37,7 +44,7 @@ Quellen in der App einlesen, Fragen mit Belegen beantworten, Testfragen prüfen,
 | neue oder geänderte Gliederung in der App | „gliederungs-pfleger: Gliederungen aus der App abgleichen“ |
 | direkt ohne Agent | `python 00_Dokumentation/Werkzeuge/handbuch_struktur.py abgleich . --app http://localhost:3000 --projekt p_default --token <API-Token>` |
 
-Der Abgleich legt nur Fehlendes an (Kapitel mit acht Arbeitsordnern, Unterkapitel, Hauptordner `05`–`08`, neue Agenten), löscht und überschreibt nichts – geänderte Vorlagen wie `CLAUDE.md` legt er als `CLAUDE.md.neu` daneben – und meldet Umbenanntes oder Entfallenes in `GLIEDERUNG_ABGLEICH.md`. Jede App-Gliederung erhält einen eigenen Ordner unter `03_Varianten/`; der Ordnername bleibt gleich, auch wenn die Gliederung in der App umbenannt oder neu versioniert wird. Das API-Token legt die Administration in der App unter Integrationen › API-Tokens an (Berechtigung read). Regelmäßig: den Aufruf in der Windows-Aufgabenplanung täglich einplanen.
+Der Abgleich legt nur Fehlendes an (Kapitel mit acht Arbeitsordnern, Unterkapitel, Hauptordner `05`–`08`, Bereiche `09_Pipeline` (Kapitelordner nach der Gesamtgliederung), `10_Backlog` und `11_Intern`, neue Agenten), löscht und überschreibt nichts – geänderte Vorlagen wie `CLAUDE.md` legt er als `CLAUDE.md.neu` daneben – und meldet Umbenanntes oder Entfallenes in `GLIEDERUNG_ABGLEICH.md`. Jede App-Gliederung erhält einen eigenen Ordner unter `03_Varianten/`; der Ordnername bleibt gleich, auch wenn die Gliederung in der App umbenannt oder neu versioniert wird. Das API-Token legt die Administration in der App unter Integrationen › API-Tokens an (Berechtigung read). Regelmäßig: den Aufruf in der Windows-Aufgabenplanung täglich einplanen.
 
 ## Dateien in diesem Ordner
 

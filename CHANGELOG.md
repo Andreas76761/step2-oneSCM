@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.45.0 – Etappe 45 (24.10.2026)
+
+### Hinzugefügt
+- **Pipeline, Backlog, Intern (ADR-098):** neue Bereiche in der Navigation.
+  - **Pipeline:** Jira-Tickets in Bearbeitung, noch nicht produktiv, je Kapitel und Unterkapitel der aktuellen Gliederung, mit Erstelldatum, Stream, Produktionsdatum und der vorab geschriebenen Dokumentation.
+  - **Backlog:** Tickets, deren Bearbeitung noch nicht begonnen hat.
+  - **Intern:** Testing, Reporting, Systeme, Migration, Rollout, Other – nie im Handbuch.
+- **Aus Jira-Tickets abgleichen:**
+  - Ordnet nach Status und Produktionsdatum ein (Backlog → Pipeline, sobald in Bearbeitung; erledigt mit Produktionsdatum in der Zukunft bleibt in der Pipeline) und schlägt den Gliederungspunkt vor.
+  - Ein von Hand gesetztes Produktionsdatum bleibt; Bugs bekommen keinen Eintrag.
+- **Ins Handbuch übernehmen:** Ist ein Ticket produktiv, wird die Dokumentation als Quelle des Kapitels eingelesen (Evidenz unbestätigt). Der Eintrag bleibt als Nachweis.
+- **Jira-Import:**
+  - Liest die Felder „Stream“ und „Produktionsdatum“ (auch „Production Date“, „Go-Live Date“).
+  - Erkennt deutsche Datumsangaben TT.MM.JJJJ.
+- **Kapitelwerkstatt und Kapitelsteuerung:** zeigen die Pipeline-Tickets des Kapitels.
+- **Arbeitsordner:**
+  - Neue Ordner `09_Pipeline` (Unterordner nach der Gesamtgliederung, `00_Ohne_Zuordnung`, `PIPELINE.md`), `10_Backlog` (`BACKLOG.md`) und `11_Intern` (`01_Testing` … `06_Other` mit `THEMA.md`).
+  - Grundregel 9 in `CLAUDE.md`, neuer Agent `pipeline-redakteur`, die Regel in allen Agenten.
+  - `abgleich --app` schreibt die Einträge als Dateien (eigene Änderungen bleiben, App-Fassung als `.neu`).
+- Migration `052_work_areas.sql`; Tests T-301 … T-303, E2E T-304 (axe); Anforderungen NFR-108 … NFR-110.
+
+### Geändert
+- Jira-Datumsangaben im Format TT.MM.JJJJ werden jetzt als JJJJ-MM-TT gespeichert (bisher unverändert übernommen bzw. falsch als Monat.Tag gelesen).
+
 ## 0.44.0 – Etappe 44 (24.10.2026)
 
 ### Hinzugefügt

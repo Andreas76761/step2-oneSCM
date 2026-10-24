@@ -13,7 +13,10 @@ Aufbau:
 - `06_II_Stil_und_Design/` – **II**: `STIL_UND_DESIGN.md`, `01_Designvorschlaege`, `02_Tonalitaet/TONALITAET.md`, `03_Vorlagen`, `04_Bildsprache_Screenshots`
 - `07_III_Grammatik_Synonyme_Fehlerliste/` – **III**: `01_Grammatik/GRAMMATIK.md`, `02_Synonyme/SYNONYME.csv` (mit offenen Terminologiefragen), `03_Fehlerliste/FEHLERLISTE.csv` und `FEHLERLISTE.md`
 - `08_IV_Translation/` – **IV**: `TRANSLATION.md`, je Zielsprache `01_Glossar/GLOSSAR.csv`, `02_Uebersetzungsspeicher/SPEICHER.csv`, `03_Laenderreview/REVIEW.md`
-- `CLAUDE.md`, `.claude/agents/` (14 Agenten) und `.claude/settings.json` (WebFetch/WebSearch gesperrt – Daten bleiben lokal)
+- `09_Pipeline/<Kapitel>/<Unterkapitel>/` – **Pipeline**: Jira-Tickets in Bearbeitung, noch nicht produktiv, nach der Gesamtgliederung (gleiche Kapitel- und Unterkapitelordner wie `02_Kapitel`), je Ticket `<Ticket>.md` mit Erstelldatum, Stream, Produktionsdatum und Vorab-Dokumentation; `00_Ohne_Zuordnung`, `PIPELINE.md`
+- `10_Backlog/` – **Backlog**: Tickets, deren Bearbeitung noch nicht begonnen hat; `<Ticket>.md`, `BACKLOG.md`
+- `11_Intern/` – **Intern**: `01_Testing`, `02_Reporting`, `03_Systeme`, `04_Migration`, `05_Rollout`, `06_Other`, je mit `THEMA.md` – nie im Handbuch
+- `CLAUDE.md` (Grundregel 9: Pipeline, Backlog und Intern sind kein Handbuch), `.claude/agents/` (15 Agenten) und `.claude/settings.json` (WebFetch/WebSearch gesperrt – Daten bleiben lokal)
 
 Die acht Arbeitsordner je Kapitel:
 
@@ -28,7 +31,7 @@ Die acht Arbeitsordner je Kapitel:
 | `07_Ideenspeicher` | | ideen-sammler |
 | `08_Steuerung` | `01_Dealer`, `02_MO`, `03_Markt`, `04_HQ`, `05_IT`, `06_Marktspezifisch`, `07_Spartenspezifisch` | steuerung |
 
-Dazu `gliederungs-pfleger` für den Abgleich, `uebersetzer-de` (fremdsprachige Quellen → `dt_<Original>`) und `uebersetzer-ausgabe` (freigegebene Kapitel → `04_Output`, Produkte → `05_I_Output/<Produkt>/03_Final/<Sprache>`, mit Glossar, Übersetzungsspeicher und Länderreview aus `08_IV_Translation`) sowie für die Hauptordner `ausgabe-produzent` (I), `stil-designer` (II) und `sprach-lektor` (III).
+Dazu `gliederungs-pfleger` für den Abgleich, `uebersetzer-de` (fremdsprachige Quellen → `dt_<Original>`) und `uebersetzer-ausgabe` (freigegebene Kapitel → `04_Output`, Produkte → `05_I_Output/<Produkt>/03_Final/<Sprache>`, mit Glossar, Übersetzungsspeicher und Länderreview aus `08_IV_Translation`) sowie für die Hauptordner `ausgabe-produzent` (I), `stil-designer` (II) und `sprach-lektor` (III) und für Pipeline, Backlog und Intern der `pipeline-redakteur`.
 
 `04_Output` und `05_I_Output`: `04_Output` enthält den Handbuchtext je Sprache und Kapitel, `05_I_Output` die fertigen Produkte nach Art mit deutschem Master. Übersetzt wird immer aus dem deutschen Master über `08_IV_Translation` – Kapitel nach `04_Output/<Sprache>/`, Produkte nach `05_I_Output/<Produkt>/03_Final/<Sprache>/`.
 
@@ -52,6 +55,10 @@ Expand-Archive -Path "$HOME\Downloads\Handbuch_23102026.zip" -DestinationPath "C
 ```
 
 Die Gliederung selbst liegt nicht im Repository.
+
+## Pipeline, Backlog, Intern (`09_`–`11_`)
+
+Der Abgleich legt die drei Bereiche bei jedem Aufruf an; die Kapitel- und Unterkapitelordner in `09_Pipeline` folgen dem, was in `02_Kapitel` liegt. Mit `--app …` holt er die Einträge der App (Seiten Pipeline, Backlog, Intern; `GET /api/v1/work-areas/export`) und schreibt je Eintrag eine Datei – `09_Pipeline/<Kapitel>/<Unterkapitel>/<Ticket>.md` (Zuordnung über Nummer bzw. Titel, sonst `00_Ohne_Zuordnung`), `10_Backlog/<Ticket>.md`, `11_Intern/<Thema>/<Titel>.md` – sowie die Übersichten `PIPELINE.md` und `BACKLOG.md`. Dateien, die seit der letzten Lieferung niemand geändert hat, werden aktualisiert (Stand in `00_Dokumentation/App/bereiche_stand.json`); geänderte bleiben, die App-Fassung liegt als `.neu` daneben. Wechselt ein Ticket den Ort (Backlog → Pipeline, anderes Kapitel), bleibt die alte Datei liegen und wird im Bericht gemeldet.
 
 ## Kapitelanweisung (`ANWEISUNG.md`)
 

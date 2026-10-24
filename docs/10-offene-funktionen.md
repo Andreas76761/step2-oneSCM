@@ -84,11 +84,12 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
    - G-01, G-02, G-03 und G-06 (Hausregeln, Leerzeichen, Fehlerliste/Whitelist, Englisch);
    - S-01 (Lesbarkeitswerte im Check), S-03, S-04 (Wortliste je Sprache, Fix-Sprache), S-08 (Bildunterschriften);
    - W-01 (Anweisung für Varianten).
-2. **Etappe 45 – Übersetzung:**
+2. **Etappe 45 – Pipeline, Backlog, Intern (✅ umgesetzt, ADR-098):** neuer Wunsch des Auftraggebers, vor der Übersetzung eingeschoben.
+3. **Etappe 46 – Übersetzung:**
    - U-02 (weitere Prüfungen), U-04 (Glossar je Sprache), U-08 (Rahmentexte), U-09 (Releaseletter EN);
    - U-03 (Länderreview);
    - danach U-01 (Übersetzungsspeicher).
-3. **Danach je nach Entscheidung:**
+4. **Danach je nach Entscheidung:**
    - G-04 (LanguageTool lokal), U-05 (XLIFF), U-07 (weitere Sprachen);
    - S-02 (Tonalität je Zielgruppe), W-03, W-04, W-09.
 

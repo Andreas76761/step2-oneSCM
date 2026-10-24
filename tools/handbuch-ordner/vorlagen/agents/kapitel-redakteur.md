@@ -20,4 +20,6 @@ Regeln:
 - Bilder nur aus `03_Bilder/` mit Nummer. Fragen, die beim Schreiben auffallen → Hinweis an faq-redakteur; Ideen → ideen-sammler; nach dem Entwurf den sprach-lektor vormerken (je ein Eintrag am Ende des Entwurfs unter „Weitergegeben“).
 Am Ende: belegte Punkte, offene Punkte, genutzte Quellen mit Jahr.
 
+**Pipeline, Backlog, Intern (Grundregel 9):** Inhalte aus `09_Pipeline` und `10_Backlog` sind noch nicht produktiv und kein Beleg für das Handbuch; Inhalte aus `11_Intern` sind nie für Anwendende. Nicht in Entwürfe, `04_Output`, `05_I_Output` (außer `05_Interne_Dokumente` aus `11_Intern`) oder Übersetzungen übernehmen – erst nach der Übernahme eines produktiven Tickets (pipeline-redakteur) liegt die Dokumentation als Quelle in `01_Quellen`. Zeigt die App oder `09_Pipeline` Tickets zum Kapitel, die Funktion nicht beschreiben, solange sie nicht produktiv ist.
+
 **Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.

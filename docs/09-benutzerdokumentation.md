@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.44 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.45 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -37,7 +37,32 @@ Stand: Version 0.44 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 - **Quellenänderungen:** Update-Eingang – geänderte Quellen absatzweise übernehmen.
 - **Textcluster, Widersprüche, Dopplungen:** Ergebnis der Qualitätsanalyse. Widersprüche entscheidet, wer das Recht „Entscheiden“ hat; Dopplungen bekommen ein Zielkapitel.
 
-## 4. Schreiben
+## 4. Pipeline, Backlog, Intern
+
+Kommende Funktionen und interne Themen – getrennt vom Handbuch.
+
+- **Pipeline:** Jira-Tickets in Bearbeitung, noch nicht produktiv, je Kapitel und Unterkapitel der aktuellen Gliederung. Spalten: Ticket, Titel, Erstelldatum, Stream, Produktionsdatum, Status (Jira), Dokumentation.
+  - **Aus Jira-Tickets abgleichen:** liest die unter „Quellen“ eingelesenen Jira-Exporte aus.
+
+    | Ticket | Ergebnis |
+    |---|---|
+    | offen/Backlog | Backlog |
+    | in Bearbeitung, Test, blockiert | Pipeline |
+    | erledigt, Produktionsdatum in der Zukunft | bleibt in der Pipeline |
+    | erledigt, Produktionsdatum erreicht | „produktiv – ins Handbuch übernehmen“ |
+    | abgebrochen | abgebrochen |
+    | Bug | kein Eintrag |
+
+    Die Gliederung kommt aus dem Kapitel, das das Ticket schon nutzt, sonst als **Vorschlag** aus dem Titel – bitte prüfen.
+  - **Bearbeiten:** Gliederung, Stream, Produktionsdatum und die **Dokumentation** (Markdown) vorab schreiben. Ein von Hand geändertes Produktionsdatum überschreibt der nächste Abgleich nicht.
+  - **Ins Handbuch übernehmen:** erst, wenn das Ticket produktiv ist. Die Dokumentation wird als Quelle des Kapitels eingelesen (Evidenz unbestätigt); bestätigen, generieren und freigeben wie gewohnt.
+  - Stream und Produktionsdatum liest der Jira-Import aus den Feldern „Stream“ und „Production Date“/„Produktionsdatum“/„Go-Live Date“. Fehlen sie im Export, tragen Sie sie von Hand ein.
+- **Backlog:** Tickets, deren Bearbeitung noch nicht begonnen hat. Sie wechseln beim nächsten Abgleich in die Pipeline.
+- **Intern:** Reiter Testing, Reporting, Systeme, Migration, Rollout, Other. Einträge erscheinen nie im Handbuch, Export, Release oder in Übersetzungen.
+- Personenbezogene Daten werden wie bei Wissensnotizen abgewiesen oder auf Wunsch pseudonymisiert. Eigene Einträge lassen sich löschen; Jira-Einträge setzen Sie auf „abgebrochen“.
+- **Arbeitsordner:** `abgleich --app …` schreibt die Einträge nach `09_Pipeline/<Kapitel>/<Unterkapitel>/<Ticket>.md`, `10_Backlog/` und `11_Intern/<Thema>/`.
+
+## 5. Schreiben
 
 - **Kapitelsteuerung:** je Kapitel und Unterkapitel eine kurze **Kapitelanweisung** – „Worauf es ankommt“, „Wichtige Themen“ (je Zeile eines, müssen vorkommen) und „Nicht beschreiben“. Sie gilt mit Vorrang: Der Kapitelgenerator lässt Quellen zu „Nicht beschreiben“ weg und meldet wichtige Themen ohne Quelle als Lücke, KI-Vorschläge und Anleitungs-Check beachten sie, die Werkstatt zeigt sie oben. Quellenbindung und Datenschutz gehen ihr vor.
   - **Handbuch-Varianten:** Über „Gliederung“ wählen Sie die Kapitel einer Variante und geben ihnen eine eigene Anweisung; sie gilt zusätzlich zur Anweisung der Quellkapitel.
@@ -57,7 +82,7 @@ Stand: Version 0.44 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
   - **Labels und Kapitel:** je Bild mehrere Labels (Domäne, Rolle, Gliederung, weitere) und Kapitel über „+ hinzufügen“, entfernen mit ×. Die Sprache pflegen Sie unter „Merkmale“.
   - **Bildabdeckung je Kapitel** und **Deckungsmatrix** (je Reiter, Maske, Kapitel oder Gliederungspunkt × Sprache/Rolle/Sparte) zeigen fehlende Bilder.
 
-## 5. Prüfen
+## 6. Prüfen
 
 - **Anleitungs-Check:** Ist das Kapitel leicht zu befolgen? Zwölf Prüfpunkte als **Muss** (10 Punkte) oder **Soll** (5 Punkte) mit Korrektur per Klick. Die Administration legt fest, ob ein Mindestwert und/oder „alle Muss-Punkte erfüllt“ Bedingung für Einreichen und Freigabe sind.
 - **Rückmeldungen:** Rückmeldungen der Leserinnen und Leser aus Leseransicht und Online-Hilfe auswerten.
@@ -70,7 +95,7 @@ Stand: Version 0.44 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 - **Evidenz:** Herkunft jedes Absatzes.
 - **Freigabe:** einreichen, mehrstufig freigeben; das Qualitätsgate zeigt, was noch fehlt.
 
-## 6. Veröffentlichen
+## 7. Veröffentlichen
 
 - **Leseransicht:** Handbuch lesen, suchen, Lesezeichen, „Weiter mit …“, Drucken mit Deckblatt im Firmen-Layout.
 - **Export:** Markdown, HTML, PDF, Word – gefiltert nach Rolle, Sparte, Markt; Quick Guide, One Pager, Lesefassung.
@@ -79,12 +104,12 @@ Stand: Version 0.44 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 - **Release-Abgleich, Releaseletter:** Jira-Tickets gegen den Bestand prüfen; Releaseletter mit Prüfregeln.
 - **Kontexthilfe:** Hilfe-Widget für oneSCM (F1 je Maske).
 
-## 7. Typische Arbeitsabläufe
+## 8. Typische Arbeitsabläufe
 
 1. **Wissen aufbauen:** Einlesen → Chunks mit Labels → Fragen & Antworten → Antwortqualität prüfen → Lücken in die Expertenbefragung → Antworten als Frage & Antwort (Label „Prüfen“) → später durch Quellen belegen.
 2. **Kapitel erstellen:** Kapitelanweisung festlegen (Kapitelsteuerung) → Quellen einlesen → Qualitätsanalyse (Widersprüche, Dopplungen) → Kapitelgenerator oder Kapitel-Assistent → Kapitelwerkstatt → Anleitungs-Check → Freigabe → Export/Veröffentlichung.
 3. **Screenshots pflegen:** Bild ins Archiv (oder Platzhalter) → Datenschutz im Bild prüfen (erkannte Stellen, ggf. eigene Stellen) → Merkmale, Labels und Kapitel → Varianten verknüpfen → Klickstrecke → Deckungsmatrix auf Lücken prüfen → neue Fassung bei neuem Release.
 
-## 8. Datenschutz
+## 9. Datenschutz
 
 Personenbezogene Daten (Namen, E-Mail, FIN, Kennzeichen …) erkennt die Datenschutzprüfung – in Texten und, mit eingerichteter Texterkennung, auch in Bildern; dort werden sie verpixelt, das Original bleibt erhalten. Die Daten gehen nie an externe Dienste. Gesichter und Unterschriften erkennt die App nicht – markieren Sie sie als eigene Stelle. Fragen mit personenbezogenen Daten werden bei externem KI-Dienst nicht gestellt. Befragungen erfassen Fachbereich oder Rolle, keine Personennamen.

@@ -2614,3 +2614,50 @@ test('[T-300] Schreibstil: Hausregeln (Anführungszeichen, Zahlen, Datum) automa
   await expect(read).toContainText('Flesch');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-304] Pipeline, Backlog, Intern: Jira-Tickets je Gliederung mit Erstelldatum, Stream und Produktionsdatum, vorab dokumentieren, interne Themen', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'x-user-id': 'u-admin' };
+  const md = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# 14. E2E-Pipeline Kündigung\n\n## 14.1 Kündigungsgrund erfassen\n\nSie erfassen den Grund.\n';
+  expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name: 'e2e_pipeline.md', mimeType: 'text/markdown', buffer: Buffer.from(md) } } })).status()).toBe(202);
+  const csv = 'Summary,Issue key,Issue Type,Status,Created,Custom field (Stream),Custom field (Production Date)\n'
+    + `Kündigungsgrund erfassen in Pipeline Kündigung,E2EPIPE-1,Story,In Progress,01.10.2026,Stream E2E,15.03.${new Date().getFullYear() + 1}\n`
+    + 'Vorlage für Kündigung,E2EPIPE-2,Story,PI Backlog,02.10.2026,Stream E2E,\n';
+  expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name: 'e2e_pipeline.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) } } })).status()).toBe(202);
+  // warten, bis beide Importe durch sind (Ticketquelle vorhanden)
+  await expect.poll(async () => (await (await request.get('/api/v1/ticket-releases', { headers: h })).json()).tickets?.filter((t: any) => t.key.startsWith('E2EPIPE')).length ?? 0, { timeout: 15000 }).toBe(2);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Pipeline', exact: true }).click();
+  await page.getByRole('button', { name: 'Aus Jira-Tickets abgleichen' }).click();
+  await expect(page.getByText(/Jira-Tickets abgeglichen/)).toBeVisible();
+  const card = page.locator('.card', { hasText: 'E2E-Pipeline Kündigung' });
+  const row = card.locator('tr', { hasText: 'E2EPIPE-1' });
+  await expect(row).toContainText('01.10.2026');
+  await expect(row).toContainText('Stream E2E');
+  await expect(row).toContainText(`15.03.${new Date().getFullYear() + 1}`);
+  await expect(card.getByRole('heading', { name: '14.1 Kündigungsgrund erfassen' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  // vorab dokumentieren
+  await row.getByRole('button', { name: /bearbeiten/ }).click();
+  const dlg = page.getByRole('dialog');
+  await dlg.getByRole('textbox', { name: /Dokumentation \(Markdown\)/ }).fill('1. Öffnen Sie den Vertrag.\n2. Wählen Sie den Kündigungsgrund.');
+  expect(await axe()).toEqual([]);
+  await dlg.getByRole('button', { name: 'Speichern' }).click();
+  await expect(row).toContainText('bereits dokumentiert');
+  // Backlog
+  await page.getByRole('navigation', { name: 'Arbeitsbereiche' }).getByRole('link', { name: /Backlog/ }).click();
+  await expect(page.locator('tr', { hasText: 'E2EPIPE-2' })).toContainText('PI Backlog');
+  // Intern mit Themen
+  await page.getByRole('navigation', { name: 'Arbeitsbereiche' }).getByRole('link', { name: /Intern/ }).click();
+  await page.getByRole('tab', { name: /Migration/ }).click();
+  await page.getByRole('button', { name: 'Neuer Eintrag' }).click();
+  await expect(page.getByRole('dialog').getByRole('combobox', { name: /Thema/ })).toHaveValue('migration');
+  await page.getByRole('dialog').getByRole('textbox', { name: 'Titel' }).fill('E2E Migrationsplan');
+  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.locator('tr', { hasText: 'E2E Migrationsplan' })).toContainText('Migration');
+  expect(await axe()).toEqual([]);
+});

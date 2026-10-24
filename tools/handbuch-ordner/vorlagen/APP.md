@@ -21,6 +21,15 @@ Die App (Installationspaket `onescm-studio-<Version>-windows-x64.zip`, Start mit
 
 Antworten aus der Expertenbefragung tragen in der App das Label „Prüfen“ und haben **keinen Quellenbeleg** – im Entwurf nur als `[offen: Expertenaussage <Fachbereich>, Beleg fehlt]` verwenden, bis eine Quelle vorliegt.
 
+## Pipeline, Backlog, Intern
+
+| Aufgabe | In der App | Ablage hier |
+|---|---|---|
+| Jira-Tickets einordnen | Jira-Export unter „Quellen“ einlesen, dann **Pipeline** → „Aus Jira-Tickets abgleichen“ | `09_Pipeline/<Kapitel>/<Unterkapitel>/<Ticket>.md`, `10_Backlog/<Ticket>.md` (per Abgleich) |
+| kommende Funktion vorab dokumentieren | Pipeline → Eintrag → „Dokumentation“ | Abschnitt „Dokumentation“ der Ticketdatei |
+| Ticket produktiv | „Ins Handbuch übernehmen“ (erst nach Bestätigung durch einen Menschen) | Quelle in `02_Kapitel/<Kapitel>/01_Quellen/` (pipeline-redakteur) |
+| interne Themen | **Intern** → Thema wählen → „Neuer Eintrag“ | `11_Intern/<Thema>/` |
+
 ## Screenshots
 
 - Bildarchiv: jedes Bild mit fester Nummer (B-0001 …) und Merkmalen (Sprache, Rolle, Sparte, Markt, Release, Reiter). Platzhalter reservieren Nummern für fehlende Screenshots.

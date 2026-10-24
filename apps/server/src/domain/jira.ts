@@ -21,6 +21,10 @@ export interface JiraIssue {
   sprint: string;
   created: string;
   updated: string;
+  /** Stream (eigenes Feld „Stream“, ADR-098) */
+  stream: string;
+  /** geplantes Produktionsdatum (eigenes Feld „Production Date“/„Produktionsdatum“/„Go-Live Date“, ADR-098) */
+  productionDate: string;
   links: { type: string; key: string }[];
   /** Beschreibung als Markdown (aus HTML bzw. Jira-Wiki-Syntax umgewandelt) */
   description: string;
@@ -39,9 +43,15 @@ const text = (s: string) => decode(s).replace(/\s+/g, ' ').trim();
 const tagAll = (block: string, tag: string) => [...block.matchAll(new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, 'g'))].map((m) => m[1]);
 const tag = (block: string, t: string) => tagAll(block, t)[0] ?? '';
 const isoDate = (s: string) => {
+  // deutsche Oberfläche: TT.MM.JJJJ (auch mit Uhrzeit)
+  const de = /^(\d{1,2})\.(\d{1,2})\.(\d{4})\b/.exec(s.trim());
+  if (de) return `${de[3]}-${de[2].padStart(2, '0')}-${de[1].padStart(2, '0')}`;
   const d = Date.parse(s);
   return Number.isNaN(d) ? s : new Date(d).toISOString().slice(0, 10);
 };
+// eigene Felder für Stream und Produktionsdatum (englische und deutsche Feldnamen)
+const STREAM_FIELDS = ['stream', 'workstream', 'value stream'];
+const PRODUCTION_FIELDS = ['production date', 'produktionsdatum', 'go-live date', 'go live date', 'go-live', 'produktivsetzung'];
 
 /** Überschriften der Beschreibung unter die Ticketebene schieben (H4 … H6): sie dürfen keine Kapitel erzeugen */
 const demoteHtml = (html: string) => html.replace(/<(\/?)h([1-6])\b/gi, (_, slash, n) => `<${slash}h${Math.min(6, Number(n) + 3)}`);
@@ -99,6 +109,7 @@ export function parseJiraXml(xml: string): JiraIssue[] | null {
       labels: tagAll(tag(item, 'labels'), 'label').map(text),
       epic: [...custom('epic link'), ...custom('epic name')].map(text)[0] ?? '', sprint: custom('sprint').map(text).join(', '),
       created: isoDate(text(tag(item, 'created'))), updated: isoDate(text(tag(item, 'updated'))),
+      stream: STREAM_FIELDS.flatMap(custom).map(text)[0] ?? '', productionDate: PRODUCTION_FIELDS.flatMap(custom).map((v) => isoDate(text(v)))[0] ?? '',
       links,
       description: htmlFragment(decode(tag(item, 'description'))),
       acceptance: acceptance.map((a) => htmlFragment(a)).join('\n\n'),
@@ -108,7 +119,7 @@ export function parseJiraXml(xml: string): JiraIssue[] | null {
 }
 
 // Spaltennamen des CSV-Exports (englische und deutsche Oberfläche)
-const CSV_FIELDS: Record<keyof Omit<JiraIssue, 'links' | 'description' | 'acceptance'> | 'description' | 'acceptance' | 'links', string[]> = {
+const CSV_FIELDS: Record<keyof JiraIssue, string[]> = {
   key: ['issue key', 'schlüssel', 'vorgangsschlüssel', 'key'],
   summary: ['summary', 'zusammenfassung'],
   type: ['issue type', 'vorgangstyp', 'typ'],
@@ -124,6 +135,8 @@ const CSV_FIELDS: Record<keyof Omit<JiraIssue, 'links' | 'description' | 'accept
   sprint: ['sprint'],
   created: ['created', 'erstellt'],
   updated: ['updated', 'aktualisiert'],
+  stream: [...STREAM_FIELDS, ...STREAM_FIELDS.map((f) => `custom field (${f})`), 'benutzerdefiniertes feld (stream)'],
+  productionDate: [...PRODUCTION_FIELDS, ...PRODUCTION_FIELDS.map((f) => `custom field (${f})`), 'benutzerdefiniertes feld (produktionsdatum)'],
   description: ['description', 'beschreibung'],
   acceptance: ['custom field (acceptance criteria)', 'acceptance criteria', 'akzeptanzkriterien'],
   links: [],
@@ -148,6 +161,7 @@ export function parseJiraCsv(csv: string): JiraIssue[] | null {
       key, summary: one('summary'), type: one('type'), status: one('status'), priority: one('priority'), resolution: one('resolution'), project: one('project'),
       components: many('components'), fixVersions: many('fixVersions'), affectsVersions: many('affectsVersions'), labels: many('labels').flatMap((l) => l.split(/\s+/)),
       epic: one('epic'), sprint: many('sprint').join(', '), created: isoDate(one('created')), updated: isoDate(one('updated')),
+      stream: one('stream'), productionDate: one('productionDate') ? isoDate(one('productionDate')) : '',
       links: linkCols.flatMap(([h, i]) => ((r[i] ?? '').trim() ? [{ type: /\((.*)\)/.exec(h)![1], key: r[i].trim() }] : [])),
       description: wikiToMarkdown(one('description')),
       acceptance: wikiToMarkdown(one('acceptance')),
@@ -167,12 +181,14 @@ export function issueToMarkdown(issue: JiraIssue, opts: { names?: string[] } = {
     ['Ticket', issue.key], ['Typ', issue.type], ['Status', issue.status], ['Priorität', issue.priority], ['Lösung', issue.resolution],
     ['Projekt', issue.project], ['Komponente', issue.components.join(', ')], ['Lösungsversion (PI)', issue.fixVersions.join(', ') || 'PI TBD'],
     ['Betrifft Version', issue.affectsVersions.join(', ')], ['Labels', issue.labels.join(', ')], ['Epic', issue.epic], ['Sprint', issue.sprint],
-    ['Erstellt', issue.created], ['Aktualisiert', issue.updated],
+    ['Erstellt', issue.created], ['Aktualisiert', issue.updated], ['Stream', issue.stream ?? ''], ['Produktionsdatum', issue.productionDate ?? ''],
   ];
   const fm = [
     '---', 'evidence_status: unconfirmed', 'source_type: jira', `jira_key: ${yamlStr(issue.key)}`, `jira_type: ${yamlStr(issue.type)}`,
     `jira_status: ${yamlStr(issue.status)}`, `jira_fix_versions: ${JSON.stringify(issue.fixVersions)}`, `jira_components: ${JSON.stringify(issue.components)}`,
     `jira_epic: ${yamlStr(issue.epic)}`, `jira_created: ${yamlStr(issue.created)}`,
+    // nur wenn vorhanden: ältere Exporte ohne diese Felder ergeben dieselbe Quelle wie bisher
+    ...(issue.stream ? [`jira_stream: ${yamlStr(issue.stream)}`] : []), ...(issue.productionDate ? [`jira_production_date: ${yamlStr(issue.productionDate)}`] : []),
     'jira_note: "Ticket- und Teststatus sind kein Nachweis für den Produktivstand."', '---',
   ];
   const md = [...fm, '', '# Jira-Tickets', '', `## ${issue.key} ${summary}`, '', '| Feld | Wert |', '|---|---|',

@@ -68,6 +68,7 @@ const HeadingsPage = lazy(() => import('./pages/Headings').then((m) => ({ defaul
 const IngestPage = lazy(() => import('./pages/Ingest').then((m) => ({ default: m.IngestPage })));
 const ImageArchivePage = lazy(() => import('./pages/ImageArchive').then((m) => ({ default: m.ImageArchivePage })));
 const StructurePage = lazy(() => import('./pages/Structure').then((m) => ({ default: m.StructurePage })));
+const WorkAreaPage = lazy(() => import('./pages/WorkAreas').then((m) => ({ default: m.WorkAreaPage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
@@ -96,6 +97,12 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/cluster', label: 'Textcluster', icon: '🧩' },
     { to: '/widersprueche', label: 'Widersprüche', icon: '⚖️' },
     { to: '/dopplungen', label: 'Dopplungen', icon: '📑' },
+  ] },
+  // Arbeitsbereiche (ADR-098): kommende Funktionen vorab dokumentieren, Backlog, interne Themen – nicht im Handbuch
+  { id: 'bereiche', label: 'Pipeline, Backlog, Intern', items: [
+    { to: '/pipeline', label: 'Pipeline', icon: '🚧' },
+    { to: '/backlog', label: 'Backlog', icon: '🗃' },
+    { to: '/intern', label: 'Intern', icon: '🔒' },
   ] },
   { id: 'schreiben', label: '2 Schreiben', items: [
     { to: '/kapitelsteuerung', label: 'Kapitelsteuerung', icon: '🎛' },
@@ -457,6 +464,9 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/export" element={<ExportPage />} />
             <Route path="/bildarchiv" element={<ImageArchivePage />} />
             <Route path="/kapitelsteuerung" element={<StructurePage />} />
+            <Route path="/pipeline" element={<WorkAreaPage area="pipeline" />} />
+            <Route path="/backlog" element={<WorkAreaPage area="backlog" />} />
+            <Route path="/intern" element={<WorkAreaPage area="intern" />} />
             <Route path="/veroeffentlichung" element={<ReleasesPage />} />
             <Route path="/uebersetzungen" element={<TranslationsPage />} />
             <Route path="/aufgaben" element={<InboxPage onRead={reloadUnread} />} />

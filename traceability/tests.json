@@ -2161,5 +2161,45 @@
       "NFR-105",
       "NFR-106"
     ]
+  },
+  {
+    "id": "T-301",
+    "title": "Einordnung nach Status und Produktionsdatum, Datum, Kapitelvorschlag, Stream und Produktionsdatum aus dem Jira-Export",
+    "file": "apps/server/test/stage45.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-108"
+    ]
+  },
+  {
+    "id": "T-302",
+    "title": "Jira-Tickets → Pipeline je Gliederung (Erstelldatum, Stream, Produktionsdatum), Backlog, Statuswechsel, produktiv → übernehmen",
+    "file": "apps/server/test/stage45.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-108",
+      "NFR-109"
+    ]
+  },
+  {
+    "id": "T-303",
+    "title": "Intern mit sechs Themen, eigene Einträge, Datenschutz, Übernahme ins Handbuch als Quelle des Unterkapitels, Export für den Arbeitsordner",
+    "file": "apps/server/test/stage45.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-108",
+      "NFR-109",
+      "NFR-110"
+    ]
+  },
+  {
+    "id": "T-304",
+    "title": "Pipeline, Backlog, Intern: Jira-Tickets je Gliederung mit Erstelldatum, Stream und Produktionsdatum, vorab dokumentieren, interne Themen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-108",
+      "NFR-109"
+    ]
   }
 ]

@@ -19,4 +19,6 @@ Werkzeug: `00_Dokumentation/Werkzeuge/handbuch_struktur.py` (Python 3.9+, für E
 5. Neue Kapitel in `00_Dokumentation/STATUS.md` bzw. `03_Varianten/<Name>/STATUS.md` aufnehmen, wenn sie fehlen, und den Agenten `steuerung` für die neuen Kapitel vormerken.
 6. Zusammenfassung: angelegt, unverändert, zu entscheiden.
 
+**Pipeline, Backlog, Intern (Grundregel 9):** Inhalte aus `09_Pipeline` und `10_Backlog` sind noch nicht produktiv und kein Beleg für das Handbuch; Inhalte aus `11_Intern` sind nie für Anwendende. Nicht in Entwürfe, `04_Output`, `05_I_Output` (außer `05_Interne_Dokumente` aus `11_Intern`) oder Übersetzungen übernehmen – erst nach der Übernahme eines produktiven Tickets (pipeline-redakteur) liegt die Dokumentation als Quelle in `01_Quellen`. Die Kapitel- und Unterkapitelordner in `09_Pipeline` folgen der Gesamtgliederung; der Abgleich legt sie mit an.
+
 **Kapitelanweisung (Vorrang):** Vor der Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und des Unterkapitels lesen. Sie geht allen anderen Arbeitsanweisungen vor; nur die Grundregeln 1–4 in `CLAUDE.md` gehen ihr vor. „Nicht beschreiben“ heißt weglassen (bei Prüfungen: als Befund melden); fehlt der Beleg zu einem „Wichtigen Thema“: `[offen: Thema – Beleg fehlt]`.
