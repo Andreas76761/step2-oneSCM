@@ -1329,5 +1329,32 @@
     "documentation": [
       "docs/adr/ADR-102-tonalitaet-tickets-releasevergleich.md"
     ]
+  },
+  {
+    "id": "NFR-127",
+    "title": "Plausibilität Text ↔ Quellen je Aussage: belegt, unbelegt, Widerspruch, fehlend mit Wert 0–100 je Kapitelversion",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-103-kapitelbewertung-fehlerliste.md"
+    ]
+  },
+  {
+    "id": "NFR-128",
+    "title": "Kapitelbewertung mit fünf Kriterien (Sprache, Ziel, Tonalität, Quellenabgleich, Fakten), Ampel je Kriterium und Gesamtampel, Übersicht aller Kapitel",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-103-kapitelbewertung-fehlerliste.md"
+    ]
+  },
+  {
+    "id": "NFR-129",
+    "title": "Fehlerliste in der App: Funde der Stilprüfung übernehmen, Status mit Begründung, Abgleich nach Korrektur, Export und Rückimport wie FEHLERLISTE.csv",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-103-kapitelbewertung-fehlerliste.md"
+    ]
   }
 ]

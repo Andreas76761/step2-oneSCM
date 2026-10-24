@@ -2397,5 +2397,45 @@
       "NFR-125",
       "NFR-126"
     ]
+  },
+  {
+    "id": "T-324",
+    "title": "Plausibilität je Aussage, Fakten-Wert, Ampel und Gesamtbewertung (Einheit)",
+    "file": "apps/server/test/stage50.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-127",
+      "NFR-128"
+    ]
+  },
+  {
+    "id": "T-325",
+    "title": "Kapitelbewertung mit fünf Kriterien und Ampel, Plausibilität je Aussage, Übersicht aller Kapitel",
+    "file": "apps/server/test/stage50.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-127",
+      "NFR-128"
+    ]
+  },
+  {
+    "id": "T-326",
+    "title": "Fehlerliste: Funde der Stilprüfung übernehmen, Status mit Begründung, Abgleich nach Korrektur, Export und Rückimport wie FEHLERLISTE.csv",
+    "file": "apps/server/test/stage50.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-129"
+    ]
+  },
+  {
+    "id": "T-327",
+    "title": "Kapitelbewertung mit Ampel und Plausibilität je Aussage, Funde in die Fehlerliste, Status mit Begründung – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-127",
+      "NFR-128",
+      "NFR-129"
+    ]
   }
 ]

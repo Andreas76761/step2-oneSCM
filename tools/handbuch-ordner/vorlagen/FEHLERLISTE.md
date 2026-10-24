@@ -35,3 +35,7 @@
 4. Keine personenbezogenen Daten in der Spalte Fehler – Fundstelle genügt.
 
 Auswertung: Zahl der Fehler je Kategorie und Kapitel im Lektoratsbericht (`03_Fehlerliste/Lektorat_<JJJJ-MM-TT>.md`).
+
+## In der App
+
+Die App führt dieselbe Liste unter **3 Prüfen › Fehlerliste** (gleiche Spalten, Nr nie neu vergeben). In der **Kapitelbewertung** übernimmt „Funde in die Fehlerliste“ die Warnungen der Stilprüfung eines Kapitels; ein Fund, der im Kapitel nicht mehr steht, wird „korrigiert“. `abgleich --app …` schreibt die Liste der App nach `03_Fehlerliste/FEHLERLISTE.csv` – eine von Hand geänderte Datei bleibt, die App-Fassung liegt dann als `FEHLERLISTE.csv.neu` daneben. Umgekehrt liest „FEHLERLISTE.csv einlesen“ in der App Status, Korrekturen und neue Einträge aus dieser Datei (erst Vorschau). Ablehnungen schreiben Sie als `abgelehnt (Begründung)`.

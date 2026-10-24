@@ -782,6 +782,28 @@ def uebersetzung_abgleichen(ziel: Path, adresse: str, projekt: str, token: str |
     bericht.append(f"- Übersetzung ({', '.join(sprachen) or 'keine Zielsprachen'}): {zahl['neu']} Dateien neu, {zahl['aktualisiert']} aktualisiert, {zahl['abweichend']} abweichend (.neu)")
 
 
+def fehlerliste_abgleichen(ziel: Path, adresse: str, projekt: str, token: str | None, benutzer: str | None, bericht: list):
+    """Fehlerliste der App (ADR-103, GET /language-errors/export) nach 07_III_…/03_Fehlerliste/FEHLERLISTE.csv:
+    unverändert aktualisieren, von Hand geändert bleibt (App-Fassung als .neu). Zurück in die App: Seite „Fehlerliste“ › einlesen."""
+    inhalt = app_hole_datei(adresse, projekt, token, benutzer, '/language-errors/export')
+    if inhalt is None:
+        bericht.append('- App liefert keine Fehlerliste (ältere Version oder keine Berechtigung)')
+        return
+    stand_datei = ziel / LEKTORAT / 'app_stand.json'
+    try:
+        stand = json.loads(stand_datei.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        stand = {}
+    dateien_stand = stand.get('dateien', {})
+    zahl = {'neu': 0, 'aktualisiert': 0, 'abweichend': 0}
+    vorlage = {rel: hashlib.sha256(t.encode()).hexdigest() for rel, t in hauptordner()[1].items()}
+    _schreiben_geschuetzt(ziel, dateien_stand, vorlage, zahl, bericht)(f'{LEKTORAT}/03_Fehlerliste/FEHLERLISTE.csv', inhalt)
+    stand_datei.parent.mkdir(parents=True, exist_ok=True)
+    stand_datei.write_text(json.dumps({'dateien': dateien_stand}, ensure_ascii=False, indent=2), encoding='utf-8')
+    eintraege = max(0, len([z for z in inhalt.lstrip('\ufeff').splitlines() if z.strip()]) - 1)
+    bericht.append(f"- Fehlerliste ({eintraege} Einträge): {zahl['neu']} neu, {zahl['aktualisiert']} aktualisiert, {zahl['abweichend']} abweichend (.neu)")
+
+
 def agenten_abgleichen(ziel: Path, daten: dict, neue_unterkapitel: list, bericht: list):
     """Aufgaben, Entscheidungen und Ziel-Abgleich der App (GET /agents/export) als Dateien; neue Unterkapitel der Triage
     (GET /triage/new-subchapters) als Ordner neu_<Titel> im passenden Kapitel unter 02_Kapitel – Vorhandenes bleibt."""
@@ -997,6 +1019,7 @@ def main():
         # Übersetzungsspeicher und Glossar je Zielsprache (App ab 0.48)
         bericht += ['', f'## Übersetzung aus der App → {TRANSLATION}', '']
         uebersetzung_abgleichen(ziel, a.app, a.projekt, a.token, a.benutzer, bericht)
+        fehlerliste_abgleichen(ziel, a.app, a.projekt, a.token, a.benutzer, bericht)
         # Agenten: Aufgaben, Entscheidungen, Ziel-Abgleich, neue Unterkapitel der Triage (App ab 0.47)
         ag = app_hole(a.app, a.projekt, a.token, a.benutzer, '/agents/export')
         bericht += ['', f'## Agenten aus der App → {AGENTEN_DOK}, {GOAL}, 02_Kapitel (neu_…)', '']

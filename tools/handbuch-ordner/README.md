@@ -11,7 +11,7 @@ Aufbau:
 - `04_Output/<Sprache>/<Kapitel>/` – freigegebene Fassung in Deutsch (Hauptsprache) und acht Landessprachen (EN, FR, IT, ES, CS, SK, KO, MS); Varianten unter `<Sprache>/Varianten/<Name>/`
 - `05_I_Output/<Produkt>/` – **I Output**: fertige Produkte mit Screenshots (`01_Handbuch`, `02_Releaseletter`, `03_QuickGuide`, `04_Schulungsmaterial`, `05_Interne_Dokumente`, `06_Videos`, `07_Grafiken`, `08_Prozesse`), je Produkt `PRODUKT.md`, `01_Entwurf`, `02_Screens`, `03_Final/<Sprache>` (Master `01_Deutsch_DE`)
 - `06_II_Stil_und_Design/` – **II**: `STIL_UND_DESIGN.md`, `01_Designvorschlaege`, `02_Tonalitaet/TONALITAET.md`, `03_Vorlagen`, `04_Bildsprache_Screenshots`
-- `07_III_Grammatik_Synonyme_Fehlerliste/` – **III**: `01_Grammatik/GRAMMATIK.md`, `02_Synonyme/SYNONYME.csv` (mit offenen Terminologiefragen), `03_Fehlerliste/FEHLERLISTE.csv` und `FEHLERLISTE.md`
+- `07_III_Grammatik_Synonyme_Fehlerliste/` – **III**: `01_Grammatik/GRAMMATIK.md`, `02_Synonyme/SYNONYME.csv` (mit offenen Terminologiefragen), `03_Fehlerliste/FEHLERLISTE.csv` und `FEHLERLISTE.md` – mit `abgleich --app` die Fehlerliste der App (eigene Änderungen bleiben, App-Fassung als `.neu`)
 - `08_IV_Translation/` – **IV**: `TRANSLATION.md`, je Zielsprache `01_Glossar/GLOSSAR.csv`, `02_Uebersetzungsspeicher/SPEICHER.csv`, `03_Laenderreview/REVIEW.md`
 - `09_Pipeline/<Kapitel>/<Unterkapitel>/` – **Pipeline**: Jira-Tickets in Bearbeitung, noch nicht produktiv, nach der Gesamtgliederung (gleiche Kapitel- und Unterkapitelordner wie `02_Kapitel`), je Ticket `<Ticket>.md` mit Erstelldatum, Stream, Produktionsdatum und Vorab-Dokumentation; `00_Ohne_Zuordnung`, `PIPELINE.md`
 - `10_Backlog/` – **Backlog**: Tickets, deren Bearbeitung noch nicht begonnen hat; `<Ticket>.md`, `BACKLOG.md`

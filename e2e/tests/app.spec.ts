@@ -2890,3 +2890,41 @@ test('[T-323] Tonalität je Rolle in der Stilprüfung, Ticket-Einstufung im Rele
   // aufräumen: „gültig ab“ zurück, damit spätere Exporte vollständig bleiben
   for (const c of [now, later]) await request.patch(`/api/v1/structure/chapters/${c.chapterId}`, { headers: red, data: { validFrom: null } });
 });
+
+test('[T-327] Kapitelbewertung mit Ampel und Plausibilität je Aussage, Funde in die Fehlerliste, Status mit Begründung – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: 'E2E Bewertung Antrag', purpose: 'Mit dieser Anleitung legen sie einen Antrag an , der Antrag wird gespeichert werden.', steps: ['Öffnen Sie **Anträge**', 'Klicken Sie auf **Neu**'], result: 'Der Antrag ist gespeichert.' } })).json();
+  expect(ch.versionId).toBeTruthy();
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Kapitelbewertung' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Kapitelbewertung' })).toBeVisible();
+  await page.getByRole('button', { name: 'E2E Bewertung Antrag' }).click();
+  const criteria = page.getByRole('list', { name: 'Kriterien' });
+  for (const c of ['Sprache', 'Ziel', 'Tonalität', 'Quellenabgleich', 'Fakten']) await expect(criteria).toContainText(c);
+  await expect(page.getByRole('region', { name: 'Aussagen' })).toContainText('unbelegt');
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Funde in die Fehlerliste' }).click();
+  await expect(page.getByText(/Fehlerliste: \d+ neue Funde/)).toBeVisible();
+
+  await nav.getByRole('link', { name: 'Fehlerliste' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Fehlerliste' })).toBeVisible();
+  const row = page.getByRole('row', { name: /E2E Bewertung Antrag/ }).first();
+  await expect(row).toContainText('offen');
+  const nr = (await row.getByRole('rowheader').textContent())!.trim();
+  await row.getByRole('combobox', { name: `Status ${nr}` }).selectOption('rejected');
+  await page.getByRole('textbox', { name: `Begründung ${nr}` }).fill('Bewusst so formuliert');
+  await page.getByRole('button', { name: 'Ablehnen' }).click();
+  await expect(page.getByText(`${nr}: abgelehnt.`)).toBeVisible();
+  await page.getByRole('combobox', { name: 'Status', exact: true }).selectOption('rejected');
+  await expect(page.getByRole('row', { name: new RegExp(nr) })).toContainText('Bewusst so formuliert');
+  expect(await axe()).toEqual([]);
+  const csv = await (await request.get('/api/v1/language-errors/export', { headers: red })).text();
+  expect(csv).toContain(`${nr};`);
+  expect(csv).toContain('abgelehnt (Bewusst so formuliert)');
+});

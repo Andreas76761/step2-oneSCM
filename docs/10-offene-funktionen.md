@@ -29,7 +29,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | G-02 | **Leerzeichen-Regeln:** mehrfache Leerzeichen, Leerzeichen vor Satzzeichen, wiederholte Satzzeichen, fehlendes Satzende | Releaseletter-Prüfer | teilweise (Zeichensetzung) | S | **war bereits vorhanden (Regel „Zeichensetzung“)** |
 | G-03 | **Rechtschreib-Fehlerliste erweitern** (52 DE/EN-Einträge wie „Standart“) und **Fachbegriffe-Whitelist** (82 Begriffe: oneSCM, VIN, BTO …), Import/Export | Releaseletter-Prüfer | teilweise (eigene Liste, keine Whitelist, kein Import) | S | **umgesetzt in Etappe 44 (ADR-097)** |
 | G-04 | **Lokale Grammatikprüfung mit LanguageTool** (selbst betrieben, Deutsch und Englisch): Kongruenz, Kommasetzung, Groß-/Kleinschreibung über Regeln hinaus | DokuPress-Konzept (F-11) | nicht vorhanden | M | **übernehmen**, sofern LanguageTool lokal betrieben werden darf (Java-Dienst oder Docker) |
-| G-05 | **Fehlerliste in der App** – gefundene Sprachfehler mit Fundstelle, Korrektur, Kategorie, Status; Abgleich mit `FEHLERLISTE.csv` des Arbeitsordners | Arbeitsordner (sprach-lektor) | nicht vorhanden (nur als Datei) | M | optional |
+| G-05 | **Fehlerliste in der App** – gefundene Sprachfehler mit Fundstelle, Korrektur, Kategorie, Status; Abgleich mit `FEHLERLISTE.csv` des Arbeitsordners | Arbeitsordner (sprach-lektor) | nicht vorhanden (nur als Datei) | M | **umgesetzt in Etappe 50 (ADR-103)** |
 | G-06 | **Englische Texte prüfen:** a/an, „i“ → „I“, Satzanfang, Tippfehler (für Releaseletter EN und Übersetzungen) | Releaseletter-Prüfer | nicht vorhanden – Schreibstil nur Deutsch | S | **umgesetzt in Etappe 44 (ADR-097)** |
 | G-07 | **KI-Lektorat mit Diff:** Korrekturen gelb markiert, beim Überfahren das Original, Übernahme je Kapitel oder alle | Ticket-Cockpit v3.0 | teilweise (KI-Vorschlag je Absatz mit Vergleich, Stil-Korrektur je Kapitel) | S | optional – Anzeige vereinheitlichen |
 
@@ -43,7 +43,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | S-04 | **„Fix-Sprache“ je Begriff:** Begriff überall immer deutsch oder immer englisch (UI-Begriff), Anweisung an KI und Prüfung | Ticket-Cockpit v2.96 | teilweise (feste Übersetzung je Sprache; kein „immer so lassen“) | S | **umgesetzt in Etappe 44 (ADR-097) – welche Begriffe, entscheidet die Redaktion** |
 | S-05 | **Textvarianten je Kapitel:** Endanwender, Fachtext, Kurzfassung (Management, ~¼ Länge) | Ticket-Cockpit | teilweise (Quick Guide, One Pager, Lesefassung) | M | optional |
 | S-06 | **Regelbasiertes Schreiben (tekom), ASD-STE100, Vale** als zuschaltbare Regelsätze | Checkliste | nicht vorhanden | L | später |
-| S-07 | **Kapitelbewertung mit fünf Kriterien** (Sprache, Ziel, Tonalität, Quellenabgleich, Fakten) und Ampel | Wissenssuche | teilweise (Anleitungs-Check, Schreibstil, Evidenz getrennt) | S | optional – Gesamtampel aus den vorhandenen Werten |
+| S-07 | **Kapitelbewertung mit fünf Kriterien** (Sprache, Ziel, Tonalität, Quellenabgleich, Fakten) und Ampel | Wissenssuche | teilweise (Anleitungs-Check, Schreibstil, Evidenz getrennt) | S | **umgesetzt in Etappe 50 (ADR-103)** |
 | S-08 | **Bildunterschriften-Regeln:** 1–2 Sätze, max. 200 Zeichen, UI-Begriffe wörtlich, keine Füller („Hier sieht man“) | Screenshot-Studio | teilweise (Bildunterschrift Pflicht, keine Stilprüfung) | S | **umgesetzt in Etappe 44 (ADR-097)** |
 
 ## 10.4 Übersetzung – offen
@@ -66,7 +66,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | ID | Funktion | Herkunft | Stand | Aufwand | Empfehlung |
 |---|---|---|---|---|---|
 | W-01 | **Kapitelanweisung für Handbuch-Varianten** (eigene Anweisung je Variantenkapitel bzw. Gliederungsknoten, zusätzlich zur Anweisung des Quellkapitels) | eigener Befund (ADR-096) | offen | S | **umgesetzt in Etappe 44 (ADR-097)** |
-| W-02 | **Plausibilität Text ↔ Quellen je Aussage** (belegt, unbelegt, Widerspruch, fehlend) mit Wert 0–100 | Ticket-Cockpit v2.91 | teilweise (Beleg je Satz, Evidenz) | S | optional – Wert je Kapitel aus der Evidenz |
+| W-02 | **Plausibilität Text ↔ Quellen je Aussage** (belegt, unbelegt, Widerspruch, fehlend) mit Wert 0–100 | Ticket-Cockpit v2.91 | teilweise (Beleg je Satz, Evidenz) | S | **umgesetzt in Etappe 50 (ADR-103)** |
 | W-03 | **Ticket-Einstufung** genehmigt / in Prüfung / intern / Background; intern und Background fließen nicht ins Handbuch, Background nur in die Lückenanalyse | Ticket-Cockpit | teilweise (Bug = intern im Release-Abgleich) | S | **umgesetzt in Etappe 49 (ADR-102)** |
 | W-04 | **Releaseletter-Entwurf aus Projektvergleich** (geänderte Bilder, Kapitel und Funktionen eines Release) | Screenarchiv | teilweise (Releaseletter aus Tickets, Historie seit v0.43) | M | **umgesetzt in Etappe 49 (ADR-102)** |
 | W-05 | **Vorher/Nachher-Belege** mit Schieberegler (Anlass, Änderung, Wirkung) | Screenarchiv | teilweise (Bildfassungen) | S | optional |
@@ -91,7 +91,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
    - U-03 (Länderreview);
    - danach U-01 (Übersetzungsspeicher).
 4. **Etappe 49 – Tonalität, Ticket-Einstufung, Projektvergleich, Zukunfts-Inhalte (✅ umgesetzt, ADR-102):** S-02, W-03, W-04, W-09.
-5. **Danach je nach Entscheidung:** G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen).
+5. **Etappe 50 – Kapitelbewertung, Plausibilität, Fehlerliste (✅ umgesetzt, ADR-103):** S-07, W-02, G-05.
+6. **Danach je nach Entscheidung:** G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen); optional G-07, S-05, W-05 … W-08, W-10, W-12.
 
 ## 10.7 Offene Entscheidungen
 

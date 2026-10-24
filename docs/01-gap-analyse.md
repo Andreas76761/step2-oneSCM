@@ -195,6 +195,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.52 Stand nach Etappe 50 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Plausibilität Text ↔ Quellen je Aussage mit Wert 0–100 (W-02, NFR-127) | ✅ ([ADR-103](adr/ADR-103-kapitelbewertung-fehlerliste.md)) |
+| Kapitelbewertung mit fünf Kriterien und Ampel, Übersicht (S-07, NFR-128) | ✅ |
+| Fehlerliste in der App mit Abgleich FEHLERLISTE.csv (G-05, NFR-129) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
 ## 1.51 Stand nach Etappe 49 (24.10.2026)
 
 | Punkt | Ergebnis |

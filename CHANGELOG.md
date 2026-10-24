@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.50.0 – Etappe 50 (24.10.2026)
+
+### Hinzugefügt
+- **Plausibilität je Aussage (ADR-103, W-02):** Jeder Satz wird gegen die Quellen seines Absatzes eingestuft – belegt, unbelegt (ohne bzw. unbestätigte Quelle, Zahl fehlt in der Quelle, geht über die Quelle hinaus), Widerspruch (Quelle in offenem Widerspruch), fehlend (Lücke). Der Wert 0–100 je Kapitelversion zählt Widersprüche doppelt.
+- **Kapitelbewertung (S-07):**
+  - Fünf Kriterien: Sprache (Stilwert und Lesbarkeit), Ziel (Anleitungs-Check), Tonalität, Quellenabgleich (Plausibilität), Fakten (Zahlen und Kennungen in den Quellen).
+  - Ampel je Kriterium: grün ab 80, gelb ab 60. Die Gesamtampel ist höchstens so gut wie das schwächste Kriterium.
+  - Seite „Kapitelbewertung“ mit Übersicht aller Kapitel.
+- **Fehlerliste in der App (G-05):**
+  - Funde der Stilprüfung übernehmen (dieselbe Fundstelle nur einmal); Einträge von Hand erfassen.
+  - Status offen, korrigiert, abgelehnt (mit Begründung), Regel fehlt; Korrekturen im Kapitel werden erkannt.
+  - Export und Rückimport wie `FEHLERLISTE.csv`; `abgleich --app` schreibt die Liste in den Arbeitsordner.
+- Seiten „Kapitelbewertung“ und „Fehlerliste“ (auch in der Barrierefreiheitsprüfung); Tests T-324 … T-326, E2E T-327 (axe); Anforderungen NFR-127 … NFR-129; Migration 056.
+
 ## 0.49.0 – Etappe 49 (24.10.2026)
 
 ### Hinzugefügt

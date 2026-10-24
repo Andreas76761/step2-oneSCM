@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.49.0
+  version: 0.50.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -2700,6 +2700,127 @@ paths:
         '200': { description: '{ sha256, pngSha, width, height }' }
         '400': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /assessments:
+    get:
+      operationId: listAssessments
+      summary: 'Kapitelbewertung aller Kapitel der Quellen (neueste Version): Gesamtwert und Ampel, fünf Kriterien (ADR-103, S-07)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-128]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ chapterId, title, versionId, versionNo, status, overall: { value, traffic, label }, criteria: [{ code, label, value, traffic }] }], summary: { chapters, green, yellow, red }, criteria }' }
+  /chapter-versions/{versionId}/assessment:
+    get:
+      operationId: getChapterAssessment
+      summary: 'Kapitelbewertung einer Version: Sprache, Ziel, Tonalität, Quellenabgleich, Fakten je 0–100 mit Ampel (grün ab 80, gelb ab 60), Gesamtampel höchstens wie das schwächste Kriterium (ADR-103, S-07)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-128]
+      x-extension: true
+      parameters: [{ name: versionId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ overall, criteria: [{ code, label, hint, value, traffic, trafficLabel, detail }], plausibility }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/plausibility:
+    get:
+      operationId: getChapterPlausibility
+      summary: 'Plausibilität Text ↔ Quellen je Aussage: belegt, unbelegt, Widerspruch, fehlend; Wert 0–100, ein Widerspruch zählt doppelt (ADR-103, W-02)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-127]
+      x-extension: true
+      parameters: [{ name: versionId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ value, traffic, counts, statements: [{ blockId, section, text, class, label, support, reason, sources }], facts: { value, total, found, missing } }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /language-errors:
+    get:
+      operationId: listLanguageErrors
+      summary: 'Fehlerliste (ADR-103, G-05): Einträge mit Nr, Fundstelle, Fehler, Korrektur, Kategorie, Regel, Status'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      parameters:
+        - { name: status, in: query, required: false, schema: { type: string, enum: [open, fixed, rejected, rule_missing] } }
+        - { name: chapterId, in: query, required: false, schema: { type: string } }
+        - { name: category, in: query, required: false, schema: { type: string } }
+        - { name: q, in: query, required: false, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items, summary, categories, statusLabels }' }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createLanguageError
+      summary: 'Eintrag der Fehlerliste von Hand erfassen (Berechtigung edit)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [location, error, category], properties: { location: { type: string }, error: { type: string }, correction: { type: string }, category: { type: string }, rule: { type: string }, chapterId: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Eintrag }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /language-errors/{id}:
+    patch:
+      operationId: updateLanguageError
+      summary: 'Status, Korrektur, Kategorie eines Eintrags ändern; „abgelehnt“ braucht eine Begründung (Berechtigung edit)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { status: { type: string, enum: [open, fixed, rejected, rule_missing] }, reason: { type: string }, correction: { type: string }, category: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Eintrag }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /language-errors/collect:
+    post:
+      operationId: collectLanguageErrors
+      summary: 'Warnungen der Stilprüfung einer Kapitelversion in die Fehlerliste übernehmen (gleiche Fundstelle nur einmal); erledigte offene Funde gelten als korrigiert (Berechtigung edit)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [versionId], properties: { versionId: { type: string }, includeInfo: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ added, known, fixed, items, summary }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /language-errors/export:
+    get:
+      operationId: exportLanguageErrors
+      summary: 'Fehlerliste als FEHLERLISTE.csv (UTF-8 mit BOM, Semikolon) für den Arbeitsordner'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'text/csv' }
+  /language-errors/import:
+    post:
+      operationId: importLanguageErrors
+      summary: 'FEHLERLISTE.csv einlesen: Vorschau, mit apply übernehmen; bekannte Nr. aktualisieren, neue anlegen (Berechtigung edit)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [csv], properties: { csv: { type: string }, apply: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ applied, changes: [{ nr, action, status, problems }], invalid }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
   /style/tone:
     get:
       operationId: getStyleTone

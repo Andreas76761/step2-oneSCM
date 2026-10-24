@@ -46,6 +46,8 @@ const GlossaryPage = lazy(() => import('./pages/MasterData').then((m) => ({ defa
 const ImageIndexPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.ImageIndexPage })));
 const PlanningPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.PlanningPage })));
 const GuidancePage = lazy(() => import('./pages/Guidance').then((m) => ({ default: m.GuidancePage })));
+const AssessmentPage = lazy(() => import('./pages/Assessment').then((m) => ({ default: m.AssessmentPage })));
+const LanguageErrorsPage = lazy(() => import('./pages/Assessment').then((m) => ({ default: m.LanguageErrorsPage })));
 const ChapterAssistantPage = lazy(() => import('./pages/ChapterAssistant').then((m) => ({ default: m.ChapterAssistantPage })));
 const PrintPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.PrintPage })));
 const ReaderBookmarksPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderBookmarksPage })));
@@ -128,8 +130,10 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   ] },
   { id: 'pruefen', label: '3 Prüfen', items: [
     { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: '🔍' },
+    { to: '/kapitelbewertung', label: 'Kapitelbewertung', icon: '🚦' },
     { to: '/rueckmeldungen', label: 'Rückmeldungen', icon: '💬' },
     { to: '/schreibstil', label: 'Schreibstil', icon: '🖋️' },
+    { to: '/fehlerliste', label: 'Fehlerliste', icon: '📝' },
     { to: '/terminologie', label: 'Terminologie', icon: '📖' },
     { to: '/evidenz', label: 'Evidenz', icon: '🔎' },
     { to: '/freigabe', label: 'Freigabe', icon: '✅' },
@@ -437,6 +441,9 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/anleitungs-check" element={<GuidancePage />} />
             <Route path="/anleitungs-check/:versionId" element={<GuidancePage />} />
+            <Route path="/kapitelbewertung" element={<AssessmentPage />} />
+            <Route path="/kapitelbewertung/:versionId" element={<AssessmentPage />} />
+            <Route path="/fehlerliste" element={<LanguageErrorsPage />} />
             <Route path="/kapitel-assistent" element={<ChapterAssistantPage />} />
             <Route path="/lesen" element={<ReaderPage />} />
             <Route path="/lesen/druck" element={<PrintPage />} />

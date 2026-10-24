@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.49 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.50 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -97,6 +97,8 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 
 - **Anleitungs-Check:** Ist das Kapitel leicht zu befolgen? Zwölf Prüfpunkte als **Muss** (10 Punkte) oder **Soll** (5 Punkte) mit Korrektur per Klick. Die Administration legt fest, ob ein Mindestwert und/oder „alle Muss-Punkte erfüllt“ Bedingung für Einreichen und Freigabe sind.
 - **Rückmeldungen:** Rückmeldungen der Leserinnen und Leser aus Leseransicht und Online-Hilfe auswerten.
+- **Kapitelbewertung:** je Kapitel fünf Kriterien mit Ampel (grün ab 80, gelb ab 60) – Sprache, Ziel (Anleitungs-Check), Tonalität, Quellenabgleich, Fakten – und eine Gesamtampel. Im Detail steht jede Aussage mit Einstufung: belegt, unbelegt, Widerspruch oder fehlend. „Funde in die Fehlerliste“ übernimmt die Warnungen der Stilprüfung.
+- **Fehlerliste:** Nr, Fundstelle, Fehler, Korrektur, Kategorie, Regel und Status (offen, korrigiert, abgelehnt mit Begründung, Regel fehlt). Steht ein Fund nicht mehr im Kapitel, wird er beim nächsten Übernehmen „korrigiert“. „FEHLERLISTE.csv“ lädt die Liste herunter; „FEHLERLISTE.csv einlesen“ übernimmt Änderungen aus dem Arbeitsordner nach einer Vorschau.
 - **Schreibstil, Terminologie:** Stilregeln mit gelber Markierung und Umformulierung; Fachbegriffe und Synonyme mit fester Übersetzung.
   - **Hausregeln:** „…“ statt "…", Gedankenstrich, Menüpfad mit ›, Zahlen bis zwölf ausschreiben, Tausenderpunkt, Leerzeichen vor Einheit und %, Datum TT.MM.JJJJ, „oneSCM“ – „Automatisch korrigieren“ übernimmt alle eindeutigen Korrekturen.
   - **Sprache des Textes** im Textfeld wählen: Englisch prüft zusätzlich a/an, „I“ und Rechtschreibung. Übersetzungen zeigen je Absatz die Sprachprüfung.
