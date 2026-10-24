@@ -2607,9 +2607,14 @@ test('[T-300] Schreibstil: Hausregeln (Anführungszeichen, Zahlen, Datum) automa
   await page.reload();
   await page.getByRole('tab', { name: 'Kapitel' }).click();
   const select = page.getByRole('combobox', { name: 'Kapitel', exact: true });
-  const value = await select.evaluate((el) => [...(el as HTMLSelectElement).options].find((o) => o.value)?.value ?? '');
-  await select.selectOption(value);
+  // erstes Kapitel, dessen Fassung Sätze enthält (Fassungen nur aus Lücken haben keine Lesbarkeit)
+  const values = await select.evaluate((el) => [...(el as HTMLSelectElement).options].map((o) => o.value).filter(Boolean));
   const read = page.getByRole('region', { name: 'Lesbarkeit' });
+  for (const value of values) {
+    await select.selectOption(value);
+    await expect(page.getByRole('status').getByRole('link', { name: 'in der Werkstatt öffnen' })).toHaveAttribute('href', `/werkstatt/${value}`);
+    if (await read.count()) break;
+  }
   await expect(read).toContainText('Lesbarkeit für Fachanwender und Administration');
   await expect(read).toContainText('Flesch');
   expect(await axe()).toEqual([]);
