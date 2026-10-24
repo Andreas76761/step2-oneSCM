@@ -422,10 +422,11 @@ export async function metadataOverview(ctx: Ctx) {
     const cur = formats.get(f) ?? { documents: 0, chunks: 0 };
     formats.set(f, { documents: cur.documents + 1, chunks: cur.chunks + Number(d.chunks) });
   }
+  // je aktuellem Chunk ein Blick in den Primärschlüssel der Labels – seit TRIAGE trägt jeder Chunk rund zwölf Labels,
+  // ein Join über alle Zuordnungen mit COUNT(DISTINCT) wurde bei 12 000 Chunks zur halben Sekunde (Lasttest Etappe 49)
   const labeled = await ctx.db.get<{ n: number }>(
-    `SELECT COUNT(DISTINCT x.snippet_id) AS n FROM metadata_chunk_labels x JOIN text_snippets s ON s.id = x.snippet_id
-     JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
-     WHERE x.project_id = ? AND r.is_current = 1 AND d.removed_at IS NULL`, ctx.projectId,
+    `SELECT COUNT(*) AS n FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
+     WHERE d.project_id = ? AND r.is_current = 1 AND d.removed_at IS NULL AND EXISTS (SELECT 1 FROM metadata_chunk_labels x WHERE x.snippet_id = s.id)`, ctx.projectId,
   );
   const labels = await ctx.db.all<{ label_group: string; n: number }>(
     'SELECT label_group, COUNT(*) AS n FROM metadata_labels WHERE project_id = ? AND archived_at IS NULL GROUP BY label_group', ctx.projectId,

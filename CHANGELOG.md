@@ -22,6 +22,11 @@
 - Der KI-Vorschlag je Absatz nutzt den Prompt `rewrite-1.1` (mit Ton).
 - `GET /style/rules` liefert zusätzlich `tone`.
 
+### Behoben
+- **TRIAGE sperrt den Server nicht mehr:** Sie arbeitet in Teilschritten zu 250 Chunks mit je eigener Transaktion. Vorher lief sie in einer einzigen Transaktion über alle Chunks, und andere Anfragen warteten (12 000 Chunks ≈ 7 s).
+- **Übersicht oneSCM_Metadaten** zählt gelabelte Chunks mit `EXISTS` statt per Join über alle Zuordnungen: 31 statt 504 ms bei 12 000 Chunks. Ein abgebrochener TRIAGE-Lauf steht auf „failed“.
+- Lasttest wiederholt (`docs/lasttest-metadaten.md`), Skript misst die Funktionen der Etappen 48 und 49 und wartet auf die TRIAGE.
+
 ## 0.48.0 – Etappe 48 (24.10.2026)
 
 ### Hinzugefügt

@@ -34,8 +34,15 @@ const zip = await z.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' }
 out.daten = { dokumente: DOCS, abschnitte: DOCS * 8, zipKB: Math.round(zip.length / 1024) };
 
 const waitImport = async (id) => { for (;;) { const s = await call('GET', `/imports/${id}`); if (!['queued', 'processing'].includes(s.status)) return s; await new Promise((r) => setTimeout(r, 250)); } };
+// TRIAGE läuft nach jedem Import mit neuen Chunks als eigener Job (ADR-100): abwarten, damit spätere Messungen nicht mitlaufen
+const triageRuns = async () => (await call('GET', '/triage/runs', null, 'u-leser')).items ?? [];
+const waitTriage = async (before) => { for (let i = 0; i < 1200; i++) { const r = await triageRuns(); if (r.length > before && !r.some((x) => x.status === 'running')) return r[0]; await new Promise((res) => setTimeout(res, 250)); } return null; };
+let runsBefore = (await triageRuns()).length;
 let [ms, imp] = await t(async () => waitImport((await upload('/imports', 'last.zip', zip)).id));
 out.import = { ms: Math.round(ms), status: imp.status, stats: imp.stats, dokumenteJeSekunde: Math.round(DOCS / (ms / 1000)) };
+let tr;
+[ms, tr] = await t(() => waitTriage(runsBefore));
+out.triageNachImport = { ms: Math.round(ms), chunks: tr?.stats?.chunks, labels: tr?.stats?.labels };
 [ms, imp] = await t(async () => waitImport((await upload('/imports', 'last.zip', zip)).id));
 out.importUnveraendert = { ms: Math.round(ms), identical: imp.stats?.identical };
 
@@ -76,6 +83,29 @@ for (const format of ['md', 'html', 'pdf', 'docx']) {
     out['export_' + format] = { ms: Math.round(m1), kapitel: okIds.length - (r.skipped?.length ?? 0) };
   } catch (e) { out['export_' + format] = { fehler: String(e.message).slice(0, 160) }; }
 }
+// Etappe 49: Stilprüfung mit Ton, Kapitel-Stilprüfung, Ticket-Einstufung, Projektvergleich, Export mit Stand
+const longText = Array.from({ length: 40 }, (_, i) => `Sie müssen den Vertrag ${i} einfach im Menü **Verträge** öffnen und den Eintrag speichern, das gibt's auch als Vorlage.`).join(' ');
+out.stilpruefungTon = await lat(20, (i) => call('POST', '/style/check', { text: longText, roles: i % 2 ? ['dealer'] : undefined, product: 'manual' }, 'u-leser'));
+const fresh = await call('GET', '/chapters', null, 'u-leser');
+const approvedVersions = (Array.isArray(fresh) ? fresh : []).filter((c) => okIds.includes(c.id)).map((c) => c.versions.find((v) => v.status === 'approved')?.id).filter(Boolean);
+out.kapitelStilpruefung = approvedVersions.length ? await lat(Math.min(10, approvedVersions.length), (i) => call('GET', `/style/chapter-versions/${approvedVersions[i]}`, null, 'u-leser')) : { fehler: 'keine freigegebenen Versionen' };
+const jiraHead = 'Summary,Issue key,Issue Type,Status,Fix Version/s,Created,Description';
+const jiraRows = Array.from({ length: 500 }, (_, i) => `"${topics[i % topics.length]} ${verbs[i % verbs.length]} ${i}",PERF-${i + 1},${i % 5 === 0 ? 'Bug' : 'Story'},Fertig,P${(i % 4) + 1},2026-02-05T10:00:00.000+0100,"Beschreibung ${i}."`);
+runsBefore = (await triageRuns()).length;
+[ms] = await t(async () => waitImport((await upload('/imports', 'tickets.csv', Buffer.from([jiraHead, ...jiraRows].join('\n')))).id));
+out.import500Tickets = { ms: Math.round(ms) };
+[ms] = await t(() => waitTriage(runsBefore));
+out.triageNachTicketImport = { ms: Math.round(ms) };
+out.releaseAbgleich = await lat(5, () => call('GET', '/ticket-releases', null, 'u-leser'));
+[ms] = await t(() => call('PUT', '/ticket-classifications', { keys: Array.from({ length: 100 }, (_, i) => `PERF-${i + 1}`), classification: 'background' }, 'u-fachpruefung'));
+out.einstufung100Tickets = { ms: Math.round(ms) };
+const r1 = await call('POST', '/releases', { version: 'P1' }, 'u-freigabe');
+const r2 = await call('POST', '/releases', { version: 'P2' }, 'u-freigabe');
+out.projektvergleich = await lat(5, () => call('GET', `/releases/${r2.id}/comparison?from=${r1.id}`, null, 'u-leser'));
+[ms] = await t(() => call('POST', '/release-letters/from-comparison', { releaseId: r2.id }, 'u-redaktion'));
+out.letterAusVergleich = { ms: Math.round(ms) };
+[ms] = await t(() => call('POST', '/exports', { chapterIds: okIds, format: 'md', asOf: 'P1' }, 'u-leser'));
+out.exportMitStand = { ms: Math.round(ms) };
 // parallele Nutzer: 20 gleichzeitig, je 25 Anfragen (Lesen)
 const paths = ['/metadata/overview', '/metadata/chunks?limit=20', '/search?q=Vertrag', '/image-archive/coverage', '/metadata/qa'];
 const all = [];

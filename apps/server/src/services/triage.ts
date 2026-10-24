@@ -131,6 +131,9 @@ const firstPick = (p: Pick) => p.codes[0];
  * Lauf über alle Chunks („all“), nur Chunks ohne vollständige Pflichtlabels („missing“) oder die Chunks eines Imports.
  * Ergebnis je Chunk in triage_results; Labels gesetzt, Verschiebungen und neue Unterkapitel als Vorschlag.
  */
+/** Chunks je Transaktion der Triage */
+const TRIAGE_BATCH = 250;
+
 export async function runTriage(ctx: Ctx, input: { scope?: unknown; importId?: string }, actor: string) {
   const scope = input.importId ? `import:${input.importId}` : String(input.scope ?? 'missing');
   if (!input.importId && !['all', 'missing'].includes(scope)) throw badRequest('scope muss all oder missing sein.');
@@ -167,110 +170,122 @@ export async function runTriage(ctx: Ctx, input: { scope?: unknown; importId?: s
   const at = now();
   const before = labels.byCode.size;
 
-  await ctx.db.tx(async () => {
-    // ältere offene Vorschläge derselben Chunks gelten nicht mehr
-    for (let i = 0; i < chunks.length; i += 500) {
-      const part = chunks.slice(i, i + 500).map((c) => c.id);
-      await ctx.db.run(`UPDATE triage_results SET status = 'superseded' WHERE project_id = ? AND status = 'proposed' AND snippet_id IN (${part.map(() => '?').join(',')})`, ctx.projectId, ...part);
-    }
-    for (const [i, c] of chunks.entries()) {
-      if (c.format === 'jira' && c.originalKey && !jiraStatus.has(c.originalKey)) {
-        try {
-          jiraStatus.set(c.originalKey, String(JSON.parse((await ctx.store.get(c.originalKey)).toString('utf8'))?.status ?? '') || null);
-        } catch {
-          jiraStatus.set(c.originalKey, null);
-        }
-      }
-      const t: TriageInput = {
-        text: c.text, kind: c.kind, headingPath: c.headingPath, path: c.path, sourceFormat: c.format, evidenceStatus: c.evidence, marketCode: c.market, releaseCode: c.release,
-        roles: roles.get(c.id) ?? [], divisions: divisions.get(c.id) ?? [], jiraStatus: c.originalKey ? jiraStatus.get(c.originalKey) ?? null : null,
-      };
-      // Zuordnung
-      let placement: 'kept' | 'move' | 'new_subchapter' | 'unassigned' = 'kept';
-      let target: { chapterId: string | null; subchapterId: string | null; newTitle: string | null; confidence: number; reason: string } = {
-        chapterId: c.chapterId, subchapterId: c.subchapterId, newTitle: null, confidence: 1, reason: 'Quelle gehört schon zu einem Kapitel der Gliederung',
-      };
-      const tokens = new Set([...index.docs[i].body, ...index.docs[i].head]);
-      const headTokens = new Set(index.docs[i].head);
-      const memo = remembered.get(c.normHash);
-      if (memo && (memo.chapterId !== c.chapterId || memo.subchapterId !== c.subchapterId)) {
-        placement = 'move';
-        target = { ...memo, newTitle: null, confidence: 0.95, reason: 'wie bei gleichem Text zuvor übernommen' };
-        stats.remembered++;
-      } else if (!outlineIds.has(c.chapterId) && c.format !== 'jira') {
-        let best: { chapterId: string; subchapterId: string | null; score: number; title: string; head: number } | null = null;
-        let bestChapter: { chapterId: string; score: number; title: string } | null = null;
-        for (const ch of outlineQ) {
-          const cs = coverage(ch.q, tokens);
-          if (!bestChapter || cs > bestChapter.score) bestChapter = { chapterId: ch.id, score: cs, title: ch.title };
-          for (const s of ch.subs) {
-            const score = 0.7 * coverage(s.q, tokens) + 0.3 * cs;
-            if (!best || score > best.score) best = { chapterId: ch.id, subchapterId: s.id, score, title: `${ch.title} › ${s.title}`, head: coverage(s.q, headTokens) };
+  // In Teilschritten mit je eigener Transaktion (Lasttest Etappe 49): eine Transaktion über alle Chunks hielt die Datenbank
+  // für alle anderen Anfragen gesperrt (12 000 Chunks ≈ 7 s). Zwischen den Teilschritten kommen andere Anfragen an die Reihe.
+  try {
+    for (let from = 0; from < chunks.length; from += TRIAGE_BATCH) {
+      if (from) await new Promise((r) => setImmediate(r));
+      const to = Math.min(chunks.length, from + TRIAGE_BATCH);
+      await ctx.db.tx(async () => {
+        // ältere offene Vorschläge derselben Chunks gelten nicht mehr
+        const part = chunks.slice(from, to).map((c) => c.id);
+        await ctx.db.run(`UPDATE triage_results SET status = 'superseded' WHERE project_id = ? AND status = 'proposed' AND snippet_id IN (${part.map(() => '?').join(',')})`, ctx.projectId, ...part);
+        for (let i = from; i < to; i++) {
+          const c = chunks[i];
+          if (c.format === 'jira' && c.originalKey && !jiraStatus.has(c.originalKey)) {
+            try {
+              jiraStatus.set(c.originalKey, String(JSON.parse((await ctx.store.get(c.originalKey)).toString('utf8'))?.status ?? '') || null);
+            } catch {
+              jiraStatus.set(c.originalKey, null);
+            }
           }
-        }
-        const heading = c.headingPath[c.headingPath.length - 1];
-        // eigenes Thema: die Überschrift des Chunks nennt das Unterkapitel nicht, das Kapitel passt → neues Unterkapitel
-        const ownTopic = !!heading && (best?.head ?? 0) < 0.5 && (bestChapter?.score ?? 0) >= PLACE_MIN && headingKey(heading) !== headingKey(c.chapterTitle);
-        if (best && best.score >= PLACE_MIN && !ownTopic) {
-          placement = 'move';
-          target = { chapterId: best.chapterId, subchapterId: best.subchapterId, newTitle: null, confidence: Math.min(1, best.score), reason: `passt zu „${best.title}“` };
-        } else if (bestChapter && bestChapter.score >= PLACE_MIN && heading && headingKey(heading) !== headingKey(c.chapterTitle)) {
-          placement = 'new_subchapter';
-          target = { chapterId: bestChapter.chapterId, subchapterId: null, newTitle: stripNumber(heading) || heading, confidence: Math.min(1, bestChapter.score) * 0.9, reason: `Kapitel „${bestChapter.title}“ passt, kein Unterkapitel – neues Unterkapitel „${stripNumber(heading) || heading}“` };
-        } else if (bestChapter && bestChapter.score >= PLACE_MIN) {
-          placement = 'move';
-          target = { chapterId: bestChapter.chapterId, subchapterId: null, newTitle: null, confidence: Math.min(1, bestChapter.score) * 0.9, reason: `passt zu Kapitel „${bestChapter.title}“` };
-        } else {
-          placement = 'unassigned';
-          target = { chapterId: null, subchapterId: null, newTitle: null, confidence: Math.max(best?.score ?? 0, bestChapter?.score ?? 0), reason: 'kein Kapitel der Gliederung passt sicher' };
-        }
-      }
-      // Labels je Pflichtgruppe
-      const targetChapterTitle = target.chapterId ? (outline.find((o) => o.id === target.chapterId)?.title ?? c.chapterTitle) : c.chapterTitle;
-      const picks: Partial<Record<RequiredGroup, Pick>> = {
-        version: detectVersion(t), status: detectStatus(t), domain: detectDomain(t, domains, chapterDomain(targetChapterTitle)), role: detectRoles(t),
-        language: detectLanguage(t.text), division: detectDivision(t), market: detectMarkets(t), detail: detectDetail(t),
-      };
-      const uncertain = Object.entries(picks).filter(([, p]) => p!.confidence < REVIEW_BELOW).map(([g]) => g as RequiredGroup);
-      const review = uncertain.length > 0 || placement === 'unassigned' || placement === 'new_subchapter';
-      picks.review = { codes: [review ? 'yes' : 'no'], confidence: 1, reason: review ? `unsicher: ${[...uncertain.map((g) => GROUP_LABEL[g]), ...(placement === 'unassigned' ? ['Kapitel'] : placement === 'new_subchapter' ? ['neues Unterkapitel'] : [])].join(', ')}` : 'alle Gruppen sicher' };
-      const have = assigned.get(c.id) ?? [];
-      const applied: { group: string; code: string; confidence: number; reason: string; kept?: boolean }[] = [];
-      for (const g of REQUIRED_GROUPS) {
-        const p = picks[g]!;
-        if (have.some((a) => a.group === g && a.origin !== 'triage')) {
-          applied.push({ group: g, code: '(manuell)', confidence: 1, reason: 'manuell gesetzt – bleibt', kept: true });
-          stats.keptManual++;
-          continue;
-        }
-        const ids: string[] = [];
-        for (const code of p.codes) {
-          const names = g === 'language' ? LANGUAGE_NAMES[code] ?? [code.toUpperCase(), code.toUpperCase()]
-            : g === 'market' ? [code === 'all' ? 'alle Märkte' : code.toUpperCase(), code === 'all' ? 'All markets' : code.toUpperCase()]
-              : g === 'version' ? [p.names?.[code] ?? code, p.names?.[code] ?? code] : [code, code];
-          const l = await labels.ensure(g, code, names[0], names[1]);
-          if (l) ids.push(l.id);
-        }
-        const old = have.filter((a) => a.group === g && a.origin === 'triage').map((a) => a.labelId);
-        if (old.length) await ctx.db.run(`DELETE FROM metadata_chunk_labels WHERE snippet_id = ? AND label_id IN (${old.map(() => '?').join(',')})`, c.id, ...old);
-        for (const id of ids) {
+          const t: TriageInput = {
+            text: c.text, kind: c.kind, headingPath: c.headingPath, path: c.path, sourceFormat: c.format, evidenceStatus: c.evidence, marketCode: c.market, releaseCode: c.release,
+            roles: roles.get(c.id) ?? [], divisions: divisions.get(c.id) ?? [], jiraStatus: c.originalKey ? jiraStatus.get(c.originalKey) ?? null : null,
+          };
+          // Zuordnung
+          let placement: 'kept' | 'move' | 'new_subchapter' | 'unassigned' = 'kept';
+          let target: { chapterId: string | null; subchapterId: string | null; newTitle: string | null; confidence: number; reason: string } = {
+            chapterId: c.chapterId, subchapterId: c.subchapterId, newTitle: null, confidence: 1, reason: 'Quelle gehört schon zu einem Kapitel der Gliederung',
+          };
+          const tokens = new Set([...index.docs[i].body, ...index.docs[i].head]);
+          const headTokens = new Set(index.docs[i].head);
+          const memo = remembered.get(c.normHash);
+          if (memo && (memo.chapterId !== c.chapterId || memo.subchapterId !== c.subchapterId)) {
+            placement = 'move';
+            target = { ...memo, newTitle: null, confidence: 0.95, reason: 'wie bei gleichem Text zuvor übernommen' };
+            stats.remembered++;
+          } else if (!outlineIds.has(c.chapterId) && c.format !== 'jira') {
+            let best: { chapterId: string; subchapterId: string | null; score: number; title: string; head: number } | null = null;
+            let bestChapter: { chapterId: string; score: number; title: string } | null = null;
+            for (const ch of outlineQ) {
+              const cs = coverage(ch.q, tokens);
+              if (!bestChapter || cs > bestChapter.score) bestChapter = { chapterId: ch.id, score: cs, title: ch.title };
+              for (const s of ch.subs) {
+                const score = 0.7 * coverage(s.q, tokens) + 0.3 * cs;
+                if (!best || score > best.score) best = { chapterId: ch.id, subchapterId: s.id, score, title: `${ch.title} › ${s.title}`, head: coverage(s.q, headTokens) };
+              }
+            }
+            const heading = c.headingPath[c.headingPath.length - 1];
+            // eigenes Thema: die Überschrift des Chunks nennt das Unterkapitel nicht, das Kapitel passt → neues Unterkapitel
+            const ownTopic = !!heading && (best?.head ?? 0) < 0.5 && (bestChapter?.score ?? 0) >= PLACE_MIN && headingKey(heading) !== headingKey(c.chapterTitle);
+            if (best && best.score >= PLACE_MIN && !ownTopic) {
+              placement = 'move';
+              target = { chapterId: best.chapterId, subchapterId: best.subchapterId, newTitle: null, confidence: Math.min(1, best.score), reason: `passt zu „${best.title}“` };
+            } else if (bestChapter && bestChapter.score >= PLACE_MIN && heading && headingKey(heading) !== headingKey(c.chapterTitle)) {
+              placement = 'new_subchapter';
+              target = { chapterId: bestChapter.chapterId, subchapterId: null, newTitle: stripNumber(heading) || heading, confidence: Math.min(1, bestChapter.score) * 0.9, reason: `Kapitel „${bestChapter.title}“ passt, kein Unterkapitel – neues Unterkapitel „${stripNumber(heading) || heading}“` };
+            } else if (bestChapter && bestChapter.score >= PLACE_MIN) {
+              placement = 'move';
+              target = { chapterId: bestChapter.chapterId, subchapterId: null, newTitle: null, confidence: Math.min(1, bestChapter.score) * 0.9, reason: `passt zu Kapitel „${bestChapter.title}“` };
+            } else {
+              placement = 'unassigned';
+              target = { chapterId: null, subchapterId: null, newTitle: null, confidence: Math.max(best?.score ?? 0, bestChapter?.score ?? 0), reason: 'kein Kapitel der Gliederung passt sicher' };
+            }
+          }
+          // Labels je Pflichtgruppe
+          const targetChapterTitle = target.chapterId ? (outline.find((o) => o.id === target.chapterId)?.title ?? c.chapterTitle) : c.chapterTitle;
+          const picks: Partial<Record<RequiredGroup, Pick>> = {
+            version: detectVersion(t), status: detectStatus(t), domain: detectDomain(t, domains, chapterDomain(targetChapterTitle)), role: detectRoles(t),
+            language: detectLanguage(t.text), division: detectDivision(t), market: detectMarkets(t), detail: detectDetail(t),
+          };
+          const uncertain = Object.entries(picks).filter(([, p]) => p!.confidence < REVIEW_BELOW).map(([g]) => g as RequiredGroup);
+          const review = uncertain.length > 0 || placement === 'unassigned' || placement === 'new_subchapter';
+          picks.review = { codes: [review ? 'yes' : 'no'], confidence: 1, reason: review ? `unsicher: ${[...uncertain.map((g) => GROUP_LABEL[g]), ...(placement === 'unassigned' ? ['Kapitel'] : placement === 'new_subchapter' ? ['neues Unterkapitel'] : [])].join(', ')}` : 'alle Gruppen sicher' };
+          const have = assigned.get(c.id) ?? [];
+          const applied: { group: string; code: string; confidence: number; reason: string; kept?: boolean }[] = [];
+          for (const g of REQUIRED_GROUPS) {
+            const p = picks[g]!;
+            if (have.some((a) => a.group === g && a.origin !== 'triage')) {
+              applied.push({ group: g, code: '(manuell)', confidence: 1, reason: 'manuell gesetzt – bleibt', kept: true });
+              stats.keptManual++;
+              continue;
+            }
+            const ids: string[] = [];
+            for (const code of p.codes) {
+              const names = g === 'language' ? LANGUAGE_NAMES[code] ?? [code.toUpperCase(), code.toUpperCase()]
+                : g === 'market' ? [code === 'all' ? 'alle Märkte' : code.toUpperCase(), code === 'all' ? 'All markets' : code.toUpperCase()]
+                  : g === 'version' ? [p.names?.[code] ?? code, p.names?.[code] ?? code] : [code, code];
+              const l = await labels.ensure(g, code, names[0], names[1]);
+              if (l) ids.push(l.id);
+            }
+            const old = have.filter((a) => a.group === g && a.origin === 'triage').map((a) => a.labelId);
+            if (old.length) await ctx.db.run(`DELETE FROM metadata_chunk_labels WHERE snippet_id = ? AND label_id IN (${old.map(() => '?').join(',')})`, c.id, ...old);
+            for (const id of ids) {
+              await ctx.db.run(
+                "INSERT INTO metadata_chunk_labels (snippet_id, label_id, project_id, assigned_by, assigned_at, origin, confidence) VALUES (?, ?, ?, 'triage', ?, 'triage', ?) ON CONFLICT (snippet_id, label_id) DO NOTHING",
+                c.id, id, ctx.projectId, at, Math.round(p.confidence * 100) / 100,
+              );
+              stats.labels++;
+            }
+            applied.push({ group: g, code: p.codes.join(', '), confidence: Math.round(p.confidence * 100) / 100, reason: p.reason });
+          }
+          if (review) stats.review++;
+          stats[placement === 'new_subchapter' ? 'newSubchapter' : placement]++;
           await ctx.db.run(
-            "INSERT INTO metadata_chunk_labels (snippet_id, label_id, project_id, assigned_by, assigned_at, origin, confidence) VALUES (?, ?, ?, 'triage', ?, 'triage', ?) ON CONFLICT (snippet_id, label_id) DO NOTHING",
-            c.id, id, ctx.projectId, at, Math.round(p.confidence * 100) / 100,
+            `INSERT INTO triage_results (id, run_id, project_id, snippet_id, labels, chapter_before, subchapter_before, chapter_id, subchapter_id, new_subchapter_title, placement, confidence, review, reasons, status, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            newId('trr'), runId, ctx.projectId, c.id, json(applied), c.chapterId, c.subchapterId, target.chapterId, target.subchapterId, target.newTitle, placement,
+            Math.round(target.confidence * 100) / 100, review ? 1 : 0, json([target.reason]), placement === 'kept' || placement === 'unassigned' ? 'applied' : 'proposed', at,
           );
-          stats.labels++;
         }
-        applied.push({ group: g, code: p.codes.join(', '), confidence: Math.round(p.confidence * 100) / 100, reason: p.reason });
-      }
-      if (review) stats.review++;
-      stats[placement === 'new_subchapter' ? 'newSubchapter' : placement]++;
-      await ctx.db.run(
-        `INSERT INTO triage_results (id, run_id, project_id, snippet_id, labels, chapter_before, subchapter_before, chapter_id, subchapter_id, new_subchapter_title, placement, confidence, review, reasons, status, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        newId('trr'), runId, ctx.projectId, c.id, json(applied), c.chapterId, c.subchapterId, target.chapterId, target.subchapterId, target.newTitle, placement,
-        Math.round(target.confidence * 100) / 100, review ? 1 : 0, json([target.reason]), placement === 'kept' || placement === 'unassigned' ? 'applied' : 'proposed', at,
-      );
+      });
     }
+  } catch (e) {
+    await ctx.db.run("UPDATE triage_runs SET status = 'failed', stats = ?, finished_at = ? WHERE id = ?", json(stats), now(), runId);
+    throw e;
+  }
+  await ctx.db.tx(async () => {
     stats.createdLabels = labels.byCode.size - before;
     await ctx.db.run("UPDATE triage_runs SET status = 'finished', stats = ?, finished_at = ? WHERE id = ?", json(stats), now(), runId);
     await audit(ctx, actor, 'triage.finished', 'triage_run', runId, { scope, ...stats });
