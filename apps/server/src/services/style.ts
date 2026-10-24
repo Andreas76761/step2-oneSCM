@@ -5,6 +5,8 @@ import { json, newId, now, parseJson } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
 import { sha256 } from '../domain/similarity.js';
 import { analyzeStyle, autoFix, PRESENT_RULES, RULE_LABEL, STYLE_RULES, type StylePhrase, type StyleRule } from '../domain/style.js';
+import { assessReadability, AUDIENCES, readability, type Audience } from '../domain/readability.js';
+import { LANGUAGES } from '../domain/translate.js';
 import { LlmError } from '../llm.js';
 import { badRequest, Problem, unprocessable } from '../problem.js';
 import { getChapterVersion, patchBlock } from './chapters.js';
@@ -18,9 +20,29 @@ export type StyleMode = (typeof STYLE_MODES)[number];
 
 // ---------- Eigene Stilregeln je Projekt (ADR-044) ----------
 
-export interface StyleRules { disabled: StyleRule[]; phrases: StylePhrase[]; address: 'sie' | 'du' | null; maxSentenceWords: number | null }
-export const DEFAULT_STYLE_RULES: StyleRules = { disabled: [], phrases: [], address: 'sie', maxSentenceWords: null };
+/** `allowed`: erlaubte Begriffe (Whitelist, ADR-097); `audience`: Zielgruppe für die Sollwerte der Lesbarkeit */
+export interface StyleRules { disabled: StyleRule[]; phrases: StylePhrase[]; address: 'sie' | 'du' | null; maxSentenceWords: number | null; allowed: string[]; audience: Audience }
+export const DEFAULT_STYLE_RULES: StyleRules = { disabled: [], phrases: [], address: 'sie', maxSentenceWords: null, allowed: [], audience: 'enduser' };
 const MAX_PHRASES = 300;
+const MAX_ALLOWED = 1000;
+/** Sprachen eigener Regeln: Deutsch und alle Zielsprachen */
+export const PHRASE_LANGUAGES = ['de', ...Object.keys(LANGUAGES)];
+
+/** Liste erlaubter Begriffe bereinigen: getrimmt, 2–60 Zeichen, ohne Dubletten; Text mit Zeilen, Semikolon oder Komma */
+export function cleanAllowed(v: unknown): string[] {
+  const list = typeof v === 'string' ? v.split(/\r?\n|;|,/) : v;
+  if (!Array.isArray(list)) throw badRequest('allowed ist eine Liste von Begriffen.');
+  const out: string[] = [];
+  for (const x of list) {
+    if (typeof x !== 'string') throw badRequest('allowed ist eine Liste von Begriffen.');
+    const t = x.replace(/^\ufeff/, '').trim();
+    if (!t) continue;
+    if (t.length < 2 || t.length > 60) throw badRequest(`allowed: „${t.slice(0, 30)}“ – je Begriff 2 bis 60 Zeichen.`);
+    if (!out.some((o) => o.toLowerCase() === t.toLowerCase())) out.push(t);
+  }
+  if (out.length > MAX_ALLOWED) throw badRequest(`allowed: höchstens ${MAX_ALLOWED} Begriffe.`);
+  return out;
+}
 
 export async function getStyleRules(ctx: Ctx): Promise<StyleRules> {
   const r = await ctx.db.get('SELECT style_rules FROM projects WHERE id = ?', ctx.projectId);
@@ -35,11 +57,13 @@ export function cleanPhrases(v: unknown): StylePhrase[] {
   for (const raw of v as Record<string, unknown>[]) {
     const avoid = typeof raw?.avoid === 'string' ? raw.avoid.trim().slice(0, 80) : '';
     if (!avoid) throw badRequest('Jede Regel braucht „avoid“ (zu vermeidende Formulierung).');
-    if (seen.has(avoid.toLowerCase())) throw badRequest(`Doppelte Regel „${avoid}“.`);
-    seen.add(avoid.toLowerCase());
     const use = typeof raw.use === 'string' ? raw.use.trim().slice(0, 80) : null;
     const note = typeof raw.note === 'string' && raw.note.trim() ? raw.note.trim().slice(0, 200) : null;
-    out.push({ avoid, use, note });
+    const language = typeof raw.language === 'string' && raw.language.trim() ? raw.language.trim().toLowerCase() : null;
+    if (language && !PHRASE_LANGUAGES.includes(language)) throw badRequest(`language „${language}“: erlaubt sind ${PHRASE_LANGUAGES.join(', ')}.`);
+    if (seen.has(`${avoid.toLowerCase()}|${language ?? 'de'}`)) throw badRequest(`Doppelte Regel „${avoid}“.`);
+    seen.add(`${avoid.toLowerCase()}|${language ?? 'de'}`);
+    out.push({ avoid, use, note, ...(language && language !== 'de' ? { language } : {}) });
   }
   return out;
 }
@@ -61,9 +85,14 @@ export async function updateStyleRules(ctx: Ctx, input: Partial<Record<keyof Sty
     next.maxSentenceWords = n as number | null;
   }
   if (input.phrases !== undefined) next.phrases = cleanPhrases(input.phrases);
+  if (input.allowed !== undefined) next.allowed = cleanAllowed(input.allowed);
+  if (input.audience !== undefined) {
+    if (!(AUDIENCES as unknown[]).includes(input.audience)) throw badRequest(`audience: ${AUDIENCES.join(' oder ')}.`);
+    next.audience = input.audience as Audience;
+  }
   await ctx.db.tx(async () => {
     await ctx.db.run('UPDATE projects SET style_rules = ? WHERE id = ?', json(next), ctx.projectId);
-    await audit(ctx, user.id, 'style.rules_changed', 'project', ctx.projectId, { disabled: next.disabled, phrases: next.phrases.length, address: next.address, maxSentenceWords: next.maxSentenceWords });
+    await audit(ctx, user.id, 'style.rules_changed', 'project', ctx.projectId, { disabled: next.disabled, phrases: next.phrases.length, address: next.address, maxSentenceWords: next.maxSentenceWords, allowed: next.allowed.length, audience: next.audience });
   });
   return next;
 }
@@ -136,8 +165,14 @@ async function options(ctx: Ctx) {
   const rules = await getStyleRules(ctx);
   const maxWords = rules.maxSentenceWords ?? Math.min(25, (await getSettings(ctx.db)).readability.maxSentenceWords);
   // Projektregeln und abonnierte Bibliotheken (ADR-050)
-  const phrases = (await effectivePhrases(ctx, rules.phrases)).phrases.map(({ avoid, use, note }) => ({ avoid, use, note }));
-  return { terms, maxWords, disabled: rules.disabled, phrases, address: rules.address };
+  const phrases = (await effectivePhrases(ctx, rules.phrases)).phrases.map(({ avoid, use, note, language }) => ({ avoid, use, note, language }));
+  return { terms, maxWords, disabled: rules.disabled, phrases, address: rules.address, allowed: rules.allowed ?? [], audience: rules.audience ?? 'enduser' };
+}
+
+/** Optionen für Texte einer anderen Sprache (ADR-097): Terminologie und Anrede gelten nur für Deutsch */
+export async function styleOptionsFor(ctx: Ctx, language = 'de') {
+  const o = await options(ctx);
+  return language === 'de' ? { ...o, language } : { ...o, language, terms: [], address: null };
 }
 
 const cleanText = (text: unknown) => {
@@ -155,10 +190,12 @@ function withLabels(a: ReturnType<typeof analyzeStyle>) {
   };
 }
 
-/** Freien Text prüfen */
-export async function checkText(ctx: Ctx, text: unknown) {
+/** Freien Text prüfen – Deutsch oder eine Zielsprache (ADR-097) */
+export async function checkText(ctx: Ctx, text: unknown, language: unknown = 'de') {
   const t = cleanText(text);
-  return { text: t, ...withLabels(analyzeStyle(t, await options(ctx))) };
+  const lang = typeof language === 'string' && language ? language.toLowerCase() : 'de';
+  if (!PHRASE_LANGUAGES.includes(lang)) throw badRequest(`language: erlaubt sind ${PHRASE_LANGUAGES.join(', ')}.`);
+  return { text: t, language: lang, ...withLabels(analyzeStyle(t, await styleOptionsFor(ctx, lang))) };
 }
 
 const SYSTEM_PROMPT = `Du überarbeitest Texte eines Software-Benutzerhandbuchs (oneSCM) auf Deutsch.
@@ -236,6 +273,8 @@ export async function checkChapterVersion(ctx: Ctx, versionId: string) {
   return {
     version: { id: v.id, chapterId: v.chapterId, versionNo: v.versionNo, status: v.status, title: v.title, editable: v.status === 'draft' },
     summary: { blocks: blocks.length, withProblems: blocks.filter((b) => b.analysis.problemSentences).length },
+    // Lesbarkeit des Kapitels mit Sollwerten der Zielgruppe (ADR-097, S-01)
+    readability: assessReadability(readability(blocks.map((b) => b.text)), opts.audience),
     blocks,
   };
 }
@@ -443,7 +482,7 @@ const ACTION = (p: StylePhrase) => (p.use === null || p.use === undefined ? 'hin
 
 /** Formulierungen als CSV (Semikolon, BOM – öffnet in Excel direkt richtig) */
 export function phrasesToCsv(phrases: StylePhrase[]) {
-  const lines = ['vermeiden;aktion;ersetzen durch;hinweis', ...phrases.map((p) => [p.avoid, ACTION(p), p.use ?? '', p.note ?? ''].map(csvCell).join(';'))];
+  const lines = ['vermeiden;aktion;ersetzen durch;hinweis;sprache', ...phrases.map((p) => [p.avoid, ACTION(p), p.use ?? '', p.note ?? '', p.language ?? 'de'].map(csvCell).join(';'))];
   return `\ufeff${lines.join('\r\n')}\r\n`;
 }
 
@@ -459,13 +498,14 @@ export async function exportStyleRules(ctx: Ctx, format: string) {
 export function phrasesFromCsv(csv: string): StylePhrase[] {
   const rows = parseCsv(csv);
   if (!rows.length) throw badRequest('Die CSV-Datei ist leer.');
-  const cols = mapHeader(rows[0], { avoid: ['vermeiden', 'avoid', 'begriff', 'formulierung'], action: ['aktion', 'action'], use: ['ersetzen durch', 'ersetzen', 'use', 'ersatz'], note: ['hinweis', 'note', 'bemerkung'] });
+  const cols = mapHeader(rows[0], { avoid: ['vermeiden', 'avoid', 'begriff', 'formulierung', 'falsch'], action: ['aktion', 'action'], use: ['ersetzen durch', 'ersetzen', 'use', 'ersatz', 'richtig'], note: ['hinweis', 'note', 'bemerkung'], language: ['sprache', 'language'] });
   if (cols.avoid === undefined) throw badRequest('Spalte „vermeiden“ fehlt.');
   return rows.slice(1).map((r) => {
     const cell = (k: string) => (cols[k] === undefined ? '' : (r[cols[k]] ?? '').trim());
     const action = cell('action').toLowerCase();
     const use = action === 'hinweis' ? null : action === 'streichen' ? '' : cell('use') || (action === 'ersetzen' ? '' : null);
-    return { avoid: cell('avoid'), use, note: cell('note') || null };
+    const language = cell('language').toLowerCase();
+    return { avoid: cell('avoid'), use, note: cell('note') || null, ...(language && language !== 'de' ? { language } : {}) };
   }).filter((p) => p.avoid);
 }
 
@@ -474,7 +514,7 @@ function mergePhrases(cur: StylePhrase[], incoming: StylePhrase[], mode: 'merge'
   let added = 0;
   let updated = 0;
   for (const p of incoming) {
-    const i = out.findIndex((x) => x.avoid.toLowerCase() === p.avoid.toLowerCase());
+    const i = out.findIndex((x) => x.avoid.toLowerCase() === p.avoid.toLowerCase() && (x.language ?? 'de') === (p.language ?? 'de'));
     if (i >= 0) (out[i] = p), updated++;
     else out.push(p), added++;
   }
@@ -493,7 +533,7 @@ export async function importStyleRules(ctx: Ctx, input: { csv?: unknown; rules?:
     if (!Array.isArray(r.phrases)) throw badRequest('rules.phrases fehlt.');
     incoming = r.phrases as StylePhrase[];
     // Einstellungen aus einem JSON-Export übernehmen
-    rest = { disabled: r.disabled, address: r.address, maxSentenceWords: r.maxSentenceWords };
+    rest = { disabled: r.disabled, address: r.address, maxSentenceWords: r.maxSentenceWords, allowed: r.allowed, audience: r.audience };
     for (const k of Object.keys(rest) as (keyof StyleRules)[]) if (rest[k] === undefined) delete rest[k];
   } else throw badRequest('csv oder rules ist Pflicht.');
   const m = mergePhrases(cur.phrases, incoming, mode);

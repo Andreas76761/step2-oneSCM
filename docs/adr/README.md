@@ -98,3 +98,4 @@
 | [ADR-094](ADR-094-leistung-installationspaket.md) | Leistung bei großen Beständen (Präfix-Filter für Dubletten, Zwischenspeicher für Wortstämme) und Installationspaket für Windows offline und Linux/macOS | akzeptiert, umgesetzt |
 | [ADR-095](ADR-095-datenschutz-bild-labels.md) | Datenschutz im Bild (Namen, User-ID, Adresse, FIN verpixelt, an/aus, Original bleibt), mehrere Labels und Kapitel je Bild | akzeptiert, umgesetzt |
 | [ADR-096](ADR-096-kapitelsteuerung-historie.md) | Kapitelanweisung je Kapitel und Unterkapitel mit Vorrang für Generator, KI, Check und Agenten; Kapitel ergänzen; Version „gültig ab“; Historie abgelöster Funktionen | akzeptiert, umgesetzt |
+| [ADR-097](ADR-097-grammatik-sprachstil.md) | Hausregeln (Typografie, Zahlen, Produktname), Englisch und Sprache je Regel, erlaubte Begriffe, Lesbarkeit mit Sollwerten, „nicht übersetzen“, Bildunterschriften, Anweisung für Varianten | akzeptiert, umgesetzt |

@@ -32,14 +32,27 @@ async function chapterDto(ctx: Ctx, r: Row, withHistory: boolean) {
   };
 }
 
-/** Kapitel und Unterkapitel der Quellen (ohne Handbuch-Varianten) mit Anweisung und Version; Historie nur auf Wunsch */
-export async function listStructure(ctx: Ctx, opts: { history?: boolean } = {}) {
+/**
+ * Kapitel und Unterkapitel der Quellen mit Anweisung und Version; Historie nur auf Wunsch. `outlineFamilyId`: Kapitel einer
+ * Handbuch-Variante (ADR-097, W-01) – sie haben eine eigene Anweisung zusätzlich zu der ihrer Quellkapitel.
+ */
+export async function listStructure(ctx: Ctx, opts: { history?: boolean; outlineFamilyId?: string } = {}) {
   const rows = await ctx.db.all(
-    `SELECT * FROM chapters WHERE project_id = ? AND outline_family_id IS NULL AND key <> '__none__' ${opts.history ? '' : 'AND history_at IS NULL'} ORDER BY position, title`, ctx.projectId,
+    `SELECT * FROM chapters WHERE project_id = ? AND ${opts.outlineFamilyId ? 'outline_family_id = ?' : 'outline_family_id IS NULL'} AND key <> '__none__' ${opts.history ? '' : 'AND history_at IS NULL'} ORDER BY position, title`,
+    ctx.projectId, ...(opts.outlineFamilyId ? [opts.outlineFamilyId] : []),
   );
   const chapters = await Promise.all(rows.map((r) => chapterDto(ctx, r, !!opts.history)));
   const withInstruction = chapters.filter((c) => !isEmpty(c.instruction)).length + chapters.reduce((n, c) => n + c.subchapters.filter((s) => !isEmpty(s.instruction)).length, 0);
   return { chapters, summary: { chapters: chapters.length, subchapters: chapters.reduce((n, c) => n + c.subchapters.length, 0), withInstruction } };
+}
+
+/** Handbuch-Varianten mit angelegten Kapiteln (für die Auswahl in der Kapitelsteuerung) */
+export async function structureOutlines(ctx: Ctx) {
+  const rows = await ctx.db.all(
+    `SELECT o.family_id, o.name, o.version_no, (SELECT COUNT(*) FROM chapters c WHERE c.project_id = o.project_id AND c.outline_family_id = o.family_id) AS chapters
+     FROM outlines o WHERE o.project_id = ? AND o.version_no = (SELECT MAX(x.version_no) FROM outlines x WHERE x.family_id = o.family_id) ORDER BY o.name`, ctx.projectId,
+  );
+  return rows.map((r) => ({ familyId: r.family_id as string, name: r.name as string, versionNo: Number(r.version_no), chapters: Number(r.chapters) }));
 }
 
 async function chapterRow(ctx: Ctx, id: string) {
@@ -301,12 +314,13 @@ export async function historyAppendix(ctx: Ctx) {
 
 /** Anweisungen aller Kapitel und Unterkapitel als Markdown-Dateien (für ANWEISUNG.md im Arbeitsordner) */
 export async function exportInstructions(ctx: Ctx) {
-  const { chapters } = await listStructure(ctx);
-  return {
-    format: 'onescm-instructions',
-    chapters: chapters.map((c) => ({
-      title: c.title, validFrom: c.validFrom, instruction: c.instruction, markdown: instructionMarkdown(c.title, c.instruction, c.validFrom),
-      subchapters: c.subchapters.map((s) => ({ title: s.title, validFrom: s.validFrom, instruction: s.instruction, markdown: instructionMarkdown(s.title, s.instruction, s.validFrom) })),
-    })),
-  };
+  const shape = (chapters: Awaited<ReturnType<typeof listStructure>>['chapters']) => chapters.map((c) => ({
+    title: c.title, validFrom: c.validFrom, instruction: c.instruction, markdown: instructionMarkdown(c.title, c.instruction, c.validFrom),
+    subchapters: c.subchapters.map((s) => ({ title: s.title, validFrom: s.validFrom, instruction: s.instruction, markdown: instructionMarkdown(s.title, s.instruction, s.validFrom) })),
+  }));
+  const variants = [];
+  for (const o of (await structureOutlines(ctx)).filter((x) => x.chapters)) {
+    variants.push({ familyId: o.familyId, name: o.name, chapters: shape((await listStructure(ctx, { outlineFamilyId: o.familyId })).chapters) });
+  }
+  return { format: 'onescm-instructions', chapters: shape((await listStructure(ctx)).chapters), variants };
 }

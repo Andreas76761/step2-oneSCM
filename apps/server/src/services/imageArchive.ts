@@ -31,6 +31,21 @@ export const imageNumber = (n: number) => `B-${String(n).padStart(4, '0')}`;
 
 export type ImageCheck = { rule: string; severity: 'error' | 'warning' | 'info'; message: string };
 
+const CAPTION_MAX = 200;
+const CAPTION_FILLER = /^(?:hier\s+(?:sieht\s+man|sehen\s+sie|ist|wird)|(?:das|dieses|der)\s+(?:bild|screenshot)\s+zeigt|screenshot\s+(?:von|der|des|zeigt)|bild\s+(?:von|der|des)|man\s+sieht)\b/i;
+
+/** Regeln für Bildunterschriften (ADR-097, S-08): 1–2 Sätze, höchstens 200 Zeichen, ohne Füller wie „Hier sieht man“ */
+export function captionChecks(title: string, placeholder = false): ImageCheck[] {
+  if (placeholder) return [];
+  const t = title.trim();
+  const out: ImageCheck[] = [];
+  if (t.length > CAPTION_MAX) out.push({ rule: 'caption_long', severity: 'warning', message: `Bildunterschrift hat ${t.length} Zeichen – höchstens ${CAPTION_MAX}.` });
+  const sentences = t.split(/(?<=[.!?])\s+(?=\p{Lu})/u).filter(Boolean).length;
+  if (sentences > 2) out.push({ rule: 'caption_sentences', severity: 'warning', message: `Bildunterschrift mit ${sentences} Sätzen – höchstens zwei.` });
+  if (CAPTION_FILLER.test(t)) out.push({ rule: 'caption_filler', severity: 'info', message: 'Bildunterschrift ohne Füller wie „Hier sieht man“ – direkt sagen, was zu sehen ist.' });
+  return out;
+}
+
 /** Basis-Bilder: alle Bilder außer späteren Fassungen und PNG-Fassungen von SVG */
 async function bases(ctx: Ctx) {
   return ctx.db.all(
@@ -94,6 +109,7 @@ function checksFor(cur: Row, meta: Row, use: Awaited<ReturnType<typeof usage>>, 
   if (placeholder && use.chapters.some((c) => c.status === 'approved')) out.push({ rule: 'placeholder_approved', severity: 'error', message: 'Platzhalter in einem freigegebenen Kapitel – echte Fassung hochladen.' });
   else if (placeholder && use.chapters.length) out.push({ rule: 'placeholder_used', severity: 'warning', message: 'Platzhalter wird verwendet – echte Fassung fehlt noch.' });
   if (!title?.trim()) out.push({ rule: 'caption_missing', severity: 'warning', message: 'Bildunterschrift (Titel) fehlt – sie erscheint im Bildverzeichnis.' });
+  else out.push(...captionChecks(title, placeholder));
   if (!placeholder && cur.mime !== 'image/svg+xml' && cur.width && cur.width < MIN_WIDTH) out.push({ rule: 'low_resolution', severity: 'warning', message: `Breite ${cur.width} px – unter ${MIN_WIDTH} px im Druck schwer lesbar.` });
   if (Number(cur.byte_size) > MAX_BYTES) out.push({ rule: 'too_large', severity: 'warning', message: `Datei ${(Number(cur.byte_size) / 1048576).toFixed(1)} MB – über 2 MB verlangsamt Exporte.` });
   if (!meta.language) out.push({ rule: 'language_missing', severity: 'info', message: 'Sprache der Oberfläche im Bild ist nicht angegeben.' });

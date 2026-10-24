@@ -17,6 +17,8 @@ export interface Term {
   updatedBy: string;
   updatedAt: string;
   translations: Record<string, { term: string; definition: string | null }>;
+  /** nicht übersetzen (ADR-097, S-04): der Begriff steht in jeder Sprache unverändert */
+  keepUntranslated: boolean;
 }
 
 /** Startbestand bis Etappe 2 (Einstellung `terminology`) */
@@ -49,6 +51,7 @@ function toTerm(r: Record<string, any>): Term {
     id: r.id, preferred: r.preferred, avoid: parseJson(r.avoid, []), definition: r.definition, status: r.status,
     translations: parseJson<Record<string, { term: string; definition: string | null }>>(r.translations, {}),
     createdBy: r.created_by, createdAt: r.created_at, updatedBy: r.updated_by, updatedAt: r.updated_at,
+    keepUntranslated: !!Number(r.keep_untranslated ?? 0),
   };
 }
 
@@ -62,10 +65,14 @@ export async function listTerms(ctx: Ctx, opts: { includeRetired?: boolean } = {
 
 /** Begriffe mit fester Übersetzung je Sprache (F-12, ADR-083) für Übersetzungsanfrage und -prüfung */
 export async function fixedTranslations(ctx: Ctx): Promise<FixedTerm[]> {
-  const rows = await ctx.db.all("SELECT preferred, translations FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId);
+  const rows = await ctx.db.all("SELECT preferred, translations, keep_untranslated FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId);
+  const langs = rows.some((r) => Number(r.keep_untranslated)) ? await projectLanguages(ctx) : [];
   return rows.map((r) => ({
     preferred: String(r.preferred),
-    translations: Object.fromEntries(Object.entries(parseJson<Record<string, { term?: string }>>(r.translations, {})).map(([l, v]) => [l, v?.term?.trim() ?? '']).filter(([, v]) => v)),
+    // „nicht übersetzen“ (S-04): in jeder Projektsprache genau der deutsche Begriff
+    translations: Number(r.keep_untranslated)
+      ? Object.fromEntries(langs.map((l) => [l, String(r.preferred)]))
+      : Object.fromEntries(Object.entries(parseJson<Record<string, { term?: string }>>(r.translations, {})).map(([l, v]) => [l, v?.term?.trim() ?? '']).filter(([, v]) => v)),
   }));
 }
 
@@ -125,6 +132,8 @@ export interface TermInput {
   status?: 'active' | 'retired';
   /** Begriff und Definition je Projektsprache (Glossar in der Leseransicht, ADR-071) */
   translations?: Record<string, { term?: string; definition?: string | null }>;
+  /** nicht übersetzen (S-04) */
+  keepUntranslated?: boolean;
 }
 
 /** Übersetzungen prüfen: nur Projektsprachen, Begriff Pflicht (sonst entfällt die Sprache), Längen begrenzt */
@@ -171,9 +180,9 @@ export async function createTerm(ctx: Ctx, input: TermInput, actor: string) {
   const id = newId('term');
   await ctx.db.tx(async () => {
     await ctx.db.run(
-      `INSERT INTO terminology_terms (id, project_id, preferred, avoid, definition, status, created_by, created_at, updated_by, updated_at, translations)
-       VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?)`,
-      id, ctx.projectId, preferred, json(avoid), input.definition?.trim() || null, actor, now(), actor, now(), json(translations),
+      `INSERT INTO terminology_terms (id, project_id, preferred, avoid, definition, status, created_by, created_at, updated_by, updated_at, translations, keep_untranslated)
+       VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, ?)`,
+      id, ctx.projectId, preferred, json(avoid), input.definition?.trim() || null, actor, now(), actor, now(), json(translations), input.keepUntranslated ? 1 : 0,
     );
     await audit(ctx, actor, 'term.created', 'term', id, { preferred, avoid });
   });
@@ -191,8 +200,9 @@ export async function updateTerm(ctx: Ctx, id: string, input: TermInput, actor: 
   const translations = (await cleanTranslations(ctx, input.translations)) ?? before.translations;
   await ctx.db.tx(async () => {
     await ctx.db.run(
-      'UPDATE terminology_terms SET preferred = ?, avoid = ?, definition = ?, status = ?, translations = ?, updated_by = ?, updated_at = ? WHERE id = ?',
-      preferred, json(avoid), input.definition !== undefined ? input.definition?.trim() || null : before.definition, status, json(translations), actor, now(), id,
+      'UPDATE terminology_terms SET preferred = ?, avoid = ?, definition = ?, status = ?, translations = ?, keep_untranslated = ?, updated_by = ?, updated_at = ? WHERE id = ?',
+      preferred, json(avoid), input.definition !== undefined ? input.definition?.trim() || null : before.definition, status, json(translations),
+      (input.keepUntranslated ?? before.keepUntranslated) ? 1 : 0, actor, now(), id,
     );
     await audit(ctx, actor, status === 'retired' && before.status === 'active' ? 'term.retired' : 'term.updated', 'term', id, { before, after: { preferred, avoid, status } });
   });

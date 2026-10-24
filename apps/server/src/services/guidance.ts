@@ -7,7 +7,8 @@ import { segmentSentences } from '../domain/style.js';
 import { badRequest } from '../problem.js';
 import { getChapterVersion, insertBlock, normalizePositions } from './chapters.js';
 import { assertIdsInProject } from './projects.js';
-import { applyChapterTexts } from './style.js';
+import { applyChapterTexts, getStyleRules } from './style.js';
+import { assessReadability, readability } from '../domain/readability.js';
 import { getGuidanceSettings, knownAcronyms, SKIP_SECTIONS } from './guidanceBase.js';
 import { checkAgainst, isEmpty } from '../domain/chapterInstruction.js';
 import { instructionFor } from './structure.js';
@@ -30,8 +31,11 @@ export async function chapterGuidance(ctx: Ctx, versionId: string) {
     ins.excluded.push(...JSON.parse(s.instruction_excluded ?? '[]').filter((t: string) => !ins.excluded.includes(t)));
   }
   const instruction = isEmpty(ins) ? null : { ...ins, ...checkAgainst(ins, blocks.filter((b) => b.kind !== 'gap')), excludedMentioned: checkAgainst(ins, blocks.filter((b) => b.kind !== 'gap')).excludedMentioned.map((m) => ({ ...m, section: where.get(m.blockId) ?? null })) };
+  // Lesbarkeit mit Sollwerten der Zielgruppe (ADR-097, S-01) – zusätzlich zum Punktwert
+  const read = assessReadability(readability(blocks.filter((b) => b.kind !== 'gap').map((b) => b.text)), (await getStyleRules(ctx)).audience ?? 'enduser');
   return {
     instruction,
+    readability: read,
     versionId: v.id, chapterId: v.chapterId, title: v.title, versionNo: v.versionNo, status: v.status, editable: v.status === 'draft',
     ...a, checks: a.checks.map((c) => ({ ...c, items: c.items.map((i) => ({ ...i, section: i.blockId ? where.get(i.blockId) ?? null : null })) })),
   };
@@ -53,6 +57,7 @@ export async function guidanceSummary(ctx: Ctx) {
   );
   const known = await knownAcronyms(ctx);
   const { levels } = await getGuidanceSettings(ctx);
+  const audience = (await getStyleRules(ctx)).audience ?? 'enduser';
   const out = [];
   for (const v of versions) {
     const rows = await ctx.db.all('SELECT id, section_code, kind, text, version_no, mode FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NULL ORDER BY position', v.version_id);
@@ -61,6 +66,7 @@ export async function guidanceSummary(ctx: Ctx) {
       chapterId: v.chapter_id as string, title: v.title as string, versionId: v.version_id as string, versionNo: Number(v.version_no), status: v.status as string,
       score: a.score, passed: a.passed, total: a.total, fixable: a.fixable, open: a.checks.filter((c) => c.status !== 'ok').map((c) => ({ code: c.code, label: GUIDANCE_OPEN_LABEL[c.code], status: c.status, level: c.level })),
       points: a.points, mustPassed: a.mustPassed,
+      readability: (({ flesch, lix, avgWords, ok }) => ({ flesch, lix, avgWords, ok }))(assessReadability(readability(rows.filter((b) => b.kind !== 'gap' && !SKIP_SECTIONS.has(b.section_code)).map((b) => b.text)), audience)),
     });
   }
   out.sort((x, y) => x.score - y.score || x.title.localeCompare(y.title));

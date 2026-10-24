@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.43, 23.10.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.44, 24.10.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -25,26 +25,26 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 
 | ID | Funktion | Herkunft | Stand in der App | Aufwand | Empfehlung |
 |---|---|---|---|---|---|
-| G-01 | **Hausregeln aus `GRAMMATIK.md` als Prüfregeln** – deutsche Anführungszeichen „…“ (G-Z1), Halbgeviertstrich mit Leerzeichen (G-Z2), Menüpfad mit › (G-Z3), kein Punkt nach Überschrift (G-Z4), Zahlen bis zwölf ausschreiben (G-N1), Tausenderpunkt/Dezimalkomma (G-N2), geschütztes Leerzeichen vor Einheit und % (G-N3), Datum TT.MM.JJJJ (G-N4), Zeitraum mit Halbgeviertstrich (G-N6), Produktname „oneSCM“ (G-R1) | Arbeitsordner, Wortliste Screenarchiv | nicht geprüft (nur im Arbeitsordner beschrieben) | M | **übernehmen** – mit Korrektur per Klick |
-| G-02 | **Leerzeichen-Regeln:** mehrfache Leerzeichen, Leerzeichen vor Satzzeichen, wiederholte Satzzeichen, fehlendes Satzende | Releaseletter-Prüfer | teilweise (Zeichensetzung) | S | **übernehmen** |
-| G-03 | **Rechtschreib-Fehlerliste erweitern** (52 DE/EN-Einträge wie „Standart“) und **Fachbegriffe-Whitelist** (82 Begriffe: oneSCM, VIN, BTO …), Import/Export | Releaseletter-Prüfer | teilweise (eigene Liste, keine Whitelist, kein Import) | S | **übernehmen** |
+| G-01 | **Hausregeln aus `GRAMMATIK.md` als Prüfregeln** – deutsche Anführungszeichen „…“ (G-Z1), Halbgeviertstrich mit Leerzeichen (G-Z2), Menüpfad mit › (G-Z3), kein Punkt nach Überschrift (G-Z4), Zahlen bis zwölf ausschreiben (G-N1), Tausenderpunkt/Dezimalkomma (G-N2), geschütztes Leerzeichen vor Einheit und % (G-N3), Datum TT.MM.JJJJ (G-N4), Zeitraum mit Halbgeviertstrich (G-N6), Produktname „oneSCM“ (G-R1) | Arbeitsordner, Wortliste Screenarchiv | nicht geprüft (nur im Arbeitsordner beschrieben) | M | **umgesetzt in Etappe 44 (ADR-097)** |
+| G-02 | **Leerzeichen-Regeln:** mehrfache Leerzeichen, Leerzeichen vor Satzzeichen, wiederholte Satzzeichen, fehlendes Satzende | Releaseletter-Prüfer | teilweise (Zeichensetzung) | S | **war bereits vorhanden (Regel „Zeichensetzung“)** |
+| G-03 | **Rechtschreib-Fehlerliste erweitern** (52 DE/EN-Einträge wie „Standart“) und **Fachbegriffe-Whitelist** (82 Begriffe: oneSCM, VIN, BTO …), Import/Export | Releaseletter-Prüfer | teilweise (eigene Liste, keine Whitelist, kein Import) | S | **umgesetzt in Etappe 44 (ADR-097)** |
 | G-04 | **Lokale Grammatikprüfung mit LanguageTool** (selbst betrieben, Deutsch und Englisch): Kongruenz, Kommasetzung, Groß-/Kleinschreibung über Regeln hinaus | DokuPress-Konzept (F-11) | nicht vorhanden | M | **übernehmen**, sofern LanguageTool lokal betrieben werden darf (Java-Dienst oder Docker) |
 | G-05 | **Fehlerliste in der App** – gefundene Sprachfehler mit Fundstelle, Korrektur, Kategorie, Status; Abgleich mit `FEHLERLISTE.csv` des Arbeitsordners | Arbeitsordner (sprach-lektor) | nicht vorhanden (nur als Datei) | M | optional |
-| G-06 | **Englische Texte prüfen:** a/an, „i“ → „I“, Satzanfang, Tippfehler (für Releaseletter EN und Übersetzungen) | Releaseletter-Prüfer | nicht vorhanden – Schreibstil nur Deutsch | S | **übernehmen** (Grundregeln), mehr über G-04 |
+| G-06 | **Englische Texte prüfen:** a/an, „i“ → „I“, Satzanfang, Tippfehler (für Releaseletter EN und Übersetzungen) | Releaseletter-Prüfer | nicht vorhanden – Schreibstil nur Deutsch | S | **umgesetzt in Etappe 44 (ADR-097)** |
 | G-07 | **KI-Lektorat mit Diff:** Korrekturen gelb markiert, beim Überfahren das Original, Übernahme je Kapitel oder alle | Ticket-Cockpit v3.0 | teilweise (KI-Vorschlag je Absatz mit Vergleich, Stil-Korrektur je Kapitel) | S | optional – Anzeige vereinheitlichen |
 
 ## 10.3 Sprachstil – offen
 
 | ID | Funktion | Herkunft | Stand in der App | Aufwand | Empfehlung |
 |---|---|---|---|---|---|
-| S-01 | **Lesbarkeitswerte je Kapitel und Rolle:** LIX (unter 40 leicht, 40–50 mittel, über 50 schwer), Flesch-Amstad (mindestens 60 für Endanwender, 40 für Admin/Service), Ø Wörter je Satz (höchstens 15), Anteil langer Sätze (> 25), Passivanteil; als Soll-Werte im Anleitungs-Check | Werkstatt V4, Checkliste (Multi-Agent-Gate) | teilweise (lange Sätze, Passiv einzeln; kein Lesbarkeitsindex) | S | **übernehmen** |
+| S-01 | **Lesbarkeitswerte je Kapitel und Rolle:** LIX (unter 40 leicht, 40–50 mittel, über 50 schwer), Flesch-Amstad (mindestens 60 für Endanwender, 40 für Admin/Service), Ø Wörter je Satz (höchstens 15), Anteil langer Sätze (> 25), Passivanteil; als Soll-Werte im Anleitungs-Check | Werkstatt V4, Checkliste (Multi-Agent-Gate) | teilweise (lange Sätze, Passiv einzeln; kein Lesbarkeitsindex) | S | **umgesetzt in Etappe 44 (ADR-097)** |
 | S-02 | **Tonalität je Produktart bzw. Zielgruppe:** sachlich (Handbuch), freundlich, formell, knapp; sechs Rollenprofile mit eigener Tonalität; gilt für Prüfung und KI-Vorschläge | Ticket-Cockpit, Checkliste, `TONALITAET.md` | teilweise (nur Anrede Sie/du und freier Redaktionshinweis) | M | **übernehmen** – als Einstellung je Projekt bzw. Ausgabeprofil |
-| S-03 | **Wortliste je Sprache** „falsch → richtig (Sprache)“, z. B. Dealer→Händler (de), Händler→Dealer (en), OneSCM→oneSCM; Prüfung „Text passt nicht zur Sprache des Labels“ | Screenarchiv | teilweise (eigene Regeln nur Deutsch; feste Übersetzung je Sprache) | S | **übernehmen** – eigene Regeln mit Sprache |
-| S-04 | **„Fix-Sprache“ je Begriff:** Begriff überall immer deutsch oder immer englisch (UI-Begriff), Anweisung an KI und Prüfung | Ticket-Cockpit v2.96 | teilweise (feste Übersetzung je Sprache; kein „immer so lassen“) | S | **übernehmen** – erledigt auch die offene Frage „MO Checks/MO-Prüfungen“ technisch, sobald entschieden |
+| S-03 | **Wortliste je Sprache** „falsch → richtig (Sprache)“, z. B. Dealer→Händler (de), Händler→Dealer (en), OneSCM→oneSCM; Prüfung „Text passt nicht zur Sprache des Labels“ | Screenarchiv | teilweise (eigene Regeln nur Deutsch; feste Übersetzung je Sprache) | S | **umgesetzt in Etappe 44 (ADR-097) – ohne Prüfung „Text passt nicht zur Sprache“ (mit U-02)** |
+| S-04 | **„Fix-Sprache“ je Begriff:** Begriff überall immer deutsch oder immer englisch (UI-Begriff), Anweisung an KI und Prüfung | Ticket-Cockpit v2.96 | teilweise (feste Übersetzung je Sprache; kein „immer so lassen“) | S | **umgesetzt in Etappe 44 (ADR-097) – welche Begriffe, entscheidet die Redaktion** |
 | S-05 | **Textvarianten je Kapitel:** Endanwender, Fachtext, Kurzfassung (Management, ~¼ Länge) | Ticket-Cockpit | teilweise (Quick Guide, One Pager, Lesefassung) | M | optional |
 | S-06 | **Regelbasiertes Schreiben (tekom), ASD-STE100, Vale** als zuschaltbare Regelsätze | Checkliste | nicht vorhanden | L | später |
 | S-07 | **Kapitelbewertung mit fünf Kriterien** (Sprache, Ziel, Tonalität, Quellenabgleich, Fakten) und Ampel | Wissenssuche | teilweise (Anleitungs-Check, Schreibstil, Evidenz getrennt) | S | optional – Gesamtampel aus den vorhandenen Werten |
-| S-08 | **Bildunterschriften-Regeln:** 1–2 Sätze, max. 200 Zeichen, UI-Begriffe wörtlich, keine Füller („Hier sieht man“) | Screenshot-Studio | teilweise (Bildunterschrift Pflicht, keine Stilprüfung) | S | **übernehmen** (Prüfregel im Bildarchiv) |
+| S-08 | **Bildunterschriften-Regeln:** 1–2 Sätze, max. 200 Zeichen, UI-Begriffe wörtlich, keine Füller („Hier sieht man“) | Screenshot-Studio | teilweise (Bildunterschrift Pflicht, keine Stilprüfung) | S | **umgesetzt in Etappe 44 (ADR-097)** |
 
 ## 10.4 Übersetzung – offen
 
@@ -65,7 +65,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 
 | ID | Funktion | Herkunft | Stand | Aufwand | Empfehlung |
 |---|---|---|---|---|---|
-| W-01 | **Kapitelanweisung für Handbuch-Varianten** (eigene Anweisung je Variantenkapitel bzw. Gliederungsknoten, zusätzlich zur Anweisung des Quellkapitels) | eigener Befund (ADR-096) | offen | S | **übernehmen** |
+| W-01 | **Kapitelanweisung für Handbuch-Varianten** (eigene Anweisung je Variantenkapitel bzw. Gliederungsknoten, zusätzlich zur Anweisung des Quellkapitels) | eigener Befund (ADR-096) | offen | S | **umgesetzt in Etappe 44 (ADR-097)** |
 | W-02 | **Plausibilität Text ↔ Quellen je Aussage** (belegt, unbelegt, Widerspruch, fehlend) mit Wert 0–100 | Ticket-Cockpit v2.91 | teilweise (Beleg je Satz, Evidenz) | S | optional – Wert je Kapitel aus der Evidenz |
 | W-03 | **Ticket-Einstufung** genehmigt / in Prüfung / intern / Background; intern und Background fließen nicht ins Handbuch, Background nur in die Lückenanalyse | Ticket-Cockpit | teilweise (Bug = intern im Release-Abgleich) | S | **übernehmen** |
 | W-04 | **Releaseletter-Entwurf aus Projektvergleich** (geänderte Bilder, Kapitel und Funktionen eines Release) | Screenarchiv | teilweise (Releaseletter aus Tickets, Historie seit v0.43) | M | **übernehmen** – nutzt Historie und Bildfassungen |
@@ -80,7 +80,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 
 ## 10.6 Vorschlag für die nächsten Etappen
 
-1. **Etappe 44 – Grammatik und Sprachstil:**
+1. **Etappe 44 – Grammatik und Sprachstil (✅ umgesetzt, ADR-097):**
    - G-01, G-02, G-03 und G-06 (Hausregeln, Leerzeichen, Fehlerliste/Whitelist, Englisch);
    - S-01 (Lesbarkeitswerte im Check), S-03, S-04 (Wortliste je Sprache, Fix-Sprache), S-08 (Bildunterschriften);
    - W-01 (Anweisung für Varianten).

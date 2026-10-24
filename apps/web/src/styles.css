@@ -874,3 +874,8 @@ div.reader-lang-note p { margin: 0; }
 .st-add, .st-replace { margin-top: 0.75rem; }
 .grid2.tight { gap: 0.75rem; }
 .ws-instruction ul { margin: 0.35rem 0 0; }
+
+/* Sprachstil und Lesbarkeit (ADR-097) */
+.read-checks { list-style: none; padding: 0; margin: 0.35rem 0 0; display: flex; flex-wrap: wrap; gap: 0.15rem 1rem; }
+.tr-style { list-style: none; padding: 0; margin: 0.35rem 0 0; }
+.tr-style li { margin: 0.1rem 0; }

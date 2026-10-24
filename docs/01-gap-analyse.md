@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.46 Stand nach Etappe 44 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Hausregeln, Rechtschreibliste, erlaubte Begriffe (G-01–G-03, NFR-104) | ✅ ([ADR-097](adr/ADR-097-grammatik-sprachstil.md)) |
+| Englisch, Sprache je Regel, Prüfung der Übersetzungen, „nicht übersetzen“ (G-06, S-03, S-04, NFR-105) | ✅ |
+| Lesbarkeit mit Sollwerten je Zielgruppe, Bildunterschriften (S-01, S-08, NFR-106) | ✅ |
+| Kapitelanweisung für Handbuch-Varianten (W-01, NFR-107) | ✅ |
+| Offen | G-04 (LanguageTool lokal – Entscheidung), G-05, S-02, Übersetzung U-01 … U-10 (Etappe 45) |
+
 ## 1.45 Stand nach Etappe 43 (23.10.2026)
 
 | Punkt | Ergebnis |

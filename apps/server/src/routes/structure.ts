@@ -2,12 +2,14 @@
 import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
 import {
-  createChapter, createSubchapter, exportInstructions, instructionFor, listHistory, listStructure, replaceItem, restoreItem, subchapterInstructions, updateChapterMeta, updateSubchapterMeta, type StructureKind,
+  createChapter, createSubchapter, exportInstructions, structureOutlines, instructionFor, listHistory, listStructure, replaceItem, restoreItem, subchapterInstructions, updateChapterMeta, updateSubchapterMeta, type StructureKind,
 } from '../services/structure.js';
 import { userOf } from './helpers.js';
 
 export function structureRoutes(app: FastifyInstance, _ctx: Ctx) {
-  app.get<{ Querystring: { history?: string } }>('/structure', async (req) => (userOf(req.ctx, req), listStructure(req.ctx, { history: req.query.history === 'true' })));
+  app.get<{ Querystring: { history?: string; outline?: string } }>('/structure', async (req) => (userOf(req.ctx, req), listStructure(req.ctx, { history: req.query.history === 'true', outlineFamilyId: req.query.outline || undefined })));
+  // Handbuch-Varianten mit Kapiteln (ADR-097, W-01)
+  app.get('/structure/outlines', async (req) => (userOf(req.ctx, req), { items: await structureOutlines(req.ctx) }));
   app.post<{ Body: any }>('/structure/chapters', async (req, reply) => {
     const user = userOf(req.ctx, req, 'edit');
     reply.code(201);

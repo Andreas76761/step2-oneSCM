@@ -1,6 +1,8 @@
 // Mehrsprachigkeit (ADR-020): Übersetzungen freigegebener deutscher Kapitelversionen je Zielsprache.
 // KI-Übersetzung je Absatz mit Satz-Zuordnung zur deutschen Quelle, manuelle Nachbearbeitung, Freigabe je Sprache.
 import { fixedTranslations } from './terminology.js';
+import { styleOptionsFor } from './style.js';
+import { analyzeStyle, RULE_LABEL } from '../domain/style.js';
 import { audit, privacyNames, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
@@ -99,6 +101,11 @@ export async function getTranslation(ctx: Ctx, id: string) {
     id,
   );
   const chapter = await ctx.db.get('SELECT title FROM chapters WHERE id = ?', t.chapter_id);
+  // Sprachprüfung der Zielsprache (ADR-097): Englisch mit Grammatik und Rechtschreibung, sonst sprachneutrale Regeln
+  const styleOpts = await styleOptionsFor(ctx, t.language);
+  const style = (text: string | null) => (text ? analyzeStyle(text, styleOpts).sentences.flatMap((x) => x.issues)
+    .filter((i) => !['long_sentence', 'capitalization'].includes(i.rule) || t.language === 'en')
+    .map((i) => ({ rule: i.rule, label: RULE_LABEL[i.rule], message: i.message, severity: i.severity, fix: i.fix ?? null })) : []);
   return {
     ...(await summary(ctx, t)),
     sourceTitle: chapter?.title ?? '',
@@ -106,7 +113,7 @@ export async function getTranslation(ctx: Ctx, id: string) {
       code: s.code, title: s.title, translatedTitle: SECTION_TITLES[t.language]?.[s.code] ?? s.title,
       blocks: blocks.filter((b) => b.section_code === s.code).map((b) => ({
         id: b.id, blockId: b.block_id, kind: b.kind, sourceText: b.source_text, text: b.text ?? null, mode: b.mode,
-        sentences: parseJson(b.sentences, null), issues: parseJson<TranslationIssue[]>(b.issues, []), provider: b.provider ?? null, model: b.model ?? null,
+        sentences: parseJson(b.sentences, null), issues: parseJson<TranslationIssue[]>(b.issues, []), style: style(b.text ?? null), provider: b.provider ?? null, model: b.model ?? null,
         updatedBy: b.updated_by ?? null, updatedAt: b.updated_at ?? null,
       })),
     })).filter((s) => s.blocks.length),

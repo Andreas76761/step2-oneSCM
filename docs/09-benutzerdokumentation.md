@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.43 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.44 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -40,6 +40,7 @@ Stand: Version 0.43 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 ## 4. Schreiben
 
 - **Kapitelsteuerung:** je Kapitel und Unterkapitel eine kurze **Kapitelanweisung** – „Worauf es ankommt“, „Wichtige Themen“ (je Zeile eines, müssen vorkommen) und „Nicht beschreiben“. Sie gilt mit Vorrang: Der Kapitelgenerator lässt Quellen zu „Nicht beschreiben“ weg und meldet wichtige Themen ohne Quelle als Lücke, KI-Vorschläge und Anleitungs-Check beachten sie, die Werkstatt zeigt sie oben. Quellenbindung und Datenschutz gehen ihr vor.
+  - **Handbuch-Varianten:** Über „Gliederung“ wählen Sie die Kapitel einer Variante und geben ihnen eine eigene Anweisung; sie gilt zusätzlich zur Anweisung der Quellkapitel.
   - **Fehlendes Kapitel oder Unterkapitel ergänzen:** Titel eingeben (mit Nummer wird es danach eingeordnet), optional „gültig ab“. Später eingelesene Quellen mit derselben Überschrift gehören dazu.
   - **Gültig ab:** Version bzw. Release je Kapitel, Unterkapitel und Label (Label unter „Labels: Version und Ablösen“, Administration). Steht im Export unter der Kapitelüberschrift.
   - **Veraltete Funktion ablösen:** Nachfolger neu anlegen oder vorhandenen wählen, „Nachfolger gültig ab“ und Hinweis eintragen → „Ablösen und in die Historie legen“. Das Alte erscheint nicht mehr im Handbuch, sondern im Anhang „Historie: abgelöste Funktionen“ (gültig von–bis, ersetzt durch). Bei Labels können Chunks, Fragen & Antworten und Bilder übertragen werden. „Zurückholen“ macht es rückgängig.
@@ -48,7 +49,7 @@ Stand: Version 0.43 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 - **Kapitelwerkstatt:** Absätze bearbeiten, verschieben, KI-Vorschläge (mit Beleg je Satz) annehmen, Anleitungs-Check und Schreibstil direkt im Kapitel.
 - **Draft Manual:** Gesamtentwurf mit farbiger Kennzeichnung von Dopplungen, Lücken, Widersprüchen und Warnungen; Handbuch-Varianten je Rolle, Sparte, Markt.
 - **Bilder:** aus Textstellen ASCII-Bilder, Klickstrecken, Prozessbilder und Infografiken; Screenshots markieren (Pfeile, Rahmen, Unschärfe, Zuschnitt).
-- **Bildarchiv:** jedes Bild mit fester Bildnummer (B-0001 …), Merkmalen (Sprache, Rollen, Sparten, Märkte, Release, Reiter) und Prüfregeln.
+- **Bildarchiv:** jedes Bild mit fester Bildnummer (B-0001 …), Merkmalen (Sprache, Rollen, Sparten, Märkte, Release, Reiter) und Prüfregeln – auch für die Bildunterschrift (höchstens 200 Zeichen und zwei Sätze, ohne „Hier sieht man …“).
   - **Neue Fassung** (Datei oder Strg+V) ersetzt das Bild überall; **Platzhalter** reservieren eine Nummer.
   - **Varianten einer Maske** verknüpfen: Export, Releases und Übersetzungen zeigen automatisch die Fassung in passender Sprache, Rolle, Sparte und Markt.
   - **Klickstrecke aus Screenshots:** Stationen aus Archivbildern, parallele Wege 3a/3b; das Ergebnis liegt als Bild im Archiv.
@@ -61,6 +62,11 @@ Stand: Version 0.43 (23.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 - **Anleitungs-Check:** Ist das Kapitel leicht zu befolgen? Zwölf Prüfpunkte als **Muss** (10 Punkte) oder **Soll** (5 Punkte) mit Korrektur per Klick. Die Administration legt fest, ob ein Mindestwert und/oder „alle Muss-Punkte erfüllt“ Bedingung für Einreichen und Freigabe sind.
 - **Rückmeldungen:** Rückmeldungen der Leserinnen und Leser aus Leseransicht und Online-Hilfe auswerten.
 - **Schreibstil, Terminologie:** Stilregeln mit gelber Markierung und Umformulierung; Fachbegriffe und Synonyme mit fester Übersetzung.
+  - **Hausregeln:** „…“ statt "…", Gedankenstrich, Menüpfad mit ›, Zahlen bis zwölf ausschreiben, Tausenderpunkt, Leerzeichen vor Einheit und %, Datum TT.MM.JJJJ, „oneSCM“ – „Automatisch korrigieren“ übernimmt alle eindeutigen Korrekturen.
+  - **Sprache des Textes** im Textfeld wählen: Englisch prüft zusätzlich a/an, „I“ und Rechtschreibung. Übersetzungen zeigen je Absatz die Sprachprüfung.
+  - **Regeln** (Administration): Zielgruppe für die Lesbarkeit, erlaubte Begriffe (werden nie gemeldet, Liste einlesbar), eigene Formulierungen je Sprache (z. B. Dealer → Händler auf Deutsch, Händler → Dealer auf Englisch).
+  - **Lesbarkeit** je Kapitel im Anleitungs-Check und im Schreibstil: Flesch, LIX, Ø Wörter je Satz, lange Sätze, Passiv mit Sollwerten der Zielgruppe.
+  - **Terminologie:** „nicht übersetzen“ – der Begriff steht in jeder Sprache unverändert (z. B. Begriffe der Oberfläche).
 - **Evidenz:** Herkunft jedes Absatzes.
 - **Freigabe:** einreichen, mehrstufig freigeben; das Qualitätsgate zeigt, was noch fehlt.
 

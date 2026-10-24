@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.44.0 – Etappe 44 (24.10.2026)
+
+### Hinzugefügt
+- **Hausregeln als Prüfregeln (ADR-097):** Typografie („…“, Gedankenstrich, Menüpfad mit ›, kein Punkt nach Überschriften), Zahlen und Datum (bis zwölf ausschreiben, Tausenderpunkt, Dezimalkomma, Leerzeichen vor Einheit, TT.MM.JJJJ, Zeitraum 2023–2027), Produktname „oneSCM“ – mit Korrektur per Klick.
+- **Rechtschreibung:** erweiterte deutsche und neue englische Fehlerliste; **erlaubte Begriffe** (Whitelist) je Projekt, auch als Textliste einlesbar.
+- **Englisch und weitere Sprachen:** Prüfung mit Sprachwahl im Textfeld und je Absatz einer Übersetzung; Englisch mit a/an, „I“ und Rechtschreibung.
+- **Wortliste je Sprache:** eigene Formulierungen mit Sprache (z. B. Dealer → Händler auf Deutsch, Händler → Dealer auf Englisch); CSV mit Spalte „sprache“.
+- **Lesbarkeit je Kapitel:** LIX, Flesch-Amstad, Ø Satzlänge, lange Sätze, Passiv mit Sollwerten je Zielgruppe (Endanwender bzw. Fachanwender) – im Anleitungs-Check und im Schreibstil.
+- **„Nicht übersetzen“** je Begriff der Terminologie: bleibt in jeder Sprache unverändert, KI-Übersetzung und Prüfung beachten es.
+- **Bildunterschriften:** Prüfregeln für Länge, Satzzahl und Füller.
+- **Kapitelanweisung für Handbuch-Varianten** zusätzlich zu der der Quellkapitel; im Arbeitsordner unter `03_Varianten`.
+- Migration `051_style_keep_terms.sql`; Tests T-296 … T-299, E2E T-300 (axe); Anforderungen NFR-104 … NFR-107.
+
 ## 0.43.0 – Etappe 43 (23.10.2026)
 
 ### Hinzugefügt

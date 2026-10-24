@@ -158,14 +158,22 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
   if (!gate.passed) throw conflict('Generierung blockiert: offene Blocker-Befunde müssen zuerst geklärt werden.', { gate });
 
   // Kapitelanweisung (ADR-096) mit Vorrang: ausgeschlossene Themen kommen nicht in den Entwurf
+  // Handbuch-Variante (ADR-097, W-01): eigene Anweisung des Variantenkapitels plus die der Quellkapitel und -unterkapitel
   const chapterInstruction = instructionOf(chapter);
   const subInstructions = await subchapterInstructions(ctx, chapterId);
-  const subOf = new Map((await ctx.db.all('SELECT id, subchapter_id FROM text_snippets WHERE chapter_id = ?', chapterId)).map((r) => [r.id as string, r.subchapter_id as string | null]));
   const all = await loadGenSnippets(ctx, chapterId);
+  const origin = all.length ? new Map((await ctx.db.all(
+    `SELECT s.id, s.chapter_id, s.subchapter_id, c.instruction, c.instruction_topics, c.instruction_excluded, sc.instruction AS sub_instruction,
+       sc.instruction_topics AS sub_topics, sc.instruction_excluded AS sub_excluded
+     FROM text_snippets s JOIN chapters c ON c.id = s.chapter_id LEFT JOIN subchapters sc ON sc.id = s.subchapter_id WHERE s.id IN (${all.map(() => '?').join(',')})`, ...all.map((s) => s.id),
+  )).map((r) => [r.id as string, r])) : new Map();
   const excludedByInstruction: { snippetId: string; topic: string }[] = [];
   const snippets = all.filter((s) => {
-    const sub = subOf.get(s.id);
-    const ins = mergeInstructions(chapterInstruction, sub ? subInstructions.get(sub) : null);
+    const o = origin.get(s.id);
+    let ins = chapterInstruction;
+    if (o && o.chapter_id !== chapterId) ins = mergeInstructions(ins, instructionOf(o));
+    const sub = o?.subchapter_id ? (o.chapter_id === chapterId ? subInstructions.get(o.subchapter_id) : instructionOf({ instruction: o.sub_instruction, instruction_topics: o.sub_topics, instruction_excluded: o.sub_excluded })) : null;
+    ins = mergeInstructions(ins, sub);
     const topic = ins.excluded.find((t) => mentions(s.text, t));
     if (topic) excludedByInstruction.push({ snippetId: s.id, topic });
     return !topic;

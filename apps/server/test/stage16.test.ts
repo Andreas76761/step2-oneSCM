@@ -28,7 +28,7 @@ describe('Etappe 16', () => {
     const built = await build('rules');
     const call = client(built);
     try {
-      expect((await call('GET', '/style/rules', undefined, 'u-leser')).json).toEqual({ disabled: [], phrases: [], address: 'sie', maxSentenceWords: null });
+      expect((await call('GET', '/style/rules', undefined, 'u-leser')).json).toEqual({ disabled: [], phrases: [], address: 'sie', maxSentenceWords: null, allowed: [], audience: 'enduser' });
       const rules = { disabled: ['filler'], phrases, address: 'sie', maxSentenceWords: 8 };
       expect((await call('PUT', '/style/rules', rules, 'u-redaktion')).status).toBe(403);
       expect((await call('PUT', '/style/rules', { disabled: ['gibtsnicht'] })).status).toBe(400);

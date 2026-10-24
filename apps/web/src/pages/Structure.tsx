@@ -19,7 +19,11 @@ export function StructurePage() {
   const { notify } = useApp();
   const { canEdit, isAdmin } = usePerms();
   const [showHistory, setShowHistory] = useState(false);
-  const st = useLoad<any>(`/structure${showHistory ? '?history=true' : ''}`, [showHistory]);
+  // Handbuch-Varianten (ADR-097, W-01): eigene Anweisung je Variantenkapitel zusätzlich zur Anweisung der Quellkapitel
+  const outlines = useLoad<{ items: any[] }>('/structure/outlines');
+  const [outline, setOutline] = useState('');
+  const query = [showHistory && !outline ? 'history=true' : '', outline ? `outline=${encodeURIComponent(outline)}` : ''].filter(Boolean).join('&');
+  const st = useLoad<any>(`/structure${query ? `?${query}` : ''}`, [query]);
   const hist = useLoad<{ items: any[] }>('/structure/history');
   const [sel, setSel] = useState<Sel>(null);
   const [newCh, setNewCh] = useState({ title: '', afterId: '', validFrom: '' });
@@ -64,7 +68,18 @@ export function StructurePage() {
         </div>
       )}
       <div className="grid2">
-        <Card title="Kapitel und Unterkapitel" actions={<label className="inline small"><input type="checkbox" checked={showHistory} onChange={(e) => setShowHistory(e.target.checked)} /> Historie einblenden</label>}>
+        <Card title="Kapitel und Unterkapitel" actions={<span className="row-actions">
+          {(outlines.data?.items ?? []).some((o) => o.chapters) && (
+            <label className="inline small">Gliederung
+              <select value={outline} onChange={(e) => { setOutline(e.target.value); setSel(null); }}>
+                <option value="">Quellen (Gesamtgliederung)</option>
+                {(outlines.data?.items ?? []).filter((o) => o.chapters).map((o) => <option key={o.familyId} value={o.familyId}>Variante: {o.name}</option>)}
+              </select>
+            </label>
+          )}
+          {!outline && <label className="inline small"><input type="checkbox" checked={showHistory} onChange={(e) => setShowHistory(e.target.checked)} /> Historie einblenden</label>}
+        </span>}>
+          {outline && <p className="small muted">Kapitel der Handbuch-Variante: Ihre Anweisung gilt zusätzlich zur Anweisung der Quellkapitel, aus denen die Absätze stammen. Kapitel ergänzen Sie in der Gliederung (Stammdaten › Inhaltsverzeichnis).</p>}
           {!chapters.length ? <Empty>Noch keine Kapitel. Kapitel entstehen beim Einlesen oder hier unten.</Empty> : (
             <ul className="st-tree" aria-label="Kapitel">
               {chapters.map((c) => (
@@ -85,7 +100,7 @@ export function StructurePage() {
               ))}
             </ul>
           )}
-          {canEdit && (
+          {canEdit && !outline && (
             <fieldset className="st-add">
               <legend>Fehlendes Kapitel ergänzen</legend>
               <div className="filters">
@@ -104,7 +119,7 @@ export function StructurePage() {
           )}
         </Card>
         <div>
-          {item ? <Editor key={item.id} kind={sel!.kind} item={item} chapter={selChapter} chapters={chapters} canEdit={canEdit} onChange={reload} />
+          {item ? <Editor key={item.id} kind={sel!.kind} item={item} chapter={selChapter} chapters={chapters} canEdit={canEdit} variant={!!outline} onChange={reload} />
             : <Card title="Anweisung"><Empty>Wählen Sie links ein Kapitel oder Unterkapitel.</Empty></Card>}
           <LabelVersions isAdmin={isAdmin} onChange={reload} />
         </div>
@@ -144,7 +159,7 @@ function Meta({ x }: { x: any }) {
   );
 }
 
-function Editor({ kind, item, chapter, chapters, canEdit, onChange }: { kind: 'chapter' | 'subchapter'; item: any; chapter: any; chapters: any[]; canEdit: boolean; onChange: () => void }) {
+function Editor({ kind, item, chapter, chapters, canEdit, variant, onChange }: { kind: 'chapter' | 'subchapter'; item: any; chapter: any; chapters: any[]; canEdit: boolean; variant?: boolean; onChange: () => void }) {
   const { notify } = useApp();
   const [f, setF] = useState({ title: item.title, validFrom: item.validFrom ?? '', text: item.instruction.text ?? '', topics: item.instruction.topics.join('\n'), excluded: item.instruction.excluded.join('\n') });
   const [sub, setSub] = useState('');
@@ -204,13 +219,13 @@ function Editor({ kind, item, chapter, chapters, canEdit, onChange }: { kind: 'c
         {canEdit && <button type="button" className="btn primary" onClick={save}>Anweisung speichern</button>}
       </fieldset>
       <p className="small muted">Der Generator lässt Quellen zu „Nicht beschreiben“ weg und meldet wichtige Themen ohne Quelle als Lücke; KI-Vorschläge und der Anleitungs-Check beachten die Anweisung. Im Arbeitsordner steht sie als <code>ANWEISUNG.md</code>.</p>
-      {canEdit && kind === 'chapter' && !item.inHistory && (
+      {canEdit && kind === 'chapter' && !item.inHistory && !variant && (
         <div className="filters">
           <label className="grow">Fehlendes Unterkapitel <input value={sub} maxLength={160} placeholder="z. B. 7.2 Kündigung prüfen" onChange={(e) => setSub(e.target.value)} /></label>
           <button type="button" className="btn" disabled={sub.trim().length < 3} onClick={addSub}>Unterkapitel ergänzen</button>
         </div>
       )}
-      {canEdit && !item.inHistory && (
+      {canEdit && !item.inHistory && !variant && (
         <fieldset className="st-replace">
           <legend>Veraltete Funktion ablösen</legend>
           <p className="small muted">Das {what} gilt dann bis zur Version des Nachfolgers, kommt in die Historie und erscheint nicht mehr im Handbuch – dort steht es im Anhang „Historie“.</p>

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.43.0
+  version: 0.44.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -1072,6 +1072,7 @@ paths:
                 avoid: { type: array, items: { type: string } }
                 definition: { type: [string, 'null'] }
                 translations: { type: object, description: 'Je Projektsprache { term, definition } fürs Glossar beim Lesen (ADR-071); andere Sprachen → 400', additionalProperties: { type: object, properties: { term: { type: string }, definition: { type: [string, "null"] } } } }
+                keepUntranslated: { type: boolean, description: 'nicht übersetzen (ADR-097): der Begriff steht in jeder Sprache unverändert' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Angelegt }
@@ -1096,6 +1097,7 @@ paths:
                 avoid: { type: array, items: { type: string } }
                 definition: { type: [string, 'null'] }
                 translations: { type: object, description: 'Je Projektsprache { term, definition } fürs Glossar beim Lesen (ADR-071); andere Sprachen → 400', additionalProperties: { type: object, properties: { term: { type: string }, definition: { type: [string, "null"] } } } }
+                keepUntranslated: { type: boolean, description: 'nicht übersetzen (ADR-097): der Begriff steht in jeder Sprache unverändert' }
                 status: { type: string, enum: [active, retired] }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -2515,16 +2517,16 @@ paths:
   /style/check:
     post:
       operationId: checkStyle
-      summary: 'Text auf Stil, Grammatik und Zeitform prüfen – Sätze mit Position, Hinweisen und Korrekturvorschlägen (ADR-040)'
+      summary: 'Text auf Stil, Grammatik und Zeitform prüfen – Sätze mit Position, Hinweisen und Korrekturvorschlägen (ADR-040); mit Hausregeln (Typografie, Zahlen, Produktname) und Sprache (ADR-097)'
       tags: [Schreibstil]
-      x-requirements: [NFR-27]
+      x-requirements: [NFR-27, NFR-104, NFR-105]
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 } } } } }
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 }, language: { type: string, description: 'de (Standard, alle Regeln), en (zusätzlich a/an, „I“, Rechtschreibung), sonst nur sprachneutrale Regeln und eigene Regeln der Sprache' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ text, sentences: [{ start, end, text, issues: [{ rule, severity, message, start, end, fix? }] }], counts, score, rules, problemSentences, fixable }' }
+        '200': { description: '{ text, language, sentences: [{ start, end, text, issues: [{ rule, severity, message, start, end, fix? }] }], counts, score, rules, problemSentences, fixable }' }
         '400': { $ref: '#/components/responses/Problem' }
   /style/rewrite:
     post:
@@ -2705,7 +2707,7 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ disabled: [Regel], phrases: [{ avoid, use, note }], address: sie|du|null, maxSentenceWords }' }
+        '200': { description: '{ disabled: [Regel], phrases: [{ avoid, use, note, language? }], address: sie|du|null, maxSentenceWords, allowed: [Begriff], audience: enduser|expert }' }
     put:
       operationId: updateStyleRules
       summary: 'Eigene Stilregeln ändern (Berechtigung admin, ADR-044)'
@@ -2720,9 +2722,11 @@ paths:
               type: object
               properties:
                 disabled: { type: array, items: { type: string } }
-                phrases: { type: array, maxItems: 300, items: { type: object, required: [avoid], properties: { avoid: { type: string }, use: { type: [string, 'null'] }, note: { type: [string, 'null'] } } } }
+                phrases: { type: array, maxItems: 300, items: { type: object, required: [avoid], properties: { avoid: { type: string }, use: { type: [string, 'null'] }, note: { type: [string, 'null'] }, language: { type: [string, 'null'], description: 'Sprache der Regel (ADR-097), ohne Angabe Deutsch' } } } }
                 address: { type: [string, 'null'], enum: [sie, du, null] }
                 maxSentenceWords: { type: [integer, 'null'], minimum: 8, maximum: 60 }
+                allowed: { oneOf: [{ type: array, maxItems: 1000, items: { type: string, minLength: 2, maxLength: 60 } }, { type: string }], description: 'erlaubte Begriffe (Whitelist, ADR-097); als Text je Zeile, Semikolon oder Komma getrennt' }
+                audience: { type: string, enum: [enduser, expert], description: 'Zielgruppe für die Sollwerte der Lesbarkeit (ADR-097)' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Stilregeln' }
@@ -3037,7 +3041,7 @@ paths:
         - { $ref: '#/components/parameters/VersionId' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ versionId, chapterId, title, editable, score, passed, total, fixable, checks: [{ code, label, status, message, hint, items: [{ blockId, excerpt, section, fix? }], addSection? }] }' }
+        '200': { description: '{ versionId, chapterId, title, editable, score, passed, total, fixable, checks: [{ code, label, status, message, hint, items: [{ blockId, excerpt, section, fix? }], addSection? }], instruction, readability: { sentences, words, avgWords, longShare, passiveShare, lix, flesch, audience, checks, ok } }' }
         '404': { $ref: '#/components/responses/Problem' }
   /guidance/chapter-versions/{versionId}/apply:
     post:
@@ -4465,10 +4469,22 @@ paths:
       tags: [Kapitel]
       x-requirements: [NFR-101, NFR-102]
       x-extension: true
-      parameters: [{ name: history, in: query, required: false, schema: { type: string, enum: ['true', 'false'] } }]
+      parameters:
+        - { name: history, in: query, required: false, schema: { type: string, enum: ['true', 'false'] } }
+        - { name: outline, in: query, required: false, schema: { type: string }, description: 'Kapitel einer Handbuch-Variante (familyId, ADR-097)' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ chapters: [{ id, key, title, position, snippets, instruction: { text, topics, excluded }, validFrom, validUntil, replacedBy, inHistory, subchapters: [...] }], summary: { chapters, subchapters, withInstruction } }' }
+  /structure/outlines:
+    get:
+      operationId: listStructureOutlines
+      summary: 'Handbuch-Varianten mit angelegten Kapiteln – deren Kapitel haben eine eigene Anweisung zusätzlich zu der der Quellkapitel (ADR-097, W-01)'
+      tags: [Kapitel]
+      x-requirements: [NFR-107]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ familyId, name, versionNo, chapters }] }' }
   /structure/chapters:
     post:
       operationId: createStructureChapter
@@ -4590,7 +4606,7 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ format: onescm-instructions, chapters: [{ title, validFrom, instruction, markdown, subchapters }] }' }
+        '200': { description: '{ format: onescm-instructions, chapters: [{ title, validFrom, instruction, markdown, subchapters }], variants: [{ familyId, name, chapters }] }' }
   /image-clickpaths:
     get:
       operationId: listClickpaths

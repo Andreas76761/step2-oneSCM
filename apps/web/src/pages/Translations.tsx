@@ -164,6 +164,13 @@ function TranslationEditor({ id, canEdit, canApprove, llm, issueLabels, onChange
                   {b.issues.filter((x: string) => x !== 'empty' || b.text).map((x: string) => <span key={x} className="sev-text"> ✖ {issueLabels[x] ?? x}</span>)}
                   {b.sentences && <span className="muted"> · {b.sentences.length} Sätze der Quelle zugeordnet</span>}
                 </div>
+                {/* Sprachprüfung der Zielsprache (ADR-097): Englisch mit a/an, „I“, Rechtschreibung; sonst sprachneutrale Regeln und eigene Regeln der Sprache */}
+                {b.style?.length > 0 && (
+                  <ul className="small tr-style" aria-label="Sprachprüfung">
+                    {b.style.slice(0, 8).map((x: any, i: number) => <li key={i}><span className={`tag small ${x.severity === 'warning' ? 'sev-medium' : ''}`}>{x.label}</span> {x.message}</li>)}
+                    {b.style.length > 8 && <li className="muted">… und {b.style.length - 8} weitere</li>}
+                  </ul>
+                )}
               </div>
             </div>
           ))}

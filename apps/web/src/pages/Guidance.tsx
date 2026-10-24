@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import { post, put } from '../api';
 import { FeedbackCard } from './Reader';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { ReadabilityPanel } from './Style';
 
 const STATUS_ICON: Record<string, { icon: string; label: string }> = {
   ok: { icon: '✓', label: 'erfüllt' },
@@ -108,6 +109,7 @@ export function GuidancePanel({ versionId, canEdit, onChanged }: { versionId: st
           {d.instruction.topicsMissing.length > 0 && <div className="small">Wichtige Themen fehlen: {d.instruction.topicsMissing.map((t: string) => `„${t}“`).join(', ')}</div>}
         </section>
       )}
+      <ReadabilityPanel r={d.readability} />
       <div className="guide-head">
         <ScoreMeter score={d.score} />
         <p className="small">{d.passed} von {d.total} Punkten erfüllt{!d.editable && ' · freigegebene oder eingereichte Versionen sind schreibgeschützt'}</p>
@@ -187,7 +189,7 @@ export function GuidancePage() {
         <Card title={`Kapitel (${chapters.length})`} actions={list.data.average !== null && <span className="small">Durchschnitt: <strong>{list.data.average}</strong> · {scoreLabel(list.data.average)}</span>}>
           <div className="table-wrap" role="region" aria-label="Kapitel im Anleitungs-Check" tabIndex={0}>
             <table className="table">
-              <thead><tr><th>Kapitel</th><th>Wert</th><th>Offene Punkte</th><th>Leser</th><th /></tr></thead>
+              <thead><tr><th>Kapitel</th><th>Wert</th><th>Offene Punkte</th><th>Lesbarkeit</th><th>Leser</th><th /></tr></thead>
               <tbody>
                 {chapters.map((c) => (
                   <tr key={c.chapterId}>
@@ -197,6 +199,7 @@ export function GuidancePage() {
                       {c.open.length ? c.open.map((o: any) => <span key={o.code} className={`tag guide-tag ${o.status}`}>{o.status === 'warning' ? '! ' : 'i '}{o.level === 'must' ? 'Muss: ' : ''}{o.label}</span>) : <span className="small">✓ alles erfüllt</span>}
                       <div className="small muted">{c.points.achieved}/{c.points.possible} Punkte{c.mustPassed ? '' : ' · Muss-Punkte offen'}</div>
                     </td>
+                    <td className="small">{c.readability ? <>{c.readability.ok ? '✓' : '!'} Flesch {c.readability.flesch} · LIX {c.readability.lix}<div className="muted">Ø {String(c.readability.avgWords).replace('.', ',')} Wörter</div></> : '–'}</td>
                     <td>{fbByChapter.get(c.chapterId) ? (() => { const f = fbByChapter.get(c.chapterId)!; return <span className="small" aria-label={`${f.helpful} hilfreich, ${f.notHelpful} nicht hilfreich, ${f.open} offen`}>👍 {f.helpful} · 👎 {f.notHelpful}{f.open ? ` · ${f.open} offen` : ''}</span>; })() : <span className="small muted">–</span>}</td>
                     <td><Link className="btn small" to={`/anleitungs-check/${c.versionId}`} aria-label={`${c.title} prüfen`}>Prüfen</Link></td>
                   </tr>

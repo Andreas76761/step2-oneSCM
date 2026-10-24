@@ -2564,3 +2564,51 @@ test('[T-295] Kapitelsteuerung: Kapitel und Unterkapitel ergänzen, Kapitelanwei
   await expect(page.getByText('„9.1 E2E Kündigung erfassen“ aus der Historie zurückgeholt.')).toBeVisible();
   await expect(tree).toContainText('9.1 E2E Kündigung erfassen');
 });
+
+test('[T-300] Schreibstil: Hausregeln (Anführungszeichen, Zahlen, Datum) automatisch korrigieren, Englisch prüfen, Zielgruppe und erlaubte Begriffe; Lesbarkeit je Kapitel', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Schreibstil' }).click();
+  // Deutsch: Hausregeln
+  await page.getByRole('textbox', { name: 'Text' }).fill('Klicken Sie auf "Speichern". Es gibt 3 Rollen ab 2026-10-23 in OneSCM.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Stilwert' })).toContainText('Typografie 1');
+  await page.getByRole('button', { name: /Automatisch korrigieren/ }).click();
+  await expect(page.getByRole('textbox', { name: 'Text' })).toHaveValue('Klicken Sie auf „Speichern“. Es gibt drei Rollen ab 23.10.2026 in oneSCM.');
+  expect(await axe()).toEqual([]);
+  // Englisch: a/an
+  await page.getByLabel('Sprache des Textes').selectOption('en');
+  await page.getByRole('textbox', { name: 'Text' }).fill('Create a order for the dealer.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Stilwert' })).toContainText('Grammatik 1');
+  await expect(page.getByRole('button', { name: 'In Präsens umwandeln' })).toHaveCount(0);
+  await page.getByRole('button', { name: /Automatisch korrigieren/ }).click();
+  await expect(page.getByRole('textbox', { name: 'Text' })).toHaveValue('Create an order for the dealer.');
+
+  // Regeln: Zielgruppe und erlaubte Begriffe
+  await page.getByRole('tab', { name: 'Regeln' }).click();
+  await page.getByLabel('Zielgruppe (Lesbarkeit)').selectOption('expert');
+  await page.getByLabel(/Erlaubte Begriffe/).fill('BTO\nVIN');
+  await page.getByRole('button', { name: 'Stilregeln speichern' }).click();
+  await expect(page.getByText('Stilregeln gespeichert.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Lesbarkeit je Kapitel im Schreibstil (ein Kapitelentwurf wird bei Bedarf erzeugt)
+  const h = { 'x-user-id': 'u-redaktion' };
+  const chapters = await (await page.request.get('/api/v1/chapters', { headers: h })).json();
+  if (!chapters.some((c: any) => c.versions.length)) {
+    for (const c of chapters) if ((await page.request.post(`/api/v1/chapters/${c.id}/generate`, { headers: h })).ok()) break;
+  }
+  await page.reload();
+  await page.getByRole('tab', { name: 'Kapitel' }).click();
+  const select = page.getByRole('combobox', { name: 'Kapitel', exact: true });
+  const value = await select.evaluate((el) => [...(el as HTMLSelectElement).options].find((o) => o.value)?.value ?? '');
+  await select.selectOption(value);
+  const read = page.getByRole('region', { name: 'Lesbarkeit' });
+  await expect(read).toContainText('Lesbarkeit für Fachanwender und Administration');
+  await expect(read).toContainText('Flesch');
+  expect(await axe()).toEqual([]);
+});

@@ -2111,5 +2111,55 @@
       "NFR-102",
       "NFR-103"
     ]
+  },
+  {
+    "id": "T-296",
+    "title": "Hausregeln (Typografie, Zahlen, Datum, Produktname), Englisch (a/an, „I“, Rechtschreibung), Wortliste je Sprache, erlaubte Begriffe (Einheit)",
+    "file": "apps/server/test/stage44.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-104",
+      "NFR-105"
+    ]
+  },
+  {
+    "id": "T-297",
+    "title": "Lesbarkeit (LIX, Flesch-Amstad, Sollwerte je Zielgruppe) und Bildunterschriften (Einheit)",
+    "file": "apps/server/test/stage44.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-106"
+    ]
+  },
+  {
+    "id": "T-298",
+    "title": "Stilregeln mit Zielgruppe, erlaubten Begriffen und Sprache je Regel; Prüfung in Englisch; Lesbarkeit im Anleitungs-Check; „nicht übersetzen“; Sprachprüfung der Übersetzung; Bildunterschrift im Archiv",
+    "file": "apps/server/test/stage44.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-104",
+      "NFR-105",
+      "NFR-106"
+    ]
+  },
+  {
+    "id": "T-299",
+    "title": "Kapitelanweisung für Handbuch-Varianten: eigene Anweisung des Variantenkapitels und die der Quellkapitel gelten beim Generieren; Export mit Varianten",
+    "file": "apps/server/test/stage44.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-107"
+    ]
+  },
+  {
+    "id": "T-300",
+    "title": "Schreibstil: Hausregeln (Anführungszeichen, Zahlen, Datum) automatisch korrigieren, Englisch prüfen, Zielgruppe und erlaubte Begriffe; Lesbarkeit je Kapitel",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-104",
+      "NFR-105",
+      "NFR-106"
+    ]
   }
 ]

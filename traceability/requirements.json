@@ -1118,5 +1118,41 @@
     "documentation": [
       "docs/adr/ADR-096-kapitelsteuerung-historie.md"
     ]
+  },
+  {
+    "id": "NFR-104",
+    "title": "Hausregeln als Prüfregeln mit Korrektur (Anführungszeichen, Gedankenstrich, Menüpfad, Zahlen bis zwölf, Tausenderpunkt, Einheit, Datum, Zeitraum, Produktname oneSCM); erweiterte Rechtschreibliste; erlaubte Begriffe",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-097-grammatik-sprachstil.md"
+    ]
+  },
+  {
+    "id": "NFR-105",
+    "title": "Sprachprüfung je Sprache: Englisch mit a/an, „I“ und Rechtschreibung, andere Sprachen sprachneutral; eigene Regeln je Sprache; Prüfung der Übersetzungen; Begriffe „nicht übersetzen“",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-097-grammatik-sprachstil.md"
+    ]
+  },
+  {
+    "id": "NFR-106",
+    "title": "Lesbarkeit je Kapitel (LIX, Flesch-Amstad, Satzlänge, lange Sätze, Passiv) mit Sollwerten je Zielgruppe; Regeln für Bildunterschriften",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-097-grammatik-sprachstil.md"
+    ]
+  },
+  {
+    "id": "NFR-107",
+    "title": "Kapitelanweisung für Kapitel der Handbuch-Varianten zusätzlich zu der der Quellkapitel, auch im Arbeitsordner (03_Varianten)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-097-grammatik-sprachstil.md"
+    ]
   }
 ]

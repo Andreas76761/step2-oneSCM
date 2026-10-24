@@ -485,12 +485,26 @@ def nummer(titel: str) -> str | None:
     return '.'.join(str(int(x)) for x in m.group(1).split('.')) if m else None
 
 
-def anweisungen_abgleichen(ziel: Path, daten: dict, bericht: list):
-    """Anweisungen der App in 02_Kapitel/<Kapitel>/ANWEISUNG.md und <Unterkapitel>/ANWEISUNG.md – Zuordnung über die Nummer.
+def anweisungen_abgleichen(ziel: Path, daten: dict, bericht: list, zuordnung: dict | None = None):
+    """Anweisungen der App in 02_Kapitel/<Kapitel>/ANWEISUNG.md und <Unterkapitel>/ANWEISUNG.md – Zuordnung über die Nummer;
+    Anweisungen der Handbuch-Varianten in 03_Varianten/<Name>/<Kapitel>/ANWEISUNG.md (Ordner laut zuordnung.json).
     Fehlt die Datei oder ist sie noch leer, wird sie geschrieben; eigene Angaben bleiben, die App-Fassung kommt als .neu daneben."""
-    basis = ziel / '02_Kapitel'
+    ziele = [('02_Kapitel', daten.get('chapters', []))]
+    for v in daten.get('variants', []):
+        name = (zuordnung or {}).get(v.get('familyId'))
+        if name:
+            ziele.append((f'03_Varianten/{name}', v.get('chapters', [])))
+    gesamt = [0, 0]
+    for rel, kapitel in ziele:
+        n, a = _anweisungen_in(ziel, ziel / rel, kapitel, bericht)
+        gesamt[0] += n
+        gesamt[1] += a
+    bericht.append(f'- {gesamt[0]} Kapitelanweisungen aus der App übernommen' + (f', {gesamt[1]} abweichend (.neu)' if gesamt[1] else ''))
+
+
+def _anweisungen_in(ziel: Path, basis: Path, kapitel: list, bericht: list):
     if not basis.exists():
-        return
+        return 0, 0
     kap_ordner = {nummer(k.name): k for k in basis.iterdir() if k.is_dir() and nummer(k.name)}
     neu = abweichend = 0
 
@@ -508,7 +522,7 @@ def anweisungen_abgleichen(ziel: Path, daten: dict, bericht: list):
                 bericht.append(f'- `{pfad.relative_to(ziel)}` hat eigene Angaben und weicht von der App ab – App-Fassung als `ANWEISUNG.md.neu`, bitte zusammenführen')
 
     leer = lambda i: not ((i.get('text') or '').strip() or i.get('topics') or i.get('excluded'))
-    for c in daten.get('chapters', []):
+    for c in kapitel:
         k = kap_ordner.get(nummer(c['title']) or '')
         if not k:
             continue
@@ -519,7 +533,7 @@ def anweisungen_abgleichen(ziel: Path, daten: dict, bericht: list):
             u = unter.get(nummer(s['title']) or '')
             if u and not leer(s['instruction']):
                 schreibe(u / 'ANWEISUNG.md', s['markdown'])
-    bericht.append(f'- {neu} Kapitelanweisungen aus der App übernommen' + (f', {abweichend} abweichend (.neu)' if abweichend else ''))
+    return neu, abweichend
 
 
 def agenten_aktualisieren(ziel: Path, bericht: list):
@@ -681,11 +695,11 @@ def main():
         zuordnung_datei.write_text(json.dumps(zuordnung, ensure_ascii=False, indent=2), encoding='utf-8')
         # Kapitelanweisungen (App ab 0.43, Kapitelsteuerung) für die Gesamtgliederung unter 02_Kapitel
         anw = app_anweisungen(a.app, a.projekt, a.token, a.benutzer)
-        bericht += ['', '## Kapitelanweisungen aus der App → 02_Kapitel', '']
+        bericht += ['', '## Kapitelanweisungen aus der App → 02_Kapitel und 03_Varianten', '']
         if anw is None:
             bericht.append('- App liefert keine Kapitelanweisungen (ältere Version oder keine Berechtigung)')
         else:
-            anweisungen_abgleichen(ziel, anw, bericht)
+            anweisungen_abgleichen(ziel, anw, bericht, zuordnung)
     if not (a.gliederung or a.app):
         bericht += ['', 'Nur Agenten, Hauptordner und Vorlagen abgeglichen (weder --gliederung noch --app angegeben).']
     (ziel / '00_Dokumentation' / 'GLIEDERUNG_ABGLEICH.md').write_text('\n'.join(bericht) + '\n', encoding='utf-8')
