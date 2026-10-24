@@ -195,6 +195,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.53 Stand nach Etappe 51 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Word-Prüffassung mit „Fertig, wenn …“ exportieren und zurücklesen, Abweichungen als Vorschläge (W-06, NFR-130) | ✅ ([ADR-104](adr/ADR-104-aenderungsvorschlaege-word-lektorat.md)) |
+| KI-Lektorat je Kapitel mit Wortvergleich, Übernahme je Vorschlag oder je Kapitel (G-07, NFR-131) | ✅ |
+| Interne Kommentare nie im Export, Drei-Spalten-Ansicht Stand – Vorschlag – Neu (W-08, NFR-132) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
 ## 1.52 Stand nach Etappe 50 (24.10.2026)
 
 | Punkt | Ergebnis |

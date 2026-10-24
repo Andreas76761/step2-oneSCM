@@ -31,7 +31,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | G-04 | **Lokale Grammatikprüfung mit LanguageTool** (selbst betrieben, Deutsch und Englisch): Kongruenz, Kommasetzung, Groß-/Kleinschreibung über Regeln hinaus | DokuPress-Konzept (F-11) | nicht vorhanden | M | **übernehmen**, sofern LanguageTool lokal betrieben werden darf (Java-Dienst oder Docker) |
 | G-05 | **Fehlerliste in der App** – gefundene Sprachfehler mit Fundstelle, Korrektur, Kategorie, Status; Abgleich mit `FEHLERLISTE.csv` des Arbeitsordners | Arbeitsordner (sprach-lektor) | nicht vorhanden (nur als Datei) | M | **umgesetzt in Etappe 50 (ADR-103)** |
 | G-06 | **Englische Texte prüfen:** a/an, „i“ → „I“, Satzanfang, Tippfehler (für Releaseletter EN und Übersetzungen) | Releaseletter-Prüfer | nicht vorhanden – Schreibstil nur Deutsch | S | **umgesetzt in Etappe 44 (ADR-097)** |
-| G-07 | **KI-Lektorat mit Diff:** Korrekturen gelb markiert, beim Überfahren das Original, Übernahme je Kapitel oder alle | Ticket-Cockpit v3.0 | teilweise (KI-Vorschlag je Absatz mit Vergleich, Stil-Korrektur je Kapitel) | S | optional – Anzeige vereinheitlichen |
+| G-07 | **KI-Lektorat mit Diff:** Korrekturen gelb markiert, beim Überfahren das Original, Übernahme je Kapitel oder alle | Ticket-Cockpit v3.0 | teilweise (KI-Vorschlag je Absatz mit Vergleich, Stil-Korrektur je Kapitel) | S | **umgesetzt in Etappe 51 (ADR-104)** |
 
 ## 10.3 Sprachstil – offen
 
@@ -70,9 +70,9 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | W-03 | **Ticket-Einstufung** genehmigt / in Prüfung / intern / Background; intern und Background fließen nicht ins Handbuch, Background nur in die Lückenanalyse | Ticket-Cockpit | teilweise (Bug = intern im Release-Abgleich) | S | **umgesetzt in Etappe 49 (ADR-102)** |
 | W-04 | **Releaseletter-Entwurf aus Projektvergleich** (geänderte Bilder, Kapitel und Funktionen eines Release) | Screenarchiv | teilweise (Releaseletter aus Tickets, Historie seit v0.43) | M | **umgesetzt in Etappe 49 (ADR-102)** |
 | W-05 | **Vorher/Nachher-Belege** mit Schieberegler (Anlass, Änderung, Wirkung) | Screenarchiv | teilweise (Bildfassungen) | S | optional |
-| W-06 | **Word zurücklesen:** in Word überarbeitete Exporte mit Kriterium „Fertig, wenn …“ wieder einlesen und als Änderung vorschlagen | Screenarchiv | teilweise (Word-Import als Quelle) | M | optional |
+| W-06 | **Word zurücklesen:** in Word überarbeitete Exporte mit Kriterium „Fertig, wenn …“ wieder einlesen und als Änderung vorschlagen | Screenarchiv | teilweise (Word-Import als Quelle) | M | **umgesetzt in Etappe 51 (ADR-104)** |
 | W-07 | **Ausgabe als PowerPoint** und Klickstrecke als BPMN | Screenarchiv, Screenshot-Studio, Wissenssuche | nicht vorhanden | M | optional |
-| W-08 | **Interne Kommentare**, die nie exportiert werden; Drei-Spalten-Editor (Stand, Verbesserungen, neu) | Ticket-Cockpit v3.0 | teilweise (Diskussion je Absatz, Versionsvergleich) | S | optional |
+| W-08 | **Interne Kommentare**, die nie exportiert werden; Drei-Spalten-Editor (Stand, Verbesserungen, neu) | Ticket-Cockpit v3.0 | teilweise (Diskussion je Absatz, Versionsvergleich) | S | **umgesetzt in Etappe 51 (ADR-104)** |
 | W-09 | **Zukunfts-Inhalte:** eingebaut, aber erst ab Release X veröffentlicht | DokuPress | teilweise („gültig ab“ seit v0.43, ohne Ausblenden) | S | **umgesetzt in Etappe 49 (ADR-102)** |
 | W-10 | **Zwischenbilder** für kurze Zustände (Menü, Dialog) aus Videos | Screenshot-Studio | teilweise (Standbilder bei Änderung) | S | optional |
 | W-11 | **Textbausteine (Single Sourcing)** | Werkstatt V4 (F-19) | offen | L | später |
@@ -92,7 +92,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
    - danach U-01 (Übersetzungsspeicher).
 4. **Etappe 49 – Tonalität, Ticket-Einstufung, Projektvergleich, Zukunfts-Inhalte (✅ umgesetzt, ADR-102):** S-02, W-03, W-04, W-09.
 5. **Etappe 50 – Kapitelbewertung, Plausibilität, Fehlerliste (✅ umgesetzt, ADR-103):** S-07, W-02, G-05.
-6. **Danach je nach Entscheidung:** G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen); optional G-07, S-05, W-05 … W-08, W-10, W-12.
+6. **Etappe 51 – Überarbeitung: Word zurücklesen, KI-Lektorat, interne Kommentare (✅ umgesetzt, ADR-104):** W-06, G-07, W-08.
+7. **Danach je nach Entscheidung:** G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen); optional S-05, W-05, W-07, W-10, W-12.
 
 ## 10.7 Offene Entscheidungen
 

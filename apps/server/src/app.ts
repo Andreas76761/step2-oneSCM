@@ -22,6 +22,7 @@ import { collaborationRoutes } from './routes/collaboration.js';
 import { translationRoutes } from './routes/translations.js';
 import { translationWorkflowRoutes } from './routes/translationWorkflow.js';
 import { assessmentRoutes } from './routes/assessment.js';
+import { revisionRoutes } from './routes/revisions.js';
 import { failMachineTranslation, runMachineTranslation } from './services/translations.js';
 import { deliverNotification } from './services/collaboration.js';
 import { runIndexJob } from './services/semantic.js';
@@ -279,6 +280,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       translationRoutes(api, ctx);
       translationWorkflowRoutes(api, ctx);
       assessmentRoutes(api, ctx);
+      revisionRoutes(api, ctx);
       metadataRoutes(api, ctx);
       sourceUpdateRoutes(api, ctx);
       releaseLetterRoutes(api, ctx);

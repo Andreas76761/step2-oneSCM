@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.50.0
+  version: 0.51.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -367,6 +367,11 @@ components:
         reading: { type: boolean, default: false, description: 'Lesefassung (F-28): ohne Badges, Versionszeile und Abschnitt „Quellen- und Freigabestatus“' }
         transitions: { type: boolean, description: '„Weiter mit …“ am Kapitelende (F-29, nur profile full): fehlt = gepflegte Übergänge, true = zusätzlich automatisch das nächste exportierte Kapitel, false = keine' }
         asOf: { type: string, maxLength: 40, description: 'Stand (Release) für Zukunfts-Inhalte (ADR-102, W-09): Kapitel mit späterem „gültig ab“ werden ausgeblendet; Standard ist release' }
+        reviewCopy:
+          description: 'Prüffassung für Word (ADR-104, W-06, nur format docx): Lesefassung mit Zeile „Fertig, wenn: …“ je Kapitel und Exportkennung in den Dokumenteigenschaften; die geänderte Datei liest POST /revisions/word zurück'
+          oneOf:
+            - { type: boolean }
+            - { type: object, properties: { criterion: { type: string, maxLength: 300, description: 'Prüfkriterium; Standard: alle Schritte, Begriffe und Bildschirmtexte stimmen mit der Oberfläche überein' } } }
 security:
   - oidcBearer: []
   - demoUser: []
@@ -2821,6 +2826,110 @@ paths:
         '200': { description: '{ applied, changes: [{ nr, action, status, problems }], invalid }' }
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
+  /revisions/word:
+    post:
+      operationId: readWordReview
+      summary: 'Word-Prüffassung zurücklesen (ADR-104, W-06): Kapitel über die Exportkennung bzw. den Titel, Abschnitte über die Überschrift, Absätze per Ausrichtung; jede Abweichung wird ein offener Änderungsvorschlag (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-130]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Vorschlagsliste { id, origin: word, exportId, stats: { chapters, proposals, changed, added, removed, unmatchedChapters, unmatchedSections, criteria }, chapters: [{ chapterId, title, proposals }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/lektorat:
+    post:
+      operationId: runLektorat
+      summary: 'KI-Lektorat einer Kapitelversion (ADR-104, G-07): je Absatz eine Umformulierung (lokaler KI-Dienst, sonst Regelkorrekturen) als Änderungsvorschlag mit Wortvergleich; gesperrte Absätze, Bilder und Absätze mit verlorenen Zahlen entfallen (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-131]
+      x-extension: true
+      parameters: [{ name: versionId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Vorschlagsliste { id, origin: ai, stats: { proposals, skipped, method }, chapters }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '502': { $ref: '#/components/responses/Problem' }
+  /revision-batches:
+    get:
+      operationId: listRevisionBatches
+      summary: 'Vorschlagslisten des Projekts (Word-Rücklauf, KI-Lektorat) mit Anzahl je Status'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-130, NFR-131]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, origin, fileName, exportId, stats, counts: { open, accepted, rejected, stale }, createdBy, createdAt }]' }
+  /revision-batches/{id}:
+    get:
+      operationId: getRevisionBatch
+      summary: 'Vorschlagsliste mit Vorschlägen je Kapitel: Stand bei Einlesen (original), Vorschlag (proposed), aktueller Stand (current), veraltet, Wortvergleich, interner Kommentar'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-130, NFR-131, NFR-132]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, origin, stats, chapters: [{ chapterId, title, proposals: [{ id, section, sectionTitle, change, status, original, proposed, current, outdated, diff: [{ op, text }], criterion, comment, appliedVersionId }] }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /revision-batches/{id}/accept-all:
+    post:
+      operationId: acceptAllRevisions
+      summary: 'Alle offenen Vorschläge der Liste (optional eines Kapitels) übernehmen; geänderte Absätze werden „veraltet“ (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-131]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { chapterId: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ accepted, stale, batch }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /revision-proposals/{id}/decision:
+    post:
+      operationId: decideRevisionProposal
+      summary: 'Vorschlag übernehmen (optional mit eigener Fassung text) oder verwerfen; übernommen wird in einen Entwurf des Kapitels – bei freigegebener Version als Kopie (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-131, NFR-132]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [decision], properties: { decision: { type: string, enum: [accept, reject] }, text: { type: string }, comment: { type: string, maxLength: 1000 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Vorschlag mit Status accepted bzw. rejected und appliedVersionId' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'bereits entschieden, Absatz inzwischen geändert (Vorschlag veraltet) oder Kapitel zur Freigabe eingereicht' }
+  /revision-proposals/{id}:
+    patch:
+      operationId: commentRevisionProposal
+      summary: 'Interner Kommentar zum Vorschlag (ADR-104, W-08) – erscheint in keinem Export (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-132]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { comment: { type: string, maxLength: 1000 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Vorschlag mit comment' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /style/tone:
     get:
       operationId: getStyleTone

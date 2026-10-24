@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.50 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.51 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -99,6 +99,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 - **Rückmeldungen:** Rückmeldungen der Leserinnen und Leser aus Leseransicht und Online-Hilfe auswerten.
 - **Kapitelbewertung:** je Kapitel fünf Kriterien mit Ampel (grün ab 80, gelb ab 60) – Sprache, Ziel (Anleitungs-Check), Tonalität, Quellenabgleich, Fakten – und eine Gesamtampel. Im Detail steht jede Aussage mit Einstufung: belegt, unbelegt, Widerspruch oder fehlend. „Funde in die Fehlerliste“ übernimmt die Warnungen der Stilprüfung.
 - **Fehlerliste:** Nr, Fundstelle, Fehler, Korrektur, Kategorie, Regel und Status (offen, korrigiert, abgelehnt mit Begründung, Regel fehlt). Steht ein Fund nicht mehr im Kapitel, wird er beim nächsten Übernehmen „korrigiert“. „FEHLERLISTE.csv“ lädt die Liste herunter; „FEHLERLISTE.csv einlesen“ übernimmt Änderungen aus dem Arbeitsordner nach einer Vorschau.
+- **Überarbeitung:** Änderungen aus Word und dem KI-Lektorat als Vorschläge prüfen. Unter „Export“ erzeugt Word mit „Prüffassung für Word“ eine Lesefassung mit „Fertig, wenn …“ je Kapitel; die in Word bearbeitete Datei laden Sie hier hoch. „KI-Lektorat starten“ schlägt je Absatz eine bessere Fassung vor. Je Vorschlag stehen drei Spalten nebeneinander: Stand, Vorschlag (entfernte Wörter durchgestrichen, neue unterstrichen) und Neu (änderbar). „Übernehmen“ schreibt in einen Entwurf des Kapitels – die freigegebene Version bleibt bis zur nächsten Freigabe gültig. Wurde der Absatz inzwischen geändert, wird der Vorschlag „veraltet“. Der interne Kommentar steht in keinem Export.
 - **Schreibstil, Terminologie:** Stilregeln mit gelber Markierung und Umformulierung; Fachbegriffe und Synonyme mit fester Übersetzung.
   - **Hausregeln:** „…“ statt "…", Gedankenstrich, Menüpfad mit ›, Zahlen bis zwölf ausschreiben, Tausenderpunkt, Leerzeichen vor Einheit und %, Datum TT.MM.JJJJ, „oneSCM“ – „Automatisch korrigieren“ übernimmt alle eindeutigen Korrekturen.
   - **Sprache des Textes** im Textfeld wählen: Englisch prüft zusätzlich a/an, „I“ und Rechtschreibung. Übersetzungen zeigen je Absatz die Sprachprüfung.

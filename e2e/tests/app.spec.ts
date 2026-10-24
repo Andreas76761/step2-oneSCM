@@ -2928,3 +2928,43 @@ test('[T-327] Kapitelbewertung mit Ampel und Plausibilität je Aussage, Funde in
   expect(csv).toContain(`${nr};`);
   expect(csv).toContain('abgelehnt (Bewusst so formuliert)');
 });
+
+test('[T-331] Überarbeitung: Prüffassung exportieren, KI-Lektorat, Drei-Spalten-Ansicht mit Wortvergleich, eigene Fassung übernehmen, interner Kommentar – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: 'E2E Lektorat Kennwort', purpose: 'Mit dieser Anleitung ändern Sie Ihr Kennwort.', steps: ['Öffnen Sie **Profil**', 'Klicken Sie auf **Sicherheit**'], result: 'Das Kennwort wurde gespeichert.' } })).json();
+  expect(ch.versionId).toBeTruthy();
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  // Prüffassung für Word nur beim Format Word
+  await nav.getByRole('link', { name: 'Export' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Export' })).toBeVisible();
+  await page.getByLabel('Format').selectOption('docx');
+  await page.getByLabel(/Prüffassung für Word/).check();
+  await expect(page.getByRole('textbox', { name: 'Fertig, wenn …' })).toBeVisible();
+
+  await nav.getByRole('link', { name: 'Überarbeitung' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Überarbeitung' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Kapitel', exact: true }).selectOption({ label: 'E2E Lektorat Kennwort – Version 1 (Entwurf)' });
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'KI-Lektorat starten' }).click();
+  await expect(page.getByText(/KI-Lektorat: \d+ Vorschläge/)).toBeVisible();
+  const item = page.getByTestId('revision-proposal').filter({ hasText: 'wurde' }).first();
+  await expect(item.locator('del', { hasText: 'wurde' })).toBeVisible();
+  await expect(item.locator('ins', { hasText: 'wird' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await item.getByLabel('Text für den Entwurf').fill('Das Kennwort ist jetzt gespeichert.');
+  await item.getByLabel('Interner Kommentar (nie im Export)').fill('Mit Fachbereich abgestimmt');
+  await item.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(page.getByText('Vorschlag in den Entwurf übernommen.')).toBeVisible();
+  await page.getByLabel('Status').selectOption('accepted');
+  const done = page.getByTestId('revision-proposal').filter({ hasText: 'übernommen' }).first();
+  await expect(done).toContainText('Das Kennwort ist jetzt gespeichert.');
+  await expect(done.getByLabel('Interner Kommentar (nie im Export)')).toHaveValue('Mit Fachbereich abgestimmt');
+  const v = await (await request.get(`/api/v1/chapter-versions/${ch.versionId}`, { headers: red })).json();
+  expect(v.sections.flatMap((s: any) => s.blocks.map((b: any) => b.text))).toContain('Das Kennwort ist jetzt gespeichert.');
+});

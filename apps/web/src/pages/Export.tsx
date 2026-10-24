@@ -21,6 +21,9 @@ export function ExportPage() {
   const [profile, setProfile] = useState('full');
   const [reading, setReading] = useState(false);
   const [transitions, setTransitions] = useState(true);
+  // Prüffassung für Word (ADR-104, W-06): mit „Fertig, wenn: …“ je Kapitel, zum Zurücklesen auf der Seite „Überarbeitung“
+  const [review, setReview] = useState(false);
+  const [criterion, setCriterion] = useState('');
   const [result, setResult] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const t = (l: string[], s: (v: string[]) => void, c: string) => s(l.includes(c) ? l.filter((x) => x !== c) : [...l, c]);
@@ -29,7 +32,7 @@ export function ExportPage() {
   const run = async () => {
     setError(null);
     try {
-      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, asOf: asOf.trim() || undefined, format, profile, reading, transitions, ...(outline ? { outlineId, appendices } : {}) });
+      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, asOf: asOf.trim() || undefined, format, profile, reading, transitions, ...(review && format === 'docx' ? { reviewCopy: { criterion: criterion.trim() || undefined } } : {}), ...(outline ? { outlineId, appendices } : {}) });
       setResult(r);
       notify(`Export erstellt (${r.chapters} Kapitel).`);
       history.reload();
@@ -79,6 +82,12 @@ export function ExportPage() {
             <label className="inline"><input type="checkbox" checked={reading} onChange={(e) => setReading(e.target.checked)} /> Lesefassung (ohne Rollen-/Sparten-Badges, Versionszeile und Quellenstatus)</label>
             {profile === 'full' && <label className="inline"><input type="checkbox" checked={transitions} onChange={(e) => setTransitions(e.target.checked)} /> „Weiter mit …“ am Kapitelende</label>}
           </div>
+          {format === 'docx' && (
+            <div className="form-row">
+              <label className="inline"><input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} /> Prüffassung für Word (Lesefassung mit „Fertig, wenn …“ je Kapitel; geänderte Datei unter „Überarbeitung“ zurücklesen)</label>
+              {review && <label>Fertig, wenn … <input value={criterion} onChange={(e) => setCriterion(e.target.value)} maxLength={300} size={50} placeholder="alle Schritte, Begriffe und Bildschirmtexte mit der aktuellen Oberfläche übereinstimmen." /></label>}
+            </div>
+          )}
           <button className="btn primary" onClick={run}>Export erstellen</button>
           <ErrorBox error={error} />
         </Card>

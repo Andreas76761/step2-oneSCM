@@ -1356,5 +1356,32 @@
     "documentation": [
       "docs/adr/ADR-103-kapitelbewertung-fehlerliste.md"
     ]
+  },
+  {
+    "id": "NFR-130",
+    "title": "Word-Prüffassung mit „Fertig, wenn: …“ je Kapitel exportieren, geänderte Datei zurücklesen und Abweichungen je Absatz als Änderungsvorschläge zuordnen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-104-aenderungsvorschlaege-word-lektorat.md"
+    ]
+  },
+  {
+    "id": "NFR-131",
+    "title": "KI-Lektorat je Kapitel als Änderungsvorschläge mit Wortvergleich; Übernehmen, eigene Fassung oder Verwerfen je Vorschlag, alle übernehmen je Kapitel, Entwurf statt Änderung der freigegebenen Version",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-104-aenderungsvorschlaege-word-lektorat.md"
+    ]
+  },
+  {
+    "id": "NFR-132",
+    "title": "Interne Kommentare je Absatz und Vorschlag, die in keinem Export erscheinen; Drei-Spalten-Ansicht Stand | Vorschlag | Neu",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-104-aenderungsvorschlaege-word-lektorat.md"
+    ]
   }
 ]

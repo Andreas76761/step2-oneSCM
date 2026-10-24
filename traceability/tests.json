@@ -2437,5 +2437,45 @@
       "NFR-128",
       "NFR-129"
     ]
+  },
+  {
+    "id": "T-328",
+    "title": "Prüffassung zerlegen (Kapitel, Abschnitte, Absätze, Kriterium, Kästen), Absätze zuordnen auch bei mehrteiligen Absätzen, Wortvergleich",
+    "file": "apps/server/test/stage51.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-130",
+      "NFR-131"
+    ]
+  },
+  {
+    "id": "T-329",
+    "title": "Word-Prüffassung exportieren, geändert zurücklesen, Vorschläge mit eigener Fassung und Kommentar übernehmen, alle übernehmen, veraltete Vorschläge; interne Kommentare in keinem Export",
+    "file": "apps/server/test/stage51.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-130",
+      "NFR-132"
+    ]
+  },
+  {
+    "id": "T-330",
+    "title": "KI-Lektorat je Kapitel mit Wortvergleich, Verwerfen und alle übernehmen in einen Entwurf, eingereichte Version gesperrt",
+    "file": "apps/server/test/stage51.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-131"
+    ]
+  },
+  {
+    "id": "T-331",
+    "title": "Überarbeitung: Prüffassung exportieren, KI-Lektorat starten, Drei-Spalten-Ansicht mit Wortvergleich, eigene Fassung übernehmen, interner Kommentar – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-130",
+      "NFR-131",
+      "NFR-132"
+    ]
   }
 ]

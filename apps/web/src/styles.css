@@ -887,3 +887,7 @@ div.reader-lang-note p { margin: 0; }
 .tag.wa-documented { background: var(--ok-bg); color: var(--ok); }
 .tag.wa-ready { background: var(--warn-bg); color: var(--warn); }
 .tag.wa-live { background: var(--surface); color: var(--muted); }
+/* Überarbeitung (ADR-104): Vorschlag in drei Spalten */
+.rev-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin: 8px 0; }
+.rev-item textarea { width: 100%; }
+.rev-item .dp-cols { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }

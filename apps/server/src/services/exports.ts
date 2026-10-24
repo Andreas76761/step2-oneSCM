@@ -15,6 +15,7 @@ import { historyAppendix } from './structure.js';
 import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
 import { DEFAULT_LAYOUT, resolveLayout, type ResolvedLayout } from './layout.js';
 import { renderDocx } from './docx.js';
+import { DEFAULT_CRITERION } from '../domain/revision.js';
 import { transitionsFor } from './transitions.js';
 import { applyVariants } from './imageArchive.js';
 
@@ -67,6 +68,11 @@ export interface ExportInput extends ExportFilter {
    * Standard ist der Release-Filter; ohne beides wird nichts ausgeblendet.
    */
   asOf?: string;
+  /**
+   * Prüffassung für Word (ADR-104, W-06, nur docx): Lesefassung mit Zeile „Fertig, wenn: …“ je Kapitel und Exportkennung in
+   * den Dokumenteigenschaften, damit die geänderte Datei zurückgelesen und den Kapitelversionen zugeordnet werden kann.
+   */
+  reviewCopy?: { criterion?: string } | boolean;
 }
 
 export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'docx', 'json'] as const;
@@ -324,16 +330,20 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
 }
 
 /** Word-Export (ADR-038) aus den sichtbaren Absätzen */
-export async function renderDocxExport(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}): Promise<Buffer> {
+export async function renderDocxExport(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}, review?: { exportId: string; criterion: string }): Promise<Buffer> {
   const F = frameTexts(extras.language);
   return renderDocx(visible(chapters, f).map((ch) => ({
-    title: ch.title, meta: versionLine(ch, F),
+    title: ch.title, meta: versionLine(ch, F), criterion: review?.criterion ?? null,
     sections: ch.sections.map((s) => ({
       title: s.title,
       blocks: s.blocks.map((b: any) => ({ kind: b.kind, text: b.text, badges: pdfBadges(b), label: kindLabel(b.kind, F) && b.kind !== 'xref' ? kindLabel(b.kind, F)! : null })),
     })),
-  })), { title: extras.title ?? F.manualTitle, filterLine: filterDescription(f, F), media, layout: extras.layout ?? NO_LAYOUT, appendices: extras.appendices, frame: F });
+  })), { title: extras.title ?? F.manualTitle, filterLine: filterDescription(f, F), media, layout: extras.layout ?? NO_LAYOUT, appendices: extras.appendices, frame: F,
+    customProperties: review ? [{ name: 'onescm-export', value: review.exportId }] : undefined });
 }
+
+/** Interne Kommentare (ADR-104, W-08) stehen in keinem Export */
+const withoutComments = (chapters: ExportChapter[]) => chapters.map((ch) => ({ ...ch, sections: ch.sections.map((s: any) => ({ ...s, blocks: s.blocks.map(({ comment: _c, ...b }: any) => b) })) }));
 
 /** Ohne Verzeichnisse: nur die Historie abgelöster Funktionen (ADR-096), sofern vorhanden */
 async function historyOnly(ctx: Ctx): Promise<Appendices | null> {
@@ -380,6 +390,11 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   if (blockers.length) throw conflict('Export blockiert: offene Blocker- oder Datenschutzbefunde.', { blockers });
   chapters.sort((a, b) => a.position - b.position);
   const profile = input.profile ?? 'full';
+  if (input.reviewCopy && format !== 'docx') throw badRequest('Die Prüffassung gibt es nur als Word-Datei (format docx).');
+  const review = input.reviewCopy
+    ? { exportId: newId('exp'), criterion: (typeof input.reviewCopy === 'object' && typeof input.reviewCopy.criterion === 'string' ? input.reviewCopy.criterion.trim().slice(0, 300) : '') || DEFAULT_CRITERION }
+    : null;
+  if (review) input = { ...input, reading: true };
   if (!(EXPORT_PROFILES as readonly string[]).includes(profile)) throw badRequest(`profile muss eines von ${EXPORT_PROFILES.join(', ')} sein.`);
 
   const vf = outline ? variantFilter(outline) : null;
@@ -409,24 +424,24 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
     data = await renderPdfExport(chapters, filter, media, extras);
     preview = null;
   } else if (format === 'docx') {
-    data = await renderDocxExport(chapters, filter, media, extras);
+    data = await renderDocxExport(chapters, filter, media, extras, review ?? undefined);
     preview = null;
   } else {
     const text = format === 'md' ? renderMarkdown(chapters, filter, media, extras) : format === 'html' ? renderHtml(chapters, filter, media, extras)
-      : JSON.stringify({ title: extras.title ?? null, filter, chapters: visible(chapters, filter), appendices: extras.appendices ?? null }, null, 2);
+      : JSON.stringify({ title: extras.title ?? null, filter, chapters: withoutComments(visible(chapters, filter)), appendices: extras.appendices ?? null }, null, 2);
     data = Buffer.from(text, 'utf8');
     // Vorschau für die UI immer als Markdown bzw. JSON (HTML wird dort nicht eingebettet)
     preview = (format === 'json' ? text : renderMarkdown(chapters, filter, undefined, { title: extras.title })).slice(0, 4000);
   }
 
-  const id = newId('exp');
+  const id = review?.exportId ?? newId('exp');
   const key = `exports/${id}.${format}`;
   await ctx.store.put(key, data);
-  const suffix = (profile === 'full' ? '' : `-${profile}`) + (input.reading ? '-lesefassung' : '');
+  const suffix = (profile === 'full' ? '' : `-${profile}`) + (review ? '-pruefassung' : input.reading ? '-lesefassung' : '');
   const fileName = `onescm-handbuch${suffix}-${now().slice(0, 10)}.${format}`;
   await ctx.db.run(
     'INSERT INTO exports (id, project_id, params, status, format, storage_key, file_name, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    id, ctx.projectId, json({ ...input, skipped, future }), 'completed', format, key, fileName, actor, now(),
+    id, ctx.projectId, json({ ...input, skipped, future, ...(review ? { review: visible(chapters, filter).map((ch: any) => ({ chapterId: ch.chapterId, versionId: ch.id, title: ch.title })), criterion: review.criterion } : {}) }), 'completed', format, key, fileName, actor, now(),
   );
   await audit(ctx, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped, future: future.length });
   return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, asOf, future, downloadUrl: `/api/v1/exports/${id}/download`, preview, byteSize: data.length };

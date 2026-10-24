@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.51.0 – Etappe 51 (24.10.2026)
+
+### Hinzugefügt
+- **Änderungsvorschläge (ADR-104):** Word-Rücklauf und KI-Lektorat erzeugen eine gemeinsame Vorschlagsliste je Absatz (geändert, neu, entfällt). Übernommen wird in einen Entwurf; bei freigegebener Version entsteht er als Kopie, die freigegebene Version bleibt. Geänderte Absätze machen den Vorschlag „veraltet“ statt überschrieben zu werden.
+- **Word zurücklesen (W-06):**
+  - Export Word als „Prüffassung“: Lesefassung mit „Fertig, wenn: …“ je Kapitel und Exportkennung in den Dokumenteigenschaften.
+  - Die in Word bearbeitete Datei wird zurückgelesen; Kapitel über die Exportkennung bzw. den Titel, Abschnitte über die Überschrift, Absätze über Wortähnlichkeit – auch mehrteilige Absätze und Hinweiskästen.
+- **KI-Lektorat mit Wortvergleich (G-07):** je Kapitel eine Umformulierung je Absatz (lokaler KI-Dienst, sonst Regelkorrekturen), Wortvergleich mit Original beim Überfahren, Übernehmen, eigene Fassung, Verwerfen, „Alle übernehmen (Kapitel)“.
+- **Interne Kommentare und Drei-Spalten-Ansicht (W-08):** interner Kommentar je Vorschlag und Absatz, der in keinem Export steht (der JSON-Export entfernt ihn); Seite „Überarbeitung“ mit Stand | Vorschlag | Neu.
+- Seite „Überarbeitung“ (auch in der Barrierefreiheitsprüfung); Tests T-328 … T-330, E2E T-331 (axe); Anforderungen NFR-130 … NFR-132; Migration 057.
+
 ## 0.50.0 – Etappe 50 (24.10.2026)
 
 ### Hinzugefügt

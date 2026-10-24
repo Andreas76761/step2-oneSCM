@@ -46,6 +46,7 @@ const GlossaryPage = lazy(() => import('./pages/MasterData').then((m) => ({ defa
 const ImageIndexPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.ImageIndexPage })));
 const PlanningPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.PlanningPage })));
 const GuidancePage = lazy(() => import('./pages/Guidance').then((m) => ({ default: m.GuidancePage })));
+const RevisionsPage = lazy(() => import('./pages/Revisions').then((m) => ({ default: m.RevisionsPage })));
 const AssessmentPage = lazy(() => import('./pages/Assessment').then((m) => ({ default: m.AssessmentPage })));
 const LanguageErrorsPage = lazy(() => import('./pages/Assessment').then((m) => ({ default: m.LanguageErrorsPage })));
 const ChapterAssistantPage = lazy(() => import('./pages/ChapterAssistant').then((m) => ({ default: m.ChapterAssistantPage })));
@@ -131,6 +132,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   { id: 'pruefen', label: '3 Prüfen', items: [
     { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: '🔍' },
     { to: '/kapitelbewertung', label: 'Kapitelbewertung', icon: '🚦' },
+    { to: '/ueberarbeitung', label: 'Überarbeitung', icon: '🔁' },
     { to: '/rueckmeldungen', label: 'Rückmeldungen', icon: '💬' },
     { to: '/schreibstil', label: 'Schreibstil', icon: '🖋️' },
     { to: '/fehlerliste', label: 'Fehlerliste', icon: '📝' },
@@ -444,6 +446,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/kapitelbewertung" element={<AssessmentPage />} />
             <Route path="/kapitelbewertung/:versionId" element={<AssessmentPage />} />
             <Route path="/fehlerliste" element={<LanguageErrorsPage />} />
+            <Route path="/ueberarbeitung" element={<RevisionsPage />} />
+            <Route path="/ueberarbeitung/:batchId" element={<RevisionsPage />} />
             <Route path="/kapitel-assistent" element={<ChapterAssistantPage />} />
             <Route path="/lesen" element={<ReaderPage />} />
             <Route path="/lesen/druck" element={<PrintPage />} />
