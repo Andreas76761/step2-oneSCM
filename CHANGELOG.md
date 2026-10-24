@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.67.0 – Etappe 67 (24.10.2026)
+
+### Hinzugefügt
+- **Kontexthilfe im Lesestil „Handbuch-Kapitel“ (ADR-119):** Das Hilfe-Widget in oneSCM übernimmt den gewählten Lesestil:
+  - Farben und Schriften der Anpassung, Überschriften mit Balken;
+  - Hinweisboxen mit Icon und Beschriftung in der Sprache des Inhalts;
+  - Schaltflächen in der Hauptfarbe.
+- Tests T-379 und E2E T-380 (axe auf der eingebetteten Hilfeseite); Anforderung NFR-154.
+
+### Geändert
+- „War das hilfreich?“ in der Kontexthilfe mit Icons (Daumen hoch/runter) statt Emoji; der zugängliche Name bleibt „Ja“/„Nein“.
+- Icon-Generator um `thumbs-up` und `thumbs-down` ergänzt.
+
 ## 0.66.0 – Etappe 66 (24.10.2026)
 
 Wahl des Auftraggebers vom 24.10.2026: barrierefreies PDF.

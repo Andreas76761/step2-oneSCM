@@ -2908,5 +2908,23 @@
     "requirements": [
       "NFR-153"
     ]
+  },
+  {
+    "id": "T-379",
+    "title": "Kontexthilfe im Lesestil: CSS der Anpassung, Warnbox mit Icon und Beschriftung, Schaltflächen in der Hauptfarbe; Rückmeldung mit Icons statt Emoji; ohne Skripte",
+    "file": "apps/server/test/stage67.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-154"
+    ]
+  },
+  {
+    "id": "T-380",
+    "title": "Eingebettete Kontexthilfe im Lesestil im Browser: Balken, Farbe, Box mit Icon, Schaltfläche „Ja“ – axe ohne Befund",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-154"
+    ]
   }
 ]

@@ -120,3 +120,4 @@
 | [ADR-116](ADR-116-designvorlagen-powerpoint.md) | Designvorlagen als PowerPoint (16:9): Titelfolie mit Überblick, Karten bzw. Kennzahlen und Abschnittsfolien, Fortsetzung, Nummerierung mit Startwert | akzeptiert, umgesetzt |
 | [ADR-117](ADR-117-lesestil-handbuch-kapitel.md) | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (Farben, Schriften, Balken, Boxen der Designvorlage) | akzeptiert, umgesetzt |
 | [ADR-118](ADR-118-barrierefreies-pdf.md) | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht nach jedem PDF-Export | akzeptiert, umgesetzt |
+| [ADR-119](ADR-119-kontexthilfe-lesestil.md) | Kontexthilfe im Lesestil „Handbuch-Kapitel“; Hinweisboxen mit Icon und Beschriftung; Rückmeldung mit Icons statt Emoji | akzeptiert, umgesetzt |

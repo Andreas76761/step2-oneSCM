@@ -3481,3 +3481,31 @@ test('[T-378] Barrierefreies PDF im Design: Prüfbericht nach dem Export ohne Be
   await page.getByRole('button', { name: 'Export erstellen' }).click();
   await expect(report.getByText('Getaggte, barrierefreie PDFs entstehen mit einer Designvorlage')).toBeVisible();
 });
+
+test('[T-380] Kontexthilfe im Lesestil Handbuch-Kapitel: Farben, Balken, Box mit Icon und Beschriftung, Rückmeldung mit Icons – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const admin = { 'X-User-Id': 'u-admin' };
+  const project = await (await request.post('/api/v1/projects', { headers: admin, data: { name: 'E2E-Hilfe-Lesestil', visibility: 'open' } })).json();
+  const as = (user: string) => ({ 'X-User-Id': user, 'X-Project-Id': project.id });
+  const md = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\nhelp_context: contract.extend\n---\n# 3. Vertrag verlängern\n\n## 3.1 Zweck\n\nSie verlängern einen laufenden Vertrag.\n\n## 3.2 Schritte\n\n1. Öffnen Sie die **Vertragsverwaltung**.\n\nAchtung: Eine Verlängerung ist nur vor Vertragsende möglich.\n';
+  expect((await request.post('/api/v1/imports', { headers: as('u-admin'), multipart: { file: { name: 'vertrag.md', mimeType: 'text/markdown', buffer: Buffer.from(md) } } })).status()).toBe(202);
+  let ch: any;
+  await expect.poll(async () => (ch = (await (await request.get('/api/v1/chapters', { headers: as('u-admin') })).json()).find((c: any) => c.title === '3. Vertrag verlängern'))).toBeTruthy();
+  const v = await (await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: as('u-redaktion') })).json();
+  for (const b of v.sections.flatMap((s: any) => s.blocks)) if (b.kind === 'gap') await request.delete(`/api/v1/content-blocks/${b.id}?reason=entfällt`, { headers: as('u-redaktion') });
+  expect((await request.post(`/api/v1/chapter-versions/${v.id}/submit`, { headers: as('u-redaktion'), data: {} })).ok()).toBe(true);
+  expect((await request.post(`/api/v1/chapter-versions/${v.id}/approve`, { headers: as('u-freigabe'), data: { comment: 'ok' } })).ok()).toBe(true);
+  expect((await request.post('/api/v1/releases', { headers: as('u-freigabe'), data: { version: 'e2e-lesestil' } })).status()).toBe(201);
+  expect((await request.put('/api/v1/help-settings', { headers: as('u-admin'), data: { public: true } })).ok()).toBe(true);
+  expect((await request.put('/api/v1/layout', { headers: as('u-admin'), data: { readingStyle: 'fachdoku' } })).ok()).toBe(true);
+
+  await page.goto(`/help/embed/${project.id}/contract.extend`);
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('3. Vertrag verlängern');
+  await expect(page.locator('h2').first()).toHaveCSS('border-left-width', '4px');
+  await expect(page.locator('h2').first()).toHaveCSS('color', 'rgb(31, 58, 104)');
+  await expect(page.locator('.kind-warning .label')).toHaveText('Warnung');
+  await expect(page.locator('.kind-warning .label svg[aria-hidden="true"]')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Ja', exact: true })).toBeVisible();
+  const violations = (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations.map((x) => `${x.id}: ${x.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  expect(violations).toEqual([]);
+});

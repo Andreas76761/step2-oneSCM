@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const ICONS = [
   'info', 'lightbulb', 'triangle-alert', 'octagon-alert', 'circle-alert', 'circle-check', 'circle-question-mark', 'link', 'external-link', 'mail',
   'file-text', 'list-checks', 'list-ordered', 'layers', 'gauge', 'hash', 'shield-check', 'tag', 'calendar', 'book-open', 'check',
-  'arrow-right', 'arrow-up-right', 'sparkles', 'users', 'clock', 'mouse-pointer-click', 'image', 'bookmark', 'files', 'circle-dashed', 'code',
+  'arrow-right', 'arrow-up-right', 'sparkles', 'users', 'clock', 'mouse-pointer-click', 'image', 'bookmark', 'files', 'circle-dashed', 'code', 'thumbs-up', 'thumbs-down',
 ];
 const here = path.dirname(fileURLToPath(import.meta.url));
 const dir = path.resolve(here, '../../../node_modules/lucide-react/dist/esm/icons');

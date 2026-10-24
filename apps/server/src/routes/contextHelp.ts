@@ -11,6 +11,10 @@ import { createContext, deleteContext, latestRelease, listContexts, resolveHelp,
 import { submitFeedback } from '../services/feedback.js';
 import { withProject } from '../services/projects.js';
 import { escapeHtml } from '../services/render.js';
+import { getLayout } from '../services/layout.js';
+import { normalizeTheme, readingCss, readingIcon, type DesignTheme } from '../domain/designs.js';
+import { svgIcon } from '../domain/designIcons.js';
+import { frameTexts } from '../domain/frameTexts.js';
 import { userOf } from './helpers.js';
 
 export function contextHelpRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -84,6 +88,20 @@ interface EmbedState {
   appUrl: string | null;
   /** Rückmeldung (ADR-061): gesendet bzw. abgelehnt */
   feedback?: 'sent' | 'limited';
+  /** Lesestil Handbuch-Kapitel (ADR-119) */
+  reading?: DesignTheme;
+}
+
+/** Lesestil des Projekts für die Kontexthilfe (ADR-119): Handbuch-Kapitel mit Anpassung, sonst keiner */
+async function readingOf(ctx: Ctx): Promise<DesignTheme | undefined> {
+  const l = await getLayout(ctx);
+  return l.readingStyle === 'fachdoku' ? normalizeTheme('fachdoku', l.designThemes?.fachdoku ?? {}).theme : undefined;
+}
+
+/** Hinweisboxen im Lesestil mit Beschriftung und Icon in der Sprache der Hilfe */
+function labelBoxes(html: string, lang: string) {
+  const F = frameTexts(lang);
+  return html.replace(/<div class="block kind-(note|tip|warning)">/g, (all, kind: 'note' | 'tip' | 'warning') => `${all}<p class="label">${readingIcon(kind)}${escapeHtml(F[kind])}</p>`);
 }
 
 /** „Siehe auch“ und passende FAQ (ADR-072): Verweise auf das Hilfethema des Zielkapitels, sonst nur der Titel */
@@ -114,12 +132,12 @@ function embedPage(s: EmbedState) {
     ? `<h1>${escapeHtml(h.title)}</h1>
 <p class="meta">${escapeHtml(l.version)} ${escapeHtml(h.release?.version ?? String(h.versionNo))}${deep}</p>
 ${h.fallback ? `<p class="meta"><strong>${escapeHtml(l.fallback)}</strong></p>` : ''}
-<div lang="${escapeHtml(h.fallback ? 'de' : h.language)}">${h.html}</div>
+<div lang="${escapeHtml(h.fallback ? 'de' : h.language)}">${s.reading ? labelBoxes(h.html, h.fallback ? 'de' : h.language) : h.html}</div>
 ${seeAlso(s)}`
     : `<h1>${escapeHtml(l.help)}</h1><p>${escapeHtml(l.none)}</p>`;
   return `<!doctype html>
 <html lang="${escapeHtml(s.ui)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapeHtml(h?.title ?? l.help)}</title><style>${EMBED_CSS}</style></head>
+<title>${escapeHtml(h?.title ?? l.help)}</title><style>${EMBED_CSS}${s.reading ? `${readingCss(s.reading)}button{background:${s.reading.primary}}.answer sup{color:${s.reading.primary}}.label{margin:0 0 2px;font-weight:600}` : ''}</style></head>
 <body><main>${body}
 ${h ? `<form method="post" action="${escapeHtml(s.action)}">
 <label for="q">${escapeHtml(l.ask)}</label>
@@ -133,7 +151,7 @@ ${s.feedback ? `<p role="status">${escapeHtml(s.feedback === 'sent' ? l.thanks :
 <input type="text" id="fbc" name="comment" maxlength="500">
 <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
 ${hidden('role', s.role)}${hidden('division', s.division)}${hidden('language', s.lang === 'de' ? undefined : s.lang)}
-<button type="submit" name="helpful" value="1">👍 ${escapeHtml(l.yes)}</button> <button type="submit" name="helpful" value="0">👎 ${escapeHtml(l.no)}</button>`}
+<button type="submit" name="helpful" value="1">${svgIcon('thumbs-up', 15)} ${escapeHtml(l.yes)}</button> <button type="submit" name="helpful" value="0">${svgIcon('thumbs-down', 15)} ${escapeHtml(l.no)}</button>`}
 </fieldset></form>` : ''}
 </main></body></html>`;
 }
@@ -174,6 +192,7 @@ export async function publicHelpRoutes(app: FastifyInstance, base: Ctx, embedOri
       const state: EmbedState = { ...embedLanguages(lang), help: null, action: `/help/embed/${encodeURIComponent(projectId)}/${encodeURIComponent(contextKey)}`, role, division, appUrl: base.config.notify.appUrl };
       // nicht freigeschaltet und unbekannt sind nicht unterscheidbar
       if (!ctx) return reply.code(404).send(embedPage(state));
+      state.reading = await readingOf(ctx);
       try {
         state.help = await resolveHelp(ctx, contextKey, { role, division, language: lang }, 'release');
       } catch (e) {
@@ -209,6 +228,7 @@ export async function publicHelpRoutes(app: FastifyInstance, base: Ctx, embedOri
       const ctx = project?.help_public ? withProject(base, project.id) : null;
       const state: EmbedState = { ...embedLanguages(lang), help: null, action: `/help/embed/${encodeURIComponent(projectId)}/${encodeURIComponent(contextKey)}`, role, division, appUrl: base.config.notify.appUrl };
       if (!ctx) return reply.code(404).send(embedPage(state));
+      state.reading = await readingOf(ctx);
       try {
         state.help = await resolveHelp(ctx, contextKey, { role, division, language: lang }, 'release');
       } catch (e) {
