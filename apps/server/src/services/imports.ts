@@ -278,6 +278,8 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
     'SELECT DISTINCT document_id AS id FROM source_revisions WHERE import_id = ? UNION SELECT id FROM source_documents WHERE removed_in_import = ?', importId, importId,
   )).map((r) => r.id as string);
   if (changedDocs.length) await refreshDuplicates(ctx, changedDocs).catch((e) => ctx.log('Dubletten-Abgleich fehlgeschlagen', { importId, error: (e as Error).message }));
+  // Agent TRIAGE (ADR-100): Pflichtlabels und Kapitelvorschläge für die neuen Chunks dieses Imports
+  if (stats.snippets) await ctx.jobs.enqueue('triage', { projectId: ctx.projectId, importId });
 
   // Bilder zählen nicht als Dokumente: schlagen alle Dokumente fehl, ist der Import fehlgeschlagen
   const status = stats.failed === 0 ? 'completed' : stats.failed === stats.files - mediaItems.size ? 'failed' : 'completed_with_errors';

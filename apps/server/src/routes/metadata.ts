@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
 import { badRequest } from '../problem.js';
 import {
-  createLabel, createQa, deleteQa, getQa, labelGroups, listChunks, listLabels, listQa, metadataOverview, setChunkLabels, updateLabel, updateQa,
+  createLabel, createQa, deleteLabel, deleteQa, getQa, labelGroups, listChunks, listLabels, listQa, metadataOverview, setChunkLabels, updateLabel, updateQa,
 } from '../services/metadata.js';
 import { exportAccessMatrix, getAccessMatrix, importAccessMatrix, setAccessCell } from '../services/accessMatrix.js';
 import { exportDomainMap, getDomainMap, setDomainLink } from '../services/domainMap.js';
@@ -40,6 +40,8 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
     return createLabel(req.ctx, req.body ?? {}, user);
   });
   app.patch<P<'labelId'> & { Body: any }>('/metadata/labels/:labelId', async (req) => updateLabel(req.ctx, req.params.labelId, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+  // Label löschen (ADR-100), Administration: Zuordnungen entfallen
+  app.delete<P<'labelId'>>('/metadata/labels/:labelId', async (req) => deleteLabel(req.ctx, req.params.labelId, userOf(req.ctx, req, 'admin')));
 
   // ENTSCHEIDUNG(M-09): Chunks lesen mit `read`, labeln mit `edit`
   app.get<{ Querystring: { q?: string; heading?: string; labels?: string; unlabeled?: string; noOutline?: string; documentId?: string; format?: string; limit?: string; offset?: string } }>('/metadata/chunks', async (req) => {

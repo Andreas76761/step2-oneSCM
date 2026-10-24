@@ -17,7 +17,7 @@ describe('Etappe 28', () => {
     const call = client(built);
     try {
       const count = (g: string) => LABEL_CATALOG.filter((l) => l.group === g).length;
-      expect(['outline', 'role', 'navigation', 'domain', 'customer', 'system', 'content', 'division', 'quality'].map(count)).toEqual([33, 11, 39, 9, 5, 19, 22, 3, 17]);
+      expect(['outline', 'role', 'navigation', 'domain', 'customer', 'system', 'content', 'division', 'quality'].map(count)).toEqual([33, 12, 39, 10, 5, 19, 22, 3, 17]); // + Sonstiges, Allgemein (ADR-100)
       const labels = (await call('GET', '/metadata/labels')).json;
       expect(labels).toHaveLength(LABEL_CATALOG.length);
       const by = (code: string) => labels.find((l: any) => l.code === code);
@@ -27,7 +27,7 @@ describe('Etappe 28', () => {
       expect(by('nav.generation.mo-checks')).toMatchObject({ nameDe: 'Vertragserstellung › MO Checks', nameEn: 'Contract Generation › MO Checks' });
       expect(by('nav.mainpage').description).toContain('Acess Mainpage');
       expect(by('role.mo').nameDe).toBe('MO (Market Operation)');
-      expect(labels.filter((l: any) => l.group === 'division').map((l: any) => l.nameDe)).toEqual(['Pkw', 'Van', 'Pkw und Van']);
+      expect(labels.filter((l: any) => l.group === 'division').map((l: any) => l.nameDe)).toEqual(['Pkw', 'Van', 'Pkw+Van']);
 
       // Stand von Etappe 27 nachstellen: alte Katalog-Labels, eines mit Zuordnung, eines von der Administration geändert
       const db = built.ctx.db;
@@ -52,7 +52,8 @@ describe('Etappe 28', () => {
       expect(n('role.key-user').archived).toBe(false); // von der Administration bearbeitet → bleibt
       expect(n('role.market').nameDe).toBe('Markt (MPC)'); // unbearbeitet → folgt dem Katalog
       expect(n('role.dealer').nameDe).toBe('Händler'); // bearbeitet → bleibt
-      expect((await call('GET', '/metadata/chunks')).json.items[0].labels.map((l: any) => [l.code, l.archived])).toEqual([['division.truck', true]]);
+      // Pflichtlabels der Triage (ADR-100) daneben; die ausgeblendete Zuordnung bleibt
+      expect((await call('GET', '/metadata/chunks')).json.items[0].labels.filter((l: any) => l.code === 'division.truck').map((l: any) => [l.code, l.archived])).toEqual([['division.truck', true]]);
       // ein zweiter Abgleich ändert nichts mehr
       const stand = JSON.stringify(nach.map((l: any) => [l.code, l.nameDe, l.archived, l.position]));
       await seedMetadataLabels(db, 'p_default');

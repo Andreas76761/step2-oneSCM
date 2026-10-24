@@ -17,7 +17,7 @@ async function axes(ctx: Ctx) {
   const dto = (r: Row) => ({ id: r.id, code: r.code, nameDe: r.name_de, nameEn: r.name_en });
   return {
     // „Alle Rollen“ ist keine eigene Spalte
-    roles: labels.filter((l) => l.label_group === 'role' && l.code !== 'role.all').map(dto),
+    roles: labels.filter((l) => l.label_group === 'role' && l.code !== 'role.all' && l.code !== 'role.other').map(dto),
     navigation: labels.filter((l) => l.label_group === 'navigation').map(dto),
   };
 }

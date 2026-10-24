@@ -71,7 +71,7 @@ export async function listLabels(ctx: Ctx, opts: { group?: string; includeArchiv
     `SELECT l.*,
        (SELECT COUNT(*) FROM metadata_chunk_labels c WHERE c.label_id = l.id) AS chunk_count,
        (SELECT COUNT(*) FROM metadata_qa_labels q WHERE q.label_id = l.id) AS qa_count
-     FROM metadata_labels l WHERE l.project_id = ? ${opts.group ? 'AND l.label_group = ?' : ''} ${opts.includeArchived ? '' : 'AND l.archived_at IS NULL'}`,
+     FROM metadata_labels l WHERE l.project_id = ? AND l.origin <> 'deleted' ${opts.group ? 'AND l.label_group = ?' : ''} ${opts.includeArchived ? '' : 'AND l.archived_at IS NULL'}`,
     ...[ctx.projectId, ...(opts.group ? [opts.group] : [])],
   );
   const order = (g: string) => LABEL_GROUP_CODES.indexOf(g);
@@ -127,6 +127,29 @@ export async function updateLabel(ctx: Ctx, id: string, input: { nameDe?: string
     await audit(ctx, user.id, 'metadata.label.updated', 'metadata_label', id, { code: r.code, nameDe, nameEn, archived: !!archivedAt });
   });
   return labelDto((await ctx.db.get('SELECT * FROM metadata_labels WHERE id = ?', id))!);
+}
+
+/**
+ * Label löschen (ADR-100): Zuordnungen zu Chunks, Fragen & Antworten und Bildern entfallen. Eigene und von TRIAGE angelegte
+ * Labels werden entfernt; Katalog-Labels bleiben als „gelöscht“ vermerkt, damit der Katalogabgleich sie nicht wieder anlegt.
+ */
+export async function deleteLabel(ctx: Ctx, id: string, user: User) {
+  const r = await ctx.db.get("SELECT * FROM metadata_labels WHERE id = ? AND project_id = ? AND origin <> 'deleted'", id, ctx.projectId);
+  if (!r) throw notFound(`Label ${id}`);
+  const counts = {
+    chunks: Number((await ctx.db.get('SELECT COUNT(*) AS n FROM metadata_chunk_labels WHERE label_id = ?', id))?.n ?? 0),
+    qa: Number((await ctx.db.get('SELECT COUNT(*) AS n FROM metadata_qa_labels WHERE label_id = ?', id))?.n ?? 0),
+  };
+  await ctx.db.tx(async () => {
+    await ctx.db.run('DELETE FROM metadata_chunk_labels WHERE label_id = ?', id);
+    await ctx.db.run('DELETE FROM metadata_qa_labels WHERE label_id = ?', id);
+    await ctx.db.run('DELETE FROM media_labels WHERE label_id = ?', id);
+    await ctx.db.run('DELETE FROM metadata_label_links WHERE domain_label_id = ? OR target_label_id = ?', id, id);
+    if (r.origin === 'catalog') await ctx.db.run("UPDATE metadata_labels SET origin = 'deleted', archived_at = ?, updated_by = ?, updated_at = ? WHERE id = ?", now(), user.id, now(), id);
+    else await ctx.db.run('DELETE FROM metadata_labels WHERE id = ?', id);
+    await audit(ctx, user.id, 'metadata.label.deleted', 'metadata_label', id, { code: r.code, group: r.label_group, ...counts });
+  });
+  return { id, code: r.code, removedAssignments: counts };
 }
 
 /** IDs normalisieren und prüfen: gehören zum Projekt; für neue Zuordnungen nur eingeblendete Labels. */

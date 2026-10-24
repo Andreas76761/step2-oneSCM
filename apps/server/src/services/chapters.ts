@@ -1,4 +1,5 @@
 // Kapitel, Generierung, Kapitelwerkstatt, Qualitätsgate und Freigabe (US-008, US-009, US-010, US-012).
+import { DEFAULT_DETAIL_LEVELS } from '../domain/metadataLabels.js';
 import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { evaluateGate, type GateResult } from '../domain/gate.js';
@@ -130,6 +131,7 @@ async function loadGenSnippets(ctx: Ctx, chapterId: string): Promise<GenSnippet[
       divisions: await db.all('SELECT division_code AS code, evidence_status AS evidenceStatus FROM snippet_divisions WHERE snippet_id = ?', s.id),
       market: s.market_code, release: s.release_code, scopeStatus: s.scope_status, sourceLabel: `${s.path} (Rev. ${s.revision_no})`,
       canonicalRedirect: topic ? { topicId: topic.id, topicTitle: topic.title, leadChapterTitle: topic.lead } : null,
+      detail: ((await db.get("SELECT l.code FROM metadata_chunk_labels x JOIN metadata_labels l ON l.id = x.label_id WHERE x.snippet_id = ? AND l.label_group = 'detail' ORDER BY x.origin = 'triage', l.position LIMIT 1", s.id))?.code ?? '').replace(/^detail\./, '') || null,
     } as GenSnippet;
   }));
 }
@@ -168,7 +170,10 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
      FROM text_snippets s JOIN chapters c ON c.id = s.chapter_id LEFT JOIN subchapters sc ON sc.id = s.subchapter_id WHERE s.id IN (${all.map(() => '?').join(',')})`, ...all.map((s) => s.id),
   )).map((r) => [r.id as string, r])) : new Map();
   const excludedByInstruction: { snippetId: string; topic: string }[] = [];
-  const snippets = all.filter((s) => {
+  // Detaillierung des Kapitels (ADR-100): nur die gewählten Detaillevel; Chunks ohne Detaillevel gelten als Basis
+  const levels = new Set(parseJson<string[] | null>(chapter.detail_levels, null) ?? DEFAULT_DETAIL_LEVELS);
+  const excludedByDetail = all.filter((s) => s.detail && !levels.has(s.detail)).length;
+  const snippets = all.filter((s) => !s.detail || levels.has(s.detail)).filter((s) => {
     const o = origin.get(s.id);
     let ins = chapterInstruction;
     if (o && o.chapter_id !== chapterId) ins = mergeInstructions(ins, instructionOf(o));
@@ -250,7 +255,7 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
   });
   return {
     ...(await getChapterVersion(ctx, versionId)),
-    generation: { gaps: result.gaps, usedSnippets: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, excludedByInstruction, missingTopics },
+    generation: { gaps: result.gaps, usedSnippets: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, excludedByInstruction, excludedByDetail, detailLevels: [...levels], missingTopics },
   };
 }
 

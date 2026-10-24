@@ -5,6 +5,7 @@ import { audit, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { cleanTopics, instructionMarkdown, isEmpty, MAX_INSTRUCTION, mergeInstructions, type Instruction } from '../domain/chapterInstruction.js';
 import { chapterOf, headingKey } from '../domain/markdown.js';
+import { DEFAULT_DETAIL_LEVELS, DETAIL_LEVELS, type DetailLevel } from '../domain/metadataLabels.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 
 export type StructureKind = 'chapter' | 'subchapter' | 'label';
@@ -19,7 +20,7 @@ export const instructionOf = (r: Row | null | undefined): Instruction => ({
 const versionOf = (r: Row) => ({ validFrom: r.valid_from ?? null, validUntil: r.valid_until ?? null, replacedBy: r.replaced_by ?? null, inHistory: !!r.history_at, historyAt: r.history_at ?? null });
 
 function subDto(r: Row) {
-  return { id: r.id, key: r.key, title: r.title, position: Number(r.position), instruction: instructionOf(r), ...versionOf(r), updatedBy: r.meta_updated_by ?? null, updatedAt: r.meta_updated_at ?? null };
+  return { id: r.id, key: r.key, title: r.title, position: Number(r.position), isNew: !!Number(r.triage_new ?? 0), instruction: instructionOf(r), ...versionOf(r), updatedBy: r.meta_updated_by ?? null, updatedAt: r.meta_updated_at ?? null };
 }
 
 async function chapterDto(ctx: Ctx, r: Row, withHistory: boolean) {
@@ -29,6 +30,7 @@ async function chapterDto(ctx: Ctx, r: Row, withHistory: boolean) {
   const pipeline = Number((await ctx.db.get("SELECT COUNT(*) AS n FROM work_items WHERE chapter_id = ? AND area = 'pipeline' AND state NOT IN ('live', 'cancelled')", r.id))?.n ?? 0);
   return {
     id: r.id, key: r.key, title: r.title, position: Number(r.position), outlineFamilyId: r.outline_family_id ?? null, snippets, pipeline,
+    detailLevels: parseJson<string[] | null>(r.detail_levels, null) ?? DEFAULT_DETAIL_LEVELS, detailLevelsCustom: !!r.detail_levels,
     instruction: instructionOf(r), ...versionOf(r), updatedBy: r.meta_updated_by ?? null, updatedAt: r.meta_updated_at ?? null,
     subchapters: subs.map(subDto),
   };
@@ -97,6 +99,15 @@ function metaSets(input: any) {
     throw badRequest((e as Error).message);
   }
   if (input.validFrom !== undefined) sets.push(['valid_from', cleanVersion(input.validFrom, 'validFrom')]);
+  // Detaillierung des Kapitels (ADR-100): welche Detaillevel der Generator übernimmt; null = Standard
+  if (input.detailLevels !== undefined) {
+    if (input.detailLevels === null) sets.push(['detail_levels', null]);
+    else {
+      if (!Array.isArray(input.detailLevels) || input.detailLevels.some((d: unknown) => !DETAIL_LEVELS.includes(String(d) as DetailLevel))) throw badRequest(`detailLevels: Liste aus ${DETAIL_LEVELS.join(', ')}.`);
+      if (!input.detailLevels.length) throw badRequest('detailLevels: mindestens ein Detaillevel.');
+      sets.push(['detail_levels', json([...new Set(input.detailLevels.map(String))])]);
+    }
+  }
   return sets;
 }
 

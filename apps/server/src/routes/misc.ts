@@ -100,6 +100,7 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
       if (!patterns) throw badRequest(`import.excludePatterns muss eine Liste von höchstens ${MAX_EXCLUDE_PATTERNS} Mustern (je höchstens 200 Zeichen) sein.`);
       body.import = { ...body.import, excludePatterns: patterns };
     }
+    if (body.triage !== undefined && (typeof body.triage !== 'object' || (body.triage.auto !== undefined && typeof body.triage.auto !== 'boolean'))) throw badRequest('triage.auto muss true oder false sein.');
     const mins = body.rewrite?.minSupport;
     if (mins !== undefined && (typeof mins !== 'number' || mins < 0.1 || mins > 1)) throw badRequest('rewrite.minSupport muss eine Zahl zwischen 0,1 und 1 sein.');
     await saveSettings(req.ctx.db, body);

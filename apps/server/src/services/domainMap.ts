@@ -103,10 +103,10 @@ export async function getDomainMap(ctx: Ctx, opts: { outlineId?: string } = {}) 
   const navigation = all.filter((l) => l.label_group === 'navigation');
   const links = await ctx.db.all('SELECT domain_label_id, target_label_id, origin, active FROM metadata_label_links WHERE project_id = ?', ctx.projectId);
   const linkOf = new Map(links.map((r) => [`${r.domain_label_id}:${r.target_label_id}`, r]));
-  // Belege aus den Chunks: Abschnitte mit Domänen- und Ziel-Label
+  // Belege aus den Chunks: Abschnitte mit Domänen- und Ziel-Label – nur menschliche Zuordnungen (keine Vermutung der Triage, ADR-100)
   const pairCounts = new Map((await ctx.db.all(
     `SELECT d.label_id AS domain_id, t.label_id AS target_id, COUNT(*) AS n
-     FROM metadata_chunk_labels d JOIN metadata_chunk_labels t ON t.snippet_id = d.snippet_id AND t.label_id <> d.label_id
+     FROM metadata_chunk_labels d JOIN metadata_chunk_labels t ON t.snippet_id = d.snippet_id AND t.label_id <> d.label_id AND d.origin <> 'triage' AND t.origin <> 'triage'
      JOIN metadata_labels ld ON ld.id = d.label_id AND ld.project_id = ? AND ld.label_group = 'domain'
      JOIN metadata_labels lt ON lt.id = t.label_id AND lt.label_group IN ('outline', 'navigation')
      GROUP BY d.label_id, t.label_id`, ctx.projectId,

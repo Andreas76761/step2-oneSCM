@@ -38,6 +38,8 @@ import { transitionRoutes } from './routes/transitions.js';
 import { imageRoutes } from './routes/images.js';
 import { structureRoutes } from './routes/structure.js';
 import { workAreaRoutes } from './routes/workAreas.js';
+import { agentRoutes } from './routes/agents.js';
+import { runImportTriage } from './services/triage.js';
 import { seedMetadataLabels } from './services/metadata.js';
 import { seedDomainLinks } from './services/domainMap.js';
 import { styleRoutes } from './routes/style.js';
@@ -133,6 +135,11 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     if (!(await archived(c))) await runRedactionJob(c, p.sha);
   });
   jobs.register('notify', async (p) => deliverNotification(ctx, p.notificationId));
+  // Agent TRIAGE nach dem Import (ADR-100)
+  jobs.register('triage', async (p) => {
+    const c = withProject(ctx, p.projectId);
+    if (!(await archived(c))) await runImportTriage(c, p.importId);
+  });
   jobs.register('semantic-index', async (p) => {
     const c = withProject(ctx, p.projectId);
     if (!(await archived(c))) await runIndexJob(c);
@@ -275,6 +282,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       imageRoutes(api, ctx);
       structureRoutes(api, ctx);
       workAreaRoutes(api, ctx);
+      agentRoutes(api, ctx);
       transitionRoutes(api, ctx);
     },
     { prefix: '/api/v1' },

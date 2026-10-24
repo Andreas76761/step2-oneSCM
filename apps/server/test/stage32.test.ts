@@ -61,7 +61,7 @@ describe('Etappe 32', () => {
       await importFile(built, 'vertrag.md', `${FM}# 10. Verträge im Alltag verwalten\n\n## 10.1 Vertrag kündigen\n\nSie kündigen einen Vertrag in der Vertragsverwaltung über die Funktion Beenden.\n\n## 10.2 Zahlungen\n\nRechnungen und Zahlungen prüfen Sie im Bereich Finanzen.\n`);
       const page = (await call('GET', '/metadata/chunks?noOutline=true', undefined, 'u-leser')).json;
       const kuend = page.items.find((c: any) => c.text.includes('kündigen'));
-      expect(kuend.labels).toEqual([]); // nichts automatisch übernommen
+      expect(kuend.labels.filter((l: any) => l.group === 'outline')).toEqual([]); // Gliederung nie automatisch übernommen (Pflichtlabels setzt die Triage, ADR-100)
       expect(kuend.outlineSuggestions[0]).toMatchObject({ code: 'outline.kap10' });
       expect(kuend.outlineSuggestions[0].score).toBeGreaterThanOrEqual(0.25);
       expect(kuend.outlineSuggestions[0].matched.length).toBeGreaterThan(0);

@@ -227,6 +227,8 @@ export const DEFAULT_SETTINGS = {
   // ADR-017: semantische Suche und optionale hybride Analyse (TF-IDF bleibt Standard, ENTSCHEIDUNG E-05)
   // ADR-080 (F-04): zusätzliche Klarnamen für die Datenschutzprüfung (Jira-Bearbeiter, Ansprechpartner …)
   privacy: { names: [] as string[] },
+  // Agent TRIAGE (ADR-100): nach jedem Import Pflichtlabels und Kapitelvorschläge für die neuen Chunks
+  triage: { auto: true },
   semantic: { analysisMethod: 'tfidf' as 'tfidf' | 'hybrid', embeddingThreshold: 0.85, maxPairDocs: 8000, annThreshold: 20000, annEfSearch: 200 },
 };
 export type Settings = typeof DEFAULT_SETTINGS;

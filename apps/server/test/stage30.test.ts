@@ -21,7 +21,7 @@ describe('Etappe 30', () => {
     const call = client(built);
     try {
       const m = (await call('GET', '/metadata/domain-map', undefined, 'u-leser')).json;
-      expect(m.domains.map((d: any) => d.code)).toHaveLength(9);
+      expect(m.domains.map((d: any) => d.code)).toHaveLength(10);
       const cm = m.domains.find((d: any) => d.code === 'domain.contract-management');
       expect(cm.outline.map((o: any) => [o.code, o.folder, o.origin])).toEqual([
         ['outline.kap10', '02_Kapitel/10_Verträge_im_Alltag_verwalten', 'catalog'],
@@ -35,7 +35,7 @@ describe('Etappe 30', () => {
       expect(m.withoutDomain.length).toBeGreaterThan(0);
       expect(m.outline.find((o: any) => o.id === m.withoutDomain[0]).code).toBe('outline.vorspann');
       expect(m.controlFolders.map((f: any) => f.folder)).toEqual(['05_I_Output', '06_II_Stil_und_Design', '07_III_Grammatik_Synonyme_Fehlerliste', '08_IV_Translation']);
-      expect(m.summary).toMatchObject({ domains: 9, suggestions: 0 });
+      expect(m.summary).toMatchObject({ domains: 10, suggestions: 0 }); // + Allgemein (ADR-100)
       const linksBefore = m.summary.links;
 
       // Unterordner aus einer App-Gliederung, deren Kapitel die Titel der Gesamtgliederung tragen

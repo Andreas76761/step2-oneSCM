@@ -17,7 +17,22 @@ export const LABEL_GROUPS = [
   { code: 'content', nameDe: 'Inhaltstyp', nameEn: 'Content type', icon: '🧾', color: '#b45309' },
   { code: 'division', nameDe: 'Sparte', nameEn: 'Division', icon: '🚘', color: '#0369a1' },
   { code: 'quality', nameDe: 'Qualität und Status', nameEn: 'Quality and status', icon: '🏷', color: '#b91c1c' },
+  // Pflichtgruppen der Triage (ADR-100): jeder Chunk trägt je Gruppe mindestens ein Label
+  { code: 'version', nameDe: 'Version', nameEn: 'Version', icon: '🔖', color: '#7c3aed' },
+  { code: 'status', nameDe: 'Status', nameEn: 'Status', icon: '🚦', color: '#15803d' },
+  { code: 'language', nameDe: 'Sprache', nameEn: 'Language', icon: '🌐', color: '#0e7490' },
+  { code: 'market', nameDe: 'Markt', nameEn: 'Market', icon: '🗺', color: '#a16207' },
+  { code: 'detail', nameDe: 'Detaillevel', nameEn: 'Detail level', icon: '🔍', color: '#9333ea' },
+  { code: 'review', nameDe: 'Zu prüfen', nameEn: 'To be reviewed', icon: '⚠', color: '#dc2626' },
 ] as const;
+/** Pflicht-Labelgruppen je Chunk (ADR-100): Version, Status, Domäne, Rolle, Sprache, Sparte, Markt, Detaillevel, zu prüfen */
+export const REQUIRED_GROUPS = ['version', 'status', 'domain', 'role', 'language', 'division', 'market', 'detail', 'review'] as const;
+export type RequiredGroup = (typeof REQUIRED_GROUPS)[number];
+/** Detaillevel steuern Umfang und Ausgabe: HappyPath = Standardablauf, Edge = Ausnahmen (Abschnitt „Fehler und Ausnahmen“) */
+export const DETAIL_LEVELS = ['basis', 'basis-plus', 'zusatz', 'intern', 'happy-path', 'edge', 'in-review'] as const;
+export type DetailLevel = (typeof DETAIL_LEVELS)[number];
+/** Standard je Kapitel: alles außer Intern und inPrüfung */
+export const DEFAULT_DETAIL_LEVELS: DetailLevel[] = ['basis', 'basis-plus', 'zusatz', 'happy-path', 'edge'];
 export type LabelGroup = (typeof LABEL_GROUPS)[number]['code'];
 export const LABEL_GROUP_CODES = LABEL_GROUPS.map((g) => g.code) as string[];
 
@@ -77,6 +92,7 @@ export const LABEL_CATALOG: CatalogLabel[] = [
     ['cam-team', 'CaM-Team', 'CaM team'],
     ['it', 'IT', 'IT'],
     ['all', 'Alle Rollen', 'All roles'],
+    ['other', 'Sonstiges', 'Other', 'keine der Rollen Dealer, MO, Market, HQ (Triage)'],
   ]),
   // Navigation: Menü der oneSCM-Oberfläche; nameEn = UI-Begriff (unverändert), nameDe = Handbuchbegriff
   ...group('navigation', 'nav', [
@@ -132,6 +148,7 @@ export const LABEL_CATALOG: CatalogLabel[] = [
     ['vehicle', 'Vehicle Management', 'Vehicle Management'],
     ['documents', 'Documents & Communication', 'Documents & Communication'],
     ['reporting', 'Reporting', 'Reporting'],
+    ['general', 'Allgemein', 'General', 'domänenübergreifend, z. B. Anmeldung, Navigation, Grundlagen (Triage)'],
   ]),
   ...group('customer', 'customer', [
     ['private', 'Privatkunde', 'Private customer'],
@@ -191,7 +208,7 @@ export const LABEL_CATALOG: CatalogLabel[] = [
   ...group('division', 'division', [
     ['car', 'Pkw', 'Car'],
     ['van', 'Van', 'Van'],
-    ['all', 'Pkw und Van', 'Car and van'],
+    ['all', 'Pkw+Van', 'Car+Van'],
   ]),
   ...group('quality', 'quality', [
     ['checked', 'Geprüft', 'Checked'],
@@ -211,6 +228,35 @@ export const LABEL_CATALOG: CatalogLabel[] = [
     ['manual-candidate', 'Kandidat für Handbuch', 'Candidate for manual'],
     ['faq-candidate', 'Kandidat für FAQ', 'Candidate for FAQ'],
     ['not-relevant', 'Nicht relevant', 'Not relevant'],
+  ]),
+  // Pflichtgruppen (ADR-100); Versionen, Märkte und weitere Sprachen legt TRIAGE bei Bedarf an
+  ...group('version', 'version', [
+    ['open', 'ohne Version', 'No version', 'keine Version, kein Release in der Quelle'],
+  ]),
+  ...group('status', 'status', [
+    ['live', 'live', 'Live', 'produktiv, bestätigte Quelle'],
+    ['draft', 'Entwurf', 'Draft', 'Quelle unbestätigt'],
+    ['in-progress', 'in Bearbeitung', 'In progress', 'Ticket in Bearbeitung bzw. Pipeline'],
+  ]),
+  ...group('language', 'language', [
+    ['de', 'Deutsch', 'German'],
+    ['en', 'Englisch', 'English'],
+  ]),
+  ...group('market', 'market', [
+    ['all', 'alle Märkte', 'All markets', 'marktübergreifend (Blueprint)'],
+  ]),
+  ...group('detail', 'detail', [
+    ['basis', 'Basis', 'Basic', 'Überblick und Grundbegriffe'],
+    ['basis-plus', 'Basis+', 'Basic+', 'vertiefte Erklärung'],
+    ['zusatz', 'Zusatz', 'Additional', 'Tipps, Hinweise, Beispiele, optionale Wege'],
+    ['intern', 'Intern', 'Internal', 'nicht für Anwendende'],
+    ['happy-path', 'HappyPath', 'Happy path', 'Standardablauf (Standard-Workflow)'],
+    ['edge', 'Edge', 'Edge case', 'Ausnahmen, Fehler, Sonderfälle'],
+    ['in-review', 'inPrüfung', 'In review', 'Umfang noch nicht entschieden'],
+  ]),
+  ...group('review', 'review', [
+    ['yes', 'zu prüfen', 'To be reviewed', 'Triage unsicher – ein Mensch prüft'],
+    ['no', 'geprüft', 'Reviewed'],
   ]),
 ];
 

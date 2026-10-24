@@ -23,7 +23,7 @@ describe('Etappe 27 (oneSCM_Metadaten M1)', () => {
       expect(labels.every((l: any) => l.origin === 'catalog' && !l.archived && l.chunkCount === 0 && l.nameDe && l.nameEn)).toBe(true);
       expect(count('outline') + count('role')).toBeGreaterThan(0);
       expect((await call('GET', '/metadata/labels?group=xx')).status).toBe(400);
-      expect((await call('GET', '/metadata/label-groups')).json.map((g: any) => g.code)).toEqual(['outline', 'role', 'navigation', 'domain', 'customer', 'system', 'content', 'division', 'quality']);
+      expect((await call('GET', '/metadata/label-groups')).json.map((g: any) => g.code)).toEqual(['outline', 'role', 'navigation', 'domain', 'customer', 'system', 'content', 'division', 'quality', 'version', 'status', 'language', 'market', 'detail', 'review']);
 
       // Pflege nur mit admin
       const nav = labels.find((l: any) => l.code === 'nav.generation.proposal');
@@ -57,6 +57,8 @@ describe('Etappe 27 (oneSCM_Metadaten M1)', () => {
     const built = await build('chunks');
     const call = client(built);
     try {
+      // manuelles Labeln ohne die automatische Triage nach dem Import (ADR-100; die Triage prüft T-309 ff.)
+      expect((await call('PUT', '/settings', { triage: { auto: false } })).status).toBe(200);
       await importFile(built, 'vertrag.md', SOURCE);
       const all = (await call('GET', '/metadata/chunks', undefined, 'u-leser')).json;
       expect(all.total).toBe(2);

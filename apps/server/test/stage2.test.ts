@@ -36,7 +36,9 @@ describe('Persistente Jobqueue (ADR-008)', () => {
     expect(imp.json()).toMatchObject({ status: 'completed', stats: { imported: 1 } });
     expect(await second.ctx.db.get("SELECT status, attempts FROM jobs WHERE type = 'import'")).toMatchObject({ status: 'completed', attempts: 1 });
 
-    // Wiederholung mit Backoff und endgültiger Fehlschlag mit Fehler-Handler
+    // Wiederholung mit Backoff und endgültiger Fehlschlag mit Fehler-Handler – der Worker der App ruht, damit nur `q` die Testjobs holt
+    // (seit ADR-100 folgt dem Import ein Triage-Job; der App-Worker pollt danach sofort weiter)
+    await second.ctx.jobs.stop();
     const q = new JobQueue(second.ctx.db, { backoffMs: 10, pollMs: 10 });
     let calls = 0;
     const failed: string[] = [];
