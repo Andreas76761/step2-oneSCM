@@ -15,7 +15,15 @@ export function ExportPage() {
   const [divs, setDivs] = useState<string[]>([]);
   const [market, setMarket] = useState('');
   const [release, setRelease] = useState('');
+  // Stand für Zukunfts-Inhalte (ADR-102, W-09): Kapitel mit späterem „gültig ab“ werden ausgeblendet
+  const [asOf, setAsOf] = useState('');
   const [format, setFormat] = useState('md');
+  const [profile, setProfile] = useState('full');
+  const [reading, setReading] = useState(false);
+  const [transitions, setTransitions] = useState(true);
+  // Prüffassung für Word (ADR-104, W-06): mit „Fertig, wenn: …“ je Kapitel, zum Zurücklesen auf der Seite „Überarbeitung“
+  const [review, setReview] = useState(false);
+  const [criterion, setCriterion] = useState('');
   const [result, setResult] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const t = (l: string[], s: (v: string[]) => void, c: string) => s(l.includes(c) ? l.filter((x) => x !== c) : [...l, c]);
@@ -24,7 +32,7 @@ export function ExportPage() {
   const run = async () => {
     setError(null);
     try {
-      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, format, ...(outline ? { outlineId, appendices } : {}) });
+      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, asOf: asOf.trim() || undefined, format, profile, reading, transitions, ...(review && format === 'docx' ? { reviewCopy: { criterion: criterion.trim() || undefined } } : {}), ...(outline ? { outlineId, appendices } : {}) });
       setResult(r);
       notify(`Export erstellt (${r.chapters} Kapitel).`);
       history.reload();
@@ -60,8 +68,27 @@ export function ExportPage() {
           <div className="form-row">
             <label>Markt <select value={market} onChange={(e) => setMarket(e.target.value)}><option value="">alle</option>{ref?.markets.map((m) => <option key={m.code}>{m.code}</option>)}</select></label>
             <label>Release <select value={release} onChange={(e) => setRelease(e.target.value)}><option value="">alle</option>{ref?.releases.map((m) => <option key={m.code}>{m.code}</option>)}</select></label>
-            <label>Format <select value={format} onChange={(e) => setFormat(e.target.value)}><option value="md">Markdown</option><option value="html">HTML (druckfähig)</option><option value="pdf">PDF</option><option value="docx">Word (.docx)</option><option value="json">JSON</option></select></label>
+            <label>Stand (Release) <input value={asOf} onChange={(e) => setAsOf(e.target.value)} placeholder={release || 'z. B. 2026.3'} size={10} title="Kapitel mit späterem „gültig ab“ werden ausgeblendet; leer = Release-Filter" /></label>
+            <label>Format <select value={format} onChange={(e) => setFormat(e.target.value)}><option value="md">Markdown</option><option value="html">HTML (druckfähig)</option><option value="pdf">PDF</option><option value="docx">Word (.docx)</option><option value="pptx">PowerPoint (.pptx)</option><option value="json">JSON</option></select></label>
           </div>
+          <div className="form-row">
+            <label>Ausgabe
+              <select value={profile} onChange={(e) => setProfile(e.target.value)}>
+                <option value="full">Vollständig</option>
+                <option value="quickguide">Quick Guide – Voraussetzungen, Schritte, Ergebnis, Warnungen</option>
+                <option value="onepager">One Pager – Zweck kurz, Schritte, Warnungen</option>
+                <option value="summary">Kurzfassung – je Kapitel ein Absatz (Management, etwa ¼ der Länge)</option>
+              </select>
+            </label>
+            <label className="inline"><input type="checkbox" checked={reading} onChange={(e) => setReading(e.target.checked)} /> Lesefassung (ohne Rollen-/Sparten-Badges, Versionszeile und Quellenstatus)</label>
+            {profile === 'full' && <label className="inline"><input type="checkbox" checked={transitions} onChange={(e) => setTransitions(e.target.checked)} /> „Weiter mit …“ am Kapitelende</label>}
+          </div>
+          {format === 'docx' && (
+            <div className="form-row">
+              <label className="inline"><input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} /> Prüffassung für Word (Lesefassung mit „Fertig, wenn …“ je Kapitel; geänderte Datei unter „Überarbeitung“ zurücklesen)</label>
+              {review && <label>Fertig, wenn … <input value={criterion} onChange={(e) => setCriterion(e.target.value)} maxLength={300} size={50} placeholder="alle Schritte, Begriffe und Bildschirmtexte mit der aktuellen Oberfläche übereinstimmen." /></label>}
+            </div>
+          )}
           <button className="btn primary" onClick={run}>Export erstellen</button>
           <ErrorBox error={error} />
         </Card>
@@ -70,7 +97,12 @@ export function ExportPage() {
             <>
               <p><DownloadButton className="btn primary" href={result.downloadUrl} name={result.fileName}>⬇ {result.fileName} herunterladen</DownloadButton></p>
               {result.skipped.map((s: any) => <div key={s.chapterId} className="alert small">{s.reason}</div>)}
-              {result.preview === null ? <p className="muted">{result.format === 'docx' ? 'Word-Dokument' : 'PDF'} erstellt ({Math.round(result.byteSize / 1024)} KB) – Vorschau nach dem Herunterladen.</p>
+              {result.future?.length > 0 && (
+                <div className="alert small" role="status">
+                  Zukunfts-Inhalte, nicht im Export (Stand {result.asOf}): {result.future.map((f: any) => `„${f.title}“ (gültig ab ${f.validFrom})`).join(', ')}
+                </div>
+              )}
+              {result.preview === null ? <p className="muted">{result.format === 'docx' ? 'Word-Dokument' : result.format === 'pptx' ? 'PowerPoint-Präsentation' : 'PDF'} erstellt ({Math.round(result.byteSize / 1024)} KB) – Vorschau nach dem Herunterladen.</p>
                 : result.format === 'json' ? <pre tabIndex={0} aria-label="Quelltext" className="source small">{result.preview}</pre> : <div className="export-preview" tabIndex={0} role="region" aria-label="Exportvorschau"><Md text={result.preview} /></div>}
             </>
           )}

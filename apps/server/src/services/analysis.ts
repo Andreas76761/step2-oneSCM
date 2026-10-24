@@ -158,7 +158,7 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
 
   // Datenschutz, Terminologie, Lesbarkeit je Textabschnitt
   for (const s of snippets) {
-    const privacy = detectPrivacy(s.text);
+    const privacy = detectPrivacy(s.text, { names: all.privacy.names });
     if (privacy.length) {
       found.push({ type: 'privacy', subtype: privacy[0].kind, severity: 'blocker', chapterId: s.chapter_id, a: s.id, method: 'privacy-patterns-1.0', reason: `Mögliche personenbezogene Daten: ${privacy.map((h) => `${h.kind} (${h.match})`).join(', ')}`, details: { hits: privacy } });
     }

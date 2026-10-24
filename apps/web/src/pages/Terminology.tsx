@@ -12,12 +12,15 @@ export function TerminologyPage() {
   // Projektsprachen: Begriff und Definition je Sprache für das Glossar der Leseransicht (ADR-071)
   const languages = (useLoad<any[]>('/reader/languages').data ?? []).filter((l) => l.code !== 'de');
   const list = (s: string) => s.split(',').map((x) => x.trim()).filter(Boolean);
+  // Begriffskandidaten aus Jira-Tickets (F-12, ADR-083)
+  const candidates = useLoad<any[]>('/terminology/candidates');
 
   const save = async (fn: () => Promise<unknown>, msg: string) => {
     try {
       await fn();
       notify(msg);
       terms.reload();
+      candidates.reload();
       return true;
     } catch (e) {
       notify(errorText(e), 'error');
@@ -64,9 +67,12 @@ export function TerminologyPage() {
                     <td><input value={edit.preferred} onChange={(e) => setEdit({ ...edit, preferred: e.target.value })} aria-label="Bevorzugt bearbeiten" /></td>
                     <td><input value={edit.avoid} onChange={(e) => setEdit({ ...edit, avoid: e.target.value })} aria-label="Zu vermeiden bearbeiten" /></td>
                     <td><input value={edit.definition} onChange={(e) => setEdit({ ...edit, definition: e.target.value })} aria-label="Definition bearbeiten" /></td>
-                    <td colSpan={2} />
+                    <td colSpan={2}>
+                      {/* „Fix-Sprache“ (ADR-097, S-04): der Begriff bleibt in jeder Sprache unverändert, z. B. UI-Begriffe */}
+                      <label className="small"><input type="checkbox" checked={!!edit.keepUntranslated} onChange={(e) => setEdit({ ...edit, keepUntranslated: e.target.checked })} /> nicht übersetzen (in allen Sprachen so schreiben)</label>
+                    </td>
                     <td className="row-actions">
-                      <button className="btn primary small" onClick={async () => (await save(() => patch(`/terminology/${t.id}`, { preferred: edit.preferred, avoid: list(edit.avoid), definition: edit.definition || null, translations: edit.translations }), 'Begriff gespeichert.')) && setEdit(null)}>Speichern</button>
+                      <button className="btn primary small" onClick={async () => (await save(() => patch(`/terminology/${t.id}`, { preferred: edit.preferred, avoid: list(edit.avoid), definition: edit.definition || null, translations: edit.translations, keepUntranslated: !!edit.keepUntranslated }), 'Begriff gespeichert.')) && setEdit(null)}>Speichern</button>
                       <button className="btn small" onClick={() => setEdit(null)}>Abbrechen</button>
                     </td>
                   </tr>
@@ -92,13 +98,13 @@ export function TerminologyPage() {
                   </Fragment>
                 ) : (
                   <tr key={t.id}>
-                    <td><strong>{t.preferred}</strong></td>
+                    <td><strong>{t.preferred}</strong>{t.keepUntranslated && <span className="tag small" title="wird in keiner Sprache übersetzt">nicht übersetzen</span>}</td>
                     <td>{t.avoid.map((a: string) => <span key={a} className="tag">{a}</span>)}</td>
                     <td className="small">{t.definition ?? '–'}{Object.keys(t.translations ?? {}).map((c) => <span key={c} className="tag small" title={`${t.translations[c].term}: ${t.translations[c].definition ?? ''}`}>{c.toUpperCase()}</span>)}</td>
                     <td><Status s={t.status === 'active' ? 'confirmed' : 'superseded'} /></td>
                     <td className="small">{t.updatedBy}, {new Date(t.updatedAt).toLocaleString('de-DE')}</td>
                     <td className="row-actions">
-                      {t.status === 'active' && <button className="btn small" onClick={() => setEdit({ id: t.id, preferred: t.preferred, avoid: t.avoid.join(', '), definition: t.definition ?? '', translations: { ...(t.translations ?? {}) } })}>Bearbeiten</button>}
+                      {t.status === 'active' && <button className="btn small" onClick={() => setEdit({ id: t.id, preferred: t.preferred, avoid: t.avoid.join(', '), definition: t.definition ?? '', translations: { ...(t.translations ?? {}) }, keepUntranslated: !!t.keepUntranslated })}>Bearbeiten</button>}
                       <button className="btn small" onClick={() => save(() => patch(`/terminology/${t.id}`, { status: t.status === 'active' ? 'retired' : 'active' }), t.status === 'active' ? 'Begriff ausgemustert.' : 'Begriff reaktiviert.')}>
                         {t.status === 'active' ? 'Ausmustern' : 'Reaktivieren'}
                       </button>
@@ -106,6 +112,25 @@ export function TerminologyPage() {
                   </tr>
                 ),
               )}
+            </tbody>
+          </table>
+        )}
+      </Card>
+      <Card title={`Begriffskandidaten aus Jira-Tickets (${candidates.data?.length ?? 0})`}>
+        <p className="small muted">Mehrteilige Fachbegriffe, die in mindestens zwei Tickets vorkommen und noch nicht in der Terminologie stehen. Übernehmen Sie nur, was ein fester Begriff ist; die Übersetzung je Sprache tragen Sie danach unter „Bearbeiten“ ein – sie gilt dann als feste Übersetzung.</p>
+        <ErrorBox error={candidates.error} />
+        {!candidates.data?.length ? <Empty>Keine Kandidaten – Jira-Exporte lesen Sie unter „Quellen“ ein.</Empty> : (
+          <table className="table">
+            <thead><tr><th>Begriff</th><th>Tickets</th><th>Beispiele</th><th /></tr></thead>
+            <tbody>
+              {candidates.data.slice(0, 50).map((c) => (
+                <tr key={c.term}>
+                  <td>{c.term}</td>
+                  <td>{c.tickets}</td>
+                  <td className="small">{c.examples.join(', ')}</td>
+                  <td className="row-actions"><button className="btn small" aria-label={`${c.term} als Begriff anlegen`} onClick={() => save(() => post('/terminology', { preferred: c.term, avoid: [], definition: null }), `Begriff „${c.term}“ angelegt.`)}>Als Begriff anlegen</button></td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}

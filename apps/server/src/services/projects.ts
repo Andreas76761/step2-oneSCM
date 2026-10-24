@@ -11,6 +11,8 @@ import { PERMISSIONS } from '../domain/reference.js';
 import { getRoleTemplate } from './roleTemplates.js';
 import { badRequest, conflict, forbidden, notFound, Problem } from '../problem.js';
 import { seedTerminology } from './terminology.js';
+import { seedMetadataLabels } from './metadata.js';
+import { seedDomainLinks } from './domainMap.js';
 import { LANGUAGES } from '../domain/translate.js';
 
 export type Visibility = 'open' | 'restricted';
@@ -108,6 +110,8 @@ export async function createProject(ctx: Ctx, input: { name?: string; descriptio
   await db.tx(async () => {
     await db.run('INSERT INTO projects (id, name, description, visibility, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?)', id, name, input.description?.trim() || null, visibility, user.id, now());
     await seedTerminology(db, id);
+    await seedMetadataLabels(db, id);
+    await seedDomainLinks(db, id);
     await audit(withProject(ctx, id), user.id, 'project.created', 'project', id, { name, visibility });
   });
   const p = await projectRow(ctx, id);
@@ -219,6 +223,10 @@ const OWNER_SQL: Record<string, string> = {
   faqId: 'SELECT project_id FROM faq_entries WHERE id = ?',
   webhookId: 'SELECT project_id FROM webhook_subscriptions WHERE id = ?',
   deliveryId: 'SELECT s.project_id FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id WHERE d.id = ?',
+  labelId: 'SELECT project_id FROM metadata_labels WHERE id = ?',
+  qaId: 'SELECT project_id FROM metadata_qa WHERE id = ?',
+  letterId: 'SELECT project_id FROM release_letters WHERE id = ?',
+  noteId: 'SELECT project_id FROM knowledge_notes WHERE id = ?',
   batchId: 'SELECT c.project_id FROM rewrite_batches b JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id WHERE b.id = ?',
 };
 

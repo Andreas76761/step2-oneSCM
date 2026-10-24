@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 
 // WCAG 2.2 AA (ADR-016): automatische Prüfung der Hauptseiten
 const PAGES = ['/', '/quellen', '/cluster', '/widersprueche', '/dopplungen', '/generator', '/werkstatt', '/rollen', '/sparten', '/optimierungen',
-  '/terminologie', '/evidenz', '/freigabe', '/export', '/traceability', '/projekte', '/einstellungen', '/veroeffentlichung', '/aufgaben', '/uebersetzungen', '/analytik', '/assistent', '/integrationen', '/kontexthilfe', '/draft-manual', '/stammdaten/inhaltsverzeichnis', '/stammdaten/abkuerzungen', '/stammdaten/glossar', '/stammdaten/bildverzeichnis', '/stammdaten/faq', '/stammdaten/planung', '/suche?q=Vertrag', '/schreibstil', '/bilder', '/benutzer', '/dashboard', '/anleitungs-check', '/kapitel-assistent', '/lesen', '/lesen/druck', '/rueckmeldungen'];
+  '/terminologie', '/evidenz', '/freigabe', '/export', '/traceability', '/projekte', '/einstellungen', '/veroeffentlichung', '/aufgaben', '/uebersetzungen', '/analytik', '/assistent', '/integrationen', '/kontexthilfe', '/draft-manual', '/stammdaten/inhaltsverzeichnis', '/stammdaten/abkuerzungen', '/stammdaten/glossar', '/stammdaten/bildverzeichnis', '/stammdaten/faq', '/stammdaten/planung', '/suche?q=Vertrag', '/schreibstil', '/bilder', '/benutzer', '/dashboard', '/anleitungs-check', '/kapitel-assistent', '/lesen', '/lesen/druck', '/rueckmeldungen', '/kapitelbewertung', '/fehlerliste', '/ueberarbeitung', '/pruefprofile', '/textvarianten', '/vorher-nachher', '/textbausteine'];
 
 for (const path of PAGES) {
   test(`[T-208] WCAG 2.2 AA ohne Verstöße: ${path}`, async ({ page }) => {
@@ -93,6 +93,6 @@ test('[T-209] Tastatur: Sprunglink, Absatz per Tastatur auswählen, Fokus im Dia
   await expect(nav).toBeHidden();
   await page.getByRole('button', { name: '☰ Menü' }).click();
   await expect(nav).toBeVisible();
-  await nav.getByRole('link', { name: /Quellen/ }).click();
+  await nav.getByRole('link', { name: 'Quellen', exact: true }).click();
   await expect(nav).toBeHidden();
 });

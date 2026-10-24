@@ -34,7 +34,7 @@ export interface ImportRow {
   message: string | null;
 }
 
-async function readTable(fileName: string, data: Buffer): Promise<string[][]> {
+export async function readTable(fileName: string, data: Buffer): Promise<string[][]> {
   const ext = path.extname(fileName).toLowerCase();
   if (ext === '.csv' || ext === '.txt') {
     try {

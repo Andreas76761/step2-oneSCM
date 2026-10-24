@@ -1,17 +1,20 @@
 // Handbuch-Releases (ADR-018): unveränderlicher Stand aller freigegebenen Kapitel eines Projekts mit
 // automatisch ermittelten Änderungen gegenüber dem Vorgänger-Release und einer statischen Online-Hilfe.
+import { isFutureContent } from '../domain/releaseOrder.js';
 import JSZip from 'jszip';
 import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { gateForChapter, getChapterVersion } from './chapters.js';
 import { compareVersions } from './compare.js';
+import { frameTexts } from '../domain/frameTexts.js';
 import { badgeLine, KIND_LABEL, renderMarkdown, visible, type ExportChapter, type ExportFilter } from './exports.js';
 import { appendixHtmlSections } from './appendixRender.js';
 import { resolveLayout, type ResolvedLayout } from './layout.js';
 import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
 import { escapeHtml, markdownToHtml, type ImageSource } from './render.js';
 import { inlineMedia, loadMedia, type MediaFile } from './media.js';
+import { applyVariants } from './imageArchive.js';
 import { MIME_EXT } from '../domain/media.js';
 import { projectLanguages, translatedChapter } from './translations.js';
 import { LANGUAGES } from '../domain/translate.js';
@@ -70,7 +73,7 @@ const UI: Record<string, Record<string, string>> = {
   es: { ask: 'Preguntar al asistente', home: 'Manual de usuario oneSCM', skip: 'Ir al contenido', toc: 'Índice', changes: 'Cambios en esta versión', published: 'publicado el', version: 'Versión', approved: 'Versión aprobada', fallback: 'Aún no traducido: se muestra la versión alemana.', languages: 'Idioma', pager: 'Recorrer capítulos' },
   it: { ask: 'Chiedi all’assistente', home: 'Manuale utente oneSCM', skip: 'Vai al contenuto', toc: 'Indice', changes: 'Modifiche in questa versione', published: 'pubblicato il', version: 'Versione', approved: 'Versione approvata', fallback: 'Non ancora tradotto: viene mostrata la versione tedesca.', languages: 'Lingua', pager: 'Sfoglia i capitoli' },
 };
-const ui = (lang: string) => UI[lang] ?? UI.en;
+const ui = (lang: string) => UI[lang] ?? UI[lang.split('-')[0]] ?? UI.en; // de-ch, fr-ch wie de, fr (U-07)
 
 interface SiteLang {
   code: string;
@@ -105,7 +108,8 @@ function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false, images?: 
       const badges = badgeLine(b);
       out.push(`<div class="block kind-${escapeHtml(b.kind)}">`);
       if (badges) out.push(`<p class="badges">${escapeHtml(badges)}</p>`);
-      if (KIND_LABEL[b.kind] && b.kind !== 'xref') out.push(`<p class="label">${KIND_LABEL[b.kind]}</p>`);
+      // Rahmentexte in der Sprache der Seite (U-08)
+      if (KIND_LABEL[b.kind] && b.kind !== 'xref') out.push(`<p class="label">${escapeHtml(frameTexts(lang)[b.kind as 'note' | 'tip' | 'warning'] ?? KIND_LABEL[b.kind])}</p>`);
       out.push(markdownToHtml(b.text, images), '</div>');
     }
   }
@@ -196,12 +200,15 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
   const family = outline ? { sql: 'outline_family_id = ?', params: [outline.family_id] } : { sql: 'outline_family_id IS NULL', params: [] };
   // Variante: nur Kapitel, die in der gewählten Gliederungsversion vorkommen
   const inVersion = outline ? { sql: ' AND c.outline_node_key IN (SELECT node_key FROM outline_nodes WHERE outline_id = ? AND level = 1)', params: [outline.id] } : { sql: '', params: [] };
-  const rows = await db.all(
-    `SELECT c.id AS chapter_id, c.title, c.position, v.id AS version_id FROM chapters c JOIN generated_chapter_versions v ON v.chapter_id = c.id
+  const all = await db.all(
+    `SELECT c.id AS chapter_id, c.title, c.position, c.valid_from, v.id AS version_id FROM chapters c JOIN generated_chapter_versions v ON v.chapter_id = c.id
      WHERE c.project_id = ? AND c.${family.sql}${inVersion.sql} AND v.status = 'approved' ORDER BY c.position, c.title`,
     ctx.projectId, ...family.params, ...inVersion.params,
   );
-  if (!rows.length) throw unprocessable('Keine freigegebenen Kapitel – es gibt nichts zu veröffentlichen.');
+  // Zukunfts-Inhalte (ADR-102, W-09): Kapitel mit „gültig ab“ nach dieser Version kommen erst in ein späteres Release
+  const future = all.filter((r) => isFutureContent(r.valid_from, version)).map((r) => ({ chapterId: r.chapter_id as string, title: r.title as string, validFrom: r.valid_from as string }));
+  const rows = all.filter((r) => !isFutureContent(r.valid_from, version));
+  if (!rows.length) throw unprocessable(future.length ? `Alle freigegebenen Kapitel gelten erst nach Version ${version} – es gibt nichts zu veröffentlichen.` : 'Keine freigegebenen Kapitel – es gibt nichts zu veröffentlichen.');
   const blockers: { chapterId: string; checks: unknown }[] = [];
   for (const r of rows) {
     const gate = await gateForChapter(ctx, r.chapter_id, 'export');
@@ -240,6 +247,8 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
     const vf = variantFilter(outline);
     return { roles: vf.roles, divisions: vf.divisions, market: vf.market, blueprint: vf.blueprint, markets: vf.markets };
   })() : {};
+  // Bildvarianten (ADR-093): deutsche Fassung passend zu Rolle, Sparte und Markt der Variante
+  chapters.splice(0, chapters.length, ...(await applyVariants(ctx, chapters, { language: 'de', roles: filter.roles, divisions: filter.divisions, market: filter.market })));
   const appendices = outline ? await appendicesFor(ctx, outline, visible(chapters, filter)) : null;
   const notes = input.notes?.trim() || null;
   // Freigegebene Übersetzungen genau der veröffentlichten Kapitelversionen (ADR-021)
@@ -253,7 +262,10 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
     }
     const translated = list.filter(Boolean).length;
     if (!translated) continue;
-    translations.set(lang, list);
+    // Bildvarianten in der Sprache der Übersetzung (ADR-093)
+    const swapped = await applyVariants(ctx, list.filter((c): c is ExportChapter => !!c), { language: lang, roles: filter.roles, divisions: filter.divisions, market: filter.market });
+    let k = 0;
+    translations.set(lang, list.map((c) => (c ? swapped[k++] : null)));
     languages.push({ language: lang, translated, total: list.length, markdownKey: `releases/${id}/handbuch-${lang}.md` });
   }
   const allTexts = [chapters, ...[...translations.values()].map((l) => l.filter((c): c is ExportChapter => !!c))]
@@ -268,7 +280,7 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
   for (const l of languages) {
     // Kapitel ohne freigegebene Übersetzung auf Deutsch (im Markdown gekennzeichnet)
     const chs = translations.get(l.language)!.map((t, i) => t ?? { ...chapters[i], title: `${chapters[i].title} (DE)` });
-    const lmd = renderMarkdown(chs, filter, media, { title: `${title} – ${LANGUAGES[l.language] ?? l.language} – Version ${version}` });
+    const lmd = renderMarkdown(chs, filter, media, { title: `${title} – ${LANGUAGES[l.language] ?? l.language} – Version ${version}`, language: l.language });
     await ctx.store.put(l.markdownKey, Buffer.from(lmd, 'utf8'));
   }
   await db.tx(async () => {
@@ -278,9 +290,9 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
       id, ctx.projectId, version, title, notes, json(releaseChapters), json(changes), prevRow?.id ?? null, siteKey, mdKey, actor, createdAt, json(languages),
       outline?.id ?? null, outline?.family_id ?? null,
     );
-    await audit(ctx, actor, 'release.published', 'release', id, { version, outlineId: outline?.id ?? null, chapters: releaseChapters.length, changes: changesText(changes), languages: languages.map((l) => l.language) });
+    await audit(ctx, actor, 'release.published', 'release', id, { version, outlineId: outline?.id ?? null, chapters: releaseChapters.length, changes: changesText(changes), languages: languages.map((l) => l.language), future: future.length });
   });
-  return getRelease(ctx, id);
+  return { ...(await getRelease(ctx, id)), future };
 }
 
 export async function downloadRelease(ctx: Ctx, id: string, format: string, language?: string) {

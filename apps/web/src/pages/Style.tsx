@@ -105,8 +105,15 @@ export function SentenceEditor({ s, onApply, onClose }: { s: Sentence; onApply: 
 }
 
 /** Prüf- und Bearbeitungsfläche für einen Text (freies Textfeld oder Kapitelabsatz) */
-function StyleEditor({ initial, onSave, saveLabel, canRewrite }: { initial: string; onSave?: (text: string) => Promise<void>; saveLabel?: string; canRewrite: boolean }) {
+function StyleEditor({ initial, onSave, saveLabel, canRewrite, chooseLanguage }: { initial: string; onSave?: (text: string) => Promise<void>; saveLabel?: string; canRewrite: boolean; chooseLanguage?: boolean }) {
   const { notify } = useApp();
+  // Sprache des Textes (ADR-097): Deutsch prüft alle Regeln, Englisch zusätzlich a/an, „I“ und Rechtschreibung
+  const [lang, setLang] = useState('de');
+  // Tonalität (ADR-102, S-02): Produktart und Rolle bestimmen den Ton der Prüfung und der KI
+  const [product, setProduct] = useState('manual');
+  const [role, setRole] = useState('');
+  const tone = useLoad<any>('/style/tone');
+  const scope = { product, ...(role ? { roles: [role] } : {}) };
   const [text, setText] = useState(initial);
   const [a, setA] = useState<Analysis | null>(null);
   const [sel, setSel] = useState<number | null>(null);
@@ -123,7 +130,7 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite }: { initial: stri
   const check = async (t = text) => {
     if (!t.trim()) return;
     try {
-      const r = await post<any>('/style/check', { text: t });
+      const r = await post<any>('/style/check', { text: t, language: lang, ...scope });
       setA(r);
       setSel(null);
     } catch (e) {
@@ -147,7 +154,7 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite }: { initial: stri
         if (next === cur) break;
         applied += analysis.fixable;
         cur = next;
-        analysis = await post<Analysis>('/style/check', { text: cur });
+        analysis = await post<Analysis>('/style/check', { text: cur, language: lang, ...scope });
       }
       setText(cur);
       setA(analysis);
@@ -163,7 +170,7 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite }: { initial: stri
     setBusy(true);
     try {
       const source = text;
-      const r = await post<any>('/style/rewrite', { text: source, mode });
+      const r = await post<any>('/style/rewrite', { text: source, mode, ...scope });
       if (textRef.current === source) setProposal({ ...r, source });
       else notify('Der Text wurde inzwischen geändert – Vorschlag verworfen. Bitte erneut umformulieren.', 'error');
     } catch (e) {
@@ -181,14 +188,37 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite }: { initial: stri
   };
   return (
     <>
+      {chooseLanguage && (
+        <label className="inline">Sprache des Textes
+          <select value={lang} onChange={(e) => { setLang(e.target.value); setA(null); }}>
+            {PHRASE_LANGS.map(([c, l]) => <option key={c} value={c}>{l}</option>)}
+          </select>
+        </label>
+      )}
+      {tone.data?.active && lang === 'de' && (
+        <div className="filters">
+          <label className="inline">Produktart
+            <select value={product} onChange={(e) => { setProduct(e.target.value); setA(null); }}>
+              {tone.data.products.map((p: any) => <option key={p.product} value={p.product}>{p.label}</option>)}
+            </select>
+          </label>
+          <label className="inline">Rolle
+            <select value={role} onChange={(e) => { setRole(e.target.value); setA(null); }}>
+              <option value="">alle Rollen</option>
+              {tone.data.roles.map((r: any) => <option key={r.role} value={r.role}>{r.label}</option>)}
+            </select>
+          </label>
+          {(a as any)?.tone && <span className="tag">Ton: {(a as any).tone.label}</span>}
+        </div>
+      )}
       <label className="block">Text
         <textarea rows={8} value={text} onChange={(e) => { setText(e.target.value); setA(null); }} placeholder="Fließtext hier einfügen …" />
       </label>
       <div className="filters">
         <button className="btn primary" disabled={!text.trim()} onClick={() => check()}>Prüfen</button>
         <button className="btn" disabled={busy || !a?.fixable} onClick={autoFix}>Automatisch korrigieren{a?.fixable ? ` (${a.fixable})` : ''}</button>
-        {canRewrite && <button className="btn" disabled={busy || !text.trim()} onClick={() => rewrite('professional')}>Professionell umformulieren</button>}
-        {canRewrite && <button className="btn" disabled={busy || !text.trim()} onClick={() => rewrite('present')}>In Präsens umwandeln</button>}
+        {canRewrite && lang === 'de' && <button className="btn" disabled={busy || !text.trim()} onClick={() => rewrite('professional')}>Professionell umformulieren</button>}
+        {canRewrite && lang === 'de' && <button className="btn" disabled={busy || !text.trim()} onClick={() => rewrite('present')}>In Präsens umwandeln</button>}
         <button className="btn ghost" disabled={!text.trim()} onClick={() => navigator.clipboard?.writeText(text).then(() => notify('Text kopiert.'))}>Kopieren</button>
         {onSave && <button className="btn primary" disabled={busy || text === initial} onClick={() => onSave(text)}>{saveLabel ?? 'Speichern'}</button>}
       </div>
@@ -244,6 +274,7 @@ function ChapterTab({ canEdit }: { canEdit: boolean }) {
             {data.data.summary.withProblems} von {data.data.summary.blocks} Absätzen mit Problemen ·
             {data.data.version.editable ? ' Entwurf – Korrekturen werden als neue Absatzversion gespeichert' : ' nicht bearbeitbar (eingereicht oder freigegeben)'} · <Link to={`/werkstatt/${data.data.version.chapterId}`}>in der Werkstatt öffnen</Link>
           </p>
+          <ReadabilityPanel r={data.data.readability} />
           {data.data.blocks.map((b: any) => (
             <Card key={b.id} title={`${b.section} · ${b.analysis.problemSentences ? `⚠ ${b.analysis.problemSentences} Problem(e)` : '✓'}`}>
               {open === b.id ? (
@@ -311,8 +342,75 @@ const RULE_NAMES: Record<string, string> = {
   punctuation: 'Zeichensetzung', capitalization: 'Großschreibung am Satzanfang', impersonal: 'Unpersönlich („man“)', colloquial: 'Umgangssprache',
   hedging: 'Unklare Anweisungen', nominal: 'Nominalstil', spelling: 'Rechtschreibung', abbreviation: 'Abkürzungen', terminology: 'Terminologie',
   custom: 'Eigene Regeln', address: 'Anrede',
+  typography: 'Typografie („…“, –, ›)', numbers: 'Zahlen, Einheiten, Datum', product_name: 'Produktname oneSCM', grammar: 'Grammatik (Englisch: a/an, „I“)',
+  tone: 'Tonalität (je Produktart und Rolle)',
 };
-interface Phrase { avoid: string; use: string | null; note: string | null }
+interface Phrase { avoid: string; use: string | null; note: string | null; language?: string | null }
+// Sprachen eigener Regeln (ADR-097): Deutsch und die Zielsprachen
+const PHRASE_LANGS: [string, string][] = [['de', 'Deutsch'], ['en', 'Englisch'], ['fr', 'Französisch'], ['es', 'Spanisch'], ['it', 'Italienisch'], ['nl', 'Niederländisch'], ['pl', 'Polnisch'], ['cs', 'Tschechisch'], ['pt', 'Portugiesisch'], ['sk', 'Slowakisch'], ['ko', 'Koreanisch'], ['ms', 'Malaiisch']];
+
+/** Lesbarkeit eines Kapitels mit Sollwerten der Zielgruppe (ADR-097, S-01) */
+export function ReadabilityPanel({ r }: { r: any }) {
+  if (!r?.sentences) return null;
+  return (
+    <section className={`alert ${r.ok ? 'ok' : 'warning'}`} aria-label="Lesbarkeit">
+      <strong>Lesbarkeit für {r.audienceLabel}:</strong> Flesch {r.flesch} · LIX {r.lix} ({r.lixLabel}) · Ø {String(r.avgWords).replace('.', ',')} Wörter je Satz · {r.longShare} % lange Sätze · {r.passiveShare} % Passiv
+      <ul className="small read-checks">
+        {r.checks.map((c: any) => <li key={c.code}>{c.ok ? '✓' : '✗'} {c.label} <span className="muted">(ist {String(c.value).replace('.', ',')})</span></li>)}
+      </ul>
+    </section>
+  );
+}
+
+/** Tonalität je Produktart und Rolle (ADR-102, S-02): leer = Ton aus TONALITAET.md bzw. der Produktart */
+function ToneCard({ d, setD, ro }: { d: any; setD: (d: any) => void; ro: boolean }) {
+  const tone = useLoad<any>('/style/tone');
+  if (!tone.data) return <ErrorBox error={tone.error} />;
+  const t = d.tone ?? { products: {}, roles: {} };
+  const set = (kind: 'products' | 'roles', key: string, value: string) => {
+    const next = { ...t[kind] };
+    if (value) next[key] = value;
+    else delete next[key];
+    setD({ ...d, tone: { ...t, [kind]: next } });
+  };
+  const label = (code: string) => tone.data.tones.find((x: any) => x.tone === code)?.label ?? code;
+  return (
+    <Card title="Tonalität">
+      <p className="small muted">Ton je Produktart (Vorgabe aus TONALITAET.md) und je Rolle: Ein Rollenprofil gilt für Absätze, die genau dieser Rolle zugeordnet sind. Der Ton wirkt auf die Prüfung (Regel „Tonalität“) und auf die KI-Vorschläge.</p>
+      <ul className="small">{tone.data.tones.map((x: any) => <li key={x.tone}><strong>{x.label}:</strong> {x.hint}</li>)}</ul>
+      <div className="table-wrap" role="region" aria-label="Tonalität" tabIndex={0}>
+        <table className="table compact">
+          <caption className="sr-only">Ton je Produktart und Rolle</caption>
+          <thead><tr><th scope="col">Produktart bzw. Rolle</th><th scope="col">Ton</th></tr></thead>
+          <tbody>
+            {tone.data.products.map((p: any) => (
+              <tr key={p.product}>
+                <td>{p.label}</td>
+                <td>
+                  <select aria-label={`Ton für ${p.label}`} disabled={ro} value={t.products[p.product] ?? ''} onChange={(e) => set('products', p.product, e.target.value)}>
+                    <option value="">Standard ({label(p.default)})</option>
+                    {tone.data.tones.map((x: any) => <option key={x.tone} value={x.tone}>{x.label}</option>)}
+                  </select>
+                </td>
+              </tr>
+            ))}
+            {tone.data.roles.map((r: any) => (
+              <tr key={r.role}>
+                <td>Rolle {r.label}</td>
+                <td>
+                  <select aria-label={`Ton für Rolle ${r.label}`} disabled={ro} value={t.roles[r.role] ?? ''} onChange={(e) => set('roles', r.role, e.target.value)}>
+                    <option value="">wie Produktart</option>
+                    {tone.data.tones.map((x: any) => <option key={x.tone} value={x.tone}>{x.label}</option>)}
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
 
 /** Eigene Stilregeln des Projekts (ADR-044): Regeln an/aus, Anrede, Satzlänge, eigene Formulierungen – ändern nur Administration */
 function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAdmin: boolean }) {
@@ -327,7 +425,7 @@ function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAd
   const setPhrase = (i: number, p: Partial<Phrase>) => setD({ ...d, phrases: phrases.map((x, j) => (j === i ? { ...x, ...p } : x)) });
   const save = async () => {
     try {
-      await put('/style/rules', { ...d, phrases: phrases.filter((p) => p.avoid.trim()) });
+      await put('/style/rules', { ...d, phrases: phrases.filter((p) => p.avoid.trim()), allowed: (d.allowed ?? []).filter((x: string) => x.trim()) });
       notify('Stilregeln gespeichert.');
       rules.reload();
     } catch (e) {
@@ -346,6 +444,11 @@ function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAd
           ))}
         </fieldset>
         <div className="filters">
+          <label className="inline">Zielgruppe (Lesbarkeit)
+            <select disabled={ro} value={d.audience ?? 'enduser'} onChange={(e) => setD({ ...d, audience: e.target.value })}>
+              <option value="enduser">Endanwender (Flesch ≥ 60, Ø ≤ 15 Wörter)</option><option value="expert">Fachanwender und Administration (Flesch ≥ 40)</option>
+            </select>
+          </label>
           <label className="inline">Anrede
             <select disabled={ro} value={d.address ?? ''} onChange={(e) => setD({ ...d, address: e.target.value || null })}>
               <option value="sie">Sie</option><option value="du">du</option><option value="">nicht prüfen</option>
@@ -356,12 +459,27 @@ function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAd
               onChange={(e) => setD({ ...d, maxSentenceWords: e.target.value ? Number(e.target.value) : null })} />
           </label>
         </div>
+        <label className="block">Erlaubte Begriffe (werden nie als Fehler gemeldet, je Zeile einer – z. B. oneSCM, VIN, BTO, MO Checks)
+          <textarea rows={4} disabled={ro} value={(d.allowed ?? []).join('\n')} onChange={(e) => setD({ ...d, allowed: e.target.value.split('\n') })} />
+        </label>
+        {!ro && (
+          <label className="small">Liste einlesen (.txt, .csv – je Zeile ein Begriff)
+            <input type="file" accept=".txt,.csv,.md,text/plain,text/csv" onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (!f) return;
+              const words = (await f.text()).split(/\r?\n|;|,/).map((x) => x.replace(/^\ufeff/, '').trim()).filter(Boolean);
+              setD({ ...d, allowed: [...new Set([...(d.allowed ?? []).filter((x: string) => x.trim()), ...words])] });
+              notify(`${words.length} Begriffe übernommen – zum Sichern „Stilregeln speichern“.`);
+            }} />
+          </label>
+        )}
       </Card>
+      <ToneCard d={d} setD={setD} ro={ro} />
       <Card title="Eigene Formulierungen">
-        <p className="small muted">Zu vermeidende Wörter oder Wendungen, optional mit Ersatz (leer = streichen) oder Hinweis. Gilt für Prüfung, automatische Korrektur und KI-Umformulierung.</p>
+        <p className="small muted">Zu vermeidende Wörter oder Wendungen, optional mit Ersatz (leer = streichen) oder Hinweis – je Sprache, z. B. „Dealer → Händler“ (Deutsch) und „Händler → Dealer“ (Englisch). Gilt für Prüfung, automatische Korrektur, KI-Umformulierung und Übersetzungen der Sprache.</p>
         <div className="table-wrap" role="region" aria-label="Eigene Formulierungen" tabIndex={0}>
           <table className="table compact">
-            <thead><tr><th>Vermeiden</th><th>Aktion</th><th>Hinweis</th><th /></tr></thead>
+            <thead><tr><th>Vermeiden</th><th>Aktion</th><th>Hinweis</th><th>Sprache</th><th /></tr></thead>
             <tbody>
               {phrases.map((p, i) => (
                 <tr key={i}>
@@ -374,6 +492,11 @@ function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAd
                     {p.use !== null && (p.use !== '' || replacing.has(i)) && <input aria-label={`Regel ${i + 1} ersetzen durch`} disabled={ro} value={p.use} onChange={(e) => setPhrase(i, { use: e.target.value })} />}
                   </td>
                   <td><input aria-label={`Regel ${i + 1} Hinweis`} disabled={ro} value={p.note ?? ''} onChange={(e) => setPhrase(i, { note: e.target.value || null })} /></td>
+                  <td>
+                    <select aria-label={`Regel ${i + 1} Sprache`} disabled={ro} value={p.language ?? 'de'} onChange={(e) => setPhrase(i, { language: e.target.value === 'de' ? null : e.target.value })}>
+                      {PHRASE_LANGS.map(([c, l]) => <option key={c} value={c}>{l}</option>)}
+                    </select>
+                  </td>
                   <td>{!ro && <button className="btn small danger" aria-label={`Regel ${i + 1} entfernen`} onClick={() => { setReplacing(new Set()); setD({ ...d, phrases: phrases.filter((_, j) => j !== i) }); }}>✕</button>}</td>
                 </tr>
               ))}
@@ -585,7 +708,7 @@ export function StylePage() {
         ))}
       </div>
       <div role="tabpanel">
-        {tab === 'text' && <StyleEditor initial={empty} canRewrite={canEdit} />}
+        {tab === 'text' && <StyleEditor initial={empty} canRewrite={canEdit} chooseLanguage />}
         {tab === 'chapter' && <ChapterTab canEdit={canEdit} />}
         {tab === 'snippets' && <SnippetTab />}
         {tab === 'rules' && <RulesTab canAdmin={canAdmin} canGlobalAdmin={canGlobalAdmin} />}

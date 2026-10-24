@@ -31,6 +31,8 @@ const UsersPage = lazy(() => import('./pages/Users').then((m) => ({ default: m.U
 const ReleasesPage = lazy(() => import('./pages/Releases').then((m) => ({ default: m.ReleasesPage })));
 const InboxPage = lazy(() => import('./pages/Discussion').then((m) => ({ default: m.InboxPage })));
 const TranslationsPage = lazy(() => import('./pages/Translations').then((m) => ({ default: m.TranslationsPage })));
+const TranslationMemoryPage = lazy(() => import('./pages/TranslationTools').then((m) => ({ default: m.TranslationMemoryPage })));
+const TranslationGlossaryPage = lazy(() => import('./pages/TranslationTools').then((m) => ({ default: m.TranslationGlossaryPage })));
 const AnalyticsPage = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.AnalyticsPage })));
 const AssistantPage = lazy(() => import('./pages/Assistant').then((m) => ({ default: m.AssistantPage })));
 const IntegrationsPage = lazy(() => import('./pages/Integrations').then((m) => ({ default: m.IntegrationsPage })));
@@ -44,33 +46,103 @@ const GlossaryPage = lazy(() => import('./pages/MasterData').then((m) => ({ defa
 const ImageIndexPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.ImageIndexPage })));
 const PlanningPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.PlanningPage })));
 const GuidancePage = lazy(() => import('./pages/Guidance').then((m) => ({ default: m.GuidancePage })));
+const TextModulesPage = lazy(() => import('./pages/TextModules').then((m) => ({ default: m.TextModulesPage })));
+const BeforeAfterPage = lazy(() => import('./pages/BeforeAfter').then((m) => ({ default: m.BeforeAfterPage })));
+const TextVariantsPage = lazy(() => import('./pages/Audience').then((m) => ({ default: m.TextVariantsPage })));
+const ProfileReviewsPage = lazy(() => import('./pages/Audience').then((m) => ({ default: m.ProfileReviewsPage })));
+const RevisionsPage = lazy(() => import('./pages/Revisions').then((m) => ({ default: m.RevisionsPage })));
+const AssessmentPage = lazy(() => import('./pages/Assessment').then((m) => ({ default: m.AssessmentPage })));
+const LanguageErrorsPage = lazy(() => import('./pages/Assessment').then((m) => ({ default: m.LanguageErrorsPage })));
 const ChapterAssistantPage = lazy(() => import('./pages/ChapterAssistant').then((m) => ({ default: m.ChapterAssistantPage })));
 const PrintPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.PrintPage })));
 const ReaderBookmarksPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderBookmarksPage })));
 const ReaderFaqPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderFaqPage })));
 const ReaderPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderPage })));
+const MetadataOverviewPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataOverviewPage })));
+const MetadataChunksPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataChunksPage })));
+const MetadataQaPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataQaPage })));
+const AccessMatrixPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.AccessMatrixPage })));
+const DomainMapPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.DomainMapPage })));
+const MetadataLabelsPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataLabelsPage })));
+const SourceUpdatesPage = lazy(() => import('./pages/SourceUpdates').then((m) => ({ default: m.SourceUpdatesPage })));
+const TicketReleasesPage = lazy(() => import('./pages/ReleaseLetters').then((m) => ({ default: m.TicketReleasesPage })));
+const ReleaseLettersPage = lazy(() => import('./pages/ReleaseLetters').then((m) => ({ default: m.ReleaseLettersPage })));
+const OutlineSourcesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.OutlineSourcesPage })));
+const KnowledgeNotesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.KnowledgeNotesPage })));
+const QuestionCatalogPage = lazy(() => import('./pages/QuestionCatalog').then((m) => ({ default: m.QuestionCatalogPage })));
+const AnswerQualityPage = lazy(() => import('./pages/AnswerQuality').then((m) => ({ default: m.AnswerQualityPage })));
+const SurveysPage = lazy(() => import('./pages/Surveys').then((m) => ({ default: m.SurveysPage })));
+const MetaDuplicatesPage = lazy(() => import('./pages/MetaDuplicates').then((m) => ({ default: m.MetaDuplicatesPage })));
+const HeadingsPage = lazy(() => import('./pages/Headings').then((m) => ({ default: m.HeadingsPage })));
+const IngestPage = lazy(() => import('./pages/Ingest').then((m) => ({ default: m.IngestPage })));
+const ImageArchivePage = lazy(() => import('./pages/ImageArchive').then((m) => ({ default: m.ImageArchivePage })));
+const StructurePage = lazy(() => import('./pages/Structure').then((m) => ({ default: m.StructurePage })));
+const TriagePage = lazy(() => import('./pages/Triage').then((m) => ({ default: m.TriagePage })));
+const ContentDashboardPage = lazy(() => import('./pages/Triage').then((m) => ({ default: m.ContentDashboardPage })));
+const AgentsPage = lazy(() => import('./pages/Agents').then((m) => ({ default: m.AgentsPage })));
+const GoalPage = lazy(() => import('./pages/Agents').then((m) => ({ default: m.GoalPage })));
+const WorkAreaPage = lazy(() => import('./pages/WorkAreas').then((m) => ({ default: m.WorkAreaPage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
 type NavItem = { to: string; label: string; icon: string };
 const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
+  // oneSCM_Metadaten (ADR-079): Quellen einlesen, je Überschrift labeln und befragen
+  { id: 'metadaten', label: 'oneSCM_Metadaten', items: [
+    { to: '/metadaten', label: 'Übersicht', icon: '🧠' },
+    { to: '/metadaten/einlesen', label: 'Einlesen', icon: '📥' },
+    { to: '/metadaten/triage', label: 'Triage', icon: '🚦' },
+    { to: '/metadaten/inhalte', label: 'Inhalts-Dashboard', icon: '📊' },
+    { to: '/metadaten/ueberschriften', label: 'Quellen je Überschrift', icon: '🗂' },
+    { to: '/metadaten/chunks', label: 'Chunks', icon: '🧱' },
+    { to: '/metadaten/dubletten', label: 'Dubletten (alle Formate)', icon: '👯' },
+    { to: '/metadaten/kapitel-quellen', label: 'Kapitel ↔ Quellen', icon: '📚' },
+    { to: '/metadaten/wissensnotizen', label: 'Wissensnotizen', icon: '🗒' },
+    { to: '/metadaten/fragen', label: 'Fragen & Antworten', icon: '💡' },
+    { to: '/metadaten/rueckfragen', label: 'Rückfragen', icon: '❓' },
+    { to: '/metadaten/qualitaet', label: 'Antwortqualität', icon: '🎯' },
+    { to: '/metadaten/befragung', label: 'Expertenbefragung', icon: '🧑‍🏫' },
+    { to: '/metadaten/zugriffsmatrix', label: 'Zugriffsmatrix', icon: '🔐' },
+    { to: '/metadaten/zuordnung', label: 'Zuordnung', icon: '🧩' },
+    { to: '/metadaten/labels', label: 'Labels', icon: '🏷' },
+  ] },
+  // Agenten in der App (ADR-100): Orchestrator, Aufgaben, Entscheidungen, Ziel-Abgleich GOAL
+  { id: 'agenten', label: 'Agenten', items: [
+    { to: '/agenten', label: 'Aufgaben & Entscheidungen', icon: '🤖' },
+    { to: '/agenten/goal', label: 'GOAL – Ziel-Abgleich', icon: '🏁' },
+  ] },
   { id: 'sammeln', label: '1 Sammeln', items: [
     { to: '/quellen', label: 'Quellen', icon: '📥' },
+    { to: '/quellenaenderungen', label: 'Quellenänderungen', icon: '🔄' },
     { to: '/cluster', label: 'Textcluster', icon: '🧩' },
     { to: '/widersprueche', label: 'Widersprüche', icon: '⚖️' },
     { to: '/dopplungen', label: 'Dopplungen', icon: '📑' },
   ] },
+  // Arbeitsbereiche (ADR-098): kommende Funktionen vorab dokumentieren, Backlog, interne Themen – nicht im Handbuch
+  { id: 'bereiche', label: 'Pipeline, Backlog, Intern', items: [
+    { to: '/pipeline', label: 'Pipeline', icon: '🚧' },
+    { to: '/backlog', label: 'Backlog', icon: '🗃' },
+    { to: '/intern', label: 'Intern', icon: '🔒' },
+  ] },
   { id: 'schreiben', label: '2 Schreiben', items: [
+    { to: '/kapitelsteuerung', label: 'Kapitelsteuerung', icon: '🎛' },
     { to: '/kapitel-assistent', label: 'Kapitel-Assistent', icon: '🧭' },
     { to: '/generator', label: 'Kapitelgenerator', icon: '⚙️' },
     { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: '✏️' },
     { to: '/draft-manual', label: 'Draft Manual', icon: '📝' },
+    { to: '/textbausteine', label: 'Textbausteine', icon: '🧩' },
     { to: '/bilder', label: 'Bilder', icon: '🎨' },
+    { to: '/bildarchiv', label: 'Bildarchiv', icon: '🗂' },
+    { to: '/vorher-nachher', label: 'Vorher/Nachher', icon: '↔️' },
   ] },
   { id: 'pruefen', label: '3 Prüfen', items: [
     { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: '🔍' },
+    { to: '/kapitelbewertung', label: 'Kapitelbewertung', icon: '🚦' },
+    { to: '/ueberarbeitung', label: 'Überarbeitung', icon: '🔁' },
+    { to: '/pruefprofile', label: 'Prüferprofile', icon: '👥' },
     { to: '/rueckmeldungen', label: 'Rückmeldungen', icon: '💬' },
     { to: '/schreibstil', label: 'Schreibstil', icon: '🖋️' },
+    { to: '/fehlerliste', label: 'Fehlerliste', icon: '📝' },
     { to: '/terminologie', label: 'Terminologie', icon: '📖' },
     { to: '/evidenz', label: 'Evidenz', icon: '🔎' },
     { to: '/freigabe', label: 'Freigabe', icon: '✅' },
@@ -78,8 +150,13 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   { id: 'veroeffentlichen', label: '4 Veröffentlichen', items: [
     { to: '/lesen', label: 'Leseransicht', icon: '📖' },
     { to: '/export', label: 'Export', icon: '📤' },
+    { to: '/textvarianten', label: 'Textvarianten', icon: '📑' },
     { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
     { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
+    { to: '/uebersetzungen/speicher', label: 'Übersetzungsspeicher', icon: '🗄' },
+    { to: '/uebersetzungen/glossar', label: 'Glossar je Sprache', icon: '📘' },
+    { to: '/release-abgleich', label: 'Release-Abgleich', icon: '🎯' },
+    { to: '/releaseletter', label: 'Releaseletter', icon: '📰' },
   ] },
 ];
 const NAV_MORE: NavItem[] = [
@@ -307,7 +384,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
               <div key={g.id} role="group" aria-labelledby={`nav-h-${g.id}`} className="nav-section">
                 <span id={`nav-h-${g.id}`} className="nav-heading">{g.label}</span>
                 {g.items.map((n) => (
-                  <NavLink key={n.to} to={n.to} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
+                  // Übersicht nur bei genauer Übereinstimmung aktiv, wenn Unterseiten eigene Einträge haben
+                  <NavLink key={n.to} to={n.to} end={g.items.some((o) => o.to.startsWith(`${n.to}/`))} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
                     <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
                   </NavLink>
                 ))}
@@ -373,6 +451,13 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/anleitungs-check" element={<GuidancePage />} />
             <Route path="/anleitungs-check/:versionId" element={<GuidancePage />} />
+            <Route path="/kapitelbewertung" element={<AssessmentPage />} />
+            <Route path="/kapitelbewertung/:versionId" element={<AssessmentPage />} />
+            <Route path="/fehlerliste" element={<LanguageErrorsPage />} />
+            <Route path="/ueberarbeitung" element={<RevisionsPage />} />
+            <Route path="/pruefprofile" element={<ProfileReviewsPage />} />
+            <Route path="/textvarianten" element={<TextVariantsPage />} />
+            <Route path="/ueberarbeitung/:batchId" element={<RevisionsPage />} />
             <Route path="/kapitel-assistent" element={<ChapterAssistantPage />} />
             <Route path="/lesen" element={<ReaderPage />} />
             <Route path="/lesen/druck" element={<PrintPage />} />
@@ -380,7 +465,24 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/lesen/lesezeichen" element={<ReaderBookmarksPage />} />
             <Route path="/rueckmeldungen" element={<FeedbackPage />} />
             <Route path="/lesen/:chapterId" element={<ReaderPage />} />
+            <Route path="/metadaten" element={<MetadataOverviewPage />} />
+            <Route path="/metadaten/chunks" element={<MetadataChunksPage />} />
+            <Route path="/metadaten/fragen" element={<MetadataQaPage />} />
+            <Route path="/metadaten/zugriffsmatrix" element={<AccessMatrixPage />} />
+            <Route path="/metadaten/zuordnung" element={<DomainMapPage />} />
+            <Route path="/metadaten/kapitel-quellen" element={<OutlineSourcesPage />} />
+            <Route path="/metadaten/wissensnotizen" element={<KnowledgeNotesPage />} />
+            <Route path="/metadaten/einlesen" element={<IngestPage />} />
+            <Route path="/metadaten/ueberschriften" element={<HeadingsPage />} />
+            <Route path="/metadaten/dubletten" element={<MetaDuplicatesPage />} />
+            <Route path="/metadaten/rueckfragen" element={<QuestionCatalogPage />} />
+            <Route path="/metadaten/qualitaet" element={<AnswerQualityPage />} />
+            <Route path="/metadaten/befragung" element={<SurveysPage />} />
+            <Route path="/release-abgleich" element={<TicketReleasesPage />} />
+            <Route path="/releaseletter" element={<ReleaseLettersPage />} />
+            <Route path="/metadaten/labels" element={<MetadataLabelsPage />} />
             <Route path="/quellen" element={<SourcesPage />} />
+            <Route path="/quellenaenderungen" element={<SourceUpdatesPage />} />
             <Route path="/cluster" element={<ClustersPage />} />
             <Route path="/widersprueche" element={<ContradictionsPage />} />
             <Route path="/dopplungen" element={<DuplicatesPage />} />
@@ -396,8 +498,21 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/vergleich/:chapterId" element={<ComparePage />} />
             <Route path="/freigabe" element={<ApprovalPage />} />
             <Route path="/export" element={<ExportPage />} />
+            <Route path="/bildarchiv" element={<ImageArchivePage />} />
+            <Route path="/vorher-nachher" element={<BeforeAfterPage />} />
+            <Route path="/textbausteine" element={<TextModulesPage />} />
+            <Route path="/kapitelsteuerung" element={<StructurePage />} />
+            <Route path="/metadaten/triage" element={<TriagePage />} />
+            <Route path="/metadaten/inhalte" element={<ContentDashboardPage />} />
+            <Route path="/agenten" element={<AgentsPage />} />
+            <Route path="/agenten/goal" element={<GoalPage />} />
+            <Route path="/pipeline" element={<WorkAreaPage area="pipeline" />} />
+            <Route path="/backlog" element={<WorkAreaPage area="backlog" />} />
+            <Route path="/intern" element={<WorkAreaPage area="intern" />} />
             <Route path="/veroeffentlichung" element={<ReleasesPage />} />
             <Route path="/uebersetzungen" element={<TranslationsPage />} />
+            <Route path="/uebersetzungen/speicher" element={<TranslationMemoryPage />} />
+            <Route path="/uebersetzungen/glossar" element={<TranslationGlossaryPage />} />
             <Route path="/aufgaben" element={<InboxPage onRead={reloadUnread} />} />
             <Route path="/analytik" element={<AnalyticsPage />} />
             <Route path="/assistent" element={<AssistantPage />} />

@@ -1,4 +1,5 @@
 // Kapitel, Generierung, Kapitelwerkstatt, Qualitätsgate und Freigabe (US-008, US-009, US-010, US-012).
+import { DEFAULT_DETAIL_LEVELS } from '../domain/metadataLabels.js';
 import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { evaluateGate, type GateResult } from '../domain/gate.js';
@@ -7,7 +8,10 @@ import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, ROLE
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { assertIdsInProject } from './projects.js';
 import { systemNotice } from './collaboration.js';
-import { guidanceGateCheck } from './guidanceBase.js';
+import { guidanceGateChecks } from './guidanceBase.js';
+import { mentions, mergeInstructions } from '../domain/chapterInstruction.js';
+import { instructionOf, subchapterInstructions } from './structure.js';
+import { excludedTicketDocuments } from './ticketClasses.js';
 import { snippetScope, variantSnippetRefs } from './variantSnippets.js';
 import { checkDecider, clearWorkflowSql, recordApproval, startWorkflow, workflowState } from './workflow.js';
 
@@ -20,7 +24,7 @@ export async function listChapters(ctx: Ctx, opts: { outlineFamilyId?: string; o
     ? await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? ORDER BY CASE WHEN outline_family_id IS NULL THEN 0 ELSE 1 END, outline_family_id, position, title', ctx.projectId)
     : opts.outlineFamilyId
     ? await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id = ? ORDER BY position, title', ctx.projectId, opts.outlineFamilyId)
-    : await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id IS NULL ORDER BY position, title', ctx.projectId);
+    : await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id IS NULL AND history_at IS NULL ORDER BY position, title', ctx.projectId);
   // outlineId: Inhalte der Variantenkapitel an dieser Gliederungsversion messen
   return Promise.all(chapters.map((c) => chapterSummary(ctx, opts.outlineId && c.outline_family_id ? { ...c, outline_id: opts.outlineId } : c)));
 }
@@ -47,9 +51,11 @@ async function chapterSummary(ctx: Ctx, c: Row) {
     title: c.title,
     position: c.position,
     outlineFamilyId: c.outline_family_id ?? null,
+    validFrom: c.valid_from ?? null,
+    inHistory: !!c.history_at,
     subchapters: c.outline_family_id
       ? (await variantSnippetRefs(ctx, c)).subchapters
-      : await db.all('SELECT id, title, position FROM subchapters WHERE chapter_id = ? ORDER BY position', c.id),
+      : await db.all('SELECT id, title, position, valid_from AS "validFrom" FROM subchapters WHERE chapter_id = ? AND history_at IS NULL ORDER BY position', c.id),
     snippetCount: counts.total ?? 0,
     confirmedSnippetCount: counts.confirmed ?? 0,
     openFindings: findings.filter((f) => f.status === 'open' || f.status === 'deferred').length,
@@ -126,6 +132,7 @@ async function loadGenSnippets(ctx: Ctx, chapterId: string): Promise<GenSnippet[
       divisions: await db.all('SELECT division_code AS code, evidence_status AS evidenceStatus FROM snippet_divisions WHERE snippet_id = ?', s.id),
       market: s.market_code, release: s.release_code, scopeStatus: s.scope_status, sourceLabel: `${s.path} (Rev. ${s.revision_no})`,
       canonicalRedirect: topic ? { topicId: topic.id, topicTitle: topic.title, leadChapterTitle: topic.lead } : null,
+      detail: ((await db.get("SELECT l.code FROM metadata_chunk_labels x JOIN metadata_labels l ON l.id = x.label_id WHERE x.snippet_id = ? AND l.label_group = 'detail' ORDER BY x.origin = 'triage', l.position LIMIT 1", s.id))?.code ?? '').replace(/^detail\./, '') || null,
     } as GenSnippet;
   }));
 }
@@ -134,12 +141,12 @@ export async function gateForChapter(ctx: Ctx, chapterId: string, purpose: 'gene
   const findings = await chapterFindings(ctx, chapterId);
   const active = versionId ? await activeBlocks(ctx, versionId) : [];
   const result = evaluateGate(active.map(gateBlock), findings, { purpose });
-  // Anleitungs-Check als Freigabebedingung, wenn im Projekt ein Mindestwert eingestellt ist (ADR-057)
+  // Anleitungs-Check als Freigabebedingung, wenn im Projekt ein Mindestwert bzw. „alle Muss-Punkte“ eingestellt ist (ADR-057, ADR-092)
   // Handbuch-Varianten (outline_family_id) sind ausgenommen (ADR-057)
   const isVariant = !!(await ctx.db.get('SELECT outline_family_id FROM chapters WHERE id = ?', chapterId))?.outline_family_id;
   if (purpose === 'approve' && versionId && !isVariant) {
-    const check = await guidanceGateCheck(ctx, active.map((b) => ({ id: b.id as string, section: b.section as string, kind: b.kind as string, text: b.text as string, versionNo: b.versionNo as number, mode: b.mode as string })));
-    if (check) {
+    const checks = await guidanceGateChecks(ctx, active.map((b) => ({ id: b.id as string, section: b.section as string, kind: b.kind as string, text: b.text as string, versionNo: b.versionNo as number, mode: b.mode as string })));
+    for (const check of checks) {
       result.checks.push(check);
       result.passed = result.passed && check.passed;
     }
@@ -153,11 +160,50 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
   const gate = await gateForChapter(ctx, chapterId, 'generate');
   if (!gate.passed) throw conflict('Generierung blockiert: offene Blocker-Befunde müssen zuerst geklärt werden.', { gate });
 
-  const snippets = await loadGenSnippets(ctx, chapterId);
+  // Kapitelanweisung (ADR-096) mit Vorrang: ausgeschlossene Themen kommen nicht in den Entwurf
+  // Handbuch-Variante (ADR-097, W-01): eigene Anweisung des Variantenkapitels plus die der Quellkapitel und -unterkapitel
+  const chapterInstruction = instructionOf(chapter);
+  const subInstructions = await subchapterInstructions(ctx, chapterId);
+  const all = await loadGenSnippets(ctx, chapterId);
+  const origin = all.length ? new Map((await ctx.db.all(
+    `SELECT s.id, s.chapter_id, s.subchapter_id, c.instruction, c.instruction_topics, c.instruction_excluded, sc.instruction AS sub_instruction,
+       sc.instruction_topics AS sub_topics, sc.instruction_excluded AS sub_excluded
+     FROM text_snippets s JOIN chapters c ON c.id = s.chapter_id LEFT JOIN subchapters sc ON sc.id = s.subchapter_id WHERE s.id IN (${all.map(() => '?').join(',')})`, ...all.map((s) => s.id),
+  )).map((r) => [r.id as string, r])) : new Map();
+  const excludedByInstruction: { snippetId: string; topic: string }[] = [];
+  // Detaillierung des Kapitels (ADR-100): nur die gewählten Detaillevel; Chunks ohne Detaillevel gelten als Basis
+  const levels = new Set(parseJson<string[] | null>(chapter.detail_levels, null) ?? DEFAULT_DETAIL_LEVELS);
+  const excludedByDetail = all.filter((s) => s.detail && !levels.has(s.detail)).length;
+  // Ticket-Einstufung (ADR-102, W-03): Tickets „intern“ und „Background“ fließen nicht ins Handbuch
+  const ticketDocs = await excludedTicketDocuments(ctx);
+  const docOf = ticketDocs.size && all.length ? new Map((await ctx.db.all(
+    `SELECT s.id, r.document_id FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE r.source_format = 'jira' AND s.id IN (${all.map(() => '?').join(',')})`, ...all.map((s) => s.id),
+  )).map((r) => [r.id as string, r.document_id as string])) : new Map<string, string>();
+  const byTicket = (s: { id: string }) => ticketDocs.has(docOf.get(s.id) ?? '');
+  const excludedByTicket = all.filter(byTicket).length;
+  const snippets = all.filter((s) => !byTicket(s)).filter((s) => !s.detail || levels.has(s.detail)).filter((s) => {
+    const o = origin.get(s.id);
+    let ins = chapterInstruction;
+    if (o && o.chapter_id !== chapterId) ins = mergeInstructions(ins, instructionOf(o));
+    const sub = o?.subchapter_id ? (o.chapter_id === chapterId ? subInstructions.get(o.subchapter_id) : instructionOf({ instruction: o.sub_instruction, instruction_topics: o.sub_topics, instruction_excluded: o.sub_excluded })) : null;
+    ins = mergeInstructions(ins, sub);
+    const topic = ins.excluded.find((t) => mentions(s.text, t));
+    if (topic) excludedByInstruction.push({ snippetId: s.id, topic });
+    return !topic;
+  });
   if (!snippets.some((s) => CONFIRMED_EVIDENCE.includes(s.evidenceStatus))) {
-    throw unprocessable('Keine bestätigten Quellen (source_confirmed/manually_confirmed) in diesem Kapitel – es wird nichts generiert.');
+    throw unprocessable(excludedByInstruction.length
+      ? 'Keine bestätigten Quellen außerhalb der laut Kapitelanweisung ausgeschlossenen Themen – es wird nichts generiert.'
+      : 'Keine bestätigten Quellen (source_confirmed/manually_confirmed) in diesem Kapitel – es wird nichts generiert.');
   }
   const result = generateChapter(chapter.title, snippets);
+  // wichtige Themen ohne bestätigte Quelle werden als Lücke sichtbar
+  const usedTexts = snippets.filter((s) => result.usedSnippetIds.includes(s.id)).map((s) => s.text);
+  const allTopics = [...new Set([...chapterInstruction.topics, ...[...subInstructions.values()].flatMap((i) => i.topics)])];
+  const missingTopics = allTopics.filter((t) => !usedTexts.some((x) => mentions(x, t)));
+  for (const t of missingTopics) {
+    result.blocks.push({ section: 'purpose', kind: 'gap', text: `Laut Kapitelanweisung wichtig, aber ohne bestätigte Quelle: „${t}“.`, sourceIds: [], roles: [], divisions: [], market: null, release: null, scopeStatus: 'unconfirmed' } as any);
+  }
   const { db } = ctx;
   const versionId = newId('cv');
   const currentIds = new Set(snippets.map((s) => s.id));
@@ -213,9 +259,12 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
       }, actor, 'generiert');
     }
     await normalizePositions(ctx, versionId);
-    await audit(ctx, actor, 'chapter.generated', 'chapter_version', versionId, { chapterId, gaps: result.gaps, used: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, carried: carried.length });
+    await audit(ctx, actor, 'chapter.generated', 'chapter_version', versionId, { chapterId, gaps: result.gaps, used: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, carried: carried.length, excludedByInstruction: excludedByInstruction.length, missingTopics });
   });
-  return { ...(await getChapterVersion(ctx, versionId)), generation: { gaps: result.gaps, usedSnippets: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated } };
+  return {
+    ...(await getChapterVersion(ctx, versionId)),
+    generation: { gaps: result.gaps, usedSnippets: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, excludedByInstruction, excludedByDetail, excludedByTicket, detailLevels: [...levels], missingTopics },
+  };
 }
 
 const MANUAL_MODES = ['manually_edited', 'locked', 'needs_regeneration', 'ai_rewritten'];
@@ -244,6 +293,9 @@ export interface BlockInput {
   comment: string | null;
   /** Satz-Evidenz eines übernommenen KI-Vorschlags (ADR-013) */
   sentences?: Sentence[] | null;
+  /** Textbaustein und dessen Fassung (ADR-107, W-11) */
+  moduleId?: string | null;
+  moduleVersion?: number | null;
 }
 
 export interface Sentence {
@@ -255,9 +307,10 @@ export async function insertBlock(ctx: Ctx, versionId: string, b: BlockInput, ac
   const id = newId('cb');
   const { db } = ctx;
   await db.run(
-    `INSERT INTO content_blocks (id, chapter_version_id, lineage_id, section_code, position, kind, text, mode, market_code, release_code, scope_status, justification, comment, sentence_sources, version_no, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
-    id, versionId, b.lineageId, b.section, b.position, b.kind, b.text, b.mode, b.market, b.release, b.scopeStatus, b.justification, b.comment, b.sentences ? json(b.sentences) : null, now(),
+    `INSERT INTO content_blocks (id, chapter_version_id, lineage_id, section_code, position, kind, text, mode, market_code, release_code, scope_status, justification, comment, sentence_sources, module_id, module_version, version_no, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+    id, versionId, b.lineageId, b.section, b.position, b.kind, b.text, b.mode, b.market, b.release, b.scopeStatus, b.justification, b.comment, b.sentences ? json(b.sentences) : null,
+    b.moduleId ?? null, b.moduleId ? b.moduleVersion ?? null : null, now(),
   );
   for (const r of b.roles) await db.run('INSERT INTO content_block_roles VALUES (?, ?) ON CONFLICT DO NOTHING', id, r);
   for (const d of b.divisions) await db.run('INSERT INTO content_block_divisions VALUES (?, ?) ON CONFLICT DO NOTHING', id, d);
@@ -278,6 +331,7 @@ export async function blockDto(ctx: Ctx, b: Row) {
     id: b.id, chapterVersionId: b.chapter_version_id, lineageId: b.lineage_id, section: b.section_code, position: b.position, kind: b.kind, text: b.text, mode: b.mode,
     market: b.market_code, release: b.release_code, scopeStatus: b.scope_status, justification: b.justification, comment: b.comment, versionNo: b.version_no,
     deletedAt: b.deleted_at, updatedAt: b.updated_at,
+    moduleId: (b.module_id ?? null) as string | null, moduleVersion: b.module_version == null ? null : Number(b.module_version),
     sentences: parseJson<Sentence[] | null>(b.sentence_sources, null),
     roles: (await db.all('SELECT role_code FROM content_block_roles WHERE block_id = ? ORDER BY role_code', b.id)).map((r) => r.role_code as string),
     divisions: (await db.all('SELECT division_code FROM content_block_divisions WHERE block_id = ? ORDER BY division_code', b.id)).map((r) => r.division_code as string),
@@ -397,6 +451,8 @@ export async function patchBlock(ctx: Ctx, id: string, p: BlockPatch, actor: str
       upd('text', p.text);
       // Manuell geänderter Text: die Satz-Evidenz eines KI-Vorschlags gilt nicht mehr
       if (p.text !== b.text) upd('sentence_sources', null);
+      // eigener Text statt Textbaustein (ADR-107): die Verknüpfung wird gelöst
+      if (p.text !== b.text && b.module_id) (upd('module_id', null), upd('module_version', null));
     }
     if (p.section !== undefined) (upd('section_code', p.section), (changeType = 'moved'));
     if (p.position !== undefined) (upd('position', p.position), (changeType = p.text === undefined ? 'moved' : changeType));
@@ -433,6 +489,21 @@ export async function patchBlock(ctx: Ctx, id: string, p: BlockPatch, actor: str
     await audit(ctx, actor, `content_block.${changeType}`, 'content_block', id, { ...p, previousVersion: b.version_no });
   });
   return blockDto(ctx, await blockRow(ctx, id));
+}
+
+/**
+ * Text eines Textbausteins in einen verknüpften Absatz übernehmen (ADR-107, W-11) – auch in gesperrten Absätzen, mit
+ * Eintrag in der Absatzhistorie; nur in Entwürfen.
+ */
+export async function applyModuleText(ctx: Ctx, id: string, text: string, module: { id: string; version: number }, actor: string, reason: string) {
+  const b = await blockRow(ctx, id);
+  await assertEditable(ctx, b.chapter_version_id);
+  await ctx.db.tx(async () => {
+    await ctx.db.run('UPDATE content_blocks SET text = ?, sentence_sources = NULL, module_id = ?, module_version = ?, version_no = ?, updated_at = ? WHERE id = ?',
+      text, module.id, module.version, b.version_no + 1, now(), id);
+    await snapshot(ctx, id, b.version_no + 1, 'edited', actor, reason);
+    await audit(ctx, actor, 'content_block.module_applied', 'content_block', id, { moduleId: module.id, moduleVersion: module.version, previousVersion: b.version_no });
+  });
 }
 
 export async function createBlock(ctx: Ctx, versionId: string, p: BlockPatch & { text: string; section: string }, actor: string) {

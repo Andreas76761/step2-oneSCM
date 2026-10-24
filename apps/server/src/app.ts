@@ -20,6 +20,11 @@ import { semanticRoutes } from './routes/semantic.js';
 import { releaseRoutes } from './routes/releases.js';
 import { collaborationRoutes } from './routes/collaboration.js';
 import { translationRoutes } from './routes/translations.js';
+import { translationWorkflowRoutes } from './routes/translationWorkflow.js';
+import { assessmentRoutes } from './routes/assessment.js';
+import { revisionRoutes } from './routes/revisions.js';
+import { textVariantRoutes } from './routes/textVariants.js';
+import { textModuleRoutes } from './routes/textModules.js';
 import { failMachineTranslation, runMachineTranslation } from './services/translations.js';
 import { deliverNotification } from './services/collaboration.js';
 import { runIndexJob } from './services/semantic.js';
@@ -30,6 +35,18 @@ import { assistantRoutes } from './routes/assistant.js';
 import { integrationRoutes } from './routes/integrations.js';
 import { contextHelpRoutes, publicHelpRoutes } from './routes/contextHelp.js';
 import { masterDataRoutes } from './routes/masterData.js';
+import { metadataRoutes } from './routes/metadata.js';
+import { sourceUpdateRoutes } from './routes/sourceUpdates.js';
+import { releaseLetterRoutes } from './routes/releaseLetters.js';
+import { knowledgeRoutes } from './routes/knowledge.js';
+import { transitionRoutes } from './routes/transitions.js';
+import { imageRoutes } from './routes/images.js';
+import { structureRoutes } from './routes/structure.js';
+import { workAreaRoutes } from './routes/workAreas.js';
+import { agentRoutes } from './routes/agents.js';
+import { runImportTriage } from './services/triage.js';
+import { seedMetadataLabels } from './services/metadata.js';
+import { seedDomainLinks } from './services/domainMap.js';
 import { styleRoutes } from './routes/style.js';
 import { APP_VERSION } from './version.js';
 import { deliverWebhook, failWebhookDelivery } from './services/webhooks.js';
@@ -46,6 +63,7 @@ import { failAnalysisJob, runAnalysis } from './services/analysis.js';
 import { failImportJob, runImportJob } from './services/imports.js';
 import { failBatch, runBatch } from './services/rewriteBatch.js';
 import { assertParamsInProject, resolveProject, withProject } from './services/projects.js';
+import { runRedactionJob } from './services/imageRedaction.js';
 import { seedTerminology } from './services/terminology.js';
 import { createObjectStore } from './storage.js';
 import { initTracing, registerTracing, traceDb, traceEmbeddings, traceLlm } from './tracing.js';
@@ -73,6 +91,11 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
   const db = traceDb(await openDb(config.database));
   await seedReferenceData(db, config.authMode);
   await seedTerminology(db, DEFAULT_PROJECT_ID);
+  // Label-Katalog (ADR-079): neue Katalog-Labels erscheinen auch in bestehenden Projekten
+  for (const p of await db.all<{ id: string }>('SELECT id FROM projects')) {
+    await seedMetadataLabels(db, p.id);
+    await seedDomainLinks(db, p.id);
+  }
   const jobs = new JobQueue(db, { onError: (type, err) => app.log.error({ err }, `Job ${type} fehlgeschlagen`) });
   const ctx: Ctx = {
     db,
@@ -111,7 +134,17 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     if (await archived(c)) return failMachineTranslation(c, p.translationId, ARCHIVED);
     await runMachineTranslation(c, p.translationId, p.actor);
   }, async (p, err) => failMachineTranslation(await translationCtx(p), p.translationId, err));
+  // Datenschutz im Bild (ADR-095): Erkennung nach dem Ablegen eines Screenshots
+  jobs.register('image-redact', async (p) => {
+    const c = withProject(ctx, p.projectId);
+    if (!(await archived(c))) await runRedactionJob(c, p.sha);
+  });
   jobs.register('notify', async (p) => deliverNotification(ctx, p.notificationId));
+  // Agent TRIAGE nach dem Import (ADR-100)
+  jobs.register('triage', async (p) => {
+    const c = withProject(ctx, p.projectId);
+    if (!(await archived(c))) await runImportTriage(c, p.importId);
+  });
   jobs.register('semantic-index', async (p) => {
     const c = withProject(ctx, p.projectId);
     if (!(await archived(c))) await runIndexJob(c);
@@ -247,6 +280,20 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       styleRoutes(api, ctx);
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
+      translationWorkflowRoutes(api, ctx);
+      assessmentRoutes(api, ctx);
+      revisionRoutes(api, ctx);
+      textVariantRoutes(api, ctx);
+      textModuleRoutes(api, ctx);
+      metadataRoutes(api, ctx);
+      sourceUpdateRoutes(api, ctx);
+      releaseLetterRoutes(api, ctx);
+      knowledgeRoutes(api, ctx);
+      imageRoutes(api, ctx);
+      structureRoutes(api, ctx);
+      workAreaRoutes(api, ctx);
+      agentRoutes(api, ctx);
+      transitionRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

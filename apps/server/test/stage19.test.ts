@@ -75,12 +75,12 @@ describe('Etappe 19', () => {
       await importFile(built, 'x.md', `${fm}# 1. Nebenkapitel\n\nKlicken Sie auf **Speichern**.\n`);
       const good = (await assistantChapter(call, 'Auftrag anlegen')).json;
       const weak = (await call('POST', '/chapter-assistant', { title: 'Schwach', purpose: 'Zweck …', steps: ['Öffnen Sie …'] }, 'u-redaktion')).json;
-      expect((await call('GET', '/guidance/settings', undefined, 'u-leser')).json).toEqual({ minScore: null });
+      expect((await call('GET', '/guidance/settings', undefined, 'u-leser')).json).toMatchObject({ minScore: null, requireMust: false });
       // ohne Mindestwert: kein zusätzlicher Gate-Punkt
       expect((await call('GET', `/chapter-versions/${weak.versionId}/gate`)).json.checks.some((c: any) => c.code === 'guidance_min_score')).toBe(false);
       expect((await call('PUT', '/guidance/settings', { minScore: 80 }, 'u-redaktion')).status).toBe(403);
       expect((await call('PUT', '/guidance/settings', { minScore: 101 })).status).toBe(400);
-      expect((await call('PUT', '/guidance/settings', { minScore: 80 })).json).toEqual({ minScore: 80 });
+      expect((await call('PUT', '/guidance/settings', { minScore: 80 })).json).toMatchObject({ minScore: 80 });
       const gate = (await call('GET', `/chapter-versions/${weak.versionId}/gate`)).json;
       const chk = gate.checks.find((c: any) => c.code === 'guidance_min_score');
       expect(chk).toMatchObject({ passed: false });

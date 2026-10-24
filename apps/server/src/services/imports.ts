@@ -1,15 +1,25 @@
 // Importpipeline (US-001, US-002, US-003, US-004).
 import JSZip from 'jszip';
+import { touchMetadata } from './metadataCache.js';
 import path from 'node:path';
 import { audit, getSettings, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
+import { compileExclusions } from '../domain/exclude.js';
 import { classifySnippet } from '../domain/classify.js';
-import { CONVERTIBLE, docxToMarkdown, embedDataImages, htmlToMarkdown } from '../domain/convert.js';
+import { CONVERTIBLE, docxToMarkdown, embedDataImages, headingLocators, htmlHeadingIds, htmlToMarkdown } from '../domain/convert.js';
+import { pdfToMarkdown } from '../domain/pdf.js';
+import { suggestImageOutline } from './imageArchive.js';
+import { refreshDuplicates } from './metadataDuplicates.js';
+import { pptxToMarkdown, type LocatedMarkdown } from '../domain/pptx.js';
+import { subtitlesToMarkdown } from '../domain/subtitles.js';
 import { chapterOf, headingKey, parseMarkdown } from '../domain/markdown.js';
+import { issueToMarkdown, parseJira } from '../domain/jira.js';
 import { MEDIA_EXT, resolveRelative, rewriteImages } from '../domain/media.js';
 import { normalizedHash, sha256 } from '../domain/similarity.js';
 import { finishConnectionImport } from './connections.js';
 import { storeMedia } from './media.js';
+import { queueRedaction } from './imageRedaction.js';
+import { extractStills, ocrImage, transcribe } from './mediaTools.js';
 import { contextsFromFrontMatter } from './contextHelp.js';
 import { badRequest, conflict, notFound, Problem } from '../problem.js';
 import { refreshSearchIndex } from './searchIndex.js';
@@ -21,9 +31,13 @@ interface Entry {
   skipped?: string;
   /** Bilddatei im ZIP (ADR-029) – wird als Medium abgelegt, nicht als Dokument */
   media?: boolean;
+  /** Ticket aus einem Jira-Export (ADR-081): bereits umgewandelt */
+  jira?: { markdown: Buffer; original: Buffer };
 }
 
 const MD_EXT = ['.md', '.markdown'];
+// Jira-Exporte (ADR-081): je Ticket ein Dokument unter jira/<Schlüssel>.md
+const JIRA_EXT = ['.xml', '.csv'];
 
 /**
  * `snapshot` (nur ZIP): die Datei ist der vollständige Stand ihrer Herkunft – Dokumente derselben Herkunft (Upload bzw.
@@ -45,13 +59,34 @@ export async function createImport(ctx: Ctx, fileName: string, data: Buffer, act
   await ctx.db.tx(async () => {
     await ctx.db.run(
       'INSERT INTO imports (id, project_id, file_name, kind, sha256, byte_size, status, created_by, created_at, origin, snapshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : CONVERTIBLE[ext] ?? 'md', hash, data.length, 'queued', actor, now(), opts.origin ?? 'upload', opts.snapshot && ext === '.zip' ? 1 : 0,
+      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : JIRA_EXT.includes(ext) ? 'jira' : CONVERTIBLE[ext] ?? 'md', hash, data.length, 'queued', actor, now(), opts.origin ?? 'upload', opts.snapshot && ext === '.zip' ? 1 : 0,
     );
     await audit(ctx, actor, 'import.created', 'import', id, { fileName, sha256: hash, ...(opts.snapshot && ext === '.zip' ? { snapshot: true } : {}) });
     // Persistenter Job: Originaldatei liegt im Object-Store, der Job kennt nur die Import-ID
     await ctx.jobs.enqueue('import', { importId: id });
   });
   ctx.jobs.wake();
+  return getImport(ctx, id);
+}
+
+/**
+ * Interne Quelle sofort einlesen (ohne Jobqueue), z. B. Wissensnotizen (ADR-084): gleiche Pipeline wie ein Upload,
+ * damit Chunks, Bilder, Revisionen und Audit identisch entstehen. Nur für kleine, von der App erzeugte Dateien.
+ */
+export async function importNow(ctx: Ctx, fileName: string, data: Buffer, actor: string, origin: string) {
+  const ext = path.extname(fileName).toLowerCase();
+  const hash = sha256(data);
+  await ctx.store.put(`uploads/${hash}`, data);
+  const id = newId('imp');
+  await ctx.db.tx(async () => {
+    await ctx.db.run(
+      'INSERT INTO imports (id, project_id, file_name, kind, sha256, byte_size, status, created_by, created_at, origin, snapshot) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)',
+      id, ctx.projectId, fileName, ext === '.zip' ? 'zip' : 'md', hash, data.length, 'queued', actor, now(), origin,
+    );
+    await audit(ctx, actor, 'import.created', 'import', id, { fileName, sha256: hash, origin });
+  });
+  await processImport(ctx, id, fileName, data);
+  await refreshSearchIndex(ctx).catch(() => undefined);
   return getImport(ctx, id);
 }
 
@@ -72,9 +107,34 @@ export async function failImportJob(ctx: Ctx, payload: { importId: string }, err
   await finishConnectionImport(ctx, payload.importId, 'failed', error);
 }
 
+/** Jira-Export in je ein Dokument pro Ticket zerlegen; kein Jira-Export → Fehler für diese Datei */
+function jiraEntries(p: string, data: Buffer, names: string[], maxTickets: number, inZip = false): Entry[] {
+  const issues = parseJira(p, data);
+  // im ZIP sind andere XML-/CSV-Dateien (z. B. Anhänge eines Confluence-Exports) kein Fehler, sondern werden übersprungen
+  if (!issues && inZip) return [{ path: p, skipped: 'Kein Jira-Export – übersprungen' }];
+  if (!issues) return [{ path: p, error: 'Kein Jira-Export erkannt (XML-Export oder CSV mit den Spalten „Issue key“ und „Summary“ erwartet)' }];
+  if (!issues.length) return [{ path: p, skipped: 'Jira-Export ohne Tickets – übersprungen' }];
+  if (issues.length > maxTickets) return [{ path: p, error: `Jira-Export enthält ${issues.length} Tickets, erlaubt sind ${maxTickets}.` }];
+  return issues.map((i) => {
+    const { markdown, original } = issueToMarkdown(i, { names });
+    return { path: `jira/${i.key}.md`, data: Buffer.from(markdown, 'utf8'), jira: { markdown: Buffer.from(markdown, 'utf8'), original: Buffer.from(original, 'utf8') } };
+  });
+}
+
 async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<Entry[]> {
-  const settings = (await getSettings(ctx.db)).import;
-  if (!fileName.toLowerCase().endsWith('.zip')) return [{ path: path.basename(fileName), data }];
+  const all = await getSettings(ctx.db);
+  const settings = all.import;
+  const lower = fileName.toLowerCase();
+  // Ausschlussliste (F-17): ausgeschlossene Dateien erscheinen als „übersprungen“ mit dem zutreffenden Muster
+  const excluded = compileExclusions(settings.excludePatterns ?? []);
+  const skip = (p: string) => {
+    const hit = excluded(p);
+    return hit ? { path: p, skipped: `Ausgeschlossen (Ausschlussliste: „${hit}“) – übersprungen` } : null;
+  };
+  const filter = (entries: Entry[]) => entries.map((e) => (e.data || e.jira ? skip(e.path) ?? e : e));
+  if (skip(path.basename(fileName))) return [skip(path.basename(fileName))!];
+  if (JIRA_EXT.includes(path.extname(lower))) return filter(jiraEntries(path.basename(fileName), data, all.privacy.names, settings.maxZipFiles));
+  if (!lower.endsWith('.zip')) return [{ path: path.basename(fileName), data }];
   const zip = await JSZip.loadAsync(data);
   const files = Object.values(zip.files).filter((f) => !f.dir);
   if (files.length > settings.maxZipFiles) throw badRequest(`ZIP enthält ${files.length} Dateien, erlaubt sind ${settings.maxZipFiles}.`);
@@ -82,9 +142,15 @@ async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<En
   for (const f of files) {
     const p = f.name.replace(/\\/g, '/').replace(/^\/+/, '');
     if (p.startsWith('__MACOSX/') || path.basename(p).startsWith('.')) continue;
+    const ex = skip(p);
+    if (ex) {
+      out.push(ex);
+      continue;
+    }
     const ext = path.extname(p).toLowerCase();
     const media = !!MEDIA_EXT[ext];
-    if (!media && !MD_EXT.includes(ext) && !(CONVERTIBLE[ext] && settings.allowedExtensions.includes(ext))) {
+    const jira = JIRA_EXT.includes(ext) && settings.allowedExtensions.includes(ext);
+    if (!media && !jira && !MD_EXT.includes(ext) && !(CONVERTIBLE[ext] && settings.allowedExtensions.includes(ext))) {
       out.push({ path: p, skipped: 'Kein unterstütztes Format – übersprungen' });
       continue;
     }
@@ -97,6 +163,7 @@ async function readEntries(ctx: Ctx, fileName: string, data: Buffer): Promise<En
     try {
       const buf = await f.async('nodebuffer');
       if (buf.length > settings.maxEntryBytes) out.push({ path: p, error: `Datei größer als ${settings.maxEntryBytes} Bytes` });
+      else if (jira) out.push(...filter(jiraEntries(p, buf, all.privacy.names, settings.maxZipFiles, true)));
       else out.push({ path: p, data: buf, media });
     } catch (e) {
       out.push({ path: p, error: `Entpacken fehlgeschlagen: ${(e as Error).message}` });
@@ -129,6 +196,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   for (const entry of entries.filter((e) => e.media && e.data)) {
     try {
       const m = await storeMedia(ctx, entry.data!, path.posix.basename(entry.path), importId);
+      await queueRedaction(ctx, m.sha, m.mime);
       mediaByPath.set(entry.path, m.sha);
       mediaItems.set(entry.path, { status: 'media', message: `Bild ${m.mime}${m.width ? `, ${m.width}×${m.height}` : ''}`, sha: m.sha });
     } catch (e) {
@@ -137,6 +205,15 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
     }
   }
   const images: ImageResolver = { byPath: mediaByPath, importId };
+  // Untertitel neben einem Video (gleicher Name, .vtt/.srt) gehören zum Video und werden mit ihm eingelesen (ADR-090)
+  const sidecars = new Map<string, Entry>();
+  const byPath = new Map(entries.map((e) => [e.path, e]));
+  for (const e of entries.filter((x) => x.data && path.extname(x.path).toLowerCase() === '.mp4')) {
+    const base = e.path.slice(0, -4);
+    const sub = [`${base}.vtt`, `${base}.srt`, `${base}.VTT`, `${base}.SRT`].map((p) => byPath.get(p)).find((x) => x?.data);
+    if (sub) sidecars.set(e.path, sub);
+  }
+  const sidecarOf = new Map([...sidecars].map(([video, sub]) => [sub.path, video]));
 
   for (const entry of entries) {
     stats.files++;
@@ -152,15 +229,22 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
       if (entry.skipped) {
         item.status = 'skipped';
         item.message = entry.skipped;
+      } else if (sidecarOf.has(entry.path)) {
+        item.status = 'skipped';
+        item.message = `Untertitel zum Video ${path.posix.basename(sidecarOf.get(entry.path)!)} – mit dem Video eingelesen`;
       } else if (entry.error) {
         throw new Error(entry.error);
       } else {
-        const converted = await convertEntry(ctx, entry.path, entry.data!, images);
+        const converted = entry.jira
+          ? { markdown: entry.jira.markdown, original: { format: 'jira' as const, data: entry.jira.original }, warnings: [] as string[], skip: undefined }
+          : await convertEntry(ctx, entry.path, entry.data!, images, sidecars.get(entry.path));
         if (converted.skip) {
           item.status = 'skipped';
           item.message = converted.skip;
         } else {
-          const res = await storeRevision(ctx, importId, entry.path, converted.markdown, converted.original, cache);
+          const res = await storeRevision(ctx, importId, entry.path, converted.markdown, converted.original, cache, converted.locators);
+          // F-25: Bilder einer Folie → Gliederungs-Vorschlag aus dem Folientext (nie automatisch übernommen)
+          if (converted.images?.length) await suggestImageOutline(ctx, converted.images, entry.path);
           const warning = [res.warning, ...converted.warnings].filter(Boolean).join('; ');
           item.status = res.identical ? 'identical' : 'imported';
           item.revisionId = res.revisionId;
@@ -190,9 +274,18 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   }
   await insertMany(ctx, 'import_items (id, import_id, path, sha256, status, message, revision_id, position)', items);
 
+  // Dubletten je Abschnitt (ADR-088): nur Dateien mit neuer Revision oder als entfernt markiert neu berechnen
+  const changedDocs = (await db.all(
+    'SELECT DISTINCT document_id AS id FROM source_revisions WHERE import_id = ? UNION SELECT id FROM source_documents WHERE removed_in_import = ?', importId, importId,
+  )).map((r) => r.id as string);
+  if (changedDocs.length) await refreshDuplicates(ctx, changedDocs).catch((e) => ctx.log('Dubletten-Abgleich fehlgeschlagen', { importId, error: (e as Error).message }));
+  // Agent TRIAGE (ADR-100): Pflichtlabels und Kapitelvorschläge für die neuen Chunks dieses Imports
+  if (stats.snippets) await ctx.jobs.enqueue('triage', { projectId: ctx.projectId, importId });
+
   // Bilder zählen nicht als Dokumente: schlagen alle Dokumente fehl, ist der Import fehlgeschlagen
   const status = stats.failed === 0 ? 'completed' : stats.failed === stats.files - mediaItems.size ? 'failed' : 'completed_with_errors';
   await db.run('UPDATE imports SET status = ?, finished_at = ?, stats = ? WHERE id = ?', status, now(), json(stats), importId);
+  touchMetadata(ctx.projectId);
   await audit(ctx, 'system', 'import.finished', 'import', importId, { status, ...stats });
   await finishConnectionImport(ctx, importId, status, stats.failed ? `${stats.failed} von ${stats.files} Dateien fehlerhaft (Import ${importId})` : null);
 }
@@ -218,6 +311,7 @@ async function markRemoved(ctx: Ctx, importId: string, seen: Set<string>) {
       await ctx.db.run('UPDATE source_documents SET removed_at = ?, removed_in_import = ? WHERE id = ?', now(), importId, d.id);
       await ctx.db.run('UPDATE source_revisions SET is_current = 0 WHERE document_id = ?', d.id);
     }
+    touchMetadata(ctx.projectId);
     await audit(ctx, 'system', 'source.removed', 'import', importId, { documents: removed.map((d) => d.path).slice(0, 100), count: removed.length });
   });
   return removed as { id: string; path: string }[];
@@ -239,10 +333,11 @@ async function reviveDocument(ctx: Ctx, documentId: string) {
   await ctx.db.run('UPDATE source_documents SET removed_at = NULL, removed_in_import = NULL WHERE id = ?', documentId);
   const latest = await ctx.db.get('SELECT id FROM source_revisions WHERE document_id = ? ORDER BY revision_no DESC LIMIT 1', documentId);
   if (latest) await ctx.db.run('UPDATE source_revisions SET is_current = 1 WHERE id = ?', latest.id);
+  touchMetadata(ctx.projectId);
 }
 
 interface Original {
-  format: 'html' | 'docx';
+  format: 'html' | 'docx' | 'pptx' | 'pdf' | 'jira' | 'mp4' | 'vtt' | 'srt';
   data: Buffer;
 }
 
@@ -256,7 +351,9 @@ const missingWarning = (missing: string[]) =>
   missing.length ? [`Bild nicht gefunden: ${[...new Set(missing)].slice(0, 5).join(', ')}${missing.length > 5 ? ' …' : ''}`] : [];
 
 /** Markdown direkt übernehmen, HTML/Word umwandeln (ADR-022). Die Originaldatei wird zusätzlich aufbewahrt. */
-async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: ImageResolver): Promise<{ markdown: Buffer; original?: Original; warnings: string[]; skip?: string }> {
+type ConvertedEntry = { markdown: Buffer; original?: Original; warnings: string[]; skip?: string; locators?: LocatedMarkdown['locators']; images?: LocatedMarkdown['images'] };
+
+async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: ImageResolver, sidecar?: Entry): Promise<ConvertedEntry> {
   const format = CONVERTIBLE[path.extname(filePath).toLowerCase()];
   const fromZip = (target: string) => {
     const p = resolveRelative(filePath, target);
@@ -270,11 +367,48 @@ async function convertEntry(ctx: Ctx, filePath: string, data: Buffer, images?: I
   }
   const title = path.basename(filePath, path.extname(filePath));
   const settings = (await getSettings(ctx.db)).import;
-  const embed = async (buf: Buffer, name: string) => (await storeMedia(ctx, buf, name, images?.importId ?? null)).sha;
-  const res = format === 'html'
-    ? htmlToMarkdown(await embedDataImages(decodeHtml(data), embed), title, { resolve: fromZip })
-    : await docxToMarkdown(data, title, settings.maxEntryBytes * 5, embed);
-  return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.warnings, skip: res.skip };
+  const embed = async (buf: Buffer, name: string) => {
+    const m = await storeMedia(ctx, buf, name, images?.importId ?? null);
+    await queueRedaction(ctx, m.sha, m.mime); // Datenschutz im Bild (ADR-095)
+    return m.sha;
+  };
+  // Fundstellen (ADR-086): Folie bzw. Seite; bei HTML und Word der Abschnitt (Anker der Überschrift)
+  if (format === 'mp4' || format === 'vtt' || format === 'srt') return convertMedia(ctx, format, title, data, embed, sidecar);
+  if (format === 'pptx' || format === 'pdf') {
+    // Gescannte Seiten: lokale Texterkennung, sofern eingerichtet (ADR-090)
+    const tools = ctx.config.mediaTools;
+    const ocr = tools?.ocrCmd ? (png: Buffer) => ocrImage(tools, png) : undefined;
+    const res = format === 'pptx' ? await pptxToMarkdown(data, title, settings.maxEntryBytes * 5, embed) : await pdfToMarkdown(data, title, { ocr });
+    return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.warnings, skip: res.skip, locators: res.locators, images: res.images };
+  }
+  const html = format === 'html' ? await embedDataImages(decodeHtml(data), embed) : null;
+  const res = html !== null ? htmlToMarkdown(html, title, { resolve: fromZip }) : await docxToMarkdown(data, title, settings.maxEntryBytes * 5, embed);
+  return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.warnings, skip: res.skip, locators: headingLocators(res.markdown, html !== null ? htmlHeadingIds(html) : undefined) };
+}
+
+/**
+ * Video und Untertitel (ADR-090, M6): Untertitel direkt; Video mit mitgelieferten Untertiteln, sonst lokaler Transkription.
+ * Standbilder mit sichtbarer Änderung (F-26) kommen als Bilder an ihre Zeitmarke. Fundstelle je Absatz: Zeitmarke.
+ */
+async function convertMedia(ctx: Ctx, format: 'mp4' | 'vtt' | 'srt', title: string, data: Buffer, embed: (buf: Buffer, name: string) => Promise<string>, sidecar?: Entry): Promise<ConvertedEntry> {
+  const warnings: string[] = [];
+  let subtitles: string | null;
+  if (format !== 'mp4') subtitles = decoder.decode(data.subarray(data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf ? 3 : 0));
+  else if (sidecar?.data) {
+    subtitles = decoder.decode(sidecar.data);
+    warnings.push(`Text aus ${path.posix.basename(sidecar.path)}`);
+  } else {
+    subtitles = await transcribe(ctx.config.mediaTools, data);
+    if (!subtitles) return { markdown: Buffer.alloc(0), warnings, skip: 'Video ohne Untertitel – Transkription nicht eingerichtet (TRANSCRIBE_CMD), übersprungen' };
+    warnings.push('Text per Transkription erstellt (bitte prüfen)');
+  }
+  const stills = format !== 'mp4' ? [] : await extractStills(ctx.config.mediaTools, data, embed).catch((e) => {
+    warnings.push(`Standbilder nicht erstellt: ${(e as Error).message}`);
+    return [];
+  });
+  if (stills.length) warnings.push(`${stills.length} Standbilder`);
+  const res = subtitlesToMarkdown(subtitles, title, stills);
+  return { markdown: Buffer.from(res.markdown, 'utf8'), original: { format, data }, warnings: res.skip ? [] : warnings, skip: res.skip, locators: res.locators };
 }
 
 /** HTML-Zeichensatz: UTF-8 (Standard), sonst laut meta charset (Windows-1252/ISO-8859-1 älterer Exporte) */
@@ -298,7 +432,7 @@ interface StructureCache {
 }
 const newCache = (): StructureCache => ({ chapters: new Map(), subs: new Map() });
 
-async function storeRevision(ctx: Ctx, importId: string, filePath: string, data: Buffer, original?: Original, cache: StructureCache = newCache()) {
+async function storeRevision(ctx: Ctx, importId: string, filePath: string, data: Buffer, original?: Original, cache: StructureCache = newCache(), locators: LocatedMarkdown['locators'] = []) {
   const { db } = ctx;
   const text = decoder.decode(data);
   const hash = sha256(data);
@@ -330,6 +464,7 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
       await db.run('INSERT INTO source_documents (id, project_id, path, file_name, created_at) VALUES (?, ?, ?, ?, ?)', doc.id, ctx.projectId, filePath, path.basename(filePath), now());
     }
     await db.run('UPDATE source_revisions SET is_current = 0 WHERE document_id = ?', doc.id);
+    touchMetadata(ctx.projectId);
     await db.run(
       'INSERT INTO source_revisions (id, document_id, import_id, revision_no, sha256, storage_key, byte_size, front_matter, is_current, imported_at, source_format, original_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)',
       revisionId, doc.id, importId, revisionNo, hash, `sources/${hash}`, data.length, json(parsed.frontMatter), now(), original?.format ?? 'markdown', originalKey,
@@ -372,10 +507,14 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
       const sub = b.subchapterTitle ? await subFor(b.chapterTitle, b.subchapterTitle) : null;
       const cls = classifySnippet({ text: b.text, headings: [b.chapterTitle ?? '', b.subchapterTitle ?? '', ...b.headingPath], path: filePath, frontMatter: parsed.frontMatter });
       const snippetId = newId('sn');
+      // Fundstelle: letzte Markierung bis zum Beginn des Absatzes (Folie, Seite, Abschnitt)
+      let locator: LocatedMarkdown['locators'][number]['locator'] | null = null;
+      for (const l of locators) if (l.line <= b.lineStart) locator = l.locator;
       snippetRows.push([
         snippetId, seq++, revisionId, chapter.id, sub?.id ?? null, json(b.headingPath), b.position, b.lineStart, b.lineEnd, b.kind, b.text,
         sha256(b.text), normalizedHash(b.text), cls.evidenceStatus, cls.market?.code ?? null, cls.release?.code ?? null,
         (cls.market?.status ?? 'confirmed') === 'confirmed' && (cls.release?.status ?? 'confirmed') === 'confirmed' ? 'confirmed' : 'unconfirmed', created,
+        locator ? json(locator) : null,
       ]);
       for (const r of cls.roles) roleRows.push([snippetId, r.code, r.score, r.method, r.modelVersion, r.evidenceStatus, r.evidence]);
       for (const d of cls.divisions) divisionRows.push([snippetId, d.code, d.score, d.method, d.modelVersion, d.evidenceStatus, d.evidence]);
@@ -384,7 +523,7 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
       snippetCount++;
     }
     await insertMany(ctx, `text_snippets (id, seq, revision_id, chapter_id, subchapter_id, heading_path, position, line_start, line_end, kind, text, text_hash, norm_hash,
-      evidence_status, market_code, release_code, scope_status, created_at)`, snippetRows);
+      evidence_status, market_code, release_code, scope_status, created_at, locator)`, snippetRows);
     await insertMany(ctx, 'snippet_roles', roleRows);
     await insertMany(ctx, 'snippet_divisions', divisionRows);
     for (const m of markets) await db.run('INSERT INTO markets (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', m, m);
@@ -473,6 +612,12 @@ export async function getRevisionRaw(ctx: Ctx, revisionId: string) {
 const ORIGINAL_TYPES: Record<string, string> = {
   html: 'text/plain; charset=utf-8', // nie als HTML ausliefern (keine Skriptausführung)
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  jira: 'application/json; charset=utf-8', // Ticketfelder ohne Personenfelder (ADR-081)
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  pdf: 'application/pdf',
+  mp4: 'video/mp4',
+  vtt: 'text/plain; charset=utf-8',
+  srt: 'text/plain; charset=utf-8',
 };
 
 /** Originaldatei einer umgewandelten Revision (HTML, Word) */

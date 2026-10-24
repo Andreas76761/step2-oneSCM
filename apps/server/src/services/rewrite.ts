@@ -2,7 +2,7 @@
 // Ablauf: Vorschlag anfordern → automatische Satzprüfung → Redaktion übernimmt oder verwirft.
 // Übernommene Vorschläge werden als eigener Modus `ai_rewritten` mit Satz-Evidenz gespeichert.
 import { imageRefs } from '../domain/media.js';
-import { audit, getSettings, type Ctx } from '../context.js';
+import { audit, getSettings, privacyNames, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
 import {
@@ -12,6 +12,9 @@ import { sha256 } from '../domain/similarity.js';
 import { LlmError } from '../llm.js';
 import { conflict, notFound, Problem, unprocessable } from '../problem.js';
 import { assertEditable, blockDto, blockRow, snapshot } from './chapters.js';
+import { instructionFor } from './structure.js';
+import { getStyleRules } from './style.js';
+import { resolveTone, TONE_HINT, TONE_LABEL } from '../domain/tone.js';
 
 export function llmStatus(ctx: Ctx) {
   const p = ctx.llm;
@@ -82,8 +85,9 @@ export async function proposeRewrite(ctx: Ctx, blockId: string, input: { instruc
   if (privacy.length) throw unprocessable('Übertragung gesperrt: offene Datenschutzbefunde zu den Quellen dieses Absatzes.', { findings: privacy.map((f) => f.seq) });
   const sourceRows = await db.all(`SELECT id, seq, text FROM text_snippets WHERE id IN (${marks}) ORDER BY seq`, ...snippetIds);
   // … und keine personenbezogenen Daten, die nur im (manuell bearbeiteten) Absatz stehen
-  const sourceHits = new Set(detectPrivacy(sourceRows.map((s) => s.text).join('\n')).map((h) => h.match));
-  const ownHits = detectPrivacy(b.text).filter((h) => !sourceHits.has(h.match));
+  const names = await privacyNames(db);
+  const sourceHits = new Set(detectPrivacy(sourceRows.map((s) => s.text).join('\n'), { names }).map((h) => h.match));
+  const ownHits = detectPrivacy(b.text, { names }).filter((h) => !sourceHits.has(h.match));
   if (ownHits.length) throw unprocessable('Übertragung gesperrt: Der Absatz enthält mögliche personenbezogene Daten.', { hits: ownHits });
 
   const sources: RewriteSource[] = sourceRows.map((s, i) => ({ label: `S${i + 1}`, snippetId: s.id, seq: s.seq, text: s.text }));
@@ -93,7 +97,14 @@ export async function proposeRewrite(ctx: Ctx, blockId: string, input: { instruc
   if (!derivedFromSources(b.text, sources, settings.rewrite.minSupport)) {
     throw unprocessable('Absatz stammt nicht aus Quelltext (z. B. erzeugter Rollen- oder Statushinweis) und wird nicht umformuliert.');
   }
-  const prompt = buildRewritePrompt({ kind: b.kind, section: b.section, text: b.text, sources, terms, instructions: input.instructions });
+  // Kapitelanweisung (ADR-096): Kapitel und – bei gemeinsamem Unterkapitel der Quellen – dessen Anweisung
+  const cv = await db.get('SELECT chapter_id FROM generated_chapter_versions WHERE id = ?', row.chapter_version_id);
+  const subs = [...new Set((await db.all(`SELECT subchapter_id FROM text_snippets WHERE id IN (${marks})`, ...snippetIds)).map((r) => r.subchapter_id as string | null))];
+  const chapterInstruction = cv ? await instructionFor(ctx, cv.chapter_id, subs.length === 1 ? subs[0] : null) : null;
+  // Tonalität (ADR-102): Rollenprofil bzw. Ton des Handbuchs
+  const style = await getStyleRules(ctx);
+  const tone = style.disabled.includes('tone') ? null : resolveTone(style.tone, { product: 'manual', roles: b.roles }).tone;
+  const prompt = buildRewritePrompt({ kind: b.kind, section: b.section, text: b.text, sources, terms, instructions: input.instructions, chapterInstruction, tone: tone ? { label: TONE_LABEL[tone], hint: TONE_HINT[tone] } : null });
   const promptHash = sha256(`${prompt.system}\n${prompt.user}`);
   const requestInfo = { provider: provider.id, model: provider.model, promptHash, promptVersion: REWRITE_PROMPT_VERSION, sentSnippetIds: snippetIds, external: provider.external };
 

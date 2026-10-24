@@ -773,5 +773,678 @@
     "documentation": [
       "docs/adr/ADR-078-weitere-sprachen.md"
     ]
+  },
+  {
+    "id": "NFR-66",
+    "title": "oneSCM_Metadaten: 100 vordefinierte Labels in sechs Gruppen (Handbuch-Gliederung, Rollen, Navigation im System, Inhaltstyp, Sparte, Qualität) auf Deutsch und Englisch; Pflege durch die Administration",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-079-onescm-metadaten.md",
+      "docs/06-plan-onescm-metadaten.md"
+    ]
+  },
+  {
+    "id": "NFR-67",
+    "title": "oneSCM_Metadaten: Chunks aller Quelldateien je Überschrift mit Fundstelle anzeigen, filtern und einzeln oder gesammelt labeln",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-079-onescm-metadaten.md",
+      "docs/06-plan-onescm-metadaten.md"
+    ]
+  },
+  {
+    "id": "NFR-68",
+    "title": "oneSCM_Metadaten: Fragen und Antworten mit Quelldatei, Fundstelle, Auszug und Labels speichern, filtern, ändern und löschen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-079-onescm-metadaten.md",
+      "docs/06-plan-onescm-metadaten.md"
+    ]
+  },
+  {
+    "id": "NFR-69",
+    "title": "oneSCM_Metadaten: Labelkatalog nach echtem oneSCM (Gesamtgliederung, Menü der Oberfläche, Rollen, Domänen, Kundengruppen, Systeme, nur Pkw und Van); Abgleich bestehender Projekte ohne Verlust von Zuordnungen und Anpassungen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-080-katalog-onescm-datenschutz.md"
+    ]
+  },
+  {
+    "id": "NFR-70",
+    "title": "Datenschutzprüfung erkennt zusätzlich Fahrgestellnummer, Kennzeichen, Benutzerkennung, Adresse, Namen aus Metadaten und Namensliste; Pseudonymisierung ohne Rückgabe von Klarwerten",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-080-katalog-onescm-datenschutz.md"
+    ]
+  },
+  {
+    "id": "NFR-71",
+    "title": "Jira-Export (XML, CSV) als Datei importieren: je Ticket eine Quelle mit Feldern, Beschreibung, Akzeptanzkriterien und Verknüpfungen, ohne Personenfelder und Kommentare, pseudonymisiert",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-081-jira-update-zugriff.md"
+    ]
+  },
+  {
+    "id": "NFR-72",
+    "title": "Update-Eingang: geänderte, entfallene und neue Quellabschnitte je Kapitelabsatz anzeigen und absatzweise übernehmen, ergänzen, entfernen oder verwerfen; nur Entwürfe änderbar",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-081-jira-update-zugriff.md"
+    ]
+  },
+  {
+    "id": "NFR-73",
+    "title": "Zugriffsmatrix Rolle × Menüpunkt mit Stufe und Beleg pflegen, aus CSV übernehmen und exportieren",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-081-jira-update-zugriff.md"
+    ]
+  },
+  {
+    "id": "NFR-74",
+    "title": "Zuordnung Fachdomäne → Gliederungspunkt, Menüpunkt und Ordner des Arbeitsordners anzeigen und pflegen, Unterordner aus einer Gliederung, CSV-Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-082-zuordnung-domaene-ordner.md"
+    ]
+  },
+  {
+    "id": "NFR-75",
+    "title": "Release-Abgleich und Releaseletter aus Jira-Tickets: Tickets je Release, Bug = intern, Releaseletter nur aus Ticketfakten mit festen Guardrails, Prüfregeln Ticket ↔ Letter mit Urteil, Freigabe, Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-083-releaseletter-lektorat.md"
+    ]
+  },
+  {
+    "id": "NFR-76",
+    "title": "Warnhinweise nach Schema prüfen, Übersetzungen auf Platzhalter, Struktur, Signalwörter und feste Begriffsübersetzungen prüfen, Begriffskandidaten aus Tickets",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-083-releaseletter-lektorat.md"
+    ]
+  },
+  {
+    "id": "NFR-77",
+    "title": "Gliederungs-Vorschlag je Chunk mit Trefferwert (nie automatisch), Kapitel ↔ Quellen je Gliederungspunkt, Zielkapitel je Dopplung",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-084-gliederung-wissen.md"
+    ]
+  },
+  {
+    "id": "NFR-78",
+    "title": "Wissensnotizen als eigene Quelle mit Screenshot und Revisionen; Ausschlussliste „nicht einlesen“ beim Import",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-084-gliederung-wissen.md"
+    ]
+  },
+  {
+    "id": "NFR-79",
+    "title": "Bildarchiv: feste Bildnummer, Merkmale, Prüfregeln und Bildabdeckung je Kapitel; neue Fassung ersetzt das Bild überall, Original bleibt; Platzhalter mit reservierter Nummer; Screenshot aus der Zwischenablage",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-085-bilder-ausgabe.md"
+    ]
+  },
+  {
+    "id": "NFR-80",
+    "title": "Ausgabeprofile Quick Guide und One Pager, Lesefassung ohne Quellenbezüge, Wasserzeichen „Entwurf“ im Druck, Übergänge „Weiter mit …“ in Leseransicht, Druck und Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-085-bilder-ausgabe.md"
+    ]
+  },
+  {
+    "id": "NFR-81",
+    "title": "PowerPoint und PDF lokal einlesen (Folien mit Titel, Aufzählungen, Tabellen, Bildern, Notizen; PDF-Textebene mit Überschriften, Absätzen, Listen, ohne Kopf-/Fußzeilen); Fundstelle je Chunk als Folie, Seite oder Abschnitt; Seite „Einlesen“",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-086-pptx-pdf-fundstellen.md"
+    ]
+  },
+  {
+    "id": "NFR-82",
+    "title": "Bild aus einer Folie mit Gliederungs-Vorschlag aus Folientext und Alternativtext, nur von Hand übernommen (F-25)",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-086-pptx-pdf-fundstellen.md"
+    ]
+  },
+  {
+    "id": "NFR-83",
+    "title": "Teilstücke langer Chunks: 300–800 Zeichen an Satzgrenzen, 1 Satz Überlappung, Tabellen/Listen ganz; Textabschnitte unverändert (E-02)",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-087-teilstuecke-ueberschriften.md"
+    ]
+  },
+  {
+    "id": "NFR-84",
+    "title": "Quellen je Überschrift: Baum je Datei und Zusammenführung gleicher Überschriften über Dateien; Filter „Überschrift“ in der Chunk-Liste",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-087-teilstuecke-ueberschriften.md"
+    ]
+  },
+  {
+    "id": "NFR-85",
+    "title": "Dubletten je Abschnitt über alle Formate (exakt und ab 85 % Ähnlichkeit, lokal), Gruppen; nach jedem Import nur geänderte Dateien neu berechnet",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-088-dubletten-formatuebergreifend.md"
+    ]
+  },
+  {
+    "id": "NFR-86",
+    "title": "Dubletten nebeneinander mit wortweise markierten Unterschieden; Entscheidung führende Fassung oder kein Duplikat je Inhaltspaar, bleibt bei erneutem Einlesen erhalten",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-088-dubletten-formatuebergreifend.md"
+    ]
+  },
+  {
+    "id": "NFR-87",
+    "title": "Frage an alle Quellen: hybride Suche über Chunks und Teilstücke mit Filtern (Format, Datei, Überschrift, Label), Top 20 → Neugewichtung → Top 6; Antwort nur aus den Belegen mit Beleg je Satz, ohne KI extraktiv",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-089-fragen-alle-quellen.md"
+    ]
+  },
+  {
+    "id": "NFR-88",
+    "title": "Frage & Antwort mit Rahmen speichern, erneut fragen mit Vergleich zum gespeicherten Stand, Export CSV/Excel/JSON",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-089-fragen-alle-quellen.md"
+    ]
+  },
+  {
+    "id": "NFR-89",
+    "title": "Rückfragen: Fragenkatalog aus HTML-App, CSV, JSON oder Text einlesen (mit Kapitel), alle Fragen mit Belegen beantworten, Status je Frage, als Frage & Antwort speichern, Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-089-fragen-alle-quellen.md"
+    ]
+  },
+  {
+    "id": "NFR-90",
+    "title": "Untertitel (WebVTT, SRT) und Video (MP4) einlesen: Text aus Untertiteln gleichen Namens oder lokaler Transkription, Abschnitte je Kapitelmarke bzw. 2 Minuten, Zeitmarke je Absatz als Fundstelle",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-090-video-untertitel-ocr.md"
+    ]
+  },
+  {
+    "id": "NFR-91",
+    "title": "Standbilder aus Videos nur bei sichtbarer Änderung mit rot markiertem Bereich (F-26) und Texterkennung gescannter PDF-Seiten – nur lokale Werkzeuge, ohne Shell, mit Zeitlimit",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-090-video-untertitel-ocr.md"
+    ]
+  },
+  {
+    "id": "NFR-92",
+    "title": "Testfragensätze mit erwarteten Quellen, Stichworten und Lückenfragen – aus CSV, Excel, JSON, gespeicherten Fragen & Antworten oder von Hand",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-091-antwortqualitaet.md"
+    ]
+  },
+  {
+    "id": "NFR-93",
+    "title": "Prüflauf über „Frage an alle Quellen“ mit Kennzahlen (bestanden, Treffer@1/@3/@6, MRR, Beleg richtig, Stichworte, Lücken richtig), Vergleich mit dem vorigen Lauf und Export",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-091-antwortqualitaet.md"
+    ]
+  },
+  {
+    "id": "NFR-94",
+    "title": "Punktmodell im Anleitungs-Check: Muss-/Soll-Punkte je Prüfpunkt, je Projekt einstellbar, „alle Muss-Punkte“ als Bedingung für Einreichen und Freigabe (F-08)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-092-punktmodell-befragung-deckung.md"
+    ]
+  },
+  {
+    "id": "NFR-95",
+    "title": "Expertenbefragung zu Wissenslücken: Fragen aus Rückfragen, Prüfläufen oder von Hand, Antwort per Option und Freitext in der App oder per Excel, Übernahme als Frage & Antwort mit Label „Prüfen“ (F-16)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-092-punktmodell-befragung-deckung.md"
+    ]
+  },
+  {
+    "id": "NFR-96",
+    "title": "Deckungsmatrix der Bilder: Stelle (Reiter bzw. Kapitel) × Sprache/Rolle/Sparte mit Lücken und Platzhaltern, Export (F-30)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-092-punktmodell-befragung-deckung.md"
+    ]
+  },
+  {
+    "id": "NFR-97",
+    "title": "Varianten einer Maske verknüpfen; Export, Handbuch-Varianten, Releases und Übersetzungen zeigen die Fassung mit passender Sprache, Rolle, Sparte und Markt; doppelte Varianten werden gemeldet (F-22)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-093-varianten-klickstrecke.md"
+    ]
+  },
+  {
+    "id": "NFR-98",
+    "title": "Klickstrecke aus Screenshots mit parallelen Wegen 3a/3b als Bild im Archiv, Alternativtext erzeugt, Änderung als neue Fassung (F-24)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-093-varianten-klickstrecke.md"
+    ]
+  },
+  {
+    "id": "NFR-99",
+    "title": "Personenbezogene Daten in Bildern (Namen, User-ID, Adresse, FIN …) per lokaler Texterkennung erkennen und verpixelt ausliefern; an/aus und je Stelle umschaltbar, manuelle Stellen; Original bleibt erhalten und ist nur mit Bearbeitungsrecht abrufbar",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-095-datenschutz-bild-labels.md"
+    ]
+  },
+  {
+    "id": "NFR-100",
+    "title": "Mehrere Labels (Domäne, Rolle, Gliederung, weitere) und Kapitel je Bild; Filter im Bildarchiv, Deckungsmatrix je Gliederungspunkt",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-095-datenschutz-bild-labels.md"
+    ]
+  },
+  {
+    "id": "NFR-101",
+    "title": "Kapitelanweisung je Kapitel und Unterkapitel (worauf es ankommt, wichtige Themen, nicht beschreiben) mit Vorrang für Generator, KI-Vorschläge, Anleitungs-Check und Agenten im Arbeitsordner (ANWEISUNG.md); fehlende Kapitel und Unterkapitel ergänzen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-096-kapitelsteuerung-historie.md"
+    ]
+  },
+  {
+    "id": "NFR-102",
+    "title": "Version („gültig ab“) an Kapiteln, Unterkapiteln und Labels, sichtbar im Output (auch in der Lesefassung)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-096-kapitelsteuerung-historie.md"
+    ]
+  },
+  {
+    "id": "NFR-103",
+    "title": "Veraltete Funktionen (Kapitel, Unterkapitel, Labels) durch neue ablösen: Historie mit gültig von–bis und Nachfolger, nicht mehr im Handbuch, Anhang „Historie“, Zuordnungen übertragbar, zurückholbar",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-096-kapitelsteuerung-historie.md"
+    ]
+  },
+  {
+    "id": "NFR-104",
+    "title": "Hausregeln als Prüfregeln mit Korrektur (Anführungszeichen, Gedankenstrich, Menüpfad, Zahlen bis zwölf, Tausenderpunkt, Einheit, Datum, Zeitraum, Produktname oneSCM); erweiterte Rechtschreibliste; erlaubte Begriffe",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-097-grammatik-sprachstil.md"
+    ]
+  },
+  {
+    "id": "NFR-105",
+    "title": "Sprachprüfung je Sprache: Englisch mit a/an, „I“ und Rechtschreibung, andere Sprachen sprachneutral; eigene Regeln je Sprache; Prüfung der Übersetzungen; Begriffe „nicht übersetzen“",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-097-grammatik-sprachstil.md"
+    ]
+  },
+  {
+    "id": "NFR-106",
+    "title": "Lesbarkeit je Kapitel (LIX, Flesch-Amstad, Satzlänge, lange Sätze, Passiv) mit Sollwerten je Zielgruppe; Regeln für Bildunterschriften",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-097-grammatik-sprachstil.md"
+    ]
+  },
+  {
+    "id": "NFR-107",
+    "title": "Kapitelanweisung für Kapitel der Handbuch-Varianten zusätzlich zu der der Quellkapitel, auch im Arbeitsordner (03_Varianten)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-097-grammatik-sprachstil.md"
+    ]
+  },
+  {
+    "id": "NFR-108",
+    "title": "Pipeline: Jira-Tickets in Bearbeitung und noch nicht produktiv je Kapitel und Unterkapitel der aktuellen Gliederung mit Erstelldatum, Stream und Produktionsdatum<br>Vorab-Dokumentation<br>Übernahme ins Handbuch als Quelle, wenn produktiv",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-098-pipeline-backlog-intern.md"
+    ]
+  },
+  {
+    "id": "NFR-109",
+    "title": "Backlog (noch nicht begonnen) und Intern mit den Themen Testing, Reporting, Systeme, Migration, Rollout, Other – nie im Handbuch, Export oder Release",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-098-pipeline-backlog-intern.md"
+    ]
+  },
+  {
+    "id": "NFR-110",
+    "title": "Arbeitsordner mit 09_Pipeline (Unterordner nach der Gesamtgliederung), 10_Backlog und 11_Intern, Grundregel 9, Agent pipeline-redakteur, Abgleich mit der App",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-098-pipeline-backlog-intern.md",
+      "tools/handbuch-ordner/README.md"
+    ]
+  },
+  {
+    "id": "NFR-111",
+    "title": "Suche v2 für Fragen an alle Quellen: deutsche Morphologie, Komposita, Kennungen, Abfrageerweiterung aus Terminologie und Abkürzungen, BM25 mit Kontextkopf und Vektor per Reciprocal Rank Fusion, MMR ohne Dubletten",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-099-rag-retrieval-v2.md",
+      "docs/11-rag-messung.md"
+    ]
+  },
+  {
+    "id": "NFR-112",
+    "title": "Relevanzschwelle mit begründeter Enthaltung (unbekannte Fachbegriffe genannt), Satzauswahl im Zusammenhang der Überschrift und nach Antworttyp",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-099-rag-retrieval-v2.md"
+    ]
+  },
+  {
+    "id": "NFR-113",
+    "title": "Messbestand mit Abstimmungs- und Prüfsatz und Regressionsschutz, Prüflauf je Verfahren mit nDCG@6, lokale KI- und Embedding-Dienste nur mit lokaler Adresse als intern",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-099-rag-retrieval-v2.md",
+      "docs/11-rag-messung.md"
+    ]
+  },
+  {
+    "id": "NFR-114",
+    "title": "Agent TRIAGE nach dem Einlesen: Pflichtlabels Version, Status, Domäne, Rolle, Sprache, Sparte, Markt, Detaillevel und zu prüfen je Chunk mit Sicherheit und Begründung; Labels von Menschen gehen vor; Labels bearbeiten, erweitern, löschen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-100-triage-agenten.md"
+    ]
+  },
+  {
+    "id": "NFR-115",
+    "title": "TRIAGE ordnet Chunks gemischter Quellen Kapiteln und Unterkapiteln zu (Vorschlag), legt neue Unterkapitel mit Kennung „neu“ an; Übernehmen, Verwerfen, alle übernehmen, bestätigen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-100-triage-agenten.md"
+    ]
+  },
+  {
+    "id": "NFR-116",
+    "title": "Detaillevel (Basis, Basis+, Zusatz, Intern, HappyPath, Edge, inPrüfung) steuern die Kapitelerzeugung: Standardablauf und Ausnahmen getrennt, Detaillierung je Kapitel; Inhalts-Dashboard je Kapitel und Domäne",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-100-triage-agenten.md"
+    ]
+  },
+  {
+    "id": "NFR-117",
+    "title": "Agenten in der App: ORCHESTRATOR plant und verfeinert Aufgaben aller Agenten und legt Entscheidungen vor, ein Mensch entscheidet; GOAL vergleicht mit dem Ziel und erstellt Empfehlungen; Ordner 12_Goal und 00_Dokumentation/Agenten",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-100-triage-agenten.md",
+      "tools/handbuch-ordner/README.md"
+    ]
+  },
+  {
+    "id": "NFR-118",
+    "title": "Übersetzungsspeicher: freigegebene Absätze je Sprachpaar, 100-%-Treffer übernehmen, ähnliche ab 75 % vorschlagen, Pflege, Export und Import wie SPEICHER.csv",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-101-uebersetzung.md"
+    ]
+  },
+  {
+    "id": "NFR-119",
+    "title": "Weitere Prüfungen (Länge 0,55–1,8, deutsche Wörter, Datum/Kennung nur auf einer Seite), Glossar je Sprache mit Export/Import, XLIFF 1.2 und Excel für Übersetzungsbüros mit geprüftem Rückimport",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-101-uebersetzung.md"
+    ]
+  },
+  {
+    "id": "NFR-120",
+    "title": "Länderreview je Sprache und Markt mit MQM-Fehlerpunkten (bestanden bis 5 je 1 000 Wörter), „zurück an Übersetzung“, Freigabe durch das Land; Rückübersetzung einer Stichprobe der Sicherheitshinweise",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-101-uebersetzung.md"
+    ]
+  },
+  {
+    "id": "NFR-121",
+    "title": "Sprachen de-CH (nach Regeln aus dem Deutschen) und fr-CH (aus Französisch), Rahmentexte in Export und Druck je Sprache, Hinweis auf fehlende Bildvarianten",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-101-uebersetzung.md"
+    ]
+  },
+  {
+    "id": "NFR-122",
+    "title": "Releaseletter DE↔EN übersetzen und prüfen: Speicher, KI je Zeile, Prüfbefunde je Zeile vor der Freigabe, Übernahme in den Speicher",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-101-uebersetzung.md"
+    ]
+  },
+  {
+    "id": "NFR-123",
+    "title": "Tonalität je Produktart und Rolle (sachlich, freundlich, formell, knapp) als Einstellung je Projekt; wirkt auf Stilprüfung und KI-Vorschläge",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-102-tonalitaet-tickets-releasevergleich.md"
+    ]
+  },
+  {
+    "id": "NFR-124",
+    "title": "Ticket-Einstufung genehmigt / in Prüfung / intern / Background: intern und Background fließen nicht ins Handbuch, Background nur in die Lückenanalyse",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-102-tonalitaet-tickets-releasevergleich.md"
+    ]
+  },
+  {
+    "id": "NFR-125",
+    "title": "Releaseletter-Entwurf aus dem Projektvergleich zweier Handbuch-Releases: neue und geänderte Kapitel, Bildfassungen, neue und abgelöste Funktionen, Tickets der Version",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-102-tonalitaet-tickets-releasevergleich.md"
+    ]
+  },
+  {
+    "id": "NFR-126",
+    "title": "Zukunfts-Inhalte: Kapitel mit späterem „gültig ab“ als der Stand werden in Export und Release ausgeblendet",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-102-tonalitaet-tickets-releasevergleich.md"
+    ]
+  },
+  {
+    "id": "NFR-127",
+    "title": "Plausibilität Text ↔ Quellen je Aussage: belegt, unbelegt, Widerspruch, fehlend mit Wert 0–100 je Kapitelversion",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-103-kapitelbewertung-fehlerliste.md"
+    ]
+  },
+  {
+    "id": "NFR-128",
+    "title": "Kapitelbewertung mit fünf Kriterien (Sprache, Ziel, Tonalität, Quellenabgleich, Fakten), Ampel je Kriterium und Gesamtampel, Übersicht aller Kapitel",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-103-kapitelbewertung-fehlerliste.md"
+    ]
+  },
+  {
+    "id": "NFR-129",
+    "title": "Fehlerliste in der App: Funde der Stilprüfung übernehmen, Status mit Begründung, Abgleich nach Korrektur, Export und Rückimport wie FEHLERLISTE.csv",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-103-kapitelbewertung-fehlerliste.md"
+    ]
+  },
+  {
+    "id": "NFR-130",
+    "title": "Word-Prüffassung mit „Fertig, wenn: …“ je Kapitel exportieren, geänderte Datei zurücklesen und Abweichungen je Absatz als Änderungsvorschläge zuordnen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-104-aenderungsvorschlaege-word-lektorat.md"
+    ]
+  },
+  {
+    "id": "NFR-131",
+    "title": "KI-Lektorat je Kapitel als Änderungsvorschläge mit Wortvergleich; Übernehmen, eigene Fassung oder Verwerfen je Vorschlag, alle übernehmen je Kapitel, Entwurf statt Änderung der freigegebenen Version",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-104-aenderungsvorschlaege-word-lektorat.md"
+    ]
+  },
+  {
+    "id": "NFR-132",
+    "title": "Interne Kommentare je Absatz und Vorschlag, die in keinem Export erscheinen; Drei-Spalten-Ansicht Stand | Vorschlag | Neu",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-104-aenderungsvorschlaege-word-lektorat.md"
+    ]
+  },
+  {
+    "id": "NFR-133",
+    "title": "Textvarianten je Kapitel: Endanwender, Fachtext, Kurzfassung für das Management (~¼ der Länge) mit Wortzahl, Download und Exportprofil „Kurzfassung“; KI-Kurzfassung ohne erfundene Zahlen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-105-textvarianten-pruefprofile.md"
+    ]
+  },
+  {
+    "id": "NFR-134",
+    "title": "Vier Prüferprofile (fachlich, Redaktion, Compliance, Endanwender) mit Wert, Ampel und Funden je Absatz, regelbasiert und optional mit lokalem KI-Dienst; Verlauf je Kapitelversion",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-105-textvarianten-pruefprofile.md"
+    ]
+  },
+  {
+    "id": "NFR-135",
+    "title": "Vorher/Nachher-Belege: zwei Bilder bzw. Fassungen mit Anlass, Änderung und Wirkung, Schieberegler in der Oberfläche, Gegenüberstellung als Bild im Archiv",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-106-vorher-nachher-pptx-zwischenbilder.md"
+    ]
+  },
+  {
+    "id": "NFR-136",
+    "title": "Ausgabe als PowerPoint (16:9, Titel-, Übersichts-, Inhalts- und Bildfolien) und Klickstrecke als BPMN 2.0 mit Diagramm",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-106-vorher-nachher-pptx-zwischenbilder.md"
+    ]
+  },
+  {
+    "id": "NFR-137",
+    "title": "Zwischenbilder aus Videos: kurze Zustände (Menü, Dialog) bis 2 s zusätzlich zu den Standbildern, abschaltbar",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-106-vorher-nachher-pptx-zwischenbilder.md"
+    ]
+  },
+  {
+    "id": "NFR-138",
+    "title": "Textbausteine (Single Sourcing): Fassungen, Einfügen als verknüpfter Absatz, Verwendung je Kapitel, neue Fassung in Entwürfe übernehmen, wiederkehrende Absätze als Kandidaten, eigener Text löst die Verknüpfung",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-107-textbausteine-uebersicht.md"
+    ]
+  },
+  {
+    "id": "NFR-139",
+    "title": "Übersicht oneSCM_Metadaten mit Zwischenspeicher je Projekt (höchstens 30 s, bei Änderungen sofort verworfen)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-107-textbausteine-uebersicht.md"
+    ]
   }
 ]

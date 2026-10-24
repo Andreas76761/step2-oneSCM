@@ -128,6 +128,8 @@ export function WorkshopPage() {
           </div>
         </header>
         <ErrorBox error={version.error} />
+        {chapterId && <InstructionBanner chapterId={chapterId} />}
+        {chapterId && <PipelineBanner chapterId={chapterId} />}
         {!v && <Empty>Für dieses Kapitel gibt es noch keine generierte Version.</Empty>}
         {styleOn && styleData.data && (
           <p className="small" role="status">
@@ -230,6 +232,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
         <DivisionBadges codes={b.divisions.filter((d: string) => d !== 'all')} />
         {b.market && <span className="tag">Markt {b.market}</span>}
         {b.release && <span className="tag">Release {b.release}</span>}
+        {b.moduleId && <span className="tag" title="Absatz aus einem Textbaustein – gepflegt unter „Textbausteine“; eigener Text löst die Verknüpfung">🧩 Textbaustein F{b.moduleVersion}</span>}
         <span className="small muted">{b.sources.length ? `${b.sources.length} Quelle(n)` : b.justification ? 'manuell begründet' : 'ohne Evidenz'} · v{b.versionNo}</span>
       </div>
       {mode === 'edit' ? (
@@ -817,5 +820,40 @@ function SaveTemplateButton({ versionId, title }: { versionId: string; title: st
         </Modal>
       )}
     </>
+  );
+}
+
+/** Pipeline (ADR-098): Tickets dieses Kapitels in Bearbeitung – vorab dokumentiert, aber noch nicht produktiv */
+function PipelineBanner({ chapterId }: { chapterId: string }) {
+  const r = useLoad<any>(`/work-areas?area=pipeline&chapterId=${encodeURIComponent(chapterId)}`, [chapterId]);
+  const items = (r.data?.items ?? []).filter((i: any) => i.state !== 'cancelled' && i.state !== 'live');
+  if (!items.length) return null;
+  const ready = items.filter((i: any) => i.state === 'ready').length;
+  return (
+    <aside className="alert info ws-instruction" aria-label="Pipeline">
+      <strong>Pipeline:</strong> {items.length} Ticket{items.length === 1 ? '' : 's'} für dieses Kapitel in Bearbeitung ({items.map((i: any) => i.jiraKey ?? i.title).join(', ')}) – noch nicht produktiv, nicht ins Kapitel schreiben.
+      {ready > 0 && <> {ready} davon produktiv – übernehmen.</>} <Link to="/pipeline" className="small">zur Pipeline</Link>
+    </aside>
+  );
+}
+
+/** Kapitelanweisung (ADR-096) oben in der Werkstatt – mit Vorrang für Generator und KI-Vorschläge */
+function InstructionBanner({ chapterId }: { chapterId: string }) {
+  const r = useLoad<any>(`/chapters/${chapterId}/instruction`, [chapterId]);
+  const c = r.data?.chapter;
+  const subs = (r.data?.subchapters ?? []).filter((s: any) => s.instruction.text || s.instruction.topics.length || s.instruction.excluded.length);
+  if (!c || (!c.text && !c.topics.length && !c.excluded.length && !subs.length)) return null;
+  const part = (i: any) => (
+    <>
+      {i.text && <span>{i.text} </span>}
+      {i.topics.length > 0 && <span><strong>Wichtig:</strong> {i.topics.join(', ')}. </span>}
+      {i.excluded.length > 0 && <span><strong>Nicht beschreiben:</strong> {i.excluded.join(', ')}.</span>}
+    </>
+  );
+  return (
+    <aside className="alert info ws-instruction" aria-label="Kapitelanweisung">
+      <strong>Kapitelanweisung:</strong> {part(c)} <Link to="/kapitelsteuerung" className="small">bearbeiten</Link>
+      {subs.length > 0 && <ul className="small">{subs.map((s: any) => <li key={s.id}><em>{s.title}:</em> {part(s.instruction)}</li>)}</ul>}
+    </aside>
   );
 }

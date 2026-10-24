@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { patch, post } from '../api';
 import { Card, errorText, useApp } from './ui';
+import { readClipboardImage, usePasteImage } from './clipboard';
 
 // jede Markierung hat eine Kennung, damit Rückgängig und Entfernen einander nicht in die Quere kommen
 interface Marker { id?: number; x: number; y: number; text: string }
@@ -216,6 +217,16 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
     i.src = url;
   };
 
+  // F-23: Screenshot direkt aus der Zwischenablage (Strg+V oder Schaltfläche), danach zuschneiden und markieren
+  usePasteImage(load);
+  const paste = async () => {
+    try {
+      load(await readClipboardImage());
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+
   const pos = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     return { x: clamp(((e.clientX - r.left) / r.width) * 100), y: clamp(((e.clientY - r.top) / r.height) * 100) };
@@ -365,6 +376,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
       <label className="block">Bildschirmfoto (PNG oder JPEG)
         <input type="file" accept="image/png,image/jpeg" data-testid="screenshot-input" onChange={(e) => load(e.target.files?.[0])} />
       </label>
+      <p className="small muted">oder <button type="button" className="btn small" onClick={() => void paste()}>📋 Aus Zwischenablage einfügen</button> – bzw. Strg+V drücken. Danach mit ✂ Zuschneiden den Ausschnitt wählen.</p>
       {img && (
         <>
           <div className="filters" role="group" aria-label="Werkzeug">

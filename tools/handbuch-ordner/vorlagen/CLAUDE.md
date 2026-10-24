@@ -1,0 +1,105 @@
+# oneSCM Benutzerhandbuch – Arbeitsordner {{STAND}}
+
+Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesamtgliederung `00_Dokumentation/Gliederung/{{GLIEDERUNG}}` (Kapitel 1–23, Vorspann V, Anhänge A–I, Übergangstexte T). Gliederungen aus der App (Varianten je Rolle, Sparte, Markt) liegen unter `03_Varianten/`, die Sprachausgaben unter `04_Output/`. Gesteuert wird über vier Hauptordner: **I Output** (fertige Produkte), **II Stil und Design**, **III Grammatik, Synonyme, Fehlerliste** und **IV Translation**. Dazu drei Bereiche außerhalb des Handbuchs: **Pipeline** (Jira-Tickets in Bearbeitung, noch nicht produktiv – je Gliederungspunkt, vorab dokumentiert), **Backlog** (noch nicht begonnen) und **Intern** (Testing, Reporting, Systeme, Migration, Rollout, Other). **Hauptsprache ist Deutsch**; fremdsprachige Quellen werden als `dt_`-Datei übersetzt.
+
+## Grundregeln (verbindlich)
+
+1. **Daten bleiben lokal.** Keine Inhalte an Webdienste, Cloud-KI, Übersetzungsdienste oder Suchmaschinen. WebFetch und WebSearch sind gesperrt. Einzige erlaubte Netzadresse: die lokale App (z. B. `http://localhost:3000`) für den Gliederungsabgleich.
+2. **Nichts erfinden.** Jede fachliche Aussage braucht eine Quelle aus `01_Quellen` (Datei + Fundstelle: Seite, Folie, Abschnitt oder Zeitmarke). Ohne Beleg: `[offen: …]`.
+3. **Nichts löschen.** Verschieben oder als ersetzt markieren. Gliederungsordner werden nie umbenannt oder entfernt, nur gemeldet.
+4. **Datenschutz:** Namen, E-Mail, Telefon, FIN/VIN, Kennzeichen, User-IDs, GSSN von Personen und Kundendaten vor jeder Weiterverarbeitung melden; in Entwürfen, FAQ und Bildern nur anonymisiert.
+5. **Status nie vorwegnehmen:** Rollen, Scope (Pkw/Van, Markt, Release) und Freigaben bleiben „?“ bzw. „Vorschlag“, bis ein Beleg vorliegt. Freigaben erteilt nur ein Mensch.
+6. **Übersetzungen sind kein Original.** `dt_`-Dateien und Sprachausgaben tragen ihre Herkunft im Kopf; Belege nennen immer auch das Original.
+7. **Neuere Quelle schlägt ältere nicht automatisch.** Widersprechen sich `Raw_2025` und `Raw_2026`, beide Aussagen mit Jahr nennen und als Widerspruch melden.
+8. **Kapitelanweisung hat Vorrang.** Vor jeder Arbeit an einem Kapitel `ANWEISUNG.md` des Kapitels und – falls vorhanden – des Unterkapitels lesen und befolgen; sie geht allen anderen Arbeitsanweisungen vor, nur die Regeln 1–4 gehen ihr vor. Themen unter „Nicht beschreiben“ weglassen (auch nicht als Hinweis); fehlt zu einem „Wichtigen Thema“ der Beleg: `[offen: Thema – Beleg fehlt]`. Die Anweisung pflegt ein Mensch – in der Datei oder in der App (Kapitelsteuerung, Übernahme per Abgleich).
+9. **Pipeline, Backlog und Intern sind kein Handbuch.** Inhalte aus `09_Pipeline` und `10_Backlog` beschreiben Funktionen, die noch nicht produktiv sind; sie gehören nicht in Entwürfe, `04_Output`, `05_I_Output` oder Übersetzungen und sind kein Beleg. Produktiv ist ein Ticket erst, wenn es erledigt und das Produktionsdatum erreicht ist und ein Mensch das bestätigt – dann übernimmt der pipeline-redakteur die Dokumentation als Quelle in `01_Quellen`. Inhalte aus `11_Intern` sind nie für Anwendende (Ausnahme: `05_I_Output/05_Interne_Dokumente`).
+10. **Pflichtlabels, Mensch geht vor.** Jeder Abschnitt trägt nach der Triage die Pflichtlabels Version, Status, Domäne, Rolle, Sprache, Sparte, Markt, Detaillevel und „zu prüfen“. Labels und Zuordnungen von Menschen überschreibt kein Agent; Verschiebungen und neue Unterkapitel (`neu_…`) der Triage sind Vorschläge, bis ein Mensch sie bestätigt. Das Detaillevel steuert den Umfang: HappyPath = Standardablauf, Edge = Ausnahmen, Intern und inPrüfung nie im Handbuch-Standard.
+
+## Aufbau
+
+| Ordner | Inhalt |
+|---|---|
+| `00_Dokumentation/` | Arbeitsweise, Gliederungen (Excel, CSV, Markdown, App-Exporte), Status, Entscheidungen, Begriffe, Gesamtlisten (Audit, FAQ, Ideen, Steuerung), Werkzeuge |
+| `01_Input/` | `01_Eingang` (neue Dateien), `02_Zugeordnet` (Originale), `03_Ausgeschlossen` |
+| `02_Kapitel/<Kapitel>/` | Gesamtgliederung: `KAPITEL.md`, `ANWEISUNG.md` (Kapitelanweisung), acht Arbeitsordner, je Unterkapitel ein Ordner mit `UNTERKAPITEL.md` und `ANWEISUNG.md` |
+| `03_Varianten/<Gliederung>/` | dieselbe Struktur für jede Gliederung aus der App, dazu `VARIANTE.md` und `STATUS.md` |
+| `04_Output/<Sprache>/<Kapitel>/` | freigegebene Fassung je Sprache: `01_Deutsch_DE`, `02_Englisch_EN`, `03_Französisch_FR`, `04_Italienisch_IT`, `05_Spanisch_ES`, `06_Tschechisch_CS`, `07_Slowakisch_SK`, `08_Koreanisch_KO`, `09_Malaiisch_MS`, `10_Deutsch_DE-CH`, `11_Französisch_FR-CH`; Varianten unter `<Sprache>/Varianten/<Name>/` |
+| `05_I_Output/<Produkt>/` | **I Output** – fertige Produkte mit Screenshots: `01_Handbuch`, `02_Releaseletter`, `03_QuickGuide`, `04_Schulungsmaterial`, `05_Interne_Dokumente`, `06_Videos`, `07_Grafiken`, `08_Prozesse`; je Produkt `PRODUKT.md`, `01_Entwurf`, `02_Screens`, `03_Final/<Sprache>` |
+| `06_II_Stil_und_Design/` | **II Stil und Design** – `STIL_UND_DESIGN.md` (Layout, Typografie, Farben, Screenshots), `01_Designvorschlaege`, `02_Tonalitaet` (`TONALITAET.md`), `03_Vorlagen` (Word/PowerPoint), `04_Bildsprache_Screenshots` |
+| `07_III_Grammatik_Synonyme_Fehlerliste/` | **III** – `01_Grammatik/GRAMMATIK.md`, `02_Synonyme/SYNONYME.csv`, `03_Fehlerliste/FEHLERLISTE.csv` und `FEHLERLISTE.md` |
+| `08_IV_Translation/` | **IV Translation** – `TRANSLATION.md`; je Zielsprache `01_Glossar` (`GLOSSAR.csv`), `02_Uebersetzungsspeicher` (`SPEICHER.csv`), `03_Laenderreview` (`REVIEW.md`); mit `abgleich --app` Speicher und Glossar aus der App |
+| `09_Pipeline/<Kapitel>/<Unterkapitel>/` | **Pipeline** – Jira-Tickets in Bearbeitung, noch nicht produktiv, nach der aktuellen Gliederung; je Ticket `<Ticket>.md` mit Erstelldatum, Stream, Produktionsdatum und Vorab-Dokumentation; `00_Ohne_Zuordnung`, `PIPELINE.md` |
+| `10_Backlog/` | **Backlog** – Tickets, deren Bearbeitung noch nicht begonnen hat; `<Ticket>.md`, `BACKLOG.md` |
+| `11_Intern/` | **Intern** – `01_Testing`, `02_Reporting`, `03_Systeme`, `04_Migration`, `05_Rollout`, `06_Other`; je Thema `THEMA.md`; nie im Handbuch |
+| `12_Goal/` | **Goal** – `ZIEL.md` (Ziel und Kriterien, pflegt ein Mensch), `ABGLEICH.md` (Ist/Soll je Kriterium), `EMPFEHLUNGEN.md` |
+| `00_Dokumentation/Agenten/` | Steuerung durch den orchestrator: `AUFGABEN.md` (offene Todos je Agent), `ENTSCHEIDUNGEN.md` (Fragen an den Menschen), `TRIAGE.md` |
+
+**`04_Output` oder `05_I_Output`?** `04_Output` enthält den Handbuchtext je Sprache und Kapitel (Markdown je Unterkapitel). `05_I_Output` enthält die fertigen Produkte nach Art; Master ist Deutsch in `03_Final/01_Deutsch_DE`. Übersetzt wird immer aus dem deutschen Master über `08_IV_Translation`: Kapitel nach `04_Output/<Sprache>/`, Produkte nach `05_I_Output/<Produkt>/03_Final/<Sprache>/`.
+
+### Die acht Arbeitsordner je Kapitel
+
+| Ordner | Inhalt | Agent |
+|---|---|---|
+| `01_Quellen/Raw_2023` … `Raw_2027` | zugeordnete Quellen nach Jahr des Dokumentstands; `QUELLEN.md` | input-sortierer |
+| `02_Entwurf/` | Text je Unterkapitel (`<Nr>_Entwurf.md`) mit Quelle je Absatz | kapitel-redakteur |
+| `03_Bilder/` | Screenshots, Schaubilder, `BILDER.md` | bild-redakteur |
+| `04_Pruefung_Freigabe/` | Prüfberichte, Freigabebelege | pruefer, Mensch |
+| `05_Audit/` | Audit-Berichte (Nachweisführung, Kennzahlen), `AUDIT.md` | auditor |
+| `06_FAQ/` | häufige Fragen mit belegter Antwort, `FAQ.md` | faq-redakteur |
+| `07_Ideenspeicher/` | Ideen, Verbesserungen, zukünftige Funktionen, Inhalte außerhalb des Scopes, `IDEEN.md` | ideen-sammler |
+| `08_Steuerung/` | `01_Dealer`, `02_MO`, `03_Markt`, `04_HQ`, `05_IT`, `06_Marktspezifisch`, `07_Spartenspezifisch`; `STEUERUNG.md` | steuerung |
+
+Material, das nur ein Unterkapitel betrifft, darf direkt im Unterkapitel-Ordner liegen.
+
+## Agenten (`.claude/agents/`)
+
+| Agent | Aufgabe |
+|---|---|
+| `orchestrator` | **steuert alle Agenten:** plant Aufgaben aus dem Stand, verfeinert sie nach jedem Schritt, legt Entscheidungen dem Menschen vor – schreibt keine Texte, entscheidet nichts |
+| `triage` | nach dem Eingang: Pflichtlabels je Abschnitt und Zuordnung zu Kapitel/Unterkapitel, neue Unterkapitel `neu_…` als Vorschlag |
+| `goal` | vergleicht alle Funktionen mit dem Ziel in `12_Goal/ZIEL.md`, schreibt Abgleich und Empfehlungen |
+| `gliederungs-pfleger` | Ordner und Agenten mit neuen Gliederungen abgleichen – aus Excel oder aus der App |
+| `input-sortierer` | Eingang sichten, Datenschutz und Dubletten prüfen, Raw-Jahr bestimmen, Kapitel/Unterkapitel zuordnen |
+| `kapitel-redakteur` | Entwurf je Unterkapitel ausschließlich aus den Quellen, gesteuert nach `08_Steuerung`, nach Tonalität und Sprachregeln (II, III) |
+| `bild-redakteur` | Bilder benennen, Alternativtext, Anonymisierung, Bildverzeichnis |
+| `pruefer` | Entwürfe prüfen (Belege, Vollständigkeit, Terminologie, Datenschutz, Steuerung, Stil- und Sprachregeln) – ändert keine Texte |
+| `auditor` | Nachweisführung prüfen und messen (Quellenabdeckung, Belegquote, Pflichtkriterien, Freigabebelege) |
+| `faq-redakteur` | Fragen sammeln und nur mit Beleg beantworten, je Rolle und Sparte |
+| `ideen-sammler` | Ideen, Verbesserungen und Zukünftiges festhalten, nie ungefragt in den Entwurf übernehmen |
+| `steuerung` | Inhalte den Rollen Dealer, MO, Markt, HQ, IT sowie markt- oder spartenspezifischen Themen zuordnen |
+| `uebersetzer-de` | englische und andere fremdsprachige Quellen ins Deutsche übersetzen – neue Datei `dt_<Original>` neben dem Original, mit Glossar aus `08_IV_Translation` |
+| `uebersetzer-ausgabe` | freigegebene deutsche Kapitel nach `04_Output` und Produkte nach `05_I_Output/<Produkt>/03_Final/<Sprache>` übersetzen – mit Glossar, Übersetzungsspeicher und Länderreview (IV) |
+| `ausgabe-produzent` | **I:** fertige Produkte aus freigegebenen Kapiteln erstellen (Handbuch, Releaseletter, QuickGuide, Schulung, Interne Dokumente, Videos, Grafiken, Prozesse) |
+| `stil-designer` | **II:** Designvorschläge, Tonalität, Vorlagen und Screenshot-Regeln pflegen, Produkte auf Stil prüfen |
+| `sprach-lektor` | **III:** Grammatik, Synonyme und Tonalität prüfen, `FEHLERLISTE.csv` führen – ändert keine Texte |
+| `pipeline-redakteur` | **Pipeline, Backlog, Intern:** Jira-Tickets der Gliederung zuordnen, vorab dokumentieren, Übersichten führen, Übernahme produktiver Tickets vorbereiten; interne Themen ablegen |
+
+Steuerung: **orchestrator plant → Agenten arbeiten → goal gleicht mit dem Ziel ab → orchestrator verfeinert.** Ablauf: **Eingang → input-sortierer → triage → uebersetzer-de → steuerung → kapitel-redakteur + bild-redakteur + faq-redakteur → sprach-lektor → pruefer → auditor → Mensch gibt frei → uebersetzer-ausgabe → Sprachreview durch das jeweilige Land.** Produkte: **freigegebene Kapitel → ausgabe-produzent → sprach-lektor + stil-designer → Mensch gibt frei → uebersetzer-ausgabe → Länderreview.** Englisch ist die internationale Fassung. Kommende Funktionen: **Jira-Export → pipeline-redakteur (Backlog/Pipeline, vorab dokumentieren) → Ticket produktiv, Mensch bestätigt → Quelle in `01_Quellen` → kapitel-redakteur.** Ideen sammelt der ideen-sammler jederzeit. Stand: `00_Dokumentation/STATUS.md`.
+
+## Neue Gliederung, fehlende Kapitel, abgelöste Funktionen
+
+Neue Gesamtgliederung (Excel) oder neue Gliederung in der App (Stammdaten › Inhaltsverzeichnis): „gliederungs-pfleger: Gliederungen abgleichen“. Er ruft `00_Dokumentation/Werkzeuge/handbuch_struktur.py abgleich` auf, legt fehlende Ordner und neue Agenten an und meldet Umbenanntes oder Entfallenes in `00_Dokumentation/GLIEDERUNG_ABGLEICH.md`.
+
+- **Fehlende Kapitel oder Unterkapitel** ergänzen Sie in der Gliederung (Excel) oder in der App (Kapitelsteuerung bzw. Inhaltsverzeichnis) und gleichen danach ab – der Ordner entsteht mit `KAPITEL.md`/`UNTERKAPITEL.md` und leerer `ANWEISUNG.md`.
+- **Version:** „gültig ab“ (Release) steht in der App je Kapitel, Unterkapitel und Label und erscheint im Output.
+- **Abgelöste Funktionen** (z. B. Menüpunkt ersetzt) legt die App in die Historie; sie erscheinen nicht mehr im Handbuch, sondern im Anhang „Historie: abgelöste Funktionen“. Im Arbeitsordner wird nichts gelöscht: der alte Kapitel- bzw. Unterkapitelordner bleibt, der Abgleich meldet ihn als entfallen.
+
+## Pipeline, Backlog, Intern
+
+In der App unter **Pipeline, Backlog, Intern**: „Aus Jira-Tickets abgleichen“ ordnet die eingelesenen Tickets nach Status ein (Backlog → Pipeline, sobald in Bearbeitung; erledigt mit Produktionsdatum in der Zukunft bleibt in der Pipeline) und schlägt den Gliederungspunkt vor. Dort wird die Dokumentation vorab geschrieben; „Ins Handbuch übernehmen“ liest sie als Quelle des Kapitels ein (Evidenz unbestätigt). Der Abgleich `abgleich --app …` schreibt die Einträge als Dateien nach `09_Pipeline`, `10_Backlog` und `11_Intern` – eigene Änderungen bleiben, die App-Fassung liegt dann als `.neu` daneben.
+
+## Triage, Orchestrator, Goal
+
+In der App läuft **TRIAGE** automatisch nach jedem Einlesen (oneSCM_Metadaten › Triage): Pflichtlabels je Chunk, Vorschläge für Kapitel und Unterkapitel, neue Unterkapitel mit Kennung „neu“; Kennzahlen je Kapitel und Domäne im **Inhalts-Dashboard**. Unter **Agenten** plant der Orchestrator Aufgaben und legt Entscheidungen vor; **GOAL** gleicht mit dem Ziel ab. `abgleich --app …` schreibt Aufgaben und Entscheidungen nach `00_Dokumentation/Agenten/`, den Ziel-Abgleich nach `12_Goal/ABGLEICH.md` und legt für neue Unterkapitel der Triage Ordner `neu_<Titel>` an. Je Kapitel steuert die **Detaillierung** (Kapitelsteuerung), welche Detaillevel in den Entwurf kommen.
+
+## App (oneSCM Handbook Studio)
+
+Die lokale App unter `http://localhost:3000` liest die Quellen ein (Fundstelle je Chunk: Seite, Folie, Zeitmarke), beantwortet Fragen mit Belegen und misst die Antwortqualität mit `00_Dokumentation/App/TESTFRAGEN.csv`. Antworten aus der Expertenbefragung (Label „Prüfen“) sind **kein Beleg** – im Entwurf nur als `[offen: …]`. Ablauf und Ablage: `00_Dokumentation/App/APP.md`.
+
+## Begriffe und offene Entscheidungen
+
+- Schreibweise: **oneSCM**, **Servicevertrag**, **Antrag (Proposal)**, **MO Checks / MO-Prüfungen**. Englische UI-Begriffe in „…“ mit deutschem Handbuchbegriff.
+- Rollen der Steuerung: **Dealer, MO, Markt, HQ, IT**. Sparten: **Pkw und Van**.
+- **MO = Market Operation** (Prüfung und Freigabe, MO Checks). Anrede: **„Sie“**. Sparten: **nur Pkw und Van** – Truck und Bus nicht verwenden.
+- Bevorzugte und zu vermeidende Begriffe: `07_III_Grammatik_Synonyme_Fehlerliste/02_Synonyme/SYNONYME.csv` – Begriffe mit Status `offen` (z. B. MO-Prüfungen/MO Checks, Status FI-Beleg/FI-Dokument, Nemesis/NEMESIS, „Chassis Number“) nicht selbst entscheiden.
+- Weitere offene Entscheidungen: `00_Dokumentation/ENTSCHEIDUNGEN.md`.

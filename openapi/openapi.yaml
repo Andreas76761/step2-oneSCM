@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.26.0
+  version: 0.54.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -43,6 +43,9 @@ tags:
   - name: Suche
   - name: Schreibstil
   - name: Bilder
+  - name: Metadaten
+  - name: Releaseletter
+  - name: Übersetzung
   - name: System
 components:
   securitySchemes:
@@ -357,9 +360,18 @@ components:
         divisions: { type: array, items: { $ref: '#/components/schemas/DivisionCode' } }
         market: { type: [string, 'null'] }
         release: { type: [string, 'null'] }
-        format: { type: string, enum: [md, html, pdf, docx, json], default: md, description: 'docx: Word mit Formatvorlagen und Firmen-Layout (ADR-038)' }
+        format: { type: string, enum: [md, html, pdf, docx, pptx, json], default: md, description: 'docx: Word mit Formatvorlagen und Firmen-Layout (ADR-038); pptx: PowerPoint 16:9 mit Titelfolie, Übersicht je Kapitel, Inhaltsfolien je Abschnitt und einer Folie je Bild (ADR-106, W-07)' }
         outlineId: { type: string, description: 'Handbuch-Variante (ADR-034): freigegebene Kapitel dieser Gliederung, Filter aus ihrer Variante' }
         appendices: { type: boolean, description: 'Verzeichnisse (Abkürzungen, Glossar, Bildverzeichnis, FAQ) anhängen; Standard bei Varianten: true' }
+        profile: { type: string, enum: [full, quickguide, onepager, summary], default: full, description: 'Ausgabeprofil (ADR-085, F-27): Quick Guide = Voraussetzungen, Schritte, Ergebnis, Warnungen; One Pager = Zweck kurz, Schritte, Warnungen (Kapitel ohne Schritte entfallen); Kurzfassung (ADR-105, S-05) = je Kapitel ein Absatz mit etwa einem Viertel der Länge' }
+        reading: { type: boolean, default: false, description: 'Lesefassung (F-28): ohne Badges, Versionszeile und Abschnitt „Quellen- und Freigabestatus“' }
+        transitions: { type: boolean, description: '„Weiter mit …“ am Kapitelende (F-29, nur profile full): fehlt = gepflegte Übergänge, true = zusätzlich automatisch das nächste exportierte Kapitel, false = keine' }
+        asOf: { type: string, maxLength: 40, description: 'Stand (Release) für Zukunfts-Inhalte (ADR-102, W-09): Kapitel mit späterem „gültig ab“ werden ausgeblendet; Standard ist release' }
+        reviewCopy:
+          description: 'Prüffassung für Word (ADR-104, W-06, nur format docx): Lesefassung mit Zeile „Fertig, wenn: …“ je Kapitel und Exportkennung in den Dokumenteigenschaften; die geänderte Datei liest POST /revisions/word zurück'
+          oneOf:
+            - { type: boolean }
+            - { type: object, properties: { criterion: { type: string, maxLength: 300, description: 'Prüfkriterium; Standard: alle Schritte, Begriffe und Bildschirmtexte stimmen mit der Oberfläche überein' } } }
 security:
   - oidcBearer: []
   - demoUser: []
@@ -367,9 +379,9 @@ paths:
   /imports:
     post:
       operationId: createImport
-      summary: ZIP-, Markdown-, HTML- (Confluence-Export) oder Word-Datei importieren (HTML/Word werden in Markdown umgewandelt, ADR-022)
+      summary: 'ZIP-, Markdown-, HTML- (Confluence-Export), Word-, PowerPoint- oder PDF-Datei oder Jira-Export (XML/CSV, je Ticket eine Quelle unter jira/, ADR-081) importieren (HTML/Word/PowerPoint/PDF werden in Markdown umgewandelt, ADR-022, ADR-086; Fundstelle je Chunk: Folie, Seite oder Abschnitt)'
       tags: [Import]
-      x-requirements: [US-001, US-002, US-003, US-004, NFR-09, NFR-14, NFR-23]
+      x-requirements: [US-001, US-002, US-003, US-004, NFR-09, NFR-14, NFR-23, NFR-81]
       parameters:
         - { name: snapshot, in: query, schema: { type: boolean }, description: 'ZIP ist der vollständige Stand – fehlende Dateien derselben Herkunft werden als entfernt markiert (ADR-036)' }
       requestBody:
@@ -1067,6 +1079,7 @@ paths:
                 avoid: { type: array, items: { type: string } }
                 definition: { type: [string, 'null'] }
                 translations: { type: object, description: 'Je Projektsprache { term, definition } fürs Glossar beim Lesen (ADR-071); andere Sprachen → 400', additionalProperties: { type: object, properties: { term: { type: string }, definition: { type: [string, "null"] } } } }
+                keepUntranslated: { type: boolean, description: 'nicht übersetzen (ADR-097): der Begriff steht in jeder Sprache unverändert' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: Angelegt }
@@ -1091,6 +1104,7 @@ paths:
                 avoid: { type: array, items: { type: string } }
                 definition: { type: [string, 'null'] }
                 translations: { type: object, description: 'Je Projektsprache { term, definition } fürs Glossar beim Lesen (ADR-071); andere Sprachen → 400', additionalProperties: { type: object, properties: { term: { type: string }, definition: { type: [string, "null"] } } } }
+                keepUntranslated: { type: boolean, description: 'nicht übersetzen (ADR-097): der Begriff steht in jeder Sprache unverändert' }
                 status: { type: string, enum: [active, retired] }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -1464,13 +1478,13 @@ paths:
       operationId: createRelease
       summary: Handbuch-Version aus allen freigegebenen Kapiteln veröffentlichen (Berechtigung approve); mit outlineId das Handbuch einer Variante inkl. Verzeichnissen
       tags: [Veröffentlichung]
-      x-requirements: [NFR-05, US-014, NFR-08, NFR-21]
+      x-requirements: [NFR-05, US-014, NFR-08, NFR-21, NFR-126]
       x-extension: true
       requestBody:
         content: { application/json: { schema: { type: object, required: [version], properties: { version: { type: string }, title: { type: string }, notes: { type: string }, outlineId: { type: string } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '201': { description: Release mit Änderungsliste }
+        '201': { description: 'Release mit Änderungsliste; future: Kapitel mit „gültig ab“ nach der Version, nicht enthalten (W-09)' }
         '409': { description: Version existiert oder Blocker offen }
         '422': { description: keine freigegebenen Kapitel }
   /releases/{releaseId}:
@@ -1692,11 +1706,11 @@ paths:
       operationId: createExport
       summary: Freigegebene Kapitel rollen-/sparten-/markt-/releasegefiltert exportieren
       tags: [Export]
-      x-requirements: [US-010, US-012, US-014]
+      x-requirements: [US-010, US-012, US-014, NFR-80, NFR-126]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExportRequest' } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '201': { description: Export erstellt }
+        '201': { description: 'Export erstellt; asOf und future: Kapitel mit späterem „gültig ab“ (ADR-102, W-09), nicht im Export' }
         '409': { description: 'Blockiert (offene Blocker-/Datenschutzbefunde), content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
     get:
       operationId: listExports
@@ -1740,7 +1754,7 @@ paths:
         '200': { description: Einstellungen }
     put:
       operationId: putSettings
-      summary: Einstellungen ändern (Berechtigung admin)
+      summary: 'Einstellungen ändern (Berechtigung admin); privacy.names = zusätzliche Klarnamen für die Datenschutzprüfung (ADR-080)'
       tags: [System]
       x-requirements: [US-005, US-001, US-015]
       x-extension: true
@@ -1749,6 +1763,20 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: Einstellungen }
         '403': { $ref: '#/components/responses/Problem' }
+  /privacy/check:
+    post:
+      operationId: checkPrivacy
+      summary: 'Datenschutzprüfung eines Textes: E-Mail, Telefon, IBAN, FIN, Kennzeichen, Benutzerkennung, Adresse, Namen (Metadatenfelder und Namensliste); optional pseudonymisiert; nichts wird gespeichert (ADR-080)'
+      tags: [System]
+      x-requirements: [NFR-70]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 200000 }, pseudonymize: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ hits: [{ kind: email | phone | iban | vin | plate | user_id | address | name, match (maskiert) }], pseudonymized?: { text, replaced, kinds: [{ kind, distinct }] } }' }
+        '400': { $ref: '#/components/responses/Problem' }
   /reference:
     get:
       operationId: getReference
@@ -1981,14 +2009,20 @@ paths:
   /media/{mediaSha}:
     get:
       operationId: getMedia
-      summary: Bild ausliefern (nur eigenes Projekt, nosniff, unveränderlich zwischenspeicherbar)
+      summary: 'Bild ausliefern (nur eigenes Projekt, nosniff) – die neueste Fassung (ADR-085), mit ?original=1 genau die angefragte; ETag = Kennung der Fassung, Cache-Control private, no-cache'
       tags: [Medien]
-      x-requirements: [NFR-16]
+      x-requirements: [NFR-16, NFR-79]
       x-extension: true
-      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string, pattern: '^[a-f0-9]{64}$' } }]
+      parameters:
+        - { name: mediaSha, in: path, required: true, schema: { type: string, pattern: '^[a-f0-9]{64}$' } }
+        - { name: original, in: query, required: false, schema: { type: string, enum: ['1'] }, description: 'genau diese Fassung statt der neuesten' }
+        - { name: unredacted, in: query, required: false, schema: { type: string, enum: ['1'] }, description: 'Original ohne Unkenntlichmachung (ADR-095) – nur mit Berechtigung edit; sonst wird bei eingeschalteter Unkenntlichmachung die verpixelte Kopie geliefert' }
+        - { name: If-None-Match, in: header, required: false, schema: { type: string } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Bilddaten, content: { image/png: {}, image/jpeg: {}, image/gif: {}, image/webp: {} }' }
+        '304': { description: 'unverändert (ETag passt)' }
+        '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
     patch:
       operationId: setMediaTitle
@@ -2490,27 +2524,27 @@ paths:
   /style/check:
     post:
       operationId: checkStyle
-      summary: 'Text auf Stil, Grammatik und Zeitform prüfen – Sätze mit Position, Hinweisen und Korrekturvorschlägen (ADR-040)'
+      summary: 'Text auf Stil, Grammatik und Zeitform prüfen – Sätze mit Position, Hinweisen und Korrekturvorschlägen (ADR-040); mit Hausregeln (Typografie, Zahlen, Produktname) und Sprache (ADR-097)'
       tags: [Schreibstil]
-      x-requirements: [NFR-27]
+      x-requirements: [NFR-27, NFR-104, NFR-105, NFR-123]
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 } } } } }
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 }, language: { type: string, description: 'de (Standard, alle Regeln), en (zusätzlich a/an, „I“, Rechtschreibung), sonst nur sprachneutrale Regeln und eigene Regeln der Sprache' }, product: { type: string, enum: [manual, releaseletter, quickguide, training, internal, video, graphic, process], description: 'Produktart für den Ton (ADR-102, Standard Handbuch)' }, roles: { type: array, items: { type: string }, description: 'Rollen des Textes; bei genau einer Rolle gilt ihr Rollenprofil' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ text, sentences: [{ start, end, text, issues: [{ rule, severity, message, start, end, fix? }] }], counts, score, rules, problemSentences, fixable }' }
+        '200': { description: '{ text, language, tone: { tone, label } | null, sentences: [{ start, end, text, issues: [{ rule, severity, message, start, end, fix? }] }], counts, score, rules, problemSentences, fixable }' }
         '400': { $ref: '#/components/responses/Problem' }
   /style/rewrite:
     post:
       operationId: rewriteStyle
       summary: 'Text professionell umformulieren bzw. ins Präsens setzen (KI-Dienst, sonst Regelkorrekturen); speichert nichts (Berechtigung edit, ADR-040)'
       tags: [Schreibstil]
-      x-requirements: [NFR-27]
+      x-requirements: [NFR-27, NFR-123]
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 }, mode: { type: string, enum: [professional, present, rules], default: professional } } } } }
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 }, mode: { type: string, enum: [professional, present, rules], default: professional }, product: { type: string, description: 'Produktart für den Ton (ADR-102)' }, roles: { type: array, items: { type: string } } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ text, method: ai|rules, mode, provider, lostNumbers, analysis }' }
@@ -2671,6 +2705,408 @@ paths:
         '200': { description: '{ sha256, pngSha, width, height }' }
         '400': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /assessments:
+    get:
+      operationId: listAssessments
+      summary: 'Kapitelbewertung aller Kapitel der Quellen (neueste Version): Gesamtwert und Ampel, fünf Kriterien (ADR-103, S-07)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-128]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ chapterId, title, versionId, versionNo, status, overall: { value, traffic, label }, criteria: [{ code, label, value, traffic }] }], summary: { chapters, green, yellow, red }, criteria }' }
+  /chapter-versions/{versionId}/assessment:
+    get:
+      operationId: getChapterAssessment
+      summary: 'Kapitelbewertung einer Version: Sprache, Ziel, Tonalität, Quellenabgleich, Fakten je 0–100 mit Ampel (grün ab 80, gelb ab 60), Gesamtampel höchstens wie das schwächste Kriterium (ADR-103, S-07)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-128]
+      x-extension: true
+      parameters: [{ name: versionId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ overall, criteria: [{ code, label, hint, value, traffic, trafficLabel, detail }], plausibility }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/plausibility:
+    get:
+      operationId: getChapterPlausibility
+      summary: 'Plausibilität Text ↔ Quellen je Aussage: belegt, unbelegt, Widerspruch, fehlend; Wert 0–100, ein Widerspruch zählt doppelt (ADR-103, W-02)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-127]
+      x-extension: true
+      parameters: [{ name: versionId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ value, traffic, counts, statements: [{ blockId, section, text, class, label, support, reason, sources }], facts: { value, total, found, missing } }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /language-errors:
+    get:
+      operationId: listLanguageErrors
+      summary: 'Fehlerliste (ADR-103, G-05): Einträge mit Nr, Fundstelle, Fehler, Korrektur, Kategorie, Regel, Status'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      parameters:
+        - { name: status, in: query, required: false, schema: { type: string, enum: [open, fixed, rejected, rule_missing] } }
+        - { name: chapterId, in: query, required: false, schema: { type: string } }
+        - { name: category, in: query, required: false, schema: { type: string } }
+        - { name: q, in: query, required: false, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items, summary, categories, statusLabels }' }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createLanguageError
+      summary: 'Eintrag der Fehlerliste von Hand erfassen (Berechtigung edit)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [location, error, category], properties: { location: { type: string }, error: { type: string }, correction: { type: string }, category: { type: string }, rule: { type: string }, chapterId: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: Eintrag }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /language-errors/{id}:
+    patch:
+      operationId: updateLanguageError
+      summary: 'Status, Korrektur, Kategorie eines Eintrags ändern; „abgelehnt“ braucht eine Begründung (Berechtigung edit)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { status: { type: string, enum: [open, fixed, rejected, rule_missing] }, reason: { type: string }, correction: { type: string }, category: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: Eintrag }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /language-errors/collect:
+    post:
+      operationId: collectLanguageErrors
+      summary: 'Warnungen der Stilprüfung einer Kapitelversion in die Fehlerliste übernehmen (gleiche Fundstelle nur einmal); erledigte offene Funde gelten als korrigiert (Berechtigung edit)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [versionId], properties: { versionId: { type: string }, includeInfo: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ added, known, fixed, items, summary }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /language-errors/export:
+    get:
+      operationId: exportLanguageErrors
+      summary: 'Fehlerliste als FEHLERLISTE.csv (UTF-8 mit BOM, Semikolon) für den Arbeitsordner'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'text/csv' }
+  /language-errors/import:
+    post:
+      operationId: importLanguageErrors
+      summary: 'FEHLERLISTE.csv einlesen: Vorschau, mit apply übernehmen; bekannte Nr. aktualisieren, neue anlegen (Berechtigung edit)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-129]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [csv], properties: { csv: { type: string }, apply: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ applied, changes: [{ nr, action, status, problems }], invalid }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /revisions/word:
+    post:
+      operationId: readWordReview
+      summary: 'Word-Prüffassung zurücklesen (ADR-104, W-06): Kapitel über die Exportkennung bzw. den Titel, Abschnitte über die Überschrift, Absätze per Ausrichtung; jede Abweichung wird ein offener Änderungsvorschlag (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-130]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Vorschlagsliste { id, origin: word, exportId, stats: { chapters, proposals, changed, added, removed, unmatchedChapters, unmatchedSections, criteria }, chapters: [{ chapterId, title, proposals }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/lektorat:
+    post:
+      operationId: runLektorat
+      summary: 'KI-Lektorat einer Kapitelversion (ADR-104, G-07): je Absatz eine Umformulierung (lokaler KI-Dienst, sonst Regelkorrekturen) als Änderungsvorschlag mit Wortvergleich; gesperrte Absätze, Bilder und Absätze mit verlorenen Zahlen entfallen (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-131]
+      x-extension: true
+      parameters: [{ name: versionId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Vorschlagsliste { id, origin: ai, stats: { proposals, skipped, method }, chapters }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '502': { $ref: '#/components/responses/Problem' }
+  /revision-batches:
+    get:
+      operationId: listRevisionBatches
+      summary: 'Vorschlagslisten des Projekts (Word-Rücklauf, KI-Lektorat) mit Anzahl je Status'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-130, NFR-131]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, origin, fileName, exportId, stats, counts: { open, accepted, rejected, stale }, createdBy, createdAt }]' }
+  /revision-batches/{id}:
+    get:
+      operationId: getRevisionBatch
+      summary: 'Vorschlagsliste mit Vorschlägen je Kapitel: Stand bei Einlesen (original), Vorschlag (proposed), aktueller Stand (current), veraltet, Wortvergleich, interner Kommentar'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-130, NFR-131, NFR-132]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, origin, stats, chapters: [{ chapterId, title, proposals: [{ id, section, sectionTitle, change, status, original, proposed, current, outdated, diff: [{ op, text }], criterion, comment, appliedVersionId }] }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /revision-batches/{id}/accept-all:
+    post:
+      operationId: acceptAllRevisions
+      summary: 'Alle offenen Vorschläge der Liste (optional eines Kapitels) übernehmen; geänderte Absätze werden „veraltet“ (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-131]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { chapterId: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ accepted, stale, batch }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /revision-proposals/{id}/decision:
+    post:
+      operationId: decideRevisionProposal
+      summary: 'Vorschlag übernehmen (optional mit eigener Fassung text) oder verwerfen; übernommen wird in einen Entwurf des Kapitels – bei freigegebener Version als Kopie (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-131, NFR-132]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [decision], properties: { decision: { type: string, enum: [accept, reject] }, text: { type: string }, comment: { type: string, maxLength: 1000 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Vorschlag mit Status accepted bzw. rejected und appliedVersionId' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'bereits entschieden, Absatz inzwischen geändert (Vorschlag veraltet) oder Kapitel zur Freigabe eingereicht' }
+  /revision-proposals/{id}:
+    patch:
+      operationId: commentRevisionProposal
+      summary: 'Interner Kommentar zum Vorschlag (ADR-104, W-08) – erscheint in keinem Export (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-132]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { comment: { type: string, maxLength: 1000 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Vorschlag mit comment' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/text-variants:
+    get:
+      operationId: getTextVariants
+      summary: 'Textvarianten einer Kapitelversion (ADR-105, S-05): Endanwender, Fachtext, Kurzfassung (Management, etwa ¼ der Länge) mit Wortzahl und Anteil am Fachtext; ai=true lässt die Kurzfassung vom KI-Dienst schreiben (erfundene Zahlen oder zu lang → regelbasiert)'
+      tags: [Kapitel]
+      x-requirements: [NFR-133]
+      x-extension: true
+      parameters:
+        - { name: versionId, in: path, required: true, schema: { type: string } }
+        - { name: ai, in: query, schema: { type: boolean } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ versionId, title, method: rules|ai, note, variants: [{ code: enduser|expert|summary, label, hint, words, ratio, sections, markdown }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '502': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/text-variants/{code}/download:
+    get:
+      operationId: downloadTextVariant
+      summary: 'Eine Textvariante als Markdown-Datei'
+      tags: [Kapitel]
+      x-requirements: [NFR-133]
+      x-extension: true
+      parameters:
+        - { name: versionId, in: path, required: true, schema: { type: string } }
+        - { name: code, in: path, required: true, schema: { type: string, enum: [enduser, expert, summary] } }
+        - { name: ai, in: query, schema: { type: boolean } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Markdown', content: { text/markdown: { schema: { type: string } } } }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /review-profiles:
+    get:
+      operationId: listReviewProfiles
+      summary: 'Prüferprofile (ADR-105, W-12): fachlich, Redaktion, Compliance, Endanwender mit Blickwinkel'
+      tags: [Qualität]
+      x-requirements: [NFR-134]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ profile, label, focus }]' }
+  /chapter-versions/{versionId}/profile-reviews:
+    get:
+      operationId: getProfileReviews
+      summary: 'Letzte Prüfung je Profil (Wert 0–100, Ampel, Funde mit Schweregrad, Absatz, Zitat, Vorschlag) und Verlauf der Werte'
+      tags: [Qualität]
+      x-requirements: [NFR-134]
+      x-extension: true
+      parameters: [{ name: versionId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ versionId, title, profiles, latest: [{ id, profile, label, method, score, traffic, counts, findings, note, createdAt }], history }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: runProfileReviews
+      summary: 'Kapitelversion mit den gewählten Prüferprofilen prüfen (Standard alle vier); ai=true ergänzt Funde des KI-Dienstes je Profil – gesperrt bei personenbezogenen Daten und externem Dienst (Berechtigung edit)'
+      tags: [Qualität]
+      x-requirements: [NFR-134]
+      x-extension: true
+      parameters: [{ name: versionId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { profiles: { type: array, items: { type: string, enum: [domain, editorial, compliance, enduser] } }, ai: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'wie GET' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '502': { $ref: '#/components/responses/Problem' }
+  /text-modules:
+    get:
+      operationId: listTextModules
+      summary: 'Textbausteine (ADR-107, W-11, Single Sourcing) mit Fassung, Zahl der verknüpften und der veralteten Kapitel'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [active, retired] } }
+        - { name: q, in: query, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, key, title, kind, versionNo, status, text, chapters, outdatedChapters }]' }
+    post:
+      operationId: createTextModule
+      summary: 'Textbaustein anlegen (Kennung aus dem Titel, wenn leer; Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [title, text], properties: { title: { type: string, maxLength: 120 }, key: { type: string, maxLength: 60 }, kind: { type: string, enum: [paragraph, list, note, tip, warning, table] }, text: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Textbaustein mit Fassungen, Verwendung und Kandidaten' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'Kennung schon vergeben' }
+  /text-modules/candidates:
+    get:
+      operationId: textModuleCandidates
+      summary: 'Wiederkehrende Absätze: gleicher Text (ab 8 Wörtern) in mindestens zwei Kapiteln, noch ohne Textbaustein'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ text, kind, chapters: [{ chapterId, title }] }]' }
+  /text-modules/{id}:
+    get:
+      operationId: getTextModule
+      summary: 'Textbaustein mit Fassungen, Verwendung je Kapitel (aktuell/veraltet) und Kapiteln mit gleichem, noch nicht verknüpftem Text'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ …, versions, usage: [{ chapterId, title, versionId, versionNo, status, blocks, outdated }], candidates }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateTextModule
+      summary: 'Titel, Art, Status (active/retired) oder Text ändern; geänderter Text = neue Fassung mit Notiz (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { title: { type: string }, kind: { type: string }, status: { type: string, enum: [active, retired] }, text: { type: string }, note: { type: string, maxLength: 300 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Textbaustein' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /text-modules/{id}/insert:
+    post:
+      operationId: insertTextModule
+      summary: 'Textbaustein als gesperrten, verknüpften Absatz am Ende eines Abschnitts einfügen – in den Entwurf des Kapitels, bei freigegebener Version in eine Kopie (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [chapterId, section], properties: { chapterId: { type: string }, section: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ blockId, versionId, module }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { description: 'Textbaustein abgelegt oder Kapitel zur Freigabe eingereicht' }
+  /text-modules/{id}/propagate:
+    post:
+      operationId: propagateTextModule
+      summary: 'Aktuelle Fassung in die Kapitel übernehmen: veraltete verknüpfte Absätze, mit adopt auch Absätze mit gleichem Text; je Kapitel in einen Entwurf, eingereichte Kapitel werden übersprungen (Berechtigung edit)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-138]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { chapterIds: { type: array, items: { type: string } }, adopt: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ version, updated: [{ chapterId, title, versionId, blocks }], skipped: [{ chapterId, title, reason }], module }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /style/tone:
+    get:
+      operationId: getStyleTone
+      summary: 'Tonalität je Produktart und Rolle (ADR-102, S-02): Einstellung, wirksamer Ton je Produktart (Vorgabe aus TONALITAET.md), Rollenprofile, Töne mit Beschreibung; ändern über PUT /style/rules (tone)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-123]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ products: [{ product, label, tone, effective, default }], roles: [{ role, label, tone }], tones: [{ tone, label, hint }], active }' }
   /style/rules:
     get:
       operationId: getStyleRules
@@ -2680,12 +3116,12 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ disabled: [Regel], phrases: [{ avoid, use, note }], address: sie|du|null, maxSentenceWords }' }
+        '200': { description: '{ disabled: [Regel], phrases: [{ avoid, use, note, language? }], address: sie|du|null, maxSentenceWords, allowed: [Begriff], audience: enduser|expert, tone: { products: { Produktart: Ton }, roles: { Rolle: Ton } } }' }
     put:
       operationId: updateStyleRules
       summary: 'Eigene Stilregeln ändern (Berechtigung admin, ADR-044)'
       tags: [Schreibstil]
-      x-requirements: [NFR-31]
+      x-requirements: [NFR-31, NFR-123]
       x-extension: true
       requestBody:
         required: true
@@ -2695,9 +3131,12 @@ paths:
               type: object
               properties:
                 disabled: { type: array, items: { type: string } }
-                phrases: { type: array, maxItems: 300, items: { type: object, required: [avoid], properties: { avoid: { type: string }, use: { type: [string, 'null'] }, note: { type: [string, 'null'] } } } }
+                phrases: { type: array, maxItems: 300, items: { type: object, required: [avoid], properties: { avoid: { type: string }, use: { type: [string, 'null'] }, note: { type: [string, 'null'] }, language: { type: [string, 'null'], description: 'Sprache der Regel (ADR-097), ohne Angabe Deutsch' } } } }
                 address: { type: [string, 'null'], enum: [sie, du, null] }
                 maxSentenceWords: { type: [integer, 'null'], minimum: 8, maximum: 60 }
+                allowed: { oneOf: [{ type: array, maxItems: 1000, items: { type: string, minLength: 2, maxLength: 60 } }, { type: string }], description: 'erlaubte Begriffe (Whitelist, ADR-097); als Text je Zeile, Semikolon oder Komma getrennt' }
+                audience: { type: string, enum: [enduser, expert], description: 'Zielgruppe für die Sollwerte der Lesbarkeit (ADR-097)' }
+                tone: { type: object, description: 'Tonalität (ADR-102, S-02): Ton je Produktart und Rolle; Töne factual (sachlich), friendly (freundlich), formal (formell), concise (knapp)', properties: { products: { type: object, additionalProperties: { type: string, enum: [factual, friendly, formal, concise] } }, roles: { type: object, additionalProperties: { type: string, enum: [factual, friendly, formal, concise] } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Stilregeln' }
@@ -3012,7 +3451,7 @@ paths:
         - { $ref: '#/components/parameters/VersionId' }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ versionId, chapterId, title, editable, score, passed, total, fixable, checks: [{ code, label, status, message, hint, items: [{ blockId, excerpt, section, fix? }], addSection? }] }' }
+        '200': { description: '{ versionId, chapterId, title, editable, score, passed, total, fixable, checks: [{ code, label, status, message, hint, items: [{ blockId, excerpt, section, fix? }], addSection? }], instruction, readability: { sentences, words, avgWords, longShare, passiveShare, lix, flesch, audience, checks, ok } }' }
         '404': { $ref: '#/components/responses/Problem' }
   /guidance/chapter-versions/{versionId}/apply:
     post:
@@ -3127,25 +3566,25 @@ paths:
   /guidance/settings:
     get:
       operationId: guidanceSettings
-      summary: 'Mindestwert des Anleitungs-Checks für Einreichen und Freigabe (ADR-057)'
+      summary: 'Mindestwert des Anleitungs-Checks und Punktmodell Muss/Soll je Prüfpunkt für Einreichen und Freigabe (ADR-057, ADR-092)'
       tags: [Schreibstil]
-      x-requirements: [NFR-44]
+      x-requirements: [NFR-44, NFR-94]
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ minScore: integer | null }' }
+        '200': { description: '{ minScore: integer | null, levels: { <Prüfpunkt>: must | should }, requireMust: boolean, checks: [{ code, label, level, defaultLevel }] }' }
     put:
       operationId: updateGuidanceSettings
-      summary: 'Mindestwert setzen oder aufheben (Berechtigung admin, ADR-057)'
+      summary: 'Mindestwert, Muss/Soll je Prüfpunkt und „alle Muss-Punkte“ als Freigabebedingung setzen – nur angegebene Felder (Berechtigung admin, ADR-057, ADR-092)'
       tags: [Schreibstil]
-      x-requirements: [NFR-44]
+      x-requirements: [NFR-44, NFR-94]
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [minScore], properties: { minScore: { type: [integer, 'null'], minimum: 0, maximum: 100 } } } } }
+        content: { application/json: { schema: { type: object, properties: { minScore: { type: [integer, 'null'], minimum: 0, maximum: 100 }, levels: { type: object, additionalProperties: { type: string, enum: [must, should] } }, requireMust: { type: boolean } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ minScore }' }
+        '200': { description: 'Einstellungen wie GET' }
         '400': { $ref: '#/components/responses/Problem' }
   /feedback/insights:
     get:
@@ -3731,3 +4170,2266 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'OK' }
+  /metadata/overview:
+    get:
+      operationId: metadataOverview
+      summary: 'oneSCM_Metadaten: Quelldateien und Chunks je Format, gelabelte Chunks, gespeicherte Antworten, Labels je Gruppe (ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-67]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ documents, chunks, labeledChunks, savedAnswers, formats: [{ format, documents, chunks }], labelGroups: [{ code, nameDe, nameEn, icon, color, labels }] }' }
+  /metadata/label-groups:
+    get:
+      operationId: listMetadataLabelGroups
+      summary: 'Labelgruppen: Handbuch-Gliederung, Rollen, Navigation im System, Fachdomäne, Kundengruppe, Systeme, Inhaltstyp, Sparte, Qualität und Status (ADR-079, ADR-080)'
+      tags: [Metadaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ code, nameDe, nameEn, icon, color }]' }
+  /metadata/labels:
+    get:
+      operationId: listMetadataLabels
+      summary: 'Vordefinierte Labels (Katalog nach echtem oneSCM, Deutsch und Englisch) mit Anzahl der Chunks und Antworten (ADR-079, ADR-080)'
+      tags: [Metadaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      parameters:
+        - { name: group, in: query, schema: { type: string, enum: [outline, role, navigation, domain, customer, system, content, division, quality] } }
+        - { name: includeArchived, in: query, schema: { type: boolean }, description: 'auch ausgeblendete Labels' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, code, group, nameDe, nameEn, description, position, origin: catalog | custom, archived, updatedBy, updatedAt } + chunkCount, qaCount]' }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createMetadataLabel
+      summary: 'Eigenes Label ergänzen (Berechtigung admin, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [code, group, nameDe, nameEn], properties: { code: { type: string, pattern: '^[a-z0-9][a-z0-9.-]{1,59}$' }, group: { type: string, enum: [outline, role, navigation, domain, customer, system, content, division, quality] }, nameDe: { type: string, maxLength: 120 }, nameEn: { type: string, maxLength: 120 }, description: { type: string, maxLength: 1000 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, code, group, nameDe, nameEn, description, position, origin: catalog | custom, archived, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/labels/{labelId}:
+    patch:
+      operationId: updateMetadataLabel
+      summary: 'Label umbenennen (Deutsch, Englisch), Beschreibung, Reihenfolge, ausblenden oder wieder einblenden (Berechtigung admin, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-66, NFR-102]
+      x-extension: true
+      parameters: [{ name: labelId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { nameDe: { type: string, maxLength: 120 }, nameEn: { type: string, maxLength: 120 }, description: { type: [string, 'null'] }, position: { type: integer, minimum: 1 }, archived: { type: boolean, description: 'Labels in der Historie (ADR-096) lassen sich nur über „Zurückholen“ wieder einblenden' }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release; ADR-096)' } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, code, group, nameDe, nameEn, description, position, origin: catalog | custom, archived, validFrom, validUntil, replacedBy, inHistory, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/chunks:
+    get:
+      operationId: listMetadataChunks
+      summary: 'Chunks der aktuellen Quelldateien mit Überschrift, Fundstelle und Labels; Suche und Filter; Gliederungs-Vorschläge für Chunks ohne Gliederungspunkt; Teilstücke langer Chunks (parts, ADR-079, ADR-084, ADR-087)'
+      tags: [Metadaten]
+      x-requirements: [NFR-67, NFR-77, NFR-83, NFR-84]
+      x-extension: true
+      parameters:
+        - { name: q, in: query, schema: { type: string }, description: 'Teiltreffer im Text' }
+        - { name: heading, in: query, schema: { type: string }, description: 'Teiltreffer in Kapitel, Unterkapitel oder tieferer Überschrift (M3)' }
+        - { name: labels, in: query, schema: { type: string }, description: 'Label-IDs, kommagetrennt – alle müssen zugewiesen sein' }
+        - { name: unlabeled, in: query, schema: { type: boolean } }
+        - { name: noOutline, in: query, schema: { type: boolean }, description: 'nur Chunks ohne Gliederungspunkt (F-13)' }
+        - { name: documentId, in: query, schema: { type: string } }
+        - { name: format, in: query, schema: { type: string }, description: 'markdown | html | docx | pptx | pdf | mp4 | subtitles | jira' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, limit, offset, items: [{ id, seq, documentId, path, fileName, format, revisionId, revisionNo, chapter, subchapter, headingPath, kind, text, lineStart, lineEnd, locator, labels }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /metadata/chunks/labels:
+    post:
+      operationId: setMetadataChunkLabels
+      summary: 'Labels für einen oder mehrere Chunks hinzufügen und entfernen (höchstens 500, Berechtigung edit, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-67]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [snippetIds], properties: { snippetIds: { type: array, items: { type: string }, maxItems: 500 }, add: { type: array, items: { type: string } }, remove: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chunks, added, removed }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/qa:
+    get:
+      operationId: listMetadataQa
+      summary: 'Gespeicherte Fragen und Antworten mit Quellen und Labels (ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-68]
+      x-extension: true
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: labels, in: query, schema: { type: string }, description: 'Label-IDs, kommagetrennt – alle müssen zugewiesen sein' }
+        - { name: language, in: query, schema: { type: string, enum: [de, en] } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, question, answer, language: de | en, sources: [{ snippetId, path, headingPath, locator, lineStart, lineEnd, excerpt }], note, labels: [{ id, code, group, nameDe, nameEn, archived }], createdBy, createdAt, updatedBy, updatedAt }]' }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createMetadataQa
+      summary: 'Frage und Antwort mit Quell-Chunks (Auszug wird mitgespeichert) und Labels speichern (Berechtigung edit, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-68]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [question, answer], properties: { question: { type: string, maxLength: 2000 }, answer: { type: string, maxLength: 20000 }, language: { type: string, enum: [de, en], default: de }, snippetIds: { type: array, items: { type: string }, maxItems: 20 }, labelIds: { type: array, items: { type: string } }, note: { type: string, maxLength: 2000 }, filters: { type: object, description: 'Rahmen der Frage (format, documentId, heading, labelIds) für „erneut fragen“ (ADR-089)' }, askId: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, question, answer, language: de | en, sources: [{ snippetId, path, headingPath, locator, lineStart, lineEnd, excerpt }], note, labels: [{ id, code, group, nameDe, nameEn, archived }], createdBy, createdAt, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/qa/{qaId}:
+    get:
+      operationId: getMetadataQa
+      summary: 'Gespeicherte Frage und Antwort (ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-68]
+      x-extension: true
+      parameters: [{ name: qaId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, question, answer, language: de | en, sources: [{ snippetId, path, headingPath, locator, lineStart, lineEnd, excerpt }], note, labels: [{ id, code, group, nameDe, nameEn, archived }], createdBy, createdAt, updatedBy, updatedAt }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateMetadataQa
+      summary: 'Frage, Antwort, Sprache, Quellen, Labels oder Notiz ändern (Berechtigung edit, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-68]
+      x-extension: true
+      parameters: [{ name: qaId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { question: { type: string }, answer: { type: string }, language: { type: string, enum: [de, en] }, snippetIds: { type: array, items: { type: string } }, labelIds: { type: array, items: { type: string } }, note: { type: [string, 'null'] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, question, answer, language: de | en, sources: [{ snippetId, path, headingPath, locator, lineStart, lineEnd, excerpt }], note, labels: [{ id, code, group, nameDe, nameEn, archived }], createdBy, createdAt, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteMetadataQa
+      summary: 'Gespeicherte Frage und Antwort löschen (Berechtigung edit, ADR-079)'
+      tags: [Metadaten]
+      x-requirements: [NFR-68]
+      x-extension: true
+      parameters: [{ name: qaId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'Gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /source-updates:
+    get:
+      operationId: listSourceUpdates
+      summary: 'Update-Eingang: Kapitelabsätze mit geänderter, entfallener oder neuer Quelle, je Absatz mit altem und neuem Quellabschnitt (ADR-081)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-72]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ summary: { total, changed, unchanged, removed, added, chapters, regenerate }, items: [{ id, kind: changed | unchanged | removed | added, chapterId, chapter, versionId, versionNo, versionStatus, editable, blockId, blockText, section, path, old: { snippetId, text, revisionNo, headingPath } | null, new: { … } | null, similarity }] }' }
+  /source-updates/decisions:
+    post:
+      operationId: decideSourceUpdate
+      summary: 'Änderung übernehmen (replace), nur Quelle aktualisieren (relink), neuen Abschnitt ergänzen (append), entfallene Quelle entfernen (remove) oder verwerfen (dismiss); Änderungen nur an Entwürfen (Berechtigung edit, ADR-081)'
+      tags: [Kapitelwerkstatt]
+      x-requirements: [NFR-72]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [blockId, action], properties: { blockId: { type: string }, oldSnippetId: { type: [string, 'null'] }, newSnippetId: { type: [string, 'null'] }, action: { type: string, enum: [replace, relink, append, remove, dismiss] }, reason: { type: string, maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ action, block }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/access-matrix:
+    get:
+      operationId: getAccessMatrix
+      summary: 'Zugriffsmatrix: Rollen × Menüpunkte (Labels) mit Stufe V, L, -, ? und Beleg (ADR-081)'
+      tags: [Metadaten]
+      x-requirements: [NFR-73]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ roles: [{ id, code, nameDe, nameEn }], navigation: [...], cells: [{ roleId, navId, level, evidence, updatedBy, updatedAt }], summary: { cells, V, L, none, open, withEvidence } }' }
+  /metadata/access-matrix/cells:
+    put:
+      operationId: setAccessMatrixCell
+      summary: 'Stufe und Beleg eines Feldes setzen (Berechtigung edit, ADR-081)'
+      tags: [Metadaten]
+      x-requirements: [NFR-73]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [roleId, navId, level], properties: { roleId: { type: string }, navId: { type: string }, level: { type: string, enum: [V, L, '-', '?'] }, evidence: { type: [string, 'null'], maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Matrix wie GET' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/access-matrix/import:
+    post:
+      operationId: importAccessMatrix
+      summary: 'CSV übernehmen: erste Spalte Menüpunkt (Code, UI-Begriff oder deutscher Name), je Rolle eine Spalte, optional „Beleg“; leere Felder bleiben (Berechtigung edit, ADR-081)'
+      tags: [Metadaten]
+      x-requirements: [NFR-73]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [csv], properties: { csv: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ written, unknownNavigation, unknownRoles, errors }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/access-matrix/export:
+    get:
+      operationId: exportAccessMatrix
+      summary: 'Zugriffsmatrix als CSV im Importformat (ADR-081)'
+      tags: [Metadaten]
+      x-requirements: [NFR-73]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'text/csv' }
+  /metadata/domain-map:
+    get:
+      operationId: getDomainMap
+      summary: 'Zuordnung Fachdomäne → Gliederungspunkte, Menüpunkte und Ordner des Arbeitsordners; Vorschläge aus Chunks (ADR-082)'
+      tags: [Metadaten]
+      x-requirements: [NFR-74]
+      x-extension: true
+      parameters:
+        - { name: outlineId, in: query, required: false, schema: { type: string }, description: 'Gliederung der App, aus der die Unterordner je Kapitel kommen' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ domains: [{ id, code, nameDe, nameEn, outline: [{ id, code, nameDe, nameEn, folder, output, subfolders, linked, origin, chunks, suggested }], navigation: [...] }], outline, navigation, withoutDomain, workFolders, controlFolders, subfolderSource, summary: { domains, links, suggestions } }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/domain-map/links:
+    put:
+      operationId: setDomainLink
+      summary: 'Domäne einem Gliederungs- oder Menüpunkt zuordnen oder die Zuordnung lösen (Berechtigung edit, ADR-082)'
+      tags: [Metadaten]
+      x-requirements: [NFR-74]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [domainId, targetId, linked], properties: { domainId: { type: string }, targetId: { type: string }, linked: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ domainId, targetId, linked }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/domain-map/export:
+    get:
+      operationId: exportDomainMap
+      summary: 'Zuordnung als CSV: Domäne, Gliederungspunkt, Ordner, Unterordner, Menüpunkte (ADR-082)'
+      tags: [Metadaten]
+      x-requirements: [NFR-74]
+      x-extension: true
+      parameters:
+        - { name: outlineId, in: query, required: false, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'text/csv' }
+  /terminology/candidates:
+    get:
+      operationId: listTermCandidates
+      summary: 'Begriffskandidaten aus Jira-Tickets: mehrteilige Fachbegriffe, die in mehreren Tickets vorkommen und noch nicht in der Terminologie stehen (ADR-083, F-12)'
+      tags: [System]
+      x-requirements: [NFR-76]
+      x-extension: true
+      parameters:
+        - { name: minTickets, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 20, default: 2 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ term, tickets, occurrences, examples }]' }
+  /ticket-releases:
+    get:
+      operationId: listTicketReleases
+      summary: 'Release-Abgleich: Jira-Tickets je Release (Lösungsversion, sonst PI TBD) mit Statusgruppe, Einordnung Handbuch-Kandidat oder intern (Bug), Änderungen zum vorigen Import und Kapitelbezug (ADR-083, F-03)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75, NFR-124]
+      x-extension: true
+      parameters:
+        - { name: release, in: query, required: false, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ releases: [{ label, tickets, manual, internal, unknown, done, gaps, changed }], tickets: [{ key, summary, type, status, statusBucket, manualClass, classification, classificationLabel, classificationOrigin, classificationNote, classifiedBy, classifiedAt, release, chapters, gap, isNew, changes }], statusLabels, classLabels, ticketClassLabels, ticketClassHints }' }
+  /ticket-classifications:
+    put:
+      operationId: setTicketClassifications
+      summary: 'Ticket-Einstufung (ADR-102, W-03): genehmigt, in Prüfung, intern oder Background für ein oder mehrere Tickets; null = wieder ableiten (Bug = intern, sonst in Prüfung). Intern und Background fließen nicht ins Handbuch, Background nur in die Lückenanalyse (Berechtigung decide)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-124]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [keys, classification], properties: { keys: { type: array, items: { type: string }, maxItems: 500 }, classification: { type: [string, 'null'], enum: [approved, review, internal, background, null] }, note: { type: string, maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ keys, classification, label }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /releases/{releaseId}/comparison:
+    get:
+      operationId: compareReleases
+      summary: 'Projektvergleich zweier Handbuch-Releases (ADR-102, W-04): neue und geänderte Kapitel, Bildfassungen, neue Funktionen („gültig ab“ = Version), abgelöste Funktionen, Tickets der Version ohne Background'
+      tags: [Veröffentlichung]
+      x-requirements: [NFR-125]
+      x-extension: true
+      parameters:
+        - { $ref: '#/components/parameters/ReleaseId' }
+        - { name: from, in: query, required: false, schema: { type: string }, description: 'älteres Release; Standard ist das Vorgänger-Release' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ from, to, chapters: [{ chapterId, title, change, fromVersionNo, toVersionNo, summary }], images: [{ sha, title, change, versionNo, fromVersionNo, chapters }], functions: { added, superseded }, tickets }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /release-letters/from-comparison:
+    post:
+      operationId: createReleaseLetterFromComparison
+      summary: 'Releaseletter-Entwurf aus dem Projektvergleich (ADR-102, W-04); geprüft gegen die Tickets der Version (Berechtigung edit)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-125]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [releaseId], properties: { releaseId: { type: string }, fromReleaseId: { type: string }, language: { type: string, enum: [de, en] }, audience: { type: string, enum: [mgmt, biz, it, end] }, country: { type: string }, division: { type: string, enum: [car, van, all] }, title: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Releaseletter (origin comparison, comparison: { fromVersion, toVersion, chapters, images, added, superseded, tickets })' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /ticket-releases/match:
+    post:
+      operationId: matchTicketList
+      summary: 'Ticketliste eines Releases gegen die eingelesenen Tickets abgleichen (ADR-083, F-03)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [keys], properties: { keys: { oneOf: [{ type: string }, { type: array, items: { type: string } }] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, loaded, missing }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /release-letters:
+    get:
+      operationId: listReleaseLetters
+      summary: 'Releaseletter des Projekts (ohne Text) mit letztem Prüfurteil (ADR-083, F-02)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, title, release, ticketKeys, language, audience, country, division, origin, status, verdict, verdictLabel, … }]' }
+    post:
+      operationId: createReleaseLetter
+      summary: 'Releaseletter aus den Tickets eines Releases oder einer Ticketliste erzeugen – nur Ticketfakten, feste Guardrails (Berechtigung edit, ADR-083, F-02)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { release: { type: string }, keys: { oneOf: [{ type: string }, { type: array, items: { type: string } }] }, title: { type: string, maxLength: 200 }, language: { type: string, enum: [de, en] }, audience: { type: string, enum: [mgmt, biz, it, end] }, country: { type: string, pattern: '^[A-Za-z]{2}$' }, division: { type: string, enum: [car, van, all] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Releaseletter mit text und check { verdict, verdictLabel, verdictText, findings, counts, pii, coverage, phantoms, missingTickets, ticketsNotLoaded }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /release-letters/import:
+    post:
+      operationId: importReleaseLetter
+      summary: 'Vorhandenen Releaseletter (z. B. aus Dify) einfügen und gegen die Tickets prüfen; Umfang aus keys oder aus dem Text (Berechtigung edit, ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 200000 }, keys: { oneOf: [{ type: string }, { type: array, items: { type: string } }] }, title: { type: string }, language: { type: string, enum: [de, en] }, audience: { type: string, enum: [mgmt, biz, it, end] }, country: { type: string }, division: { type: string, enum: [car, van, all] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Releaseletter wie bei POST /release-letters' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /release-letters/{letterId}:
+    get:
+      operationId: getReleaseLetter
+      summary: 'Releaseletter mit Text und aktueller Prüfung gegen die Tickets (ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters: [{ name: letterId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Releaseletter mit text und check' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateReleaseLetter
+      summary: 'Text oder Titel eines Entwurfs ändern; erneut prüfen (Berechtigung edit, ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters: [{ name: letterId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { text: { type: string }, title: { type: string, maxLength: 200 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Releaseletter mit text und check' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteReleaseLetter
+      summary: 'Entwurf löschen (Berechtigung edit); freigegebene Releaseletter bleiben erhalten (ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters: [{ name: letterId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /release-letters/{letterId}/approve:
+    post:
+      operationId: approveReleaseLetter
+      summary: 'Freigeben (Berechtigung approve): nicht bei „Nicht freigeben“, bei „Bedingt freigeben“ nur mit Begründung (ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters: [{ name: letterId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: false
+        content: { application/json: { schema: { type: object, properties: { reason: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Releaseletter (status approved)' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /release-letters/{letterId}/export:
+    get:
+      operationId: exportReleaseLetter
+      summary: 'Releaseletter als Markdown oder Word (ADR-083)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-75]
+      x-extension: true
+      parameters:
+        - { name: letterId, in: path, required: true, schema: { type: string } }
+        - { name: format, in: query, required: false, schema: { type: string, enum: [md, docx], default: md } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'text/markdown bzw. application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /metadata/outline-coverage:
+    get:
+      operationId: getOutlineCoverage
+      summary: 'Je Punkt der Gesamtgliederung: zugeordnete Chunks, davon im Handbuch verwendet, offene Vorschläge, Ordner (ADR-084, F-13/F-14)'
+      tags: [Metadaten]
+      x-requirements: [NFR-77]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chunks, unassigned, minScore, items: [{ id, code, nameDe, nameEn, folder, chunks, used, suggestions }] }' }
+  /metadata/outline/{labelId}:
+    get:
+      operationId: getOutlineSources
+      summary: 'Kapitel ↔ Quellen: Handbuchkapitel (gleicher Titel oder über Quellen) und zugeordnete Chunks mit „im Handbuch verwendet“, dazu Vorschläge – nie automatisch übernommen (ADR-084, F-14)'
+      tags: [Metadaten]
+      x-requirements: [NFR-77]
+      x-extension: true
+      parameters:
+        - { name: labelId, in: path, required: true, schema: { type: string } }
+        - { name: minScore, in: query, required: false, schema: { type: number, minimum: 0.1, maximum: 1, default: 0.25 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ outline, handbook: [{ chapterId, title, match, version, blocks, fromAssigned }], chunks: [… usedInHandbook], suggestions: [… score, matched], summary }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /knowledge-notes:
+    get:
+      operationId: listKnowledgeNotes
+      summary: 'Wissensnotizen mit Quelle, Revisionen und Chunks (ADR-084, F-15)'
+      tags: [Metadaten]
+      x-requirements: [NFR-78]
+      x-extension: true
+      parameters:
+        - { name: includeRemoved, in: query, required: false, schema: { type: boolean } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, question, insight, roles, divisions, confirmed, image, path, status, documentId, revisions, chunks, … }]' }
+    post:
+      operationId: createKnowledgeNote
+      summary: 'Notiz als eigene Quelle wissensnotizen/<id>.md einlesen; Screenshot mit Pflicht-Alternativtext; personenbezogene Daten werden abgewiesen oder pseudonymisiert (Berechtigung edit, ADR-084)'
+      tags: [Metadaten]
+      x-requirements: [NFR-78]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [question, insight], properties: { question: { type: string, minLength: 5, maxLength: 300 }, insight: { type: string, minLength: 5, maxLength: 20000 }, roles: { type: array, items: { type: string, enum: [dealer, market, mo, hq, all] } }, divisions: { type: array, items: { type: string, enum: [car, van, all] } }, confirmed: { type: boolean }, image: { type: object, properties: { name: { type: string }, data: { type: string, description: 'Base64 oder Data-URL, bis 5 MB' } } }, imageAlt: { type: string }, pseudonymize: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Notiz' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /knowledge-notes/{noteId}:
+    patch:
+      operationId: updateKnowledgeNote
+      summary: 'Notiz ändern – neue Revision derselben Quelle; image null entfernt den Screenshot (Berechtigung edit, ADR-084)'
+      tags: [Metadaten]
+      x-requirements: [NFR-78]
+      x-extension: true
+      parameters: [{ name: noteId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Notiz' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: removeKnowledgeNote
+      summary: 'Notiz entfernen – die Quelle gilt als entfernt, Historie bleibt (Berechtigung edit, ADR-084)'
+      tags: [Metadaten]
+      x-requirements: [NFR-78]
+      x-extension: true
+      parameters: [{ name: noteId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'entfernt' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /duplicate-targets:
+    get:
+      operationId: listDuplicateTargets
+      summary: 'Zielkapitel je Dopplung (Gliederungspunkt) oder Vorschlag (ADR-084, F-18)'
+      tags: [Qualität]
+      x-requirements: [NFR-77]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ findingId, target: { labelId, code, nameDe, note, decidedBy, decidedAt } | null, suggestion | null }]' }
+  /duplicate-targets/{findingId}:
+    put:
+      operationId: setDuplicateTarget
+      summary: 'Zielkapitel setzen; beide Textabschnitte erhalten das Gliederungs-Label (Berechtigung edit, ADR-084)'
+      tags: [Qualität]
+      x-requirements: [NFR-77]
+      x-extension: true
+      parameters: [{ name: findingId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [outlineLabelId], properties: { outlineLabelId: { type: string }, note: { type: [string, 'null'], maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Zielkapitel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: removeDuplicateTarget
+      summary: 'Zielkapitel entfernen; Label-Zuordnungen bleiben (Berechtigung edit, ADR-084)'
+      tags: [Qualität]
+      x-requirements: [NFR-77]
+      x-extension: true
+      parameters: [{ name: findingId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'entfernt' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-archive:
+    get:
+      operationId: listImageArchive
+      summary: 'Bildarchiv (ADR-085, F-20): feste Bildnummer, Merkmale, Fassungen, Verwendung und Prüfregeln je Bild; q sucht in Nummer, Titel, Menüpunkt, Release'
+      tags: [Medien]
+      x-requirements: [NFR-79]
+      x-extension: true
+      parameters:
+        - { name: q, in: query, required: false, schema: { type: string } }
+        - { name: labelId, in: query, required: false, schema: { type: string }, description: 'nur Bilder mit diesem Label (ADR-095)' }
+        - { name: chapterId, in: query, required: false, schema: { type: string }, description: 'nur Bilder, die diesem Kapitel zugeordnet sind oder darin verwendet werden (ADR-095)' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ sha, imageNo, title, currentSha, placeholder, language, roles, divisions, markets, release, navigation, outline, labels: [{ id, code, group, nameDe, nameEn }], chapters: [{ id, key, title }], redaction: { enabled, status, regions, active, available, redactedSha }, source: { path, slide, slideTitle, suggestions }, versions (url, originalUrl), usedIn, sourceUses, checks }], summary: { images, placeholders, withErrors, withWarnings, versioned } }' }
+  /image-archive/coverage:
+    get:
+      operationId: getImageCoverage
+      summary: 'Bildabdeckung je Kapitel (F-20): Bilder, Platzhalter, fehlende Alternativtexte, Schrittabsätze mit Bild in der neuesten Version'
+      tags: [Medien]
+      x-requirements: [NFR-79]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ chapterId, title, status, images, placeholders, missingAlt, stepBlocks, stepBlocksWithImage, coverage }], summary }' }
+  /image-archive/coverage-matrix:
+    get:
+      operationId: getImageCoverageMatrix
+      summary: 'Deckungsmatrix (F-30): Stelle (Reiter/Menüpunkt bzw. Kapitel) × Sprache/Rolle/Sparte – abgedeckt, nur Platzhalter, Lücke'
+      tags: [Medien]
+      x-requirements: [NFR-96]
+      x-extension: true
+      parameters: [{ name: rows, in: query, schema: { type: string, enum: [navigation, variant, chapter], default: navigation } }, { name: dims, in: query, description: 'Kommagetrennt: language, role, division', schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ rowsBy, dims, languages, columns: [{ key, label }], rows: [{ key, label, images, cells: [{ key, count, placeholders, images }], gaps, placeholderOnly, unassigned }], summary }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /image-archive/coverage-matrix/export:
+    get:
+      operationId: exportImageCoverageMatrix
+      summary: 'Deckungsmatrix als Excel (farbig) oder CSV'
+      tags: [Medien]
+      x-requirements: [NFR-96]
+      x-extension: true
+      parameters: [{ name: rows, in: query, schema: { type: string, enum: [navigation, variant, chapter], default: navigation } }, { name: dims, in: query, description: 'Kommagetrennt: language, role, division', schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [xlsx, csv], default: xlsx } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /image-archive/placeholders:
+    post:
+      operationId: createImagePlaceholder
+      summary: 'Platzhalterbild (F-21) mit reservierter nächster Bildnummer anlegen (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-79]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [title], properties: { title: { type: string, minLength: 3, maxLength: 200 }, roles: { type: array, items: { type: string, enum: [dealer, market, mo, hq, all] } }, divisions: { type: array, items: { type: string, enum: [car, van, all] } }, navLabelId: { type: string }, release: { type: string }, language: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Bild mit markdown zum Einfügen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /image-archive/{mediaSha}:
+    patch:
+      operationId: updateImageMeta
+      summary: 'Merkmale, Bildunterschrift, Gliederungsstelle, Labels und Kapitel eines Bildes ändern – den Vorschlag aus der Folie übernimmt die Redaktion hier (Berechtigung edit, F-20, F-25, ADR-095)'
+      tags: [Medien]
+      x-requirements: [NFR-79, NFR-82, NFR-100]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { title: { type: [string, 'null'] }, language: { type: [string, 'null'], pattern: '^[a-z]{2}(-[a-z]{2})?$' }, roles: { type: array, items: { type: string } }, divisions: { type: array, items: { type: string, enum: [car, van, all] } }, markets: { type: array, items: { type: string, pattern: '^[A-Z]{2}$' } }, release: { type: [string, 'null'] }, navLabelId: { type: [string, 'null'] }, outlineLabelId: { type: [string, 'null'], description: 'Punkt der Gesamtgliederung (label_group outline)' }, labelIds: { type: array, maxItems: 50, items: { type: string }, description: 'vollständige Liste der Labels (Domäne, Rolle, Gliederung …); der erste Gliederungs-Label wird Gliederungsstelle' }, chapterIds: { type: array, maxItems: 50, items: { type: string }, description: 'vollständige Liste der zugeordneten Kapitel' }, addLabelIds: { type: array, items: { type: string }, description: 'einzelne Labels hinzufügen (statt labelIds)' }, removeLabelIds: { type: array, items: { type: string } }, addChapterIds: { type: array, items: { type: string }, description: 'einzelne Kapitel zuordnen (statt chapterIds)' }, removeChapterIds: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Bild' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-archive/{mediaSha}/redaction:
+    get:
+      operationId: getImageRedaction
+      summary: 'Datenschutz im Bild (ADR-095): erkannte und manuelle Stellen einer Fassung, Schalter, Stand der Texterkennung'
+      tags: [Medien]
+      x-requirements: [NFR-99]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string }, description: 'genau diese Fassung (z. B. currentSha)' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ sha, available, status: none|done|unavailable|failed, error, enabled, regions: [{ id, x, y, w, h (relativ), kind, label (maskiert), source: ocr|manual, active }], active, redactedSha, detectedAt }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateImageRedaction
+      summary: 'Unkenntlichmachung an/aus (rückgängig), einzelne Stellen an/aus, manuelle Stellen hinzufügen oder entfernen; das Original bleibt unverändert (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-99]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { enabled: { type: boolean }, regions: { type: array, items: { type: object, required: [id, active], properties: { id: { type: string }, active: { type: boolean } } } }, add: { type: array, items: { type: object, required: [x, y, w, h], properties: { x: { type: number }, y: { type: number }, w: { type: number }, h: { type: number } } } }, remove: { type: array, items: { type: string } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Stand wie GET' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-archive/{mediaSha}/redaction/detect:
+    post:
+      operationId: detectImageRedaction
+      summary: 'Erkennung (erneut) ausführen: lokale Texterkennung mit Wortpositionen, Datenschutzprüfung je Zeile; manuelle Stellen bleiben (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-99]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Stand wie GET' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-archive/{mediaSha}/variants:
+    post:
+      operationId: linkImageVariant
+      summary: 'Bild mit einer Variante derselben Maske verknüpfen (F-22); Gruppen werden zusammengeführt (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-97]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [withSha], properties: { withSha: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Bild mit variantGroup und variants' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: unlinkImageVariant
+      summary: 'Bild aus seiner Variantengruppe lösen (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-97]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Bild' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /structure:
+    get:
+      operationId: getStructure
+      summary: 'Kapitelsteuerung (ADR-096): Kapitel und Unterkapitel der Quellen mit Kapitelanweisung und Version; history=true zeigt auch Abgelöstes; pipeline = Tickets in Bearbeitung (ADR-098)'
+      tags: [Kapitel]
+      x-requirements: [NFR-101, NFR-102]
+      x-extension: true
+      parameters:
+        - { name: history, in: query, required: false, schema: { type: string, enum: ['true', 'false'] } }
+        - { name: outline, in: query, required: false, schema: { type: string }, description: 'Kapitel einer Handbuch-Variante (familyId, ADR-097)' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chapters: [{ id, key, title, position, snippets, pipeline, instruction: { text, topics, excluded }, validFrom, validUntil, replacedBy, inHistory, subchapters: [...] }], summary: { chapters, subchapters, withInstruction } }' }
+  /structure/outlines:
+    get:
+      operationId: listStructureOutlines
+      summary: 'Handbuch-Varianten mit angelegten Kapiteln – deren Kapitel haben eine eigene Anweisung zusätzlich zu der der Quellkapitel (ADR-097, W-01)'
+      tags: [Kapitel]
+      x-requirements: [NFR-107]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ familyId, name, versionNo, chapters }] }' }
+  /structure/chapters:
+    post:
+      operationId: createStructureChapter
+      summary: 'Fehlendes Kapitel ergänzen – Schlüssel wie beim Import, später eingelesene Quellen mit gleicher Überschrift gehören dazu (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-101]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [title], properties: { afterId: { type: string, description: 'einordnen nach diesem Kapitel' }, title: { type: string, minLength: 3, maxLength: 160 }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release)' }, instruction: { type: [string, 'null'], maxLength: 2000, description: 'worauf es ankommt' }, topics: { type: array, maxItems: 30, items: { type: string }, description: 'wichtige Themen (müssen vorkommen)' }, excluded: { type: array, maxItems: 30, items: { type: string }, description: 'Themen, die nicht beschrieben werden' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Kapitel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /structure/chapters/{chapterId}:
+    patch:
+      operationId: updateStructureChapter
+      summary: 'Titel, Kapitelanweisung, Version und Detaillierung (Detaillevel) eines Kapitels ändern (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-101, NFR-102, NFR-116]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { title: { type: string, minLength: 3, maxLength: 160 }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release)' }, instruction: { type: [string, 'null'], maxLength: 2000, description: 'worauf es ankommt' }, topics: { type: array, maxItems: 30, items: { type: string }, description: 'wichtige Themen (müssen vorkommen)' }, excluded: { type: array, maxItems: 30, items: { type: string }, description: 'Themen, die nicht beschrieben werden' }, detailLevels: { type: [array, 'null'], minItems: 1, items: { type: string, enum: [basis, basis-plus, zusatz, intern, happy-path, edge, in-review] }, description: 'Detaillevel, die der Generator übernimmt (nur Kapitel; null = Standard ohne intern und in-review, ADR-100)' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Kapitel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /structure/chapters/{chapterId}/subchapters:
+    post:
+      operationId: createStructureSubchapter
+      summary: 'Fehlendes Unterkapitel ergänzen (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-101]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [title], properties: { title: { type: string, minLength: 3, maxLength: 160 }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release)' }, instruction: { type: [string, 'null'], maxLength: 2000, description: 'worauf es ankommt' }, topics: { type: array, maxItems: 30, items: { type: string }, description: 'wichtige Themen (müssen vorkommen)' }, excluded: { type: array, maxItems: 30, items: { type: string }, description: 'Themen, die nicht beschrieben werden' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Unterkapitel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /structure/subchapters/{subchapterId}:
+    patch:
+      operationId: updateStructureSubchapter
+      summary: 'Titel, Anweisung (ergänzt die des Kapitels) und Version eines Unterkapitels ändern (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-101, NFR-102]
+      x-extension: true
+      parameters: [{ name: subchapterId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { title: { type: string, minLength: 3, maxLength: 160 }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release)' }, instruction: { type: [string, 'null'], maxLength: 2000, description: 'worauf es ankommt' }, topics: { type: array, maxItems: 30, items: { type: string }, description: 'wichtige Themen (müssen vorkommen)' }, excluded: { type: array, maxItems: 30, items: { type: string }, description: 'Themen, die nicht beschrieben werden' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Unterkapitel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /chapters/{chapterId}/instruction:
+    get:
+      operationId: getChapterInstruction
+      summary: 'Gültige Kapitelanweisung (Werkstatt, Agenten): Kapitel und je Unterkapitel'
+      tags: [Kapitel]
+      x-requirements: [NFR-101]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chapterId, chapter: { text, topics, excluded }, subchapters: [{ id, title, instruction }] }' }
+  /structure/replace:
+    post:
+      operationId: replaceStructureItem
+      summary: 'Veraltete Funktion ablösen: Kapitel, Unterkapitel (Berechtigung edit) oder Label (admin) durch einen vorhandenen oder neuen Nachfolger; das Alte gilt bis zur Version des Neuen, kommt in die Historie und erscheint nicht mehr im Handbuch'
+      tags: [Kapitel]
+      x-requirements: [NFR-103]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [kind, id], properties: { kind: { type: string, enum: [chapter, subchapter, label] }, id: { type: string }, replacementId: { type: string }, newTitle: { type: string }, validFrom: { type: [string, 'null'], description: 'gültig ab des Nachfolgers = gültig bis des Alten' }, note: { type: [string, 'null'], maxLength: 500 }, moveAssignments: { type: boolean, description: 'nur Labels: Chunks, Fragen & Antworten und Bilder übertragen' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ replaced: { kind, id }, successor: { id, title }, moved, history }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /structure/history:
+    get:
+      operationId: listStructureHistory
+      summary: 'Historie abgelöster Funktionen (Art, Titel, gültig von–bis, Nachfolger, Hinweis, übertragene Zuordnungen)'
+      tags: [Kapitel]
+      x-requirements: [NFR-103]
+      x-extension: true
+      parameters: [{ name: restored, in: query, required: false, schema: { type: string, enum: ['true', 'false'] }, description: 'auch zurückgeholte Einträge' }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, kind, kindLabel, itemId, title, parentTitle, replacedBy, validFrom, validUntil, note, moved, createdBy, createdAt, restoredAt }] }' }
+  /structure/history/{historyId}/restore:
+    post:
+      operationId: restoreStructureItem
+      summary: 'Aus der Historie zurückholen (Ablösung rückgängig; Labels: Berechtigung admin, sonst edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-103]
+      x-extension: true
+      parameters: [{ name: historyId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /structure/instructions/export:
+    get:
+      operationId: exportChapterInstructions
+      summary: 'Kapitelanweisungen als JSON mit Markdown je Kapitel und Unterkapitel (format onescm-instructions) – für ANWEISUNG.md im Arbeitsordner'
+      tags: [Kapitel]
+      x-requirements: [NFR-101]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ format: onescm-instructions, chapters: [{ title, validFrom, instruction, markdown, subchapters }], variants: [{ familyId, name, chapters }] }' }
+  /work-areas:
+    get:
+      operationId: listWorkItems
+      summary: 'Pipeline, Backlog, Intern (ADR-098): Einträge eines Bereichs; Pipeline zusätzlich je Kapitel und Unterkapitel der aktuellen Gliederung'
+      tags: [Kapitel]
+      x-requirements: [NFR-108, NFR-109]
+      x-extension: true
+      parameters:
+        - { name: area, in: query, required: false, schema: { type: string, enum: [pipeline, backlog, intern] } }
+        - { name: topic, in: query, required: false, schema: { type: string, enum: [testing, reporting, systems, migration, rollout, other] }, description: 'nur Intern' }
+        - { name: chapterId, in: query, required: false, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, area, topic, origin, jiraKey, title, jiraStatus, stream, createdOn, productionDate, chapterId, chapterTitle, subchapterId, subchapterTitle, chapterSource, text, documented, state, stateLabel }], groups: [{ chapterId, chapterTitle, items, subchapters: [{ id, title, items }] }], unassigned, counts, topicCounts, outline, ready }' }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createWorkItem
+      summary: 'Eigenen Eintrag anlegen – Pipeline, Backlog oder Intern (mit Thema); personenbezogene Daten werden abgewiesen oder pseudonymisiert (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-108, NFR-109]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [area, title], properties: { area: { type: string, enum: [pipeline, backlog, intern] }, topic: { type: [string, 'null'], enum: [testing, reporting, systems, migration, rollout, other, null] }, title: { type: string, minLength: 3, maxLength: 200 }, jiraKey: { type: [string, 'null'] }, stream: { type: [string, 'null'], maxLength: 80 }, createdOn: { type: [string, 'null'], description: 'TT.MM.JJJJ oder JJJJ-MM-TT' }, productionDate: { type: [string, 'null'], description: 'TT.MM.JJJJ oder JJJJ-MM-TT' }, chapterId: { type: [string, 'null'] }, subchapterId: { type: [string, 'null'] }, text: { type: string, maxLength: 50000, description: 'Vorab-Dokumentation (Markdown)' }, pseudonymize: { type: boolean } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Eintrag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /work-areas/sync-jira:
+    post:
+      operationId: syncWorkItemsFromJira
+      summary: 'Eingelesene Jira-Tickets einordnen: offen → Backlog, in Bearbeitung oder Produktionsdatum in der Zukunft → Pipeline mit Kapitelvorschlag; produktiv → „übernehmen“, abgebrochen; Bugs ohne Eintrag (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-108]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ tickets, created, updated, moved, ready, cancelled, skipped, …Pipeline }' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /work-areas/export:
+    get:
+      operationId: exportWorkAreas
+      summary: 'Pipeline, Backlog und Intern als JSON mit Markdown je Eintrag (format onescm-work-areas) – für 09_Pipeline, 10_Backlog und 11_Intern im Arbeitsordner'
+      tags: [Kapitel]
+      x-requirements: [NFR-110]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ format: onescm-work-areas, pipeline: [...], backlog: [...], intern: [{ …, topicFolder }], topics }' }
+  /work-areas/{id}:
+    get:
+      operationId: getWorkItem
+      summary: 'Eintrag aus Pipeline, Backlog oder Intern'
+      tags: [Kapitel]
+      x-requirements: [NFR-108, NFR-109]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Eintrag' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateWorkItem
+      summary: 'Eintrag ändern oder verschieben (Bereich, Thema, Gliederung, Stream, Produktionsdatum, Dokumentation); state cancelled bzw. zurück auf open (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-108, NFR-109]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { area: { type: string }, topic: { type: [string, 'null'] }, title: { type: string }, stream: { type: [string, 'null'] }, createdOn: { type: [string, 'null'] }, productionDate: { type: [string, 'null'] }, chapterId: { type: [string, 'null'] }, subchapterId: { type: [string, 'null'] }, text: { type: string }, state: { type: string, enum: [cancelled, open] }, pseudonymize: { type: boolean } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Eintrag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteWorkItem
+      summary: 'Eigenen Eintrag löschen – Jira-Einträge und übernommene Einträge bleiben (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-109]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /work-areas/{id}/go-live:
+    post:
+      operationId: workItemGoLive
+      summary: 'Produktiv: Vorab-Dokumentation als Quelle des Kapitels einlesen (H1 Kapitel, H2 Unterkapitel, Evidenz unbestätigt); Eintrag bleibt als „übernommen“ (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-108]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ item, importId, importStatus }' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /image-clickpaths:
+    get:
+      operationId: listClickpaths
+      summary: 'Klickstrecken aus Screenshots (F-24)'
+      tags: [Medien]
+      x-requirements: [NFR-98]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, title, steps, perRow, baseSha, … }]' }
+    post:
+      operationId: createClickpath
+      summary: 'Klickstrecke aus Bildern des Archivs zeichnen (PNG mit Nummern, parallele Wege 3a/3b) und im Bildarchiv ablegen (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-98]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [title, steps], properties: { title: { type: string, minLength: 3, maxLength: 120 }, perRow: { type: integer, minimum: 2, maximum: 6, default: 4 }, steps: { type: array, minItems: 2, maxItems: 12, items: { type: object, properties: { alternatives: { type: array, minItems: 1, maxItems: 3, items: { type: object, required: [sha], properties: { sha: { type: string }, caption: { type: string, maxLength: 80 } } } } } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, title, steps, perRow, baseSha, alt, markdown, url, createdBy, createdAt, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /image-clickpaths/{clickpathId}/bpmn:
+    get:
+      operationId: getClickpathBpmn
+      summary: 'Klickstrecke als BPMN 2.0 mit Diagramm (ADR-106, W-07): Start, je Station eine Aufgabe, parallele Wege 3a/3b zwischen exklusivem Gateway und Zusammenführung, Ende'
+      tags: [Bilder]
+      x-requirements: [NFR-136]
+      x-extension: true
+      parameters: [{ name: clickpathId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'BPMN-XML', content: { application/xml: { schema: { type: string } } } }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-comparisons:
+    get:
+      operationId: listImageComparisons
+      summary: 'Vorher/Nachher-Belege (ADR-106, W-05), optional zu einem Bild (sha: alle Belege seiner Fassungen)'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      parameters: [{ name: sha, in: query, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, title, before: { sha, url, versionNo }, after, baseSha, reason, change, effect, ticket, renderedSha, markdown }]' }
+    post:
+      operationId: createImageComparison
+      summary: 'Beleg anlegen: Vorher- und Nachher-Bild (meist zwei Fassungen desselben Bildes) mit Anlass, Änderung, Wirkung und Ticket (Berechtigung edit)'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [beforeSha, afterSha], properties: { beforeSha: { type: string }, afterSha: { type: string }, title: { type: string, maxLength: 120 }, reason: { type: string, maxLength: 500 }, change: { type: string, maxLength: 500 }, effect: { type: string, maxLength: 500 }, ticket: { type: string, maxLength: 40 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Beleg' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-comparisons/{comparisonId}:
+    get:
+      operationId: getImageComparison
+      summary: 'Vorher/Nachher-Beleg'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      parameters: [{ name: comparisonId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Beleg' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateImageComparison
+      summary: 'Titel, Anlass, Änderung, Wirkung oder Ticket ändern (Berechtigung edit)'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      parameters: [{ name: comparisonId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { title: { type: string }, reason: { type: string }, change: { type: string }, effect: { type: string }, ticket: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Beleg' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteImageComparison
+      summary: 'Beleg löschen; eine erzeugte Gegenüberstellung bleibt im Archiv (Berechtigung edit)'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      parameters: [{ name: comparisonId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-comparisons/{comparisonId}/render:
+    post:
+      operationId: renderImageComparison
+      summary: 'Gegenüberstellung Vorher | Nachher mit Anlass, Änderung und Wirkung als PNG im Bildarchiv ablegen; erneut erzeugt = neue Fassung desselben Bildes (Berechtigung edit)'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      parameters: [{ name: comparisonId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Beleg mit renderedSha und markdown' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-clickpaths/{clickpathId}:
+    get:
+      operationId: getClickpath
+      summary: 'Klickstrecke mit Alternativtext und Markdown zum Einbinden'
+      tags: [Medien]
+      x-requirements: [NFR-98]
+      x-extension: true
+      parameters: [{ name: clickpathId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, title, steps, perRow, baseSha, alt, markdown, url, createdBy, createdAt, updatedBy, updatedAt }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: updateClickpath
+      summary: 'Klickstrecke ändern: neu zeichnen als neue Fassung desselben Bildes – Verweise in Kapiteln folgen (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-98]
+      x-extension: true
+      parameters: [{ name: clickpathId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { title: { type: string, minLength: 3, maxLength: 120 }, perRow: { type: integer, minimum: 2, maximum: 6, default: 4 }, steps: { type: array, minItems: 2, maxItems: 12, items: { type: object, properties: { alternatives: { type: array, minItems: 1, maxItems: 3, items: { type: object, required: [sha], properties: { sha: { type: string }, caption: { type: string, maxLength: 80 } } } } } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, title, steps, perRow, baseSha, alt, markdown, url, createdBy, createdAt, updatedBy, updatedAt }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteClickpath
+      summary: 'Definition löschen; das Bild bleibt im Archiv (Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-98]
+      x-extension: true
+      parameters: [{ name: clickpathId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-archive/{mediaSha}/versions:
+    post:
+      operationId: addImageVersion
+      summary: 'Neue Fassung hochladen (F-21): ersetzt das Bild überall, frühere Fassungen bleiben über ?original=1 abrufbar; hebt einen Platzhalter auf (multipart file, optional note; Berechtigung edit)'
+      tags: [Medien]
+      x-requirements: [NFR-79]
+      x-extension: true
+      parameters: [{ name: mediaSha, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary }, note: { type: string, maxLength: 300 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Bild mit allen Fassungen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+  /chapter-transitions:
+    get:
+      operationId: listChapterTransitions
+      summary: 'Gepflegte Übergänge „Weiter mit …“ (ADR-085, F-29)'
+      tags: [Kapitel]
+      x-requirements: [NFR-80]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ chapterId, explicit, text, nextChapterId, next: { chapterId, title } }]' }
+  /chapter-transitions/{chapterId}:
+    get:
+      operationId: getChapterTransition
+      summary: 'Übergang eines Kapitels; ohne Eintrag das nächste Kapitel derselben Gliederung'
+      tags: [Kapitel]
+      x-requirements: [NFR-80]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ chapterId, explicit, text, nextChapterId, next }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: setChapterTransition
+      summary: 'Übergangstext und optional ein anderes Folgekapitel setzen (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-80]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { nextChapterId: { type: [string, 'null'] }, text: { type: [string, 'null'], maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Übergang' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteChapterTransition
+      summary: 'Übergang entfernen – es gilt wieder das nächste Kapitel (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-80]
+      x-extension: true
+      parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Übergang (Standard)' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/media-tools:
+    get:
+      operationId: getMediaTools
+      summary: 'Lokale Werkzeuge (ADR-090, M6): ob Transkription, Standbilder und Texterkennung eingerichtet sind – ohne Befehle'
+      tags: [Metadaten]
+      x-requirements: [NFR-90, NFR-91]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ transcribe, ocr, stills } (jeweils boolean)' }
+  /metadata/headings/documents:
+    get:
+      operationId: listHeadingDocuments
+      summary: 'Quellen je Überschrift (ADR-087, M3): Dateien der aktuellen Revisionen mit Anzahl Überschriften und Chunks'
+      tags: [Metadaten]
+      x-requirements: [NFR-84]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ documentId, path, format, chunks, headings }]' }
+  /metadata/headings/documents/{documentId}:
+    get:
+      operationId: getHeadingTree
+      summary: 'Überschriftenbaum einer Datei mit Chunk-Vorschau und Fundstelle je Chunk'
+      tags: [Metadaten]
+      x-requirements: [NFR-84]
+      x-extension: true
+      parameters: [{ name: documentId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ documentId, path, format, chunks, tree: [{ title, level, chunks, children }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/headings/merged:
+    get:
+      operationId: listMergedHeadings
+      summary: 'Alle Quellen zusammengeführt je Überschrift (Nummerierung und Formatierung ignoriert); mehrfach vorkommende zuerst'
+      tags: [Metadaten]
+      x-requirements: [NFR-84]
+      x-extension: true
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: multi, in: query, schema: { type: boolean }, description: 'nur Überschriften aus mehreren Dateien' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, limit, offset, multiFiles, items: [{ key, title, files, chunks, sources: [{ documentId, path, format, headingPath, chunks }] }] }' }
+  /metadata/duplicates:
+    get:
+      operationId: listSectionDuplicates
+      summary: 'Dubletten über alle Formate je Abschnitt (ADR-088, M4): exakt gleich oder ab 85 % ähnlich, mit Entscheidung; Kennzahlen'
+      tags: [Metadaten]
+      x-requirements: [NFR-85]
+      x-extension: true
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [open, decided, all], default: open } }
+        - { name: crossFormat, in: query, schema: { type: boolean } }
+        - { name: minScore, in: query, schema: { type: number } }
+        - { name: q, in: query, schema: { type: string }, description: 'Teiltreffer in Pfad oder Überschrift' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, limit, offset, items: [{ id, score, kind, crossFormat, shared, a, b, decision }], summary: { sections, pairs, exact, near, crossFormat, open, decided, groups } }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /metadata/duplicates/groups:
+    get:
+      operationId: listSectionDuplicateGroups
+      summary: 'Gruppen offener Dubletten (über Paare verbunden), z. B. dieselbe Folie in PowerPoint, PDF und Word'
+      tags: [Metadaten]
+      x-requirements: [NFR-85]
+      x-extension: true
+      parameters: [{ name: crossFormat, in: query, schema: { type: boolean } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ sections, formats, pairs, maxScore }]' }
+  /metadata/duplicates/rebuild:
+    post:
+      operationId: rebuildSectionDuplicates
+      summary: 'Abschnitte und Paare des ganzen Bestands neu berechnen; Entscheidungen bleiben (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-85]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ sections, pairs }' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/duplicates/{duplicateId}:
+    get:
+      operationId: getSectionDuplicate
+      summary: 'Paar nebeneinander mit wortweisem Unterschied und den Chunks beider Seiten'
+      tags: [Metadaten]
+      x-requirements: [NFR-86]
+      x-extension: true
+      parameters: [{ name: duplicateId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ …Paar, textA, textB, diff: [{ op, text }], chunksA, chunksB }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/duplicates/{duplicateId}/decision:
+    put:
+      operationId: decideSectionDuplicate
+      summary: 'Führende Fassung (a | b), kein Duplikat oder zurücksetzen – gilt je Inhaltspaar und überlebt erneutes Einlesen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-86]
+      x-extension: true
+      parameters: [{ name: duplicateId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [decision], properties: { decision: { type: string, enum: [leading, not_duplicate, open] }, leading: { type: string, enum: [a, b] }, note: { type: [string, 'null'], maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Paar mit Entscheidung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/ask:
+    post:
+      operationId: askMetadataSources
+      summary: 'Frage an alle eingelesenen Quellen (ADR-089, M5; Suche v2 ADR-099): Morphologie, Abfrageerweiterung, BM25 + Vektor per RRF, Relevanzschwelle, MMR → Top 6 Belege; Antwort nur aus den Belegen, jeder Satz mit Beleg (KI mit Satzprüfung, sonst extraktiv; Berechtigung read)'
+      tags: [Metadaten]
+      x-requirements: [NFR-87, NFR-111, NFR-112]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, language: { type: string, enum: [de, en], default: de }, method: { type: string, enum: [v1, v2], default: v2, description: 'Suchverfahren (ADR-099)' }, filters: { type: object, properties: { format: { type: string, enum: [markdown, html, docx, pptx, pdf, mp4, subtitles, jira] }, documentId: { type: string }, heading: { type: string }, labelIds: { type: array, items: { type: string } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, question, filters, mode: llm | extractive | none, answer: [{ text, sources: [n] }], answerText, sources: [{ n, snippetId, part, parts, path, format, headingPath, locator, text, score }], notice, dropped, candidates, searched, retrieval: { method, expansions, unknownTerms, bestCoverage }, retrieved }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /metadata/qa/export:
+    get:
+      operationId: exportMetadataQa
+      summary: 'Gespeicherte Fragen und Antworten als CSV (Semikolon, UTF-8 mit BOM), Excel oder JSON – Filter wie in der Liste'
+      tags: [Metadaten]
+      x-requirements: [NFR-88]
+      x-extension: true
+      parameters:
+        - { name: format, in: query, schema: { type: string, enum: [csv, xlsx, json], default: csv } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: labels, in: query, schema: { type: string } }
+        - { name: language, in: query, schema: { type: string, enum: [de, en] } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /metadata/qa/{qaId}/reask:
+    post:
+      operationId: reaskMetadataQa
+      summary: 'Gespeicherte Frage im gleichen Rahmen erneut stellen und mit dem gespeicherten Stand vergleichen (Belege neu, entfallen, gleich; Antwort wortweise)'
+      tags: [Metadaten]
+      x-requirements: [NFR-88]
+      x-extension: true
+      parameters: [{ name: qaId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ qaId, saved: { answer, sources, savedAt }, current, changes: { sourcesAdded, sourcesRemoved, sourcesKept, answerChanged, diff } }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/surveys:
+    get:
+      operationId: listSurveys
+      summary: 'Expertenbefragungen (F-16) mit Zahl der Fragen, Antworten und Übernahmen'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, title, audience, origin, status, questions, answered, adopted, createdAt }]' }
+    post:
+      operationId: createSurvey
+      summary: 'Befragung anlegen: Fragen von Hand oder aus einem Fragenkatalog (ohne Aussage) bzw. Prüflauf (ohne Antwort); Antwortoptionen, Zielgruppe (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [title], properties: { title: { type: string }, audience: { type: string }, options: { type: array, items: { type: string } }, items: { type: array, items: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, context: { type: string }, options: { type: array, items: { type: string }, maxItems: 10 } } } }, from: { type: object, properties: { catalogId: { type: string }, evalRunId: { type: string } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Befragung mit Fragen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/surveys/{surveyId}:
+    get:
+      operationId: getSurvey
+      summary: 'Befragung mit Fragen, Optionen, Antworten und Status'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, title, audience, options, status, items: [{ id, position, question, context, options, choice, answerText, answeredBy, answeredAt, qaId, status }], summary }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: setSurveyStatus
+      summary: 'Befragung abschließen bzw. wieder öffnen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [status], properties: { status: { type: string, enum: [open, closed] } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Befragung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteSurvey
+      summary: 'Befragung mit Antworten löschen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/surveys/{surveyId}/items:
+    post:
+      operationId: addSurveyItem
+      summary: 'Frage ergänzen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, context: { type: string }, options: { type: array, items: { type: string }, maxItems: 10 } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Befragung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/surveys/{surveyId}/export:
+    get:
+      operationId: exportSurvey
+      summary: 'Befragung als Excel (Auswahlliste je Frage) oder CSV für Fachleute ohne App-Zugang'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [xlsx, csv], default: xlsx } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/surveys/{surveyId}/answers:
+    post:
+      operationId: importSurveyAnswers
+      summary: 'Ausgefüllte Excel- oder CSV-Datei einlesen: Zuordnung über ID bzw. Nr., Option geprüft (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: surveyId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ updated, skipped, errors: [{ row, message }], survey }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/survey-items/{itemId}/answer:
+    put:
+      operationId: answerSurveyItem
+      summary: 'Antwort einer Fachperson: Option und/oder Freitext; leer setzt zurück (Berechtigung read)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { choice: { type: [string, 'null'] }, text: { type: [string, 'null'] } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Frage mit Antwort' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/survey-items/{itemId}/qa:
+    post:
+      operationId: adoptSurveyItem
+      summary: 'Antwort als Frage & Antwort übernehmen – mit Label „Prüfen“, ohne Quellenbeleg (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-95]
+      x-extension: true
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { labelIds: { type: array, items: { type: string } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Frage & Antwort' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-sets:
+    get:
+      operationId: listEvalSets
+      summary: 'Testfragensätze (Antwortqualität, ADR-091) mit Anzahl Fragen, Prüfläufen und letztem Lauf'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, name, origin, fileName, questions, runs, lastRun, createdAt }]' }
+    post:
+      operationId: createEvalSet
+      summary: 'Testfragensatz anlegen: JSON { name, items?, fromQa?: { labelIds? } } oder multipart „file“ (CSV, Excel, JSON) mit Spalten Frage, Erwartete Quelle, Erwartete Überschrift, Stichworte, Keine Antwort (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { type: object, required: [name], properties: { name: { type: string }, items: { type: array, items: { type: object, properties: { question: { type: string, minLength: 3, maxLength: 500 }, expected: { type: array, items: { oneOf: [{ type: string }, { type: object, properties: { path: { type: string }, heading: { type: string } } }] } }, keywords: { type: array, items: { type: string } }, expectNoAnswer: { type: boolean }, note: { type: string } } } }, fromQa: { type: object, properties: { labelIds: { type: array, items: { type: string } } } } } } }
+          multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary }, name: { type: string } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Testfragensatz mit Fragen und Läufen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-sets/{setId}:
+    get:
+      operationId: getEvalSet
+      summary: 'Testfragensatz mit Fragen und den letzten 50 Prüfläufen'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, name, origin, items: [{ id, position, question, expected, keywords, expectNoAnswer, note, qaId }], runs }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteEvalSet
+      summary: 'Testfragensatz mit allen Prüfläufen löschen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-sets/{setId}/items:
+    post:
+      operationId: addEvalItem
+      summary: 'Testfrage ergänzen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { question: { type: string, minLength: 3, maxLength: 500 }, expected: { type: array, items: { oneOf: [{ type: string }, { type: object, properties: { path: { type: string }, heading: { type: string } } }] } }, keywords: { type: array, items: { type: string } }, expectNoAnswer: { type: boolean }, note: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Testfragensatz' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-sets/{setId}/runs:
+    post:
+      operationId: runEval
+      summary: 'Prüflauf: jede Testfrage wie eine Frage an alle Quellen stellen und bewerten – Kennzahlen, Ergebnis je Frage, Vergleich mit dem vorigen Lauf; nicht im Frageprotokoll (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93, NFR-113]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { method: { type: string, enum: [v1, v2], default: v2, description: 'Suchverfahren (ADR-099)' } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, metrics: { questions, passed, passRate, hitAt1, hitAt3, hitAt6, mrr, ndcg6, citedRate, answeredRate, keywordCoverage, noAnswerAccuracy, avgMs }, config, results, compare }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-items/{itemId}:
+    patch:
+      operationId: updateEvalItem
+      summary: 'Testfrage ändern (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { question: { type: string, minLength: 3, maxLength: 500 }, expected: { type: array, items: { oneOf: [{ type: string }, { type: object, properties: { path: { type: string }, heading: { type: string } } }] } }, keywords: { type: array, items: { type: string } }, expectNoAnswer: { type: boolean }, note: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Testfrage' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteEvalItem
+      summary: 'Testfrage entfernen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'entfernt' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-runs/{runId}:
+    get:
+      operationId: getEvalRun
+      summary: 'Prüflauf mit Kennzahlen, Ergebnis je Frage (Rang, Beleg, Stichworte, Antwort, gefundene Stellen) und Vergleich mit dem vorigen Lauf'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: runId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, setId, metrics, config, results, compare: { previousRunId, delta, improved, regressed } | null }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/eval-runs/{runId}/export:
+    get:
+      operationId: exportEvalRun
+      summary: 'Prüflauf exportieren: Excel (Kennzahlen und Ergebnisse), CSV oder JSON'
+      tags: [Metadaten]
+      x-requirements: [NFR-92, NFR-93]
+      x-extension: true
+      parameters: [{ name: runId, in: path, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [xlsx, csv, json], default: xlsx } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/question-sets:
+    get:
+      operationId: listQuestionSets
+      summary: 'Fragenkataloge (Rückfragen, ADR-089) mit Anzahl Fragen und beantworteten'
+      tags: [Metadaten]
+      x-requirements: [NFR-89]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, name, fileName, questions, answered, createdBy, createdAt, answeredAt }]' }
+    post:
+      operationId: importQuestionSet
+      summary: 'Fragenkatalog einlesen: multipart „file“ (HTML-App, CSV, JSON, Text) oder JSON { text, name } – Fragen mit Kapitel, ohne Doppelungen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-89]
+      x-extension: true
+      requestBody:
+        required: true
+        content:
+          multipart/form-data: { schema: { type: object, required: [file], properties: { file: { type: string, format: binary }, name: { type: string } } } }
+          application/json: { schema: { type: object, required: [text], properties: { text: { type: string }, name: { type: string }, fileName: { type: string } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Katalog mit Fragen und Kennzahlen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /metadata/question-sets/{setId}:
+    get:
+      operationId: getQuestionSet
+      summary: 'Fragenkatalog mit allen Fragen, Status, Antworten und Belegen'
+      tags: [Metadaten]
+      x-requirements: [NFR-89]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, name, items: [{ id, position, chapter, question, status, mode, answer, answerText, sources, notice, qaId }], summary }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteQuestionSet
+      summary: 'Fragenkatalog mit Antworten löschen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-89]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/question-sets/{setId}/answer:
+    post:
+      operationId: answerQuestionSet
+      summary: 'Alle (bzw. nur offene) Fragen mit Belegen aus den Quellen beantworten (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-87, NFR-89]
+      x-extension: true
+      parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { onlyOpen: { type: boolean }, filters: { type: object } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Katalog mit Antworten' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/question-sets/{setId}/export:
+    get:
+      operationId: exportQuestionSet
+      summary: 'Fragenkatalog mit Antworten und Belegen als Excel, CSV oder JSON'
+      tags: [Metadaten]
+      x-requirements: [NFR-89]
+      x-extension: true
+      parameters:
+        - { name: setId, in: path, required: true, schema: { type: string } }
+        - { name: format, in: query, schema: { type: string, enum: [xlsx, csv, json], default: xlsx } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /metadata/question-items/{itemId}/qa:
+    post:
+      operationId: questionItemToQa
+      summary: 'Beantwortete Frage aus dem Katalog als Frage & Antwort mit Belegen speichern (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-88, NFR-89]
+      x-extension: true
+      parameters: [{ name: itemId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { labelIds: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Frage & Antwort' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /triage/runs:
+    get:
+      operationId: listTriageRuns
+      summary: 'Läufe des Agenten TRIAGE (neueste zuerst, ADR-100)'
+      tags: [Metadaten]
+      x-requirements: [NFR-114]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, scope, status, stats, startedBy, startedAt, finishedAt }] }' }
+    post:
+      operationId: startTriageRun
+      summary: 'TRIAGE starten: alle Chunks oder nur Chunks ohne vollständige Pflichtlabels (Berechtigung edit); läuft auch automatisch nach jedem Einlesen (Einstellung triage.auto)'
+      tags: [Metadaten]
+      x-requirements: [NFR-114, NFR-115]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { scope: { type: string, enum: [all, missing] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Lauf mit stats: chunks, labels, keptManual, kept, move, newSubchapter, unassigned, remembered, review, createdLabels' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /triage/runs/{id}:
+    get:
+      operationId: getTriageRun
+      summary: 'Ein Lauf des Agenten TRIAGE'
+      tags: [Metadaten]
+      x-requirements: [NFR-114]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Lauf' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /triage/results:
+    get:
+      operationId: listTriageResults
+      summary: 'Ergebnisse je Chunk: gesetzte Pflichtlabels mit Sicherheit und Begründung, Zuordnung (kept, move, new_subchapter, unassigned) vorher → nachher, zu prüfen, Status'
+      tags: [Metadaten]
+      x-requirements: [NFR-114, NFR-115]
+      x-extension: true
+      parameters: [{ name: runId, in: query, schema: { type: string } }, { name: status, in: query, schema: { type: string, enum: [applied, proposed, accepted, rejected] } }, { name: review, in: query, schema: { type: boolean } }, { name: placement, in: query, schema: { type: string } }, { name: limit, in: query, schema: { type: integer, maximum: 500 } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, snippetId, text, path, headingPath, labels, placement, confidence, review, reasons, status, before, target }] }' }
+  /triage/results/{id}/decision:
+    post:
+      operationId: decideTriageResult
+      summary: 'Vorschlag übernehmen (Chunk wechselt Kapitel/Unterkapitel, neues Unterkapitel mit Kennung „neu“ wird angelegt) oder verwerfen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-115]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [decision], properties: { decision: { type: string, enum: [accept, reject] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Ergebnis' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /triage/accept-all:
+    post:
+      operationId: acceptAllTriage
+      summary: 'Alle offenen Vorschläge übernehmen, optional je Lauf oder Art (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-115]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { runId: { type: string }, placement: { type: string, enum: [move, new_subchapter] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ accepted }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /triage/new-subchapters:
+    get:
+      operationId: listTriageNewSubchapters
+      summary: 'Von TRIAGE angelegte Unterkapitel mit Kennung „neu“, noch nicht bestätigt'
+      tags: [Metadaten]
+      x-requirements: [NFR-115]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, title, chapterId, chapterTitle, createdAt, chunks }] }' }
+  /triage/new-subchapters/{id}/confirm:
+    post:
+      operationId: confirmTriageNewSubchapter
+      summary: 'Neues Unterkapitel in die Gliederung aufnehmen – Kennung „neu“ entfällt (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-115]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Unterkapitel' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /triage/dashboard:
+    get:
+      operationId: contentDashboard
+      summary: 'Inhalts-Dashboard: Chunks, Wörter, Labels je Kapitel und Domäne, Anteil je Pflichtgruppe, Detaillevel, offene Vorschläge, Unterkapitel „neu“'
+      tags: [Metadaten]
+      x-requirements: [NFR-116]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ totals, requiredGroups, chapters, domains, detailLevels, newSubchapters, openProposals }' }
+  /agents:
+    get:
+      operationId: listAgents
+      summary: 'Alle Agenten (ORCHESTRATOR, TRIAGE, GOAL und die Agenten des Arbeitsordners) mit offenen Aufgaben und Entscheidungen'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ code, name, purpose, inApp, folder, link, openTasks, openDecisions }] }' }
+  /agents/export:
+    get:
+      operationId: exportAgents
+      summary: 'Aufgaben, Entscheidungen und Ziel-Abgleich als Markdown (format onescm-agents) – für 00_Dokumentation/Agenten und 12_Goal im Arbeitsordner'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ format: onescm-agents, files: { tasks, decisions, goal } }' }
+  /agents/tasks:
+    get:
+      operationId: listAgentTasks
+      summary: 'Aufgaben (offene Todos) der Agenten'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      parameters: [{ name: agent, in: query, schema: { type: string } }, { name: status, in: query, schema: { type: string, enum: [active, open, in_progress, done, dropped] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, agent, title, detail, status, priority, source, key, link }] }' }
+    post:
+      operationId: createAgentTask
+      summary: 'Aufgabe von Hand anlegen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [agent, title], properties: { agent: { type: string }, title: { type: string, minLength: 3, maxLength: 200 }, detail: { type: string }, priority: { type: integer, enum: [1, 2, 3] }, status: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Aufgabe' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /agents/tasks/{id}:
+    patch:
+      operationId: updateAgentTask
+      summary: 'Aufgabe ändern, z. B. Status (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { agent: { type: string }, title: { type: string }, detail: { type: [string, 'null'] }, priority: { type: integer, enum: [1, 2, 3] }, status: { type: string, enum: [open, in_progress, done, dropped] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Aufgabe' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteAgentTask
+      summary: 'Aufgabe löschen – nur von Hand angelegte (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /agents/decisions:
+    get:
+      operationId: listAgentDecisions
+      summary: 'Entscheidungen der Agenten (offene zuerst)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      parameters: [{ name: status, in: query, schema: { type: string, enum: [open, decided, dropped] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, agent, question, context, options, status, decision, note, key, executedAt }] }' }
+    post:
+      operationId: createAgentDecision
+      summary: 'Entscheidung vorlegen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [question], properties: { agent: { type: string }, question: { type: string }, context: { type: string }, options: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Entscheidung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /agents/decisions/{id}/decide:
+    post:
+      operationId: decideAgentDecision
+      summary: 'Entscheidung treffen oder verwerfen – nur ein Mensch mit Berechtigung decide; der Orchestrator führt sie beim nächsten Plan aus'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { decision: { type: string }, note: { type: string }, drop: { type: boolean }, free: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Entscheidung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /agents/orchestrator/plan:
+    post:
+      operationId: orchestratorPlan
+      summary: 'ORCHESTRATOR: getroffene Entscheidungen ausführen, Plan aus dem Stand erstellen bzw. verfeinern – Aufgaben ohne Doppelungen, Entscheidungen vorlegen, erledigte schließen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ plannedAt, created, updated, reopened, closed, decisionsCreated, executed, plan, tasks, decisions }' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /agents/goal:
+    get:
+      operationId: getAgentGoal
+      summary: 'GOAL: Ziel, Kriterien mit Sollwert und letzter Abgleich'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ goal, criteria, lastRun }' }
+    put:
+      operationId: updateAgentGoal
+      summary: 'Ziel und Sollwerte ändern (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { goal: { type: string, minLength: 10, maxLength: 4000 }, criteria: { type: array, items: { type: object, properties: { code: { type: string }, target: { type: number }, enabled: { type: boolean } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Ziel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /agents/goal/runs:
+    post:
+      operationId: runAgentGoal
+      summary: 'GOAL: Stand aller Funktionen gegen das Ziel – Ist/Soll je Kriterium, Empfehlung, zuständiger Agent; nicht erfüllte Kriterien werden Aufgaben (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, results, score, createdAt }' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /translation-memory:
+    get:
+      operationId: listTranslationMemory
+      summary: 'Übersetzungsspeicher: Segmente je Sprachpaar mit Herkunft, Status (freigegeben, zu prüfen) und Nutzung (ADR-101, U-01)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: language, in: query, schema: { type: string } }, { name: q, in: query, schema: { type: string } }, { name: status, in: query, schema: { type: string, enum: [approved, review] } }, { name: limit, in: query, schema: { type: integer } }, { name: offset, in: query, schema: { type: integer } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, items, counts }' }
+  /translation-memory/export:
+    get:
+      operationId: exportTranslationMemory
+      summary: 'Speicher als CSV (wie SPEICHER.csv im Arbeitsordner: Nr;Deutsch;<Sprache>;Datei;Ausgangsversion;Datum;Status) oder Excel'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: language, in: query, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [csv, xlsx] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /translation-memory/import:
+    post:
+      operationId: importTranslationMemory
+      summary: 'Speicher aus CSV/Excel einlesen; Status „freigegeben“ bleibt freigegeben, sonst „zu prüfen“ (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: language, in: query, required: true, schema: { type: string } }, { name: apply, in: query, schema: { type: boolean }, description: 'true übernimmt, sonst Vorschau' }]
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, properties: { file: { type: string, format: binary } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ rows, usable, approved, applied, added, updated }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /translation-memory/{id}:
+    patch:
+      operationId: updateTranslationMemory
+      summary: 'Segment ändern oder freigeben (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { targetText: { type: string }, status: { type: string, enum: [approved, review] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Segment' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteTranslationMemory
+      summary: 'Segment löschen (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /translation-blocks/{id}/memory:
+    get:
+      operationId: translationBlockMemory
+      summary: 'Treffer im Speicher für einen Absatz: 100 % und ähnliche ab 75 %'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ blockId, matches: [{ id, sourceText, targetText, score, status, origin, originRef }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /translation-glossary:
+    get:
+      operationId: translationGlossary
+      summary: 'Glossar je Sprache: feste Übersetzung je Begriff, geerbt aus der Grundsprache, „nicht übersetzen“ (U-04)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-119]
+      x-extension: true
+      parameters: [{ name: language, in: query, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ language, items: [{ termId, term, avoid, definition, translation, inherited, keepUntranslated, status }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /translation-glossary/export:
+    get:
+      operationId: exportTranslationGlossary
+      summary: 'Glossar als CSV (wie GLOSSAR.csv: Deutsch;<Sprache>;Kontext;Status;Quelle) oder Excel'
+      tags: [Übersetzung]
+      x-requirements: [NFR-119]
+      x-extension: true
+      parameters: [{ name: language, in: query, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [csv, xlsx] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /translation-glossary/import:
+    post:
+      operationId: importTranslationGlossary
+      summary: 'Glossar vom Übersetzer zurück: feste Übersetzungen setzen, unbekannte Begriffe melden (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-119]
+      x-extension: true
+      parameters: [{ name: language, in: query, required: true, schema: { type: string } }, { name: apply, in: query, schema: { type: boolean }, description: 'true übernimmt, sonst Vorschau' }]
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, properties: { file: { type: string, format: binary } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ rows, changes, unknown, applied }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /translations/{translationId}/file:
+    get:
+      operationId: exportTranslationFile
+      summary: 'Übersetzung für das Büro: XLIFF 1.2 (trans-unit je Absatz) oder Excel (U-05)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-119]
+      x-extension: true
+      parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [xlf, xlsx] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: importTranslationFile
+      summary: 'Rückimport XLIFF 1.2 oder Excel: nur eigene Absätze mit unverändertem deutschen Text, jede Übersetzung geprüft (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-119]
+      x-extension: true
+      parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }, { name: apply, in: query, schema: { type: boolean }, description: 'true übernimmt, sonst Vorschau' }]
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, properties: { file: { type: string, format: binary } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ units, updated, unchanged, empty, unknown, sourceChanged, withIssues, results, applied }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+  /translations/{translationId}/reviews:
+    get:
+      operationId: listTranslationReviews
+      summary: 'Runden des Länderreviews mit MQM-Fehlern und Punkten je 1 000 Wörter (U-03)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: requestTranslationReview
+      summary: 'Länderreview anfordern: Prüferin bzw. Prüfer und Markt (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [reviewer], properties: { reviewer: { type: string }, market: { type: string, pattern: '^[A-Za-z]{2}$' } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Review' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /translation-reviews/{id}/errors:
+    post:
+      operationId: addTranslationReviewError
+      summary: 'MQM-Fehler erfassen – nur die zugewiesene Person oder Administration'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [category, severity, note], properties: { blockId: { type: string }, category: { type: string, enum: [accuracy, fluency, terminology, style, locale, design] }, severity: { type: string, enum: [minor, major, critical] }, note: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Review' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /translation-reviews/{id}/errors/{errorId}:
+    delete:
+      operationId: removeTranslationReviewError
+      summary: 'MQM-Fehler entfernen'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { name: errorId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Review' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /translation-reviews/{id}/decision:
+    post:
+      operationId: decideTranslationReview
+      summary: 'Freigabe durch das Land (bis 5 MQM-Punkte je 1 000 Wörter) oder „zurück an Übersetzung“'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [decision], properties: { decision: { type: string, enum: [approve, return] }, comment: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Review' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /translations/{translationId}/backcheck:
+    post:
+      operationId: translationBackcheck
+      summary: 'Rückübersetzung einer Stichprobe (10 %) der Sicherheitshinweise ins Deutsche mit Vergleich zur Quelle (U-06, Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ candidates, checked, passed, failed, sample }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /release-letters/{id}/translate:
+    post:
+      operationId: translateReleaseLetter
+      summary: 'Releaseletter DE↔EN übersetzen: Speicher zuerst, sonst KI je Zeile; neuer Entwurf mit Prüfbefunden je Zeile (U-09, Berechtigung edit)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-122]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, fromMemory, machine, issues }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '502': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }

@@ -5,7 +5,9 @@ import mammoth from 'mammoth';
 import TurndownService from 'turndown';
 import { escapeAlt } from './media.js';
 
-export const CONVERTIBLE: Record<string, 'html' | 'docx'> = { '.html': 'html', '.htm': 'html', '.docx': 'docx' };
+export const CONVERTIBLE: Record<string, 'html' | 'docx' | 'pptx' | 'pdf' | 'mp4' | 'vtt' | 'srt'> = {
+  '.html': 'html', '.htm': 'html', '.docx': 'docx', '.pptx': 'pptx', '.pdf': 'pdf', '.mp4': 'mp4', '.vtt': 'vtt', '.srt': 'srt',
+};
 
 export interface Converted {
   markdown: string;
@@ -144,4 +146,36 @@ export async function docxToMarkdown(data: Buffer, fallbackTitle: string, maxUnc
   const html = hasH1 ? res.value : `<h1>${fallbackTitle.replace(/</g, '&lt;')}</h1>${shiftHeadings(res.value, 2)}`;
   const markdown = tidy(turndown().turndown(html));
   return { markdown, warnings };
+}
+
+/** Anker einer Überschrift wie in üblichen Markdown-Darstellungen („3.2 Verträge ändern“ → „32-vertrage-andern“) */
+export const headingSlug = (title: string) => title.toLocaleLowerCase('de').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss')
+  .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+/** Kennungen der Überschriften im HTML (Confluence: `<h2 id="…">`), nach normiertem Überschriftentext */
+export function htmlHeadingIds(html: string): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const m of html.matchAll(/<h([1-6])\b[^>]*\sid=["']([^"']+)["'][^>]*>([\s\S]*?)<\/h\1>/gi)) {
+    const text = decodeEntities(m[3].replace(/<[^>]+>/g, '')).replace(/\s+/g, ' ').trim();
+    if (text && !out.has(text)) out.set(text, m[2]);
+  }
+  return out;
+}
+
+/**
+ * Fundstelle je Abschnitt (ADR-086): ab jeder Überschrift gilt ihr Anker – aus dem HTML, sonst aus dem Text.
+ * Überschriften in Codeblöcken zählen nicht.
+ */
+export function headingLocators(markdown: string, ids: Map<string, string> = new Map()) {
+  const out: { line: number; locator: { anchor: string } }[] = [];
+  let fence = false;
+  markdown.split('\n').forEach((l, i) => {
+    if (/^\s*(```|~~~)/.test(l)) fence = !fence;
+    const m = fence ? null : /^#{1,6}\s+(.+?)\s*#*\s*$/.exec(l);
+    if (!m) return;
+    const title = m[1].replace(/\\([\\`*_{}[\]()#+.!-])/g, '$1');
+    const anchor = ids.get(title) ?? headingSlug(title);
+    if (anchor) out.push({ line: i + 1, locator: { anchor } });
+  });
+  return out;
 }

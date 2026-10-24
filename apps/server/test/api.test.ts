@@ -104,7 +104,7 @@ describe('Import (US-001, US-002)', () => {
   });
 
   it('[T-103] unzulässiger Dateityp liefert application/problem+json', async () => {
-    const res = await upload('handbuch.pdf', Buffer.from('%PDF'));
+    const res = await upload('handbuch.exe', Buffer.from('MZ'));
     expect(res.status).toBe(415);
     expect(res.headers['content-type']).toContain('application/problem+json');
     expect(res.json).toMatchObject({ status: 415, title: 'Unsupported Media Type' });

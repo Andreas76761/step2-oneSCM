@@ -161,6 +161,255 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.39 Stand nach Etappe 37 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Fragen über alle Quellen mit hybrider Suche, Filtern und Belegen je Satz (M5, NFR-87) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
+| Speichern mit Rahmen, erneut fragen mit Vergleich, Export CSV/Excel/JSON (NFR-88) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
+| Rückfragen: Fragenkatalog einlesen und mit Belegen beantworten (NFR-89) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
+| Offen | Etappen M6 (Video, OCR) und M7 (Antwortqualität) |
+
+## 1.40 Stand nach Etappe 38 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Untertitel und Video mit Zeitmarke je Absatz, Text aus Untertiteln oder lokaler Transkription (M6, NFR-90) | ✅ ([ADR-090](adr/ADR-090-video-untertitel-ocr.md)) |
+| Standbilder bei Änderung mit rotem Rahmen (F-26) und Texterkennung gescannter PDF-Seiten, nur lokale Werkzeuge (NFR-91) | ✅ ([ADR-090](adr/ADR-090-video-untertitel-ocr.md)) |
+| Offen | Etappe M7 (Antwortqualität); lokale Werkzeuge (whisper.cpp, Tesseract, ffmpeg) im Betrieb einrichten |
+
+## 1.41 Stand nach Etappe 39 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Testfragensätze mit erwarteten Quellen, Stichworten und Lückenfragen (M7, NFR-92) | ✅ ([ADR-091](adr/ADR-091-antwortqualitaet.md)) |
+| Prüfläufe mit Trefferquote, MRR, Beleg, Lücken richtig, Vergleich und Export (NFR-93) | ✅ ([ADR-091](adr/ADR-091-antwortqualitaet.md)) |
+| Offen | Plan M1–M7 abgeschlossen; Testfragen aus Wissens-Check und Lückenanalyse (D-08) einlesen und erste Prüfläufe mit echten Quellen; lokale Werkzeuge im Betrieb einrichten |
+
+## 1.42 Stand nach Etappe 40 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Punktmodell Muss/Soll im Anleitungs-Check, „alle Muss-Punkte“ als Freigabebedingung (F-08, NFR-94) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
+| Expertenbefragung zu Wissenslücken mit Excel hin und zurück, Übernahme mit Label „Prüfen“ (F-16, NFR-95) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
+| Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
+| Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
+
+## 1.56 Stand nach Etappe 54 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Textbausteine mit Fassungen, Verwendung, Aktualisieren in Entwürfen, Kandidaten aus wiederkehrenden Absätzen (W-11, NFR-138) | ✅ ([ADR-107](adr/ADR-107-textbausteine-uebersicht.md)) |
+| Übersicht oneSCM_Metadaten mit Zwischenspeicher (NFR-139, Lasttest Etappe 49) | ✅ |
+| Offen – Entscheidung des Auftraggebers | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09 |
+
+## 1.55 Stand nach Etappe 53 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Vorher/Nachher-Belege mit Schieberegler, Anlass/Änderung/Wirkung, Gegenüberstellung im Archiv (W-05, NFR-135) | ✅ ([ADR-106](adr/ADR-106-vorher-nachher-pptx-zwischenbilder.md)) |
+| Ausgabe als PowerPoint, Klickstrecke als BPMN 2.0 mit Diagramm (W-07, NFR-136) | ✅ |
+| Zwischenbilder kurzer Zustände aus Videos (W-10, NFR-137) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; W-11 Textbausteine (später); schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
+## 1.54 Stand nach Etappe 52 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Textvarianten je Kapitel: Endanwender, Fachtext, Kurzfassung (~¼), Exportprofil „Kurzfassung“ (S-05, NFR-133) | ✅ ([ADR-105](adr/ADR-105-textvarianten-pruefprofile.md)) |
+| Vier Prüferprofile fachlich, Redaktion, Compliance, Endanwender mit Wert, Ampel, Funden und optional lokalem KI-Dienst (W-12, NFR-134) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; optional W-05, W-07, W-10; schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
+## 1.53 Stand nach Etappe 51 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Word-Prüffassung mit „Fertig, wenn …“ exportieren und zurücklesen, Abweichungen als Vorschläge (W-06, NFR-130) | ✅ ([ADR-104](adr/ADR-104-aenderungsvorschlaege-word-lektorat.md)) |
+| KI-Lektorat je Kapitel mit Wortvergleich, Übernahme je Vorschlag oder je Kapitel (G-07, NFR-131) | ✅ |
+| Interne Kommentare nie im Export, Drei-Spalten-Ansicht Stand – Vorschlag – Neu (W-08, NFR-132) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
+## 1.52 Stand nach Etappe 50 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Plausibilität Text ↔ Quellen je Aussage mit Wert 0–100 (W-02, NFR-127) | ✅ ([ADR-103](adr/ADR-103-kapitelbewertung-fehlerliste.md)) |
+| Kapitelbewertung mit fünf Kriterien und Ampel, Übersicht (S-07, NFR-128) | ✅ |
+| Fehlerliste in der App mit Abgleich FEHLERLISTE.csv (G-05, NFR-129) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
+## 1.51 Stand nach Etappe 49 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Tonalität je Produktart und Rolle, Prüfregel „Tonalität“, Ton in den KI-Vorschlägen (S-02, NFR-123) | ✅ ([ADR-102](adr/ADR-102-tonalitaet-tickets-releasevergleich.md)) |
+| Ticket-Einstufung genehmigt / in Prüfung / intern / Background, ohne interne Tickets in Kapiteln (W-03, NFR-124) | ✅ |
+| Releaseletter-Entwurf aus dem Projektvergleich zweier Handbuch-Releases (W-04, NFR-125) | ✅ |
+| Zukunfts-Inhalte in Export und Release ausgeblendet (W-09, NFR-126) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Zukunfts-Inhalte je Unterkapitel; Schreibweise offener Begriffe (S-04) |
+
+## 1.50 Stand nach Etappe 48 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Übersetzungsspeicher mit 100 % und ähnlichen Treffern, SPEICHER.csv hin und zurück (U-01, NFR-118) | ✅ ([ADR-101](adr/ADR-101-uebersetzung.md)) |
+| Weitere Prüfungen, Glossar je Sprache, XLIFF 1.2 und Excel (U-02, U-04, U-05, NFR-119) | ✅ |
+| Länderreview mit MQM, Rückübersetzung der Sicherheitshinweise (U-03, U-06, NFR-120) | ✅ |
+| de-CH und fr-CH, Rahmentexte je Sprache, Hinweis auf Bildvarianten (U-07, U-08, U-10, NFR-121) | ✅ |
+| Releaseletter DE↔EN (U-09, NFR-122) | ✅ |
+| Offen | weitere Märkte und Sprachen (U-07); Pflicht-Länderreview je Sprache; Ansprechperson je Land (O-09); Satzsegmentierung (SRX) für den Speicher; G-04 LanguageTool |
+
+## 1.49 Stand nach Etappe 47 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| TRIAGE nach dem Einlesen: Pflichtlabels je Chunk mit Sicherheit, Mensch geht vor, Labels löschen (NFR-114) | ✅ ([ADR-100](adr/ADR-100-triage-agenten.md)) |
+| Kapitel- und Unterkapitelvorschläge für gemischte Quellen, neue Unterkapitel „neu“ (NFR-115) | ✅ |
+| Detaillevel steuern das Kapitel (HappyPath, Edge), Detaillierung je Kapitel, Inhalts-Dashboard (NFR-116) | ✅ |
+| Agenten in der App: ORCHESTRATOR, Aufgaben, Entscheidungen, GOAL; Ordner `12_Goal`, `00_Dokumentation/Agenten` (NFR-117) | ✅ |
+| Offen | Erkennung weiterer Sprachen; Zuordnung über ein lokales Sprachmodell oder Embeddings (Entscheidung lokaler Dienst); Domänennamen aus echten Quellen ergänzen; Übersetzung U-01 … U-10 |
+
+## 1.48 Stand nach Etappe 46 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Suche v2: Morphologie, Komposita, Kennungen, Abfrageerweiterung, BM25 + Vektor per RRF, MMR (NFR-111) | ✅ ([ADR-099](adr/ADR-099-rag-retrieval-v2.md), Messung [docs/11](11-rag-messung.md)) |
+| Relevanzschwelle mit begründeter Enthaltung, Antwortauswahl (NFR-112) | ✅ |
+| Prüflauf je Verfahren mit nDCG@6, Messbestand mit Regressionsschutz, lokale KI-/Embedding-Dienste (NFR-113) | ✅ |
+| Offen | englische Fragen auf deutsche Quellen ohne Terminologie-Eintrag (lokales mehrsprachiges Modell, nicht gemessen); lokaler neuronaler Reranker; Treueprüfung der KI-Antworten; Übersetzung U-01 … U-10 |
+
+## 1.47 Stand nach Etappe 45 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Pipeline: Jira-Tickets in Bearbeitung je Gliederung mit Erstelldatum, Stream, Produktionsdatum, vorab dokumentiert, Übernahme wenn produktiv (NFR-108) | ✅ ([ADR-098](adr/ADR-098-pipeline-backlog-intern.md)) |
+| Backlog und Intern (Testing, Reporting, Systeme, Migration, Rollout, Other), nie im Handbuch (NFR-109) | ✅ |
+| Arbeitsordner `09_Pipeline`, `10_Backlog`, `11_Intern`, Grundregel 9, Agent pipeline-redakteur, Abgleich mit der App (NFR-110) | ✅ |
+| Offen | Feldnamen für Stream und Produktionsdatum im echten Jira-Export bestätigen; Übersetzung U-01 … U-10 (Etappe 46); G-04 (LanguageTool – Entscheidung) |
+
+## 1.46 Stand nach Etappe 44 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Hausregeln, Rechtschreibliste, erlaubte Begriffe (G-01–G-03, NFR-104) | ✅ ([ADR-097](adr/ADR-097-grammatik-sprachstil.md)) |
+| Englisch, Sprache je Regel, Prüfung der Übersetzungen, „nicht übersetzen“ (G-06, S-03, S-04, NFR-105) | ✅ |
+| Lesbarkeit mit Sollwerten je Zielgruppe, Bildunterschriften (S-01, S-08, NFR-106) | ✅ |
+| Kapitelanweisung für Handbuch-Varianten (W-01, NFR-107) | ✅ |
+| Offen | G-04 (LanguageTool lokal – Entscheidung), G-05, S-02, Übersetzung U-01 … U-10 (damals für Etappe 45 geplant, jetzt Etappe 46) |
+
+## 1.45 Stand nach Etappe 43 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Kapitelanweisung je Kapitel und Unterkapitel mit Vorrang für Generator, KI, Check, Agenten; Kapitel ergänzen (NFR-101) | ✅ ([ADR-096](adr/ADR-096-kapitelsteuerung-historie.md)) |
+| Version „gültig ab“ an Kapiteln, Unterkapiteln, Labels im Output (NFR-102) | ✅ |
+| Abgelöste Funktionen in der Historie, Anhang „Historie“, zurückholbar (NFR-103) | ✅ |
+| Offen | Anweisung für Handbuch-Varianten nur über die Quellkapitel; optional F-10, F-11; später F-19, F-31 |
+
+## 1.44 Stand nach Etappe 42 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Namen, User-ID, Adresse, FIN in Bildern erkennen und verpixeln; an/aus, je Stelle, manuelle Stellen; Original bleibt (NFR-99) | ✅ ([ADR-095](adr/ADR-095-datenschutz-bild-labels.md)) |
+| Mehrere Labels (Domäne, Rolle, Gliederung …) und Kapitel je Bild, Filter, Deckungsmatrix je Gliederungspunkt (NFR-100) | ✅ ([ADR-095](adr/ADR-095-datenschutz-bild-labels.md)) |
+| Offen | Gesichter/Unterschriften nur manuell; optional F-10, F-11; später F-19, F-31; fastify-Hinweis „low“ |
+
+## 1.43 Stand nach Etappe 41 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Varianten einer Maske mit passender Fassung in Export, Release und Übersetzung (F-22, NFR-97) | ✅ ([ADR-093](adr/ADR-093-varianten-klickstrecke.md)) |
+| Klickstrecke aus Screenshots mit parallelen Wegen 3a/3b, neue Fassung bei Änderung (F-24, NFR-98) | ✅ ([ADR-093](adr/ADR-093-varianten-klickstrecke.md)) |
+| Offen | optional F-10, F-11; später F-19, F-31; fastify-Hinweis „low“ |
+
+## 1.38 Stand nach Etappe 36 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Dubletten je Abschnitt über alle Formate, exakt und ab 85 %, Gruppen (M4, NFR-85) | ✅ ([ADR-088](adr/ADR-088-dubletten-formatuebergreifend.md)) |
+| Nach jedem Import nur geänderte Dateien; Entscheidung führende Fassung / kein Duplikat mit Unterschieden (NFR-86) | ✅ ([ADR-088](adr/ADR-088-dubletten-formatuebergreifend.md)) |
+| Offen | Etappen M5 (Fragen über alle Quellen mit Teilstücken), M6 (Video, OCR), M7 (Antwortqualität) |
+
+## 1.37 Stand nach Etappe 35 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Teilstücke langer Chunks 300–800 Zeichen mit 1 Satz Überlappung, ohne E-02 zu ändern (M3, NFR-83) | ✅ ([ADR-087](adr/ADR-087-teilstuecke-ueberschriften.md)) |
+| Quellen je Überschrift (je Datei, zusammengeführt), Filter „Überschrift“ (M3, NFR-84) | ✅ ([ADR-087](adr/ADR-087-teilstuecke-ueberschriften.md)) |
+| Offen | Etappen M4 (formatübergreifende Dopplungen), M5 (Fragen über alle Quellen mit Teilstücken), M6 (Video, OCR), M7 (Antwortqualität) |
+
+## 1.36 Stand nach Etappe 34 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| PowerPoint und PDF einlesen, Fundstelle je Folie, Seite bzw. Abschnitt, Seite „Einlesen“ (M2, NFR-81) | ✅ ([ADR-086](adr/ADR-086-pptx-pdf-fundstellen.md)) |
+| Bild → Gliederungsstelle über den Folientext (F-25, NFR-82) | ✅ ([ADR-086](adr/ADR-086-pptx-pdf-fundstellen.md)) |
+| Offen | Feinabstimmung mit echten PPTX-/PDF-Beispieldateien; F-22, F-24, F-30 (optional); Etappen M3 (Rest) bis M7, F-26 mit M6 |
+
+## 1.35 Stand nach Etappe 33 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Bildarchiv: Bildnummer, Merkmale, Prüfregeln, Bildabdeckung, Versionen, Platzhalter, Zwischenablage (F-20, F-21, F-23, NFR-79) | ✅ ([ADR-085](adr/ADR-085-bilder-ausgabe.md)) |
+| Quick Guide, One Pager, Lesefassung, Wasserzeichen, Übergänge „Weiter mit …“ (F-27, F-28, F-29, NFR-80) | ✅ ([ADR-085](adr/ADR-085-bilder-ausgabe.md)) |
+| Offen | F-22, F-24, F-30 (optional), F-25 mit M2, F-26 mit M6; Etappen M2 (PPTX/PDF, Beispieldateien nötig) bis M7 |
+
+## 1.34 Stand nach Etappe 32 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Gliederungs-Vorschlag je Chunk, Kapitel ↔ Quellen, Zielkapitel je Dopplung (F-13, F-14, F-18, NFR-77) | ✅ ([ADR-084](adr/ADR-084-gliederung-wissen.md)) |
+| Wissensnotizen, Ausschlussliste (F-15, F-17, NFR-78) | ✅ ([ADR-084](adr/ADR-084-gliederung-wissen.md)) |
+| Offen | Bilder und Ausgabe (F-20 … F-30), Etappen M2 (PPTX/PDF, Beispieldateien nötig) bis M7 |
+
+## 1.33 Stand nach Etappe 31 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Release-Abgleich (F-03) | ✅ Tickets je Release, Bug = intern, Kapitelbezug, Änderungen, Ticketliste ([ADR-083](adr/ADR-083-releaseletter-lektorat.md)) |
+| Releaseletter (F-02, NFR-75) | ✅ aus Tickets mit Guardrails, Prüfregeln und Urteil, auch für eingefügte Letter ([ADR-083](adr/ADR-083-releaseletter-lektorat.md)) |
+| Warnhinweis-Schema, Übersetzungsprüfung, feste Übersetzungen (F-07, F-09, F-12, NFR-76) | ✅ ([ADR-083](adr/ADR-083-releaseletter-lektorat.md)) |
+| Offen | KI-Formulierung des Letters mit lokalem Modell (optional); weitere Funktionen aus docs/07 (F-13 ff.); Etappen M2–M7 |
+
+## 1.32 Stand nach Etappe 30 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Menüpunkte Contract Management 3.1–3.5 | ✅ eigene Navigations-Labels, Zugriffsmatrix vollständig ([ADR-082](adr/ADR-082-zuordnung-domaene-ordner.md)) |
+| Zuordnung Domäne → Gliederung → Ordner (NFR-74) | ✅ Seite „Zuordnung“ mit Kapitel- und Unterordnern, Vorschlägen aus Chunks, CSV ([ADR-082](adr/ADR-082-zuordnung-domaene-ordner.md)) |
+| Steuerungsordner im Arbeitsordner | ✅ 05_I_Output, 06_II_Stil_und_Design, 07_III_Grammatik_Synonyme_Fehlerliste, 08_IV_Translation mit Agenten |
+| Offen | englische UI-Begriffe für 3.1–3.5 bestätigen; Domänenzuordnung fachlich prüfen; F-02, F-03, M2–M7 |
+
+## 1.31 Stand nach Etappe 29 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Jira-Import als Datei (NFR-71) | ✅ XML/CSV, je Ticket eine Quelle, ohne Personenfelder ([ADR-081](adr/ADR-081-jira-update-zugriff.md)) |
+| Update-Eingang (NFR-72) | ✅ geänderte, entfallene, neue Quellabschnitte absatzweise übernehmen ([ADR-081](adr/ADR-081-jira-update-zugriff.md)) |
+| Zugriffsmatrix (NFR-73) | ✅ Rolle × Menüpunkt mit Beleg, CSV-Import/-Export ([ADR-081](adr/ADR-081-jira-update-zugriff.md)) |
+| Offen | Releaseletter aus Tickets (F-02), Release-Abgleich (F-03), weitere Funktionen aus docs/07, Etappen M2–M7 |
+
+## 1.30 Stand nach Etappe 28 (23.10.2026)
+
+Umfang vom Auftraggeber am 23.10.2026 festgelegt: Empfehlungen der Entscheidungsvorlage ([07](07-bestehende-artefakte.md)) übernommen, Start mit Labelkatalog und Datenschutz.
+
+| Punkt | Ergebnis |
+|---|---|
+| Labelkatalog nach echtem oneSCM (NFR-69) | ✅ 153 Labels in neun Gruppen, Abgleich bestehender Projekte ([ADR-080](adr/ADR-080-katalog-onescm-datenschutz.md)) |
+| Erweiterte Datenschutzprüfung (NFR-70) | ✅ FIN, Kennzeichen, Benutzerkennung, Adresse, Namen, Namensliste, Pseudonymisierung ([ADR-080](adr/ADR-080-katalog-onescm-datenschutz.md)) |
+| Offen | übrige Funktionen aus docs/07 (Jira-Import, Releaseletter, Update-Eingang, Zugriffsmatrix …) und Etappen M2–M7 |
+
+## 1.29 Stand nach Etappe 27 (23.10.2026)
+
+Umfang vom Auftraggeber am 23.10.2026 festgelegt: oneSCM_Metadaten nach Plan [06](06-plan-onescm-metadaten.md), Etappe M1; Annahmen M-01 … M-10 übernommen, Daten bleiben lokal, 100 vordefinierte Labels, Deutsch und Englisch.
+
+| Punkt | Ergebnis |
+|---|---|
+| Vordefinierte Labels (NFR-66) | ✅ 100 Labels in sechs Gruppen (Gliederung, Rollen, Navigation, Inhaltstyp, Sparte, Qualität), Deutsch/Englisch, Pflege durch die Administration ([ADR-079](adr/ADR-079-onescm-metadaten.md)) |
+| Chunks je Überschrift labeln (NFR-67) | ✅ Ansicht je Überschrift und Tabelle, Fundstelle, Filter, Einzel- und Sammel-Labeln ([ADR-079](adr/ADR-079-onescm-metadaten.md)) |
+| Fragen und Antworten speichern (NFR-68) | ✅ mit Quell-Chunks samt Auszug, Labels, Sprache, Notiz ([ADR-079](adr/ADR-079-onescm-metadaten.md)) |
+| Offen für M2 … M7 | PowerPoint, PDF und Video einlesen, Fundstellen je Seite/Folie/Zeitmarke, Dopplungen über alle Formate, automatische Antworten aus allen Quellen, Qualitätsmessung |
+
 ## 1.28 Stand nach Etappe 26 (27.09.2026)
 
 Umfang vom Auftraggeber am 27.09.2026 festgelegt: Häufige Fragen übersetzen, weitere Sprachen vollständig.

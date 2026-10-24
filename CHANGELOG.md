@@ -1,5 +1,372 @@
 # Changelog
 
+## 0.54.0 – Etappe 54 (24.10.2026)
+
+### Hinzugefügt
+- **Textbausteine (ADR-107, W-11, Single Sourcing):** wiederkehrende Absätze einmal pflegen – Kennung, Art, Fassungen mit Notiz; als gesperrten, verknüpften Absatz in Kapitel einfügen; Verwendung je Kapitel mit „aktuell“/„veraltet“; neue Fassung mit einem Klick in die Entwürfe der Kapitel übernehmen (freigegebene Versionen bleiben, eingereichte werden übersprungen); gleiche, noch nicht verknüpfte Absätze verknüpfen; wiederkehrende Absätze als Kandidaten; eigener Text löst die Verknüpfung. Kennzeichen in der Werkstatt.
+- **Übersicht oneSCM_Metadaten schneller:** teure Zählungen je Projekt höchstens 30 s zwischengespeichert, bei Import, Labeln, TRIAGE und Entfernen sofort verworfen (offener Punkt aus dem Lasttest der Etappe 49).
+- Seite „Textbausteine“ (auch in der Barrierefreiheitsprüfung); Tests T-341 … T-343, E2E T-344 (axe); Anforderungen NFR-138, NFR-139; Migration 060.
+
+### Geändert
+- E2E T-291 wartet nach jedem Hinzufügen eines Labels auf die neu geladene Liste (Wettlauf in CI unter Node 22).
+
+## 0.53.0 – Etappe 53 (24.10.2026)
+
+### Hinzugefügt
+- **Vorher/Nachher-Belege (ADR-106, W-05):** zwei Fassungen eines Bildes mit Schieberegler, Anlass, Änderung, Wirkung und Ticket; „Als Bild ins Archiv“ legt eine Gegenüberstellung ab, die sich in Kapitel einfügen lässt (erneut erzeugt = neue Fassung).
+- **Ausgabe als PowerPoint (W-07):** Exportformat `pptx` (16:9) mit Titelfolie, Übersicht je Kapitel, Inhaltsfolien je Abschnitt (Aufzählungen, Nummerierung, Fettdruck, Hinweisarten) und einer Folie je Bild; Hausfarbe aus dem Firmen-Layout. Eigener Generator, ohne neue Abhängigkeit.
+- **Klickstrecke als BPMN 2.0 (W-07):** Start, Aufgabe je Station, parallele Wege zwischen exklusivem Gateway und Zusammenführung, Ende – mit Diagramm für Camunda Modeler oder bpmn.io.
+- **Zwischenbilder aus Videos (W-10):** kurz geöffnete Menüs und Dialoge (bis 2 s) zusätzlich zu den Standbildern, rot umrahmt; abschaltbar mit `MEDIA_TRANSIENT_STILLS=false`.
+- Seite „Vorher/Nachher“ (auch in der Barrierefreiheitsprüfung); Tests T-336 … T-339, E2E T-340 (axe); Anforderungen NFR-135 … NFR-137; Migration 059.
+
+## 0.52.0 – Etappe 52 (24.10.2026)
+
+### Hinzugefügt
+- **Textvarianten je Kapitel (ADR-105, S-05):** Endanwender (Zweck, Voraussetzungen, Schritte, Ergebnis, Hinweise), Fachtext (vollständig) und Kurzfassung für das Management (etwa ¼ der Länge, regelbasiert aus Zweck, Ergebnis, Warnhinweisen und Ablauf; auf Wunsch vom KI-Dienst, ohne erfundene Zahlen). Wortzahl und Anteil je Variante, Download als Markdown, Exportprofil „Kurzfassung“.
+- **Vier Prüferprofile (W-12):**
+  - **Fachlich:** Widersprüche, unbelegte Aussagen, Zahlen ohne Quelle.
+  - **Redaktion:** Stil und Anleitungs-Check.
+  - **Compliance:** personenbezogene Daten, unhaltbare Zusagen, folgenreiche Aktion ohne Warnhinweis, Warnhinweis-Schema.
+  - **Endanwender:** Lesbarkeit, lange Sätze, Fachjargon, unerklärte Abkürzungen.
+  - Je Profil Wert und Ampel; auf Wunsch ergänzt ein lokaler KI-Dienst Funde. Verlauf je Kapitelversion.
+- Seiten „Textvarianten“ und „Prüferprofile“ (auch in der Barrierefreiheitsprüfung); Tests T-332 … T-334, E2E T-335 (axe); Anforderungen NFR-133, NFR-134; Migration 058.
+
+## 0.51.0 – Etappe 51 (24.10.2026)
+
+### Hinzugefügt
+- **Änderungsvorschläge (ADR-104):** Word-Rücklauf und KI-Lektorat erzeugen eine gemeinsame Vorschlagsliste je Absatz (geändert, neu, entfällt). Übernommen wird in einen Entwurf; bei freigegebener Version entsteht er als Kopie, die freigegebene Version bleibt. Geänderte Absätze machen den Vorschlag „veraltet“ statt überschrieben zu werden.
+- **Word zurücklesen (W-06):**
+  - Export Word als „Prüffassung“: Lesefassung mit „Fertig, wenn: …“ je Kapitel und Exportkennung in den Dokumenteigenschaften.
+  - Die in Word bearbeitete Datei wird zurückgelesen; Kapitel über die Exportkennung bzw. den Titel, Abschnitte über die Überschrift, Absätze über Wortähnlichkeit – auch mehrteilige Absätze und Hinweiskästen.
+- **KI-Lektorat mit Wortvergleich (G-07):** je Kapitel eine Umformulierung je Absatz (lokaler KI-Dienst, sonst Regelkorrekturen), Wortvergleich mit Original beim Überfahren, Übernehmen, eigene Fassung, Verwerfen, „Alle übernehmen (Kapitel)“.
+- **Interne Kommentare und Drei-Spalten-Ansicht (W-08):** interner Kommentar je Vorschlag und Absatz, der in keinem Export steht (der JSON-Export entfernt ihn); Seite „Überarbeitung“ mit Stand | Vorschlag | Neu.
+- Seite „Überarbeitung“ (auch in der Barrierefreiheitsprüfung); Tests T-328 … T-330, E2E T-331 (axe); Anforderungen NFR-130 … NFR-132; Migration 057.
+
+## 0.50.0 – Etappe 50 (24.10.2026)
+
+### Hinzugefügt
+- **Plausibilität je Aussage (ADR-103, W-02):** Jeder Satz wird gegen die Quellen seines Absatzes eingestuft – belegt, unbelegt (ohne bzw. unbestätigte Quelle, Zahl fehlt in der Quelle, geht über die Quelle hinaus), Widerspruch (Quelle in offenem Widerspruch), fehlend (Lücke). Der Wert 0–100 je Kapitelversion zählt Widersprüche doppelt.
+- **Kapitelbewertung (S-07):**
+  - Fünf Kriterien: Sprache (Stilwert und Lesbarkeit), Ziel (Anleitungs-Check), Tonalität, Quellenabgleich (Plausibilität), Fakten (Zahlen und Kennungen in den Quellen).
+  - Ampel je Kriterium: grün ab 80, gelb ab 60. Die Gesamtampel ist höchstens so gut wie das schwächste Kriterium.
+  - Seite „Kapitelbewertung“ mit Übersicht aller Kapitel.
+- **Fehlerliste in der App (G-05):**
+  - Funde der Stilprüfung übernehmen (dieselbe Fundstelle nur einmal); Einträge von Hand erfassen.
+  - Status offen, korrigiert, abgelehnt (mit Begründung), Regel fehlt; Korrekturen im Kapitel werden erkannt.
+  - Export und Rückimport wie `FEHLERLISTE.csv`; `abgleich --app` schreibt die Liste in den Arbeitsordner.
+- Seiten „Kapitelbewertung“ und „Fehlerliste“ (auch in der Barrierefreiheitsprüfung); Tests T-324 … T-326, E2E T-327 (axe); Anforderungen NFR-127 … NFR-129; Migration 056.
+
+## 0.49.0 – Etappe 49 (24.10.2026)
+
+### Hinzugefügt
+- **Tonalität je Produktart und Rolle (ADR-102, S-02):**
+  - Vier Töne: sachlich, freundlich, formell, knapp. Ton je Produktart mit Vorgabe aus `TONALITAET.md`, dazu Rollenprofile für Dealer, Markt, MO und HQ.
+  - Neue Prüfregel „Tonalität“, je nach Ton: Werbesprache, Verkürzungen und Smileys, Floskeln und Satzlänge, strenge Formulierungen.
+  - Die Kapitelprüfung wählt den Ton je Absatz nach seiner Rolle. Die KI-Umformulierung und der KI-Vorschlag je Absatz treffen den Ton.
+- **Ticket-Einstufung (W-03):**
+  - genehmigt, in Prüfung, intern oder Background je Jira-Ticket (Berechtigung „Entscheiden“).
+  - Intern und Background fließen nicht in Kapitel. Background zählt nur in der Lückenanalyse und erscheint in keinem Releaseletter.
+- **Releaseletter aus dem Projektvergleich (W-04):**
+  - Vergleich zweier Handbuch-Releases: neue und geänderte Kapitel, Bildfassungen, neue Funktionen („gültig ab“ = Version), abgelöste Funktionen, Tickets der Version.
+  - Daraus ein Letter-Entwurf auf Deutsch oder Englisch.
+- **Zukunfts-Inhalte (W-09):** Kapitel mit späterem „gültig ab“ blendet der Export (Feld „Stand“) bzw. das Handbuch-Release bis zu ihrer Version aus.
+- Tests T-319 … T-322, E2E T-323 (axe); Anforderungen NFR-123 … NFR-126; Migration 055.
+
+### Geändert
+- Die Tonprüfung ist standardmäßig aktiv (Handbuch: sachlich) und lässt sich mit der Regel „Tonalität“ abschalten.
+- Bug-Tickets ohne Einstufung gelten als intern und sind keine Quelle mehr für Kapitel.
+- Der KI-Vorschlag je Absatz nutzt den Prompt `rewrite-1.1` (mit Ton).
+- `GET /style/rules` liefert zusätzlich `tone`.
+
+### Behoben
+- **TRIAGE sperrt den Server nicht mehr:** Sie arbeitet in Teilschritten zu 250 Chunks mit je eigener Transaktion. Vorher lief sie in einer einzigen Transaktion über alle Chunks, und andere Anfragen warteten (12 000 Chunks ≈ 7 s).
+- **Übersicht oneSCM_Metadaten** zählt gelabelte Chunks mit `EXISTS` statt per Join über alle Zuordnungen: 31 statt 504 ms bei 12 000 Chunks. Ein abgebrochener TRIAGE-Lauf steht auf „failed“.
+- Lasttest wiederholt (`docs/lasttest-metadaten.md`), Skript misst die Funktionen der Etappen 48 und 49 und wartet auf die TRIAGE.
+
+## 0.48.0 – Etappe 48 (24.10.2026)
+
+### Hinzugefügt
+- **Übersetzung (ADR-101, U-01 … U-10):**
+  - **Übersetzungsspeicher:** freigegebene Absätze je Sprachpaar; 100-%-Treffer werden beim Anlegen übernommen, ähnliche ab 75 % vorgeschlagen; Pflege, Export und Import wie `SPEICHER.csv`.
+  - **Weitere Prüfungen:** Längenverhältnis außerhalb 0,55–1,8, deutsche Wörter im Zieltext, Datum oder Kennung nur auf einer Seite.
+  - **Länderreview** je Sprache und Markt mit MQM-Fehlerpunkten (bestanden bis 5 je 1 000 Wörter), „zurück an Übersetzung“, Freigabe durch das Land vor der Freigabe der Übersetzung.
+  - **Glossar je Sprache** mit Export (wie `GLOSSAR.csv`, Excel) und Rückimport.
+  - **XLIFF 1.2 und Excel** für Übersetzungsbüros, Rückimport mit Vorschau und Prüfung.
+  - **Rückübersetzung** einer Stichprobe (10 %) der Sicherheitshinweise.
+  - **Sprachen de-CH und fr-CH:** Schweizer Hochdeutsch nach Regeln aus dem deutschen Master (ss statt ß, «…»), Schweizer Französisch auf Basis der freigegebenen französischen Fassung.
+  - **Rahmentexte** in Export und Druck je Sprache (Titel, Stand, Inhalt, Seite, Gültig ab, Hinweisarten, Verzeichnisse, Historie).
+  - **Releaseletter DE↔EN** übersetzen und prüfen; Freigabe übernimmt die Zeilen in den Speicher.
+  - **Hinweis auf Bilder ohne Fassung** in der Zielsprache.
+- Seiten **Übersetzungsspeicher** und **Glossar je Sprache**; im Arbeitsordner Sprachordner `10_Deutsch_DE-CH`, `11_Französisch_FR-CH`, Abgleich von Speicher und Glossar mit der App.
+- Tests T-314 … T-317, E2E T-318 (axe); Anforderungen NFR-118 … NFR-122; Migration 054.
+
+### Geändert
+- Die Demo-KI (ohne eingerichteten KI-Dienst) pseudo-lokalisiert statt deutschen Text auszugeben; ins Deutsche läuft sie rückwärts.
+
+### Behoben
+- **Bildarchiv:** Labels und Kapitel werden einzeln hinzugefügt bzw. entfernt (`addLabelIds`, `removeLabelIds`, `addChapterIds`, `removeChapterIds`). Schnell nacheinander gewählte Labels überschreiben sich nicht mehr gegenseitig (Ursache von T-291 in CI).
+
+## 0.47.0 – Etappe 47 (24.10.2026)
+
+### Hinzugefügt
+- **Agent TRIAGE (ADR-100):** läuft nach jedem Einlesen (abschaltbar unter Einstellungen) und auf Anforderung (oneSCM_Metadaten › Triage).
+  - Pflichtlabels je Chunk mit Sicherheit und Begründung: Version, Status (live, Entwurf, in Bearbeitung), Domäne, Rolle (Dealer, MO, Market, HQ, Sonstiges), Sprache, Sparte (Pkw, Van, Pkw+Van), Markt, Detaillevel, zu prüfen.
+  - Labels von Menschen gehen vor; TRIAGE ersetzt nur eigene Zuordnungen.
+  - Kapitel und Unterkapitel für gemischte Quellen als Vorschlag: verschieben, neues Unterkapitel mit Kennung „neu“, nicht zugeordnet (zu prüfen). Übernehmen, Verwerfen, alle übernehmen; neue Unterkapitel bestätigen.
+- **Detaillevel** Basis, Basis+, Zusatz, Intern, HappyPath, Edge, inPrüfung steuern die Kapitelerzeugung: HappyPath im Standardablauf, Edge unter „Fehlerbehebung“. Die Detaillierung je Kapitel stellen Sie in der Kapitelsteuerung ein (Standard ohne Intern und inPrüfung).
+- **Inhalts-Dashboard:** Chunks, Wörter und Labels je Kapitel und Domäne, Anteil je Pflichtgruppe, Detaillevel, offene Vorschläge.
+- **Labels löschen** (admin): Zuordnungen werden entfernt, Katalog-Labels kommen beim Abgleich nicht wieder.
+- **Agenten in der App:** Übersicht aller Agenten, Aufgaben (offene Todos) und Entscheidungen.
+  - **ORCHESTRATOR** plant Aufgaben aus dem Stand, verfeinert sie bei jedem Lauf, legt Entscheidungen vor und führt getroffene Entscheidungen aus. Entscheiden darf nur ein Mensch mit der Berechtigung „Entscheiden“.
+  - **GOAL** vergleicht den Stand aller Funktionen mit dem Ziel (zehn Kriterien mit Sollwert) und erstellt Empfehlungen; nicht erfüllte Kriterien werden Aufgaben.
+- **Arbeitsordner:** Ordner `12_Goal` (Ziel, Abgleich, Empfehlungen) und `00_Dokumentation/Agenten` (Aufgaben, Entscheidungen, Triage), Agenten `orchestrator`, `triage`, `goal`, Grundregel 10. `abgleich --app` übernimmt Aufgaben, Entscheidungen und Ziel-Abgleich und legt für neue Unterkapitel der Triage Ordner `neu_<Titel>` an.
+- Tests T-309 … T-312, E2E T-313 (axe); Anforderungen NFR-114 … NFR-117; Migration 053.
+
+### Geändert
+- Labelkatalog: neue Gruppen Version, Status, Sprache, Markt, Detaillevel, zu prüfen; Rolle „Sonstiges“, Domäne „Allgemein“, Sparte „Pkw+Van“.
+- Domänenkarte und Zugriffsmatrix werten nur Labels von Menschen bzw. echte Rollen aus.
+
+## 0.46.0 – Etappe 46 (24.10.2026)
+
+### Verbessert
+- **RAG-Komponente „Frage an alle Quellen“ (ADR-099, Messung in [docs/11](docs/11-rag-messung.md)):** neues Suchverfahren v2 (Standard).
+  - Deutsche Morphologie: Partizip, trennbare Verben, Umlaute, Zerlegung von Komposita, Wortteile.
+  - Kennungen wie E-4711 und ONESCM-1234.
+  - Abfrageerweiterung aus Terminologie (Synonyme, Übersetzungen) und Abkürzungen.
+  - BM25 mit Kontextkopf (Datei, Überschriften) und Vektor, verbunden per Reciprocal Rank Fusion.
+  - Relevanzschwelle mit begründeter Enthaltung („in den Quellen nicht gefunden: …“).
+  - MMR-Auswahl ohne Dubletten älterer Fassungen; Satzauswahl im Zusammenhang der Überschrift, bei Mengen- und Zeitfragen bevorzugt mit Zahl.
+- **Gemessen** am fiktiven Messbestand:
+  - Abstimmungssatz: bestanden 53 % → 89 %, Treffer@1 61 % → 81 %, Lückenfragen richtig 20 % → 80 %.
+  - Prüfsatz: bestanden 77 % → 82 %.
+  - Laufzeit bei 2 000 Dokumenten unverändert (Median ca. 210 ms).
+- **KI-Antworten** erhalten die Begriffe der Abfrageerweiterung als Hinweis.
+
+### Hinzugefügt
+- **Antwortqualität:** Prüflauf je Verfahren (v1/v2) und Kennzahl **nDCG@6**, auch im Vergleich mit dem vorigen Lauf.
+- **Lokale KI- und Embedding-Dienste:** `LLM_LOCAL=true` bzw. `EMBEDDINGS_LOCAL=true` mit einer Adresse auf diesem Rechner oder im eigenen Netz (z. B. Ollama). Der Dienst gilt als intern, die Daten bleiben lokal.
+- Messskript `apps/server/scripts/rag-bench.ts` mit fiktivem Messbestand; Tests T-305 … T-307, E2E T-308 (axe); Anforderungen NFR-111 … NFR-113.
+
+## 0.45.0 – Etappe 45 (24.10.2026)
+
+### Hinzugefügt
+- **Pipeline, Backlog, Intern (ADR-098):** neue Bereiche in der Navigation.
+  - **Pipeline:** Jira-Tickets in Bearbeitung, noch nicht produktiv, je Kapitel und Unterkapitel der aktuellen Gliederung, mit Erstelldatum, Stream, Produktionsdatum und der vorab geschriebenen Dokumentation.
+  - **Backlog:** Tickets, deren Bearbeitung noch nicht begonnen hat.
+  - **Intern:** Testing, Reporting, Systeme, Migration, Rollout, Other – nie im Handbuch.
+- **Aus Jira-Tickets abgleichen:**
+  - Ordnet nach Status und Produktionsdatum ein (Backlog → Pipeline, sobald in Bearbeitung; erledigt mit Produktionsdatum in der Zukunft bleibt in der Pipeline) und schlägt den Gliederungspunkt vor.
+  - Ein von Hand gesetztes Produktionsdatum bleibt; Bugs bekommen keinen Eintrag.
+- **Ins Handbuch übernehmen:** Ist ein Ticket produktiv, wird die Dokumentation als Quelle des Kapitels eingelesen (Evidenz unbestätigt). Der Eintrag bleibt als Nachweis.
+- **Jira-Import:**
+  - Liest die Felder „Stream“ und „Produktionsdatum“ (auch „Production Date“, „Go-Live Date“).
+  - Erkennt deutsche Datumsangaben TT.MM.JJJJ.
+- **Kapitelwerkstatt und Kapitelsteuerung:** zeigen die Pipeline-Tickets des Kapitels.
+- **Arbeitsordner:**
+  - Neue Ordner `09_Pipeline` (Unterordner nach der Gesamtgliederung, `00_Ohne_Zuordnung`, `PIPELINE.md`), `10_Backlog` (`BACKLOG.md`) und `11_Intern` (`01_Testing` … `06_Other` mit `THEMA.md`).
+  - Grundregel 9 in `CLAUDE.md`, neuer Agent `pipeline-redakteur`, die Regel in allen Agenten.
+  - `abgleich --app` schreibt die Einträge als Dateien (eigene Änderungen bleiben, App-Fassung als `.neu`).
+- Migration `052_work_areas.sql`; Tests T-301 … T-303, E2E T-304 (axe); Anforderungen NFR-108 … NFR-110.
+
+### Geändert
+- Jira-Datumsangaben im Format TT.MM.JJJJ werden jetzt als JJJJ-MM-TT gespeichert (bisher unverändert übernommen bzw. falsch als Monat.Tag gelesen).
+
+## 0.44.0 – Etappe 44 (24.10.2026)
+
+### Hinzugefügt
+- **Hausregeln als Prüfregeln (ADR-097):** Typografie („…“, Gedankenstrich, Menüpfad mit ›, kein Punkt nach Überschriften), Zahlen und Datum (bis zwölf ausschreiben, Tausenderpunkt, Dezimalkomma, Leerzeichen vor Einheit, TT.MM.JJJJ, Zeitraum 2023–2027), Produktname „oneSCM“ – mit Korrektur per Klick.
+- **Rechtschreibung:** erweiterte deutsche und neue englische Fehlerliste; **erlaubte Begriffe** (Whitelist) je Projekt, auch als Textliste einlesbar.
+- **Englisch und weitere Sprachen:** Prüfung mit Sprachwahl im Textfeld und je Absatz einer Übersetzung; Englisch mit a/an, „I“ und Rechtschreibung.
+- **Wortliste je Sprache:** eigene Formulierungen mit Sprache (z. B. Dealer → Händler auf Deutsch, Händler → Dealer auf Englisch); CSV mit Spalte „sprache“.
+- **Lesbarkeit je Kapitel:** LIX, Flesch-Amstad, Ø Satzlänge, lange Sätze, Passiv mit Sollwerten je Zielgruppe (Endanwender bzw. Fachanwender) – im Anleitungs-Check und im Schreibstil.
+- **„Nicht übersetzen“** je Begriff der Terminologie: bleibt in jeder Sprache unverändert, KI-Übersetzung und Prüfung beachten es.
+- **Bildunterschriften:** Prüfregeln für Länge, Satzzahl und Füller.
+- **Kapitelanweisung für Handbuch-Varianten** zusätzlich zu der der Quellkapitel; im Arbeitsordner unter `03_Varianten`.
+- Migration `051_style_keep_terms.sql`; Tests T-296 … T-299, E2E T-300 (axe); Anforderungen NFR-104 … NFR-107.
+
+## 0.43.0 – Etappe 43 (23.10.2026)
+
+### Hinzugefügt
+- **Kapitelsteuerung (ADR-096):** je Kapitel und Unterkapitel eine Kapitelanweisung (worauf es ankommt, wichtige Themen, nicht beschreiben) mit Vorrang: Der Generator lässt Quellen zu ausgeschlossenen Themen weg und meldet wichtige Themen ohne Quelle als Lücke, KI-Vorschläge erhalten die Anweisung, der Anleitungs-Check prüft sie, die Werkstatt zeigt sie oben.
+- **Fehlende Kapitel und Unterkapitel ergänzen** – eingelesene Quellen mit gleicher Überschrift werden zugeordnet.
+- **Version „gültig ab“** an Kapiteln, Unterkapiteln und Labels; im Export unter der Kapitelüberschrift, auch in der Lesefassung.
+- **Veraltete Funktionen ablösen:** Kapitel, Unterkapitel und Labels durch einen Nachfolger ersetzen; das Alte kommt in die Historie (gültig von–bis), erscheint nicht mehr im Handbuch, aber im Anhang „Historie: abgelöste Funktionen“; Label-Zuordnungen übertragbar; zurückholen möglich.
+- **Arbeitsordner:** `ANWEISUNG.md` je Kapitel und Unterkapitel, Grundregel 8 in `CLAUDE.md`, alle Agenten lesen die Anweisung mit Vorrang; `abgleich --app` übernimmt die Anweisungen aus der App (eigene Angaben bleiben, App-Fassung als `.neu`).
+- Migration `050_chapter_instructions_history.sql`; Tests T-292 … T-294, E2E T-295 (axe); Anforderungen NFR-101 … NFR-103.
+
+## 0.42.0 – Etappe 42 (23.10.2026)
+
+### Hinzugefügt
+- **Datenschutz im Bild (ADR-095):** Namen, User-IDs, Adressen, FIN und weitere personenbezogene Daten in Screenshots werden per lokaler Texterkennung erkannt und verpixelt ausgeliefert – im Bildarchiv, in Exporten, Releases und Übersetzungen. Unkenntlichmachung an/aus (rückgängig), je Stelle an/aus, eigene Stellen mit der Maus ziehen; das Original bleibt erhalten und ist nur mit Bearbeitungsrecht abrufbar (`?unredacted=1`). Neue Einstellung `OCR_BOXES_CMD` (sonst aus Tesseract-`OCR_CMD` abgeleitet).
+- **Mehrere Labels und Kapitel je Bild:** Domäne, Rolle, Gliederung und weitere Labels sowie Kapitel je Bild; Filter im Bildarchiv, Deckungsmatrix „je Gliederungspunkt“.
+- Migration `049_image_redaction_labels.sql`; Tests T-288 … T-290, E2E T-291 (axe); Anforderungen NFR-99, NFR-100.
+
+## 0.41.1 – Abschluss (23.10.2026)
+
+### Behoben
+- Antworten und Belegauszüge unter „Fragen & Antworten“, „Rückfragen“ und „Antwortqualität“ zeigen Markdown formatiert (fett, kursiv, Code, Bild als „[Bild: …]“) statt Sternchen.
+- Übersicht oneSCM_Metadaten: Schritte ② Extraktion, ④ Indexierung, ⑤ Fragestellung als verfügbar, neu ⑦ Qualität.
+
+### Verbessert
+- **Leistung (ADR-094):** Dubletten-Abgleich mit Präfix-Filter (Ergebnis unverändert) und nur für geänderte Abschnitte; Zwischenspeicher für Wortstämme bei der Frage an alle Quellen – Import von 2 000 Dokumenten 33 statt 44 s, Frage an alle Quellen p50 160 statt 328 ms, Prüflauf 30 Fragen 4,5 statt 9,4 s ([Lasttest](docs/lasttest-metadaten.md)).
+
+### Hinzugefügt
+- **Installationspaket** (`tools/paket/paket.sh`): Windows-x64-Paket offline mit Node.js portable und allen Abhängigkeiten (Start per `start.cmd`), universelles Paket für Linux/macOS/Windows mit Installationsskript, jeweils mit fiktiven Beispieldaten und Sicherungsskript.
+- **Dokumentation:** [08 Installation und Betrieb](docs/08-installation-betrieb.md), [09 Benutzerdokumentation](docs/09-benutzerdokumentation.md), [Lasttest](docs/lasttest-metadaten.md); Lastskript `apps/server/scripts/perf-metadata.mjs`.
+- **Handbuch-Arbeitsordner:** `00_Dokumentation/App/` mit Anleitung zur App, Vorlage `TESTFRAGEN.csv` und Ablage für Befragungen und Exporte; der Abgleich ergänzt sie in bestehenden Ordnern.
+
+## 0.41.0 – Etappe 41 (23.10.2026)
+
+### Hinzugefügt
+- **Varianten einer Maske (ADR-093, F-22):** Bilder derselben Maske im Bildarchiv verknüpfen; Export, Handbuch-Varianten, Releases und Übersetzungen zeigen je Verweis die Fassung mit passender Sprache, Rolle, Sparte und Markt. Prüfregel für doppelte Varianten, Deckungsmatrix „je Maske“.
+- **Klickstrecke aus Screenshots (F-24):** Stationen aus Bildern des Archivs, parallele Wege als 3a/3b, gezeichnet als PNG mit Nummern, Beschriftungen und Pfeilen; im Bildarchiv abgelegt, Änderungen als neue Fassung – alle Verweise folgen.
+- Migration `048_variants_clickpaths.sql`; Tests T-284 … T-286, E2E T-287 (axe); Anforderungen NFR-97, NFR-98.
+
+## 0.40.0 – Etappe 40 (23.10.2026)
+
+### Hinzugefügt
+- **Punktmodell Muss/Soll im Anleitungs-Check (ADR-092, F-08):** jeder Prüfpunkt ist Muss (10 Punkte) oder Soll (5 Punkte), je Projekt umstellbar; „alle Muss-Punkte erfüllt“ wahlweise als Bedingung für Einreichen und Freigabe; Punkte und offene Muss-Punkte in Checkliste, Übersicht und Freigabe.
+- **Expertenbefragung zu Wissenslücken (F-16):** Fragen ohne Aussage aus Rückfragen oder Prüfläufen an Fachleute – Antwort per Option und Freitext in der App oder per Excel-Datei; Übernahme als Frage & Antwort mit Label „Prüfen“.
+- **Deckungsmatrix der Bilder (F-30):** Reiter/Menüpunkt bzw. Kapitel × Sprache/Rolle/Sparte im Bildarchiv – abgedeckt, nur Platzhalter, Lücke; Export als Excel oder CSV.
+- Migration `047_points_surveys.sql`; Tests T-279 … T-282, E2E T-283 (axe); Anforderungen NFR-94 … NFR-96.
+
+## 0.39.0 – Etappe 39 (23.10.2026)
+
+### Hinzugefügt
+- **Antwortqualität (ADR-091, M7):** unter „oneSCM_Metadaten › Antwortqualität“ Testfragensätze mit erwarteten Quellen (Pfad, optional Überschrift), Stichworten und Lückenfragen – aus CSV, Excel, JSON, aus gespeicherten Fragen & Antworten oder von Hand.
+- **Prüflauf** stellt jede Testfrage wie eine Frage an alle Quellen und misst: bestanden, Treffer@1/@3/@6, MRR, Beleg richtig, Stichwort-Abdeckung, Lücken richtig, Zeit je Frage – ohne Einträge im Frageprotokoll.
+- **Verlauf und Vergleich** mit dem vorigen Lauf (Änderung je Kennzahl, neu bestanden/durchgefallen), Ergebnis je Frage mit Antwort und gefundenen Stellen, Export als Excel/CSV/JSON.
+- „Frage an alle Quellen“ liefert zusätzlich die gefundenen Stellen in Rangfolge (`retrieved`).
+- Migration `046_answer_quality.sql`; Tests T-275 … T-277, E2E T-278 (axe); Anforderungen NFR-92, NFR-93.
+
+## 0.38.0 – Etappe 38 (23.10.2026)
+
+### Hinzugefügt
+- **Untertitel und Video einlesen (ADR-090, M6):** `.vtt` und `.srt` mit Abschnitten je Kapitelmarke bzw. 2 Minuten und Zeitmarke je Absatz als Fundstelle („bei 01:31“); `.mp4` mit Untertiteln gleichen Namens im ZIP oder mit lokaler Transkription (`TRANSCRIBE_CMD`, z. B. whisper.cpp).
+- **Standbilder bei Änderung (F-26):** mit ffmpeg (`FFMPEG_PATH`) alle 2 s verglichen, behalten nur Bilder mit sichtbarer Änderung, geänderter Bereich rot umrahmt, an ihrer Zeitmarke im Text.
+- **Texterkennung gescannter PDF-Seiten** mit lokalem Werkzeug (`OCR_CMD`, z. B. Tesseract), gekennzeichnet „bitte prüfen“.
+- Seite „Einlesen“ zeigt die Formate Video und Untertitel und den Status der lokalen Werkzeuge; Formatfilter „Video“ und „Untertitel“ in Chunks und Fragen.
+- Werkzeuge nur über Umgebungsvariablen, ohne Shell, mit Zeitlimit (`MEDIA_TOOL_TIMEOUT_MS`); Daten verlassen den Rechner nicht.
+- Migration `045_media_tools.sql`; Tests T-270 … T-273, E2E T-274 (axe); Anforderungen NFR-90, NFR-91.
+
+## 0.37.0 – Etappe 37 (23.10.2026)
+
+### Hinzugefügt
+- **Frage an alle Quellen (ADR-089, M5):** unter „oneSCM_Metadaten › Fragen & Antworten“ – hybride Suche über Chunks und Teilstücke, eingrenzbar nach Format, Datei, Überschrift und Label; Antwort nur aus den sechs besten Belegen, jeder Satz mit Beleg [n] (KI mit Satzprüfung, sonst extraktiv).
+- **Als Frage & Antwort übernehmen** mit dem Rahmen der Frage; **Erneut fragen** vergleicht mit dem gespeicherten Stand (Belege neu/entfallen/gleich, Antwort wortweise).
+- **Export** der gespeicherten Fragen und Antworten als CSV, Excel oder JSON.
+- **Rückfragen (Fragenkatalog):** Fragen aus einer HTML-App (z. B. Review-Cockpit), CSV, JSON oder Text einlesen, alle mit Belegen beantworten, als Frage & Antwort speichern, als Excel/CSV/JSON exportieren.
+- Mindestrelevanz je Beleg (30 % der Fragewörter oder deutliche Ähnlichkeit) – keine Scheinantworten aus einzelnen gemeinsamen Wörtern.
+- Migrationen `043_metadata_ask.sql`, `044_question_catalog.sql`; Tests T-263 … T-265, T-267, T-268, E2E T-266, T-269 (axe); Anforderungen NFR-87 … NFR-89.
+
+## 0.36.0 – Etappe 36 (23.10.2026)
+
+### Hinzugefügt
+- **Dubletten über alle Formate (ADR-088, M4):** gleiche und ähnliche Abschnitte (ab 85 %) über Dateien und Formate hinweg, z. B. dieselbe Folie als PowerPoint und PDF; Paare und Gruppen, Unterschiede wortweise markiert.
+- **Nach jedem Import** werden nur geänderte Dateien neu berechnet; „Neu berechnen“ baut alles neu auf.
+- **Entscheidung** „A/B führend“ oder „kein Duplikat“ je Inhaltspaar – bleibt bei erneutem Einlesen erhalten.
+- Seite „Dubletten (alle Formate)“ unter oneSCM_Metadaten; Migration `042_section_duplicates.sql`; Tests T-260, T-261, E2E T-262 (axe); Anforderungen NFR-85, NFR-86.
+
+### Behoben
+- PDF: Textstücke einer Zeile werden nach Position zusammengesetzt – nummerierte Listen (Nummer nach dem Text geschrieben) werden richtig erkannt.
+
+## 0.35.0 – Etappe 35 (23.10.2026)
+
+### Hinzugefügt
+- **Teilstücke langer Chunks (ADR-087, M3):** Chunks über 800 Zeichen werden für Suche und Antworten an Satzgrenzen in Teilstücke von 300–800 Zeichen mit einem Satz Überlappung geteilt; die Textabschnitte selbst bleiben unverändert (E-02).
+- **Quellen je Überschrift:** neue Seite unter oneSCM_Metadaten – je Datei als Überschriftenbaum oder alle Quellen zusammengeführt je Überschrift.
+- **Filter „Überschrift“** in der Chunk-Liste.
+- Tests T-257, T-258, E2E T-259 (axe); Anforderungen NFR-83, NFR-84.
+
+## 0.34.0 – Etappe 34 (23.10.2026)
+
+### Hinzugefügt
+- **PowerPoint einlesen (ADR-086, M2):** je Folie ein Abschnitt mit Titel, Aufzählungen mit Ebenen, Tabellen, Bildern mit Alternativtext und Sprechernotizen; ausgeblendete Folien entfallen.
+- **PDF einlesen (M2):** Textebene lokal mit pdf.js; Überschriften aus Lesezeichen bzw. Schriftgröße, Absätze und Listen, ohne wiederholte Kopf-/Fußzeilen und Seitenzahlen; Seiten ohne Textebene werden gemeldet.
+- **Fundstelle je Chunk:** Folie, Seite bzw. Abschnitt (Anker der Überschrift bei HTML und Word).
+- **Bild → Gliederungsstelle (F-25):** Vorschlag aus Folientext und Alternativtext, im Bildarchiv von Hand übernehmen; Folientitel als Bildunterschrift.
+- **Seite „Einlesen“** unter oneSCM_Metadaten: mehrere Dateien auf einmal mit Ergebnis je Datei.
+- Migration `041_slides_pages.sql`; Tests T-252 … T-255, E2E T-256 (axe); Anforderungen NFR-81, NFR-82; Abhängigkeit `pdfjs-dist`.
+
+### Geändert
+- `.pptx` und `.pdf` sind erlaubte Importformate (auch in gespeicherten Einstellungen mit der bisherigen Standardliste); Originale werden nur als Download mit `nosniff` und `sandbox` ausgeliefert.
+
+## 0.33.0 – Etappe 33 (23.10.2026)
+
+### Hinzugefügt
+- **Bildarchiv (ADR-085, F-20):** feste Bildnummer B-0001 …, Merkmale (Sprache, Rollen, Sparten, Märkte, Release, Reiter), Prüfregeln je Bild und Bildabdeckung je Kapitel.
+- **Bildversionen und Platzhalter (F-21):** eine neue Fassung ersetzt das Bild überall, das Original bleibt über `?original=1` abrufbar; Platzhalterbild mit reservierter Nummer.
+- **Screenshot aus der Zwischenablage (F-23):** Strg+V oder Schaltfläche im Screenshot-Editor (danach zuschneiden) und im Bildarchiv.
+- **Quick Guide und One Pager (F-27)** als Ausgabeprofil im Export, für alle Formate und je Variante.
+- **Lesefassung (F-28)** ohne Badges, Versionszeile und Quellenstatus; Wasserzeichen „ENTWURF“ beim Druck mit Entwürfen.
+- **„Weiter mit …“ (F-29):** Übergangstext und Folgekapitel je Kapitel in Leseransicht, Druck und Export.
+- Migration `040_image_archive.sql`; Tests T-248 … T-250, E2E T-251 (axe); Anforderungen NFR-79, NFR-80.
+
+### Geändert
+- `GET /media/{sha}` liefert die neueste Fassung mit `ETag` und `Cache-Control: private, no-cache` statt `immutable`.
+
+## 0.32.0 – Etappe 32 (23.10.2026)
+
+### Hinzugefügt
+- **Gliederungs-Vorschlag je Chunk (ADR-084, F-13):** bis zu drei Punkte der Gesamtgliederung mit Trefferwert und Treffer-Wörtern, nie automatisch übernommen; Filter „nur ohne Gliederungspunkt“.
+- **Kapitel ↔ Quellen (F-14):** je Gliederungspunkt das Handbuchkapitel links und die zugeordneten Quellen rechts – „im Handbuch“ oder „nicht verwendet“ –, dazu Vorschläge.
+- **Wissensnotizen (F-15):** Frage, Erkenntnis und Screenshot als eigene Quelle mit Revisionen, Rollen und Sparten; personenbezogene Daten abgewiesen oder pseudonymisiert.
+- **Ausschlussliste „nicht einlesen“ (F-17)** in den Einstellungen; ausgeschlossene Dateien erscheinen im Import als übersprungen.
+- **Zielkapitel je Dopplung (F-18):** „zusammenführen in …“ ordnet beide Textabschnitte dem Gliederungspunkt zu.
+- Migration `039_knowledge_notes.sql`; Tests T-244 … T-246, E2E T-247 (axe); Anforderungen NFR-77, NFR-78.
+
+## 0.31.0 – Etappe 31 (23.10.2026)
+
+### Hinzugefügt
+- **Release-Abgleich (ADR-083, F-03):** Jira-Tickets je Release mit Statusgruppe, Einordnung „Benutzerhandbuch-Kandidat“ oder „Intern / Bug“, Kapitelbezug („fehlt“), Änderungen seit dem letzten Import und Abgleich einer Ticketliste.
+- **Releaseletter (ADR-083, F-02):** aus den Tickets eines Releases erzeugt – nur Ticketfakten, feste Guardrails, Deutsch oder Englisch, vier Zielgruppen; eingefügte Letter (z. B. aus Dify) werden mit denselben Regeln geprüft; Urteil „Nicht freigeben“, „Bedingt freigeben“, „Freigabe möglich“; Freigabe, Export als Markdown und Word.
+- **Warnhinweis-Schema (F-07)** im Anleitungs-Check; **Übersetzungsprüfung (F-09)** mit Platzhaltern, Struktur, Fettung und Signalwörtern; **feste Übersetzungen und Begriffskandidaten aus Tickets (F-12)**.
+- Zielsprachen Slowakisch, Koreanisch und Malaiisch.
+- Migration `038_release_letters.sql`; Tests T-241, T-242, E2E T-243 (axe); Anforderungen NFR-75, NFR-76.
+
+### Geändert
+- Englische UI-Begriffe für Contract Management 3.1–3.5 und die Domänenzuordnung sind bestätigt (ADR-082).
+- Die Datenschutzprüfung erkennt Namen auch hinter „Prepared by“ und „Exported by“.
+
+## 0.30.0 – Etappe 30 (23.10.2026)
+
+### Hinzugefügt
+- **Zuordnung (ADR-082):** neue Seite „oneSCM_Metadaten › Zuordnung“ – je Fachdomäne die Gliederungspunkte mit Kapitelordner (`02_Kapitel/…`) und Unterordnern aus einer wählbaren Gliederung, die Menüpunkte und Vorschläge aus gelabelten Chunks; übernehmen, lösen, zuordnen; CSV-Export.
+- **Contract Management 3.1–3.5** als eigene Menüpunkte im Labelkatalog (Navigation 39, Katalog 158 Labels).
+- **Arbeitsordner:** vier Hauptordner zur Steuerung – `05_I_Output` (Handbuch, Releaseletter, QuickGuide, Schulungsmaterial, interne Dokumente, Videos, Grafiken, Prozesse), `06_II_Stil_und_Design`, `07_III_Grammatik_Synonyme_Fehlerliste`, `08_IV_Translation` – mit neuen Agenten.
+- Migration `037_domain_map.sql`; Tests T-240, E2E T-239 (axe); Anforderung NFR-74.
+
+### Korrigiert
+- Gepflegte Klarnamen sperren die Übertragung an externe Dienste schon vor der ersten Analyse; die Namensliste lässt sich wieder normal eintippen (Review PR 28).
+
+## 0.29.0 – Etappe 29 (23.10.2026)
+
+### Hinzugefügt
+- **Jira-Import als Datei (ADR-081, F-01):** XML- und CSV-Exporte, je Ticket eine Quelle unter `jira/` mit Feldern, Beschreibung, Akzeptanzkriterien und Verknüpfungen; ohne Personenfelder und Kommentare, Text pseudonymisiert; Format „Jira-Ticket“ in oneSCM_Metadaten.
+- **Quellenänderungen (ADR-081, F-05):** geänderte, entfallene und neue Quellabschnitte je Kapitelabsatz mit Gegenüberstellung; Text übernehmen, nur Quelle aktualisieren, ergänzen, entfernen oder verwerfen – nur an Entwürfen.
+- **Zugriffsmatrix (ADR-081, F-06):** Rolle × Menüpunkt mit V/L/–/? und Beleg, CSV-Import und -Export.
+- Migration `036_source_updates_access.sql`; Tests T-214 … T-216, E2E T-238 (axe); Anforderungen NFR-71 … NFR-73.
+
+## 0.28.0 – Etappe 28 (23.10.2026)
+
+### Geändert
+- **Labelkatalog nach echtem oneSCM (ADR-080):** 153 Labels in neun Gruppen – Gesamtgliederung (Vorspann, Kapitel 1–23, Anhänge A–I), 34 Menüpunkte der Oberfläche (UI-Begriff englisch, Handbuchbegriff deutsch), Rollen mit MO = Market Operation, neu Fachdomäne, Kundengruppe und Systeme; Sparten nur Pkw und Van. Bestehende Projekte werden abgeglichen: Labels früherer Katalogstände werden ausgeblendet, Zuordnungen und Anpassungen der Administration bleiben.
+
+### Hinzugefügt
+- **Erweiterte Datenschutzprüfung (ADR-080, F-04):** Fahrgestellnummer, Kfz-Kennzeichen, Benutzerkennung, Straßenadresse, Namen hinter Metadatenfeldern und aus einer Namensliste (Einstellungen › Datenschutz); Pseudonymisierung und Prüf-Endpunkt `POST /privacy/check`.
+- Entscheidungen vom 23.10.2026 in docs/04 und docs/07; Tests T-212, T-213; Anforderungen NFR-69, NFR-70; keine Migration.
+
+## 0.27.0 – Etappe 27 (23.10.2026)
+
+### Hinzugefügt
+- **oneSCM_Metadaten, Etappe M1 (ADR-079):** eigener Bereich in der Navigation mit Übersicht (Quelldateien und Chunks je Format, Ablauf Ablage → Ausgabe), **Chunks** (je Überschrift oder als Tabelle, Fundstelle, Suche, Filter nach Format, Labels und „ohne Label“, einzeln und gesammelt labeln), **Fragen & Antworten** (mit Quell-Chunks samt Auszug, Labels, Sprache Deutsch/Englisch, Notiz) und **Labels**.
+- **100 vordefinierte Labels** in sechs Gruppen, Deutsch und Englisch: Handbuch-Gliederung (30), Rollen (10), Navigation im System (25), Inhaltstyp (15), Sparte (5), Qualität und Status (15); Pflege, Ausblenden und eigene Labels durch die Administration; jedes Projekt erhält den Katalog.
+- Plan [docs/06-plan-onescm-metadaten.md](docs/06-plan-onescm-metadaten.md) mit den Entscheidungen M-01 … M-10 (Daten bleiben lokal) und Entwicklungs-Agenten unter `.claude/agents/`.
+- Migration `035_metadata.sql`; Tests T-209 … T-211, E2E T-237 (axe); Anforderungen NFR-66 … NFR-68.
+
+### Geändert
+- Navigation: Übersichtseinträge sind nur auf der eigenen Seite markiert, wenn Unterseiten eigene Einträge haben.
+
 ## 0.26.0 – Etappe 26 (27.09.2026)
 
 ### Hinzugefügt

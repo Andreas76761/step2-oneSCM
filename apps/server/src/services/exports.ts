@@ -7,10 +7,20 @@ import { gateForChapter, getChapterVersion } from './chapters.js';
 import { escapeHtml, markdownToHtml, markdownToPdf, renderPdf } from './render.js';
 import { assertIdsInProject } from './projects.js';
 import { dataUri, inlineMedia, loadMedia, type MediaFile } from './media.js';
-import { appendixHtmlSections, appendixMarkdown, appendixPdf } from './appendixRender.js';
+import { appendixHtmlSections, appendixMarkdown, appendixPdf, APPENDIX_ANCHORS } from './appendixRender.js';
+import { isFutureContent } from '../domain/releaseOrder.js';
+import { frameTexts, pageLine, type FrameTexts } from '../domain/frameTexts.js';
+import { htmlLang } from '../domain/translate.js';
+import { historyAppendix } from './structure.js';
 import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
 import { DEFAULT_LAYOUT, resolveLayout, type ResolvedLayout } from './layout.js';
 import { renderDocx } from './docx.js';
+import { markdownParagraphs, paginate, renderPptx, type Slide } from '../domain/pptxWriter.js';
+import { imageRefs } from '../domain/media.js';
+import { DEFAULT_CRITERION } from '../domain/revision.js';
+import { extractiveSummary } from '../domain/textVariants.js';
+import { transitionsFor } from './transitions.js';
+import { applyVariants } from './imageArchive.js';
 
 type Media = Map<string, MediaFile>;
 
@@ -30,7 +40,16 @@ export interface ExportExtras {
   appendices?: Appendices | null;
   /** Firmen-Layout (ADR-038) */
   layout?: ResolvedLayout;
+  /** Lesefassung (ADR-085, F-28): ohne Rollen-/Sparten-/Markt-Badges und ohne Versionszeile */
+  reading?: boolean;
+  /** Sprache der Rahmentexte (ADR-101, U-08); Standard Deutsch */
+  language?: string;
 }
+
+/** Ausgabeprofile (ADR-085, F-27): vollständiges Handbuch, Quick Guide (Schritte, Ergebnis, Warnungen), One Pager oder Kurzfassung für das Management (ADR-105, S-05) */
+export const EXPORT_PROFILES = ['full', 'quickguide', 'onepager', 'summary'] as const;
+export type ExportProfile = (typeof EXPORT_PROFILES)[number];
+export const PROFILE_LABEL: Record<ExportProfile, string> = { full: 'Handbuch', quickguide: 'Quick Guide', onepager: 'One Pager', summary: 'Kurzfassung' };
 
 const NO_LAYOUT: ResolvedLayout = { ...DEFAULT_LAYOUT, logo: null, stylesXml: null };
 
@@ -41,15 +60,32 @@ export interface ExportInput extends ExportFilter {
   outlineId?: string;
   /** Verzeichnisse anhängen (Standard: bei Varianten ja) */
   appendices?: boolean;
+  /** Ausgabeprofil (F-27) */
+  profile?: ExportProfile;
+  /** Lesefassung ohne Badges und Versionszeile (F-28) */
+  reading?: boolean;
+  /** „Weiter mit Kapitel …“ am Kapitelende (F-29, nur vollständiges Handbuch): Standard = gepflegte Übergänge, true = zusätzlich automatisch das nächste Kapitel, false = keine */
+  transitions?: boolean;
+  /**
+   * Stand (Release) für Zukunfts-Inhalte (ADR-102, W-09): Kapitel mit späterem „gültig ab“ werden ausgeblendet.
+   * Standard ist der Release-Filter; ohne beides wird nichts ausgeblendet.
+   */
+  asOf?: string;
+  /**
+   * Prüffassung für Word (ADR-104, W-06, nur docx): Lesefassung mit Zeile „Fertig, wenn: …“ je Kapitel und Exportkennung in
+   * den Dokumenteigenschaften, damit die geänderte Datei zurückgelesen und den Kapitelversionen zugeordnet werden kann.
+   */
+  reviewCopy?: { criterion?: string } | boolean;
 }
 
-export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'docx', 'json'] as const;
+export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'docx', 'pptx', 'json'] as const;
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];
 export const CONTENT_TYPES: Record<ExportFormat, string> = {
   md: 'text/markdown; charset=utf-8',
   html: 'text/html; charset=utf-8',
   pdf: 'application/pdf',
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   json: 'application/json',
 };
 
@@ -77,20 +113,29 @@ export function badgeLine(b: Pick<Block, 'roles' | 'divisions' | 'market' | 'rel
   return parts.join(' · ');
 }
 
-const KIND_PREFIX: Record<string, string> = { note: 'ℹ️ **Hinweis:** ', tip: '💡 **Tipp:** ', warning: '⚠️ **Warnung:** ', xref: '↗️ ' };
+const KIND_ICON: Record<string, string> = { note: 'ℹ️', tip: '💡', warning: '⚠️' };
+const kindPrefix = (kind: string, F: FrameTexts) => (kind === 'xref' ? '↗️ ' : KIND_ICON[kind] ? `${KIND_ICON[kind]} **${F[kind as 'note' | 'tip' | 'warning']}:** ` : '');
+const kindLabel = (kind: string, F: FrameTexts) => (['note', 'tip', 'warning', 'xref'].includes(kind) ? F[kind as 'note' | 'tip' | 'warning' | 'xref'] : undefined);
 export const KIND_LABEL: Record<string, string> = { note: 'Hinweis', tip: 'Tipp', warning: 'Warnung', xref: 'Querverweis' };
+/** Titel der Verzeichnisse im Anhang in der Sprache der Rahmentexte */
+const APPENDIX_KEY: Record<string, keyof FrameTexts> = { abkuerzungen: 'abbreviations', glossar: 'glossary', bildverzeichnis: 'images', faq: 'faq', historie: 'history' };
+function localizeAppendixMarkdown(md: string, F: FrameTexts) {
+  let out = md;
+  for (const a of APPENDIX_ANCHORS) out = out.replace(new RegExp(`^(#{1,6} )${a.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'), `$1${F[APPENDIX_KEY[a.id]]}`);
+  return out;
+}
 
 export type ExportChapter = { title: string; versionNo: number; approvedAt: string | null; sections: { code: string; title: string; blocks: any[] }[] };
 
-function filterDescription(f: ExportFilter): string {
+function filterDescription(f: ExportFilter, F: FrameTexts = frameTexts('de')): string {
   const parts = [
-    f.roles?.length ? `Rollen: ${f.roles.map((c) => ROLES.find((r) => r.code === c)?.label ?? c).join(', ')}` : null,
-    f.divisions?.length ? `Sparten: ${f.divisions.map((c) => DIVISIONS.find((d) => d.code === c)?.label ?? c).join(', ')}` : null,
-    f.market ? `Markt: ${f.market}` : f.markets && f.markets.length > 1 ? `Märkte: ${f.markets.join(', ')}` : null,
-    f.blueprint ? 'Blueprint (ohne marktspezifische Inhalte)' : null,
-    f.release ? `Release: ${f.release}` : null,
+    f.roles?.length ? `${F.roles}: ${f.roles.map((c) => ROLES.find((r) => r.code === c)?.label ?? c).join(', ')}` : null,
+    f.divisions?.length ? `${F.divisions}: ${f.divisions.map((c) => DIVISIONS.find((d) => d.code === c)?.label ?? c).join(', ')}` : null,
+    f.market ? `${F.market}: ${f.market}` : f.markets && f.markets.length > 1 ? `${F.markets}: ${f.markets.join(', ')}` : null,
+    f.blueprint ? F.blueprint : null,
+    f.release ? `${F.release}: ${f.release}` : null,
   ].filter(Boolean);
-  return parts.length ? `Filter: ${parts.join(' · ')}` : 'ungefiltert';
+  return parts.length ? `${F.filter}: ${parts.join(' · ')}` : F.unfiltered;
 }
 
 /** Kapitel → sichtbare Abschnitte/Blöcke nach Filter (gemeinsam für alle Formate). */
@@ -101,47 +146,89 @@ export function visible(chapters: ExportChapter[], f: ExportFilter) {
   }));
 }
 
-const versionLine = (ch: ExportChapter) => `Freigegebene Version ${ch.versionNo}${ch.approvedAt ? ` vom ${ch.approvedAt.slice(0, 10)}` : ''}`;
+// Version der Funktion („gültig ab“, ADR-096) steht auch in der Lesefassung; die Freigabeversion nicht
+const versionLine = (ch: ExportChapter, F: FrameTexts = frameTexts('de')) => [
+  (ch as any).hideVersion ? '' : `${F.approvedVersion} ${ch.versionNo}${ch.approvedAt ? ` ${F.dated} ${ch.approvedAt.slice(0, 10)}` : ''}`,
+  (ch as any).validFrom ? `${F.validFrom} ${(ch as any).validFrom}` : '',
+].filter(Boolean).join(' · ');
+
+const firstSentences = (text: string, n: number) => text.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ0-9„"])/).slice(0, n).join(' ');
+
+/**
+ * Kapitel für ein Ausgabeprofil zuschneiden (F-27), als Lesefassung ohne Badges/Versionszeile (F-28) und mit
+ * „Weiter mit …“ am Kapitelende (F-29). Läuft nach dem Filter; die Renderer bleiben unverändert.
+ */
+export function shapeChapters(chapters: ExportChapter[], f: ExportFilter, opts: { profile?: ExportProfile; reading?: boolean; next?: Map<string, { title: string; text: string | null }> } = {}): ExportChapter[] {
+  const profile = opts.profile ?? 'full';
+  const plain = (b: any) => (opts.reading ? { ...b, roles: [], divisions: [], market: null, release: null } : b);
+  return visible(chapters, f).map((ch: any) => {
+    // Lesefassung: ohne Abschnitt „Quellen- und Freigabestatus“ (Quellenverweise)
+    let sections = opts.reading ? ch.sections.filter((s: any) => s.code !== 'status') : ch.sections;
+    if (profile === 'summary') {
+      const text = extractiveSummary(sections.map((s: any) => ({ code: s.code, title: s.title, blocks: s.blocks.filter((b: any) => b.kind !== 'gap') })));
+      sections = [{ code: 'summary', title: 'Kurzfassung', blocks: [{ kind: 'paragraph', text, roles: [], divisions: [], market: null, release: null }] }];
+    } else if (profile !== 'full') {
+      const warnings = sections.flatMap((s: any) => s.blocks.filter((b: any) => b.kind === 'warning' && s.code !== 'steps'));
+      const purpose = sections.find((s: any) => s.code === 'purpose')?.blocks[0];
+      const keep = profile === 'quickguide' ? ['prerequisites', 'steps', 'result'] : ['steps'];
+      sections = [
+        ...(profile === 'onepager' && purpose ? [{ code: 'purpose', title: 'Zweck', blocks: [{ ...purpose, text: firstSentences(purpose.text, 2) }] }] : []),
+        ...sections.filter((s: any) => keep.includes(s.code)),
+        ...(warnings.length ? [{ code: 'hints', title: 'Wichtige Hinweise', blocks: warnings }] : []),
+      ];
+    }
+    const next = profile === 'full' ? opts.next?.get(ch.chapterId) : undefined;
+    if (next) {
+      const block = { kind: 'xref', text: `Weiter mit „${next.title}“${next.text ? ` – ${next.text}` : ''}`, roles: [], divisions: [], market: null, release: null };
+      sections = sections.length ? [...sections.slice(0, -1), { ...sections[sections.length - 1], blocks: [...sections[sections.length - 1].blocks, block] }] : sections;
+    }
+    return { ...ch, hideVersion: !!opts.reading, sections: sections.map((s: any) => ({ ...s, blocks: s.blocks.map(plain) })) };
+  }).filter((ch: any) => profile === 'full' || profile === 'summary' || ch.sections.some((s: any) => s.code === 'steps'));
+}
 
 /** `media`: Bilder als data:-URIs einbetten (eigenständige Datei); ohne: Verweise bleiben `media:<sha>` */
 export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter, media?: Media, extras: ExportExtras = {}): string {
-  const out: string[] = [`# ${extras.title ?? 'oneSCM Benutzerhandbuch'}`, '', `> Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, ''];
+  const F = frameTexts(extras.language);
+  const out: string[] = [`# ${extras.title ?? F.manualTitle}`, '', `> ${F.exportedOn} ${now().slice(0, 10)} · ${filterDescription(f, F)}`, ''];
   for (const ch of visible(chapters, f)) {
-    out.push(`## ${ch.title}`, '', `*${versionLine(ch)}*`, '');
+    const vl = versionLine(ch, F);
+    out.push(`## ${ch.title}`, '', ...(vl ? [`*${vl}*`, ''] : []));
     for (const s of ch.sections) {
       out.push(`### ${s.title}`, '');
       for (const b of s.blocks) {
         const badges = badgeLine(b);
         if (badges) out.push(`> ${badges}`, '');
-        out.push(`${KIND_PREFIX[b.kind] ?? ''}${media ? inlineMedia(b.text, media) : b.text}`, '');
+        out.push(`${kindPrefix(b.kind, F)}${media ? inlineMedia(b.text, media) : b.text}`, '');
       }
     }
   }
-  if (extras.appendices && hasAppendices(extras.appendices)) out.push(appendixMarkdown(extras.appendices));
+  if (extras.appendices && hasAppendices(extras.appendices)) out.push(localizeAppendixMarkdown(appendixMarkdown(extras.appendices), F));
   return out.join('\n');
 }
 
 /** Eigenständiges, druckfähiges HTML ohne Skripte (CSP im Dokument, HTML aus Quellen escaped). */
 export function renderHtml(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}): string {
-  const title = extras.title ?? 'oneSCM Benutzerhandbuch';
+  const F = frameTexts(extras.language);
+  const title = extras.title ?? F.manualTitle;
   const l = extras.layout ?? NO_LAYOUT;
   const images = (sha: string) => (media.has(sha) ? dataUri(media.get(sha)!) : null);
   // Titelseite (ADR-038)
   const cover = l.cover ? `<header class="cover">${l.logo ? `<img class="logo" src="${escapeHtml(dataUri(l.logo))}" alt="${escapeHtml(l.companyName ?? 'Logo')}">` : ''}
 ${l.companyName ? `<p class="company">${escapeHtml(l.companyName)}</p>` : ''}<h1>${escapeHtml(title)}</h1>${l.coverSubtitle ? `<p class="subtitle">${escapeHtml(l.coverSubtitle)}</p>` : ''}
-<p class="filter">Stand ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f))}</p>${l.confidentiality ? `<p class="confidential">${escapeHtml(l.confidentiality)}</p>` : ''}</header>` : '';
+<p class="filter">${F.asOf} ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f, F))}</p>${l.confidentiality ? `<p class="confidential">${escapeHtml(l.confidentiality)}</p>` : ''}</header>` : '';
   const body: string[] = [];
   const toc: string[] = [];
   visible(chapters, f).forEach((ch, i) => {
     toc.push(`<li><a href="#k${i}">${escapeHtml(ch.title)}</a></li>`);
-    body.push(`<section class="chapter" id="k${i}"><h2>${escapeHtml(ch.title)}</h2><p class="meta">${escapeHtml(versionLine(ch))}</p>`);
+    const vl = versionLine(ch, F);
+    body.push(`<section class="chapter" id="k${i}"><h2>${escapeHtml(ch.title)}</h2>${vl ? `<p class="meta">${escapeHtml(vl)}</p>` : ''}`);
     for (const s of ch.sections) {
       body.push(`<h3>${escapeHtml(s.title)}</h3>`);
       for (const b of s.blocks) {
         const badges = badgeLine(b);
         body.push(`<div class="block kind-${escapeHtml(b.kind)}">`);
         if (badges) body.push(`<p class="badges">${escapeHtml(badges)}</p>`);
-        if (KIND_LABEL[b.kind] && b.kind !== 'xref') body.push(`<p class="label">${KIND_LABEL[b.kind]}</p>`);
+        if (kindLabel(b.kind, F) && b.kind !== 'xref') body.push(`<p class="label">${escapeHtml(kindLabel(b.kind, F)!)}</p>`);
         body.push(markdownToHtml(b.text, images), '</div>');
       }
     }
@@ -149,11 +236,12 @@ ${l.companyName ? `<p class="company">${escapeHtml(l.companyName)}</p>` : ''}<h1
   });
   // Verzeichnisse im Anhang (Varianten-Export)
   for (const a of extras.appendices ? appendixHtmlSections(extras.appendices, images) : []) {
-    toc.push(`<li><a href="#${a.id}">${escapeHtml(a.title)}</a></li>`);
-    body.push(`<section class="chapter" id="${a.id}"><h2>${escapeHtml(a.title)}</h2>${a.html}</section>`);
+    const at = APPENDIX_KEY[a.id] ? String(F[APPENDIX_KEY[a.id]]) : a.title;
+    toc.push(`<li><a href="#${a.id}">${escapeHtml(at)}</a></li>`);
+    body.push(`<section class="chapter" id="${a.id}"><h2>${escapeHtml(at)}</h2>${a.html}</section>`);
   }
   return `<!doctype html>
-<html lang="de"><head><meta charset="utf-8">
+<html lang="${htmlLang(extras.language ?? 'de')}"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
@@ -173,8 +261,8 @@ nav ol{columns:2}
 </style></head><body>
 ${l.headerText ? `<p class="running">${escapeHtml(l.headerText)}</p>` : ''}
 ${cover || `<h1>${escapeHtml(title)}</h1>
-<p class="filter">Exportiert am ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f))}</p>`}
-<nav><h2>Inhalt</h2><ol>${toc.join('')}</ol></nav>
+<p class="filter">${F.exportedOn} ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f, F))}</p>`}
+<nav><h2>${escapeHtml(F.contents)}</h2><ol>${toc.join('')}</ol></nav>
 ${body.join('\n')}
 ${l.footerText ? `<footer class="running">${escapeHtml(l.footerText)}</footer>` : ''}
 </body></html>`;
@@ -191,7 +279,8 @@ function pdfBadges(b: Block): string {
 }
 
 export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter, media?: Media, extras: ExportExtras = {}): Promise<Buffer> {
-  const title = extras.title ?? 'oneSCM Benutzerhandbuch';
+  const F = frameTexts(extras.language);
+  const title = extras.title ?? F.manualTitle;
   const l = extras.layout ?? NO_LAYOUT;
   const content: unknown[] = l.cover ? [
     // Titelseite (ADR-038)
@@ -199,23 +288,23 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
     ...(l.companyName ? [{ text: l.companyName, fontSize: 14, bold: true, color: l.primaryColor, margin: [0, 0, 0, 8] }] : []),
     { text: title, style: 'title' },
     ...(l.coverSubtitle ? [{ text: l.coverSubtitle, fontSize: 14, margin: [0, 0, 0, 12] }] : []),
-    { text: `Stand ${now().slice(0, 10)} · ${filterDescription(f)}`, style: 'meta' },
+    { text: `${F.asOf} ${now().slice(0, 10)} · ${filterDescription(f, F)}`, style: 'meta' },
     ...(l.confidentiality ? [{ text: l.confidentiality, bold: true, color: '#b91c1c', margin: [0, 40, 0, 0] }] : []),
     { text: '', pageBreak: 'after' },
   ] : [
     { text: title, style: 'title' },
-    { text: `Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, style: 'meta', margin: [0, 0, 0, 16] },
+    { text: `${F.exportedOn} ${now().slice(0, 10)} · ${filterDescription(f, F)}`, style: 'meta', margin: [0, 0, 0, 16] },
   ];
   visible(chapters, f).forEach((ch, i) => {
     content.push({ text: ch.title, style: 'chapter', tocItem: true, ...(i > 0 ? { pageBreak: 'before' } : {}) });
-    content.push({ text: versionLine(ch), style: 'meta', margin: [0, 0, 0, 8] });
+    if (versionLine(ch, F)) content.push({ text: versionLine(ch, F), style: 'meta', margin: [0, 0, 0, 8] });
     for (const s of ch.sections) {
       content.push({ text: s.title, style: 'section' });
       for (const b of s.blocks) {
         const badges = pdfBadges(b);
         const inner: unknown[] = [];
         if (badges) inner.push({ text: badges, style: 'badges' });
-        if (KIND_LABEL[b.kind] && b.kind !== 'xref') inner.push({ text: KIND_LABEL[b.kind], bold: true });
+        if (kindLabel(b.kind, F) && b.kind !== 'xref') inner.push({ text: kindLabel(b.kind, F), bold: true });
         inner.push(...markdownToPdf(b.text, media));
         const box = b.kind === 'warning' ? '#fdecec' : b.kind === 'note' || b.kind === 'tip' ? '#eaf1fd' : null;
         content.push(box ? { table: { widths: ['*'], body: [[{ stack: inner, fillColor: box }]] }, layout: 'noBorders', margin: [0, 2, 0, 8] } : { stack: inner, margin: [0, 0, 0, 4] });
@@ -231,7 +320,7 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
     header: (page: number) => (l.cover && page === 1) || !(l.headerText || l.companyName) ? null
       : { text: l.headerText ?? [l.companyName, title].filter(Boolean).join(' · '), alignment: 'right', fontSize: 8, color: '#64748b', margin: [48, 24, 48, 0] },
     footer: (page: number, pages: number) => (l.cover && page === 1 ? null
-      : { text: `${l.footerText ? `${l.footerText} · ` : ''}Seite ${page} von ${pages}`, alignment: 'center', fontSize: 8, color: '#64748b', margin: [0, 20, 0, 0] }),
+      : { text: `${l.footerText ? `${l.footerText} · ` : ''}${pageLine(F, page, pages)}`, alignment: 'center', fontSize: 8, color: '#64748b', margin: [0, 20, 0, 0] }),
     styles: {
       title: { fontSize: 22, bold: true, margin: [0, 0, 0, 4] },
       meta: { fontSize: 9, color: '#5b6474' },
@@ -248,14 +337,67 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
 }
 
 /** Word-Export (ADR-038) aus den sichtbaren Absätzen */
-export async function renderDocxExport(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}): Promise<Buffer> {
+export async function renderDocxExport(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}, review?: { exportId: string; criterion: string }): Promise<Buffer> {
+  const F = frameTexts(extras.language);
   return renderDocx(visible(chapters, f).map((ch) => ({
-    title: ch.title, meta: versionLine(ch),
+    title: ch.title, meta: versionLine(ch, F), criterion: review?.criterion ?? null,
     sections: ch.sections.map((s) => ({
       title: s.title,
-      blocks: s.blocks.map((b: any) => ({ kind: b.kind, text: b.text, badges: pdfBadges(b), label: KIND_LABEL[b.kind] && b.kind !== 'xref' ? KIND_LABEL[b.kind] : null })),
+      blocks: s.blocks.map((b: any) => ({ kind: b.kind, text: b.text, badges: pdfBadges(b), label: kindLabel(b.kind, F) && b.kind !== 'xref' ? kindLabel(b.kind, F)! : null })),
     })),
-  })), { title: extras.title ?? 'oneSCM Benutzerhandbuch', filterLine: filterDescription(f), media, layout: extras.layout ?? NO_LAYOUT, appendices: extras.appendices });
+  })), { title: extras.title ?? F.manualTitle, filterLine: filterDescription(f, F), media, layout: extras.layout ?? NO_LAYOUT, appendices: extras.appendices, frame: F,
+    customProperties: review ? [{ name: 'onescm-export', value: review.exportId }] : undefined });
+}
+
+/**
+ * PowerPoint-Export (ADR-106, W-07): Titelfolie, je Kapitel eine Übersichtsfolie (Versionszeile, Zweck, Abschnitte), je
+ * Abschnitt Inhaltsfolien (Aufzählungen und Nummerierung bleiben, Hinweisarten mit Kennwort) und je Bild eine eigene Folie.
+ */
+export async function renderPptxExport(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}): Promise<Buffer> {
+  const F = frameTexts(extras.language);
+  const title = extras.title ?? F.manualTitle;
+  const slides: Slide[] = [{ kind: 'title', title, subtitle: `${F.asOf} ${now().slice(0, 10)} · ${filterDescription(f, F)}` }];
+  for (const ch of visible(chapters, f)) {
+    const sections = ch.sections.filter((s: any) => s.blocks.some((b: any) => b.kind !== 'gap' && b.text.trim()));
+    const purpose = sections.find((s: any) => s.code === 'purpose')?.blocks.find((b: any) => b.kind !== 'gap');
+    const vl = versionLine(ch, F);
+    slides.push({ kind: 'content', title: ch.title, paragraphs: [
+      ...(vl ? [{ text: vl }] : []),
+      ...(purpose ? markdownParagraphs(purpose.text.replace(/!\[[^\]]*\]\([^)]*\)/g, '')) : []),
+      ...sections.filter((s: any) => s.code !== 'purpose').map((s: any) => ({ text: s.title, bullet: 'char' as const })),
+    ] });
+    for (const s of sections) {
+      if (s.code === 'purpose') continue;
+      const paras = [];
+      const pics: Slide[] = [];
+      for (const b of s.blocks as any[]) {
+        if (b.kind === 'gap' || !b.text.trim()) continue;
+        for (const r of imageRefs(b.text)) {
+          const m = r.sha ? media.get(r.sha) : undefined;
+          const img = m && ['image/png', 'image/jpeg', 'image/gif'].includes(m.mime) ? m : m?.fallback?.mime === 'image/png' ? m.fallback : null;
+          if (img) pics.push({ kind: 'image', title: r.alt || s.title, image: { data: img.data, mime: img.mime, width: img.width, height: img.height, alt: r.alt } });
+        }
+        const text = b.text.replace(/!\[[^\]]*\]\([^)]*\)/g, '').trim();
+        if (!text) continue;
+        const ps = markdownParagraphs(text);
+        const label = kindLabel(b.kind, F);
+        if (label && ps.length) ps[0] = { ...ps[0], text: `**${label}:** ${ps[0].text}` };
+        paras.push(...ps);
+      }
+      paginate(paras).forEach((page, i) => slides.push({ kind: 'content', title: i ? `${s.title} (${i + 1})` : s.title, paragraphs: page }));
+      slides.push(...pics);
+    }
+  }
+  return renderPptx(slides, { title, color: (extras.layout ?? NO_LAYOUT).primaryColor });
+}
+
+/** Interne Kommentare (ADR-104, W-08) stehen in keinem Export */
+const withoutComments = (chapters: ExportChapter[]) => chapters.map((ch) => ({ ...ch, sections: ch.sections.map((s: any) => ({ ...s, blocks: s.blocks.map(({ comment: _c, ...b }: any) => b) })) }));
+
+/** Ohne Verzeichnisse: nur die Historie abgelöster Funktionen (ADR-096), sofern vorhanden */
+async function historyOnly(ctx: Ctx): Promise<Appendices | null> {
+  const history = await historyAppendix(ctx);
+  return history.length ? { abbreviations: [], glossary: [], images: [], faq: [], history } : null;
 }
 
 export async function createExport(ctx: Ctx, input: ExportInput, actor: string) {
@@ -268,15 +410,23 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
     ? input.chapterIds
     : (outline
       ? await ctx.db.all("SELECT DISTINCT chapter_id, c.position FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id = ? AND c.outline_node_key IN (SELECT node_key FROM outline_nodes WHERE outline_id = ? AND level = 1) AND v.status = 'approved' ORDER BY c.position", ctx.projectId, outline.family_id, outline.id)
-      : await ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id IS NULL AND v.status = 'approved'", ctx.projectId)
+      // abgelöste Kapitel (Historie, ADR-096) gehören nicht mehr ins Handbuch
+      : await ctx.db.all("SELECT DISTINCT chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id IS NULL AND c.history_at IS NULL AND v.status = 'approved'", ctx.projectId)
     ).map((r) => r.chapter_id as string);
 
   const blockers: { chapterId: string; checks: unknown }[] = [];
   const skipped: { chapterId: string; reason: string }[] = [];
-  const chapters: any[] = [];
+  const asOf = (typeof input.asOf === 'string' ? input.asOf.trim().slice(0, 40) : '') || input.release || null;
+  const future: { chapterId: string; title: string; validFrom: string }[] = [];
+  let chapters: any[] = [];
   for (const cid of chapterIds) {
-    const chapter = await ctx.db.get('SELECT id, title, position FROM chapters WHERE id = ?', cid);
+    const chapter = await ctx.db.get('SELECT id, title, position, valid_from FROM chapters WHERE id = ?', cid);
     if (!chapter) throw notFound(`Kapitel ${cid}`);
+    // Zukunfts-Inhalt (W-09): eingebaut, aber erst ab einem späteren Release veröffentlicht
+    if (isFutureContent(chapter.valid_from, asOf)) {
+      future.push({ chapterId: cid, title: chapter.title, validFrom: chapter.valid_from });
+      continue;
+    }
     const gate = await gateForChapter(ctx, cid, 'export');
     if (!gate.passed) blockers.push({ chapterId: cid, checks: gate.checks.filter((c) => !c.passed) });
     const v = await ctx.db.get("SELECT id FROM generated_chapter_versions WHERE chapter_id = ? AND status = 'approved'", cid);
@@ -284,10 +434,17 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
       skipped.push({ chapterId: cid, reason: `Kapitel „${chapter.title}“ hat keine freigegebene Version.` });
       continue;
     }
-    chapters.push({ ...(await getChapterVersion(ctx, v.id)), position: chapter.position });
+    chapters.push({ ...(await getChapterVersion(ctx, v.id)), position: chapter.position, validFrom: chapter.valid_from ?? null });
   }
   if (blockers.length) throw conflict('Export blockiert: offene Blocker- oder Datenschutzbefunde.', { blockers });
   chapters.sort((a, b) => a.position - b.position);
+  const profile = input.profile ?? 'full';
+  if (input.reviewCopy && format !== 'docx') throw badRequest('Die Prüffassung gibt es nur als Word-Datei (format docx).');
+  const review = input.reviewCopy
+    ? { exportId: newId('exp'), criterion: (typeof input.reviewCopy === 'object' && typeof input.reviewCopy.criterion === 'string' ? input.reviewCopy.criterion.trim().slice(0, 300) : '') || DEFAULT_CRITERION }
+    : null;
+  if (review) input = { ...input, reading: true };
+  if (!(EXPORT_PROFILES as readonly string[]).includes(profile)) throw badRequest(`profile muss eines von ${EXPORT_PROFILES.join(', ')} sein.`);
 
   const vf = outline ? variantFilter(outline) : null;
   const filter: ExportFilter = {
@@ -295,10 +452,18 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
     market: input.market ?? vf?.market ?? null, release: input.release ?? null,
     ...(vf ? { blueprint: vf.blueprint, markets: vf.markets } : {}),
   };
+  // Übergänge nur im vollständigen Handbuch; gepflegte immer, automatische mit transitions: true
+  const next = profile === 'full' && input.transitions !== false ? await transitionsFor(ctx, chapters, input.transitions === true) : undefined;
+  const raw = chapters;
+  chapters = shapeChapters(raw, filter, { profile, reading: input.reading, next });
+  // Varianten einer Maske (ADR-093, F-22): passende Fassung je Rolle, Sparte und Markt; das Handbuch ist deutsch
+  chapters = await applyVariants(ctx, chapters, { language: 'de', roles: filter.roles, divisions: filter.divisions, market: filter.market });
+  const baseTitle = outline ? outline.name : profile === 'full' ? undefined : 'oneSCM Benutzerhandbuch';
   const extras: ExportExtras = {
-    title: outline ? outline.name : undefined,
-    layout: format === 'pdf' || format === 'html' || format === 'docx' ? await resolveLayout(ctx) : undefined,
-    appendices: (input.appendices ?? !!outline) ? await appendicesFor(ctx, outline, visible(chapters, filter)) : null,
+    title: baseTitle && profile !== 'full' ? `${baseTitle} – ${PROFILE_LABEL[profile]}` : baseTitle,
+    reading: !!input.reading,
+    layout: format === 'pdf' || format === 'html' || format === 'docx' || format === 'pptx' ? await resolveLayout(ctx) : undefined,
+    appendices: (input.appendices ?? !!outline) ? await appendicesFor(ctx, outline, visible(raw, filter)) : await historyOnly(ctx),
   };
   // Bilder der sichtbaren Absätze (ADR-029) – eingebettet, damit die Datei eigenständig bleibt
   const media = format === 'json' ? new Map() : await loadMedia(ctx, visible(chapters, filter).flatMap((ch) => ch.sections.flatMap((s) => s.blocks.map((b: any) => b.text as string))));
@@ -308,26 +473,30 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
     data = await renderPdfExport(chapters, filter, media, extras);
     preview = null;
   } else if (format === 'docx') {
-    data = await renderDocxExport(chapters, filter, media, extras);
+    data = await renderDocxExport(chapters, filter, media, extras, review ?? undefined);
+    preview = null;
+  } else if (format === 'pptx') {
+    data = await renderPptxExport(chapters, filter, media, extras);
     preview = null;
   } else {
     const text = format === 'md' ? renderMarkdown(chapters, filter, media, extras) : format === 'html' ? renderHtml(chapters, filter, media, extras)
-      : JSON.stringify({ title: extras.title ?? null, filter, chapters: visible(chapters, filter), appendices: extras.appendices ?? null }, null, 2);
+      : JSON.stringify({ title: extras.title ?? null, filter, chapters: withoutComments(visible(chapters, filter)), appendices: extras.appendices ?? null }, null, 2);
     data = Buffer.from(text, 'utf8');
     // Vorschau für die UI immer als Markdown bzw. JSON (HTML wird dort nicht eingebettet)
     preview = (format === 'json' ? text : renderMarkdown(chapters, filter, undefined, { title: extras.title })).slice(0, 4000);
   }
 
-  const id = newId('exp');
+  const id = review?.exportId ?? newId('exp');
   const key = `exports/${id}.${format}`;
   await ctx.store.put(key, data);
-  const fileName = `onescm-handbuch-${now().slice(0, 10)}.${format}`;
+  const suffix = (profile === 'full' ? '' : `-${profile}`) + (review ? '-pruefassung' : input.reading ? '-lesefassung' : '');
+  const fileName = `onescm-handbuch${suffix}-${now().slice(0, 10)}.${format}`;
   await ctx.db.run(
     'INSERT INTO exports (id, project_id, params, status, format, storage_key, file_name, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    id, ctx.projectId, json({ ...input, skipped }), 'completed', format, key, fileName, actor, now(),
+    id, ctx.projectId, json({ ...input, skipped, future, ...(review ? { review: visible(chapters, filter).map((ch: any) => ({ chapterId: ch.chapterId, versionId: ch.id, title: ch.title })), criterion: review.criterion } : {}) }), 'completed', format, key, fileName, actor, now(),
   );
-  await audit(ctx, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped });
-  return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, downloadUrl: `/api/v1/exports/${id}/download`, preview, byteSize: data.length };
+  await audit(ctx, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped, future: future.length });
+  return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, asOf, future, downloadUrl: `/api/v1/exports/${id}/download`, preview, byteSize: data.length };
 }
 
 export async function listExports(ctx: Ctx) {

@@ -60,6 +60,26 @@ export interface AppConfig {
   integrations: { allowInsecure: boolean };
   /** Kontexthilfe (ADR-030): Ursprünge, die die öffentliche Hilfe einbetten dürfen (frame-ancestors) */
   help: { embedOrigins: string[] };
+  /** Lokale Werkzeuge für Video und Texterkennung (ADR-090, M6) */
+  mediaTools: MediaToolsConfig;
+}
+
+/**
+ * Lokale Werkzeuge (ADR-090): Befehle mit Platzhaltern {input}, {output}, {lang}; ausgeführt ohne Shell.
+ * Nur über Umgebungsvariablen (Betrieb), nie über die Oberfläche. null = nicht eingerichtet.
+ */
+export interface MediaToolsConfig {
+  /** Transkription, z. B. „whisper-cli -m /models/ggml-base.bin -l de -ovtt -of {output} -f {input}“ – erzeugt {output}.vtt */
+  transcribeCmd: string | null;
+  /** Texterkennung, z. B. „tesseract {input} stdout -l deu+eng“ – Text auf der Standardausgabe */
+  ocrCmd: string | null;
+  /** Texterkennung mit Wortpositionen (TSV wie Tesseract), z. B. „tesseract {input} stdout -l deu+eng tsv“; ohne Angabe aus ocrCmd abgeleitet, wenn es Tesseract ist (ADR-095) */
+  ocrBoxesCmd: string | null;
+  /** ffmpeg für Standbilder aus Videos (F-26); null = keine Standbilder */
+  ffmpeg: string | null;
+  /** Zwischenbilder kurzer Zustände (ADR-106, W-10) in einem zweiten Durchgang; Standard an (MEDIA_TRANSIENT_STILLS=false schaltet ab) */
+  transientStills?: boolean;
+  timeoutMs: number;
 }
 
 export type EngineSetting = 'auto' | 'exact' | 'hnsw' | 'pgvector';
@@ -111,6 +131,8 @@ function llmFromEnv(): LlmConfig | null {
     baseUrl: process.env.LLM_BASE_URL || undefined,
     timeoutMs: Number(process.env.LLM_TIMEOUT_MS || 60_000),
     maxTokens: Number(process.env.LLM_MAX_TOKENS || 4000),
+    // ADR-099: selbst betriebener Dienst (z. B. Ollama) – wirkt nur mit lokaler Adresse in LLM_BASE_URL
+    local: process.env.LLM_LOCAL === 'true',
   };
 }
 
@@ -174,6 +196,10 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     integrations: { allowInsecure: process.env.INTEGRATIONS_ALLOW_INSECURE === '1', ...overrides.integrations },
     help: { embedOrigins: parseOrigins(process.env.HELP_EMBED_ORIGINS), ...overrides.help },
     git: { allowFile: process.env.GIT_ALLOW_FILE === '1', timeoutMs: Number(process.env.GIT_TIMEOUT_MS ?? 120_000), ...overrides.git },
+    mediaTools: {
+      transcribeCmd: process.env.TRANSCRIBE_CMD?.trim() || null, ocrCmd: process.env.OCR_CMD?.trim() || null, ocrBoxesCmd: process.env.OCR_BOXES_CMD?.trim() || null,
+      ffmpeg: process.env.FFMPEG_PATH?.trim() || null, transientStills: process.env.MEDIA_TRANSIENT_STILLS !== 'false', timeoutMs: Number(process.env.MEDIA_TOOL_TIMEOUT_MS ?? 30 * 60_000), ...overrides.mediaTools,
+    },
   };
 }
 
@@ -181,10 +207,12 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
 export const DEFAULT_SETTINGS = {
   // ENTSCHEIDUNG(E-01)
   import: {
-    allowedExtensions: ['.md', '.markdown', '.zip', '.html', '.htm', '.docx'],
+    allowedExtensions: ['.md', '.markdown', '.zip', '.html', '.htm', '.docx', '.xml', '.csv', '.pptx', '.pdf', '.mp4', '.vtt', '.srt'],
     maxUploadBytes: Number(process.env.UPLOAD_MAX_BYTES ?? 50 * 1024 * 1024),
     maxZipFiles: Number(process.env.ZIP_MAX_FILES ?? 5000),
     maxEntryBytes: 20 * 1024 * 1024,
+    // Ausschlussliste „nicht einlesen“ (ADR-084, F-17)
+    excludePatterns: [] as string[],
   },
   // ENTSCHEIDUNG(E-05, E-07)
   analysis: {
@@ -199,6 +227,10 @@ export const DEFAULT_SETTINGS = {
   // ENTSCHEIDUNG(E-16): Mindestabdeckung der Inhaltswörter eines umformulierten Satzes durch seine Quellen
   rewrite: { minSupport: 0.5 },
   // ADR-017: semantische Suche und optionale hybride Analyse (TF-IDF bleibt Standard, ENTSCHEIDUNG E-05)
+  // ADR-080 (F-04): zusätzliche Klarnamen für die Datenschutzprüfung (Jira-Bearbeiter, Ansprechpartner …)
+  privacy: { names: [] as string[] },
+  // Agent TRIAGE (ADR-100): nach jedem Import Pflichtlabels und Kapitelvorschläge für die neuen Chunks
+  triage: { auto: true },
   semantic: { analysisMethod: 'tfidf' as 'tfidf' | 'hybrid', embeddingThreshold: 0.85, maxPairDocs: 8000, annThreshold: 20000, annEfSearch: 200 },
 };
 export type Settings = typeof DEFAULT_SETTINGS;

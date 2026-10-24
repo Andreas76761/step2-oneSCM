@@ -13,10 +13,10 @@ test('[T-201] Navigation, Import einer MD-Datei und Quellenliste', async ({ page
   // Selteneres liegt unter „Weitere“ (ADR-053)
   await nav.getByRole('button', { name: 'Weitere' }).click();
   for (const item of NAV) {
-    await nav.getByRole('link', { name: item }).click();
+    await nav.getByRole('link', { name: item, exact: true }).click();
     await expect(page.getByRole('heading', { level: 1 }).first()).toHaveText(item);
   }
-  await nav.getByRole('link', { name: 'Quellen' }).click();
+  await nav.getByRole('link', { name: 'Quellen', exact: true }).click();
   await page.getByTestId('file-input').setInputFiles({
     name: 'e2e_hinweis.md',
     mimeType: 'text/markdown',
@@ -548,7 +548,7 @@ test('[T-221] Navigation einklappbar, Stammdaten: Inhaltsverzeichnis anlegen, Dr
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
   await page.getByRole('button', { name: 'Navigation einklappen' }).click();
   await expect(nav.getByText('Quellen', { exact: true })).toBeHidden();
-  await expect(nav.getByRole('link', { name: 'Quellen' })).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Quellen', exact: true })).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: 'Navigation ausklappen' }).click();
   await expect(nav.getByText('Quellen', { exact: true })).toBeVisible();
@@ -709,7 +709,7 @@ test('[T-222] Varianten-Handbuch aus dem Draft Manual, Varianten-Export, Suche, 
   await expect(page.getByRole('cell', { name: 'Import aus CSV' })).toBeVisible();
 
   // Quellen: vollständiger Stand als Option beim Import
-  await nav.getByRole('link', { name: 'Quellen' }).click();
+  await nav.getByRole('link', { name: 'Quellen', exact: true }).click();
   await expect(page.getByLabel(/vollständige Stand/)).not.toBeChecked();
 });
 
@@ -862,17 +862,19 @@ test('[T-225] Werkstatt: Stil anzeigen und korrigieren, Stapelkorrektur, Bild au
   // Stapelkorrektur mit Vorschau
   await page.getByRole('button', { name: '🖋️ Stil korrigieren' }).click();
   const dlg = page.getByRole('dialog', { name: 'Schreibstil: Kapitel automatisch korrigieren' });
-  await expect(dlg.getByRole('status')).toContainText('1 Absätze mit automatischen Korrekturen');
+  // zwei Absätze: Präsens („war“ → „ist“) und Hausregel Menüpfad („>“ → „›“, ADR-097)
+  await expect(dlg.getByRole('status')).toContainText('2 Absätze mit automatischen Korrekturen');
   expect(await axe()).toEqual([]);
-  await dlg.getByRole('button', { name: 'Auswahl übernehmen (1)' }).click();
-  await expect(page.getByText('1 Absatz/Absätze korrigiert.')).toBeVisible();
+  await dlg.getByRole('button', { name: 'Auswahl übernehmen (2)' }).click();
+  await expect(page.getByText('2 Absatz/Absätze korrigiert.')).toBeVisible();
   await expect(page.getByRole('article').filter({ hasText: 'Die Liste ist leer.' })).toBeVisible();
+  await expect(page.getByRole('article').filter({ hasText: 'Verkauf › Aufträge' })).toBeVisible();
 
   // Bild aus diesem Absatz: Klickstrecke erzeugen, speichern, einfügen; PNG-Fassung für Word
   const clickBlock = page.getByRole('article').filter({ hasText: 'Klicken Sie auf Speichern' });
   await clickBlock.getByRole('button', { name: '🎨 Bild erzeugen' }).click();
   const imgDlg = page.getByRole('dialog', { name: 'Bild aus diesem Absatz erzeugen' });
-  await expect(imgDlg.getByRole('textbox', { name: 'Textstelle' })).toHaveValue(/Öffnen Sie \*\*Verkauf > Aufträge\*\*/);
+  await expect(imgDlg.getByRole('textbox', { name: 'Textstelle' })).toHaveValue(/Öffnen Sie \*\*Verkauf › Aufträge\*\*/);
   await imgDlg.getByRole('button', { name: 'Bilder erzeugen' }).click();
   await imgDlg.getByRole('checkbox', { name: 'Klickstrecke auswählen' }).check();
   expect(await axe()).toEqual([]);
@@ -1463,6 +1465,9 @@ test('[T-232] Leseransicht: Suche mit Hervorhebung, Glossar-Erklärungen; Druck 
   await expect(glossary).toContainText('Dealer-Management-System');
   // Kopf-/Fußzeile schreibt ein Effekt nach dem Rendern – daher warten statt einmal lesen
   const header = () => page.locator('style[data-print-header]').textContent();
+  // Rolle muss noch gewählt sein (grenzt ab: verlorene Auswahl oder veraltete Kopfzeile)
+  await expect(page).toHaveURL(/rolle=dealer/);
+  await expect(cover).toContainText('für Dealer');
   await expect.poll(header).toContain('für Dealer');
   await expect.poll(header).toContain('Nur intern');
   expect(await axe()).toEqual([]);
@@ -1793,4 +1798,1291 @@ test('[T-236] Häufige Fragen übersetzen und freigeben, KI-Vorschlag; FAQ-Seite
   await page.goto('/lesen/druck?sprache=pl');
   await expect(page.getByRole('region', { name: 'Strona tytułowa' })).toContainText('Podręcznik użytkownika');
   await expect.poll(() => page.locator('style[data-print-header]').textContent()).toContain('"Strona " counter(page) " z " counter(pages)');
+});
+
+test('[T-237] oneSCM_Metadaten: Übersicht, Chunks je Überschrift labeln und filtern, Frage und Antwort mit Quelle und Labels speichern, Labelkatalog auf Englisch', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  // Übersicht: Demo-Quellen je Format, sechs Labelgruppen
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Übersicht' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'oneSCM_Metadaten' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '📝 Markdown' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Navigation im System' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Chunks je Überschrift: einen Chunk labeln, danach nach dem Label filtern
+  await page.goto('/metadaten/chunks');
+  await page.getByLabel('Im Text suchen').fill('MO-Check');
+  const chunk = page.locator('article.md-chunk').first();
+  await expect(chunk).toBeVisible();
+  const seq = (await chunk.locator('strong').first().textContent())!.trim();
+  await chunk.getByLabel(`Label für Chunk ${seq} hinzufügen`).selectOption({ label: 'Vertragserstellung › MO Checks' });
+  await expect(page.getByText('1 Zuordnung(en) hinzugefügt.')).toBeVisible();
+  await expect(chunk.locator('.md-label', { hasText: 'Vertragserstellung › MO Checks' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Im Text suchen').fill('');
+  await page.getByLabel('Nach Label filtern').selectOption({ label: 'Vertragserstellung › MO Checks' });
+  await expect(page.locator('article.md-chunk')).toHaveCount(1);
+  // gesammelt labeln in der Tabellenansicht
+  await page.getByLabel('Ansicht').selectOption('table');
+  await page.getByLabel('Alle auf dieser Seite auswählen').check();
+  await page.getByLabel('Label für die Auswahl').selectOption({ label: 'MO (Market Operation)' });
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  await expect(page.getByText('1 Zuordnung(en) hinzugefügt.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Frage und Antwort mit Quelle und Labels speichern
+  await page.goto('/metadaten/fragen');
+  await page.getByLabel('Frage', { exact: true }).fill('E2E Wer führt den MO-Check durch?');
+  await page.getByLabel('Antwort', { exact: true }).fill('Die Market Operation prüft den Vertrag im MO-Check [1].');
+  await page.getByLabel('Label zur Antwort hinzufügen').selectOption({ label: 'MO (Market Operation)' });
+  await page.getByLabel('Chunk als Quelle suchen').fill('MO-Check');
+  await page.locator('.md-found li button').first().click();
+  await expect(page.locator('.md-source')).toHaveCount(1);
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByText('Frage und Antwort angelegt.')).toBeVisible();
+  const row = page.getByRole('row', { name: /E2E Wer führt den MO-Check durch\?/ });
+  await row.getByRole('button', { name: /E2E Wer führt/ }).click();
+  await expect(page.locator('.md-excerpt')).toHaveCount(1);
+  await expect(row.locator('.md-label', { hasText: 'MO (Market Operation)' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Labelkatalog: 30 Gliederungslabels, englische Namen, Zähler
+  await page.goto('/metadaten/labels');
+  await page.getByLabel('Sprache der Labels').selectOption('en');
+  await expect(page.getByRole('heading', { name: /Manual outline \(33\)/ })).toBeVisible();
+  await expect(page.getByRole('row', { name: /Vertragserstellung › MO Checks.*Contract Generation › MO Checks/ })).toContainText('1');
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Sprache der Labels').selectOption('de');
+});
+
+test('[T-238] Jira-Export einlesen, Quellenänderungen absatzweise übernehmen, Zugriffsmatrix mit Beleg pflegen', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+  const upload = async (name: string, content: string, mimeType = 'text/markdown') =>
+    expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name, mimeType, buffer: Buffer.from(content) } } })).status()).toBe(202);
+
+  // Jira-CSV: je Ticket eine Quelle unter jira/
+  await upload('e2e_jira.csv', 'Summary,Issue key,Issue Type,Status,Description\n"E2E Antrag speichern",E2E-101,Story,Done,"h2. Ziel\n* Antrag speichern"\n', 'text/csv');
+  await expect.poll(async () => (await (await request.get('/api/v1/sources', { headers: h })).json()).some((d: any) => d.path === 'jira/E2E-101.md')).toBe(true);
+
+  // Kapitel aus Revision 1, dann Revision 2 mit geändertem Wortlaut
+  const fm = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n';
+  await upload('e2e_update.md', `${fm}# 12. E2E-Update\n\n## 12.1 Zweck\n\nDie Übersicht wird monatlich aktualisiert.\n`);
+  let ch: any;
+  await expect.poll(async () => (ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '12. E2E-Update'))).toBeTruthy();
+  expect((await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).ok()).toBe(true);
+  await upload('e2e_update.md', `${fm}# 12. E2E-Update\n\n## 12.1 Zweck\n\nDie Übersicht wird täglich aktualisiert.\n`);
+  await expect.poll(async () => (await (await request.get('/api/v1/source-updates', { headers: h })).json()).summary.changed).toBeGreaterThan(0);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Quellenänderungen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Quellenänderungen' })).toBeVisible();
+  const item = page.getByRole('article', { name: /Geändert: e2e_update\.md/ });
+  await expect(item).toContainText('täglich');
+  expect(await axe()).toEqual([]);
+  await item.getByRole('button', { name: 'Neuen Text übernehmen' }).click();
+  await expect(page.getByText('Neuer Wortlaut übernommen.')).toBeVisible();
+  await expect(page.getByRole('article', { name: /Geändert: e2e_update\.md/ })).toHaveCount(0);
+
+  // Zugriffsmatrix: Stufe wählen, Beleg speichern
+  await page.goto('/metadaten/zugriffsmatrix');
+  const sel = page.getByLabel('Vertragserstellung › MO Checks – MO (Market Operation)');
+  await sel.focus();
+  await sel.selectOption('V');
+  await page.getByLabel('Beleg für das gewählte Feld').fill('E2E Navigation V3');
+  await page.getByRole('button', { name: 'Beleg speichern' }).click();
+  await expect(page.getByText('Beleg gespeichert.')).toBeVisible();
+  await expect(sel).toHaveValue('V');
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-239] Zuordnung: Domäne zu Gliederungspunkt, Menüpunkt und Ordner; Unterordner aus einer Gliederung; Zuordnung lösen und ergänzen', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+  expect((await request.post('/api/v1/outlines', { headers: h, data: { name: 'E2E Gesamtgliederung', nodes: [{ title: 'Verträge im Alltag verwalten', children: [{ title: 'Vertrag suchen und ändern' }] }] } })).ok()).toBe(true);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Zuordnung', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Zuordnung' })).toBeVisible();
+  const cm = page.getByRole('region', { name: 'Gliederungspunkte zu Contract Management' });
+  await expect(cm).toContainText('02_Kapitel/10_Verträge_im_Alltag_verwalten');
+  await expect(page.getByRole('region', { name: 'Menüpunkte zu Contract Management' })).toContainText('Vertragsverwaltung › Dokumente und Kommunikation');
+  await page.getByLabel('Unterordner aus Gliederung').selectOption({ label: 'E2E Gesamtgliederung (v1)' });
+  await expect(cm).toContainText('10.1_Vertrag_suchen_und_ändern');
+  await expect(page.getByText('05_I_Output')).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // lösen und wieder zuordnen
+  await cm.getByRole('button', { name: '12 Geschäftskunden, Kampagnen und Sonderfälle von Contract Management lösen' }).click();
+  await expect(page.getByText('Zuordnung entfernt.')).toBeVisible();
+  await expect(cm).not.toContainText('12_Geschäftskunden');
+  await page.getByLabel('Gliederungs- oder Menüpunkt für Contract Management').selectOption({ label: '12 Geschäftskunden, Kampagnen und Sonderfälle' });
+  await page.getByRole('button', { name: 'Zuordnen zu Contract Management' }).click();
+  await expect(cm).toContainText('12_Geschäftskunden_Kampagnen_und_Sonderfälle');
+});
+
+test('[T-243] Release-Abgleich und Releaseletter: Tickets je Release, Letter erzeugen und prüfen, fremden Letter prüfen, Begriffskandidaten', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'X-User-Id': 'u-admin' };
+  const csv = [
+    'Summary,Issue key,Issue Type,Status,Component/s,Fix Version/s,Created,Description',
+    '"E2E Release Preview PDF",E2ERL-1,Story,Fertig,Documents & Communications,E2E-PI1,2026-02-05T10:00:00.000+0100,"Target State: The Release Preview PDF is shown."',
+    '"E2E Release crash",E2ERL-2,Bug,Fertig,Documents & Communications,E2E-PI1,2026-02-06T10:00:00.000+0100,"The Release Preview PDF no longer crashes."',
+  ].join('\n');
+  expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name: 'e2e_release.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) } } })).status()).toBe(202);
+  await expect.poll(async () => (await (await request.get('/api/v1/ticket-releases', { headers: h })).json()).releases.some((r: any) => r.label === 'E2E-PI1')).toBe(true);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Release-Abgleich' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Release-Abgleich' })).toBeVisible();
+  await page.getByRole('button', { name: 'E2E-PI1' }).click();
+  await expect(page.getByRole('row', { name: /E2ERL-2/ })).toContainText('Intern / Bug');
+  await page.getByLabel('Ticketnummern (eine je Zeile oder durch Komma getrennt)').fill('E2ERL-1\nE2ERL-9');
+  await page.getByRole('button', { name: 'Abgleichen' }).click();
+  await expect(page.getByRole('status')).toContainText('Es fehlen: E2ERL-9');
+  expect(await axe()).toEqual([]);
+
+  // Releaseletter aus dem Release
+  await page.getByRole('row', { name: /E2E-PI1/ }).getByRole('link', { name: 'Releaseletter' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Releaseletter' })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Release', exact: true })).toHaveValue('E2E-PI1');
+  await page.getByRole('button', { name: 'Erzeugen' }).click();
+  await expect(page.getByText('Releaseletter erzeugt.')).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: 'Freigabe möglich' })).toBeVisible();
+  await expect(page.getByLabel('Text (Markdown)')).toHaveValue(/oneSCM Consolidated Release E2E-PI1 – 06 Feb 2026/);
+  expect(await axe()).toEqual([]);
+
+  // Fremder Letter mit erfundenem Ticket und Laufdatum
+  await page.getByLabel('Text des Releaseletters').fill('Release E2E-PI1 vom 23 Oct 2026: E2ERL-1 und E2ERL-7.');
+  await page.getByRole('button', { name: 'Einfügen und prüfen' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Nicht freigeben' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Befunde' })).toContainText('Phantom-Tickets (Halluzination)');
+  await expect(page.getByRole('button', { name: 'Freigeben' })).toBeDisabled();
+
+  // Begriffskandidaten aus den Tickets
+  await page.goto('/terminologie');
+  await page.getByRole('button', { name: 'Release Preview PDF als Begriff anlegen' }).click();
+  await expect(page.getByText('Begriff „Release Preview PDF“ angelegt.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-247] Wissensnotiz als Quelle, Gliederungs-Vorschlag übernehmen, Kapitel ↔ Quellen, Zielkapitel je Dopplung, Ausschlussliste', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // Wissensnotiz → eigene Quelle
+  await nav.getByRole('link', { name: 'Wissensnotizen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Wissensnotizen' })).toBeVisible();
+  await page.getByLabel('Frage bzw. Titel').fill('E2E Wie kündige ich einen Vertrag in der Vertragsverwaltung?');
+  await page.getByLabel('Erkenntnis').fill('E2E Kündigen Sie den Vertrag in der Vertragsverwaltung über Beenden; Verträge im Alltag verwalten Sie dort.');
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Notiz gespeichert und als Quelle eingelesen.')).toBeVisible();
+  await expect(page.getByText(/Revision 1 · \d+ Chunks/)).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Chunks: Vorschlag übernehmen (nie automatisch)
+  await nav.getByRole('link', { name: 'Chunks', exact: true }).click();
+  await page.getByLabel('Im Text suchen').fill('E2E Kündigen Sie');
+  await page.getByLabel('nur ohne Gliederungspunkt').check();
+  const suggestion = page.getByRole('button', { name: /^10 Verträge im Alltag verwalten für Chunk #\d+ übernehmen$/ });
+  await expect(suggestion).toBeVisible();
+  await suggestion.click();
+  await expect(page.getByText('1 Zuordnung(en) hinzugefügt.')).toBeVisible();
+
+  // Kapitel ↔ Quellen
+  await nav.getByRole('link', { name: 'Kapitel ↔ Quellen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Kapitel ↔ Quellen' })).toBeVisible();
+  await page.getByRole('list', { name: 'Gliederungspunkte' }).getByRole('button', { name: /^10 Verträge im Alltag verwalten/ }).click();
+  await expect(page.getByRole('region', { name: 'Quellen' })).toContainText('E2E Kündigen Sie den Vertrag');
+  expect(await axe()).toEqual([]);
+
+  // Dopplungen: Spalte Zielkapitel
+  await nav.getByRole('link', { name: 'Dopplungen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Dopplungen' })).toBeVisible();
+  const target = page.getByLabel(/^Zielkapitel für Dopplung #\d+$/).first();
+  if (await target.count()) {
+    await target.selectOption({ label: '11 Rechnung, Zahlung, Kosten und Auswertungen' });
+    await expect(page.getByText('Zielkapitel gesetzt – beide Textabschnitte sind dem Gliederungspunkt zugeordnet.')).toBeVisible();
+  }
+  expect(await axe()).toEqual([]);
+
+  // Einstellungen: Ausschlussliste
+  await page.goto('/einstellungen');
+  await page.getByLabel('Nicht einlesen – ein Muster je Zeile (z. B. *.tmp, ~$*, Archiv/**)').fill('*.tmp\nArchiv/**');
+  await page.getByRole('button', { name: 'Speichern' }).first().click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
+  await page.getByLabel('Nicht einlesen – ein Muster je Zeile (z. B. *.tmp, ~$*, Archiv/**)').fill('');
+  await page.getByRole('button', { name: 'Speichern' }).first().click();
+});
+
+test('[T-251] Bildarchiv: Platzhalter, Merkmale, neue Fassung aus der Zwischenablage; „Weiter mit …“ in Leseransicht und Druck, Wasserzeichen ENTWURF, Quick Guide als Lesefassung', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const make = async (title: string, approve: boolean) => {
+    const c = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: {
+      title, purpose: `Mit dieser Anleitung bearbeiten Sie ${title}.`, steps: ['Öffnen Sie **Verträge › Übersicht**', 'Klicken Sie auf **Bearbeiten**'], result: 'Die Änderung ist gespeichert.',
+    } })).json();
+    if (approve) {
+      expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/submit`, { headers: red, data: {} })).ok()).toBe(true);
+      expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+    }
+    return c;
+  };
+  const a = await make('E2E Übergang A', true);
+  await make('E2E Übergang B', true);
+  await make('E2E Übergang Entwurf', false);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // Bildarchiv: Platzhalter reserviert eine Nummer, Merkmale pflegen
+  await nav.getByRole('link', { name: 'Bildarchiv' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Bildarchiv' })).toBeVisible();
+  await page.getByLabel('Was soll das Bild zeigen?').fill('E2E Platzhalter Vertragsliste');
+  await page.getByRole('button', { name: 'Platzhalter anlegen' }).click();
+  await expect(page.getByText(/^Platzhalter B-\d{4} angelegt\.$/)).toBeVisible();
+  await expect(page.getByText(/^!\[E2E Platzhalter Vertragsliste\]\(media:[a-f0-9]{64}\)$/)).toHaveCount(2); // Einbinden + Hinweis nach dem Anlegen
+  await page.getByLabel('Sprache').fill('de');
+  await page.getByRole('button', { name: 'Merkmale speichern' }).click();
+  await expect(page.getByText(/^B-\d{4} gespeichert\.$/)).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Strg+V: Screenshot aus der Zwischenablage wird neue Fassung, Platzhalter entfällt
+  await page.evaluate((b64) => {
+    const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const dt = new DataTransfer();
+    dt.items.add(new File([bin], 'image.png', { type: 'image/png' }));
+    document.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true }));
+  }, png(900, 500, [20, 110, 200]).toString('base64'));
+  await expect(page.getByText(/^B-\d{4}: Fassung 2 hochgeladen – ersetzt das Bild überall\.$/)).toBeVisible();
+  const entry = page.getByRole('list', { name: 'Bilder' }).getByRole('button', { name: /E2E Platzhalter Vertragsliste/ });
+  await expect(entry).toContainText('Fassung 2');
+  await expect(entry.locator('.tag', { hasText: 'Platzhalter' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Bildabdeckung je Kapitel' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Leseransicht: Übergang pflegen und anzeigen
+  await page.goto(`/lesen/${a.chapterId}`);
+  const article = page.getByRole('article', { name: 'E2E Übergang A' });
+  await article.getByRole('button', { name: 'Übergang „Weiter mit …“ pflegen' }).click();
+  await article.getByLabel('Folgekapitel').selectOption({ label: 'E2E Übergang B' });
+  await article.getByLabel('Übergangstext').fill('Danach prüfen Sie die Änderung.');
+  await article.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Übergang gespeichert.')).toBeVisible();
+  const aside = article.getByRole('complementary', { name: 'Weiter mit' });
+  await expect(aside).toContainText('Weiter mit „E2E Übergang B“');
+  await expect(aside).toContainText('Danach prüfen Sie die Änderung.');
+  expect(await axe()).toEqual([]);
+
+  // Druck mit Entwürfen: Übergang am Kapitelende, Wasserzeichen ENTWURF nur im Druck
+  await page.goto('/lesen/druck?entwuerfe=1');
+  await expect(page.getByRole('article', { name: 'E2E Übergang A' }).locator('.print-transition')).toContainText('Danach prüfen Sie die Änderung.');
+  await expect(page.locator('.print-watermark')).toBeHidden();
+  await page.emulateMedia({ media: 'print' });
+  await expect(page.locator('.print-watermark')).toBeVisible();
+  await expect(page.locator('.print-watermark')).toHaveText('ENTWURF');
+  await page.emulateMedia({ media: 'screen' });
+
+  // Export: Quick Guide als Lesefassung
+  await nav.getByRole('link', { name: 'Export', exact: true }).click();
+  await page.getByRole('checkbox', { name: /E2E Übergang A/ }).check();
+  await page.getByLabel('Ausgabe').selectOption('quickguide');
+  await page.getByRole('checkbox', { name: /^Lesefassung/ }).check();
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByRole('button', { name: /onescm-handbuch-quickguide-lesefassung-\d{4}-\d{2}-\d{2}\.md herunterladen/ })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Exportvorschau' })).toContainText('Quick Guide');
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-256] Einlesen: PowerPoint und PDF mit Fundstelle je Folie und Seite, Bild mit Gliederungs-Vorschlag aus dem Folientext übernehmen', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const { default: JSZip } = await import('jszip');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const ns = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+  const rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const p = (t: string) => `<a:p><a:r><a:t>${t}</a:t></a:r></a:p>`;
+  const sp = (ph: string, paras: string[]) => `<p:sp><p:nvSpPr><p:cNvPr id="2" name="F"/><p:cNvSpPr/><p:nvPr><p:ph ${ph}/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:bodyPr/>${paras.join('')}</p:txBody></p:sp>`;
+  const z = new JSZip();
+  z.file('ppt/presentation.xml', `<p:presentation ${ns}><p:sldIdLst><p:sldId id="256" r:id="rId1"/><p:sldId id="257" r:id="rId2"/></p:sldIdLst></p:presentation>`);
+  z.file('ppt/_rels/presentation.xml.rels', `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${rel}/slide" Target="slides/slide1.xml"/><Relationship Id="rId2" Type="${rel}/slide" Target="slides/slide2.xml"/></Relationships>`);
+  z.file('ppt/slides/slide1.xml', `<p:sld ${ns}><p:cSld><p:spTree>${sp('type="ctrTitle"', [p('E2E Reifenschulung')])}</p:spTree></p:cSld></p:sld>`);
+  z.file('ppt/slides/slide2.xml', `<p:sld ${ns}><p:cSld><p:spTree>${sp('type="title"', [p('E2E Reifenprodukte anlegen')])}${sp('idx="1"', [p('E2E Öffnen Sie Produkte › Tyres'), p('E2E Wählen Sie das Reifenpaket')])}<p:pic><p:nvPicPr><p:cNvPr id="4" name="Bild" descr="E2E Maske Reifenprodukte"/><p:cNvPicPr/><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="rId9"/></p:blipFill><p:spPr/></p:pic></p:spTree></p:cSld></p:sld>`);
+  z.file('ppt/slides/_rels/slide2.xml.rels', `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId9" Type="${rel}/image" Target="../media/image1.png"/></Relationships>`);
+  z.file('ppt/media/image1.png', png(900, 500, [30, 120, 60]));
+  const stream = 'BT /F1 24 Tf 50 780 Td (E2E Vertraege kuendigen) Tj ET\nBT /F1 12 Tf 50 740 Td (E2E Kuendigen Sie den Vertrag ueber Beenden.) Tj ET';
+  const pdfFile = `%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n4 0 obj<</Length ${stream.length}>>stream\n${stream}\nendstream endobj\n5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF`;
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Einlesen', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Einlesen' })).toBeVisible();
+  await page.getByTestId('ingest-input').setInputFiles([
+    { name: 'e2e-reifen.pptx', mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', buffer: await z.generateAsync({ type: 'nodebuffer' }) },
+    { name: 'e2e-vertraege.pdf', mimeType: 'application/pdf', buffer: Buffer.from(pdfFile, 'latin1') },
+  ]);
+  const results = page.getByRole('list', { name: 'Eingelesene Dateien' });
+  await expect(results.getByText('fertig', { exact: true })).toHaveCount(2, { timeout: 20000 });
+  await expect(results).toContainText('e2e-reifen.pptx');
+  expect(await axe()).toEqual([]);
+
+  // Chunks mit Fundstelle Folie bzw. Seite
+  await page.getByRole('link', { name: 'Zu den Chunks →' }).click();
+  await page.getByLabel('Im Text suchen').fill('E2E Wählen Sie das Reifenpaket');
+  await expect(page.getByText('Folie 2').first()).toBeVisible();
+  await page.getByLabel('Im Text suchen').fill('E2E Kuendigen Sie');
+  await expect(page.getByText('Seite 1').first()).toBeVisible();
+
+  // Bildarchiv: Bild aus Folie 2 mit Vorschlag, von Hand übernehmen
+  await nav.getByRole('link', { name: 'Bildarchiv' }).click();
+  await page.getByRole('list', { name: 'Bilder' }).getByRole('button', { name: /E2E Reifenprodukte anlegen/ }).click();
+  const where = page.getByRole('region', { name: 'Gliederungsstelle' });
+  await expect(where).toContainText('Aus e2e-reifen.pptx, Folie 2');
+  await where.getByRole('button', { name: '13 Reifenprodukte – Tyres als Gliederungsstelle übernehmen' }).click();
+  await expect(page.getByText('Gliederungsstelle übernommen.')).toBeVisible();
+  await expect(where).toContainText('Gliederungsstelle: 13 Reifenprodukte – Tyres');
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-259] Quellen je Überschrift: Baum je Datei, zusammengeführt über Dateien, Sprung zu den Chunks mit Überschriftenfilter und Teilstücken', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const fm = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n';
+  const long = Array.from({ length: 18 }, (_, i) => `E2E Satz ${i + 1} erklärt, wie Sie die Laufzeit eines Vertrags im Contract Management verlängern und prüfen.`).join(' ');
+  const upload = async (name: string, text: string) => {
+    const res = await request.post('/api/v1/imports', { headers: { 'X-User-Id': 'u-admin' }, multipart: { file: { name, mimeType: 'text/markdown', buffer: Buffer.from(text) } } });
+    expect(res.status()).toBe(202);
+    const id = (await res.json()).id;
+    await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: { 'X-User-Id': 'u-admin' } })).json()).status).toBe('completed');
+  };
+  await upload('e2e-hd-handbuch.md', `${fm}# E2E Laufzeit\n\n## 1.1 E2E Laufzeit verlängern\n\n${long}\n\n### E2E Fristen\n\nE2E Fristen beachten.\n`);
+  await upload('e2e-hd-schulung.md', `${fm}# E2E Schulung\n\n## E2E Laufzeit verlängern\n\nE2E In der Schulung verlängern Sie über Aktionen.\n`);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Quellen je Überschrift' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Quellen je Überschrift' })).toBeVisible();
+  await page.getByRole('list', { name: 'Dateien' }).getByRole('button', { name: /e2e-hd-handbuch\.md/ }).click();
+  await expect(page.getByText('1.1 E2E Laufzeit verlängern', { exact: true })).toBeVisible();
+  await page.getByText('1.1 E2E Laufzeit verlängern', { exact: true }).click(); // aufklappen
+  await expect(page.getByText('E2E Fristen', { exact: true })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  await page.getByLabel('Zusammengeführt je Überschrift').check();
+  await page.getByLabel('Überschrift suchen').fill('E2E Laufzeit verlängern');
+  const group = page.getByRole('region', { name: /E2E Laufzeit verlängern/ });
+  await expect(group).toContainText('2 Dateien');
+  await expect(group).toContainText('e2e-hd-handbuch.md');
+  await expect(group).toContainText('e2e-hd-schulung.md');
+  expect(await axe()).toEqual([]);
+
+  await group.getByRole('link', { name: 'Chunks' }).click();
+  await expect(page.getByLabel('Nach Überschrift filtern')).toHaveValue('E2E Laufzeit verlängern');
+  await expect(page.getByText(/in \d Teilstücken für Suche und Antworten/)).toBeVisible();
+  await expect(page.getByText('E2E In der Schulung verlängern Sie über Aktionen.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-262] Dubletten über alle Formate: Markdown und HTML mit gleichem Abschnitt, Unterschiede zeigen, führende Fassung festlegen', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const steps = ['E2E Öffnen Sie die Vertragssuche im Contract Management und suchen Sie den Vertrag', 'E2E Wählen Sie den Vertrag aus und prüfen Sie die Laufzeit und den Kunden', 'E2E Klicken Sie auf Beenden und bestätigen Sie die Kündigung mit Speichern'];
+  const adm = { 'X-User-Id': 'u-admin' };
+  const upload = async (name: string, mimeType: string, text: string) => {
+    const res = await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name, mimeType, buffer: Buffer.from(text) } } });
+    expect(res.status()).toBe(202);
+    const id = (await res.json()).id;
+    await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
+  };
+  await upload('e2e-dp-schulung.md', 'text/markdown', `---\nroles: [all]\ndivisions: [all]\n---\n# E2E Schulung Kündigung\n\n## E2E Vertrag kündigen\n\n${steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n`);
+  await upload('e2e-dp-handbuch.html', 'text/html', `<html><head><title>E2E Handbuch Kündigung</title></head><body><h2>E2E Vertrag kündigen</h2><ul>${steps.map((s) => `<li>${s}</li>`).join('')}</ul></body></html>`);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Dubletten (alle Formate)' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Dubletten über alle Formate' })).toBeVisible();
+  await page.getByLabel('nur formatübergreifend').check();
+  const pair = page.getByRole('article', { name: 'Dublette E2E Vertrag kündigen' });
+  await expect(pair).toContainText('exakt gleich');
+  await expect(pair).toContainText('formatübergreifend');
+  await expect(pair).toContainText('e2e-dp-schulung.md');
+  await expect(pair).toContainText('e2e-dp-handbuch.html');
+  await pair.getByRole('button', { name: 'Unterschiede zeigen' }).click();
+  await expect(pair.getByLabel('Unterschiede')).toContainText('E2E Klicken Sie auf Beenden');
+  expect(await axe()).toEqual([]);
+
+  const handbookSide = (await pair.locator('.dp-side').first().textContent())?.includes('e2e-dp-handbuch.html') ? 'A' : 'B';
+  await pair.getByRole('button', { name: `${handbookSide} führend` }).click();
+  await expect(page.getByText(`${handbookSide} ist die führende Fassung.`)).toBeVisible();
+  await expect(page.getByRole('article', { name: 'Dublette E2E Vertrag kündigen' })).toHaveCount(0); // nicht mehr offen
+  await page.getByLabel('Status').selectOption('decided');
+  const decided = page.getByRole('article', { name: 'Dublette E2E Vertrag kündigen' });
+  await expect(decided.locator('.dp-leading')).toContainText('e2e-dp-handbuch.html');
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-266] Frage an alle Quellen: Antwort mit Belegen, als Frage & Antwort übernehmen, erneut fragen, Export', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  const res = await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name: 'e2e-ask.md', mimeType: 'text/markdown', buffer: Buffer.from('---\nroles: [all]\ndivisions: [all]\n---\n# E2E Fragen\n\n## E2E Garantie verlängern\n\nE2E Eine Garantieverlängerung beantragen Sie im Menü Garantie über **Verlängern**.\n') } } });
+  const id = (await res.json()).id;
+  await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Fragen & Antworten' }).click();
+  await page.getByLabel('Ihre Frage').fill('Wie beantrage ich eine E2E Garantieverlängerung?');
+  await page.getByLabel('Nur Format').selectOption('markdown');
+  await page.getByRole('button', { name: 'Fragen', exact: true }).click();
+  const answer = page.getByRole('region', { name: 'Antwort mit Belegen' });
+  await expect(answer).toContainText('E2E Eine Garantieverlängerung beantragen Sie im Menü Garantie über Verlängern.');
+  await expect(answer.getByRole('link', { name: 'Beleg 1' })).toBeVisible();
+  await expect(answer).toContainText('[1] e2e-ask.md');
+  // Markdown im Beleg erscheint formatiert, nicht als Sternchen
+  await expect(answer).not.toContainText('**');
+  await expect(answer.locator('strong', { hasText: 'Verlängern' }).first()).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  await page.getByRole('button', { name: 'Als Frage & Antwort übernehmen' }).click();
+  await expect(page.getByLabel('Frage', { exact: true })).toHaveValue('Wie beantrage ich eine E2E Garantieverlängerung?');
+  await page.getByRole('button', { name: 'Anlegen' }).click();
+  await expect(page.getByText('Frage und Antwort angelegt.')).toBeVisible();
+  const row = page.getByRole('row', { name: /Wie beantrage ich eine E2E Garantieverlängerung/ });
+  await row.getByRole('button', { name: 'Erneut fragen' }).click();
+  const compare = page.getByRole('region', { name: 'Vergleich mit dem neuen Stand' });
+  await expect(compare).toContainText('Antwort unverändert');
+  await expect(compare).toContainText('0 neu, 0 entfallen'); // Belege wie beim Speichern (andere E2E-Daten können weitere liefern)
+  await expect(page.getByRole('button', { name: '⬇ XLSX' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-269] Rückfragen: Fragenkatalog aus einer HTML-App einlesen, alle mit Belegen beantworten, als Frage & Antwort speichern', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  const res = await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name: 'e2e-rf.md', mimeType: 'text/markdown', buffer: Buffer.from('---\nroles: [all]\ndivisions: [all]\n---\n# E2E Rückfragen\n\n## E2E Wartungspaket\n\nE2E Ein Wartungspaket buchen Sie im Angebot über Pakete hinzufügen.\n') } } });
+  const id = (await res.json()).id;
+  await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
+  const app = '<html><body><script>const FRAGEN = [{ kapitel: "E2E Kapitel 6", frage: "Wie buche ich ein E2E Wartungspaket?" }, { kapitel: "E2E Kapitel 20", frage: "Welche Zollregeln gelten für Quarkfahrzeuge?" }];</script><div id="app"></div></body></html>';
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Rückfragen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Rückfragen' })).toBeVisible();
+  await page.getByTestId('catalog-input').setInputFiles({ name: 'e2e-review-cockpit.html', mimeType: 'text/html', buffer: Buffer.from(app) });
+  await expect(page.getByText('2 Fragen aus „e2e-review-cockpit.html“ eingelesen.')).toBeVisible();
+  await page.getByRole('button', { name: 'Alle mit Belegen beantworten' }).click();
+  await expect(page.getByText(/^1 von 2 Fragen mit Belegen beantwortet\.$/)).toBeVisible();
+  const ok = page.getByRole('region', { name: 'E2E Kapitel 6' });
+  await expect(ok).toContainText('E2E Ein Wartungspaket buchen Sie im Angebot über Pakete hinzufügen.');
+  await expect(ok).toContainText('beantwortet');
+  await expect(page.getByRole('region', { name: 'E2E Kapitel 20' })).toContainText('keine Aussage in den Quellen');
+  expect(await axe()).toEqual([]);
+  await ok.getByRole('button', { name: 'Als Frage & Antwort speichern' }).click();
+  await expect(page.getByText('Als Frage & Antwort gespeichert.')).toBeVisible();
+  await expect(ok.getByText('gespeichert', { exact: true })).toBeVisible();
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-274] Einlesen: Untertitel mit Zeitmarke je Chunk, Video ohne Transkription übersprungen, Status der lokalen Werkzeuge', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const vtt = 'WEBVTT\n\nKapitel-1\n00:00:00.000 --> 00:00:03.000\nE2E Lieferung planen\n\n00:00:07.000 --> 00:00:11.000\nE2E Den Liefertermin planen Sie in der Auftragsansicht.\n';
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Einlesen', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Einlesen' })).toBeVisible();
+  const tools = page.getByRole('list', { name: 'Lokale Werkzeuge' });
+  await expect(tools).toContainText('Transkription von Videos: nicht eingerichtet');
+  await expect(page.getByRole('cell', { name: '.vtt, .srt', exact: true })).toBeVisible();
+  await page.getByTestId('ingest-input').setInputFiles([
+    { name: 'e2e-lieferung.vtt', mimeType: 'text/vtt', buffer: Buffer.from(vtt) },
+    { name: 'e2e-film.mp4', mimeType: 'video/mp4', buffer: Buffer.from('E2E kein Video') },
+  ]);
+  const results = page.getByRole('list', { name: 'Eingelesene Dateien' });
+  await expect(results.getByText('fertig', { exact: true })).toHaveCount(2, { timeout: 20000 });
+  await expect(results).toContainText('Video ohne Untertitel – Transkription nicht eingerichtet (TRANSCRIBE_CMD), übersprungen');
+  expect(await axe()).toEqual([]);
+
+  await page.getByRole('link', { name: 'Zu den Chunks →' }).click();
+  await page.getByLabel('Im Text suchen').fill('E2E Den Liefertermin planen');
+  await expect(page.getByText('bei 00:07').first()).toBeVisible();
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-278] Antwortqualität: Testfragen einlesen, Prüflauf mit Kennzahlen, nicht bestandene Fragen, Testfrage ergänzen', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const csv = 'Frage;Erwartete Quelle;Keine Antwort\r\nE2E Welche Zollvorschriften gelten für Raumschiffe auf dem Mars?;;ja\r\nE2E Wie kündige ich einen Vertrag?;e2e-gibt-es-nicht.md;\r\n';
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Antwortqualität', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Antwortqualität' })).toBeVisible();
+  await page.getByTestId('eval-input').setInputFiles({ name: 'e2e-testfragen.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await expect(page.getByText('2 Testfragen aus „e2e-testfragen.csv“ eingelesen.')).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Testfragen' })).toContainText('Lückenfrage');
+  expect(await axe()).toEqual([]);
+
+  await page.getByRole('button', { name: 'Prüflauf starten' }).click();
+  await expect(page.getByText('Prüflauf fertig: 1 von 2 Testfragen bestanden.')).toBeVisible({ timeout: 30000 });
+  const kpis = page.getByRole('group', { name: 'Kennzahlen' });
+  await expect(kpis).toContainText('50 %');
+  await page.getByLabel('nur nicht bestanden').check();
+  const results = page.getByRole('table', { name: 'Ergebnisse' });
+  await expect(results).toContainText('E2E Wie kündige ich einen Vertrag?');
+  await expect(results).not.toContainText('Raumschiffe');
+  expect(await axe()).toEqual([]);
+
+  // Testfrage ergänzen
+  await page.getByLabel('Frage', { exact: true }).fill('E2E Was ist eine Lückenfrage auf dem Jupiter?');
+  await page.getByLabel('Lückenfrage (keine Antwort erwartet)').check();
+  await page.getByRole('button', { name: 'Testfrage hinzufügen' }).click();
+  await expect(page.getByRole('table', { name: 'Testfragen' })).toContainText('E2E Was ist eine Lückenfrage auf dem Jupiter?');
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-283] Expertenbefragung beantworten und übernehmen, Punktmodell Muss/Soll im Anleitungs-Check, Deckungsmatrix im Bildarchiv', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // Expertenbefragung: anlegen, Frage ergänzen, beantworten, übernehmen
+  await nav.getByRole('link', { name: 'Expertenbefragung', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Expertenbefragung' })).toBeVisible();
+  await page.getByLabel('Titel', { exact: true }).fill('E2E Lücken Zoll');
+  await page.getByLabel('Zielgruppe (Fachbereich oder Rolle)').fill('Fachbereich Zoll');
+  await page.getByRole('button', { name: 'Befragung anlegen' }).click();
+  await expect(page.getByText('Befragung „E2E Lücken Zoll“ mit 0 Fragen angelegt.')).toBeVisible();
+  await page.getByLabel('Frage ergänzen').fill('E2E Welche Zollvorschriften gelten in Brasilien?');
+  await page.getByRole('button', { name: 'Hinzufügen', exact: true }).click();
+  const q = page.getByRole('article', { name: 'Frage 1' });
+  await expect(q).toContainText('E2E Welche Zollvorschriften gelten in Brasilien?');
+  await q.getByLabel('Teilweise').check();
+  await q.getByLabel('Freitext (Erläuterung, Quelle, Ansprechstelle)').fill('E2E Es gelten die Einfuhrregeln des Landes.');
+  await q.getByRole('button', { name: 'Antwort speichern' }).click();
+  await expect(q.getByText('beantwortet', { exact: true })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await q.getByRole('button', { name: 'Als Frage & Antwort übernehmen' }).click();
+  await expect(page.getByText('Als Frage & Antwort mit Label „Prüfen“ übernommen.')).toBeVisible();
+  await expect(q.getByText('übernommen', { exact: true })).toBeVisible();
+
+  // Punktmodell: Stufen je Prüfpunkt sichtbar (nur ansehen – Einstellungen bleiben unverändert)
+  await nav.getByRole('link', { name: 'Anleitungs-Check', exact: true }).click();
+  const levels = page.getByRole('table', { name: 'Muss- und Soll-Punkte' });
+  await expect(levels.getByLabel('Stufe für Zweck beschrieben')).toHaveValue('must');
+  await expect(levels.getByLabel('Stufe für Ergebnis beschrieben')).toHaveValue('should');
+  await expect(page.getByLabel('Alle Muss-Punkte als Bedingung für Einreichen und Freigabe')).not.toBeChecked();
+  expect(await axe()).toEqual([]);
+
+  // Deckungsmatrix
+  await nav.getByRole('link', { name: 'Bildarchiv', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Deckungsmatrix' })).toBeVisible();
+  await page.getByLabel('je Rolle').check();
+  await expect(page.getByRole('region', { name: 'Deckungsmatrix' }).or(page.getByText('Noch keine Bilder im Archiv.'))).toBeVisible();
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-287] Bildarchiv: Varianten einer Maske verknüpfen, Klickstrecke aus Screenshots mit parallelem Weg erstellen', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const pick = async (label: string, text: string) => {
+    const select = page.getByRole('combobox', { name: label, exact: true });
+    const value = await select.evaluate((el, t) => [...(el as HTMLSelectElement).options].find((o) => o.text.includes(t))?.value ?? '', text);
+    expect(value).not.toBe('');
+    await select.selectOption(value);
+  };
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Bildarchiv', exact: true }).click();
+  for (const t of ['E2E Maske Liste DE', 'E2E Maske Liste EN', 'E2E Maske Kopieren']) {
+    await page.getByLabel('Was soll das Bild zeigen?').fill(t);
+    await page.getByRole('button', { name: 'Platzhalter anlegen' }).click();
+    await expect(page.getByText(/^Platzhalter B-\d{4} angelegt\.$/).last()).toBeVisible();
+  }
+  // aktuelles Bild: „E2E Maske Kopieren“ – mit der deutschen Liste verknüpfen
+  await pick('Variante verknüpfen', 'E2E Maske Liste DE');
+  await expect(page.getByText('Variante verknüpft.')).toBeVisible();
+  const variants = page.getByRole('region', { name: 'Varianten dieser Maske' });
+  await expect(variants).toContainText('E2E Maske Liste DE');
+  await expect(variants.getByRole('button', { name: 'Aus Gruppe lösen' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Klickstrecke: 1 Liste, 2a Liste EN / 2b Kopieren
+  await page.getByLabel('Titel der Klickstrecke').fill('E2E Vertrag anlegen');
+  await pick('Bild für 1', 'E2E Maske Liste DE');
+  await page.getByLabel('Beschriftung 1').fill('Vertragsliste öffnen');
+  await pick('Bild für 2', 'E2E Maske Liste EN');
+  await page.getByRole('button', { name: '+ paralleler Weg' }).nth(1).click();
+  await pick('Bild für 2b', 'E2E Maske Kopieren');
+  await page.getByLabel('Beschriftung 2a').fill('Neu');
+  await page.getByLabel('Beschriftung 2b').fill('Kopieren');
+  await page.getByRole('button', { name: 'Klickstrecke erstellen' }).click();
+  await expect(page.getByText('Klickstrecke im Bildarchiv abgelegt.')).toBeVisible({ timeout: 20000 });
+  await expect(page.getByText('Klickstrecke E2E Vertrag anlegen: 1 Vertragsliste öffnen → 2a Neu oder 2b Kopieren', { exact: false })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Klickstrecke aktualisieren' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-291] Bildarchiv: Stelle im Bild unkenntlich machen und rückgängig, mehrere Labels (Domäne, Gliederung) und Kapitel je Bild', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'x-user-id': 'u-admin' };
+  const up = await request.post('/api/v1/media', { headers: h, multipart: { file: { name: 'kunde.png', mimeType: 'image/png', buffer: png(640, 360, [180, 40, 40]) } } });
+  expect(up.status()).toBe(201);
+  const sha = (await up.json()).sha256;
+  await request.patch(`/api/v1/image-archive/${sha}`, { headers: h, data: { title: 'E2E Kundendaten' } });
+  expect((await request.post('/api/v1/metadata/labels', { headers: h, data: { group: 'domain', code: 'domain.e2e-vertraege', nameDe: 'E2E Verträge', nameEn: 'E2E contracts' } })).status()).toBe(201);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Bildarchiv', exact: true }).click();
+  await page.getByRole('list', { name: 'Bilder' }).getByRole('button', { name: /E2E Kundendaten/ }).click();
+  const privacy = page.getByRole('region', { name: 'Datenschutz im Bild' });
+  await expect(privacy).toContainText('Keine Texterkennung eingerichtet');
+
+  // Stelle ohne Maus angeben → unkenntlich
+  await privacy.getByText('Stelle markieren: im Bild mit der Maus ziehen oder hier in Prozent angeben').click();
+  await privacy.getByLabel('von links %').fill('10');
+  await privacy.getByLabel('von oben %').fill('10');
+  await privacy.getByLabel('Breite %').fill('40');
+  await privacy.getByLabel('Höhe %').fill('15');
+  await privacy.getByRole('button', { name: 'Übernehmen' }).click();
+  await privacy.getByRole('button', { name: 'Stelle unkenntlich machen' }).click();
+  await expect(privacy).toContainText('1 Stelle(n) unkenntlich gemacht');
+  expect(await axe()).toEqual([]);
+  // rückgängig und wieder an
+  await privacy.getByLabel('Personenbezogene Daten unkenntlich machen').click();
+  await expect(privacy).toContainText('Unkenntlichmachung ist ausgeschaltet');
+  await privacy.getByLabel('Personenbezogene Daten unkenntlich machen').click();
+  await expect(privacy).toContainText('1 Stelle(n) unkenntlich gemacht');
+
+  // Labels und Kapitel
+  const labels = page.getByRole('region', { name: 'Labels und Kapitel' });
+  const pickFirst = async (name: string, text?: string) => {
+    const select = labels.getByRole('combobox', { name, exact: true });
+    const opt = await select.evaluate((el, t) => {
+      const o = [...(el as HTMLSelectElement).options].find((x) => x.value && (!t || x.text.includes(t)));
+      return { value: o?.value ?? '', text: o?.text ?? '' };
+    }, text);
+    expect(opt.value).not.toBe('');
+    await select.selectOption(opt.value);
+    // erst weiter, wenn die Liste neu geladen ist – sonst liest der nächste Aufruf noch die alte Auswahl (Wettlauf in CI)
+    await expect(labels.getByRole('button', { name: `${opt.text} entfernen` }).first()).toBeVisible();
+  };
+  await pickFirst('Domäne hinzufügen', 'E2E Verträge');
+  await expect(labels).toContainText('E2E Verträge');
+  await pickFirst('Gliederung hinzufügen');
+  await expect(page.getByText('Label hinzugefügt.').last()).toBeVisible();
+  await pickFirst('Gliederung hinzufügen');
+  await pickFirst('Kapitel hinzufügen');
+  await expect(page.getByText('Kapitel zugeordnet.')).toBeVisible();
+  await expect.poll(async () => {
+    const it = (await (await request.get('/api/v1/image-archive', { headers: h })).json()).items.find((i: any) => i.sha === sha);
+    return [it.labels.filter((l: any) => l.group === 'outline').length, it.labels.filter((l: any) => l.group === 'domain').length, it.chapters.length, it.redaction.active];
+  }).toEqual([2, 1, 1, 1]);
+  await labels.getByRole('button', { name: 'E2E Verträge entfernen' }).click();
+  await expect(labels.getByRole('button', { name: 'E2E Verträge entfernen' })).toHaveCount(0);
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-295] Kapitelsteuerung: Kapitel und Unterkapitel ergänzen, Kapitelanweisung mit Version, Anzeige in der Werkstatt, Unterkapitel ablösen → Historie und zurückholen', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Kapitelsteuerung', exact: true }).click();
+  await page.getByLabel('Titel des Kapitels').fill('9. E2E Vertrag kündigen');
+  await page.getByLabel('Gültig ab (neues Kapitel)').fill('2026.3');
+  await page.getByRole('button', { name: 'Kapitel ergänzen' }).click();
+  await expect(page.getByText('Kapitel „9. E2E Vertrag kündigen“ ergänzt.')).toBeVisible();
+  const editor = page.getByRole('group', { name: 'Anweisung bearbeiten' });
+  await editor.getByLabel('Worauf es ankommt (kurze Anleitung)').fill('Nur die Sicht des Händlers beschreiben.');
+  await editor.getByLabel('Wichtige Themen (je Zeile eines – müssen vorkommen)').fill('Kündigungsgrund\nKündigungsfrist');
+  await editor.getByLabel('Nicht beschreiben (je Zeile eines)').fill('Storno');
+  await page.getByRole('button', { name: 'Anweisung speichern' }).click();
+  await expect(page.getByText('Anweisung gespeichert.')).toBeVisible();
+  const tree = page.getByRole('list', { name: 'Kapitel' });
+  await expect(tree.getByRole('listitem').filter({ hasText: '9. E2E Vertrag kündigen' }).first()).toContainText('ab 2026.3');
+  await page.getByLabel('Fehlendes Unterkapitel').fill('9.1 E2E Kündigung erfassen');
+  await page.getByRole('button', { name: 'Unterkapitel ergänzen' }).click();
+  await expect(page.getByText('Unterkapitel „9.1 E2E Kündigung erfassen“ ergänzt.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Anweisung in der Werkstatt
+  await page.getByRole('link', { name: 'Zur Werkstatt' }).click();
+  const banner = page.getByRole('complementary', { name: 'Kapitelanweisung' });
+  await expect(banner).toContainText('Nur die Sicht des Händlers beschreiben.');
+  await expect(banner).toContainText('Nicht beschreiben: Storno.');
+  await page.goBack();
+
+  // Unterkapitel ablösen → Historie, zurückholen
+  await tree.getByRole('button', { name: '9.1 E2E Kündigung erfassen' }).click();
+  await page.getByLabel('Titel des Nachfolgers').fill('9.1 E2E Kündigung anlegen');
+  await page.getByLabel('Nachfolger gültig ab').fill('2026.4');
+  await page.getByRole('button', { name: 'Ablösen und in die Historie legen' }).click();
+  await expect(page.getByText('„9.1 E2E Kündigung erfassen“ in die Historie gelegt – ersetzt durch „9.1 E2E Kündigung anlegen“.')).toBeVisible();
+  const row = page.getByRole('row').filter({ hasText: '9.1 E2E Kündigung erfassen' });
+  await expect(row).toContainText('9.1 E2E Kündigung anlegen');
+  await expect(row).toContainText('bis 2026.4');
+  await expect(tree).not.toContainText('9.1 E2E Kündigung erfassen');
+  expect(await axe()).toEqual([]);
+  await row.getByRole('button', { name: 'Zurückholen' }).click();
+  await expect(page.getByText('„9.1 E2E Kündigung erfassen“ aus der Historie zurückgeholt.')).toBeVisible();
+  await expect(tree).toContainText('9.1 E2E Kündigung erfassen');
+});
+
+test('[T-300] Schreibstil: Hausregeln (Anführungszeichen, Zahlen, Datum) automatisch korrigieren, Englisch prüfen, Zielgruppe und erlaubte Begriffe; Lesbarkeit je Kapitel', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Schreibstil' }).click();
+  // Deutsch: Hausregeln
+  await page.getByRole('textbox', { name: 'Text' }).fill('Klicken Sie auf "Speichern". Es gibt 3 Rollen ab 2026-10-23 in OneSCM.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Stilwert' })).toContainText('Typografie 1');
+  await page.getByRole('button', { name: /Automatisch korrigieren/ }).click();
+  await expect(page.getByRole('textbox', { name: 'Text' })).toHaveValue('Klicken Sie auf „Speichern“. Es gibt drei Rollen ab 23.10.2026 in oneSCM.');
+  expect(await axe()).toEqual([]);
+  // Englisch: a/an
+  await page.getByLabel('Sprache des Textes').selectOption('en');
+  await page.getByRole('textbox', { name: 'Text' }).fill('Create a order for the dealer.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Stilwert' })).toContainText('Grammatik 1');
+  await expect(page.getByRole('button', { name: 'In Präsens umwandeln' })).toHaveCount(0);
+  await page.getByRole('button', { name: /Automatisch korrigieren/ }).click();
+  await expect(page.getByRole('textbox', { name: 'Text' })).toHaveValue('Create an order for the dealer.');
+
+  // Regeln: Zielgruppe und erlaubte Begriffe
+  await page.getByRole('tab', { name: 'Regeln' }).click();
+  await page.getByLabel('Zielgruppe (Lesbarkeit)').selectOption('expert');
+  await page.getByLabel(/Erlaubte Begriffe/).fill('BTO\nVIN');
+  await page.getByRole('button', { name: 'Stilregeln speichern' }).click();
+  await expect(page.getByText('Stilregeln gespeichert.')).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Lesbarkeit je Kapitel im Schreibstil (ein Kapitelentwurf wird bei Bedarf erzeugt)
+  const h = { 'x-user-id': 'u-redaktion' };
+  const chapters = await (await page.request.get('/api/v1/chapters', { headers: h })).json();
+  if (!chapters.some((c: any) => c.versions.length)) {
+    for (const c of chapters) if ((await page.request.post(`/api/v1/chapters/${c.id}/generate`, { headers: h })).ok()) break;
+  }
+  await page.reload();
+  await page.getByRole('tab', { name: 'Kapitel' }).click();
+  const select = page.getByRole('combobox', { name: 'Kapitel', exact: true });
+  // erstes Kapitel, dessen Fassung Sätze enthält (Fassungen nur aus Lücken haben keine Lesbarkeit)
+  const values = await select.evaluate((el) => [...(el as HTMLSelectElement).options].map((o) => o.value).filter(Boolean));
+  const read = page.getByRole('region', { name: 'Lesbarkeit' });
+  for (const value of values) {
+    await select.selectOption(value);
+    await expect(page.getByRole('status').getByRole('link', { name: 'in der Werkstatt öffnen' })).toHaveAttribute('href', `/werkstatt/${value}`);
+    if (await read.count()) break;
+  }
+  await expect(read).toContainText('Lesbarkeit für Fachanwender und Administration');
+  await expect(read).toContainText('Flesch');
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-304] Pipeline, Backlog, Intern: Jira-Tickets je Gliederung mit Erstelldatum, Stream und Produktionsdatum, vorab dokumentieren, interne Themen', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const h = { 'x-user-id': 'u-admin' };
+  const md = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# 14. E2E-Pipeline Kündigung\n\n## 14.1 Kündigungsgrund erfassen\n\nSie erfassen den Grund.\n';
+  expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name: 'e2e_pipeline.md', mimeType: 'text/markdown', buffer: Buffer.from(md) } } })).status()).toBe(202);
+  const csv = 'Summary,Issue key,Issue Type,Status,Created,Custom field (Stream),Custom field (Production Date)\n'
+    + `Kündigungsgrund erfassen in Pipeline Kündigung,E2EPIPE-1,Story,In Progress,01.10.2026,Stream E2E,15.03.${new Date().getFullYear() + 1}\n`
+    + 'Vorlage für Kündigung,E2EPIPE-2,Story,PI Backlog,02.10.2026,Stream E2E,\n';
+  expect((await request.post('/api/v1/imports', { headers: h, multipart: { file: { name: 'e2e_pipeline.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) } } })).status()).toBe(202);
+  // warten, bis beide Importe durch sind (Ticketquelle vorhanden)
+  await expect.poll(async () => (await (await request.get('/api/v1/ticket-releases', { headers: h })).json()).tickets?.filter((t: any) => t.key.startsWith('E2EPIPE')).length ?? 0, { timeout: 15000 }).toBe(2);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Pipeline', exact: true }).click();
+  await page.getByRole('button', { name: 'Aus Jira-Tickets abgleichen' }).click();
+  await expect(page.getByText(/Jira-Tickets abgeglichen/)).toBeVisible();
+  const card = page.locator('.card', { hasText: 'E2E-Pipeline Kündigung' });
+  const row = card.locator('tr', { hasText: 'E2EPIPE-1' });
+  await expect(row).toContainText('01.10.2026');
+  await expect(row).toContainText('Stream E2E');
+  await expect(row).toContainText(`15.03.${new Date().getFullYear() + 1}`);
+  await expect(card.getByRole('heading', { name: '14.1 Kündigungsgrund erfassen' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  // vorab dokumentieren
+  await row.getByRole('button', { name: /bearbeiten/ }).click();
+  const dlg = page.getByRole('dialog');
+  await dlg.getByRole('textbox', { name: /Dokumentation \(Markdown\)/ }).fill('1. Öffnen Sie den Vertrag.\n2. Wählen Sie den Kündigungsgrund.');
+  expect(await axe()).toEqual([]);
+  await dlg.getByRole('button', { name: 'Speichern' }).click();
+  await expect(row).toContainText('bereits dokumentiert');
+  // Backlog
+  await page.getByRole('navigation', { name: 'Arbeitsbereiche' }).getByRole('link', { name: /Backlog/ }).click();
+  await expect(page.locator('tr', { hasText: 'E2EPIPE-2' })).toContainText('PI Backlog');
+  // Intern mit Themen
+  await page.getByRole('navigation', { name: 'Arbeitsbereiche' }).getByRole('link', { name: /Intern/ }).click();
+  await page.getByRole('tab', { name: /Migration/ }).click();
+  await page.getByRole('button', { name: 'Neuer Eintrag' }).click();
+  await expect(page.getByRole('dialog').getByRole('combobox', { name: /Thema/ })).toHaveValue('migration');
+  await page.getByRole('dialog').getByRole('textbox', { name: 'Titel' }).fill('E2E Migrationsplan');
+  await page.getByRole('dialog').getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.locator('tr', { hasText: 'E2E Migrationsplan' })).toContainText('Migration');
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-308] RAG v2: Frage mit Abkürzung wird erweitert und belegt, Lückenfrage nennt unbekannte Begriffe; Prüflauf je Verfahren mit nDCG@6', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  expect((await request.post('/api/v1/abbreviations', { headers: adm, data: { abbreviation: 'RLQ', expansion: 'Rücklaufquittung' } })).ok()).toBeTruthy();
+  const res = await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name: 'e2e-rag.md', mimeType: 'text/markdown', buffer: Buffer.from('---\nroles: [all]\ndivisions: [all]\n---\n# E2E Lager\n\n## E2E Rücklaufquittung buchen\n\nDie Rücklaufquittung bucht das Lager innerhalb von zwei Werktagen.\n') } } });
+  const id = (await res.json()).id;
+  await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Fragen & Antworten' }).click();
+  await page.getByLabel('Ihre Frage').fill('Wer bucht die RLQ?');
+  await page.getByRole('button', { name: 'Fragen', exact: true }).click();
+  const answer = page.getByRole('region', { name: 'Antwort mit Belegen' });
+  await expect(answer).toContainText('Die Rücklaufquittung bucht das Lager innerhalb von zwei Werktagen.');
+  await expect(page.getByText(/Abfrage erweitert um „Rücklaufquittung“/)).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Ihre Frage').fill('Wie buche ich eine Rücklaufquittung in Quantenkryptografie?');
+  await page.getByRole('button', { name: 'Fragen', exact: true }).click();
+  await expect(page.getByText(/in den Quellen nicht gefunden: Quantenkryptografie/)).toBeVisible();
+
+  // Prüflauf mit Verfahren v1 und v2
+  const csv = 'Frage;Erwartete Quelle;Keine Antwort\r\nWer bucht die RLQ?;e2e-rag.md;\r\n';
+  await nav.getByRole('link', { name: 'Antwortqualität', exact: true }).click();
+  await page.getByTestId('eval-input').setInputFiles({ name: 'e2e-rag.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await expect(page.getByText('1 Testfragen aus „e2e-rag.csv“ eingelesen.')).toBeVisible();
+  await page.getByRole('combobox', { name: /Verfahren/ }).selectOption('v1');
+  await page.getByRole('button', { name: 'Prüflauf starten' }).click();
+  await expect(page.getByText(/Prüflauf fertig/)).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText(/Verfahren v1/)).toBeVisible();
+  await page.getByRole('combobox', { name: /Verfahren/ }).selectOption('v2');
+  await page.getByRole('button', { name: 'Prüflauf starten' }).click();
+  await expect(page.getByText(/Verfahren v2/)).toBeVisible({ timeout: 30000 });
+  const kpis = page.getByRole('group', { name: 'Kennzahlen' });
+  await expect(kpis).toContainText('nDCG@6');
+  await expect(kpis).toContainText('1.00');
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-313] TRIAGE nach dem Einlesen, Vorschlag übernehmen, Inhalts-Dashboard, Agenten mit Plan und Aufgaben, GOAL-Abgleich – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  const outline = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# 15. Leasingrückgabe\n\n## 15.1 Leasingrückgabe anmelden\n\nDie Leasingrückgabe wird im Portal angemeldet.\n';
+  const mixed = '---\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# E2E Schulung Leasing\n\n## Leasingrückgabe anmelden kurz erklärt\n\n1. Öffnen Sie das Portal.\n2. Melden Sie die Leasingrückgabe an.\n';
+  for (const [name, body] of [['e2e_triage_gliederung.md', outline], ['e2e_triage_schulung.md', mixed]]) {
+    const id = (await (await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name, mimeType: 'text/markdown', buffer: Buffer.from(body) } } })).json()).id;
+    await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
+  }
+  await expect.poll(async () => (await (await request.get('/api/v1/triage/results?status=proposed', { headers: adm })).json()).items.some((r: any) => r.text.includes('Melden Sie die Leasingrückgabe')), { timeout: 15000 }).toBe(true);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Triage', exact: true }).click();
+  const row = page.locator('tr', { hasText: 'Melden Sie die Leasingrückgabe' });
+  await expect(row).toContainText('verschieben');
+  await expect(row).toContainText('15.1 Leasingrückgabe anmelden');
+  await expect(row).toContainText('Detaillevel: HappyPath');
+  expect(await axe()).toEqual([]);
+  await row.getByRole('button', { name: /Vorschlag übernehmen/ }).click();
+  await expect(page.getByText('Vorschlag übernommen.')).toBeVisible();
+  // Inhalts-Dashboard
+  await nav.getByRole('link', { name: 'Inhalts-Dashboard' }).click();
+  await expect(page.getByRole('table', { name: 'Chunks, Wörter und Labels je Kapitel' })).toContainText('15. Leasingrückgabe');
+  expect(await axe()).toEqual([]);
+  // Agenten: Plan, Aufgaben, Entscheidungen
+  await nav.getByRole('link', { name: 'Aufgaben & Entscheidungen' }).click();
+  await page.getByRole('button', { name: 'Plan erstellen / verfeinern' }).click();
+  await expect(page.getByText(/Plan mit \d+ Schritten/)).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Aufgaben der Agenten' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  // GOAL
+  await page.getByRole('navigation', { name: 'Agenten' }).getByRole('link', { name: /GOAL/ }).click();
+  await page.getByRole('button', { name: 'Abgleich ausführen' }).click();
+  await expect(page.getByText(/Ziel-Abgleich: \d+ % der Kriterien erfüllt/)).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Ergebnis des Ziel-Abgleichs mit Empfehlungen' })).toContainText('Pflichtlabels');
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-318] Übersetzung: KI-Übersetzung, Büro-Austausch (XLIFF), Länderreview mit MQM und „zurück an Übersetzung“, Übersetzungsspeicher und Glossar je Sprache – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const adm = { 'X-User-Id': 'u-admin' };
+  const project = await (await request.get('/api/v1/projects/p_default', { headers: adm })).json();
+  const languages = [...new Set([...(project.languages ?? []), 'fr', 'de-ch'])];
+  expect((await request.patch('/api/v1/projects/p_default', { headers: adm, data: { languages } })).ok()).toBeTruthy();
+  const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: 'E2E Kündigung übersetzen', purpose: 'Mit dieser Anleitung kündigen Sie einen Vertrag.', steps: ['Öffnen Sie **Verträge**', 'Klicken Sie auf **Kündigen**'], result: 'Der Vertrag ist gekündigt.' } })).json();
+  expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/submit`, { headers: red })).ok()).toBeTruthy();
+  expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBeTruthy();
+  const tr = await (await request.post('/api/v1/translations', { headers: red, data: { chapterId: ch.chapterId, language: 'fr' } })).json();
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Übersetzungen', exact: true }).click();
+  await page.getByLabel('Kapitel für Übersetzungen').selectOption({ label: 'E2E Kündigung übersetzen' });
+  await page.locator('tr', { hasText: 'Französisch' }).getByRole('button', { name: 'Öffnen', exact: true }).click();
+  await page.getByRole('button', { name: '✨ Unübersetzte Absätze mit KI übersetzen' }).click();
+  await expect(page.getByText(/KI \(demo-extractive\)/).first()).toBeVisible({ timeout: 15000 });
+  await page.getByText('Übersetzungsbüro: XLIFF 1.2 oder Excel').click();
+  await expect(page.getByRole('button', { name: 'XLIFF 1.2 herunterladen' })).toBeVisible();
+  // Länderreview anfordern
+  const review = page.getByRole('region', { name: 'Länderreview' });
+  await review.getByRole('combobox', { name: /Prüferin/ }).selectOption({ label: 'Fachprüfung (Demo)' });
+  await review.getByRole('textbox', { name: /Markt/ }).fill('FR');
+  await review.getByRole('button', { name: 'Länderreview anfordern' }).click();
+  await expect(review).toContainText('offen');
+  expect(await axe()).toEqual([]);
+  // die Prüferin erfasst einen Fehler und gibt zurück
+  await page.getByLabel('Demo-Benutzer').selectOption('u-fachpruefung');
+  await nav.getByRole('link', { name: 'Übersetzungen', exact: true }).click();
+  await page.getByLabel('Kapitel für Übersetzungen').selectOption({ label: 'E2E Kündigung übersetzen' });
+  await page.locator('tr', { hasText: 'Französisch' }).getByRole('button', { name: 'Öffnen', exact: true }).click();
+  const r2 = page.getByRole('region', { name: 'Länderreview' });
+  await r2.getByRole('combobox', { name: 'Schwere' }).selectOption('critical');
+  await r2.getByRole('textbox', { name: 'Beschreibung' }).fill('Kündigungsfrist fehlt');
+  await r2.getByRole('button', { name: 'Erfassen' }).click();
+  await expect(r2.getByRole('table', { name: 'Erfasste Fehler des Länderreviews' })).toContainText('Kündigungsfrist fehlt');
+  await expect(r2.getByRole('button', { name: 'Freigeben (Land)' })).toBeDisabled();
+  expect(await axe()).toEqual([]);
+  await r2.getByRole('button', { name: 'Zurück an Übersetzung' }).click();
+  await expect(r2).toContainText('zurück an Übersetzung');
+  // Übersetzungsspeicher und Glossar je Sprache
+  // erst die neue Seite abwarten: beim Seitenwechsel steht die vorige kurz noch im DOM (Transition)
+  await nav.getByRole('link', { name: 'Übersetzungsspeicher' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Übersetzungsspeicher' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Zielsprache' }).selectOption('fr');
+  await expect(page.getByRole('heading', { name: /Deutsch → Französisch/ })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await nav.getByRole('link', { name: 'Glossar je Sprache' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Glossar je Sprache' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Zielsprache' }).selectOption('de-ch');
+  await expect(page.getByRole('heading', { name: /Deutsch → Deutsch \(Schweiz\)/ })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  expect(tr.language).toBe('fr');
+});
+
+test('[T-323] Tonalität je Rolle in der Stilprüfung, Ticket-Einstufung im Release-Abgleich, Zukunfts-Inhalte im Export, Releaseletter aus dem Projektvergleich – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // S-02: Ton für die Rolle Dealer einstellen und in der Prüfung wählen
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.goto('/schreibstil');
+  await page.getByRole('tab', { name: 'Regeln' }).click();
+  await page.getByRole('combobox', { name: 'Ton für Rolle Dealer' }).selectOption('friendly');
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Stilregeln speichern' }).click();
+  await expect(page.getByText('Stilregeln gespeichert.')).toBeVisible();
+  await page.getByRole('tab', { name: 'Textfeld' }).click();
+  await page.getByRole('combobox', { name: 'Rolle' }).selectOption({ label: 'Dealer' });
+  await page.getByRole('textbox', { name: 'Text' }).fill('Sie müssen den Antrag speichern.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.getByText('Ton: freundlich')).toBeVisible();
+  await expect(page.locator('.style-sentence').first()).toHaveAttribute('title', /wirkt streng/);
+  expect(await axe()).toEqual([]);
+  await request.put('/api/v1/style/rules', { headers: adm, data: { tone: { products: {}, roles: {} } } });
+
+  // W-03: Ticket als Background einstufen
+  const csv = [
+    'Summary,Issue key,Issue Type,Status,Fix Version/s,Created,Description',
+    '"E2E Vertrag pausieren",E2ETC-1,Story,Fertig,2096.2,2026-02-05T10:00:00.000+0100,"Der Vertrag lässt sich pausieren."',
+    '"E2E Migration",E2ETC-2,Story,Fertig,2096.2,2026-02-06T10:00:00.000+0100,"Migration der Altdaten."',
+  ].join('\n');
+  expect((await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name: 'e2e_einstufung.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) } } })).status()).toBe(202);
+  await expect.poll(async () => (await (await request.get('/api/v1/ticket-releases', { headers: adm })).json()).releases.some((r: any) => r.label === '2096.2')).toBe(true);
+  await nav.getByRole('link', { name: 'Release-Abgleich' }).click();
+  await page.getByRole('button', { name: '2096.2' }).click();
+  await page.getByRole('combobox', { name: 'Einstufung E2ETC-2' }).selectOption('background');
+  await expect(page.getByRole('row', { name: /E2ETC-2/ })).toContainText('Background');
+  await expect(page.getByRole('combobox', { name: 'Einstufung E2ETC-2' })).toHaveValue('background');
+  await page.getByRole('combobox', { name: 'Einstufung E2ETC-1' }).selectOption('approved');
+  await expect(page.getByRole('combobox', { name: 'Einstufung E2ETC-1' })).toHaveValue('approved');
+  expect(await axe()).toEqual([]);
+
+  // W-09: Kapitel mit „gültig ab“ 2096.3 ist im Export mit Stand 2096.2 ausgeblendet
+  const mk = async (title: string) => {
+    const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title, purpose: 'Mit dieser Anleitung pausieren Sie einen Vertrag.', steps: ['Öffnen Sie **Verträge**', 'Klicken Sie auf **Pausieren**'], result: 'Der Vertrag ist pausiert.' } })).json();
+    expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/submit`, { headers: red })).ok()).toBeTruthy();
+    expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBeTruthy();
+    return ch;
+  };
+  const now = await mk('E2E Vertrag pausieren');
+  const later = await mk('E2E Vertrag übertragen');
+  expect((await request.patch(`/api/v1/structure/chapters/${now.chapterId}`, { headers: red, data: { validFrom: '2096.2' } })).ok()).toBeTruthy();
+  expect((await request.patch(`/api/v1/structure/chapters/${later.chapterId}`, { headers: red, data: { validFrom: '2096.3' } })).ok()).toBeTruthy();
+  await nav.getByRole('link', { name: 'Export', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Stand (Release)' }).fill('2096.2');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Zukunfts-Inhalte' })).toContainText('„E2E Vertrag übertragen“ (gültig ab 2096.3)');
+  expect(await axe()).toEqual([]);
+
+  // W-04: Release veröffentlichen und Letter-Entwurf aus dem Projektvergleich
+  const rel = await (await request.post('/api/v1/releases', { headers: { 'X-User-Id': 'u-freigabe' }, data: { version: '2096.2' } })).json();
+  expect(rel.future.map((f: any) => f.title)).toContain('E2E Vertrag übertragen');
+  await nav.getByRole('link', { name: 'Veröffentlichung' }).click();
+  const item = page.getByRole('listitem').filter({ hasText: 'Version 2096.2' });
+  await item.getByRole('button', { name: 'Änderungen anzeigen' }).click();
+  const cmp = page.getByRole('region', { name: 'Projektvergleich' });
+  await expect(cmp).toContainText('„E2E Vertrag pausieren“');
+  await expect(cmp).toContainText('E2ETC-1');
+  await expect(cmp).not.toContainText('E2ETC-2');
+  expect(await axe()).toEqual([]);
+  await cmp.getByRole('button', { name: 'Releaseletter-Entwurf erzeugen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Releaseletter' })).toBeVisible();
+  await expect(page.getByLabel('Text (Markdown)')).toHaveValue(/# Releaseletter 2096\.2/);
+  await expect(page.getByLabel('Text (Markdown)')).toHaveValue(/- \*\*E2E Vertrag pausieren\*\* – neu ab 2096\.2/);
+  expect(await axe()).toEqual([]);
+  // aufräumen: „gültig ab“ zurück, damit spätere Exporte vollständig bleiben
+  for (const c of [now, later]) await request.patch(`/api/v1/structure/chapters/${c.chapterId}`, { headers: red, data: { validFrom: null } });
+});
+
+test('[T-327] Kapitelbewertung mit Ampel und Plausibilität je Aussage, Funde in die Fehlerliste, Status mit Begründung – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: 'E2E Bewertung Antrag', purpose: 'Mit dieser Anleitung legen sie einen Antrag an , der Antrag wird gespeichert werden.', steps: ['Öffnen Sie **Anträge**', 'Klicken Sie auf **Neu**'], result: 'Der Antrag ist gespeichert.' } })).json();
+  expect(ch.versionId).toBeTruthy();
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Kapitelbewertung' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Kapitelbewertung' })).toBeVisible();
+  await page.getByRole('button', { name: 'E2E Bewertung Antrag' }).click();
+  const criteria = page.getByRole('list', { name: 'Kriterien' });
+  for (const c of ['Sprache', 'Ziel', 'Tonalität', 'Quellenabgleich', 'Fakten']) await expect(criteria).toContainText(c);
+  await expect(page.getByRole('region', { name: 'Aussagen' })).toContainText('unbelegt');
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Funde in die Fehlerliste' }).click();
+  await expect(page.getByText(/Fehlerliste: \d+ neue Funde/)).toBeVisible();
+
+  await nav.getByRole('link', { name: 'Fehlerliste' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Fehlerliste' })).toBeVisible();
+  const row = page.getByRole('row', { name: /E2E Bewertung Antrag/ }).first();
+  await expect(row).toContainText('offen');
+  const nr = (await row.getByRole('rowheader').textContent())!.trim();
+  await row.getByRole('combobox', { name: `Status ${nr}` }).selectOption('rejected');
+  await page.getByRole('textbox', { name: `Begründung ${nr}` }).fill('Bewusst so formuliert');
+  await page.getByRole('button', { name: 'Ablehnen' }).click();
+  await expect(page.getByText(`${nr}: abgelehnt.`)).toBeVisible();
+  await page.getByRole('combobox', { name: 'Status', exact: true }).selectOption('rejected');
+  await expect(page.getByRole('row', { name: new RegExp(nr) })).toContainText('Bewusst so formuliert');
+  expect(await axe()).toEqual([]);
+  const csv = await (await request.get('/api/v1/language-errors/export', { headers: red })).text();
+  expect(csv).toContain(`${nr};`);
+  expect(csv).toContain('abgelehnt (Bewusst so formuliert)');
+});
+
+test('[T-331] Überarbeitung: Prüffassung exportieren, KI-Lektorat, Drei-Spalten-Ansicht mit Wortvergleich, eigene Fassung übernehmen, interner Kommentar – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: 'E2E Lektorat Kennwort', purpose: 'Mit dieser Anleitung ändern Sie Ihr Kennwort.', steps: ['Öffnen Sie **Profil**', 'Klicken Sie auf **Sicherheit**'], result: 'Das Kennwort wurde gespeichert.' } })).json();
+  expect(ch.versionId).toBeTruthy();
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  // Prüffassung für Word nur beim Format Word
+  await nav.getByRole('link', { name: 'Export' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Export' })).toBeVisible();
+  await page.getByLabel('Format').selectOption('docx');
+  await page.getByLabel(/Prüffassung für Word/).check();
+  await expect(page.getByRole('textbox', { name: 'Fertig, wenn …' })).toBeVisible();
+
+  await nav.getByRole('link', { name: 'Überarbeitung' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Überarbeitung' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Kapitel', exact: true }).selectOption({ label: 'E2E Lektorat Kennwort – Version 1 (Entwurf)' });
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'KI-Lektorat starten' }).click();
+  await expect(page.getByText(/KI-Lektorat: \d+ Vorschläge/)).toBeVisible();
+  const item = page.getByTestId('revision-proposal').filter({ hasText: 'wurde' }).first();
+  await expect(item.locator('del', { hasText: 'wurde' })).toBeVisible();
+  await expect(item.locator('ins', { hasText: 'wird' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await item.getByLabel('Text für den Entwurf').fill('Das Kennwort ist jetzt gespeichert.');
+  await item.getByLabel('Interner Kommentar (nie im Export)').fill('Mit Fachbereich abgestimmt');
+  await item.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(page.getByText('Vorschlag in den Entwurf übernommen.')).toBeVisible();
+  await page.getByLabel('Status').selectOption('accepted');
+  const done = page.getByTestId('revision-proposal').filter({ hasText: 'übernommen' }).first();
+  await expect(done).toContainText('Das Kennwort ist jetzt gespeichert.');
+  await expect(done.getByLabel('Interner Kommentar (nie im Export)')).toHaveValue('Mit Fachbereich abgestimmt');
+  const v = await (await request.get(`/api/v1/chapter-versions/${ch.versionId}`, { headers: red })).json();
+  expect(v.sections.flatMap((s: any) => s.blocks.map((b: any) => b.text))).toContain('Das Kennwort ist jetzt gespeichert.');
+});
+
+test('[T-335] Textvarianten und Prüferprofile – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: 'E2E Varianten Löschen', purpose: 'Mit dieser Anleitung löschen Sie einen Datensatz. Die Übertragung ist garantiert fehlerfrei.', steps: ['Öffnen Sie **Stammdaten**', 'Klicken Sie auf **Löschen**, um den Datensatz endgültig zu löschen'], result: 'Der Datensatz ist gelöscht und erscheint nicht mehr in der Liste.' } })).json();
+  expect(ch.versionId).toBeTruthy();
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Textvarianten' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Textvarianten' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Kapitel', exact: true }).selectOption({ label: 'E2E Varianten Löschen – Version 1' });
+  const tabs = page.getByRole('tablist', { name: 'Varianten' });
+  await expect(tabs.getByRole('tab')).toHaveCount(3);
+  await expect(page.getByRole('tabpanel', { name: 'Fassung Endanwender' })).toContainText('Öffnen Sie');
+  await tabs.getByRole('tab', { name: /Kurzfassung/ }).click();
+  await expect(page.getByRole('tabpanel', { name: 'Fassung Kurzfassung (Management)' })).toContainText('Mit dieser Anleitung löschen Sie einen Datensatz.');
+  expect(await axe()).toEqual([]);
+
+  await nav.getByRole('link', { name: 'Prüferprofile' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Prüferprofile' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Kapitel', exact: true }).selectOption({ label: 'E2E Varianten Löschen – Version 1' });
+  await expect(page.getByText('Für diese Version gibt es noch keine Prüfung.')).toBeVisible();
+  await page.getByRole('button', { name: 'Prüfung starten' }).click();
+  await expect(page.getByText('Prüfung abgeschlossen (4 Profile).')).toBeVisible();
+  const compliance = page.getByRole('list', { name: 'Funde Compliance' });
+  await expect(compliance).toContainText('Folgenreiche Aktion');
+  await expect(compliance).toContainText('garantiert');
+  for (const p of ['Fachlich', 'Redaktion', 'Compliance', 'Endanwender']) await expect(page.getByRole('heading', { level: 2, name: new RegExp(`^${p} `) })).toBeVisible();
+  expect(await axe()).toEqual([]);
+});
+
+test('[T-340] Vorher/Nachher mit Schieberegler und Gegenüberstellung im Archiv, PowerPoint im Export – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const v1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAKAAAABaCAYAAAA/xl1SAAAABHNCSVQICAgIfAhkiAAAAAFzUkdCAK7OHOkAAAEDSURBVHic7dIxAcAgAMAwwL8zbgSgZMjosURBj8597jcgsuoA/s2ApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjqAf/GBDT62TtKAAAAAElFTkSuQmCC', 'base64');
+  const v2 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAKAAAABaCAYAAAA/xl1SAAAABHNCSVQICAgIfAhkiAAAAAFzUkdCAK7OHOkAAAEhSURBVHic7duhEYNQFEXBkMGkPbqhArqhEXQKoApk0gHDYI5gV39xxZnn/rB9998LIu96AM8mQFICJCVAUgIkJUBSAiQ11gO4Z5qPesKpdflceucCkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSGvwLpuQCkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZL6A5oOCrV9u+P3AAAAAElFTkSuQmCC', 'base64');
+  const up = await (await request.post('/api/v1/media', { headers: red, multipart: { file: { name: 'e2e-maske.png', mimeType: 'image/png', buffer: v1 } } })).json();
+  expect((await request.post(`/api/v1/image-archive/${up.sha256}/versions`, { headers: red, multipart: { file: { name: 'e2e-maske-neu.png', mimeType: 'image/png', buffer: v2 } } })).ok()).toBe(true);
+  await request.patch(`/api/v1/image-archive/${up.sha256}`, { headers: red, data: { title: 'E2E Maske Verträge' } });
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Vorher/Nachher' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Vorher/Nachher' })).toBeVisible();
+  const select = page.getByRole('combobox', { name: 'Bild', exact: true });
+  await select.selectOption((await select.locator('option', { hasText: 'E2E Maske Verträge' }).first().getAttribute('value'))!);
+  await expect(page.getByRole('combobox', { name: 'Nachher' })).toHaveValue(/[a-f0-9]{64}/);
+  await page.getByRole('button', { name: 'Beleg anlegen' }).click();
+  await expect(page.getByText('Vorher/Nachher-Beleg angelegt.')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Nachher: E2E Maske Verträge' }).first()).toBeVisible();
+  await page.getByRole('slider', { name: 'Anteil Nachher: E2E Maske Verträge' }).first().fill('80');
+  await expect(page.getByText('(80 % Nachher sichtbar)').first()).toBeVisible();
+  await page.getByLabel('Anlass').first().fill('Release 2026.3');
+  await page.getByLabel('Änderung').first().fill('Schaltfläche Export oben rechts');
+  await page.getByLabel('Wirkung').first().fill('Verträge lassen sich direkt exportieren');
+  await page.getByRole('button', { name: 'Speichern' }).first().click();
+  await expect(page.getByText('Beleg gespeichert.')).toBeVisible();
+  await page.getByRole('button', { name: 'Als Bild ins Archiv' }).first().click();
+  await expect(page.getByText('Gegenüberstellung im Bildarchiv abgelegt.')).toBeVisible();
+  await expect(page.getByText(/!\[Vorher\/Nachher: E2E Maske Verträge\]\(media:[a-f0-9]{64}\)/).first()).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // PowerPoint im Export
+  await nav.getByRole('link', { name: 'Export' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Export' })).toBeVisible();
+  await page.getByLabel('Format').selectOption('pptx');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByText(/PowerPoint-Präsentation erstellt/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /\.pptx herunterladen/ })).toBeVisible();
+});
+
+test('[T-344] Textbausteine: wiederkehrenden Absatz übernehmen, verknüpfen, neue Fassung in Kapitel übernehmen – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const result = 'Der Auftrag erscheint danach in der Übersicht der offenen Aufträge mit dem Status Neu.';
+  for (const t of ['E2E Baustein Auftrag anlegen', 'E2E Baustein Auftrag kopieren']) {
+    const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: t, purpose: `Mit dieser Anleitung ${t.endsWith('anlegen') ? 'legen' : 'kopieren'} Sie einen Auftrag.`, steps: ['Öffnen Sie **Aufträge**', 'Klicken Sie auf **Neu**'], result } })).json();
+    expect(ch.versionId).toBeTruthy();
+  }
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Textbausteine' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Textbausteine' })).toBeVisible();
+  const cand = page.getByRole('list', { name: 'Wiederkehrende Absätze' }).getByRole('listitem').filter({ hasText: 'offenen Aufträge mit dem Status Neu' });
+  await expect(cand).toContainText('in 2 Kapiteln');
+  await cand.getByRole('button', { name: 'Als Textbaustein anlegen' }).click();
+  await expect(page.getByText(/Textbaustein „.+“ angelegt\./)).toBeVisible();
+  await page.getByRole('button', { name: 'Gleiche Absätze verknüpfen (2)' }).click();
+  await expect(page.getByText('2 Kapitel verknüpft und aktualisiert.')).toBeVisible();
+  const usage = page.getByRole('region', { name: 'Verwendung' });
+  await expect(usage).toContainText('E2E Baustein Auftrag anlegen');
+  await expect(usage.getByText('aktuell')).toHaveCount(2);
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Text des Bausteins (Markdown)').fill(result.replace('Status Neu', 'Status **Neu**'));
+  await page.getByLabel('Änderungsnotiz').fill('Status hervorgehoben');
+  await page.getByRole('button', { name: 'Neue Fassung speichern' }).click();
+  await expect(page.getByText('Neue Fassung 2 gespeichert.')).toBeVisible();
+  await expect(usage.getByText(/veraltet/)).toHaveCount(2);
+  await page.getByRole('button', { name: 'In Kapitel aktualisieren (2)' }).click();
+  await expect(page.getByText('Fassung 2 in 2 Kapitel übernommen.')).toBeVisible();
+  await expect(usage.getByText('aktuell')).toHaveCount(2);
+  expect(await axe()).toEqual([]);
 });

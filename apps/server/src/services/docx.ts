@@ -1,6 +1,9 @@
 // Word-Export (ADR-038): .docx mit Formatvorlagen (Titel, Überschrift 1–3), Inhaltsverzeichnis-Feld, Tabellen, Bildern,
 // Kopf- und Fußzeile mit Seitenzahl sowie optionaler Firmenvorlage (Formatvorlagen aus .dotx/.docx).
 // Markdown wird über dieselben Tokens wie beim PDF übersetzt; eingebettetes HTML erscheint als Text, Links nur http(s)/mailto.
+import { frameTexts, type FrameTexts } from '../domain/frameTexts.js';
+import { CRITERION_PREFIX } from '../domain/revision.js';
+import { HISTORY_TITLE, historySpan } from './appendixRender.js';
 import {
   AlignmentType, BorderStyle, Document, ExternalHyperlink, Footer, Header, ImageRun, LevelFormat, Packer, PageBreak, PageNumber, Paragraph,
   ShadingType, Table, TableCell, TableOfContents, TableRow, TextRun, WidthType, type IStylesOptions, type ParagraphChild,
@@ -12,7 +15,7 @@ import type { ResolvedLayout } from './layout.js';
 import type { Appendices } from './variants.js';
 
 export interface DocxBlock { kind: string; text: string; badges: string; label: string | null }
-export interface DocxChapter { title: string; meta: string; sections: { title: string; blocks: DocxBlock[] }[] }
+export interface DocxChapter { title: string; meta: string; /** Prüffassung (ADR-104, W-06): Zeile „Fertig, wenn: …“ */ criterion?: string | null; sections: { title: string; blocks: DocxBlock[] }[] }
 
 const SAFE_URL = /^(https?:|mailto:)/i;
 const marked = new Marked({ gfm: true, async: false });
@@ -137,6 +140,10 @@ function appendixDocx(a: Appendices, c: Ctx, heading: (text: string, level: 1 | 
       out.push(...blocks(marked.lexer(f.answer), c));
     }
   }
+  if (a.history?.length) {
+    out.push(heading(HISTORY_TITLE, 1));
+    out.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [row(['Art', 'Funktion', 'gültig', 'ersetzt durch', 'Hinweis'], true), ...a.history.map((h) => row([h.kind, h.title, historySpan(h), h.replacedBy ?? '–', h.note ?? '']))] }));
+  }
   return out;
 }
 
@@ -145,7 +152,7 @@ function appendixDocx(a: Appendices, c: Ctx, heading: (text: string, level: 1 | 
  * Formatvorlagen (Titel, Überschrift 1–3) verwendet. Das Inhaltsverzeichnis ist ein Word-Feld, das Word beim Öffnen aktualisiert.
  */
 export async function renderDocx(
-  chapters: DocxChapter[], opts: { title: string; filterLine: string; media: Map<string, MediaFile>; layout: ResolvedLayout; appendices?: Appendices | null },
+  chapters: DocxChapter[], opts: { title: string; filterLine: string; media: Map<string, MediaFile>; layout: ResolvedLayout; appendices?: Appendices | null; frame?: FrameTexts; customProperties?: { name: string; value: string }[] },
 ): Promise<Buffer> {
   const { layout: l } = opts;
   const color = hex(l.primaryColor);
@@ -166,18 +173,20 @@ export async function renderDocx(
   if (l.cover && l.companyName) children.push(new Paragraph({ children: [new TextRun({ text: l.companyName, color, bold: true, size: 28 })], spacing: { before: l.logo ? 0 : 1600 } }));
   children.push(new Paragraph(tpl?.title ? { text: opts.title, style: tpl.title } : { text: opts.title, heading: 'Title' }));
   if (l.cover && l.coverSubtitle) children.push(new Paragraph({ children: [new TextRun({ text: l.coverSubtitle, size: 28 })], spacing: { after: 240 } }));
-  children.push(new Paragraph({ children: [new TextRun({ text: `Stand ${now().slice(0, 10)} · ${opts.filterLine}`, color: '5B6474', size: 18 })] }));
+  const F = opts.frame ?? frameTexts('de');
+  children.push(new Paragraph({ children: [new TextRun({ text: `${F.asOf} ${now().slice(0, 10)} · ${opts.filterLine}`, color: '5B6474', size: 18 })] }));
   if (l.cover && l.confidentiality) children.push(new Paragraph({ children: [new TextRun({ text: l.confidentiality, bold: true, color: 'B91C1C' })], spacing: { before: 480 } }));
   if (l.cover) children.push(new Paragraph({ children: [new PageBreak()] }));
 
-  children.push(new Paragraph({ children: [new TextRun({ text: 'Inhalt', bold: true, size: 28, color })], spacing: { after: 120 } }));
-  children.push(new TableOfContents('Inhalt', { hyperlink: true, headingStyleRange: '1-2' }));
+  children.push(new Paragraph({ children: [new TextRun({ text: F.contents, bold: true, size: 28, color })], spacing: { after: 120 } }));
+  children.push(new TableOfContents(F.contents, { hyperlink: true, headingStyleRange: '1-2' }));
   children.push(new Paragraph({ children: [new PageBreak()] }));
 
   chapters.forEach((ch, i) => {
     if (i > 0) children.push(new Paragraph({ children: [new PageBreak()] }));
     children.push(heading(ch.title, 1));
     children.push(new Paragraph({ children: [new TextRun({ text: ch.meta, italics: true, color: '5B6474', size: 18 })], spacing: { after: 120 } }));
+    if (ch.criterion) children.push(new Paragraph({ children: [new TextRun({ text: `${CRITERION_PREFIX} ${ch.criterion}`, bold: true })], spacing: { after: 160 } }));
     for (const s of ch.sections) {
       children.push(heading(s.title, 2));
       for (const b of s.blocks) {
@@ -205,7 +214,7 @@ export async function renderDocx(
   const headerText = l.headerText ?? [l.companyName, opts.title].filter(Boolean).join(' · ');
   const footerRuns = [
     ...(l.footerText ? [new TextRun({ text: `${l.footerText} · ` })] : []),
-    new TextRun({ children: ['Seite ', PageNumber.CURRENT, ' von ', PageNumber.TOTAL_PAGES] }),
+    new TextRun({ children: [`${F.page} `, PageNumber.CURRENT, ` ${F.of} `, PageNumber.TOTAL_PAGES] }),
   ];
   const styles: IStylesOptions = {
     default: {
@@ -219,6 +228,7 @@ export async function renderDocx(
   const doc = new Document({
     creator: 'oneSCM Handbook Studio', title: opts.title, description: opts.filterLine,
     features: { updateFields: true },
+    ...(opts.customProperties?.length ? { customProperties: opts.customProperties } : {}),
     ...(l.stylesXml ? { externalStyles: l.stylesXml } : { styles }),
     numbering: {
       config: [{
