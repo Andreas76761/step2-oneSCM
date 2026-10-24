@@ -21,7 +21,7 @@ export function SettingsPage() {
 
   const save = async () => {
     try {
-      await put('/settings', { analysis: draft.analysis, import: { ...draft.import, excludePatterns: excludeText.split('\n').map((x) => x.trim()).filter(Boolean) }, readability: draft.readability, rewrite: draft.rewrite, semantic: draft.semantic, privacy: { names: namesText.split('\n').map((x) => x.trim()).filter(Boolean) } });
+      await put('/settings', { analysis: draft.analysis, import: { ...draft.import, excludePatterns: excludeText.split('\n').map((x) => x.trim()).filter(Boolean) }, readability: draft.readability, rewrite: draft.rewrite, semantic: draft.semantic, privacy: { names: namesText.split('\n').map((x) => x.trim()).filter(Boolean) }, triage: { auto: draft.triage?.auto !== false } });
       notify('Einstellungen gespeichert.');
       s.reload();
     } catch (e) {
@@ -48,6 +48,7 @@ export function SettingsPage() {
           {slider('duplicateThreshold', 'Dopplungsschwelle', 'Ab dieser Ähnlichkeit gilt ein Paar als semantische Dopplung (Stufe 2/3).')}
           {slider('contradictionThreshold', 'Widerspruchskandidaten', 'Ab dieser Ähnlichkeit werden Texte auf Widerspruchsmuster geprüft.')}
           <label><input type="checkbox" checked={a.crossChapter} onChange={(e) => setA('crossChapter', e.target.checked)} /> Kapitelübergreifend analysieren</label>
+          <label title="Agent TRIAGE (ADR-100): Pflichtlabels und Kapitelvorschläge für jeden neuen Chunk"><input type="checkbox" checked={draft.triage?.auto !== false} onChange={(e) => setDraft({ ...draft, triage: { auto: e.target.checked } })} /> TRIAGE nach jedem Einlesen</label>
           <label className="block">Verfahren (ADR-017)
             <select value={draft.semantic.analysisMethod} onChange={(e) => setDraft({ ...draft, semantic: { ...draft.semantic, analysisMethod: e.target.value } })}>
               <option value="tfidf">TF-IDF (Standard, Entscheidung E-05)</option>

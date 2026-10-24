@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.46.0
+  version: 0.47.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -4502,12 +4502,12 @@ paths:
   /structure/chapters/{chapterId}:
     patch:
       operationId: updateStructureChapter
-      summary: 'Titel, Kapitelanweisung und Version eines Kapitels ändern (Berechtigung edit)'
+      summary: 'Titel, Kapitelanweisung, Version und Detaillierung (Detaillevel) eines Kapitels ändern (Berechtigung edit)'
       tags: [Kapitel]
-      x-requirements: [NFR-101, NFR-102]
+      x-requirements: [NFR-101, NFR-102, NFR-116]
       x-extension: true
       parameters: [{ name: chapterId, in: path, required: true, schema: { type: string } }]
-      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { title: { type: string, minLength: 3, maxLength: 160 }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release)' }, instruction: { type: [string, 'null'], maxLength: 2000, description: 'worauf es ankommt' }, topics: { type: array, maxItems: 30, items: { type: string }, description: 'wichtige Themen (müssen vorkommen)' }, excluded: { type: array, maxItems: 30, items: { type: string }, description: 'Themen, die nicht beschrieben werden' } } } } } }
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { title: { type: string, minLength: 3, maxLength: 160 }, validFrom: { type: [string, 'null'], maxLength: 40, description: 'gültig ab (Version, Release)' }, instruction: { type: [string, 'null'], maxLength: 2000, description: 'worauf es ankommt' }, topics: { type: array, maxItems: 30, items: { type: string }, description: 'wichtige Themen (müssen vorkommen)' }, excluded: { type: array, maxItems: 30, items: { type: string }, description: 'Themen, die nicht beschrieben werden' }, detailLevels: { type: [array, 'null'], minItems: 1, items: { type: string, enum: [basis, basis-plus, zusatz, intern, happy-path, edge, in-review] }, description: 'Detaillevel, die der Generator übernimmt (nur Kapitel; null = Standard ohne intern und in-review, ADR-100)' } } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Kapitel' }
@@ -5356,3 +5356,272 @@ paths:
         '201': { description: 'Frage & Antwort' }
         '400': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /triage/runs:
+    get:
+      operationId: listTriageRuns
+      summary: 'Läufe des Agenten TRIAGE (neueste zuerst, ADR-100)'
+      tags: [Metadaten]
+      x-requirements: [NFR-114]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, scope, status, stats, startedBy, startedAt, finishedAt }] }' }
+    post:
+      operationId: startTriageRun
+      summary: 'TRIAGE starten: alle Chunks oder nur Chunks ohne vollständige Pflichtlabels (Berechtigung edit); läuft auch automatisch nach jedem Einlesen (Einstellung triage.auto)'
+      tags: [Metadaten]
+      x-requirements: [NFR-114, NFR-115]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { scope: { type: string, enum: [all, missing] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Lauf mit stats: chunks, labels, keptManual, kept, move, newSubchapter, unassigned, remembered, review, createdLabels' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /triage/runs/{id}:
+    get:
+      operationId: getTriageRun
+      summary: 'Ein Lauf des Agenten TRIAGE'
+      tags: [Metadaten]
+      x-requirements: [NFR-114]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Lauf' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /triage/results:
+    get:
+      operationId: listTriageResults
+      summary: 'Ergebnisse je Chunk: gesetzte Pflichtlabels mit Sicherheit und Begründung, Zuordnung (kept, move, new_subchapter, unassigned) vorher → nachher, zu prüfen, Status'
+      tags: [Metadaten]
+      x-requirements: [NFR-114, NFR-115]
+      x-extension: true
+      parameters: [{ name: runId, in: query, schema: { type: string } }, { name: status, in: query, schema: { type: string, enum: [applied, proposed, accepted, rejected] } }, { name: review, in: query, schema: { type: boolean } }, { name: placement, in: query, schema: { type: string } }, { name: limit, in: query, schema: { type: integer, maximum: 500 } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, snippetId, text, path, headingPath, labels, placement, confidence, review, reasons, status, before, target }] }' }
+  /triage/results/{id}/decision:
+    post:
+      operationId: decideTriageResult
+      summary: 'Vorschlag übernehmen (Chunk wechselt Kapitel/Unterkapitel, neues Unterkapitel mit Kennung „neu“ wird angelegt) oder verwerfen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-115]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [decision], properties: { decision: { type: string, enum: [accept, reject] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Ergebnis' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /triage/accept-all:
+    post:
+      operationId: acceptAllTriage
+      summary: 'Alle offenen Vorschläge übernehmen, optional je Lauf oder Art (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-115]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { runId: { type: string }, placement: { type: string, enum: [move, new_subchapter] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ accepted }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /triage/new-subchapters:
+    get:
+      operationId: listTriageNewSubchapters
+      summary: 'Von TRIAGE angelegte Unterkapitel mit Kennung „neu“, noch nicht bestätigt'
+      tags: [Metadaten]
+      x-requirements: [NFR-115]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, title, chapterId, chapterTitle, createdAt, chunks }] }' }
+  /triage/new-subchapters/{id}/confirm:
+    post:
+      operationId: confirmTriageNewSubchapter
+      summary: 'Neues Unterkapitel in die Gliederung aufnehmen – Kennung „neu“ entfällt (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-115]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Unterkapitel' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /triage/dashboard:
+    get:
+      operationId: contentDashboard
+      summary: 'Inhalts-Dashboard: Chunks, Wörter, Labels je Kapitel und Domäne, Anteil je Pflichtgruppe, Detaillevel, offene Vorschläge, Unterkapitel „neu“'
+      tags: [Metadaten]
+      x-requirements: [NFR-116]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ totals, requiredGroups, chapters, domains, detailLevels, newSubchapters, openProposals }' }
+  /agents:
+    get:
+      operationId: listAgents
+      summary: 'Alle Agenten (ORCHESTRATOR, TRIAGE, GOAL und die Agenten des Arbeitsordners) mit offenen Aufgaben und Entscheidungen'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ code, name, purpose, inApp, folder, link, openTasks, openDecisions }] }' }
+  /agents/export:
+    get:
+      operationId: exportAgents
+      summary: 'Aufgaben, Entscheidungen und Ziel-Abgleich als Markdown (format onescm-agents) – für 00_Dokumentation/Agenten und 12_Goal im Arbeitsordner'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ format: onescm-agents, files: { tasks, decisions, goal } }' }
+  /agents/tasks:
+    get:
+      operationId: listAgentTasks
+      summary: 'Aufgaben (offene Todos) der Agenten'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      parameters: [{ name: agent, in: query, schema: { type: string } }, { name: status, in: query, schema: { type: string, enum: [active, open, in_progress, done, dropped] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, agent, title, detail, status, priority, source, key, link }] }' }
+    post:
+      operationId: createAgentTask
+      summary: 'Aufgabe von Hand anlegen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [agent, title], properties: { agent: { type: string }, title: { type: string, minLength: 3, maxLength: 200 }, detail: { type: string }, priority: { type: integer, enum: [1, 2, 3] }, status: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Aufgabe' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /agents/tasks/{id}:
+    patch:
+      operationId: updateAgentTask
+      summary: 'Aufgabe ändern, z. B. Status (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { agent: { type: string }, title: { type: string }, detail: { type: [string, 'null'] }, priority: { type: integer, enum: [1, 2, 3] }, status: { type: string, enum: [open, in_progress, done, dropped] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Aufgabe' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteAgentTask
+      summary: 'Aufgabe löschen – nur von Hand angelegte (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /agents/decisions:
+    get:
+      operationId: listAgentDecisions
+      summary: 'Entscheidungen der Agenten (offene zuerst)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      parameters: [{ name: status, in: query, schema: { type: string, enum: [open, decided, dropped] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, agent, question, context, options, status, decision, note, key, executedAt }] }' }
+    post:
+      operationId: createAgentDecision
+      summary: 'Entscheidung vorlegen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [question], properties: { agent: { type: string }, question: { type: string }, context: { type: string }, options: { type: array, items: { type: string } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Entscheidung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /agents/decisions/{id}/decide:
+    post:
+      operationId: decideAgentDecision
+      summary: 'Entscheidung treffen oder verwerfen – nur ein Mensch mit Berechtigung decide; der Orchestrator führt sie beim nächsten Plan aus'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { decision: { type: string }, note: { type: string }, drop: { type: boolean }, free: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Entscheidung' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /agents/orchestrator/plan:
+    post:
+      operationId: orchestratorPlan
+      summary: 'ORCHESTRATOR: getroffene Entscheidungen ausführen, Plan aus dem Stand erstellen bzw. verfeinern – Aufgaben ohne Doppelungen, Entscheidungen vorlegen, erledigte schließen (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ plannedAt, created, updated, reopened, closed, decisionsCreated, executed, plan, tasks, decisions }' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /agents/goal:
+    get:
+      operationId: getAgentGoal
+      summary: 'GOAL: Ziel, Kriterien mit Sollwert und letzter Abgleich'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ goal, criteria, lastRun }' }
+    put:
+      operationId: updateAgentGoal
+      summary: 'Ziel und Sollwerte ändern (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { goal: { type: string, minLength: 10, maxLength: 4000 }, criteria: { type: array, items: { type: object, properties: { code: { type: string }, target: { type: number }, enabled: { type: boolean } } } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Ziel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /agents/goal/runs:
+    post:
+      operationId: runAgentGoal
+      summary: 'GOAL: Stand aller Funktionen gegen das Ziel – Ist/Soll je Kriterium, Empfehlung, zuständiger Agent; nicht erfüllte Kriterien werden Aufgaben (Berechtigung edit)'
+      tags: [Metadaten]
+      x-requirements: [NFR-117]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, results, score, createdAt }' }
+        '403': { $ref: '#/components/responses/Problem' }

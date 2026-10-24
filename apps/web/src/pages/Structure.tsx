@@ -91,6 +91,7 @@ export function StructurePage() {
                       {c.subchapters.map((u: any) => (
                         <li key={u.id}>
                           <button type="button" className="btn link" aria-current={sel?.id === u.id ? true : undefined} onClick={() => setSel({ kind: 'subchapter', id: u.id })}>{u.title}</button>
+                          {u.isNew && <span className="tag small" title="von TRIAGE angelegt – noch nicht bestätigt">neu</span>}
                           <Meta x={u} />
                         </li>
                       ))}
@@ -163,14 +164,25 @@ function Meta({ x }: { x: any }) {
 function Editor({ kind, item, chapter, chapters, canEdit, variant, onChange }: { kind: 'chapter' | 'subchapter'; item: any; chapter: any; chapters: any[]; canEdit: boolean; variant?: boolean; onChange: () => void }) {
   const { notify } = useApp();
   const [f, setF] = useState({ title: item.title, validFrom: item.validFrom ?? '', text: item.instruction.text ?? '', topics: item.instruction.topics.join('\n'), excluded: item.instruction.excluded.join('\n') });
+  const [levels, setLevels] = useState<string[]>(item.detailLevels ?? []);
+  useEffect(() => setLevels(item.detailLevels ?? []), [item.id, item.detailLevels]);
   const [sub, setSub] = useState('');
   const [rep, setRep] = useState({ mode: 'new', newTitle: '', replacementId: '', validFrom: '', note: '' });
   useEffect(() => setRep((r) => ({ ...r, newTitle: '', replacementId: '' })), [item.id]);
   const base = kind === 'chapter' ? `/structure/chapters/${item.id}` : `/structure/subchapters/${item.id}`;
   const save = async () => {
     try {
-      await patch(base, { title: f.title, validFrom: f.validFrom || null, instruction: f.text || null, topics: lines(f.topics), excluded: lines(f.excluded) });
+      await patch(base, { title: f.title, validFrom: f.validFrom || null, instruction: f.text || null, topics: lines(f.topics), excluded: lines(f.excluded), ...(kind === 'chapter' && levels.length && [...levels].sort().join() !== [...(item.detailLevels ?? [])].sort().join() ? { detailLevels: levels } : {}) });
       notify('Anweisung gespeichert.');
+      onChange();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const confirmNew = async () => {
+    try {
+      await post(`/triage/new-subchapters/${item.id}/confirm`, {});
+      notify(`Unterkapitel „${item.title}“ in die Gliederung aufgenommen.`);
       onChange();
     } catch (e) {
       notify(errorText(e), 'error');
@@ -201,6 +213,11 @@ function Editor({ kind, item, chapter, chapters, canEdit, variant, onChange }: {
     <Card title={<>{what}: {item.title}</>} actions={kind === 'chapter' && <Link className="btn small" to={`/werkstatt/${item.id}`}>Zur Werkstatt</Link>}>
       {item.inHistory && <p className="small sev-medium">In der Historie{item.validUntil ? ` (gültig bis ${item.validUntil})` : ''} – nicht mehr im Handbuch.</p>}
       {kind === 'subchapter' && <p className="small muted">Gilt zusätzlich zur Anweisung des Kapitels „{chapter?.title}“.</p>}
+      {kind === 'subchapter' && item.isNew && (
+        <div className="alert warning" role="status">
+          Von TRIAGE angelegt (Kennung „neu“) – bitte prüfen, umbenennen oder ablösen. {canEdit && <button type="button" className="btn small" onClick={confirmNew}>In die Gliederung aufnehmen</button>}
+        </div>
+      )}
       <fieldset disabled={!canEdit} aria-label="Anweisung bearbeiten">
         <div className="filters">
           <label className="grow">Titel <input value={f.title} maxLength={160} onChange={(e) => setF({ ...f, title: e.target.value })} /></label>
@@ -217,7 +234,18 @@ function Editor({ kind, item, chapter, chapters, canEdit, variant, onChange }: {
             <textarea rows={4} value={f.excluded} placeholder={'Storno\nInterne Abrechnung'} onChange={(e) => setF({ ...f, excluded: e.target.value })} />
           </label>
         </div>
-        {canEdit && <button type="button" className="btn primary" onClick={save}>Anweisung speichern</button>}
+        {kind === 'chapter' && (
+          <fieldset className="st-detail">
+            <legend>Detaillierung – welche Detaillevel der Generator übernimmt{item.detailLevelsCustom ? '' : ' (Standard)'}</legend>
+            {DETAIL_LEVELS.map(([code, name, hint]) => (
+              <label key={code} className="inline small" title={hint}>
+                <input type="checkbox" checked={levels.includes(code)} onChange={(e) => setLevels(e.target.checked ? [...levels, code] : levels.filter((x) => x !== code))} /> {name}
+              </label>
+            ))}
+            <p className="small muted">HappyPath zeigt den Standardablauf, Edge die Ausnahmen (Abschnitt „Fehlerbehebung“); Intern und inPrüfung sind im Standard ausgeschlossen.</p>
+          </fieldset>
+        )}
+        {canEdit && <button type="button" className="btn primary" disabled={kind === 'chapter' && !levels.length} onClick={save}>Anweisung speichern</button>}
       </fieldset>
       <p className="small muted">Der Generator lässt Quellen zu „Nicht beschreiben“ weg und meldet wichtige Themen ohne Quelle als Lücke; KI-Vorschläge und der Anleitungs-Check beachten die Anweisung. Im Arbeitsordner steht sie als <code>ANWEISUNG.md</code>.</p>
       {canEdit && kind === 'chapter' && !item.inHistory && !variant && (
@@ -252,6 +280,12 @@ function Editor({ kind, item, chapter, chapters, canEdit, variant, onChange }: {
     </Card>
   );
 }
+
+const DETAIL_LEVELS: [string, string, string][] = [
+  ['basis', 'Basis', 'Grundlagen: was die Funktion ist'], ['basis-plus', 'Basis+', 'Grundlagen mit Erläuterung'], ['zusatz', 'Zusatz', 'Tipps und Zusatzwissen'],
+  ['intern', 'Intern', 'interne Inhalte – nie im Handbuch-Standard'], ['happy-path', 'HappyPath', 'Standardablauf Schritt für Schritt'], ['edge', 'Edge', 'Ausnahmen und Fehlermeldungen'],
+  ['in-review', 'inPrüfung', 'noch nicht bestätigt'],
+];
 
 const GROUP_LABEL: Record<string, string> = { outline: 'Gliederung', role: 'Rolle', navigation: 'Navigation', domain: 'Domäne', content: 'Inhalt', division: 'Sparte', customer: 'Kunde', system: 'System', quality: 'Qualität' };
 

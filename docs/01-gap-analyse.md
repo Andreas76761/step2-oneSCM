@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.49 Stand nach Etappe 47 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| TRIAGE nach dem Einlesen: Pflichtlabels je Chunk mit Sicherheit, Mensch geht vor, Labels löschen (NFR-114) | ✅ ([ADR-100](adr/ADR-100-triage-agenten.md)) |
+| Kapitel- und Unterkapitelvorschläge für gemischte Quellen, neue Unterkapitel „neu“ (NFR-115) | ✅ |
+| Detaillevel steuern das Kapitel (HappyPath, Edge), Detaillierung je Kapitel, Inhalts-Dashboard (NFR-116) | ✅ |
+| Agenten in der App: ORCHESTRATOR, Aufgaben, Entscheidungen, GOAL; Ordner `12_Goal`, `00_Dokumentation/Agenten` (NFR-117) | ✅ |
+| Offen | Erkennung weiterer Sprachen; Zuordnung über ein lokales Sprachmodell oder Embeddings (Entscheidung lokaler Dienst); Domänennamen aus echten Quellen ergänzen; Übersetzung U-01 … U-10 |
+
 ## 1.48 Stand nach Etappe 46 (24.10.2026)
 
 | Punkt | Ergebnis |

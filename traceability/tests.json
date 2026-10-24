@@ -2244,5 +2244,54 @@
       "NFR-112",
       "NFR-113"
     ]
+  },
+  {
+    "id": "T-309",
+    "title": "TRIAGE-Regeln: Rolle, Sparte, Markt, Version, Status, Sprache und Detaillevel mit Sicherheit (Einheit)",
+    "file": "apps/server/test/stage47.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-114"
+    ]
+  },
+  {
+    "id": "T-310",
+    "title": "Nach dem Einlesen: Pflichtlabels für jeden Chunk, Kapitel- und Unterkapitelvorschläge, neues Unterkapitel „neu“, übernehmen, menschliche Labels bleiben, Labels löschen",
+    "file": "apps/server/test/stage47.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-114",
+      "NFR-115"
+    ]
+  },
+  {
+    "id": "T-311",
+    "title": "Detaillevel steuern das Kapitel: HappyPath und Edge getrennt, Detaillierung je Kapitel; Dashboard je Kapitel und Domäne",
+    "file": "apps/server/test/stage47.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-116"
+    ]
+  },
+  {
+    "id": "T-312",
+    "title": "Agenten in der App: ORCHESTRATOR plant, legt Entscheidungen vor, führt sie aus und verfeinert; GOAL vergleicht mit dem Ziel; Aufgaben und Export",
+    "file": "apps/server/test/stage47.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-117"
+    ]
+  },
+  {
+    "id": "T-313",
+    "title": "TRIAGE nach dem Einlesen, Vorschlag übernehmen, Inhalts-Dashboard, Agenten mit Plan und Aufgaben, GOAL-Abgleich – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-114",
+      "NFR-115",
+      "NFR-116",
+      "NFR-117"
+    ]
   }
 ]

@@ -266,7 +266,10 @@ export async function setChunkLabels(ctx: Ctx, input: { snippetIds?: unknown; ad
     for (const s of snippetIds) {
       for (const l of add) {
         added += (await ctx.db.run(
-          'INSERT INTO metadata_chunk_labels (snippet_id, label_id, project_id, assigned_by, assigned_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (snippet_id, label_id) DO NOTHING',
+          // ein Label der Triage, das ein Mensch setzt, gilt danach als von Hand gesetzt (ADR-100)
+          `INSERT INTO metadata_chunk_labels (snippet_id, label_id, project_id, assigned_by, assigned_at, origin) VALUES (?, ?, ?, ?, ?, 'manual')
+           ON CONFLICT (snippet_id, label_id) DO UPDATE SET origin = 'manual', confidence = NULL, assigned_by = excluded.assigned_by, assigned_at = excluded.assigned_at
+           WHERE metadata_chunk_labels.origin <> 'manual'`,
           s, l, ctx.projectId, user.id, now(),
         )).changes;
       }

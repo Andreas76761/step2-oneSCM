@@ -233,7 +233,26 @@ export async function runGoal(ctx: Ctx, user: User) {
   const score = results.length ? Math.round((results.filter((r) => r.ok).length / results.length) * 1000) / 1000 : 0;
   const id = newId('gol');
   await ctx.db.run('INSERT INTO goal_runs (id, project_id, results, score, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?)', id, ctx.projectId, json(results), score, user.id, now());
-  await audit(ctx, user.id, 'agent_goal.run', 'goal_run', id, { score });
+  // Empfehlungen werden Aufgaben des zuständigen Agenten (Schlüssel goal:<Kriterium>); erfüllte Kriterien schließen ihre Aufgabe
+  const at = now();
+  let tasks = 0;
+  for (const r of results) {
+    const key = `goal:${r.code}`;
+    const have = await ctx.db.get('SELECT id, status FROM agent_tasks WHERE project_id = ? AND task_key = ?', ctx.projectId, key);
+    if (!r.ok) {
+      const title = `${r.title}: Ist ${r.value === null ? '–' : r.unit === 'share' ? `${Math.round(r.value * 100)} %` : r.value}, Soll ${r.direction === 'min' ? '≥' : '≤'} ${r.unit === 'share' ? `${Math.round(r.target * 100)} %` : r.target}`;
+      if (!have) {
+        await ctx.db.run("INSERT INTO agent_tasks (id, project_id, agent, title, detail, status, priority, source, task_key, link, created_by, created_at, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, 'open', 2, 'goal', ?, '/agenten/goal', ?, ?, ?, ?)",
+          newId('tsk'), ctx.projectId, r.agent, title, r.recommendation, key, user.id, at, user.id, at);
+        tasks++;
+      } else if (have.status !== 'dropped') {
+        await ctx.db.run("UPDATE agent_tasks SET title = ?, detail = ?, status = CASE WHEN status = 'done' THEN 'open' ELSE status END, done_at = NULL, updated_by = ?, updated_at = ? WHERE id = ?", title, r.recommendation, user.id, at, have.id);
+      }
+    } else if (have && ['open', 'in_progress'].includes(have.status)) {
+      await ctx.db.run("UPDATE agent_tasks SET status = 'done', done_at = ?, updated_by = ?, updated_at = ? WHERE id = ?", at, user.id, at, have.id);
+    }
+  }
+  await audit(ctx, user.id, 'agent_goal.run', 'goal_run', id, { score, tasks });
   return runDto((await ctx.db.get('SELECT * FROM goal_runs WHERE id = ?', id))!);
 }
 
@@ -311,7 +330,7 @@ export async function orchestrate(ctx: Ctx, user: User) {
   });
   const order = (s: PlanStep) => ['triage', 'pruefer', 'gliederungs-pfleger', 'kapitel-redakteur', 'pipeline-redakteur', 'goal'].indexOf(s.agent);
   return {
-    plannedAt: at, ...stats, executed,
+    plannedAt: at, created: stats.created, updated: stats.updated, reopened: stats.reopened, closed: stats.closed, decisionsCreated: stats.decisions, executed,
     plan: [...steps].sort((a, b) => a.priority - b.priority || order(a) - order(b)).map((s, i) => ({ step: i + 1, key: s.key, agent: s.agent, title: s.title, detail: s.detail, priority: s.priority, link: s.link, decision: !!s.decision })),
     tasks: await listTasks(ctx, { status: 'active' }), decisions: await listDecisions(ctx, { status: 'open' }),
   };

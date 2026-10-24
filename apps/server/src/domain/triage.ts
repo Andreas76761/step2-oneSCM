@@ -163,7 +163,8 @@ export function detectDomain(t: TriageInput, domains: DomainRef[], byChapter: st
   const hits = domains.map((d) => ({ d, n: d.names.filter((nm) => nm.length >= 4 && text.includes(lower(nm))).length })).filter((x) => x.n).sort((a, b) => b.n - a.n);
   if (hits.length) return { codes: [hits[0].d.code], confidence: hits.length === 1 ? 0.8 : 0.6, reason: `Domäne im Text (${hits[0].d.names[0]})` };
   if (byChapter) return { codes: [byChapter], confidence: 0.65, reason: 'Domäne über das zugeordnete Kapitel' };
-  return { codes: ['general'], confidence: 0.45, reason: 'keine Domäne erkennbar – allgemein' };
+  // „Allgemein“ ist eine gültige Domäne (allgemeine Inhalte), allein kein Grund für „zu prüfen“
+  return { codes: ['general'], confidence: REVIEW_BELOW, reason: 'keine Domäne erkennbar – allgemein' };
 }
 
 /** Unter dieser Sicherheit gilt eine Gruppe als unsicher → „zu prüfen“ */

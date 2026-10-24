@@ -2703,3 +2703,45 @@ test('[T-308] RAG v2: Frage mit Abkürzung wird erweitert und belegt, Lückenfra
   await expect(kpis).toContainText('1.00');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-313] TRIAGE nach dem Einlesen, Vorschlag übernehmen, Inhalts-Dashboard, Agenten mit Plan und Aufgaben, GOAL-Abgleich – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  const outline = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# 15. Leasingrückgabe\n\n## 15.1 Leasingrückgabe anmelden\n\nDie Leasingrückgabe wird im Portal angemeldet.\n';
+  const mixed = '---\ndivisions: [all]\nevidence_status: source_confirmed\n---\n# E2E Schulung Leasing\n\n## Leasingrückgabe anmelden kurz erklärt\n\n1. Öffnen Sie das Portal.\n2. Melden Sie die Leasingrückgabe an.\n';
+  for (const [name, body] of [['e2e_triage_gliederung.md', outline], ['e2e_triage_schulung.md', mixed]]) {
+    const id = (await (await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name, mimeType: 'text/markdown', buffer: Buffer.from(body) } } })).json()).id;
+    await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
+  }
+  await expect.poll(async () => (await (await request.get('/api/v1/triage/results?status=proposed', { headers: adm })).json()).items.some((r: any) => r.text.includes('Melden Sie die Leasingrückgabe')), { timeout: 15000 }).toBe(true);
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Triage', exact: true }).click();
+  const row = page.locator('tr', { hasText: 'Melden Sie die Leasingrückgabe' });
+  await expect(row).toContainText('verschieben');
+  await expect(row).toContainText('15.1 Leasingrückgabe anmelden');
+  await expect(row).toContainText('Detaillevel: HappyPath');
+  expect(await axe()).toEqual([]);
+  await row.getByRole('button', { name: /Vorschlag übernehmen/ }).click();
+  await expect(page.getByText('Vorschlag übernommen.')).toBeVisible();
+  // Inhalts-Dashboard
+  await nav.getByRole('link', { name: 'Inhalts-Dashboard' }).click();
+  await expect(page.getByRole('table', { name: 'Chunks, Wörter und Labels je Kapitel' })).toContainText('15. Leasingrückgabe');
+  expect(await axe()).toEqual([]);
+  // Agenten: Plan, Aufgaben, Entscheidungen
+  await nav.getByRole('link', { name: 'Aufgaben & Entscheidungen' }).click();
+  await page.getByRole('button', { name: 'Plan erstellen / verfeinern' }).click();
+  await expect(page.getByText(/Plan mit \d+ Schritten/)).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Aufgaben der Agenten' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  // GOAL
+  await page.getByRole('navigation', { name: 'Agenten' }).getByRole('link', { name: /GOAL/ }).click();
+  await page.getByRole('button', { name: 'Abgleich ausführen' }).click();
+  await expect(page.getByText(/Ziel-Abgleich: \d+ % der Kriterien erfüllt/)).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Ergebnis des Ziel-Abgleichs mit Empfehlungen' })).toContainText('Pflichtlabels');
+  expect(await axe()).toEqual([]);
+});

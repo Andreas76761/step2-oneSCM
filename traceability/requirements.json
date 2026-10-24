@@ -1211,5 +1211,42 @@
       "docs/adr/ADR-099-rag-retrieval-v2.md",
       "docs/11-rag-messung.md"
     ]
+  },
+  {
+    "id": "NFR-114",
+    "title": "Agent TRIAGE nach dem Einlesen: Pflichtlabels Version, Status, Domäne, Rolle, Sprache, Sparte, Markt, Detaillevel und zu prüfen je Chunk mit Sicherheit und Begründung; Labels von Menschen gehen vor; Labels bearbeiten, erweitern, löschen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-100-triage-agenten.md"
+    ]
+  },
+  {
+    "id": "NFR-115",
+    "title": "TRIAGE ordnet Chunks gemischter Quellen Kapiteln und Unterkapiteln zu (Vorschlag), legt neue Unterkapitel mit Kennung „neu“ an; Übernehmen, Verwerfen, alle übernehmen, bestätigen",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-100-triage-agenten.md"
+    ]
+  },
+  {
+    "id": "NFR-116",
+    "title": "Detaillevel (Basis, Basis+, Zusatz, Intern, HappyPath, Edge, inPrüfung) steuern die Kapitelerzeugung: Standardablauf und Ausnahmen getrennt, Detaillierung je Kapitel; Inhalts-Dashboard je Kapitel und Domäne",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-100-triage-agenten.md"
+    ]
+  },
+  {
+    "id": "NFR-117",
+    "title": "Agenten in der App: ORCHESTRATOR plant und verfeinert Aufgaben aller Agenten und legt Entscheidungen vor, ein Mensch entscheidet; GOAL vergleicht mit dem Ziel und erstellt Empfehlungen; Ordner 12_Goal und 00_Dokumentation/Agenten",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-100-triage-agenten.md",
+      "tools/handbuch-ordner/README.md"
+    ]
   }
 ]

@@ -648,6 +648,9 @@ export function MetadataLabelsPage() {
                       <td className="row-actions">
                         <button className="btn small" onClick={() => setEdit({ id: l.id, nameDe: l.nameDe, nameEn: l.nameEn, description: l.description ?? '' })}>Bearbeiten</button>
                         <button className="btn small" onClick={() => run(() => patch(`/metadata/labels/${l.id}`, { archived: !l.archived }), l.archived ? 'Label eingeblendet.' : 'Label ausgeblendet.')}>{l.archived ? 'Einblenden' : 'Ausblenden'}</button>
+                        <button className="btn small danger" aria-label={`Label „${l.nameDe}“ löschen`} onClick={() => {
+                          if (window.confirm(`Label „${l.nameDe}“ löschen? Es wird von ${l.chunkCount ?? 0} Chunks und ${l.qaCount ?? 0} Fragen entfernt.`)) void run(() => del(`/metadata/labels/${l.id}`), `Label „${l.nameDe}“ gelöscht.`);
+                        }}>Löschen</button>
                       </td>
                     )}
                   </tr>

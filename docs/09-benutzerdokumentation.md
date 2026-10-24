@@ -1,11 +1,11 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.46 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.47 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
 - **Anmelden:** Im Einzelplatz-Betrieb wählen Sie oben links einen Demo-Benutzer; im Team-Betrieb melden Sie sich mit dem Firmenkonto an.
-- **Rechte:** *Lesen* (ansehen, Fragen stellen, Befragungen beantworten), *Bearbeiten* (einlesen, schreiben, Labels, Testfragen), *Entscheiden* (Widersprüche), *Freigeben* (Kapitel freigeben), *Administration* (Einstellungen, Benutzer, Projekte).
+- **Rechte:** *Lesen* (ansehen, Fragen stellen, Befragungen beantworten), *Bearbeiten* (einlesen, schreiben, Labels, Testfragen), *Entscheiden* (Widersprüche, Entscheidungen der Agenten), *Freigeben* (Kapitel freigeben), *Administration* (Einstellungen, Benutzer, Projekte).
 - **Projekte:** Oben links wählen Sie das Projekt (z. B. ein Handbuch je Land oder Produkt). Alle Daten gehören zu einem Projekt.
 - **Suche:** `/` öffnet die Suche über Kapitel, Quellen, Begriffe und Bilder.
 - **Menü nach Arbeitsablauf:** oneSCM_Metadaten · 1 Sammeln · 2 Schreiben · 3 Prüfen · 4 Veröffentlichen · Verwaltung.
@@ -16,6 +16,8 @@ Stand: Version 0.46 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 |---|---|---|
 | **Übersicht** | Stand des Bestands je Format, Labels, gespeicherte Fragen | – |
 | **Einlesen** | Dateien aufnehmen: Markdown, HTML/Confluence, Word, PowerPoint, PDF (gescannte Seiten per Texterkennung), Untertitel (VTT/SRT), Video (MP4), Jira-Exporte, ZIP | Dateien hineinziehen; je Datei erscheinen Ergebnis und Hinweise. Video: Untertitel mit gleichem Namen im ZIP mitliefern oder Transkription einrichten |
+| **Triage** | Agent TRIAGE: nach jedem Einlesen Pflichtlabels je Chunk (Version, Status, Domäne, Rolle, Sprache, Sparte, Markt, Detaillevel, zu prüfen) und Vorschläge für Kapitel und Unterkapitel – auch neue Unterkapitel mit Kennung „neu“ | Vorschläge prüfen → „Übernehmen“ oder „Verwerfen“ bzw. „Alle Vorschläge übernehmen“; neue Unterkapitel „Bestätigen“; Filter „zu prüfen“; Labels, die Sie selbst setzen, überschreibt TRIAGE nicht |
+| **Inhalts-Dashboard** | Chunks, Wörter und Labels je Kapitel und Domäne, Anteil je Pflichtgruppe, Detaillevel | – |
 | **Quellen je Überschrift** | Gliederung jeder Datei mit ihren Chunks; zusammengeführte Überschriften über alle Dateien | Überschrift wählen → Chunks dieser Überschrift |
 | **Chunks** | Textabschnitte mit Fundstelle (Zeile, Folie, Seite, Zeitmarke) und Labels | filtern nach Format, Datei, Überschrift, Label; Labels setzen |
 | **Dubletten (alle Formate)** | gleiche und ähnliche Abschnitte über Dateien und Formate, Unterschiede markiert | je Paar „A führend“, „B führend“ oder „kein Duplikat“ |
@@ -27,7 +29,7 @@ Stand: Version 0.46 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 | **Expertenbefragung** | Wissenslücken an Fachleute geben | Befragung aus Rückfragen oder Prüflauf anlegen → Fachleute antworten in der App (Recht „Lesen“) oder per Excel → „Als Frage & Antwort übernehmen“ (Label „Prüfen“) |
 | **Zugriffsmatrix** | Zugriffsstufe je Rolle und Menüpunkt in oneSCM (V/L/–) | Stufe setzen, CSV ein- und ausgeben |
 | **Zuordnung** | Domäne → Gliederungspunkt → Ordner | Zuordnung pflegen |
-| **Labels** | Labelkatalog (Gliederung, Rolle, Sparte, Markt, Navigation, Qualität …) | Labels anlegen, umbenennen, ausblenden |
+| **Labels** | Labelkatalog (Gliederung, Rolle, Sparte, Markt, Navigation, Qualität …) | Labels anlegen, umbenennen, ausblenden, löschen (admin) |
 
 **Belege lesen:** Jeder Beleg nennt Datei, Überschriftenpfad und Fundstelle („Seite 3“, „Folie 2“, „bei 01:31“, „Zeile 10“). Ohne passende Stelle antwortet die App „Die Quellen enthalten dazu keine Aussage“ – eine Lücke, die Sie in die Expertenbefragung geben können.
 
@@ -62,7 +64,16 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 - Personenbezogene Daten werden wie bei Wissensnotizen abgewiesen oder auf Wunsch pseudonymisiert. Eigene Einträge lassen sich löschen; Jira-Einträge setzen Sie auf „abgebrochen“.
 - **Arbeitsordner:** `abgleich --app …` schreibt die Einträge nach `09_Pipeline/<Kapitel>/<Unterkapitel>/<Ticket>.md`, `10_Backlog/` und `11_Intern/<Thema>/`.
 
-## 5. Schreiben
+## 5. Agenten
+
+| Menüpunkt | Wofür | So geht’s |
+|---|---|---|
+| **Aufgaben & Entscheidungen** | Der ORCHESTRATOR steuert alle Agenten: offene Aufgaben je Agent, Entscheidungen, die ein Mensch trifft | „Plan erstellen / verfeinern“ → Plan mit Schritten; Entscheidungen mit dem Recht „Entscheiden“ beantworten – der Orchestrator führt sie beim nächsten Plan aus; eigene Aufgaben anlegen |
+| **GOAL – Ziel-Abgleich** | Stand aller Funktionen gegen das Ziel, mit Empfehlungen | Ziel und Sollwerte einstellen → „Abgleich ausführen“; nicht erfüllte Kriterien werden Aufgaben |
+
+**Detaillierung je Kapitel:** In der Kapitelsteuerung wählen Sie je Kapitel die Detaillevel, die der Kapitelgenerator übernimmt. HappyPath erscheint im Standardablauf, Edge unter „Fehlerbehebung“; Intern und inPrüfung sind im Standard ausgeschlossen.
+
+## 6. Schreiben
 
 - **Kapitelsteuerung:** je Kapitel und Unterkapitel eine kurze **Kapitelanweisung** – „Worauf es ankommt“, „Wichtige Themen“ (je Zeile eines, müssen vorkommen) und „Nicht beschreiben“. Sie gilt mit Vorrang: Der Kapitelgenerator lässt Quellen zu „Nicht beschreiben“ weg und meldet wichtige Themen ohne Quelle als Lücke, KI-Vorschläge und Anleitungs-Check beachten sie, die Werkstatt zeigt sie oben. Quellenbindung und Datenschutz gehen ihr vor.
   - **Handbuch-Varianten:** Über „Gliederung“ wählen Sie die Kapitel einer Variante und geben ihnen eine eigene Anweisung; sie gilt zusätzlich zur Anweisung der Quellkapitel.
@@ -82,7 +93,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
   - **Labels und Kapitel:** je Bild mehrere Labels (Domäne, Rolle, Gliederung, weitere) und Kapitel über „+ hinzufügen“, entfernen mit ×. Die Sprache pflegen Sie unter „Merkmale“.
   - **Bildabdeckung je Kapitel** und **Deckungsmatrix** (je Reiter, Maske, Kapitel oder Gliederungspunkt × Sprache/Rolle/Sparte) zeigen fehlende Bilder.
 
-## 6. Prüfen
+## 7. Prüfen
 
 - **Anleitungs-Check:** Ist das Kapitel leicht zu befolgen? Zwölf Prüfpunkte als **Muss** (10 Punkte) oder **Soll** (5 Punkte) mit Korrektur per Klick. Die Administration legt fest, ob ein Mindestwert und/oder „alle Muss-Punkte erfüllt“ Bedingung für Einreichen und Freigabe sind.
 - **Rückmeldungen:** Rückmeldungen der Leserinnen und Leser aus Leseransicht und Online-Hilfe auswerten.
@@ -95,7 +106,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 - **Evidenz:** Herkunft jedes Absatzes.
 - **Freigabe:** einreichen, mehrstufig freigeben; das Qualitätsgate zeigt, was noch fehlt.
 
-## 7. Veröffentlichen
+## 8. Veröffentlichen
 
 - **Leseransicht:** Handbuch lesen, suchen, Lesezeichen, „Weiter mit …“, Drucken mit Deckblatt im Firmen-Layout.
 - **Export:** Markdown, HTML, PDF, Word – gefiltert nach Rolle, Sparte, Markt; Quick Guide, One Pager, Lesefassung.
@@ -104,12 +115,12 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 - **Release-Abgleich, Releaseletter:** Jira-Tickets gegen den Bestand prüfen; Releaseletter mit Prüfregeln.
 - **Kontexthilfe:** Hilfe-Widget für oneSCM (F1 je Maske).
 
-## 8. Typische Arbeitsabläufe
+## 9. Typische Arbeitsabläufe
 
 1. **Wissen aufbauen:** Einlesen → Chunks mit Labels → Fragen & Antworten → Antwortqualität prüfen → Lücken in die Expertenbefragung → Antworten als Frage & Antwort (Label „Prüfen“) → später durch Quellen belegen.
 2. **Kapitel erstellen:** Kapitelanweisung festlegen (Kapitelsteuerung) → Quellen einlesen → Qualitätsanalyse (Widersprüche, Dopplungen) → Kapitelgenerator oder Kapitel-Assistent → Kapitelwerkstatt → Anleitungs-Check → Freigabe → Export/Veröffentlichung.
 3. **Screenshots pflegen:** Bild ins Archiv (oder Platzhalter) → Datenschutz im Bild prüfen (erkannte Stellen, ggf. eigene Stellen) → Merkmale, Labels und Kapitel → Varianten verknüpfen → Klickstrecke → Deckungsmatrix auf Lücken prüfen → neue Fassung bei neuem Release.
 
-## 9. Datenschutz
+## 10. Datenschutz
 
 Personenbezogene Daten (Namen, E-Mail, FIN, Kennzeichen …) erkennt die Datenschutzprüfung – in Texten und, mit eingerichteter Texterkennung, auch in Bildern; dort werden sie verpixelt, das Original bleibt erhalten. Die Daten gehen nie an externe Dienste. Gesichter und Unterschriften erkennt die App nicht – markieren Sie sie als eigene Stelle. Fragen mit personenbezogenen Daten werden bei externem KI-Dienst nicht gestellt. Befragungen erfassen Fachbereich oder Rolle, keine Personennamen.

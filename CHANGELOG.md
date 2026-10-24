@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.47.0 – Etappe 47 (24.10.2026)
+
+### Hinzugefügt
+- **Agent TRIAGE (ADR-100):** läuft nach jedem Einlesen (abschaltbar unter Einstellungen) und auf Anforderung (oneSCM_Metadaten › Triage).
+  - Pflichtlabels je Chunk mit Sicherheit und Begründung: Version, Status (live, Entwurf, in Bearbeitung), Domäne, Rolle (Dealer, MO, Market, HQ, Sonstiges), Sprache, Sparte (Pkw, Van, Pkw+Van), Markt, Detaillevel, zu prüfen.
+  - Labels von Menschen gehen vor; TRIAGE ersetzt nur eigene Zuordnungen.
+  - Kapitel und Unterkapitel für gemischte Quellen als Vorschlag: verschieben, neues Unterkapitel mit Kennung „neu“, nicht zugeordnet (zu prüfen). Übernehmen, Verwerfen, alle übernehmen; neue Unterkapitel bestätigen.
+- **Detaillevel** Basis, Basis+, Zusatz, Intern, HappyPath, Edge, inPrüfung steuern die Kapitelerzeugung: HappyPath im Standardablauf, Edge unter „Fehlerbehebung“. Die Detaillierung je Kapitel stellen Sie in der Kapitelsteuerung ein (Standard ohne Intern und inPrüfung).
+- **Inhalts-Dashboard:** Chunks, Wörter und Labels je Kapitel und Domäne, Anteil je Pflichtgruppe, Detaillevel, offene Vorschläge.
+- **Labels löschen** (admin): Zuordnungen werden entfernt, Katalog-Labels kommen beim Abgleich nicht wieder.
+- **Agenten in der App:** Übersicht aller Agenten, Aufgaben (offene Todos) und Entscheidungen.
+  - **ORCHESTRATOR** plant Aufgaben aus dem Stand, verfeinert sie bei jedem Lauf, legt Entscheidungen vor und führt getroffene Entscheidungen aus. Entscheiden darf nur ein Mensch mit der Berechtigung „Entscheiden“.
+  - **GOAL** vergleicht den Stand aller Funktionen mit dem Ziel (zehn Kriterien mit Sollwert) und erstellt Empfehlungen; nicht erfüllte Kriterien werden Aufgaben.
+- **Arbeitsordner:** Ordner `12_Goal` (Ziel, Abgleich, Empfehlungen) und `00_Dokumentation/Agenten` (Aufgaben, Entscheidungen, Triage), Agenten `orchestrator`, `triage`, `goal`, Grundregel 10. `abgleich --app` übernimmt Aufgaben, Entscheidungen und Ziel-Abgleich und legt für neue Unterkapitel der Triage Ordner `neu_<Titel>` an.
+- Tests T-309 … T-312, E2E T-313 (axe); Anforderungen NFR-114 … NFR-117; Migration 053.
+
+### Geändert
+- Labelkatalog: neue Gruppen Version, Status, Sprache, Markt, Detaillevel, zu prüfen; Rolle „Sonstiges“, Domäne „Allgemein“, Sparte „Pkw+Van“.
+- Domänenkarte und Zugriffsmatrix werten nur Labels von Menschen bzw. echte Rollen aus.
+
 ## 0.46.0 – Etappe 46 (24.10.2026)
 
 ### Verbessert

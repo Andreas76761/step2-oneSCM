@@ -92,6 +92,10 @@ describe('Etappe 47', () => {
       const gut = byText('Gutschriften');
       const triageRole = gut.labels.find((l: any) => l.group === 'role');
       await call('POST', '/metadata/chunks/labels', { snippetIds: [gut.id], add: [dealer.id], remove: [triageRole.id] }, 'u-redaktion');
+      // ein Label der Triage von Hand bestätigen: zählt als hinzugefügt und gilt danach als menschlich
+      const statusLabel = gut.labels.find((l: any) => l.group === 'status');
+      expect((await call('POST', '/metadata/chunks/labels', { snippetIds: [gut.id], add: [statusLabel.id] }, 'u-redaktion')).json.added).toBe(1);
+      expect((await call('POST', '/metadata/chunks/labels', { snippetIds: [gut.id], add: [statusLabel.id] }, 'u-redaktion')).json.added).toBe(0);
       const run = (await call('POST', '/triage/runs', { scope: 'all' }, 'u-redaktion')).json;
       expect(run.stats.keptManual).toBeGreaterThan(0);
       expect(codes((await call('GET', '/metadata/chunks?limit=100')).json.items.find((c: any) => c.id === gut.id), 'role')).toEqual(['role.dealer']);
@@ -156,6 +160,7 @@ describe('Etappe 47', () => {
       expect(plan.plan.find((p: any) => p.key === 'triage:proposals')).toMatchObject({ agent: 'triage', priority: 1, decision: true });
       expect(plan.plan.some((p: any) => p.key === 'quality:eval')).toBe(true);
       expect(plan.created).toBeGreaterThan(2);
+      expect(plan.decisionsCreated).toBeGreaterThanOrEqual(1);
       const dec = plan.decisions.find((x: any) => x.key === 'triage:proposals');
       expect(dec.options).toEqual(['alle übernehmen', 'einzeln prüfen', 'verwerfen']);
       // zweiter Lauf: keine Doppelungen
@@ -189,6 +194,10 @@ describe('Etappe 47', () => {
       expect(r('answer_quality').recommendation).toContain('Testfragensatz');
       expect(run.score).toBeGreaterThan(0);
       expect(run.score).toBeLessThan(1);
+      // Empfehlungen werden Aufgaben des zuständigen Agenten
+      const goalTasks = (await call('GET', '/agents/tasks?status=active')).json.items.filter((x: any) => x.source === 'goal');
+      expect(goalTasks.find((x: any) => x.key === 'goal:answer_quality')).toMatchObject({ agent: 'goal', status: 'open' });
+      expect(goalTasks.some((x: any) => x.key === 'goal:required_labels')).toBe(false);
       // Export für den Arbeitsordner
       const exp = (await call('GET', '/agents/export')).json;
       expect(exp.format).toBe('onescm-agents');

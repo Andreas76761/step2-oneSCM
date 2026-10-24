@@ -9,6 +9,7 @@ gilt mit Vorrang für die Agenten). Dazu CLAUDE.md, .claude/agents und .claude/s
 Hauptordner zur Steuerung: 05_I_Output (Produkte), 06_II_Stil_und_Design, 07_III_Grammatik_Synonyme_Fehlerliste, 08_IV_Translation.
 Bereiche außerhalb des Handbuchs: 09_Pipeline (Jira-Tickets in Bearbeitung, je Kapitel/Unterkapitel der Gesamtgliederung),
 10_Backlog (noch nicht begonnen) und 11_Intern (Testing, Reporting, Systeme, Migration, Rollout, Other).
+Steuerung der Agenten: 12_Goal (Ziel, Abgleich, Empfehlungen) und 00_Dokumentation/Agenten (Aufgaben, Entscheidungen, Triage).
 
 Befehle:
   zip       <Gliederung.xlsx|.json> <Ziel.zip> [--stand 23102026]
@@ -18,7 +19,9 @@ Befehle:
             (abweichende Vorlagen als <Datei>.neu daneben), und schreibt 00_Dokumentation/GLIEDERUNG_ABGLEICH.md. Gliederungen aus der App landen unter 03_Varianten/<Name>/.
             Mit --app werden auch die Kapitelanweisungen aus der App (Kapitelsteuerung) in ANWEISUNG.md der Kapitel unter 02_Kapitel übernommen –
             nur wenn die Datei fehlt oder noch leer ist; sonst als ANWEISUNG.md.neu. Ebenso die Einträge aus Pipeline, Backlog und
-            Intern der App als Dateien in 09_Pipeline, 10_Backlog und 11_Intern (von Hand geänderte Dateien bleiben, App-Fassung als .neu).
+            Intern der App als Dateien in 09_Pipeline, 10_Backlog und 11_Intern (von Hand geänderte Dateien bleiben, App-Fassung als .neu),
+            Aufgaben und Entscheidungen der Agenten nach 00_Dokumentation/Agenten, der Ziel-Abgleich nach 12_Goal/ABGLEICH.md und
+            für neue Unterkapitel der Triage (Kennung „neu“) Ordner neu_<Titel> im passenden Kapitel unter 02_Kapitel.
 
 Benötigt Python 3.9+, für Excel zusätzlich openpyxl. Der App-Abgleich nutzt nur die lokale App-Adresse.
 """
@@ -89,6 +92,9 @@ TRANSLATION_ORDNER = ['01_Glossar', '02_Uebersetzungsspeicher', '03_Laenderrevie
 PIPELINE = '09_Pipeline'
 BACKLOG = '10_Backlog'
 INTERN = '11_Intern'
+# Steuerung der Agenten (ADR-100): Ziel-Abgleich GOAL und Aufgaben/Entscheidungen des Orchestrators
+GOAL = '12_Goal'
+AGENTEN_DOK = '00_Dokumentation/Agenten'
 OHNE_ZUORDNUNG = '00_Ohne_Zuordnung'
 INTERN_THEMEN = {
     '01_Testing': ('Testing', 'Testkonzepte, Testfälle, Testdaten (nur anonymisiert), Ergebnisse'),
@@ -373,6 +379,14 @@ def bereiche(kapitel: list):
         f'{BACKLOG}/README.md': lies('Backlog_README.md'),
         f'{BACKLOG}/BACKLOG.md': '# Backlog – Übersicht\n\nTickets, deren Bearbeitung noch nicht begonnen hat.\n\n' + TICKET_KOPF,
         f'{INTERN}/README.md': lies('Intern_README.md'),
+        f'{GOAL}/README.md': lies('Goal_README.md'),
+        f'{GOAL}/ZIEL.md': lies('ZIEL.md'),
+        f'{GOAL}/ABGLEICH.md': '# Ziel-Abgleich (GOAL)\n\nNoch kein Abgleich. Agent goal starten oder `abgleich --app …`.\n\n| Kriterium | Ist | Soll | erfüllt | Empfehlung | Agent |\n|---|---|---|---|---|---|\n',
+        f'{GOAL}/EMPFEHLUNGEN.md': '# Empfehlungen (GOAL)\n\n| Datum | Kriterium | Empfehlung | Agent | als Aufgabe übernommen |\n|---|---|---|---|---|\n',
+        f'{AGENTEN_DOK}/README.md': lies('Agenten_README.md'),
+        f'{AGENTEN_DOK}/AUFGABEN.md': '# Aufgaben der Agenten\n\n> Plant und verfeinert der orchestrator; Herkunft: Orchestrator, GOAL oder von Hand.\n\n| Agent | Aufgabe | Priorität | Status | Herkunft | geändert |\n|---|---|---|---|---|---|\n',
+        f'{AGENTEN_DOK}/ENTSCHEIDUNGEN.md': '# Entscheidungen der Agenten\n\n> Entscheidungen trifft ein Mensch. Der orchestrator trägt Fragen ein und setzt Antworten um.\n\n| Agent | Frage | Möglichkeiten | Status | Entscheidung | von, am |\n|---|---|---|---|---|---|\n',
+        f'{AGENTEN_DOK}/TRIAGE.md': '# Triage – Bericht\n\n| Datum | Abschnitte | Labels | Vorschläge | neue Unterkapitel | zu prüfen |\n|---|---|---|---|---|---|\n',
     }
     for o, (name, inhalt) in INTERN_THEMEN.items():
         ordner.add(f'{INTERN}/{o}')
@@ -624,20 +638,9 @@ def _passend(basis: Path, titel: str | None, mit_punkt: bool):
     return next((x for x in kandidaten if name and x.name.endswith(name)), None)
 
 
-def bereiche_abgleichen(ziel: Path, daten: dict, bericht: list):
-    """Einträge der App als Dateien: Pipeline je Kapitel/Unterkapitel, Backlog, Intern je Thema. Eine Datei, die seit der
-    letzten Lieferung niemand geändert hat, wird aktualisiert; eine geänderte bleibt, die App-Fassung kommt als .neu daneben.
-    Wechselt ein Eintrag den Ort (z. B. Backlog → Pipeline), bleibt die alte Datei liegen und wird gemeldet."""
-    stand_datei = ziel / '00_Dokumentation' / 'App' / 'bereiche_stand.json'
-    try:
-        stand = json.loads(stand_datei.read_text(encoding='utf-8'))
-    except (OSError, ValueError):
-        stand = {}
-    dateien_stand, orte = stand.get('dateien', {}), stand.get('orte', {})
-    zahl = {'neu': 0, 'aktualisiert': 0, 'abweichend': 0}
-    # leere Übersichten aus der Vorlage gelten als unverändert
-    vorlage = {rel: hashlib.sha256(t.encode()).hexdigest() for rel, t in bereiche([])[1].items()}
-
+def _schreiben_geschuetzt(ziel: Path, dateien_stand: dict, vorlage: dict, zahl: dict, bericht: list):
+    """Schreiber für App-Lieferungen: neue Datei anlegen; unveränderte (Hash wie letzte Lieferung bzw. Vorlage) aktualisieren;
+    von Hand geänderte bleiben, die App-Fassung kommt als .neu daneben"""
     def schreibe(rel: str, inhalt: str):
         p = ziel / rel
         h = hashlib.sha256(inhalt.encode()).hexdigest()
@@ -660,6 +663,23 @@ def bereiche_abgleichen(ziel: Path, daten: dict, bericht: list):
                     bericht.append(f'- `{rel}` wurde von Hand geändert – App-Fassung als `{rel}.neu`, bitte zusammenführen')
                 return
         dateien_stand[rel] = h
+    return schreibe
+
+
+def bereiche_abgleichen(ziel: Path, daten: dict, bericht: list):
+    """Einträge der App als Dateien: Pipeline je Kapitel/Unterkapitel, Backlog, Intern je Thema. Eine Datei, die seit der
+    letzten Lieferung niemand geändert hat, wird aktualisiert; eine geänderte bleibt, die App-Fassung kommt als .neu daneben.
+    Wechselt ein Eintrag den Ort (z. B. Backlog → Pipeline), bleibt die alte Datei liegen und wird gemeldet."""
+    stand_datei = ziel / '00_Dokumentation' / 'App' / 'bereiche_stand.json'
+    try:
+        stand = json.loads(stand_datei.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        stand = {}
+    dateien_stand, orte = stand.get('dateien', {}), stand.get('orte', {})
+    zahl = {'neu': 0, 'aktualisiert': 0, 'abweichend': 0}
+    # leere Übersichten aus der Vorlage gelten als unverändert
+    vorlage = {rel: hashlib.sha256(t.encode()).hexdigest() for rel, t in bereiche([])[1].items()}
+    schreibe = _schreiben_geschuetzt(ziel, dateien_stand, vorlage, zahl, bericht)
 
     dateiname = lambda e: f"{e['jiraKey']}.md" if e.get('jiraKey') else f"{ordnername(e['title'], 40) or e['id']}.md"
     zeilen = {PIPELINE: [], BACKLOG: []}
@@ -693,6 +713,56 @@ def bereiche_abgleichen(ziel: Path, daten: dict, bericht: list):
     stand_datei.write_text(json.dumps({'dateien': dateien_stand, 'orte': orte}, ensure_ascii=False, indent=2), encoding='utf-8')
     bericht.append(f"- Pipeline {len(zeilen[PIPELINE])}, Backlog {len(zeilen[BACKLOG])}, Intern {len(intern)} Einträge: "
                    f"{zahl['neu']} Dateien neu, {zahl['aktualisiert']} aktualisiert, {zahl['abweichend']} abweichend (.neu)")
+
+
+def app_hole(adresse: str, projekt: str, token: str | None, benutzer: str | None, pfad: str):
+    """GET auf die lokale App; None bei Fehler oder älterer App"""
+    kopf = {'X-Project-Id': projekt, 'Accept': 'application/json'}
+    if token:
+        kopf['Authorization'] = f'Bearer {token}'
+    elif benutzer:
+        kopf['X-User-Id'] = benutzer
+    try:
+        with urllib.request.urlopen(urllib.request.Request(adresse.rstrip('/') + '/api/v1' + pfad, headers=kopf), timeout=30) as r:
+            return json.loads(r.read().decode('utf-8'))
+    except (OSError, ValueError):
+        return None
+
+
+def agenten_abgleichen(ziel: Path, daten: dict, neue_unterkapitel: list, bericht: list):
+    """Aufgaben, Entscheidungen und Ziel-Abgleich der App (GET /agents/export) als Dateien; neue Unterkapitel der Triage
+    (GET /triage/new-subchapters) als Ordner neu_<Titel> im passenden Kapitel unter 02_Kapitel – Vorhandenes bleibt."""
+    stand_datei = ziel / AGENTEN_DOK / 'agenten_stand.json'
+    try:
+        stand = json.loads(stand_datei.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        stand = {}
+    dateien_stand = stand.get('dateien', {})
+    zahl = {'neu': 0, 'aktualisiert': 0, 'abweichend': 0}
+    vorlage = {rel: hashlib.sha256(t.encode()).hexdigest() for rel, t in bereiche([])[1].items()}
+    schreibe = _schreiben_geschuetzt(ziel, dateien_stand, vorlage, zahl, bericht)
+    f = daten.get('files', {})
+    for rel, key in [(f'{AGENTEN_DOK}/AUFGABEN.md', 'tasks'), (f'{AGENTEN_DOK}/ENTSCHEIDUNGEN.md', 'decisions'), (f'{GOAL}/ABGLEICH.md', 'goal')]:
+        if f.get(key):
+            schreibe(rel, f[key])
+    ordner_neu = 0
+    for u in neue_unterkapitel:
+        kap = _passend(ziel / '02_Kapitel', u.get('chapterTitle'), False)
+        if not kap:
+            bericht.append(f"- ⚠ neues Unterkapitel „{u.get('title')}“: Kapitel „{u.get('chapterTitle')}“ hat keinen Ordner in `02_Kapitel`")
+            continue
+        o = kap / f"neu_{ordnername(u.get('title') or '', 50)}"
+        if not o.exists():
+            o.mkdir(parents=True)
+            (o / 'UNTERKAPITEL.md').write_text(
+                f"# {u.get('title')}\n\n**Kennung: neu** – von TRIAGE angelegt ({(u.get('createdAt') or '')[:10]}), {u.get('chunks', 0)} Abschnitte. "
+                'Ein Mensch bestätigt, benennt um oder löst ab (App: Kapitelsteuerung bzw. Triage). Nach der Bestätigung den Ordner '
+                'ohne `neu_` in die Gliederung übernehmen (Gesamtgliederung ergänzen, dann `abgleich --gliederung …`).\n', encoding='utf-8')
+            ordner_neu += 1
+    stand_datei.parent.mkdir(parents=True, exist_ok=True)
+    stand_datei.write_text(json.dumps({'dateien': dateien_stand}, ensure_ascii=False, indent=2), encoding='utf-8')
+    bericht.append(f"- Agenten: {zahl['neu']} Dateien neu, {zahl['aktualisiert']} aktualisiert, {zahl['abweichend']} abweichend (.neu); "
+                   f"{len(neue_unterkapitel)} neue Unterkapitel der Triage, {ordner_neu} Ordner `neu_…` angelegt")
 
 
 def agenten_aktualisieren(ziel: Path, bericht: list):
@@ -871,6 +941,14 @@ def main():
             bericht.append('- App liefert keine Arbeitsbereiche (ältere Version oder keine Berechtigung)')
         else:
             bereiche_abgleichen(ziel, ber, bericht)
+        # Agenten: Aufgaben, Entscheidungen, Ziel-Abgleich, neue Unterkapitel der Triage (App ab 0.47)
+        ag = app_hole(a.app, a.projekt, a.token, a.benutzer, '/agents/export')
+        bericht += ['', f'## Agenten aus der App → {AGENTEN_DOK}, {GOAL}, 02_Kapitel (neu_…)', '']
+        if not ag or ag.get('format') != 'onescm-agents':
+            bericht.append('- App liefert keine Agenten (ältere Version oder keine Berechtigung)')
+        else:
+            neu = (app_hole(a.app, a.projekt, a.token, a.benutzer, '/triage/new-subchapters') or {}).get('items', [])
+            agenten_abgleichen(ziel, ag, neu, bericht)
     if not (a.gliederung or a.app):
         bericht += ['', 'Nur Agenten, Hauptordner und Vorlagen abgeglichen (weder --gliederung noch --app angegeben).']
     (ziel / '00_Dokumentation' / 'GLIEDERUNG_ABGLEICH.md').write_text('\n'.join(bericht) + '\n', encoding='utf-8')
