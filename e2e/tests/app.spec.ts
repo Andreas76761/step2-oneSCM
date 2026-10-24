@@ -862,17 +862,19 @@ test('[T-225] Werkstatt: Stil anzeigen und korrigieren, Stapelkorrektur, Bild au
   // Stapelkorrektur mit Vorschau
   await page.getByRole('button', { name: '🖋️ Stil korrigieren' }).click();
   const dlg = page.getByRole('dialog', { name: 'Schreibstil: Kapitel automatisch korrigieren' });
-  await expect(dlg.getByRole('status')).toContainText('1 Absätze mit automatischen Korrekturen');
+  // zwei Absätze: Präsens („war“ → „ist“) und Hausregel Menüpfad („>“ → „›“, ADR-097)
+  await expect(dlg.getByRole('status')).toContainText('2 Absätze mit automatischen Korrekturen');
   expect(await axe()).toEqual([]);
-  await dlg.getByRole('button', { name: 'Auswahl übernehmen (1)' }).click();
-  await expect(page.getByText('1 Absatz/Absätze korrigiert.')).toBeVisible();
+  await dlg.getByRole('button', { name: 'Auswahl übernehmen (2)' }).click();
+  await expect(page.getByText('2 Absatz/Absätze korrigiert.')).toBeVisible();
   await expect(page.getByRole('article').filter({ hasText: 'Die Liste ist leer.' })).toBeVisible();
+  await expect(page.getByRole('article').filter({ hasText: 'Verkauf › Aufträge' })).toBeVisible();
 
   // Bild aus diesem Absatz: Klickstrecke erzeugen, speichern, einfügen; PNG-Fassung für Word
   const clickBlock = page.getByRole('article').filter({ hasText: 'Klicken Sie auf Speichern' });
   await clickBlock.getByRole('button', { name: '🎨 Bild erzeugen' }).click();
   const imgDlg = page.getByRole('dialog', { name: 'Bild aus diesem Absatz erzeugen' });
-  await expect(imgDlg.getByRole('textbox', { name: 'Textstelle' })).toHaveValue(/Öffnen Sie \*\*Verkauf > Aufträge\*\*/);
+  await expect(imgDlg.getByRole('textbox', { name: 'Textstelle' })).toHaveValue(/Öffnen Sie \*\*Verkauf › Aufträge\*\*/);
   await imgDlg.getByRole('button', { name: 'Bilder erzeugen' }).click();
   await imgDlg.getByRole('checkbox', { name: 'Klickstrecke auswählen' }).check();
   expect(await axe()).toEqual([]);

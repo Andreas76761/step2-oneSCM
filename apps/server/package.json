@@ -39,7 +39,7 @@
     "jszip": "^3.10.1",
     "mammoth": "^1.12.3",
     "marked": "^18.0.14",
-    "nodemailer": "^10.0.10",
+    "nodemailer": "^10.2.1",
     "pdfjs-dist": "^5.4.624",
     "pdfmake": "^0.3.11",
     "pg": "^8.23.0",
