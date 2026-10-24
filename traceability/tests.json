@@ -2863,5 +2863,23 @@
     "requirements": [
       "NFR-151"
     ]
+  },
+  {
+    "id": "T-374",
+    "title": "Lesestil Handbuch-Kapitel: Einstellung (nur Administration, geprüft), Online-Hilfe mit Farben, Schriften, Balken und Icons der Anpassung; Standard unverändert",
+    "file": "apps/server/test/stage65.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-152"
+    ]
+  },
+  {
+    "id": "T-375",
+    "title": "Lesestil in den Einstellungen wählen, Leseransicht mit Hauptfarbe und Balken, zurück auf Standard – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-152"
+    ]
   }
 ]

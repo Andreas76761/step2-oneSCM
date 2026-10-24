@@ -16,6 +16,7 @@ import { escapeHtml, markdownToHtml, type ImageSource } from './render.js';
 import { inlineMedia, loadMedia, type MediaFile } from './media.js';
 import { applyVariants } from './imageArchive.js';
 import { MIME_EXT } from '../domain/media.js';
+import { normalizeTheme, readingCss, readingIcon, type DesignTheme } from '../domain/designs.js';
 import { projectLanguages, translatedChapter } from './translations.js';
 import { LANGUAGES } from '../domain/translate.js';
 
@@ -82,11 +83,12 @@ interface SiteLang {
 }
 
 /** Firmen-Layout der Online-Hilfe (ADR-038): Hausfarbe in Kopfzeile und Überschriften, Logo, Firmenname, Fußzeile */
-interface SiteBrand { color: string; logoFile: string | null; company: string | null; footer: string | null }
+interface SiteBrand { color: string; logoFile: string | null; company: string | null; footer: string | null; /** Lesestil Handbuch-Kapitel (ADR-117) */ reading?: DesignTheme }
 
 function pageOf(title: string, releaseLabel: string, body: string, lang = 'de', switcher = '', brand?: SiteBrand) {
   const up = lang === 'de' ? '' : '../';
-  const css = brand && brand.color !== '#1d63d8' ? `${PAGE_CSS}header{background:${brand.color}}h2{border-bottom-color:${brand.color}}.kind-note,.kind-tip{border-left-color:${brand.color}}` : PAGE_CSS;
+  const base = brand && brand.color !== '#1d63d8' ? `${PAGE_CSS}header{background:${brand.color}}h2{border-bottom-color:${brand.color}}.kind-note,.kind-tip{border-left-color:${brand.color}}` : PAGE_CSS;
+  const css = brand?.reading ? base + readingCss(brand.reading) : base;
   const logo = brand?.logoFile ? `<img src="${up}${brand.logoFile}" alt="${escapeHtml(brand.company ?? 'Logo')}" style="height:28px;vertical-align:middle;margin-right:10px;border:0;background:#fff;padding:2px">` : '';
   // Eigenständig und ohne Skripte (ADR-012): eigene CSP, keine externen Ressourcen
   return `<!doctype html>
@@ -99,7 +101,7 @@ function pageOf(title: string, releaseLabel: string, body: string, lang = 'de', 
 <main id="inhalt">${body}</main>${brand?.footer ? `<footer class="meta" style="max-width:860px;margin:0 auto;padding:0 20px 20px">${escapeHtml(brand.footer)}</footer>` : ''}</body></html>`;
 }
 
-function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false, images?: ImageSource) {
+function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false, images?: ImageSource, reading = false) {
   const out: string[] = [`<h1>${escapeHtml(ch.title)}</h1>`, `<p class="meta">${escapeHtml(ui(lang).approved)} ${ch.versionNo}${ch.approvedAt ? ` · ${ch.approvedAt.slice(0, 10)}` : ''}</p>`];
   if (fallback) out.push(`<p class="meta" lang="${lang}"><strong>${escapeHtml(ui(lang).fallback)}</strong></p>`);
   for (const s of ch.sections) {
@@ -109,7 +111,7 @@ function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false, images?: 
       out.push(`<div class="block kind-${escapeHtml(b.kind)}">`);
       if (badges) out.push(`<p class="badges">${escapeHtml(badges)}</p>`);
       // Rahmentexte in der Sprache der Seite (U-08)
-      if (KIND_LABEL[b.kind] && b.kind !== 'xref') out.push(`<p class="label">${escapeHtml(frameTexts(lang)[b.kind as 'note' | 'tip' | 'warning'] ?? KIND_LABEL[b.kind])}</p>`);
+      if (KIND_LABEL[b.kind] && b.kind !== 'xref') out.push(`<p class="label">${reading ? readingIcon(b.kind) : ''}${escapeHtml(frameTexts(lang)[b.kind as 'note' | 'tip' | 'warning'] ?? KIND_LABEL[b.kind])}</p>`);
       out.push(markdownToHtml(b.text, images), '</div>');
     }
   }
@@ -140,7 +142,7 @@ async function buildSite(
   if (layout) {
     const logoFile = layout.logo ? `bilder/logo.${MIME_EXT[layout.logo.mime] ?? 'png'}` : null;
     if (layout.logo && logoFile) zip.file(logoFile, layout.logo.data);
-    brand = { color: layout.primaryColor, logoFile, company: layout.companyName, footer: layout.footerText };
+    brand = { color: layout.primaryColor, logoFile, company: layout.companyName, footer: layout.footerText, ...(layout.readingStyle === 'fachdoku' ? { reading: normalizeTheme('fachdoku', layout.designThemes?.fachdoku ?? {}).theme } : {}) };
   }
   const page = (title: string, label: string, body: string, lang = 'de', sw = '') => pageOf(title, label, body, lang, sw, brand);
   // Bilder (ADR-029) als Dateien unter bilder/ – einmal je Inhalt, von allen Sprachen gemeinsam genutzt
@@ -180,7 +182,7 @@ ${lines.length ? `<ul lang="de">${lines.map((x) => `<li>${escapeHtml(x)}</li>`).
     pages.forEach((p, i) => {
       const prev = i > 0 ? `<a href="${files[i - 1]}">← ${escapeHtml(pages[i - 1].ch.title)}</a>` : '<span></span>';
       const next = i < pages.length - 1 ? `<a href="${files[i + 1]}">${escapeHtml(pages[i + 1].ch.title)} →</a>` : '<span></span>';
-      zip.file(`${l.prefix}${files[i]}`, page(p.ch.title, label, `<div${p.fallback ? ' lang="de"' : ''}>${chapterHtml(p.ch, l.code, p.fallback, images(l.prefix))}</div><nav class="pager" aria-label="${escapeHtml(u.pager)}">${prev}${next}</nav>`, l.code, switcher(l.code, files[i])));
+      zip.file(`${l.prefix}${files[i]}`, page(p.ch.title, label, `<div${p.fallback ? ' lang="de"' : ''}>${chapterHtml(p.ch, l.code, p.fallback, images(l.prefix), !!brand?.reading)}</div><nav class="pager" aria-label="${escapeHtml(u.pager)}">${prev}${next}</nav>`, l.code, switcher(l.code, files[i])));
     });
   }
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });

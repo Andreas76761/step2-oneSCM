@@ -118,3 +118,4 @@
 | [ADR-114](ADR-114-designvorlagen-anpassen.md) | Designvorlagen anpassen: Haupt-, Akzent- und Warnfarbe mit Kontrastprüfung, Schriften, Logo-Position, Vorschau | akzeptiert, umgesetzt |
 | [ADR-115](ADR-115-designvorlagen-word.md) | Designvorlagen als Word-Dokument: Querformat mit zwei Spalten bzw. Kopfzeile und Formatvorlagen, Icons als SVG mit PNG-Ersatz, Nummerierung je Liste | akzeptiert, umgesetzt |
 | [ADR-116](ADR-116-designvorlagen-powerpoint.md) | Designvorlagen als PowerPoint (16:9): Titelfolie mit Überblick, Karten bzw. Kennzahlen und Abschnittsfolien, Fortsetzung, Nummerierung mit Startwert | akzeptiert, umgesetzt |
+| [ADR-117](ADR-117-lesestil-handbuch-kapitel.md) | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (Farben, Schriften, Balken, Boxen der Designvorlage) | akzeptiert, umgesetzt |

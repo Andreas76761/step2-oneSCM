@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, del, put } from '../api';
 import { contrast } from '../contrast';
+import { resetReadingStyle } from '../readingStyle';
 import { DesignThemeCard } from './DesignThemeCard';
 
 import { Decision, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
@@ -132,6 +133,7 @@ function LayoutCard() {
       const { docxTemplate: _t, ...body } = d;
       await put('/layout', body);
       notify('Layout gespeichert.');
+      resetReadingStyle();
       layout.reload();
     } catch (e) {
       notify(errorText(e), 'error');
@@ -186,6 +188,12 @@ function LayoutCard() {
         <label>Kopfzeile <input value={d.headerText ?? ''} onChange={(e) => set('headerText', e.target.value)} placeholder="Standard: Firmenname · Titel" /></label>
         <label>Fußzeile <input value={d.footerText ?? ''} onChange={(e) => set('footerText', e.target.value)} placeholder="z. B. Nur für den internen Gebrauch" /></label>
       </div>
+      <label className="block">Stil für Leseransicht, Druck und Online-Hilfe
+        <select value={d.readingStyle ?? 'standard'} onChange={(e) => set('readingStyle', e.target.value)}>
+          <option value="standard">Standard (Hausfarbe)</option>
+          <option value="fachdoku">Handbuch-Kapitel (Farben und Schriften der Designvorlage)</option>
+        </select>
+      </label>
       <label className="block">Vertraulichkeitshinweis <input value={d.confidentiality ?? ''} onChange={(e) => set('confidentiality', e.target.value)} placeholder="z. B. VERTRAULICH" /></label>
       <fieldset className="checks">
         <legend>Designvorlagen (Quick Reference Guide, Handbuch-Kapitel)</legend>

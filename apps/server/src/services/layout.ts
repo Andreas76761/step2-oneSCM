@@ -34,11 +34,13 @@ export interface Layout {
   quickRefLinks: string | null;
   /** Anpassung der Designvorlagen (ADR-114); gepflegt über /design-templates/:id/theme, fehlend = Standard */
   designThemes: Partial<Record<'quickref' | 'fachdoku', DesignTheme>>;
+  /** Stil von Leseransicht, Druck und Online-Hilfe (ADR-117): standard oder fachdoku (Handbuch-Kapitel mit Anpassung) */
+  readingStyle: 'standard' | 'fachdoku';
 }
 
 export const DEFAULT_LAYOUT: Layout = {
   companyName: null, primaryColor: '#1d63d8', logoSha: null, cover: false, coverSubtitle: null, headerText: null, footerText: null, confidentiality: null, docxTemplate: null,
-  docLabel: null, productLine: null, quickRefLinks: null, designThemes: {},
+  docLabel: null, productLine: null, quickRefLinks: null, designThemes: {}, readingStyle: 'standard',
 };
 
 export { contrastToWhite };
@@ -66,6 +68,10 @@ export async function updateLayout(ctx: Ctx, input: Partial<Layout>, user: User)
     const v = input.quickRefLinks === null ? '' : String(input.quickRefLinks).replace(/\r\n?/g, '\n').trim();
     if (v.length > 2000) throw badRequest('quickRefLinks: höchstens 2 000 Zeichen.');
     next.quickRefLinks = v || null;
+  }
+  if (input.readingStyle !== undefined) {
+    if (input.readingStyle !== 'standard' && input.readingStyle !== 'fachdoku') throw badRequest('readingStyle muss standard oder fachdoku sein.');
+    next.readingStyle = input.readingStyle;
   }
   if (input.cover !== undefined) {
     if (typeof input.cover !== 'boolean') throw badRequest('cover muss true oder false sein.');

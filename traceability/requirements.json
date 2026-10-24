@@ -1554,5 +1554,14 @@
     "documentation": [
       "docs/adr/ADR-116-designvorlagen-powerpoint.md"
     ]
+  },
+  {
+    "id": "NFR-152",
+    "title": "Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe: Farben, Schriften, Balken und Hinweisboxen der Designvorlage mit Anpassung; dunkler Modus mit App-Textfarben; Online-Hilfe ohne Skripte",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-117-lesestil-handbuch-kapitel.md"
+    ]
   }
 ]

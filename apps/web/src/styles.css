@@ -926,3 +926,21 @@ div.reader-lang-note p { margin: 0; }
 .theme-colors { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 8px 0; }
 .theme-color { display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
 .theme-preview { width: 100%; height: 520px; border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; background: #fff; }
+/* Lesestil Handbuch-Kapitel (ADR-117): Farben nur im hellen Modus, im dunklen bleiben Text- und Flächenfarben der App */
+.reading-fachdoku { font-family: var(--rd-bfont); }
+.reading-fachdoku h3 { font-family: var(--rd-hfont); color: var(--rd-primary); border-left: 4px solid var(--rd-primary); padding-left: 9px; }
+.reading-fachdoku .callout { background: transparent; border-radius: 0; border-left: 4px solid var(--rd-accent); }
+.reading-fachdoku .callout.tip { border-left-color: #c76b00; }
+.reading-fachdoku .callout.warning { border-left-color: var(--rd-warn); }
+.reading-fachdoku .callout.xref { border: 1px solid var(--border); border-left: 4px solid var(--rd-primary); }
+.reading-fachdoku table th { background: var(--surface-2); font-weight: 400; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .reading-fachdoku h3 { color: var(--text); }
+}
+:root[data-theme='dark'] .reading-fachdoku h3 { color: var(--text); }
+@media print {
+  .reading-fachdoku h3 { color: var(--rd-primary); }
+  .reading-fachdoku .callout { border-left: 3pt solid var(--rd-accent); }
+  .reading-fachdoku .callout.warning { border-left-color: var(--rd-warn); }
+  .reading-fachdoku .callout.tip { border-left-color: #c76b00; }
+}

@@ -3427,3 +3427,28 @@ test('[T-373] Designvorlagen als PowerPoint: Muster als PowerPoint, Export Power
   expect(file.suggestedFilename()).toMatch(/^onescm-handbuch-quickref-quickguide-\d{4}-\d{2}-\d{2}\.pptx$/);
   expect(await axe()).toEqual([]);
 });
+
+test('[T-375] Lesestil Handbuch-Kapitel: in den Einstellungen wählen, Leseransicht mit Farben und Balken der Designvorlage, zurück auf Standard – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const setStyle = async (label: string) => {
+    await page.goto('/einstellungen');
+    await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+    await page.getByLabel('Stil für Leseransicht, Druck und Online-Hilfe').selectOption({ label });
+    await page.getByRole('button', { name: 'Layout speichern' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'Layout gespeichert' })).toBeVisible();
+  };
+  await setStyle('Handbuch-Kapitel (Farben und Schriften der Designvorlage)');
+  await page.goto('/lesen');
+  const styled = page.locator('.reading-fachdoku').first();
+  await expect(styled).toBeVisible();
+  // Überschriften der Abschnitte in der Hauptfarbe mit Balken (Standard der Vorlage #1f3a68)
+  await expect(styled.locator('h3').first()).toHaveCSS('color', 'rgb(31, 58, 104)');
+  await expect(styled.locator('h3').first()).toHaveCSS('border-left-width', '4px');
+  expect(await axe()).toEqual([]);
+  await setStyle('Standard (Hausfarbe)');
+  await page.goto('/lesen');
+  await expect(page.locator('.reader-section').first()).toBeVisible();
+  await expect(page.locator('.reading-fachdoku')).toHaveCount(0);
+});

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.64.0
+  version: 0.65.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -2564,10 +2564,10 @@ paths:
       operationId: updateLayout
       summary: 'Firmen-Layout ändern (Administration): Firmenname, Hausfarbe (Kontrast ≥ 4,5 : 1), Logo, Titelseite, Kopf-/Fußzeile, Vertraulichkeitshinweis'
       tags: [Export]
-      x-requirements: [NFR-25]
+      x-requirements: [NFR-25, NFR-152]
       x-extension: true
       requestBody:
-        content: { application/json: { schema: { type: object, properties: { companyName: { type: [string, 'null'] }, primaryColor: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }, logoSha: { type: [string, 'null'] }, cover: { type: boolean }, coverSubtitle: { type: [string, 'null'] }, headerText: { type: [string, 'null'] }, footerText: { type: [string, 'null'] }, confidentiality: { type: [string, 'null'] }, docLabel: { type: [string, 'null'], maxLength: 80, description: 'Dokumentart in der Kopfzeile des Handbuch-Kapitels (ADR-112)' }, productLine: { type: [string, 'null'], maxLength: 60, description: 'Zusatz unter der Marke (ADR-112)' }, quickRefLinks: { type: [string, 'null'], maxLength: 2000, description: 'Markdown für „Wichtige Links und Ansprechpartner“ im Quick Reference Guide (ADR-112)' } } } } }
+        content: { application/json: { schema: { type: object, properties: { companyName: { type: [string, 'null'] }, primaryColor: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }, logoSha: { type: [string, 'null'] }, cover: { type: boolean }, coverSubtitle: { type: [string, 'null'] }, headerText: { type: [string, 'null'] }, footerText: { type: [string, 'null'] }, confidentiality: { type: [string, 'null'] }, docLabel: { type: [string, 'null'], maxLength: 80, description: 'Dokumentart in der Kopfzeile des Handbuch-Kapitels (ADR-112)' }, productLine: { type: [string, 'null'], maxLength: 60, description: 'Zusatz unter der Marke (ADR-112)' }, quickRefLinks: { type: [string, 'null'], maxLength: 2000, description: 'Markdown für „Wichtige Links und Ansprechpartner“ im Quick Reference Guide (ADR-112)' }, readingStyle: { type: string, enum: [standard, fachdoku], description: 'Stil von Leseransicht, Druck und Online-Hilfe (ADR-117)' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Layout' }

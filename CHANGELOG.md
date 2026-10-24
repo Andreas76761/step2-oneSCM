@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.65.0 – Etappe 65 (24.10.2026)
+
+### Hinzugefügt
+- **Lesestil „Handbuch-Kapitel“ (ADR-117):** neues Feld „Stil für Leseransicht, Druck und Online-Hilfe“ im Firmen-Layout (`readingStyle`: `standard` oder `fachdoku`, nur Administration).
+  - **Leseransicht und Druck:** Abschnittsüberschriften in Schrift und Hauptfarbe der Vorlage mit Balken; Hinweisboxen mit farbigem Balken; Fließtext in der Textschrift. Im dunklen Modus bleiben die Textfarben der App.
+  - **Online-Hilfe:** Kopfzeile, Überschriften, Links und Boxen in Farben und Schriften der Vorlage; Lucide-Icon vor der Beschriftung der Hinweisboxen. Weiterhin ohne Skripte.
+- Tests T-374 (Einstellung, Online-Hilfe) und E2E T-375 (Leseransicht, axe); Anforderung NFR-152.
+
 ## 0.64.0 – Etappe 64 (24.10.2026)
 
 Wahl des Auftraggebers vom 24.10.2026: PowerPoint im Design.

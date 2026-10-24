@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.64 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.65 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -115,7 +115,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 
 ## 8. Veröffentlichen
 
-- **Leseransicht:** Handbuch lesen, suchen, Lesezeichen, „Weiter mit …“, Drucken mit Deckblatt im Firmen-Layout.
+- **Leseransicht:** Handbuch lesen, suchen, Lesezeichen, „Weiter mit …“, Drucken mit Deckblatt im Firmen-Layout. Unter **Einstellungen → Layout** wählt die Administration den Stil für Leseransicht, Druck und Online-Hilfe. „Handbuch-Kapitel“ übernimmt Farben, Schriften, Balken und Hinweisboxen der Designvorlage samt Anpassung; im dunklen Modus bleiben die Textfarben der App.
 - **Export:** Markdown, HTML, PDF, Word, PowerPoint – gefiltert nach Rolle, Sparte, Markt; Quick Guide, One Pager, Kurzfassung (Management, je Kapitel ein Absatz), Lesefassung. Mit **Stand (Release)** blendet der Export Kapitel aus, deren „gültig ab“ später liegt (Zukunfts-Inhalte); das Ergebnis nennt sie.
   - **Designvorlagen** (Format HTML, Auswahl „Design“):
     - **Quick Reference Guide:** A4 quer, kompakt, Profil Quick Guide.

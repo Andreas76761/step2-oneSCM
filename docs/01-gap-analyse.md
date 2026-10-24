@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.67 Stand nach Etappe 65 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (NFR-152) | ✅ ([ADR-117](adr/ADR-117-lesestil-handbuch-kapitel.md)), T-374, T-375 |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
 ## 1.66 Stand nach Etappe 64 (24.10.2026)
 
 | Punkt | Ergebnis |

@@ -9,6 +9,7 @@ import { GlossText, GlossaryProvider, type GlossaryEntry } from '../components/G
 import { Card, Empty, ErrorBox, Md, Page, errorText, preloadMarkdown, useApp, useLoad } from '../components/ui';
 import { matches } from './FilteredView';
 import { NATIVE_NAMES, ReaderTextProvider, readerTexts, useReaderText } from '../readerText';
+import { useReadingStyle } from '../readingStyle';
 
 const CALLOUT: Record<string, { icon: LucideIcon; label: 'tip' | 'warning' | 'note' }> = {
   tip: { icon: LightbulbIcon, label: 'tip' },
@@ -126,8 +127,10 @@ export function readerSections(version: any, role?: string) {
 export function ChapterContent({ version, role }: { version: any; role?: string }) {
   // Hinweis-Beschriftungen in der Sprache des gezeigten Textes (bei deutschem Rückfall deutsch, wie die Abschnittstitel)
   const { t } = useMemo(() => readerTexts(version.language ?? 'de'), [version.language]);
+  // Lesestil Handbuch-Kapitel (ADR-117): Farben, Schriften, Balken und Boxen der Designvorlage
+  const reading = useReadingStyle();
   return (
-    <>
+    <div className={reading?.className} style={reading?.style}>
       {readerSections(version, role).map((s: any) => (
         <section key={s.code} className="reader-section">
           <h3>{s.title}</h3>
@@ -138,7 +141,7 @@ export function ChapterContent({ version, role }: { version: any; role?: string 
           })}
         </section>
       ))}
-    </>
+    </div>
   );
 }
 

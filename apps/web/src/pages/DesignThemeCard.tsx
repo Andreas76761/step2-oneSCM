@@ -5,6 +5,7 @@ import { api, del, put } from '../api';
 import { Ico, OkMark } from '../components/icons';
 import { Card, ErrorBox, errorText, useApp, useLoad } from '../components/ui';
 import { contrast } from '../contrast';
+import { resetReadingStyle } from '../readingStyle';
 
 type Theme = { primary: string; accent: string; warn: string; headingFont: 'serif' | 'sans'; bodyFont: 'serif' | 'sans'; logo: 'right' | 'left' | 'none' };
 const COLORS: { key: 'primary' | 'accent' | 'warn'; label: string; use: string }[] = [
@@ -43,6 +44,7 @@ export function DesignThemeCard() {
     try {
       await put(`/design-templates/${id}/theme`, draft);
       notify(`Anpassung „${tpl.name}“ gespeichert.`);
+      resetReadingStyle();
       templates.reload();
     } catch (e) {
       notify(errorText(e), 'error');
@@ -52,6 +54,7 @@ export function DesignThemeCard() {
     try {
       await del(`/design-templates/${id}/theme`);
       notify(`„${tpl.name}“ auf den Standard zurückgesetzt.`);
+      resetReadingStyle();
       templates.reload();
     } catch (e) {
       notify(errorText(e), 'error');

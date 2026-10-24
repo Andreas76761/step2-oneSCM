@@ -182,6 +182,21 @@ export function chapterFacts(c: DesignChapter): { sub: string; kpis: [DesignIcon
   };
 }
 
+// ---------------------------------------------------------------- Lesestil „Handbuch-Kapitel“ (ADR-117)
+
+/** Zusatz-CSS der Online-Hilfe im Stil Handbuch-Kapitel: Farben und Schriften der Anpassung, Balken, Hinweisboxen */
+export function readingCss(t: DesignTheme): string {
+  const warnText = `color-mix(in srgb,${t.warn} 70%,#000)`;
+  return `body{font-family:${FONTS[t.bodyFont]}}header{background:${t.primary}}`
+    + `h1,h2,h3{font-family:${FONTS[t.headingFont]};color:${t.primary}}h2{border-bottom:0;border-left:4px solid ${t.primary};padding:0 0 0 9px}a{color:${t.primary}}`
+    + `.kind-note,.kind-tip,.kind-warning,.kind-xref{background:#fff;border-left:4px solid ${t.accent};padding:6px 12px}`
+    + `.kind-tip{border-left-color:#c76b00;color:#8a4b00}.kind-warning{border-left-color:${t.warn};color:${warnText}}`
+    + `.kind-xref{border:1px solid #d9dee5;border-left:4px solid ${t.primary}}`
+    + `.label{display:flex;align-items:center;gap:6px}.label svg{flex:none}th{background:#f3f4f6;color:#5f6b7a;font-weight:400}`;
+}
+/** Icon vor der Beschriftung einer Hinweisbox (Online-Hilfe) */
+export const readingIcon = (kind: string) => (BOX[kind] ? svgIcon(BOX[kind].icon, 15) : '');
+
 // ---------------------------------------------------------------- Quick Reference Guide
 
 const QR_CSS = (o: DesignOptions, t: DesignTheme) => `
