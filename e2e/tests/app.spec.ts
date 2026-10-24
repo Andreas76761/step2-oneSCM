@@ -2797,11 +2797,14 @@ test('[T-318] Übersetzung: KI-Übersetzung, Büro-Austausch (XLIFF), Länderrev
   await r2.getByRole('button', { name: 'Zurück an Übersetzung' }).click();
   await expect(r2).toContainText('zurück an Übersetzung');
   // Übersetzungsspeicher und Glossar je Sprache
+  // erst die neue Seite abwarten: beim Seitenwechsel steht die vorige kurz noch im DOM (Transition)
   await nav.getByRole('link', { name: 'Übersetzungsspeicher' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Übersetzungsspeicher' })).toBeVisible();
   await page.getByRole('combobox', { name: 'Zielsprache' }).selectOption('fr');
   await expect(page.getByRole('heading', { name: /Deutsch → Französisch/ })).toBeVisible();
   expect(await axe()).toEqual([]);
   await nav.getByRole('link', { name: 'Glossar je Sprache' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Glossar je Sprache' })).toBeVisible();
   await page.getByRole('combobox', { name: 'Zielsprache' }).selectOption('de-ch');
   await expect(page.getByRole('heading', { name: /Deutsch → Deutsch \(Schweiz\)/ })).toBeVisible();
   expect(await axe()).toEqual([]);
