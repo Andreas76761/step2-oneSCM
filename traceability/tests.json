@@ -2836,5 +2836,32 @@
     "requirements": [
       "NFR-150"
     ]
+  },
+  {
+    "id": "T-371",
+    "title": "Designvorlagen als Foliensatz: Titelfolie mit Überblick, Karten, Kennzahlen, Boxen, Tabelle, Fortsetzung, Nummerierung, Anpassung, eigener Import",
+    "file": "apps/server/test/stage64.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-151"
+    ]
+  },
+  {
+    "id": "T-372",
+    "title": "Export und Muster als PowerPoint im Design; Standard-PowerPoint unverändert",
+    "file": "apps/server/test/stage64.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-151"
+    ]
+  },
+  {
+    "id": "T-373",
+    "title": "Muster als PowerPoint und Export PowerPoint im Design in der Oberfläche – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-151"
+    ]
   }
 ]

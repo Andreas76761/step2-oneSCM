@@ -3,36 +3,44 @@
 import JSZip from 'jszip';
 
 export interface SlideImage { data: Buffer; mime: string; width: number | null; height: number | null; alt: string }
-export interface SlideParagraph { text: string; bullet?: 'char' | 'num' | null; level?: number }
+export interface SlideParagraph { text: string; bullet?: 'char' | 'num' | null; level?: number; /** Nummer aus dem Markdown – bleibt über Unterpunkte und Folgefolien erhalten */ num?: number }
 export type Slide =
   | { kind: 'title'; title: string; subtitle?: string }
   | { kind: 'content'; title: string; paragraphs: SlideParagraph[] }
-  | { kind: 'image'; title: string; image: SlideImage };
+  | { kind: 'image'; title: string; image: SlideImage }
+  /** frei gestaltete Folie (Designvorlagen, ADR-116): fertige Formen; Bilder als r:embed="rId2", "rId3" … in Reihenfolge */
+  | { kind: 'custom'; title: string; shapes: string; images: SlideImage[] };
 
 const W = 12192000;
 const H = 6858000;
+/** Foliengröße 16:9 in EMU */
+export const SLIDE = { W, H } as const;
 const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpeg', 'image/gif': 'gif' };
 
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+export const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   // in XML 1.0 unzulässige Steuerzeichen entfernen
   .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
 
+export interface RunStyle { color?: string; font?: string; bold?: boolean; italic?: boolean }
 /** Text mit **Fettdruck** in Läufe zerlegen; übrige Markdown-Zeichen (`, _, Links) werden schlichter Text */
-function runs(text: string, size: number) {
+export function runs(text: string, size: number, st: RunStyle = {}) {
   const clean = text.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/`([^`]*)`/g, '$1');
   const out: string[] = [];
   const parts = clean.split(/(\*\*[^*]+\*\*)/g).filter((p) => p !== '');
   for (const p of parts.length ? parts : ['']) {
     const bold = /^\*\*[^*]+\*\*$/.test(p);
-    out.push(`<a:r><a:rPr lang="de-DE" sz="${size}"${bold ? ' b="1"' : ''} dirty="0"/><a:t>${esc(bold ? p.slice(2, -2) : p)}</a:t></a:r>`);
+    const fill = st.color ? `<a:solidFill><a:srgbClr val="${st.color.replace('#', '').toUpperCase()}"/></a:solidFill>` : '';
+    const font = st.font ? `<a:latin typeface="${esc(st.font)}"/>` : '';
+    const attrs = `lang="de-DE" sz="${size}"${bold || st.bold ? ' b="1"' : ''}${st.italic ? ' i="1"' : ''} dirty="0"`;
+    out.push(`<a:r><a:rPr ${attrs}${fill || font ? `>${fill}${font}</a:rPr>` : '/>'}<a:t>${esc(bold ? p.slice(2, -2) : p)}</a:t></a:r>`);
   }
   return out.join('');
 }
 
-const NS = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+export const NS = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
 const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
 const GRP = '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>';
-const xfrm = (x: number, y: number, cx: number, cy: number) => `<a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>`;
+export const xfrm = (x: number, y: number, cx: number, cy: number) => `<a:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>`;
 const BOX = { title: [457200, 304800, W - 914400, 1005840], body: [457200, 1463040, W - 914400, H - 1920240], ctr: [914400, 2011680, W - 1828800, 1463040], sub: [914400, 3611880, W - 1828800, 1005840] } as const;
 
 function shape(id: number, name: string, ph: string, box: readonly number[], body: string, anchor = 't') {
@@ -43,7 +51,7 @@ function shape(id: number, name: string, ph: string, box: readonly number[], bod
 function paragraph(p: SlideParagraph, size: number) {
   const lvl = Math.min(Math.max(p.level ?? 0, 0), 4);
   const indent = 342900 * (lvl + 1);
-  const bu = p.bullet === 'num' ? '<a:buFont typeface="+mj-lt"/><a:buAutoNum type="arabicPeriod"/>' : p.bullet === 'char' ? '<a:buFont typeface="Arial"/><a:buChar char="•"/>' : '<a:buNone/>';
+  const bu = p.bullet === 'num' ? `<a:buFont typeface="+mj-lt"/><a:buAutoNum type="arabicPeriod"${p.num && p.num > 1 ? ` startAt="${p.num}"` : ''}/>` : p.bullet === 'char' ? '<a:buFont typeface="Arial"/><a:buChar char="•"/>' : '<a:buNone/>';
   const spc = '<a:spcBef><a:spcPts val="600"/></a:spcBef>';
   const pPr = p.bullet ? `<a:pPr marL="${indent}" lvl="${lvl}" indent="-342900">${spc}${bu}</a:pPr>` : `<a:pPr marL="0" indent="0">${spc}${bu}</a:pPr>`;
   return `<a:p>${pPr}${runs(p.text, size)}</a:p>`;
@@ -57,6 +65,8 @@ function slideXml(s: Slide, imageRel: string | null) {
     tree = title(s.title, 'ctrTitle', BOX.ctr, 4000) + (s.subtitle ? shape(3, 'Untertitel', '<p:ph type="subTitle" idx="1"/>', BOX.sub, `<a:p><a:pPr marL="0" indent="0" algn="ctr"><a:buNone/></a:pPr>${runs(s.subtitle, 1800)}</a:p>`) : '');
   } else if (s.kind === 'content') {
     tree = title(s.title) + shape(3, 'Inhalt', '<p:ph type="body" idx="1"/>', BOX.body, s.paragraphs.length ? s.paragraphs.map((p) => paragraph(p, 2000)).join('') : '<a:p><a:endParaRPr lang="de-DE"/></a:p>');
+  } else if (s.kind === 'custom') {
+    tree = s.shapes;
   } else {
     // Bild einpassen (Seitenverhältnis bleibt), mittig unter dem Titel
     const [bx, by, bw, bh] = BOX.body;
@@ -72,7 +82,7 @@ function slideXml(s: Slide, imageRel: string | null) {
 const rel = (id: string, type: string, target: string) => `<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/${type}" Target="${target}"/>`;
 const rels = (items: string[]) => `${XML}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${items.join('')}</Relationships>`;
 
-function theme(color: string) {
+function theme(color: string, fonts: { major: string; minor: string }) {
   const c = color.replace('#', '').toUpperCase();
   const fill = '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>';
   const ln = '<a:ln w="9525"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln>';
@@ -80,7 +90,7 @@ function theme(color: string) {
     + `<a:clrScheme name="oneSCM"><a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1><a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1><a:dk2><a:srgbClr val="1F2937"/></a:dk2><a:lt2><a:srgbClr val="F3F4F6"/></a:lt2>`
     + `<a:accent1><a:srgbClr val="${c}"/></a:accent1><a:accent2><a:srgbClr val="B91C1C"/></a:accent2><a:accent3><a:srgbClr val="15803D"/></a:accent3><a:accent4><a:srgbClr val="B45309"/></a:accent4><a:accent5><a:srgbClr val="6D28D9"/></a:accent5><a:accent6><a:srgbClr val="0E7490"/></a:accent6>`
     + '<a:hlink><a:srgbClr val="1D4ED8"/></a:hlink><a:folHlink><a:srgbClr val="6D28D9"/></a:folHlink></a:clrScheme>'
-    + '<a:fontScheme name="oneSCM"><a:majorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont><a:minorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont></a:fontScheme>'
+    + `<a:fontScheme name="oneSCM"><a:majorFont><a:latin typeface="${esc(fonts.major)}"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont><a:minorFont><a:latin typeface="${esc(fonts.minor)}"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont></a:fontScheme>`
     + `<a:fmtScheme name="oneSCM"><a:fillStyleLst>${fill}${fill}${fill}</a:fillStyleLst><a:lnStyleLst>${ln}${ln}${ln}</a:lnStyleLst>`
     + '<a:effectStyleLst><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle><a:effectStyle><a:effectLst/></a:effectStyle></a:effectStyleLst>'
     + `<a:bgFillStyleLst>${fill}${fill}${fill}</a:bgFillStyleLst></a:fmtScheme></a:themeElements><a:objectDefaults/><a:extraClrSchemeLst/></a:theme>`;
@@ -99,7 +109,7 @@ const layout = (type: 'title' | 'obj', name: string) =>
   `${XML}<p:sldLayout ${NS} type="${type}" preserve="1"><p:cSld name="${name}"><p:spTree>${GRP}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>`;
 
 /** Präsentation (PPTX) aus Folien; `color` ist die Hausfarbe (Titel) */
-export async function renderPptx(slides: Slide[], opts: { title: string; color?: string; author?: string; created?: string }): Promise<Buffer> {
+export async function renderPptx(slides: Slide[], opts: { title: string; color?: string; author?: string; created?: string; fonts?: { major: string; minor: string } }): Promise<Buffer> {
   const zip = new JSZip();
   const created = opts.created ?? new Date().toISOString().replace(/\.\d+Z$/, 'Z');
   const images: { file: string; mime: string }[] = [];
@@ -108,15 +118,16 @@ export async function renderPptx(slides: Slide[], opts: { title: string; color?:
     const n = i + 1;
     let imageRel: string | null = null;
     const r = [rel('rId1', 'slideLayout', `../slideLayouts/slideLayout${s.kind === 'title' ? 1 : 2}.xml`)];
-    if (s.kind === 'image') {
-      const ext = EXT[s.image.mime] ?? 'png';
+    const pics = s.kind === 'image' ? [s.image] : s.kind === 'custom' ? s.images : [];
+    pics.forEach((img, k) => {
+      const ext = EXT[img.mime] ?? 'png';
       exts.add(ext);
       const file = `image${images.length + 1}.${ext}`;
-      images.push({ file, mime: s.image.mime });
-      zip.file(`ppt/media/${file}`, s.image.data);
-      imageRel = 'rId2';
-      r.push(rel('rId2', 'image', `../media/${file}`));
-    }
+      images.push({ file, mime: img.mime });
+      zip.file(`ppt/media/${file}`, img.data);
+      r.push(rel(`rId${k + 2}`, 'image', `../media/${file}`));
+    });
+    if (s.kind === 'image') imageRel = 'rId2';
     zip.file(`ppt/slides/slide${n}.xml`, slideXml(s, imageRel));
     zip.file(`ppt/slides/_rels/slide${n}.xml.rels`, rels(r));
   });
@@ -158,7 +169,7 @@ export async function renderPptx(slides: Slide[], opts: { title: string; color?:
   zip.file('ppt/slideLayouts/slideLayout1.xml', layout('title', 'Titelfolie'));
   zip.file('ppt/slideLayouts/slideLayout2.xml', layout('obj', 'Titel und Inhalt'));
   for (const n of [1, 2]) zip.file(`ppt/slideLayouts/_rels/slideLayout${n}.xml.rels`, rels([rel('rId1', 'slideMaster', '../slideMasters/slideMaster1.xml')]));
-  zip.file('ppt/theme/theme1.xml', theme(opts.color ?? '#1F4E79'));
+  zip.file('ppt/theme/theme1.xml', theme(opts.color ?? '#1F4E79', opts.fonts ?? { major: 'Calibri', minor: 'Calibri' }));
   return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
 }
 
@@ -168,7 +179,7 @@ export function markdownParagraphs(md: string): SlideParagraph[] {
   for (const raw of md.replace(/\r\n?/g, '\n').split('\n')) {
     if (!raw.trim() || /^\s*\|?[\s|:-]*-[\s|:-]*\|?\s*$/.test(raw)) continue;
     const m = /^(\s*)(\d+[.)]|[-*•])\s+(.*)$/.exec(raw);
-    if (m) out.push({ text: m[3].trim(), bullet: /\d/.test(m[2]) ? 'num' : 'char', level: Math.floor(m[1].length / 2) });
+    if (m) out.push({ text: m[3].trim(), bullet: /\d/.test(m[2]) ? 'num' : 'char', level: Math.floor(m[1].length / 2), ...(/\d/.test(m[2]) ? { num: parseInt(m[2], 10) } : {}) });
     else out.push({ text: raw.replace(/^#{1,6}\s+/, '').replace(/^>\s?/, '').replace(/^\|\s*|\s*\|$/g, '').replace(/\s*\|\s*/g, ' · ').trim() });
   }
   return out;

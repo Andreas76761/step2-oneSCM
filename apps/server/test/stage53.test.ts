@@ -63,7 +63,7 @@ describe('Etappe 53', () => {
     expect(xml.match(/<bpmndi:BPMNEdge /g)).toHaveLength(flows.length);
 
     expect(markdownParagraphs('1. Öffnen Sie **Verträge**.\n  - Unterpunkt\n\nText | mit Tabelle\n| --- |')).toEqual([
-      { text: 'Öffnen Sie **Verträge**.', bullet: 'num', level: 0 }, { text: 'Unterpunkt', bullet: 'char', level: 1 }, { text: 'Text · mit Tabelle' },
+      { text: 'Öffnen Sie **Verträge**.', bullet: 'num', level: 0, num: 1 }, { text: 'Unterpunkt', bullet: 'char', level: 1 }, { text: 'Text · mit Tabelle' },
     ]);
     expect(paginate(Array.from({ length: 19 }, (_, i) => ({ text: `Punkt ${i}` }))).map((p) => p.length)).toEqual([8, 8, 3]);
     const deck = await renderPptx([

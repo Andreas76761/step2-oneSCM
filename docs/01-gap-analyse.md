@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.66 Stand nach Etappe 64 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Designvorlagen als PowerPoint mit Titelfolie, Karten/Abschnittsfolien, Tabellen, Boxen, Fortsetzung und Nummerierung mit Startwert (NFR-151) | ✅ ([ADR-116](adr/ADR-116-designvorlagen-powerpoint.md)), T-371–T-373, mit LibreOffice und eigenem Import geprüft |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
 ## 1.65 Stand nach Etappe 63 (24.10.2026)
 
 | Punkt | Ergebnis |

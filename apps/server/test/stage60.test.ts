@@ -103,7 +103,7 @@ describe('Etappe 60', () => {
       expect((await call('GET', `/exports/${(await call('POST', '/exports', { format: 'html' }, 'u-redaktion')).json.id}/download`)).body).not.toContain('class="fd-kpis"');
 
       // Prüfungen
-      expect((await call('POST', '/exports', { format: 'pptx', design: 'quickref' }, 'u-redaktion')).json.detail).toBe('Designvorlagen gibt es für die Formate html, pdf und docx.');
+      expect((await call('POST', '/exports', { format: 'md', design: 'quickref' }, 'u-redaktion')).json.detail).toBe('Designvorlagen gibt es für die Formate html, pdf, docx und pptx.');
       expect((await call('POST', '/exports', { format: 'html', design: 'plakat' }, 'u-redaktion')).status).toBe(400);
     } finally {
       await built.app.close();

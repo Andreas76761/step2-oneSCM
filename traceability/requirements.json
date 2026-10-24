@@ -1545,5 +1545,14 @@
     "documentation": [
       "docs/adr/ADR-115-designvorlagen-word.md"
     ]
+  },
+  {
+    "id": "NFR-151",
+    "title": "Designvorlagen als PowerPoint (16:9): gleiche Inhalte wie HTML/PDF/Word, Anpassung, Titelfolie mit Überblick bzw. Kennzahlen, Karten/Abschnittsfolien mit Tabellen und Boxen, Fortsetzung, Nummerierung mit Startwert",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-116-designvorlagen-powerpoint.md"
+    ]
   }
 ]

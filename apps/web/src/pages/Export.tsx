@@ -1,4 +1,4 @@
-import { BookOpenIcon, CheckIcon, DownloadIcon, EyeIcon, FileTextIcon, FileTypeIcon, InfoIcon, ZapIcon } from 'lucide-react';
+import { BookOpenIcon, CheckIcon, DownloadIcon, EyeIcon, FileTextIcon, FileTypeIcon, InfoIcon, PresentationIcon, ZapIcon } from 'lucide-react';
 import { Ico, OkMark } from '../components/icons';
 import { useState } from 'react';
 import { api, post } from '../api';
@@ -25,8 +25,8 @@ export function ExportPage() {
   const templates = useLoad<any[]>('/design-templates');
   // PDF im Design (ADR-113) nur mit lokalem Browser auf dem Server
   const pdfDesign = !!templates.data?.[0]?.formats?.includes('pdf');
-  // Word im Design (ADR-115) immer, PDF nur mit lokalem Browser
-  const designable = format === 'html' || format === 'docx' || (format === 'pdf' && pdfDesign);
+  // Word und PowerPoint im Design (ADR-115, ADR-116) immer, PDF nur mit lokalem Browser
+  const designable = format === 'html' || format === 'docx' || format === 'pptx' || (format === 'pdf' && pdfDesign);
   const withDesign = designable && design !== 'standard';
   const pickDesign = (id: string) => {
     setDesign(id);
@@ -162,6 +162,7 @@ export function ExportPage() {
               <div className="actions">
                 <button className="btn" onClick={() => void showSample(t)}><Ico icon={EyeIcon} /> Muster ansehen</button>
                 <DownloadButton className="btn" href={`/api/v1/design-templates/${t.id}/sample?format=docx`} name={`muster-${t.id}.docx`}><Ico icon={FileTypeIcon} /> Muster als Word</DownloadButton>
+                <DownloadButton className="btn" href={`/api/v1/design-templates/${t.id}/sample?format=pptx`} name={`muster-${t.id}.pptx`}><Ico icon={PresentationIcon} /> Muster als PowerPoint</DownloadButton>
                 {pdfDesign && <DownloadButton className="btn" href={`/api/v1/design-templates/${t.id}/sample?format=pdf`} name={`muster-${t.id}.pdf`}><Ico icon={DownloadIcon} /> Muster als PDF</DownloadButton>}
                 <button className="btn" onClick={() => { setFormat(pdfDesign ? 'pdf' : 'html'); pickDesign(t.id); }}><Ico icon={CheckIcon} /> Für den Export wählen</button>
               </div>

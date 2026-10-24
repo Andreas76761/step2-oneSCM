@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.64.0 – Etappe 64 (24.10.2026)
+
+Wahl des Auftraggebers vom 24.10.2026: PowerPoint im Design.
+
+### Hinzugefügt
+- **Designvorlagen als PowerPoint (ADR-116):** `POST /exports` mit `format: pptx` und `design`, Muster über `?format=pptx`, Schaltfläche „Muster als PowerPoint“.
+  - **Quick Reference Guide:**
+    - Titelfolie mit Marke, Hinweis „interaktiv“ und „Die Prozesse im Überblick“.
+    - Je Abschnitt eine Karte mit abgerundetem Rahmen, Icon, Text, Bildschirmfoto und Warnbox; Links und häufige Fragen.
+    - „STAND … | n/N“ auf jeder Folie.
+  - **Handbuch-Kapitel:**
+    - Kopfzeile mit Dokumentart und „Folie n von N“; Titelfolie mit Kennzahlen.
+    - Abschnittsfolien mit Balken, Tabellen, Code, Bildern und Hinweisboxen.
+  - Fortsetzungsfolien bei langen Inhalten; Farben, Schriften und Logo aus der Anpassung.
+- PowerPoint-Generator: frei gestaltete Folien (Formen, Textfelder, Bilder, Tabellen), Läufe mit Farbe und Schrift, Schriftschema.
+- Gemeinsame Icon-Grafiken für Word und PowerPoint (`services/designIconRaster.ts`).
+- Tests T-371 (Folienaufbau, Fortsetzung, Nummerierung, Anpassung, eigener Import) und T-372 (API), E2E T-373; Anforderung NFR-151.
+
+### Geändert
+- PowerPoint-Export allgemein: Nummerierte Schritte behalten ihre Nummer aus dem Markdown (`startAt`), auch nach Unterpunkten und auf Folgefolien.
+- T-336 erwartet bei nummerierten Absätzen zusätzlich die Nummer (`num`).
+
 ## 0.63.0 – Etappe 63 (24.10.2026)
 
 ### Hinzugefügt

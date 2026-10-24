@@ -23,6 +23,7 @@ import { transitionsFor } from './transitions.js';
 import { applyVariants } from './imageArchive.js';
 import { htmlToPdf, pdfBrowserAvailable } from './pdfBrowser.js';
 import { renderDesignDocx } from './designDocx.js';
+import { renderDesignPptx } from './designPptx.js';
 import { DESIGNS, normalizeTheme, renderDesign, type Design, type DesignChapter } from '../domain/designs.js';
 
 type Media = Map<string, MediaFile>;
@@ -445,7 +446,7 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   chapters.sort((a, b) => a.position - b.position);
   const design: Design = input.design ?? 'standard';
   if (!(DESIGNS as readonly string[]).includes(design)) throw badRequest(`design muss eines von ${DESIGNS.join(', ')} sein.`);
-  if (design !== 'standard' && format !== 'html' && format !== 'pdf' && format !== 'docx') throw badRequest('Designvorlagen gibt es für die Formate html, pdf und docx.');
+  if (design !== 'standard' && !['html', 'pdf', 'docx', 'pptx'].includes(format)) throw badRequest('Designvorlagen gibt es für die Formate html, pdf, docx und pptx.');
   if (design !== 'standard' && input.reviewCopy) throw badRequest('Die Prüffassung gibt es nur im Standard-Design.');
   // PDF im Design (ADR-113) druckt ein lokaler Browser; ohne ihn bleibt HTML (im Browser als PDF speichern)
   if (design !== 'standard' && format === 'pdf' && !pdfBrowserAvailable(ctx.config.pdfBrowser)) {
@@ -497,6 +498,9 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   } else if (format === 'docx') {
     data = await renderDocxExport(chapters, filter, media, extras, review ?? undefined);
     preview = null;
+  } else if (format === 'pptx' && design !== 'standard') {
+    data = await renderDesignPptxExport(design, chapters, filter, media, { ...extras, title: outline?.name });
+    preview = null;
   } else if (format === 'pptx') {
     data = await renderPptxExport(chapters, filter, media, extras);
     preview = null;
@@ -535,16 +539,27 @@ export function renderDesignExport(design: Exclude<Design, 'standard'>, chapters
     theme: normalizeTheme(design, l.designThemes?.[design] ?? {}).theme,
   });
 }
-/** Designvorlage als Word-Dokument (ADR-115): gleiche Inhalte, Marke und Anpassung wie HTML und PDF */
-export function renderDesignDocxExport(design: Exclude<Design, 'standard'>, chapters: ExportChapter[], f: ExportFilter, media: Media, extras: ExportExtras): Promise<Buffer> {
+/** Optionen der Designvorlagen für Word und PowerPoint aus Firmen-Layout und Export */
+function designOfficeOptions(design: Exclude<Design, 'standard'>, list: DesignChapter[], media: Media, extras: ExportExtras) {
   const l = extras.layout ?? NO_LAYOUT;
-  const list = visible(chapters, f) as DesignChapter[];
-  return renderDesignDocx(design, list, {
+  return {
     title: list.length === 1 && !extras.title ? list[0].title : extras.title ?? frameTexts(extras.language).manualTitle,
     brand: l.companyName, productLine: l.productLine, logo: l.logo, docLabel: l.docLabel, footerText: l.footerText,
     links: l.quickRefLinks, faq: extras.appendices?.faq, asOf: germanDay(now()), lang: htmlLang(extras.language ?? 'de'), media,
     theme: normalizeTheme(design, l.designThemes?.[design] ?? {}).theme,
-  });
+  };
+}
+
+/** Designvorlage als Foliensatz (ADR-116) */
+export function renderDesignPptxExport(design: Exclude<Design, 'standard'>, chapters: ExportChapter[], f: ExportFilter, media: Media, extras: ExportExtras): Promise<Buffer> {
+  const list = visible(chapters, f) as DesignChapter[];
+  return renderDesignPptx(design, list, designOfficeOptions(design, list, media, extras));
+}
+
+/** Designvorlage als Word-Dokument (ADR-115): gleiche Inhalte, Marke und Anpassung wie HTML und PDF */
+export function renderDesignDocxExport(design: Exclude<Design, 'standard'>, chapters: ExportChapter[], f: ExportFilter, media: Media, extras: ExportExtras): Promise<Buffer> {
+  const list = visible(chapters, f) as DesignChapter[];
+  return renderDesignDocx(design, list, designOfficeOptions(design, list, media, extras));
 }
 const germanDay = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
 

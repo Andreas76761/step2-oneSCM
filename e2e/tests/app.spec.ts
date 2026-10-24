@@ -3406,3 +3406,24 @@ test('[T-370] Designvorlagen als Word: Muster als Word, Export Word im Design oh
   expect(fs.readFileSync(await file.path()).subarray(0, 2).toString()).toBe('PK');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-373] Designvorlagen als PowerPoint: Muster als PowerPoint, Export PowerPoint im Design – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/export');
+  const card = page.locator('.card', { has: page.getByRole('heading', { name: 'Designvorlagen' }) });
+  const [sample] = await Promise.all([page.waitForEvent('download'), card.locator('.design-template', { hasText: 'Handbuch-Kapitel' }).getByRole('button', { name: 'Muster als PowerPoint' }).click()]);
+  expect(sample.suggestedFilename()).toBe('muster-fachdoku.pptx');
+  expect(fs.readFileSync(await sample.path()).subarray(0, 2).toString()).toBe('PK');
+
+  await page.getByLabel('Format').selectOption('pptx');
+  await page.getByLabel('Design').selectOption('quickref');
+  await expect(page.getByLabel('Ausgabe')).toHaveValue('quickguide');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByRole('status')).toContainText('Export erstellt');
+  await expect(page.getByText(/PowerPoint-Präsentation erstellt/)).toBeVisible();
+  const [file] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /onescm-handbuch-quickref-quickguide-.*\.pptx herunterladen/ }).click()]);
+  expect(file.suggestedFilename()).toMatch(/^onescm-handbuch-quickref-quickguide-\d{4}-\d{2}-\d{2}\.pptx$/);
+  expect(await axe()).toEqual([]);
+});

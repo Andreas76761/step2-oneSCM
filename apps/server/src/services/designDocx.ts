@@ -2,12 +2,12 @@
 // Handbuch-Kapitel (A4 hoch, Kopfzeile mit Dokumentart und Seitenzahl, Kennzahlen, nummerierte Abschnitte, Hinweisboxen) –
 // mit denselben Inhalten wie HTML und PDF (domain/designs.ts) und der Anpassung der Vorlage (ADR-114).
 // Echte Formatvorlagen (Überschrift 1/2) für Navigation und Weiterbearbeitung; Icons als SVG mit PNG-Ersatz.
-import { createCanvas, loadImage } from '@napi-rs/canvas';
 import {
   AlignmentType, BorderStyle, Document, Footer, Header, ImageRun, LevelFormat, Packer, PageBreak, PageNumber, PageOrientation, Paragraph, SectionType,
   ShadingType, Tab, Table, TableCell, TableLayoutType, TableRow, TabStopPosition, TabStopType, TextRun, VerticalAlign, WidthType, type IBorderOptions, type ParagraphChild,
 } from 'docx';
-import { DESIGN_ICONS, type DesignIcon } from '../domain/designIcons.js';
+import type { DesignIcon } from '../domain/designIcons.js';
+import { iconImage } from './designIconRaster.js';
 import {
   BOX, cardTitle, chapterFacts, DEFAULT_THEMES, fachdokuFooter, fachdokuLabel, hasInteractiveLinks, processOverview, QR_ICON,
   type Design, type DesignBlock, type DesignChapter, type DesignOptions, type DesignTheme,
@@ -33,20 +33,8 @@ const NONE: IBorderOptions = { style: BorderStyle.NONE, size: 0, color: 'auto' }
 const NO_BORDERS = { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE };
 const line = (color: string, size = 8): IBorderOptions => ({ style: BorderStyle.SINGLE, size, color });
 
-// Icons: Lucide-SVG in der Farbe der Stelle, dazu PNG (4-fache Auflösung) für Programme ohne SVG
-const iconCache = new Map<string, { svg: Buffer; png: Buffer }>();
-async function iconData(name: DesignIcon, color: string) {
-  const key = `${name}:${color}`;
-  if (!iconCache.has(key)) {
-    const svg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#${hex(color)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${DESIGN_ICONS[name]}</svg>`);
-    const canvas = createCanvas(64, 64);
-    canvas.getContext('2d').drawImage(await loadImage(svg), 0, 0, 64, 64);
-    iconCache.set(key, { svg, png: canvas.toBuffer('image/png') });
-  }
-  return iconCache.get(key)!;
-}
 async function icon(name: DesignIcon, color: string, px = 14) {
-  const d = await iconData(name, color);
+  const d = await iconImage(name, color);
   return new ImageRun({ type: 'svg', data: d.svg, fallback: { type: 'png', data: d.png }, transformation: { width: px, height: px }, altText: { name: '', description: '', title: '' } });
 }
 
