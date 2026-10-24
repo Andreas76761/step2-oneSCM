@@ -2293,5 +2293,57 @@
       "NFR-116",
       "NFR-117"
     ]
+  },
+  {
+    "id": "T-314",
+    "title": "Prüfregeln und Verfahren der Übersetzung: Länge, deutsche Wörter, Werte nur auf einer Seite, Schweizer Hochdeutsch, Speicher-Ähnlichkeit, MQM, XLIFF 1.2, Rückübersetzung, Rahmentexte (Einheit)",
+    "file": "apps/server/test/stage48.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-118",
+      "NFR-119",
+      "NFR-120",
+      "NFR-121"
+    ]
+  },
+  {
+    "id": "T-315",
+    "title": "Übersetzungsspeicher (100 % und ähnlich), Export/Import wie SPEICHER.csv, XLIFF 1.2 und Excel hin und zurück mit Prüfung, Glossar je Sprache mit Rückimport",
+    "file": "apps/server/test/stage48.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-118",
+      "NFR-119"
+    ]
+  },
+  {
+    "id": "T-316",
+    "title": "Länderreview mit MQM und „zurück an Übersetzung“, Rückübersetzung, de-CH nach Regeln, fr-CH aus Französisch, fehlende Bildvarianten, Rahmentexte im Export",
+    "file": "apps/server/test/stage48.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-120",
+      "NFR-121"
+    ]
+  },
+  {
+    "id": "T-317",
+    "title": "Releaseletter DE→EN übersetzen und prüfen: Speicher, KI, Prüfbefunde je Zeile, Freigabe übernimmt in den Speicher",
+    "file": "apps/server/test/stage48.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-122"
+    ]
+  },
+  {
+    "id": "T-318",
+    "title": "Übersetzung: KI-Übersetzung, Büro-Austausch (XLIFF), Länderreview mit MQM und „zurück an Übersetzung“, Übersetzungsspeicher und Glossar je Sprache – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-118",
+      "NFR-119",
+      "NFR-120"
+    ]
   }
 ]

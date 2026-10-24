@@ -99,7 +99,7 @@ export function TicketReleasesPage() {
   );
 }
 
-function LetterDetail({ id, onChange }: { id: string; onChange: () => void }) {
+function LetterDetail({ id, onChange, onOpen }: { id: string; onChange: () => void; onOpen: (id: string) => void }) {
   const { notify } = useApp();
   const { canEdit, canApprove } = usePermissions();
   const l = useLoad<any>(`/release-letters/${id}`, [id]);
@@ -121,8 +121,23 @@ function LetterDetail({ id, onChange }: { id: string; onChange: () => void }) {
   const c = x.check;
   const draft = x.status === 'draft';
   return (
-    <Card title={<>{x.title} <span className="muted small">{x.release} · {x.language.toUpperCase()} · {x.audienceLabel} · {x.origin === 'external' ? 'eingefügt' : 'aus Tickets'}</span></>}
+    <Card title={<>{x.title} <span className="muted small">{x.release} · {x.language.toUpperCase()} · {x.audienceLabel} · {x.origin === 'external' ? 'eingefügt' : x.origin === 'translated' ? 'übersetzt' : 'aus Tickets'}</span></>}
       actions={<>
+        {/* Übersetzung DE↔EN (U-09): Speicher zuerst, sonst KI; neuer Entwurf mit Prüfbefunden je Zeile */}
+        {canEdit && !x.translationOf && !x.translations.length && (
+          <button className="btn small" onClick={() => void (async () => {
+            try {
+              const r = await post<any>(`/release-letters/${id}/translate`, {});
+              notify(`Übersetzt (${x.language === 'de' ? 'EN' : 'DE'}): ${r.fromMemory} Zeilen aus dem Speicher, ${r.machine} per KI, ${r.issues.length} mit Prüfbefund.`);
+              onChange();
+              onOpen(r.id);
+            } catch (e) {
+              notify(errorText(e), 'error');
+            }
+          })()}>Übersetzen ({x.language === 'de' ? 'DE → EN' : 'EN → DE'})</button>
+        )}
+        {x.translations.map((t: any) => <button key={t.id} className="btn small" onClick={() => onOpen(t.id)}>Übersetzung {t.language.toUpperCase()} öffnen</button>)}
+        {x.translationOf && <button className="btn small" onClick={() => onOpen(x.translationOf)}>Ausgangsletter öffnen</button>}
         <DownloadButton href={`/api/v1/release-letters/${id}/export?format=md`} name={`releaseletter_${x.release}_${x.language}.md`} className="btn small">Markdown</DownloadButton>
         <DownloadButton href={`/api/v1/release-letters/${id}/export?format=docx`} name={`releaseletter_${x.release}_${x.language}.docx`} className="btn small">Word</DownloadButton>
       </>}>
@@ -136,6 +151,12 @@ function LetterDetail({ id, onChange }: { id: string; onChange: () => void }) {
         <div className="stat"><span className="muted small">Personenbezogene Daten</span><strong>{c.pii.length}</strong></div>
         <div className="stat"><span className="muted small">Feldabdeckung</span><strong>{c.coverage} %</strong></div>
       </div>
+      {x.translationOf && (x.translationIssues.length ? (
+        <div className="alert warning" role="status">
+          <strong>Übersetzungsprüfung: {x.translationIssues.length} Zeilen mit Befund</strong> – vor der Freigabe beheben.
+          <ul className="small">{x.translationIssues.map((t: any, i: number) => <li key={i}>{t.line ? `Zeile ${t.line}: ` : ''}{t.labels.join('; ')}{t.text ? ` – „${t.text.slice(0, 80)}“` : ''}</li>)}</ul>
+        </div>
+      ) : <p className="small">Übersetzungsprüfung ohne Befund (Länge, deutsche Wörter, Zahlen, Kennungen, Platzhalter).</p>)}
       {c.ticketsNotLoaded.length > 0 && <p className="alert warning">Nicht mehr eingelesen: {c.ticketsNotLoaded.join(', ')}</p>}
       {!c.findings.length ? <p className="small muted">Keine Befunde.</p> : (
         <ul className="rl-findings" aria-label="Befunde">
@@ -231,7 +252,7 @@ export function ReleaseLettersPage() {
           </table>
         )}
       </Card>
-      {selected && <LetterDetail id={selected} onChange={() => letters.reload()} />}
+      {selected && <LetterDetail id={selected} onChange={() => letters.reload()} onOpen={setSelected} />}
     </Page>
   );
 }

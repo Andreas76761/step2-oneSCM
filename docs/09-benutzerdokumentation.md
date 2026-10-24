@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.47 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.48 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -111,7 +111,15 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 - **Leseransicht:** Handbuch lesen, suchen, Lesezeichen, „Weiter mit …“, Drucken mit Deckblatt im Firmen-Layout.
 - **Export:** Markdown, HTML, PDF, Word – gefiltert nach Rolle, Sparte, Markt; Quick Guide, One Pager, Lesefassung.
 - **Veröffentlichung:** Handbuch-Release mit Online-Hilfe und Übersetzungen.
-- **Übersetzungen:** Kapitel in die Landessprachen; Platzhalter- und Strukturvergleich.
+- **Übersetzungen:** Kapitel in die Landessprachen (auch Deutsch und Französisch für die Schweiz); Platzhalter- und Strukturvergleich, Länge, deutsche Wörter im Zieltext, Datum und Kennungen.
+  - **Übersetzungsspeicher:** Freigegebene Absätze werden beim nächsten Mal sofort übernommen („Speicher 100 %“); „Vorschläge aus dem Speicher“ zeigt ähnliche Treffer ab 75 %. Pflege, Export und Import unter **Übersetzungsspeicher** (Datei wie `SPEICHER.csv`).
+  - **Glossar je Sprache:** feste Übersetzungen der Terminologie, Export für Übersetzer und Rückimport.
+  - **Übersetzungsbüro:** XLIFF 1.2 oder Excel herunterladen, die Rückgabe einlesen → „Prüfen“ → „Übernehmen“.
+  - **Länderreview:** Prüferin bzw. Prüfer und Markt wählen → „Länderreview anfordern“. Die Prüferin erfasst Fehler nach MQM (gering 1, schwer 5, kritisch 10 Punkte) und gibt frei (bis 5 Punkte je 1 000 Wörter) oder „zurück an Übersetzung“. Ein angefordertes Review muss vor der Freigabe der Übersetzung bestanden sein.
+  - **Rückübersetzung:** „Stichprobe rückübersetzen“ prüft 10 % der Sicherheitshinweise gegen das Deutsche.
+  - **Schweiz:** Deutsch (Schweiz) entsteht per Klick nach Regeln aus dem Deutschen (ss statt ß, «…»); Französisch (Schweiz) übernimmt die freigegebene französische Fassung.
+  - Hinweis, wenn ein Bild keine Fassung in der Zielsprache hat; Exporte zeigen Inhaltsverzeichnis, Versionszeile und Hinweisarten in der Zielsprache.
+- **Releaseletter:** „Übersetzen (DE → EN)“ bzw. „EN → DE“ legt einen geprüften Entwurf in der anderen Sprache an.
 - **Release-Abgleich, Releaseletter:** Jira-Tickets gegen den Bestand prüfen; Releaseletter mit Prüfregeln.
 - **Kontexthilfe:** Hilfe-Widget für oneSCM (F1 je Maske).
 

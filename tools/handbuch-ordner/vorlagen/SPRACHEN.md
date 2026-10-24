@@ -11,8 +11,10 @@
 | `07_Slowakisch_SK` | Slowakisch | sk | SK | Markt SK | Land (Markt SK) |
 | `08_Koreanisch_KO` | Koreanisch | ko | KR (Südkorea) | Markt KR | Land (Markt KR) |
 | `09_Malaiisch_MS` | Malaiisch | ms | MY (Malaysia) | Markt MY | Land (Markt MY) |
+| `10_Deutsch_DE-CH` | Deutsch (Schweiz) | de-ch | CH | Markt CH | Land (Markt CH) – entsteht nach Regeln aus dem deutschen Master (ss statt ß, «…») |
+| `11_Französisch_FR-CH` | Französisch (Schweiz) | fr-ch | CH | Markt CH | Land (Markt CH) – Grundlage ist die freigegebene französische Fassung |
 
-Märkte je Sprache: entschieden am 23.10.2026. Englisch ist die internationale Fassung und enthält keine marktspezifischen Abschnitte. Das Sprachreview macht das jeweilige Land; erst danach gilt eine Übersetzung als freigegeben.
+Märkte je Sprache: entschieden am 23.10.2026, Schweizer Varianten am 24.10.2026. Englisch ist die internationale Fassung und enthält keine marktspezifischen Abschnitte. Das Sprachreview macht das jeweilige Land; erst danach gilt eine Übersetzung als freigegeben.
 
 Marktspezifische Abschnitte (`> Markt: …` im Entwurf, `08_Steuerung/06_Marktspezifisch`) gehen nur in die Sprachen der betroffenen Märkte.
 

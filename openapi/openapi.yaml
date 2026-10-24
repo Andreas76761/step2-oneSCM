@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.47.0
+  version: 0.48.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -45,6 +45,7 @@ tags:
   - name: Bilder
   - name: Metadaten
   - name: Releaseletter
+  - name: Übersetzung
   - name: System
 components:
   securitySchemes:
@@ -5625,3 +5626,265 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: '{ id, results, score, createdAt }' }
         '403': { $ref: '#/components/responses/Problem' }
+  /translation-memory:
+    get:
+      operationId: listTranslationMemory
+      summary: 'Übersetzungsspeicher: Segmente je Sprachpaar mit Herkunft, Status (freigegeben, zu prüfen) und Nutzung (ADR-101, U-01)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: language, in: query, schema: { type: string } }, { name: q, in: query, schema: { type: string } }, { name: status, in: query, schema: { type: string, enum: [approved, review] } }, { name: limit, in: query, schema: { type: integer } }, { name: offset, in: query, schema: { type: integer } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ total, items, counts }' }
+  /translation-memory/export:
+    get:
+      operationId: exportTranslationMemory
+      summary: 'Speicher als CSV (wie SPEICHER.csv im Arbeitsordner: Nr;Deutsch;<Sprache>;Datei;Ausgangsversion;Datum;Status) oder Excel'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: language, in: query, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [csv, xlsx] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /translation-memory/import:
+    post:
+      operationId: importTranslationMemory
+      summary: 'Speicher aus CSV/Excel einlesen; Status „freigegeben“ bleibt freigegeben, sonst „zu prüfen“ (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: language, in: query, required: true, schema: { type: string } }, { name: apply, in: query, schema: { type: boolean }, description: 'true übernimmt, sonst Vorschau' }]
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, properties: { file: { type: string, format: binary } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ rows, usable, approved, applied, added, updated }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /translation-memory/{id}:
+    patch:
+      operationId: updateTranslationMemory
+      summary: 'Segment ändern oder freigeben (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { targetText: { type: string }, status: { type: string, enum: [approved, review] } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Segment' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteTranslationMemory
+      summary: 'Segment löschen (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /translation-blocks/{id}/memory:
+    get:
+      operationId: translationBlockMemory
+      summary: 'Treffer im Speicher für einen Absatz: 100 % und ähnliche ab 75 %'
+      tags: [Übersetzung]
+      x-requirements: [NFR-118]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ blockId, matches: [{ id, sourceText, targetText, score, status, origin, originRef }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /translation-glossary:
+    get:
+      operationId: translationGlossary
+      summary: 'Glossar je Sprache: feste Übersetzung je Begriff, geerbt aus der Grundsprache, „nicht übersetzen“ (U-04)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-119]
+      x-extension: true
+      parameters: [{ name: language, in: query, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ language, items: [{ termId, term, avoid, definition, translation, inherited, keepUntranslated, status }] }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /translation-glossary/export:
+    get:
+      operationId: exportTranslationGlossary
+      summary: 'Glossar als CSV (wie GLOSSAR.csv: Deutsch;<Sprache>;Kontext;Status;Quelle) oder Excel'
+      tags: [Übersetzung]
+      x-requirements: [NFR-119]
+      x-extension: true
+      parameters: [{ name: language, in: query, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [csv, xlsx] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /translation-glossary/import:
+    post:
+      operationId: importTranslationGlossary
+      summary: 'Glossar vom Übersetzer zurück: feste Übersetzungen setzen, unbekannte Begriffe melden (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-119]
+      x-extension: true
+      parameters: [{ name: language, in: query, required: true, schema: { type: string } }, { name: apply, in: query, schema: { type: boolean }, description: 'true übernimmt, sonst Vorschau' }]
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, properties: { file: { type: string, format: binary } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ rows, changes, unknown, applied }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /translations/{translationId}/file:
+    get:
+      operationId: exportTranslationFile
+      summary: 'Übersetzung für das Büro: XLIFF 1.2 (trans-unit je Absatz) oder Excel (U-05)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-119]
+      x-extension: true
+      parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }, { name: format, in: query, schema: { type: string, enum: [xlf, xlsx] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Datei' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: importTranslationFile
+      summary: 'Rückimport XLIFF 1.2 oder Excel: nur eigene Absätze mit unverändertem deutschen Text, jede Übersetzung geprüft (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-119]
+      x-extension: true
+      parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }, { name: apply, in: query, schema: { type: boolean }, description: 'true übernimmt, sonst Vorschau' }]
+      requestBody:
+        required: true
+        content: { multipart/form-data: { schema: { type: object, properties: { file: { type: string, format: binary } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ units, updated, unchanged, empty, unknown, sourceChanged, withIssues, results, applied }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+  /translations/{translationId}/reviews:
+    get:
+      operationId: listTranslationReviews
+      summary: 'Runden des Länderreviews mit MQM-Fehlern und Punkten je 1 000 Wörter (U-03)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: requestTranslationReview
+      summary: 'Länderreview anfordern: Prüferin bzw. Prüfer und Markt (Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [reviewer], properties: { reviewer: { type: string }, market: { type: string, pattern: '^[A-Za-z]{2}$' } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Review' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /translation-reviews/{id}/errors:
+    post:
+      operationId: addTranslationReviewError
+      summary: 'MQM-Fehler erfassen – nur die zugewiesene Person oder Administration'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [category, severity, note], properties: { blockId: { type: string }, category: { type: string, enum: [accuracy, fluency, terminology, style, locale, design] }, severity: { type: string, enum: [minor, major, critical] }, note: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Review' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /translation-reviews/{id}/errors/{errorId}:
+    delete:
+      operationId: removeTranslationReviewError
+      summary: 'MQM-Fehler entfernen'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }, { name: errorId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Review' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /translation-reviews/{id}/decision:
+    post:
+      operationId: decideTranslationReview
+      summary: 'Freigabe durch das Land (bis 5 MQM-Punkte je 1 000 Wörter) oder „zurück an Übersetzung“'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, required: [decision], properties: { decision: { type: string, enum: [approve, return] }, comment: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Review' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /translations/{translationId}/backcheck:
+    post:
+      operationId: translationBackcheck
+      summary: 'Rückübersetzung einer Stichprobe (10 %) der Sicherheitshinweise ins Deutsche mit Vergleich zur Quelle (U-06, Berechtigung edit)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-120]
+      x-extension: true
+      parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ candidates, checked, passed, failed, sample }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /release-letters/{id}/translate:
+    post:
+      operationId: translateReleaseLetter
+      summary: 'Releaseletter DE↔EN übersetzen: Speicher zuerst, sonst KI je Zeile; neuer Entwurf mit Prüfbefunden je Zeile (U-09, Berechtigung edit)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-122]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: '{ id, fromMemory, machine, issues }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '502': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }

@@ -2750,3 +2750,60 @@ test('[T-313] TRIAGE nach dem Einlesen, Vorschlag übernehmen, Inhalts-Dashboard
   await expect(page.getByRole('table', { name: 'Ergebnis des Ziel-Abgleichs mit Empfehlungen' })).toContainText('Pflichtlabels');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-318] Übersetzung: KI-Übersetzung, Büro-Austausch (XLIFF), Länderreview mit MQM und „zurück an Übersetzung“, Übersetzungsspeicher und Glossar je Sprache – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const adm = { 'X-User-Id': 'u-admin' };
+  const project = await (await request.get('/api/v1/projects/p_default', { headers: adm })).json();
+  const languages = [...new Set([...(project.languages ?? []), 'fr', 'de-ch'])];
+  expect((await request.patch('/api/v1/projects/p_default', { headers: adm, data: { languages } })).ok()).toBeTruthy();
+  const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: 'E2E Kündigung übersetzen', purpose: 'Mit dieser Anleitung kündigen Sie einen Vertrag.', steps: ['Öffnen Sie **Verträge**', 'Klicken Sie auf **Kündigen**'], result: 'Der Vertrag ist gekündigt.' } })).json();
+  expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/submit`, { headers: red })).ok()).toBeTruthy();
+  expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBeTruthy();
+  const tr = await (await request.post('/api/v1/translations', { headers: red, data: { chapterId: ch.chapterId, language: 'fr' } })).json();
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Übersetzungen', exact: true }).click();
+  await page.getByLabel('Kapitel für Übersetzungen').selectOption({ label: 'E2E Kündigung übersetzen' });
+  await page.locator('tr', { hasText: 'Französisch' }).getByRole('button', { name: 'Öffnen' }).click();
+  await page.getByRole('button', { name: /Unübersetzte Absätze übersetzen/ }).click();
+  await expect(page.getByText(/KI \(demo-extractive\)/).first()).toBeVisible({ timeout: 15000 });
+  await page.getByText('Übersetzungsbüro: XLIFF 1.2 oder Excel').click();
+  await expect(page.getByRole('button', { name: 'XLIFF 1.2 herunterladen' })).toBeVisible();
+  // Länderreview anfordern
+  const review = page.getByRole('region', { name: 'Länderreview' });
+  await review.getByRole('combobox', { name: /Prüferin/ }).selectOption({ label: 'Fachprüfung (Demo)' });
+  await review.getByRole('textbox', { name: /Markt/ }).fill('FR');
+  await review.getByRole('button', { name: 'Länderreview anfordern' }).click();
+  await expect(review).toContainText('offen');
+  expect(await axe()).toEqual([]);
+  // die Prüferin erfasst einen Fehler und gibt zurück
+  await page.getByLabel('Demo-Benutzer').selectOption('u-fachpruefung');
+  await nav.getByRole('link', { name: 'Übersetzungen', exact: true }).click();
+  await page.getByLabel('Kapitel für Übersetzungen').selectOption({ label: 'E2E Kündigung übersetzen' });
+  await page.locator('tr', { hasText: 'Französisch' }).getByRole('button', { name: 'Öffnen' }).click();
+  const r2 = page.getByRole('region', { name: 'Länderreview' });
+  await r2.getByRole('combobox', { name: 'Schwere' }).selectOption('critical');
+  await r2.getByRole('textbox', { name: 'Beschreibung' }).fill('Kündigungsfrist fehlt');
+  await r2.getByRole('button', { name: 'Erfassen' }).click();
+  await expect(r2.getByRole('table', { name: 'Erfasste Fehler des Länderreviews' })).toContainText('Kündigungsfrist fehlt');
+  await expect(r2.getByRole('button', { name: 'Freigeben (Land)' })).toBeDisabled();
+  expect(await axe()).toEqual([]);
+  await r2.getByRole('button', { name: 'Zurück an Übersetzung' }).click();
+  await expect(r2).toContainText('zurück an Übersetzung');
+  // Übersetzungsspeicher und Glossar je Sprache
+  await nav.getByRole('link', { name: 'Übersetzungsspeicher' }).click();
+  await page.getByRole('combobox', { name: 'Zielsprache' }).selectOption('fr');
+  await expect(page.getByRole('heading', { name: /Deutsch → Französisch/ })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await nav.getByRole('link', { name: 'Glossar je Sprache' }).click();
+  await page.getByRole('combobox', { name: 'Zielsprache' }).selectOption('de-ch');
+  await expect(page.getByRole('heading', { name: /Deutsch → Deutsch \(Schweiz\)/ })).toBeVisible();
+  expect(await axe()).toEqual([]);
+  expect(tr.language).toBe('fr');
+});

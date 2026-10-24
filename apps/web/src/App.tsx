@@ -31,6 +31,8 @@ const UsersPage = lazy(() => import('./pages/Users').then((m) => ({ default: m.U
 const ReleasesPage = lazy(() => import('./pages/Releases').then((m) => ({ default: m.ReleasesPage })));
 const InboxPage = lazy(() => import('./pages/Discussion').then((m) => ({ default: m.InboxPage })));
 const TranslationsPage = lazy(() => import('./pages/Translations').then((m) => ({ default: m.TranslationsPage })));
+const TranslationMemoryPage = lazy(() => import('./pages/TranslationTools').then((m) => ({ default: m.TranslationMemoryPage })));
+const TranslationGlossaryPage = lazy(() => import('./pages/TranslationTools').then((m) => ({ default: m.TranslationGlossaryPage })));
 const AnalyticsPage = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.AnalyticsPage })));
 const AssistantPage = lazy(() => import('./pages/Assistant').then((m) => ({ default: m.AssistantPage })));
 const IntegrationsPage = lazy(() => import('./pages/Integrations').then((m) => ({ default: m.IntegrationsPage })));
@@ -137,6 +139,8 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/export', label: 'Export', icon: '📤' },
     { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
     { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
+    { to: '/uebersetzungen/speicher', label: 'Übersetzungsspeicher', icon: '🗄' },
+    { to: '/uebersetzungen/glossar', label: 'Glossar je Sprache', icon: '📘' },
     { to: '/release-abgleich', label: 'Release-Abgleich', icon: '🎯' },
     { to: '/releaseletter', label: 'Releaseletter', icon: '📰' },
   ] },
@@ -484,6 +488,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/intern" element={<WorkAreaPage area="intern" />} />
             <Route path="/veroeffentlichung" element={<ReleasesPage />} />
             <Route path="/uebersetzungen" element={<TranslationsPage />} />
+            <Route path="/uebersetzungen/speicher" element={<TranslationMemoryPage />} />
+            <Route path="/uebersetzungen/glossar" element={<TranslationGlossaryPage />} />
             <Route path="/aufgaben" element={<InboxPage onRead={reloadUnread} />} />
             <Route path="/analytik" element={<AnalyticsPage />} />
             <Route path="/assistent" element={<AssistantPage />} />

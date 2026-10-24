@@ -23,11 +23,11 @@ Lokale Arbeitsumgebung für das oneSCM-Benutzerhandbuch. Grundlage ist die Gesam
 | `01_Input/` | `01_Eingang` (neue Dateien), `02_Zugeordnet` (Originale), `03_Ausgeschlossen` |
 | `02_Kapitel/<Kapitel>/` | Gesamtgliederung: `KAPITEL.md`, `ANWEISUNG.md` (Kapitelanweisung), acht Arbeitsordner, je Unterkapitel ein Ordner mit `UNTERKAPITEL.md` und `ANWEISUNG.md` |
 | `03_Varianten/<Gliederung>/` | dieselbe Struktur für jede Gliederung aus der App, dazu `VARIANTE.md` und `STATUS.md` |
-| `04_Output/<Sprache>/<Kapitel>/` | freigegebene Fassung je Sprache: `01_Deutsch_DE`, `02_Englisch_EN`, `03_Französisch_FR`, `04_Italienisch_IT`, `05_Spanisch_ES`, `06_Tschechisch_CS`, `07_Slowakisch_SK`, `08_Koreanisch_KO`, `09_Malaiisch_MS`; Varianten unter `<Sprache>/Varianten/<Name>/` |
+| `04_Output/<Sprache>/<Kapitel>/` | freigegebene Fassung je Sprache: `01_Deutsch_DE`, `02_Englisch_EN`, `03_Französisch_FR`, `04_Italienisch_IT`, `05_Spanisch_ES`, `06_Tschechisch_CS`, `07_Slowakisch_SK`, `08_Koreanisch_KO`, `09_Malaiisch_MS`, `10_Deutsch_DE-CH`, `11_Französisch_FR-CH`; Varianten unter `<Sprache>/Varianten/<Name>/` |
 | `05_I_Output/<Produkt>/` | **I Output** – fertige Produkte mit Screenshots: `01_Handbuch`, `02_Releaseletter`, `03_QuickGuide`, `04_Schulungsmaterial`, `05_Interne_Dokumente`, `06_Videos`, `07_Grafiken`, `08_Prozesse`; je Produkt `PRODUKT.md`, `01_Entwurf`, `02_Screens`, `03_Final/<Sprache>` |
 | `06_II_Stil_und_Design/` | **II Stil und Design** – `STIL_UND_DESIGN.md` (Layout, Typografie, Farben, Screenshots), `01_Designvorschlaege`, `02_Tonalitaet` (`TONALITAET.md`), `03_Vorlagen` (Word/PowerPoint), `04_Bildsprache_Screenshots` |
 | `07_III_Grammatik_Synonyme_Fehlerliste/` | **III** – `01_Grammatik/GRAMMATIK.md`, `02_Synonyme/SYNONYME.csv`, `03_Fehlerliste/FEHLERLISTE.csv` und `FEHLERLISTE.md` |
-| `08_IV_Translation/` | **IV Translation** – `TRANSLATION.md`; je Zielsprache `01_Glossar`, `02_Uebersetzungsspeicher`, `03_Laenderreview` (`REVIEW.md`) |
+| `08_IV_Translation/` | **IV Translation** – `TRANSLATION.md`; je Zielsprache `01_Glossar` (`GLOSSAR.csv`), `02_Uebersetzungsspeicher` (`SPEICHER.csv`), `03_Laenderreview` (`REVIEW.md`); mit `abgleich --app` Speicher und Glossar aus der App |
 | `09_Pipeline/<Kapitel>/<Unterkapitel>/` | **Pipeline** – Jira-Tickets in Bearbeitung, noch nicht produktiv, nach der aktuellen Gliederung; je Ticket `<Ticket>.md` mit Erstelldatum, Stream, Produktionsdatum und Vorab-Dokumentation; `00_Ohne_Zuordnung`, `PIPELINE.md` |
 | `10_Backlog/` | **Backlog** – Tickets, deren Bearbeitung noch nicht begonnen hat; `<Ticket>.md`, `BACKLOG.md` |
 | `11_Intern/` | **Intern** – `01_Testing`, `02_Reporting`, `03_Systeme`, `04_Migration`, `05_Rollout`, `06_Other`; je Thema `THEMA.md`; nie im Handbuch |

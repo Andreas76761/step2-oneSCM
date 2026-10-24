@@ -1248,5 +1248,50 @@
       "docs/adr/ADR-100-triage-agenten.md",
       "tools/handbuch-ordner/README.md"
     ]
+  },
+  {
+    "id": "NFR-118",
+    "title": "Übersetzungsspeicher: freigegebene Absätze je Sprachpaar, 100-%-Treffer übernehmen, ähnliche ab 75 % vorschlagen, Pflege, Export und Import wie SPEICHER.csv",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-101-uebersetzung.md"
+    ]
+  },
+  {
+    "id": "NFR-119",
+    "title": "Weitere Prüfungen (Länge 0,55–1,8, deutsche Wörter, Datum/Kennung nur auf einer Seite), Glossar je Sprache mit Export/Import, XLIFF 1.2 und Excel für Übersetzungsbüros mit geprüftem Rückimport",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-101-uebersetzung.md"
+    ]
+  },
+  {
+    "id": "NFR-120",
+    "title": "Länderreview je Sprache und Markt mit MQM-Fehlerpunkten (bestanden bis 5 je 1 000 Wörter), „zurück an Übersetzung“, Freigabe durch das Land; Rückübersetzung einer Stichprobe der Sicherheitshinweise",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-101-uebersetzung.md"
+    ]
+  },
+  {
+    "id": "NFR-121",
+    "title": "Sprachen de-CH (nach Regeln aus dem Deutschen) und fr-CH (aus Französisch), Rahmentexte in Export und Druck je Sprache, Hinweis auf fehlende Bildvarianten",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-101-uebersetzung.md"
+    ]
+  },
+  {
+    "id": "NFR-122",
+    "title": "Releaseletter DE↔EN übersetzen und prüfen: Speicher, KI je Zeile, Prüfbefunde je Zeile vor der Freigabe, Übernahme in den Speicher",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-101-uebersetzung.md"
+    ]
   }
 ]

@@ -12,6 +12,7 @@ import {
   MQM_WEIGHTS, mqmScore, parseTranslateResponse, parseXliff, sampleEvery, TM_FUZZY_MIN, tmNormalize, tmSimilarity, TRANSLATION_ISSUE_LABELS, XliffError, type TranslationIssue,
 } from '../domain/translate.js';
 import { signalLevels } from '../domain/warnings.js';
+import { germanDate } from '../domain/workAreas.js';
 import { LlmError } from '../llm.js';
 import { badRequest, conflict, notFound, Problem, unprocessable } from '../problem.js';
 import { readTable } from './masterDataImport.js';
@@ -143,7 +144,7 @@ export async function exportTm(ctx: Ctx, language: string, format: string) {
   if (!LANGUAGES[language]) throw badRequest(`language muss eine von ${Object.keys(LANGUAGES).join(', ')} sein.`);
   const rows = await ctx.db.all("SELECT * FROM translation_memory WHERE project_id = ? AND source_lang = 'de' AND target_lang = ? ORDER BY created_at", ctx.projectId, language);
   const table: unknown[][] = [['Nr', 'Deutsch', code(language), 'Datei', 'Ausgangsversion', 'Datum', 'Status'],
-    ...rows.map((r, i) => [i + 1, r.source_text, r.target_text, r.origin_ref ?? '', r.origin_version ?? '', String(r.updated_at).slice(0, 10), TM_STATUS_DE[r.status] ?? r.status])];
+    ...rows.map((r, i) => [i + 1, r.source_text, r.target_text, r.origin_ref ?? '', r.origin_version ?? '', germanDate(String(r.updated_at).slice(0, 10)), TM_STATUS_DE[r.status] ?? r.status])];
   const base = `speicher_${language}`;
   if (format === 'xlsx') return { data: await xlsx('Übersetzungsspeicher', table, [6, 60, 60, 30, 14, 12, 12]), fileName: `${base}.xlsx`, contentType: xlsxType };
   if (format !== 'csv') throw badRequest('format muss csv oder xlsx sein.');

@@ -7,7 +7,7 @@ Hier liegt der **Handbuchtext je Sprache und Kapitel** (Markdown je Unterkapitel
 | Ordner | Inhalt | Agent |
 |---|---|---|
 | `01_Deutsch_DE` | freigegebene deutsche Fassung (Hauptsprache) | uebersetzer-ausgabe (Kopie des freigegebenen Entwurfs) |
-| `02_Englisch_EN` … `09_Malaiisch_MS` | Übersetzungen der freigegebenen deutschen Fassung | uebersetzer-ausgabe |
+| `02_Englisch_EN` … `11_Französisch_FR-CH` | Übersetzungen der freigegebenen deutschen Fassung | uebersetzer-ausgabe |
 
 Regeln:
 - Übersetzt wird nur, was in `02_Kapitel/<Kapitel>/04_Pruefung_Freigabe/` einen Freigabebeleg hat – immer aus der deutschen Fassung, nie aus einer anderen Übersetzung.

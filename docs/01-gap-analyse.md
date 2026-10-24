@@ -195,6 +195,17 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.50 Stand nach Etappe 48 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Übersetzungsspeicher mit 100 % und ähnlichen Treffern, SPEICHER.csv hin und zurück (U-01, NFR-118) | ✅ ([ADR-101](adr/ADR-101-uebersetzung.md)) |
+| Weitere Prüfungen, Glossar je Sprache, XLIFF 1.2 und Excel (U-02, U-04, U-05, NFR-119) | ✅ |
+| Länderreview mit MQM, Rückübersetzung der Sicherheitshinweise (U-03, U-06, NFR-120) | ✅ |
+| de-CH und fr-CH, Rahmentexte je Sprache, Hinweis auf Bildvarianten (U-07, U-08, U-10, NFR-121) | ✅ |
+| Releaseletter DE↔EN (U-09, NFR-122) | ✅ |
+| Offen | weitere Märkte und Sprachen (U-07); Pflicht-Länderreview je Sprache; Ansprechperson je Land (O-09); Satzsegmentierung (SRX) für den Speicher; G-04 LanguageTool |
+
 ## 1.49 Stand nach Etappe 47 (24.10.2026)
 
 | Punkt | Ergebnis |

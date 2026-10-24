@@ -35,3 +35,12 @@ Glossarbegriffe werden erst nach Bestätigung durch einen Menschen verbindlich (
 2. „uebersetzer-ausgabe: Kapitel 6, alle Sprachen“ – nutzt Glossar und Übersetzungsspeicher, legt die Übersetzung ab und trägt sie in `REVIEW.md` mit Status `bereit` ein.
 3. Das Land prüft; Korrekturen übernimmt der uebersetzer-ausgabe, bestätigte Sätze wandern in den Übersetzungsspeicher, neue Begriffe ins Glossar (Vorschlag).
 4. Status `geprüft` mit Datum und Reviewer-Land; im Kopf der Übersetzung `geprüft durch Markt <Code>, <Datum>`.
+
+## In der App (ab Version 0.48)
+
+- **Übersetzungsspeicher:** Freigegebene Übersetzungen kommen je Absatz in den Speicher. 100-%-Treffer übernimmt die App beim Anlegen einer Übersetzung, ähnliche Treffer ab 75 % schlägt sie vor. `abgleich --app …` schreibt `SPEICHER.csv` und `GLOSSAR.csv` je Zielsprache hierher; eigene Änderungen bleiben, die App-Fassung liegt dann als `.neu` daneben. Umgekehrt lassen sich beide Dateien in der App einlesen (Übersetzung › Übersetzungsspeicher bzw. Glossar je Sprache).
+- **Übersetzungsbüro:** XLIFF 1.2 (für CAT-Werkzeuge wie Trados, memoQ, Across) oder Excel je Übersetzung; der Rückimport prüft jede Einheit (ID, unveränderter deutscher Text, Prüfregeln).
+- **Prüfungen:** Länge außerhalb 0,55–1,8 der deutschen Quelle, deutsche Wörter im Zieltext, Datum oder Kennung nur auf einer Seite – zusätzlich zu Zahlen, Platzhaltern, Struktur, Signalwörtern und festen Begriffen.
+- **Länderreview mit MQM:** Prüferin bzw. Prüfer je Sprache und Markt, Fehler je Absatz (Genauigkeit, Sprachfluss, Terminologie, Stil, Landeskonventionen, Layout; gering 1, schwer 5, kritisch 10 Punkte). Bestanden bis 5 Punkte je 1 000 Wörter; sonst „zurück an Übersetzung“. Eine angeforderte Länderprüfung muss vor der Freigabe bestanden sein.
+- **Rückübersetzung:** Stichprobe von 10 % der übersetzten Sicherheitshinweise (mindestens einer) zurück ins Deutsche, mit Vergleich zur Quelle.
+- **Schweizer Varianten:** `10_Deutsch_DE-CH` entsteht nach Regeln aus dem deutschen Master (ss statt ß, «…»); `11_Französisch_FR-CH` beruht auf der freigegebenen französischen Fassung und wird vom Markt CH geprüft.

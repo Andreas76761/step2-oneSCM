@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.48.0 – Etappe 48 (24.10.2026)
+
+### Hinzugefügt
+- **Übersetzung (ADR-101, U-01 … U-10):**
+  - **Übersetzungsspeicher:** freigegebene Absätze je Sprachpaar; 100-%-Treffer werden beim Anlegen übernommen, ähnliche ab 75 % vorgeschlagen; Pflege, Export und Import wie `SPEICHER.csv`.
+  - **Weitere Prüfungen:** Längenverhältnis außerhalb 0,55–1,8, deutsche Wörter im Zieltext, Datum oder Kennung nur auf einer Seite.
+  - **Länderreview** je Sprache und Markt mit MQM-Fehlerpunkten (bestanden bis 5 je 1 000 Wörter), „zurück an Übersetzung“, Freigabe durch das Land vor der Freigabe der Übersetzung.
+  - **Glossar je Sprache** mit Export (wie `GLOSSAR.csv`, Excel) und Rückimport.
+  - **XLIFF 1.2 und Excel** für Übersetzungsbüros, Rückimport mit Vorschau und Prüfung.
+  - **Rückübersetzung** einer Stichprobe (10 %) der Sicherheitshinweise.
+  - **Sprachen de-CH und fr-CH:** Schweizer Hochdeutsch nach Regeln aus dem deutschen Master (ss statt ß, «…»), Schweizer Französisch auf Basis der freigegebenen französischen Fassung.
+  - **Rahmentexte** in Export und Druck je Sprache (Titel, Stand, Inhalt, Seite, Gültig ab, Hinweisarten, Verzeichnisse, Historie).
+  - **Releaseletter DE↔EN** übersetzen und prüfen; Freigabe übernimmt die Zeilen in den Speicher.
+  - **Hinweis auf Bilder ohne Fassung** in der Zielsprache.
+- Seiten **Übersetzungsspeicher** und **Glossar je Sprache**; im Arbeitsordner Sprachordner `10_Deutsch_DE-CH`, `11_Französisch_FR-CH`, Abgleich von Speicher und Glossar mit der App.
+- Tests T-314 … T-317, E2E T-318 (axe); Anforderungen NFR-118 … NFR-122; Migration 054.
+
+### Geändert
+- Die Demo-KI (ohne eingerichteten KI-Dienst) pseudo-lokalisiert statt deutschen Text auszugeben; ins Deutsche läuft sie rückwärts.
+
 ## 0.47.0 – Etappe 47 (24.10.2026)
 
 ### Hinzugefügt

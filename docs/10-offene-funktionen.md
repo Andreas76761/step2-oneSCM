@@ -50,16 +50,16 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 
 | ID | Funktion | Herkunft | Stand in der App | Aufwand | Empfehlung |
 |---|---|---|---|---|---|
-| U-01 | **Übersetzungsspeicher (Translation Memory):** bereits übersetzte und freigegebene Sätze wiederverwenden (100 % und ähnliche Treffer), Pflege und Export | DokuPress-Audit (F-31), Arbeitsordner (`SPEICHER.csv`) | nicht vorhanden | L | **übernehmen** – senkt Aufwand und Kosten je Release deutlich |
-| U-02 | **Weitere Prüfungen:** Längenverhältnis außerhalb 0,55–1,8 bzw. ±30 %, deutsche Wörter im Zieltext (Fehler), Werte/IDs/Daten nur auf einer Seite | Releaseletter-Prüfer, Checkliste | teilweise (Zahlen, Platzhalter, Struktur, Signalwörter, feste Begriffe) | S | **übernehmen** |
-| U-03 | **Länderreview als Arbeitsschritt:** Prüferin bzw. Prüfer je Sprache/Markt, Kommentare, „zurück an Übersetzung“, Freigabe durch das Land; MQM-Fehlerpunkte (≤ 5 je 1 000 Wörter) | Checkliste, Arbeitsordner (`REVIEW.md`) | teilweise (eine Freigabe je Sprache) | M | **übernehmen** |
-| U-04 | **Glossar je Sprache** als eigene Sicht und Export (CSV/Excel) für Übersetzer, Import zurück | Ticket-Cockpit, Releaseletter-Prüfer (287 EN→DE), Arbeitsordner (`GLOSSAR.csv`) | teilweise (feste Übersetzung im Begriff gespeichert) | S | **übernehmen** |
-| U-05 | **XLIFF bzw. Excel hin und zurück** für externe Übersetzungsbüros (Segmente mit ID, Rückimport mit Prüfung) | DokuPress, Checkliste | nicht vorhanden | M | **übernehmen**, falls Büros beteiligt sind |
-| U-06 | **Rückübersetzung von Sicherheitshinweisen** (Stichprobe 10 %) | Checkliste | nicht vorhanden | S | optional |
-| U-07 | **Weitere Sprachen:** Hindi, Türkisch, Ungarisch, Rumänisch, Japanisch, Chinesisch, Arabisch, Schweizer Varianten de-CH/fr-CH | Screenarchiv (22 Sprach-Labels), Ticket-Cockpit (HI), Releaseletter-Prüfer (TR) | 11 Sprachen | S je Sprache | **Entscheidung nötig** – welche Märkte? (Rechts-nach-links für Arabisch: M) |
-| U-08 | **Übersetzung der Rahmentexte** in Export und Druck (Deckblatt, Kopf-/Fußzeile, Verzeichnisse, „Gültig ab“, „Historie“) | Screenarchiv | teilweise (Leseransicht und Abschnittstitel übersetzt) | S | **übernehmen** |
-| U-09 | **Releaseletter DE↔EN** übersetzen und prüfen | Ticket-Cockpit, Releaseletter-Prüfer | teilweise (Releaseletter mit Prüfregeln, Übersetzung nicht angebunden) | S | **übernehmen** |
-| U-10 | **Übersetzung von Bildern:** Hinweis, wenn für eine Sprache keine Bildvariante existiert | Screenarchiv | teilweise (Varianten, Deckungsmatrix) | S | optional – Warnung in der Übersetzung |
+| U-01 | **Übersetzungsspeicher (Translation Memory):** bereits übersetzte und freigegebene Sätze wiederverwenden (100 % und ähnliche Treffer), Pflege und Export | DokuPress-Audit (F-31), Arbeitsordner (`SPEICHER.csv`) | nicht vorhanden | L | **umgesetzt in Etappe 48 (ADR-101)** |
+| U-02 | **Weitere Prüfungen:** Längenverhältnis außerhalb 0,55–1,8 bzw. ±30 %, deutsche Wörter im Zieltext (Fehler), Werte/IDs/Daten nur auf einer Seite | Releaseletter-Prüfer, Checkliste | teilweise (Zahlen, Platzhalter, Struktur, Signalwörter, feste Begriffe) | S | **umgesetzt in Etappe 48 (ADR-101)** |
+| U-03 | **Länderreview als Arbeitsschritt:** Prüferin bzw. Prüfer je Sprache/Markt, Kommentare, „zurück an Übersetzung“, Freigabe durch das Land; MQM-Fehlerpunkte (≤ 5 je 1 000 Wörter) | Checkliste, Arbeitsordner (`REVIEW.md`) | teilweise (eine Freigabe je Sprache) | M | **umgesetzt in Etappe 48 (ADR-101)** |
+| U-04 | **Glossar je Sprache** als eigene Sicht und Export (CSV/Excel) für Übersetzer, Import zurück | Ticket-Cockpit, Releaseletter-Prüfer (287 EN→DE), Arbeitsordner (`GLOSSAR.csv`) | teilweise (feste Übersetzung im Begriff gespeichert) | S | **umgesetzt in Etappe 48 (ADR-101)** |
+| U-05 | **XLIFF bzw. Excel hin und zurück** für externe Übersetzungsbüros (Segmente mit ID, Rückimport mit Prüfung) | DokuPress, Checkliste | nicht vorhanden | M | **umgesetzt in Etappe 48 (ADR-101)** |
+| U-06 | **Rückübersetzung von Sicherheitshinweisen** (Stichprobe 10 %) | Checkliste | nicht vorhanden | S | **umgesetzt in Etappe 48 (ADR-101)** |
+| U-07 | **Weitere Sprachen:** Hindi, Türkisch, Ungarisch, Rumänisch, Japanisch, Chinesisch, Arabisch, Schweizer Varianten de-CH/fr-CH | Screenarchiv (22 Sprach-Labels), Ticket-Cockpit (HI), Releaseletter-Prüfer (TR) | 11 Sprachen | S je Sprache | **teilweise umgesetzt in Etappe 48 (ADR-101): de-CH, fr-CH; weitere Märkte offen** |
+| U-08 | **Übersetzung der Rahmentexte** in Export und Druck (Deckblatt, Kopf-/Fußzeile, Verzeichnisse, „Gültig ab“, „Historie“) | Screenarchiv | teilweise (Leseransicht und Abschnittstitel übersetzt) | S | **umgesetzt in Etappe 48 (ADR-101)** |
+| U-09 | **Releaseletter DE↔EN** übersetzen und prüfen | Ticket-Cockpit, Releaseletter-Prüfer | teilweise (Releaseletter mit Prüfregeln, Übersetzung nicht angebunden) | S | **umgesetzt in Etappe 48 (ADR-101)** |
+| U-10 | **Übersetzung von Bildern:** Hinweis, wenn für eine Sprache keine Bildvariante existiert | Screenarchiv | teilweise (Varianten, Deckungsmatrix) | S | **umgesetzt in Etappe 48 (ADR-101)** |
 
 ## 10.5 Weitere offene Funktionen
 
@@ -85,17 +85,18 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
    - S-01 (Lesbarkeitswerte im Check), S-03, S-04 (Wortliste je Sprache, Fix-Sprache), S-08 (Bildunterschriften);
    - W-01 (Anweisung für Varianten).
 2. **Etappe 45 – Pipeline, Backlog, Intern (✅ umgesetzt, ADR-098):** neuer Wunsch des Auftraggebers, vor der Übersetzung eingeschoben.
-3. **Etappe 46 – Übersetzung:**
+3. **Etappe 48 – Übersetzung (✅ umgesetzt, ADR-101):** U-01 … U-10; Sprachen de-CH und fr-CH, Austausch per XLIFF 1.2 und Excel (Entscheidungen 24.10.2026).
+   Ursprünglich geplant:
    - U-02 (weitere Prüfungen), U-04 (Glossar je Sprache), U-08 (Rahmentexte), U-09 (Releaseletter EN);
    - U-03 (Länderreview);
    - danach U-01 (Übersetzungsspeicher).
 4. **Danach je nach Entscheidung:**
-   - G-04 (LanguageTool lokal), U-05 (XLIFF), U-07 (weitere Sprachen);
+   - G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen);
    - S-02 (Tonalität je Zielgruppe), W-03, W-04, W-09.
 
 ## 10.7 Offene Entscheidungen
 
 1. **LanguageTool:** Darf LanguageTool lokal betrieben werden (G-04)? Es braucht Java oder Docker; Daten bleiben auf dem Rechner.
-2. **Sprachen:** Welche zusätzlichen Sprachen bzw. Märkte (U-07)? Hindi und Türkisch stehen in den Artefakten.
-3. **Übersetzungsbüros:** Arbeiten externe Büros mit (dann XLIFF, U-05)?
+2. **Sprachen:** de-CH und fr-CH entschieden am 24.10.2026. Offen: weitere Märkte (Hindi und Türkisch stehen in den Artefakten).
+3. **Übersetzungsbüros:** entschieden am 24.10.2026 – Austausch per XLIFF 1.2 und Excel (U-05, umgesetzt).
 4. **Schreibweise:** Wie lautet die Schreibweise der offenen Begriffe in `SYNONYME.csv`, z. B. „MO Checks“ oder „MO-Prüfungen“? Davon hängt S-04 ab.

@@ -2,7 +2,7 @@
 import { RewriteParseError } from './rewrite.js';
 import { SIGNAL_WORDS, signalWordsMissing } from './warnings.js';
 
-export const TRANSLATE_PROMPT_VERSION = 'translate-1.1';
+export const TRANSLATE_PROMPT_VERSION = 'translate-1.2';
 
 /** Unterstützte Zielsprachen (ISO 639-1) mit Namen für Anfrage und Oberfläche */
 export const LANGUAGES: Record<string, string> = {

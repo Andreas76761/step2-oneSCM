@@ -20,6 +20,7 @@ Befehle:
             Mit --app werden auch die Kapitelanweisungen aus der App (Kapitelsteuerung) in ANWEISUNG.md der Kapitel unter 02_Kapitel übernommen –
             nur wenn die Datei fehlt oder noch leer ist; sonst als ANWEISUNG.md.neu. Ebenso die Einträge aus Pipeline, Backlog und
             Intern der App als Dateien in 09_Pipeline, 10_Backlog und 11_Intern (von Hand geänderte Dateien bleiben, App-Fassung als .neu),
+            Übersetzungsspeicher und Glossar je Zielsprache des Projekts nach 08_IV_Translation/<Sprache> (SPEICHER.csv, GLOSSAR.csv),
             Aufgaben und Entscheidungen der Agenten nach 00_Dokumentation/Agenten, der Ziel-Abgleich nach 12_Goal/ABGLEICH.md und
             für neue Unterkapitel der Triage (Kennung „neu“) Ordner neu_<Titel> im passenden Kapitel unter 02_Kapitel.
 
@@ -50,7 +51,9 @@ MARKTUMFANG = {'blueprint': 'Blueprint (marktübergreifend)', 'markets': 'ausgew
 STEUER_ROLLEN = ['Dealer', 'MO', 'Markt', 'HQ', 'IT']
 # Ausgabesprachen: Hauptsprache Deutsch, dazu die Landessprachen (Ordner 04_Output/<Sprache>/<Kapitel>)
 SPRACHEN = ['01_Deutsch_DE', '02_Englisch_EN', '03_Französisch_FR', '04_Italienisch_IT', '05_Spanisch_ES',
-            '06_Tschechisch_CS', '07_Slowakisch_SK', '08_Koreanisch_KO', '09_Malaiisch_MS']
+            '06_Tschechisch_CS', '07_Slowakisch_SK', '08_Koreanisch_KO', '09_Malaiisch_MS',
+            # Schweizer Varianten (Entscheidung 24.10.2026, ADR-101): Kennung wie in der App (de-ch, fr-ch)
+            '10_Deutsch_DE-CH', '11_Französisch_FR-CH']
 OUTPUT = '04_Output'
 # Hauptordner zur Steuerung (I–IV); Nummern 05–08, damit der Explorer sie nach 04_Output sortiert
 AUSGABE = '05_I_Output'
@@ -729,6 +732,56 @@ def app_hole(adresse: str, projekt: str, token: str | None, benutzer: str | None
         return None
 
 
+def app_hole_datei(adresse: str, projekt: str, token: str | None, benutzer: str | None, pfad: str):
+    """GET auf die lokale App, Antwort als Text (CSV); None bei Fehler"""
+    kopf = {'X-Project-Id': projekt}
+    if token:
+        kopf['Authorization'] = f'Bearer {token}'
+    elif benutzer:
+        kopf['X-User-Id'] = benutzer
+    try:
+        with urllib.request.urlopen(urllib.request.Request(adresse.rstrip('/') + '/api/v1' + pfad, headers=kopf), timeout=30) as r:
+            return r.read().decode('utf-8')
+    except OSError:
+        return None
+
+
+def uebersetzung_abgleichen(ziel: Path, adresse: str, projekt: str, token: str | None, benutzer: str | None, bericht: list):
+    """Übersetzungsspeicher und Glossar der App je Zielsprache des Projekts (ADR-101) nach 08_IV_Translation/<Sprache>:
+    unveränderte Dateien werden aktualisiert, von Hand geänderte bleiben (App-Fassung als .neu)."""
+    sprachen = (app_hole(adresse, projekt, token, benutzer, '/languages') or {}).get('projectLanguages')
+    if sprachen is None:
+        bericht.append('- App liefert keine Sprachen (ältere Version oder keine Berechtigung)')
+        return
+    stand_datei = ziel / TRANSLATION / 'app_stand.json'
+    try:
+        stand = json.loads(stand_datei.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        stand = {}
+    dateien_stand = stand.get('dateien', {})
+    zahl = {'neu': 0, 'aktualisiert': 0, 'abweichend': 0}
+    vorlage = {rel: hashlib.sha256(t.encode()).hexdigest() for rel, t in hauptordner()[1].items()}
+    schreibe = _schreiben_geschuetzt(ziel, dateien_stand, vorlage, zahl, bericht)
+    ohne_ordner = []
+    for sp in SPRACHEN[1:]:
+        code = sp.rsplit('_', 1)[-1].lower()
+        if code not in sprachen:
+            continue
+        for rel, pfad in [(f'{TRANSLATION}/{sp}/02_Uebersetzungsspeicher/SPEICHER.csv', f'/translation-memory/export?language={code}&format=csv'),
+                          (f'{TRANSLATION}/{sp}/01_Glossar/GLOSSAR.csv', f'/translation-glossary/export?language={code}&format=csv')]:
+            inhalt = app_hole_datei(adresse, projekt, token, benutzer, pfad)
+            if inhalt is not None:
+                schreibe(rel, inhalt)
+    for code in sprachen:
+        if not any(sp.rsplit('_', 1)[-1].lower() == code for sp in SPRACHEN):
+            ohne_ordner.append(code)
+    if ohne_ordner:
+        bericht.append(f"- ⚠ Zielsprachen ohne Ordner in `{TRANSLATION}`: {', '.join(ohne_ordner)} – bitte Ordner ergänzen")
+    stand_datei.parent.mkdir(parents=True, exist_ok=True)
+    stand_datei.write_text(json.dumps({'dateien': dateien_stand}, ensure_ascii=False, indent=2), encoding='utf-8')
+    bericht.append(f"- Übersetzung ({', '.join(sprachen) or 'keine Zielsprachen'}): {zahl['neu']} Dateien neu, {zahl['aktualisiert']} aktualisiert, {zahl['abweichend']} abweichend (.neu)")
+
+
 def agenten_abgleichen(ziel: Path, daten: dict, neue_unterkapitel: list, bericht: list):
     """Aufgaben, Entscheidungen und Ziel-Abgleich der App (GET /agents/export) als Dateien; neue Unterkapitel der Triage
     (GET /triage/new-subchapters) als Ordner neu_<Titel> im passenden Kapitel unter 02_Kapitel – Vorhandenes bleibt."""
@@ -941,6 +994,9 @@ def main():
             bericht.append('- App liefert keine Arbeitsbereiche (ältere Version oder keine Berechtigung)')
         else:
             bereiche_abgleichen(ziel, ber, bericht)
+        # Übersetzungsspeicher und Glossar je Zielsprache (App ab 0.48)
+        bericht += ['', f'## Übersetzung aus der App → {TRANSLATION}', '']
+        uebersetzung_abgleichen(ziel, a.app, a.projekt, a.token, a.benutzer, bericht)
         # Agenten: Aufgaben, Entscheidungen, Ziel-Abgleich, neue Unterkapitel der Triage (App ab 0.47)
         ag = app_hole(a.app, a.projekt, a.token, a.benutzer, '/agents/export')
         bericht += ['', f'## Agenten aus der App → {AGENTEN_DOK}, {GOAL}, 02_Kapitel (neu_…)', '']

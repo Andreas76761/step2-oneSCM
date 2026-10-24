@@ -66,6 +66,10 @@ Der Abgleich legt die drei Bereiche bei jedem Aufruf an; die Kapitel- und Unterk
 
 Der Abgleich legt `12_Goal` und `00_Dokumentation/Agenten` bei jedem Aufruf an (nur Fehlendes). Mit `--app …` holt er Aufgaben, Entscheidungen und den letzten Ziel-Abgleich der App (`GET /api/v1/agents/export`) nach `AUFGABEN.md`, `ENTSCHEIDUNGEN.md` und `12_Goal/ABGLEICH.md` – unveränderte Dateien werden aktualisiert (Stand in `00_Dokumentation/Agenten/agenten_stand.json`), geänderte bleiben, die App-Fassung liegt als `.neu` daneben. Für neue Unterkapitel der Triage (Kennung „neu“, `GET /api/v1/triage/new-subchapters`) legt er im passenden Kapitel unter `02_Kapitel` einen Ordner `neu_<Titel>` mit `UNTERKAPITEL.md` an; nach der Bestätigung durch einen Menschen kommt das Unterkapitel über die Gesamtgliederung regulär dazu.
 
+## Übersetzung (`08_IV_Translation`)
+
+Mit `--app …` holt der Abgleich je Zielsprache des Projekts den Übersetzungsspeicher (`GET /api/v1/translation-memory/export`) nach `02_Uebersetzungsspeicher/SPEICHER.csv` und das Glossar (`GET /api/v1/translation-glossary/export`) nach `01_Glossar/GLOSSAR.csv` – gleiche Spalten wie die Vorlagen. Unveränderte Dateien werden aktualisiert (Stand in `08_IV_Translation/app_stand.json`), geänderte bleiben, die App-Fassung liegt als `.neu` daneben. Neu sind die Sprachordner `10_Deutsch_DE-CH` und `11_Französisch_FR-CH`.
+
 ## Kapitelanweisung (`ANWEISUNG.md`)
 
 Je Kapitel und Unterkapitel legt das Skript eine `ANWEISUNG.md` an (Abschnitte „Worauf es ankommt“, „Wichtige Themen“, „Nicht beschreiben“, leer mit `[offen]`). Alle Agenten lesen sie vor der Arbeit und befolgen sie mit Vorrang; nur die Grundregeln 1–4 in `CLAUDE.md` gehen vor. Gepflegt wird sie entweder direkt in der Datei oder in der App unter **2 Schreiben › Kapitelsteuerung**: `abgleich --app …` übernimmt die Anweisungen der App in `02_Kapitel` und – für die Kapitel der Handbuch-Varianten – in `03_Varianten/<Name>/` (Zuordnung über die Kapitel- bzw. Unterkapitelnummer). Eine Datei mit eigenen Angaben wird nie überschrieben – weicht die App ab, liegt deren Fassung als `ANWEISUNG.md.neu` daneben.

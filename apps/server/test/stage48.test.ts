@@ -123,7 +123,7 @@ describe('Etappe 48', () => {
       // Export wie SPEICHER.csv, Rückimport mit „zu prüfen“
       const csv = (await call('GET', '/translation-memory/export?language=en&format=csv')).body as string;
       expect(csv.replace(/^﻿/, '').split('\n')[0]).toBe('Nr;Deutsch;EN;Datei;Ausgangsversion;Datum;Status');
-      expect(csv).toContain(';The contract is saved.;Vertrag anlegen;Version 1;');
+      expect(csv).toMatch(/;The contract is saved\.;Vertrag anlegen;Version 1;\d{2}\.\d{2}\.\d{4};freigegeben/);
       const upload = (name: string, data: string | Buffer, path: string, user = 'u-redaktion') => built.app.inject({
         method: 'POST', url: `/api/v1${path}`, headers: { 'x-user-id': user, 'content-type': 'multipart/form-data; boundary=X' },
         payload: Buffer.concat([Buffer.from(`--X\r\nContent-Disposition: form-data; name="file"; filename="${name}"\r\nContent-Type: application/octet-stream\r\n\r\n`), Buffer.isBuffer(data) ? data : Buffer.from(data), Buffer.from('\r\n--X--\r\n')]),
