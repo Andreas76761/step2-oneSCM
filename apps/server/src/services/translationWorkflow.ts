@@ -347,8 +347,10 @@ async function reviewDto(ctx: Ctx, r: Row) {
   const errors = parseJson<any[]>(r.errors, []);
   const words = r.status === 'open' ? await targetWords(ctx, r.translation_id) : Number(r.words);
   const reviewer = await ctx.db.get('SELECT name FROM users WHERE id = ?', r.reviewer);
+  const deputy = r.deputy ? await ctx.db.get('SELECT name FROM users WHERE id = ?', r.deputy) : null;
   return {
     id: r.id, translationId: r.translation_id, reviewer: r.reviewer, reviewerName: reviewer?.name ?? r.reviewer, market: r.market ?? null, status: r.status,
+    deputy: r.deputy ?? null, deputyName: r.deputy ? deputy?.name ?? r.deputy : null, assignedBy: r.assigned_by ?? 'manual',
     errors: errors.map((e) => ({ ...e, categoryLabel: MQM_CATEGORIES[e.category] ?? e.category, severityLabel: MQM_SEVERITY_LABEL[e.severity] ?? e.severity, points: MQM_WEIGHTS[e.severity] ?? 0 })),
     score: mqmScore(errors, words), threshold: MQM_PASS_PER_1000, comment: r.comment ?? null,
     requestedBy: r.requested_by, requestedAt: r.requested_at, decidedBy: r.decided_by ?? null, decidedAt: r.decided_at ?? null,
@@ -370,25 +372,93 @@ async function reviewRow(ctx: Ctx, id: string) {
 }
 const isAdmin = (u: User) => u.permissions.includes('admin');
 function assertReviewer(r: Row, user: User) {
-  if (r.reviewer !== user.id && !isAdmin(user)) throw new Problem(403, 'Forbidden', 'Nur die zugewiesene Prüferin bzw. der zugewiesene Prüfer (oder Administration) bearbeitet das Länderreview.');
+  // Vertretung der Ansprechperson des Marktes (ADR-108, O-09) darf ebenso prüfen
+  if (r.reviewer !== user.id && r.deputy !== user.id && !isAdmin(user)) throw new Problem(403, 'Forbidden', 'Nur die zugewiesene Prüferin bzw. der zugewiesene Prüfer (oder Administration) bearbeitet das Länderreview.');
 }
 
-/** Länderreview anfordern: Prüferin bzw. Prüfer und Markt; eine Runde je Übersetzung zur Zeit */
+/** Länderreview anfordern: Prüferin bzw. Prüfer und Markt; ohne Prüfer die Ansprechperson des Marktes (O-09); eine Runde je Übersetzung zur Zeit */
 export async function requestReview(ctx: Ctx, translationId: string, input: { reviewer?: unknown; market?: unknown }, user: User) {
   const t = await translationRow(ctx, translationId);
   if (t.status !== 'draft') throw conflict('Die Übersetzung ist bereits freigegeben.');
-  const reviewer = String(input.reviewer ?? '').trim();
-  const u = await ctx.db.get('SELECT id, disabled_at FROM users WHERE id = ?', reviewer);
-  if (!u || u.disabled_at) throw badRequest('reviewer muss ein aktiver Benutzer sein.');
   const market = input.market ? String(input.market).trim().toUpperCase() : null;
   if (market && !/^[A-Z]{2}$/.test(market)) throw badRequest('market ist ein Ländercode mit zwei Buchstaben (z. B. CH).');
+  const contact = market ? await marketReviewerFor(ctx, market, t.language) : null;
+  let reviewer = String(input.reviewer ?? '').trim();
+  let deputy: string | null = null;
+  let assignedBy = 'manual';
+  if (!reviewer) {
+    if (!market) throw badRequest('reviewer oder market angeben.');
+    if (!contact) throw badRequest(`Für den Markt ${market} ist keine Ansprechperson hinterlegt – bitte unter „Ansprechpersonen je Markt“ eintragen oder eine Prüferin bzw. einen Prüfer wählen.`);
+    // Ansprechperson, bei deaktiviertem Konto die Vertretung
+    const active = async (id: string | null) => !!id && !!(await ctx.db.get('SELECT 1 FROM users WHERE id = ? AND disabled_at IS NULL', id));
+    if (await active(contact.user_id)) (reviewer = contact.user_id, deputy = (await active(contact.deputy_user_id)) ? contact.deputy_user_id : null);
+    else if (await active(contact.deputy_user_id)) reviewer = contact.deputy_user_id;
+    else throw badRequest(`Ansprechperson und Vertretung für den Markt ${market} sind nicht aktiv.`);
+    assignedBy = 'market';
+  } else if (contact && contact.user_id === reviewer) deputy = contact.deputy_user_id ?? null;
+  const u = await ctx.db.get('SELECT id, disabled_at FROM users WHERE id = ?', reviewer);
+  if (!u || u.disabled_at) throw badRequest('reviewer muss ein aktiver Benutzer sein.');
   if (await ctx.db.get("SELECT 1 FROM translation_reviews WHERE translation_id = ? AND status = 'open'", translationId)) throw conflict('Es läuft bereits ein Länderreview.');
   const id = newId('rev');
   await ctx.db.tx(async () => {
-    await ctx.db.run("INSERT INTO translation_reviews (id, project_id, translation_id, reviewer, market, status, requested_by, requested_at) VALUES (?, ?, ?, ?, ?, 'open', ?, ?)", id, ctx.projectId, translationId, reviewer, market, user.id, now());
-    await audit(ctx, user.id, 'translation_review.requested', 'translation', translationId, { reviewer, market });
+    await ctx.db.run("INSERT INTO translation_reviews (id, project_id, translation_id, reviewer, market, status, requested_by, requested_at, deputy, assigned_by) VALUES (?, ?, ?, ?, ?, 'open', ?, ?, ?, ?)",
+      id, ctx.projectId, translationId, reviewer, market, user.id, now(), deputy, assignedBy);
+    await audit(ctx, user.id, 'translation_review.requested', 'translation', translationId, { reviewer, deputy, market, assignedBy });
   });
   return reviewDto(ctx, await reviewRow(ctx, id));
+}
+
+// ---------------------------------------------------------------- Ansprechperson je Markt (ADR-108, O-09)
+
+/** Eintrag für Markt und Sprache, sonst für den Markt (alle Sprachen) */
+async function marketReviewerFor(ctx: Ctx, market: string, language: string) {
+  return (await ctx.db.get('SELECT * FROM market_reviewers WHERE project_id = ? AND market = ? AND language = ?', ctx.projectId, market, language.toLowerCase()))
+    ?? ctx.db.get("SELECT * FROM market_reviewers WHERE project_id = ? AND market = ? AND language = ''", ctx.projectId, market);
+}
+
+export async function listMarketReviewers(ctx: Ctx) {
+  const names = new Map((await ctx.db.all('SELECT id, name, disabled_at FROM users')).map((u) => [u.id as string, { name: u.name as string, active: !u.disabled_at }]));
+  return (await ctx.db.all('SELECT * FROM market_reviewers WHERE project_id = ? ORDER BY market, language', ctx.projectId)).map((r) => ({
+    market: r.market as string, language: (r.language as string) || null, userId: r.user_id as string, userName: names.get(r.user_id)?.name ?? r.user_id, userActive: names.get(r.user_id)?.active ?? false,
+    deputyUserId: r.deputy_user_id ?? null, deputyName: r.deputy_user_id ? names.get(r.deputy_user_id)?.name ?? r.deputy_user_id : null, note: r.note ?? null, updatedBy: r.updated_by, updatedAt: r.updated_at,
+  }));
+}
+
+export async function setMarketReviewer(ctx: Ctx, input: { market?: unknown; language?: unknown; userId?: unknown; deputyUserId?: unknown; note?: unknown }, user: User) {
+  const market = String(input.market ?? '').trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(market)) throw badRequest('market ist ein Ländercode mit zwei Buchstaben (z. B. CH).');
+  const language = typeof input.language === 'string' ? input.language.trim().toLowerCase() : '';
+  if (language && !LANGUAGES[language]) throw badRequest(`language muss eine der Sprachen sein (${Object.keys(LANGUAGES).join(', ')}) oder leer.`);
+  const userId = String(input.userId ?? '').trim();
+  const deputy = typeof input.deputyUserId === 'string' && input.deputyUserId.trim() ? input.deputyUserId.trim() : null;
+  for (const id of [userId, deputy].filter(Boolean) as string[]) {
+    const u = await ctx.db.get('SELECT disabled_at FROM users WHERE id = ?', id);
+    if (!u || u.disabled_at) throw badRequest(`Benutzer ${id} ist nicht aktiv.`);
+  }
+  if (deputy === userId) throw badRequest('Die Vertretung muss eine andere Person sein.');
+  const note = typeof input.note === 'string' ? input.note.trim().slice(0, 300) || null : null;
+  await ctx.db.run(
+    `INSERT INTO market_reviewers (project_id, market, language, user_id, deputy_user_id, note, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (project_id, market, language) DO UPDATE SET user_id = excluded.user_id, deputy_user_id = excluded.deputy_user_id, note = excluded.note, updated_by = excluded.updated_by, updated_at = excluded.updated_at`,
+    ctx.projectId, market, language, userId, deputy, note, user.id, now(),
+  );
+  await audit(ctx, user.id, 'market_reviewer.set', 'market', market, { language, userId, deputy });
+  return listMarketReviewers(ctx);
+}
+
+export async function deleteMarketReviewer(ctx: Ctx, market: string, language: string, user: User) {
+  const n = (await ctx.db.run('DELETE FROM market_reviewers WHERE project_id = ? AND market = ? AND language = ?', ctx.projectId, market.toUpperCase(), language.toLowerCase())).changes;
+  if (!n) throw notFound(`Ansprechperson für ${market}${language ? ` (${language})` : ''}`);
+  await audit(ctx, user.id, 'market_reviewer.deleted', 'market', market.toUpperCase(), { language });
+}
+
+/** Offene Länderreviews, bei denen ich Prüferin bzw. Prüfer oder Vertretung bin */
+export async function myReviews(ctx: Ctx, user: User) {
+  const rows = await ctx.db.all(
+    `SELECT r.*, t.language, c.title FROM translation_reviews r JOIN translations t ON t.id = r.translation_id JOIN chapters c ON c.id = t.chapter_id
+     WHERE r.project_id = ? AND r.status = 'open' AND (r.reviewer = ? OR r.deputy = ?) ORDER BY r.requested_at`, ctx.projectId, user.id, user.id,
+  );
+  return Promise.all(rows.map(async (r) => ({ ...(await reviewDto(ctx, r)), language: r.language as string, chapterTitle: r.title as string, asDeputy: r.reviewer !== user.id })));
 }
 
 export async function addReviewError(ctx: Ctx, reviewId: string, input: { blockId?: unknown; category?: unknown; severity?: unknown; note?: unknown }, user: User) {

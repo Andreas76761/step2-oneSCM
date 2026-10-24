@@ -698,8 +698,11 @@ export function StylePage() {
   const canGlobalAdmin = !!me.data?.globalPermissions?.includes('admin');
   const [tab, setTab] = useState<'text' | 'chapter' | 'snippets' | 'rules'>('text');
   const empty = useMemo(() => '', []);
+  // lokale Grammatikprüfung (ADR-108, G-04)
+  const lt = useLoad<any>('/style/language-tool');
   return (
     <Page title="Schreibstil" subtitle="Professioneller Stil, Grammatik und Präsens – problematische Sätze sind gelb markiert und direkt bearbeitbar">
+      {lt.data && <p className="small muted" role="status">LanguageTool: {lt.data.available ? `verbunden (${(lt.data.languages ?? []).join(', ')})` : lt.data.configured ? 'nicht erreichbar – Prüfung mit den eigenen Regeln' : 'nicht eingerichtet – Prüfung mit den eigenen Regeln'}</p>}
       <div className="tabs" role="tablist" aria-label="Textquelle">
         {(['text', 'chapter', 'snippets', 'rules'] as const).map((t) => (
           <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>

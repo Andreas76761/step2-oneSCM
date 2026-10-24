@@ -3,7 +3,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { getSettings, type Ctx } from '../context.js';
 import { badRequest, Problem } from '../problem.js';
 import {
-  addReviewError, blockMemory, decideReview, deleteTm, exportGlossary, exportTm, exportTranslationFile, glossary, importGlossary, importTm, importTranslationFile, listReviews,
+  addReviewError, blockMemory, deleteMarketReviewer, listMarketReviewers, myReviews, setMarketReviewer, decideReview, deleteTm, exportGlossary, exportTm, exportTranslationFile, glossary, importGlossary, importTm, importTranslationFile, listReviews,
   listTm, removeReviewError, requestReview, runBackcheck, translateReleaseLetter, updateTm,
 } from '../services/translationWorkflow.js';
 import { userOf } from './helpers.js';
@@ -74,6 +74,14 @@ export function translationWorkflowRoutes(app: FastifyInstance, _ctx: Ctx) {
     reply.code(201);
     return requestReview(req.ctx, req.params.translationId, req.body ?? {}, user);
   });
+  // Ansprechperson je Markt (ADR-108, O-09): lesen alle, pflegen Administration
+  app.get('/market-reviewers', async (req) => (userOf(req.ctx, req), listMarketReviewers(req.ctx)));
+  app.put<{ Body: any }>('/market-reviewers', async (req) => setMarketReviewer(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+  app.delete<{ Params: { market: string }; Querystring: { language?: string } }>('/market-reviewers/:market', async (req, reply) => {
+    await deleteMarketReviewer(req.ctx, req.params.market, req.query.language ?? '', userOf(req.ctx, req, 'admin'));
+    reply.code(204);
+  });
+  app.get('/translation-reviews/mine', async (req) => ({ items: await myReviews(req.ctx, userOf(req.ctx, req)) }));
   app.post<{ Params: { id: string }; Body: any }>('/translation-reviews/:id/errors', async (req, reply) => {
     const user = userOf(req.ctx, req);
     reply.code(201);

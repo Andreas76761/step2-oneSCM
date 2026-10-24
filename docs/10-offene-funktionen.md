@@ -28,7 +28,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | G-01 | **Hausregeln aus `GRAMMATIK.md` als Prüfregeln** – deutsche Anführungszeichen „…“ (G-Z1), Halbgeviertstrich mit Leerzeichen (G-Z2), Menüpfad mit › (G-Z3), kein Punkt nach Überschrift (G-Z4), Zahlen bis zwölf ausschreiben (G-N1), Tausenderpunkt/Dezimalkomma (G-N2), geschütztes Leerzeichen vor Einheit und % (G-N3), Datum TT.MM.JJJJ (G-N4), Zeitraum mit Halbgeviertstrich (G-N6), Produktname „oneSCM“ (G-R1) | Arbeitsordner, Wortliste Screenarchiv | nicht geprüft (nur im Arbeitsordner beschrieben) | M | **umgesetzt in Etappe 44 (ADR-097)** |
 | G-02 | **Leerzeichen-Regeln:** mehrfache Leerzeichen, Leerzeichen vor Satzzeichen, wiederholte Satzzeichen, fehlendes Satzende | Releaseletter-Prüfer | teilweise (Zeichensetzung) | S | **war bereits vorhanden (Regel „Zeichensetzung“)** |
 | G-03 | **Rechtschreib-Fehlerliste erweitern** (52 DE/EN-Einträge wie „Standart“) und **Fachbegriffe-Whitelist** (82 Begriffe: oneSCM, VIN, BTO …), Import/Export | Releaseletter-Prüfer | teilweise (eigene Liste, keine Whitelist, kein Import) | S | **umgesetzt in Etappe 44 (ADR-097)** |
-| G-04 | **Lokale Grammatikprüfung mit LanguageTool** (selbst betrieben, Deutsch und Englisch): Kongruenz, Kommasetzung, Groß-/Kleinschreibung über Regeln hinaus | DokuPress-Konzept (F-11) | nicht vorhanden | M | **übernehmen**, sofern LanguageTool lokal betrieben werden darf (Java-Dienst oder Docker) |
+| G-04 | **Lokale Grammatikprüfung mit LanguageTool** (selbst betrieben, Deutsch und Englisch): Kongruenz, Kommasetzung, Groß-/Kleinschreibung über Regeln hinaus | DokuPress-Konzept (F-11) | nicht vorhanden | M | **umgesetzt in Etappe 55 (ADR-108) – Java-Dienst ohne Docker (Entscheidung 24.10.2026)** |
 | G-05 | **Fehlerliste in der App** – gefundene Sprachfehler mit Fundstelle, Korrektur, Kategorie, Status; Abgleich mit `FEHLERLISTE.csv` des Arbeitsordners | Arbeitsordner (sprach-lektor) | nicht vorhanden (nur als Datei) | M | **umgesetzt in Etappe 50 (ADR-103)** |
 | G-06 | **Englische Texte prüfen:** a/an, „i“ → „I“, Satzanfang, Tippfehler (für Releaseletter EN und Übersetzungen) | Releaseletter-Prüfer | nicht vorhanden – Schreibstil nur Deutsch | S | **umgesetzt in Etappe 44 (ADR-097)** |
 | G-07 | **KI-Lektorat mit Diff:** Korrekturen gelb markiert, beim Überfahren das Original, Übernahme je Kapitel oder alle | Ticket-Cockpit v3.0 | teilweise (KI-Vorschlag je Absatz mit Vergleich, Stil-Korrektur je Kapitel) | S | **umgesetzt in Etappe 51 (ADR-104)** |
@@ -96,7 +96,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 7. **Etappe 52 – Textvarianten und Prüferprofile (✅ umgesetzt, ADR-105):** S-05, W-12.
 8. **Etappe 53 – Vorher/Nachher, PowerPoint und BPMN, Zwischenbilder (✅ umgesetzt, ADR-106):** W-05, W-07, W-10.
 9. **Etappe 54 – Textbausteine, schnellere Übersicht (✅ umgesetzt, ADR-107):** W-11.
-10. **Danach nur nach Entscheidung des Auftraggebers:** G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen), Schreibweise offener Begriffe (S-04), O-09.
+10. **Etappe 55 – LanguageTool lokal, Ansprechperson je Markt (✅ umgesetzt, ADR-108):** G-04, O-09 (Entscheidungen 24.10.2026).
+11. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 24.10.2026 keine Auswahl), Schreibweise offener Begriffe (S-04, entscheidet die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

@@ -1,5 +1,6 @@
 // Schreibstil (ADR-040) und Bilder aus Text (ADR-041)
 import type { FastifyInstance } from 'fastify';
+import { languageToolStatus } from '../services/languageTool.js';
 import type { Ctx } from '../context.js';
 import { deleteDiagramTemplate, generateDiagrams, listDiagramTemplates, saveDiagram, saveDiagramTemplate } from '../services/diagrams.js';
 import { styleHistory, applyChapterTexts, copyStyleRules, exportStyleRules, importStyleRules, getStyleRules, updateStyleRules, autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, getTone, rewriteText } from '../services/style.js';
@@ -19,6 +20,8 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.post<{ Body: { text?: unknown; language?: unknown; product?: unknown; roles?: unknown } }>('/style/check', async (req) => (userOf(req.ctx, req), checkText(req.ctx, req.body?.text, req.body?.language, { product: req.body?.product, roles: req.body?.roles })));
   // Tonalität je Produktart und Rolle (ADR-102, S-02); geändert wird sie über PUT /style/rules (tone)
   app.get('/style/tone', async (req) => (userOf(req.ctx, req), getTone(req.ctx)));
+  // lokale Grammatikprüfung (ADR-108, G-04): eingerichtet und erreichbar?
+  app.get('/style/language-tool', async (req) => (userOf(req.ctx, req), languageToolStatus(req.ctx.config.languageTool)));
   // Umformulieren verändert nichts Gespeichertes; KI-Nutzung erfordert Bearbeitungsrecht
   app.post<{ Body: any }>('/style/rewrite', async (req) => rewriteText(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit').id));
   app.get<{ Params: { versionId: string } }>('/style/chapter-versions/:versionId', async (req) => (userOf(req.ctx, req), checkChapterVersion(req.ctx, req.params.versionId)));

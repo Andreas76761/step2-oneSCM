@@ -62,6 +62,11 @@ export interface AppConfig {
   help: { embedOrigins: string[] };
   /** Lokale Werkzeuge für Video und Texterkennung (ADR-090, M6) */
   mediaTools: MediaToolsConfig;
+  /**
+   * Lokale Grammatikprüfung mit LanguageTool (ADR-108, G-04): Adresse des selbst betriebenen Java-Dienstes, z. B.
+   * http://localhost:8081; nur lokale bzw. interne Adressen – null = nicht eingerichtet
+   */
+  languageTool: { url: string | null; timeoutMs: number };
 }
 
 /**
@@ -200,6 +205,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
       transcribeCmd: process.env.TRANSCRIBE_CMD?.trim() || null, ocrCmd: process.env.OCR_CMD?.trim() || null, ocrBoxesCmd: process.env.OCR_BOXES_CMD?.trim() || null,
       ffmpeg: process.env.FFMPEG_PATH?.trim() || null, transientStills: process.env.MEDIA_TRANSIENT_STILLS !== 'false', timeoutMs: Number(process.env.MEDIA_TOOL_TIMEOUT_MS ?? 30 * 60_000), ...overrides.mediaTools,
     },
+    languageTool: { url: process.env.LANGUAGETOOL_URL?.trim().replace(/\/+$/, '') || null, timeoutMs: Number(process.env.LANGUAGETOOL_TIMEOUT_MS ?? 8000), ...overrides.languageTool },
   };
 }
 

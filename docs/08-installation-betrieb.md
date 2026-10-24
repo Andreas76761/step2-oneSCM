@@ -1,6 +1,6 @@
 # 08 Installation und Betrieb
 
-Stand: Version 0.54 (24.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
+Stand: Version 0.55 (24.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
 
 ## 1. Welche Installation passt?
 
@@ -75,6 +75,8 @@ Alle Einstellungen sind Umgebungsvariablen; die vollständige Liste steht im REA
 | `TRANSCRIBE_CMD` | – | lokale Transkription von Videos, z. B. whisper.cpp |
 | `FFMPEG_PATH` | – | ffmpeg für Standbilder aus Videos |
 | `MEDIA_TRANSIENT_STILLS` | an | `false` schaltet die Zwischenbilder kurzer Zustände (Menü, Dialog) aus Videos ab (ADR-106) |
+| `LANGUAGETOOL_URL` | – | lokale Grammatikprüfung mit LanguageTool (ADR-108), z. B. `http://localhost:8081`; nur lokale bzw. interne Adressen – Start und Einrichtung siehe `tools/languagetool/README.md` |
+| `LANGUAGETOOL_TIMEOUT_MS` | 8000 | Zeitlimit je Prüfanfrage an LanguageTool |
 | `OCR_CMD` | – | lokale Texterkennung gescannter PDF-Seiten, z. B. Tesseract |
 | `OCR_BOXES_CMD` | aus `OCR_CMD` abgeleitet | Texterkennung mit Wortpositionen für den Datenschutz im Bild; bei Tesseract genügt `OCR_CMD` (die App hängt `tsv` an) |
 
@@ -88,6 +90,16 @@ $env:TRANSCRIBE_CMD = 'C:\Tools\whisper\whisper-cli.exe -m C:\Tools\whisper\ggml
 ```
 
 Die Seite „oneSCM_Metadaten › Einlesen“ zeigt, welche Werkzeuge eingerichtet sind – auch „Datenschutz im Bild“. Ohne Texterkennung markieren Sie Stellen in Bildern von Hand.
+
+### LanguageTool (optional)
+
+Die Grammatikprüfung mit LanguageTool läuft als eigener Java-Dienst neben der App (Java 17 oder neuer, rund 1 GB Arbeitsspeicher):
+
+1. LanguageTool besorgen – offizielles Paket oder über Maven: im Ordner `tools/languagetool` `mvn -q dependency:copy-dependencies -DoutputDirectory=lib`.
+2. Starten: `tools/languagetool/start-languagetool.sh` bzw. `start-languagetool.cmd` (lauscht nur auf `localhost:8081`).
+3. In der App `LANGUAGETOOL_URL=http://localhost:8081` setzen und neu starten. Unter „Einstellungen“ und „Schreibstil“ steht dann „verbunden“.
+
+Ohne LanguageTool prüft die App mit den eigenen Regeln.
 
 ## 6. Sicherung, Wiederherstellung, Aktualisierung
 

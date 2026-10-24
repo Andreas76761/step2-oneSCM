@@ -79,6 +79,6 @@ Daten bleiben lokal. Die KI läuft nur über den eingerichteten Dienst; an exter
 - Migration 054: `translation_memory`, `translation_reviews`, `translation_backchecks`; `translation_blocks.tm_id` und `.tm_score`; `release_letters.translation_of` und `.translation_issues`.
 - Neue Blockmodi `memory` (aus dem Speicher) und `imported` (Büro).
 - Das Länderreview ist optional. Ob es für bestimmte Sprachen Pflicht werden soll, ist offen.
-- Die Ansprechperson je Land (O-09) bleibt offen; in der App ist es ein Benutzer.
+- Die Ansprechperson je Land (O-09) ist seit Etappe 55 ein Benutzer je Markt mit Vertretung (ADR-108).
 - Die Rückübersetzung braucht einen KI-Dienst. Mit externem Dienst überspringt sie Absätze mit personenbezogenen Daten.
 - Arabisch, Asiatisches und weitere Sprachen sind nicht Teil der Entscheidung (U-07, weitere Märkte offen).

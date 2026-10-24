@@ -3086,3 +3086,42 @@ test('[T-344] Textbausteine: wiederkehrenden Absatz übernehmen, verknüpfen, ne
   await expect(usage.getByText('aktuell')).toHaveCount(2);
   expect(await axe()).toEqual([]);
 });
+
+test('[T-348] Ansprechperson je Markt mit Vertretung, Länderreview automatisch, „Meine Länderreviews“; Status LanguageTool – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const adm = { 'X-User-Id': 'u-admin' };
+  const proj = (await (await request.get('/api/v1/projects', { headers: adm })).json()).find((p: any) => p.id === 'p_default');
+  const languages = [...new Set([...(proj?.languages ?? []), 'fr'])];
+  await request.patch('/api/v1/projects/p_default', { headers: adm, data: { languages } });
+  const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: 'E2E Länderreview Frankreich', purpose: 'Mit dieser Anleitung legen Sie einen Vertrag an.', steps: ['Öffnen Sie **Verträge**', 'Klicken Sie auf **Neu**'], result: 'Der Vertrag ist gespeichert.' } })).json();
+  expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/submit`, { headers: red, data: {} })).ok()).toBe(true);
+  expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+  const tr = await (await request.post('/api/v1/translations', { headers: red, data: { chapterId: ch.chapterId, language: 'fr' } })).json();
+
+  // Administration: Ansprechperson für Frankreich mit Vertretung
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.goto('/einstellungen');
+  const card = page.getByRole('group', { name: 'Ansprechperson festlegen' });
+  await card.getByLabel('Markt', { exact: true }).fill('FR');
+  await card.getByRole('combobox', { name: 'Ansprechperson', exact: true }).selectOption({ label: 'Fachprüfung (Demo)' });
+  await card.getByRole('combobox', { name: 'Vertretung', exact: true }).selectOption({ label: 'Freigabe (Demo)' });
+  await card.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Ansprechperson für FR gespeichert.')).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Ansprechpersonen je Markt' })).toContainText('Fachprüfung (Demo)');
+  await expect(page.getByText(/nicht eingerichtet|verbunden|nicht erreichbar/).first()).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // Redaktion fordert ohne Prüferin an → Ansprechperson des Marktes; die Vertretung sieht es unter „Meine Länderreviews“
+  const rev = await (await request.post(`/api/v1/translations/${tr.id}/reviews`, { headers: red, data: { market: 'FR' } })).json();
+  expect(rev).toMatchObject({ reviewer: 'u-fachpruefung', deputy: 'u-freigabe', assignedBy: 'market' });
+  await page.getByLabel('Demo-Benutzer').selectOption('u-freigabe');
+  await page.goto('/uebersetzungen');
+  const mine = page.getByRole('list', { name: 'Meine Länderreviews' });
+  await expect(mine).toContainText('E2E Länderreview Frankreich');
+  await expect(mine).toContainText('als Vertretung für Fachprüfung (Demo)');
+  expect(await axe()).toEqual([]);
+});

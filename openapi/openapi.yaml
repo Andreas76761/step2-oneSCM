@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.54.0
+  version: 0.55.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3097,6 +3097,65 @@ paths:
         '200': { description: '{ version, updated: [{ chapterId, title, versionId, blocks }], skipped: [{ chapterId, title, reason }], module }' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /market-reviewers:
+    get:
+      operationId: listMarketReviewers
+      summary: 'Ansprechpersonen je Land/Markt für das Länderreview mit Vertretung, optional je Sprache (ADR-108, O-09)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-141]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ market, language, userId, userName, userActive, deputyUserId, deputyName, note }]' }
+    put:
+      operationId: setMarketReviewer
+      summary: 'Ansprechperson für Markt (und Sprache) festlegen bzw. ändern (Berechtigung admin)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-141]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [market, userId], properties: { market: { type: string, pattern: '^[A-Za-z]{2}$' }, language: { type: string }, userId: { type: string }, deputyUserId: { type: string }, note: { type: string, maxLength: 300 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Liste der Ansprechpersonen' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /market-reviewers/{market}:
+    delete:
+      operationId: deleteMarketReviewer
+      summary: 'Ansprechperson eines Marktes entfernen (language = Sprache des Eintrags, leer = alle Sprachen; Berechtigung admin)'
+      tags: [Übersetzung]
+      x-requirements: [NFR-141]
+      x-extension: true
+      parameters:
+        - { name: market, in: path, required: true, schema: { type: string } }
+        - { name: language, in: query, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'entfernt' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /translation-reviews/mine:
+    get:
+      operationId: myTranslationReviews
+      summary: 'Offene Länderreviews, bei denen ich Prüferin bzw. Prüfer oder Vertretung bin'
+      tags: [Übersetzung]
+      x-requirements: [NFR-141]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ items: [{ id, translationId, chapterTitle, language, market, reviewerName, asDeputy, requestedAt }] }' }
+  /style/language-tool:
+    get:
+      operationId: getLanguageToolStatus
+      summary: 'Lokale Grammatikprüfung mit LanguageTool (ADR-108, G-04): eingerichtet (LANGUAGETOOL_URL, nur lokale bzw. interne Adressen), erreichbar, Sprachen'
+      tags: [Schreibstil]
+      x-requirements: [NFR-140]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ configured, available, languages, reason }' }
   /style/tone:
     get:
       operationId: getStyleTone
@@ -6339,13 +6398,13 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
     post:
       operationId: requestTranslationReview
-      summary: 'Länderreview anfordern: Prüferin bzw. Prüfer und Markt (Berechtigung edit)'
+      summary: 'Länderreview anfordern: Prüferin bzw. Prüfer und Markt; ohne reviewer geht es an die Ansprechperson des Marktes, bei gesperrtem Konto an die Vertretung (ADR-108, O-09; Berechtigung edit)'
       tags: [Übersetzung]
-      x-requirements: [NFR-120]
+      x-requirements: [NFR-120, NFR-141]
       x-extension: true
       parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }]
       requestBody:
-        content: { application/json: { schema: { type: object, required: [reviewer], properties: { reviewer: { type: string }, market: { type: string, pattern: '^[A-Za-z]{2}$' } } } } }
+        content: { application/json: { schema: { type: object, properties: { reviewer: { type: string }, market: { type: string, pattern: '^[A-Za-z]{2}$' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '201': { description: 'Review' }

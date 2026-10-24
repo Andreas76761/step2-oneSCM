@@ -9,6 +9,7 @@ import { assessReadability, AUDIENCES, readability, type Audience } from '../dom
 import { LANGUAGES } from '../domain/translate.js';
 import { cleanToneSettings, DEFAULT_TONE_SETTINGS, isProduct, resolveTone, TONE_HINT, TONE_LABEL, toneOverview, type Product, type Tone, type ToneSettings } from '../domain/tone.js';
 import { LlmError } from '../llm.js';
+import { languageToolIssues, languageToolMany } from './languageTool.js';
 import { badRequest, Problem, unprocessable } from '../problem.js';
 import { getChapterVersion, patchBlock } from './chapters.js';
 import { mapHeader, parseCsv } from '../domain/tabular.js';
@@ -221,7 +222,13 @@ export async function checkText(ctx: Ctx, text: unknown, language: unknown = 'de
   const lang = typeof language === 'string' && language ? language.toLowerCase() : 'de';
   if (!PHRASE_LANGUAGES.includes(lang)) throw badRequest(`language: erlaubt sind ${PHRASE_LANGUAGES.join(', ')}.`);
   const opts = await styleOptionsFor(ctx, lang, toneScope(scope));
-  return { text: t, language: lang, tone: opts.tone ? { tone: opts.tone, label: TONE_LABEL[opts.tone] } : null, ...withLabels(analyzeStyle(t, opts)) };
+  // lokale Grammatikprüfung (ADR-108, G-04), sofern eingerichtet
+  const lt = await languageToolIssues(ctx.config.languageTool, t, lang);
+  return {
+    text: t, language: lang, tone: opts.tone ? { tone: opts.tone, label: TONE_LABEL[opts.tone] } : null,
+    languageTool: { used: !!lt && !lt.error, error: lt?.error ?? null },
+    ...withLabels(analyzeStyle(t, { ...opts, extraIssues: lt?.issues })),
+  };
 }
 
 const SYSTEM_PROMPT = `Du überarbeitest Texte eines Software-Benutzerhandbuchs (oneSCM) auf Deutsch.
@@ -298,13 +305,18 @@ export async function checkChapterVersion(ctx: Ctx, versionId: string) {
   const opts = await options(ctx);
   // Ton je Absatz (ADR-102): Rollenprofil, wenn der Absatz genau einer Rolle zugeordnet ist, sonst Ton des Handbuchs
   const toneOf = (roles: string[]) => (opts.tone ? resolveTone(opts.toneSettings, { product: 'manual', roles }).tone : null);
-  const blocks = v.sections.flatMap((s) => s.blocks.filter((b: any) => b.kind !== 'gap' && b.kind !== 'xref').map((b: any) => {
+  const raw = v.sections.flatMap((s) => s.blocks.filter((b: any) => b.kind !== 'gap' && b.kind !== 'xref').map((b: any) => ({ s, b })));
+  // lokale Grammatikprüfung (ADR-108, G-04) je Absatz, sofern eingerichtet
+  const lt = await languageToolMany(ctx.config.languageTool, raw.map(({ b }) => b.text as string), 'de');
+  const blocks = raw.map(({ s, b }, i) => {
     const tone = toneOf(b.roles ?? []);
-    return { id: b.id as string, section: s.title, kind: b.kind as string, versionNo: b.versionNo as number, text: b.text as string, tone, analysis: withLabels(analyzeStyle(b.text, { ...opts, tone })) };
-  }));
+    return { id: b.id as string, section: s.title, kind: b.kind as string, versionNo: b.versionNo as number, text: b.text as string, tone, analysis: withLabels(analyzeStyle(b.text, { ...opts, tone, extraIssues: lt[i]?.issues })) };
+  });
+  const ltErrors = lt.filter((x) => x?.error).length;
   return {
     version: { id: v.id, chapterId: v.chapterId, versionNo: v.versionNo, status: v.status, title: v.title, editable: v.status === 'draft' },
     summary: { blocks: blocks.length, withProblems: blocks.filter((b) => b.analysis.problemSentences).length },
+    languageTool: { used: lt.some((x) => x && !x.error), errors: ltErrors },
     // Lesbarkeit des Kapitels mit Sollwerten der Zielgruppe (ADR-097, S-01)
     readability: assessReadability(readability(blocks.map((b) => b.text)), opts.audience),
     blocks,

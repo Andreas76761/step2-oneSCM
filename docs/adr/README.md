@@ -109,3 +109,4 @@
 | [ADR-105](ADR-105-textvarianten-pruefprofile.md) | Textvarianten je Kapitel (Endanwender, Fachtext, Kurzfassung ~¼, Exportprofil) und vier Prüferprofile (fachlich, Redaktion, Compliance, Endanwender) mit Wert, Ampel und optional lokalem KI-Dienst | akzeptiert, umgesetzt |
 | [ADR-106](ADR-106-vorher-nachher-pptx-zwischenbilder.md) | Vorher/Nachher-Belege mit Schieberegler und Gegenüberstellung, Ausgabe als PowerPoint, Klickstrecke als BPMN 2.0, Zwischenbilder kurzer Zustände aus Videos | akzeptiert, umgesetzt |
 | [ADR-107](ADR-107-textbausteine-uebersicht.md) | Textbausteine (Single Sourcing) mit Fassungen, Verwendung und Aktualisieren in Entwürfen; Zwischenspeicher der Übersicht oneSCM_Metadaten | akzeptiert, umgesetzt |
+| [ADR-108](ADR-108-languagetool-ansprechperson-markt.md) | Lokale Grammatikprüfung mit LanguageTool als Java-Dienst; Ansprechperson je Land/Markt mit Vertretung für das Länderreview | akzeptiert, umgesetzt |

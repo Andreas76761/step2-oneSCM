@@ -2598,5 +2598,42 @@
     "requirements": [
       "NFR-138"
     ]
+  },
+  {
+    "id": "T-345",
+    "title": "LanguageTool: Markdown neutralisieren ohne Stellen zu verschieben, Treffer übernehmen, Maskierungsfehler und doppelte Funde vermeiden, nur lokale Adressen (Einheit)",
+    "file": "apps/server/test/stage55.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-140"
+    ]
+  },
+  {
+    "id": "T-346",
+    "title": "Stilprüfung mit lokalem LanguageTool: Funde mit Korrektur, Kapitelprüfung mit Zwischenspeicher, Status; nicht erreichbar bzw. nicht lokal: eigene Regeln",
+    "file": "apps/server/test/stage55.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-140"
+    ]
+  },
+  {
+    "id": "T-347",
+    "title": "Ansprechperson je Markt mit Vertretung: Länderreview automatisch zuweisen, Vertretung prüft, gesperrte Ansprechperson, „Meine Länderreviews“, Berechtigung",
+    "file": "apps/server/test/stage55.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-141"
+    ]
+  },
+  {
+    "id": "T-348",
+    "title": "Ansprechperson je Markt in den Einstellungen, Länderreview automatisch, „Meine Länderreviews“ der Vertretung, Status LanguageTool – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-140",
+      "NFR-141"
+    ]
   }
 ]

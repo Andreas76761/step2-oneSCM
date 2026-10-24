@@ -38,6 +38,11 @@ export interface StyleOptions {
   allowed?: string[];
   /** Ton (ADR-102, S-02): sachlich, freundlich, formell oder knapp – nur deutsche Texte */
   tone?: Tone | null;
+  /**
+   * Funde eines externen Prüfdienstes (ADR-108, G-04: LanguageTool) mit Stellen im Text; sie zählen wie eigene Funde,
+   * außer an Stellen, die eine eigene Regel schon meldet
+   */
+  extraIssues?: StyleIssue[];
 }
 
 export const RULE_LABEL: Record<StyleRule, string> = {
@@ -309,6 +314,12 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
         for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(avoid)}(?![\p{L}])`, 'giu'))) add('terminology', 'warning', `Terminologie: „${term.preferred}“ statt „${m[0]}“`, m.index!, m.index! + m[0].length, { replacement: term.preferred, label: `„${term.preferred}“` });
       }
     }
+  }
+  // Funde des externen Dienstes dem Satz zuordnen; was eine eigene Regel an derselben Stelle meldet, zählt nur einmal
+  for (const x of opts.extraIssues ?? []) {
+    const s = sentences.find((y) => x.start >= y.start && x.start < Math.max(y.end, y.start + 1));
+    if (!s || s.issues.some((i) => i.start < x.end && x.start < i.end)) continue;
+    s.issues.push(x);
   }
   // erlaubte Begriffe (Whitelist) und ausgeschaltete Regeln herausfiltern
   for (const s of sentences) {

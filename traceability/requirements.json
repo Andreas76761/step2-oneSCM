@@ -1446,5 +1446,23 @@
     "documentation": [
       "docs/adr/ADR-107-textbausteine-uebersicht.md"
     ]
+  },
+  {
+    "id": "NFR-140",
+    "title": "Lokale Grammatikprüfung mit LanguageTool als Java-Dienst (nur lokale bzw. interne Adresse): Funde in der Stilprüfung mit Korrektur, Markdown neutralisiert, ohne Dienst eigene Regeln",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-108-languagetool-ansprechperson-markt.md"
+    ]
+  },
+  {
+    "id": "NFR-141",
+    "title": "Ansprechperson je Land/Markt mit Vertretung, optional je Sprache: Länderreview automatisch zuweisen, Vertretung prüft und übernimmt bei gesperrtem Konto, „Meine Länderreviews“",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-108-languagetool-ansprechperson-markt.md"
+    ]
   }
 ]

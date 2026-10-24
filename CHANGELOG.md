@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.55.0 – Etappe 55 (24.10.2026)
+
+Entscheidungen des Auftraggebers vom 24.10.2026: G-04 LanguageTool als Java-Dienst ohne Docker; O-09 Benutzer je Land/Markt als Ansprechperson mit Vertretung; U-07 ohne Auswahl (bleibt offen).
+
+### Hinzugefügt
+- **Lokale Grammatikprüfung mit LanguageTool (ADR-108, G-04):**
+  - Die Stilprüfung von Texten und Kapiteln nutzt einen selbst betriebenen LanguageTool-Dienst (`LANGUAGETOOL_URL`, nur lokale bzw. interne Adressen).
+  - Funde als Grammatik, Rechtschreibung, Zeichensetzung und Groß-/Kleinschreibung mit Korrektur per Klick; Markdown wird neutralisiert, ohne Stellen zu verschieben.
+  - Ohne Dienst gelten die eigenen Regeln. Status in Schreibstil und Einstellungen.
+  - `tools/languagetool` mit Startskripten (Linux/macOS, Windows) und `pom.xml` für LanguageTool 6.6 aus Maven Central.
+  - Geprüft mit dem echten LanguageTool 6.6 unter OpenJDK 21.
+- **Ansprechperson je Markt (O-09):**
+  - Je Land/Markt (optional je Sprache) ein Benutzer mit Vertretung, gepflegt in den Einstellungen.
+  - Länderreviews ohne gewählte Prüferin gehen automatisch an die Ansprechperson, bei gesperrtem Konto an die Vertretung. Die Vertretung darf prüfen.
+  - „Meine Länderreviews“ auf der Seite Übersetzungen.
+- Tests T-345 … T-347, E2E T-348 (axe); Anforderungen NFR-140, NFR-141; Migration 061.
+
 ## 0.54.0 – Etappe 54 (24.10.2026)
 
 ### Hinzugefügt

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, del, put } from '../api';
-import { Decision, Card, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+
+import { Decision, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export function SettingsPage() {
   const { ref, notify } = useApp();
@@ -100,6 +101,8 @@ export function SettingsPage() {
           <p className="small muted">Die Datenschutzprüfung meldet außerdem E-Mail, Telefon, IBAN, Fahrgestellnummer, Kennzeichen, Benutzerkennung, Straßenadresse und Namen hinter Feldern wie „Autor:“ oder „Assignee:“. Treffer blockieren Freigabe und Export.</p>
         </Card>
         <LayoutCard />
+        <MarketReviewersCard />
+        <LanguageToolCard />
         <Card title="KI-Umformulierung">
           <label className="block">Mindestabdeckung je Satz durch die zitierten Quellen (0,1–1)
             <input type="number" step="0.05" min="0.1" max="1" value={draft.rewrite.minSupport} onChange={(e) => setDraft({ ...draft, rewrite: { minSupport: Number(e.target.value) } })} />
@@ -219,5 +222,80 @@ function LlmUsage() {
         </table>
       )}
     </>
+  );
+}
+
+/** Lokale Grammatikprüfung mit LanguageTool (ADR-108, G-04): Status des Java-Dienstes */
+function LanguageToolCard() {
+  const st = useLoad<any>('/style/language-tool');
+  const d = st.data;
+  return (
+    <Card title="Grammatikprüfung (LanguageTool)">
+      <ErrorBox error={st.error} />
+      {d && (d.available
+        ? <p><span className="tag st-approved">verbunden</span> Sprachen: {(d.languages ?? []).join(', ') || '–'}</p>
+        : <p><span className="tag sev-medium">{d.configured ? 'nicht erreichbar' : 'nicht eingerichtet'}</span> {d.reason}</p>)}
+      <p className="small muted">LanguageTool läuft als lokaler Java-Dienst (tools/languagetool, Umgebungsvariable LANGUAGETOOL_URL, nur lokale bzw. interne Adressen). Die Funde erscheinen in der Stilprüfung als Grammatik, Rechtschreibung, Zeichensetzung und Groß-/Kleinschreibung mit Korrektur per Klick. Ohne Dienst prüft die App mit den eigenen Regeln.</p>
+    </Card>
+  );
+}
+
+/** Ansprechperson je Land/Markt für das Länderreview mit Vertretung (ADR-108, O-09) */
+function MarketReviewersCard() {
+  const { notify } = useApp();
+  const list = useLoad<any[]>('/market-reviewers');
+  const people = useLoad<any[]>('/collaborators');
+  const [f, setF] = useState({ market: '', language: '', userId: '', deputyUserId: '', note: '' });
+  const save = async () => {
+    try {
+      list.setData(await put<any[]>('/market-reviewers', { ...f, language: f.language || undefined, deputyUserId: f.deputyUserId || undefined }));
+      notify(`Ansprechperson für ${f.market.toUpperCase()} gespeichert.`);
+      setF({ market: '', language: '', userId: '', deputyUserId: '', note: '' });
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const remove = async (market: string, language: string | null) => {
+    try {
+      await del(`/market-reviewers/${market}${language ? `?language=${encodeURIComponent(language)}` : ''}`);
+      notify(`Ansprechperson für ${market} entfernt.`);
+      list.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const person = (id: string, label: string, set: (v: string) => void, optional = false) => (
+    <label>{label}
+      <select value={id} onChange={(e) => set(e.target.value)}>
+        <option value="">{optional ? '– keine –' : '– wählen –'}</option>
+        {(people.data ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+      </select>
+    </label>
+  );
+  return (
+    <Card title="Ansprechpersonen je Markt (Länderreview)">
+      <p className="small muted">Fordert die Redaktion ein Länderreview ohne Prüferin bzw. Prüfer an, geht es an die Ansprechperson des Marktes; die Vertretung kann ebenso prüfen und übernimmt, wenn das Konto der Ansprechperson gesperrt ist. Ein Eintrag mit Sprache gilt vor dem Eintrag für alle Sprachen.</p>
+      {!list.data?.length ? <Empty>Noch keine Ansprechpersonen.</Empty> : (
+        <div className="table-wrap" role="region" aria-label="Ansprechpersonen je Markt" tabIndex={0}>
+          <table className="table compact">
+            <caption className="sr-only">Ansprechpersonen je Markt</caption>
+            <thead><tr><th scope="col">Markt</th><th scope="col">Sprache</th><th scope="col">Ansprechperson</th><th scope="col">Vertretung</th><th scope="col"><span className="sr-only">Aktion</span></th></tr></thead>
+            <tbody>{list.data.map((r) => (
+              <tr key={`${r.market}-${r.language ?? ''}`}>
+                <td>{r.market}</td><td>{r.language ?? 'alle'}</td><td>{r.userName}{!r.userActive && <span className="tag sev-medium"> gesperrt</span>}</td><td>{r.deputyName ?? '–'}</td>
+                <td><button type="button" className="btn small" aria-label={`Ansprechperson ${r.market} ${r.language ?? ''} entfernen`} onClick={() => void remove(r.market, r.language)}>Entfernen</button></td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      )}
+      <div className="form-row" role="group" aria-label="Ansprechperson festlegen">
+        <label>Markt <input value={f.market} size={4} maxLength={2} placeholder="CH" onChange={(e) => setF({ ...f, market: e.target.value.toUpperCase() })} /></label>
+        <label>Sprache <input value={f.language} size={6} maxLength={8} placeholder="alle" onChange={(e) => setF({ ...f, language: e.target.value.toLowerCase() })} /></label>
+        {person(f.userId, 'Ansprechperson', (v) => setF({ ...f, userId: v }))}
+        {person(f.deputyUserId, 'Vertretung', (v) => setF({ ...f, deputyUserId: v }), true)}
+        <button type="button" className="btn" disabled={f.market.length !== 2 || !f.userId} onClick={() => void save()}>Speichern</button>
+      </div>
+    </Card>
   );
 }

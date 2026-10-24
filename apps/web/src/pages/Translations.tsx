@@ -24,6 +24,8 @@ export function TranslationsPage() {
   const current = (list.data ?? []).filter((t) => !t.outdated);
   // Übersetzungswünsche aus der Leseransicht (ADR-075)
   const requests = useLoad<any[]>('/translation-requests');
+  // offene Länderreviews, bei denen ich Ansprechperson bzw. Vertretung bin (ADR-108, O-09)
+  const mine = useLoad<{ items: any[] }>('/translation-reviews/mine');
   const create = async (language: string, forChapter = chapterId) => {
     try {
       const t = await post<any>('/translations', { chapterId: forChapter, language });
@@ -40,6 +42,18 @@ export function TranslationsPage() {
     <Page title="Übersetzungen" subtitle="Freigegebene deutsche Kapitel in die Zielsprachen des Projekts übersetzen – mit Übersetzungsspeicher, Satz-Zuordnung, Prüfungen, Länderreview und Freigabe je Sprache"
       actions={<span className="row-actions"><Link className="btn small" to="/uebersetzungen/speicher">Übersetzungsspeicher</Link><Link className="btn small" to="/uebersetzungen/glossar">Glossar je Sprache</Link></span>}>
       {!projectLangs.length && <div className="alert">Für dieses Projekt sind keine Zielsprachen festgelegt. Die Administration legt sie unter <Link to="/projekte">Projekte</Link> fest.</div>}
+      {!!mine.data?.items.length && (
+        <Card title={`Meine Länderreviews (${mine.data.items.length})`}>
+          <ul className="plain" aria-label="Meine Länderreviews">
+            {mine.data.items.map((r) => (
+              <li key={r.id}>
+                <button type="button" className="linklike" onClick={() => (setChapterId(approved.find((c) => c.title === r.chapterTitle)?.id ?? chapterId), setOpenId(r.translationId))}>{r.chapterTitle}</button>
+                <span className="small muted"> · {name(r.language)}{r.market ? ` · Markt ${r.market}` : ''}{r.asDeputy ? ` · als Vertretung für ${r.reviewerName}` : ''} · seit {new Date(r.requestedAt).toLocaleDateString('de-DE')}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
       {!!requests.data?.length && (
         <Card title={`Gewünschte Übersetzungen (${requests.data.length})`}>
           <p className="small muted">Leserinnen und Leser haben diese Kapitel in der Leseransicht angefordert – meistgewünschte zuerst. Erledigt ist ein Wunsch, sobald die Übersetzung der aktuellen Fassung freigegeben ist.</p>
@@ -287,7 +301,8 @@ function ReviewPanel({ translation: d, me, canEdit, mqm, onChanged }: { translat
   const [err, setErr] = useState({ blockId: '', category: 'accuracy', severity: 'minor', note: '' });
   const [comment, setComment] = useState('');
   const r = d.review;
-  const isReviewer = r && (r.reviewer === me?.id || me?.permissions?.includes('admin'));
+  // Vertretung der Ansprechperson des Marktes prüft ebenso (ADR-108, O-09)
+  const isReviewer = r && (r.reviewer === me?.id || r.deputy === me?.id || me?.permissions?.includes('admin'));
   const act = async (fn: () => Promise<unknown>, msg: string) => {
     try {
       await fn();
@@ -306,7 +321,7 @@ function ReviewPanel({ translation: d, me, canEdit, mqm, onChanged }: { translat
         <>
           <p className="small">
             <strong>{r.status === 'open' ? 'offen' : r.status === 'returned' ? 'zurück an Übersetzung' : r.status === 'approved' ? 'vom Land freigegeben' : r.status}</strong>
-            {' '}– {r.reviewerName}{r.market ? ` (${r.market})` : ''} · {r.score.points} MQM-Punkte bei {r.score.words} Wörtern = {r.score.per1000 === null ? '–' : String(r.score.per1000).replace('.', ',')} je 1 000 Wörter
+            {' '}– {r.reviewerName}{r.deputyName ? `, Vertretung ${r.deputyName}` : ''}{r.market ? ` (${r.market}${r.assignedBy === 'market' ? ', Ansprechperson des Marktes' : ''})` : ''} · {r.score.points} MQM-Punkte bei {r.score.words} Wörtern = {r.score.per1000 === null ? '–' : String(r.score.per1000).replace('.', ',')} je 1 000 Wörter
             {' '}(<span className={r.score.pass ? '' : 'sev-text'}>{r.score.pass ? 'bestanden' : `über ${r.threshold}`}</span>){r.comment ? ` · „${r.comment}“` : ''}
           </p>
           {r.errors.length > 0 && (
@@ -360,12 +375,12 @@ function ReviewPanel({ translation: d, me, canEdit, mqm, onChanged }: { translat
         <div className="filters">
           <label>Prüferin / Prüfer
             <select value={form.reviewer} onChange={(e) => setForm({ ...form, reviewer: e.target.value })}>
-              <option value="">– wählen –</option>
+              <option value="">automatisch – Ansprechperson des Marktes</option>
               {(people.data ?? []).map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </label>
           <label>Markt (Ländercode) <input value={form.market} size={4} maxLength={2} placeholder="CH" onChange={(e) => setForm({ ...form, market: e.target.value.toUpperCase() })} /></label>
-          <button className="btn small" disabled={!form.reviewer} onClick={() => void act(() => post(`/translations/${d.id}/reviews`, { reviewer: form.reviewer, market: form.market || undefined }), r ? 'Neue Runde des Länderreviews angefordert.' : 'Länderreview angefordert.')}>
+          <button className="btn small" disabled={!form.reviewer && form.market.length !== 2} onClick={() => void act(() => post(`/translations/${d.id}/reviews`, { reviewer: form.reviewer || undefined, market: form.market || undefined }), r ? 'Neue Runde des Länderreviews angefordert.' : 'Länderreview angefordert.')}>
             {r ? 'Erneut anfordern' : 'Länderreview anfordern'}
           </button>
         </div>

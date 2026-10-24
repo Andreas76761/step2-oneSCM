@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.57 Stand nach Etappe 55 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Lokale Grammatikprüfung mit LanguageTool als Java-Dienst (G-04, NFR-140; Entscheidung 24.10.2026) | ✅ ([ADR-108](adr/ADR-108-languagetool-ansprechperson-markt.md)), mit echtem LanguageTool 6.6 geprüft |
+| Ansprechperson je Land/Markt mit Vertretung im Länderreview (O-09, NFR-141; Entscheidung 24.10.2026) | ✅ |
+| Offen | U-07 weitere Sprachen und Märkte (ohne Auswahl am 24.10.2026); Schreibweise offener Begriffe (S-04, entscheidet die Redaktion); Benachrichtigung der Ansprechperson |
+
 ## 1.56 Stand nach Etappe 54 (24.10.2026)
 
 | Punkt | Ergebnis |
