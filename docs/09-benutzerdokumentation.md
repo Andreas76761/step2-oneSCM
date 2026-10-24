@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.60 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.61 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -121,7 +121,8 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
     - **Quick Reference Guide:** A4 quer, kompakt, Profil Quick Guide.
     - **Handbuch-Kapitel (Fachdokumentation):** A4 hoch, ausführlich.
   - Die Karte „Designvorlagen“ unten auf der Seite zeigt mit „Muster ansehen“ jede Vorlage mit fiktiven Inhalten. „Für den Export wählen“ stellt Format, Design und Profil ein.
-  - Die HTML-Datei öffnen Sie im Browser und speichern sie über „Drucken → Als PDF speichern“. Kopf- und Fußzeilen mit Seitenzahl und Stand erscheinen dabei auf jeder Seite.
+  - **PDF im Design:** Ist auf dem Server ein Browser eingerichtet (Hinweis „PDF im Design ist eingerichtet“), wählen Sie Format PDF und das Design. Das PDF entsteht direkt, „Muster als PDF“ lädt das Muster herunter.
+  - Sonst öffnen Sie die HTML-Datei im Browser und speichern sie über „Drucken → Als PDF speichern“. Kopf- und Fußzeilen mit Seitenzahl und Stand erscheinen dabei auf jeder Seite.
   - Marke, Logo und Fußzeile kommen aus **Einstellungen → Layout**. Dort gibt es auch „Zusatz unter der Marke“, „Dokumentart in der Kopfzeile“ und „Wichtige Links und Ansprechpartner“ (Markdown).
 - **Textvarianten:** ein Kapitel in drei Fassungen nebeneinander – Endanwender (was zu tun ist), Fachtext (vollständig mit Rollen und Quellenstatus) und Kurzfassung für das Management (etwa ein Viertel der Länge) – mit Wortzahl und Download als Markdown. Die Kurzfassung entsteht aus Zweck, Ergebnis, Warnhinweisen und Ablauf; mit „Kurzfassung mit KI-Dienst“ formuliert ein lokaler KI-Dienst sie, ohne neue Zahlen hinzuzufügen.
 - **Textbausteine:** wiederkehrende Absätze einmal pflegen. „Wiederkehrende Absätze“ zeigt gleich lautende Absätze in mehreren Kapiteln; „Als Textbaustein anlegen“ übernimmt einen davon. „Gleiche Absätze verknüpfen“ verbindet die Kapitel mit dem Baustein, „In Kapitel einfügen“ setzt ihn ans Ende eines Abschnitts. Nach einer Änderung („Neue Fassung speichern“) sind die Kapitel „veraltet“; „In Kapitel aktualisieren“ übernimmt die Fassung in die Entwürfe – freigegebene Versionen bleiben bis zur nächsten Freigabe gültig. In der Werkstatt trägt ein verknüpfter Absatz das Kennzeichen „🧩 Textbaustein“; wer seinen Text ändert, löst die Verknüpfung.

@@ -2,13 +2,25 @@
 import type { Ctx } from '../context.js';
 import { DESIGN_INFO, renderDesign, type Design } from '../domain/designs.js';
 import { SAMPLE_FACHDOKU, SAMPLE_QUICKREF, SAMPLE_SHA, sampleScreenshot } from '../domain/designSamples.js';
-import { notFound } from '../problem.js';
+import { badRequest, notFound, Problem } from '../problem.js';
+import { htmlToPdf, pdfBrowserAvailable } from './pdfBrowser.js';
 import { dataUri } from './media.js';
 import { resolveLayout } from './layout.js';
 import { markdownToHtml } from './render.js';
 
-export function listDesignTemplates() {
-  return Object.entries(DESIGN_INFO).map(([id, d]) => ({ id, ...d, sampleUrl: `/api/v1/design-templates/${id}/sample` }));
+/** Vorlagen mit Formaten: html immer, pdf nur mit lokalem Browser (ADR-113) */
+export function listDesignTemplates(ctx: Ctx) {
+  const formats = pdfBrowserAvailable(ctx.config.pdfBrowser) ? ['html', 'pdf'] : ['html'];
+  return Object.entries(DESIGN_INFO).map(([id, d]) => ({ id, ...d, formats, sampleUrl: `/api/v1/design-templates/${id}/sample` }));
+}
+
+/** Muster als PDF (ADR-113) */
+export async function designSamplePdf(ctx: Ctx, id: string): Promise<Buffer> {
+  const html = await designSample(ctx, id);
+  if (!pdfBrowserAvailable(ctx.config.pdfBrowser)) throw badRequest('PDF im Design braucht einen lokal installierten Chromium, Chrome oder Edge (PDF_BROWSER_PATH).');
+  return htmlToPdf(ctx.config.pdfBrowser, html).catch((e: Error) => {
+    throw new Problem(503, 'Service Unavailable', `PDF im Design konnte nicht erzeugt werden: ${e.message}`);
+  });
 }
 
 /** Muster einer Designvorlage als HTML – fiktive Inhalte, Marke, Logo und Texte aus dem Firmen-Layout des Projekts */

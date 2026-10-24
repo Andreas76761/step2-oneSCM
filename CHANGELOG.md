@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.61.0 – Etappe 61 (24.10.2026)
+
+### Hinzugefügt
+- **PDF im Design (ADR-113):** Quick Reference Guide und Handbuch-Kapitel entstehen direkt als PDF. Dafür druckt ein lokal installierter Chromium, Chrome oder Edge (`PDF_BROWSER_PATH`) die Vorlage:
+  - ohne Shell, mit eigenem Profil im Temp-Ordner und mit Zeitlimit (`PDF_BROWSER_TIMEOUT_MS`);
+  - ohne Netz, alle Namen lösen ins Leere auf;
+  - Seitenformat, Kopf- und Fußzeilen mit Seitenzahl wie in der Vorlage.
+- `POST /exports` mit `format: pdf` und `design`; `GET /design-templates` nennt die verfügbaren `formats`; `GET /design-templates/:id/sample?format=pdf` liefert das Muster als PDF.
+- Seite **Export:**
+  - Hinweis, ob PDF im Design eingerichtet ist;
+  - Auswahl „Design“ auch beim Format PDF;
+  - Schaltfläche „Muster als PDF“;
+  - „Für den Export wählen“ stellt PDF ein, wenn verfügbar.
+- Tests T-362 (Druckaufruf, Fehler), T-363 (API mit Ersatzbrowser, ohne Browser, defekter Browser) und E2E T-364 (mit Chromium aus Playwright); Anforderung NFR-148.
+
+### Geändert
+- Ohne eingerichteten Browser lehnt die App PDF im Design mit Hinweis auf `PDF_BROWSER_PATH` und das HTML-Format ab (400). Scheitert der Browser, kommt 503 mit der Fehlermeldung des Browsers.
+- Die E2E-Konfiguration richtet für den Server den Chromium von Playwright als PDF-Browser ein (`PDF_BROWSER_NO_SANDBOX=1`).
+- Korrektur aus CI (Etappe 60): Die Karten der Designvorlagen sind keine benannten Regionen mehr. Die Karte „Handbuch-Kapitel“ machte `getByLabel('Handbuch')` in T-222 mehrdeutig; die Überschrift bleibt.
+
 ## 0.60.0 – Etappe 60 (24.10.2026)
 
 Wunsch des Auftraggebers vom 24.10.2026: Er hat zwei Muster geliefert (einen Quick Reference Guide und ein Handbuch-Kapitel) mit der Bitte, sie detailgetreu als Designvorlagen anzulegen und professionelle Icons zu nutzen.

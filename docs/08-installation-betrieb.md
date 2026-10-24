@@ -1,6 +1,6 @@
 # 08 Installation und Betrieb
 
-Stand: Version 0.60 (24.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
+Stand: Version 0.61 (24.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
 
 ## 1. Welche Installation passt?
 
@@ -77,6 +77,9 @@ Alle Einstellungen sind Umgebungsvariablen; die vollständige Liste steht im REA
 | `MEDIA_TRANSIENT_STILLS` | an | `false` schaltet die Zwischenbilder kurzer Zustände (Menü, Dialog) aus Videos ab (ADR-106) |
 | `LANGUAGETOOL_URL` | – | lokale Grammatikprüfung mit LanguageTool (ADR-108), z. B. `http://localhost:8081`; nur lokale bzw. interne Adressen – Start und Einrichtung siehe `tools/languagetool/README.md` |
 | `LANGUAGETOOL_TIMEOUT_MS` | 8000 | Zeitlimit je Prüfanfrage an LanguageTool |
+| `PDF_BROWSER_PATH` | – | PDF im Design (ADR-113): Pfad zu einem lokal installierten Chromium, Chrome oder Edge, z. B. `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe` oder `/usr/bin/chromium` |
+| `PDF_BROWSER_TIMEOUT_MS` | 60000 | Zeitlimit je PDF |
+| `PDF_BROWSER_NO_SANDBOX` | aus | `1` startet den Browser ohne Sandbox – nur in Containern, in denen er als root läuft |
 | `OCR_CMD` | – | lokale Texterkennung gescannter PDF-Seiten, z. B. Tesseract |
 | `OCR_BOXES_CMD` | aus `OCR_CMD` abgeleitet | Texterkennung mit Wortpositionen für den Datenschutz im Bild; bei Tesseract genügt `OCR_CMD` (die App hängt `tsv` an) |
 
@@ -100,6 +103,16 @@ Die Grammatikprüfung mit LanguageTool läuft als eigener Java-Dienst neben der 
 3. In der App `LANGUAGETOOL_URL=http://localhost:8081` setzen und neu starten. Unter „Einstellungen“ und „Schreibstil“ steht dann „verbunden“.
 
 Ohne LanguageTool prüft die App mit den eigenen Regeln.
+
+### PDF im Design (optional)
+
+Die Designvorlagen Quick Reference Guide und Handbuch-Kapitel (ADR-112) gibt es auch direkt als PDF. Dazu druckt die App die Vorlage mit einem lokal installierten Browser:
+
+1. Einen Chromium-Browser bereitstellen – unter Windows genügt das vorhandene Edge, unter Linux z. B. das Paket `chromium`.
+2. `PDF_BROWSER_PATH` auf die Programmdatei setzen und die App neu starten.
+3. Auf der Seite „Export“ steht dann „PDF im Design ist eingerichtet“; beim Format PDF erscheint die Auswahl „Design“.
+
+Die App startet den Browser ohne Shell, mit eigenem Profil im Temp-Ordner und mit Zeitlimit. Der Browser hat kein Netz: Alle Namen lösen ins Leere auf, die Vorlage enthält keine Skripte und bettet ihre Bilder ein. Läuft die App in einem Container als root, setzen Sie `PDF_BROWSER_NO_SANDBOX=1`. Ohne Browser bleibt das HTML-Format; im Browser speichern Sie es über „Drucken → Als PDF speichern“.
 
 ## 6. Sicherung, Wiederherstellung, Aktualisierung
 

@@ -2,7 +2,7 @@
 import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson } from '../db.js';
 import { DIVISIONS, ROLES } from '../domain/reference.js';
-import { badRequest, conflict, notFound } from '../problem.js';
+import { badRequest, conflict, notFound, Problem } from '../problem.js';
 import { gateForChapter, getChapterVersion } from './chapters.js';
 import { escapeHtml, markdownToHtml, markdownToPdf, renderPdf } from './render.js';
 import { assertIdsInProject } from './projects.js';
@@ -21,6 +21,7 @@ import { DEFAULT_CRITERION } from '../domain/revision.js';
 import { extractiveSummary } from '../domain/textVariants.js';
 import { transitionsFor } from './transitions.js';
 import { applyVariants } from './imageArchive.js';
+import { htmlToPdf, pdfBrowserAvailable } from './pdfBrowser.js';
 import { DESIGNS, renderDesign, type Design, type DesignChapter } from '../domain/designs.js';
 
 type Media = Map<string, MediaFile>;
@@ -443,7 +444,11 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   chapters.sort((a, b) => a.position - b.position);
   const design: Design = input.design ?? 'standard';
   if (!(DESIGNS as readonly string[]).includes(design)) throw badRequest(`design muss eines von ${DESIGNS.join(', ')} sein.`);
-  if (design !== 'standard' && format !== 'html') throw badRequest('Designvorlagen gibt es für das Format html (druckfähig, als PDF speicherbar).');
+  if (design !== 'standard' && format !== 'html' && format !== 'pdf') throw badRequest('Designvorlagen gibt es für die Formate html und pdf.');
+  // PDF im Design (ADR-113) druckt ein lokaler Browser; ohne ihn bleibt HTML (im Browser als PDF speichern)
+  if (design !== 'standard' && format === 'pdf' && !pdfBrowserAvailable(ctx.config.pdfBrowser)) {
+    throw badRequest('PDF im Design braucht einen lokal installierten Chromium, Chrome oder Edge (PDF_BROWSER_PATH). Alternativ: Format html und im Browser als PDF speichern.');
+  }
   const profile = input.profile ?? (design === 'quickref' ? 'quickguide' : 'full');
   if (input.reviewCopy && format !== 'docx') throw badRequest('Die Prüffassung gibt es nur als Word-Datei (format docx).');
   const review = input.reviewCopy
@@ -475,7 +480,13 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   const media = format === 'json' ? new Map() : await loadMedia(ctx, visible(chapters, filter).flatMap((ch) => ch.sections.flatMap((s) => s.blocks.map((b: any) => b.text as string))));
   let data: Buffer;
   let preview: string | null;
-  if (format === 'pdf') {
+  if (format === 'pdf' && design !== 'standard') {
+    const html = renderDesignExport(design, chapters, filter, media, { ...extras, title: outline?.name });
+    data = await htmlToPdf(ctx.config.pdfBrowser, html).catch((e: Error) => {
+      throw new Problem(503, 'Service Unavailable', `PDF im Design konnte nicht erzeugt werden: ${e.message}`);
+    });
+    preview = null;
+  } else if (format === 'pdf') {
     data = await renderPdfExport(chapters, filter, media, extras);
     preview = null;
   } else if (format === 'docx') {

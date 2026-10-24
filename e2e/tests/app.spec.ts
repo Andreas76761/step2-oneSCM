@@ -3297,9 +3297,9 @@ test('[T-361] Designvorlagen: Quick Reference Guide und Handbuch-Kapitel als Mus
   expect(await axe(fd)).toEqual([]);
   await fd.close();
 
-  // Für den Export wählen: Format HTML, Design und Profil Quick Guide gesetzt
+  // Für den Export wählen: Format (PDF, da der E2E-Server einen Browser hat – ADR-113), Design und Profil Quick Guide gesetzt
   await card.locator('.design-template', { hasText: 'Quick Reference Guide' }).getByRole('button', { name: 'Für den Export wählen' }).click();
-  await expect(page.getByLabel('Format')).toHaveValue('html');
+  await expect(page.getByLabel('Format')).toHaveValue('pdf');
   await expect(page.getByLabel('Design')).toHaveValue('quickref');
   await expect(page.getByLabel('Ausgabe')).toHaveValue('quickguide');
   await page.getByLabel('Format').selectOption('md');
@@ -3311,4 +3311,36 @@ test('[T-361] Designvorlagen: Quick Reference Guide und Handbuch-Kapitel als Mus
   await expect(page.getByLabel('Zusatz unter der Marke')).toBeVisible();
   await expect(page.getByLabel('Dokumentart in der Kopfzeile')).toBeVisible();
   await expect(page.getByLabel(/Wichtige Links und Ansprechpartner/)).toBeVisible();
+});
+
+test('[T-364] PDF im Design: Hinweis auf den lokalen Browser, Muster als PDF, Export als Quick Reference Guide und Handbuch-Kapitel – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/export');
+  const card = page.locator('.card', { has: page.getByRole('heading', { name: 'Designvorlagen' }) });
+  await expect(card.getByRole('note')).toContainText('PDF im Design ist eingerichtet');
+  // Muster als PDF herunterladen
+  const [sample] = await Promise.all([page.waitForEvent('download'), card.locator('.design-template', { hasText: 'Handbuch-Kapitel' }).getByRole('button', { name: 'Muster als PDF' }).click()]);
+  expect(sample.suggestedFilename()).toBe('muster-fachdoku.pdf');
+  expect(fs.readFileSync(await sample.path()).subarray(0, 5).toString()).toBe('%PDF-');
+
+  // Export: Format PDF mit Design – braucht ein freigegebenes Kapitel (aus den vorigen Tests vorhanden)
+  await page.getByLabel('Format').selectOption('pdf');
+  await page.getByLabel('Design').selectOption('quickref');
+  await expect(page.getByLabel('Ausgabe')).toHaveValue('quickguide');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByRole('status')).toContainText('Export erstellt');
+  const button = page.getByRole('button', { name: /onescm-handbuch-quickref-quickguide-.*\.pdf herunterladen/ });
+  await expect(button).toBeVisible();
+  const [file] = await Promise.all([page.waitForEvent('download'), button.click()]);
+  expect(file.suggestedFilename()).toMatch(/^onescm-handbuch-quickref-quickguide-\d{4}-\d{2}-\d{2}\.pdf$/);
+  expect(fs.readFileSync(await file.path()).subarray(0, 5).toString()).toBe('%PDF-');
+  expect(await axe()).toEqual([]);
+  // Handbuch-Kapitel über die API: PDF im Hochformat
+  const h = { 'X-User-Id': 'u-redaktion' };
+  const exp = await (await request.post('/api/v1/exports', { headers: h, data: { format: 'pdf', design: 'fachdoku', profile: 'full' } })).json();
+  expect(exp.fileName).toMatch(/-fachdoku-.*\.pdf$/);
+  const pdf = await (await request.get(exp.downloadUrl, { headers: h })).body();
+  expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
 });

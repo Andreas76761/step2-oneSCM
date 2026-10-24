@@ -1,4 +1,4 @@
-import { BookOpenIcon, CheckIcon, EyeIcon, ZapIcon } from 'lucide-react';
+import { BookOpenIcon, CheckIcon, DownloadIcon, EyeIcon, FileTextIcon, InfoIcon, ZapIcon } from 'lucide-react';
 import { Ico, OkMark } from '../components/icons';
 import { useState } from 'react';
 import { api, post } from '../api';
@@ -23,6 +23,13 @@ export function ExportPage() {
   // Designvorlage für HTML (ADR-112): Quick Reference Guide oder Handbuch-Kapitel
   const [design, setDesign] = useState('standard');
   const templates = useLoad<any[]>('/design-templates');
+  // PDF im Design (ADR-113) nur mit lokalem Browser auf dem Server
+  const pdfDesign = !!templates.data?.[0]?.formats?.includes('pdf');
+  const designable = format === 'html' || (format === 'pdf' && pdfDesign);
+  const pickDesign = (id: string) => {
+    setDesign(id);
+    if (id === 'quickref') setProfile('quickguide');
+  };
   const [profile, setProfile] = useState('full');
   const [reading, setReading] = useState(false);
   const [transitions, setTransitions] = useState(true);
@@ -37,7 +44,7 @@ export function ExportPage() {
   const run = async () => {
     setError(null);
     try {
-      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, asOf: asOf.trim() || undefined, format, profile, reading, ...(format === 'html' && design !== 'standard' ? { design } : {}), transitions, ...(review && format === 'docx' ? { reviewCopy: { criterion: criterion.trim() || undefined } } : {}), ...(outline ? { outlineId, appendices } : {}) });
+      const r = await post('/exports', { chapterIds, roles, divisions: divs, market: market || null, release: release || null, asOf: asOf.trim() || undefined, format, profile, reading, ...(designable && design !== 'standard' ? { design } : {}), transitions, ...(review && format === 'docx' ? { reviewCopy: { criterion: criterion.trim() || undefined } } : {}), ...(outline ? { outlineId, appendices } : {}) });
       setResult(r);
       notify(`Export erstellt (${r.chapters} Kapitel).`);
       history.reload();
@@ -88,10 +95,10 @@ export function ExportPage() {
             <label>Stand (Release) <input value={asOf} onChange={(e) => setAsOf(e.target.value)} placeholder={release || 'z. B. 2026.3'} size={10} title="Kapitel mit späterem „gültig ab“ werden ausgeblendet; leer = Release-Filter" /></label>
             <label>Format <select value={format} onChange={(e) => setFormat(e.target.value)}><option value="md">Markdown</option><option value="html">HTML (druckfähig)</option><option value="pdf">PDF</option><option value="docx">Word (.docx)</option><option value="pptx">PowerPoint (.pptx)</option><option value="json">JSON</option></select></label>
           </div>
-          {format === 'html' && (
+          {designable && (
             <div className="form-row">
               <label>Design
-                <select value={design} onChange={(e) => { setDesign(e.target.value); if (e.target.value === 'quickref') setProfile('quickguide'); }}>
+                <select value={design} onChange={(e) => pickDesign(e.target.value)}>
                   <option value="standard">Standard (Firmen-Layout)</option>
                   {templates.data?.map((t) => <option key={t.id} value={t.id}>{t.name} – {t.page}</option>)}
                 </select>
@@ -138,14 +145,22 @@ export function ExportPage() {
       <Card title="Designvorlagen">
         <p className="small muted">Druckfähige HTML-Vorlagen (im Browser als PDF speichern). Marke, Logo und Texte kommen aus dem Firmen-Layout unter Einstellungen; das Muster zeigt fiktive Inhalte.</p>
         <ErrorBox error={templates.error} />
+        {templates.data && (
+          <p className="small" role="note">
+            {pdfDesign
+              ? <><Ico icon={FileTextIcon} /> PDF im Design ist eingerichtet: Der Server druckt die Vorlage mit einem lokalen Browser, ohne Netz.</>
+              : <><Ico icon={InfoIcon} /> PDF im Design ist nicht eingerichtet (lokaler Browser, PDF_BROWSER_PATH). Bis dahin: Format HTML und im Browser als PDF speichern.</>}
+          </p>
+        )}
         <div className="design-templates">
           {templates.data?.map((t) => (
-            <section key={t.id} className="design-template" aria-labelledby={`dt-${t.id}`}>
-              <h3 id={`dt-${t.id}`}><Ico icon={t.id === 'quickref' ? ZapIcon : BookOpenIcon} size={18} /> {t.name}</h3>
+            <section key={t.id} className="design-template">
+              <h3><Ico icon={t.id === 'quickref' ? ZapIcon : BookOpenIcon} size={18} /> {t.name}</h3>
               <p className="small"><span className="page-format">{t.page}</span> {t.description}</p>
               <div className="actions">
                 <button className="btn" onClick={() => void showSample(t)}><Ico icon={EyeIcon} /> Muster ansehen</button>
-                <button className="btn" onClick={() => { setFormat('html'); setDesign(t.id); if (t.id === 'quickref') setProfile('quickguide'); }}><Ico icon={CheckIcon} /> Für den Export wählen</button>
+                {pdfDesign && <DownloadButton className="btn" href={`/api/v1/design-templates/${t.id}/sample?format=pdf`} name={`muster-${t.id}.pdf`}><Ico icon={DownloadIcon} /> Muster als PDF</DownloadButton>}
+                <button className="btn" onClick={() => { setFormat(pdfDesign ? 'pdf' : 'html'); pickDesign(t.id); }}><Ico icon={CheckIcon} /> Für den Export wählen</button>
               </div>
             </section>
           ))}

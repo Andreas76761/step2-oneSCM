@@ -15,7 +15,7 @@ import { translationStatus } from '../services/translations.js';
 import { buildMatrix, matrixCsv, matrixMarkdown, matrixXlsx } from '../services/traceability.js';
 import { globalSearch } from '../services/search.js';
 import { refreshSearchIndex } from '../services/searchIndex.js';
-import { designSample, listDesignTemplates } from '../services/designTemplates.js';
+import { designSample, designSamplePdf, listDesignTemplates } from '../services/designTemplates.js';
 import { deleteDocxTemplate, getLayout, updateLayout, uploadDocxTemplate } from '../services/layout.js';
 import { list, userOf } from './helpers.js';
 
@@ -31,9 +31,14 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
   });
   app.get('/exports', async (req) => (userOf(req.ctx, req), listExports(req.ctx)));
   // Designvorlagen (ADR-112): Quick Reference Guide und Handbuch-Kapitel mit Muster
-  app.get('/design-templates', async (req) => (userOf(req.ctx, req), listDesignTemplates()));
-  app.get<{ Params: { id: string } }>('/design-templates/:id/sample', async (req, reply) => {
+  app.get('/design-templates', async (req) => (userOf(req.ctx, req), listDesignTemplates(req.ctx)));
+  app.get<{ Params: { id: string }; Querystring: { format?: string } }>('/design-templates/:id/sample', async (req, reply) => {
     userOf(req.ctx, req);
+    // PDF im Design (ADR-113) mit lokalem Browser
+    if (req.query.format === 'pdf') {
+      const pdf = await designSamplePdf(req.ctx, req.params.id);
+      return reply.header('Content-Type', 'application/pdf').header('Content-Disposition', `attachment; filename="muster-${req.params.id}.pdf"`).send(pdf);
+    }
     return reply.header('Content-Type', 'text/html; charset=utf-8').send(await designSample(req.ctx, req.params.id));
   });
   // Firmen-Layout (ADR-038): lesen für alle, ändern nur Administration

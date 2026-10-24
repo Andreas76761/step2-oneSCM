@@ -61,4 +61,4 @@ Die gelieferten Muster tragen das Branding eines Herstellers. Dieses Branding da
 ## Folgen
 - Kontraste der Vorlagen erfüllen WCAG AA. axe prüft die Muster in T-361.
 - Neue Icons für die Vorlagen kommen über das Generator-Skript hinzu, nicht von Hand.
-- Offen: eine PDF-Ausgabe direkt im Design. Bis dahin gilt: HTML öffnen und im Browser als PDF speichern.
+- PDF direkt im Design: umgesetzt in Etappe 61 ([ADR-113](ADR-113-pdf-im-design.md)). Ohne eingerichteten Browser gilt weiter: HTML öffnen und im Browser als PDF speichern.

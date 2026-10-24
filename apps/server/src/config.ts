@@ -67,6 +67,11 @@ export interface AppConfig {
    * http://localhost:8081; nur lokale bzw. interne Adressen – null = nicht eingerichtet
    */
   languageTool: { url: string | null; timeoutMs: number };
+  /**
+   * PDF im Design (ADR-113): lokal installierter Chromium, Chrome oder Edge, der die Designvorlage ohne Netz druckt –
+   * null = nicht eingerichtet (dann nur HTML). noSandbox nur für Container, in denen die Sandbox nicht startet.
+   */
+  pdfBrowser: { path: string | null; timeoutMs: number; noSandbox: boolean };
 }
 
 /**
@@ -205,6 +210,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
       transcribeCmd: process.env.TRANSCRIBE_CMD?.trim() || null, ocrCmd: process.env.OCR_CMD?.trim() || null, ocrBoxesCmd: process.env.OCR_BOXES_CMD?.trim() || null,
       ffmpeg: process.env.FFMPEG_PATH?.trim() || null, transientStills: process.env.MEDIA_TRANSIENT_STILLS !== 'false', timeoutMs: Number(process.env.MEDIA_TOOL_TIMEOUT_MS ?? 30 * 60_000), ...overrides.mediaTools,
     },
+    pdfBrowser: { path: process.env.PDF_BROWSER_PATH?.trim() || null, timeoutMs: Number(process.env.PDF_BROWSER_TIMEOUT_MS ?? 60_000), noSandbox: process.env.PDF_BROWSER_NO_SANDBOX === '1', ...overrides.pdfBrowser },
     languageTool: { url: process.env.LANGUAGETOOL_URL?.trim().replace(/\/+$/, '') || null, timeoutMs: Number(process.env.LANGUAGETOOL_TIMEOUT_MS ?? 8000), ...overrides.languageTool },
   };
 }

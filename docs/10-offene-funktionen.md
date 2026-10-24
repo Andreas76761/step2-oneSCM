@@ -100,8 +100,9 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 11. **Etappe 56 – Regelsätze, Benachrichtigung zum Länderreview (✅ umgesetzt, ADR-109):** S-06; Hinweis an Ansprechperson und Vertretung (offener Punkt aus Etappe 55).
 12. **Etappe 57 – UI-Begriffe in der Terminologie (✅ umgesetzt, ADR-110):** „MO-Prüfungen“ im Fließtext, „MO Checks“ in Menüpfaden und Anführungszeichen (Entscheidung 24.10.2026); SYNONYME.csv übernehmen.
 13. **Etappe 58 und 59 – Professionelle Icons (✅ umgesetzt, ADR-111):** Lucide statt Emoji in der ganzen Oberfläche (Wunsch des Auftraggebers vom 24.10.2026).
-14. **Etappe 60 – Designvorlagen (✅ umgesetzt, ADR-112):** Quick Reference Guide und Handbuch-Kapitel nach den gelieferten Mustern (Wunsch des Auftraggebers vom 24.10.2026). Noch offen ist die PDF-Ausgabe direkt im Design.
-15. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 24.10.2026 keine Auswahl), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+14. **Etappe 60 – Designvorlagen (✅ umgesetzt, ADR-112):** Quick Reference Guide und Handbuch-Kapitel nach den gelieferten Mustern (Wunsch des Auftraggebers vom 24.10.2026). PDF direkt im Design folgt in Etappe 61.
+15. **Etappe 61 – PDF im Design (✅ umgesetzt, ADR-113):** lokaler Browser druckt die Vorlagen ohne Netz.
+16. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 24.10.2026 keine Auswahl), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

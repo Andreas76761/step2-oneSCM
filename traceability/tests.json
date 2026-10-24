@@ -2755,5 +2755,32 @@
     "requirements": [
       "NFR-147"
     ]
+  },
+  {
+    "id": "T-362",
+    "title": "Browser-Druck: Argumente (headless, ohne Netz, eigenes Profil, Sandbox nur abschaltbar), PDF-Prüfung, verständliche Fehler, Temp-Ordner aufgeräumt",
+    "file": "apps/server/test/stage61.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-148"
+    ]
+  },
+  {
+    "id": "T-363",
+    "title": "Export pdf mit design und Muster als PDF mit Ersatzbrowser; formats; ohne Browser 400, defekter Browser 503; PDF ohne Design unverändert",
+    "file": "apps/server/test/stage61.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-148"
+    ]
+  },
+  {
+    "id": "T-364",
+    "title": "PDF im Design in der Oberfläche: Hinweis, Muster als PDF, Export als Quick Reference Guide und Handbuch-Kapitel – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-148"
+    ]
   }
 ]

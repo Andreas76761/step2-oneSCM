@@ -1518,5 +1518,14 @@
     "documentation": [
       "docs/adr/ADR-112-designvorlagen.md"
     ]
+  },
+  {
+    "id": "NFR-148",
+    "title": "PDF im Design: Designvorlagen direkt als PDF über einen lokal installierten Browser (Chromium, Chrome, Edge) – ohne Shell, ohne Netz, mit Zeitlimit und eigenem Profil; ohne Browser verständlich abgelehnt",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-113-pdf-im-design.md"
+    ]
   }
 ]
