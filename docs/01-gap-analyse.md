@@ -195,6 +195,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.48 Stand nach Etappe 46 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Suche v2: Morphologie, Komposita, Kennungen, Abfrageerweiterung, BM25 + Vektor per RRF, MMR (NFR-111) | ✅ ([ADR-099](adr/ADR-099-rag-retrieval-v2.md), Messung [docs/11](11-rag-messung.md)) |
+| Relevanzschwelle mit begründeter Enthaltung, Antwortauswahl (NFR-112) | ✅ |
+| Prüflauf je Verfahren mit nDCG@6, Messbestand mit Regressionsschutz, lokale KI-/Embedding-Dienste (NFR-113) | ✅ |
+| Offen | englische Fragen auf deutsche Quellen ohne Terminologie-Eintrag (lokales mehrsprachiges Modell, nicht gemessen); lokaler neuronaler Reranker; Treueprüfung der KI-Antworten; Übersetzung U-01 … U-10 |
+
 ## 1.47 Stand nach Etappe 45 (24.10.2026)
 
 | Punkt | Ergebnis |

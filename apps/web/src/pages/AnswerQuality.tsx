@@ -12,6 +12,7 @@ const KPIS: [string, string, (v: number | undefined) => string, string][] = [
   ['hitAt1', 'Treffer@1', pct, 'erwartete Quelle an erster Stelle'],
   ['hitAt6', 'Treffer@6', pct, 'erwartete Quelle unter den sechs gefundenen Stellen (Trefferquote)'],
   ['mrr', 'MRR', (v) => (v === undefined ? '–' : v.toFixed(2)), 'mittlerer reziproker Rang der erwarteten Quelle'],
+  ['ndcg6', 'nDCG@6', (v) => (v === undefined ? '–' : v.toFixed(2)), 'wie weit oben die passenden Stellen unter den sechs gefundenen stehen (1 = ideal)'],
   ['citedRate', 'Beleg richtig', pct, 'Antwort belegt mit einer erwarteten Quelle'],
   ['keywordCoverage', 'Stichworte', pct, 'Anteil der erwarteten Stichworte in der Antwort'],
   ['noAnswerAccuracy', 'Lücken richtig', pct, 'Lückenfragen ohne Antwort („keine Aussage in den Quellen“)'],
@@ -39,6 +40,7 @@ export function AnswerQualityPage() {
   const run = useLoad<any>(runId ? `/metadata/eval-runs/${runId}` : null, [runId]);
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
+  const [method, setMethod] = useState<'v1' | 'v2'>('v2');
   const [onlyFailed, setOnlyFailed] = useState(false);
   const [q, setQ] = useState({ question: '', sources: '', keywords: '', gap: false });
 
@@ -91,7 +93,7 @@ export function AnswerQualityPage() {
   const start = async () => {
     setBusy(true);
     try {
-      const r = await post<any>(`/metadata/eval-sets/${sel}/runs`, {});
+      const r = await post<any>(`/metadata/eval-sets/${sel}/runs`, { method });
       notify(`Prüflauf fertig: ${r.metrics.passed} von ${r.metrics.questions} Testfragen bestanden.`);
       set.reload();
       sets.reload();
@@ -149,6 +151,14 @@ export function AnswerQualityPage() {
 
       {s && (
         <Card title={s.name} actions={<span className="row-actions">
+          {canEdit && (
+            <label className="inline small" title="v2: Morphologie, Abfrageerweiterung, BM25 + Vektor (RRF), Relevanzschwelle, MMR; v1: bisheriges Verfahren zum Vergleich">Verfahren
+              <select value={method} onChange={(e) => setMethod(e.target.value as 'v1' | 'v2')}>
+                <option value="v2">v2 (Standard)</option>
+                <option value="v1">v1 (bisher, Vergleich)</option>
+              </select>
+            </label>
+          )}
           {canEdit && <button className="btn primary small" disabled={busy || !s.items.length} onClick={() => void start()}>{busy ? 'Prüflauf läuft …' : 'Prüflauf starten'}</button>}
           {canEdit && <button className="btn small ghost" onClick={() => void removeSet()}>Löschen</button>}
         </span>}>
@@ -159,12 +169,12 @@ export function AnswerQualityPage() {
                   <div key={k} className="stat" title={help}>
                     <span className="muted small">{label}</span>
                     <strong>{fmt(r.metrics[k])}</strong>
-                    <Delta v={r.compare?.delta?.[k]} points={k !== 'mrr'} />
+                    <Delta v={r.compare?.delta?.[k]} points={k !== 'mrr' && k !== 'ndcg6'} />
                   </div>
                 ))}
               </div>
               <p className="small muted">
-                {r.metrics.passed} von {r.metrics.questions} bestanden · {r.metrics.withSources} mit erwarteter Quelle · {r.metrics.noAnswerItems} Lückenfragen · {r.config.units} durchsuchte Stellen · {r.config.llm ? `KI: ${r.config.llm.provider}` : 'ohne KI (extraktiv)'} · Ø {r.metrics.avgMs} ms je Frage
+                {r.metrics.passed} von {r.metrics.questions} bestanden · {r.metrics.withSources} mit erwarteter Quelle · {r.metrics.noAnswerItems} Lückenfragen · {r.config.units} durchsuchte Stellen · {r.config.llm ? `KI: ${r.config.llm.provider}` : 'ohne KI (extraktiv)'} · Verfahren {r.config.method ?? 'v1'} · Ø {r.metrics.avgMs} ms je Frage
                 {r.compare && <> · verglichen mit dem Lauf vom {new Date(r.compare.previousAt).toLocaleString('de-DE')}: {r.compare.improved.length} neu bestanden, {r.compare.regressed.length} neu durchgefallen</>}
               </p>
             </>

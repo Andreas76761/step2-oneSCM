@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.46.0 – Etappe 46 (24.10.2026)
+
+### Verbessert
+- **RAG-Komponente „Frage an alle Quellen“ (ADR-099, Messung in [docs/11](docs/11-rag-messung.md)):** neues Suchverfahren v2 (Standard).
+  - Deutsche Morphologie: Partizip, trennbare Verben, Umlaute, Zerlegung von Komposita, Wortteile.
+  - Kennungen wie E-4711 und ONESCM-1234.
+  - Abfrageerweiterung aus Terminologie (Synonyme, Übersetzungen) und Abkürzungen.
+  - BM25 mit Kontextkopf (Datei, Überschriften) und Vektor, verbunden per Reciprocal Rank Fusion.
+  - Relevanzschwelle mit begründeter Enthaltung („in den Quellen nicht gefunden: …“).
+  - MMR-Auswahl ohne Dubletten älterer Fassungen; Satzauswahl im Zusammenhang der Überschrift, bei Mengen- und Zeitfragen bevorzugt mit Zahl.
+- **Gemessen** am fiktiven Messbestand:
+  - Abstimmungssatz: bestanden 53 % → 89 %, Treffer@1 61 % → 81 %, Lückenfragen richtig 20 % → 80 %.
+  - Prüfsatz: bestanden 77 % → 82 %.
+  - Laufzeit bei 2 000 Dokumenten unverändert (Median ca. 210 ms).
+- **KI-Antworten** erhalten die Begriffe der Abfrageerweiterung als Hinweis.
+
+### Hinzugefügt
+- **Antwortqualität:** Prüflauf je Verfahren (v1/v2) und Kennzahl **nDCG@6**, auch im Vergleich mit dem vorigen Lauf.
+- **Lokale KI- und Embedding-Dienste:** `LLM_LOCAL=true` bzw. `EMBEDDINGS_LOCAL=true` mit einer Adresse auf diesem Rechner oder im eigenen Netz (z. B. Ollama). Der Dienst gilt als intern, die Daten bleiben lokal.
+- Messskript `apps/server/scripts/rag-bench.ts` mit fiktivem Messbestand; Tests T-305 … T-307, E2E T-308 (axe); Anforderungen NFR-111 … NFR-113.
+
 ## 0.45.0 – Etappe 45 (24.10.2026)
 
 ### Hinzugefügt

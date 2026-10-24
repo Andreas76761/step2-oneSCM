@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.45.0
+  version: 0.46.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -4956,16 +4956,16 @@ paths:
   /metadata/ask:
     post:
       operationId: askMetadataSources
-      summary: 'Frage an alle eingelesenen Quellen (ADR-089, M5): hybride Suche über Chunks und Teilstücke, Top 20 → Neugewichtung → Top 6 Belege; Antwort nur aus den Belegen, jeder Satz mit Beleg (KI mit Satzprüfung, sonst extraktiv; Berechtigung read)'
+      summary: 'Frage an alle eingelesenen Quellen (ADR-089, M5; Suche v2 ADR-099): Morphologie, Abfrageerweiterung, BM25 + Vektor per RRF, Relevanzschwelle, MMR → Top 6 Belege; Antwort nur aus den Belegen, jeder Satz mit Beleg (KI mit Satzprüfung, sonst extraktiv; Berechtigung read)'
       tags: [Metadaten]
-      x-requirements: [NFR-87]
+      x-requirements: [NFR-87, NFR-111, NFR-112]
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, language: { type: string, enum: [de, en], default: de }, filters: { type: object, properties: { format: { type: string, enum: [markdown, html, docx, pptx, pdf, mp4, subtitles, jira] }, documentId: { type: string }, heading: { type: string }, labelIds: { type: array, items: { type: string } } } } } } } }
+        content: { application/json: { schema: { type: object, required: [question], properties: { question: { type: string, minLength: 3, maxLength: 500 }, language: { type: string, enum: [de, en], default: de }, method: { type: string, enum: [v1, v2], default: v2, description: 'Suchverfahren (ADR-099)' }, filters: { type: object, properties: { format: { type: string, enum: [markdown, html, docx, pptx, pdf, mp4, subtitles, jira] }, documentId: { type: string }, heading: { type: string }, labelIds: { type: array, items: { type: string } } } } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ id, question, filters, mode: llm | extractive | none, answer: [{ text, sources: [n] }], answerText, sources: [{ n, snippetId, part, parts, path, format, headingPath, locator, text, score }], notice, dropped, candidates, searched }' }
+        '200': { description: '{ id, question, filters, mode: llm | extractive | none, answer: [{ text, sources: [n] }], answerText, sources: [{ n, snippetId, part, parts, path, format, headingPath, locator, text, score }], notice, dropped, candidates, searched, retrieval: { method, expansions, unknownTerms, bestCoverage }, retrieved }' }
         '400': { $ref: '#/components/responses/Problem' }
         '422': { $ref: '#/components/responses/Problem' }
   /metadata/qa/export:
@@ -5200,12 +5200,14 @@ paths:
       operationId: runEval
       summary: 'Prüflauf: jede Testfrage wie eine Frage an alle Quellen stellen und bewerten – Kennzahlen, Ergebnis je Frage, Vergleich mit dem vorigen Lauf; nicht im Frageprotokoll (Berechtigung edit)'
       tags: [Metadaten]
-      x-requirements: [NFR-92, NFR-93]
+      x-requirements: [NFR-92, NFR-93, NFR-113]
       x-extension: true
       parameters: [{ name: setId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { method: { type: string, enum: [v1, v2], default: v2, description: 'Suchverfahren (ADR-099)' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '201': { description: '{ id, metrics: { questions, passed, passRate, hitAt1, hitAt3, hitAt6, mrr, citedRate, answeredRate, keywordCoverage, noAnswerAccuracy, avgMs }, config, results, compare }' }
+        '201': { description: '{ id, metrics: { questions, passed, passRate, hitAt1, hitAt3, hitAt6, mrr, ndcg6, citedRate, answeredRate, keywordCoverage, noAnswerAccuracy, avgMs }, config, results, compare }' }
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }

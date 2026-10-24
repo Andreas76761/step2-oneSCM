@@ -1,6 +1,6 @@
 # 08 Installation und Betrieb
 
-Stand: Version 0.45 (24.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
+Stand: Version 0.46 (24.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
 
 ## 1. Welche Installation passt?
 
@@ -69,6 +69,9 @@ Alle Einstellungen sind Umgebungsvariablen; die vollständige Liste steht im REA
 | `DATABASE_URL` | – | PostgreSQL statt SQLite (Team-Betrieb) |
 | `AUTH_MODE` | `demo` | `oidc` für echte Anmeldung; `demo` nur für Einzelplatz und Tests |
 | `LLM_PROVIDER` | `none` | KI-Umformulierung und KI-Antworten: `openai` (auch lokale, OpenAI-kompatible Server wie Ollama oder vLLM), `anthropic`; ohne Angabe antwortet die App extraktiv aus den Belegen |
+| `LLM_LOCAL` | `false` | `true`: der OpenAI-kompatible KI-Dienst unter `LLM_BASE_URL` läuft auf diesem Rechner oder im eigenen Netz (z. B. Ollama `http://localhost:11434/v1`) – gilt dann als intern, Datenschutz-Sperren für externe Dienste entfallen; wirkt nur mit lokaler Adresse (ADR-099) |
+| `EMBEDDINGS_PROVIDER`, `EMBEDDINGS_BASE_URL`, `EMBEDDINGS_MODEL` | `local` | Vektoren für die Suche: `local` (eingebaut, ohne Modell) oder `openai` (OpenAI-kompatibel), z. B. ein mehrsprachiges Modell wie `bge-m3` über Ollama – verbessert englische Fragen auf deutsche Quellen |
+| `EMBEDDINGS_LOCAL` | `false` | `true`: Embedding-Dienst unter `EMBEDDINGS_BASE_URL` ist lokal (wie `LLM_LOCAL`) |
 | `TRANSCRIBE_CMD` | – | lokale Transkription von Videos, z. B. whisper.cpp |
 | `FFMPEG_PATH` | – | ffmpeg für Standbilder aus Videos |
 | `OCR_CMD` | – | lokale Texterkennung gescannter PDF-Seiten, z. B. Tesseract |

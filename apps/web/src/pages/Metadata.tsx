@@ -346,7 +346,9 @@ function AskResult({ r }: { r: any }) {
           {r.answer.map((s: any, i: number) => <span key={i}><InlineMd text={s.text} />{s.sources.map((n: number) => <sup key={n}><a href={`#beleg-${r.id}-${n}`} aria-label={`Beleg ${n}`}>[{n}]</a></sup>)} </span>)}
         </p>
       )}
-      <p className="small muted">{r.mode === 'llm' ? 'Antwort aus den Belegen formuliert, jeder Satz geprüft' : r.mode === 'extractive' ? 'Passende Sätze aus den Belegen (ohne KI)' : ''}{r.dropped ? ` · ${r.dropped} unbelegte Sätze verworfen` : ''} · {r.searched} Abschnitte durchsucht</p>
+      <p className="small muted">{r.mode === 'llm' ? 'Antwort aus den Belegen formuliert, jeder Satz geprüft' : r.mode === 'extractive' ? 'Passende Sätze aus den Belegen (ohne KI)' : ''}{r.dropped ? ` · ${r.dropped} unbelegte Sätze verworfen` : ''} · {r.searched} Abschnitte durchsucht
+        {r.retrieval?.expansions?.length > 0 && <> · Abfrage erweitert um {r.retrieval.expansions.map((x: string) => `„${x}“`).join(', ')} (Terminologie, Abkürzungen)</>}
+        {r.retrieval?.unknownTerms?.length > 0 && <> · in den Quellen nicht gefunden: {r.retrieval.unknownTerms.join(', ')}</>}</p>
       {r.sources.map((s: any) => (
         <blockquote key={s.n} id={`beleg-${r.id}-${s.n}`} className="md-excerpt small">
           <strong>[{s.n}] {s.path}</strong> · {s.headingPath.join(' › ') || '–'} · <span className="muted">{locatorText(s)}{s.part ? ` · Teilstück ${s.part} von ${s.parts}` : ''}</span>

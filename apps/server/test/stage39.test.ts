@@ -31,7 +31,7 @@ describe('Etappe 39', () => {
     const other = { path: 'schulung/reifen.md', headingPath: ['Reifen'] };
     const item = { question: 'Wie kündige ich?', expected: [{ path: 'verträge' }], keywords: ['Beenden', 'Monatsende'], expectNoAnswer: false };
     const a = scoreItem(item, { retrieved: [other, found], sources: [found], answerText: 'Klicken Sie auf Beenden.', answered: true });
-    expect(a).toEqual({ rank: 2, cited: true, answered: true, keywordHits: 1, keywordTotal: 2, passed: true });
+    expect(a).toEqual({ rank: 2, cited: true, answered: true, keywordHits: 1, keywordTotal: 2, passed: true, ndcg: 0.631 }); // nDCG@6 seit ADR-099
     const b = scoreItem(item, { retrieved: [other], sources: [other], answerText: 'Beenden zum Monatsende.', answered: true });
     expect(b).toMatchObject({ rank: null, cited: false, passed: false });
     const gap = { question: 'Zoll in Brasilien?', expected: [], keywords: [], expectNoAnswer: true };

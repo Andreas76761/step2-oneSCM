@@ -8,8 +8,9 @@ import { buildSourcesPrompt, extractiveAnswer, keywordScore, parseAssistantRespo
 import { chunkParts } from '../domain/chunking.js';
 import { NO_CHAPTER_TITLE } from '../domain/markdown.js';
 import { detectPrivacy } from '../domain/privacy.js';
+import { analyzeQuery, answerSentences, bm25, buildIndex, rank as rankV2, type Index, type Lexicon } from '../domain/retrieval.js';
 import { checkSentences } from '../domain/rewrite.js';
-import { tokenize } from '../domain/similarity.js';
+import { sha256, tokenize } from '../domain/similarity.js';
 import { wordDiff } from '../domain/sectionDupes.js';
 import { dot } from '../embeddings.js';
 import { badRequest, notFound, unprocessable } from '../problem.js';
@@ -81,8 +82,40 @@ function rerank(question: string, c: { score: number; text: string; headingPath:
   return 0.6 * c.score + 0.25 * head + 0.15 * bigram;
 }
 
+/** Retrieval-Verfahren (ADR-099): v2 = Morphologie, Abfrageerweiterung, BM25 + Vektor per RRF, Relevanzschwelle, MMR; v1 = bisher */
+export type RetrievalMethod = 'v1' | 'v2';
+export const DEFAULT_METHOD: RetrievalMethod = 'v2';
+
+/** Synonyme, Übersetzungen und Abkürzungen des Projekts für die Abfrageerweiterung */
+async function lexicon(ctx: Ctx): Promise<Lexicon> {
+  const groups: string[][] = [];
+  for (const r of await ctx.db.all("SELECT preferred, avoid, translations FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId)) {
+    const tr = Object.values(parseJson<Record<string, { term?: string }>>(r.translations, {})).map((t) => t?.term?.trim()).filter(Boolean) as string[];
+    groups.push([String(r.preferred), ...parseJson<string[]>(r.avoid, []), ...tr]);
+  }
+  for (const r of await ctx.db.all('SELECT abbreviation, expansion FROM abbreviations WHERE project_id = ?', ctx.projectId)) groups.push([String(r.abbreviation), String(r.expansion)]);
+  return { groups: groups.map((g) => [...new Set(g.map((x) => x.trim()).filter(Boolean))]).filter((g) => g.length > 1) };
+}
+
+// Index je Bestand und Rahmen zwischenspeichern: neue Revisionen ergeben neue Chunk-IDs und damit einen neuen Schlüssel
+const INDEX_CACHE_MAX = 6;
+const indexCache = new Map<string, Index>();
+function indexFor(projectId: string, all: { snippetId: string; part: number | null; text: string; headingPath: string[]; path: string }[]) {
+  const key = sha256(`${projectId}|${all.map((u) => `${u.snippetId}:${u.part ?? ''}:${u.text.length}`).join(',')}`);
+  let idx = indexCache.get(key);
+  if (idx) {
+    indexCache.delete(key);
+    indexCache.set(key, idx);
+    return idx;
+  }
+  idx = buildIndex(all.map((u) => ({ text: u.text, header: `${u.path.replace(/\.[^.]+$/, '').replace(/[/_-]+/g, ' ')} ${u.headingPath.join(' ')}` })));
+  indexCache.set(key, idx);
+  if (indexCache.size > INDEX_CACHE_MAX) indexCache.delete(indexCache.keys().next().value!);
+  return idx;
+}
+
 /** `log: false` für Prüfläufe (ADR-091): keine Einträge im Frageprotokoll, der Lauf selbst wird protokolliert */
-export async function askSources(ctx: Ctx, input: any, user: User, opts: { log?: boolean } = {}) {
+export async function askSources(ctx: Ctx, input: any, user: User, opts: { log?: boolean; method?: 'v1' | 'v2' } = {}) {
   const question = String(input?.question ?? '').trim();
   if (question.length < 3 || question.length > 500) throw badRequest('Frage mit 3 bis 500 Zeichen erforderlich.');
   const language = input?.language === 'en' ? 'en' : 'de';
@@ -96,8 +129,24 @@ export async function askSources(ctx: Ctx, input: any, user: User, opts: { log?:
 
   // 1. hybride Suche: Begriffe (Stämme) für alle Einheiten, Vektor nur für die besten 200 nach Begriffen und alle ohne Treffer
   // aus kleinen Beständen – so bleibt die Zahl der Embeddings begrenzt
+  const method: RetrievalMethod = opts.method ?? (input?.method === 'v1' ? 'v1' : DEFAULT_METHOD);
   let ranked: (typeof all[number] & { score: number; kw: number })[] = [];
-  if (all.length) {
+  let retrieval: { method: RetrievalMethod; expansions: string[]; unknownTerms: string[]; bestCoverage: number | null } = { method, expansions: [], unknownTerms: [], bestCoverage: null };
+  let query: ReturnType<typeof analyzeQuery> | null = null;
+  let index: Index | null = null;
+  if (all.length && method === 'v2') {
+    index = indexFor(ctx.projectId, all);
+    query = analyzeQuery(question, index, await lexicon(ctx), { language });
+    // Vektor für die besten 200 nach BM25 bzw. für alle Einheiten kleiner Bestände (Kontextkopf vor dem Text)
+    const lexOrder = all.map((_, i) => ({ i, s: bm25(index!, query!, i) })).sort((a, b) => b.s - a.s);
+    const pool = all.length <= 400 ? lexOrder.map((x) => x.i) : lexOrder.slice(0, 200).map((x) => x.i);
+    const [qv, ...pv] = await embedTexts(ctx, [query.text, ...pool.map((i) => `${all[i].headingPath.join(' – ')}: ${all[i].context ? `${all[i].context} ` : ''}${all[i].text}`)]);
+    const sims: (number | null)[] = all.map(() => null);
+    pool.forEach((i, k) => (sims[i] = Math.max(0, dot(qv, pv[k]))));
+    const r = rankV2(index, query, sims, { candidates: CANDIDATES, passages: PASSAGES });
+    ranked = r.ranked.map((x) => ({ ...all[x.i], score: x.score, kw: x.coverage }));
+    retrieval = { method, expansions: query.expansions, unknownTerms: query.concepts.filter((c) => !c.known).map((c) => c.word), bestCoverage: Math.round(r.best * 100) / 100 };
+  } else if (all.length) {
     const kwAll = all.map((u) => keywordScore(question, `${u.headingPath.join(' ')} ${u.text}`));
     const order = all.map((_, i) => i).sort((a, b) => kwAll[b] - kwAll[a]);
     const pool = (all.length <= 400 ? order : order.slice(0, 200)).map((i) => ({ ...all[i], kw: kwAll[i] }));
@@ -118,7 +167,9 @@ export async function askSources(ctx: Ctx, input: any, user: User, opts: { log?:
   const forLlm = ctx.llm?.external ? passages.filter((p) => !sensitive(p.text)) : passages;
   if (forLlm.length && ctx.llm) {
     try {
-      const res = await ctx.llm.complete(buildSourcesPrompt(question, forLlm, language));
+      // Begriffe aus der Abfrageerweiterung mitgeben (Händler → Dealer), damit die KI die Belege der Frage zuordnet
+      const llmQuestion = retrieval.expansions.length ? `${question}\n(In den Quellen auch: ${retrieval.expansions.join(', ')})` : question;
+      const res = await ctx.llm.complete(buildSourcesPrompt(llmQuestion, forLlm, language));
       const parsed = parseAssistantResponse(res.text);
       const checked = checkSentences(parsed, forLlm.map((p) => ({ label: p.label, snippetId: p.label, seq: 0, text: p.text })), { minSupport: (await getSettings(ctx.db)).rewrite.minSupport });
       sentences = checked.filter((c) => !c.issues.length).map((c) => ({ text: c.text, sources: c.sourceLabels }));
@@ -131,7 +182,7 @@ export async function askSources(ctx: Ctx, input: any, user: User, opts: { log?:
     }
   }
   if (passages.length && !sentences.length && !(mode === 'llm' && notice?.startsWith('Die Quellen'))) {
-    sentences = extractiveAnswer(question, passages);
+    sentences = query ? answerSentences(query, index, passages.map((p, i) => ({ ...p, header: ranked[i].headingPath.join(' ') })), 3, question) : extractiveAnswer(question, passages);
     mode = sentences.length ? 'extractive' : 'none';
   }
   if (!sentences.length) notice ??= all.length ? 'Die Quellen enthalten dazu keine Aussage.' : 'Keine Quellen im gewählten Rahmen.';
@@ -155,7 +206,7 @@ export async function askSources(ctx: Ctx, input: any, user: User, opts: { log?:
     if (mode === 'llm') await audit(ctx, user.id, 'metadata.asked', 'metadata_ask', id, { provider: ctx.llm!.id, model: ctx.llm!.model, promptVersion: SOURCES_PROMPT_VERSION, passages: ranked.map((u) => u.snippetId), external: ctx.llm!.external });
   });
   return {
-    id, question, language, filters, mode, answer, sources, notice, dropped, candidates: ranked.length, searched: all.length,
+    id, question, language, filters, mode, answer, sources, notice, dropped, candidates: ranked.length, searched: all.length, retrieval,
     // alle gefundenen Stellen in Rangfolge (auch nicht zitierte) – für die Trefferquote (ADR-091)
     retrieved: ranked.map((u, i) => ({ rank: i + 1, snippetId: u.snippetId, documentId: u.documentId, path: u.path, format: u.format, headingPath: u.headingPath, locator: u.locator, lineStart: u.lineStart, score: Math.round(u.score * 100) / 100 })),
     // Antworttext mit Belegnummern, z. B. zum Speichern als Frage & Antwort

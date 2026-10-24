@@ -2201,5 +2201,48 @@
       "NFR-108",
       "NFR-109"
     ]
+  },
+  {
+    "id": "T-305",
+    "title": "Morphologie, Komposita, Kennungen, Abfrageerweiterung, Relevanzschwelle, RRF und MMR",
+    "file": "apps/server/test/stage46.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-111",
+      "NFR-112"
+    ]
+  },
+  {
+    "id": "T-306",
+    "title": "Messbestand: v2 übertrifft v1 im Abstimmungs- und im Prüfsatz, enthält sich bei Lückenfragen, keine Dubletten unter den Belegen",
+    "file": "apps/server/test/stage46.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-111",
+      "NFR-112",
+      "NFR-113"
+    ]
+  },
+  {
+    "id": "T-307",
+    "title": "Frage an alle Quellen mit Erweiterung und Enthaltung, Prüflauf je Verfahren mit nDCG@6, lokaler KI- und Embedding-Dienst",
+    "file": "apps/server/test/stage46.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-111",
+      "NFR-112",
+      "NFR-113"
+    ]
+  },
+  {
+    "id": "T-308",
+    "title": "RAG v2: Frage mit Abkürzung wird erweitert und belegt, Lückenfrage nennt unbekannte Begriffe; Prüflauf je Verfahren mit nDCG@6",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-111",
+      "NFR-112",
+      "NFR-113"
+    ]
   }
 ]

@@ -129,6 +129,8 @@ function llmFromEnv(): LlmConfig | null {
     baseUrl: process.env.LLM_BASE_URL || undefined,
     timeoutMs: Number(process.env.LLM_TIMEOUT_MS || 60_000),
     maxTokens: Number(process.env.LLM_MAX_TOKENS || 4000),
+    // ADR-099: selbst betriebener Dienst (z. B. Ollama) – wirkt nur mit lokaler Adresse in LLM_BASE_URL
+    local: process.env.LLM_LOCAL === 'true',
   };
 }
 

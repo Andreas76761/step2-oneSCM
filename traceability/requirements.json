@@ -1182,5 +1182,34 @@
       "docs/adr/ADR-098-pipeline-backlog-intern.md",
       "tools/handbuch-ordner/README.md"
     ]
+  },
+  {
+    "id": "NFR-111",
+    "title": "Suche v2 für Fragen an alle Quellen: deutsche Morphologie, Komposita, Kennungen, Abfrageerweiterung aus Terminologie und Abkürzungen, BM25 mit Kontextkopf und Vektor per Reciprocal Rank Fusion, MMR ohne Dubletten",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-099-rag-retrieval-v2.md",
+      "docs/11-rag-messung.md"
+    ]
+  },
+  {
+    "id": "NFR-112",
+    "title": "Relevanzschwelle mit begründeter Enthaltung (unbekannte Fachbegriffe genannt), Satzauswahl im Zusammenhang der Überschrift und nach Antworttyp",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-099-rag-retrieval-v2.md"
+    ]
+  },
+  {
+    "id": "NFR-113",
+    "title": "Messbestand mit Abstimmungs- und Prüfsatz und Regressionsschutz, Prüflauf je Verfahren mit nDCG@6, lokale KI- und Embedding-Dienste nur mit lokaler Adresse als intern",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-099-rag-retrieval-v2.md",
+      "docs/11-rag-messung.md"
+    ]
   }
 ]

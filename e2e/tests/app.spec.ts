@@ -2661,3 +2661,45 @@ test('[T-304] Pipeline, Backlog, Intern: Jira-Tickets je Gliederung mit Erstelld
   await expect(page.locator('tr', { hasText: 'E2E Migrationsplan' })).toContainText('Migration');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-308] RAG v2: Frage mit Abkürzung wird erweitert und belegt, Lückenfrage nennt unbekannte Begriffe; Prüflauf je Verfahren mit nDCG@6', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  expect((await request.post('/api/v1/abbreviations', { headers: adm, data: { abbreviation: 'RLQ', expansion: 'Rücklaufquittung' } })).ok()).toBeTruthy();
+  const res = await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name: 'e2e-rag.md', mimeType: 'text/markdown', buffer: Buffer.from('---\nroles: [all]\ndivisions: [all]\n---\n# E2E Lager\n\n## E2E Rücklaufquittung buchen\n\nDie Rücklaufquittung bucht das Lager innerhalb von zwei Werktagen.\n') } } });
+  const id = (await res.json()).id;
+  await expect.poll(async () => (await (await request.get(`/api/v1/imports/${id}`, { headers: adm })).json()).status).toBe('completed');
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Fragen & Antworten' }).click();
+  await page.getByLabel('Ihre Frage').fill('Wer bucht die RLQ?');
+  await page.getByRole('button', { name: 'Fragen', exact: true }).click();
+  const answer = page.getByRole('region', { name: 'Antwort mit Belegen' });
+  await expect(answer).toContainText('Die Rücklaufquittung bucht das Lager innerhalb von zwei Werktagen.');
+  await expect(page.getByText(/Abfrage erweitert um „Rücklaufquittung“/)).toBeVisible();
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Ihre Frage').fill('Wie buche ich eine Rücklaufquittung in Quantenkryptografie?');
+  await page.getByRole('button', { name: 'Fragen', exact: true }).click();
+  await expect(page.getByText(/in den Quellen nicht gefunden: Quantenkryptografie/)).toBeVisible();
+
+  // Prüflauf mit Verfahren v1 und v2
+  const csv = 'Frage;Erwartete Quelle;Keine Antwort\r\nWer bucht die RLQ?;e2e-rag.md;\r\n';
+  await nav.getByRole('link', { name: 'Antwortqualität', exact: true }).click();
+  await page.getByTestId('eval-input').setInputFiles({ name: 'e2e-rag.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await expect(page.getByText('1 Testfragen aus „e2e-rag.csv“ eingelesen.')).toBeVisible();
+  await page.getByRole('combobox', { name: /Verfahren/ }).selectOption('v1');
+  await page.getByRole('button', { name: 'Prüflauf starten' }).click();
+  await expect(page.getByText(/Prüflauf fertig/)).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText(/Verfahren v1/)).toBeVisible();
+  await page.getByRole('combobox', { name: /Verfahren/ }).selectOption('v2');
+  await page.getByRole('button', { name: 'Prüflauf starten' }).click();
+  await expect(page.getByText(/Verfahren v2/)).toBeVisible({ timeout: 30000 });
+  const kpis = page.getByRole('group', { name: 'Kennzahlen' });
+  await expect(kpis).toContainText('nDCG@6');
+  await expect(kpis).toContainText('1.00');
+  expect(await axe()).toEqual([]);
+});

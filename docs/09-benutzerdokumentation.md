@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.45 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.46 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -21,9 +21,9 @@ Stand: Version 0.45 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 | **Dubletten (alle Formate)** | gleiche und ähnliche Abschnitte über Dateien und Formate, Unterschiede markiert | je Paar „A führend“, „B führend“ oder „kein Duplikat“ |
 | **Kapitel ↔ Quellen** | welche Quellen zu welchem Gliederungspunkt gehören, mit Vorschlägen | Vorschlag prüfen und übernehmen |
 | **Wissensnotizen** | eigene Erkenntnisse (Frage, Antwort, Screenshot) als Quelle | Notiz anlegen – sie wird wie eine Quelle durchsucht |
-| **Fragen & Antworten** | **Frage an alle Quellen**: Antwort nur aus den sechs besten Belegen, jeder Satz mit Beleg [n] | Frage eingeben, optional eingrenzen (Format, Datei, Überschrift, Label) → „Fragen“; „Als Frage & Antwort übernehmen“ speichert mit Belegen; „Erneut fragen“ vergleicht mit dem neuen Stand; Export CSV/Excel/JSON |
+| **Fragen & Antworten** | **Frage an alle Quellen**: Antwort nur aus den sechs besten Belegen, jeder Satz mit Beleg [n]. Synonyme, Übersetzungen und Abkürzungen aus Terminologie und Stammdaten erweitern die Frage („Abfrage erweitert um …“); fehlt ein Fachbegriff in den Quellen, gibt es keine Antwort und die App nennt ihn („in den Quellen nicht gefunden: …“) | Frage eingeben, optional eingrenzen (Format, Datei, Überschrift, Label) → „Fragen“; „Als Frage & Antwort übernehmen“ speichert mit Belegen; „Erneut fragen“ vergleicht mit dem neuen Stand; Export CSV/Excel/JSON |
 | **Rückfragen** | Fragenkatalog (z. B. Review-Cockpit, CSV, Text) einlesen und alle Fragen mit Belegen beantworten | Datei einlesen → „Alle mit Belegen beantworten“ → einzeln übernehmen, exportieren |
-| **Antwortqualität** | Testfragen mit erwarteten Quellen und Stichworten; Lückenfragen (richtig ist „keine Aussage“) | Satz aus CSV/Excel/JSON oder aus Fragen & Antworten anlegen → „Prüflauf starten“ → Kennzahlen (bestanden, Treffer@1/@6, MRR, Beleg richtig, Lücken richtig), Vergleich mit dem vorigen Lauf |
+| **Antwortqualität** | Testfragen mit erwarteten Quellen und Stichworten; Lückenfragen (richtig ist „keine Aussage“) | Satz aus CSV/Excel/JSON oder aus Fragen & Antworten anlegen → Verfahren wählen (v2 Standard, v1 zum Vergleich) → „Prüflauf starten“ → Kennzahlen (bestanden, Treffer@1/@6, MRR, nDCG@6, Beleg richtig, Lücken richtig), Vergleich mit dem vorigen Lauf |
 | **Expertenbefragung** | Wissenslücken an Fachleute geben | Befragung aus Rückfragen oder Prüflauf anlegen → Fachleute antworten in der App (Recht „Lesen“) oder per Excel → „Als Frage & Antwort übernehmen“ (Label „Prüfen“) |
 | **Zugriffsmatrix** | Zugriffsstufe je Rolle und Menüpunkt in oneSCM (V/L/–) | Stufe setzen, CSV ein- und ausgeben |
 | **Zuordnung** | Domäne → Gliederungspunkt → Ordner | Zuordnung pflegen |

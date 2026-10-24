@@ -6,7 +6,7 @@ import { mapHeader } from './tabular.js';
 export interface Expectation { path?: string; heading?: string }
 export interface EvalItem { question: string; expected: Expectation[]; keywords: string[]; expectNoAnswer: boolean; note?: string | null }
 export interface Found { path: string; headingPath: string[] }
-export interface ItemScore { rank: number | null; cited: boolean; answered: boolean; keywordHits: number; keywordTotal: number; passed: boolean }
+export interface ItemScore { rank: number | null; cited: boolean; answered: boolean; keywordHits: number; keywordTotal: number; passed: boolean; ndcg: number }
 
 export const MAX_ITEMS = 500;
 /** Stichworte gelten als abgedeckt ab diesem Anteil */
@@ -26,6 +26,11 @@ export function scoreItem(item: EvalItem, res: { retrieved: Found[]; sources: Fo
   const hit = (f: Found) => item.expected.some((e) => matches(f, e));
   const idx = res.retrieved.findIndex(hit);
   const rank = idx >= 0 ? idx + 1 : null;
+  // nDCG@6 (binäre Relevanz, ADR-099): wie weit oben die passenden Stellen stehen – ideal: alle gefundenen passenden ganz oben
+  const gains = res.retrieved.slice(0, 6).map((f) => (hit(f) ? 1 : 0));
+  const dcg = gains.reduce((s: number, g, i) => s + g / Math.log2(i + 2), 0);
+  const idcg = Array.from({ length: gains.filter(Boolean).length }, (_, i) => 1 / Math.log2(i + 2)).reduce((a, b) => a + b, 0);
+  const ndcg = idcg ? Math.round((dcg / idcg) * 1000) / 1000 : 0;
   const cited = res.sources.some(hit);
   const text = fold(res.answerText);
   const keywordHits = res.answered ? item.keywords.filter((k) => text.includes(fold(k))).length : 0;
@@ -37,12 +42,12 @@ export function scoreItem(item: EvalItem, res: { retrieved: Found[]; sources: Fo
     if (item.expected.length) passed &&= cited;
     if (keywordTotal) passed &&= keywordHits / keywordTotal >= KEYWORD_PASS;
   }
-  return { rank, cited, answered: res.answered, keywordHits, keywordTotal, passed };
+  return { rank, cited, answered: res.answered, keywordHits, keywordTotal, passed, ndcg };
 }
 
 export interface Metrics {
   questions: number; passed: number; passRate: number;
-  withSources: number; hitAt1: number; hitAt3: number; hitAt6: number; mrr: number; citedRate: number;
+  withSources: number; hitAt1: number; hitAt3: number; hitAt6: number; mrr: number; ndcg6: number; citedRate: number;
   answerable: number; answeredRate: number;
   withKeywords: number; keywordCoverage: number;
   noAnswerItems: number; noAnswerAccuracy: number;
@@ -61,6 +66,7 @@ export function aggregate(rows: { item: EvalItem; score: ItemScore; ms: number }
     questions: rows.length, passed: rows.filter((r) => r.score.passed).length, passRate: ratio(rows.filter((r) => r.score.passed).length, rows.length),
     withSources: src.length, hitAt1: at(1), hitAt3: at(3), hitAt6: at(6),
     mrr: src.length ? Math.round((src.reduce((s, r) => s + (r.score.rank ? 1 / r.score.rank : 0), 0) / src.length) * 1000) / 1000 : 0,
+    ndcg6: src.length ? Math.round((src.reduce((s, r) => s + (r.score.ndcg ?? 0), 0) / src.length) * 1000) / 1000 : 0,
     citedRate: ratio(src.filter((r) => r.score.cited).length, src.length),
     answerable: pos.length, answeredRate: ratio(pos.filter((r) => r.score.answered).length, pos.length),
     withKeywords: kw.length, keywordCoverage: kw.length ? Math.round((kw.reduce((s, r) => s + r.score.keywordHits / r.score.keywordTotal, 0) / kw.length) * 1000) / 1000 : 0,

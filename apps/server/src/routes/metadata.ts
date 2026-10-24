@@ -159,10 +159,10 @@ export function metadataRoutes(app: FastifyInstance, _ctx: Ctx) {
     await deleteEvalItem(req.ctx, req.params.itemId, userOf(req.ctx, req, 'edit'));
     reply.code(204);
   });
-  app.post<P<'setId'>>('/metadata/eval-sets/:setId/runs', async (req, reply) => {
+  app.post<P<'setId'> & { Body: any }>('/metadata/eval-sets/:setId/runs', async (req, reply) => {
     const user = userOf(req.ctx, req, 'edit');
     reply.code(201);
-    return runEval(req.ctx, req.params.setId, user);
+    return runEval(req.ctx, req.params.setId, user, { method: (req.body as any)?.method });
   });
   app.get<P<'runId'>>('/metadata/eval-runs/:runId', async (req) => (userOf(req.ctx, req), getEvalRun(req.ctx, req.params.runId)));
   app.get<P<'runId'> & { Querystring: { format?: string } }>('/metadata/eval-runs/:runId/export', async (req, reply) => {

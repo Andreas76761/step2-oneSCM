@@ -8,7 +8,8 @@ import { SOURCES_PROMPT_VERSION } from '../domain/assistant.js';
 import { aggregate, itemsFromJson, itemsFromTable, MAX_ITEMS, normalizeItem, scoreItem, type EvalItem, type Metrics } from '../domain/evaluation.js';
 import { badRequest, notFound, Problem } from '../problem.js';
 import { listQa } from './metadata.js';
-import { askSources, CANDIDATES, MIN_KEYWORDS, MIN_SIMILARITY, PASSAGES } from './metadataAsk.js';
+import { askSources, CANDIDATES, DEFAULT_METHOD, MIN_KEYWORDS, MIN_SIMILARITY, PASSAGES, type RetrievalMethod } from './metadataAsk.js';
+import { MIN_COVERAGE, MMR_LAMBDA, RRF_K } from '../domain/retrieval.js';
 import { readTable } from './masterDataImport.js';
 
 const itemDto = (r: any) => ({
@@ -151,8 +152,11 @@ export async function deleteEvalSet(ctx: Ctx, id: string, user: User) {
 }
 
 /** Prüflauf: jede Testfrage wie eine Frage an alle Quellen stellen, bewerten, Kennzahlen speichern */
-export async function runEval(ctx: Ctx, setId: string, user: User) {
+export async function runEval(ctx: Ctx, setId: string, user: User, opts: { method?: unknown } = {}) {
   await setRow(ctx, setId);
+  // Verfahren wählbar (ADR-099): v2 Standard, v1 zum Vergleich am eigenen Bestand
+  if (opts.method !== undefined && opts.method !== 'v1' && opts.method !== 'v2') throw badRequest('method muss v1 oder v2 sein.');
+  const method = (opts.method ?? DEFAULT_METHOD) as RetrievalMethod;
   const items = (await ctx.db.all('SELECT * FROM metadata_eval_items WHERE set_id = ? ORDER BY position', setId)).map(itemDto);
   if (!items.length) throw badRequest('Der Testfragensatz enthält keine Fragen.');
   const started = Date.now();
@@ -163,7 +167,7 @@ export async function runEval(ctx: Ctx, setId: string, user: User) {
     let res: any = null;
     let notice: string | null = null;
     try {
-      res = await askSources(ctx, { question: item.question }, user, { log: false });
+      res = await askSources(ctx, { question: item.question }, user, { log: false, method });
       notice = res.notice;
       searched = res.searched;
     } catch (e) {
@@ -176,6 +180,7 @@ export async function runEval(ctx: Ctx, setId: string, user: User) {
   }
   const metrics = aggregate(rows);
   const config = {
+    method, ...(method === 'v2' ? { rrfK: RRF_K, minCoverage: MIN_COVERAGE, mmrLambda: MMR_LAMBDA } : {}),
     candidates: CANDIDATES, passages: PASSAGES, minKeywords: MIN_KEYWORDS, minSimilarity: MIN_SIMILARITY, promptVersion: SOURCES_PROMPT_VERSION,
     embeddings: { provider: ctx.embeddings.id, model: ctx.embeddings.model }, llm: ctx.llm ? { provider: ctx.llm.id, model: ctx.llm.model, external: ctx.llm.external } : null, units: searched,
   };
@@ -213,7 +218,7 @@ export async function getEvalRun(ctx: Ctx, runId: string) {
   if (prev) {
     const before = new Map((await ctx.db.all('SELECT item_id, passed FROM metadata_eval_results WHERE run_id = ?', prev.id)).map((x) => [x.item_id, !!Number(x.passed)]));
     const pm = parseJson<Metrics>(prev.metrics, {} as Metrics);
-    const keys = ['passRate', 'hitAt1', 'hitAt3', 'hitAt6', 'mrr', 'citedRate', 'answeredRate', 'keywordCoverage', 'noAnswerAccuracy'] as const;
+    const keys = ['passRate', 'hitAt1', 'hitAt3', 'hitAt6', 'mrr', 'ndcg6', 'citedRate', 'answeredRate', 'keywordCoverage', 'noAnswerAccuracy'] as const;
     compare = {
       previousRunId: prev.id, previousAt: prev.created_at,
       delta: Object.fromEntries(keys.map((k) => [k, Math.round(((run.metrics[k] ?? 0) - (pm[k] ?? 0)) * 1000) / 1000])),

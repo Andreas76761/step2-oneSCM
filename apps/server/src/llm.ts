@@ -17,6 +17,21 @@ export interface LlmConfig {
   baseUrl?: string;
   timeoutMs?: number;
   maxTokens?: number;
+  /** selbst betriebener Dienst auf diesem Rechner bzw. im eigenen Netz (z. B. Ollama): Daten verlassen die Umgebung nicht (ADR-099) */
+  local?: boolean;
+}
+
+/** Adresse liegt auf diesem Rechner oder in einem privaten Netz (Loopback, 10/8, 172.16/12, 192.168/16, .local) */
+export function isLocalUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  let host: string;
+  try {
+    host = new URL(url).hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  } catch {
+    return false;
+  }
+  return host === 'localhost' || host === '::1' || host.endsWith('.local') || host.endsWith('.localhost')
+    || /^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
 }
 
 export interface LlmRequest {
@@ -95,10 +110,12 @@ export class AnthropicProvider implements LlmProvider {
 
 export class OpenAiCompatibleProvider implements LlmProvider {
   readonly id = 'openai' as const;
-  readonly external = true;
+  readonly external: boolean;
   readonly model: string;
   constructor(private readonly cfg: LlmConfig) {
     this.model = cfg.model;
+    // nur ausdrücklich als lokal erklärt und mit lokaler Adresse gilt der Dienst als intern
+    this.external = !(cfg.local && isLocalUrl(cfg.baseUrl));
   }
   async complete(req: LlmRequest): Promise<LlmResponse> {
     const base = (this.cfg.baseUrl ?? 'https://api.openai.com/v1').replace(/\/+$/, '');
