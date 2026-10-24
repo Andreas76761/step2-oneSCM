@@ -1,4 +1,4 @@
-import { BookOpenIcon, CheckIcon, DownloadIcon, EyeIcon, FileTextIcon, FileTypeIcon, InfoIcon, PresentationIcon, ZapIcon } from 'lucide-react';
+import { AccessibilityIcon, BookOpenIcon, CheckIcon, DownloadIcon, EyeIcon, FileTextIcon, FileTypeIcon, InfoIcon, PresentationIcon, ZapIcon } from 'lucide-react';
 import { Ico, OkMark } from '../components/icons';
 import { useState } from 'react';
 import { api, post } from '../api';
@@ -137,6 +137,17 @@ export function ExportPage() {
                 <div className="alert small" role="status">
                   Zukunfts-Inhalte, nicht im Export (Stand {result.asOf}): {result.future.map((f: any) => `„${f.title}“ (gültig ab ${f.validFrom})`).join(', ')}
                 </div>
+              )}
+              {result.accessibility && (
+                <section className="pdf-a11y" aria-labelledby="pdf-a11y-h">
+                  <h3 id="pdf-a11y-h"><Ico icon={AccessibilityIcon} /> Barrierefreiheit (PDF)</h3>
+                  <ul className="plain small">
+                    {result.accessibility.checks.map((c: any) => (
+                      <li key={c.id}>{c.ok === null ? <span className="muted">– </span> : <OkMark ok={c.ok} />} {c.label}{c.detail ? ` (${c.detail})` : ''}{c.ok === null ? ' – nicht prüfbar' : ''}</li>
+                    ))}
+                  </ul>
+                  {!result.accessibility.ok && <p className="small muted">Getaggte, barrierefreie PDFs entstehen mit einer Designvorlage und dem lokalen Browser (PDF im Design).</p>}
+                </section>
               )}
               {result.preview === null ? <p className="muted">{result.format === 'docx' ? 'Word-Dokument' : result.format === 'pptx' ? 'PowerPoint-Präsentation' : 'PDF'} erstellt ({Math.round(result.byteSize / 1024)} KB) – Vorschau nach dem Herunterladen.</p>
                 : result.format === 'json' ? <pre tabIndex={0} aria-label="Quelltext" className="source small">{result.preview}</pre> : <div className="export-preview" tabIndex={0} role="region" aria-label="Exportvorschau"><Md text={result.preview} /></div>}

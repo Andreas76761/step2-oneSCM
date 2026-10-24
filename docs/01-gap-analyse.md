@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.68 Stand nach Etappe 66 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht nach jedem PDF-Export (NFR-153) | ✅ ([ADR-118](adr/ADR-118-barrierefreies-pdf.md)), T-376–T-378, mit Chromium 141 alle neun Prüfungen bestanden |
+| Offen | vollständige PDF/UA-Prüfung (PAC/veraPDF) außerhalb der App; Standard-PDF ungetaggt; S-04-Begriffe; U-07 |
+
 ## 1.67 Stand nach Etappe 65 (24.10.2026)
 
 | Punkt | Ergebnis |

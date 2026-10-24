@@ -323,7 +323,7 @@ body{margin:0;font:9.5pt/1.55 ${FONTS[t.bodyFont]};color:var(--fd-ink);backgroun
 .fd-logo{max-height:32px;max-width:110px}
 .fd-brandtext{display:flex;flex-direction:column;line-height:1.1;font-weight:600;font-size:9pt}
 .fd-brandtext em{font-weight:400;color:var(--fd-muted);font-style:normal}
-.fd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 16px;break-inside:avoid}
+.fd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 16px;padding:0;list-style:none;break-inside:avoid}
 .fd-kpi{border:1px solid var(--fd-line);border-top:2px solid var(--fd-navy);border-radius:6px;padding:7px 10px;text-align:left}
 .fd-kpi .v{display:flex;align-items:center;gap:6px;font:700 15pt ${FONTS[t.headingFont]};color:var(--fd-navy)}
 .fd-kpi .v .ic{color:var(--fd-blue)}
@@ -374,7 +374,7 @@ export function renderFachdoku(chapters: DesignChapter[], o: DesignOptions): str
     return `<article class="fd-chapter" data-title="${esc(c.title)}">
 <div class="fd-run"><b>${esc(label)}</b><span>Kapitel ${ci + 1} von ${chapters.length}</span></div>
 <div class="fd-titlerow${t.logo === 'left' ? ' logo-left' : ''}"><div><h1>${esc(c.title)}</h1><p class="fd-sub">${esc(sub)}</p></div>${ci === 0 && t.logo !== 'none' ? brandHtml(o, 'fd') : ''}</div>
-<div class="fd-kpis">${kpis.map(([ic, v, l]) => `<div class="fd-kpi"><div class="v">${svgIcon(ic, 16)}${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('')}</div>
+<ul class="fd-kpis" role="list" aria-label="Kennzahlen">${kpis.map(([ic, v, l]) => `<li class="fd-kpi"><div class="v">${svgIcon(ic, 16)}${esc(v)}</div><div class="l">${esc(l)}</div></li>`).join('')}</ul>
 ${sections}
 <div class="fd-foot"><span>${esc(fachdokuFooter(o))}</span><span>${esc(c.title)} · Stand ${esc(o.asOf)}</span></div>
 </article>`;

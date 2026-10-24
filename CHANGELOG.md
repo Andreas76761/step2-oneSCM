@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.66.0 – Etappe 66 (24.10.2026)
+
+Wahl des Auftraggebers vom 24.10.2026: barrierefreies PDF.
+
+### Hinzugefügt
+- **Barrierefreies PDF im Design (ADR-118):** Der Browser druckt mit `--export-tagged-pdf` und `--generate-pdf-document-outline`, also getaggt mit Lesezeichen aus den Überschriften. Die Tags folgen der HTML-Struktur der Vorlagen; dekorative Icons bleiben ausgeblendet.
+- **Prüfbericht** nach jedem PDF-Export (`accessibility` in `POST /exports`, Karte „Barrierefreiheit (PDF)“ im Ergebnis):
+  - getaggt, Strukturbaum, Sprache, Titel, Fenstertitel, Lesezeichen;
+  - Überschriften, Alternativtexte der Abbildungen, Tabellen mit Kopfzellen.
+  
+  Angelehnt an PDF/UA, ohne Konformität zu behaupten.
+- Tests T-376 (Prüfbericht, Druckschalter, Kennzahlen als Liste) und T-377 (API), E2E T-378 (mit Chromium); Anforderung NFR-153.
+
+### Geändert
+- Die Kennzahlen-Karten des Handbuch-Kapitels sind eine Liste (`ul`/`li`, „Kennzahlen“) – bessere Struktur für Screenreader und Tags.
+
 ## 0.65.0 – Etappe 65 (24.10.2026)
 
 ### Hinzugefügt

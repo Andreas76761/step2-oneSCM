@@ -3461,3 +3461,23 @@ test('[T-375] Lesestil Handbuch-Kapitel: in den Einstellungen wählen, Leseransi
   await expect(page.locator('.reader-section').first()).toBeVisible();
   await expect(page.locator('.reading-fachdoku')).toHaveCount(0);
 });
+
+test('[T-378] Barrierefreies PDF im Design: Prüfbericht nach dem Export ohne Befund, Standard-PDF mit Hinweis – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/export');
+  await page.getByLabel('Format').selectOption('pdf');
+  await page.getByLabel('Design').selectOption('fachdoku');
+  await page.getByLabel('Ausgabe').selectOption('full');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  const report = page.getByRole('region', { name: 'Barrierefreiheit (PDF)' });
+  await expect(report).toBeVisible();
+  for (const label of ['Getaggtes PDF (Tagged PDF)', 'Dokumentsprache angegeben (de)', 'Lesezeichen (Gliederung)', 'Überschriften ausgezeichnet']) await expect(report).toContainText(label);
+  await expect(report.locator('.ico.fail')).toHaveCount(0);
+  expect(await axe()).toEqual([]);
+  // Standard-PDF: nicht getaggt, Hinweis auf PDF im Design
+  await page.getByLabel('Design').selectOption('standard');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(report.getByText('Getaggte, barrierefreie PDFs entstehen mit einer Designvorlage')).toBeVisible();
+});

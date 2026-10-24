@@ -944,3 +944,8 @@ div.reader-lang-note p { margin: 0; }
   .reading-fachdoku .callout.warning { border-left-color: var(--rd-warn); }
   .reading-fachdoku .callout.tip { border-left-color: #c76b00; }
 }
+/* Prüfbericht Barrierefreiheit (ADR-118) */
+.pdf-a11y { border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin: 8px 0; }
+.pdf-a11y h3 { margin: 0 0 4px; font-size: 1rem; display: flex; align-items: center; gap: 6px; }
+.pdf-a11y ul { list-style: none; padding-left: 0; margin: 0; }
+.pdf-a11y li { margin: 2px 0; }

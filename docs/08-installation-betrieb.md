@@ -1,6 +1,6 @@
 # 08 Installation und Betrieb
 
-Stand: Version 0.65 (24.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
+Stand: Version 0.66 (24.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
 
 ## 1. Welche Installation passt?
 
@@ -112,7 +112,7 @@ Die Designvorlagen Quick Reference Guide und Handbuch-Kapitel (ADR-112) gibt es 
 2. `PDF_BROWSER_PATH` auf die Programmdatei setzen und die App neu starten.
 3. Auf der Seite „Export“ steht dann „PDF im Design ist eingerichtet“; beim Format PDF erscheint die Auswahl „Design“.
 
-Die App startet den Browser ohne Shell, mit eigenem Profil im Temp-Ordner und mit Zeitlimit. Der Browser hat kein Netz: Alle Namen lösen ins Leere auf, die Vorlage enthält keine Skripte und bettet ihre Bilder ein. Läuft die App in einem Container als root, setzen Sie `PDF_BROWSER_NO_SANDBOX=1`. Ohne Browser bleibt das HTML-Format; im Browser speichern Sie es über „Drucken → Als PDF speichern“.
+Die App startet den Browser ohne Shell, mit eigenem Profil im Temp-Ordner und mit Zeitlimit. Sie fordert ein getaggtes PDF mit Lesezeichen an (`--export-tagged-pdf`, `--generate-pdf-document-outline`, ADR-118); empfohlen ist eine aktuelle Version; ältere Browser ignorieren unbekannte Schalter, dann fehlen ggf. die Lesezeichen – der Prüfbericht zeigt es. Der Browser hat kein Netz: Alle Namen lösen ins Leere auf, die Vorlage enthält keine Skripte und bettet ihre Bilder ein. Läuft die App in einem Container als root, setzen Sie `PDF_BROWSER_NO_SANDBOX=1`. Ohne Browser bleibt das HTML-Format; im Browser speichern Sie es über „Drucken → Als PDF speichern“.
 
 ## 6. Sicherung, Wiederherstellung, Aktualisierung
 

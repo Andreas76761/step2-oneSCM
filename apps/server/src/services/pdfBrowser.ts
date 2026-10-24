@@ -20,6 +20,8 @@ export function browserArgs(cfg: PdfBrowserConfig, dir: string, input: string, o
     `--user-data-dir=${path.join(dir, 'profil')}`,
     '--host-resolver-rules=MAP * ~NOTFOUND',
     '--no-pdf-header-footer',
+    // barrierefreies PDF (ADR-118): Tags aus der HTML-Struktur, Lesezeichen aus den Überschriften
+    '--export-tagged-pdf', '--generate-pdf-document-outline',
     `--print-to-pdf=${output}`,
     pathToFileURL(input).href,
   ];
