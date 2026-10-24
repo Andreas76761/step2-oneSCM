@@ -9,6 +9,8 @@ import {
 } from '../domain/releaseLetter.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { markdownToDocx } from './docx.js';
+import { recordLetterMemory, refreshLetterIssues } from './translationWorkflow.js';
+import { TRANSLATION_ISSUE_LABELS, type TranslationIssue } from '../domain/translate.js';
 
 const MAX_TEXT = 200_000;
 const MAX_KEYS = 500;
@@ -130,12 +132,21 @@ function cleanOptions(input: any) {
   return { language: language as 'de' | 'en', audience, country, division: division as string };
 }
 
+/** Prüfergebnis eines Letters gegen seine Tickets (auch für übersetzte Letter, ADR-101) */
+export async function letterVerdict(ctx: Ctx, text: string, keys: string[], audience: Audience) {
+  const { tickets } = await ticketsFor(ctx, keys);
+  return checkReleaseLetter(text, tickets, { audience, names: await privacyNames(ctx.db) }).verdict;
+}
+
 async function dto(ctx: Ctx, r: Row, withCheck = true) {
   const keys = parseJson<string[]>(r.ticket_keys, []);
   const base = {
     id: r.id, title: r.title, release: r.release_label, ticketKeys: keys, language: r.language, audience: r.audience, audienceLabel: AUDIENCE_LABEL[r.audience as Audience],
     country: r.country, division: r.division, origin: r.origin, status: r.status, verdict: r.verdict ?? null, verdictLabel: r.verdict ? VERDICT_LABEL[r.verdict as keyof typeof VERDICT_LABEL] : null,
     createdBy: r.created_by, createdAt: r.created_at, updatedBy: r.updated_by, updatedAt: r.updated_at, approvedBy: r.approved_by ?? null, approvedAt: r.approved_at ?? null,
+    // Übersetzung DE↔EN (U-09): Ausgangsletter, Prüfbefunde je Zeile, vorhandene Übersetzungen
+    translationOf: r.translation_of ?? null, translationIssues: parseJson<any[]>(r.translation_issues, []).map((x) => ({ ...x, labels: x.issues.map((i: TranslationIssue) => TRANSLATION_ISSUE_LABELS[i]) })),
+    translations: (await ctx.db.all('SELECT id, language, status FROM release_letters WHERE translation_of = ?', r.id)).map((x) => ({ id: x.id, language: x.language, status: x.status })),
   };
   if (!withCheck) return base;
   const { tickets, missing } = await ticketsFor(ctx, keys);
@@ -219,6 +230,7 @@ export async function updateReleaseLetter(ctx: Ctx, id: string, input: { text?: 
   const verdict = checkReleaseLetter(text, tickets, { audience: r.audience, names: await privacyNames(ctx.db) }).verdict;
   await ctx.db.tx(async () => {
     await ctx.db.run('UPDATE release_letters SET text = ?, title = ?, verdict = ?, updated_by = ?, updated_at = ? WHERE id = ?', text, title, verdict, user.id, now(), id);
+    await refreshLetterIssues(ctx, id);
     await audit(ctx, user.id, 'release_letter.updated', 'release_letter', id, { verdict });
   });
   return getReleaseLetter(ctx, id);
@@ -232,10 +244,14 @@ export async function approveReleaseLetter(ctx: Ctx, id: string, input: { reason
   const check = (current as any).check;
   if (check.verdict === 'block') throw conflict(`Freigabe nicht möglich: ${check.findings.filter((f: any) => f.severity === 'fail').map((f: any) => f.title).join('; ')}.`, { findings: check.findings });
   const reason = String(input.reason ?? '').trim();
+  // übersetzter Letter: Prüfbefunde der Übersetzung zuerst beheben (U-09)
+  const trIssues = await refreshLetterIssues(ctx, id);
+  if (trIssues.length) throw conflict(`Freigabe nicht möglich: ${trIssues.length} Zeilen mit Befunden der Übersetzungsprüfung.`, { translationIssues: trIssues });
   if (check.verdict === 'cond' && !reason) throw conflict('Der Releaseletter hat noch Warnungen – für eine bedingte Freigabe ist eine Begründung nötig.', { findings: check.findings });
   await ctx.db.tx(async () => {
     await ctx.db.run("UPDATE release_letters SET status = 'approved', verdict = ?, approved_by = ?, approved_at = ? WHERE id = ?", check.verdict, user.id, now(), id);
     await audit(ctx, user.id, 'release_letter.approved', 'release_letter', id, { verdict: check.verdict, reason: reason || null });
+    await recordLetterMemory(ctx, id, user.id);
   });
   return getReleaseLetter(ctx, id);
 }
@@ -243,6 +259,7 @@ export async function approveReleaseLetter(ctx: Ctx, id: string, input: { reason
 export async function deleteReleaseLetter(ctx: Ctx, id: string, user: User) {
   const r = await letterRow(ctx, id);
   if (r.status !== 'draft') throw conflict('Freigegebene Releaseletter bleiben erhalten.');
+  if (await ctx.db.get('SELECT 1 FROM release_letters WHERE translation_of = ?', id)) throw conflict('Zu diesem Letter gibt es eine Übersetzung – bitte zuerst die Übersetzung löschen.');
   await ctx.db.tx(async () => {
     await ctx.db.run('DELETE FROM release_letters WHERE id = ?', id);
     await audit(ctx, user.id, 'release_letter.deleted', 'release_letter', id, {});

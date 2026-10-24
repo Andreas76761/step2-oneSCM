@@ -15,8 +15,10 @@ const fitList = (have: string[], want: string[] | undefined) => {
 export function variantScore(v: VariantImage, t: VariantTarget): number | null {
   let s = 0;
   if (t.language) {
-    if (v.language && v.language !== t.language) return null;
-    s += v.language === t.language ? 4 : 0;
+    // Schweizer Varianten (U-07): Bild in der Grundsprache (de, fr) passt, die eigene Fassung passt besser
+    const base = t.language.split('-')[0];
+    if (v.language && v.language !== t.language && v.language !== base) return null;
+    s += v.language === t.language ? 4 : v.language === base ? 3 : 0;
   }
   if (t.market) {
     if (v.markets.length && !v.markets.includes(t.market)) return null;

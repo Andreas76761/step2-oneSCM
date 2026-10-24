@@ -2,6 +2,7 @@
 // Adapter: Anthropic Claude (Messages API), OpenAI-kompatible Chat-API (OpenAI, Azure, vLLM, Ollama …) und ein
 // Demo-Anbieter ohne Netzwerkzugriff (nur für Demo und Tests). Standard: keine Anbindung.
 import { extractiveAnswer } from './domain/assistant.js';
+import { pseudoLocalize, toSwissGerman, unpseudo } from './domain/translate.js';
 import { translateSignalWords } from './domain/warnings.js';
 import { extractPromptData } from './domain/rewrite.js';
 import { parseStructure } from './domain/diagrams.js';
@@ -168,13 +169,20 @@ export class DemoProvider implements LlmProvider {
       return { text: JSON.stringify(parseStructure(st.text)), usage: { inputTokens: 0, outputTokens: 0 } };
     }
     // Übersetzung (ADR-020): kennzeichnet den Text mit der Zielsprache statt wirklich zu übersetzen
-    const tr = data as unknown as { targetLanguage?: string; sentences: { n: number; text: string }[] };
+    const tr = data as unknown as { targetLanguage?: string; sourceLanguage?: string; sentences: { n: number; text: string }[] };
+    // ins Deutsche (Rückübersetzung, Releaseletter EN→DE): Pseudo-Lokalisierung rückgängig
+    if (tr.targetLanguage === 'de') {
+      const sentences = tr.sentences.map((s) => ({ text: unpseudo(s.text, tr.sourceLanguage ?? 'en'), sources: [s.n] }));
+      return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
+    }
     if (tr.targetLanguage) {
       const tag = `[${tr.targetLanguage.toUpperCase()}]`;
       const sentences = tr.sentences.map((s) => {
         const marker = s.text.match(/^\s*(?:\d+\.|[-*])\s+/)?.[0] ?? '';
         // feste Bestandteile wie eine echte Übersetzung: Signalwörter der Zielsprache (ADR-083)
-        return { text: `${marker}${tag} ${translateSignalWords(s.text.slice(marker.length), tr.targetLanguage!)}`, sources: [s.n] };
+        // Pseudo-Lokalisierung statt deutschem Text (Prüfung „deutsche Wörter im Zieltext“, U-02); Schweizer Hochdeutsch nach Regeln
+        const body = translateSignalWords(s.text.slice(marker.length), tr.targetLanguage!);
+        return { text: `${marker}${tag} ${tr.targetLanguage === 'de-ch' ? toSwissGerman(body) : pseudoLocalize(body)}`, sources: [s.n] };
       });
       return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
     }

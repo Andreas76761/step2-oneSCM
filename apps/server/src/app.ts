@@ -20,6 +20,7 @@ import { semanticRoutes } from './routes/semantic.js';
 import { releaseRoutes } from './routes/releases.js';
 import { collaborationRoutes } from './routes/collaboration.js';
 import { translationRoutes } from './routes/translations.js';
+import { translationWorkflowRoutes } from './routes/translationWorkflow.js';
 import { failMachineTranslation, runMachineTranslation } from './services/translations.js';
 import { deliverNotification } from './services/collaboration.js';
 import { runIndexJob } from './services/semantic.js';
@@ -275,6 +276,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       styleRoutes(api, ctx);
       collaborationRoutes(api, ctx);
       translationRoutes(api, ctx);
+      translationWorkflowRoutes(api, ctx);
       metadataRoutes(api, ctx);
       sourceUpdateRoutes(api, ctx);
       releaseLetterRoutes(api, ctx);

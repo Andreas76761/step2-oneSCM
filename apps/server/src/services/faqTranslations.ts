@@ -105,7 +105,7 @@ export async function machineFaqTranslation(ctx: Ctx, faqId: string, lang: strin
   // keine personenbezogenen Daten an externe Dienste (ADR-013)
   if (provider.external && detectPrivacy(`${q}\n${a}`).length) throw badRequest('Der Eintrag enthält personenbezogene Daten und wird nicht an den externen KI-Dienst gesendet.');
   const fixed = await fixedTranslations(ctx);
-  const terms = fixed.map((x) => ({ preferred: x.preferred, fixed: x.translations[lang] ?? null }));
+  const terms = fixed.map((x) => ({ preferred: x.preferred, fixed: x.translations[lang] ?? x.translations[lang.split('-')[0]] ?? null }));
   const run = async (text: string, kind: string) => {
     const out = parseTranslateResponse((await provider.complete(buildTranslatePrompt({ language: lang, kind, sentences: splitSentences(text, kind), terms }))).text);
     const joined = out.map((s) => s.text).filter(Boolean).join(/^\s*(\d+\.|[-*])\s+/m.test(text) ? '\n' : ' ');

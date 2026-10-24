@@ -1,6 +1,7 @@
 // Word-Export (ADR-038): .docx mit Formatvorlagen (Titel, Überschrift 1–3), Inhaltsverzeichnis-Feld, Tabellen, Bildern,
 // Kopf- und Fußzeile mit Seitenzahl sowie optionaler Firmenvorlage (Formatvorlagen aus .dotx/.docx).
 // Markdown wird über dieselben Tokens wie beim PDF übersetzt; eingebettetes HTML erscheint als Text, Links nur http(s)/mailto.
+import { frameTexts, type FrameTexts } from '../domain/frameTexts.js';
 import { HISTORY_TITLE, historySpan } from './appendixRender.js';
 import {
   AlignmentType, BorderStyle, Document, ExternalHyperlink, Footer, Header, ImageRun, LevelFormat, Packer, PageBreak, PageNumber, Paragraph,
@@ -150,7 +151,7 @@ function appendixDocx(a: Appendices, c: Ctx, heading: (text: string, level: 1 | 
  * Formatvorlagen (Titel, Überschrift 1–3) verwendet. Das Inhaltsverzeichnis ist ein Word-Feld, das Word beim Öffnen aktualisiert.
  */
 export async function renderDocx(
-  chapters: DocxChapter[], opts: { title: string; filterLine: string; media: Map<string, MediaFile>; layout: ResolvedLayout; appendices?: Appendices | null },
+  chapters: DocxChapter[], opts: { title: string; filterLine: string; media: Map<string, MediaFile>; layout: ResolvedLayout; appendices?: Appendices | null; frame?: FrameTexts },
 ): Promise<Buffer> {
   const { layout: l } = opts;
   const color = hex(l.primaryColor);
@@ -171,12 +172,13 @@ export async function renderDocx(
   if (l.cover && l.companyName) children.push(new Paragraph({ children: [new TextRun({ text: l.companyName, color, bold: true, size: 28 })], spacing: { before: l.logo ? 0 : 1600 } }));
   children.push(new Paragraph(tpl?.title ? { text: opts.title, style: tpl.title } : { text: opts.title, heading: 'Title' }));
   if (l.cover && l.coverSubtitle) children.push(new Paragraph({ children: [new TextRun({ text: l.coverSubtitle, size: 28 })], spacing: { after: 240 } }));
-  children.push(new Paragraph({ children: [new TextRun({ text: `Stand ${now().slice(0, 10)} · ${opts.filterLine}`, color: '5B6474', size: 18 })] }));
+  const F = opts.frame ?? frameTexts('de');
+  children.push(new Paragraph({ children: [new TextRun({ text: `${F.asOf} ${now().slice(0, 10)} · ${opts.filterLine}`, color: '5B6474', size: 18 })] }));
   if (l.cover && l.confidentiality) children.push(new Paragraph({ children: [new TextRun({ text: l.confidentiality, bold: true, color: 'B91C1C' })], spacing: { before: 480 } }));
   if (l.cover) children.push(new Paragraph({ children: [new PageBreak()] }));
 
-  children.push(new Paragraph({ children: [new TextRun({ text: 'Inhalt', bold: true, size: 28, color })], spacing: { after: 120 } }));
-  children.push(new TableOfContents('Inhalt', { hyperlink: true, headingStyleRange: '1-2' }));
+  children.push(new Paragraph({ children: [new TextRun({ text: F.contents, bold: true, size: 28, color })], spacing: { after: 120 } }));
+  children.push(new TableOfContents(F.contents, { hyperlink: true, headingStyleRange: '1-2' }));
   children.push(new Paragraph({ children: [new PageBreak()] }));
 
   chapters.forEach((ch, i) => {
@@ -210,7 +212,7 @@ export async function renderDocx(
   const headerText = l.headerText ?? [l.companyName, opts.title].filter(Boolean).join(' · ');
   const footerRuns = [
     ...(l.footerText ? [new TextRun({ text: `${l.footerText} · ` })] : []),
-    new TextRun({ children: ['Seite ', PageNumber.CURRENT, ' von ', PageNumber.TOTAL_PAGES] }),
+    new TextRun({ children: [`${F.page} `, PageNumber.CURRENT, ` ${F.of} `, PageNumber.TOTAL_PAGES] }),
   ];
   const styles: IStylesOptions = {
     default: {

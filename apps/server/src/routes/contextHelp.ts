@@ -47,11 +47,13 @@ const LABELS: Record<string, Record<string, string>> = {
   cs: { see: 'Viz také', faq: 'Časté dotazy', fb: 'Bylo to užitečné?', yes: 'Ano', no: 'Ne', comment: 'Co chybí? (nepovinné)', thanks: 'Děkujeme za zpětnou vazbu.', limit: 'Příliš mnoho zpětné vazby – zkuste to prosím později.', help: 'Nápověda oneSCM', ask: 'Zeptejte se asistenta příručky', send: 'Zeptat se', sources: 'Zdroje', open: 'Otevřít v příručce', fallback: 'Zatím nepřeloženo – německá verze.', none: 'Pro tuto obrazovku zatím není zveřejněna nápověda.', version: 'Verze' },
   pt: { see: 'Ver também', faq: 'Perguntas frequentes', fb: 'Isto foi útil?', yes: 'Sim', no: 'Não', comment: 'O que falta? (opcional)', thanks: 'Obrigado pelo seu feedback.', limit: 'Demasiado feedback – tente novamente mais tarde.', help: 'Ajuda oneSCM', ask: 'Pergunte ao assistente do manual', send: 'Perguntar', sources: 'Fontes', open: 'Abrir no manual', fallback: 'Ainda não traduzido – versão alemã.', none: 'Ainda não há ajuda publicada para este ecrã.', version: 'Versão' },
 };
-const label = (lang: string) => LABELS[lang] ?? LABELS.de;
+const label = (lang: string) => LABELS[lang] ?? LABELS[lang.split('-')[0]] ?? LABELS.de;
 /** Inhaltssprache wie angefragt (bleibt in Formularen und Links erhalten); Beschriftungen in allen neun Sprachen, unbekannte englisch (ADR-074, ADR-078) */
 function embedLanguages(requested: string) {
-  const lang = /^[a-z]{2}$/.test(requested) ? requested : 'de';
-  return { lang, ui: LABELS[lang] ? lang : lang === 'de' ? 'de' : 'en' };
+  // auch Schweizer Varianten (de-ch, fr-ch): Beschriftungen der Grundsprache (U-07)
+  const lang = /^[a-z]{2}(?:-[a-z]{2})?$/.test(requested) ? requested : 'de';
+  const base = lang.split('-')[0];
+  return { lang, ui: LABELS[lang] ? lang : LABELS[base] ? base : 'en' };
 }
 /** anonyme Rückmeldungen je Stunde und Adresse (ADR-061) */
 const FEEDBACK_MAX = Number(process.env.HELP_FEEDBACK_MAX ?? 10);

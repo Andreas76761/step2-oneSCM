@@ -6,6 +6,7 @@ import { json, newId, now, parseJson, type Row } from '../db.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { gateForChapter, getChapterVersion } from './chapters.js';
 import { compareVersions } from './compare.js';
+import { frameTexts } from '../domain/frameTexts.js';
 import { badgeLine, KIND_LABEL, renderMarkdown, visible, type ExportChapter, type ExportFilter } from './exports.js';
 import { appendixHtmlSections } from './appendixRender.js';
 import { resolveLayout, type ResolvedLayout } from './layout.js';
@@ -71,7 +72,7 @@ const UI: Record<string, Record<string, string>> = {
   es: { ask: 'Preguntar al asistente', home: 'Manual de usuario oneSCM', skip: 'Ir al contenido', toc: 'Índice', changes: 'Cambios en esta versión', published: 'publicado el', version: 'Versión', approved: 'Versión aprobada', fallback: 'Aún no traducido: se muestra la versión alemana.', languages: 'Idioma', pager: 'Recorrer capítulos' },
   it: { ask: 'Chiedi all’assistente', home: 'Manuale utente oneSCM', skip: 'Vai al contenuto', toc: 'Indice', changes: 'Modifiche in questa versione', published: 'pubblicato il', version: 'Versione', approved: 'Versione approvata', fallback: 'Non ancora tradotto: viene mostrata la versione tedesca.', languages: 'Lingua', pager: 'Sfoglia i capitoli' },
 };
-const ui = (lang: string) => UI[lang] ?? UI.en;
+const ui = (lang: string) => UI[lang] ?? UI[lang.split('-')[0]] ?? UI.en; // de-ch, fr-ch wie de, fr (U-07)
 
 interface SiteLang {
   code: string;
@@ -106,7 +107,8 @@ function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false, images?: 
       const badges = badgeLine(b);
       out.push(`<div class="block kind-${escapeHtml(b.kind)}">`);
       if (badges) out.push(`<p class="badges">${escapeHtml(badges)}</p>`);
-      if (KIND_LABEL[b.kind] && b.kind !== 'xref') out.push(`<p class="label">${KIND_LABEL[b.kind]}</p>`);
+      // Rahmentexte in der Sprache der Seite (U-08)
+      if (KIND_LABEL[b.kind] && b.kind !== 'xref') out.push(`<p class="label">${escapeHtml(frameTexts(lang)[b.kind as 'note' | 'tip' | 'warning'] ?? KIND_LABEL[b.kind])}</p>`);
       out.push(markdownToHtml(b.text, images), '</div>');
     }
   }
@@ -274,7 +276,7 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
   for (const l of languages) {
     // Kapitel ohne freigegebene Übersetzung auf Deutsch (im Markdown gekennzeichnet)
     const chs = translations.get(l.language)!.map((t, i) => t ?? { ...chapters[i], title: `${chapters[i].title} (DE)` });
-    const lmd = renderMarkdown(chs, filter, media, { title: `${title} – ${LANGUAGES[l.language] ?? l.language} – Version ${version}` });
+    const lmd = renderMarkdown(chs, filter, media, { title: `${title} – ${LANGUAGES[l.language] ?? l.language} – Version ${version}`, language: l.language });
     await ctx.store.put(l.markdownKey, Buffer.from(lmd, 'utf8'));
   }
   await db.tx(async () => {

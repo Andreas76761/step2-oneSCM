@@ -26,6 +26,9 @@ export const SIGNAL_WORDS: Record<string, Record<SignalLevel, string>> = {
   pl: { danger: 'NIEBEZPIECZEŃSTWO', warning: 'OSTRZEŻENIE', caution: 'UWAGA', notice: 'NOTYFIKACJA' },
   pt: { danger: 'PERIGO', warning: 'ADVERTÊNCIA', caution: 'CUIDADO', notice: 'AVISO' },
 };
+// Schweizer Varianten (U-07): Signalwörter wie Deutsch bzw. Französisch
+SIGNAL_WORDS['de-ch'] = SIGNAL_WORDS.de;
+SIGNAL_WORDS['fr-ch'] = SIGNAL_WORDS.fr;
 
 /** Umgangssprachliche Signalwörter, die durch ein festes ersetzt werden sollen (Vorschlag: HINWEIS) */
 const NON_STANDARD = ['ACHTUNG', 'WICHTIG', 'BITTE BEACHTEN', 'BEACHTEN'];

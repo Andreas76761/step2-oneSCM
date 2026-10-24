@@ -16,7 +16,7 @@ import { outlineProfiles } from './metadataOutline.js';
 
 const ROLES = ['dealer', 'market', 'mo', 'hq', 'all'];
 const DIVISIONS = ['car', 'van', 'all']; // nur Pkw und Van (Entscheidung 23.10.2026)
-const LANG_RE = /^[a-z]{2}$/;
+const LANG_RE = /^[a-z]{2}(?:-[a-z]{2})?$/; // auch Schweizer Varianten de-ch, fr-ch (U-07)
 // Labelgruppen, die einem Bild zugeordnet werden können (ADR-095); Sprache und Rollen sind eigene Merkmale
 export const IMAGE_LABEL_GROUPS = ['domain', 'role', 'outline', 'navigation', 'content', 'division', 'customer', 'system', 'quality'];
 const MAX_LABELS = 50;
@@ -503,6 +503,29 @@ export async function variantSwapper(ctx: Ctx, target: VariantTarget) {
     return res;
   };
   return (text: string) => text.replace(/\(media:([a-f0-9]{64})\)/g, (_all, sha: string) => `(media:${swap(sha)})`);
+}
+
+/**
+ * Bilder ohne Fassung in der Zielsprache (U-10): Verweise, deren beste Fassung eine andere Oberflächensprache zeigt.
+ * Bilder ohne Sprachangabe gelten als sprachneutral; de-ch und fr-ch nehmen auch Bilder in de bzw. fr.
+ */
+export async function imageVariantHints(ctx: Ctx, blocks: { id: string; text: string }[], language: string) {
+  const shas = [...new Set(blocks.flatMap((b) => [...b.text.matchAll(/\(media:([a-f0-9]{64})\)/g)].map((m) => m[1])))];
+  if (!shas.length) return [];
+  const swap = await variantSwapper(ctx, { language });
+  const versionBase = new Map((await ctx.db.all('SELECT sha, base_sha FROM media_versions WHERE project_id = ?', ctx.projectId)).map((v) => [v.sha as string, v.base_sha as string]));
+  const base = language.split('-')[0];
+  const out: { blockId: string; sha: string; imageNo: string | null; title: string | null; imageLanguage: string; variantGroup: string | null }[] = [];
+  for (const b of blocks) {
+    for (const m of b.text.matchAll(/\(media:([a-f0-9]{64})\)/g)) {
+      const chosen = swap(`(media:${m[1]})`).slice(7, -1);
+      const meta = await ctx.db.get('SELECT m.image_no, a.title, m.language, m.variant_group FROM media_meta m LEFT JOIN media_assets a ON a.project_id = m.project_id AND a.sha256 = m.base_sha WHERE m.project_id = ? AND m.base_sha = ?', ctx.projectId, versionBase.get(chosen) ?? chosen);
+      if (meta?.language && meta.language !== language && meta.language !== base) {
+        out.push({ blockId: b.id, sha: m[1], imageNo: meta.image_no ? imageNumber(Number(meta.image_no)) : null, title: meta.title ?? null, imageLanguage: meta.language, variantGroup: meta.variant_group ?? null });
+      }
+    }
+  }
+  return out;
 }
 
 /** Kapitel (Abschnitte mit Absätzen) mit den passenden Bildvarianten für eine Ausgabe */

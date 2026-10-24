@@ -7,7 +7,9 @@ import { gateForChapter, getChapterVersion } from './chapters.js';
 import { escapeHtml, markdownToHtml, markdownToPdf, renderPdf } from './render.js';
 import { assertIdsInProject } from './projects.js';
 import { dataUri, inlineMedia, loadMedia, type MediaFile } from './media.js';
-import { appendixHtmlSections, appendixMarkdown, appendixPdf } from './appendixRender.js';
+import { appendixHtmlSections, appendixMarkdown, appendixPdf, APPENDIX_ANCHORS } from './appendixRender.js';
+import { frameTexts, pageLine, type FrameTexts } from '../domain/frameTexts.js';
+import { htmlLang } from '../domain/translate.js';
 import { historyAppendix } from './structure.js';
 import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
 import { DEFAULT_LAYOUT, resolveLayout, type ResolvedLayout } from './layout.js';
@@ -35,6 +37,8 @@ export interface ExportExtras {
   layout?: ResolvedLayout;
   /** Lesefassung (ADR-085, F-28): ohne Rollen-/Sparten-/Markt-Badges und ohne Versionszeile */
   reading?: boolean;
+  /** Sprache der Rahmentexte (ADR-101, U-08); Standard Deutsch */
+  language?: string;
 }
 
 /** Ausgabeprofile (ADR-085, F-27): vollständiges Handbuch, Quick Guide (Schritte, Ergebnis, Warnungen) oder One Pager */
@@ -93,20 +97,29 @@ export function badgeLine(b: Pick<Block, 'roles' | 'divisions' | 'market' | 'rel
   return parts.join(' · ');
 }
 
-const KIND_PREFIX: Record<string, string> = { note: 'ℹ️ **Hinweis:** ', tip: '💡 **Tipp:** ', warning: '⚠️ **Warnung:** ', xref: '↗️ ' };
+const KIND_ICON: Record<string, string> = { note: 'ℹ️', tip: '💡', warning: '⚠️' };
+const kindPrefix = (kind: string, F: FrameTexts) => (kind === 'xref' ? '↗️ ' : KIND_ICON[kind] ? `${KIND_ICON[kind]} **${F[kind as 'note' | 'tip' | 'warning']}:** ` : '');
+const kindLabel = (kind: string, F: FrameTexts) => (['note', 'tip', 'warning', 'xref'].includes(kind) ? F[kind as 'note' | 'tip' | 'warning' | 'xref'] : undefined);
 export const KIND_LABEL: Record<string, string> = { note: 'Hinweis', tip: 'Tipp', warning: 'Warnung', xref: 'Querverweis' };
+/** Titel der Verzeichnisse im Anhang in der Sprache der Rahmentexte */
+const APPENDIX_KEY: Record<string, keyof FrameTexts> = { abkuerzungen: 'abbreviations', glossar: 'glossary', bildverzeichnis: 'images', faq: 'faq', historie: 'history' };
+function localizeAppendixMarkdown(md: string, F: FrameTexts) {
+  let out = md;
+  for (const a of APPENDIX_ANCHORS) out = out.replace(new RegExp(`^(#{1,6} )${a.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'), `$1${F[APPENDIX_KEY[a.id]]}`);
+  return out;
+}
 
 export type ExportChapter = { title: string; versionNo: number; approvedAt: string | null; sections: { code: string; title: string; blocks: any[] }[] };
 
-function filterDescription(f: ExportFilter): string {
+function filterDescription(f: ExportFilter, F: FrameTexts = frameTexts('de')): string {
   const parts = [
-    f.roles?.length ? `Rollen: ${f.roles.map((c) => ROLES.find((r) => r.code === c)?.label ?? c).join(', ')}` : null,
-    f.divisions?.length ? `Sparten: ${f.divisions.map((c) => DIVISIONS.find((d) => d.code === c)?.label ?? c).join(', ')}` : null,
-    f.market ? `Markt: ${f.market}` : f.markets && f.markets.length > 1 ? `Märkte: ${f.markets.join(', ')}` : null,
-    f.blueprint ? 'Blueprint (ohne marktspezifische Inhalte)' : null,
-    f.release ? `Release: ${f.release}` : null,
+    f.roles?.length ? `${F.roles}: ${f.roles.map((c) => ROLES.find((r) => r.code === c)?.label ?? c).join(', ')}` : null,
+    f.divisions?.length ? `${F.divisions}: ${f.divisions.map((c) => DIVISIONS.find((d) => d.code === c)?.label ?? c).join(', ')}` : null,
+    f.market ? `${F.market}: ${f.market}` : f.markets && f.markets.length > 1 ? `${F.markets}: ${f.markets.join(', ')}` : null,
+    f.blueprint ? F.blueprint : null,
+    f.release ? `${F.release}: ${f.release}` : null,
   ].filter(Boolean);
-  return parts.length ? `Filter: ${parts.join(' · ')}` : 'ungefiltert';
+  return parts.length ? `${F.filter}: ${parts.join(' · ')}` : F.unfiltered;
 }
 
 /** Kapitel → sichtbare Abschnitte/Blöcke nach Filter (gemeinsam für alle Formate). */
@@ -118,9 +131,9 @@ export function visible(chapters: ExportChapter[], f: ExportFilter) {
 }
 
 // Version der Funktion („gültig ab“, ADR-096) steht auch in der Lesefassung; die Freigabeversion nicht
-const versionLine = (ch: ExportChapter) => [
-  (ch as any).hideVersion ? '' : `Freigegebene Version ${ch.versionNo}${ch.approvedAt ? ` vom ${ch.approvedAt.slice(0, 10)}` : ''}`,
-  (ch as any).validFrom ? `Gültig ab ${(ch as any).validFrom}` : '',
+const versionLine = (ch: ExportChapter, F: FrameTexts = frameTexts('de')) => [
+  (ch as any).hideVersion ? '' : `${F.approvedVersion} ${ch.versionNo}${ch.approvedAt ? ` ${F.dated} ${ch.approvedAt.slice(0, 10)}` : ''}`,
+  (ch as any).validFrom ? `${F.validFrom} ${(ch as any).validFrom}` : '',
 ].filter(Boolean).join(' · ');
 
 const firstSentences = (text: string, n: number) => text.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+(?=[A-ZÄÖÜ0-9„"])/).slice(0, n).join(' ');
@@ -156,43 +169,47 @@ export function shapeChapters(chapters: ExportChapter[], f: ExportFilter, opts: 
 
 /** `media`: Bilder als data:-URIs einbetten (eigenständige Datei); ohne: Verweise bleiben `media:<sha>` */
 export function renderMarkdown(chapters: ExportChapter[], f: ExportFilter, media?: Media, extras: ExportExtras = {}): string {
-  const out: string[] = [`# ${extras.title ?? 'oneSCM Benutzerhandbuch'}`, '', `> Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, ''];
+  const F = frameTexts(extras.language);
+  const out: string[] = [`# ${extras.title ?? F.manualTitle}`, '', `> ${F.exportedOn} ${now().slice(0, 10)} · ${filterDescription(f, F)}`, ''];
   for (const ch of visible(chapters, f)) {
-    out.push(`## ${ch.title}`, '', ...(versionLine(ch) ? [`*${versionLine(ch)}*`, ''] : []));
+    const vl = versionLine(ch, F);
+    out.push(`## ${ch.title}`, '', ...(vl ? [`*${vl}*`, ''] : []));
     for (const s of ch.sections) {
       out.push(`### ${s.title}`, '');
       for (const b of s.blocks) {
         const badges = badgeLine(b);
         if (badges) out.push(`> ${badges}`, '');
-        out.push(`${KIND_PREFIX[b.kind] ?? ''}${media ? inlineMedia(b.text, media) : b.text}`, '');
+        out.push(`${kindPrefix(b.kind, F)}${media ? inlineMedia(b.text, media) : b.text}`, '');
       }
     }
   }
-  if (extras.appendices && hasAppendices(extras.appendices)) out.push(appendixMarkdown(extras.appendices));
+  if (extras.appendices && hasAppendices(extras.appendices)) out.push(localizeAppendixMarkdown(appendixMarkdown(extras.appendices), F));
   return out.join('\n');
 }
 
 /** Eigenständiges, druckfähiges HTML ohne Skripte (CSP im Dokument, HTML aus Quellen escaped). */
 export function renderHtml(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}): string {
-  const title = extras.title ?? 'oneSCM Benutzerhandbuch';
+  const F = frameTexts(extras.language);
+  const title = extras.title ?? F.manualTitle;
   const l = extras.layout ?? NO_LAYOUT;
   const images = (sha: string) => (media.has(sha) ? dataUri(media.get(sha)!) : null);
   // Titelseite (ADR-038)
   const cover = l.cover ? `<header class="cover">${l.logo ? `<img class="logo" src="${escapeHtml(dataUri(l.logo))}" alt="${escapeHtml(l.companyName ?? 'Logo')}">` : ''}
 ${l.companyName ? `<p class="company">${escapeHtml(l.companyName)}</p>` : ''}<h1>${escapeHtml(title)}</h1>${l.coverSubtitle ? `<p class="subtitle">${escapeHtml(l.coverSubtitle)}</p>` : ''}
-<p class="filter">Stand ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f))}</p>${l.confidentiality ? `<p class="confidential">${escapeHtml(l.confidentiality)}</p>` : ''}</header>` : '';
+<p class="filter">${F.asOf} ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f, F))}</p>${l.confidentiality ? `<p class="confidential">${escapeHtml(l.confidentiality)}</p>` : ''}</header>` : '';
   const body: string[] = [];
   const toc: string[] = [];
   visible(chapters, f).forEach((ch, i) => {
     toc.push(`<li><a href="#k${i}">${escapeHtml(ch.title)}</a></li>`);
-    body.push(`<section class="chapter" id="k${i}"><h2>${escapeHtml(ch.title)}</h2>${versionLine(ch) ? `<p class="meta">${escapeHtml(versionLine(ch))}</p>` : ''}`);
+    const vl = versionLine(ch, F);
+    body.push(`<section class="chapter" id="k${i}"><h2>${escapeHtml(ch.title)}</h2>${vl ? `<p class="meta">${escapeHtml(vl)}</p>` : ''}`);
     for (const s of ch.sections) {
       body.push(`<h3>${escapeHtml(s.title)}</h3>`);
       for (const b of s.blocks) {
         const badges = badgeLine(b);
         body.push(`<div class="block kind-${escapeHtml(b.kind)}">`);
         if (badges) body.push(`<p class="badges">${escapeHtml(badges)}</p>`);
-        if (KIND_LABEL[b.kind] && b.kind !== 'xref') body.push(`<p class="label">${KIND_LABEL[b.kind]}</p>`);
+        if (kindLabel(b.kind, F) && b.kind !== 'xref') body.push(`<p class="label">${escapeHtml(kindLabel(b.kind, F)!)}</p>`);
         body.push(markdownToHtml(b.text, images), '</div>');
       }
     }
@@ -200,11 +217,12 @@ ${l.companyName ? `<p class="company">${escapeHtml(l.companyName)}</p>` : ''}<h1
   });
   // Verzeichnisse im Anhang (Varianten-Export)
   for (const a of extras.appendices ? appendixHtmlSections(extras.appendices, images) : []) {
-    toc.push(`<li><a href="#${a.id}">${escapeHtml(a.title)}</a></li>`);
-    body.push(`<section class="chapter" id="${a.id}"><h2>${escapeHtml(a.title)}</h2>${a.html}</section>`);
+    const at = APPENDIX_KEY[a.id] ? String(F[APPENDIX_KEY[a.id]]) : a.title;
+    toc.push(`<li><a href="#${a.id}">${escapeHtml(at)}</a></li>`);
+    body.push(`<section class="chapter" id="${a.id}"><h2>${escapeHtml(at)}</h2>${a.html}</section>`);
   }
   return `<!doctype html>
-<html lang="de"><head><meta charset="utf-8">
+<html lang="${htmlLang(extras.language ?? 'de')}"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
@@ -224,8 +242,8 @@ nav ol{columns:2}
 </style></head><body>
 ${l.headerText ? `<p class="running">${escapeHtml(l.headerText)}</p>` : ''}
 ${cover || `<h1>${escapeHtml(title)}</h1>
-<p class="filter">Exportiert am ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f))}</p>`}
-<nav><h2>Inhalt</h2><ol>${toc.join('')}</ol></nav>
+<p class="filter">${F.exportedOn} ${now().slice(0, 10)} · ${escapeHtml(filterDescription(f, F))}</p>`}
+<nav><h2>${escapeHtml(F.contents)}</h2><ol>${toc.join('')}</ol></nav>
 ${body.join('\n')}
 ${l.footerText ? `<footer class="running">${escapeHtml(l.footerText)}</footer>` : ''}
 </body></html>`;
@@ -242,7 +260,8 @@ function pdfBadges(b: Block): string {
 }
 
 export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter, media?: Media, extras: ExportExtras = {}): Promise<Buffer> {
-  const title = extras.title ?? 'oneSCM Benutzerhandbuch';
+  const F = frameTexts(extras.language);
+  const title = extras.title ?? F.manualTitle;
   const l = extras.layout ?? NO_LAYOUT;
   const content: unknown[] = l.cover ? [
     // Titelseite (ADR-038)
@@ -250,23 +269,23 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
     ...(l.companyName ? [{ text: l.companyName, fontSize: 14, bold: true, color: l.primaryColor, margin: [0, 0, 0, 8] }] : []),
     { text: title, style: 'title' },
     ...(l.coverSubtitle ? [{ text: l.coverSubtitle, fontSize: 14, margin: [0, 0, 0, 12] }] : []),
-    { text: `Stand ${now().slice(0, 10)} · ${filterDescription(f)}`, style: 'meta' },
+    { text: `${F.asOf} ${now().slice(0, 10)} · ${filterDescription(f, F)}`, style: 'meta' },
     ...(l.confidentiality ? [{ text: l.confidentiality, bold: true, color: '#b91c1c', margin: [0, 40, 0, 0] }] : []),
     { text: '', pageBreak: 'after' },
   ] : [
     { text: title, style: 'title' },
-    { text: `Exportiert am ${now().slice(0, 10)} · ${filterDescription(f)}`, style: 'meta', margin: [0, 0, 0, 16] },
+    { text: `${F.exportedOn} ${now().slice(0, 10)} · ${filterDescription(f, F)}`, style: 'meta', margin: [0, 0, 0, 16] },
   ];
   visible(chapters, f).forEach((ch, i) => {
     content.push({ text: ch.title, style: 'chapter', tocItem: true, ...(i > 0 ? { pageBreak: 'before' } : {}) });
-    if (versionLine(ch)) content.push({ text: versionLine(ch), style: 'meta', margin: [0, 0, 0, 8] });
+    if (versionLine(ch, F)) content.push({ text: versionLine(ch, F), style: 'meta', margin: [0, 0, 0, 8] });
     for (const s of ch.sections) {
       content.push({ text: s.title, style: 'section' });
       for (const b of s.blocks) {
         const badges = pdfBadges(b);
         const inner: unknown[] = [];
         if (badges) inner.push({ text: badges, style: 'badges' });
-        if (KIND_LABEL[b.kind] && b.kind !== 'xref') inner.push({ text: KIND_LABEL[b.kind], bold: true });
+        if (kindLabel(b.kind, F) && b.kind !== 'xref') inner.push({ text: kindLabel(b.kind, F), bold: true });
         inner.push(...markdownToPdf(b.text, media));
         const box = b.kind === 'warning' ? '#fdecec' : b.kind === 'note' || b.kind === 'tip' ? '#eaf1fd' : null;
         content.push(box ? { table: { widths: ['*'], body: [[{ stack: inner, fillColor: box }]] }, layout: 'noBorders', margin: [0, 2, 0, 8] } : { stack: inner, margin: [0, 0, 0, 4] });
@@ -282,7 +301,7 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
     header: (page: number) => (l.cover && page === 1) || !(l.headerText || l.companyName) ? null
       : { text: l.headerText ?? [l.companyName, title].filter(Boolean).join(' · '), alignment: 'right', fontSize: 8, color: '#64748b', margin: [48, 24, 48, 0] },
     footer: (page: number, pages: number) => (l.cover && page === 1 ? null
-      : { text: `${l.footerText ? `${l.footerText} · ` : ''}Seite ${page} von ${pages}`, alignment: 'center', fontSize: 8, color: '#64748b', margin: [0, 20, 0, 0] }),
+      : { text: `${l.footerText ? `${l.footerText} · ` : ''}${pageLine(F, page, pages)}`, alignment: 'center', fontSize: 8, color: '#64748b', margin: [0, 20, 0, 0] }),
     styles: {
       title: { fontSize: 22, bold: true, margin: [0, 0, 0, 4] },
       meta: { fontSize: 9, color: '#5b6474' },
@@ -300,13 +319,14 @@ export async function renderPdfExport(chapters: ExportChapter[], f: ExportFilter
 
 /** Word-Export (ADR-038) aus den sichtbaren Absätzen */
 export async function renderDocxExport(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}): Promise<Buffer> {
+  const F = frameTexts(extras.language);
   return renderDocx(visible(chapters, f).map((ch) => ({
-    title: ch.title, meta: versionLine(ch),
+    title: ch.title, meta: versionLine(ch, F),
     sections: ch.sections.map((s) => ({
       title: s.title,
-      blocks: s.blocks.map((b: any) => ({ kind: b.kind, text: b.text, badges: pdfBadges(b), label: KIND_LABEL[b.kind] && b.kind !== 'xref' ? KIND_LABEL[b.kind] : null })),
+      blocks: s.blocks.map((b: any) => ({ kind: b.kind, text: b.text, badges: pdfBadges(b), label: kindLabel(b.kind, F) && b.kind !== 'xref' ? kindLabel(b.kind, F)! : null })),
     })),
-  })), { title: extras.title ?? 'oneSCM Benutzerhandbuch', filterLine: filterDescription(f), media, layout: extras.layout ?? NO_LAYOUT, appendices: extras.appendices });
+  })), { title: extras.title ?? F.manualTitle, filterLine: filterDescription(f, F), media, layout: extras.layout ?? NO_LAYOUT, appendices: extras.appendices, frame: F });
 }
 
 /** Ohne Verzeichnisse: nur die Historie abgelöster Funktionen (ADR-096), sofern vorhanden */

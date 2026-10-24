@@ -13,7 +13,7 @@ export interface Passage {
   section: string;
 }
 
-const LANGUAGE_NAMES: Record<string, string> = { de: 'German', en: 'English', fr: 'French', es: 'Spanish', it: 'Italian', nl: 'Dutch', pl: 'Polish', cs: 'Czech', pt: 'Portuguese' };
+const LANGUAGE_NAMES: Record<string, string> = { de: 'German', en: 'English', fr: 'French', es: 'Spanish', it: 'Italian', nl: 'Dutch', pl: 'Polish', cs: 'Czech', pt: 'Portuguese', sk: 'Slovak', ko: 'Korean', ms: 'Malay', 'de-ch': 'Swiss Standard German (ss instead of ß)', 'fr-ch': 'Swiss French' };
 
 export function buildAssistantPrompt(question: string, passages: Passage[], language: string) {
   const system = `You answer questions about the user manual of the software oneSCM.
