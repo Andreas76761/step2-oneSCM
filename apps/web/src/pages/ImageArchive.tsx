@@ -613,10 +613,10 @@ function ImageLabels({ item, canEdit, onChange }: { item: any; canEdit: boolean;
             <div key={key} className="ia-label-row">
               <dt>{title}</dt>
               <dd>
-                {mine.map((l: any) => chip(l.id, l.nameDe, () => void send({ labelIds: labelIds.filter((x) => x !== l.id) }, `${l.nameDe} entfernt.`)))}
+                {mine.map((l: any) => chip(l.id, l.nameDe, () => void send({ removeLabelIds: [l.id] }, `${l.nameDe} entfernt.`)))}
                 {!mine.length && <span className="muted">– </span>}
                 {canEdit && free.length > 0 && (
-                  <select aria-label={`${title} hinzufügen`} value="" onChange={(e) => e.target.value && void send({ labelIds: [...labelIds, e.target.value] }, 'Label hinzugefügt.')}>
+                  <select aria-label={`${title} hinzufügen`} value="" onChange={(e) => e.target.value && void send({ addLabelIds: [e.target.value] }, 'Label hinzugefügt.')}>
                     <option value="">+ hinzufügen</option>
                     {free.map((l: any) => <option key={l.id} value={l.id}>{key === 'other' ? `${l.group}: ` : ''}{l.nameDe}</option>)}
                   </select>
@@ -627,10 +627,10 @@ function ImageLabels({ item, canEdit, onChange }: { item: any; canEdit: boolean;
         })}
         <dt>Kapitel</dt>
         <dd>
-          {item.chapters.map((c: any) => chip(c.id, c.title, () => void send({ chapterIds: chapterIds.filter((x) => x !== c.id) }, `${c.title} entfernt.`)))}
+          {item.chapters.map((c: any) => chip(c.id, c.title, () => void send({ removeChapterIds: [c.id] }, `${c.title} entfernt.`)))}
           {!item.chapters.length && <span className="muted">– </span>}
           {canEdit && (chapters.data ?? []).some((c: any) => !chapterIds.includes(c.id)) && (
-            <select aria-label="Kapitel hinzufügen" value="" onChange={(e) => e.target.value && void send({ chapterIds: [...chapterIds, e.target.value] }, 'Kapitel zugeordnet.')}>
+            <select aria-label="Kapitel hinzufügen" value="" onChange={(e) => e.target.value && void send({ addChapterIds: [e.target.value] }, 'Kapitel zugeordnet.')}>
               <option value="">+ hinzufügen</option>
               {(chapters.data ?? []).filter((c: any) => !chapterIds.includes(c.id)).map((c: any) => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>

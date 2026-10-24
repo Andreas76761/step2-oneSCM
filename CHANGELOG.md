@@ -20,6 +20,9 @@
 ### Geändert
 - Die Demo-KI (ohne eingerichteten KI-Dienst) pseudo-lokalisiert statt deutschen Text auszugeben; ins Deutsche läuft sie rückwärts.
 
+### Behoben
+- **Bildarchiv:** Labels und Kapitel werden einzeln hinzugefügt bzw. entfernt (`addLabelIds`, `removeLabelIds`, `addChapterIds`, `removeChapterIds`). Schnell nacheinander gewählte Labels überschreiben sich nicht mehr gegenseitig (Ursache von T-291 in CI).
+
 ## 0.47.0 – Etappe 47 (24.10.2026)
 
 ### Hinzugefügt

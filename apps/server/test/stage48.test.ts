@@ -189,6 +189,12 @@ describe('Etappe 48', () => {
       await importFile(built, 'b.zip', await z.generateAsync({ type: 'nodebuffer' }));
       const sha = sha256(img);
       await call('PATCH', `/image-archive/${sha}`, { title: 'Vertragsliste', language: 'de', roles: ['all'], divisions: ['car'] }, 'u-redaktion');
+      // einzelne Labels hinzufügen und entfernen: gleichzeitige Änderungen überschreiben sich nicht
+      const lbl = (await call('GET', '/metadata/labels?group=domain')).json.slice(0, 2).map((l: any) => l.id);
+      await Promise.all(lbl.map((id: string) => call('PATCH', `/image-archive/${sha}`, { addLabelIds: [id] }, 'u-redaktion')));
+      expect((await call('GET', '/image-archive')).json.items.find((i: any) => i.sha === sha).labels.filter((l: any) => l.group === 'domain')).toHaveLength(2);
+      await call('PATCH', `/image-archive/${sha}`, { removeLabelIds: [lbl[0]] }, 'u-redaktion');
+      expect((await call('GET', '/image-archive')).json.items.find((i: any) => i.sha === sha).labels.map((l: any) => l.id)).toEqual([lbl[1]]);
       await call('PATCH', '/projects/p_default', { languages: ['fr', 'de-ch', 'fr-ch'] });
       const a = await chapter(call, 'Straßenverkehr melden', {
         result: `Der Vertrag ist gespeichert.\n\n![Vertragsliste](media:${sha})`, hints: ['WARNUNG: Gespeicherte Verträge lassen sich nicht löschen'],

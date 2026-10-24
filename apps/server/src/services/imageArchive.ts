@@ -229,6 +229,16 @@ export async function updateImageMeta(ctx: Ctx, sha: string, input: any, user: U
     if (input.outlineLabelId !== null && !(await ctx.db.get("SELECT 1 FROM metadata_labels WHERE id = ? AND project_id = ? AND label_group = 'outline'", input.outlineLabelId, ctx.projectId))) throw badRequest('outlineLabelId ist kein Punkt der Gesamtgliederung dieses Projekts.');
     set('outline_label_id', input.outlineLabelId);
   }
+  // einzelne Labels hinzufügen bzw. entfernen – schnelle Folgeänderungen überschreiben sich nicht (statt vollständiger Liste)
+  // (Einfügen mit ON CONFLICT bzw. Löschen je Label, damit auch gleichzeitige Anfragen nichts verlieren)
+  const single = input.labelIds === undefined && (input.addLabelIds !== undefined || input.removeLabelIds !== undefined);
+  const addLabels = single ? cleanList(input.addLabelIds ?? [], (x) => x.length > 0 && x.length <= 80, 'addLabelIds') : [];
+  const removeLabels = single ? cleanList(input.removeLabelIds ?? [], (x) => x.length > 0 && x.length <= 80, 'removeLabelIds') : [];
+  if (addLabels.length) {
+    const ok = await ctx.db.all(`SELECT id, label_group FROM metadata_labels WHERE project_id = ? AND id IN (${addLabels.map(() => '?').join(', ')})`, ctx.projectId, ...addLabels);
+    const bad = addLabels.filter((id) => !ok.some((l) => l.id === id && IMAGE_LABEL_GROUPS.includes(l.label_group)));
+    if (bad.length) throw badRequest(`addLabelIds: ${bad.join(', ')} ist kein Label dieses Projekts.`);
+  }
   // mehrere Labels (Domäne, Rolle, Gliederung …) und Kapitel je Bild (ADR-095): jeweils die vollständige Liste
   let labelIds: string[] | undefined;
   if (input.labelIds !== undefined) {
@@ -255,6 +265,14 @@ export async function updateImageMeta(ctx: Ctx, sha: string, input: any, user: U
     const have = (await ctx.db.all('SELECT label_id FROM media_labels WHERE project_id = ? AND base_sha = ?', ctx.projectId, base.sha256)).map((r) => r.label_id as string);
     if (!have.includes(input.outlineLabelId)) labelIds = [...have, input.outlineLabelId];
   }
+  const singleCh = input.chapterIds === undefined && (input.addChapterIds !== undefined || input.removeChapterIds !== undefined);
+  const addChapters = singleCh ? cleanList(input.addChapterIds ?? [], (x) => x.length > 0 && x.length <= 80, 'addChapterIds') : [];
+  const removeChapters = singleCh ? cleanList(input.removeChapterIds ?? [], (x) => x.length > 0 && x.length <= 80, 'removeChapterIds') : [];
+  if (addChapters.length) {
+    const ok = await ctx.db.all(`SELECT id FROM chapters WHERE project_id = ? AND id IN (${addChapters.map(() => '?').join(', ')})`, ctx.projectId, ...addChapters);
+    const bad = addChapters.filter((id) => !ok.some((c) => c.id === id));
+    if (bad.length) throw badRequest(`addChapterIds: ${bad.join(', ')} ist kein Kapitel dieses Projekts.`);
+  }
   let chapterIds: string[] | undefined;
   if (input.chapterIds !== undefined) {
     chapterIds = cleanList(input.chapterIds, (x) => x.length > 0 && x.length <= 80, 'chapterIds');
@@ -274,6 +292,16 @@ export async function updateImageMeta(ctx: Ctx, sha: string, input: any, user: U
     if (chapterIds) {
       await ctx.db.run('DELETE FROM media_chapters WHERE project_id = ? AND base_sha = ?', ctx.projectId, base.sha256);
       for (const id of chapterIds) await ctx.db.run('INSERT INTO media_chapters (project_id, base_sha, chapter_id, created_by, created_at) VALUES (?, ?, ?, ?, ?)', ctx.projectId, base.sha256, id, user.id, now());
+    }
+    for (const id of addLabels) await ctx.db.run('INSERT INTO media_labels (project_id, base_sha, label_id, created_by, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING', ctx.projectId, base.sha256, id, user.id, now());
+    for (const id of removeLabels) await ctx.db.run('DELETE FROM media_labels WHERE project_id = ? AND base_sha = ? AND label_id = ?', ctx.projectId, base.sha256, id);
+    for (const id of addChapters) await ctx.db.run('INSERT INTO media_chapters (project_id, base_sha, chapter_id, created_by, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING', ctx.projectId, base.sha256, id, user.id, now());
+    for (const id of removeChapters) await ctx.db.run('DELETE FROM media_chapters WHERE project_id = ? AND base_sha = ? AND chapter_id = ?', ctx.projectId, base.sha256, id);
+    if (single) {
+      // Gliederungsstelle (F-25) wie bei der vollständigen Liste: erster verbleibender Gliederungs-Label
+      const outlines = (await ctx.db.all("SELECT x.label_id FROM media_labels x JOIN metadata_labels l ON l.id = x.label_id WHERE x.project_id = ? AND x.base_sha = ? AND l.label_group = 'outline' ORDER BY x.created_at", ctx.projectId, base.sha256)).map((r) => r.label_id as string);
+      const meta = await ctx.db.get('SELECT outline_label_id FROM media_meta WHERE project_id = ? AND base_sha = ?', ctx.projectId, base.sha256);
+      if (!outlines.includes(meta?.outline_label_id)) await ctx.db.run('UPDATE media_meta SET outline_label_id = ? WHERE project_id = ? AND base_sha = ?', outlines[0] ?? null, ctx.projectId, base.sha256);
     }
     await audit(ctx, user.id, 'image.meta_updated', 'media', base.sha256, { ...input });
   });

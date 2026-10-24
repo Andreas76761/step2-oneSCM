@@ -2770,8 +2770,8 @@ test('[T-318] Übersetzung: KI-Übersetzung, Büro-Austausch (XLIFF), Länderrev
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
   await nav.getByRole('link', { name: 'Übersetzungen', exact: true }).click();
   await page.getByLabel('Kapitel für Übersetzungen').selectOption({ label: 'E2E Kündigung übersetzen' });
-  await page.locator('tr', { hasText: 'Französisch' }).getByRole('button', { name: 'Öffnen' }).click();
-  await page.getByRole('button', { name: /Unübersetzte Absätze übersetzen/ }).click();
+  await page.locator('tr', { hasText: 'Französisch' }).getByRole('button', { name: 'Öffnen', exact: true }).click();
+  await page.getByRole('button', { name: '✨ Unübersetzte Absätze mit KI übersetzen' }).click();
   await expect(page.getByText(/KI \(demo-extractive\)/).first()).toBeVisible({ timeout: 15000 });
   await page.getByText('Übersetzungsbüro: XLIFF 1.2 oder Excel').click();
   await expect(page.getByRole('button', { name: 'XLIFF 1.2 herunterladen' })).toBeVisible();
@@ -2786,7 +2786,7 @@ test('[T-318] Übersetzung: KI-Übersetzung, Büro-Austausch (XLIFF), Länderrev
   await page.getByLabel('Demo-Benutzer').selectOption('u-fachpruefung');
   await nav.getByRole('link', { name: 'Übersetzungen', exact: true }).click();
   await page.getByLabel('Kapitel für Übersetzungen').selectOption({ label: 'E2E Kündigung übersetzen' });
-  await page.locator('tr', { hasText: 'Französisch' }).getByRole('button', { name: 'Öffnen' }).click();
+  await page.locator('tr', { hasText: 'Französisch' }).getByRole('button', { name: 'Öffnen', exact: true }).click();
   const r2 = page.getByRole('region', { name: 'Länderreview' });
   await r2.getByRole('combobox', { name: 'Schwere' }).selectOption('critical');
   await r2.getByRole('textbox', { name: 'Beschreibung' }).fill('Kündigungsfrist fehlt');

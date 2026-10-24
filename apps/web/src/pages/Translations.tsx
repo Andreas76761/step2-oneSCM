@@ -150,10 +150,10 @@ function TranslationEditor({ id, me, canEdit, canApprove, llm, langs, onChanged 
           </button>
         )}
         {draft && canEdit && !d.ruleBased && llm?.enabled && (
-          <button className="btn" disabled={running} onClick={() => {
+          <button className="btn" disabled={running} title="Zuerst 100-%-Treffer aus dem Übersetzungsspeicher, dann KI" onClick={() => {
             if (llm.external && !confirm(`Die deutschen Absätze werden zur Übersetzung an ${llm.provider} (${llm.model}) übertragen. Fortfahren?`)) return;
             void act(() => post(`/translations/${id}/machine`, {}), 'KI-Übersetzung gestartet.');
-          }}>{running ? 'KI übersetzt …' : '✨ Unübersetzte Absätze übersetzen (Speicher, dann KI)'}</button>
+          }}>{running ? 'KI übersetzt …' : '✨ Unübersetzte Absätze mit KI übersetzen'}</button>
         )}
         <button className="btn small" onClick={() => download(`/api/v1/translations/${id}/export?format=md`, `${d.language}.md`).catch((e) => notify(errorText(e), 'error'))}>Export Markdown</button>
         <button className="btn small" onClick={() => download(`/api/v1/translations/${id}/export?format=html`, `${d.language}.html`).catch((e) => notify(errorText(e), 'error'))}>Export HTML</button>
