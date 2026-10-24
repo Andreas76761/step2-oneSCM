@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.56.0 – Etappe 56 (24.10.2026)
+
+### Hinzugefügt
+- **Zuschaltbare Regelsätze (ADR-109, S-06):** ein- und ausschalten je Projekt unter „Schreibstil › Regeln“, jede Regel einzeln abschaltbar. Die Funde zählen als Regel „Regelsatz“ in Schreibstil, Kapitelprüfung, Kapitelbewertung, Prüferprofil „Redaktion“ und Fehlerliste.
+  - **Regelbasiertes Schreiben** (Deutsch): eine Handlung je Schritt, Bedingung vor Handlung, direkt auffordern, Schritte höchstens 20 Wörter, genau verweisen, keine doppelte Verneinung, keine Klammern in Schritten.
+  - **Simplified Technical English** (Englisch, Schreibregeln von ASD-STE100 ohne das geschützte Wörterbuch): Satzlänge 20/25 Wörter, eine Anweisung je Satz, Aktiv, keine -ing-Formen, klare Anweisungen, höchstens sechs Sätze je Absatz.
+  - **Vale-Stile** einlesen (YAML-Dateien oder ZIP mit dem Stilordner) mit den Regeltypen existence, substitution (mit Korrektur per Klick) und occurrence. Nicht unterstützte Regeln und unsichere Muster werden mit Grund genannt. Die Prüfung läuft lokal in der App.
+- **Benachrichtigung zum Länderreview (ADR-109):**
+  - Prüferin bzw. Prüfer und Vertretung erhalten beim Anfordern einen Hinweis.
+  - Die anfordernde Person erhält das Ergebnis.
+  - Zustellung über „Aufgaben & Hinweise“ sowie Webhook/E-Mail je Einstellung.
+  - Der Link und „Meine Länderreviews“ öffnen die Übersetzung direkt.
+- Tests T-349 … T-352, E2E T-353 (axe); Anforderungen NFR-142 … NFR-144; Migration 062.
+
+### Geändert
+- Einstellungen: Die Schaltfläche der Karte „Ansprechperson festlegen“ heißt „Ansprechperson speichern“; ein zweites „Speichern“ auf der Seite war mehrdeutig (E2E T-210).
+- E2E T-234 öffnet die englische Glossar-Erklärung erneut, falls sie beim Nachladen des Glossars schließt (einmal in CI unter Node 22).
+
 ## 0.55.0 – Etappe 55 (24.10.2026)
 
 Entscheidungen des Auftraggebers vom 24.10.2026: G-04 LanguageTool als Java-Dienst ohne Docker; O-09 Benutzer je Land/Markt als Ansprechperson mit Vertretung; U-07 ohne Auswahl (bleibt offen).

@@ -23,6 +23,7 @@ const CATEGORY_OF: Record<StyleRule, string> = {
   terminology: 'Terminologie', product_name: 'Terminologie', custom: 'Terminologie', numbers: 'Zahlen und Einheiten', abbreviation: 'Konsistenz',
   long_sentence: 'Stil und Tonalität', passive: 'Stil und Tonalität', future: 'Stil und Tonalität', past: 'Stil und Tonalität', filler: 'Stil und Tonalität',
   impersonal: 'Stil und Tonalität', colloquial: 'Stil und Tonalität', hedging: 'Stil und Tonalität', nominal: 'Stil und Tonalität', address: 'Stil und Tonalität', tone: 'Stil und Tonalität',
+  rule_set: 'Stil und Tonalität',
 };
 const MAX_TEXT = 500;
 const nrLabel = (n: number) => `F-${String(n).padStart(4, '0')}`;

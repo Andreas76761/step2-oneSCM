@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { del, download, get, patch, post } from '../api';
 import { Card, Empty, ErrorBox, Md, Page, Status, errorText, useApp, useLoad } from '../components/ui';
 
@@ -11,12 +11,14 @@ export function TranslationsPage() {
   const llm = useLoad<any>('/llm/status');
   const me = useLoad<any>('/me');
   const approved = (chapters.data ?? []).filter((c) => c.versions.some((v: any) => v.status === 'approved'));
-  const [chapterId, setChapterId] = useState('');
+  // Sprung aus einer Benachrichtigung (ADR-109): ?kapitel=…&uebersetzung=…
+  const [params] = useSearchParams();
+  const [chapterId, setChapterId] = useState(params.get('kapitel') ?? '');
   useEffect(() => {
     if (!chapterId && approved.length) setChapterId(approved[0].id);
   }, [approved.length]);
   const list = useLoad<any[]>(chapterId ? `/translations?chapterId=${chapterId}` : null, [chapterId]);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(params.get('uebersetzung'));
   const perms: string[] = me.data?.permissions ?? [];
   const canEdit = perms.includes('edit') || perms.includes('admin');
   const projectLangs: string[] = langs.data?.projectLanguages ?? [];
@@ -47,7 +49,7 @@ export function TranslationsPage() {
           <ul className="plain" aria-label="Meine Länderreviews">
             {mine.data.items.map((r) => (
               <li key={r.id}>
-                <button type="button" className="linklike" onClick={() => (setChapterId(approved.find((c) => c.title === r.chapterTitle)?.id ?? chapterId), setOpenId(r.translationId))}>{r.chapterTitle}</button>
+                <button type="button" className="linklike" onClick={() => (setChapterId(r.chapterId), setOpenId(r.translationId))}>{r.chapterTitle}</button>
                 <span className="small muted"> · {name(r.language)}{r.market ? ` · Markt ${r.market}` : ''}{r.asDeputy ? ` · als Vertretung für ${r.reviewerName}` : ''} · seit {new Date(r.requestedAt).toLocaleDateString('de-DE')}</span>
               </li>
             ))}

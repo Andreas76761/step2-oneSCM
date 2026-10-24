@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.55.0
+  version: 0.56.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3145,7 +3145,7 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ items: [{ id, translationId, chapterTitle, language, market, reviewerName, asDeputy, requestedAt }] }' }
+        '200': { description: '{ items: [{ id, translationId, chapterId, chapterTitle, language, market, reviewerName, asDeputy, requestedAt }] }' }
   /style/language-tool:
     get:
       operationId: getLanguageToolStatus
@@ -3156,6 +3156,81 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ configured, available, languages, reason }' }
+  /style/rule-sets:
+    get:
+      operationId: listStyleRuleSets
+      summary: 'Zuschaltbare Regelsätze (ADR-109, S-06): mitgelieferte (Regelbasiertes Schreiben, Simplified Technical English) und eingelesene Vale-Stile mit Regeln, Sprache, ein/aus'
+      tags: [Schreibstil]
+      x-requirements: [NFR-142, NFR-143]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ sets: [{ key, name, kind, language, enabled, description, rules: [{ id, label, description, enabled }], unsupported }], languages }' }
+  /style/rule-sets/{key}:
+    parameters:
+      - { name: key, in: path, required: true, schema: { type: string }, description: 'tekom, ste oder vale:<name>' }
+    patch:
+      operationId: updateStyleRuleSet
+      summary: 'Regelsatz ein- oder ausschalten, einzelne Regeln abschalten, Sprache ändern (Berechtigung admin)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-142]
+      x-extension: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                disabledRules: { type: array, items: { type: string } }
+                language: { type: string }
+      responses:
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '200': { description: Regelsatz }
+    delete:
+      operationId: deleteStyleRuleSet
+      summary: 'Vale-Stil entfernen; mitgelieferte Sätze lassen sich nur ausschalten (Berechtigung admin)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-143]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '204': { description: entfernt }
+  /style/rule-sets/vale:
+    post:
+      operationId: importValeStyle
+      summary: 'Vale-Stil einlesen bzw. ersetzen: JSON { name, language, files: [{ name, content }] } oder multipart (Feld file: .yml oder ZIP mit dem Stilordner; name, language als Abfrageparameter). Unterstützt existence, substitution, occurrence (Berechtigung admin)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-143]
+      x-extension: true
+      parameters:
+        - { name: name, in: query, schema: { type: string } }
+        - { name: language, in: query, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, files]
+              properties:
+                name: { type: string }
+                language: { type: string }
+                files: { type: array, items: { type: object, properties: { name: { type: string }, content: { type: string } } } }
+          multipart/form-data:
+            schema: { type: object, properties: { file: { type: string, format: binary } } }
+      responses:
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '413': { $ref: '#/components/responses/Problem' }
+        '201': { description: 'Regelsatz mit Regeln und nicht übernommenen Regeln (unsupported)' }
   /style/tone:
     get:
       operationId: getStyleTone
@@ -6398,9 +6473,9 @@ paths:
         '404': { $ref: '#/components/responses/Problem' }
     post:
       operationId: requestTranslationReview
-      summary: 'Länderreview anfordern: Prüferin bzw. Prüfer und Markt; ohne reviewer geht es an die Ansprechperson des Marktes, bei gesperrtem Konto an die Vertretung (ADR-108, O-09; Berechtigung edit)'
+      summary: 'Länderreview anfordern: Prüferin bzw. Prüfer und Markt; ohne reviewer geht es an die Ansprechperson des Marktes, bei gesperrtem Konto an die Vertretung (ADR-108, O-09). Prüferin bzw. Prüfer und Vertretung werden benachrichtigt (ADR-109; Berechtigung edit)'
       tags: [Übersetzung]
-      x-requirements: [NFR-120, NFR-141]
+      x-requirements: [NFR-120, NFR-141, NFR-144]
       x-extension: true
       parameters: [{ name: translationId, in: path, required: true, schema: { type: string } }]
       requestBody:
@@ -6448,7 +6523,7 @@ paths:
       operationId: decideTranslationReview
       summary: 'Freigabe durch das Land (bis 5 MQM-Punkte je 1 000 Wörter) oder „zurück an Übersetzung“'
       tags: [Übersetzung]
-      x-requirements: [NFR-120]
+      x-requirements: [NFR-120, NFR-144]
       x-extension: true
       parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
       requestBody:

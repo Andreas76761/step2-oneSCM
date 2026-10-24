@@ -110,3 +110,4 @@
 | [ADR-106](ADR-106-vorher-nachher-pptx-zwischenbilder.md) | Vorher/Nachher-Belege mit Schieberegler und Gegenüberstellung, Ausgabe als PowerPoint, Klickstrecke als BPMN 2.0, Zwischenbilder kurzer Zustände aus Videos | akzeptiert, umgesetzt |
 | [ADR-107](ADR-107-textbausteine-uebersicht.md) | Textbausteine (Single Sourcing) mit Fassungen, Verwendung und Aktualisieren in Entwürfen; Zwischenspeicher der Übersicht oneSCM_Metadaten | akzeptiert, umgesetzt |
 | [ADR-108](ADR-108-languagetool-ansprechperson-markt.md) | Lokale Grammatikprüfung mit LanguageTool als Java-Dienst; Ansprechperson je Land/Markt mit Vertretung für das Länderreview | akzeptiert, umgesetzt |
+| [ADR-109](ADR-109-regelsaetze-benachrichtigung.md) | Zuschaltbare Regelsätze (Regelbasiertes Schreiben, Simplified Technical English, Vale-Stile); Benachrichtigung zum Länderreview | akzeptiert, umgesetzt |

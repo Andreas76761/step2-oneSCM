@@ -2635,5 +2635,53 @@
       "NFR-140",
       "NFR-141"
     ]
+  },
+  {
+    "id": "T-349",
+    "title": "Regelsätze: Regelbasiertes Schreiben und STE-Grundregeln mit Fundstellen, Regeln abschaltbar",
+    "file": "apps/server/test/stage56.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-142"
+    ]
+  },
+  {
+    "id": "T-350",
+    "title": "Vale-Stile lesen: existence, substitution mit Korrektur, occurrence; nicht unterstützte Regeln und unsichere Muster",
+    "file": "apps/server/test/stage56.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-143"
+    ]
+  },
+  {
+    "id": "T-351",
+    "title": "Regelsätze je Projekt: einschalten, Regel abschalten, Vale-Stil als JSON und ZIP, Wirkung in Stil- und Kapitelprüfung, Berechtigung",
+    "file": "apps/server/test/stage56.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-142",
+      "NFR-143"
+    ]
+  },
+  {
+    "id": "T-352",
+    "title": "Benachrichtigung zum Länderreview an Ansprechperson und Vertretung, Ergebnis an die anfordernde Person",
+    "file": "apps/server/test/stage56.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-144"
+    ]
+  },
+  {
+    "id": "T-353",
+    "title": "Regelsätze im Schreibstil einschalten, Vale-Stil einlesen, Fund in der Prüfung; Benachrichtigung führt zur Übersetzung – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-142",
+      "NFR-143",
+      "NFR-144"
+    ]
   }
 ]

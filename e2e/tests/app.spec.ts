@@ -3129,3 +3129,62 @@ test('[T-348] Ansprechperson je Markt mit Vertretung, Länderreview automatisch,
   await expect(mine).toContainText('als Vertretung für Fachprüfung (Demo)');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-353] Regelsätze im Schreibstil einschalten, Vale-Stil einlesen, Fund in der Prüfung; Benachrichtigung zum Länderreview führt zur Übersetzung – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const adm = { 'X-User-Id': 'u-admin' };
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.goto('/schreibstil');
+  await page.getByRole('tab', { name: 'Regeln' }).click();
+  const tekom = page.getByRole('group', { name: 'Regelsatz Regelbasiertes Schreiben' });
+  await tekom.getByRole('checkbox', { name: 'Regelbasiertes Schreiben' }).click();
+  await expect(page.getByText('Regelsatz „Regelbasiertes Schreiben“ eingeschaltet.')).toBeVisible();
+  await expect(tekom.getByRole('checkbox', { name: 'Regelbasiertes Schreiben' })).toBeChecked();
+  await tekom.getByText(/Regeln \(7 von 7 aktiv\)/).click();
+  await expect(tekom.getByRole('checkbox', { name: 'Eine Handlung je Schritt' })).toBeChecked();
+  // Vale-Stil aus einer Regeldatei
+  const vale = page.getByRole('group', { name: 'Vale-Stil einlesen' });
+  await vale.getByLabel('Name des Stils').fill('E2E Haus');
+  await vale.getByLabel('Sprache der Texte').selectOption('en');
+  await vale.getByLabel('Regeldateien (.yml oder ZIP)').setInputFiles({ name: 'Weasel.yml', mimeType: 'application/x-yaml', buffer: Buffer.from("extends: existence\nmessage: \"'%s' is a weasel word!\"\nignorecase: true\nlevel: warning\ntokens:\n  - simply\n") });
+  await vale.getByRole('button', { name: 'Vale-Stil einlesen' }).click();
+  await expect(page.getByText('Vale-Stil „E2E Haus“ eingelesen: 1 Regel.')).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Regelsatz E2E Haus' })).toContainText('Vale-Stil · Sprache en');
+  expect(await axe()).toEqual([]);
+
+  // Prüfung: Fund des Regelsatzes im Textfeld (Deutsch) und des Vale-Stils (Englisch)
+  await page.getByRole('tab', { name: 'Textfeld' }).click();
+  await page.getByRole('textbox', { name: 'Text' }).fill('1. Öffnen Sie **Verträge** und klicken Sie auf **Neu**.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Stilwert' })).toContainText('Regelsatz 1');
+  await page.getByLabel('Sprache des Textes').selectOption('en');
+  await page.getByRole('textbox', { name: 'Text' }).fill('Simply open the menu.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Stilwert' })).toContainText('Regelsatz 1');
+  expect(await axe()).toEqual([]);
+  // aufräumen: Regelsatz aus, Vale-Stil entfernen
+  expect((await request.patch('/api/v1/style/rule-sets/tekom', { headers: adm, data: { enabled: false } })).ok()).toBe(true);
+  expect((await request.delete(`/api/v1/style/rule-sets/${encodeURIComponent('vale:e2e-haus')}`, { headers: adm })).status()).toBe(204);
+
+  // Länderreview: Benachrichtigung an die Prüferin, „öffnen“ führt direkt zur Übersetzung
+  const proj = (await (await request.get('/api/v1/projects', { headers: adm })).json()).find((p: any) => p.id === 'p_default');
+  await request.patch('/api/v1/projects/p_default', { headers: adm, data: { languages: [...new Set([...(proj?.languages ?? []), 'fr'])] } });
+  const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: 'E2E Hinweis Länderreview', purpose: 'Mit dieser Anleitung legen Sie einen Vertrag an.', steps: ['Öffnen Sie **Verträge**'], result: 'Der Vertrag ist gespeichert.' } })).json();
+  expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/submit`, { headers: red, data: {} })).ok()).toBe(true);
+  expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+  const tr = await (await request.post('/api/v1/translations', { headers: red, data: { chapterId: ch.chapterId, language: 'fr' } })).json();
+  expect((await request.post(`/api/v1/translations/${tr.id}/reviews`, { headers: red, data: { reviewer: 'u-fachpruefung' } })).ok()).toBe(true);
+  await page.getByLabel('Demo-Benutzer').selectOption('u-fachpruefung');
+  await page.goto('/aufgaben');
+  const hint = page.locator('.comment-list li').filter({ hasText: 'Länderreview für „E2E Hinweis Länderreview“' });
+  await expect(hint).toContainText('ist Ihnen zugewiesen');
+  expect(await axe()).toEqual([]);
+  await hint.getByRole('link', { name: 'öffnen' }).click();
+  await expect(page).toHaveURL(/\/uebersetzungen\?kapitel=/);
+  await expect(page.getByRole('heading', { name: 'Französisch: E2E Hinweis Länderreview' })).toBeVisible();
+  expect(await axe()).toEqual([]);
+});

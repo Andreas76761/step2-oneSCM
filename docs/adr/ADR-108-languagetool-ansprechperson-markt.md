@@ -58,5 +58,5 @@ Entscheidungen vom 24.10.2026:
   - `POST /translations/{id}/reviews` ohne `reviewer`.
 - Neue Umgebungsvariablen `LANGUAGETOOL_URL`, `LANGUAGETOOL_TIMEOUT_MS`.
 - Geprüft mit dem echten LanguageTool 6.6 (Maven Central) unter OpenJDK 21; die automatischen Tests nutzen einen Ersatzdienst mit derselben API.
-- Benachrichtigungen an die Ansprechperson gibt es noch nicht (Benachrichtigungen hängen bisher an Kommentaren); sie sieht ihre Reviews unter „Meine Länderreviews“.
+- Benachrichtigungen an die Ansprechperson folgen in Etappe 56 (ADR-109); sie sieht ihre Reviews zudem unter „Meine Länderreviews“.
 - Weiter offen: U-07 (weitere Sprachen und Märkte), Schreibweise offener Begriffe (S-04, entscheidet die Redaktion).

@@ -1464,5 +1464,32 @@
     "documentation": [
       "docs/adr/ADR-108-languagetool-ansprechperson-markt.md"
     ]
+  },
+  {
+    "id": "NFR-142",
+    "title": "Zuschaltbare Regelsätze je Projekt: Regelbasiertes Schreiben (Deutsch) und Grundregeln von Simplified Technical English (Englisch), einzelne Regeln abschaltbar, Funde in Stil- und Kapitelprüfung",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-109-regelsaetze-benachrichtigung.md"
+    ]
+  },
+  {
+    "id": "NFR-143",
+    "title": "Vale-Stile einlesen (YAML einzeln oder als ZIP): existence, substitution mit Korrektur, occurrence; nicht unterstützte Regeln und unsichere Muster werden genannt, Prüfung lokal",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-109-regelsaetze-benachrichtigung.md"
+    ]
+  },
+  {
+    "id": "NFR-144",
+    "title": "Benachrichtigung zum Länderreview: Zuweisung an Prüferin bzw. Prüfer und Vertretung, Ergebnis an die anfordernde Person, Link öffnet die Übersetzung",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-109-regelsaetze-benachrichtigung.md"
+    ]
   }
 ]

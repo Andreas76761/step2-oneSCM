@@ -2,7 +2,7 @@
 // professionell bzw. ins Präsens umformulieren – für freien Text, Kapitelabsätze (übernehmen) und Textschnipsel (nur prüfen).
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { api, currentProjectId, patch, post, put, qs } from '../api';
+import { api, currentProjectId, del, patch, post, put, qs } from '../api';
 import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export interface Fix { start: number; end: number; replacement: string; label: string }
@@ -343,7 +343,7 @@ const RULE_NAMES: Record<string, string> = {
   hedging: 'Unklare Anweisungen', nominal: 'Nominalstil', spelling: 'Rechtschreibung', abbreviation: 'Abkürzungen', terminology: 'Terminologie',
   custom: 'Eigene Regeln', address: 'Anrede',
   typography: 'Typografie („…“, –, ›)', numbers: 'Zahlen, Einheiten, Datum', product_name: 'Produktname oneSCM', grammar: 'Grammatik (Englisch: a/an, „I“)',
-  tone: 'Tonalität (je Produktart und Rolle)',
+  tone: 'Tonalität (je Produktart und Rolle)', rule_set: 'Regelsätze (unten ein- und ausschalten)',
 };
 interface Phrase { avoid: string; use: string | null; note: string | null; language?: string | null }
 // Sprachen eigener Regeln (ADR-097): Deutsch und die Zielsprachen
@@ -506,6 +506,7 @@ function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAd
         {!ro && <button className="btn small" onClick={() => { setReplacing((r) => new Set(r).add(phrases.length)); setD({ ...d, phrases: [...phrases, { avoid: '', use: '', note: null }] }); }}>+ Formulierung</button>}
       </Card>
       {!ro && <button className="btn primary" onClick={save}>Stilregeln speichern</button>}
+      <RuleSets canAdmin={canAdmin} />
       <RulesExchange canAdmin={canAdmin} onChanged={rules.reload} />
       <Libraries canAdmin={canAdmin} canGlobalAdmin={canGlobalAdmin} />
     </>
@@ -513,6 +514,90 @@ function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAd
 }
 
 /** Stilregeln austauschen (ADR-047): Export CSV/JSON, Import (zusammenführen/ersetzen), Übernahme aus einem anderen Projekt */
+/** Zuschaltbare Regelsätze (ADR-109, S-06): Regelbasiertes Schreiben, STE-Grundregeln, eingelesene Vale-Stile */
+function RuleSets({ canAdmin }: { canAdmin: boolean }) {
+  const { notify } = useApp();
+  const sets = useLoad<{ sets: any[]; languages: string[] }>('/style/rule-sets');
+  const [name, setName] = useState('');
+  const [language, setLanguage] = useState('en');
+  const [files, setFiles] = useState<File[]>([]);
+  const [result, setResult] = useState<any | null>(null);
+  const run = async (fn: () => Promise<unknown>, msg: string) => {
+    try {
+      await fn();
+      notify(msg);
+      sets.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const importStyle = async () => {
+    try {
+      let r: any;
+      if (files.length === 1 && /\.zip$/i.test(files[0].name)) {
+        const fd = new FormData();
+        fd.append('file', files[0]);
+        r = await post(`/style/rule-sets/vale?name=${encodeURIComponent(name.trim() || files[0].name.replace(/\.zip$/i, ''))}&language=${language}`, fd);
+      } else {
+        r = await post('/style/rule-sets/vale', { name: name.trim(), language, files: await Promise.all(files.map(async (f) => ({ name: f.name, content: await f.text() }))) });
+      }
+      setResult(r);
+      setFiles([]);
+      notify(`Vale-Stil „${r.name}“ eingelesen: ${r.rules.length} ${r.rules.length === 1 ? 'Regel' : 'Regeln'}.`);
+      sets.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  if (!sets.data) return <ErrorBox error={sets.error} />;
+  const ro = !canAdmin;
+  return (
+    <Card title="Regelsätze">
+      <p className="small muted">Zuschaltbare Regelsätze prüfen zusätzlich zu den Regeln oben – in Schreibstil, Kapitelprüfung, Kapitelbewertung und Fehlerliste. Ein Satz gilt für Texte seiner Sprache.</p>
+      <ul className="plain rule-sets">
+        {sets.data.sets.map((rs) => {
+          const off = rs.rules.filter((r: any) => !r.enabled).map((r: any) => r.id);
+          return (
+            <li key={rs.key}>
+              <fieldset aria-label={`Regelsatz ${rs.name}`}>
+                <legend>
+                  <label><input type="checkbox" checked={rs.enabled} disabled={ro} onChange={(e) => void run(() => patch(`/style/rule-sets/${encodeURIComponent(rs.key)}`, { enabled: e.target.checked }), `Regelsatz „${rs.name}“ ${e.target.checked ? 'eingeschaltet' : 'ausgeschaltet'}.`)} /> {rs.name}</label>
+                  <span className="small muted"> · {rs.kind === 'vale' ? 'Vale-Stil' : 'mitgeliefert'} · Sprache {rs.language}</span>
+                </legend>
+                <p className="small muted">{rs.description}</p>
+                <details>
+                  <summary>Regeln ({rs.rules.length - off.length} von {rs.rules.length} aktiv)</summary>
+                  <ul className="plain">
+                    {rs.rules.map((r: any) => (
+                      <li key={r.id}>
+                        <label title={r.description}><input type="checkbox" checked={r.enabled} disabled={ro}
+                          onChange={(e) => void run(() => patch(`/style/rule-sets/${encodeURIComponent(rs.key)}`, { disabledRules: e.target.checked ? off.filter((x: string) => x !== r.id) : [...off, r.id] }), 'Regel geändert.')} /> {r.label}</label>
+                        <span className="small muted"> – {r.description}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {rs.unsupported.length > 0 && <p className="small muted">Nicht übernommen: {rs.unsupported.map((u: any) => `${u.name} (${u.reason})`).join('; ')}</p>}
+                </details>
+                {rs.kind === 'vale' && !ro && <button type="button" className="btn small danger" onClick={() => void run(() => del(`/style/rule-sets/${encodeURIComponent(rs.key)}`), `Vale-Stil „${rs.name}“ entfernt.`)}>Vale-Stil entfernen</button>}
+              </fieldset>
+            </li>
+          );
+        })}
+      </ul>
+      {!ro && (
+        <div role="group" aria-label="Vale-Stil einlesen" className="form-row">
+          <label>Name des Stils <input value={name} onChange={(e) => setName(e.target.value)} placeholder="z. B. Haus" /></label>
+          <label>Sprache der Texte <select value={language} onChange={(e) => setLanguage(e.target.value)}>{sets.data.languages.map((l) => <option key={l} value={l}>{l}</option>)}</select></label>
+          <label>Regeldateien (.yml oder ZIP) <input type="file" multiple accept=".yml,.yaml,.zip" onChange={(e) => setFiles([...(e.target.files ?? [])])} /></label>
+          <button type="button" className="btn" disabled={!files.length || (!name.trim() && !(files.length === 1 && /\.zip$/i.test(files[0].name)))} onClick={() => void importStyle()}>Vale-Stil einlesen</button>
+        </div>
+      )}
+      {result?.unsupported?.length > 0 && <p className="small" role="status">Nicht übernommen: {result.unsupported.map((u: any) => `${u.name} (${u.reason})`).join('; ')}</p>}
+      <p className="small muted">Unterstützt werden Vale-Regeln der Typen existence, substitution und occurrence; Muster laufen lokal, nichts verlässt den Rechner.</p>
+    </Card>
+  );
+}
+
 function RulesExchange({ canAdmin, onChanged }: { canAdmin: boolean; onChanged: () => void }) {
   const { notify } = useApp();
   const projects = useLoad<any[]>(canAdmin ? '/projects' : null, [canAdmin]);

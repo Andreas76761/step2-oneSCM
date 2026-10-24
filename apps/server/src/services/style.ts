@@ -10,6 +10,7 @@ import { LANGUAGES } from '../domain/translate.js';
 import { cleanToneSettings, DEFAULT_TONE_SETTINGS, isProduct, resolveTone, TONE_HINT, TONE_LABEL, toneOverview, type Product, type Tone, type ToneSettings } from '../domain/tone.js';
 import { LlmError } from '../llm.js';
 import { languageToolIssues, languageToolMany } from './languageTool.js';
+import { activeRuleSets } from './ruleSets.js';
 import { badRequest, Problem, unprocessable } from '../problem.js';
 import { getChapterVersion, patchBlock } from './chapters.js';
 import { mapHeader, parseCsv } from '../domain/tabular.js';
@@ -192,7 +193,9 @@ async function options(ctx: Ctx, scope: { product?: Product; roles?: string[] } 
   const phrases = (await effectivePhrases(ctx, rules.phrases)).phrases.map(({ avoid, use, note, language }) => ({ avoid, use, note, language }));
   // Ton (ADR-102): Rollenprofil bzw. Produktart; ausgeschaltet mit der Regel „tone“
   const tone: Tone | null = rules.disabled.includes('tone') ? null : resolveTone(rules.tone, scope).tone;
-  return { terms, maxWords, disabled: rules.disabled, phrases, address: rules.address, allowed: rules.allowed ?? [], audience: rules.audience ?? 'enduser', tone, toneSettings: rules.tone };
+  // zuschaltbare Regelsätze (ADR-109, S-06) – gelten je nach Sprache des Satzes
+  const ruleSets = rules.disabled.includes('rule_set') ? [] : await activeRuleSets(ctx);
+  return { terms, maxWords, disabled: rules.disabled, phrases, address: rules.address, allowed: rules.allowed ?? [], audience: rules.audience ?? 'enduser', tone, toneSettings: rules.tone, ruleSets };
 }
 
 /** Optionen für Texte einer anderen Sprache (ADR-097): Terminologie und Anrede gelten nur für Deutsch */

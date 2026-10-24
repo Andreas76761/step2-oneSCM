@@ -1,7 +1,8 @@
 // Schreibstil (ADR-040) und Bilder aus Text (ADR-041)
 import type { FastifyInstance } from 'fastify';
 import { languageToolStatus } from '../services/languageTool.js';
-import type { Ctx } from '../context.js';
+import { getSettings, type Ctx } from '../context.js';
+import { deleteRuleSet, importValeStyle, listRuleSets, updateRuleSet, valeFiles } from '../services/ruleSets.js';
 import { deleteDiagramTemplate, generateDiagrams, listDiagramTemplates, saveDiagram, saveDiagramTemplate } from '../services/diagrams.js';
 import { styleHistory, applyChapterTexts, copyStyleRules, exportStyleRules, importStyleRules, getStyleRules, updateStyleRules, autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, getTone, rewriteText } from '../services/style.js';
 import { applyGuidanceFixes, assistantSuggestions, chapterGuidance, createChapterFromAssistant, guidanceSummary } from '../services/guidance.js';
@@ -13,7 +14,7 @@ import { getGuidanceSettings, updateGuidanceSettings } from '../services/guidanc
 import { myTranslationRequests, requestTranslation } from '../services/translationRequests.js';
 import { readerFaqEntries } from '../services/faqTranslations.js';
 import { buildDigest, getDigestSettings, sendDigests, updateDigestSettings } from '../services/digest.js';
-import { badRequest } from '../problem.js';
+import { badRequest, Problem } from '../problem.js';
 import { userOf } from './helpers.js';
 
 export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
@@ -21,6 +22,27 @@ export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
   // Tonalität je Produktart und Rolle (ADR-102, S-02); geändert wird sie über PUT /style/rules (tone)
   app.get('/style/tone', async (req) => (userOf(req.ctx, req), getTone(req.ctx)));
   // lokale Grammatikprüfung (ADR-108, G-04): eingerichtet und erreichbar?
+  // zuschaltbare Regelsätze (ADR-109, S-06): Regelbasiertes Schreiben, STE, Vale-Stile
+  app.get('/style/rule-sets', async (req) => (userOf(req.ctx, req), listRuleSets(req.ctx)));
+  app.patch<{ Params: { key: string }; Body: any }>('/style/rule-sets/:key', async (req) => updateRuleSet(req.ctx, req.params.key, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+  app.delete<{ Params: { key: string } }>('/style/rule-sets/:key', async (req, reply) => {
+    await deleteRuleSet(req.ctx, req.params.key, userOf(req.ctx, req, 'admin'));
+    return reply.code(204).send();
+  });
+  // Vale-Stil: JSON { name, language, files: [{ name, content }] } oder multipart (Feld „file“: .yml oder .zip; name, language als Abfrageparameter)
+  app.post<{ Querystring: { name?: string; language?: string }; Body: any }>('/style/rule-sets/vale', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'admin');
+    let input: { name?: unknown; language?: unknown; files?: unknown } = req.body ?? {};
+    if (req.isMultipart()) {
+      const file = await req.file();
+      if (!file) throw badRequest('Feld „file“ fehlt.');
+      const data = await file.toBuffer();
+      const max = (await getSettings(req.ctx.db)).import.maxUploadBytes;
+      if (data.length > max) throw new Problem(413, 'Content Too Large', `Datei überschreitet ${max} Bytes.`);
+      input = { name: req.query.name || file.filename.replace(/\.(zip|ya?ml)$/i, ''), language: req.query.language, files: await valeFiles(file.filename, data) };
+    }
+    return reply.code(201).send(await importValeStyle(req.ctx, input, user));
+  });
   app.get('/style/language-tool', async (req) => (userOf(req.ctx, req), languageToolStatus(req.ctx.config.languageTool)));
   // Umformulieren verändert nichts Gespeichertes; KI-Nutzung erfordert Bearbeitungsrecht
   app.post<{ Body: any }>('/style/rewrite', async (req) => rewriteText(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit').id));

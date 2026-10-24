@@ -195,6 +195,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.58 Stand nach Etappe 56 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Zuschaltbare Regelsätze: Regelbasiertes Schreiben (Deutsch), Simplified Technical English (Englisch, ohne Wörterbuch), Regeln einzeln abschaltbar (S-06, NFR-142) | ✅ ([ADR-109](adr/ADR-109-regelsaetze-benachrichtigung.md)) |
+| Vale-Stile einlesen (YAML oder ZIP; existence, substitution, occurrence), Prüfung lokal (S-06, NFR-143) | ✅ |
+| Benachrichtigung zum Länderreview an Prüferin/Prüfer und Vertretung, Ergebnis an die anfordernde Person (NFR-144) | ✅ – schließt den offenen Punkt aus Etappe 55 |
+| Offen | U-07 weitere Sprachen und Märkte (ohne Auswahl am 24.10.2026); Schreibweise offener Begriffe (S-04, entscheidet die Redaktion) |
+
 ## 1.57 Stand nach Etappe 55 (24.10.2026)
 
 | Punkt | Ergebnis |

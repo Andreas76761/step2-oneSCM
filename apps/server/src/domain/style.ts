@@ -1,6 +1,7 @@
 // Schreibstil (ADR-040): regelbasierte Prüfung deutscher Handbuchtexte – ohne Netz, ohne Wörterbuchdienst.
 // Liefert je Satz die Fundstellen (Zeichenpositionen) und, wo eindeutig, eine automatische Korrektur.
 // Reine Fachlogik ohne I/O.
+import { ruleSetIssues, type ActiveSet } from './ruleSets.js';
 import { toneHits, type Tone } from './tone.js';
 
 export type StyleRule =
@@ -9,11 +10,13 @@ export type StyleRule =
   // Hausregeln aus GRAMMATIK.md (ADR-097): Typografie, Zahlen und Datum, Produktname; Grammatik (Englisch: a/an, „I“)
   | 'typography' | 'numbers' | 'product_name' | 'grammar'
   // Tonalität je Produktart bzw. Rolle (ADR-102, S-02)
-  | 'tone';
+  | 'tone'
+  // zuschaltbare Regelsätze: Regelbasiertes Schreiben, STE, Vale-Stile (ADR-109, S-06)
+  | 'rule_set';
 
 export const STYLE_RULES: StyleRule[] = [
   'long_sentence', 'passive', 'future', 'past', 'filler', 'double_word', 'punctuation', 'capitalization', 'impersonal', 'colloquial', 'hedging', 'nominal',
-  'spelling', 'abbreviation', 'terminology', 'custom', 'address', 'typography', 'numbers', 'product_name', 'grammar', 'tone',
+  'spelling', 'abbreviation', 'terminology', 'custom', 'address', 'typography', 'numbers', 'product_name', 'grammar', 'tone', 'rule_set',
 ];
 /**
  * Eigene Formulierungsregel eines Projekts (ADR-044): „avoid“ vermeiden, optional durch „use“ ersetzen ('' = streichen);
@@ -22,7 +25,11 @@ export const STYLE_RULES: StyleRule[] = [
 export interface StylePhrase { avoid: string; use?: string | null; note?: string | null; language?: string | null }
 
 export interface StyleFix { start: number; end: number; replacement: string; label: string }
-export interface StyleIssue { rule: StyleRule; severity: 'warning' | 'info'; message: string; start: number; end: number; fix?: StyleFix }
+export interface StyleIssue {
+  rule: StyleRule; severity: 'warning' | 'info'; message: string; start: number; end: number; fix?: StyleFix;
+  /** Herkunft eines Fundes aus einem Regelsatz (ADR-109): Satz und Regel */
+  source?: { set: string; rule: string };
+}
 export interface StyleSentence { start: number; end: number; text: string; issues: StyleIssue[] }
 export interface StyleOptions {
   maxWords?: number;
@@ -43,13 +50,15 @@ export interface StyleOptions {
    * außer an Stellen, die eine eigene Regel schon meldet
    */
   extraIssues?: StyleIssue[];
+  /** eingeschaltete Regelsätze (ADR-109, S-06); ihre Funde zählen zusätzlich zu den eigenen Regeln */
+  ruleSets?: ActiveSet[];
 }
 
 export const RULE_LABEL: Record<StyleRule, string> = {
   long_sentence: 'Langer Satz', passive: 'Passiv', future: 'Futur', past: 'Vergangenheit', filler: 'Füllwort', double_word: 'Doppeltes Wort',
   punctuation: 'Zeichensetzung', capitalization: 'Großschreibung', impersonal: 'Unpersönlich', colloquial: 'Umgangssprache', hedging: 'Unklare Anweisung',
   nominal: 'Nominalstil', spelling: 'Rechtschreibung', abbreviation: 'Abkürzung', terminology: 'Terminologie', custom: 'Eigene Regel', address: 'Anrede',
-  typography: 'Typografie', numbers: 'Zahlen und Datum', product_name: 'Produktname', grammar: 'Grammatik', tone: 'Tonalität',
+  typography: 'Typografie', numbers: 'Zahlen und Datum', product_name: 'Produktname', grammar: 'Grammatik', tone: 'Tonalität', rule_set: 'Regelsatz',
 };
 
 const FILLERS = ['eigentlich', 'grundsätzlich', 'halt', 'eben', 'quasi', 'sozusagen', 'gewissermaßen', 'irgendwie', 'ziemlich', 'relativ', 'einfach mal', 'wohl', 'durchaus', 'letztendlich', 'im Prinzip', 'an und für sich'];
@@ -319,6 +328,12 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
   for (const x of opts.extraIssues ?? []) {
     const s = sentences.find((y) => x.start >= y.start && x.start < Math.max(y.end, y.start + 1));
     if (!s || s.issues.some((i) => i.start < x.end && x.start < i.end)) continue;
+    s.issues.push(x);
+  }
+  // Funde der Regelsätze: eigene Prüfungen, daher ohne Abgleich mit den übrigen Regeln (nur gleiche Meldung an gleicher Stelle einmal)
+  for (const x of opts.ruleSets?.length ? ruleSetIssues(text, lang, opts.ruleSets) : []) {
+    const s = sentences.find((y) => x.start >= y.start && x.start < Math.max(y.end, y.start + 1)) ?? sentences.at(-1);
+    if (!s || s.issues.some((i) => i.rule === 'rule_set' && i.start === x.start && i.message === x.message)) continue;
     s.issues.push(x);
   }
   // erlaubte Begriffe (Whitelist) und ausgeschaltete Regeln herausfiltern

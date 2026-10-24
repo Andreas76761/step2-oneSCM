@@ -15,6 +15,7 @@ import { signalLevels } from '../domain/warnings.js';
 import { germanDate } from '../domain/workAreas.js';
 import { LlmError } from '../llm.js';
 import { badRequest, conflict, notFound, Problem, unprocessable } from '../problem.js';
+import { projectNotice } from './collaboration.js';
 import { readTable } from './masterDataImport.js';
 import { fixedTranslations } from './terminology.js';
 import { projectLanguages } from './translations.js';
@@ -404,9 +405,17 @@ export async function requestReview(ctx: Ctx, translationId: string, input: { re
     await ctx.db.run("INSERT INTO translation_reviews (id, project_id, translation_id, reviewer, market, status, requested_by, requested_at, deputy, assigned_by) VALUES (?, ?, ?, ?, ?, 'open', ?, ?, ?, ?)",
       id, ctx.projectId, translationId, reviewer, market, user.id, now(), deputy, assignedBy);
     await audit(ctx, user.id, 'translation_review.requested', 'translation', translationId, { reviewer, deputy, market, assignedBy });
+    // Benachrichtigung an Prüferin bzw. Prüfer und Vertretung (ADR-109): Posteingang, Webhook/E-Mail je Einstellung
+    const where = `„${t.chapter_title}“ (${LANGUAGES[t.language] ?? t.language}${market ? `, Markt ${market}` : ''})`;
+    const link = reviewLink(translationId, t.chapter_id);
+    if (reviewer !== user.id) await projectNotice(ctx, reviewer, `Länderreview für ${where} ist Ihnen zugewiesen${assignedBy === 'market' ? ' – als Ansprechperson des Marktes' : ''}.`, 'review_assigned', link);
+    if (deputy && deputy !== user.id) await projectNotice(ctx, deputy, `Länderreview für ${where}: Sie sind als Vertretung eingetragen.`, 'review_assigned', link);
   });
   return reviewDto(ctx, await reviewRow(ctx, id));
 }
+
+/** Sprung aus der Benachrichtigung direkt zur Übersetzung (ADR-109) */
+const reviewLink = (translationId: string, chapterId: string) => `/uebersetzungen?kapitel=${encodeURIComponent(chapterId)}&uebersetzung=${encodeURIComponent(translationId)}`;
 
 // ---------------------------------------------------------------- Ansprechperson je Markt (ADR-108, O-09)
 
@@ -455,10 +464,10 @@ export async function deleteMarketReviewer(ctx: Ctx, market: string, language: s
 /** Offene Länderreviews, bei denen ich Prüferin bzw. Prüfer oder Vertretung bin */
 export async function myReviews(ctx: Ctx, user: User) {
   const rows = await ctx.db.all(
-    `SELECT r.*, t.language, c.title FROM translation_reviews r JOIN translations t ON t.id = r.translation_id JOIN chapters c ON c.id = t.chapter_id
+    `SELECT r.*, t.language, t.chapter_id, c.title FROM translation_reviews r JOIN translations t ON t.id = r.translation_id JOIN chapters c ON c.id = t.chapter_id
      WHERE r.project_id = ? AND r.status = 'open' AND (r.reviewer = ? OR r.deputy = ?) ORDER BY r.requested_at`, ctx.projectId, user.id, user.id,
   );
-  return Promise.all(rows.map(async (r) => ({ ...(await reviewDto(ctx, r)), language: r.language as string, chapterTitle: r.title as string, asDeputy: r.reviewer !== user.id })));
+  return Promise.all(rows.map(async (r) => ({ ...(await reviewDto(ctx, r)), language: r.language as string, chapterId: r.chapter_id as string, chapterTitle: r.title as string, asDeputy: r.reviewer !== user.id })));
 }
 
 export async function addReviewError(ctx: Ctx, reviewId: string, input: { blockId?: unknown; category?: unknown; severity?: unknown; note?: unknown }, user: User) {
@@ -504,6 +513,11 @@ export async function decideReview(ctx: Ctx, reviewId: string, input: { decision
   await ctx.db.tx(async () => {
     await ctx.db.run('UPDATE translation_reviews SET status = ?, words = ?, comment = ?, decided_by = ?, decided_at = ? WHERE id = ?', decision === 'approve' ? 'approved' : 'returned', words, comment, user.id, now(), reviewId);
     await audit(ctx, user.id, `translation_review.${decision === 'approve' ? 'approved' : 'returned'}`, 'translation', r.translation_id, { per1000: score.per1000, errors: parseJson<any[]>(r.errors, []).length });
+    // Ergebnis an die anfordernde Person (ADR-109)
+    if (r.requested_by && r.requested_by !== user.id) {
+      const t = await translationRow(ctx, r.translation_id);
+      await projectNotice(ctx, r.requested_by, `Länderreview für „${t.chapter_title}“ (${LANGUAGES[t.language] ?? t.language}${r.market ? `, Markt ${r.market}` : ''}): ${decision === 'approve' ? 'vom Land freigegeben' : 'zurück an Übersetzung'}.`, 'review_decided', reviewLink(r.translation_id, t.chapter_id));
+    }
   });
   return reviewDto(ctx, await reviewRow(ctx, reviewId));
 }
