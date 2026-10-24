@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { download, post } from '../api';
 import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 
@@ -9,12 +10,46 @@ const CHANGE: Record<string, { label: string; cls: string }> = {
   unchanged: { label: 'unverändert', cls: '' },
 };
 
+const IMAGE_CHANGE: Record<string, string> = { new: 'neues Bild', version: 'neue Fassung', removed: 'entfernt' };
+
+/** Projektvergleich mit dem Vorgänger-Release und Releaseletter-Entwurf daraus (ADR-102, W-04) */
+function ComparisonPanel({ id, canEdit }: { id: string; canEdit: boolean }) {
+  const { notify } = useApp();
+  const navigate = useNavigate();
+  const c = useLoad<any>(`/releases/${id}/comparison`, [id]);
+  if (!c.data) return <ErrorBox error={c.error} />;
+  const d = c.data;
+  return (
+    <section aria-label="Projektvergleich" className="release-compare">
+      <h4>Projektvergleich {d.from ? `mit Version ${d.from.version}` : '(erstes Release)'}</h4>
+      <ul className="small">
+        <li><strong>Neue Funktionen:</strong> {d.functions.added.length ? d.functions.added.map((f: any) => `„${f.title}“${f.parentTitle ? ` (${f.parentTitle})` : ''}`).join(', ') : '–'}</li>
+        <li><strong>Geänderte Bilder:</strong> {d.images.length ? d.images.map((i: any) => `„${i.title}“ – ${IMAGE_CHANGE[i.change]}`).join(', ') : '–'}</li>
+        <li><strong>Abgelöste Funktionen:</strong> {d.functions.superseded.length ? d.functions.superseded.map((f: any) => `„${f.title}“${f.replacedByTitle ? ` → „${f.replacedByTitle}“` : ''}`).join(', ') : '–'}</li>
+        <li><strong>Tickets der Version:</strong> {d.tickets.length ? d.tickets.map((t: any) => t.key).join(', ') : '–'}</li>
+      </ul>
+      {canEdit && (
+        <button className="btn small" onClick={async () => {
+          try {
+            const r = await post<any>('/release-letters/from-comparison', { releaseId: id });
+            notify('Releaseletter-Entwurf aus dem Projektvergleich erzeugt.');
+            navigate(`/releaseletter?letter=${encodeURIComponent(r.id)}`);
+          } catch (e) {
+            notify(errorText(e), 'error');
+          }
+        }}>Releaseletter-Entwurf erzeugen</button>
+      )}
+    </section>
+  );
+}
+
 /** Handbuch-Releases (ADR-018): Stand aller freigegebenen Kapitel veröffentlichen, Änderungen und Online-Hilfe */
 export function ReleasesPage() {
   const { notify } = useApp();
   const releases = useLoad<any[]>('/releases');
   const me = useLoad<any>('/me');
   const canPublish = !!me.data?.permissions.some((p: string) => p === 'approve' || p === 'admin');
+  const canEdit = !!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin');
   const outlines = useLoad<any>('/outlines');
   const [form, setForm] = useState({ version: '', title: 'oneSCM Benutzerhandbuch', notes: '', outlineId: '' });
   const outlineName = (id: string | null) => outlines.data?.items.find((o: any) => o.id === id)?.name ?? null;
@@ -22,7 +57,8 @@ export function ReleasesPage() {
   const publish = async () => {
     try {
       const r = await post<any>('/releases', { ...form, outlineId: form.outlineId || undefined });
-      notify(`Version ${r.version} veröffentlicht (${r.chapters.length} Kapitel).`);
+      // Zukunfts-Inhalte (W-09): Kapitel mit späterem „gültig ab“ kommen erst in ein späteres Release
+      notify(`Version ${r.version} veröffentlicht (${r.chapters.length} Kapitel).${r.future?.length ? ` Nicht enthalten, da erst später gültig: ${r.future.map((f: any) => `„${f.title}“ (ab ${f.validFrom})`).join(', ')}.` : ''}`);
       setForm({ ...form, version: '', notes: '' });
       setOpen(r.id);
       releases.reload();
@@ -49,7 +85,7 @@ export function ReleasesPage() {
           <label className="block">Einleitung / Hinweise (Markdown, optional)
             <textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} aria-label="Einleitung" />
           </label>
-          <p className="small muted">{form.outlineId ? 'Enthalten sind die freigegebenen Kapitel der Variante, gefiltert nach Rollen, Sparten und Blueprint/Märkten; Abkürzungen, Glossar, Bildverzeichnis und FAQ werden als Verzeichnisse beigefügt.' : 'Enthalten sind alle Kapitel der Quellen mit freigegebener Version.'} Offene Blocker- oder Datenschutzbefunde verhindern die Veröffentlichung.</p>
+          <p className="small muted">{form.outlineId ? 'Enthalten sind die freigegebenen Kapitel der Variante, gefiltert nach Rollen, Sparten und Blueprint/Märkten; Abkürzungen, Glossar, Bildverzeichnis und FAQ werden als Verzeichnisse beigefügt.' : 'Enthalten sind alle Kapitel der Quellen mit freigegebener Version.'} Kapitel, deren „gültig ab“ nach der Versionsnummer liegt, bleiben bis zu ihrem Release draußen. Offene Blocker- oder Datenschutzbefunde verhindern die Veröffentlichung.</p>
           <button className="btn primary" disabled={!form.version.trim()} onClick={publish}>Veröffentlichen</button>
         </Card>
       )}
@@ -90,6 +126,7 @@ export function ReleasesPage() {
                           ))}
                         </tbody>
                       </table>
+                      <ComparisonPanel id={r.id} canEdit={canEdit} />
                     </div>
                   )}
                 </li>

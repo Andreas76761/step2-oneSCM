@@ -1293,5 +1293,41 @@
     "documentation": [
       "docs/adr/ADR-101-uebersetzung.md"
     ]
+  },
+  {
+    "id": "NFR-123",
+    "title": "Tonalität je Produktart und Rolle (sachlich, freundlich, formell, knapp) als Einstellung je Projekt; wirkt auf Stilprüfung und KI-Vorschläge",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-102-tonalitaet-tickets-releasevergleich.md"
+    ]
+  },
+  {
+    "id": "NFR-124",
+    "title": "Ticket-Einstufung genehmigt / in Prüfung / intern / Background: intern und Background fließen nicht ins Handbuch, Background nur in die Lückenanalyse",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-102-tonalitaet-tickets-releasevergleich.md"
+    ]
+  },
+  {
+    "id": "NFR-125",
+    "title": "Releaseletter-Entwurf aus dem Projektvergleich zweier Handbuch-Releases: neue und geänderte Kapitel, Bildfassungen, neue und abgelöste Funktionen, Tickets der Version",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-102-tonalitaet-tickets-releasevergleich.md"
+    ]
+  },
+  {
+    "id": "NFR-126",
+    "title": "Zukunfts-Inhalte: Kapitel mit späterem „gültig ab“ als der Stand werden in Export und Release ausgeblendet",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-102-tonalitaet-tickets-releasevergleich.md"
+    ]
   }
 ]

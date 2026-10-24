@@ -37,6 +37,26 @@ export function manualClass(type: string): ManualClass {
   return /bug|fehler|defect/i.test(type) ? 'internal' : 'manual';
 }
 
+/**
+ * Ticket-Einstufung (ADR-102, W-03, Ticket-Cockpit): genehmigt und in Prüfung fließen ins Handbuch, intern und Background nicht;
+ * Background zählt nur in der Lückenanalyse. Ohne Einstufung durch einen Menschen: Bug = intern, sonst „in Prüfung“.
+ */
+export const TICKET_CLASSES = ['approved', 'review', 'internal', 'background'] as const;
+export type TicketClass = (typeof TICKET_CLASSES)[number];
+export const TICKET_CLASS_LABEL: Record<TicketClass, string> = { approved: 'genehmigt', review: 'in Prüfung', internal: 'intern', background: 'Background' };
+export const TICKET_CLASS_HINT: Record<TicketClass, string> = {
+  approved: 'fließt ins Handbuch und in Releaseletter',
+  review: 'fließt ins Handbuch; Einstufung noch nicht bestätigt',
+  internal: 'nicht im Handbuch; im Releaseletter nur als behobener Fehler (Bug)',
+  background: 'nicht im Handbuch und nicht im Releaseletter; nur Lückenanalyse',
+};
+export const isTicketClass = (v: unknown): v is TicketClass => typeof v === 'string' && (TICKET_CLASSES as readonly string[]).includes(v);
+export const defaultTicketClass = (type: string): TicketClass => (manualClass(type) === 'internal' ? 'internal' : 'review');
+/** Quelle für Kapitel (Generierung) */
+export const ticketFeedsManual = (c: TicketClass) => c === 'approved' || c === 'review';
+/** Inhalt eines Releaseletters: kein Background; intern nur Bugs (Abschnitt „Behobene Fehler“) */
+export const ticketInLetter = (c: TicketClass, type: string) => c !== 'background' && (c !== 'internal' || manualClass(type) === 'internal');
+
 const isNone = (v: string) => !v.trim() || /^(keine|none)$/i.test(v.trim());
 /** Release-Angabe nur aus Lösungs- bzw. betroffener Version, sonst „PI TBD“ – nie erfunden */
 export function piLabel(t: Pick<ReleaseTicket, 'fixVersions' | 'affectsVersions'>) {

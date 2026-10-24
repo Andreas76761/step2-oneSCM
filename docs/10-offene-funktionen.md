@@ -38,7 +38,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | ID | Funktion | Herkunft | Stand in der App | Aufwand | Empfehlung |
 |---|---|---|---|---|---|
 | S-01 | **Lesbarkeitswerte je Kapitel und Rolle:** LIX (unter 40 leicht, 40–50 mittel, über 50 schwer), Flesch-Amstad (mindestens 60 für Endanwender, 40 für Admin/Service), Ø Wörter je Satz (höchstens 15), Anteil langer Sätze (> 25), Passivanteil; als Soll-Werte im Anleitungs-Check | Werkstatt V4, Checkliste (Multi-Agent-Gate) | teilweise (lange Sätze, Passiv einzeln; kein Lesbarkeitsindex) | S | **umgesetzt in Etappe 44 (ADR-097)** |
-| S-02 | **Tonalität je Produktart bzw. Zielgruppe:** sachlich (Handbuch), freundlich, formell, knapp; sechs Rollenprofile mit eigener Tonalität; gilt für Prüfung und KI-Vorschläge | Ticket-Cockpit, Checkliste, `TONALITAET.md` | teilweise (nur Anrede Sie/du und freier Redaktionshinweis) | M | **übernehmen** – als Einstellung je Projekt bzw. Ausgabeprofil |
+| S-02 | **Tonalität je Produktart bzw. Zielgruppe:** sachlich (Handbuch), freundlich, formell, knapp; sechs Rollenprofile mit eigener Tonalität; gilt für Prüfung und KI-Vorschläge | Ticket-Cockpit, Checkliste, `TONALITAET.md` | teilweise (nur Anrede Sie/du und freier Redaktionshinweis) | M | **umgesetzt in Etappe 49 (ADR-102)** |
 | S-03 | **Wortliste je Sprache** „falsch → richtig (Sprache)“, z. B. Dealer→Händler (de), Händler→Dealer (en), OneSCM→oneSCM; Prüfung „Text passt nicht zur Sprache des Labels“ | Screenarchiv | teilweise (eigene Regeln nur Deutsch; feste Übersetzung je Sprache) | S | **umgesetzt in Etappe 44 (ADR-097) – ohne Prüfung „Text passt nicht zur Sprache“ (mit U-02)** |
 | S-04 | **„Fix-Sprache“ je Begriff:** Begriff überall immer deutsch oder immer englisch (UI-Begriff), Anweisung an KI und Prüfung | Ticket-Cockpit v2.96 | teilweise (feste Übersetzung je Sprache; kein „immer so lassen“) | S | **umgesetzt in Etappe 44 (ADR-097) – welche Begriffe, entscheidet die Redaktion** |
 | S-05 | **Textvarianten je Kapitel:** Endanwender, Fachtext, Kurzfassung (Management, ~¼ Länge) | Ticket-Cockpit | teilweise (Quick Guide, One Pager, Lesefassung) | M | optional |
@@ -67,13 +67,13 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 |---|---|---|---|---|---|
 | W-01 | **Kapitelanweisung für Handbuch-Varianten** (eigene Anweisung je Variantenkapitel bzw. Gliederungsknoten, zusätzlich zur Anweisung des Quellkapitels) | eigener Befund (ADR-096) | offen | S | **umgesetzt in Etappe 44 (ADR-097)** |
 | W-02 | **Plausibilität Text ↔ Quellen je Aussage** (belegt, unbelegt, Widerspruch, fehlend) mit Wert 0–100 | Ticket-Cockpit v2.91 | teilweise (Beleg je Satz, Evidenz) | S | optional – Wert je Kapitel aus der Evidenz |
-| W-03 | **Ticket-Einstufung** genehmigt / in Prüfung / intern / Background; intern und Background fließen nicht ins Handbuch, Background nur in die Lückenanalyse | Ticket-Cockpit | teilweise (Bug = intern im Release-Abgleich) | S | **übernehmen** |
-| W-04 | **Releaseletter-Entwurf aus Projektvergleich** (geänderte Bilder, Kapitel und Funktionen eines Release) | Screenarchiv | teilweise (Releaseletter aus Tickets, Historie seit v0.43) | M | **übernehmen** – nutzt Historie und Bildfassungen |
+| W-03 | **Ticket-Einstufung** genehmigt / in Prüfung / intern / Background; intern und Background fließen nicht ins Handbuch, Background nur in die Lückenanalyse | Ticket-Cockpit | teilweise (Bug = intern im Release-Abgleich) | S | **umgesetzt in Etappe 49 (ADR-102)** |
+| W-04 | **Releaseletter-Entwurf aus Projektvergleich** (geänderte Bilder, Kapitel und Funktionen eines Release) | Screenarchiv | teilweise (Releaseletter aus Tickets, Historie seit v0.43) | M | **umgesetzt in Etappe 49 (ADR-102)** |
 | W-05 | **Vorher/Nachher-Belege** mit Schieberegler (Anlass, Änderung, Wirkung) | Screenarchiv | teilweise (Bildfassungen) | S | optional |
 | W-06 | **Word zurücklesen:** in Word überarbeitete Exporte mit Kriterium „Fertig, wenn …“ wieder einlesen und als Änderung vorschlagen | Screenarchiv | teilweise (Word-Import als Quelle) | M | optional |
 | W-07 | **Ausgabe als PowerPoint** und Klickstrecke als BPMN | Screenarchiv, Screenshot-Studio, Wissenssuche | nicht vorhanden | M | optional |
 | W-08 | **Interne Kommentare**, die nie exportiert werden; Drei-Spalten-Editor (Stand, Verbesserungen, neu) | Ticket-Cockpit v3.0 | teilweise (Diskussion je Absatz, Versionsvergleich) | S | optional |
-| W-09 | **Zukunfts-Inhalte:** eingebaut, aber erst ab Release X veröffentlicht | DokuPress | teilweise („gültig ab“ seit v0.43, ohne Ausblenden) | S | **übernehmen** – Export blendet Kapitel mit späterem „gültig ab“ aus |
+| W-09 | **Zukunfts-Inhalte:** eingebaut, aber erst ab Release X veröffentlicht | DokuPress | teilweise („gültig ab“ seit v0.43, ohne Ausblenden) | S | **umgesetzt in Etappe 49 (ADR-102)** |
 | W-10 | **Zwischenbilder** für kurze Zustände (Menü, Dialog) aus Videos | Screenshot-Studio | teilweise (Standbilder bei Änderung) | S | optional |
 | W-11 | **Textbausteine (Single Sourcing)** | Werkstatt V4 (F-19) | offen | L | später |
 | W-12 | **Vier Prüferprofile** (fachlich, Redaktion, Compliance, Endanwender) mit lokalem Modell | Ticket-Cockpit (F-10) | teilweise | M | optional |
@@ -90,9 +90,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
    - U-02 (weitere Prüfungen), U-04 (Glossar je Sprache), U-08 (Rahmentexte), U-09 (Releaseletter EN);
    - U-03 (Länderreview);
    - danach U-01 (Übersetzungsspeicher).
-4. **Danach je nach Entscheidung:**
-   - G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen);
-   - S-02 (Tonalität je Zielgruppe), W-03, W-04, W-09.
+4. **Etappe 49 – Tonalität, Ticket-Einstufung, Projektvergleich, Zukunfts-Inhalte (✅ umgesetzt, ADR-102):** S-02, W-03, W-04, W-09.
+5. **Danach je nach Entscheidung:** G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen).
 
 ## 10.7 Offene Entscheidungen
 

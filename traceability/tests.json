@@ -2345,5 +2345,57 @@
       "NFR-119",
       "NFR-120"
     ]
+  },
+  {
+    "id": "T-319",
+    "title": "Tonalität, Reihenfolge von Releases, Ticket-Einstufung und Letter aus dem Projektvergleich (Einheit)",
+    "file": "apps/server/test/stage49.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-123",
+      "NFR-124",
+      "NFR-125",
+      "NFR-126"
+    ]
+  },
+  {
+    "id": "T-320",
+    "title": "Tonalität je Produktart und Rolle: Einstellung, Prüfung freier Texte und Kapitel, KI-Umformulierung mit Ton",
+    "file": "apps/server/test/stage49.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-123"
+    ]
+  },
+  {
+    "id": "T-321",
+    "title": "Ticket-Einstufung: genehmigt, in Prüfung, intern, Background – Lückenanalyse, Releaseletter, Generierung ohne interne Tickets",
+    "file": "apps/server/test/stage49.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-124"
+    ]
+  },
+  {
+    "id": "T-322",
+    "title": "Zukunfts-Inhalte im Export und Release; Projektvergleich zweier Releases und Releaseletter-Entwurf daraus",
+    "file": "apps/server/test/stage49.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-125",
+      "NFR-126"
+    ]
+  },
+  {
+    "id": "T-323",
+    "title": "Tonalität je Rolle in der Stilprüfung, Ticket-Einstufung im Release-Abgleich, Zukunfts-Inhalte im Export, Releaseletter aus dem Projektvergleich – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-123",
+      "NFR-124",
+      "NFR-125",
+      "NFR-126"
+    ]
   }
 ]

@@ -8,6 +8,7 @@ import { escapeHtml, markdownToHtml, markdownToPdf, renderPdf } from './render.j
 import { assertIdsInProject } from './projects.js';
 import { dataUri, inlineMedia, loadMedia, type MediaFile } from './media.js';
 import { appendixHtmlSections, appendixMarkdown, appendixPdf, APPENDIX_ANCHORS } from './appendixRender.js';
+import { isFutureContent } from '../domain/releaseOrder.js';
 import { frameTexts, pageLine, type FrameTexts } from '../domain/frameTexts.js';
 import { htmlLang } from '../domain/translate.js';
 import { historyAppendix } from './structure.js';
@@ -61,6 +62,11 @@ export interface ExportInput extends ExportFilter {
   reading?: boolean;
   /** „Weiter mit Kapitel …“ am Kapitelende (F-29, nur vollständiges Handbuch): Standard = gepflegte Übergänge, true = zusätzlich automatisch das nächste Kapitel, false = keine */
   transitions?: boolean;
+  /**
+   * Stand (Release) für Zukunfts-Inhalte (ADR-102, W-09): Kapitel mit späterem „gültig ab“ werden ausgeblendet.
+   * Standard ist der Release-Filter; ohne beides wird nichts ausgeblendet.
+   */
+  asOf?: string;
 }
 
 export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'docx', 'json'] as const;
@@ -351,10 +357,17 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
 
   const blockers: { chapterId: string; checks: unknown }[] = [];
   const skipped: { chapterId: string; reason: string }[] = [];
+  const asOf = (typeof input.asOf === 'string' ? input.asOf.trim().slice(0, 40) : '') || input.release || null;
+  const future: { chapterId: string; title: string; validFrom: string }[] = [];
   let chapters: any[] = [];
   for (const cid of chapterIds) {
     const chapter = await ctx.db.get('SELECT id, title, position, valid_from FROM chapters WHERE id = ?', cid);
     if (!chapter) throw notFound(`Kapitel ${cid}`);
+    // Zukunfts-Inhalt (W-09): eingebaut, aber erst ab einem späteren Release veröffentlicht
+    if (isFutureContent(chapter.valid_from, asOf)) {
+      future.push({ chapterId: cid, title: chapter.title, validFrom: chapter.valid_from });
+      continue;
+    }
     const gate = await gateForChapter(ctx, cid, 'export');
     if (!gate.passed) blockers.push({ chapterId: cid, checks: gate.checks.filter((c) => !c.passed) });
     const v = await ctx.db.get("SELECT id FROM generated_chapter_versions WHERE chapter_id = ? AND status = 'approved'", cid);
@@ -413,10 +426,10 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   const fileName = `onescm-handbuch${suffix}-${now().slice(0, 10)}.${format}`;
   await ctx.db.run(
     'INSERT INTO exports (id, project_id, params, status, format, storage_key, file_name, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    id, ctx.projectId, json({ ...input, skipped }), 'completed', format, key, fileName, actor, now(),
+    id, ctx.projectId, json({ ...input, skipped, future }), 'completed', format, key, fileName, actor, now(),
   );
-  await audit(ctx, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped });
-  return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, downloadUrl: `/api/v1/exports/${id}/download`, preview, byteSize: data.length };
+  await audit(ctx, actor, 'export.created', 'export', id, { ...input, chapters: chapters.length, skipped, future: future.length });
+  return { id, status: 'completed', format, fileName, chapters: chapters.length, skipped, asOf, future, downloadUrl: `/api/v1/exports/${id}/download`, preview, byteSize: data.length };
 }
 
 export async function listExports(ctx: Ctx) {

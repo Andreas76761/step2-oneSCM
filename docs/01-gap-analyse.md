@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.51 Stand nach Etappe 49 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Tonalität je Produktart und Rolle, Prüfregel „Tonalität“, Ton in den KI-Vorschlägen (S-02, NFR-123) | ✅ ([ADR-102](adr/ADR-102-tonalitaet-tickets-releasevergleich.md)) |
+| Ticket-Einstufung genehmigt / in Prüfung / intern / Background, ohne interne Tickets in Kapiteln (W-03, NFR-124) | ✅ |
+| Releaseletter-Entwurf aus dem Projektvergleich zweier Handbuch-Releases (W-04, NFR-125) | ✅ |
+| Zukunfts-Inhalte in Export und Release ausgeblendet (W-09, NFR-126) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Zukunfts-Inhalte je Unterkapitel; Schreibweise offener Begriffe (S-04) |
+
 ## 1.50 Stand nach Etappe 48 (24.10.2026)
 
 | Punkt | Ergebnis |

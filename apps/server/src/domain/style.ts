@@ -1,16 +1,19 @@
 // Schreibstil (ADR-040): regelbasierte Prüfung deutscher Handbuchtexte – ohne Netz, ohne Wörterbuchdienst.
 // Liefert je Satz die Fundstellen (Zeichenpositionen) und, wo eindeutig, eine automatische Korrektur.
 // Reine Fachlogik ohne I/O.
+import { toneHits, type Tone } from './tone.js';
 
 export type StyleRule =
   | 'long_sentence' | 'passive' | 'future' | 'past' | 'filler' | 'double_word' | 'punctuation' | 'capitalization'
   | 'impersonal' | 'colloquial' | 'hedging' | 'nominal' | 'spelling' | 'abbreviation' | 'terminology' | 'custom' | 'address'
   // Hausregeln aus GRAMMATIK.md (ADR-097): Typografie, Zahlen und Datum, Produktname; Grammatik (Englisch: a/an, „I“)
-  | 'typography' | 'numbers' | 'product_name' | 'grammar';
+  | 'typography' | 'numbers' | 'product_name' | 'grammar'
+  // Tonalität je Produktart bzw. Rolle (ADR-102, S-02)
+  | 'tone';
 
 export const STYLE_RULES: StyleRule[] = [
   'long_sentence', 'passive', 'future', 'past', 'filler', 'double_word', 'punctuation', 'capitalization', 'impersonal', 'colloquial', 'hedging', 'nominal',
-  'spelling', 'abbreviation', 'terminology', 'custom', 'address', 'typography', 'numbers', 'product_name', 'grammar',
+  'spelling', 'abbreviation', 'terminology', 'custom', 'address', 'typography', 'numbers', 'product_name', 'grammar', 'tone',
 ];
 /**
  * Eigene Formulierungsregel eines Projekts (ADR-044): „avoid“ vermeiden, optional durch „use“ ersetzen ('' = streichen);
@@ -33,13 +36,15 @@ export interface StyleOptions {
   language?: string;
   /** erlaubte Begriffe (Whitelist): Fundstellen mit genau diesem Wortlaut werden nicht gemeldet */
   allowed?: string[];
+  /** Ton (ADR-102, S-02): sachlich, freundlich, formell oder knapp – nur deutsche Texte */
+  tone?: Tone | null;
 }
 
 export const RULE_LABEL: Record<StyleRule, string> = {
   long_sentence: 'Langer Satz', passive: 'Passiv', future: 'Futur', past: 'Vergangenheit', filler: 'Füllwort', double_word: 'Doppeltes Wort',
   punctuation: 'Zeichensetzung', capitalization: 'Großschreibung', impersonal: 'Unpersönlich', colloquial: 'Umgangssprache', hedging: 'Unklare Anweisung',
   nominal: 'Nominalstil', spelling: 'Rechtschreibung', abbreviation: 'Abkürzung', terminology: 'Terminologie', custom: 'Eigene Regel', address: 'Anrede',
-  typography: 'Typografie', numbers: 'Zahlen und Datum', product_name: 'Produktname', grammar: 'Grammatik',
+  typography: 'Typografie', numbers: 'Zahlen und Datum', product_name: 'Produktname', grammar: 'Grammatik', tone: 'Tonalität',
 };
 
 const FILLERS = ['eigentlich', 'grundsätzlich', 'halt', 'eben', 'quasi', 'sozusagen', 'gewissermaßen', 'irgendwie', 'ziemlich', 'relativ', 'einfach mal', 'wohl', 'durchaus', 'letztendlich', 'im Prinzip', 'an und für sich'];
@@ -284,6 +289,8 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
       }
     }
     for (const w of COLLOQUIAL) for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(w)}(?![\p{L}])`, 'giu'))) add('colloquial', 'info', `Umgangssprache „${m[0]}“ – sachlich formulieren`, m.index!, m.index! + m[0].length);
+    // Tonalität (ADR-102): Werbesprache, Verkürzungen, Floskeln, harte Formulierungen je nach Ton
+    if (opts.tone) for (const h of toneHits(t, opts.tone, { longReported: words > maxWords })) if (!inCode(h.start, h.end)) add('tone', h.severity, h.message, h.start, h.end);
     for (const w of HEDGING) for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(w)}(?![\p{L}])`, 'giu'))) add('hedging', 'info', `Unklare Anweisung „${m[0]}“ – eindeutig formulieren`, m.index!, m.index! + m[0].length);
     const nominal = [...t.matchAll(/\b[\p{Lu}][\p{Ll}]+(?:ung|heit|keit|ion|ierung|schaft)(?:en)?\b/gu)];
     if (nominal.length >= 3) add('nominal', 'info', `Nominalstil (${nominal.map((n) => n[0]).slice(0, 4).join(', ')}) – mit Verben formulieren`, nominal[0].index!, nominal.at(-1)!.index! + nominal.at(-1)![0].length);

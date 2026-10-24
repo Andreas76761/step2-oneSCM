@@ -1,5 +1,6 @@
 // Handbuch-Releases (ADR-018): unveränderlicher Stand aller freigegebenen Kapitel eines Projekts mit
 // automatisch ermittelten Änderungen gegenüber dem Vorgänger-Release und einer statischen Online-Hilfe.
+import { isFutureContent } from '../domain/releaseOrder.js';
 import JSZip from 'jszip';
 import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
@@ -199,12 +200,15 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
   const family = outline ? { sql: 'outline_family_id = ?', params: [outline.family_id] } : { sql: 'outline_family_id IS NULL', params: [] };
   // Variante: nur Kapitel, die in der gewählten Gliederungsversion vorkommen
   const inVersion = outline ? { sql: ' AND c.outline_node_key IN (SELECT node_key FROM outline_nodes WHERE outline_id = ? AND level = 1)', params: [outline.id] } : { sql: '', params: [] };
-  const rows = await db.all(
-    `SELECT c.id AS chapter_id, c.title, c.position, v.id AS version_id FROM chapters c JOIN generated_chapter_versions v ON v.chapter_id = c.id
+  const all = await db.all(
+    `SELECT c.id AS chapter_id, c.title, c.position, c.valid_from, v.id AS version_id FROM chapters c JOIN generated_chapter_versions v ON v.chapter_id = c.id
      WHERE c.project_id = ? AND c.${family.sql}${inVersion.sql} AND v.status = 'approved' ORDER BY c.position, c.title`,
     ctx.projectId, ...family.params, ...inVersion.params,
   );
-  if (!rows.length) throw unprocessable('Keine freigegebenen Kapitel – es gibt nichts zu veröffentlichen.');
+  // Zukunfts-Inhalte (ADR-102, W-09): Kapitel mit „gültig ab“ nach dieser Version kommen erst in ein späteres Release
+  const future = all.filter((r) => isFutureContent(r.valid_from, version)).map((r) => ({ chapterId: r.chapter_id as string, title: r.title as string, validFrom: r.valid_from as string }));
+  const rows = all.filter((r) => !isFutureContent(r.valid_from, version));
+  if (!rows.length) throw unprocessable(future.length ? `Alle freigegebenen Kapitel gelten erst nach Version ${version} – es gibt nichts zu veröffentlichen.` : 'Keine freigegebenen Kapitel – es gibt nichts zu veröffentlichen.');
   const blockers: { chapterId: string; checks: unknown }[] = [];
   for (const r of rows) {
     const gate = await gateForChapter(ctx, r.chapter_id, 'export');
@@ -286,9 +290,9 @@ export async function createRelease(ctx: Ctx, input: { version?: string; title?:
       id, ctx.projectId, version, title, notes, json(releaseChapters), json(changes), prevRow?.id ?? null, siteKey, mdKey, actor, createdAt, json(languages),
       outline?.id ?? null, outline?.family_id ?? null,
     );
-    await audit(ctx, actor, 'release.published', 'release', id, { version, outlineId: outline?.id ?? null, chapters: releaseChapters.length, changes: changesText(changes), languages: languages.map((l) => l.language) });
+    await audit(ctx, actor, 'release.published', 'release', id, { version, outlineId: outline?.id ?? null, chapters: releaseChapters.length, changes: changesText(changes), languages: languages.map((l) => l.language), future: future.length });
   });
-  return getRelease(ctx, id);
+  return { ...(await getRelease(ctx, id)), future };
 }
 
 export async function downloadRelease(ctx: Ctx, id: string, format: string, language?: string) {

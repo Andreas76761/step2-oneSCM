@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.48.0
+  version: 0.49.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -366,6 +366,7 @@ components:
         profile: { type: string, enum: [full, quickguide, onepager], default: full, description: 'Ausgabeprofil (ADR-085, F-27): Quick Guide = Voraussetzungen, Schritte, Ergebnis, Warnungen; One Pager = Zweck kurz, Schritte, Warnungen; Kapitel ohne Schritte entfallen' }
         reading: { type: boolean, default: false, description: 'Lesefassung (F-28): ohne Badges, Versionszeile und Abschnitt „Quellen- und Freigabestatus“' }
         transitions: { type: boolean, description: '„Weiter mit …“ am Kapitelende (F-29, nur profile full): fehlt = gepflegte Übergänge, true = zusätzlich automatisch das nächste exportierte Kapitel, false = keine' }
+        asOf: { type: string, maxLength: 40, description: 'Stand (Release) für Zukunfts-Inhalte (ADR-102, W-09): Kapitel mit späterem „gültig ab“ werden ausgeblendet; Standard ist release' }
 security:
   - oidcBearer: []
   - demoUser: []
@@ -1472,13 +1473,13 @@ paths:
       operationId: createRelease
       summary: Handbuch-Version aus allen freigegebenen Kapiteln veröffentlichen (Berechtigung approve); mit outlineId das Handbuch einer Variante inkl. Verzeichnissen
       tags: [Veröffentlichung]
-      x-requirements: [NFR-05, US-014, NFR-08, NFR-21]
+      x-requirements: [NFR-05, US-014, NFR-08, NFR-21, NFR-126]
       x-extension: true
       requestBody:
         content: { application/json: { schema: { type: object, required: [version], properties: { version: { type: string }, title: { type: string }, notes: { type: string }, outlineId: { type: string } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '201': { description: Release mit Änderungsliste }
+        '201': { description: 'Release mit Änderungsliste; future: Kapitel mit „gültig ab“ nach der Version, nicht enthalten (W-09)' }
         '409': { description: Version existiert oder Blocker offen }
         '422': { description: keine freigegebenen Kapitel }
   /releases/{releaseId}:
@@ -1700,11 +1701,11 @@ paths:
       operationId: createExport
       summary: Freigegebene Kapitel rollen-/sparten-/markt-/releasegefiltert exportieren
       tags: [Export]
-      x-requirements: [US-010, US-012, US-014, NFR-80]
+      x-requirements: [US-010, US-012, US-014, NFR-80, NFR-126]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExportRequest' } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '201': { description: Export erstellt }
+        '201': { description: 'Export erstellt; asOf und future: Kapitel mit späterem „gültig ab“ (ADR-102, W-09), nicht im Export' }
         '409': { description: 'Blockiert (offene Blocker-/Datenschutzbefunde), content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
     get:
       operationId: listExports
@@ -2520,25 +2521,25 @@ paths:
       operationId: checkStyle
       summary: 'Text auf Stil, Grammatik und Zeitform prüfen – Sätze mit Position, Hinweisen und Korrekturvorschlägen (ADR-040); mit Hausregeln (Typografie, Zahlen, Produktname) und Sprache (ADR-097)'
       tags: [Schreibstil]
-      x-requirements: [NFR-27, NFR-104, NFR-105]
+      x-requirements: [NFR-27, NFR-104, NFR-105, NFR-123]
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 }, language: { type: string, description: 'de (Standard, alle Regeln), en (zusätzlich a/an, „I“, Rechtschreibung), sonst nur sprachneutrale Regeln und eigene Regeln der Sprache' } } } } }
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 }, language: { type: string, description: 'de (Standard, alle Regeln), en (zusätzlich a/an, „I“, Rechtschreibung), sonst nur sprachneutrale Regeln und eigene Regeln der Sprache' }, product: { type: string, enum: [manual, releaseletter, quickguide, training, internal, video, graphic, process], description: 'Produktart für den Ton (ADR-102, Standard Handbuch)' }, roles: { type: array, items: { type: string }, description: 'Rollen des Textes; bei genau einer Rolle gilt ihr Rollenprofil' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ text, language, sentences: [{ start, end, text, issues: [{ rule, severity, message, start, end, fix? }] }], counts, score, rules, problemSentences, fixable }' }
+        '200': { description: '{ text, language, tone: { tone, label } | null, sentences: [{ start, end, text, issues: [{ rule, severity, message, start, end, fix? }] }], counts, score, rules, problemSentences, fixable }' }
         '400': { $ref: '#/components/responses/Problem' }
   /style/rewrite:
     post:
       operationId: rewriteStyle
       summary: 'Text professionell umformulieren bzw. ins Präsens setzen (KI-Dienst, sonst Regelkorrekturen); speichert nichts (Berechtigung edit, ADR-040)'
       tags: [Schreibstil]
-      x-requirements: [NFR-27]
+      x-requirements: [NFR-27, NFR-123]
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 }, mode: { type: string, enum: [professional, present, rules], default: professional } } } } }
+        content: { application/json: { schema: { type: object, required: [text], properties: { text: { type: string, maxLength: 20000 }, mode: { type: string, enum: [professional, present, rules], default: professional }, product: { type: string, description: 'Produktart für den Ton (ADR-102)' }, roles: { type: array, items: { type: string } } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ text, method: ai|rules, mode, provider, lostNumbers, analysis }' }
@@ -2699,6 +2700,16 @@ paths:
         '200': { description: '{ sha256, pngSha, width, height }' }
         '400': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /style/tone:
+    get:
+      operationId: getStyleTone
+      summary: 'Tonalität je Produktart und Rolle (ADR-102, S-02): Einstellung, wirksamer Ton je Produktart (Vorgabe aus TONALITAET.md), Rollenprofile, Töne mit Beschreibung; ändern über PUT /style/rules (tone)'
+      tags: [Schreibstil]
+      x-requirements: [NFR-123]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ products: [{ product, label, tone, effective, default }], roles: [{ role, label, tone }], tones: [{ tone, label, hint }], active }' }
   /style/rules:
     get:
       operationId: getStyleRules
@@ -2708,12 +2719,12 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ disabled: [Regel], phrases: [{ avoid, use, note, language? }], address: sie|du|null, maxSentenceWords, allowed: [Begriff], audience: enduser|expert }' }
+        '200': { description: '{ disabled: [Regel], phrases: [{ avoid, use, note, language? }], address: sie|du|null, maxSentenceWords, allowed: [Begriff], audience: enduser|expert, tone: { products: { Produktart: Ton }, roles: { Rolle: Ton } } }' }
     put:
       operationId: updateStyleRules
       summary: 'Eigene Stilregeln ändern (Berechtigung admin, ADR-044)'
       tags: [Schreibstil]
-      x-requirements: [NFR-31]
+      x-requirements: [NFR-31, NFR-123]
       x-extension: true
       requestBody:
         required: true
@@ -2728,6 +2739,7 @@ paths:
                 maxSentenceWords: { type: [integer, 'null'], minimum: 8, maximum: 60 }
                 allowed: { oneOf: [{ type: array, maxItems: 1000, items: { type: string, minLength: 2, maxLength: 60 } }, { type: string }], description: 'erlaubte Begriffe (Whitelist, ADR-097); als Text je Zeile, Semikolon oder Komma getrennt' }
                 audience: { type: string, enum: [enduser, expert], description: 'Zielgruppe für die Sollwerte der Lesbarkeit (ADR-097)' }
+                tone: { type: object, description: 'Tonalität (ADR-102, S-02): Ton je Produktart und Rolle; Töne factual (sachlich), friendly (freundlich), formal (formell), concise (knapp)', properties: { products: { type: object, additionalProperties: { type: string, enum: [factual, friendly, formal, concise] } }, roles: { type: object, additionalProperties: { type: string, enum: [factual, friendly, formal, concise] } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: 'Stilregeln' }
@@ -4066,13 +4078,60 @@ paths:
       operationId: listTicketReleases
       summary: 'Release-Abgleich: Jira-Tickets je Release (Lösungsversion, sonst PI TBD) mit Statusgruppe, Einordnung Handbuch-Kandidat oder intern (Bug), Änderungen zum vorigen Import und Kapitelbezug (ADR-083, F-03)'
       tags: [Releaseletter]
-      x-requirements: [NFR-75]
+      x-requirements: [NFR-75, NFR-124]
       x-extension: true
       parameters:
         - { name: release, in: query, required: false, schema: { type: string } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ releases: [{ label, tickets, manual, internal, unknown, done, gaps, changed }], tickets: [{ key, summary, type, status, statusBucket, manualClass, release, chapters, gap, isNew, changes }], statusLabels, classLabels }' }
+        '200': { description: '{ releases: [{ label, tickets, manual, internal, unknown, done, gaps, changed }], tickets: [{ key, summary, type, status, statusBucket, manualClass, classification, classificationLabel, classificationOrigin, classificationNote, classifiedBy, classifiedAt, release, chapters, gap, isNew, changes }], statusLabels, classLabels, ticketClassLabels, ticketClassHints }' }
+  /ticket-classifications:
+    put:
+      operationId: setTicketClassifications
+      summary: 'Ticket-Einstufung (ADR-102, W-03): genehmigt, in Prüfung, intern oder Background für ein oder mehrere Tickets; null = wieder ableiten (Bug = intern, sonst in Prüfung). Intern und Background fließen nicht ins Handbuch, Background nur in die Lückenanalyse (Berechtigung decide)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-124]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [keys, classification], properties: { keys: { type: array, items: { type: string }, maxItems: 500 }, classification: { type: [string, 'null'], enum: [approved, review, internal, background, null] }, note: { type: string, maxLength: 500 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ keys, classification, label }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /releases/{releaseId}/comparison:
+    get:
+      operationId: compareReleases
+      summary: 'Projektvergleich zweier Handbuch-Releases (ADR-102, W-04): neue und geänderte Kapitel, Bildfassungen, neue Funktionen („gültig ab“ = Version), abgelöste Funktionen, Tickets der Version ohne Background'
+      tags: [Veröffentlichung]
+      x-requirements: [NFR-125]
+      x-extension: true
+      parameters:
+        - { $ref: '#/components/parameters/ReleaseId' }
+        - { name: from, in: query, required: false, schema: { type: string }, description: 'älteres Release; Standard ist das Vorgänger-Release' }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ from, to, chapters: [{ chapterId, title, change, fromVersionNo, toVersionNo, summary }], images: [{ sha, title, change, versionNo, fromVersionNo, chapters }], functions: { added, superseded }, tickets }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /release-letters/from-comparison:
+    post:
+      operationId: createReleaseLetterFromComparison
+      summary: 'Releaseletter-Entwurf aus dem Projektvergleich (ADR-102, W-04); geprüft gegen die Tickets der Version (Berechtigung edit)'
+      tags: [Releaseletter]
+      x-requirements: [NFR-125]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [releaseId], properties: { releaseId: { type: string }, fromReleaseId: { type: string }, language: { type: string, enum: [de, en] }, audience: { type: string, enum: [mgmt, biz, it, end] }, country: { type: string }, division: { type: string, enum: [car, van, all] }, title: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Releaseletter (origin comparison, comparison: { fromVersion, toVersion, chapters, images, added, superseded, tickets })' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /ticket-releases/match:
     post:
       operationId: matchTicketList

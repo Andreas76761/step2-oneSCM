@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.49.0 – Etappe 49 (24.10.2026)
+
+### Hinzugefügt
+- **Tonalität je Produktart und Rolle (ADR-102, S-02):**
+  - Vier Töne: sachlich, freundlich, formell, knapp. Ton je Produktart mit Vorgabe aus `TONALITAET.md`, dazu Rollenprofile für Dealer, Markt, MO und HQ.
+  - Neue Prüfregel „Tonalität“, je nach Ton: Werbesprache, Verkürzungen und Smileys, Floskeln und Satzlänge, strenge Formulierungen.
+  - Die Kapitelprüfung wählt den Ton je Absatz nach seiner Rolle. Die KI-Umformulierung und der KI-Vorschlag je Absatz treffen den Ton.
+- **Ticket-Einstufung (W-03):**
+  - genehmigt, in Prüfung, intern oder Background je Jira-Ticket (Berechtigung „Entscheiden“).
+  - Intern und Background fließen nicht in Kapitel. Background zählt nur in der Lückenanalyse und erscheint in keinem Releaseletter.
+- **Releaseletter aus dem Projektvergleich (W-04):**
+  - Vergleich zweier Handbuch-Releases: neue und geänderte Kapitel, Bildfassungen, neue Funktionen („gültig ab“ = Version), abgelöste Funktionen, Tickets der Version.
+  - Daraus ein Letter-Entwurf auf Deutsch oder Englisch.
+- **Zukunfts-Inhalte (W-09):** Kapitel mit späterem „gültig ab“ blendet der Export (Feld „Stand“) bzw. das Handbuch-Release bis zu ihrer Version aus.
+- Tests T-319 … T-322, E2E T-323 (axe); Anforderungen NFR-123 … NFR-126; Migration 055.
+
+### Geändert
+- Die Tonprüfung ist standardmäßig aktiv (Handbuch: sachlich) und lässt sich mit der Regel „Tonalität“ abschalten.
+- Bug-Tickets ohne Einstufung gelten als intern und sind keine Quelle mehr für Kapitel.
+- Der KI-Vorschlag je Absatz nutzt den Prompt `rewrite-1.1` (mit Ton).
+- `GET /style/rules` liefert zusätzlich `tone`.
+
 ## 0.48.0 – Etappe 48 (24.10.2026)
 
 ### Hinzugefügt

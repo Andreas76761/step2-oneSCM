@@ -13,6 +13,8 @@ import { LlmError } from '../llm.js';
 import { conflict, notFound, Problem, unprocessable } from '../problem.js';
 import { assertEditable, blockDto, blockRow, snapshot } from './chapters.js';
 import { instructionFor } from './structure.js';
+import { getStyleRules } from './style.js';
+import { resolveTone, TONE_HINT, TONE_LABEL } from '../domain/tone.js';
 
 export function llmStatus(ctx: Ctx) {
   const p = ctx.llm;
@@ -99,7 +101,10 @@ export async function proposeRewrite(ctx: Ctx, blockId: string, input: { instruc
   const cv = await db.get('SELECT chapter_id FROM generated_chapter_versions WHERE id = ?', row.chapter_version_id);
   const subs = [...new Set((await db.all(`SELECT subchapter_id FROM text_snippets WHERE id IN (${marks})`, ...snippetIds)).map((r) => r.subchapter_id as string | null))];
   const chapterInstruction = cv ? await instructionFor(ctx, cv.chapter_id, subs.length === 1 ? subs[0] : null) : null;
-  const prompt = buildRewritePrompt({ kind: b.kind, section: b.section, text: b.text, sources, terms, instructions: input.instructions, chapterInstruction });
+  // Tonalität (ADR-102): Rollenprofil bzw. Ton des Handbuchs
+  const style = await getStyleRules(ctx);
+  const tone = style.disabled.includes('tone') ? null : resolveTone(style.tone, { product: 'manual', roles: b.roles }).tone;
+  const prompt = buildRewritePrompt({ kind: b.kind, section: b.section, text: b.text, sources, terms, instructions: input.instructions, chapterInstruction, tone: tone ? { label: TONE_LABEL[tone], hint: TONE_HINT[tone] } : null });
   const promptHash = sha256(`${prompt.system}\n${prompt.user}`);
   const requestInfo = { provider: provider.id, model: provider.model, promptHash, promptVersion: REWRITE_PROMPT_VERSION, sentSnippetIds: snippetIds, external: provider.external };
 

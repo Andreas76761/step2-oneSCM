@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.48 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.49 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -102,6 +102,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
   - **Sprache des Textes** im Textfeld wählen: Englisch prüft zusätzlich a/an, „I“ und Rechtschreibung. Übersetzungen zeigen je Absatz die Sprachprüfung.
   - **Regeln** (Administration): Zielgruppe für die Lesbarkeit, erlaubte Begriffe (werden nie gemeldet, Liste einlesbar), eigene Formulierungen je Sprache (z. B. Dealer → Händler auf Deutsch, Händler → Dealer auf Englisch).
   - **Lesbarkeit** je Kapitel im Anleitungs-Check und im Schreibstil: Flesch, LIX, Ø Wörter je Satz, lange Sätze, Passiv mit Sollwerten der Zielgruppe.
+  - **Tonalität:** Unter Schreibstil › Regeln › Tonalität legen Sie den Ton je Produktart (Vorgabe aus TONALITAET.md: Handbuch sachlich, Releaseletter und Quick Guide knapp, Schulung freundlich, Interne Dokumente formell) und je Rolle fest. Beim Prüfen wählen Sie Produktart und Rolle; die Regel „Tonalität“ meldet z. B. Werbesprache, Verkürzungen oder strenge Formulierungen, und die KI-Vorschläge treffen den gewählten Ton. Im Kapitel gilt das Rollenprofil für Absätze genau einer Rolle.
   - **Terminologie:** „nicht übersetzen“ – der Begriff steht in jeder Sprache unverändert (z. B. Begriffe der Oberfläche).
 - **Evidenz:** Herkunft jedes Absatzes.
 - **Freigabe:** einreichen, mehrstufig freigeben; das Qualitätsgate zeigt, was noch fehlt.
@@ -109,8 +110,8 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 ## 8. Veröffentlichen
 
 - **Leseransicht:** Handbuch lesen, suchen, Lesezeichen, „Weiter mit …“, Drucken mit Deckblatt im Firmen-Layout.
-- **Export:** Markdown, HTML, PDF, Word – gefiltert nach Rolle, Sparte, Markt; Quick Guide, One Pager, Lesefassung.
-- **Veröffentlichung:** Handbuch-Release mit Online-Hilfe und Übersetzungen.
+- **Export:** Markdown, HTML, PDF, Word – gefiltert nach Rolle, Sparte, Markt; Quick Guide, One Pager, Lesefassung. Mit **Stand (Release)** blendet der Export Kapitel aus, deren „gültig ab“ später liegt (Zukunfts-Inhalte); das Ergebnis nennt sie.
+- **Veröffentlichung:** Handbuch-Release mit Online-Hilfe und Übersetzungen. Kapitel mit späterem „gültig ab“ als die Versionsnummer kommen erst in ein späteres Release. Unter „Änderungen anzeigen“ steht der **Projektvergleich** mit dem Vorgänger (neue Funktionen, geänderte Bilder, abgelöste Funktionen, Tickets der Version); „Releaseletter-Entwurf erzeugen“ legt daraus einen Letter an.
 - **Übersetzungen:** Kapitel in die Landessprachen (auch Deutsch und Französisch für die Schweiz); Platzhalter- und Strukturvergleich, Länge, deutsche Wörter im Zieltext, Datum und Kennungen.
   - **Übersetzungsspeicher:** Freigegebene Absätze werden beim nächsten Mal sofort übernommen („Speicher 100 %“); „Vorschläge aus dem Speicher“ zeigt ähnliche Treffer ab 75 %. Pflege, Export und Import unter **Übersetzungsspeicher** (Datei wie `SPEICHER.csv`).
   - **Glossar je Sprache:** feste Übersetzungen der Terminologie, Export für Übersetzer und Rückimport.
@@ -121,6 +122,8 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
   - Hinweis, wenn ein Bild keine Fassung in der Zielsprache hat; Exporte zeigen Inhaltsverzeichnis, Versionszeile und Hinweisarten in der Zielsprache.
 - **Releaseletter:** „Übersetzen (DE → EN)“ bzw. „EN → DE“ legt einen geprüften Entwurf in der anderen Sprache an.
 - **Release-Abgleich, Releaseletter:** Jira-Tickets gegen den Bestand prüfen; Releaseletter mit Prüfregeln.
+  - **Einstufung je Ticket** (Berechtigung „Entscheiden“): genehmigt, in Prüfung, intern oder Background. Intern und Background fließen nicht in Kapitel; Background zählt nur in der Lückenanalyse und erscheint in keinem Releaseletter. Ohne Einstufung gilt Bug = intern, sonst „in Prüfung“.
+  - **Aus Projektvergleich erzeugen:** Releaseletter-Entwurf aus zwei Handbuch-Releases.
 - **Kontexthilfe:** Hilfe-Widget für oneSCM (F1 je Maske).
 
 ## 9. Typische Arbeitsabläufe

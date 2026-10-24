@@ -30,5 +30,9 @@ Gilt für Kapitelentwürfe und alle Produkte in `05_I_Output`. Grammatik und Sch
 | Grafiken | Stichworte, keine ganzen Sätze | | Beschriftung englisch für UI, deutsch für Erklärungen |
 | Prozesse | neutral, Ablauf aus Sicht der Rollen | | Verben im Infinitiv in Prozessschritten („Antrag prüfen“) |
 
+## In der App
+
+Unter **Schreibstil › Regeln › Tonalität** steht derselbe Ton je Produktart als Vorgabe (Handbuch und Prozesse sachlich; Releaseletter, Quick Guide und Grafiken knapp; Schulung und Videos freundlich; Interne Dokumente formell), dazu ein Ton je Rolle (Dealer, Markt, MO, HQ) für Absätze genau einer Rolle. Die Regel „Tonalität“ meldet Werbesprache, Verkürzungen, Floskeln und strenge Formulierungen; die KI-Vorschläge treffen den eingestellten Ton. Weicht diese Datei von der App ab, gleichen Sie beides ab – ein Mensch entscheidet.
+
 ## Vorschläge
 

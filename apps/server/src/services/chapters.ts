@@ -11,6 +11,7 @@ import { systemNotice } from './collaboration.js';
 import { guidanceGateChecks } from './guidanceBase.js';
 import { mentions, mergeInstructions } from '../domain/chapterInstruction.js';
 import { instructionOf, subchapterInstructions } from './structure.js';
+import { excludedTicketDocuments } from './ticketClasses.js';
 import { snippetScope, variantSnippetRefs } from './variantSnippets.js';
 import { checkDecider, clearWorkflowSql, recordApproval, startWorkflow, workflowState } from './workflow.js';
 
@@ -173,7 +174,14 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
   // Detaillierung des Kapitels (ADR-100): nur die gewählten Detaillevel; Chunks ohne Detaillevel gelten als Basis
   const levels = new Set(parseJson<string[] | null>(chapter.detail_levels, null) ?? DEFAULT_DETAIL_LEVELS);
   const excludedByDetail = all.filter((s) => s.detail && !levels.has(s.detail)).length;
-  const snippets = all.filter((s) => !s.detail || levels.has(s.detail)).filter((s) => {
+  // Ticket-Einstufung (ADR-102, W-03): Tickets „intern“ und „Background“ fließen nicht ins Handbuch
+  const ticketDocs = await excludedTicketDocuments(ctx);
+  const docOf = ticketDocs.size && all.length ? new Map((await ctx.db.all(
+    `SELECT s.id, r.document_id FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE r.source_format = 'jira' AND s.id IN (${all.map(() => '?').join(',')})`, ...all.map((s) => s.id),
+  )).map((r) => [r.id as string, r.document_id as string])) : new Map<string, string>();
+  const byTicket = (s: { id: string }) => ticketDocs.has(docOf.get(s.id) ?? '');
+  const excludedByTicket = all.filter(byTicket).length;
+  const snippets = all.filter((s) => !byTicket(s)).filter((s) => !s.detail || levels.has(s.detail)).filter((s) => {
     const o = origin.get(s.id);
     let ins = chapterInstruction;
     if (o && o.chapter_id !== chapterId) ins = mergeInstructions(ins, instructionOf(o));
@@ -255,7 +263,7 @@ export async function generate(ctx: Ctx, chapterId: string, actor: string) {
   });
   return {
     ...(await getChapterVersion(ctx, versionId)),
-    generation: { gaps: result.gaps, usedSnippets: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, excludedByInstruction, excludedByDetail, detailLevels: [...levels], missingTopics },
+    generation: { gaps: result.gaps, usedSnippets: result.usedSnippetIds.length, skippedUnconfirmed: result.skippedUnconfirmed, deduplicated: result.deduplicated, excludedByInstruction, excludedByDetail, excludedByTicket, detailLevels: [...levels], missingTopics },
   };
 }
 

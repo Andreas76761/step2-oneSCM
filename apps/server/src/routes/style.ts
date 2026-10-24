@@ -2,7 +2,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { Ctx } from '../context.js';
 import { deleteDiagramTemplate, generateDiagrams, listDiagramTemplates, saveDiagram, saveDiagramTemplate } from '../services/diagrams.js';
-import { styleHistory, applyChapterTexts, copyStyleRules, exportStyleRules, importStyleRules, getStyleRules, updateStyleRules, autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, rewriteText } from '../services/style.js';
+import { styleHistory, applyChapterTexts, copyStyleRules, exportStyleRules, importStyleRules, getStyleRules, updateStyleRules, autofixChapterVersion, chapterStyleSummary, checkChapterVersion, checkSnippets, checkText, getTone, rewriteText } from '../services/style.js';
 import { applyGuidanceFixes, assistantSuggestions, chapterGuidance, createChapterFromAssistant, guidanceSummary } from '../services/guidance.js';
 import { effectivePhrases, projectLibraries, setProjectLibraries } from '../services/style.js';
 import { feedbackInsights, feedbackSummary, feedbackToTask, listFeedback, submitFeedback, updateFeedback } from '../services/feedback.js';
@@ -16,7 +16,9 @@ import { badRequest } from '../problem.js';
 import { userOf } from './helpers.js';
 
 export function styleRoutes(app: FastifyInstance, _ctx: Ctx) {
-  app.post<{ Body: { text?: unknown; language?: unknown } }>('/style/check', async (req) => (userOf(req.ctx, req), checkText(req.ctx, req.body?.text, req.body?.language)));
+  app.post<{ Body: { text?: unknown; language?: unknown; product?: unknown; roles?: unknown } }>('/style/check', async (req) => (userOf(req.ctx, req), checkText(req.ctx, req.body?.text, req.body?.language, { product: req.body?.product, roles: req.body?.roles })));
+  // Tonalität je Produktart und Rolle (ADR-102, S-02); geändert wird sie über PUT /style/rules (tone)
+  app.get('/style/tone', async (req) => (userOf(req.ctx, req), getTone(req.ctx)));
   // Umformulieren verändert nichts Gespeichertes; KI-Nutzung erfordert Bearbeitungsrecht
   app.post<{ Body: any }>('/style/rewrite', async (req) => rewriteText(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit').id));
   app.get<{ Params: { versionId: string } }>('/style/chapter-versions/:versionId', async (req) => (userOf(req.ctx, req), checkChapterVersion(req.ctx, req.params.versionId)));

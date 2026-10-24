@@ -5,12 +5,23 @@ import {
   approveReleaseLetter, createReleaseLetter, deleteReleaseLetter, exportReleaseLetter, getReleaseLetter, importReleaseLetter, listReleaseLetters,
   listTicketReleases, matchTicketList, updateReleaseLetter,
 } from '../services/releaseLetters.js';
+import { createLetterFromComparison, releaseComparison } from '../services/releaseComparison.js';
+import { setTicketClasses } from '../services/ticketClasses.js';
 import { userOf } from './helpers.js';
 
 type P = { Params: { letterId: string } };
 
 export function releaseLetterRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Querystring: { release?: string } }>('/ticket-releases', async (req) => (userOf(req.ctx, req), listTicketReleases(req.ctx, { release: req.query.release || undefined })));
+  // Ticket-Einstufung (ADR-102, W-03): Entscheidung eines Menschen (Berechtigung decide)
+  app.put<{ Body: any }>('/ticket-classifications', async (req) => setTicketClasses(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'decide')));
+  // Projektvergleich zweier Handbuch-Releases und Letter-Entwurf daraus (W-04)
+  app.get<{ Params: { releaseId: string }; Querystring: { from?: string } }>('/releases/:releaseId/comparison', async (req) => (userOf(req.ctx, req), releaseComparison(req.ctx, req.params.releaseId, req.query.from || undefined)));
+  app.post<{ Body: any }>('/release-letters/from-comparison', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    return createLetterFromComparison(req.ctx, req.body ?? {}, user);
+  });
   app.post<{ Body: any }>('/ticket-releases/match', async (req) => (userOf(req.ctx, req), matchTicketList(req.ctx, req.body ?? {})));
 
   app.get('/release-letters', async (req) => (userOf(req.ctx, req), listReleaseLetters(req.ctx)));

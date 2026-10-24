@@ -25,7 +25,7 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
     reply.code(201);
     return createExport(req.ctx, { chapterIds: list(b.chapterIds), roles: list(b.roles), divisions: list(b.divisions), market: b.market || null, release: b.release || null, format: b.format,
       outlineId: typeof b.outlineId === 'string' && b.outlineId ? b.outlineId : undefined, appendices: typeof b.appendices === 'boolean' ? b.appendices : undefined,
-      profile: b.profile || undefined, reading: b.reading === true, transitions: typeof b.transitions === 'boolean' ? b.transitions : undefined }, user.id);
+      profile: b.profile || undefined, reading: b.reading === true, transitions: typeof b.transitions === 'boolean' ? b.transitions : undefined, asOf: typeof b.asOf === 'string' && b.asOf.trim() ? b.asOf : undefined }, user.id);
   });
   app.get('/exports', async (req) => (userOf(req.ctx, req), listExports(req.ctx)));
   // Firmen-Layout (ADR-038): lesen für alle, ändern nur Administration

@@ -7,6 +7,7 @@ import { sha256 } from '../domain/similarity.js';
 import { analyzeStyle, autoFix, PRESENT_RULES, RULE_LABEL, STYLE_RULES, type StylePhrase, type StyleRule } from '../domain/style.js';
 import { assessReadability, AUDIENCES, readability, type Audience } from '../domain/readability.js';
 import { LANGUAGES } from '../domain/translate.js';
+import { cleanToneSettings, DEFAULT_TONE_SETTINGS, isProduct, resolveTone, TONE_HINT, TONE_LABEL, toneOverview, type Product, type Tone, type ToneSettings } from '../domain/tone.js';
 import { LlmError } from '../llm.js';
 import { badRequest, Problem, unprocessable } from '../problem.js';
 import { getChapterVersion, patchBlock } from './chapters.js';
@@ -20,9 +21,12 @@ export type StyleMode = (typeof STYLE_MODES)[number];
 
 // ---------- Eigene Stilregeln je Projekt (ADR-044) ----------
 
-/** `allowed`: erlaubte Begriffe (Whitelist, ADR-097); `audience`: Zielgruppe für die Sollwerte der Lesbarkeit */
-export interface StyleRules { disabled: StyleRule[]; phrases: StylePhrase[]; address: 'sie' | 'du' | null; maxSentenceWords: number | null; allowed: string[]; audience: Audience }
-export const DEFAULT_STYLE_RULES: StyleRules = { disabled: [], phrases: [], address: 'sie', maxSentenceWords: null, allowed: [], audience: 'enduser' };
+/**
+ * `allowed`: erlaubte Begriffe (Whitelist, ADR-097); `audience`: Zielgruppe für die Sollwerte der Lesbarkeit;
+ * `tone`: Ton je Produktart und Rolle (ADR-102, S-02)
+ */
+export interface StyleRules { disabled: StyleRule[]; phrases: StylePhrase[]; address: 'sie' | 'du' | null; maxSentenceWords: number | null; allowed: string[]; audience: Audience; tone: ToneSettings }
+export const DEFAULT_STYLE_RULES: StyleRules = { disabled: [], phrases: [], address: 'sie', maxSentenceWords: null, allowed: [], audience: 'enduser', tone: DEFAULT_TONE_SETTINGS };
 const MAX_PHRASES = 300;
 const MAX_ALLOWED = 1000;
 /** Sprachen eigener Regeln: Deutsch und alle Zielsprachen */
@@ -46,7 +50,21 @@ export function cleanAllowed(v: unknown): string[] {
 
 export async function getStyleRules(ctx: Ctx): Promise<StyleRules> {
   const r = await ctx.db.get('SELECT style_rules FROM projects WHERE id = ?', ctx.projectId);
-  return { ...DEFAULT_STYLE_RULES, ...parseJson<Partial<StyleRules>>(r?.style_rules, {}) };
+  const rules = { ...DEFAULT_STYLE_RULES, ...parseJson<Partial<StyleRules>>(r?.style_rules, {}) };
+  return { ...rules, tone: { ...DEFAULT_TONE_SETTINGS, ...rules.tone } };
+}
+
+/** Tonalität des Projekts mit wirksamem Ton je Produktart (ADR-102) */
+export async function getTone(ctx: Ctx) {
+  const rules = await getStyleRules(ctx);
+  return { ...rules.tone, active: !rules.disabled.includes('tone'), ...toneOverview(rules.tone) };
+}
+
+/** Geltungsbereich eines Textes für den Ton: Produktart und Rollen (Fehler bei unbekannter Produktart) */
+export function toneScope(input: { product?: unknown; roles?: unknown }): { product?: Product; roles?: string[] } {
+  if (input.product !== undefined && input.product !== null && input.product !== '' && !isProduct(input.product)) throw badRequest('product: unbekannte Produktart.');
+  const roles = Array.isArray(input.roles) ? input.roles.map(String) : typeof input.roles === 'string' && input.roles ? input.roles.split(',') : undefined;
+  return { product: isProduct(input.product) ? input.product : undefined, roles };
 }
 
 /** Formulierungsregeln prüfen und bereinigen (Projektregeln und Bibliotheken) */
@@ -90,9 +108,14 @@ export async function updateStyleRules(ctx: Ctx, input: Partial<Record<keyof Sty
     if (!(AUDIENCES as unknown[]).includes(input.audience)) throw badRequest(`audience: ${AUDIENCES.join(' oder ')}.`);
     next.audience = input.audience as Audience;
   }
+  if (input.tone !== undefined) {
+    const t = cleanToneSettings(input.tone);
+    if (typeof t === 'string') throw badRequest(t);
+    next.tone = t;
+  }
   await ctx.db.tx(async () => {
     await ctx.db.run('UPDATE projects SET style_rules = ? WHERE id = ?', json(next), ctx.projectId);
-    await audit(ctx, user.id, 'style.rules_changed', 'project', ctx.projectId, { disabled: next.disabled, phrases: next.phrases.length, address: next.address, maxSentenceWords: next.maxSentenceWords, allowed: next.allowed.length, audience: next.audience });
+    await audit(ctx, user.id, 'style.rules_changed', 'project', ctx.projectId, { disabled: next.disabled, phrases: next.phrases.length, address: next.address, maxSentenceWords: next.maxSentenceWords, allowed: next.allowed.length, audience: next.audience, tone: next.tone });
   });
   return next;
 }
@@ -159,20 +182,22 @@ export async function setProjectLibraries(ctx: Ctx, input: { libraryIds?: unknow
   return projectLibraries(ctx);
 }
 
-async function options(ctx: Ctx) {
+async function options(ctx: Ctx, scope: { product?: Product; roles?: string[] } = {}) {
   const terms = (await ctx.db.all("SELECT preferred, avoid FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId))
     .map((t) => ({ preferred: t.preferred as string, avoid: parseJson<string[]>(t.avoid, []) }));
   const rules = await getStyleRules(ctx);
   const maxWords = rules.maxSentenceWords ?? Math.min(25, (await getSettings(ctx.db)).readability.maxSentenceWords);
   // Projektregeln und abonnierte Bibliotheken (ADR-050)
   const phrases = (await effectivePhrases(ctx, rules.phrases)).phrases.map(({ avoid, use, note, language }) => ({ avoid, use, note, language }));
-  return { terms, maxWords, disabled: rules.disabled, phrases, address: rules.address, allowed: rules.allowed ?? [], audience: rules.audience ?? 'enduser' };
+  // Ton (ADR-102): Rollenprofil bzw. Produktart; ausgeschaltet mit der Regel „tone“
+  const tone: Tone | null = rules.disabled.includes('tone') ? null : resolveTone(rules.tone, scope).tone;
+  return { terms, maxWords, disabled: rules.disabled, phrases, address: rules.address, allowed: rules.allowed ?? [], audience: rules.audience ?? 'enduser', tone, toneSettings: rules.tone };
 }
 
 /** Optionen für Texte einer anderen Sprache (ADR-097): Terminologie und Anrede gelten nur für Deutsch */
-export async function styleOptionsFor(ctx: Ctx, language = 'de') {
-  const o = await options(ctx);
-  return language === 'de' ? { ...o, language } : { ...o, language, terms: [], address: null };
+export async function styleOptionsFor(ctx: Ctx, language = 'de', scope: { product?: Product; roles?: string[] } = {}) {
+  const o = await options(ctx, scope);
+  return language === 'de' ? { ...o, language } : { ...o, language, terms: [], address: null, tone: null };
 }
 
 const cleanText = (text: unknown) => {
@@ -191,16 +216,18 @@ function withLabels(a: ReturnType<typeof analyzeStyle>) {
 }
 
 /** Freien Text prüfen – Deutsch oder eine Zielsprache (ADR-097) */
-export async function checkText(ctx: Ctx, text: unknown, language: unknown = 'de') {
+export async function checkText(ctx: Ctx, text: unknown, language: unknown = 'de', scope: { product?: unknown; roles?: unknown } = {}) {
   const t = cleanText(text);
   const lang = typeof language === 'string' && language ? language.toLowerCase() : 'de';
   if (!PHRASE_LANGUAGES.includes(lang)) throw badRequest(`language: erlaubt sind ${PHRASE_LANGUAGES.join(', ')}.`);
-  return { text: t, language: lang, ...withLabels(analyzeStyle(t, await styleOptionsFor(ctx, lang))) };
+  const opts = await styleOptionsFor(ctx, lang, toneScope(scope));
+  return { text: t, language: lang, tone: opts.tone ? { tone: opts.tone, label: TONE_LABEL[opts.tone] } : null, ...withLabels(analyzeStyle(t, opts)) };
 }
 
 const SYSTEM_PROMPT = `Du überarbeitest Texte eines Software-Benutzerhandbuchs (oneSCM) auf Deutsch.
 Regeln:
 - Professionell und sachlich; Präsens; aktiv, wo möglich; Anrede wie in „address“ angegeben (sie = „Sie“, du = „du“, null = Anrede nicht ändern); kurze Sätze (höchstens „maxSentenceWords“ Wörter, sofern angegeben).
+- Ton wie in „tone“ angegeben (Beschreibung in „toneHint“), z. B. sachlich, freundlich, formell oder knapp; null = Ton nicht ändern.
 - Eigene Regeln des Projekts („phrases“): „avoid“ nicht verwenden, stattdessen „use“ (leer = streichen).
 - Keine neuen Inhalte, nichts weglassen. Zahlen, Fristen, Menüpfade, Feldnamen, **Fettdruck** und Markdown-Struktur (Listen, Zeilen) bleiben erhalten.
 - Terminologie: bevorzugte Begriffe verwenden, zu vermeidende ersetzen.
@@ -211,11 +238,11 @@ Regeln:
  * Umformulieren: `professional` (Stil, Grammatik, Präsens, aktiv) bzw. `present` (nur Zeitform) über den KI-Dienst;
  * `rules` bzw. ohne KI-Dienst: automatische Regelkorrekturen. Zahlen, die im Ergebnis fehlen, werden gemeldet.
  */
-export async function rewriteText(ctx: Ctx, input: { text?: unknown; mode?: unknown }, actor: string) {
+export async function rewriteText(ctx: Ctx, input: { text?: unknown; mode?: unknown; product?: unknown; roles?: unknown }, actor: string) {
   const text = cleanText(input.text);
   const mode = (input.mode ?? 'professional') as StyleMode;
   if (!(STYLE_MODES as readonly string[]).includes(mode)) throw badRequest(`mode muss eines von ${STYLE_MODES.join(', ')} sein.`);
-  const opts = await options(ctx);
+  const opts = await options(ctx, toneScope(input));
   const provider = ctx.llm;
   let result: string;
   let method: 'ai' | 'rules';
@@ -233,6 +260,8 @@ export async function rewriteText(ctx: Ctx, input: { text?: unknown; mode?: unkn
       phrases: opts.disabled.includes('custom') ? [] : opts.phrases,
       address: opts.disabled.includes('address') ? null : opts.address,
       maxSentenceWords: opts.disabled.includes('long_sentence') ? null : opts.maxWords,
+      // Tonalität (ADR-102, S-02)
+      tone: opts.tone ? TONE_LABEL[opts.tone] : null, toneHint: opts.tone ? TONE_HINT[opts.tone] : null,
     };
     const instruction = mode === 'present' ? 'Setze den Text ins Präsens; ändere sonst nichts.' : 'Überarbeite den Text nach den Regeln.';
     const prompt = { system: SYSTEM_PROMPT, user: `${instruction} Eingabedaten:\n<<<DATA\n${JSON.stringify(payload, null, 2)}\nDATA>>>` };
@@ -260,16 +289,19 @@ export async function rewriteText(ctx: Ctx, input: { text?: unknown; mode?: unkn
   const numbers = (s: string) => [...s.matchAll(/\d+(?:[.,]\d+)?/g)].map((m) => m[0]);
   const after = new Set(numbers(result));
   const lostNumbers = [...new Set(numbers(text))].filter((n) => !after.has(n));
-  return { text: result, method, mode, provider: method === 'ai' ? { id: provider!.id, model: provider!.model, external: provider!.external } : null, lostNumbers, analysis: withLabels(analyzeStyle(result, opts)) };
+  return { text: result, method, mode, tone: opts.tone, provider: method === 'ai' ? { id: provider!.id, model: provider!.model, external: provider!.external } : null, lostNumbers, analysis: withLabels(analyzeStyle(result, opts)) };
 }
 
 /** Absätze einer Kapitelversion prüfen; bearbeitbar nur im Entwurf */
 export async function checkChapterVersion(ctx: Ctx, versionId: string) {
   const v = await getChapterVersion(ctx, versionId);
   const opts = await options(ctx);
-  const blocks = v.sections.flatMap((s) => s.blocks.filter((b: any) => b.kind !== 'gap' && b.kind !== 'xref').map((b: any) => ({
-    id: b.id as string, section: s.title, kind: b.kind as string, versionNo: b.versionNo as number, text: b.text as string, analysis: withLabels(analyzeStyle(b.text, opts)),
-  })));
+  // Ton je Absatz (ADR-102): Rollenprofil, wenn der Absatz genau einer Rolle zugeordnet ist, sonst Ton des Handbuchs
+  const toneOf = (roles: string[]) => (opts.tone ? resolveTone(opts.toneSettings, { product: 'manual', roles }).tone : null);
+  const blocks = v.sections.flatMap((s) => s.blocks.filter((b: any) => b.kind !== 'gap' && b.kind !== 'xref').map((b: any) => {
+    const tone = toneOf(b.roles ?? []);
+    return { id: b.id as string, section: s.title, kind: b.kind as string, versionNo: b.versionNo as number, text: b.text as string, tone, analysis: withLabels(analyzeStyle(b.text, { ...opts, tone })) };
+  }));
   return {
     version: { id: v.id, chapterId: v.chapterId, versionNo: v.versionNo, status: v.status, title: v.title, editable: v.status === 'draft' },
     summary: { blocks: blocks.length, withProblems: blocks.filter((b) => b.analysis.problemSentences).length },
@@ -533,7 +565,7 @@ export async function importStyleRules(ctx: Ctx, input: { csv?: unknown; rules?:
     if (!Array.isArray(r.phrases)) throw badRequest('rules.phrases fehlt.');
     incoming = r.phrases as StylePhrase[];
     // Einstellungen aus einem JSON-Export übernehmen
-    rest = { disabled: r.disabled, address: r.address, maxSentenceWords: r.maxSentenceWords, allowed: r.allowed, audience: r.audience };
+    rest = { disabled: r.disabled, address: r.address, maxSentenceWords: r.maxSentenceWords, allowed: r.allowed, audience: r.audience, tone: r.tone };
     for (const k of Object.keys(rest) as (keyof StyleRules)[]) if (rest[k] === undefined) delete rest[k];
   } else throw badRequest('csv oder rules ist Pflicht.');
   const m = mergePhrases(cur.phrases, incoming, mode);

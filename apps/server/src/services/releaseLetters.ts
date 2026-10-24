@@ -5,8 +5,9 @@ import { audit, privacyNames, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import {
   AUDIENCES, AUDIENCE_LABEL, buildReleaseLetter, checkReleaseLetter, MANUAL_CLASS_LABEL, manualClass, piLabel, STATUS_BUCKET_LABEL, statusBucket,
-  VERDICT_LABEL, VERDICT_TEXT, type Audience, type ReleaseTicket,
+  VERDICT_LABEL, VERDICT_TEXT, TICKET_CLASS_HINT, TICKET_CLASS_LABEL, ticketInLetter, type Audience, type ReleaseTicket,
 } from '../domain/releaseLetter.js';
+import { ticketClassMap } from './ticketClasses.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { markdownToDocx } from './docx.js';
 import { recordLetterMemory, refreshLetterIssues } from './translationWorkflow.js';
@@ -37,7 +38,7 @@ async function original(ctx: Ctx, key: string | null) {
 }
 
 /** Alle Tickets der Jira-Importe (aktuelle Revision) mit Vergleich zur vorigen Revision */
-async function loadTickets(ctx: Ctx) {
+export async function loadTickets(ctx: Ctx) {
   const rows = await ctx.db.all(
     `SELECT d.id AS document_id, d.path, r.id AS revision_id, r.revision_no, r.original_key, r.imported_at,
        (SELECT p.original_key FROM source_revisions p WHERE p.document_id = d.id AND p.revision_no < r.revision_no AND p.source_format = 'jira' ORDER BY p.revision_no DESC LIMIT 1) AS previous_key
@@ -74,17 +75,21 @@ async function coverage(ctx: Ctx) {
 export async function listTicketReleases(ctx: Ctx, opts: { release?: string } = {}) {
   const all = await loadTickets(ctx);
   const cov = await coverage(ctx);
+  const classes = await ticketClassMap(ctx, all.map((x) => x.ticket));
   const tickets = all.map((x) => {
     const t = x.ticket;
     const cls = manualClass(t.type);
     const bucket = statusBucket(t.status);
+    // Einstufung (ADR-102, W-03): intern zählt nicht als Lücke, Background nur in der Lückenanalyse
+    const tc = classes.get(t.key)!;
     return {
+      classification: tc.classification, classificationLabel: tc.label, classificationOrigin: tc.origin, classificationNote: tc.note, classifiedBy: tc.setBy, classifiedAt: tc.setAt,
       key: t.key, summary: t.summary, type: t.type, status: t.status, statusBucket: bucket, statusLabel: STATUS_BUCKET_LABEL[bucket],
       manualClass: cls, manualClassLabel: MANUAL_CLASS_LABEL[cls], release: piLabel(t), components: t.components, created: t.created,
       revisionNo: x.revisionNo, importedAt: x.importedAt, isNew: x.isNew, changes: x.changes,
       chapters: cov.get(x.documentId) ?? [],
       // Handbuch-Kandidat ohne Kapitel, das auf dem Ticket beruht
-      gap: cls === 'manual' && bucket !== 'cancelled' && !(cov.get(x.documentId)?.length),
+      gap: tc.classification !== 'internal' && (cls === 'manual' || tc.origin === 'manual') && bucket !== 'cancelled' && !(cov.get(x.documentId)?.length),
     };
   });
   const releases = [...new Set(tickets.map((t) => t.release))].sort((a, b) => (a === 'PI TBD' ? 1 : b === 'PI TBD' ? -1 : a.localeCompare(b, 'de', { numeric: true }))).map((label) => {
@@ -96,10 +101,10 @@ export async function listTicketReleases(ctx: Ctx, opts: { release?: string } = 
     };
   });
   const shown = opts.release ? tickets.filter((t) => t.release === opts.release) : tickets;
-  return { releases, tickets: shown, statusLabels: STATUS_BUCKET_LABEL, classLabels: MANUAL_CLASS_LABEL };
+  return { releases, tickets: shown, statusLabels: STATUS_BUCKET_LABEL, classLabels: MANUAL_CLASS_LABEL, ticketClassLabels: TICKET_CLASS_LABEL, ticketClassHints: TICKET_CLASS_HINT };
 }
 
-const parseKeys = (v: unknown) => {
+export const parseKeys = (v: unknown) => {
   const raw = Array.isArray(v) ? v.map(String).join('\n') : String(v ?? '');
   return [...new Set((raw.toUpperCase().match(/[A-Z][A-Z0-9]{1,9}-\d+/g) ?? []))].slice(0, MAX_KEYS);
 };
@@ -120,7 +125,7 @@ async function ticketsFor(ctx: Ctx, keys: string[]) {
   return { tickets: keys.map((k) => by.get(k)).filter((t): t is ReleaseTicket => !!t), missing: keys.filter((k) => !by.has(k)), all };
 }
 
-function cleanOptions(input: any) {
+export function cleanOptions(input: any) {
   const language = input.language ?? 'de';
   if (language !== 'de' && language !== 'en') throw badRequest('language muss de oder en sein.');
   const audience = (input.audience ?? 'biz') as Audience;
@@ -147,6 +152,8 @@ async function dto(ctx: Ctx, r: Row, withCheck = true) {
     // Übersetzung DE↔EN (U-09): Ausgangsletter, Prüfbefunde je Zeile, vorhandene Übersetzungen
     translationOf: r.translation_of ?? null, translationIssues: parseJson<any[]>(r.translation_issues, []).map((x) => ({ ...x, labels: x.issues.map((i: TranslationIssue) => TRANSLATION_ISSUE_LABELS[i]) })),
     translations: (await ctx.db.all('SELECT id, language, status FROM release_letters WHERE translation_of = ?', r.id)).map((x) => ({ id: x.id, language: x.language, status: x.status })),
+    // Entwurf aus dem Projektvergleich (ADR-102, W-04): verglichene Releases und Umfang
+    comparison: parseJson<Record<string, unknown> | null>(r.comparison, null),
   };
   if (!withCheck) return base;
   const { tickets, missing } = await ticketsFor(ctx, keys);
@@ -169,15 +176,16 @@ export async function getReleaseLetter(ctx: Ctx, id: string) {
   return dto(ctx, await letterRow(ctx, id));
 }
 
-async function store(ctx: Ctx, row: Record<string, unknown>, user: User, action: string) {
+export async function storeLetter(ctx: Ctx, row: Record<string, unknown>, user: User, action: string) {
   const { tickets } = await ticketsFor(ctx, row.keys as string[]);
   const verdict = checkReleaseLetter(String(row.text), tickets, { audience: row.audience as Audience, names: await privacyNames(ctx.db) }).verdict;
   const id = newId('rl');
   await ctx.db.tx(async () => {
     await ctx.db.run(
-      `INSERT INTO release_letters (id, project_id, title, release_label, ticket_keys, language, audience, country, division, origin, text, status, verdict, created_by, created_at, updated_by, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?)`,
+      `INSERT INTO release_letters (id, project_id, title, release_label, ticket_keys, language, audience, country, division, origin, text, status, verdict, created_by, created_at, updated_by, updated_at, comparison)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?)`,
       id, ctx.projectId, row.title, row.release, json(row.keys), row.language, row.audience, row.country, row.division, row.origin, row.text, verdict, user.id, now(), user.id, now(),
+      row.comparison ? json(row.comparison) : null,
     );
     await audit(ctx, user.id, action, 'release_letter', id, { release: row.release, tickets: (row.keys as string[]).length, verdict });
   });
@@ -192,11 +200,15 @@ export async function createReleaseLetter(ctx: Ctx, input: any, user: User) {
   const release = typeof input?.release === 'string' ? input.release.trim() : '';
   if (!keys.length && release) keys = all.filter((t) => piLabel(t) === release).map((t) => t.key);
   if (!keys.length) throw badRequest('Bitte ein Release (Lösungsversion) oder Ticketnummern angeben.');
-  const { tickets, missing } = await ticketsFor(ctx, keys);
+  const { tickets: chosen, missing } = await ticketsFor(ctx, keys);
   if (missing.length) throw badRequest(`Diese Tickets sind nicht eingelesen: ${missing.join(', ')}. Jira-Export unter „Quellen“ hochladen.`);
+  // Einstufung (ADR-102, W-03): Background nie, intern nur als behobener Fehler
+  const classes = await ticketClassMap(ctx, chosen);
+  const tickets = chosen.filter((t) => ticketInLetter(classes.get(t.key)!.classification, t.type));
+  if (!tickets.length) throw badRequest('Alle gewählten Tickets sind als Background bzw. intern eingestuft – kein Inhalt für einen Releaseletter.');
   const letter = buildReleaseLetter(tickets, { ...opts, release: release || undefined, title: input?.title });
   if (!letter.keys.length) throw badRequest('Alle gewählten Tickets sind storniert – kein Inhalt für einen Releaseletter.');
-  return store(ctx, { ...opts, title: String(input?.title ?? '').trim().slice(0, 200) || `Releaseletter ${letter.release} (${opts.language.toUpperCase()})`, release: letter.release, keys: letter.keys, text: letter.markdown, origin: 'generated' }, user, 'release_letter.generated');
+  return storeLetter(ctx, { ...opts, title: String(input?.title ?? '').trim().slice(0, 200) || `Releaseletter ${letter.release} (${opts.language.toUpperCase()})`, release: letter.release, keys: letter.keys, text: letter.markdown, origin: 'generated' }, user, 'release_letter.generated');
 }
 
 /** Fremden Letter (z. B. aus Dify) einfügen und gegen die Tickets prüfen */
@@ -215,7 +227,7 @@ export async function importReleaseLetter(ctx: Ctx, input: any, user: User) {
   if (!keys.length) throw badRequest('Kein eingelesenes Ticket im Text gefunden – bitte keys angeben.');
   const { tickets } = await ticketsFor(ctx, keys);
   const release = [...new Set(tickets.map(piLabel))].join(', ') || 'PI TBD';
-  return store(ctx, { ...opts, title: String(input?.title ?? '').trim().slice(0, 200) || `Eingefügter Releaseletter (${keys[0]}${keys.length > 1 ? ' …' : ''})`, release, keys, text, origin: 'external' }, user, 'release_letter.imported');
+  return storeLetter(ctx, { ...opts, title: String(input?.title ?? '').trim().slice(0, 200) || `Eingefügter Releaseletter (${keys[0]}${keys.length > 1 ? ' …' : ''})`, release, keys, text, origin: 'external' }, user, 'release_letter.imported');
 }
 
 export async function updateReleaseLetter(ctx: Ctx, id: string, input: { text?: unknown; title?: unknown }, user: User) {

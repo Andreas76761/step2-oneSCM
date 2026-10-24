@@ -2807,3 +2807,83 @@ test('[T-318] Übersetzung: KI-Übersetzung, Büro-Austausch (XLIFF), Länderrev
   expect(await axe()).toEqual([]);
   expect(tr.language).toBe('fr');
 });
+
+test('[T-323] Tonalität je Rolle in der Stilprüfung, Ticket-Einstufung im Release-Abgleich, Zukunfts-Inhalte im Export, Releaseletter aus dem Projektvergleich – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const adm = { 'X-User-Id': 'u-admin' };
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+
+  // S-02: Ton für die Rolle Dealer einstellen und in der Prüfung wählen
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.goto('/schreibstil');
+  await page.getByRole('tab', { name: 'Regeln' }).click();
+  await page.getByRole('combobox', { name: 'Ton für Rolle Dealer' }).selectOption('friendly');
+  expect(await axe()).toEqual([]);
+  await page.getByRole('button', { name: 'Stilregeln speichern' }).click();
+  await expect(page.getByText('Stilregeln gespeichert.')).toBeVisible();
+  await page.getByRole('tab', { name: 'Textfeld' }).click();
+  await page.getByRole('combobox', { name: 'Rolle' }).selectOption({ label: 'Dealer' });
+  await page.getByRole('textbox', { name: 'Text' }).fill('Sie müssen den Antrag speichern.');
+  await page.getByRole('button', { name: 'Prüfen', exact: true }).click();
+  await expect(page.getByText('Ton: freundlich')).toBeVisible();
+  await expect(page.locator('.style-sentence').first()).toHaveAttribute('title', /wirkt streng/);
+  expect(await axe()).toEqual([]);
+  await request.put('/api/v1/style/rules', { headers: adm, data: { tone: { products: {}, roles: {} } } });
+
+  // W-03: Ticket als Background einstufen
+  const csv = [
+    'Summary,Issue key,Issue Type,Status,Fix Version/s,Created,Description',
+    '"E2E Vertrag pausieren",E2ETC-1,Story,Fertig,2096.2,2026-02-05T10:00:00.000+0100,"Der Vertrag lässt sich pausieren."',
+    '"E2E Migration",E2ETC-2,Story,Fertig,2096.2,2026-02-06T10:00:00.000+0100,"Migration der Altdaten."',
+  ].join('\n');
+  expect((await request.post('/api/v1/imports', { headers: adm, multipart: { file: { name: 'e2e_einstufung.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) } } })).status()).toBe(202);
+  await expect.poll(async () => (await (await request.get('/api/v1/ticket-releases', { headers: adm })).json()).releases.some((r: any) => r.label === '2096.2')).toBe(true);
+  await nav.getByRole('link', { name: 'Release-Abgleich' }).click();
+  await page.getByRole('button', { name: '2096.2' }).click();
+  await page.getByRole('combobox', { name: 'Einstufung E2ETC-2' }).selectOption('background');
+  await expect(page.getByRole('row', { name: /E2ETC-2/ })).toContainText('Background');
+  await expect(page.getByRole('combobox', { name: 'Einstufung E2ETC-2' })).toHaveValue('background');
+  await page.getByRole('combobox', { name: 'Einstufung E2ETC-1' }).selectOption('approved');
+  await expect(page.getByRole('combobox', { name: 'Einstufung E2ETC-1' })).toHaveValue('approved');
+  expect(await axe()).toEqual([]);
+
+  // W-09: Kapitel mit „gültig ab“ 2096.3 ist im Export mit Stand 2096.2 ausgeblendet
+  const mk = async (title: string) => {
+    const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title, purpose: 'Mit dieser Anleitung pausieren Sie einen Vertrag.', steps: ['Öffnen Sie **Verträge**', 'Klicken Sie auf **Pausieren**'], result: 'Der Vertrag ist pausiert.' } })).json();
+    expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/submit`, { headers: red })).ok()).toBeTruthy();
+    expect((await request.post(`/api/v1/chapter-versions/${ch.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBeTruthy();
+    return ch;
+  };
+  const now = await mk('E2E Vertrag pausieren');
+  const later = await mk('E2E Vertrag übertragen');
+  expect((await request.patch(`/api/v1/structure/chapters/${now.chapterId}`, { headers: red, data: { validFrom: '2096.2' } })).ok()).toBeTruthy();
+  expect((await request.patch(`/api/v1/structure/chapters/${later.chapterId}`, { headers: red, data: { validFrom: '2096.3' } })).ok()).toBeTruthy();
+  await nav.getByRole('link', { name: 'Export', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Stand (Release)' }).fill('2096.2');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Zukunfts-Inhalte' })).toContainText('„E2E Vertrag übertragen“ (gültig ab 2096.3)');
+  expect(await axe()).toEqual([]);
+
+  // W-04: Release veröffentlichen und Letter-Entwurf aus dem Projektvergleich
+  const rel = await (await request.post('/api/v1/releases', { headers: { 'X-User-Id': 'u-freigabe' }, data: { version: '2096.2' } })).json();
+  expect(rel.future.map((f: any) => f.title)).toContain('E2E Vertrag übertragen');
+  await nav.getByRole('link', { name: 'Veröffentlichung' }).click();
+  const item = page.getByRole('listitem').filter({ hasText: 'Version 2096.2' });
+  await item.getByRole('button', { name: 'Änderungen anzeigen' }).click();
+  const cmp = page.getByRole('region', { name: 'Projektvergleich' });
+  await expect(cmp).toContainText('„E2E Vertrag pausieren“');
+  await expect(cmp).toContainText('E2ETC-1');
+  await expect(cmp).not.toContainText('E2ETC-2');
+  expect(await axe()).toEqual([]);
+  await cmp.getByRole('button', { name: 'Releaseletter-Entwurf erzeugen' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Releaseletter' })).toBeVisible();
+  await expect(page.getByLabel('Text (Markdown)')).toHaveValue(/# Releaseletter 2096\.2/);
+  await expect(page.getByLabel('Text (Markdown)')).toHaveValue(/- \*\*E2E Vertrag pausieren\*\* – neu ab 2096\.2/);
+  expect(await axe()).toEqual([]);
+  // aufräumen: „gültig ab“ zurück, damit spätere Exporte vollständig bleiben
+  for (const c of [now, later]) await request.patch(`/api/v1/structure/chapters/${c.chapterId}`, { headers: red, data: { validFrom: null } });
+});

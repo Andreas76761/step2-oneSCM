@@ -109,6 +109,11 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite, chooseLanguage }:
   const { notify } = useApp();
   // Sprache des Textes (ADR-097): Deutsch prüft alle Regeln, Englisch zusätzlich a/an, „I“ und Rechtschreibung
   const [lang, setLang] = useState('de');
+  // Tonalität (ADR-102, S-02): Produktart und Rolle bestimmen den Ton der Prüfung und der KI
+  const [product, setProduct] = useState('manual');
+  const [role, setRole] = useState('');
+  const tone = useLoad<any>('/style/tone');
+  const scope = { product, ...(role ? { roles: [role] } : {}) };
   const [text, setText] = useState(initial);
   const [a, setA] = useState<Analysis | null>(null);
   const [sel, setSel] = useState<number | null>(null);
@@ -125,7 +130,7 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite, chooseLanguage }:
   const check = async (t = text) => {
     if (!t.trim()) return;
     try {
-      const r = await post<any>('/style/check', { text: t, language: lang });
+      const r = await post<any>('/style/check', { text: t, language: lang, ...scope });
       setA(r);
       setSel(null);
     } catch (e) {
@@ -149,7 +154,7 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite, chooseLanguage }:
         if (next === cur) break;
         applied += analysis.fixable;
         cur = next;
-        analysis = await post<Analysis>('/style/check', { text: cur, language: lang });
+        analysis = await post<Analysis>('/style/check', { text: cur, language: lang, ...scope });
       }
       setText(cur);
       setA(analysis);
@@ -165,7 +170,7 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite, chooseLanguage }:
     setBusy(true);
     try {
       const source = text;
-      const r = await post<any>('/style/rewrite', { text: source, mode });
+      const r = await post<any>('/style/rewrite', { text: source, mode, ...scope });
       if (textRef.current === source) setProposal({ ...r, source });
       else notify('Der Text wurde inzwischen geändert – Vorschlag verworfen. Bitte erneut umformulieren.', 'error');
     } catch (e) {
@@ -189,6 +194,22 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite, chooseLanguage }:
             {PHRASE_LANGS.map(([c, l]) => <option key={c} value={c}>{l}</option>)}
           </select>
         </label>
+      )}
+      {tone.data?.active && lang === 'de' && (
+        <div className="filters">
+          <label className="inline">Produktart
+            <select value={product} onChange={(e) => { setProduct(e.target.value); setA(null); }}>
+              {tone.data.products.map((p: any) => <option key={p.product} value={p.product}>{p.label}</option>)}
+            </select>
+          </label>
+          <label className="inline">Rolle
+            <select value={role} onChange={(e) => { setRole(e.target.value); setA(null); }}>
+              <option value="">alle Rollen</option>
+              {tone.data.roles.map((r: any) => <option key={r.role} value={r.role}>{r.label}</option>)}
+            </select>
+          </label>
+          {(a as any)?.tone && <span className="tag">Ton: {(a as any).tone.label}</span>}
+        </div>
       )}
       <label className="block">Text
         <textarea rows={8} value={text} onChange={(e) => { setText(e.target.value); setA(null); }} placeholder="Fließtext hier einfügen …" />
@@ -322,6 +343,7 @@ const RULE_NAMES: Record<string, string> = {
   hedging: 'Unklare Anweisungen', nominal: 'Nominalstil', spelling: 'Rechtschreibung', abbreviation: 'Abkürzungen', terminology: 'Terminologie',
   custom: 'Eigene Regeln', address: 'Anrede',
   typography: 'Typografie („…“, –, ›)', numbers: 'Zahlen, Einheiten, Datum', product_name: 'Produktname oneSCM', grammar: 'Grammatik (Englisch: a/an, „I“)',
+  tone: 'Tonalität (je Produktart und Rolle)',
 };
 interface Phrase { avoid: string; use: string | null; note: string | null; language?: string | null }
 // Sprachen eigener Regeln (ADR-097): Deutsch und die Zielsprachen
@@ -337,6 +359,56 @@ export function ReadabilityPanel({ r }: { r: any }) {
         {r.checks.map((c: any) => <li key={c.code}>{c.ok ? '✓' : '✗'} {c.label} <span className="muted">(ist {String(c.value).replace('.', ',')})</span></li>)}
       </ul>
     </section>
+  );
+}
+
+/** Tonalität je Produktart und Rolle (ADR-102, S-02): leer = Ton aus TONALITAET.md bzw. der Produktart */
+function ToneCard({ d, setD, ro }: { d: any; setD: (d: any) => void; ro: boolean }) {
+  const tone = useLoad<any>('/style/tone');
+  if (!tone.data) return <ErrorBox error={tone.error} />;
+  const t = d.tone ?? { products: {}, roles: {} };
+  const set = (kind: 'products' | 'roles', key: string, value: string) => {
+    const next = { ...t[kind] };
+    if (value) next[key] = value;
+    else delete next[key];
+    setD({ ...d, tone: { ...t, [kind]: next } });
+  };
+  const label = (code: string) => tone.data.tones.find((x: any) => x.tone === code)?.label ?? code;
+  return (
+    <Card title="Tonalität">
+      <p className="small muted">Ton je Produktart (Vorgabe aus TONALITAET.md) und je Rolle: Ein Rollenprofil gilt für Absätze, die genau dieser Rolle zugeordnet sind. Der Ton wirkt auf die Prüfung (Regel „Tonalität“) und auf die KI-Vorschläge.</p>
+      <ul className="small">{tone.data.tones.map((x: any) => <li key={x.tone}><strong>{x.label}:</strong> {x.hint}</li>)}</ul>
+      <div className="table-wrap" role="region" aria-label="Tonalität" tabIndex={0}>
+        <table className="table compact">
+          <caption className="sr-only">Ton je Produktart und Rolle</caption>
+          <thead><tr><th scope="col">Produktart bzw. Rolle</th><th scope="col">Ton</th></tr></thead>
+          <tbody>
+            {tone.data.products.map((p: any) => (
+              <tr key={p.product}>
+                <td>{p.label}</td>
+                <td>
+                  <select aria-label={`Ton für ${p.label}`} disabled={ro} value={t.products[p.product] ?? ''} onChange={(e) => set('products', p.product, e.target.value)}>
+                    <option value="">Standard ({label(p.default)})</option>
+                    {tone.data.tones.map((x: any) => <option key={x.tone} value={x.tone}>{x.label}</option>)}
+                  </select>
+                </td>
+              </tr>
+            ))}
+            {tone.data.roles.map((r: any) => (
+              <tr key={r.role}>
+                <td>Rolle {r.label}</td>
+                <td>
+                  <select aria-label={`Ton für Rolle ${r.label}`} disabled={ro} value={t.roles[r.role] ?? ''} onChange={(e) => set('roles', r.role, e.target.value)}>
+                    <option value="">wie Produktart</option>
+                    {tone.data.tones.map((x: any) => <option key={x.tone} value={x.tone}>{x.label}</option>)}
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }
 
@@ -402,6 +474,7 @@ function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAd
           </label>
         )}
       </Card>
+      <ToneCard d={d} setD={setD} ro={ro} />
       <Card title="Eigene Formulierungen">
         <p className="small muted">Zu vermeidende Wörter oder Wendungen, optional mit Ersatz (leer = streichen) oder Hinweis – je Sprache, z. B. „Dealer → Händler“ (Deutsch) und „Händler → Dealer“ (Englisch). Gilt für Prüfung, automatische Korrektur, KI-Umformulierung und Übersetzungen der Sprache.</p>
         <div className="table-wrap" role="region" aria-label="Eigene Formulierungen" tabIndex={0}>
