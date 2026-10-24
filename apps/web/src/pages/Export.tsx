@@ -140,7 +140,7 @@ export function ExportPage() {
               )}
               {result.accessibility && (
                 <section className="pdf-a11y" aria-labelledby="pdf-a11y-h">
-                  <h3 id="pdf-a11y-h"><Ico icon={AccessibilityIcon} /> Barrierefreiheit ({result.format === 'docx' ? 'Word' : result.format === 'pptx' ? 'PowerPoint' : 'PDF'})</h3>
+                  <h3 id="pdf-a11y-h"><Ico icon={AccessibilityIcon} /> Barrierefreiheit ({result.format === 'docx' ? 'Word' : result.format === 'pptx' ? 'PowerPoint' : result.format === 'html' ? 'HTML' : 'PDF'})</h3>
                   <ul className="plain small">
                     {result.accessibility.checks.map((c: any) => (
                       <li key={c.id}>{c.ok === null ? <span className="muted">– </span> : <OkMark ok={c.ok} />} {c.label}{c.detail ? ` (${c.detail})` : ''}{c.ok === null ? ' – nicht prüfbar' : ''}</li>

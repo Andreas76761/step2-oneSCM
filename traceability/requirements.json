@@ -1590,5 +1590,14 @@
     "documentation": [
       "docs/adr/ADR-120-barrierefreiheit-word-powerpoint.md"
     ]
+  },
+  {
+    "id": "NFR-156",
+    "title": "Prüfbericht Barrierefreiheit für den HTML-Export (Sprache, Titel, Hauptbereich, Überschriftenfolge, Alternativtexte, Icons, Tabellenköpfe, Linknamen); Standard-HTML mit Hauptbereich",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-121-barrierefreiheit-html.md"
+    ]
   }
 ]

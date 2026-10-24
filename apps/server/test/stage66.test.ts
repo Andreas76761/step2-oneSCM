@@ -76,8 +76,8 @@ fs.writeFileSync(out, ${JSON.stringify(taggedPdf().toString('latin1'))}, 'latin1
       const std = (await call('POST', '/exports', { format: 'pdf' }, 'u-redaktion')).json;
       expect(std.accessibility.ok).toBe(false);
       expect(std.accessibility.checks.find((c: any) => c.id === 'tagged').ok).toBe(false);
-      // andere Formate ohne Bericht
-      expect((await call('POST', '/exports', { format: 'html', design: 'fachdoku' }, 'u-redaktion')).json.accessibility).toBeUndefined();
+      // Textformate ohne Bericht (HTML hat seit Etappe 69 einen eigenen, ADR-121)
+      expect((await call('POST', '/exports', { format: 'md' }, 'u-redaktion')).json.accessibility).toBeUndefined();
     } finally {
       await built.app.close();
     }

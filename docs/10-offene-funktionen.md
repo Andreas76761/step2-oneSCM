@@ -109,7 +109,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 20. **Etappe 66 – Barrierefreies PDF mit Prüfbericht (✅ umgesetzt, ADR-118):** Wahl des Auftraggebers vom 24.10.2026.
 21. **Etappe 67 – Kontexthilfe im Lesestil (✅ umgesetzt, ADR-119).**
 22. **Etappe 68 – Barrierefreiheit für Word und PowerPoint (✅ umgesetzt, ADR-120):** Prüfbericht wie beim PDF.
-23. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 24.10.2026 keine Auswahl), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+23. **Etappe 69 – Barrierefreiheit HTML (✅ umgesetzt, ADR-121):** Prüfbericht auch für den HTML-Export.
+24. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 24.10.2026 keine Auswahl), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

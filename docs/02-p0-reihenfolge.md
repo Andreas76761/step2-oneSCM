@@ -58,6 +58,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **47** ✅ | Agent TRIAGE mit Pflichtlabels und Kapitelzuordnung (neue Unterkapitel „neu“), Detaillevel je Kapitel, Inhalts-Dashboard, Labels löschen, Agenten in der App mit ORCHESTRATOR und GOAL, Ordner 12_Goal (ADR-100) | 182 Server-Tests grün auf SQLite, Etappen-Tests auch auf PostgreSQL |
 | **67** ✅ | Kontexthilfe im Lesestil, Rückmeldung mit Icons (ADR-119) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-380 |
 | **68** ✅ | Barrierefreiheit für Word und PowerPoint mit Prüfbericht (ADR-120) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-383 |
+| **69** ✅ | Prüfbericht Barrierefreiheit für HTML (ADR-121) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-386 |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

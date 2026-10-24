@@ -3531,3 +3531,22 @@ test('[T-383] Barrierefreiheit Word und PowerPoint: Prüfbericht nach dem Export
   await expect(slides).toContainText('Jede Folie mit Titel');
   await expect(slides.locator('.ico.fail')).toHaveCount(0);
 });
+
+test('[T-386] Barrierefreiheit HTML: Prüfbericht nach dem HTML-Export im Standard und im Design ohne Befund – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/export');
+  await page.getByLabel('Ausgabe').selectOption('full');
+  await page.getByLabel('Format').selectOption('html');
+  await page.getByLabel('Design').selectOption('quickref');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  const report = page.getByRole('region', { name: 'Barrierefreiheit (HTML)' });
+  for (const label of ['Sprache der Seite angegeben (de)', 'Hauptbereich ausgezeichnet', 'Überschriften ohne übersprungene Ebene', 'Links mit erkennbarem Namen']) await expect(report).toContainText(label);
+  await expect(report.locator('.ico.fail')).toHaveCount(0);
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Design').selectOption('standard');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(report).toContainText('Hauptbereich ausgezeichnet');
+  await expect(report.locator('.ico.fail')).toHaveCount(0);
+});

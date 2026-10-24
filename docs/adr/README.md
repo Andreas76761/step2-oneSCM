@@ -122,3 +122,4 @@
 | [ADR-118](ADR-118-barrierefreies-pdf.md) | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht nach jedem PDF-Export | akzeptiert, umgesetzt |
 | [ADR-119](ADR-119-kontexthilfe-lesestil.md) | Kontexthilfe im Lesestil „Handbuch-Kapitel“; Hinweisboxen mit Icon und Beschriftung; Rückmeldung mit Icons statt Emoji | akzeptiert, umgesetzt |
 | [ADR-120](ADR-120-barrierefreiheit-word-powerpoint.md) | Barrierefreiheit für Word und PowerPoint: Prüfbericht, Icons dekorativ, Sprache, Folientitel als Platzhalter | akzeptiert, umgesetzt |
+| [ADR-121](ADR-121-barrierefreiheit-html.md) | Prüfbericht Barrierefreiheit für den HTML-Export; Standard-HTML mit Hauptbereich | akzeptiert, umgesetzt |

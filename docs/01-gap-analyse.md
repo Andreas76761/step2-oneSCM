@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.71 Stand nach Etappe 69 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Prüfbericht Barrierefreiheit für den HTML-Export; Standard-HTML mit Hauptbereich (NFR-156) | ✅ ([ADR-121](adr/ADR-121-barrierefreiheit-html.md)), T-384, T-385, T-386 (axe) |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
 ## 1.70 Stand nach Etappe 68 (24.10.2026)
 
 | Punkt | Ergebnis |

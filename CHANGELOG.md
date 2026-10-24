@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.69.0 – Etappe 69 (24.10.2026)
+
+### Hinzugefügt
+- **Prüfbericht Barrierefreiheit für HTML (ADR-121):** nach jedem HTML-Export, im Standard und im Design:
+  - Sprache der Seite, Seitentitel, Hauptbereich;
+  - Überschriften ohne übersprungene Ebene;
+  - Bilder mit Alternativtext, Icons ausgeblendet oder benannt;
+  - Tabellen mit Kopfzellen, Links mit erkennbarem Namen.
+- Karte „Barrierefreiheit (HTML)“ auf der Seite „Export“.
+- Tests T-384, T-385 und E2E T-386; Anforderung NFR-156.
+
+### Geändert
+- Standard-HTML: Kapitel im Hauptbereich (`<main>`), damit Screenreader direkt zum Inhalt springen.
+- T-377 prüft „ohne Bericht“ mit Markdown statt HTML.
+
 ## 0.68.0 – Etappe 68 (24.10.2026)
 
 ### Hinzugefügt

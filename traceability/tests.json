@@ -2953,5 +2953,32 @@
     "requirements": [
       "NFR-155"
     ]
+  },
+  {
+    "id": "T-384",
+    "title": "Prüfbericht HTML: Designvorlagen und Standard ohne Befund; Lücken (Sprache, Titel, Hauptbereich, Überschriftensprung, Alternativtext, unbenanntes Icon, Tabelle ohne Kopfzelle, Link ohne Namen) werden erkannt",
+    "file": "apps/server/test/stage69.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-156"
+    ]
+  },
+  {
+    "id": "T-385",
+    "title": "Export als HTML im Standard und in beiden Designvorlagen mit Prüfbericht ohne Befund; Markdown und JSON ohne Bericht",
+    "file": "apps/server/test/stage69.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-156"
+    ]
+  },
+  {
+    "id": "T-386",
+    "title": "Prüfbericht Barrierefreiheit (HTML) nach dem Export im Design und im Standard ohne Befund – axe ohne Befund",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-156"
+    ]
   }
 ]

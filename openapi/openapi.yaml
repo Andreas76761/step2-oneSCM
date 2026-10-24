@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.68.0
+  version: 0.69.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -1725,7 +1725,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '400': { description: 'ungültig, z. B. Designvorlage bei einem anderen Format als html/pdf oder PDF im Design ohne eingerichteten Browser' }
         '503': { description: 'PDF im Design konnte nicht erzeugt werden (lokaler Browser, ADR-113)' }
-        '201': { description: 'Export erstellt; asOf und future: Kapitel mit späterem „gültig ab“ (ADR-102, W-09), nicht im Export; bei format pdf, docx und pptx accessibility: { ok, checks[{ id, label, ok (true/false/null = nicht prüfbar), detail }] } (ADR-118, ADR-120)' }
+        '201': { description: 'Export erstellt; asOf und future: Kapitel mit späterem „gültig ab“ (ADR-102, W-09), nicht im Export; bei format pdf, docx, pptx und html accessibility: { ok, checks[{ id, label, ok (true/false/null = nicht prüfbar), detail }] } (ADR-118, ADR-120, ADR-121)' }
         '409': { description: 'Blockiert (offene Blocker-/Datenschutzbefunde), content: { application/problem+json: { schema: { $ref: ''#/components/schemas/Problem'' } } }' }
     get:
       operationId: listExports
