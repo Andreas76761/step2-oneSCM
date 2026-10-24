@@ -1,4 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ArchiveIcon, ArrowLeftRightIcon, BadgeCheckIcon, BadgeHelpIcon, BellIcon, BlocksIcon, BookAIcon, BookMarkedIcon, BookOpenIcon, BookOpenCheckIcon, BotIcon, BoxesIcon, CalendarDaysIcon, CarIcon, CaseSensitiveIcon, ChartLineIcon, ChartPieIcon, ChevronDownIcon, ChevronRightIcon, CircleCheckIcon, CircleHelpIcon, ClipboardListIcon, CompassIcon, ConstructionIcon, CopyIcon, CopyCheckIcon, DatabaseIcon, EllipsisIcon, FileInputIcon, FileOutputIcon, FilePenIcon, FileTextIcon, FilesIcon, FlagIcon, FolderInputIcon, FolderKanbanIcon, GaugeIcon, GitCompareIcon, GitCompareArrowsIcon, GroupIcon, HouseIcon, ImageIcon, ImagesIcon, LanguagesIcon, LayoutDashboardIcon, LibraryIcon, LifeBuoyIcon, LinkIcon, ListChecksIcon, ListFilterIcon, ListOrderedIcon, ListTreeIcon, LockIcon, MenuIcon, MessageCircleQuestionIcon, MessageSquareIcon, MessagesSquareIcon, NetworkIcon, NewspaperIcon, PaletteIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PenLineIcon, PlugIcon, PuzzleIcon, RefreshCwIcon, RocketIcon, ScaleIcon, SearchCheckIcon, SettingsIcon, ShieldCheckIcon, SlidersHorizontalIcon, SparklesIcon, SpellCheckIcon, StickyNoteIcon, TagsIcon, TargetIcon, UserCogIcon, UserRoundSearchIcon, UsersIcon, UsersRoundIcon, WandSparklesIcon, XIcon, type LucideIcon,
+} from 'lucide-react';
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { currentProjectId, currentUserId, get, setCurrentProjectId, setCurrentUserId } from './api';
 import { initAuth, login, logout, type AuthConfig } from './auth';
@@ -85,102 +88,102 @@ const WorkAreaPage = lazy(() => import('./pages/WorkAreas').then((m) => ({ defau
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
-type NavItem = { to: string; label: string; icon: string };
+type NavItem = { to: string; label: string; icon: LucideIcon };
 const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   // oneSCM_Metadaten (ADR-079): Quellen einlesen, je Überschrift labeln und befragen
   { id: 'metadaten', label: 'oneSCM_Metadaten', items: [
-    { to: '/metadaten', label: 'Übersicht', icon: '🧠' },
-    { to: '/metadaten/einlesen', label: 'Einlesen', icon: '📥' },
-    { to: '/metadaten/triage', label: 'Triage', icon: '🚦' },
-    { to: '/metadaten/inhalte', label: 'Inhalts-Dashboard', icon: '📊' },
-    { to: '/metadaten/ueberschriften', label: 'Quellen je Überschrift', icon: '🗂' },
-    { to: '/metadaten/chunks', label: 'Chunks', icon: '🧱' },
-    { to: '/metadaten/dubletten', label: 'Dubletten (alle Formate)', icon: '👯' },
-    { to: '/metadaten/kapitel-quellen', label: 'Kapitel ↔ Quellen', icon: '📚' },
-    { to: '/metadaten/wissensnotizen', label: 'Wissensnotizen', icon: '🗒' },
-    { to: '/metadaten/fragen', label: 'Fragen & Antworten', icon: '💡' },
-    { to: '/metadaten/rueckfragen', label: 'Rückfragen', icon: '❓' },
-    { to: '/metadaten/qualitaet', label: 'Antwortqualität', icon: '🎯' },
-    { to: '/metadaten/befragung', label: 'Expertenbefragung', icon: '🧑‍🏫' },
-    { to: '/metadaten/zugriffsmatrix', label: 'Zugriffsmatrix', icon: '🔐' },
-    { to: '/metadaten/zuordnung', label: 'Zuordnung', icon: '🧩' },
-    { to: '/metadaten/labels', label: 'Labels', icon: '🏷' },
+    { to: '/metadaten', label: 'Übersicht', icon: GaugeIcon },
+    { to: '/metadaten/einlesen', label: 'Einlesen', icon: FileInputIcon },
+    { to: '/metadaten/triage', label: 'Triage', icon: ListFilterIcon },
+    { to: '/metadaten/inhalte', label: 'Inhalts-Dashboard', icon: ChartPieIcon },
+    { to: '/metadaten/ueberschriften', label: 'Quellen je Überschrift', icon: ListTreeIcon },
+    { to: '/metadaten/chunks', label: 'Chunks', icon: BlocksIcon },
+    { to: '/metadaten/dubletten', label: 'Dubletten (alle Formate)', icon: CopyIcon },
+    { to: '/metadaten/kapitel-quellen', label: 'Kapitel ↔ Quellen', icon: ArrowLeftRightIcon },
+    { to: '/metadaten/wissensnotizen', label: 'Wissensnotizen', icon: StickyNoteIcon },
+    { to: '/metadaten/fragen', label: 'Fragen & Antworten', icon: MessageCircleQuestionIcon },
+    { to: '/metadaten/rueckfragen', label: 'Rückfragen', icon: CircleHelpIcon },
+    { to: '/metadaten/qualitaet', label: 'Antwortqualität', icon: TargetIcon },
+    { to: '/metadaten/befragung', label: 'Expertenbefragung', icon: UserRoundSearchIcon },
+    { to: '/metadaten/zugriffsmatrix', label: 'Zugriffsmatrix', icon: ShieldCheckIcon },
+    { to: '/metadaten/zuordnung', label: 'Zuordnung', icon: NetworkIcon },
+    { to: '/metadaten/labels', label: 'Labels', icon: TagsIcon },
   ] },
   // Agenten in der App (ADR-100): Orchestrator, Aufgaben, Entscheidungen, Ziel-Abgleich GOAL
   { id: 'agenten', label: 'Agenten', items: [
-    { to: '/agenten', label: 'Aufgaben & Entscheidungen', icon: '🤖' },
-    { to: '/agenten/goal', label: 'GOAL – Ziel-Abgleich', icon: '🏁' },
+    { to: '/agenten', label: 'Aufgaben & Entscheidungen', icon: BotIcon },
+    { to: '/agenten/goal', label: 'GOAL – Ziel-Abgleich', icon: FlagIcon },
   ] },
   { id: 'sammeln', label: '1 Sammeln', items: [
-    { to: '/quellen', label: 'Quellen', icon: '📥' },
-    { to: '/quellenaenderungen', label: 'Quellenänderungen', icon: '🔄' },
-    { to: '/cluster', label: 'Textcluster', icon: '🧩' },
-    { to: '/widersprueche', label: 'Widersprüche', icon: '⚖️' },
-    { to: '/dopplungen', label: 'Dopplungen', icon: '📑' },
+    { to: '/quellen', label: 'Quellen', icon: FolderInputIcon },
+    { to: '/quellenaenderungen', label: 'Quellenänderungen', icon: RefreshCwIcon },
+    { to: '/cluster', label: 'Textcluster', icon: GroupIcon },
+    { to: '/widersprueche', label: 'Widersprüche', icon: ScaleIcon },
+    { to: '/dopplungen', label: 'Dopplungen', icon: CopyCheckIcon },
   ] },
   // Arbeitsbereiche (ADR-098): kommende Funktionen vorab dokumentieren, Backlog, interne Themen – nicht im Handbuch
   { id: 'bereiche', label: 'Pipeline, Backlog, Intern', items: [
-    { to: '/pipeline', label: 'Pipeline', icon: '🚧' },
-    { to: '/backlog', label: 'Backlog', icon: '🗃' },
-    { to: '/intern', label: 'Intern', icon: '🔒' },
+    { to: '/pipeline', label: 'Pipeline', icon: ConstructionIcon },
+    { to: '/backlog', label: 'Backlog', icon: ArchiveIcon },
+    { to: '/intern', label: 'Intern', icon: LockIcon },
   ] },
   { id: 'schreiben', label: '2 Schreiben', items: [
-    { to: '/kapitelsteuerung', label: 'Kapitelsteuerung', icon: '🎛' },
-    { to: '/kapitel-assistent', label: 'Kapitel-Assistent', icon: '🧭' },
-    { to: '/generator', label: 'Kapitelgenerator', icon: '⚙️' },
-    { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: '✏️' },
-    { to: '/draft-manual', label: 'Draft Manual', icon: '📝' },
-    { to: '/textbausteine', label: 'Textbausteine', icon: '🧩' },
-    { to: '/bilder', label: 'Bilder', icon: '🎨' },
-    { to: '/bildarchiv', label: 'Bildarchiv', icon: '🗂' },
-    { to: '/vorher-nachher', label: 'Vorher/Nachher', icon: '↔️' },
+    { to: '/kapitelsteuerung', label: 'Kapitelsteuerung', icon: SlidersHorizontalIcon },
+    { to: '/kapitel-assistent', label: 'Kapitel-Assistent', icon: CompassIcon },
+    { to: '/generator', label: 'Kapitelgenerator', icon: WandSparklesIcon },
+    { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: PenLineIcon },
+    { to: '/draft-manual', label: 'Draft Manual', icon: FileTextIcon },
+    { to: '/textbausteine', label: 'Textbausteine', icon: PuzzleIcon },
+    { to: '/bilder', label: 'Bilder', icon: PaletteIcon },
+    { to: '/bildarchiv', label: 'Bildarchiv', icon: ImagesIcon },
+    { to: '/vorher-nachher', label: 'Vorher/Nachher', icon: GitCompareArrowsIcon },
   ] },
   { id: 'pruefen', label: '3 Prüfen', items: [
-    { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: '🔍' },
-    { to: '/kapitelbewertung', label: 'Kapitelbewertung', icon: '🚦' },
-    { to: '/ueberarbeitung', label: 'Überarbeitung', icon: '🔁' },
-    { to: '/pruefprofile', label: 'Prüferprofile', icon: '👥' },
-    { to: '/rueckmeldungen', label: 'Rückmeldungen', icon: '💬' },
-    { to: '/schreibstil', label: 'Schreibstil', icon: '🖋️' },
-    { to: '/fehlerliste', label: 'Fehlerliste', icon: '📝' },
-    { to: '/terminologie', label: 'Terminologie', icon: '📖' },
-    { to: '/evidenz', label: 'Evidenz', icon: '🔎' },
-    { to: '/freigabe', label: 'Freigabe', icon: '✅' },
+    { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: ListChecksIcon },
+    { to: '/kapitelbewertung', label: 'Kapitelbewertung', icon: BadgeCheckIcon },
+    { to: '/ueberarbeitung', label: 'Überarbeitung', icon: FilePenIcon },
+    { to: '/pruefprofile', label: 'Prüferprofile', icon: UsersRoundIcon },
+    { to: '/rueckmeldungen', label: 'Rückmeldungen', icon: MessageSquareIcon },
+    { to: '/schreibstil', label: 'Schreibstil', icon: SpellCheckIcon },
+    { to: '/fehlerliste', label: 'Fehlerliste', icon: ClipboardListIcon },
+    { to: '/terminologie', label: 'Terminologie', icon: BookAIcon },
+    { to: '/evidenz', label: 'Evidenz', icon: SearchCheckIcon },
+    { to: '/freigabe', label: 'Freigabe', icon: CircleCheckIcon },
   ] },
   { id: 'veroeffentlichen', label: '4 Veröffentlichen', items: [
-    { to: '/lesen', label: 'Leseransicht', icon: '📖' },
-    { to: '/export', label: 'Export', icon: '📤' },
-    { to: '/textvarianten', label: 'Textvarianten', icon: '📑' },
-    { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
-    { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
-    { to: '/uebersetzungen/speicher', label: 'Übersetzungsspeicher', icon: '🗄' },
-    { to: '/uebersetzungen/glossar', label: 'Glossar je Sprache', icon: '📘' },
-    { to: '/release-abgleich', label: 'Release-Abgleich', icon: '🎯' },
-    { to: '/releaseletter', label: 'Releaseletter', icon: '📰' },
+    { to: '/lesen', label: 'Leseransicht', icon: BookOpenIcon },
+    { to: '/export', label: 'Export', icon: FileOutputIcon },
+    { to: '/textvarianten', label: 'Textvarianten', icon: FilesIcon },
+    { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: RocketIcon },
+    { to: '/uebersetzungen', label: 'Übersetzungen', icon: LanguagesIcon },
+    { to: '/uebersetzungen/speicher', label: 'Übersetzungsspeicher', icon: DatabaseIcon },
+    { to: '/uebersetzungen/glossar', label: 'Glossar je Sprache', icon: BookMarkedIcon },
+    { to: '/release-abgleich', label: 'Release-Abgleich', icon: GitCompareIcon },
+    { to: '/releaseletter', label: 'Releaseletter', icon: NewspaperIcon },
   ] },
 ];
 const NAV_MORE: NavItem[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/rollen', label: 'Rollenansichten', icon: '👥' },
-  { to: '/sparten', label: 'Spartenansichten', icon: '🚘' },
-  { to: '/optimierungen', label: 'Optimierungen', icon: '✨' },
-  { to: '/assistent', label: 'Assistent', icon: '💬' },
-  { to: '/kontexthilfe', label: 'Kontexthilfe', icon: '❓' },
-  { to: '/analytik', label: 'Analytik', icon: '📈' },
-  { to: '/traceability', label: 'Traceability', icon: '🔗' },
-  { to: '/projekte', label: 'Projekte', icon: '🗂️' },
-  { to: '/benutzer', label: 'Benutzer', icon: '👤' },
-  { to: '/integrationen', label: 'Integrationen', icon: '🔌' },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
+  { to: '/rollen', label: 'Rollenansichten', icon: UsersIcon },
+  { to: '/sparten', label: 'Spartenansichten', icon: CarIcon },
+  { to: '/optimierungen', label: 'Optimierungen', icon: SparklesIcon },
+  { to: '/assistent', label: 'Assistent', icon: MessagesSquareIcon },
+  { to: '/kontexthilfe', label: 'Kontexthilfe', icon: LifeBuoyIcon },
+  { to: '/analytik', label: 'Analytik', icon: ChartLineIcon },
+  { to: '/traceability', label: 'Traceability', icon: LinkIcon },
+  { to: '/projekte', label: 'Projekte', icon: FolderKanbanIcon },
+  { to: '/benutzer', label: 'Benutzer', icon: UserCogIcon },
+  { to: '/integrationen', label: 'Integrationen', icon: PlugIcon },
 ];
 
 // Stammdaten (ADR-032): unten in der Navigation, mit Untermenü
 const MASTER_DATA = [
-  { to: '/stammdaten/inhaltsverzeichnis', label: 'Inhaltsverzeichnis', icon: '🗂' },
-  { to: '/stammdaten/abkuerzungen', label: 'Abkürzungen', icon: '🔤' },
-  { to: '/stammdaten/glossar', label: 'Glossar', icon: '📘' },
-  { to: '/stammdaten/bildverzeichnis', label: 'Bildverzeichnis', icon: '🖼️' },
-  { to: '/stammdaten/faq', label: 'FAQ', icon: '❔' },
-  { to: '/stammdaten/planung', label: 'Planung', icon: '📅' },
+  { to: '/stammdaten/inhaltsverzeichnis', label: 'Inhaltsverzeichnis', icon: ListOrderedIcon },
+  { to: '/stammdaten/abkuerzungen', label: 'Abkürzungen', icon: CaseSensitiveIcon },
+  { to: '/stammdaten/glossar', label: 'Glossar', icon: LibraryIcon },
+  { to: '/stammdaten/bildverzeichnis', label: 'Bildverzeichnis', icon: ImageIcon },
+  { to: '/stammdaten/faq', label: 'FAQ', icon: BadgeHelpIcon },
+  { to: '/stammdaten/planung', label: 'Planung', icon: CalendarDaysIcon },
 ];
 
 const COLLAPSE_KEY = 'onescm.nav.collapsed';
@@ -353,10 +356,10 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
       <div className={`shell${collapsed ? " nav-collapsed" : ""}`}>
         <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
           <div className="brand">
-            <strong>oneSCM Handbook Studio</strong>
+            <strong><BookOpenCheckIcon className="brand-logo" aria-hidden="true" size={22} strokeWidth={2} />oneSCM Handbook Studio</strong>
             <span>v{__APP_VERSION__}</span>
             <button type="button" className="collapse-toggle" aria-expanded={!collapsed} aria-controls="main-nav" aria-label={collapsed ? 'Navigation ausklappen' : 'Navigation einklappen'} title={collapsed ? 'Navigation ausklappen' : 'Navigation einklappen'} onClick={toggleCollapsed}>
-              {collapsed ? '»' : '«'}
+              {collapsed ? <PanelLeftOpenIcon aria-hidden="true" size={18} /> : <PanelLeftCloseIcon aria-hidden="true" size={18} />}
             </button>
           </div>
           <div className="project-box">
@@ -371,14 +374,14 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <input id="global-search" ref={searchRef} type="search" placeholder="Suchen … ( / )" value={search} onChange={(e) => setSearch(e.target.value)} />
           </form>
           <button className="btn nav-toggle" aria-expanded={navOpen} aria-controls="main-nav" onClick={() => setNavOpen(!navOpen)}>
-            {navOpen ? '✕ Menü schließen' : '☰ Menü'}
+            {navOpen ? <><XIcon aria-hidden="true" size={18} /> Menü schließen</> : <><MenuIcon aria-hidden="true" size={18} /> Menü</>}
           </button>
           <nav id="main-nav" aria-label="Hauptnavigation" className={navOpen ? 'open' : ''}>
             <NavLink to="/aufgaben" title="Aufgaben & Hinweise" className={({ isActive }) => (isActive ? 'active' : '')}>
-              <span aria-hidden="true" className="nav-icon">🔔</span> <span className="nav-label">Aufgaben & Hinweise</span>{unread > 0 && <span className="count" aria-label={`${unread} ungelesen`}>{unread}</span>}
+              <BellIcon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">Aufgaben & Hinweise</span>{unread > 0 && <span className="count" aria-label={`${unread} ungelesen`}>{unread}</span>}
             </NavLink>
             <NavLink to="/" end title="Start" className={({ isActive }) => (isActive ? 'active' : '')}>
-              <span aria-hidden="true" className="nav-icon">🏠</span> <span className="nav-label">Start</span>
+              <HouseIcon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">Start</span>
             </NavLink>
             {NAV_GROUPS.map((g) => (
               <div key={g.id} role="group" aria-labelledby={`nav-h-${g.id}`} className="nav-section">
@@ -386,34 +389,34 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
                 {g.items.map((n) => (
                   // Übersicht nur bei genauer Übereinstimmung aktiv, wenn Unterseiten eigene Einträge haben
                   <NavLink key={n.to} to={n.to} end={g.items.some((o) => o.to.startsWith(`${n.to}/`))} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
-                    <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
+                    <n.icon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">{n.label}</span>
                   </NavLink>
                 ))}
               </div>
             ))}
             <button type="button" className={`nav-group${inMore ? ' active-group' : ''}`} aria-expanded={moreOpen} aria-controls="nav-weitere" title="Weitere" onClick={() => setMoreOpen(!moreOpen)}>
-              <span aria-hidden="true" className="nav-icon">⋯</span> <span className="nav-label">Weitere</span><span aria-hidden="true" className="nav-caret">{moreOpen ? '▾' : '▸'}</span>
+              <EllipsisIcon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">Weitere</span><span aria-hidden="true" className="nav-caret">{moreOpen ? <ChevronDownIcon size={16} /> : <ChevronRightIcon size={16} />}</span>
             </button>
             <div id="nav-weitere" className="nav-sub" hidden={!moreOpen}>
               {NAV_MORE.map((n) => (
                 <NavLink key={n.to} to={n.to} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
-                  <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
+                  <n.icon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">{n.label}</span>
                 </NavLink>
               ))}
             </div>
             <div className="nav-bottom">
               <button type="button" className={`nav-group${inMasterData ? ' active-group' : ''}`} aria-expanded={masterOpen} aria-controls="nav-stammdaten" title="Stammdaten" onClick={() => setMasterOpen(!masterOpen)}>
-                <span aria-hidden="true" className="nav-icon">🗃</span> <span className="nav-label">Stammdaten</span><span aria-hidden="true" className="nav-caret">{masterOpen ? '▾' : '▸'}</span>
+                <BoxesIcon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">Stammdaten</span><span aria-hidden="true" className="nav-caret">{masterOpen ? <ChevronDownIcon size={16} /> : <ChevronRightIcon size={16} />}</span>
               </button>
               <div id="nav-stammdaten" className="nav-sub" hidden={!masterOpen}>
                 {MASTER_DATA.map((n) => (
                   <NavLink key={n.to} to={n.to} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
-                    <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
+                    <n.icon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">{n.label}</span>
                   </NavLink>
                 ))}
               </div>
               <NavLink to="/einstellungen" title="Einstellungen" className={({ isActive }) => (isActive ? 'active' : '')}>
-                <span aria-hidden="true" className="nav-icon">⚙</span> <span className="nav-label">Einstellungen</span>
+                <SettingsIcon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">Einstellungen</span>
               </NavLink>
             </div>
           </nav>

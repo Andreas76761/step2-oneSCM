@@ -1,3 +1,4 @@
+import { ImagePlusIcon, XIcon } from 'lucide-react';
 import { Suspense, createContext, lazy, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { ApiError, download, get, mediaUrl, post } from '../api';
 
@@ -193,7 +194,7 @@ export function Modal({ title, onClose, children, wide }: { title: string; onClo
       <div ref={ref} className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <div className="card-head">
           <h2>{title}</h2>
-          <button className="btn ghost" onClick={onClose} aria-label="Schließen">✕</button>
+          <button className="btn ghost" onClick={onClose} aria-label="Schließen"><XIcon aria-hidden="true" size={18} /></button>
         </div>
         {children}
       </div>
@@ -208,7 +209,7 @@ export function ImageInsert({ onInsert }: { onInsert: (markdown: string) => void
   const [alt, setAlt] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  if (!open) return <button type="button" className="btn small" onClick={() => setOpen(true)}>🖼️ Bild einfügen</button>;
+  if (!open) return <button type="button" className="btn small" onClick={() => setOpen(true)}><ImagePlusIcon className="btn-icon" aria-hidden="true" size={16} />Bild einfügen</button>;
   const insert = async () => {
     if (!file || !alt.trim()) return;
     setBusy(true);

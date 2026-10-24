@@ -146,7 +146,7 @@ test('[T-205] KI-Vorschlag in der Kapitelwerkstatt: Satz-Evidenz prüfen und üb
 
   await page.goto(`/werkstatt/${ch.id}`);
   const purpose = page.locator('.ws-section', { has: page.getByRole('heading', { name: '1. Zweck' }) }).getByRole('article').first();
-  await purpose.getByRole('button', { name: '✨ KI-Vorschlag' }).click();
+  await purpose.getByRole('button', { name: 'KI-Vorschlag' }).click();
   const proposal = purpose.locator('.rewrite');
   await expect(proposal).toContainText('jeder Satz belegt');
   await expect(proposal.locator('.rewrite-sentences li').first()).toContainText('Abdeckung');
@@ -189,7 +189,7 @@ test('[T-207] Ganzes Kapitel umformulieren: Fortschritt, Sammelprüfung, alle g�
   await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h });
 
   await page.goto(`/werkstatt/${ch.id}`);
-  await page.getByRole('button', { name: '✨ Kapitel umformulieren' }).click();
+  await page.getByRole('button', { name: 'Kapitel umformulieren' }).click();
   const panel = page.getByRole('region', { name: 'KI-Umformulierung des Kapitels' });
   await panel.getByRole('button', { name: 'Vorschläge für alle Absätze anfordern' }).click();
   await expect(panel.getByRole('heading', { name: /Sammelprüfung: \d+ offene Vorschläge/ })).toBeVisible();
@@ -384,7 +384,7 @@ test('[T-217] Handbuch-Assistent: Frage mit Quellenangabe, Bewertung, Wissenslü
   await expect(answer.getByText(/Zurückweisung ohne Kommentar ist nicht möglich/).first()).toBeVisible();
   await expect(answer.getByRole('link', { name: 'Quelle 1' })).toBeVisible();
   await expect(answer.locator('ol.sources')).toContainText('5. MO-Check');
-  await answer.getByRole('button', { name: '👎 Nein' }).click();
+  await answer.getByRole('button', { name: 'Nein' }).click();
   await expect(page.getByText('Danke für die Bewertung.')).toBeVisible();
   // Frage ohne Aussage im Handbuch → Wissenslücke
   await page.getByLabel('Ihre Frage').fill('Wie konfiguriere ich den Quantencomputer?');
@@ -465,7 +465,7 @@ test('[T-219] Bilder: Anzeige in der Kapitelwerkstatt, Bild mit Pflicht-Alternat
   // Bild in einen Absatz einfügen: Einfügen erst mit Alternativtext möglich
   const block = page.getByRole('article').filter({ hasText: 'Die Bildschirmmaske zeigt die Anmeldung.' });
   await block.getByRole('button', { name: 'Bearbeiten' }).click();
-  await block.getByRole('button', { name: '🖼️ Bild einfügen' }).click();
+  await block.getByRole('button', { name: 'Bild einfügen' }).click();
   await block.getByLabel(/^Bilddatei/).setInputFiles({ name: 'knopf.png', mimeType: 'image/png', buffer: png(12, 6, [200, 30, 30]) });
   const insert = block.getByRole('button', { name: 'Einfügen' });
   await expect(insert).toBeDisabled();
@@ -849,7 +849,7 @@ test('[T-225] Werkstatt: Stil anzeigen und korrigieren, Stapelkorrektur, Bild au
 
   // Werkstatt: Stil anzeigen, gelben Satz direkt korrigieren
   await page.goto(`/werkstatt/${ch.id}`);
-  await page.getByRole('button', { name: '🖋️ Stil anzeigen' }).click();
+  await page.getByRole('button', { name: 'Stil anzeigen' }).click();
   await expect(page.getByRole('status').filter({ hasText: /Schreibstil: \d+ von \d+ Absätzen mit Problemen/ })).toBeVisible();
   const first = page.getByRole('article').filter({ hasText: 'Die Auftragsdaten wurden eigentlich gespeichert.' });
   await first.locator('.style-sentence.warn').click();
@@ -860,7 +860,7 @@ test('[T-225] Werkstatt: Stil anzeigen und korrigieren, Stapelkorrektur, Bild au
   await expect(page.getByRole('article').filter({ hasText: 'Die Auftragsdaten werden gespeichert.' })).toBeVisible();
 
   // Stapelkorrektur mit Vorschau
-  await page.getByRole('button', { name: '🖋️ Stil korrigieren' }).click();
+  await page.getByRole('button', { name: 'Stil korrigieren' }).click();
   const dlg = page.getByRole('dialog', { name: 'Schreibstil: Kapitel automatisch korrigieren' });
   // zwei Absätze: Präsens („war“ → „ist“) und Hausregel Menüpfad („>“ → „›“, ADR-097)
   await expect(dlg.getByRole('status')).toContainText('2 Absätze mit automatischen Korrekturen');
@@ -872,7 +872,7 @@ test('[T-225] Werkstatt: Stil anzeigen und korrigieren, Stapelkorrektur, Bild au
 
   // Bild aus diesem Absatz: Klickstrecke erzeugen, speichern, einfügen; PNG-Fassung für Word
   const clickBlock = page.getByRole('article').filter({ hasText: 'Klicken Sie auf Speichern' });
-  await clickBlock.getByRole('button', { name: '🎨 Bild erzeugen' }).click();
+  await clickBlock.getByRole('button', { name: 'Bild erzeugen' }).click();
   const imgDlg = page.getByRole('dialog', { name: 'Bild aus diesem Absatz erzeugen' });
   await expect(imgDlg.getByRole('textbox', { name: 'Textstelle' })).toHaveValue(/Öffnen Sie \*\*Verkauf › Aufträge\*\*/);
   await imgDlg.getByRole('button', { name: 'Bilder erzeugen' }).click();
@@ -986,7 +986,7 @@ test('[T-226] Eigene Stilregeln, Benutzerverwaltung, KI-Stapelumformulierung, Sc
   await expect.poll(async () => (ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '13. E2E-KI-Stapel'))).toBeTruthy();
   expect((await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).ok()).toBe(true);
   await page.goto(`/werkstatt/${ch.id}`);
-  await page.getByRole('button', { name: '🖋️ Stil korrigieren' }).click();
+  await page.getByRole('button', { name: 'Stil korrigieren' }).click();
   const dlg = page.getByRole('dialog', { name: 'Schreibstil: Kapitel automatisch korrigieren' });
   await dlg.getByRole('button', { name: '✨ KI: ins Präsens' }).click();
   await expect(dlg.getByRole('status').filter({ hasText: /Absätze mit Vorschlägen/ })).toBeVisible();
@@ -1186,7 +1186,7 @@ test('[T-228] Startseite, Menü nach Ablauf, Kapitel-Assistent, Anleitungs-Check
   expect(after.sections.find((s: any) => s.code === 'steps').blocks[0]).toMatchObject({ kind: 'list', text: '1. Öffnen Sie **Einkauf > Lieferungen**.\n2. Klicken Sie auf **Neu**.\n3. Wählen Sie den Lieferanten.' });
   // aus der Werkstatt erreichbar
   await page.getByRole('link', { name: 'In der Werkstatt öffnen' }).click();
-  await expect(page.getByRole('link', { name: '🔍 Anleitungs-Check' })).toBeVisible();
+  await expect(page.getByRole('main').getByRole('link', { name: 'Anleitungs-Check' })).toBeVisible();
 
   // Stilregel-Bibliothek anlegen und abonnieren
   await request.put('/api/v1/style/rules', { headers: h, data: { phrases: [{ avoid: 'Popup', use: 'Dialogfenster' }] } });
@@ -1255,7 +1255,7 @@ test('[T-229] Einführung, Leseransicht mit Schritten und Rückmeldung, Vorlagen
   await page.evaluate(() => localStorage.setItem('onescm.user', 'u-leser'));
   await page.reload();
   const art2 = page.getByRole('article', { name: 'E2E Lesen' });
-  await art2.getByRole('button', { name: '👎 Nein' }).click();
+  await art2.getByRole('button', { name: 'Nein' }).click();
   await art2.getByLabel(/Was hat gefehlt/).fill('Wo finde ich Notizen anderer?');
   await art2.getByRole('button', { name: 'Rückmeldung senden' }).click();
   await expect(art2.getByRole('status')).toContainText('Danke für Ihre Rückmeldung');
@@ -1310,7 +1310,7 @@ test('[T-230] Rückmeldungen auswerten mit Aufgabe, eigene Kapitelvorlage aus de
 
   // Eigene Vorlage aus der Werkstatt, im Assistenten wählbar, umbenennen, löschen
   await page.goto(`/werkstatt/${c.chapterId}`);
-  await page.getByRole('button', { name: '💾 Als Vorlage' }).click();
+  await page.getByRole('button', { name: 'Als Vorlage' }).click();
   const dlg = page.getByRole('dialog', { name: 'Als Vorlage speichern' });
   await expect(dlg.getByLabel('Name der Vorlage')).toHaveValue('E2E Rückmeldung');
   await dlg.getByLabel('Name der Vorlage').fill('E2E Reklamation');
@@ -1640,7 +1640,7 @@ test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; 
   await page.getByLabel('Lesezeichen filtern').fill('Inventur');
   await expect(page.getByRole('link', { name: 'E2E Packliste ändern' })).toBeVisible();
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: '📤 Als CSV speichern' }).click();
+  await page.getByRole('button', { name: 'Als CSV speichern' }).click();
   const csv = fs.readFileSync(await (await download).path(), 'utf8');
   expect(csv).toContain('"E2E Packliste ändern";"Vor der Inventur prüfen"');
   expect(await axe()).toEqual([]);
@@ -1660,7 +1660,7 @@ test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; 
   await expect(page.getByRole('article', { name: 'E2E Packliste ändern' }).getByText('(not translated yet – German version)')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Frequently asked questions' })).toBeVisible();
   await expect(page.locator('#faq').getByText('Wo finde ich die Packliste einer Sendung?')).toBeVisible();
-  await expect(page.getByRole('button', { name: '🖨️ Drucken / als PDF speichern' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Drucken / als PDF speichern' })).toBeEnabled();
 
   // Online-Hilfe: Siehe auch als Links auf die Hilfe der anderen Kapitel, passende FAQ
   expect((await request.post('/api/v1/help-contexts', { headers: red, data: { key: 'e2e.pack.print', chapterId: a.chapterId } })).ok()).toBe(true);
@@ -3214,4 +3214,34 @@ test('[T-356] Terminologie: „MO-Prüfungen“ mit UI-Begriff „MO Checks“ �
   expect(await axe()).toEqual([]);
   // aufräumen
   expect((await request.patch(`/api/v1/terminology/${term.id}`, { headers: adm, data: { status: 'retired' } })).ok()).toBe(true);
+});
+
+test('[T-357] Oberfläche mit einheitlichen SVG-Icons: Navigation, Startseite und Schaltflächen ohne Emoji, Icons für Screenreader ausgeblendet, eingeklappt und dunkel – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const emoji = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  // jeder Eintrag hat ein SVG-Icon, das Screenreader überspringen; die Namen sind reiner Text
+  const links = nav.getByRole('link');
+  expect(await links.count()).toBeGreaterThan(50);
+  expect(await nav.locator('a svg.nav-icon[aria-hidden="true"]').count()).toBe(await nav.locator('a').count());
+  expect(emoji.test(await nav.innerText())).toBe(false);
+  await expect(nav.getByRole('link', { name: 'Schreibstil', exact: true })).toBeVisible();
+  // Startseite: Aufgaben-Kacheln mit Icon
+  const tasks = page.getByRole('navigation', { name: 'Hauptaufgaben' });
+  expect(await tasks.locator('.task-icon svg').count()).toBe(5);
+  expect(emoji.test(await tasks.innerText())).toBe(false);
+  expect(await axe()).toEqual([]);
+  // eingeklappt: nur Icons, Namen bleiben als zugänglicher Name erhalten
+  await page.getByRole('button', { name: 'Navigation einklappen' }).click();
+  await expect(nav.getByRole('link', { name: 'Schreibstil', exact: true }).locator('svg')).toBeVisible();
+  await expect(nav.getByRole('link', { name: 'Schreibstil', exact: true }).locator('.nav-label')).toBeHidden();
+  await page.getByRole('button', { name: 'Navigation ausklappen' }).click();
+  // dunkle Darstellung
+  await page.getByLabel('Darstellung').selectOption('dark');
+  expect(await axe()).toEqual([]);
+  await page.getByLabel('Darstellung').selectOption('system');
 });

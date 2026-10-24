@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.58.0 – Etappe 58 (24.10.2026)
+
+Wunsch des Auftraggebers vom 24.10.2026: Oberfläche verbessern, professionelle Icons verwenden.
+
+### Hinzugefügt
+- **Einheitliche SVG-Icons mit Lucide (ADR-111):** statt Emoji in der gesamten Navigation, im Kopf (Logo, Ein-/Ausklappen, Menü), auf den Aufgaben-Kacheln der Startseite und auf den Hauptschaltflächen von Kapitelwerkstatt, Leseransicht und Dialogen. Linien-Icons in `currentColor` passen zu Hell- und Dunkelmodus. Sie werden lokal mitgebaut, ohne Nachladen aus dem Netz.
+- E2E T-357 (axe hell und dunkel); Anforderung NFR-146; neue Abhängigkeit `lucide-react` 1.54.0 (ISC).
+
+### Geändert
+- Feinschliff: Icon-Flächen auf den Startkacheln, ruhigere Navigation (Abstand, Deckkraft, aktiver Eintrag), Kacheln heben sich beim Überfahren leicht an (nicht bei „Bewegung reduzieren“).
+- Barrierefreiheit: Icons sind für Screenreader ausgeblendet; Schaltflächen heißen wie ihr sichtbarer Text (z. B. „KI-Vorschlag“ statt „✨ KI-Vorschlag“).
+- T-172: Die Zusammenfassung des Stammdaten-Imports enthält die Zählung „übersprungen“ (Nachtrag zu Etappe 57).
+
 ## 0.57.0 – Etappe 57 (24.10.2026)
 
 Entscheidung des Auftraggebers vom 24.10.2026 (S-04): „MO-Prüfungen“ im Fließtext, „MO Checks“ nur in Menüpfaden und als UI-Begriff in Anführungszeichen. Offen bleiben die Schreibweise der Systemnamen (später nach Oberfläche), der deutsche Begriff für „Grace Period“ (Redaktion) und U-07.

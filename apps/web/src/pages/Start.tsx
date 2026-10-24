@@ -1,15 +1,16 @@
 // Startseite (ADR-053): „Was möchten Sie tun?“ – die Hauptaufgaben auf einen Blick, der Fortschritt zum fertigen Handbuch
 // und die Kapitel, die als Nächstes Aufmerksamkeit brauchen.
+import { CompassIcon, FolderInputIcon, ListChecksIcon, PenLineIcon, RocketIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, Page, useLoad } from '../components/ui';
 import { scoreLabel } from './Guidance';
 
 const TASKS = [
-  { to: '/quellen', icon: '📥', title: 'Quellen hochladen', text: 'Vorhandene Dokumente, Notizen oder Exporte als Grundlage einlesen.' },
-  { to: '/kapitel-assistent', icon: '🧭', title: 'Neues Kapitel schreiben', text: 'Geführt in vier Schritten – mit Vorschlägen aus den Quellen.' },
-  { to: '/werkstatt', icon: '✏️', title: 'Kapitel überarbeiten', text: 'Absätze bearbeiten, Bilder einfügen, Stil korrigieren.' },
-  { to: '/anleitungs-check', icon: '🔍', title: 'Verständlichkeit prüfen', text: 'Sind die Anleitungen leicht zu befolgen? Mit Korrekturen per Klick.' },
-  { to: '/veroeffentlichung', icon: '📚', title: 'Handbuch veröffentlichen', text: 'Freigegebene Kapitel als Version bereitstellen und exportieren.' },
+  { to: '/quellen', icon: FolderInputIcon, title: 'Quellen hochladen', text: 'Vorhandene Dokumente, Notizen oder Exporte als Grundlage einlesen.' },
+  { to: '/kapitel-assistent', icon: CompassIcon, title: 'Neues Kapitel schreiben', text: 'Geführt in vier Schritten – mit Vorschlägen aus den Quellen.' },
+  { to: '/werkstatt', icon: PenLineIcon, title: 'Kapitel überarbeiten', text: 'Absätze bearbeiten, Bilder einfügen, Stil korrigieren.' },
+  { to: '/anleitungs-check', icon: ListChecksIcon, title: 'Verständlichkeit prüfen', text: 'Sind die Anleitungen leicht zu befolgen? Mit Korrekturen per Klick.' },
+  { to: '/veroeffentlichung', icon: RocketIcon, title: 'Handbuch veröffentlichen', text: 'Freigegebene Kapitel als Version bereitstellen und exportieren.' },
 ];
 
 export function StartPage() {
@@ -37,7 +38,7 @@ export function StartPage() {
       <nav aria-label="Hauptaufgaben" className="task-grid">
         {TASKS.map((t) => (
           <Link key={t.to} to={t.to} className="task-tile">
-            <span className="task-icon" aria-hidden="true">{t.icon}</span>
+            <span className="task-icon" aria-hidden="true"><t.icon size={22} strokeWidth={1.75} /></span>
             <strong>{t.title}</strong>
             <span className="small">{t.text}</span>
           </Link>

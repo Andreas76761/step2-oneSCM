@@ -1,3 +1,4 @@
+import { ListChecksIcon, PaletteIcon, SaveIcon, SparklesIcon, SpellCheckIcon, WandSparklesIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
@@ -119,11 +120,11 @@ export function WorkshopPage() {
               </select>
             )}
             {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}
-            {v && <Link className="btn" to={`/anleitungs-check/${v.id}`}>🔍 Anleitungs-Check</Link>}
-            {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}>🖋️ Stil anzeigen</button>}
-            {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}>🖋️ Stil korrigieren</button>}
+            {v && <Link className="btn" to={`/anleitungs-check/${v.id}`}><ListChecksIcon className="btn-icon" aria-hidden="true" size={16} />Anleitungs-Check</Link>}
+            {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}><SpellCheckIcon className="btn-icon" aria-hidden="true" size={16} />Stil anzeigen</button>}
+            {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}><WandSparklesIcon className="btn-icon" aria-hidden="true" size={16} />Stil korrigieren</button>}
             {v && me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin') && <SaveTemplateButton versionId={v.id} title={v.title} />}
-            {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}>✨ Kapitel umformulieren</button>}
+            {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}><SparklesIcon className="btn-icon" aria-hidden="true" size={16} />Kapitel umformulieren</button>}
             {chapter && <button className="btn primary" onClick={regenerate}>{chapter.versions.length ? 'Neu generieren' : 'Generieren'}</button>}
           </div>
         </header>
@@ -280,8 +281,8 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
         <div className="row-actions" onClick={(e) => e.stopPropagation()}>
           {!locked && <button className="btn small" onClick={() => setMode('edit')}>Bearbeiten</button>}
           {!locked && <button className="btn small" onClick={() => setMode('classify')}>Zuordnen</button>}
-          {!locked && <button className="btn small" onClick={() => setImageOpen(true)}>🎨 Bild erzeugen</button>}
-          {!locked && canRewrite && !proposal && <button className="btn small" disabled={busy} onClick={requestRewrite}>{busy ? 'KI formuliert …' : '✨ KI-Vorschlag'}</button>}
+          {!locked && <button className="btn small" onClick={() => setImageOpen(true)}><PaletteIcon className="btn-icon" aria-hidden="true" size={16} />Bild erzeugen</button>}
+          {!locked && canRewrite && !proposal && <button className="btn small" disabled={busy} onClick={requestRewrite}>{busy ? 'KI formuliert …' : <><SparklesIcon className="btn-icon" aria-hidden="true" size={16} />KI-Vorschlag</>}</button>}
           {!locked && prev && <button className="btn small" aria-label="nach oben" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { position: prev.position - 5 }), 'Verschoben.')}>↑</button>}
           {!locked && next && <button className="btn small" aria-label="nach unten" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { position: next.position + 5 }), 'Verschoben.')}>↓</button>}
           {!locked && (
@@ -799,7 +800,7 @@ function SaveTemplateButton({ versionId, title }: { versionId: string; title: st
   const [description, setDescription] = useState('');
   return (
     <>
-      <button className="btn" onClick={() => { setName(title.replace(/^\d+(\.\d+)*\.?\s*/, '')); setOpen(true); }}>💾 Als Vorlage</button>
+      <button className="btn" onClick={() => { setName(title.replace(/^\d+(\.\d+)*\.?\s*/, '')); setOpen(true); }}><SaveIcon className="btn-icon" aria-hidden="true" size={16} />Als Vorlage</button>
       {open && (
         <Modal title="Als Vorlage speichern" onClose={() => setOpen(false)}>
           <p className="small">Zweck, Voraussetzungen, Schritte, Ergebnis und Tipps dieses Kapitels werden zur Vorlage im Kapitel-Assistenten. Ersetzen Sie danach konkrete Begriffe bei Bedarf durch „…“.</p>

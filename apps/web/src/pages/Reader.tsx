@@ -1,5 +1,6 @@
 // Leseransicht (ADR-054): das Handbuch so lesen, wie Endnutzer es sehen – Inhaltsverzeichnis, Schritte zum Abhaken,
 // Hinweise hervorgehoben – und je Kapitel „War das hilfreich?“ beantworten.
+import { DownloadIcon, FileTextIcon, PrinterIcon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, currentProjectId, get, mediaUrl, post } from '../api';
@@ -98,8 +99,8 @@ function Feedback({ chapterId, versionId }: { chapterId: string; versionId: stri
     <section className="reader-feedback no-print" aria-labelledby="fb-q" lang={uiLang}>
       <h2 id="fb-q">{t('fbQuestion')}</h2>
       <div className="row-actions">
-        <button className="btn" aria-pressed={helpful === true} onClick={() => { setHelpful(true); void send(true); }}>👍 {t('yes')}</button>
-        <button className="btn" aria-pressed={helpful === false} onClick={() => setHelpful(false)}>👎 {t('no')}</button>
+        <button className="btn" aria-pressed={helpful === true} onClick={() => { setHelpful(true); void send(true); }}><ThumbsUpIcon className="btn-icon" aria-hidden="true" size={16} />{t('yes')}</button>
+        <button className="btn" aria-pressed={helpful === false} onClick={() => setHelpful(false)}><ThumbsDownIcon className="btn-icon" aria-hidden="true" size={16} />{t('no')}</button>
       </div>
       {helpful === false && (
         <div className="reader-feedback-form">
@@ -421,7 +422,7 @@ export function ReaderBookmarksPage() {
   };
   return (
     <Page title="Lesezeichen" subtitle="Ihre gemerkten Kapitel mit eigenen Notizen – nur für Sie sichtbar"
-      actions={<span className="row-actions"><Link className="btn" to="/lesen">← Leseransicht</Link><button className="btn" disabled={!items.length} onClick={exportCsv}>📤 Als CSV speichern</button></span>}>
+      actions={<span className="row-actions"><Link className="btn" to="/lesen">← Leseransicht</Link><button className="btn" disabled={!items.length} onClick={exportCsv}><DownloadIcon className="btn-icon" aria-hidden="true" size={16} />Als CSV speichern</button></span>}>
       <ErrorBox error={mine.error} />
       <div className="filters">
         <label className="inline">Lesezeichen filtern <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Titel oder Notiz" /></label>
@@ -605,8 +606,8 @@ export function ReaderPage() {
     <ReaderTextProvider lang={lang}>
     <Page title="Leseransicht" subtitle="Das Handbuch so lesen, wie Ihre Leserinnen und Leser es sehen"
       actions={<span className="no-print row-actions">
-        {current && <button className="btn" onClick={() => window.print()}>🖨️ Kapitel drucken</button>}
-        <Link className="btn" to={`/lesen/druck${drafts ? '?entwuerfe=1' : ''}`}>📄 Handbuch drucken</Link>
+        {current && <button className="btn" onClick={() => window.print()}><PrinterIcon className="btn-icon" aria-hidden="true" size={16} />Kapitel drucken</button>}
+        <Link className="btn" to={`/lesen/druck${drafts ? '?entwuerfe=1' : ''}`}><FileTextIcon className="btn-icon" aria-hidden="true" size={16} />Handbuch drucken</Link>
       </span>}>
       <ErrorBox error={chapters.error} />
       <div className="reader">
@@ -886,7 +887,7 @@ export function PrintPage() {
     <Page title="Handbuch drucken" subtitle={`${variant ? `Variante „${variant.name}“` : 'Standardhandbuch'}${roleLabel ? ` für ${roleLabel}` : ''} · ${drafts ? 'freigegebene Kapitel und Entwürfe' : 'freigegebene Kapitel'} · Stand ${date}`}
       actions={<span className="no-print row-actions">
         <Link className="btn" to="/lesen">← Leseransicht</Link>
-        <button className="btn primary" disabled={!ready} onClick={() => void print()}>🖨️ Drucken / als PDF speichern</button>
+        <button className="btn primary" disabled={!ready} onClick={() => void print()}><PrinterIcon className="btn-icon" aria-hidden="true" size={16} />Drucken / als PDF speichern</button>
       </span>}>
       <style data-print-header="">{pageCss}</style>
       <ErrorBox error={error ?? chapters.error ?? projects.error ?? releases.error ?? layout.error} />

@@ -28,7 +28,7 @@ test('[T-208] WCAG 2.2 AA in Interaktionszuständen: Werkstatt mit Auswahl und K
   await page.goto(`/werkstatt/${ch.id}`);
   const block = page.locator('.ws-section', { has: page.getByRole('heading', { name: '1. Zweck' }) }).getByRole('article').first();
   await block.locator('.block-meta').first().click();
-  await block.getByRole('button', { name: '✨ KI-Vorschlag' }).click();
+  await block.getByRole('button', { name: 'KI-Vorschlag' }).click();
   await expect(block.locator('.rewrite')).toBeVisible();
   expect(await axe(page)).toEqual([]);
   await page.getByRole('button', { name: 'Quelle öffnen' }).first().click();
@@ -91,7 +91,7 @@ test('[T-209] Tastatur: Sprunglink, Absatz per Tastatur auswählen, Fokus im Dia
   }
   const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
   await expect(nav).toBeHidden();
-  await page.getByRole('button', { name: '☰ Menü' }).click();
+  await page.getByRole('button', { name: 'Menü' }).click();
   await expect(nav).toBeVisible();
   await nav.getByRole('link', { name: 'Quellen', exact: true }).click();
   await expect(nav).toBeHidden();

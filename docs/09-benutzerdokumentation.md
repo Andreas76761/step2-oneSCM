@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.57 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.58 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -9,6 +9,7 @@ Stand: Version 0.57 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 - **Projekte:** Oben links wählen Sie das Projekt (z. B. ein Handbuch je Land oder Produkt). Alle Daten gehören zu einem Projekt.
 - **Suche:** `/` öffnet die Suche über Kapitel, Quellen, Begriffe und Bilder.
 - **Menü nach Arbeitsablauf:** oneSCM_Metadaten · 1 Sammeln · 2 Schreiben · 3 Prüfen · 4 Veröffentlichen · Verwaltung.
+- **Navigation:** Jeder Eintrag hat ein Icon. Mit der Schaltfläche oben rechts neben dem Namen klappen Sie die Navigation auf die Icons ein; der Name erscheint dann beim Überfahren. Unter „Darstellung“ (unten links) wählen Sie hell, dunkel oder wie im System.
 
 ## 2. oneSCM_Metadaten – Wissen einlesen, ordnen, befragen
 

@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.60 Stand nach Etappe 58 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Oberfläche mit einheitlichen SVG-Icons (Lucide) statt Emoji: Navigation, Kopf, Startseite, Hauptschaltflächen (NFR-146) | ✅ ([ADR-111](adr/ADR-111-icons-lucide.md)), axe hell und dunkel ohne Befund |
+| Offen | Emoji in Inhalten, Befunden und Schaltflächen seltener Seiten (später); Systemnamen, „Grace Period“ u. a. (S-04, Redaktion); U-07 |
+
 ## 1.59 Stand nach Etappe 57 (24.10.2026)
 
 | Punkt | Ergebnis |

@@ -2710,5 +2710,14 @@
     "requirements": [
       "NFR-145"
     ]
+  },
+  {
+    "id": "T-357",
+    "title": "Einheitliche SVG-Icons in Navigation und Startseite, ohne Emoji, für Screenreader ausgeblendet, eingeklappt und dunkel – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-146"
+    ]
   }
 ]
