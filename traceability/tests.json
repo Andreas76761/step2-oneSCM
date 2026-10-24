@@ -2515,5 +2515,52 @@
       "NFR-133",
       "NFR-134"
     ]
+  },
+  {
+    "id": "T-336",
+    "title": "Zwischenbilder erkennen, Klickstrecke als BPMN (Aufgaben, Gateways, Flüsse, Diagramm), PowerPoint-Folien und Rücklesen (Einheit)",
+    "file": "apps/server/test/stage53.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-136",
+      "NFR-137"
+    ]
+  },
+  {
+    "id": "T-337",
+    "title": "PowerPoint-Export freigegebener Kapitel mit Bildern, Klickstrecke als BPMN herunterladen",
+    "file": "apps/server/test/stage53.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-136"
+    ]
+  },
+  {
+    "id": "T-338",
+    "title": "Vorher/Nachher-Belege: Fassungen gegenüberstellen, Anlass/Änderung/Wirkung, Gegenüberstellung als neue Fassung im Archiv, Berechtigung",
+    "file": "apps/server/test/stage53.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-135"
+    ]
+  },
+  {
+    "id": "T-339",
+    "title": "Zwischenbilder aus dem Video zusätzlich zu den Standbildern, abschaltbar",
+    "file": "apps/server/test/stage53.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-137"
+    ]
+  },
+  {
+    "id": "T-340",
+    "title": "Vorher/Nachher mit Schieberegler und Gegenüberstellung im Archiv, PowerPoint im Export – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-135",
+      "NFR-136"
+    ]
   }
 ]

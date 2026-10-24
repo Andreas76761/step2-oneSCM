@@ -3002,3 +3002,46 @@ test('[T-335] Textvarianten und Prüferprofile – barrierefrei', async ({ page,
   for (const p of ['Fachlich', 'Redaktion', 'Compliance', 'Endanwender']) await expect(page.getByRole('heading', { level: 2, name: new RegExp(`^${p} `) })).toBeVisible();
   expect(await axe()).toEqual([]);
 });
+
+test('[T-340] Vorher/Nachher mit Schieberegler und Gegenüberstellung im Archiv, PowerPoint im Export – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const v1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAKAAAABaCAYAAAA/xl1SAAAABHNCSVQICAgIfAhkiAAAAAFzUkdCAK7OHOkAAAEDSURBVHic7dIxAcAgAMAwwL8zbgSgZMjosURBj8597jcgsuoA/s2ApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjKgKQMSMqApAxIyoCkDEjqAf/GBDT62TtKAAAAAElFTkSuQmCC', 'base64');
+  const v2 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAKAAAABaCAYAAAA/xl1SAAAABHNCSVQICAgIfAhkiAAAAAFzUkdCAK7OHOkAAAEhSURBVHic7duhEYNQFEXBkMGkPbqhArqhEXQKoApk0gHDYI5gV39xxZnn/rB9998LIu96AM8mQFICJCVAUgIkJUBSAiQ11gO4Z5qPesKpdflceucCkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSGvwLpuQCkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZISICkBkhIgKQGSEiApAZL6A5oOCrV9u+P3AAAAAElFTkSuQmCC', 'base64');
+  const up = await (await request.post('/api/v1/media', { headers: red, multipart: { file: { name: 'e2e-maske.png', mimeType: 'image/png', buffer: v1 } } })).json();
+  expect((await request.post(`/api/v1/image-archive/${up.sha256}/versions`, { headers: red, multipart: { file: { name: 'e2e-maske-neu.png', mimeType: 'image/png', buffer: v2 } } })).ok()).toBe(true);
+  await request.patch(`/api/v1/image-archive/${up.sha256}`, { headers: red, data: { title: 'E2E Maske Verträge' } });
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Vorher/Nachher' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Vorher/Nachher' })).toBeVisible();
+  const select = page.getByRole('combobox', { name: 'Bild', exact: true });
+  await select.selectOption((await select.locator('option', { hasText: 'E2E Maske Verträge' }).first().getAttribute('value'))!);
+  await expect(page.getByRole('combobox', { name: 'Nachher' })).toHaveValue(/[a-f0-9]{64}/);
+  await page.getByRole('button', { name: 'Beleg anlegen' }).click();
+  await expect(page.getByText('Vorher/Nachher-Beleg angelegt.')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Nachher: E2E Maske Verträge' }).first()).toBeVisible();
+  await page.getByRole('slider', { name: 'Anteil Nachher: E2E Maske Verträge' }).first().fill('80');
+  await expect(page.getByText('(80 % Nachher sichtbar)').first()).toBeVisible();
+  await page.getByLabel('Anlass').first().fill('Release 2026.3');
+  await page.getByLabel('Änderung').first().fill('Schaltfläche Export oben rechts');
+  await page.getByLabel('Wirkung').first().fill('Verträge lassen sich direkt exportieren');
+  await page.getByRole('button', { name: 'Speichern' }).first().click();
+  await expect(page.getByText('Beleg gespeichert.')).toBeVisible();
+  await page.getByRole('button', { name: 'Als Bild ins Archiv' }).first().click();
+  await expect(page.getByText('Gegenüberstellung im Bildarchiv abgelegt.')).toBeVisible();
+  await expect(page.getByText(/!\[Vorher\/Nachher: E2E Maske Verträge\]\(media:[a-f0-9]{64}\)/).first()).toBeVisible();
+  expect(await axe()).toEqual([]);
+
+  // PowerPoint im Export
+  await nav.getByRole('link', { name: 'Export' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Export' })).toBeVisible();
+  await page.getByLabel('Format').selectOption('pptx');
+  await page.getByRole('button', { name: 'Export erstellen' }).click();
+  await expect(page.getByText(/PowerPoint-Präsentation erstellt/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /\.pptx herunterladen/ })).toBeVisible();
+});

@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.52 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.53 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -114,8 +114,10 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 ## 8. Veröffentlichen
 
 - **Leseransicht:** Handbuch lesen, suchen, Lesezeichen, „Weiter mit …“, Drucken mit Deckblatt im Firmen-Layout.
-- **Export:** Markdown, HTML, PDF, Word – gefiltert nach Rolle, Sparte, Markt; Quick Guide, One Pager, Kurzfassung (Management, je Kapitel ein Absatz), Lesefassung. Mit **Stand (Release)** blendet der Export Kapitel aus, deren „gültig ab“ später liegt (Zukunfts-Inhalte); das Ergebnis nennt sie.
+- **Export:** Markdown, HTML, PDF, Word, PowerPoint – gefiltert nach Rolle, Sparte, Markt; Quick Guide, One Pager, Kurzfassung (Management, je Kapitel ein Absatz), Lesefassung. Mit **Stand (Release)** blendet der Export Kapitel aus, deren „gültig ab“ später liegt (Zukunfts-Inhalte); das Ergebnis nennt sie.
 - **Textvarianten:** ein Kapitel in drei Fassungen nebeneinander – Endanwender (was zu tun ist), Fachtext (vollständig mit Rollen und Quellenstatus) und Kurzfassung für das Management (etwa ein Viertel der Länge) – mit Wortzahl und Download als Markdown. Die Kurzfassung entsteht aus Zweck, Ergebnis, Warnhinweisen und Ablauf; mit „Kurzfassung mit KI-Dienst“ formuliert ein lokaler KI-Dienst sie, ohne neue Zahlen hinzuzufügen.
+- **Vorher/Nachher:** zwei Fassungen eines Bildes aus dem Bildarchiv wählen und mit dem Schieberegler vergleichen (links Nachher, rechts Vorher). Anlass, Änderung, Wirkung und Ticket belegen die Änderung. „Als Bild ins Archiv“ legt die Gegenüberstellung als Bild ab; den angezeigten Verweis fügen Sie in ein Kapitel ein.
+- **Klickstrecke als BPMN:** unter „Bildarchiv“ eine gespeicherte Klickstrecke wählen und „Als BPMN 2.0“ herunterladen – für Prozessmodelle in Camunda Modeler oder bpmn.io.
 - **Veröffentlichung:** Handbuch-Release mit Online-Hilfe und Übersetzungen. Kapitel mit späterem „gültig ab“ als die Versionsnummer kommen erst in ein späteres Release. Unter „Änderungen anzeigen“ steht der **Projektvergleich** mit dem Vorgänger (neue Funktionen, geänderte Bilder, abgelöste Funktionen, Tickets der Version); „Releaseletter-Entwurf erzeugen“ legt daraus einen Letter an.
 - **Übersetzungen:** Kapitel in die Landessprachen (auch Deutsch und Französisch für die Schweiz); Platzhalter- und Strukturvergleich, Länge, deutsche Wörter im Zieltext, Datum und Kennungen.
   - **Übersetzungsspeicher:** Freigegebene Absätze werden beim nächsten Mal sofort übernommen („Speicher 100 %“); „Vorschläge aus dem Speicher“ zeigt ähnliche Treffer ab 75 %. Pflege, Export und Import unter **Übersetzungsspeicher** (Datei wie `SPEICHER.csv`).

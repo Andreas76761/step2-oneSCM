@@ -15,6 +15,8 @@ import { historyAppendix } from './structure.js';
 import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices } from './variants.js';
 import { DEFAULT_LAYOUT, resolveLayout, type ResolvedLayout } from './layout.js';
 import { renderDocx } from './docx.js';
+import { markdownParagraphs, paginate, renderPptx, type Slide } from '../domain/pptxWriter.js';
+import { imageRefs } from '../domain/media.js';
 import { DEFAULT_CRITERION } from '../domain/revision.js';
 import { extractiveSummary } from '../domain/textVariants.js';
 import { transitionsFor } from './transitions.js';
@@ -76,13 +78,14 @@ export interface ExportInput extends ExportFilter {
   reviewCopy?: { criterion?: string } | boolean;
 }
 
-export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'docx', 'json'] as const;
+export const EXPORT_FORMATS = ['md', 'html', 'pdf', 'docx', 'pptx', 'json'] as const;
 export type ExportFormat = (typeof EXPORT_FORMATS)[number];
 export const CONTENT_TYPES: Record<ExportFormat, string> = {
   md: 'text/markdown; charset=utf-8',
   html: 'text/html; charset=utf-8',
   pdf: 'application/pdf',
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   json: 'application/json',
 };
 
@@ -346,6 +349,48 @@ export async function renderDocxExport(chapters: ExportChapter[], f: ExportFilte
     customProperties: review ? [{ name: 'onescm-export', value: review.exportId }] : undefined });
 }
 
+/**
+ * PowerPoint-Export (ADR-106, W-07): Titelfolie, je Kapitel eine Übersichtsfolie (Versionszeile, Zweck, Abschnitte), je
+ * Abschnitt Inhaltsfolien (Aufzählungen und Nummerierung bleiben, Hinweisarten mit Kennwort) und je Bild eine eigene Folie.
+ */
+export async function renderPptxExport(chapters: ExportChapter[], f: ExportFilter, media: Media = new Map(), extras: ExportExtras = {}): Promise<Buffer> {
+  const F = frameTexts(extras.language);
+  const title = extras.title ?? F.manualTitle;
+  const slides: Slide[] = [{ kind: 'title', title, subtitle: `${F.asOf} ${now().slice(0, 10)} · ${filterDescription(f, F)}` }];
+  for (const ch of visible(chapters, f)) {
+    const sections = ch.sections.filter((s: any) => s.blocks.some((b: any) => b.kind !== 'gap' && b.text.trim()));
+    const purpose = sections.find((s: any) => s.code === 'purpose')?.blocks.find((b: any) => b.kind !== 'gap');
+    const vl = versionLine(ch, F);
+    slides.push({ kind: 'content', title: ch.title, paragraphs: [
+      ...(vl ? [{ text: vl }] : []),
+      ...(purpose ? markdownParagraphs(purpose.text.replace(/!\[[^\]]*\]\([^)]*\)/g, '')) : []),
+      ...sections.filter((s: any) => s.code !== 'purpose').map((s: any) => ({ text: s.title, bullet: 'char' as const })),
+    ] });
+    for (const s of sections) {
+      if (s.code === 'purpose') continue;
+      const paras = [];
+      const pics: Slide[] = [];
+      for (const b of s.blocks as any[]) {
+        if (b.kind === 'gap' || !b.text.trim()) continue;
+        for (const r of imageRefs(b.text)) {
+          const m = r.sha ? media.get(r.sha) : undefined;
+          const img = m && ['image/png', 'image/jpeg', 'image/gif'].includes(m.mime) ? m : m?.fallback?.mime === 'image/png' ? m.fallback : null;
+          if (img) pics.push({ kind: 'image', title: r.alt || s.title, image: { data: img.data, mime: img.mime, width: img.width, height: img.height, alt: r.alt } });
+        }
+        const text = b.text.replace(/!\[[^\]]*\]\([^)]*\)/g, '').trim();
+        if (!text) continue;
+        const ps = markdownParagraphs(text);
+        const label = kindLabel(b.kind, F);
+        if (label && ps.length) ps[0] = { ...ps[0], text: `**${label}:** ${ps[0].text}` };
+        paras.push(...ps);
+      }
+      paginate(paras).forEach((page, i) => slides.push({ kind: 'content', title: i ? `${s.title} (${i + 1})` : s.title, paragraphs: page }));
+      slides.push(...pics);
+    }
+  }
+  return renderPptx(slides, { title, color: (extras.layout ?? NO_LAYOUT).primaryColor });
+}
+
 /** Interne Kommentare (ADR-104, W-08) stehen in keinem Export */
 const withoutComments = (chapters: ExportChapter[]) => chapters.map((ch) => ({ ...ch, sections: ch.sections.map((s: any) => ({ ...s, blocks: s.blocks.map(({ comment: _c, ...b }: any) => b) })) }));
 
@@ -417,7 +462,7 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
   const extras: ExportExtras = {
     title: baseTitle && profile !== 'full' ? `${baseTitle} – ${PROFILE_LABEL[profile]}` : baseTitle,
     reading: !!input.reading,
-    layout: format === 'pdf' || format === 'html' || format === 'docx' ? await resolveLayout(ctx) : undefined,
+    layout: format === 'pdf' || format === 'html' || format === 'docx' || format === 'pptx' ? await resolveLayout(ctx) : undefined,
     appendices: (input.appendices ?? !!outline) ? await appendicesFor(ctx, outline, visible(raw, filter)) : await historyOnly(ctx),
   };
   // Bilder der sichtbaren Absätze (ADR-029) – eingebettet, damit die Datei eigenständig bleibt
@@ -429,6 +474,9 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
     preview = null;
   } else if (format === 'docx') {
     data = await renderDocxExport(chapters, filter, media, extras, review ?? undefined);
+    preview = null;
+  } else if (format === 'pptx') {
+    data = await renderPptxExport(chapters, filter, media, extras);
     preview = null;
   } else {
     const text = format === 'md' ? renderMarkdown(chapters, filter, media, extras) : format === 'html' ? renderHtml(chapters, filter, media, extras)

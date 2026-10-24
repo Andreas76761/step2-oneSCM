@@ -891,3 +891,10 @@ div.reader-lang-note p { margin: 0; }
 .rev-item { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; margin: 8px 0; }
 .rev-item textarea { width: 100%; }
 .rev-item .dp-cols { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+/* Vorher/Nachher (ADR-106): Nachher über Vorher, sichtbar bis zum Regler */
+.ba { margin: 0 0 10px; }
+.ba-frame { position: relative; display: inline-block; max-width: 100%; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; line-height: 0; }
+.ba-frame img { display: block; max-width: 100%; height: auto; }
+.ba-frame img.ba-after { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.ba-line { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger, #b91c1c); }
+.ba input[type="range"] { width: 100%; max-width: 640px; }

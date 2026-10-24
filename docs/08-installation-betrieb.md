@@ -1,6 +1,6 @@
 # 08 Installation und Betrieb
 
-Stand: Version 0.52 (24.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
+Stand: Version 0.53 (24.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
 
 ## 1. Welche Installation passt?
 
@@ -74,6 +74,7 @@ Alle Einstellungen sind Umgebungsvariablen; die vollständige Liste steht im REA
 | `EMBEDDINGS_LOCAL` | `false` | `true`: Embedding-Dienst unter `EMBEDDINGS_BASE_URL` ist lokal (wie `LLM_LOCAL`) |
 | `TRANSCRIBE_CMD` | – | lokale Transkription von Videos, z. B. whisper.cpp |
 | `FFMPEG_PATH` | – | ffmpeg für Standbilder aus Videos |
+| `MEDIA_TRANSIENT_STILLS` | an | `false` schaltet die Zwischenbilder kurzer Zustände (Menü, Dialog) aus Videos ab (ADR-106) |
 | `OCR_CMD` | – | lokale Texterkennung gescannter PDF-Seiten, z. B. Tesseract |
 | `OCR_BOXES_CMD` | aus `OCR_CMD` abgeleitet | Texterkennung mit Wortpositionen für den Datenschutz im Bild; bei Tesseract genügt `OCR_CMD` (die App hängt `tsv` an) |
 

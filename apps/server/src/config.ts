@@ -77,6 +77,8 @@ export interface MediaToolsConfig {
   ocrBoxesCmd: string | null;
   /** ffmpeg für Standbilder aus Videos (F-26); null = keine Standbilder */
   ffmpeg: string | null;
+  /** Zwischenbilder kurzer Zustände (ADR-106, W-10) in einem zweiten Durchgang; Standard an (MEDIA_TRANSIENT_STILLS=false schaltet ab) */
+  transientStills?: boolean;
   timeoutMs: number;
 }
 
@@ -196,7 +198,7 @@ export function loadConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     git: { allowFile: process.env.GIT_ALLOW_FILE === '1', timeoutMs: Number(process.env.GIT_TIMEOUT_MS ?? 120_000), ...overrides.git },
     mediaTools: {
       transcribeCmd: process.env.TRANSCRIBE_CMD?.trim() || null, ocrCmd: process.env.OCR_CMD?.trim() || null, ocrBoxesCmd: process.env.OCR_BOXES_CMD?.trim() || null,
-      ffmpeg: process.env.FFMPEG_PATH?.trim() || null, timeoutMs: Number(process.env.MEDIA_TOOL_TIMEOUT_MS ?? 30 * 60_000), ...overrides.mediaTools,
+      ffmpeg: process.env.FFMPEG_PATH?.trim() || null, transientStills: process.env.MEDIA_TRANSIENT_STILLS !== 'false', timeoutMs: Number(process.env.MEDIA_TOOL_TIMEOUT_MS ?? 30 * 60_000), ...overrides.mediaTools,
     },
   };
 }

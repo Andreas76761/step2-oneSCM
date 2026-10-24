@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.53.0 – Etappe 53 (24.10.2026)
+
+### Hinzugefügt
+- **Vorher/Nachher-Belege (ADR-106, W-05):** zwei Fassungen eines Bildes mit Schieberegler, Anlass, Änderung, Wirkung und Ticket; „Als Bild ins Archiv“ legt eine Gegenüberstellung ab, die sich in Kapitel einfügen lässt (erneut erzeugt = neue Fassung).
+- **Ausgabe als PowerPoint (W-07):** Exportformat `pptx` (16:9) mit Titelfolie, Übersicht je Kapitel, Inhaltsfolien je Abschnitt (Aufzählungen, Nummerierung, Fettdruck, Hinweisarten) und einer Folie je Bild; Hausfarbe aus dem Firmen-Layout. Eigener Generator, ohne neue Abhängigkeit.
+- **Klickstrecke als BPMN 2.0 (W-07):** Start, Aufgabe je Station, parallele Wege zwischen exklusivem Gateway und Zusammenführung, Ende – mit Diagramm für Camunda Modeler oder bpmn.io.
+- **Zwischenbilder aus Videos (W-10):** kurz geöffnete Menüs und Dialoge (bis 2 s) zusätzlich zu den Standbildern, rot umrahmt; abschaltbar mit `MEDIA_TRANSIENT_STILLS=false`.
+- Seite „Vorher/Nachher“ (auch in der Barrierefreiheitsprüfung); Tests T-336 … T-339, E2E T-340 (axe); Anforderungen NFR-135 … NFR-137; Migration 059.
+
 ## 0.52.0 – Etappe 52 (24.10.2026)
 
 ### Hinzugefügt

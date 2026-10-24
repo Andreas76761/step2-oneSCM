@@ -5,7 +5,7 @@ import { escapeAlt } from './media.js';
 import { finalize, marker, type LocatedMarkdown } from './pptx.js';
 
 export interface Cue { start: number; end: number; text: string }
-export interface Still { time: number; sha: string; alt: string }
+export interface Still { time: number; sha: string; alt: string; /** Zwischenbild eines kurzen Zustands (ADR-106, W-10) */ kind?: 'transient' }
 
 const BLOCK_SECONDS = 120;
 const PARA_SECONDS = 30;

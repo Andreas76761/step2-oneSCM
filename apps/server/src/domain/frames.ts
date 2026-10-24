@@ -51,3 +51,40 @@ export function selectChanges(frames: Gray[], minRatio = 0.02): { index: number;
   }
   return out;
 }
+
+/**
+ * Zwischenbilder (ADR-106, W-10): kurze Zustände wie ein geöffnetes Menü oder ein Dialog, die nach höchstens
+ * `maxFrames` Bildern wieder verschwinden (der Bildschirm kehrt zum Zustand davor zurück). Erkannt wird ein Wechsel
+ * gegenüber dem stabilen Zustand ab `minRatio` und die Rückkehr unter `minRatio`; behalten wird das Bild mit der
+ * größten Änderung, umrahmt wird der geänderte Bereich.
+ */
+export function selectTransients(frames: Gray[], opts: { minRatio?: number; maxFrames?: number } = {}): { index: number; length: number; box: Box | null; ratio: number }[] {
+  const minRatio = opts.minRatio ?? 0.02;
+  const maxFrames = opts.maxFrames ?? 4;
+  const out: { index: number; length: number; box: Box | null; ratio: number }[] = [];
+  let i = 1;
+  while (i < frames.length) {
+    const base = frames[i - 1];
+    const c = changeOf(base, frames[i]);
+    if (c.ratio < minRatio) {
+      i++;
+      continue;
+    }
+    // Ende des kurzen Zustands suchen: erstes Bild, das wieder dem Zustand davor gleicht
+    let end = -1;
+    let best = { index: i, ...c };
+    for (let k = i + 1; k < frames.length && k - i <= maxFrames; k++) {
+      if (changeOf(base, frames[k]).ratio < minRatio) {
+        end = k;
+        break;
+      }
+      const ck = changeOf(base, frames[k]);
+      if (ck.ratio > best.ratio) best = { index: k, ...ck };
+    }
+    if (end > 0) {
+      out.push({ index: best.index, length: end - i, box: best.ratio >= 0.6 ? null : best.box, ratio: best.ratio });
+      i = end + 1;
+    } else i++;
+  }
+  return out;
+}

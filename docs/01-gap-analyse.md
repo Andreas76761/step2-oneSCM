@@ -195,6 +195,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.55 Stand nach Etappe 53 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Vorher/Nachher-Belege mit Schieberegler, Anlass/Änderung/Wirkung, Gegenüberstellung im Archiv (W-05, NFR-135) | ✅ ([ADR-106](adr/ADR-106-vorher-nachher-pptx-zwischenbilder.md)) |
+| Ausgabe als PowerPoint, Klickstrecke als BPMN 2.0 mit Diagramm (W-07, NFR-136) | ✅ |
+| Zwischenbilder kurzer Zustände aus Videos (W-10, NFR-137) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; W-11 Textbausteine (später); schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
 ## 1.54 Stand nach Etappe 52 (24.10.2026)
 
 | Punkt | Ergebnis |

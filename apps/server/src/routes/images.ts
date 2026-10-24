@@ -4,7 +4,8 @@ import { audit, getSettings, type Ctx } from '../context.js';
 import { badRequest, Problem } from '../problem.js';
 import { addImageVersion, createPlaceholder, exportCoverageMatrix, imageCoverage, imageCoverageMatrix, linkVariant, listImageArchive, unlinkVariant, updateImageMeta } from '../services/imageArchive.js';
 import { detectRedaction, getRedaction, updateRedaction } from '../services/imageRedaction.js';
-import { createClickpath, deleteClickpath, getClickpath, listClickpaths, updateClickpath } from '../services/clickpaths.js';
+import { createComparison, deleteComparison, getComparison, listComparisons, renderComparison, updateComparison } from '../services/imageComparisons.js';
+import { clickpathBpmnFile, createClickpath, deleteClickpath, getClickpath, listClickpaths, updateClickpath } from '../services/clickpaths.js';
 import { userOf } from './helpers.js';
 
 type P = { Params: { mediaSha: string } };
@@ -27,11 +28,32 @@ export function imageRoutes(app: FastifyInstance, _ctx: Ctx) {
     return createClickpath(req.ctx, req.body ?? {}, user);
   });
   app.get<{ Params: { clickpathId: string } }>('/image-clickpaths/:clickpathId', async (req) => (userOf(req.ctx, req), getClickpath(req.ctx, req.params.clickpathId)));
+  app.get<{ Params: { clickpathId: string } }>('/image-clickpaths/:clickpathId/bpmn', async (req, reply) => {
+    userOf(req.ctx, req);
+    const f = await clickpathBpmnFile(req.ctx, req.params.clickpathId);
+    reply.header('Content-Type', 'application/xml; charset=utf-8').header('Content-Disposition', `attachment; filename="${f.fileName}"`);
+    return f.body;
+  });
   app.put<{ Params: { clickpathId: string }; Body: any }>('/image-clickpaths/:clickpathId', async (req) => updateClickpath(req.ctx, req.params.clickpathId, req.body ?? {}, userOf(req.ctx, req, 'edit')));
   app.delete<{ Params: { clickpathId: string } }>('/image-clickpaths/:clickpathId', async (req, reply) => {
     await deleteClickpath(req.ctx, req.params.clickpathId, userOf(req.ctx, req, 'edit'));
     reply.code(204);
   });
+  // Vorher/Nachher-Belege (ADR-106, W-05)
+  type C = { Params: { comparisonId: string } };
+  app.get<{ Querystring: { sha?: string } }>('/image-comparisons', async (req) => (userOf(req.ctx, req), listComparisons(req.ctx, { sha: req.query.sha || undefined })));
+  app.post<{ Body: any }>('/image-comparisons', async (req, reply) => {
+    const user = userOf(req.ctx, req, 'edit');
+    reply.code(201);
+    return createComparison(req.ctx, (req.body ?? {}) as Record<string, unknown>, user);
+  });
+  app.get<C>('/image-comparisons/:comparisonId', async (req) => (userOf(req.ctx, req), getComparison(req.ctx, req.params.comparisonId)));
+  app.patch<C & { Body: any }>('/image-comparisons/:comparisonId', async (req) => updateComparison(req.ctx, req.params.comparisonId, (req.body ?? {}) as Record<string, unknown>, userOf(req.ctx, req, 'edit')));
+  app.delete<C>('/image-comparisons/:comparisonId', async (req, reply) => {
+    await deleteComparison(req.ctx, req.params.comparisonId, userOf(req.ctx, req, 'edit'));
+    reply.code(204);
+  });
+  app.post<C>('/image-comparisons/:comparisonId/render', async (req) => renderComparison(req.ctx, req.params.comparisonId, userOf(req.ctx, req, 'edit')));
   // Deckungsmatrix (ADR-092, F-30): Stelle × Sprache/Rolle/Sparte
   app.get<{ Querystring: { rows?: string; dims?: string } }>('/image-archive/coverage-matrix', async (req) => (userOf(req.ctx, req), imageCoverageMatrix(req.ctx, { rows: req.query.rows, dims: req.query.dims?.split(',').filter(Boolean) })));
   app.get<{ Querystring: { rows?: string; dims?: string; format?: string } }>('/image-archive/coverage-matrix/export', async (req, reply) => {

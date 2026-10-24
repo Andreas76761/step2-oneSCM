@@ -69,7 +69,7 @@ export function ExportPage() {
             <label>Markt <select value={market} onChange={(e) => setMarket(e.target.value)}><option value="">alle</option>{ref?.markets.map((m) => <option key={m.code}>{m.code}</option>)}</select></label>
             <label>Release <select value={release} onChange={(e) => setRelease(e.target.value)}><option value="">alle</option>{ref?.releases.map((m) => <option key={m.code}>{m.code}</option>)}</select></label>
             <label>Stand (Release) <input value={asOf} onChange={(e) => setAsOf(e.target.value)} placeholder={release || 'z. B. 2026.3'} size={10} title="Kapitel mit späterem „gültig ab“ werden ausgeblendet; leer = Release-Filter" /></label>
-            <label>Format <select value={format} onChange={(e) => setFormat(e.target.value)}><option value="md">Markdown</option><option value="html">HTML (druckfähig)</option><option value="pdf">PDF</option><option value="docx">Word (.docx)</option><option value="json">JSON</option></select></label>
+            <label>Format <select value={format} onChange={(e) => setFormat(e.target.value)}><option value="md">Markdown</option><option value="html">HTML (druckfähig)</option><option value="pdf">PDF</option><option value="docx">Word (.docx)</option><option value="pptx">PowerPoint (.pptx)</option><option value="json">JSON</option></select></label>
           </div>
           <div className="form-row">
             <label>Ausgabe
@@ -102,7 +102,7 @@ export function ExportPage() {
                   Zukunfts-Inhalte, nicht im Export (Stand {result.asOf}): {result.future.map((f: any) => `„${f.title}“ (gültig ab ${f.validFrom})`).join(', ')}
                 </div>
               )}
-              {result.preview === null ? <p className="muted">{result.format === 'docx' ? 'Word-Dokument' : 'PDF'} erstellt ({Math.round(result.byteSize / 1024)} KB) – Vorschau nach dem Herunterladen.</p>
+              {result.preview === null ? <p className="muted">{result.format === 'docx' ? 'Word-Dokument' : result.format === 'pptx' ? 'PowerPoint-Präsentation' : 'PDF'} erstellt ({Math.round(result.byteSize / 1024)} KB) – Vorschau nach dem Herunterladen.</p>
                 : result.format === 'json' ? <pre tabIndex={0} aria-label="Quelltext" className="source small">{result.preview}</pre> : <div className="export-preview" tabIndex={0} role="region" aria-label="Exportvorschau"><Md text={result.preview} /></div>}
             </>
           )}

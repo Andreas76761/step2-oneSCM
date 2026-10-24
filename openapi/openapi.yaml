@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.52.0
+  version: 0.53.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -360,7 +360,7 @@ components:
         divisions: { type: array, items: { $ref: '#/components/schemas/DivisionCode' } }
         market: { type: [string, 'null'] }
         release: { type: [string, 'null'] }
-        format: { type: string, enum: [md, html, pdf, docx, json], default: md, description: 'docx: Word mit Formatvorlagen und Firmen-Layout (ADR-038)' }
+        format: { type: string, enum: [md, html, pdf, docx, pptx, json], default: md, description: 'docx: Word mit Formatvorlagen und Firmen-Layout (ADR-038); pptx: PowerPoint 16:9 mit Titelfolie, Übersicht je Kapitel, Inhaltsfolien je Abschnitt und einer Folie je Bild (ADR-106, W-07)' }
         outlineId: { type: string, description: 'Handbuch-Variante (ADR-034): freigegebene Kapitel dieser Gliederung, Filter aus ihrer Variante' }
         appendices: { type: boolean, description: 'Verzeichnisse (Abkürzungen, Glossar, Bildverzeichnis, FAQ) anhängen; Standard bei Varianten: true' }
         profile: { type: string, enum: [full, quickguide, onepager, summary], default: full, description: 'Ausgabeprofil (ADR-085, F-27): Quick Guide = Voraussetzungen, Schritte, Ergebnis, Warnungen; One Pager = Zweck kurz, Schritte, Warnungen (Kapitel ohne Schritte entfallen); Kurzfassung (ADR-105, S-05) = je Kapitel ein Absatz mit etwa einem Viertel der Länge' }
@@ -5091,6 +5091,95 @@ paths:
         '201': { description: '{ id, title, steps, perRow, baseSha, alt, markdown, url, createdBy, createdAt, updatedBy, updatedAt }' }
         '400': { $ref: '#/components/responses/Problem' }
         '403': { $ref: '#/components/responses/Problem' }
+  /image-clickpaths/{clickpathId}/bpmn:
+    get:
+      operationId: getClickpathBpmn
+      summary: 'Klickstrecke als BPMN 2.0 mit Diagramm (ADR-106, W-07): Start, je Station eine Aufgabe, parallele Wege 3a/3b zwischen exklusivem Gateway und Zusammenführung, Ende'
+      tags: [Bilder]
+      x-requirements: [NFR-136]
+      x-extension: true
+      parameters: [{ name: clickpathId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'BPMN-XML', content: { application/xml: { schema: { type: string } } } }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-comparisons:
+    get:
+      operationId: listImageComparisons
+      summary: 'Vorher/Nachher-Belege (ADR-106, W-05), optional zu einem Bild (sha: alle Belege seiner Fassungen)'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      parameters: [{ name: sha, in: query, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, title, before: { sha, url, versionNo }, after, baseSha, reason, change, effect, ticket, renderedSha, markdown }]' }
+    post:
+      operationId: createImageComparison
+      summary: 'Beleg anlegen: Vorher- und Nachher-Bild (meist zwei Fassungen desselben Bildes) mit Anlass, Änderung, Wirkung und Ticket (Berechtigung edit)'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [beforeSha, afterSha], properties: { beforeSha: { type: string }, afterSha: { type: string }, title: { type: string, maxLength: 120 }, reason: { type: string, maxLength: 500 }, change: { type: string, maxLength: 500 }, effect: { type: string, maxLength: 500 }, ticket: { type: string, maxLength: 40 } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Beleg' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-comparisons/{comparisonId}:
+    get:
+      operationId: getImageComparison
+      summary: 'Vorher/Nachher-Beleg'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      parameters: [{ name: comparisonId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Beleg' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateImageComparison
+      summary: 'Titel, Anlass, Änderung, Wirkung oder Ticket ändern (Berechtigung edit)'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      parameters: [{ name: comparisonId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { title: { type: string }, reason: { type: string }, change: { type: string }, effect: { type: string }, ticket: { type: string } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Beleg' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteImageComparison
+      summary: 'Beleg löschen; eine erzeugte Gegenüberstellung bleibt im Archiv (Berechtigung edit)'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      parameters: [{ name: comparisonId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /image-comparisons/{comparisonId}/render:
+    post:
+      operationId: renderImageComparison
+      summary: 'Gegenüberstellung Vorher | Nachher mit Anlass, Änderung und Wirkung als PNG im Bildarchiv ablegen; erneut erzeugt = neue Fassung desselben Bildes (Berechtigung edit)'
+      tags: [Bilder]
+      x-requirements: [NFR-135]
+      x-extension: true
+      parameters: [{ name: comparisonId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Beleg mit renderedSha und markdown' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
   /image-clickpaths/{clickpathId}:
     get:
       operationId: getClickpath

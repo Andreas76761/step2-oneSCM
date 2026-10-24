@@ -1401,5 +1401,32 @@
     "documentation": [
       "docs/adr/ADR-105-textvarianten-pruefprofile.md"
     ]
+  },
+  {
+    "id": "NFR-135",
+    "title": "Vorher/Nachher-Belege: zwei Bilder bzw. Fassungen mit Anlass, Änderung und Wirkung, Schieberegler in der Oberfläche, Gegenüberstellung als Bild im Archiv",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-106-vorher-nachher-pptx-zwischenbilder.md"
+    ]
+  },
+  {
+    "id": "NFR-136",
+    "title": "Ausgabe als PowerPoint (16:9, Titel-, Übersichts-, Inhalts- und Bildfolien) und Klickstrecke als BPMN 2.0 mit Diagramm",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-106-vorher-nachher-pptx-zwischenbilder.md"
+    ]
+  },
+  {
+    "id": "NFR-137",
+    "title": "Zwischenbilder aus Videos: kurze Zustände (Menü, Dialog) bis 2 s zusätzlich zu den Standbildern, abschaltbar",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-106-vorher-nachher-pptx-zwischenbilder.md"
+    ]
   }
 ]

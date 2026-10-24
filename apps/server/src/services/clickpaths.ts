@@ -7,6 +7,7 @@ import { createCanvas, GlobalFonts, loadImage, type SKRSContext2D } from '@napi-
 import { audit, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson } from '../db.js';
 import { clickpathAlt, normalizeStations, stationLabels, type ClickStation } from '../domain/clickpath.js';
+import { clickpathBpmn } from '../domain/bpmn.js';
 import { sha256 } from '../domain/similarity.js';
 import { badRequest, notFound } from '../problem.js';
 import { addImageVersion, listImageArchive, updateImageMeta } from './imageArchive.js';
@@ -22,7 +23,7 @@ const COLOR = '#0b5cad';
 
 let fonts = false;
 /** Schrift für Beschriftungen: Roboto aus pdfmake – auch im Container ohne Systemschriften */
-function ensureFont() {
+export function ensureFont() {
   if (fonts) return;
   fonts = true;
   try {
@@ -34,7 +35,7 @@ function ensureFont() {
   }
 }
 
-function lines(g: SKRSContext2D, text: string, width: number, max = 2) {
+export function lines(g: SKRSContext2D, text: string, width: number, max = 2) {
   const out: string[] = [];
   let cur = '';
   for (const w of text.split(' ')) {
@@ -211,6 +212,13 @@ async function withImage(ctx: Ctx, r: any) {
 
 export async function getClickpath(ctx: Ctx, id: string) {
   return withImage(ctx, await row(ctx, id));
+}
+
+/** Klickstrecke als BPMN 2.0 mit Diagramm (ADR-106, W-07) */
+export async function clickpathBpmnFile(ctx: Ctx, id: string) {
+  const d = dto(await row(ctx, id));
+  const slug = d.title.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/ß/g, 'ss').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'klickstrecke';
+  return { fileName: `klickstrecke-${slug}.bpmn`, body: clickpathBpmn(d.title, d.steps, id) };
 }
 
 /** Neue Klickstrecke: Bild zeichnen, im Archiv ablegen (Bildunterschrift = Titel), Definition speichern */

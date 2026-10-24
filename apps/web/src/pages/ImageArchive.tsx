@@ -396,6 +396,7 @@ function ClickpathBuilder({ images, onDone }: { images: any[]; onDone: () => voi
           </select>
         </label>
       )}
+      {editId && <p className="small"><DownloadButton className="btn small" href={`/api/v1/image-clickpaths/${editId}/bpmn`} name="klickstrecke.bpmn">⬇ Als BPMN 2.0 (Prozessmodell)</DownloadButton></p>}
       <div className="filters">
         <label className="grow">Titel der Klickstrecke <input value={title} maxLength={120} placeholder="z. B. Vertrag anlegen" onChange={(e) => setTitle(e.target.value)} /></label>
         <label>Stationen je Zeile <select value={perRow} onChange={(e) => setPerRow(Number(e.target.value))}>{[2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n}</option>)}</select></label>
