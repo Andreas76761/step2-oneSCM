@@ -158,7 +158,7 @@ export function ExportPage() {
         </Card>
       </div>
       <Card title="Designvorlagen">
-        <p className="small muted">Druckfähige HTML-Vorlagen (im Browser als PDF speichern). Marke, Logo und Texte kommen aus dem Firmen-Layout unter Einstellungen; das Muster zeigt fiktive Inhalte.</p>
+        <p className="small muted">Zwei Vorlagen für HTML, PDF, Word und PowerPoint, jeweils mit Prüfbericht zur Barrierefreiheit. Marke, Logo und Texte kommen aus dem Firmen-Layout unter Einstellungen; das Muster zeigt fiktive Inhalte.</p>
         <ErrorBox error={templates.error} />
         {templates.data && (
           <p className="small" role="note">

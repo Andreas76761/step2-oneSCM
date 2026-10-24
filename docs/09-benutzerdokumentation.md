@@ -117,13 +117,20 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 
 - **Leseransicht:** Handbuch lesen, suchen, Lesezeichen, „Weiter mit …“, Drucken mit Deckblatt im Firmen-Layout. Unter **Einstellungen → Layout** wählt die Administration den Stil für Leseransicht, Druck und Online-Hilfe. „Handbuch-Kapitel“ übernimmt Farben, Schriften, Balken und Hinweisboxen der Designvorlage samt Anpassung – auch in der Kontexthilfe in oneSCM; im dunklen Modus bleiben die Textfarben der App.
 - **Export:** Markdown, HTML, PDF, Word, PowerPoint – gefiltert nach Rolle, Sparte, Markt; Quick Guide, One Pager, Kurzfassung (Management, je Kapitel ein Absatz), Lesefassung. Mit **Stand (Release)** blendet der Export Kapitel aus, deren „gültig ab“ später liegt (Zukunfts-Inhalte); das Ergebnis nennt sie.
-  - **Designvorlagen** (Format HTML, Auswahl „Design“):
+  - **Designvorlagen** (Auswahl „Design“ bei HTML, PDF, Word und PowerPoint):
     - **Quick Reference Guide:** A4 quer, kompakt, Profil Quick Guide.
     - **Handbuch-Kapitel (Fachdokumentation):** A4 hoch, ausführlich.
   - Die Karte „Designvorlagen“ unten auf der Seite zeigt mit „Muster ansehen“ jede Vorlage mit fiktiven Inhalten. „Für den Export wählen“ stellt Format, Design und Profil ein.
-  - **Barrierefreiheit:** Nach jedem PDF-Export zeigt „Barrierefreiheit (PDF)“ neun Prüfungen: getaggt, Strukturbaum, Sprache, Titel, Fenstertitel, Lesezeichen, Überschriften, Alternativtexte, Tabellenköpfe. PDF im Design besteht sie; das Standard-PDF ist nicht getaggt. Eine vollständige PDF/UA-Prüfung erledigt ein Prüfwerkzeug wie PAC oder veraPDF.
-  - **Barrierefreiheit Word und PowerPoint:** Nach jedem Word- bzw. PowerPoint-Export zeigt „Barrierefreiheit (Word)“ bzw. „(PowerPoint)“: Titel, Sprache, Überschriften bzw. „Jede Folie mit Titel“, Bilder mit Alternativtext (Icons sind als dekorativ markiert und zählen nicht), Tabellen mit Kopfzeile. Fehlt ein Alternativtext, ergänzen Sie ihn im Kapitel am Bild.
-  - **Barrierefreiheit HTML:** Nach jedem HTML-Export zeigt „Barrierefreiheit (HTML)“: Sprache, Seitentitel, Hauptbereich, Überschriften ohne übersprungene Ebene, Bilder mit Alternativtext, Icons, Tabellen mit Kopfzellen, Links mit erkennbarem Namen.
+  - **Prüfbericht Barrierefreiheit:** Nach jedem Export als PDF, Word, PowerPoint oder HTML zeigt die Karte „Barrierefreiheit (…)“, ob die Grundlagen erfüllt sind (Häkchen bzw. Kreuz je Prüfung):
+
+    | Format | Prüfungen |
+    |---|---|
+    | PDF | getaggt, Strukturbaum, Sprache, Titel, Fenstertitel, Lesezeichen, Überschriften, Alternativtexte, Tabellenköpfe – PDF im Design besteht sie, das Standard-PDF ist nicht getaggt |
+    | Word | Titel, Sprache, Überschriften als Formatvorlage, Bilder mit Alternativtext, Tabellen mit Kopfzeile |
+    | PowerPoint | Titel, Sprache, jede Folie mit Titel, Bilder mit Alternativtext, Tabellen mit Kopfzeile |
+    | HTML | Sprache, Seitentitel, Hauptbereich, Überschriften ohne übersprungene Ebene, Bilder mit Alternativtext, Icons, Tabellen mit Kopfzellen, Links mit erkennbarem Namen |
+
+    Icons sind als dekorativ markiert und zählen nicht als Bild. Fehlt ein Alternativtext, ergänzen Sie ihn im Kapitel am Bild; eine Tabelle erhält ihre Kopfzeile aus der ersten Markdown-Zeile. Der Bericht prüft die Grundlagen, keine Normkonformität: Eine vollständige Prüfung erledigt ein Werkzeug wie PAC oder veraPDF (PDF) bzw. die Barrierefreiheitsprüfung in Office.
   - **PDF im Design:** Ist auf dem Server ein Browser eingerichtet (Hinweis „PDF im Design ist eingerichtet“), wählen Sie Format PDF und das Design. Das PDF entsteht direkt, „Muster als PDF“ lädt das Muster herunter.
   - **Word im Design:** Format Word (.docx) und das Design wählen; „Muster als Word“ lädt das Muster. Das Dokument hat Formatvorlagen (Überschrift 1/2) und lässt sich in Word weiterbearbeiten. Die Prüffassung gibt es nur im Standard-Design.
   - **PowerPoint im Design:** Format PowerPoint (.pptx) und das Design wählen; „Muster als PowerPoint“ lädt das Muster. Der Foliensatz hat eine Titelfolie mit Überblick (Quick Reference Guide) bzw. Kennzahlen (Handbuch-Kapitel) und je Abschnitt eigene Folien; lange Inhalte laufen auf „(Fortsetzung)“ weiter.
@@ -151,13 +158,14 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 - **Release-Abgleich, Releaseletter:** Jira-Tickets gegen den Bestand prüfen; Releaseletter mit Prüfregeln.
   - **Einstufung je Ticket** (Berechtigung „Entscheiden“): genehmigt, in Prüfung, intern oder Background. Intern und Background fließen nicht in Kapitel; Background zählt nur in der Lückenanalyse und erscheint in keinem Releaseletter. Ohne Einstufung gilt Bug = intern, sonst „in Prüfung“.
   - **Aus Projektvergleich erzeugen:** Releaseletter-Entwurf aus zwei Handbuch-Releases.
-- **Kontexthilfe:** Hilfe-Widget für oneSCM (F1 je Maske).
+- **Kontexthilfe:** Hilfe-Widget für oneSCM (F1 je Maske); mit dem Lesestil „Handbuch-Kapitel“ in Farben und Schriften der Designvorlage, Hinweisboxen mit Icon und Beschriftung.
 
 ## 9. Typische Arbeitsabläufe
 
 1. **Wissen aufbauen:** Einlesen → Chunks mit Labels → Fragen & Antworten → Antwortqualität prüfen → Lücken in die Expertenbefragung → Antworten als Frage & Antwort (Label „Prüfen“) → später durch Quellen belegen.
 2. **Kapitel erstellen:** Kapitelanweisung festlegen (Kapitelsteuerung) → Quellen einlesen → Qualitätsanalyse (Widersprüche, Dopplungen) → Kapitelgenerator oder Kapitel-Assistent → Kapitelwerkstatt → Anleitungs-Check → Freigabe → Export/Veröffentlichung.
 3. **Screenshots pflegen:** Bild ins Archiv (oder Platzhalter) → Datenschutz im Bild prüfen (erkannte Stellen, ggf. eigene Stellen) → Merkmale, Labels und Kapitel → Varianten verknüpfen → Klickstrecke → Deckungsmatrix auf Lücken prüfen → neue Fassung bei neuem Release.
+4. **Handbuch im Design ausgeben:** Einstellungen → Layout (Marke, Logo, Fußzeile, Links) → Designvorlage anpassen (Farben mit Kontrastprüfung, Schriften) → „Muster ansehen“ → Export mit Format und Design → Prüfbericht Barrierefreiheit ohne Kreuz → herunterladen bzw. als Release veröffentlichen.
 
 ## 10. Datenschutz
 

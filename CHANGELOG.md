@@ -15,6 +15,15 @@
 - Standard-HTML: Kapitel im Hauptbereich (`<main>`), damit Screenreader direkt zum Inhalt springen.
 - T-377 prüft „ohne Bericht“ mit Markdown statt HTML.
 
+### Behoben
+- Export-Seite: Kontrollkästchen „Lesefassung“ und „Weiter mit …“ stehen wieder neben ihrer Beschriftung (`label.inline` in Formularzeilen).
+- Export-Seite: Text der Karte „Designvorlagen“ nennt alle vier Formate statt nur HTML.
+- T-357 wartet nach dem Benutzerwechsel, bis die Startseite neu aufgebaut ist (scheiterte unter Last).
+
+### Dokumentation
+- Benutzerdokumentation: Prüfbericht Barrierefreiheit als Übersicht je Format, Designvorlagen für alle vier Formate, Arbeitsablauf „Handbuch im Design ausgeben“, Kontexthilfe im Lesestil.
+- Stand von docs/10 und der Doku-Übersicht im README auf v0.69.
+
 ## 0.68.0 – Etappe 68 (24.10.2026)
 
 ### Hinzugefügt

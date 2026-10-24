@@ -317,7 +317,7 @@ h1:focus, h1:focus-visible { outline: none; }
 .cmp-moved { border-left-color: var(--primary); }
 
 /* Analytik (ADR-023) */
-label.inline { display: inline-flex; align-items: center; gap: 6px; }
+label.inline { display: inline-flex; flex-direction: row; align-items: center; gap: 6px; }
 .chart { margin: 0; }
 .chart svg { width: 100%; height: auto; display: block; }
 .chart .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 13px; margin-top: 6px; }

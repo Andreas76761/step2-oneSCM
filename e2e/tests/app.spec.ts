@@ -3235,7 +3235,8 @@ test('[T-357] Oberfläche mit einheitlichen SVG-Icons: Navigation, Startseite un
   await expect(nav.getByRole('link', { name: 'Schreibstil', exact: true })).toBeVisible();
   // Startseite: Aufgaben-Kacheln mit Icon
   const tasks = page.getByRole('navigation', { name: 'Hauptaufgaben' });
-  expect(await tasks.locator('.task-icon svg').count()).toBe(5);
+  // wartet, bis die Startseite nach dem Benutzerwechsel neu aufgebaut ist
+  await expect(tasks.locator('.task-icon svg')).toHaveCount(5);
   expect(emoji.test(await tasks.innerText())).toBe(false);
   expect(await axe()).toEqual([]);
   // eingeklappt: nur Icons, Namen bleiben als zugänglicher Name erhalten
