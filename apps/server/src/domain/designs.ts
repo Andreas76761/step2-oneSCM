@@ -19,6 +19,70 @@ export const DESIGN_INFO: Record<Exclude<Design, 'standard'>, { name: string; de
   },
 };
 
+/**
+ * Anpassung je Designvorlage (ADR-114): Hauptfarbe (Text, Links, Überschriften), Akzent (Rahmen, Icons), Warnfarbe,
+ * Schriften und Logo-Position. Farben werden vor dem Einsetzen ins CSS geprüft (#rrggbb, Kontrast).
+ */
+export interface DesignTheme {
+  primary: string;
+  accent: string;
+  warn: string;
+  headingFont: DesignFont;
+  bodyFont: DesignFont;
+  logo: 'right' | 'left' | 'none';
+}
+export const DESIGN_FONTS = ['serif', 'sans'] as const;
+export type DesignFont = (typeof DESIGN_FONTS)[number];
+export const LOGO_POSITIONS = ['right', 'left', 'none'] as const;
+/** Systemschriften (ohne Nachladen): Serifen wie im Muster, sonst serifenlos */
+const FONTS: Record<DesignFont, string> = {
+  serif: 'Georgia,"Times New Roman",serif',
+  sans: '"Segoe UI",system-ui,-apple-system,Roboto,"Open Sans",Arial,sans-serif',
+};
+export const DEFAULT_THEMES: Record<Exclude<Design, 'standard'>, DesignTheme> = {
+  quickref: { primary: '#0870ad', accent: '#3fa9e0', warn: '#d0021b', headingFont: 'serif', bodyFont: 'sans', logo: 'right' },
+  fachdoku: { primary: '#1f3a68', accent: '#2b5fad', warn: '#c8102e', headingFont: 'sans', bodyFont: 'sans', logo: 'right' },
+};
+
+/** Relative Leuchtdichte (WCAG 2.x) und Kontrast zu Weiß */
+function luminance(hex: string) {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+export const contrastToWhite = (hex: string) => 1.05 / (luminance(hex) + 0.05);
+
+/** Mindestkontrast zu Weiß: Text (Hauptfarbe, Warnfarbe) 4,5 : 1, Rahmen und Icons (Akzent) 3 : 1 (WCAG 1.4.3, 1.4.11) */
+export const THEME_CONTRAST = { primary: 4.5, accent: 3, warn: 4.5 } as const;
+const COLOR_LABEL = { primary: 'Hauptfarbe', accent: 'Akzentfarbe', warn: 'Warnfarbe' } as const;
+
+/** Anpassung prüfen und mit dem Standard der Vorlage vervollständigen; Fehler als Liste verständlicher Sätze */
+export function normalizeTheme(design: Exclude<Design, 'standard'>, input: Partial<Record<keyof DesignTheme, unknown>>): { theme: DesignTheme; issues: string[] } {
+  const base = DEFAULT_THEMES[design];
+  const theme: DesignTheme = { ...base };
+  const issues: string[] = [];
+  for (const k of ['primary', 'accent', 'warn'] as const) {
+    if (input[k] === undefined || input[k] === null || input[k] === '') continue;
+    const c = String(input[k]).trim().toLowerCase();
+    if (!/^#[0-9a-f]{6}$/.test(c)) {
+      issues.push(`${COLOR_LABEL[k]}: Farbe im Format #rrggbb angeben.`);
+      continue;
+    }
+    const ratio = contrastToWhite(c);
+    if (ratio < THEME_CONTRAST[k]) issues.push(`${COLOR_LABEL[k]} ${c} hat zu wenig Kontrast zu Weiß (${ratio.toFixed(2).replace('.', ',')} : 1, nötig ${String(THEME_CONTRAST[k]).replace('.', ',')} : 1).`);
+    else theme[k] = c;
+  }
+  for (const k of ['headingFont', 'bodyFont'] as const) {
+    if (input[k] === undefined || input[k] === null) continue;
+    if ((DESIGN_FONTS as readonly unknown[]).includes(input[k])) theme[k] = input[k] as DesignFont;
+    else issues.push(`${k === 'headingFont' ? 'Schrift der Überschriften' : 'Schrift des Textes'}: serif (mit Serifen) oder sans (serifenlos).`);
+  }
+  if (input.logo !== undefined && input.logo !== null) {
+    if ((LOGO_POSITIONS as readonly unknown[]).includes(input.logo)) theme.logo = input.logo as DesignTheme['logo'];
+    else issues.push('Logo-Position: right (rechts), left (links) oder none (ohne Logo).');
+  }
+  return { theme, issues };
+}
+
 export interface DesignBlock { kind: string; text: string }
 export interface DesignSection { code: string; title: string; blocks: DesignBlock[] }
 export interface DesignChapter { title: string; versionNo?: number; approvedAt?: string | null; validFrom?: string | null; sections: DesignSection[] }
@@ -42,6 +106,8 @@ export interface DesignOptions {
   lang?: string;
   /** Markdown → HTML (mit Bildern als data:-URI) */
   md: (text: string) => string;
+  /** Farben, Schriften und Logo-Position (ADR-114); Standard je Vorlage */
+  theme?: DesignTheme;
 }
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -76,25 +142,26 @@ ${body}
 
 // ---------------------------------------------------------------- Quick Reference Guide
 
-const QR_CSS = (o: DesignOptions) => `
-:root{--qr-line:#3fa9e0;--qr-ink:#1d1d1b;--qr-blue:#0870ad;--qr-title:#1b1b1b;--qr-red:#d0021b;--qr-redbg:#fdf0f0;--qr-muted:#6b7280}
+const QR_CSS = (o: DesignOptions, t: DesignTheme) => `
+:root{--qr-line:${t.accent};--qr-ink:#1d1d1b;--qr-blue:${t.primary};--qr-title:#1b1b1b;--qr-red:${t.warn};--qr-redbg:color-mix(in srgb,${t.warn} 6%,#fff);--qr-muted:#6b7280}
 *{box-sizing:border-box}
 @page{size:A4 landscape;margin:12mm 10mm 13mm;
  @bottom-left{content:${o.footerText ? `"Hinweis: ${o.footerText.replace(/["\\]/g, '')}"` : 'none'};font:8pt system-ui,sans-serif;color:#1d1d1b}
  @bottom-right{content:"STAND: ${o.asOf} | " counter(page) "/" counter(pages);font:8pt system-ui,sans-serif;letter-spacing:.18em;color:#4b5563}}
-body{margin:0;font:10.5pt/1.42 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:var(--qr-ink);background:#fff}
+body{margin:0;font:10.5pt/1.42 ${FONTS[t.bodyFont]};color:var(--qr-ink);background:#fff}
 .qr{max-width:297mm;margin:0 auto;padding:10px 14px}
 .qr-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:8px}
-.qr-head h1{font:400 25pt/1.1 Georgia,"Times New Roman",serif;margin:0;color:var(--qr-title);letter-spacing:-.01em}
+.qr-head h1{font:400 25pt/1.1 ${FONTS[t.headingFont]};margin:0;color:var(--qr-title);letter-spacing:-.01em}
 .qr-brand{display:flex;align-items:center;gap:8px;flex:none}
+.qr-head.logo-left{flex-direction:row-reverse;justify-content:flex-end}
 .qr-mark{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border:1.5px solid #9ca3af;border-radius:50%;color:#4b5563}
 .qr-logo{max-height:44px;max-width:120px}
-.qr-brandtext{display:flex;flex-direction:column;line-height:1.05;font:15pt Georgia,"Times New Roman",serif;color:#374151}
+.qr-brandtext{display:flex;flex-direction:column;line-height:1.05;font:15pt ${FONTS[t.headingFont]};color:#374151}
 .qr-brandtext em{color:var(--qr-blue);font-size:14pt}
 .qr-cols{column-count:2;column-gap:14px;column-fill:auto}
 .qr-card{border:1.5px solid var(--qr-line);border-radius:14px;padding:10px 14px 12px;margin:0 0 12px;break-inside:auto;-webkit-box-decoration-break:clone;box-decoration-break:clone;background:#fff}
 .qr-card.keep{break-inside:avoid}
-.qr-card h2{font:400 13pt/1.25 Georgia,"Times New Roman",serif;margin:0 0 8px;break-after:avoid;color:var(--qr-title);display:flex;align-items:center;gap:6px}
+.qr-card h2{font:400 13pt/1.25 ${FONTS[t.headingFont]};margin:0 0 8px;break-after:avoid;color:var(--qr-title);display:flex;align-items:center;gap:6px}
 .qr-card h2 .ic{color:var(--qr-blue);flex:none}
 .qr-card h3{font:600 10.5pt system-ui,sans-serif;margin:8px 0 4px}
 .qr p{margin:0 0 6px}
@@ -108,17 +175,17 @@ body{margin:0;font:10.5pt/1.42 "Segoe UI",system-ui,-apple-system,Roboto,Arial,s
 .qr img{float:right;max-width:46%;max-height:150px;margin:0 0 6px 10px;border:1px solid #d1d5db;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 .qr ol li::after,.qr-card::after{content:"";display:block;clear:both}
 .qr-hint strong:first-child{color:#111}
-.qr-warn{display:flex;gap:10px;align-items:flex-start;border:1.5px solid #e46b6b;background:var(--qr-redbg);border-radius:12px;padding:8px 12px;margin:8px 0 10px;break-inside:avoid}
+.qr-warn{display:flex;gap:10px;align-items:flex-start;border:1.5px solid color-mix(in srgb,${t.warn} 60%,#fff);background:var(--qr-redbg);border-radius:12px;padding:8px 12px;margin:8px 0 10px;break-inside:avoid}
 .qr-warn .ic{color:var(--qr-red);flex:none;margin-top:1px}
 .qr-warn strong{color:var(--qr-red)}
 .qr-warn p{margin:0}
 .qr-tip{border-left:3px solid var(--qr-line);padding:2px 0 2px 8px;margin:6px 0}
 .qr-interactive{color:var(--qr-blue);display:flex;align-items:center;gap:6px;margin:-2px 0 10px;font-size:10pt;break-inside:avoid}
 .qr-overview{margin:0 0 12px;break-inside:avoid}
-.qr-overview h2{font:400 13pt Georgia,"Times New Roman",serif;margin:0 0 6px;display:flex;align-items:center;gap:6px}
+.qr-overview h2{font:400 13pt ${FONTS[t.headingFont]};margin:0 0 6px;display:flex;align-items:center;gap:6px}
 .qr-overview h2 .ic{color:var(--qr-blue)}
 .qr-overview .qr-ovcols{column-count:2;column-gap:18px}
-.qr-overview h3{font:400 10.5pt Georgia,"Times New Roman",serif;color:var(--qr-red);margin:4px 0 2px;break-after:avoid}
+.qr-overview h3{font:400 10.5pt ${FONTS[t.headingFont]};color:var(--qr-red);margin:4px 0 2px;break-after:avoid}
 .qr-overview ul{list-style:none;padding-left:0;margin:0 0 6px}
 .qr-overview li{padding-left:14px;position:relative;break-inside:avoid}
 .qr-overview li::before{content:"•";position:absolute;left:2px;color:#374151}
@@ -148,6 +215,7 @@ function qrBlock(b: DesignBlock, o: DesignOptions): string {
 const QR_ICON: Record<string, DesignIcon> = { prerequisites: 'shield-check', steps: 'list-ordered', result: 'circle-check', purpose: 'info' };
 
 export function renderQuickRef(chapters: DesignChapter[], o: DesignOptions): string {
+  const t = o.theme ?? DEFAULT_THEMES.quickref;
   const multi = chapters.length > 1;
   // Überblick über die Prozesse: Kapitel mit römischer Nummer, darunter die Schritte in Kurzform
   const overview = chapters.some((c) => c.sections.some((s) => s.code === 'steps')) ? `<section class="qr-overview" aria-label="Überblick">
@@ -166,7 +234,7 @@ export function renderQuickRef(chapters: DesignChapter[], o: DesignOptions): str
   if (o.links) cards.push(`<section class="qr-card keep qr-links"><h2>${svgIcon('link', 18)}Wichtige Links und Ansprechpartner</h2>${o.md(o.links).replace(/<li>/g, `<li>${svgIcon('arrow-right', 14)}<span>`).replace(/<\/li>/g, '</span></li>')}</section>`);
   if (o.faq?.length) cards.push(`<section class="qr-card qr-faq"><h2>${svgIcon('circle-question-mark', 18)}Häufig gestellte Fragen und Antworten</h2><dl>${o.faq.map((f) => `<dt>${svgIcon('circle-question-mark', 14)}<span>${esc(f.question)}</span></dt><dd>${o.md(f.answer)}</dd>`).join('')}</dl></section>`);
   const body = `<main class="qr">
-<header class="qr-head"><h1>${esc(o.title)}</h1>${brandHtml(o, 'qr')}</header>
+<header class="qr-head${t.logo === 'left' ? ' logo-left' : ''}"><h1>${esc(o.title)}</h1>${t.logo === 'none' ? '' : brandHtml(o, 'qr')}</header>
 ${hasLinks ? `<p class="qr-interactive">${svgIcon('mouse-pointer-click', 16)}Dieses Dokument ist interaktiv – enthaltene Links können direkt geöffnet werden.</p>` : ''}
 <div class="qr-cols">
 ${overview}
@@ -174,27 +242,28 @@ ${cards.join('\n')}
 </div>
 <footer class="qr-foot"><span>${o.footerText ? `<strong>Hinweis</strong>: ${esc(o.footerText)}` : ''}</span><span class="stand">STAND: ${esc(o.asOf)}</span></footer>
 </main>`;
-  return doc(o, QR_CSS(o), body);
+  return doc(o, QR_CSS(o, t), body);
 }
 
 // ---------------------------------------------------------------- Handbuch-Kapitel (Fachdokumentation)
 
-const FD_CSS = (o: DesignOptions, label: string) => `
-:root{--fd-navy:#1f3a68;--fd-blue:#2b5fad;--fd-ink:#1f2933;--fd-muted:#5f6b7a;--fd-line:#d9dee5;--fd-th:#5f6b7a}
+const FD_CSS = (o: DesignOptions, label: string, t: DesignTheme) => `
+:root{--fd-navy:${t.primary};--fd-blue:${t.accent};--fd-ink:#1f2933;--fd-muted:#5f6b7a;--fd-line:#d9dee5;--fd-th:#5f6b7a}
 *{box-sizing:border-box}
 @page{size:A4;margin:18mm 16mm 16mm;
- @top-left{content:"${label.replace(/["\\]/g, '')}";font:700 8pt "Segoe UI",system-ui,sans-serif;letter-spacing:.04em;color:#1f3a68;border-bottom:1.5px solid #1f3a68;vertical-align:bottom;padding-bottom:3mm}
- @top-right{content:"Seite " counter(page) " von " counter(pages);font:8pt "Segoe UI",system-ui,sans-serif;color:#1f2933;border-bottom:1.5px solid #1f3a68;vertical-align:bottom;padding-bottom:3mm}
+ @top-left{content:"${label.replace(/["\\]/g, '')}";font:700 8pt "Segoe UI",system-ui,sans-serif;letter-spacing:.04em;color:${t.primary};border-bottom:1.5px solid ${t.primary};vertical-align:bottom;padding-bottom:3mm}
+ @top-right{content:"Seite " counter(page) " von " counter(pages);font:8pt "Segoe UI",system-ui,sans-serif;color:#1f2933;border-bottom:1.5px solid ${t.primary};vertical-align:bottom;padding-bottom:3mm}
  @bottom-left{content:"${(o.footerText ?? `${o.brand || 'oneSCM'} · Fach- und Handbuchdokumentation`).replace(/["\\]/g, '')}";font:7.5pt "Segoe UI",system-ui,sans-serif;color:#5f6b7a;border-top:1px solid #d9dee5;vertical-align:top;padding-top:2mm}
  @bottom-right{content:"${o.title.replace(/["\\]/g, '')}";font:7.5pt "Segoe UI",system-ui,sans-serif;color:#5f6b7a;border-top:1px solid #d9dee5;vertical-align:top;padding-top:2mm}}
-body{margin:0;font:9.5pt/1.55 "Segoe UI",system-ui,-apple-system,Roboto,"Open Sans",Arial,sans-serif;color:var(--fd-ink);background:#fff;text-align:justify;hyphens:auto}
+body{margin:0;font:9.5pt/1.55 ${FONTS[t.bodyFont]};color:var(--fd-ink);background:#fff;text-align:justify;hyphens:auto}
 .fd{max-width:210mm;margin:0 auto;padding:0}
 .fd-run{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.5px solid var(--fd-navy);padding-bottom:4px;margin-bottom:14px;font-size:8pt}
 .fd-run b{color:var(--fd-navy);letter-spacing:.04em;text-transform:uppercase}
 .fd-chapter{break-before:page}
 .fd-chapter:first-of-type{break-before:auto}
 .fd-titlerow{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
-.fd h1{font:700 21pt/1.15 "Segoe UI",system-ui,sans-serif;color:var(--fd-navy);margin:0 0 2px;text-align:left}
+.fd-titlerow.logo-left{flex-direction:row-reverse;justify-content:flex-end}
+.fd h1{font:700 21pt/1.15 ${FONTS[t.headingFont]};color:var(--fd-navy);margin:0 0 2px;text-align:left}
 .fd-sub{color:var(--fd-muted);font-size:10.5pt;margin:0 0 10px;text-align:left}
 .fd-brand{display:flex;align-items:center;gap:6px;color:var(--fd-navy);flex:none}
 .fd-mark{display:inline-flex;color:var(--fd-blue)}
@@ -203,12 +272,12 @@ body{margin:0;font:9.5pt/1.55 "Segoe UI",system-ui,-apple-system,Roboto,"Open Sa
 .fd-brandtext em{font-weight:400;color:var(--fd-muted);font-style:normal}
 .fd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 16px;break-inside:avoid}
 .fd-kpi{border:1px solid var(--fd-line);border-top:2px solid var(--fd-navy);border-radius:6px;padding:7px 10px;text-align:left}
-.fd-kpi .v{display:flex;align-items:center;gap:6px;font:700 15pt "Segoe UI",system-ui,sans-serif;color:var(--fd-navy)}
+.fd-kpi .v{display:flex;align-items:center;gap:6px;font:700 15pt ${FONTS[t.headingFont]};color:var(--fd-navy)}
 .fd-kpi .v .ic{color:var(--fd-blue)}
 .fd-kpi .l{font-size:8pt;color:var(--fd-muted);line-height:1.3}
-.fd h2{font:700 13pt/1.3 "Segoe UI",system-ui,sans-serif;color:var(--fd-navy);border-left:4px solid var(--fd-navy);padding-left:9px;margin:16px 0 6px;text-align:left;break-after:avoid}
-.fd h3{font:700 10.5pt "Segoe UI",system-ui,sans-serif;color:#1f2933;margin:12px 0 4px;text-align:left;break-after:avoid}
-.fd h4{font:700 9.5pt "Segoe UI",system-ui,sans-serif;margin:10px 0 3px}
+.fd h2{font:700 13pt/1.3 ${FONTS[t.headingFont]};color:var(--fd-navy);border-left:4px solid var(--fd-navy);padding-left:9px;margin:16px 0 6px;text-align:left;break-after:avoid}
+.fd h3{font:700 10.5pt ${FONTS[t.headingFont]};color:#1f2933;margin:12px 0 4px;text-align:left;break-after:avoid}
+.fd h4{font:700 9.5pt ${FONTS[t.headingFont]};margin:10px 0 3px}
 .fd p{margin:0 0 6px}
 .fd ul,.fd ol{margin:3px 0 8px;padding-left:18px;text-align:left}
 .fd li{margin:0 0 3px}
@@ -228,7 +297,7 @@ body{margin:0;font:9.5pt/1.55 "Segoe UI",system-ui,-apple-system,Roboto,"Open Sa
 .fd-box p:last-child{margin-bottom:0}
 .fd-box.info{border-left-color:var(--fd-blue)}.fd-box.info .t{color:#1f2933}.fd-box.info .t .ic{color:var(--fd-blue)}
 .fd-box.tip{border-left-color:#c76b00}.fd-box.tip,.fd-box.tip .t{color:#8a4b00}
-.fd-box.warn{border-left-color:#c8102e}.fd-box.warn,.fd-box.warn .t{color:#8b1220}
+.fd-box.warn{border-left-color:${t.warn}}.fd-box.warn,.fd-box.warn .t{color:color-mix(in srgb,${t.warn} 70%,#000)}
 .fd-box.xref{border:1px solid var(--fd-line);border-left:4px solid var(--fd-navy);border-radius:0 6px 6px 0}
 .fd-panel{border:1px solid var(--fd-line);border-radius:6px;padding:8px 12px;margin:8px 0 10px;text-align:left;break-inside:avoid}
 .fd-panel .t{font-weight:700;margin-bottom:2px}
@@ -244,6 +313,7 @@ function fdBlock(b: DesignBlock, o: DesignOptions): string {
 }
 
 export function renderFachdoku(chapters: DesignChapter[], o: DesignOptions): string {
+  const t = o.theme ?? DEFAULT_THEMES.fachdoku;
   const label = `${o.docLabel || `${o.brand || 'oneSCM'} Fachdokumentation`} · ${chapters.length === 1 ? chapters[0].title : o.title}`.toUpperCase();
   const parts = chapters.map((c, ci) => {
     const blocks = c.sections.flatMap((s) => s.blocks);
@@ -260,13 +330,13 @@ export function renderFachdoku(chapters: DesignChapter[], o: DesignOptions): str
     const sections = c.sections.map((s, si) => `<section><h2>${si + 1}. ${esc(s.title)}</h2>${s.blocks.map((b) => fdBlock(b, o)).join('\n')}</section>`).join('\n');
     return `<article class="fd-chapter" data-title="${esc(c.title)}">
 <div class="fd-run"><b>${esc(label)}</b><span>Kapitel ${ci + 1} von ${chapters.length}</span></div>
-<div class="fd-titlerow"><div><h1>${esc(c.title)}</h1><p class="fd-sub">${esc(sub)}</p></div>${ci === 0 ? brandHtml(o, 'fd') : ''}</div>
+<div class="fd-titlerow${t.logo === 'left' ? ' logo-left' : ''}"><div><h1>${esc(c.title)}</h1><p class="fd-sub">${esc(sub)}</p></div>${ci === 0 && t.logo !== 'none' ? brandHtml(o, 'fd') : ''}</div>
 <div class="fd-kpis">${kpis.map(([ic, v, l]) => `<div class="fd-kpi"><div class="v">${svgIcon(ic, 16)}${esc(v)}</div><div class="l">${esc(l)}</div></div>`).join('')}</div>
 ${sections}
 <div class="fd-foot"><span>${esc(o.footerText ?? `${o.brand || 'oneSCM'} · Fach- und Handbuchdokumentation`)}</span><span>${esc(c.title)} · Stand ${esc(o.asOf)}</span></div>
 </article>`;
   });
-  return doc(o, FD_CSS(o, label), `<main class="fd">\n${parts.join('\n')}\n</main>`);
+  return doc(o, FD_CSS(o, label, t), `<main class="fd">\n${parts.join('\n')}\n</main>`);
 }
 
 export function renderDesign(design: Exclude<Design, 'standard'>, chapters: DesignChapter[], o: DesignOptions): string {

@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.62.0 – Etappe 62 (24.10.2026)
+
+Wahl des Auftraggebers vom 24.10.2026: Designvorlagen anpassbar machen.
+
+### Hinzugefügt
+- **Designvorlagen anpassen (ADR-114)** je Vorlage und Projekt:
+  - Hauptfarbe, Akzentfarbe, Warnfarbe;
+  - Schrift der Überschriften und des Textes (mit Serifen oder serifenlos, nur Systemschriften);
+  - Logo rechts, links oder ohne.
+- **Prüfung:** Farben nur als `#rrggbb`; Kontrast zu Weiß mindestens 4,5 : 1 für Textfarben und 3 : 1 für Rahmen und Icons. Fehler kommen gesammelt als Sätze zurück.
+- **API:**
+  - `POST /design-templates/:id/preview`: Vorschau ohne Speichern.
+  - `PUT` und `DELETE /design-templates/:id/theme`: speichern bzw. zurücksetzen, nur Administration, im Audit-Protokoll.
+  - `GET /design-templates` mit `theme`, `defaultTheme`, `customized` und `minContrast`.
+- **Einstellungen:** Karte „Designvorlagen anpassen“ mit Farbwählern, Kontrastanzeige, Schriften, Logo-Position und einer Vorschau, die beim Ändern nachzieht (abgeschottetes iframe).
+- Export im Design (HTML und PDF), Muster und Muster als PDF übernehmen die Anpassung.
+- Tests T-365 (Darstellung, Prüfung), T-366 (API) und E2E T-367 (Oberfläche, axe); Anforderung NFR-149.
+
+### Geändert
+- Die Kontrastberechnung für Hausfarbe und Designvorlagen ist gemeinsam (`domain/designs.ts`); in der Oberfläche liegt sie in `contrast.ts`.
+
 ## 0.61.0 – Etappe 61 (24.10.2026)
 
 ### Hinzugefügt

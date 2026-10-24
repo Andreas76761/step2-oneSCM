@@ -102,7 +102,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 13. **Etappe 58 und 59 – Professionelle Icons (✅ umgesetzt, ADR-111):** Lucide statt Emoji in der ganzen Oberfläche (Wunsch des Auftraggebers vom 24.10.2026).
 14. **Etappe 60 – Designvorlagen (✅ umgesetzt, ADR-112):** Quick Reference Guide und Handbuch-Kapitel nach den gelieferten Mustern (Wunsch des Auftraggebers vom 24.10.2026). PDF direkt im Design folgt in Etappe 61.
 15. **Etappe 61 – PDF im Design (✅ umgesetzt, ADR-113):** lokaler Browser druckt die Vorlagen ohne Netz.
-16. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 24.10.2026 keine Auswahl), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+16. **Etappe 62 – Designvorlagen anpassen (✅ umgesetzt, ADR-114):** Farben, Schriften, Logo-Position je Vorlage (Wahl des Auftraggebers vom 24.10.2026).
+17. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 24.10.2026 keine Auswahl), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

@@ -1527,5 +1527,14 @@
     "documentation": [
       "docs/adr/ADR-113-pdf-im-design.md"
     ]
+  },
+  {
+    "id": "NFR-149",
+    "title": "Designvorlagen anpassen: Haupt-, Akzent- und Warnfarbe je Vorlage mit Kontrastprüfung (Text 4,5 : 1, Rahmen/Icons 3 : 1), Schriften, Logo-Position; Vorschau ohne Speichern; speichern/zurücksetzen nur Administration",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-114-designvorlagen-anpassen.md"
+    ]
   }
 ]

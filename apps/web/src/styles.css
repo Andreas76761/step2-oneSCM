@@ -922,3 +922,7 @@ div.reader-lang-note p { margin: 0; }
 .design-template h3 { margin: 0 0 6px; font-size: 1rem; display: flex; align-items: center; gap: 6px; }
 .design-template .actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .page-format { display: inline-block; border: 1px solid var(--border); border-radius: 999px; padding: 0 8px; margin-right: 4px; font-weight: 600; }
+/* Designvorlagen anpassen (ADR-114) */
+.theme-colors { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin: 8px 0; }
+.theme-color { display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }
+.theme-preview { width: 100%; height: 520px; border: 1px solid var(--border); border-radius: 8px; margin-top: 10px; background: #fff; }

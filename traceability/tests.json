@@ -2782,5 +2782,32 @@
     "requirements": [
       "NFR-148"
     ]
+  },
+  {
+    "id": "T-365",
+    "title": "Anpassung je Vorlage: Farben, Schriften und Logo-Position im CSS, Standard unverändert, Prüfung von Format, Kontrast und Auswahl",
+    "file": "apps/server/test/stage62.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-149"
+    ]
+  },
+  {
+    "id": "T-366",
+    "title": "Anpassung speichern (Administration), Vorschau ohne Speichern, Wirkung in Muster und Export, Firmen-Layout lässt sie stehen, zurücksetzen, Audit",
+    "file": "apps/server/test/stage62.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-149"
+    ]
+  },
+  {
+    "id": "T-367",
+    "title": "Designvorlagen anpassen in den Einstellungen: Kontrastprüfung sperrt Speichern, Vorschau folgt, speichern und zurücksetzen – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-149"
+    ]
   }
 ]

@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.61 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.62 (24.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -124,6 +124,11 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
   - **PDF im Design:** Ist auf dem Server ein Browser eingerichtet (Hinweis „PDF im Design ist eingerichtet“), wählen Sie Format PDF und das Design. Das PDF entsteht direkt, „Muster als PDF“ lädt das Muster herunter.
   - Sonst öffnen Sie die HTML-Datei im Browser und speichern sie über „Drucken → Als PDF speichern“. Kopf- und Fußzeilen mit Seitenzahl und Stand erscheinen dabei auf jeder Seite.
   - Marke, Logo und Fußzeile kommen aus **Einstellungen → Layout**. Dort gibt es auch „Zusatz unter der Marke“, „Dokumentart in der Kopfzeile“ und „Wichtige Links und Ansprechpartner“ (Markdown).
+  - **Designvorlagen anpassen** (Einstellungen, Administration):
+    - Je Vorlage Hauptfarbe, Akzentfarbe und Warnfarbe festlegen.
+    - Die Kontrastanzeige verlangt für Textfarben mindestens 4,5 : 1 und für Rahmen und Icons 3 : 1; sonst ist „Anpassung speichern“ gesperrt.
+    - Dazu die Schrift der Überschriften und des Textes (mit Serifen oder serifenlos) sowie das Logo (rechts, links, ohne).
+    - Die Vorschau zeigt das Muster sofort mit den Änderungen. „Auf Standard zurücksetzen“ stellt die Gestaltung des Musters wieder her.
 - **Textvarianten:** ein Kapitel in drei Fassungen nebeneinander – Endanwender (was zu tun ist), Fachtext (vollständig mit Rollen und Quellenstatus) und Kurzfassung für das Management (etwa ein Viertel der Länge) – mit Wortzahl und Download als Markdown. Die Kurzfassung entsteht aus Zweck, Ergebnis, Warnhinweisen und Ablauf; mit „Kurzfassung mit KI-Dienst“ formuliert ein lokaler KI-Dienst sie, ohne neue Zahlen hinzuzufügen.
 - **Textbausteine:** wiederkehrende Absätze einmal pflegen. „Wiederkehrende Absätze“ zeigt gleich lautende Absätze in mehreren Kapiteln; „Als Textbaustein anlegen“ übernimmt einen davon. „Gleiche Absätze verknüpfen“ verbindet die Kapitel mit dem Baustein, „In Kapitel einfügen“ setzt ihn ans Ende eines Abschnitts. Nach einer Änderung („Neue Fassung speichern“) sind die Kapitel „veraltet“; „In Kapitel aktualisieren“ übernimmt die Fassung in die Entwürfe – freigegebene Versionen bleiben bis zur nächsten Freigabe gültig. In der Werkstatt trägt ein verknüpfter Absatz das Kennzeichen „🧩 Textbaustein“; wer seinen Text ändert, löst die Verknüpfung.
 - **Vorher/Nachher:** zwei Fassungen eines Bildes aus dem Bildarchiv wählen und mit dem Schieberegler vergleichen (links Nachher, rechts Vorher). Anlass, Änderung, Wirkung und Ticket belegen die Änderung. „Als Bild ins Archiv“ legt die Gegenüberstellung als Bild ab; den angezeigten Verweis fügen Sie in ein Kapitel ein.

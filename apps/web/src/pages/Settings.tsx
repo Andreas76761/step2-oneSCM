@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, del, put } from '../api';
+import { contrast } from '../contrast';
+import { DesignThemeCard } from './DesignThemeCard';
 
 import { Decision, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
@@ -101,6 +103,7 @@ export function SettingsPage() {
           <p className="small muted">Die Datenschutzprüfung meldet außerdem E-Mail, Telefon, IBAN, Fahrgestellnummer, Kennzeichen, Benutzerkennung, Straßenadresse und Namen hinter Feldern wie „Autor:“ oder „Assignee:“. Treffer blockieren Freigabe und Export.</p>
         </Card>
         <LayoutCard />
+        <DesignThemeCard />
         <MarketReviewersCard />
         <LanguageToolCard />
         <Card title="KI-Umformulierung">
@@ -112,13 +115,6 @@ export function SettingsPage() {
       </div>
     </Page>
   );
-}
-
-/** Kontrast zu Weiß (WCAG) – die Hausfarbe dient als Hintergrund weißer Schrift und als Schriftfarbe */
-function contrast(hex: string) {
-  if (!/^#[0-9a-f]{6}$/i.test(hex)) return 0;
-  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-  return 1.05 / (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2] + 0.05);
 }
 
 /** Firmen-Layout (ADR-038) für PDF, HTML, Word und Online-Hilfe */

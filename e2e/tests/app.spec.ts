@@ -3344,3 +3344,40 @@ test('[T-364] PDF im Design: Hinweis auf den lokalen Browser, Muster als PDF, Ex
   const pdf = await (await request.get(exp.downloadUrl, { headers: h })).body();
   expect(pdf.subarray(0, 5).toString()).toBe('%PDF-');
 });
+
+test('[T-367] Designvorlagen anpassen: Farbe mit Kontrastprüfung, Schrift und Logo, Vorschau, speichern und zurücksetzen – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.goto('/einstellungen');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  const card = page.locator('.card', { has: page.getByRole('heading', { name: 'Designvorlagen anpassen' }) });
+  await card.getByLabel('Vorlage').selectOption('fachdoku');
+  const preview = card.frameLocator('iframe[title^="Vorschau"]');
+  await expect(preview.getByRole('heading', { level: 1 })).toHaveText('Kapitel 4: Vertragsberechnung');
+
+  // zu helle Hauptfarbe: Hinweis, Speichern gesperrt
+  const primary = card.getByLabel('Hauptfarbe als Farbwert');
+  await primary.fill('#9ab0d0');
+  await expect(card.getByRole('status').first()).toContainText('mind. 4,5 : 1');
+  await expect(card.getByRole('button', { name: 'Anpassung speichern' })).toBeDisabled();
+  // dunkle Farbe, Serifen, Logo links: Vorschau folgt
+  await primary.fill('#5b2a86');
+  await card.getByLabel('Schrift der Überschriften').selectOption('serif');
+  await card.getByLabel('Logo').selectOption('left');
+  await expect(preview.locator('h1')).toHaveCSS('color', 'rgb(91, 42, 134)');
+  await expect(preview.locator('h1')).toHaveCSS('font-family', /Georgia/);
+  expect(await axe()).toEqual([]);
+  await card.getByRole('button', { name: 'Anpassung speichern' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'gespeichert' })).toBeVisible();
+  await expect(card.getByLabel('Vorlage').locator('option:checked')).toHaveText('Handbuch-Kapitel (Fachdokumentation) (angepasst)');
+
+  // wirkt im Muster
+  const sample = await page.request.get('/api/v1/design-templates/fachdoku/sample', { headers: { 'X-User-Id': 'u-leser' } });
+  expect(await sample.text()).toContain('--fd-navy:#5b2a86;');
+  // zurücksetzen
+  await card.getByRole('button', { name: 'Auf Standard zurücksetzen' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'zurückgesetzt' })).toBeVisible();
+  await expect(primary).toHaveValue('#1f3a68');
+  await expect(card.getByRole('button', { name: 'Auf Standard zurücksetzen' })).toHaveCount(0);
+});

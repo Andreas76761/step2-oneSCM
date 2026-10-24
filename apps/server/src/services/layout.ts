@@ -5,6 +5,7 @@ import { audit, type Ctx, type User } from '../context.js';
 import { json, now, parseJson } from '../db.js';
 import { sha256 } from '../domain/similarity.js';
 import { badRequest, notFound } from '../problem.js';
+import { contrastToWhite, type DesignTheme } from '../domain/designs.js';
 import { getMedia, type MediaFile } from './media.js';
 
 export interface DocxTemplate {
@@ -31,19 +32,16 @@ export interface Layout {
   productLine: string | null;
   /** Markdown für „Wichtige Links und Ansprechpartner“ im Quick Reference Guide */
   quickRefLinks: string | null;
+  /** Anpassung der Designvorlagen (ADR-114); gepflegt über /design-templates/:id/theme, fehlend = Standard */
+  designThemes: Partial<Record<'quickref' | 'fachdoku', DesignTheme>>;
 }
 
 export const DEFAULT_LAYOUT: Layout = {
   companyName: null, primaryColor: '#1d63d8', logoSha: null, cover: false, coverSubtitle: null, headerText: null, footerText: null, confidentiality: null, docxTemplate: null,
-  docLabel: null, productLine: null, quickRefLinks: null,
+  docLabel: null, productLine: null, quickRefLinks: null, designThemes: {},
 };
 
-/** Relative Leuchtdichte (WCAG 2.x) */
-function luminance(hex: string) {
-  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-}
-export const contrastToWhite = (hex: string) => 1.05 / (luminance(hex) + 0.05);
+export { contrastToWhite };
 
 export async function getLayout(ctx: Ctx): Promise<Layout> {
   const r = await ctx.db.get<{ layout: string | null }>('SELECT layout FROM projects WHERE id = ?', ctx.projectId);
@@ -126,6 +124,18 @@ export async function uploadDocxTemplate(ctx: Ctx, fileName: string, data: Buffe
     await audit(ctx, user.id, 'layout.docx_template_uploaded', 'project', ctx.projectId, { name: tpl.name, styles: tpl.styles });
   });
   return getLayout(ctx);
+}
+
+/** Anpassung einer Designvorlage speichern bzw. mit null zurücksetzen (Administration, ADR-114) */
+export async function saveDesignTheme(ctx: Ctx, design: 'quickref' | 'fachdoku', theme: DesignTheme | null, user: User) {
+  const cur = await getLayout(ctx);
+  const designThemes = { ...cur.designThemes };
+  if (theme) designThemes[design] = theme;
+  else delete designThemes[design];
+  await ctx.db.tx(async () => {
+    await ctx.db.run('UPDATE projects SET layout = ? WHERE id = ?', json({ ...cur, designThemes }), ctx.projectId);
+    await audit(ctx, user.id, theme ? 'layout.design_theme_updated' : 'layout.design_theme_reset', 'project', ctx.projectId, { design, theme });
+  });
 }
 
 export async function deleteDocxTemplate(ctx: Ctx, user: User) {

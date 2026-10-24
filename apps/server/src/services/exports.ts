@@ -22,7 +22,7 @@ import { extractiveSummary } from '../domain/textVariants.js';
 import { transitionsFor } from './transitions.js';
 import { applyVariants } from './imageArchive.js';
 import { htmlToPdf, pdfBrowserAvailable } from './pdfBrowser.js';
-import { DESIGNS, renderDesign, type Design, type DesignChapter } from '../domain/designs.js';
+import { DESIGNS, normalizeTheme, renderDesign, type Design, type DesignChapter } from '../domain/designs.js';
 
 type Media = Map<string, MediaFile>;
 
@@ -526,6 +526,8 @@ export function renderDesignExport(design: Exclude<Design, 'standard'>, chapters
     brand: l.companyName, productLine: l.productLine, logo: l.logo ? dataUri(l.logo) : null, docLabel: l.docLabel, footerText: l.footerText,
     links: l.quickRefLinks, faq: extras.appendices?.faq, asOf: germanDay(now()), lang: htmlLang(extras.language ?? 'de'),
     md: (text) => markdownToHtml(text, images),
+    // Anpassung der Vorlage (ADR-114)
+    theme: normalizeTheme(design, l.designThemes?.[design] ?? {}).theme,
   });
 }
 const germanDay = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;

@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.61.0
+  version: 0.62.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -352,6 +352,16 @@ components:
               label: { type: string }
               passed: { type: boolean }
               details: { type: array, items: { type: string } }
+    DesignTheme:
+      type: object
+      description: 'Anpassung einer Designvorlage (ADR-114); fehlende Werte = Standard der Vorlage'
+      properties:
+        primary: { type: string, pattern: '^#[0-9a-fA-F]{6}$', description: 'Hauptfarbe (Links, Überschriften); Kontrast zu Weiß ≥ 4,5 : 1' }
+        accent: { type: string, pattern: '^#[0-9a-fA-F]{6}$', description: 'Akzentfarbe (Rahmen, Icons); ≥ 3 : 1' }
+        warn: { type: string, pattern: '^#[0-9a-fA-F]{6}$', description: 'Warnfarbe; ≥ 4,5 : 1' }
+        headingFont: { type: string, enum: [serif, sans] }
+        bodyFont: { type: string, enum: [serif, sans] }
+        logo: { type: string, enum: [right, left, none] }
     ExportRequest:
       type: object
       properties:
@@ -2479,7 +2489,7 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '[{ id, name, description, page, formats (html; mit lokalem Browser auch pdf, ADR-113), sampleUrl }]' }
+        '200': { description: '[{ id, name, description, page, formats (html; mit lokalem Browser auch pdf, ADR-113), sampleUrl, theme, defaultTheme, customized, minContrast (ADR-114) }]' }
   /design-templates/{id}/sample:
     get:
       operationId: getDesignTemplateSample
@@ -2496,6 +2506,50 @@ paths:
         '400': { description: 'PDF ohne eingerichteten Browser' }
         '404': { description: 'unbekannte Vorlage' }
         '503': { description: 'PDF konnte nicht erzeugt werden' }
+  /design-templates/{id}/preview:
+    post:
+      operationId: previewDesignTemplate
+      summary: 'Muster mit ungespeicherter Anpassung als HTML (ADR-114)'
+      tags: [Export]
+      x-requirements: [NFR-149]
+      x-extension: true
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, enum: [quickref, fachdoku] } }
+      requestBody: { content: { application/json: { schema: { type: object, properties: { theme: { $ref: '#/components/schemas/DesignTheme' } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'HTML', content: { text/html: { schema: { type: string } } } }
+        '400': { description: 'Anpassung ungültig (issues: Format, Kontrast, Auswahl)' }
+        '404': { description: 'unbekannte Vorlage' }
+  /design-templates/{id}/theme:
+    put:
+      operationId: updateDesignTheme
+      summary: 'Anpassung einer Designvorlage speichern (Administration, ADR-114): Farben mit Kontrastprüfung, Schriften, Logo-Position'
+      tags: [Export]
+      x-requirements: [NFR-149]
+      x-extension: true
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, enum: [quickref, fachdoku] } }
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/DesignTheme' } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'nur Administration' }
+        '200': { description: 'Vorlage mit wirksamer Anpassung' }
+        '400': { description: 'Anpassung ungültig (issues)' }
+        '404': { description: 'unbekannte Vorlage' }
+    delete:
+      operationId: resetDesignTheme
+      summary: 'Anpassung einer Designvorlage auf den Standard zurücksetzen (Administration, ADR-114)'
+      tags: [Export]
+      x-requirements: [NFR-149]
+      x-extension: true
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, enum: [quickref, fachdoku] } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'nur Administration' }
+        '200': { description: 'Vorlage mit Standard' }
+        '404': { description: 'unbekannte Vorlage' }
   /layout:
     get:
       operationId: getLayout

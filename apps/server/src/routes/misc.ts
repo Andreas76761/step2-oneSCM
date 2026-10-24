@@ -15,7 +15,7 @@ import { translationStatus } from '../services/translations.js';
 import { buildMatrix, matrixCsv, matrixMarkdown, matrixXlsx } from '../services/traceability.js';
 import { globalSearch } from '../services/search.js';
 import { refreshSearchIndex } from '../services/searchIndex.js';
-import { designSample, designSamplePdf, listDesignTemplates } from '../services/designTemplates.js';
+import { designPreview, designSample, designSamplePdf, listDesignTemplates, resetDesignTheme, updateDesignTheme } from '../services/designTemplates.js';
 import { deleteDocxTemplate, getLayout, updateLayout, uploadDocxTemplate } from '../services/layout.js';
 import { list, userOf } from './helpers.js';
 
@@ -41,6 +41,13 @@ export function miscRoutes(app: FastifyInstance, _ctx: Ctx) {
     }
     return reply.header('Content-Type', 'text/html; charset=utf-8').send(await designSample(req.ctx, req.params.id));
   });
+  // Anpassung je Vorlage (ADR-114): Vorschau für alle mit Leserecht, Speichern und Zurücksetzen nur Administration
+  app.post<{ Params: { id: string }; Body: any }>('/design-templates/:id/preview', async (req, reply) => {
+    userOf(req.ctx, req);
+    return reply.header('Content-Type', 'text/html; charset=utf-8').send(await designPreview(req.ctx, req.params.id, (req.body as any)?.theme));
+  });
+  app.put<{ Params: { id: string }; Body: any }>('/design-templates/:id/theme', async (req) => updateDesignTheme(req.ctx, req.params.id, req.body ?? {}, userOf(req.ctx, req, 'admin')));
+  app.delete<{ Params: { id: string } }>('/design-templates/:id/theme', async (req) => resetDesignTheme(req.ctx, req.params.id, userOf(req.ctx, req, 'admin')));
   // Firmen-Layout (ADR-038): lesen für alle, ändern nur Administration
   app.get('/layout', async (req) => (userOf(req.ctx, req), getLayout(req.ctx)));
   app.put<{ Body: any }>('/layout', async (req) => updateLayout(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'admin')));

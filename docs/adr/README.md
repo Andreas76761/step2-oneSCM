@@ -115,3 +115,4 @@
 | [ADR-111](ADR-111-icons-lucide.md) | Einheitliche SVG-Icons mit Lucide statt Emoji (Navigation, Startseite, Hauptschaltflächen) | akzeptiert, umgesetzt |
 | [ADR-112](ADR-112-designvorlagen.md) | Designvorlagen für den HTML-Export: Quick Reference Guide (A4 quer) und Handbuch-Kapitel (A4 hoch) mit Lucide-Icons, ohne Marke Dritter | akzeptiert, umgesetzt |
 | [ADR-113](ADR-113-pdf-im-design.md) | PDF im Design: lokaler Browser (Chromium, Chrome, Edge) druckt die Designvorlagen ohne Netz | akzeptiert, umgesetzt |
+| [ADR-114](ADR-114-designvorlagen-anpassen.md) | Designvorlagen anpassen: Haupt-, Akzent- und Warnfarbe mit Kontrastprüfung, Schriften, Logo-Position, Vorschau | akzeptiert, umgesetzt |
