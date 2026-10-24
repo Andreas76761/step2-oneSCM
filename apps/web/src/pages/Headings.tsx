@@ -1,10 +1,10 @@
+import { FormatIcon } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, Empty, ErrorBox, Page, useLoad } from '../components/ui';
 
 // oneSCM_Metadaten › Quellen je Überschrift (ADR-087, M3): je Datei als Baum oder alle Quellen zusammengeführt
 
-const ICON: Record<string, string> = { markdown: '📝', html: '🌐', docx: '📄', pptx: '📊', pdf: '📕', mp4: '🎬', jira: '🎫' };
 const where = (c: any) => (c.locator?.page ? `Seite ${c.locator.page}` : c.locator?.slide ? `Folie ${c.locator.slide}` : c.locator?.time ? `bei ${c.locator.time}` : c.lineStart === c.lineEnd ? `Zeile ${c.lineStart}` : `Zeilen ${c.lineStart}–${c.lineEnd}`);
 const chunksLink = (title: string) => `/metadaten/chunks?heading=${encodeURIComponent(title.replace(/^\d+(\.\d+)*\.?\s+/, ''))}`;
 
@@ -64,7 +64,7 @@ export function HeadingsPage() {
                 {docs.data.map((d) => (
                   <li key={d.documentId}>
                     <button aria-current={d.documentId === docId} onClick={() => setDocId(d.documentId)}>
-                      <span><span aria-hidden="true">{ICON[d.format] ?? '📁'}</span> {d.path}</span>
+                      <span><FormatIcon format={d.format} /> {d.path}</span>
                       <span className="muted small">{d.headings} Überschr. · {d.chunks} Chunks</span>
                     </button>
                   </li>
@@ -88,7 +88,7 @@ export function HeadingsPage() {
               <div className="hd-cols">
                 {g.sources.map((s: any) => (
                   <div key={s.documentId} className="hd-source">
-                    <div className="small"><span aria-hidden="true">{ICON[s.format] ?? '📁'}</span> <strong>{s.path}</strong></div>
+                    <div className="small"><FormatIcon format={s.format} /> <strong>{s.path}</strong></div>
                     <div className="small muted">{s.headingPath.join(' › ')}</div>
                     <ChunkList chunks={s.chunks} />
                   </div>

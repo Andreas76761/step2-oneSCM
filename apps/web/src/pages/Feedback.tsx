@@ -1,5 +1,7 @@
 // Rückmeldungen auswerten (ADR-058): Welche Kapitel helfen Leserinnen und Lesern nicht? Was wünschen sie sich?
 // Aus einer Rückmeldung wird mit einem Klick eine Aufgabe für die Redaktion.
+import { SendIcon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
+import { Ico, OkMark } from '../components/icons';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, post, put } from '../api';
@@ -67,7 +69,7 @@ export function FeedbackPage() {
               <BarList label="Anteil nicht hilfreich je Kapitel" rows={d.chapters.filter((c: any) => c.notHelpful > 0).slice(0, 8).map((c: any) => ({
                 key: c.chapterId, label: <Link to={`/lesen/${c.chapterId}`}>{c.title}</Link>, value: c.notHelpfulShare, hint: `${c.notHelpful} von ${c.total} nicht hilfreich`,
               }))} />
-              {!d.chapters.some((c: any) => c.notHelpful > 0) && <p className="small">✓ Alle Rückmeldungen sind positiv.</p>}
+              {!d.chapters.some((c: any) => c.notHelpful > 0) && <p className="small"><OkMark ok /> Alle Rückmeldungen sind positiv.</p>}
             </Card>
             <Card title="Häufige Begriffe in der Kritik">
               {d.words.length ? (
@@ -78,7 +80,7 @@ export function FeedbackPage() {
           <Card title="Alle Kapitel">
             <div className="table-wrap" role="region" aria-label="Rückmeldungen je Kapitel" tabIndex={0}>
               <table className="table">
-                <thead><tr><th>Kapitel</th><th>👍 hilfreich</th><th>👎 nicht hilfreich</th><th>Anteil nicht hilfreich</th><th>Entwicklung (30 Tage)</th><th>davon Online-Hilfe</th><th>offen</th></tr></thead>
+                <thead><tr><th>Kapitel</th><th><Ico icon={ThumbsUpIcon} />hilfreich</th><th><Ico icon={ThumbsDownIcon} />nicht hilfreich</th><th>Anteil nicht hilfreich</th><th>Entwicklung (30 Tage)</th><th>davon Online-Hilfe</th><th>offen</th></tr></thead>
                 <tbody>
                   {d.chapters.map((c: any) => (
                     <tr key={c.chapterId}>
@@ -94,7 +96,7 @@ export function FeedbackPage() {
             <ul className="plain feedback-list">
               {d.comments.map((f: any) => (
                 <li key={f.id}>
-                  <span aria-hidden="true">{f.helpful ? '👍' : '👎'}</span><span className="sr-only">{f.helpful ? 'hilfreich' : 'nicht hilfreich'}:</span>
+                  <Ico icon={f.helpful ? ThumbsUpIcon : ThumbsDownIcon} /><span className="sr-only">{f.helpful ? 'hilfreich' : 'nicht hilfreich'}:</span>
                   <strong>{f.title}</strong> – „{f.comment}“
                   <span className="small muted"> · {f.source === 'online-help' ? 'Online-Hilfe' : f.createdBy}, {new Date(f.createdAt).toLocaleDateString('de-DE')}{f.status === 'done' ? ' · erledigt' : ''}</span>
                   {canEdit && f.status === 'open' && (
@@ -162,7 +164,7 @@ function DigestCard({ isAdmin }: { isAdmin: boolean }) {
               {WEEKDAYS.map((w, i) => <option key={w} value={i + 1}>{w}</option>)}
             </select>
           </label>
-          {isAdmin && <button className="btn small" onClick={sendNow}>📨 Jetzt senden</button>}
+          {isAdmin && <button className="btn small" onClick={sendNow}><Ico icon={SendIcon} />Jetzt senden</button>}
           <span className="small muted">{s.lastWeek ? `Zuletzt gesendet: ${s.lastWeek}` : 'Noch nie gesendet'}</span>
         </div>
       )}
@@ -170,7 +172,7 @@ function DigestCard({ isAdmin }: { isAdmin: boolean }) {
       {p && (
         <div className="digest-preview" aria-label="Vorschau Ihrer Übersicht">
           <h3>Ihre Übersicht für {p.week}</h3>
-          {p.empty ? <p className="small">✓ Nichts zu tun – diese Woche erhielten Sie keine Nachricht.</p> : (
+          {p.empty ? <p className="small"><OkMark ok /> Nichts zu tun – diese Woche erhielten Sie keine Nachricht.</p> : (
             <ul>
               {p.openFeedback > 0 && <li><Link to="/rueckmeldungen">{p.openFeedback} offene Leser-Rückmeldung{p.openFeedback === 1 ? '' : 'en'}</Link>{p.feedbackByChapter.length > 0 && ` – ${p.feedbackByChapter.slice(0, 3).map((c: any) => `${c.title}: ${c.open}`).join(', ')}`}</li>}
               {p.tasks > 0 && <li><Link to="/aufgaben">{p.tasks} offene Aufgabe{p.tasks === 1 ? '' : 'n'} für Sie</Link>{p.overdueTasks > 0 && `, davon ${p.overdueTasks} überfällig`}</li>}

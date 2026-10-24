@@ -1,3 +1,5 @@
+import { ClipboardPasteIcon, XIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, del, forgetMedia, mediaUrl, patch, post, put } from '../api';
@@ -244,7 +246,7 @@ export function ImageArchivePage() {
                     } catch (e) {
                       notify(errorText(e), 'error');
                     }
-                  }}>📋 Aus Zwischenablage</button>
+                  }}><Ico icon={ClipboardPasteIcon} />Aus Zwischenablage</button>
                 </div>
               )}
               {canEdit && <p className="small muted">Tipp: Strg+V fügt einen Screenshot aus der Zwischenablage als neue Fassung ein. Zuschneiden und markieren Sie Screenshots in der Werkstatt (Screenshot markieren).</p>}
@@ -414,7 +416,7 @@ function ClickpathBuilder({ images, onDone }: { images: any[]; onDone: () => voi
                   </select>
                 </label>
                 <label className="grow">Beschriftung {label(i, k)} <input value={a.caption} maxLength={80} placeholder="z. B. Neu anlegen" onChange={(e) => setAlt(i, k, { caption: e.target.value })} /></label>
-                {s.alternatives.length > 1 && <button type="button" className="btn small ghost" aria-label={`Weg ${label(i, k)} entfernen`} onClick={() => setSteps(steps.map((x, n) => (n === i ? { alternatives: x.alternatives.filter((_, m) => m !== k) } : x)))}>✕</button>}
+                {s.alternatives.length > 1 && <button type="button" className="btn small ghost" aria-label={`Weg ${label(i, k)} entfernen`} onClick={() => setSteps(steps.map((x, n) => (n === i ? { alternatives: x.alternatives.filter((_, m) => m !== k) } : x)))}><Ico icon={XIcon} /></button>}
               </div>
             ))}
             <div className="row-actions">

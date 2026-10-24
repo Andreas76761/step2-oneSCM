@@ -1,3 +1,4 @@
+import { OkMark } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { del, patch, post, put } from '../api';
@@ -279,7 +280,7 @@ export function GoalPage() {
                       <td>{r.title}</td>
                       <td>{fmt(r.value, r.unit)}</td>
                       <td>{r.direction === 'min' ? '≥' : '≤'} {fmt(r.target, r.unit)}</td>
-                      <td>{r.ok ? '✅ ja' : '❌ nein'}</td>
+                      <td><OkMark ok={r.ok} /> {r.ok ? 'ja' : 'nein'}</td>
                       <td>{r.recommendation ?? '–'}{r.recommendation && <div className="muted small">zuständig: {r.agent}</div>}</td>
                     </tr>
                   ))}

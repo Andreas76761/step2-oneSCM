@@ -1,3 +1,5 @@
+import { SparklesIcon } from 'lucide-react';
+import { Ico, OkMark } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { del, download, get, patch, post } from '../api';
@@ -169,7 +171,7 @@ function TranslationEditor({ id, me, canEdit, canApprove, llm, langs, onChanged 
           <button className="btn" disabled={running} title="Zuerst 100-%-Treffer aus dem Übersetzungsspeicher, dann KI" onClick={() => {
             if (llm.external && !confirm(`Die deutschen Absätze werden zur Übersetzung an ${llm.provider} (${llm.model}) übertragen. Fortfahren?`)) return;
             void act(() => post(`/translations/${id}/machine`, {}), 'KI-Übersetzung gestartet.');
-          }}>{running ? 'KI übersetzt …' : '✨ Unübersetzte Absätze mit KI übersetzen'}</button>
+          }}>{running ? 'KI übersetzt …' : <><Ico icon={SparklesIcon} />Unübersetzte Absätze mit KI übersetzen</>}</button>
         )}
         <button className="btn small" onClick={() => download(`/api/v1/translations/${id}/export?format=md`, `${d.language}.md`).catch((e) => notify(errorText(e), 'error'))}>Export Markdown</button>
         <button className="btn small" onClick={() => download(`/api/v1/translations/${id}/export?format=html`, `${d.language}.html`).catch((e) => notify(errorText(e), 'error'))}>Export HTML</button>
@@ -405,7 +407,7 @@ function BackcheckPanel({ translation: d, canEdit, onChanged }: { translation: a
           <p className="small">Stichprobe vom {new Date(b.createdAt).toLocaleString('de-DE')}: {b.checked} von {b.candidates} Hinweisen geprüft, {b.passed} stimmen mit dem Deutschen überein, <span className={b.failed ? 'sev-text' : ''}>{b.failed} weichen ab</span> (Schwelle {Math.round(b.threshold * 100)} %).</p>
           <ul className="small">
             {b.sample.map((x: any) => (
-              <li key={x.blockId}>{x.ok === null ? '–' : x.ok ? '✅' : '❌'} „{x.source.slice(0, 80)}“ → zurück: „{x.back ?? x.skipped}“{x.similarity !== null ? ` (${Math.round(x.similarity * 100)} %)` : ''}</li>
+              <li key={x.blockId}>{x.ok === null ? '–' : <OkMark ok={x.ok} />} „{x.source.slice(0, 80)}“ → zurück: „{x.back ?? x.skipped}“{x.similarity !== null ? ` (${Math.round(x.similarity * 100)} %)` : ''}</li>
             ))}
           </ul>
         </>

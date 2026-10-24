@@ -1,3 +1,4 @@
+import { OkMark } from '../components/icons';
 import { useState } from 'react';
 import { post } from '../api';
 import { Badge, Card, DownloadButton, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
@@ -60,7 +61,7 @@ export function ExportPage() {
             <legend>Kapitel (leer = alle freigegebenen)</legend>
             {!approved.length && <p className="small muted">Noch kein Kapitel freigegeben.</p>}
             {(chapters.data ?? []).map((c) => (
-              <label key={c.id}><input type="checkbox" checked={chapterIds.includes(c.id)} onChange={() => t(chapterIds, setChapterIds, c.id)} /> {c.title} {c.versions.some((v: any) => v.status === 'approved') ? '✅' : <span className="muted small">(nicht freigegeben)</span>}</label>
+              <label key={c.id}><input type="checkbox" checked={chapterIds.includes(c.id)} onChange={() => t(chapterIds, setChapterIds, c.id)} /> {c.title} {c.versions.some((v: any) => v.status === 'approved') ? <OkMark ok /> : <span className="muted small">(nicht freigegeben)</span>}</label>
             ))}
           </fieldset>
           <fieldset className="checks"><legend>Rollen</legend>{ref?.roles.filter((r) => r.code !== 'all').map((r) => <label key={r.code}><input type="checkbox" checked={roles.includes(r.code)} onChange={() => t(roles, setRoles, r.code)} /> <Badge item={r} /></label>)}</fieldset>

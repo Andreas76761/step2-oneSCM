@@ -1,5 +1,7 @@
 // Stammdaten › Inhaltsverzeichnis (ADR-032): Gliederungen je Variante (Rolle, Sparte, Blueprint oder Märkte),
 // Versionen speichern, hochladen, bearbeiten, erweitern, exportieren
+import { PencilIcon, XIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { currentProjectId, del, download, patch, post } from '../api';
@@ -265,12 +267,12 @@ export function OutlinesPage() {
                   ) : <span className="title">{n.title} {n.snippets > 0 && <span className="small muted">({n.snippets})</span>}</span>}
                   {canEdit && editing?.id !== n.id && (
                     <span className="row-actions">
-                      <button className="btn small" aria-label={`${n.title} umbenennen`} onClick={() => setEditing({ id: n.id, title: n.title })}>✎</button>
+                      <button className="btn small" aria-label={`${n.title} umbenennen`} onClick={() => setEditing({ id: n.id, title: n.title })}><Ico icon={PencilIcon} /></button>
                       <button className="btn small" aria-label={`${n.title} nach oben`} onClick={() => run(() => patch(`/outline-nodes/${n.id}`, { move: 'up' }))}>↑</button>
                       <button className="btn small" aria-label={`${n.title} nach unten`} onClick={() => run(() => patch(`/outline-nodes/${n.id}`, { move: 'down' }))}>↓</button>
                       {n.level === 1 && <button className="btn small" aria-label={`Unterkapitel zu ${n.title} hinzufügen`} onClick={() => { const t = prompt(`Neues Unterkapitel in ${n.number} ${n.title}`); if (t?.trim()) void run(() => post(`/outlines/${o.id}/nodes`, { title: t, parentId: n.id }), 'Unterkapitel hinzugefügt.'); }}>+ Unterkapitel</button>}
                       {n.level === 2 && i > 0 && <button className="btn small" aria-label={`${n.title} zum Kapitel machen`} onClick={() => run(() => patch(`/outline-nodes/${n.id}`, { parentId: null }), 'Zum Kapitel gemacht.')}>⇤</button>}
-                      <button className="btn small danger" aria-label={`${n.title} löschen`} onClick={() => confirm(`„${n.number} ${n.title}“${n.level === 1 ? ' mit Unterkapiteln' : ''} löschen? Zuordnungen werden gelöst.`) && run(() => del(`/outline-nodes/${n.id}`), 'Gelöscht.')}>✕</button>
+                      <button className="btn small danger" aria-label={`${n.title} löschen`} onClick={() => confirm(`„${n.number} ${n.title}“${n.level === 1 ? ' mit Unterkapiteln' : ''} löschen? Zuordnungen werden gelöst.`) && run(() => del(`/outline-nodes/${n.id}`), 'Gelöscht.')}><Ico icon={XIcon} /></button>
                     </span>
                   )}
                 </li>

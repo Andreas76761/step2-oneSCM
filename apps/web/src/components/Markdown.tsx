@@ -1,4 +1,5 @@
 // Markdown-Darstellung (ADR-013 §13: kein HTML) – eigenes Modul, damit react-markdown erst bei Bedarf geladen wird
+import { WarnIcon } from './icons';
 import { useEffect, useMemo, useState } from 'react';
 import Markdown, { defaultUrlTransform } from 'react-markdown';
 import { mediaUrl } from '../api';
@@ -17,7 +18,7 @@ function MdImage({ src, alt }: { src?: string; alt?: string }) {
       alive = false;
     };
   }, [sha]);
-  if (!alt) return <span className="md-img-missing-alt" role="img" aria-label="Bild ohne Alternativtext">⚠️ Bild ohne Alternativtext</span>;
+  if (!alt) return <span className="md-img-missing-alt" role="img" aria-label="Bild ohne Alternativtext"><WarnIcon />Bild ohne Alternativtext</span>;
   if (!sha || failed) return <span className="md-img-alt">[Bild: {alt}]</span>;
   return url ? <img className="md-img" src={url} alt={alt} loading="lazy" /> : <span className="md-img-alt" aria-busy="true">[Bild: {alt}]</span>;
 }

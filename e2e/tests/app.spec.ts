@@ -152,7 +152,7 @@ test('[T-205] KI-Vorschlag in der Kapitelwerkstatt: Satz-Evidenz prüfen und üb
   await expect(proposal.locator('.rewrite-sentences li').first()).toContainText('Abdeckung');
   await proposal.getByRole('button', { name: 'Übernehmen' }).click();
   await expect(page.getByText(/KI-Vorschlag übernommen/)).toBeVisible();
-  await expect(purpose.locator('.tag.st-ai_rewritten')).toHaveText('✨ KI-umformuliert');
+  await expect(purpose.locator('.tag.st-ai_rewritten')).toHaveText('KI-umformuliert');
   await purpose.locator('.block-meta').first().click();
   await expect(page.getByRole('heading', { name: 'Satz-Evidenz (KI-umformuliert)' })).toBeVisible();
 });
@@ -269,7 +269,7 @@ test('[T-213] Übersetzung: Zielsprache festlegen, KI-Übersetzung mit Prüfung,
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Übersetzungen');
   await page.getByRole('button', { name: '+ Englisch' }).click();
   await expect(page.getByText('Übersetzung Englisch angelegt.')).toBeVisible();
-  await page.getByRole('button', { name: '✨ Unübersetzte Absätze mit KI übersetzen' }).click();
+  await page.getByRole('button', { name: 'Unübersetzte Absätze mit KI übersetzen' }).click();
   await expect(page.getByLabel('Übersetzter Kapiteltitel')).toHaveValue(/\[EN\]/);
   await expect(page.getByText(/\d+ Sätze der Quelle zugeordnet/).first()).toBeVisible();
   await page.getByLabel('Kommentar zur Freigabe der Übersetzung').fill('Sprachlich geprüft');
@@ -988,7 +988,7 @@ test('[T-226] Eigene Stilregeln, Benutzerverwaltung, KI-Stapelumformulierung, Sc
   await page.goto(`/werkstatt/${ch.id}`);
   await page.getByRole('button', { name: 'Stil korrigieren' }).click();
   const dlg = page.getByRole('dialog', { name: 'Schreibstil: Kapitel automatisch korrigieren' });
-  await dlg.getByRole('button', { name: '✨ KI: ins Präsens' }).click();
+  await dlg.getByRole('button', { name: 'KI: ins Präsens' }).click();
   await expect(dlg.getByRole('status').filter({ hasText: /Absätze mit Vorschlägen/ })).toBeVisible();
   expect(await axe()).toEqual([]);
   await dlg.getByRole('button', { name: /^Auswahl übernehmen/ }).click();
@@ -1008,7 +1008,7 @@ test('[T-226] Eigene Stilregeln, Benutzerverwaltung, KI-Stapelumformulierung, Sc
     await page.mouse.move(box.x + x2, box.y + y2, { steps: 4 });
     await page.mouse.up();
   };
-  await page.getByRole('button', { name: '➜ Pfeil ziehen' }).click();
+  await page.getByRole('button', { name: 'Pfeil ziehen' }).click();
   await drag(20, 20, 120, 80);
   await page.getByRole('button', { name: 'T Textfeld setzen' }).click();
   await page.getByLabel('Beschriftung').fill('Pflichtfeld');
@@ -1094,16 +1094,16 @@ test('[T-227] Rollenvorlagen, Stilregeln-Export/-Import, Stilwert-Verlauf im Das
   };
   await canvas.click({ position: { x: 40 * sx, y: 40 * sx } });
   await expect(page.getByLabel('Nummer 1 X in Prozent')).toHaveValue('10');
-  await page.getByRole('button', { name: '🔍 Lupe' }).click();
+  await page.getByRole('button', { name: 'Lupe' }).click();
   await drag(20, 20, 60, 60);
   await expect(canvas).toHaveAttribute('aria-label', /1 Lupen/);
   // Nummer verschieben
-  await page.getByRole('button', { name: '✥ Verschieben' }).click();
+  await page.getByRole('button', { name: 'Verschieben' }).click();
   await drag(40, 40, 120, 40);
   await expect(page.getByLabel('Nummer 1 X in Prozent')).toHaveValue('30');
-  await page.getByRole('button', { name: '✂ Zuschneiden' }).click();
+  await page.getByRole('button', { name: 'Zuschneiden' }).click();
   await drag(2, 2, 302, 152);
-  await expect(page.getByText(/✂ Zuschnitt 75 % × 75 % des Bildes/)).toBeVisible();
+  await expect(page.getByText(/Zuschnitt 75 % × 75 % des Bildes/)).toBeVisible();
   await expect(canvas).toHaveAttribute('aria-label', /zugeschnitten/);
   expect(await axe()).toEqual([]);
   await page.getByLabel('Titel (Bildverzeichnis)').fill('E2E Zuschnitt');
@@ -1263,7 +1263,7 @@ test('[T-229] Einführung, Leseransicht mit Schritten und Rückmeldung, Vorlagen
 
   // Redaktion: Rückmeldung im Anleitungs-Check, erledigen; Mindestwert für die Freigabe
   await page.goto('/anleitungs-check');
-  await expect(page.getByRole('row', { name: /E2E Lesen/ })).toContainText('👎 1');
+  await expect(page.getByRole('row', { name: /E2E Lesen/ }).locator('[aria-label*="1 nicht hilfreich"]')).toBeVisible();
   const fbCard = page.locator('.card', { has: page.getByRole('heading', { name: /Rückmeldungen von Leserinnen und Lesern/ }) });
   await expect(fbCard).toContainText('Wo finde ich Notizen anderer?');
   expect(await axe()).toEqual([]);
@@ -1400,7 +1400,7 @@ test('[T-231] Vorlage vollständig bearbeiten, Druck mit Deckblatt und Seitenzah
   await digest.getByLabel('Senden am').selectOption({ label: 'Freitag' });
   await expect(page.getByText('Übersicht kommt jetzt jeden Freitag.')).toBeVisible();
   expect(await axe()).toEqual([]);
-  await digest.getByRole('button', { name: '📨 Jetzt senden' }).click();
+  await digest.getByRole('button', { name: 'Jetzt senden' }).click();
   await expect(page.getByText(/^Übersicht an \d+ Person/)).toBeVisible();
   await expect(digest).toContainText('Zuletzt gesendet: ');
   await digest.getByLabel('Senden am').selectOption({ label: 'Montag' });
@@ -1533,10 +1533,10 @@ test('[T-233] Siehe auch und häufige Fragen unter dem Kapitel, Verweise pflegen
   await related.getByRole('button', { name: 'Fertig' }).click();
 
   // Lesezeichen und zuletzt gelesen
-  await article.getByRole('button', { name: '☆ Merken' }).click();
-  await expect(article.getByRole('button', { name: '★ Gemerkt' })).toHaveAttribute('aria-pressed', 'true');
+  await article.getByRole('button', { name: 'Merken' }).click();
+  await expect(article.getByRole('button', { name: 'Gemerkt' })).toHaveAttribute('aria-pressed', 'true');
   const toc = page.getByRole('navigation', { name: 'Inhaltsverzeichnis' });
-  await expect(toc.getByRole('heading', { name: '★ Lesezeichen' })).toBeVisible();
+  await expect(toc.getByRole('heading', { name: 'Lesezeichen' })).toBeVisible();
   await expect(toc.getByRole('link', { name: 'E2E Rechnung drucken' }).first()).toBeVisible();
   await expect(toc.getByRole('heading', { name: 'Zuletzt gelesen' })).toBeVisible();
 
@@ -1554,8 +1554,8 @@ test('[T-233] Siehe auch und häufige Fragen unter dem Kapitel, Verweise pflegen
   await toc.getByRole('link', { name: 'E2E Rechnung drucken' }).last().click();
   await expect(page.getByRole('article', { name: 'E2E Rechnung drucken' })).toBeVisible();
   await expect(page.getByText(/^Dieses Kapitel (ist neu für Sie|wurde seit)/)).toHaveCount(0);
-  await page.getByRole('article', { name: 'E2E Rechnung drucken' }).getByRole('button', { name: '★ Gemerkt' }).click();
-  await expect(toc.getByRole('heading', { name: '★ Lesezeichen' })).toHaveCount(0);
+  await page.getByRole('article', { name: 'E2E Rechnung drucken' }).getByRole('button', { name: 'Gemerkt' }).click();
+  await expect(toc.getByRole('heading', { name: 'Lesezeichen' })).toHaveCount(0);
 
   // FAQ-Seite
   await page.goto('/lesen/faq');
@@ -1630,7 +1630,7 @@ test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; 
   expect(await axe()).toEqual([]);
 
   // Lesezeichen mit Notiz
-  await page.getByRole('article', { name: 'E2E Packliste ändern' }).getByRole('button', { name: '☆ Bookmark' }).click();
+  await page.getByRole('article', { name: 'E2E Packliste ändern' }).getByRole('button', { name: 'Bookmark' }).click();
   await toc.getByRole('link', { name: 'All bookmarks and notes' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lesezeichen');
   await page.getByLabel('Lesezeichen filtern').fill('Packliste ändern');
@@ -1645,7 +1645,7 @@ test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; 
   expect(csv).toContain('"E2E Packliste ändern";"Vor der Inventur prüfen"');
   expect(await axe()).toEqual([]);
   await page.getByRole('link', { name: 'E2E Packliste ändern' }).click();
-  await expect(page.getByText('📝 Vor der Inventur prüfen')).toBeVisible();
+  await expect(page.getByText('Vor der Inventur prüfen')).toBeVisible();
   await page.goto('/lesen/lesezeichen');
   await page.getByRole('button', { name: 'Lesezeichen „E2E Packliste ändern“ entfernen' }).click();
   await expect(page.getByText('Lesezeichen „E2E Packliste ändern“ entfernt.')).toBeVisible();
@@ -1695,25 +1695,25 @@ test('[T-235] Leseransicht auf Französisch mit Übersetzung anfordern, Notiz di
   await expect(article.getByText('Tipp:')).toBeVisible();
   // Übersetzung anfordern
   await article.getByRole('button', { name: 'Demander une traduction' }).click();
-  await expect(article.getByText('✓ Traduction demandée – la rédaction a été informée.')).toBeVisible();
+  await expect(article.getByText('Traduction demandée – la rédaction a été informée.')).toBeVisible();
   expect(await axe()).toEqual([]);
 
   // Notiz direkt im Kapitel: anlegen (merkt das Kapitel), ändern, löschen
-  await article.getByRole('button', { name: '📝 Ajouter une note' }).click();
+  await article.getByRole('button', { name: 'Ajouter une note' }).click();
   await article.getByRole('textbox', { name: 'Votre note sur ce chapitre' }).fill('Avec le chef d’équipe');
   expect(await axe()).toEqual([]);
   await article.getByRole('button', { name: 'Enregistrer' }).click();
   await expect(page.getByText('Note enregistrée.')).toBeVisible();
-  await expect(article.getByText('📝 Avec le chef d’équipe')).toBeVisible();
-  await expect(article.getByRole('button', { name: '★ Signet ajouté' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(article.getByText('Avec le chef d’équipe')).toBeVisible();
+  await expect(article.getByRole('button', { name: 'Signet ajouté' })).toHaveAttribute('aria-pressed', 'true');
   await article.getByRole('button', { name: 'Modifier la note' }).click();
   await article.getByRole('textbox', { name: 'Votre note sur ce chapitre' }).fill('Avec le chef d’équipe, le lundi');
   await article.getByRole('button', { name: 'Enregistrer' }).click();
-  await expect(article.getByText('📝 Avec le chef d’équipe, le lundi')).toBeVisible();
+  await expect(article.getByText('Avec le chef d’équipe, le lundi')).toBeVisible();
   await article.getByRole('button', { name: 'Modifier la note' }).click();
   await article.getByRole('button', { name: 'Supprimer la note' }).click();
   await expect(page.getByText('Note supprimée.')).toBeVisible();
-  await expect(article.getByRole('button', { name: '📝 Ajouter une note' })).toBeVisible();
+  await expect(article.getByRole('button', { name: 'Ajouter une note' })).toBeVisible();
 
   // Redaktion: gewünschte Übersetzungen, direkt anlegen
   await page.goto('/uebersetzungen');
@@ -1813,7 +1813,7 @@ test('[T-237] oneSCM_Metadaten: Übersicht, Chunks je Überschrift labeln und fi
   // Übersicht: Demo-Quellen je Format, sechs Labelgruppen
   await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Übersicht' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'oneSCM_Metadaten' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '📝 Markdown' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Markdown', exact: true })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'Navigation im System' })).toBeVisible();
   expect(await axe()).toEqual([]);
 
@@ -2780,7 +2780,7 @@ test('[T-318] Übersetzung: KI-Übersetzung, Büro-Austausch (XLIFF), Länderrev
   await nav.getByRole('link', { name: 'Übersetzungen', exact: true }).click();
   await page.getByLabel('Kapitel für Übersetzungen').selectOption({ label: 'E2E Kündigung übersetzen' });
   await page.locator('tr', { hasText: 'Französisch' }).getByRole('button', { name: 'Öffnen', exact: true }).click();
-  await page.getByRole('button', { name: '✨ Unübersetzte Absätze mit KI übersetzen' }).click();
+  await page.getByRole('button', { name: 'Unübersetzte Absätze mit KI übersetzen' }).click();
   await expect(page.getByText(/KI \(demo-extractive\)/).first()).toBeVisible({ timeout: 15000 });
   await page.getByText('Übersetzungsbüro: XLIFF 1.2 oder Excel').click();
   await expect(page.getByRole('button', { name: 'XLIFF 1.2 herunterladen' })).toBeVisible();
@@ -3244,4 +3244,26 @@ test('[T-357] Oberfläche mit einheitlichen SVG-Icons: Navigation, Startseite un
   await page.getByLabel('Darstellung').selectOption('dark');
   expect(await axe()).toEqual([]);
   await page.getByLabel('Darstellung').selectOption('system');
+});
+
+test('[T-358] Seiten ohne Emoji: Einlesen, Schreibstil, Optimierungen, Rückmeldungen, Leseransicht und Werkstatt zeigen Lucide-Icons – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  // bunte Bildzeichen; einfarbige Textzeichen wie ✓ ✎ ✖ bleiben erlaubt, Rollen- und Spartenzeichen stammen aus den Stammdaten
+  const emoji = /[\u{1F300}-\u{1FAFF}\u{26A0}\u{26D4}\u{2705}\u{274C}\u{2728}\u{2B50}\u{2606}\u{2605}]/u;
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  for (const path of ['/metadaten/einlesen', '/schreibstil', '/optimierungen', '/rueckmeldungen', '/lesen', '/kapitel-assistent']) {
+    await page.goto(path);
+    const main = page.getByRole('main');
+    await expect(main.getByRole('heading', { level: 1 }).first()).toBeVisible();
+    await page.waitForLoadState('networkidle');
+    const text = await main.innerText();
+    expect(text.match(emoji), `${path}: ${text.match(emoji)?.[0]}`).toBeNull();
+  }
+  // Einlesen: Formate mit SVG-Icon
+  await page.goto('/metadaten/einlesen');
+  await expect(page.getByRole('cell', { name: 'Markdown', exact: true }).locator('svg.ico')).toBeVisible();
+  expect(await axe()).toEqual([]);
 });

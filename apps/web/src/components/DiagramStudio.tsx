@@ -1,6 +1,8 @@
 // Bilder aus Text (ADR-041, ADR-042): Textstelle → Struktur (Regeln oder KI) → ASCII-Bild, Klickstrecke, Prozessbild, Infografik.
 // Struktur und Darstellung (Farbe, Form, Schriftgröße, Stationen je Zeile) lassen sich nachbearbeiten und als Vorlage speichern;
 // gespeicherte Bilder erhalten eine im Browser gerasterte PNG-Fassung für Word. Genutzt auf der Seite „Bilder“ und in der Werkstatt.
+import { XIcon } from 'lucide-react';
+import { Ico } from './icons';
 import { useEffect, useState } from 'react';
 import { del, post } from '../api';
 import { storeRendition, svgDataUrl } from '../images';
@@ -75,7 +77,7 @@ function StructureEditor({ s, o, onChange, onOptions, onApply, busy }: {
                 <label className="inline small"><input type="checkbox" checked={!!st.decision} onChange={(e) => setStep(i, { decision: e.target.checked })} /> Entscheidung</label>
                 <button type="button" className="btn small" aria-label={`Schritt ${i + 1} nach oben`} disabled={i === 0} onClick={() => onChange({ ...s, steps: move(s.steps, i, -1) })}>↑</button>
                 <button type="button" className="btn small" aria-label={`Schritt ${i + 1} nach unten`} disabled={i === s.steps.length - 1} onClick={() => onChange({ ...s, steps: move(s.steps, i, 1) })}>↓</button>
-                <button type="button" className="btn small danger" aria-label={`Schritt ${i + 1} entfernen`} onClick={() => onChange({ ...s, steps: s.steps.filter((_, j) => j !== i) })}>✕</button>
+                <button type="button" className="btn small danger" aria-label={`Schritt ${i + 1} entfernen`} onClick={() => onChange({ ...s, steps: s.steps.filter((_, j) => j !== i) })}><Ico icon={XIcon} /></button>
               </div>
               {st.decision && (
                 <div className="step-row">

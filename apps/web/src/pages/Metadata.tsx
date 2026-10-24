@@ -1,3 +1,5 @@
+import { CompassIcon, FolderIcon, FolderInputIcon, FolderOpenIcon, FolderTreeIcon, PuzzleIcon, TagsIcon } from 'lucide-react';
+import { FormatIcon, Ico } from '../components/icons';
 import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { del, patch, post, put, qs } from '../api';
@@ -97,8 +99,9 @@ function LabelMulti({ labels, groups, lang, selected, onChange, ariaLabel }: { l
 }
 
 const FORMAT_LABEL: Record<string, string> = { markdown: 'Markdown', html: 'HTML', docx: 'Word', pptx: 'PowerPoint', pdf: 'PDF', mp4: 'Video', subtitles: 'Untertitel', jira: 'Jira-Ticket' };
-const FORMAT_ICON: Record<string, string> = { markdown: '📝', html: '🌐', docx: '📄', pptx: '📊', pdf: '📕', mp4: '🎬', subtitles: '💬', jira: '🎫' };
-const formatText = (f: string) => `${FORMAT_ICON[f] ?? '📁'} ${FORMAT_LABEL[f] ?? f}`;
+const formatText = (f: string) => FORMAT_LABEL[f] ?? f;
+/** Format mit Icon (ADR-111) – in Auswahllisten nur der Text */
+const FormatCell = ({ f }: { f: string }) => <><FormatIcon format={f} />{formatText(f)}</>;
 
 /** Fundstelle lesbar: Seite, Folie, Zeitmarke oder Zeilen */
 function locatorText(c: { locator: Record<string, unknown> | null; lineStart: number; lineEnd: number }) {
@@ -151,15 +154,15 @@ export function MetadataOverviewPage() {
         </ol>
       </Card>
       <div className="grid2">
-        <Card title="Quelldateien je Format" actions={<Link className="btn small" to="/quellen">📥 Dateien einlesen</Link>}>
+        <Card title="Quelldateien je Format" actions={<Link className="btn small" to="/quellen"><Ico icon={FolderInputIcon} />Dateien einlesen</Link>}>
           {!d?.formats.length ? <Empty>Noch keine Quelldateien. Unter „Quellen“ Dateien hochladen.</Empty> : (
             <table className="table">
               <thead><tr><th>Format</th><th>Dateien</th><th>Chunks</th></tr></thead>
-              <tbody>{d.formats.map((f: any) => <tr key={f.format}><td>{formatText(f.format)}</td><td>{f.documents}</td><td>{f.chunks}</td></tr>)}</tbody>
+              <tbody>{d.formats.map((f: any) => <tr key={f.format}><td><FormatCell f={f.format} /></td><td>{f.documents}</td><td>{f.chunks}</td></tr>)}</tbody>
             </table>
           )}
         </Card>
-        <Card title="Labels" actions={<Link className="btn small" to="/metadaten/labels">🏷 Katalog</Link>}>
+        <Card title="Labels" actions={<Link className="btn small" to="/metadaten/labels"><Ico icon={TagsIcon} />Katalog</Link>}>
           <table className="table">
             <thead><tr><th>Gruppe</th><th>Labels</th></tr></thead>
             <tbody>{(d?.labelGroups ?? []).map((g: any) => <tr key={g.code}><td><span aria-hidden="true">{g.icon}</span> {nameOf(g, lang)}</td><td>{g.labels}</td></tr>)}</tbody>
@@ -290,7 +293,7 @@ export function MetadataChunksPage() {
                 <tr key={c.id}>
                   {canEdit && <td><input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggle(c.id)} aria-label={`Chunk #${c.seq} auswählen`} /></td>}
                   <td>#{c.seq}</td>
-                  <td className="small">{formatText(c.format)}<br />{c.path}<br /><span className="muted">{locatorText(c)}</span></td>
+                  <td className="small"><FormatCell f={c.format} /><br />{c.path}<br /><span className="muted">{locatorText(c)}</span></td>
                   <td className="small">{headingText(c)}</td>
                   <td className="md-text">{c.text}{parts(c)}</td>
                   <td>{chunkLabels(c)}{addOne(c)}{suggest(c)}</td>
@@ -306,7 +309,7 @@ export function MetadataChunksPage() {
                 <article key={c.id} className="md-chunk">
                   <div className="md-chunk-head small">
                     {canEdit && <input type="checkbox" checked={selected.includes(c.id)} onChange={() => toggle(c.id)} aria-label={`Chunk #${c.seq} auswählen`} />}
-                    <strong>#{c.seq}</strong> {formatText(c.format)} · {c.path} · <span className="muted">{locatorText(c)}</span>
+                    <strong>#{c.seq}</strong> <FormatCell f={c.format} /> · {c.path} · <span className="muted">{locatorText(c)}</span>
                     {c.headingPath.length > 0 && <span className="muted"> · {c.headingPath.join(' › ')}</span>}
                   </div>
                   <p className="md-text">{c.text}</p>
@@ -822,7 +825,7 @@ export function DomainMapPage() {
       </Card>
       <div className="dm-grid">
         {(d?.domains ?? []).map((dom: any) => (
-          <Card key={dom.id} title={<>🧩 {nameOf(dom, lang)}</>}>
+          <Card key={dom.id} title={<><Ico icon={PuzzleIcon} />{nameOf(dom, lang)}</>}>
             <section aria-label={`Gliederungspunkte zu ${nameOf(dom, lang)}`}>
               <h3 className="small muted">Gliederungspunkte und Ordner</h3>
               {!dom.outline.length ? <Empty>Noch kein Gliederungspunkt zugeordnet.</Empty> : (
@@ -834,9 +837,9 @@ export function DomainMapPage() {
                           ? <button className="btn small" onClick={() => link(dom.id, o.id, true, 'Vorschlag übernommen.')}>Übernehmen</button>
                           : <button className="btn small ghost" aria-label={`${nameOf(o, lang)} von ${nameOf(dom, lang)} lösen`} onClick={() => link(dom.id, o.id, false, 'Zuordnung entfernt.')}>Lösen</button>)}
                       </div>
-                      <code className="dm-path">📁 {o.folder}</code>
+                      <code className="dm-path"><Ico icon={FolderIcon} />{o.folder}</code>
                       {o.subfolders?.length ? (
-                        <ul className="dm-sub small">{o.subfolders.map((s: any) => <li key={s.folder}><code>📂 {s.folder.split('/').pop()}</code></li>)}</ul>
+                        <ul className="dm-sub small">{o.subfolders.map((s: any) => <li key={s.folder}><code><Ico icon={FolderOpenIcon} />{s.folder.split('/').pop()}</code></li>)}</ul>
                       ) : o.subfolders ? <div className="small muted">keine Unterkapitel in der gewählten Gliederung</div> : null}
                     </li>
                   ))}
@@ -848,7 +851,7 @@ export function DomainMapPage() {
               <div className="dm-tags">
                 {dom.navigation.map((n: any) => (
                   <span key={n.id} className={`tag ${n.suggested ? 'sev-low' : ''}`} title={n.suggested ? `Vorschlag aus ${n.chunks} Chunks` : n.origin === 'catalog' ? 'Katalog' : 'manuell'}>
-                    🧭 {nameOf(n, lang)}
+                    <Ico icon={CompassIcon} />{nameOf(n, lang)}
                     {canEdit && (n.suggested
                       ? <button className="dm-x" aria-label={`${nameOf(n, lang)} übernehmen`} onClick={() => link(dom.id, n.id, true, 'Vorschlag übernommen.')}>＋</button>
                       : <button className="dm-x" aria-label={`${nameOf(n, lang)} von ${nameOf(dom, lang)} lösen`} onClick={() => link(dom.id, n.id, false, 'Zuordnung entfernt.')}>×</button>)}
@@ -876,7 +879,7 @@ export function DomainMapPage() {
         <Card title="Gliederungspunkte ohne Domäne">
           <p className="small muted">Querschnittskapitel wie Einführung, Rollout oder Anhänge brauchen nicht unbedingt eine Fachdomäne.</p>
           <div className="dm-tags">
-            {d.outline.filter((o: any) => d.withoutDomain.includes(o.id)).map((o: any) => <span key={o.id} className="tag" title={o.folder}>🗂 {nameOf(o, lang)}</span>)}
+            {d.outline.filter((o: any) => d.withoutDomain.includes(o.id)).map((o: any) => <span key={o.id} className="tag" title={o.folder}><Ico icon={FolderTreeIcon} size={14} />{nameOf(o, lang)}</span>)}
           </div>
         </Card>
       )}

@@ -1,5 +1,7 @@
 // Schreibstil (ADR-040): Text prüfen, problematische Sätze gelb markieren und bearbeiten, automatisch korrigieren,
 // professionell bzw. ins Präsens umformulieren – für freien Text, Kapitelabsätze (übernehmen) und Textschnipsel (nur prüfen).
+import { InfoIcon, TriangleAlertIcon, XIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { api, currentProjectId, del, patch, post, put, qs } from '../api';
@@ -88,7 +90,7 @@ export function SentenceEditor({ s, onApply, onClose }: { s: Sentence; onApply: 
       <ul className="style-issues">
         {s.issues.map((i, n) => (
           <li key={n} className={i.severity}>
-            <span className="tag">{i.severity === 'warning' ? '⚠ Problem' : 'ℹ Hinweis'}</span> {i.message}
+            <span className="tag"><Ico icon={i.severity === 'warning' ? TriangleAlertIcon : InfoIcon} size={14} />{i.severity === 'warning' ? 'Problem' : 'Hinweis'}</span> {i.message}
             {i.fix && <button className="btn small" onClick={() => setDraft((d) => applyToDraft(d, s.text, rel(i.fix!)))}>{i.fix.label || 'korrigieren'}</button>}
           </li>
         ))}
@@ -276,7 +278,7 @@ function ChapterTab({ canEdit }: { canEdit: boolean }) {
           </p>
           <ReadabilityPanel r={data.data.readability} />
           {data.data.blocks.map((b: any) => (
-            <Card key={b.id} title={`${b.section} · ${b.analysis.problemSentences ? `⚠ ${b.analysis.problemSentences} Problem(e)` : '✓'}`}>
+            <Card key={b.id} title={`${b.section} · ${b.analysis.problemSentences ? `${b.analysis.problemSentences} Problem(e)` : '✓'}`}>
               {open === b.id ? (
                 <StyleEditor initial={b.text} canRewrite={canEdit} saveLabel="Absatz speichern" onSave={data.data.version.editable && canEdit ? async (text) => {
                   try {
@@ -497,7 +499,7 @@ function RulesTab({ canAdmin, canGlobalAdmin }: { canAdmin: boolean; canGlobalAd
                       {PHRASE_LANGS.map(([c, l]) => <option key={c} value={c}>{l}</option>)}
                     </select>
                   </td>
-                  <td>{!ro && <button className="btn small danger" aria-label={`Regel ${i + 1} entfernen`} onClick={() => { setReplacing(new Set()); setD({ ...d, phrases: phrases.filter((_, j) => j !== i) }); }}>✕</button>}</td>
+                  <td>{!ro && <button className="btn small danger" aria-label={`Regel ${i + 1} entfernen`} onClick={() => { setReplacing(new Set()); setD({ ...d, phrases: phrases.filter((_, j) => j !== i) }); }}><Ico icon={XIcon} /></button>}</td>
                 </tr>
               ))}
             </tbody>

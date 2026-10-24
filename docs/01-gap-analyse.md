@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.61 Stand nach Etappe 59 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Restliche Emoji der Oberfläche als Lucide-Icons: Quellformate, Blocker/Warnungen, Hinweisarten, Screenshot-Editor, Leseransicht in neun Sprachen (NFR-146) | ✅ ([ADR-111](adr/ADR-111-icons-lucide.md)), E2E T-358 |
+| Offen | Rollen- und Spartenzeichen der Stammdaten (Daten, bewusst unverändert); S-04-Begriffe (Redaktion); U-07 |
+
 ## 1.60 Stand nach Etappe 58 (24.10.2026)
 
 | Punkt | Ergebnis |

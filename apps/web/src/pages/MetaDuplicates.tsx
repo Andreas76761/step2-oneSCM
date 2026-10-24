@@ -1,17 +1,17 @@
+import { FormatIcon } from '../components/icons';
 import { useState } from 'react';
 import { post, put } from '../api';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 // oneSCM_Metadaten › Dubletten über alle Formate je Abschnitt (ADR-088, M4)
 
-const ICON: Record<string, string> = { markdown: '📝', html: '🌐', docx: '📄', pptx: '📊', pdf: '📕', mp4: '🎬', jira: '🎫' };
 const LABEL: Record<string, string> = { markdown: 'Markdown', html: 'HTML', docx: 'Word', pptx: 'PowerPoint', pdf: 'PDF', mp4: 'Video', jira: 'Jira' };
 const where = (s: any) => (s.locator?.page ? `Seite ${s.locator.page}` : s.locator?.slide ? `Folie ${s.locator.slide}` : s.locator?.time ? `bei ${s.locator.time}` : s.locator?.anchor ? `Abschnitt #${s.locator.anchor}` : '');
 
 function Side({ s, side, leading }: { s: any; side: string; leading: boolean }) {
   return (
     <div className={`dp-side${leading ? ' dp-leading' : ''}`}>
-      <div className="small"><strong>{side}</strong> <span aria-hidden="true">{ICON[s.format] ?? '📁'}</span> {LABEL[s.format] ?? s.format} · {s.path}</div>
+      <div className="small"><strong>{side}</strong> <FormatIcon format={s.format} /> {LABEL[s.format] ?? s.format} · {s.path}</div>
       <div className="small muted">{s.headingPath.join(' › ') || s.title}{where(s) ? ` · ${where(s)}` : ''} · {s.chars} Zeichen</div>
       {leading && <span className="tag">führende Fassung</span>}
     </div>
@@ -89,7 +89,7 @@ export function MetaDuplicatesPage() {
               {groups.data.map((g, i) => (
                 <li key={i}>
                   <strong>{g.sections.length} Abschnitte</strong> <span className="muted small">bis {Math.round(g.maxScore * 100)} % · {g.formats.map((f: string) => LABEL[f] ?? f).join(', ')}</span>
-                  <ul className="small">{g.sections.map((x: any) => <li key={x.sectionId}><span aria-hidden="true">{ICON[x.format] ?? '📁'}</span> {x.path} · {x.title}{where(x) ? ` · ${where(x)}` : ''}</li>)}</ul>
+                  <ul className="small">{g.sections.map((x: any) => <li key={x.sectionId}><FormatIcon format={x.format} /> {x.path} · {x.title}{where(x) ? ` · ${where(x)}` : ''}</li>)}</ul>
                 </li>
               ))}
             </ul>

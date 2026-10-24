@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.59.0 – Etappe 59 (24.10.2026)
+
+### Hinzugefügt
+- **Icons auf allen Seiten (ADR-111, Fortsetzung):** die restlichen Emoji der Oberfläche als Lucide-Icons.
+  - Quellformate (Markdown, HTML, Word, PowerPoint, PDF, Video, Untertitel, Jira, ZIP) in Einlesen, Quellen je Überschrift, Dubletten und oneSCM_Metadaten.
+  - Blocker, Warnungen und Prüfergebnisse.
+  - Hinweisarten in Werkstatt und Leseransicht (Hinweis, Tipp, Warnung, Querverweis, Lücke).
+  - Werkzeuge des Screenshot-Editors, Sperren/Entsperren, Kommentar, Bearbeiten, Export/Import, Schließen.
+  - Leseransicht in allen neun Sprachen: Merken (Stern, gefüllt wenn gemerkt), Notiz, häufige Fragen, Übersetzung angefordert.
+- Gemeinsamer Baustein `components/icons.tsx` (Icon im Text, Format-Icon, erfüllt/nicht erfüllt, Warnung, Blocker).
+- E2E T-358: Seiten ohne bunte Emoji, Format-Icons im Einlesen, axe.
+
+### Geändert
+- Beschriftungen ohne Emoji, z. B. „KI-umformuliert“, „Merken“/„Gemerkt“, „Notiz hinzufügen“; die Tests sprechen die Schaltflächen über den Text an.
+- Die Kommentar-Schaltfläche der Werkstatt hat einen zugänglichen Namen („Kommentar“).
+- Einfarbige Textzeichen wie ✓, ✎ und ✖ bleiben an einigen Stellen; Rollen- und Spartenzeichen stammen aus den Stammdaten und bleiben unverändert.
+
 ## 0.58.0 – Etappe 58 (24.10.2026)
 
 Wunsch des Auftraggebers vom 24.10.2026: Oberfläche verbessern, professionelle Icons verwenden.

@@ -1,3 +1,5 @@
+import { ImageIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { del, patch, post } from '../api';
@@ -175,7 +177,7 @@ export function KnowledgeNotesPage() {
             {notes.data.map((n) => (
               <li key={n.id}>
                 <strong>{n.question}</strong> {n.confirmed ? <span className="tag">bestätigt</span> : <span className="tag sev-medium">unbestätigt</span>}
-                {n.image && <span className="tag" title={n.image.alt}>🖼 Screenshot</span>}
+                {n.image && <span className="tag" title={n.image.alt}><Ico icon={ImageIcon} size={14} />Screenshot</span>}
                 <div className="small muted">{n.roles.join(', ')} · {n.divisions.join(', ')} · Revision {n.revisions} · {n.chunks} Chunks · <Link to={`/metadaten/chunks`}>{n.path}</Link></div>
                 <p className="md-text small">{n.insight}</p>
                 {canEdit && (

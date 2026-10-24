@@ -1,3 +1,5 @@
+import { HandIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { useState } from 'react';
 import { post } from '../api';
 import { BarList, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
@@ -97,7 +99,7 @@ export function TriagePage() {
                   </td>
                   <td className="small">
                     {r.labels.map((l: any) => (
-                      <span key={`${l.group}.${l.code}`} className="tag small" title={`${l.reason}${l.kept ? ' (von Hand, bleibt)' : ''} – Sicherheit ${pct(l.confidence)}`}>{GROUP[l.group] ?? l.group}: {labelName(l.group, l.code)}{l.kept ? ' ✋' : ''}</span>
+                      <span key={`${l.group}.${l.code}`} className="tag small" title={`${l.reason}${l.kept ? ' (von Hand, bleibt)' : ''} – Sicherheit ${pct(l.confidence)}`}>{GROUP[l.group] ?? l.group}: {labelName(l.group, l.code)}{l.kept ? <> <Ico icon={HandIcon} size={12} /></> : ''}</span>
                     ))}
                   </td>
                   <td className="small">

@@ -1,4 +1,5 @@
-import { ListChecksIcon, PaletteIcon, SaveIcon, SparklesIcon, SpellCheckIcon, WandSparklesIcon } from 'lucide-react';
+import { ArrowUpRightIcon, CircleDashedIcon, CircleXIcon, InfoIcon, LightbulbIcon, ListChecksIcon, LockIcon, LockOpenIcon, MessageSquareIcon, PaletteIcon, PuzzleIcon, SaveIcon, SparklesIcon, SpellCheckIcon, TriangleAlertIcon, WandSparklesIcon, XIcon, type LucideIcon } from 'lucide-react';
+import { BlockerIcon, Ico, OkMark } from '../components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
@@ -13,7 +14,8 @@ import { DiscussionPanel } from './Discussion';
 
 const REWRITABLE = ['paragraph', 'list', 'note', 'tip', 'warning'];
 
-const KIND_LABEL: Record<string, string> = { paragraph: 'Absatz', list: 'Liste', note: 'ℹ️ Hinweis', tip: '💡 Tipp', warning: '⚠️ Warnung', xref: '↗️ Querverweis', gap: '⚠ Lücke', table: 'Tabelle', code: 'Code' };
+const KIND_ICON: Record<string, LucideIcon> = { note: InfoIcon, tip: LightbulbIcon, warning: TriangleAlertIcon, xref: ArrowUpRightIcon, gap: CircleDashedIcon };
+const KIND_LABEL: Record<string, string> = { paragraph: 'Absatz', list: 'Liste', note: 'Hinweis', tip: 'Tipp', warning: 'Warnung', xref: 'Querverweis', gap: 'Lücke', table: 'Tabelle', code: 'Code' };
 
 /** Kapitel nach Handbuch gruppieren: Quellenkapitel zuerst, danach je Handbuch-Variante (ADR-034) */
 function groupByHandbook(chapters: any[], outlines: any[]) {
@@ -92,7 +94,7 @@ export function WorkshopPage() {
               <button className="btn link" onClick={() => navigate(`/werkstatt/${c.id}`)}>{c.title}</button>
               <div className="small">
                 {c.versions[0] ? <Status s={c.versions[0].status} /> : <span className="muted">nicht generiert</span>}
-                {c.openBlockers > 0 && <span className="tag sev-blocker">⛔ {c.openBlockers}</span>}
+                {c.openBlockers > 0 && <span className="tag sev-blocker"><BlockerIcon />{c.openBlockers}<span className="sr-only"> offene Blocker</span></span>}
               </div>
               {c.id === chapterId && (
                 <div className="coverage small">
@@ -226,14 +228,14 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
   return (
     <article className={`block kind-${b.kind} mode-${b.mode} ${selected ? 'selected' : ''}`} {...activatable(onSelect)} aria-current={selected ? 'true' : undefined} aria-label={`Block ${KIND_LABEL[b.kind] ?? b.kind}`}>
       <div className="block-meta">
-        <span className="tag">{KIND_LABEL[b.kind] ?? b.kind}</span>
+        <span className="tag">{KIND_ICON[b.kind] && <Ico icon={KIND_ICON[b.kind]} size={14} />}{KIND_LABEL[b.kind] ?? b.kind}</span>
         <Status s={b.mode} />
         {b.scopeStatus !== 'confirmed' && <Status s={b.scopeStatus} />}
         <RoleBadges codes={b.roles.filter((r: string) => r !== 'all')} />
         <DivisionBadges codes={b.divisions.filter((d: string) => d !== 'all')} />
         {b.market && <span className="tag">Markt {b.market}</span>}
         {b.release && <span className="tag">Release {b.release}</span>}
-        {b.moduleId && <span className="tag" title="Absatz aus einem Textbaustein – gepflegt unter „Textbausteine“; eigener Text löst die Verknüpfung">🧩 Textbaustein F{b.moduleVersion}</span>}
+        {b.moduleId && <span className="tag" title="Absatz aus einem Textbaustein – gepflegt unter „Textbausteine“; eigener Text löst die Verknüpfung"><Ico icon={PuzzleIcon} />Textbaustein F{b.moduleVersion}</span>}
         <span className="small muted">{b.sources.length ? `${b.sources.length} Quelle(n)` : b.justification ? 'manuell begründet' : 'ohne Evidenz'} · v{b.versionNo}</span>
       </div>
       {mode === 'edit' ? (
@@ -264,7 +266,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
       )}
       {proposal && <RewriteProposal proposal={proposal} block={b} llm={llm} onClose={() => setProposal(null)} onDecided={() => (setProposal(null), onChanged())} />}
       {b.justification && <p className="small muted">Begründung: {b.justification}</p>}
-      {b.comment && <p className="small comment">💬 {b.comment}</p>}
+      {b.comment && <p className="small comment"><Ico icon={MessageSquareIcon} />{b.comment}</p>}
       {mode === 'classify' && <ClassifyForm block={b} onDone={() => (setMode('view'), onChanged())} />}
       {imageOpen && (
         // Bild aus diesem Absatz (ADR-042): gespeicherte Bilder werden an den Absatz angehängt
@@ -291,8 +293,8 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
               {ref?.sections.filter((s) => s.code !== b.section).map((s) => <option key={s.code} value={s.code}>{s.title}</option>)}
             </select>
           )}
-          <button className="btn small" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { mode: locked ? 'manually_edited' : 'locked' }), locked ? 'Block entsperrt.' : 'Block gesperrt.')}>{locked ? '🔓 Entsperren' : '🔒 Sperren'}</button>
-          <button className="btn small" onClick={() => { const c = prompt('Kommentar', b.comment ?? ''); if (c !== null) void run(() => patch(`/content-blocks/${b.id}`, { comment: c }), 'Kommentar gespeichert.'); }}>💬</button>
+          <button className="btn small" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { mode: locked ? 'manually_edited' : 'locked' }), locked ? 'Block entsperrt.' : 'Block gesperrt.')}>{locked ? <><Ico icon={LockOpenIcon} />Entsperren</> : <><Ico icon={LockIcon} />Sperren</>}</button>
+          <button className="btn small" onClick={() => { const c = prompt('Kommentar', b.comment ?? ''); if (c !== null) void run(() => patch(`/content-blocks/${b.id}`, { comment: c }), 'Kommentar gespeichert.'); }} aria-label="Kommentar" title="Kommentar"><Ico icon={MessageSquareIcon} /></button>
           {!locked && <button className="btn small danger" onClick={() => { const r = prompt('Grund für das Löschen (wird protokolliert)'); if (r !== null) void run(() => del(`/content-blocks/${b.id}?reason=${encodeURIComponent(r)}`), 'Block gelöscht – über Historie wiederherstellbar.'); }}>Löschen</button>}
         </div>
       )}
@@ -338,7 +340,7 @@ function StyleBatch({ version, llm, onClose, onChanged }: { version: any; llm: a
           const r = await post<any>('/style/rewrite', { text: b.text, mode: m });
           if (r.text.trim() !== b.text.trim()) {
             out.push({ id: b.id, section: b.sectionTitle, versionNo: b.versionNo, before: b.text, after: r.text, lostNumbers: r.lostNumbers,
-              note: r.lostNumbers.length ? `⚠ Zahlen fehlen: ${r.lostNumbers.join(', ')}` : r.method === 'ai' ? 'KI-Vorschlag' : 'Regelkorrektur' });
+              note: r.lostNumbers.length ? `Zahlen fehlen: ${r.lostNumbers.join(', ')}` : r.method === 'ai' ? 'KI-Vorschlag' : 'Regelkorrektur' });
           }
         } catch (e) {
           out.push({ id: b.id, section: b.sectionTitle, versionNo: b.versionNo, before: b.text, after: null, note: `nicht umformuliert: ${errorText(e)}` });
@@ -381,8 +383,8 @@ function StyleBatch({ version, llm, onClose, onChanged }: { version: any; llm: a
     <Modal title="Schreibstil: Kapitel automatisch korrigieren" wide onClose={onClose}>
       <div className="filters" role="group" aria-label="Art der Überarbeitung">
         <button className={`chip${mode === 'rules' ? ' active' : ''}`} aria-pressed={mode === 'rules'} disabled={!!progress} onClick={() => setMode('rules')}>Regelkorrekturen</button>
-        {llm?.enabled && <button className={`chip${mode === 'professional' ? ' active' : ''}`} aria-pressed={mode === 'professional'} disabled={!!progress} onClick={() => setMode('professional')}>✨ KI: professionell umformulieren</button>}
-        {llm?.enabled && <button className={`chip${mode === 'present' ? ' active' : ''}`} aria-pressed={mode === 'present'} disabled={!!progress} onClick={() => setMode('present')}>✨ KI: ins Präsens</button>}
+        {llm?.enabled && <button className={`chip${mode === 'professional' ? ' active' : ''}`} aria-pressed={mode === 'professional'} disabled={!!progress} onClick={() => setMode('professional')}><Ico icon={SparklesIcon} />KI: professionell umformulieren</button>}
+        {llm?.enabled && <button className={`chip${mode === 'present' ? ' active' : ''}`} aria-pressed={mode === 'present'} disabled={!!progress} onClick={() => setMode('present')}><Ico icon={SparklesIcon} />KI: ins Präsens</button>}
       </div>
       {progress && (
         <div role="status">
@@ -459,8 +461,8 @@ function ChapterRewrite({ version: v, llm, editable, open, onClose, onChanged }:
   return (
     <section className="card rewrite-batch" aria-label="KI-Umformulierung des Kapitels">
       <div className="card-head">
-        <h2>✨ KI-Umformulierung des Kapitels</h2>
-        {open && <button className="btn ghost small" onClick={onClose} aria-label="Schließen">✕</button>}
+        <h2><Ico icon={SparklesIcon} />KI-Umformulierung des Kapitels</h2>
+        {open && <button className="btn ghost small" onClick={onClose} aria-label="Schließen"><Ico icon={XIcon} /></button>}
       </div>
       {open && !running && editable && (
         <div className="form-row">
@@ -530,7 +532,7 @@ function RewriteProposal({ proposal: p, block: b, llm, onClose, onDecided }: { p
   return (
     <div className="rewrite" onClick={(e) => e.stopPropagation()} aria-label="KI-Vorschlag">
       <div className="block-meta">
-        <strong>✨ KI-Vorschlag</strong>
+        <strong><Ico icon={SparklesIcon} />KI-Vorschlag</strong>
         <span className="small muted">{p.provider} · {p.model}</span>
         <span className={`tag ${p.valid ? 'st-approved' : 'sev-blocker'}`}>{p.valid ? 'jeder Satz belegt' : 'Satzprüfung nicht bestanden'}</span>
       </div>
@@ -541,7 +543,7 @@ function RewriteProposal({ proposal: p, block: b, llm, onClose, onDecided }: { p
             {s.text}{' '}
             {s.sourceIds.map((id: string) => <span key={id} className="tag">#{seqOf(id)}</span>)}
             <span className="muted"> · Abdeckung {Math.round(s.support * 100)} %</span>
-            {s.issues.map((x: string) => <div key={x} className="sev-text">✖ {llm?.issueLabels?.[x] ?? x}</div>)}
+            {s.issues.map((x: string) => <div key={x} className="sev-text"><Ico icon={CircleXIcon} />{llm?.issueLabels?.[x] ?? x}</div>)}
             {s.details.map((d: string, j: number) => <div key={j} className="muted">{d}</div>)}
           </li>
         ))}
@@ -740,7 +742,7 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
       <ul className="gate">
         {gate.data?.checks.map((c: any) => (
           <li key={c.code} className={c.passed ? 'ok' : 'fail'}>
-            {c.passed ? '✔' : '✖'} {c.label}
+            <OkMark ok={c.passed} /> {c.label}
             {!c.passed && <ul className="small">{c.details.slice(0, 6).map((d: string, i: number) => <li key={i}>{d}</li>)}{c.details.length > 6 && <li>… {c.details.length - 6} weitere</li>}</ul>}
           </li>
         ))}

@@ -1,3 +1,4 @@
+import { WarnIcon } from '../components/icons';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Card, Empty, ErrorBox, Md, Page, Status, useLoad } from '../components/ui';
@@ -56,7 +57,7 @@ export function EvidencePage() {
                         {!b.sources.length && '–'}
                       </td>
                       <td className="small">
-                        {b.issues.length ? b.issues.map((i: string) => <div key={i} className={i === 'no_evidence' ? 'fail' : ''}>⚠ {d.issueLabels[i]}</div>) : <span className="ok">✔ belegt</span>}
+                        {b.issues.length ? b.issues.map((i: string) => <div key={i} className={i === 'no_evidence' ? 'fail' : ''}><WarnIcon />{d.issueLabels[i]}</div>) : <span className="ok">✔ belegt</span>}
                       </td>
                     </tr>
                   ))}

@@ -906,3 +906,12 @@ div.reader-lang-note p { margin: 0; }
 .ba-frame img.ba-after { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .ba-line { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger, #b91c1c); }
 .ba input[type="range"] { width: 100%; max-width: 640px; }
+
+/* Etappe 59 (ADR-111): Icons im Text – Lucide-SVG statt Emoji */
+.ico { display: inline-block; flex: none; vertical-align: -0.18em; margin-right: 4px; }
+.btn .ico, .chip .ico { margin-right: 0; vertical-align: middle; }
+.chip { display: inline-flex; align-items: center; gap: 6px; }
+.ico.ok { color: var(--ok); }
+.ico.fail { color: var(--danger); }
+.ico.filled { fill: currentColor; }
+.tag .ico { margin-right: 3px; }

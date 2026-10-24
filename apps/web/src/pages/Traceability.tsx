@@ -1,3 +1,4 @@
+import { WarnIcon } from '../components/icons';
 import { Card, DownloadButton, ErrorBox, Page, useLoad } from '../components/ui';
 
 export function TraceabilityPage() {
@@ -18,7 +19,7 @@ export function TraceabilityPage() {
       {m.data && (
         <>
           <Card title={`Prüfergebnis · Release ${m.data.release}`}>
-            {m.data.issues.length ? <ul>{m.data.issues.map((i: string) => <li key={i} className="fail">⚠ {i}</li>)}</ul> : <p className="ok">✔ Jede P0-Story hat mindestens einen Test und eine API-Operation; jede Operation referenziert eine Story.</p>}
+            {m.data.issues.length ? <ul>{m.data.issues.map((i: string) => <li key={i} className="fail"><WarnIcon />{i}</li>)}</ul> : <p className="ok">✔ Jede P0-Story hat mindestens einen Test und eine API-Operation; jede Operation referenziert eine Story.</p>}
           </Card>
           <Card title="Matrix">
             {/* breite Tabelle: scrollbarer Bereich per Tastatur erreichbar (WCAG 2.1.1) */}

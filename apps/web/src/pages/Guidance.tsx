@@ -1,4 +1,6 @@
 // Anleitungs-Check (ADR-051): Ist ein Kapitel leicht zu befolgen? Checkliste je Kapitel mit Korrekturen per Klick.
+import { ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { post, put } from '../api';
@@ -200,7 +202,7 @@ export function GuidancePage() {
                       <div className="small muted">{c.points.achieved}/{c.points.possible} Punkte{c.mustPassed ? '' : ' · Muss-Punkte offen'}</div>
                     </td>
                     <td className="small">{c.readability ? <>{c.readability.ok ? '✓' : '!'} Flesch {c.readability.flesch} · LIX {c.readability.lix}<div className="muted">Ø {String(c.readability.avgWords).replace('.', ',')} Wörter</div></> : '–'}</td>
-                    <td>{fbByChapter.get(c.chapterId) ? (() => { const f = fbByChapter.get(c.chapterId)!; return <span className="small" aria-label={`${f.helpful} hilfreich, ${f.notHelpful} nicht hilfreich, ${f.open} offen`}>👍 {f.helpful} · 👎 {f.notHelpful}{f.open ? ` · ${f.open} offen` : ''}</span>; })() : <span className="small muted">–</span>}</td>
+                    <td>{fbByChapter.get(c.chapterId) ? (() => { const f = fbByChapter.get(c.chapterId)!; return <span className="small" aria-label={`${f.helpful} hilfreich, ${f.notHelpful} nicht hilfreich, ${f.open} offen`}><Ico icon={ThumbsUpIcon} size={14} />{f.helpful} · <Ico icon={ThumbsDownIcon} size={14} />{f.notHelpful}{f.open ? ` · ${f.open} offen` : ''}</span>; })() : <span className="small muted">–</span>}</td>
                     <td><Link className="btn small" to={`/anleitungs-check/${c.versionId}`} aria-label={`${c.title} prüfen`}>Prüfen</Link></td>
                   </tr>
                 ))}

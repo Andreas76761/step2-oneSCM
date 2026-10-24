@@ -1,20 +1,21 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, get } from '../api';
+import { FormatIcon } from '../components/icons';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 // oneSCM_Metadaten › Einlesen (ADR-086, M2): mehrere Dateien auf einmal, je Datei Ergebnis mit Chunks und Hinweisen
 
 const FORMATS = [
-  ['📝', 'Markdown', '.md, .markdown', 'Zeilen'],
-  ['🌐', 'HTML / Confluence-Export', '.html, .htm', 'Abschnitt (Anker der Überschrift)'],
-  ['📄', 'Word', '.docx', 'Abschnitt (Überschrift)'],
-  ['📊', 'PowerPoint', '.pptx', 'Folie – Titel, Aufzählungen, Tabellen, Bilder, Sprechernotizen'],
-  ['📕', 'PDF', '.pdf', 'Seite – Überschriften aus Lesezeichen bzw. Schriftgröße; gescannte Seiten per Texterkennung'],
-  ['🎬', 'Video', '.mp4', 'Zeitmarke – Text aus mitgelieferten Untertiteln (gleicher Name) oder Transkription, Standbilder bei Änderung'],
-  ['💬', 'Untertitel', '.vtt, .srt', 'Zeitmarke – Abschnitte je Kapitelmarke bzw. 2 Minuten'],
-  ['🎫', 'Jira-Export', '.xml, .csv', 'Ticket'],
-  ['🗜', 'ZIP', '.zip', 'alle Dateien darin, Bilder werden mit abgelegt'],
+  ['markdown', 'Markdown', '.md, .markdown', 'Zeilen'],
+  ['html', 'HTML / Confluence-Export', '.html, .htm', 'Abschnitt (Anker der Überschrift)'],
+  ['docx', 'Word', '.docx', 'Abschnitt (Überschrift)'],
+  ['pptx', 'PowerPoint', '.pptx', 'Folie – Titel, Aufzählungen, Tabellen, Bilder, Sprechernotizen'],
+  ['pdf', 'PDF', '.pdf', 'Seite – Überschriften aus Lesezeichen bzw. Schriftgröße; gescannte Seiten per Texterkennung'],
+  ['mp4', 'Video', '.mp4', 'Zeitmarke – Text aus mitgelieferten Untertiteln (gleicher Name) oder Transkription, Standbilder bei Änderung'],
+  ['subtitles', 'Untertitel', '.vtt, .srt', 'Zeitmarke – Abschnitte je Kapitelmarke bzw. 2 Minuten'],
+  ['jira', 'Jira-Export', '.xml, .csv', 'Ticket'],
+  ['zip', 'ZIP', '.zip', 'alle Dateien darin, Bilder werden mit abgelegt'],
 ];
 const ACCEPT = '.zip,.md,.markdown,.html,.htm,.docx,.pptx,.pdf,.mp4,.vtt,.srt,.xml,.csv';
 const TOOLS: [string, string, string][] = [
@@ -80,9 +81,9 @@ export function IngestPage() {
           <table className="table compact">
             <thead><tr><th>Format</th><th>Endung</th><th>Fundstelle je Chunk</th></tr></thead>
             <tbody>
-              {FORMATS.map(([icon, name, ext, loc]) => {
+              {FORMATS.map(([format, name, ext, loc]) => {
                 const off = ext.split(', ').every((x) => allowed.length && !allowed.includes(x));
-                return <tr key={name}><td>{icon} {name}{off && <span className="tag sev-medium">in den Einstellungen nicht erlaubt</span>}</td><td><code>{ext}</code></td><td className="small">{loc}</td></tr>;
+                return <tr key={name}><td><FormatIcon format={format} />{name}{off && <span className="tag sev-medium">in den Einstellungen nicht erlaubt</span>}</td><td><code>{ext}</code></td><td className="small">{loc}</td></tr>;
               })}
             </tbody>
           </table>

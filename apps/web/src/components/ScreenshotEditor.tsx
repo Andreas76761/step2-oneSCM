@@ -2,6 +2,8 @@
 // Pfeile und Textfelder einzeichnen, vertrauliche Bereiche unkenntlich machen (verpixelt – im gespeicherten PNG nicht umkehrbar),
 // Legende pflegen, als PNG speichern. Nummern und Textfelder lassen sich auch per Tastatur (Koordinaten in Prozent) anlegen.
 // Etappe 17 (ADR-049): Ausschnitt zuschneiden, Lupe (vergrößerter Bereich mit Verbindungslinie), Markierungen per Maus verschieben.
+import { ClipboardPasteIcon, CropIcon, MoveIcon, MoveRightIcon, XIcon, ZoomInIcon } from 'lucide-react';
+import { Ico } from './icons';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { patch, post } from '../api';
 import { Card, errorText, useApp } from './ui';
@@ -376,18 +378,18 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
       <label className="block">Bildschirmfoto (PNG oder JPEG)
         <input type="file" accept="image/png,image/jpeg" data-testid="screenshot-input" onChange={(e) => load(e.target.files?.[0])} />
       </label>
-      <p className="small muted">oder <button type="button" className="btn small" onClick={() => void paste()}>📋 Aus Zwischenablage einfügen</button> – bzw. Strg+V drücken. Danach mit ✂ Zuschneiden den Ausschnitt wählen.</p>
+      <p className="small muted">oder <button type="button" className="btn small" onClick={() => void paste()}><Ico icon={ClipboardPasteIcon} />Aus Zwischenablage einfügen</button> – bzw. Strg+V drücken. Danach mit „Zuschneiden“ den Ausschnitt wählen.</p>
       {img && (
         <>
           <div className="filters" role="group" aria-label="Werkzeug">
             <button className={`chip${tool === 'marker' ? ' active' : ''}`} aria-pressed={tool === 'marker'} onClick={() => setTool('marker')}>① Nummer setzen</button>
             <button className={`chip${tool === 'frame' ? ' active' : ''}`} aria-pressed={tool === 'frame'} onClick={() => setTool('frame')}>▭ Rahmen ziehen</button>
-            <button className={`chip${tool === 'arrow' ? ' active' : ''}`} aria-pressed={tool === 'arrow'} onClick={() => setTool('arrow')}>➜ Pfeil ziehen</button>
+            <button className={`chip${tool === 'arrow' ? ' active' : ''}`} aria-pressed={tool === 'arrow'} onClick={() => setTool('arrow')}><Ico icon={MoveRightIcon} />Pfeil ziehen</button>
             <button className={`chip${tool === 'text' ? ' active' : ''}`} aria-pressed={tool === 'text'} onClick={() => setTool('text')}>T Textfeld setzen</button>
             <button className={`chip${tool === 'blur' ? ' active' : ''}`} aria-pressed={tool === 'blur'} onClick={() => setTool('blur')}>▦ Unkenntlich machen</button>
-            <button className={`chip${tool === 'magnify' ? ' active' : ''}`} aria-pressed={tool === 'magnify'} onClick={() => setTool('magnify')}>🔍 Lupe</button>
-            <button className={`chip${tool === 'crop' ? ' active' : ''}`} aria-pressed={tool === 'crop'} onClick={() => setTool('crop')}>✂ Zuschneiden</button>
-            <button className={`chip${tool === 'move' ? ' active' : ''}`} aria-pressed={tool === 'move'} onClick={() => setTool('move')}>✥ Verschieben</button>
+            <button className={`chip${tool === 'magnify' ? ' active' : ''}`} aria-pressed={tool === 'magnify'} onClick={() => setTool('magnify')}><Ico icon={ZoomInIcon} />Lupe</button>
+            <button className={`chip${tool === 'crop' ? ' active' : ''}`} aria-pressed={tool === 'crop'} onClick={() => setTool('crop')}><Ico icon={CropIcon} />Zuschneiden</button>
+            <button className={`chip${tool === 'move' ? ' active' : ''}`} aria-pressed={tool === 'move'} onClick={() => setTool('move')}><Ico icon={MoveIcon} />Verschieben</button>
             <label className="inline">Farbe <input type="color" value={color} onChange={(e) => setColor(e.target.value)} /></label>
             <button className="btn small" disabled={!history.length} onClick={undo}>Rückgängig</button>
             <button className="btn small" disabled={!history.length} onClick={() => { setSh(EMPTY); setHistory([]); }}>Alles entfernen</button>
@@ -398,7 +400,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
             </label>
           )}
           {crop && (
-            <p className="small">✂ Zuschnitt {Math.round(crop.w)} % × {Math.round(crop.h)} % des Bildes – gespeichert wird nur der helle Ausschnitt.{' '}
+            <p className="small"><Ico icon={CropIcon} />Zuschnitt {Math.round(crop.w)} % × {Math.round(crop.h)} % des Bildes – gespeichert wird nur der helle Ausschnitt.{' '}
               <button className="btn small" onClick={() => setCrop(null)}>Zuschnitt aufheben</button>
             </p>
           )}
@@ -421,7 +423,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
                   <input aria-label={`Nummer ${i + 1} Beschreibung`} placeholder="Was wird hier geklickt?" value={m.text} onChange={(e) => setMarkers(markers.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
                   <input aria-label={`Nummer ${i + 1} X in Prozent`} type="number" min={0} max={100} value={m.x} style={{ width: '5em' }} onChange={(e) => setMarkers(markers.map((x, j) => (j === i ? { ...x, x: clamp(Number(e.target.value)) } : x)))} />
                   <input aria-label={`Nummer ${i + 1} Y in Prozent`} type="number" min={0} max={100} value={m.y} style={{ width: '5em' }} onChange={(e) => setMarkers(markers.map((x, j) => (j === i ? { ...x, y: clamp(Number(e.target.value)) } : x)))} />
-                  <button className="btn small danger" aria-label={`Nummer ${i + 1} entfernen`} onClick={() => { setMarkers(markers.filter((_, j) => j !== i)); dropHistory(m.id); }}>✕</button>
+                  <button className="btn small danger" aria-label={`Nummer ${i + 1} entfernen`} onClick={() => { setMarkers(markers.filter((_, j) => j !== i)); dropHistory(m.id); }}><Ico icon={XIcon} /></button>
                 </li>
               ))}
             </ol>
@@ -436,7 +438,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
                     <input aria-label={`Textfeld ${i + 1}`} value={l.text} onChange={(e) => setLabels(labels.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
                     <input aria-label={`Textfeld ${i + 1} X in Prozent`} type="number" min={0} max={100} value={l.x} style={{ width: '5em' }} onChange={(e) => setLabels(labels.map((x, j) => (j === i ? { ...x, x: clamp(Number(e.target.value)) } : x)))} />
                     <input aria-label={`Textfeld ${i + 1} Y in Prozent`} type="number" min={0} max={100} value={l.y} style={{ width: '5em' }} onChange={(e) => setLabels(labels.map((x, j) => (j === i ? { ...x, y: clamp(Number(e.target.value)) } : x)))} />
-                    <button className="btn small danger" aria-label={`Textfeld ${i + 1} entfernen`} onClick={() => { setLabels(labels.filter((_, j) => j !== i)); dropHistory(l.id); }}>✕</button>
+                    <button className="btn small danger" aria-label={`Textfeld ${i + 1} entfernen`} onClick={() => { setLabels(labels.filter((_, j) => j !== i)); dropHistory(l.id); }}><Ico icon={XIcon} /></button>
                   </li>
                 ))}
               </ul>

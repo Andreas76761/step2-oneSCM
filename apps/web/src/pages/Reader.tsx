@@ -1,6 +1,7 @@
 // Leseransicht (ADR-054): das Handbuch so lesen, wie Endnutzer es sehen – Inhaltsverzeichnis, Schritte zum Abhaken,
 // Hinweise hervorgehoben – und je Kapitel „War das hilfreich?“ beantworten.
-import { DownloadIcon, FileTextIcon, PrinterIcon, ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
+import { CheckIcon, CircleHelpIcon, DownloadIcon, FileTextIcon, InfoIcon, LightbulbIcon, NotebookPenIcon, PrinterIcon, StarIcon, ThumbsDownIcon, ThumbsUpIcon, TriangleAlertIcon, XIcon, type LucideIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, currentProjectId, get, mediaUrl, post } from '../api';
@@ -9,10 +10,10 @@ import { Card, Empty, ErrorBox, Md, Page, errorText, preloadMarkdown, useApp, us
 import { matches } from './FilteredView';
 import { NATIVE_NAMES, ReaderTextProvider, readerTexts, useReaderText } from '../readerText';
 
-const CALLOUT: Record<string, { icon: string; label: 'tip' | 'warning' | 'note' }> = {
-  tip: { icon: '💡', label: 'tip' },
-  warning: { icon: '⚠️', label: 'warning' },
-  note: { icon: 'ℹ️', label: 'note' },
+const CALLOUT: Record<string, { icon: LucideIcon; label: 'tip' | 'warning' | 'note' }> = {
+  tip: { icon: LightbulbIcon, label: 'tip' },
+  warning: { icon: TriangleAlertIcon, label: 'warning' },
+  note: { icon: InfoIcon, label: 'note' },
 };
 // Verwaltungsabschnitt und Lückenhinweise gehören nicht in die Leseransicht
 const HIDDEN_SECTIONS = new Set(['status']);
@@ -94,7 +95,7 @@ function Feedback({ chapterId, versionId }: { chapterId: string; versionId: stri
       notify(errorText(e), 'error');
     }
   };
-  if (sent) return <p className="reader-feedback" role="status" lang={uiLang}>✓ {t('fbThanks')}{helpful === false ? t('fbThanksNo') : ''}.</p>;
+  if (sent) return <p className="reader-feedback" role="status" lang={uiLang}><Ico icon={CheckIcon} />{t('fbThanks')}{helpful === false ? t('fbThanksNo') : ''}.</p>;
   return (
     <section className="reader-feedback no-print" aria-labelledby="fb-q" lang={uiLang}>
       <h2 id="fb-q">{t('fbQuestion')}</h2>
@@ -131,7 +132,7 @@ export function ChapterContent({ version, role }: { version: any; role?: string 
         <section key={s.code} className="reader-section">
           <h3>{s.title}</h3>
           {s.blocks.map((b: any) => {
-            if (CALLOUT[b.kind]) return <div key={b.id} className={`callout ${b.kind}`}><strong><span aria-hidden="true">{CALLOUT[b.kind].icon}</span> {t(CALLOUT[b.kind].label)}:</strong> <Md text={b.text} /></div>;
+            if (CALLOUT[b.kind]) return <div key={b.id} className={`callout ${b.kind}`}><strong><Ico icon={CALLOUT[b.kind].icon} />{t(CALLOUT[b.kind].label)}:</strong> <Md text={b.text} /></div>;
             if (s.code === 'steps' && b.kind === 'list') return <StepList key={b.id} versionId={version.id} blockId={b.id} text={b.text} />;
             return <Md key={b.id} text={b.text} />;
           })}
@@ -192,7 +193,7 @@ function LanguageNote({ version, chapterId, requested, onRequested }: { version:
     }
   };
   const ask = version.fallback && (requested
-    ? <span className="small" role="status">{t('requested')}</span>
+    ? <span className="small" role="status"><Ico icon={CheckIcon} />{t('requested')}</span>
     : <button type="button" className="btn small" disabled={busy} onClick={() => void request()}>{t('requestTranslation')}</button>);
   if (version.fallback === 'missing') return <div className="reader-lang-note" role="note" lang={uiLang}><p>{t('langMissing', { lang: name })}</p>{ask}</div>;
   if (version.fallback === 'outdated') return <div className="reader-lang-note" role="note" lang={uiLang}><p>{t('langOutdated', { lang: name })}</p>{ask}</div>;
@@ -338,7 +339,7 @@ function Related({ chapterId, drafts, lang, canEdit, chapters, withQ }: { chapte
               {links.map((l: any) => (
                 <li key={l.chapterId}>
                   <Link to={withQ(l.chapterId)}>{l.title}</Link>
-                  {editing && manualIds.includes(l.chapterId) && <button type="button" className="btn small ghost" disabled={busy} aria-label={`Verweis auf „${l.title}“ entfernen`} onClick={() => save(manualIds.filter((x: string) => x !== l.chapterId), hiddenIds, 'Verweis entfernt.')}>✕</button>}
+                  {editing && manualIds.includes(l.chapterId) && <button type="button" className="btn small ghost" disabled={busy} aria-label={`Verweis auf „${l.title}“ entfernen`} onClick={() => save(manualIds.filter((x: string) => x !== l.chapterId), hiddenIds, 'Verweis entfernt.')}><Ico icon={XIcon} /></button>}
                   {editing && !manualIds.includes(l.chapterId) && <button type="button" className="btn small ghost" disabled={busy} aria-label={`Vorschlag „${l.title}“ ausblenden`} onClick={() => save(manualIds, [...hiddenIds, l.chapterId], 'Vorschlag ausgeblendet.')}>Ausblenden</button>}
                 </li>
               ))}
@@ -428,7 +429,7 @@ export function ReaderBookmarksPage() {
         <label className="inline">Lesezeichen filtern <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Titel oder Notiz" /></label>
         <span className="small muted" aria-live="polite">{mine.data ? `${items.length} von ${all.length}` : ''}</span>
       </div>
-      {mine.data && !all.length ? <Empty>Noch keine Lesezeichen. In der <Link to="/lesen">Leseransicht</Link> merken Sie Kapitel mit „☆ Merken“.</Empty> : (
+      {mine.data && !all.length ? <Empty>Noch keine Lesezeichen. In der <Link to="/lesen">Leseransicht</Link> merken Sie Kapitel mit „Merken“.</Empty> : (
         <Card title="Gemerkte Kapitel">
           <ul className="plain bookmark-list">
             {items.map((b) => {
@@ -529,8 +530,8 @@ function ChapterNote({ chapterId, note, onSaved }: { chapterId: string; note: st
     );
   }
   return note
-    ? <p className="small bookmark-note">📝 {note} · <button type="button" className="linklike no-print" onClick={() => { setDraft(note); setEditing(true); }}>{t('editNote')}</button></p>
-    : <p className="no-print chapter-note-add"><button type="button" className="btn small ghost" onClick={() => { setDraft(''); setEditing(true); }}>{t('addNote')}</button></p>;
+    ? <p className="small bookmark-note"><Ico icon={NotebookPenIcon} />{note} · <button type="button" className="linklike no-print" onClick={() => { setDraft(note); setEditing(true); }}>{t('editNote')}</button></p>
+    : <p className="no-print chapter-note-add"><button type="button" className="btn small ghost" onClick={() => { setDraft(''); setEditing(true); }}><Ico icon={NotebookPenIcon} />{t('addNote')}</button></p>;
 }
 
 export function ReaderPage() {
@@ -624,7 +625,7 @@ export function ReaderPage() {
             <div className="reader-search-row">
               <input id="reader-q" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('searchPlaceholder')}
                 aria-describedby="reader-q-status" autoComplete="off" />
-              {query && <button type="button" className="btn small ghost" onClick={() => setQuery('')} aria-label={t('clearSearch')}>✕</button>}
+              {query && <button type="button" className="btn small ghost" onClick={() => setQuery('')} aria-label={t('clearSearch')}><Ico icon={XIcon} /></button>}
             </div>
             <p id="reader-q-status" className="small muted" aria-live="polite">
               {searchError ?? (search ? (search.total ? t('found', { n: search.total }) : t('notFound', { q: search.q })) : '')}
@@ -647,7 +648,7 @@ export function ReaderPage() {
             <>
               {mine.data?.bookmarks.length > 0 && (
                 <>
-                  <h2 className="toc-sub">{t('bookmarks')}</h2>
+                  <h2 className="toc-sub"><Ico icon={StarIcon} />{t('bookmarks')}</h2>
                   <ul className="plain">{mine.data.bookmarks.slice(0, 5).map((b: any) => <li key={b.chapterId}><Link to={withQ(b.chapterId)}>{titleOf(b.chapterId, b.title)}</Link></li>)}</ul>
                   <p className="small"><Link to="/lesen/lesezeichen">{t('allBookmarks')}</Link></p>
                 </>
@@ -670,7 +671,7 @@ export function ReaderPage() {
                   </li>
                 ))}
               </ol>
-              <p className="small"><Link to="/lesen/faq">{t('faqLink')}</Link></p>
+              <p className="small"><Link to="/lesen/faq"><Ico icon={CircleHelpIcon} />{t('faqLink')}</Link></p>
             </>
           )}
           {glossary.data && glossary.data.length > 0 && <p className="small muted">{t('glossHint')}</p>}
@@ -695,7 +696,7 @@ export function ReaderPage() {
                 <button type="button" className="btn small no-print" lang={uiLang} aria-pressed={bookmarked} onClick={async () => {
                   await api(bookmarked ? 'DELETE' : 'PUT', `/reader/bookmarks/${current.id}`);
                   mine.reload();
-                }}>{bookmarked ? t('bookmarked') : t('bookmark')}</button>
+                }}><Ico icon={StarIcon} className={`ico${bookmarked ? ' filled' : ''}`} />{bookmarked ? t('bookmarked') : t('bookmark')}</button>
               </div>
               <div lang={uiLang}><ChapterNote chapterId={current.id} note={bookmarkNote} onSaved={() => mine.reload()} /></div>
               <LanguageNote version={version.data} chapterId={current.id} requested={translationRequested} onRequested={() => mine.reload()} />
@@ -729,7 +730,7 @@ export function FeedbackCard({ canEdit }: { canEdit: boolean }) {
         <ul className="plain feedback-list">
           {items.map((f) => (
             <li key={f.id}>
-              <span aria-hidden="true">{f.helpful ? '👍' : '👎'}</span> <span className="sr-only">{f.helpful ? 'hilfreich' : 'nicht hilfreich'}:</span>
+              <Ico icon={f.helpful ? ThumbsUpIcon : ThumbsDownIcon} /> <span className="sr-only">{f.helpful ? 'hilfreich' : 'nicht hilfreich'}:</span>
               <Link to={`/lesen/${f.chapterId}`}><strong>{f.title ?? f.chapterId}</strong></Link>
               {f.comment && <> – „{f.comment}“</>}
               <span className="small muted"> · {f.createdBy}, {new Date(f.createdAt).toLocaleDateString('de-DE')}</span>

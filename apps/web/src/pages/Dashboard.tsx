@@ -1,3 +1,4 @@
+import { BlockerIcon } from '../components/icons';
 import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { post } from '../api';
@@ -168,7 +169,7 @@ export function DashboardPage() {
                 <td>{c.snippetCount}</td>
                 <td>{c.confirmedSnippetCount}</td>
                 <td>{c.openFindings}</td>
-                <td>{c.openBlockers ? <span className="tag sev-blocker">⛔ {c.openBlockers}</span> : '–'}</td>
+                <td>{c.openBlockers ? <span className="tag sev-blocker"><BlockerIcon />{c.openBlockers}<span className="sr-only"> offene Blocker</span></span> : '–'}</td>
                 <td>{c.versions[0] ? <>V{c.versions[0].versionNo} <Status s={c.versions[0].status} /></> : '–'}</td>
                 <td><Link to={`/werkstatt/${c.id}`}>Werkstatt →</Link></td>
               </tr>

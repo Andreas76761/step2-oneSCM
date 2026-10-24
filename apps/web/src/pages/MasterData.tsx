@@ -1,4 +1,6 @@
 // Stammdaten (ADR-032): Abkürzungen, Glossar, Bildverzeichnis, FAQ, Redaktionsplanung
+import { PencilIcon, SparklesIcon } from 'lucide-react';
+import { Ico, WarnIcon } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, del, mediaUrl, patch, post, put } from '../api';
@@ -199,7 +201,7 @@ export function GlossaryPage() {
                   ) : (
                     <>
                       {t.definition ?? <span className="muted">Keine Definition.</span>}
-                      {canEdit && <> <button className="btn small" aria-label={`Definition von ${t.preferred} bearbeiten`} onClick={() => setEdit({ id: t.id, definition: t.definition ?? '' })}>✎</button></>}
+                      {canEdit && <> <button className="btn small" aria-label={`Definition von ${t.preferred} bearbeiten`} onClick={() => setEdit({ id: t.id, definition: t.definition ?? '' })}><Ico icon={PencilIcon} /></button></>}
                     </>
                   )}
                 </dd>
@@ -258,7 +260,7 @@ export function ImageIndexPage() {
                       </form>
                     ) : m.title ?? ''}
                   </td>
-                  <td>{m.altTexts.filter(Boolean).join(' / ') || <span className="muted">–</span>}{m.missingAlt && <div><span className="flag flag-warning">⚠ Alternativtext fehlt</span></div>}</td>
+                  <td>{m.altTexts.filter(Boolean).join(' / ') || <span className="muted">–</span>}{m.missingAlt && <div><span className="flag flag-warning"><WarnIcon />Alternativtext fehlt</span></div>}</td>
                   <td className="small">
                     {m.usedIn.chapters.map((c: any) => <div key={`${c.chapterId}-${c.versionNo}`}><Link to={`/werkstatt/${c.chapterId}`}>{c.chapter}</Link> V{c.versionNo}</div>)}
                     {m.usedIn.sources.map((s: any) => <div key={s.seq}>Quelle #{s.seq} ({s.chapter})</div>)}
@@ -483,7 +485,7 @@ function FaqTranslations({ faqId, question, canEdit, onChanged }: { faqId: strin
             {t.question && <div className="small" lang={t.language}><em>{t.question}</em></div>}
             <span className="row-actions">
               {canEdit && <button className="btn small" aria-label={`${t.languageName} bearbeiten`} onClick={() => setEdit({ language: t.language, question: t.question ?? '', answer: t.answer ?? '' })}>{t.status === 'missing' ? 'Übersetzen' : 'Bearbeiten'}</button>}
-              {canEdit && <button className="btn small" aria-label={`${t.languageName}: KI-Vorschlag`} onClick={() => run(() => post(`/faq/${faqId}/translations/${t.language}/machine`, {}), `KI-Vorschlag ${t.languageName} erstellt – bitte prüfen und freigeben.`)}>✨ KI-Vorschlag</button>}
+              {canEdit && <button className="btn small" aria-label={`${t.languageName}: KI-Vorschlag`} onClick={() => run(() => post(`/faq/${faqId}/translations/${t.language}/machine`, {}), `KI-Vorschlag ${t.languageName} erstellt – bitte prüfen und freigeben.`)}><Ico icon={SparklesIcon} />KI-Vorschlag</button>}
               {canApprove && t.status === 'draft' && !t.outdated && (() => {
                 // Freigabe nur ohne Prüfbefunde und durch eine andere Person als die zuletzt bearbeitende (Vier-Augen-Prinzip, ADR-077)
                 const why = t.issues.length ? 'erst die Prüfbefunde beheben' : t.updatedBy === me.data?.id ? 'Freigabe durch eine andere Person (Vier-Augen-Prinzip)' : null;

@@ -2719,5 +2719,14 @@
     "requirements": [
       "NFR-146"
     ]
+  },
+  {
+    "id": "T-358",
+    "title": "Seiten ohne bunte Emoji (Einlesen, Schreibstil, Optimierungen, Rückmeldungen, Leseransicht, Kapitel-Assistent), Format-Icons – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-146"
+    ]
   }
 ]

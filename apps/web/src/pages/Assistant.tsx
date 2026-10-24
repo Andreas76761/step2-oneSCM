@@ -1,4 +1,6 @@
 // Handbuch-Assistent (ADR-026): Fragen an das freigegebene Handbuch, Antwort mit Quellen je Satz
+import { ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { currentProjectId, post } from '../api';
@@ -89,8 +91,8 @@ export function AssistantPage() {
           )}
           <div className="actions">
             <span className="small">War die Antwort hilfreich?</span>
-            <button className="btn small" aria-pressed={rated === 1} disabled={rated !== null} onClick={() => void rate(true)}>👍 Ja</button>
-            <button className="btn small ghost" aria-pressed={rated === -1} disabled={rated !== null} onClick={() => void rate(false)}>👎 Nein</button>
+            <button className="btn small" aria-pressed={rated === 1} disabled={rated !== null} onClick={() => void rate(true)}><Ico icon={ThumbsUpIcon} />Ja</button>
+            <button className="btn small ghost" aria-pressed={rated === -1} disabled={rated !== null} onClick={() => void rate(false)}><Ico icon={ThumbsDownIcon} />Nein</button>
           </div>
         </Card>
       )}

@@ -1,6 +1,6 @@
 # ADR-111 Einheitliche SVG-Icons mit Lucide
 
-**Status:** akzeptiert, umgesetzt in Etappe 58 (Wunsch des Auftraggebers vom 24.10.2026: „verbessere die GUI, nutze professionelle Icons“). Erweitert ADR-035 (Darstellung, Dunkelmodus) und ADR-053 (Navigation nach Arbeitsablauf).
+**Status:** akzeptiert, umgesetzt in Etappe 58 und 59 (Wunsch des Auftraggebers vom 24.10.2026: „verbessere die GUI, nutze professionelle Icons“). Erweitert ADR-035 (Darstellung, Dunkelmodus) und ADR-053 (Navigation nach Arbeitsablauf).
 
 ## Kontext
 Navigation, Startseite und viele Schaltflächen nutzten Emoji als Icons. Emoji sehen je nach Betriebssystem und Schrift verschieden aus, sind farbig und passen nicht zum Dunkelmodus. Bei 70 Navigationseinträgen wirken sie unruhig. Einige Emoji gehörten außerdem zum zugänglichen Namen der Schaltflächen („✨ KI-Vorschlag“), sodass Screenreader sie mit vorlasen.
@@ -28,6 +28,7 @@ Navigation, Startseite und viele Schaltflächen nutzten Emoji als Icons. Emoji s
 ## Folgen
 - Neue Abhängigkeit `lucide-react` 1.54.0 (nur die Oberfläche).
 - Tests, die Schaltflächen über ihren Namen ansprechen, nutzen den Text ohne Emoji.
-- Weiter mit Emoji (in späteren Schritten umstellbar):
-  - Zeichen in Inhalten und Befunden (z. B. Hinweisarten in Kapiteln, Schweregrade, Rollen- und Spartenzeichen aus den Stammdaten);
-  - Schaltflächen seltener genutzter Seiten.
+- **Etappe 59:** auch die übrigen Seiten (Quellformate, Blocker und Warnungen, Hinweisarten, Screenshot-Editor, Sperren, Kommentar, Bearbeiten, Export/Import, Schließen) und die Leseransicht in allen neun Sprachen. Die Texte der Leseransicht enthalten keine Zeichen mehr; die Icons setzt die Oberfläche.
+- Bewusst unverändert:
+  - einfarbige Textzeichen wie ✓, ✎, ✖ und die Pfeile (sehen überall gleich aus);
+  - Rollen- und Spartenzeichen, die aus den Stammdaten kommen (Daten, keine Oberfläche).
