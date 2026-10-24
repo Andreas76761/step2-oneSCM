@@ -2477,5 +2477,43 @@
       "NFR-131",
       "NFR-132"
     ]
+  },
+  {
+    "id": "T-332",
+    "title": "Kurzfassung extraktiv (Zweck, Ergebnis, Warnung, Ablauf, ~¼ der Länge), erfundene Zahlen erkennen, Prüferprofile: Zusagen, fehlender Warnhinweis, lange Sätze, Fachjargon, Wert, KI-Funde prüfen (Einheit)",
+    "file": "apps/server/test/stage52.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-133",
+      "NFR-134"
+    ]
+  },
+  {
+    "id": "T-333",
+    "title": "Textvarianten einer Kapitelversion mit Wortzahl, KI-Kurzfassung, Download und Exportprofil Kurzfassung",
+    "file": "apps/server/test/stage52.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-133"
+    ]
+  },
+  {
+    "id": "T-334",
+    "title": "Prüferprofile: alle vier oder Auswahl prüfen, Funde je Profil (Widerspruch/unbelegt, Stil, Compliance, Endanwender), Verlauf, Berechtigung",
+    "file": "apps/server/test/stage52.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-134"
+    ]
+  },
+  {
+    "id": "T-335",
+    "title": "Textvarianten und Prüferprofile in der Oberfläche – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-133",
+      "NFR-134"
+    ]
   }
 ]

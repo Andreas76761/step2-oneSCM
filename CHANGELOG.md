@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.52.0 – Etappe 52 (24.10.2026)
+
+### Hinzugefügt
+- **Textvarianten je Kapitel (ADR-105, S-05):** Endanwender (Zweck, Voraussetzungen, Schritte, Ergebnis, Hinweise), Fachtext (vollständig) und Kurzfassung für das Management (etwa ¼ der Länge, regelbasiert aus Zweck, Ergebnis, Warnhinweisen und Ablauf; auf Wunsch vom KI-Dienst, ohne erfundene Zahlen). Wortzahl und Anteil je Variante, Download als Markdown, Exportprofil „Kurzfassung“.
+- **Vier Prüferprofile (W-12):**
+  - **Fachlich:** Widersprüche, unbelegte Aussagen, Zahlen ohne Quelle.
+  - **Redaktion:** Stil und Anleitungs-Check.
+  - **Compliance:** personenbezogene Daten, unhaltbare Zusagen, folgenreiche Aktion ohne Warnhinweis, Warnhinweis-Schema.
+  - **Endanwender:** Lesbarkeit, lange Sätze, Fachjargon, unerklärte Abkürzungen.
+  - Je Profil Wert und Ampel; auf Wunsch ergänzt ein lokaler KI-Dienst Funde. Verlauf je Kapitelversion.
+- Seiten „Textvarianten“ und „Prüferprofile“ (auch in der Barrierefreiheitsprüfung); Tests T-332 … T-334, E2E T-335 (axe); Anforderungen NFR-133, NFR-134; Migration 058.
+
 ## 0.51.0 – Etappe 51 (24.10.2026)
 
 ### Hinzugefügt

@@ -2968,3 +2968,37 @@ test('[T-331] Überarbeitung: Prüffassung exportieren, KI-Lektorat, Drei-Spalte
   const v = await (await request.get(`/api/v1/chapter-versions/${ch.versionId}`, { headers: red })).json();
   expect(v.sections.flatMap((s: any) => s.blocks.map((b: any) => b.text))).toContain('Das Kennwort ist jetzt gespeichert.');
 });
+
+test('[T-335] Textvarianten und Prüferprofile – barrierefrei', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const ch = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: { title: 'E2E Varianten Löschen', purpose: 'Mit dieser Anleitung löschen Sie einen Datensatz. Die Übertragung ist garantiert fehlerfrei.', steps: ['Öffnen Sie **Stammdaten**', 'Klicken Sie auf **Löschen**, um den Datensatz endgültig zu löschen'], result: 'Der Datensatz ist gelöscht und erscheint nicht mehr in der Liste.' } })).json();
+  expect(ch.versionId).toBeTruthy();
+
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
+  const nav = page.getByRole('navigation', { name: 'Hauptnavigation' });
+  await nav.getByRole('link', { name: 'Textvarianten' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Textvarianten' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Kapitel', exact: true }).selectOption({ label: 'E2E Varianten Löschen – Version 1' });
+  const tabs = page.getByRole('tablist', { name: 'Varianten' });
+  await expect(tabs.getByRole('tab')).toHaveCount(3);
+  await expect(page.getByRole('tabpanel', { name: 'Fassung Endanwender' })).toContainText('Öffnen Sie');
+  await tabs.getByRole('tab', { name: /Kurzfassung/ }).click();
+  await expect(page.getByRole('tabpanel', { name: 'Fassung Kurzfassung (Management)' })).toContainText('Mit dieser Anleitung löschen Sie einen Datensatz.');
+  expect(await axe()).toEqual([]);
+
+  await nav.getByRole('link', { name: 'Prüferprofile' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Prüferprofile' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Kapitel', exact: true }).selectOption({ label: 'E2E Varianten Löschen – Version 1' });
+  await expect(page.getByText('Für diese Version gibt es noch keine Prüfung.')).toBeVisible();
+  await page.getByRole('button', { name: 'Prüfung starten' }).click();
+  await expect(page.getByText('Prüfung abgeschlossen (4 Profile).')).toBeVisible();
+  const compliance = page.getByRole('list', { name: 'Funde Compliance' });
+  await expect(compliance).toContainText('Folgenreiche Aktion');
+  await expect(compliance).toContainText('garantiert');
+  for (const p of ['Fachlich', 'Redaktion', 'Compliance', 'Endanwender']) await expect(page.getByRole('heading', { level: 2, name: new RegExp(`^${p} `) })).toBeVisible();
+  expect(await axe()).toEqual([]);
+});

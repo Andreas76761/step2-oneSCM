@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.54 Stand nach Etappe 52 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Textvarianten je Kapitel: Endanwender, Fachtext, Kurzfassung (~¼), Exportprofil „Kurzfassung“ (S-05, NFR-133) | ✅ ([ADR-105](adr/ADR-105-textvarianten-pruefprofile.md)) |
+| Vier Prüferprofile fachlich, Redaktion, Compliance, Endanwender mit Wert, Ampel, Funden und optional lokalem KI-Dienst (W-12, NFR-134) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; optional W-05, W-07, W-10; schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
 ## 1.53 Stand nach Etappe 51 (24.10.2026)
 
 | Punkt | Ergebnis |

@@ -1383,5 +1383,23 @@
     "documentation": [
       "docs/adr/ADR-104-aenderungsvorschlaege-word-lektorat.md"
     ]
+  },
+  {
+    "id": "NFR-133",
+    "title": "Textvarianten je Kapitel: Endanwender, Fachtext, Kurzfassung für das Management (~¼ der Länge) mit Wortzahl, Download und Exportprofil „Kurzfassung“; KI-Kurzfassung ohne erfundene Zahlen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-105-textvarianten-pruefprofile.md"
+    ]
+  },
+  {
+    "id": "NFR-134",
+    "title": "Vier Prüferprofile (fachlich, Redaktion, Compliance, Endanwender) mit Wert, Ampel und Funden je Absatz, regelbasiert und optional mit lokalem KI-Dienst; Verlauf je Kapitelversion",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-105-textvarianten-pruefprofile.md"
+    ]
   }
 ]

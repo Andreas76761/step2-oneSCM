@@ -164,6 +164,10 @@ export class DemoProvider implements LlmProvider {
       const fixed = autoFix(st.text, st.mode === 'present' ? { rules: PRESENT_RULES } : { terms: st.terminology ?? [], phrases: st.phrases ?? [] }).text;
       return { text: JSON.stringify({ text: fixed }), usage: { inputTokens: 0, outputTokens: 0 } };
     }
+    // Kurzfassung (ADR-105, S-05): der regelbasierte Entwurf; Prüferprofile: keine zusätzlichen Funde
+    const sv = data as unknown as { task?: string; draft?: string };
+    if (sv.task === 'summary' && typeof sv.draft === 'string') return { text: JSON.stringify({ text: sv.draft }), usage: { inputTokens: 0, outputTokens: 0 } };
+    if (sv.task === 'review') return { text: JSON.stringify({ findings: [] }), usage: { inputTokens: 0, outputTokens: 0 } };
     // Bilder aus Text (ADR-041): regelbasierte Struktur statt echter Analyse
     if (st.task === 'diagram' && typeof st.text === 'string') {
       return { text: JSON.stringify(parseStructure(st.text)), usage: { inputTokens: 0, outputTokens: 0 } };

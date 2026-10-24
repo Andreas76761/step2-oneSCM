@@ -16,6 +16,7 @@ import { appendicesFor, hasAppendices, outlineOf, variantFilter, type Appendices
 import { DEFAULT_LAYOUT, resolveLayout, type ResolvedLayout } from './layout.js';
 import { renderDocx } from './docx.js';
 import { DEFAULT_CRITERION } from '../domain/revision.js';
+import { extractiveSummary } from '../domain/textVariants.js';
 import { transitionsFor } from './transitions.js';
 import { applyVariants } from './imageArchive.js';
 
@@ -43,10 +44,10 @@ export interface ExportExtras {
   language?: string;
 }
 
-/** Ausgabeprofile (ADR-085, F-27): vollständiges Handbuch, Quick Guide (Schritte, Ergebnis, Warnungen) oder One Pager */
-export const EXPORT_PROFILES = ['full', 'quickguide', 'onepager'] as const;
+/** Ausgabeprofile (ADR-085, F-27): vollständiges Handbuch, Quick Guide (Schritte, Ergebnis, Warnungen), One Pager oder Kurzfassung für das Management (ADR-105, S-05) */
+export const EXPORT_PROFILES = ['full', 'quickguide', 'onepager', 'summary'] as const;
 export type ExportProfile = (typeof EXPORT_PROFILES)[number];
-export const PROFILE_LABEL: Record<ExportProfile, string> = { full: 'Handbuch', quickguide: 'Quick Guide', onepager: 'One Pager' };
+export const PROFILE_LABEL: Record<ExportProfile, string> = { full: 'Handbuch', quickguide: 'Quick Guide', onepager: 'One Pager', summary: 'Kurzfassung' };
 
 const NO_LAYOUT: ResolvedLayout = { ...DEFAULT_LAYOUT, logo: null, stylesXml: null };
 
@@ -160,7 +161,10 @@ export function shapeChapters(chapters: ExportChapter[], f: ExportFilter, opts: 
   return visible(chapters, f).map((ch: any) => {
     // Lesefassung: ohne Abschnitt „Quellen- und Freigabestatus“ (Quellenverweise)
     let sections = opts.reading ? ch.sections.filter((s: any) => s.code !== 'status') : ch.sections;
-    if (profile !== 'full') {
+    if (profile === 'summary') {
+      const text = extractiveSummary(sections.map((s: any) => ({ code: s.code, title: s.title, blocks: s.blocks.filter((b: any) => b.kind !== 'gap') })));
+      sections = [{ code: 'summary', title: 'Kurzfassung', blocks: [{ kind: 'paragraph', text, roles: [], divisions: [], market: null, release: null }] }];
+    } else if (profile !== 'full') {
       const warnings = sections.flatMap((s: any) => s.blocks.filter((b: any) => b.kind === 'warning' && s.code !== 'steps'));
       const purpose = sections.find((s: any) => s.code === 'purpose')?.blocks[0];
       const keep = profile === 'quickguide' ? ['prerequisites', 'steps', 'result'] : ['steps'];
@@ -176,7 +180,7 @@ export function shapeChapters(chapters: ExportChapter[], f: ExportFilter, opts: 
       sections = sections.length ? [...sections.slice(0, -1), { ...sections[sections.length - 1], blocks: [...sections[sections.length - 1].blocks, block] }] : sections;
     }
     return { ...ch, hideVersion: !!opts.reading, sections: sections.map((s: any) => ({ ...s, blocks: s.blocks.map(plain) })) };
-  }).filter((ch: any) => profile === 'full' || ch.sections.some((s: any) => s.code === 'steps'));
+  }).filter((ch: any) => profile === 'full' || profile === 'summary' || ch.sections.some((s: any) => s.code === 'steps'));
 }
 
 /** `media`: Bilder als data:-URIs einbetten (eigenständige Datei); ohne: Verweise bleiben `media:<sha>` */

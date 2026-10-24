@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.51.0
+  version: 0.52.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -363,7 +363,7 @@ components:
         format: { type: string, enum: [md, html, pdf, docx, json], default: md, description: 'docx: Word mit Formatvorlagen und Firmen-Layout (ADR-038)' }
         outlineId: { type: string, description: 'Handbuch-Variante (ADR-034): freigegebene Kapitel dieser Gliederung, Filter aus ihrer Variante' }
         appendices: { type: boolean, description: 'Verzeichnisse (Abkürzungen, Glossar, Bildverzeichnis, FAQ) anhängen; Standard bei Varianten: true' }
-        profile: { type: string, enum: [full, quickguide, onepager], default: full, description: 'Ausgabeprofil (ADR-085, F-27): Quick Guide = Voraussetzungen, Schritte, Ergebnis, Warnungen; One Pager = Zweck kurz, Schritte, Warnungen; Kapitel ohne Schritte entfallen' }
+        profile: { type: string, enum: [full, quickguide, onepager, summary], default: full, description: 'Ausgabeprofil (ADR-085, F-27): Quick Guide = Voraussetzungen, Schritte, Ergebnis, Warnungen; One Pager = Zweck kurz, Schritte, Warnungen (Kapitel ohne Schritte entfallen); Kurzfassung (ADR-105, S-05) = je Kapitel ein Absatz mit etwa einem Viertel der Länge' }
         reading: { type: boolean, default: false, description: 'Lesefassung (F-28): ohne Badges, Versionszeile und Abschnitt „Quellen- und Freigabestatus“' }
         transitions: { type: boolean, description: '„Weiter mit …“ am Kapitelende (F-29, nur profile full): fehlt = gepflegte Übergänge, true = zusätzlich automatisch das nächste exportierte Kapitel, false = keine' }
         asOf: { type: string, maxLength: 40, description: 'Stand (Release) für Zukunfts-Inhalte (ADR-102, W-09): Kapitel mit späterem „gültig ab“ werden ausgeblendet; Standard ist release' }
@@ -2930,6 +2930,75 @@ paths:
         '200': { description: 'Vorschlag mit comment' }
         '403': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/text-variants:
+    get:
+      operationId: getTextVariants
+      summary: 'Textvarianten einer Kapitelversion (ADR-105, S-05): Endanwender, Fachtext, Kurzfassung (Management, etwa ¼ der Länge) mit Wortzahl und Anteil am Fachtext; ai=true lässt die Kurzfassung vom KI-Dienst schreiben (erfundene Zahlen oder zu lang → regelbasiert)'
+      tags: [Kapitel]
+      x-requirements: [NFR-133]
+      x-extension: true
+      parameters:
+        - { name: versionId, in: path, required: true, schema: { type: string } }
+        - { name: ai, in: query, schema: { type: boolean } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ versionId, title, method: rules|ai, note, variants: [{ code: enduser|expert|summary, label, hint, words, ratio, sections, markdown }] }' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '502': { $ref: '#/components/responses/Problem' }
+  /chapter-versions/{versionId}/text-variants/{code}/download:
+    get:
+      operationId: downloadTextVariant
+      summary: 'Eine Textvariante als Markdown-Datei'
+      tags: [Kapitel]
+      x-requirements: [NFR-133]
+      x-extension: true
+      parameters:
+        - { name: versionId, in: path, required: true, schema: { type: string } }
+        - { name: code, in: path, required: true, schema: { type: string, enum: [enduser, expert, summary] } }
+        - { name: ai, in: query, schema: { type: boolean } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Markdown', content: { text/markdown: { schema: { type: string } } } }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /review-profiles:
+    get:
+      operationId: listReviewProfiles
+      summary: 'Prüferprofile (ADR-105, W-12): fachlich, Redaktion, Compliance, Endanwender mit Blickwinkel'
+      tags: [Qualität]
+      x-requirements: [NFR-134]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ profile, label, focus }]' }
+  /chapter-versions/{versionId}/profile-reviews:
+    get:
+      operationId: getProfileReviews
+      summary: 'Letzte Prüfung je Profil (Wert 0–100, Ampel, Funde mit Schweregrad, Absatz, Zitat, Vorschlag) und Verlauf der Werte'
+      tags: [Qualität]
+      x-requirements: [NFR-134]
+      x-extension: true
+      parameters: [{ name: versionId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ versionId, title, profiles, latest: [{ id, profile, label, method, score, traffic, counts, findings, note, createdAt }], history }' }
+        '404': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: runProfileReviews
+      summary: 'Kapitelversion mit den gewählten Prüferprofilen prüfen (Standard alle vier); ai=true ergänzt Funde des KI-Dienstes je Profil – gesperrt bei personenbezogenen Daten und externem Dienst (Berechtigung edit)'
+      tags: [Qualität]
+      x-requirements: [NFR-134]
+      x-extension: true
+      parameters: [{ name: versionId, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { profiles: { type: array, items: { type: string, enum: [domain, editorial, compliance, enduser] } }, ai: { type: boolean } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'wie GET' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '502': { $ref: '#/components/responses/Problem' }
   /style/tone:
     get:
       operationId: getStyleTone

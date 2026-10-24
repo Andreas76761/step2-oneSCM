@@ -41,7 +41,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | S-02 | **Tonalität je Produktart bzw. Zielgruppe:** sachlich (Handbuch), freundlich, formell, knapp; sechs Rollenprofile mit eigener Tonalität; gilt für Prüfung und KI-Vorschläge | Ticket-Cockpit, Checkliste, `TONALITAET.md` | teilweise (nur Anrede Sie/du und freier Redaktionshinweis) | M | **umgesetzt in Etappe 49 (ADR-102)** |
 | S-03 | **Wortliste je Sprache** „falsch → richtig (Sprache)“, z. B. Dealer→Händler (de), Händler→Dealer (en), OneSCM→oneSCM; Prüfung „Text passt nicht zur Sprache des Labels“ | Screenarchiv | teilweise (eigene Regeln nur Deutsch; feste Übersetzung je Sprache) | S | **umgesetzt in Etappe 44 (ADR-097) – ohne Prüfung „Text passt nicht zur Sprache“ (mit U-02)** |
 | S-04 | **„Fix-Sprache“ je Begriff:** Begriff überall immer deutsch oder immer englisch (UI-Begriff), Anweisung an KI und Prüfung | Ticket-Cockpit v2.96 | teilweise (feste Übersetzung je Sprache; kein „immer so lassen“) | S | **umgesetzt in Etappe 44 (ADR-097) – welche Begriffe, entscheidet die Redaktion** |
-| S-05 | **Textvarianten je Kapitel:** Endanwender, Fachtext, Kurzfassung (Management, ~¼ Länge) | Ticket-Cockpit | teilweise (Quick Guide, One Pager, Lesefassung) | M | optional |
+| S-05 | **Textvarianten je Kapitel:** Endanwender, Fachtext, Kurzfassung (Management, ~¼ Länge) | Ticket-Cockpit | teilweise (Quick Guide, One Pager, Lesefassung) | M | **umgesetzt in Etappe 52 (ADR-105)** |
 | S-06 | **Regelbasiertes Schreiben (tekom), ASD-STE100, Vale** als zuschaltbare Regelsätze | Checkliste | nicht vorhanden | L | später |
 | S-07 | **Kapitelbewertung mit fünf Kriterien** (Sprache, Ziel, Tonalität, Quellenabgleich, Fakten) und Ampel | Wissenssuche | teilweise (Anleitungs-Check, Schreibstil, Evidenz getrennt) | S | **umgesetzt in Etappe 50 (ADR-103)** |
 | S-08 | **Bildunterschriften-Regeln:** 1–2 Sätze, max. 200 Zeichen, UI-Begriffe wörtlich, keine Füller („Hier sieht man“) | Screenshot-Studio | teilweise (Bildunterschrift Pflicht, keine Stilprüfung) | S | **umgesetzt in Etappe 44 (ADR-097)** |
@@ -76,7 +76,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | W-09 | **Zukunfts-Inhalte:** eingebaut, aber erst ab Release X veröffentlicht | DokuPress | teilweise („gültig ab“ seit v0.43, ohne Ausblenden) | S | **umgesetzt in Etappe 49 (ADR-102)** |
 | W-10 | **Zwischenbilder** für kurze Zustände (Menü, Dialog) aus Videos | Screenshot-Studio | teilweise (Standbilder bei Änderung) | S | optional |
 | W-11 | **Textbausteine (Single Sourcing)** | Werkstatt V4 (F-19) | offen | L | später |
-| W-12 | **Vier Prüferprofile** (fachlich, Redaktion, Compliance, Endanwender) mit lokalem Modell | Ticket-Cockpit (F-10) | teilweise | M | optional |
+| W-12 | **Vier Prüferprofile** (fachlich, Redaktion, Compliance, Endanwender) mit lokalem Modell | Ticket-Cockpit (F-10) | teilweise | M | **umgesetzt in Etappe 52 (ADR-105)** |
 
 ## 10.6 Vorschlag für die nächsten Etappen
 
@@ -93,7 +93,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 4. **Etappe 49 – Tonalität, Ticket-Einstufung, Projektvergleich, Zukunfts-Inhalte (✅ umgesetzt, ADR-102):** S-02, W-03, W-04, W-09.
 5. **Etappe 50 – Kapitelbewertung, Plausibilität, Fehlerliste (✅ umgesetzt, ADR-103):** S-07, W-02, G-05.
 6. **Etappe 51 – Überarbeitung: Word zurücklesen, KI-Lektorat, interne Kommentare (✅ umgesetzt, ADR-104):** W-06, G-07, W-08.
-7. **Danach je nach Entscheidung:** G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen); optional S-05, W-05, W-07, W-10, W-12.
+7. **Etappe 52 – Textvarianten und Prüferprofile (✅ umgesetzt, ADR-105):** S-05, W-12.
+8. **Danach je nach Entscheidung:** G-04 (LanguageTool lokal), U-07 (weitere Märkte und Sprachen); optional W-05, W-07, W-10.
 
 ## 10.7 Offene Entscheidungen
 

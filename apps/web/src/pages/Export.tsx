@@ -77,6 +77,7 @@ export function ExportPage() {
                 <option value="full">Vollständig</option>
                 <option value="quickguide">Quick Guide – Voraussetzungen, Schritte, Ergebnis, Warnungen</option>
                 <option value="onepager">One Pager – Zweck kurz, Schritte, Warnungen</option>
+                <option value="summary">Kurzfassung – je Kapitel ein Absatz (Management, etwa ¼ der Länge)</option>
               </select>
             </label>
             <label className="inline"><input type="checkbox" checked={reading} onChange={(e) => setReading(e.target.checked)} /> Lesefassung (ohne Rollen-/Sparten-Badges, Versionszeile und Quellenstatus)</label>

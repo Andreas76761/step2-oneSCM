@@ -46,6 +46,8 @@ const GlossaryPage = lazy(() => import('./pages/MasterData').then((m) => ({ defa
 const ImageIndexPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.ImageIndexPage })));
 const PlanningPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.PlanningPage })));
 const GuidancePage = lazy(() => import('./pages/Guidance').then((m) => ({ default: m.GuidancePage })));
+const TextVariantsPage = lazy(() => import('./pages/Audience').then((m) => ({ default: m.TextVariantsPage })));
+const ProfileReviewsPage = lazy(() => import('./pages/Audience').then((m) => ({ default: m.ProfileReviewsPage })));
 const RevisionsPage = lazy(() => import('./pages/Revisions').then((m) => ({ default: m.RevisionsPage })));
 const AssessmentPage = lazy(() => import('./pages/Assessment').then((m) => ({ default: m.AssessmentPage })));
 const LanguageErrorsPage = lazy(() => import('./pages/Assessment').then((m) => ({ default: m.LanguageErrorsPage })));
@@ -133,6 +135,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: '🔍' },
     { to: '/kapitelbewertung', label: 'Kapitelbewertung', icon: '🚦' },
     { to: '/ueberarbeitung', label: 'Überarbeitung', icon: '🔁' },
+    { to: '/pruefprofile', label: 'Prüferprofile', icon: '👥' },
     { to: '/rueckmeldungen', label: 'Rückmeldungen', icon: '💬' },
     { to: '/schreibstil', label: 'Schreibstil', icon: '🖋️' },
     { to: '/fehlerliste', label: 'Fehlerliste', icon: '📝' },
@@ -143,6 +146,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
   { id: 'veroeffentlichen', label: '4 Veröffentlichen', items: [
     { to: '/lesen', label: 'Leseransicht', icon: '📖' },
     { to: '/export', label: 'Export', icon: '📤' },
+    { to: '/textvarianten', label: 'Textvarianten', icon: '📑' },
     { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
     { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
     { to: '/uebersetzungen/speicher', label: 'Übersetzungsspeicher', icon: '🗄' },
@@ -447,6 +451,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/kapitelbewertung/:versionId" element={<AssessmentPage />} />
             <Route path="/fehlerliste" element={<LanguageErrorsPage />} />
             <Route path="/ueberarbeitung" element={<RevisionsPage />} />
+            <Route path="/pruefprofile" element={<ProfileReviewsPage />} />
+            <Route path="/textvarianten" element={<TextVariantsPage />} />
             <Route path="/ueberarbeitung/:batchId" element={<RevisionsPage />} />
             <Route path="/kapitel-assistent" element={<ChapterAssistantPage />} />
             <Route path="/lesen" element={<ReaderPage />} />
