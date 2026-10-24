@@ -2500,9 +2500,14 @@ test('[T-291] Bildarchiv: Stelle im Bild unkenntlich machen und rückgängig, me
   const labels = page.getByRole('region', { name: 'Labels und Kapitel' });
   const pickFirst = async (name: string, text?: string) => {
     const select = labels.getByRole('combobox', { name, exact: true });
-    const value = await select.evaluate((el, t) => [...(el as HTMLSelectElement).options].find((o) => o.value && (!t || o.text.includes(t)))?.value ?? '', text);
-    expect(value).not.toBe('');
-    await select.selectOption(value);
+    const opt = await select.evaluate((el, t) => {
+      const o = [...(el as HTMLSelectElement).options].find((x) => x.value && (!t || x.text.includes(t)));
+      return { value: o?.value ?? '', text: o?.text ?? '' };
+    }, text);
+    expect(opt.value).not.toBe('');
+    await select.selectOption(opt.value);
+    // erst weiter, wenn die Liste neu geladen ist – sonst liest der nächste Aufruf noch die alte Auswahl (Wettlauf in CI)
+    await expect(labels.getByRole('button', { name: `${opt.text} entfernen` }).first()).toBeVisible();
   };
   await pickFirst('Domäne hinzufügen', 'E2E Verträge');
   await expect(labels).toContainText('E2E Verträge');
