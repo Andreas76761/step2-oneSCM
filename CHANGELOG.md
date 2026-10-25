@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.74.0 – Etappe 74 (25.10.2026)
+
+### Behoben (Tests)
+- **T-202 lokal wieder grün:** Der Test wählte einen Absatz der Kapitelwerkstatt per Klick in seine Mitte aus. Je nach Schriftbreite traf der Klick die Schaltfläche „Bild erzeugen“; der Dialog verdeckte danach die Reiter. Der Test wählt den Absatz jetzt über seine Kopfzeile aus.
+- Damit laufen erstmals alle E2E-Tests auch lokal grün; bisher scheiterten T-202 und T-231 nur lokal (T-231 behoben in Etappe 73).
+
 ## 0.73.0 – Etappe 73 (25.10.2026)
 
 ### Hinzugefügt

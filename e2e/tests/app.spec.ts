@@ -65,7 +65,8 @@ test('[T-202] Widerspruch entscheiden, Kapitel generieren, Icons in der Kapitelw
   await block.getByLabel('Text bearbeiten').fill('Ein Administrator muss den Benutzer freigeben, bevor dieser oneSCM nutzt.');
   await block.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.locator('article.block', { hasText: 'bevor dieser oneSCM nutzt' }).getByText('manuell bearbeitet')).toBeVisible();
-  await page.locator('article.block', { hasText: 'bevor dieser oneSCM nutzt' }).click();
+  // Absatz über seine Kopfzeile auswählen – ein Klick in die Mitte trifft je nach Schriftbreite eine Schaltfläche („Bild erzeugen“)
+  await page.locator('article.block', { hasText: 'bevor dieser oneSCM nutzt' }).locator('.block-meta').click();
   await page.getByRole('tab', { name: 'Historie' }).click();
   await expect(page.getByText('v2 edited')).toBeVisible();
   await page.getByRole('tab', { name: 'Quellen' }).click();
