@@ -3043,5 +3043,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-394",
+    "title": "Alle 77 Seiten bei 390 px Breite: kein waagerechtes Scrollen der Seite (WCAG 1.4.10), axe ohne Befund, scrollende Tabellen per Tastatur erreichbar",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

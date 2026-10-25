@@ -281,6 +281,39 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
+  // Waagerecht scrollende Tabellen ohne fokussierbaren Inhalt per Tastatur erreichbar machen (WCAG 2.1.1, axe
+  // scrollable-region-focusable) – mobil werden Tabellen zum Scrollbereich (styles.css); gilt für alle Seiten
+  useEffect(() => {
+    const focusable = 'a[href], button, input, select, textarea, [tabindex]';
+    const update = () => {
+      for (const t of document.querySelectorAll<HTMLElement>('.table, .table-wrap')) {
+        const scrolls = t.scrollWidth > t.clientWidth + 1 && getComputedStyle(t).overflowX !== 'visible';
+        const needsStop = scrolls && !t.querySelector(focusable);
+        // nur selbst gesetzte Tabstopps wieder entfernen
+        if (needsStop && !t.hasAttribute('tabindex')) {
+          t.setAttribute('tabindex', '0');
+          t.dataset.scrollStop = '';
+        } else if (!needsStop && t.dataset.scrollStop !== undefined) {
+          t.removeAttribute('tabindex');
+          delete t.dataset.scrollStop;
+        }
+      }
+    };
+    let frame = 0;
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    };
+    const observer = new MutationObserver(schedule);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('resize', schedule);
+    schedule();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', schedule);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
   // Einführung (ADR-056): beim ersten Besuch der Startseite; automatisierte Browser (Tests) starten sie nicht selbst
   const [tourOpen, setTourOpen] = useState(false);
   useEffect(() => {

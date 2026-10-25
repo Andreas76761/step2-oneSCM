@@ -1,9 +1,21 @@
 # Changelog
 
+## 0.76.0 – Etappe 76 (25.10.2026)
+
+### Hinzugefügt
+- **Smartphone-Breite geprüft (E2E T-394):** Alle 77 Seiten werden bei 390 px Breite geprüft. Die Seite darf nicht waagerecht scrollen (WCAG 1.4.10, Umbruch), und axe darf keinen Befund melden.
+- **Tastaturzugang zu scrollenden Tabellen:** Tabellen, die waagerecht scrollen und nichts Fokussierbares enthalten, erhalten automatisch einen Tabstopp (WCAG 2.1.1). Das gilt für alle Seiten, auch für künftige Tabellen.
+
+### Behoben
+- **Dashboard und Generator in Smartphone-Breite:** Die Seiten waren 73 bzw. 80 px zu breit. Ursache waren Texte nur für Screenreader (`.sr-only`, absolut positioniert) in Tabellenzellen: Sie richteten sich nach der Seite statt nach dem Scrollbereich der Tabelle. Die Scrollbereiche der Tabellen sind jetzt Bezugsrahmen (`position: relative`).
+
 ## 0.75.0 – Etappe 75 (25.10.2026)
 
 ### Hinzugefügt
 - **Barrierefreiheit aller Seiten im dunklen Modus (E2E T-393):** axe (WCAG 2.2 AA) läuft auf allen 77 Seiten auch mit der Darstellung „Dunkel“ (über das Betriebssystem, ADR-035). Damit werden Farbkontraste in beiden Darstellungen geprüft.
+
+### Behoben
+- **Draft Manual im dunklen Modus:** Der Kopf eines Lückenknotens hatte einen fest hellen Hintergrund, im dunklen Modus mit heller Schrift. Der Hintergrund wird jetzt aus der Flächenfarbe abgeleitet. Gefunden hat es T-393.
 
 ## 0.74.0 – Etappe 74 (25.10.2026)
 
