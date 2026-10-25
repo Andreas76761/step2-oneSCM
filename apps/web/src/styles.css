@@ -644,6 +644,7 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .template-editor label .small, .template-editor input, .template-editor textarea { font-weight: 400; }
 .digest-preview { border-left: 4px solid var(--link); padding: 4px 14px; margin-top: 12px; }
 .digest-preview h3 { margin: 4px 0 8px; font-size: 16px; }
+.digest-preview li a { display: inline-block; min-height: 24px; padding: 2px 0; }
 
 /* ---------- Etappe 22: Suche und Glossar beim Lesen, Druck je Variante/Rolle ---------- */
 .reader-search-label { display: block; font-weight: 600; margin-bottom: 4px; }
