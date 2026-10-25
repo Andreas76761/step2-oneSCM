@@ -7,6 +7,7 @@
 
 ### Behoben
 - **Freigabe:** Das Prüfkriterium „Keine Blöcke mit Status „needs_regeneration““ heißt jetzt „Keine Absätze, die nach einer Quellenänderung neu zu generieren sind (Status „prüfen“)“. Gefunden hat es die Seitenprüfung T-391 im ersten Lauf mit vollen Daten.
+- **Rückmeldungen:** Die Links der Wochenübersicht („Ihre Übersicht für …“) haben jetzt die Mindestgröße von 24 px (WCAG 2.5.8). Gefunden hat es T-392. Damit besteht auch T-231 wieder lokal; es scheiterte bisher nur lokal an genau diesem Befund.
 
 ## 0.72.0 – Etappe 72 (25.10.2026)
 

@@ -199,7 +199,7 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 
 | Punkt | Ergebnis |
 |---|---|
-| axe (WCAG 2.2 AA) über alle 77 Seiten (NFR-03); Prüfkriterium der Freigabe ohne Code | ✅ T-392 |
+| axe (WCAG 2.2 AA) über alle 77 Seiten (NFR-03); Prüfkriterium der Freigabe ohne Code; Links der Wochenübersicht mit Mindestgröße 24 px | ✅ T-392; lokal 130 von 131 E2E-Tests grün (T-231 wieder grün) |
 | Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
 
 ## 1.74 Stand nach Etappe 72 (25.10.2026)
