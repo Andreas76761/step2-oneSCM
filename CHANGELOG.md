@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.75.0 – Etappe 75 (25.10.2026)
+
+### Hinzugefügt
+- **Barrierefreiheit aller Seiten im dunklen Modus (E2E T-393):** axe (WCAG 2.2 AA) läuft auf allen 77 Seiten auch mit der Darstellung „Dunkel“ (über das Betriebssystem, ADR-035). Damit werden Farbkontraste in beiden Darstellungen geprüft.
+
 ## 0.74.0 – Etappe 74 (25.10.2026)
 
 ### Hinzugefügt

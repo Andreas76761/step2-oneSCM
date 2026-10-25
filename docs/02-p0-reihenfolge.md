@@ -64,6 +64,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **72** ✅ | Status auf Deutsch, Seitenprüfung über alle Seiten | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-391 |
 | **73** ✅ | Barrierefreiheit aller Seiten automatisch geprüft | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-391 und T-392 |
 | **74** ✅ | T-202 lokal grün (Absatzauswahl im Test) | Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests lokal grün |
+| **75** ✅ | Barrierefreiheit aller Seiten im dunklen Modus | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-393 |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

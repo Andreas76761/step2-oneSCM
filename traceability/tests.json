@@ -3034,5 +3034,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-393",
+    "title": "axe (WCAG 2.2 AA, u. a. Kontrast) ohne Befund auf allen 77 Seiten im dunklen Modus, mit den Daten des E2E-Laufs",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

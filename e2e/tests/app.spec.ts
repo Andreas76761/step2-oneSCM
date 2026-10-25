@@ -3651,3 +3651,18 @@ test('[T-392] Barrierefreiheit aller Seiten: axe (WCAG 2.2 AA) ohne Befund auf a
   }
   expect(findings).toEqual([]);
 });
+
+test('[T-393] Barrierefreiheit aller Seiten im dunklen Modus: axe (WCAG 2.2 AA, u. a. Kontrast) ohne Befund', async ({ page }) => {
+  test.setTimeout(360_000);
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  // Darstellung „System“ folgt dem Betriebssystem (ADR-035) – hier dunkel
+  await page.emulateMedia({ colorScheme: 'dark' });
+  const findings: string[] = [];
+  for (const r of ALL_PAGES) {
+    await page.goto(r);
+    await page.waitForLoadState('networkidle');
+    const v = (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations;
+    for (const x of v) findings.push(`${r}: ${x.id} (${x.impact}) ${x.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  }
+  expect(findings).toEqual([]);
+});
