@@ -8,6 +8,7 @@
 
 ### Behoben
 - **Dashboard und Generator in Smartphone-Breite:** Die Seiten waren 73 bzw. 80 px zu breit. Ursache waren Texte nur für Screenreader (`.sr-only`, absolut positioniert) in Tabellenzellen: Sie richteten sich nach der Seite statt nach dem Scrollbereich der Tabelle. Die Scrollbereiche der Tabellen sind jetzt Bezugsrahmen (`position: relative`).
+- **Bildarchiv und Evidenz in Smartphone-Breite:** Mit vielen Daten waren die Seiten bis zu 73 bzw. 53 px zu breit. Im Bildarchiv dehnte die Bildliste die einspaltige Kartenreihe (`.grid2`) auf ihre Mindestbreite. In der Evidenz war die Kapitelauswahl so breit wie ihr längster Eintrag. Die einspaltigen Raster nutzen jetzt `minmax(0, 1fr)`, und Auswahllisten sind höchstens so breit wie ihr Bereich.
 - **Draft Manual im dunklen Modus:** Textbausteine nutzten die nicht vorhandene Variable `--card` und damit immer einen weißen Hintergrund, im dunklen Modus mit heller Schrift. Sie nutzen jetzt die Flächenfarbe der Darstellung. Gefunden hat es T-393 in der CI.
 - **Seitenprüfungen T-392 bis T-394** melden jetzt alle Fundstellen je Regel statt nur die ersten zwei, damit ein Fund keine weiteren verdeckt.
 

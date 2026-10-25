@@ -293,7 +293,7 @@ h1:focus, h1:focus-visible { outline: none; }
   .sidebar nav { display: none; }
   .sidebar nav.open { display: flex; }
   .main { padding: 16px; }
-  .grid2, .grid3, .cluster-grid { grid-template-columns: 1fr; }
+  .grid2, .grid3, .cluster-grid { grid-template-columns: minmax(0, 1fr); }
   .page-head { flex-direction: column; align-items: flex-start; gap: 8px; }
   .page-head .actions { flex-wrap: wrap; }
   .table-wrap, .card { overflow-x: auto; }
@@ -428,6 +428,7 @@ ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px
 /* Mobile Ansicht (ADR-035) */
 @media (max-width: 800px) {
   .btn, select, input:not([type='checkbox']):not([type='radio']) { min-height: 40px; }
+  select { max-width: 100%; }
   .row-actions, .filters { flex-wrap: wrap; }
   .draft-snippet .row-actions select { flex: 1 1 100%; }
   .table { display: block; overflow-x: auto; position: relative; }
