@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.75 Stand nach Etappe 73 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| axe (WCAG 2.2 AA) über alle 77 Seiten (NFR-03); Prüfkriterium der Freigabe ohne Code | ✅ T-392 |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
 ## 1.74 Stand nach Etappe 72 (25.10.2026)
 
 | Punkt | Ergebnis |

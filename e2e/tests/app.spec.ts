@@ -3602,19 +3602,22 @@ test('[T-390] Feinschliff nach Sichtprüfung: Quick Reference Guide zweispaltig 
   expect(await axe()).toEqual([]);
 });
 
+/** alle Seiten ohne Pfadparameter (wie in App.tsx) – für die Seitenprüfungen T-391 und T-392 */
+const ALL_PAGES = ['/', '/agenten', '/agenten/goal', '/analytik', '/anleitungs-check', '/assistent', '/aufgaben', '/backlog', '/benutzer', '/bildarchiv', '/bilder',
+  '/cluster', '/dashboard', '/dopplungen', '/draft-manual', '/einstellungen', '/evidenz', '/export', '/fehlerliste', '/freigabe', '/generator', '/integrationen',
+  '/intern', '/kapitel-assistent', '/kapitelbewertung', '/kapitelsteuerung', '/kontexthilfe', '/lesen', '/lesen/druck', '/lesen/faq', '/lesen/lesezeichen',
+  '/metadaten', '/metadaten/befragung', '/metadaten/chunks', '/metadaten/dubletten', '/metadaten/einlesen', '/metadaten/fragen', '/metadaten/inhalte',
+  '/metadaten/kapitel-quellen', '/metadaten/qualitaet', '/metadaten/rueckfragen', '/metadaten/triage', '/metadaten/ueberschriften', '/metadaten/wissensnotizen',
+  '/metadaten/zugriffsmatrix', '/metadaten/zuordnung', '/optimierungen', '/pipeline', '/projekte', '/pruefprofile', '/quellen', '/quellenaenderungen',
+  '/release-abgleich', '/releaseletter', '/rollen', '/rueckmeldungen', '/schreibstil', '/sparten', '/stammdaten', '/stammdaten/abkuerzungen',
+  '/stammdaten/bildverzeichnis', '/stammdaten/faq', '/stammdaten/glossar', '/stammdaten/inhaltsverzeichnis', '/stammdaten/planung', '/suche', '/terminologie',
+  '/textbausteine', '/textvarianten', '/ueberarbeitung', '/uebersetzungen', '/uebersetzungen/glossar', '/uebersetzungen/speicher', '/veroeffentlichung',
+  '/vorher-nachher', '/werkstatt', '/widersprueche'];
+
 test('[T-391] Alle Seiten auf Deutsch ohne rohe Status-Codes, farbige Emoji, „undefined“/„NaN“ und ohne Konsolenfehler', async ({ page }) => {
   test.setTimeout(240_000);
-  // alle Seiten ohne Pfadparameter (wie in App.tsx); Traceability zeigt API-Pfade, die Labelverwaltung Codes – beides gewollt
-  const routes = ['/', '/agenten', '/agenten/goal', '/analytik', '/anleitungs-check', '/assistent', '/aufgaben', '/backlog', '/benutzer', '/bildarchiv', '/bilder',
-    '/cluster', '/dashboard', '/dopplungen', '/draft-manual', '/einstellungen', '/evidenz', '/export', '/fehlerliste', '/freigabe', '/generator', '/integrationen',
-    '/intern', '/kapitel-assistent', '/kapitelbewertung', '/kapitelsteuerung', '/kontexthilfe', '/lesen', '/lesen/druck', '/lesen/faq', '/lesen/lesezeichen',
-    '/metadaten', '/metadaten/befragung', '/metadaten/chunks', '/metadaten/dubletten', '/metadaten/einlesen', '/metadaten/fragen', '/metadaten/inhalte',
-    '/metadaten/kapitel-quellen', '/metadaten/qualitaet', '/metadaten/rueckfragen', '/metadaten/triage', '/metadaten/ueberschriften', '/metadaten/wissensnotizen',
-    '/metadaten/zugriffsmatrix', '/metadaten/zuordnung', '/optimierungen', '/pipeline', '/projekte', '/pruefprofile', '/quellen', '/quellenaenderungen',
-    '/release-abgleich', '/releaseletter', '/rollen', '/rueckmeldungen', '/schreibstil', '/sparten', '/stammdaten', '/stammdaten/abkuerzungen',
-    '/stammdaten/bildverzeichnis', '/stammdaten/faq', '/stammdaten/glossar', '/stammdaten/inhaltsverzeichnis', '/stammdaten/planung', '/suche', '/terminologie',
-    '/textbausteine', '/textvarianten', '/ueberarbeitung', '/uebersetzungen', '/uebersetzungen/glossar', '/uebersetzungen/speicher', '/veroeffentlichung',
-    '/vorher-nachher', '/werkstatt', '/widersprueche'];
+  // Traceability zeigt API-Pfade, die Labelverwaltung Codes – beides gewollt
+  const routes = ALL_PAGES;
   // farbige Emoji (einfarbige Zeichen wie ✓ und Pfeile sind erlaubt, ADR-111)
   const emoji = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}]/u;
   const raw = /\b(draft|in_review|approved|rejected|pending|superseded|source_confirmed|manually_confirmed|unconfirmed|manually_edited|ai_rewritten|needs_regeneration|completed_with_errors|undefined|NaN)\b|\[object Object\]/;
@@ -3633,4 +3636,17 @@ test('[T-391] Alle Seiten auf Deutsch ohne rohe Status-Codes, farbige Emoji, „
   }
   expect(findings).toEqual([]);
   expect(errors).toEqual([]);
+});
+
+test('[T-392] Barrierefreiheit aller Seiten: axe (WCAG 2.2 AA) ohne Befund auf allen Seiten ohne Pfadparameter', async ({ page }) => {
+  test.setTimeout(360_000);
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const findings: string[] = [];
+  for (const r of ALL_PAGES) {
+    await page.goto(r);
+    await page.waitForLoadState('networkidle');
+    const v = (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations;
+    for (const x of v) findings.push(`${r}: ${x.id} (${x.impact}) ${x.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  }
+  expect(findings).toEqual([]);
 });

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.73.0 – Etappe 73 (25.10.2026)
+
+### Hinzugefügt
+- **Barrierefreiheit aller Seiten (E2E T-392):** axe (WCAG 2.2 AA) läuft auf allen 77 Seiten ohne Pfadparameter, mit den Daten des E2E-Laufs. Bisher prüften die Tests nur ausgewählte Seiten. Die Seitenliste teilen T-391 und T-392 (`ALL_PAGES`).
+
+### Behoben
+- **Freigabe:** Das Prüfkriterium „Keine Blöcke mit Status „needs_regeneration““ heißt jetzt „Keine Absätze, die nach einer Quellenänderung neu zu generieren sind (Status „prüfen“)“. Gefunden hat es die Seitenprüfung T-391 im ersten Lauf mit vollen Daten.
+
 ## 0.72.0 – Etappe 72 (25.10.2026)
 
 ### Behoben

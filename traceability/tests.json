@@ -3025,5 +3025,14 @@
     "requirements": [
       "NFR-158"
     ]
+  },
+  {
+    "id": "T-392",
+    "title": "axe (WCAG 2.2 AA) ohne Befund auf allen 77 Seiten ohne Pfadparameter, mit den Daten des E2E-Laufs",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]
