@@ -386,7 +386,7 @@ ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px
 .draft-snippet.sev-warning { border-left-color: #ca8a04; }
 .draft-snippet.sev-ok { border-left-color: #16a34a; }
 .draft-node { margin: 14px 0; }
-.draft-node.gap > .draft-node-head { border-left: 5px solid #9333ea; padding-left: 8px; background: #faf5ff; }
+.draft-node.gap > .draft-node-head { border-left: 5px solid #9333ea; padding-left: 8px; background: color-mix(in srgb, #9333ea 6%, var(--surface)); }
 .draft-node-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .draft-node-head h2, .draft-node-head h3 { margin: 0; }
 .draft-flags { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0; }
