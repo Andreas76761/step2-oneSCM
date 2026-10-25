@@ -3647,7 +3647,7 @@ test('[T-392] Barrierefreiheit aller Seiten: axe (WCAG 2.2 AA) ohne Befund auf a
     await page.goto(r);
     await page.waitForLoadState('networkidle');
     const v = (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations;
-    for (const x of v) findings.push(`${r}: ${x.id} (${x.impact}) ${x.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+    for (const x of v) findings.push(`${r}: ${x.id} (${x.impact}) ${x.nodes.map((n) => n.target.join(' ')).join(' | ')}`);
   }
   expect(findings).toEqual([]);
 });
@@ -3662,7 +3662,7 @@ test('[T-393] Barrierefreiheit aller Seiten im dunklen Modus: axe (WCAG 2.2 AA, 
     await page.goto(r);
     await page.waitForLoadState('networkidle');
     const v = (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations;
-    for (const x of v) findings.push(`${r}: ${x.id} (${x.impact}) ${x.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+    for (const x of v) findings.push(`${r}: ${x.id} (${x.impact}) ${x.nodes.map((n) => n.target.join(' ')).join(' | ')}`);
   }
   expect(findings).toEqual([]);
 });
@@ -3679,7 +3679,7 @@ test('[T-394] Alle Seiten in Smartphone-Breite (390 px): kein waagerechtes Scrol
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (overflow > 1) findings.push(`${r}: Seite ${overflow} px zu breit`);
     const v = (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations;
-    for (const x of v) findings.push(`${r}: ${x.id} (${x.impact}) ${x.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+    for (const x of v) findings.push(`${r}: ${x.id} (${x.impact}) ${x.nodes.map((n) => n.target.join(' ')).join(' | ')}`);
   }
   expect(findings).toEqual([]);
 });

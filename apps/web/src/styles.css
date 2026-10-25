@@ -380,7 +380,7 @@ ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px
 .flag-contradiction { color: #991b1b; background: #fee2e2; border-color: #f87171; }
 .flag-gap { color: #6b21a8; background: #f3e8ff; border-color: #c084fc; }
 .flag-warning { color: #854d0e; background: #fef9c3; border-color: #facc15; }
-.draft-snippet { border: 1px solid var(--border, #e2e8f0); border-left-width: 5px; border-radius: 6px; padding: 8px 10px; margin: 6px 0; background: var(--card, #fff); }
+.draft-snippet { border: 1px solid var(--border, #e2e8f0); border-left-width: 5px; border-radius: 6px; padding: 8px 10px; margin: 6px 0; background: var(--surface); }
 .draft-snippet.sev-contradiction { border-left-color: #dc2626; }
 .draft-snippet.sev-duplicate { border-left-color: #ea580c; }
 .draft-snippet.sev-warning { border-left-color: #ca8a04; }
