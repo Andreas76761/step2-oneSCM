@@ -123,3 +123,4 @@
 | [ADR-119](ADR-119-kontexthilfe-lesestil.md) | Kontexthilfe im Lesestil „Handbuch-Kapitel“; Hinweisboxen mit Icon und Beschriftung; Rückmeldung mit Icons statt Emoji | akzeptiert, umgesetzt |
 | [ADR-120](ADR-120-barrierefreiheit-word-powerpoint.md) | Barrierefreiheit für Word und PowerPoint: Prüfbericht, Icons dekorativ, Sprache, Folientitel als Platzhalter | akzeptiert, umgesetzt |
 | [ADR-121](ADR-121-barrierefreiheit-html.md) | Prüfbericht Barrierefreiheit für den HTML-Export; Standard-HTML mit Hauptbereich | akzeptiert, umgesetzt |
+| [ADR-122](ADR-122-icons-rollen-sparten.md) | Lucide-Icons für Rollen, Sparten und Label-Gruppen statt Emoji (ändert E-11) | akzeptiert, umgesetzt |

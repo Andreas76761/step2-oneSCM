@@ -1,5 +1,7 @@
 // Einheitliche Icons (ADR-111): Lucide-SVG statt Emoji – für Screenreader ausgeblendet, Farbe wie der umgebende Text
 import {
+  BadgeCheckIcon, BookmarkIcon, BriefcaseIcon, Building2Icon, BusIcon, CarIcon, CircleDotIcon, CircleHelpIcon, CompassIcon, FolderTreeIcon,
+  LanguagesIcon, LayersIcon, MapIcon, PlugIcon, PuzzleIcon, SearchIcon, StoreIcon, TagIcon, TruckIcon, UsersIcon, VanIcon,
   CaptionsIcon, CircleCheckIcon, CircleXIcon, FileArchiveIcon, FileTextIcon, FileTypeIcon, FileVideoCameraIcon, FolderIcon, GlobeIcon,
   OctagonAlertIcon, PresentationIcon, TicketIcon, TriangleAlertIcon, type LucideIcon, type LucideProps,
 } from 'lucide-react';
@@ -21,3 +23,16 @@ export const OkMark = ({ ok }: { ok: boolean }) => <Ico icon={ok ? CircleCheckIc
 /** Warnung bzw. Blocker */
 export const WarnIcon = () => <Ico icon={TriangleAlertIcon} />;
 export const BlockerIcon = () => <Ico icon={OctagonAlertIcon} />;
+
+// Rollen, Sparten und Label-Gruppen (ADR-122): Die Stammdaten tragen den Namen eines Lucide-Icons, die Oberfläche zeichnet es.
+const REF: Record<string, LucideIcon> = {
+  store: StoreIcon, globe: GlobeIcon, 'badge-check': BadgeCheckIcon, 'building-2': Building2Icon, users: UsersIcon,
+  car: CarIcon, van: VanIcon, truck: TruckIcon, bus: BusIcon, layers: LayersIcon, 'circle-help': CircleHelpIcon,
+  'folder-tree': FolderTreeIcon, compass: CompassIcon, puzzle: PuzzleIcon, briefcase: BriefcaseIcon, plug: PlugIcon, 'file-text': FileTextIcon,
+  tag: TagIcon, bookmark: BookmarkIcon, 'circle-dot': CircleDotIcon, languages: LanguagesIcon, map: MapIcon, search: SearchIcon,
+  'triangle-alert': TriangleAlertIcon,
+};
+/** Icon einer Rolle, Sparte oder Label-Gruppe; unbekannte Namen (z. B. alte Zeichen) zeigen ein neutrales Etikett */
+export function RefIcon({ name, size = 14 }: { name?: string | null; size?: number }) {
+  return <Ico icon={(name && REF[name]) || TagIcon} size={size} />;
+}

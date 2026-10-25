@@ -27,7 +27,7 @@ test('[T-201] Navigation, Import einer MD-Datei und Quellenliste', async ({ page
   await page.getByLabel('Suche', { exact: true }).fill('E2E-Test');
   await expect(page.getByRole('cell', { name: /im E2E-Test für alle Sparten/ })).toBeVisible();
   // Sparten-Icon + Label werden gemeinsam dargestellt (US-010)
-  await expect(page.locator('tr', { hasText: 'im E2E-Test' }).locator('.badge', { hasText: 'Alle' })).toContainText('🔄');
+  await expect(page.locator('tr', { hasText: 'im E2E-Test' }).locator('.badge', { hasText: 'Alle' }).locator('svg.ico')).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -60,7 +60,7 @@ test('[T-202] Widerspruch entscheiden, Kapitel generieren, Icons in der Kapitelw
   await expect(page.getByRole('heading', { name: '1. Zweck' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '10. Quellen- und Freigabestatus' })).toBeVisible();
   const block = page.locator('article.block', { hasText: 'Ein Administrator muss den Benutzer freigeben' });
-  await expect(block.locator('.badge', { hasText: 'HQ' })).toContainText('🏢');
+  await expect(block.locator('.badge', { hasText: 'HQ' }).locator('svg.ico')).toBeVisible();
   await block.getByRole('button', { name: 'Bearbeiten' }).click();
   await block.getByLabel('Text bearbeiten').fill('Ein Administrator muss den Benutzer freigeben, bevor dieser oneSCM nutzt.');
   await block.getByRole('button', { name: 'Speichern' }).click();
@@ -3550,4 +3550,24 @@ test('[T-386] Barrierefreiheit HTML: Prüfbericht nach dem HTML-Export im Standa
   await page.getByRole('button', { name: 'Export erstellen' }).click();
   await expect(report).toContainText('Hauptbereich ausgezeichnet');
   await expect(report.locator('.ico.fail')).toHaveCount(0);
+});
+
+test('[T-388] Rollen, Sparten und Label-Gruppen mit Lucide-Icons statt Emoji: Export-Filter, Quellen, Übersicht oneSCM_Metadaten – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const emoji = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u;
+  await page.goto('/export');
+  for (const legend of ['Rollen', 'Sparten']) {
+    const group = page.locator('fieldset', { has: page.locator('legend', { hasText: legend }) }).first();
+    await expect(group.locator('.badge svg.ico[aria-hidden="true"]').first()).toBeVisible();
+    expect(await group.locator('.badge').count()).toBe(await group.locator('.badge svg.ico').count());
+    expect(emoji.test(await group.innerText())).toBe(false);
+  }
+  expect(await axe()).toEqual([]);
+  await page.goto('/metadaten');
+  const groups = page.locator('table', { has: page.getByRole('cell', { name: 'Sparte', exact: true }) });
+  await expect(groups.getByRole('cell', { name: 'Sparte', exact: true }).locator('svg.ico')).toBeVisible();
+  expect(emoji.test(await groups.innerText())).toBe(false);
+  expect(await axe()).toEqual([]);
 });

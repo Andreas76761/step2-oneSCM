@@ -115,8 +115,8 @@ export function blockMatches(b: Block, f: ExportFilter): boolean {
 
 export function badgeLine(b: Pick<Block, 'roles' | 'divisions' | 'market' | 'release'>): string {
   const parts: string[] = [];
-  for (const r of ROLES) if (b.roles.includes(r.code) && r.code !== 'all') parts.push(`${r.icon} ${r.label}`);
-  for (const d of DIVISIONS) if (b.divisions.includes(d.code) && d.code !== 'all') parts.push(`${d.icon} ${d.label}`);
+  for (const r of ROLES) if (b.roles.includes(r.code) && r.code !== 'all') parts.push(r.label);
+  for (const d of DIVISIONS) if (b.divisions.includes(d.code) && d.code !== 'all') parts.push(d.label);
   if (b.market) parts.push(`Markt: ${b.market}`);
   if (b.release) parts.push(`Release: ${b.release}`);
   return parts.join(' · ');

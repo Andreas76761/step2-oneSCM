@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.69, 24.10.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.70, 25.10.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -110,11 +110,12 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 21. **Etappe 67 – Kontexthilfe im Lesestil (✅ umgesetzt, ADR-119).**
 22. **Etappe 68 – Barrierefreiheit für Word und PowerPoint (✅ umgesetzt, ADR-120):** Prüfbericht wie beim PDF.
 23. **Etappe 69 – Barrierefreiheit HTML (✅ umgesetzt, ADR-121):** Prüfbericht auch für den HTML-Export.
-24. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 24.10.2026 keine Auswahl), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+24. **Etappe 70 – Icons für Rollen, Sparten und Label-Gruppen (✅ umgesetzt, ADR-122):** Lucide statt Emoji (Entscheidung vom 25.10.2026).
+25. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 
 1. **LanguageTool:** entschieden am 24.10.2026 – lokal als Java-Dienst ohne Docker (G-04, umgesetzt in Etappe 55).
-2. **Sprachen:** de-CH und fr-CH entschieden am 24.10.2026. Offen: weitere Märkte (Hindi und Türkisch stehen in den Artefakten).
+2. **Sprachen:** de-CH und fr-CH entschieden am 24.10.2026. Weitere Märkte (Hindi und Türkisch stehen in den Artefakten) am 25.10.2026 vorerst zurückgestellt.
 3. **Übersetzungsbüros:** entschieden am 24.10.2026 – Austausch per XLIFF 1.2 und Excel (U-05, umgesetzt).
 4. **Schreibweise:** „MO-Prüfungen“ im Fließtext, „MO Checks“ als UI-Begriff – entschieden am 24.10.2026 (ADR-110). Offen: Systemnamen (Nemesis, VeDoc, CoFiCo, oneERP – später nach Oberfläche), „Grace Period“, Status FI-Beleg, Belegart, „Chassis Number“ (Redaktion).

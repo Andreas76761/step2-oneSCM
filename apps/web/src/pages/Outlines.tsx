@@ -1,7 +1,7 @@
 // Stammdaten › Inhaltsverzeichnis (ADR-032): Gliederungen je Variante (Rolle, Sparte, Blueprint oder Märkte),
 // Versionen speichern, hochladen, bearbeiten, erweitern, exportieren
 import { PencilIcon, XIcon } from 'lucide-react';
-import { Ico } from '../components/icons';
+import { Ico, RefIcon } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { currentProjectId, del, download, patch, post } from '../api';
@@ -36,13 +36,13 @@ function VariantFields({ form, setForm, markets }: { form: VariantForm; setForm:
       <fieldset className="checks">
         <legend>Rollen (keine Auswahl = alle)</legend>
         {ref?.roles.filter((r) => r.code !== 'all').map((r) => (
-          <label key={r.code} className="inline"><input type="checkbox" checked={form.roles.includes(r.code)} onChange={() => setForm({ ...form, roles: toggle(form.roles, r.code) })} /> {r.icon} {r.label}</label>
+          <label key={r.code} className="inline"><input type="checkbox" checked={form.roles.includes(r.code)} onChange={() => setForm({ ...form, roles: toggle(form.roles, r.code) })} /> <RefIcon name={r.icon} /> {r.label}</label>
         ))}
       </fieldset>
       <fieldset className="checks">
         <legend>Sparten (keine Auswahl = alle)</legend>
         {ref?.divisions.filter((d) => d.code !== 'all' && d.code !== 'unconfirmed').map((d) => (
-          <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> {d.icon} {d.label}</label>
+          <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> <RefIcon name={d.icon} /> {d.label}</label>
         ))}
       </fieldset>
       <fieldset className="checks">

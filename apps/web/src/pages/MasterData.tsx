@@ -1,6 +1,6 @@
 // Stammdaten (ADR-032): Abkürzungen, Glossar, Bildverzeichnis, FAQ, Redaktionsplanung
 import { PencilIcon, SparklesIcon } from 'lucide-react';
-import { Ico, WarnIcon } from '../components/icons';
+import { Ico, RefIcon, WarnIcon } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, del, mediaUrl, patch, post, put } from '../api';
@@ -308,10 +308,10 @@ export function FaqPage() {
           <label className="block">Frage <input value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} /></label>
           <label className="block">Antwort (Markdown) <textarea rows={4} value={form.answer} onChange={(e) => setForm({ ...form, answer: e.target.value })} /></label>
           <fieldset className="checks"><legend>Rollen (keine = alle)</legend>
-            {ref?.roles.filter((r) => r.code !== 'all').map((r) => <label key={r.code} className="inline"><input type="checkbox" checked={form.roles.includes(r.code)} onChange={() => setForm({ ...form, roles: toggle(form.roles, r.code) })} /> {r.icon} {r.label}</label>)}
+            {ref?.roles.filter((r) => r.code !== 'all').map((r) => <label key={r.code} className="inline"><input type="checkbox" checked={form.roles.includes(r.code)} onChange={() => setForm({ ...form, roles: toggle(form.roles, r.code) })} /> <RefIcon name={r.icon} /> {r.label}</label>)}
           </fieldset>
           <fieldset className="checks"><legend>Sparten (keine = alle)</legend>
-            {ref?.divisions.filter((d) => d.code !== 'all' && d.code !== 'unconfirmed').map((d) => <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> {d.icon} {d.label}</label>)}
+            {ref?.divisions.filter((d) => d.code !== 'all' && d.code !== 'unconfirmed').map((d) => <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> <RefIcon name={d.icon} /> {d.label}</label>)}
           </fieldset>
           <label className="inline">Status
             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="draft">Entwurf</option><option value="published">veröffentlicht</option></select>

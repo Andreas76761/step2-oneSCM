@@ -372,7 +372,7 @@ describe('Export (US-010, US-012, US-014)', () => {
     const md = (await call('GET', `/exports/${truck.json.id}/download`)).body;
     expect(md).toContain('## 4. Vertragsbearbeitung');
     expect(md).toContain('Laufleistung');
-    expect(md).toContain('> 🏪 Dealer · 🚛 Truck');
+    expect(md).toContain('> Dealer · Truck');
     expect(md).not.toContain('Produkt nicht verfügbar');
     expect(md).toContain('Filter: Rollen: Dealer · Sparten: Truck');
     const car = (await call('GET', `/exports/${(await call('POST', '/exports', { chapterIds: [ch4], divisions: ['car'] })).json.id}/download`)).body;
@@ -437,8 +437,9 @@ describe('Traceability (US-020)', () => {
     const s = (await call('PUT', '/settings', { analysis: { clusterThreshold: 0.6 } })).json;
     expect(s.analysis).toMatchObject({ clusterThreshold: 0.6, duplicateThreshold: 0.85 });
     const ref = (await call('GET', '/reference')).json;
-    expect(ref.roles.map((r: any) => `${r.icon} ${r.label}`)).toEqual(['🏪 Dealer', '🌍 Markt', '✅ MO', '🏢 HQ', '👥 Alle']);
-    expect(ref.divisions.map((r: any) => `${r.icon} ${r.label}`)).toEqual(['🚘 PKW', '🚐 VAN', '🚛 Truck', '🚌 Bus', '🔄 Alle', '❓ Ungeklärt']);
+    // Icons als Lucide-Namen (E-11 geändert, ADR-122)
+    expect(ref.roles.map((r: any) => `${r.icon} ${r.label}`)).toEqual(['store Dealer', 'globe Markt', 'badge-check MO', 'building-2 HQ', 'users Alle']);
+    expect(ref.divisions.map((r: any) => `${r.icon} ${r.label}`)).toEqual(['car PKW', 'van VAN', 'truck Truck', 'bus Bus', 'layers Alle', 'circle-help Ungeklärt']);
     const dash = (await call('GET', '/dashboard')).json;
     expect(dash.snippets).toBeGreaterThan(20);
   });

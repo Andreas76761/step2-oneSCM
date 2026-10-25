@@ -1,5 +1,5 @@
 import { CompassIcon, FolderIcon, FolderInputIcon, FolderOpenIcon, FolderTreeIcon, PuzzleIcon, TagsIcon } from 'lucide-react';
-import { FormatIcon, Ico } from '../components/icons';
+import { FormatIcon, Ico, RefIcon } from '../components/icons';
 import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { del, patch, post, put, qs } from '../api';
@@ -63,7 +63,7 @@ function LabelTag({ label, lang, groups, onRemove }: { label: Label; lang: Lang;
   const name = nameOf(label, lang);
   return (
     <span className={`tag md-label${label.archived ? ' md-archived' : ''}`} style={{ borderLeftColor: g?.color }} title={`${g ? nameOf(g, lang) : label.group} · ${label.code}${label.archived ? ' (ausgeblendet)' : ''}`}>
-      <span aria-hidden="true">{g?.icon} </span>{name}
+      <RefIcon name={g?.icon} /> {name}
       {onRemove && <button type="button" className="md-remove" aria-label={`Label „${name}“ entfernen`} onClick={onRemove}>×</button>}
     </span>
   );
@@ -77,7 +77,7 @@ function LabelSelect({ labels, groups, lang, value, onChange, exclude = [], aria
     <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={ariaLabel}>
       <option value="">{placeholder}</option>
       {groups.map((g) => (
-        <optgroup key={g.code} label={`${g.icon} ${nameOf(g, lang)}`}>
+        <optgroup key={g.code} label={nameOf(g, lang)}>
           {labels.filter((l) => l.group === g.code && !l.archived && !exclude.includes(l.id)).map((l) => <option key={l.id} value={l.id}>{nameOf(l, lang)}</option>)}
         </optgroup>
       ))}
@@ -165,7 +165,7 @@ export function MetadataOverviewPage() {
         <Card title="Labels" actions={<Link className="btn small" to="/metadaten/labels"><Ico icon={TagsIcon} />Katalog</Link>}>
           <table className="table">
             <thead><tr><th>Gruppe</th><th>Labels</th></tr></thead>
-            <tbody>{(d?.labelGroups ?? []).map((g: any) => <tr key={g.code}><td><span aria-hidden="true">{g.icon}</span> {nameOf(g, lang)}</td><td>{g.labels}</td></tr>)}</tbody>
+            <tbody>{(d?.labelGroups ?? []).map((g: any) => <tr key={g.code}><td><RefIcon name={g.icon} /> {nameOf(g, lang)}</td><td>{g.labels}</td></tr>)}</tbody>
           </table>
         </Card>
       </div>
@@ -610,7 +610,7 @@ export function MetadataLabelsPage() {
         <Card title="Label ergänzen">
           <div className="filters">
             <select value={form.group} onChange={(e) => setForm({ ...form, group: e.target.value })} aria-label="Gruppe">
-              {groups.map((g) => <option key={g.code} value={g.code}>{g.icon} {g.nameDe}</option>)}
+              {groups.map((g) => <option key={g.code} value={g.code}>{g.nameDe}</option>)}
             </select>
             <input placeholder="Code, z. B. nav.orders" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} aria-label="Code" />
             <input placeholder="Name (Deutsch)" value={form.nameDe} onChange={(e) => setForm({ ...form, nameDe: e.target.value })} aria-label="Name Deutsch" />
@@ -626,7 +626,7 @@ export function MetadataLabelsPage() {
       {groups.map((g) => {
         const rows = (labels.data ?? []).filter((l) => l.group === g.code);
         return (
-          <Card key={g.code} title={<><span aria-hidden="true">{g.icon}</span> {nameOf(g, lang)} <span className="muted small">({rows.length})</span></>}>
+          <Card key={g.code} title={<><RefIcon name={g.icon} /> {nameOf(g, lang)} <span className="muted small">({rows.length})</span></>}>
             <table className="table">
               <thead><tr><th>Deutsch</th><th>Englisch</th><th>Code</th><th>Chunks</th><th>Antworten</th>{isAdmin && <th />}</tr></thead>
               <tbody>

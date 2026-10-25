@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api, del, get, patch, post, qs } from '../api';
+import { RefIcon } from '../components/icons';
 import {
   Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
   activatable,
@@ -188,7 +189,7 @@ export function RefSelect({ kind, value, onChange, label }: { kind: 'roles' | 'd
   return (
     <select aria-label={label ?? (kind === 'roles' ? 'Rolle' : 'Sparte')} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
       <option value="">{kind === 'roles' ? 'Alle Rollen' : 'Alle Sparten'}</option>
-      {ref?.[kind].map((r) => <option key={r.code} value={r.code}>{r.icon} {r.label}</option>)}
+      {ref?.[kind].map((r) => <option key={r.code} value={r.code}>{r.label}</option>)}
     </select>
   );
 }
@@ -322,13 +323,13 @@ function SnippetDialog({ snippet, onClose, onSaved }: { snippet: any; onClose: (
           <fieldset className="checks">
             <legend>Fachliche Rollen (Mehrfachauswahl)</legend>
             {ref?.roles.map((r) => (
-              <label key={r.code}><input type="checkbox" checked={roles.includes(r.code)} onChange={() => toggle(roles, setRoles, r.code)} /> {r.icon} {r.label}</label>
+              <label key={r.code}><input type="checkbox" checked={roles.includes(r.code)} onChange={() => toggle(roles, setRoles, r.code)} /> <RefIcon name={r.icon} /> {r.label}</label>
             ))}
           </fieldset>
           <fieldset className="checks">
             <legend>Sparten (Mehrfachauswahl)</legend>
             {ref?.divisions.map((r) => (
-              <label key={r.code}><input type="checkbox" checked={divs.includes(r.code)} onChange={() => toggle(divs, setDivs, r.code)} /> {r.icon} {r.label}</label>
+              <label key={r.code}><input type="checkbox" checked={divs.includes(r.code)} onChange={() => toggle(divs, setDivs, r.code)} /> <RefIcon name={r.icon} /> {r.label}</label>
             ))}
           </fieldset>
           <div className="form-row">

@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.72 Stand nach Etappe 70 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Rollen, Sparten und Label-Gruppen mit Lucide-Icons statt Emoji; Exporte und Kapiteltext ohne Zeichen (NFR-157) | ✅ ([ADR-122](adr/ADR-122-icons-rollen-sparten.md)), T-387, T-388 (axe) |
+| U-07 weitere Sprachen | am 25.10.2026 vorerst zurückgestellt |
+| Offen | S-04-Begriffe (Redaktion) |
+
 ## 1.71 Stand nach Etappe 69 (24.10.2026)
 
 | Punkt | Ergebnis |

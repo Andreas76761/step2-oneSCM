@@ -8,22 +8,22 @@ export const LABEL_LANGUAGES = ['de', 'en'] as const;
 export type LabelLanguage = (typeof LABEL_LANGUAGES)[number];
 
 export const LABEL_GROUPS = [
-  { code: 'outline', nameDe: 'Handbuch-Gliederung', nameEn: 'Manual outline', icon: '🗂', color: '#1d4ed8' },
-  { code: 'role', nameDe: 'Rollen', nameEn: 'Roles', icon: '👥', color: '#6d28d9' },
-  { code: 'navigation', nameDe: 'Navigation im System', nameEn: 'System navigation', icon: '🧭', color: '#0f766e' },
-  { code: 'domain', nameDe: 'Fachdomäne', nameEn: 'Business domain', icon: '🧩', color: '#4d7c0f' },
-  { code: 'customer', nameDe: 'Kundengruppe', nameEn: 'Customer group', icon: '🧑‍💼', color: '#be185d' },
-  { code: 'system', nameDe: 'Systeme und Schnittstellen', nameEn: 'Systems and interfaces', icon: '🔌', color: '#475569' },
-  { code: 'content', nameDe: 'Inhaltstyp', nameEn: 'Content type', icon: '🧾', color: '#b45309' },
-  { code: 'division', nameDe: 'Sparte', nameEn: 'Division', icon: '🚘', color: '#0369a1' },
-  { code: 'quality', nameDe: 'Qualität und Status', nameEn: 'Quality and status', icon: '🏷', color: '#b91c1c' },
+  { code: 'outline', nameDe: 'Handbuch-Gliederung', nameEn: 'Manual outline', icon: 'folder-tree', color: '#1d4ed8' },
+  { code: 'role', nameDe: 'Rollen', nameEn: 'Roles', icon: 'users', color: '#6d28d9' },
+  { code: 'navigation', nameDe: 'Navigation im System', nameEn: 'System navigation', icon: 'compass', color: '#0f766e' },
+  { code: 'domain', nameDe: 'Fachdomäne', nameEn: 'Business domain', icon: 'puzzle', color: '#4d7c0f' },
+  { code: 'customer', nameDe: 'Kundengruppe', nameEn: 'Customer group', icon: 'briefcase', color: '#be185d' },
+  { code: 'system', nameDe: 'Systeme und Schnittstellen', nameEn: 'Systems and interfaces', icon: 'plug', color: '#475569' },
+  { code: 'content', nameDe: 'Inhaltstyp', nameEn: 'Content type', icon: 'file-text', color: '#b45309' },
+  { code: 'division', nameDe: 'Sparte', nameEn: 'Division', icon: 'car', color: '#0369a1' },
+  { code: 'quality', nameDe: 'Qualität und Status', nameEn: 'Quality and status', icon: 'tag', color: '#b91c1c' },
   // Pflichtgruppen der Triage (ADR-100): jeder Chunk trägt je Gruppe mindestens ein Label
-  { code: 'version', nameDe: 'Version', nameEn: 'Version', icon: '🔖', color: '#7c3aed' },
-  { code: 'status', nameDe: 'Status', nameEn: 'Status', icon: '🚦', color: '#15803d' },
-  { code: 'language', nameDe: 'Sprache', nameEn: 'Language', icon: '🌐', color: '#0e7490' },
-  { code: 'market', nameDe: 'Markt', nameEn: 'Market', icon: '🗺', color: '#a16207' },
-  { code: 'detail', nameDe: 'Detaillevel', nameEn: 'Detail level', icon: '🔍', color: '#9333ea' },
-  { code: 'review', nameDe: 'Zu prüfen', nameEn: 'To be reviewed', icon: '⚠', color: '#dc2626' },
+  { code: 'version', nameDe: 'Version', nameEn: 'Version', icon: 'bookmark', color: '#7c3aed' },
+  { code: 'status', nameDe: 'Status', nameEn: 'Status', icon: 'circle-dot', color: '#15803d' },
+  { code: 'language', nameDe: 'Sprache', nameEn: 'Language', icon: 'languages', color: '#0e7490' },
+  { code: 'market', nameDe: 'Markt', nameEn: 'Market', icon: 'map', color: '#a16207' },
+  { code: 'detail', nameDe: 'Detaillevel', nameEn: 'Detail level', icon: 'search', color: '#9333ea' },
+  { code: 'review', nameDe: 'Zu prüfen', nameEn: 'To be reviewed', icon: 'triangle-alert', color: '#dc2626' },
 ] as const;
 /** Pflicht-Labelgruppen je Chunk (ADR-100): Version, Status, Domäne, Rolle, Sprache, Sparte, Markt, Detaillevel, zu prüfen */
 export const REQUIRED_GROUPS = ['version', 'status', 'domain', 'role', 'language', 'division', 'market', 'detail', 'review'] as const;

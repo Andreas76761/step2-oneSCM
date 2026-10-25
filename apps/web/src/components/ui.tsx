@@ -1,5 +1,5 @@
 import { HourglassIcon, ImagePlusIcon, LockIcon, RotateCwIcon, SparklesIcon, XIcon, type LucideIcon } from 'lucide-react';
-import { BlockerIcon, Ico } from './icons';
+import { BlockerIcon, Ico, RefIcon } from './icons';
 import { Suspense, createContext, lazy, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { ApiError, download, get, mediaUrl, post } from '../api';
 
@@ -77,7 +77,7 @@ export function Badge({ item, compact }: { item?: RefItem; compact?: boolean }) 
   if (!item) return null;
   return (
     <span className="badge" style={{ '--badge': item.color } as CSSProperties} title={item.description ?? item.label}>
-      <span aria-hidden="true">{item.icon}</span> {compact ? <span className="sr-only">{item.label}</span> : item.label}
+      <RefIcon name={item.icon} /> {compact ? <span className="sr-only">{item.label}</span> : item.label}
     </span>
   );
 }

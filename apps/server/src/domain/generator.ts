@@ -167,7 +167,7 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
     const confirmedRoles = new Map<string, string[]>();
     for (const s of unique) for (const r of s.roles) if (isConfirmed(r)) confirmedRoles.set(r.code, [...(confirmedRoles.get(r.code) ?? []), s.id]);
     if (confirmedRoles.size) {
-      const lines = ROLES.filter((r) => confirmedRoles.has(r.code)).map((r) => `- ${r.icon} ${r.label} (${r.description})`);
+      const lines = ROLES.filter((r) => confirmedRoles.has(r.code)).map((r) => `- ${r.label} (${r.description})`);
       blocks.push({ section: 'responsibilities', kind: 'list', text: `Dieses Kapitel betrifft folgende Rollen:\n\n${lines.join('\n')}`, sourceIds: [...new Set([...confirmedRoles.values()].flat())], roles: [...confirmedRoles.keys()], divisions: ['all'], market: null, release: null, scopeStatus: 'general' });
     }
   }

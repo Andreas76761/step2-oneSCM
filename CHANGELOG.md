@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.70.0 – Etappe 70 (25.10.2026)
+
+### Geändert
+- **Lucide-Icons für Rollen, Sparten und Label-Gruppen (ADR-122, Entscheidung vom 25.10.2026):**
+  - Die Stammdaten tragen den Namen eines Lucide-Icons statt eines Emoji; bestehende Datenbanken werden beim Start angepasst.
+  - Badges, Filter, Stammdaten, Gliederungen, Quellen und oneSCM_Metadaten zeichnen einheitliche SVG-Icons; Farbe und Textlabel bleiben.
+  - Exporte und der Kapitelgenerator nennen nur den Namen („Dealer · Truck“, „- HQ (…)“).
+- Entscheidung E-11 geändert; die Ausnahme in ADR-111 ist aufgehoben.
+- U-07 (weitere Sprachen und Märkte): am 25.10.2026 vorerst zurückgestellt.
+
+### Hinzugefügt
+- Tests T-387 und E2E T-388; Anforderung NFR-157.
+
 ## 0.69.0 – Etappe 69 (24.10.2026)
 
 ### Hinzugefügt

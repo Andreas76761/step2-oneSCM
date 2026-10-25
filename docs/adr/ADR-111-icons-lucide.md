@@ -31,4 +31,4 @@ Navigation, Startseite und viele Schaltflächen nutzten Emoji als Icons. Emoji s
 - **Etappe 59:** auch die übrigen Seiten (Quellformate, Blocker und Warnungen, Hinweisarten, Screenshot-Editor, Sperren, Kommentar, Bearbeiten, Export/Import, Schließen) und die Leseransicht in allen neun Sprachen. Die Texte der Leseransicht enthalten keine Zeichen mehr; die Icons setzt die Oberfläche.
 - Bewusst unverändert:
   - einfarbige Textzeichen wie ✓, ✎, ✖ und die Pfeile (sehen überall gleich aus);
-  - Rollen- und Spartenzeichen, die aus den Stammdaten kommen (Daten, keine Oberfläche).
+  - Rollen- und Spartenzeichen, die aus den Stammdaten kommen (Daten, keine Oberfläche). **Aufgehoben in Etappe 70 (ADR-122):** auch sie sind jetzt Lucide-Icons.

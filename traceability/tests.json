@@ -2980,5 +2980,23 @@
     "requirements": [
       "NFR-156"
     ]
+  },
+  {
+    "id": "T-387",
+    "title": "Stammdaten mit Lucide-Namen statt Emoji (auch über die API), Kapitelgenerator und Markdown-Export ohne Bildzeichen",
+    "file": "apps/server/test/stage70.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-157"
+    ]
+  },
+  {
+    "id": "T-388",
+    "title": "Badges der Rollen und Sparten im Export-Filter und Label-Gruppen in oneSCM_Metadaten mit SVG-Icons, ohne Emoji – axe ohne Befund",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-157"
+    ]
   }
 ]
