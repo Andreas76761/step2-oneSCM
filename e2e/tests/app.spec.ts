@@ -3683,3 +3683,75 @@ test('[T-394] Alle Seiten in Smartphone-Breite (390 px): kein waagerechtes Scrol
   }
   expect(findings).toEqual([]);
 });
+
+test('[T-395] Tastaturbedienung aller Seiten: Sprunglink zuerst, sichtbarer und nicht verdeckter Fokus, kein Kreisen (WCAG 2.1.2, 2.4.1, 2.4.7, 2.4.11)', async ({ page }) => {
+  test.setTimeout(480_000);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const findings: string[] = [];
+  const probe = () => page.evaluate(() => {
+    const el = document.activeElement as HTMLElement | null;
+    if (!el || el === document.body) return null;
+    const name = `${el.tagName.toLowerCase()}${el.className && typeof el.className === 'string' && el.className.trim() ? '.' + el.className.trim().split(/\s+/).join('.') : ''}`
+      + `${el.getAttribute('aria-label') ? `[${el.getAttribute('aria-label')}]` : ''} „${(el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30)}“`;
+    const cs = getComputedStyle(el);
+    const ring = (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0) || cs.boxShadow !== 'none';
+    // verdeckt, wenn an Mitte und beiden Ecken ein fremdes Element liegt (z. B. eine fixierte Spalte) oder das Element außerhalb liegt
+    const rc = el.getBoundingClientRect();
+    const labels = (el as HTMLInputElement).labels ? [...(el as HTMLInputElement).labels!] : [];
+    const obscured = rc.width === 0 || rc.height === 0 || [[rc.left + rc.width / 2, rc.top + rc.height / 2], [rc.left + 2, rc.top + 2], [rc.right - 2, rc.bottom - 2]]
+      .every(([x, y]) => {
+        if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return true;
+        const hit = document.elementFromPoint(x, y);
+        return !!hit && !el.contains(hit) && !hit.contains(el) && !labels.some((l) => l.contains(hit));
+      });
+    const key = el.dataset.t395 || (el.dataset.t395 = String(Math.random()));
+    return { name, key, ring, obscured, inMain: !!el.closest('main') };
+  });
+  const check = (r: string, f: { name: string; ring: boolean; obscured: boolean }) => {
+    if (!f.ring) findings.push(`${r}: kein sichtbarer Fokus ${f.name}`);
+    if (f.obscured) findings.push(`${r}: Fokus verdeckt ${f.name}`);
+  };
+  // Kopf und Menü einmal vollständig (auf allen Seiten gleich)
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  for (let i = 0; i < 120; i++) {
+    await page.keyboard.press('Tab');
+    const f = await probe();
+    if (!f || f.inMain) break;
+    check('Kopf/Menü', f);
+  }
+  // je Seite: Sprunglink als erster Tabstopp, dann der Inhaltsbereich (bis zu 80 Tabstopps)
+  for (const r of ALL_PAGES) {
+    await page.goto(r);
+    await page.waitForLoadState('networkidle');
+    await page.keyboard.press('Tab');
+    const first = await probe();
+    if (!first?.name.startsWith('a.skip-link')) findings.push(`${r}: erster Tabstopp ${first?.name ?? 'keiner'}`);
+    await page.keyboard.press('Enter');
+    const seen = new Set<string>();
+    let prev = '';
+    let same = 0;
+    for (let i = 0; i < 80; i++) {
+      await page.keyboard.press('Tab');
+      const f = await probe();
+      if (!f || !f.inMain) break;
+      // Datumsfelder: Tag, Monat und Jahr sind eigene Tabstopps im selben Element
+      if (f.key === prev) {
+        if (++same > 5) { findings.push(`${r}: Fokus hängt bei ${f.name}`); break; }
+        continue;
+      }
+      same = 0;
+      prev = f.key;
+      if (seen.has(f.key)) { findings.push(`${r}: Fokus kreist bei ${f.name}`); break; }
+      seen.add(f.key);
+      check(r, f);
+    }
+  }
+  expect(findings).toEqual([]);
+  // Weiterleitung nach einem Klick (/werkstatt → erstes Kapitel): Fokus auf der Seitenüberschrift (WCAG 2.4.3)
+  await page.goto('/quellen');
+  await page.waitForLoadState('networkidle');
+  await page.locator('.sidebar').getByRole('link', { name: 'Kapitelwerkstatt', exact: true }).click();
+  await expect(page).toHaveURL(/\/werkstatt\/.+/);
+  await expect(page.locator('main h1')).toBeFocused();
+});

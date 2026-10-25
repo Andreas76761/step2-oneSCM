@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.77.0 – Etappe 77 (25.10.2026)
+
+### Hinzugefügt
+- **Tastaturbedienung aller Seiten geprüft (E2E T-395):** Auf allen 77 Seiten ist „Zum Inhalt springen“ der erste Tabstopp. Danach durchläuft der Test bis zu 80 Tabstopps im Inhaltsbereich, mit den vollen Testdaten des E2E-Laufs (gut 2 000 Tabstopps; im dunklen Modus zusätzlich einmalig geprüft, ohne Befund). Jeder Tabstopp muss einen sichtbaren Fokus haben (WCAG 2.4.7), der nicht verdeckt ist (2.4.11), und der Fokus darf nicht kreisen (2.1.2). Kopf und Menü werden einmal vollständig geprüft.
+- **Benutzerdokumentation:** Abschnitt „Mit der Tastatur“ in den Grundlagen.
+
+### Behoben
+- **Sprunglink beim direkten Aufruf von /stammdaten und /werkstatt:** Beide Seiten leiten beim Laden weiter, zum Inhaltsverzeichnis bzw. zum ersten Kapitel. Die App wertete das als Seitenwechsel und setzte den Fokus auf die Überschrift, sodass der erste Tabstopp nicht mehr „Zum Inhalt springen“ war. Weiterleitungen beim ersten Laden setzen den Fokus jetzt nicht mehr. Nach einem Klick im Menü steht der Fokus weiter auf der Überschrift, auch mit Weiterleitung (WCAG 2.4.3).
+- **Zugriffsmatrix per Tastatur:** Beim Tabben durch die Matrix schob der Browser das nächste Feld nur knapp ins Bild und damit unter die fixierte erste Spalte. Ein fokussiertes Feld unter einer fixierten Spalte wird jetzt ganz sichtbar geschoben, in allen Tabellen mit fixierter Spalte (WCAG 2.4.11).
+
 ## 0.76.0 – Etappe 76 (25.10.2026)
 
 ### Hinzugefügt

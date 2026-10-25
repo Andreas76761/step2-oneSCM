@@ -2,7 +2,7 @@ import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import {
   ArchiveIcon, ArrowLeftRightIcon, BadgeCheckIcon, BadgeHelpIcon, BellIcon, BlocksIcon, BookAIcon, BookMarkedIcon, BookOpenIcon, BookOpenCheckIcon, BotIcon, BoxesIcon, CalendarDaysIcon, CarIcon, CaseSensitiveIcon, ChartLineIcon, ChartPieIcon, ChevronDownIcon, ChevronRightIcon, CircleCheckIcon, CircleHelpIcon, ClipboardListIcon, CompassIcon, ConstructionIcon, CopyIcon, CopyCheckIcon, DatabaseIcon, EllipsisIcon, FileInputIcon, FileOutputIcon, FilePenIcon, FileTextIcon, FilesIcon, FlagIcon, FolderInputIcon, FolderKanbanIcon, GaugeIcon, GitCompareIcon, GitCompareArrowsIcon, GroupIcon, HouseIcon, ImageIcon, ImagesIcon, LanguagesIcon, LayoutDashboardIcon, LibraryIcon, LifeBuoyIcon, LinkIcon, ListChecksIcon, ListFilterIcon, ListOrderedIcon, ListTreeIcon, LockIcon, MenuIcon, MessageCircleQuestionIcon, MessageSquareIcon, MessagesSquareIcon, NetworkIcon, NewspaperIcon, PaletteIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PenLineIcon, PlugIcon, PuzzleIcon, RefreshCwIcon, RocketIcon, ScaleIcon, SearchCheckIcon, SettingsIcon, ShieldCheckIcon, SlidersHorizontalIcon, SparklesIcon, SpellCheckIcon, StickyNoteIcon, TagsIcon, TargetIcon, UserCogIcon, UserRoundSearchIcon, UsersIcon, UsersRoundIcon, WandSparklesIcon, XIcon, type LucideIcon,
 } from 'lucide-react';
-import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { currentProjectId, currentUserId, get, setCurrentProjectId, setCurrentUserId } from './api';
 import { initAuth, login, logout, type AuthConfig } from './auth';
 import { AppCtx, type Reference } from './components/ui';
@@ -314,6 +314,26 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
       cancelAnimationFrame(frame);
     };
   }, []);
+  // Fixierte erste Spalte (z. B. Zugriffsmatrix): Beim Tabben schiebt der Browser das Feld nur knapp ins Bild und
+  // damit unter die fixierte Spalte. Dann den Scrollbereich so weit schieben, dass der Fokus sichtbar ist (WCAG 2.4.11).
+  useEffect(() => {
+    const onFocus = (e: FocusEvent) => {
+      const el = e.target as HTMLElement;
+      const row = el.closest?.('tr');
+      if (!row) return;
+      let box: HTMLElement | null = row.parentElement;
+      while (box && !(box.scrollWidth > box.clientWidth + 1 && getComputedStyle(box).overflowX !== 'visible')) box = box.parentElement;
+      if (!box) return;
+      const r = el.getBoundingClientRect();
+      for (const cell of row.querySelectorAll<HTMLElement>(':scope > th, :scope > td')) {
+        if (cell.contains(el) || getComputedStyle(cell).position !== 'sticky') continue;
+        const c = cell.getBoundingClientRect();
+        if (r.left < c.right && r.right > c.left) box.scrollLeft -= c.right - r.left + 8;
+      }
+    };
+    document.addEventListener('focusin', onFocus);
+    return () => document.removeEventListener('focusin', onFocus);
+  }, []);
   // Einführung (ADR-056): beim ersten Besuch der Startseite; automatisierte Browser (Tests) starten sie nicht selbst
   const [tourOpen, setTourOpen] = useState(false);
   useEffect(() => {
@@ -331,6 +351,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   }, [inMasterData]);
   const mainRef = useRef<HTMLElement>(null);
   const firstRender = useRef(true);
+  const navigationType = useNavigationType();
+  const userNavigated = useRef(false);
   const [unread, setUnread] = useState(0);
   const reloadUnread = useCallback(() => {
     get<any>('/notifications?unread=true').then((n) => setUnread(n.unread)).catch(() => setUnread(0));
@@ -347,6 +369,10 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
       firstRender.current = false;
       return;
     }
+    // Weiterleitungen beim ersten Laden (z. B. /stammdaten → Inhaltsverzeichnis) sind kein Seitenwechsel:
+    // Der Fokus bleibt am Seitenanfang, der erste Tabstopp ist „Zum Inhalt springen“.
+    if (navigationType === 'REPLACE' && !userNavigated.current) return;
+    userNavigated.current = true;
     const t = setTimeout(() => {
       const h1 = mainRef.current?.querySelector<HTMLElement>('h1');
       if (h1) {

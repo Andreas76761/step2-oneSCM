@@ -3052,5 +3052,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-395",
+    "title": "Tastaturbedienung aller 77 Seiten: Sprunglink als erster Tabstopp, sichtbarer und nicht verdeckter Fokus, kein Kreisen; Fokus auf der Überschrift nach Weiterleitung per Klick",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

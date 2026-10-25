@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.79 Stand nach Etappe 77 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Tastaturbedienung (NFR-03): auf allen 77 Seiten „Zum Inhalt springen“ als erster Tabstopp, sichtbarer Fokus (WCAG 2.4.7), Fokus nicht verdeckt (2.4.11), kein Kreisen (2.1.2); Kopf und Menü einmal vollständig | ✅ T-395 |
+| Behoben | Weiterleitungen beim Laden (/stammdaten, /werkstatt) setzten den Fokus auf die Überschrift und übersprangen den Sprunglink; in der Zugriffsmatrix lag das fokussierte Feld unter der fixierten ersten Spalte |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
 ## 1.78 Stand nach Etappe 76 (25.10.2026)
 
 | Punkt | Ergebnis |
