@@ -126,6 +126,20 @@ export const BOX: Record<string, { cls: string; icon: DesignIcon; label: string 
   xref: { cls: 'xref', icon: 'arrow-up-right', label: 'Siehe auch' },
 };
 
+/**
+ * Beschriftung einer Box: Beginnt der Text mit einem fett gesetzten Signalwort („**Wichtig:**“, „**Achtung:**“ …), wird es zur
+ * Beschriftung und fällt aus dem Text – sonst gilt die Beschriftung der Art. So steht nichts doppelt da (ADR-112: Wichtig/Tipp).
+ */
+const SIGNAL = /^\*\*(Wichtig|Hinweis|Tipp|Warnung|Achtung|Siehe auch)\s*:?\s*\*\*\s*:?\s*/i;
+export function boxLabel(b: DesignBlock): { label: string; text: string } | null {
+  const box = BOX[b.kind];
+  if (!box) return null;
+  const m = SIGNAL.exec(b.text);
+  if (!m) return { label: box.label, text: b.text };
+  const word = m[1].toLowerCase() === 'siehe auch' ? 'Siehe auch' : m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
+  return { label: word, text: b.text.slice(m[0].length) };
+}
+
 function brandHtml(o: DesignOptions, cls: string) {
   const mark = o.logo ? `<img class="${cls}-logo" src="${esc(o.logo)}" alt="${esc(o.brand ?? 'Logo')}">` : `<span class="${cls}-mark">${svgIcon('book-open', 26, 'ic')}</span>`;
   return `<div class="${cls}-brand">${mark}<span class="${cls}-brandtext"><span>${esc(o.brand || 'oneSCM')}</span>${o.productLine ? `<em>${esc(o.productLine)}</em>` : ''}</span></div>`;
@@ -257,16 +271,15 @@ body{margin:0;font:10.5pt/1.42 ${FONTS[t.bodyFont]};color:var(--qr-ink);backgrou
 table{border-collapse:collapse;font-size:9.5pt;margin:4px 0}td,th{border:1px solid #d1d5db;padding:3px 6px;text-align:left}
 code{font-family:ui-monospace,Consolas,monospace;font-size:9pt;background:#f3f4f6;padding:0 3px;border-radius:3px}
 @media print{.qr{padding:0;max-width:none}.qr-foot{display:none}a{text-decoration:underline}}
-@media screen{body{background:#eef2f6}.qr{background:#fff;margin:16px auto;box-shadow:0 2px 12px rgba(0,0,0,.08);border-radius:6px;padding:18px 22px}}
+@media screen{body{background:#eef2f6}.qr-cols{column-fill:balance}.qr{background:#fff;margin:16px auto;box-shadow:0 2px 12px rgba(0,0,0,.08);border-radius:6px;padding:18px 22px}}
 `;
 
 function qrBlock(b: DesignBlock, o: DesignOptions): string {
-  const html = o.md(b.text);
-  if (b.kind === 'warning') return `<div class="qr-warn">${svgIcon('circle-alert', 26)}<div>${html}</div></div>`;
-  if (b.kind === 'note') return `<div class="qr-hint">${html.replace(/^<p>/, '<p><strong>Hinweis</strong>: ')}</div>`;
-  if (b.kind === 'tip') return `<div class="qr-tip">${html.replace(/^<p>/, '<p><strong>Tipp</strong>: ')}</div>`;
-  if (b.kind === 'xref') return `<div class="qr-hint">${html.replace(/^<p>/, '<p><strong>Siehe auch</strong>: ')}</div>`;
-  return html;
+  if (b.kind === 'warning') return `<div class="qr-warn">${svgIcon('circle-alert', 26)}<div>${o.md(b.text)}</div></div>`;
+  const l = boxLabel(b);
+  if (!l) return o.md(b.text);
+  const html = o.md(l.text).replace(/^<p>/, `<p><strong>${esc(l.label)}</strong>: `);
+  return b.kind === 'tip' ? `<div class="qr-tip">${html}</div>` : `<div class="qr-hint">${html}</div>`;
 }
 
 
@@ -323,7 +336,7 @@ body{margin:0;font:9.5pt/1.55 ${FONTS[t.bodyFont]};color:var(--fd-ink);backgroun
 .fd-logo{max-height:32px;max-width:110px}
 .fd-brandtext{display:flex;flex-direction:column;line-height:1.1;font-weight:600;font-size:9pt}
 .fd-brandtext em{font-weight:400;color:var(--fd-muted);font-style:normal}
-.fd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 16px;padding:0;list-style:none;break-inside:avoid}
+.fd ul.fd-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 16px;padding:0;list-style:none;break-inside:avoid}
 .fd-kpi{border:1px solid var(--fd-line);border-top:2px solid var(--fd-navy);border-radius:6px;padding:7px 10px;text-align:left}
 .fd-kpi .v{display:flex;align-items:center;gap:6px;font:700 15pt ${FONTS[t.headingFont]};color:var(--fd-navy)}
 .fd-kpi .v .ic{color:var(--fd-blue)}
@@ -361,8 +374,8 @@ body{margin:0;font:9.5pt/1.55 ${FONTS[t.bodyFont]};color:var(--fd-ink);backgroun
 
 function fdBlock(b: DesignBlock, o: DesignOptions): string {
   const box = BOX[b.kind];
-  const html = o.md(b.text);
-  return box ? `<div class="fd-box ${box.cls}"><div class="t">${svgIcon(box.icon, 15)}${esc(box.label)}</div>${html}</div>` : html;
+  const l = boxLabel(b);
+  return box && l ? `<div class="fd-box ${box.cls}"><div class="t">${svgIcon(box.icon, 15)}${esc(l.label)}</div>${o.md(l.text)}</div>` : o.md(b.text);
 }
 
 export function renderFachdoku(chapters: DesignChapter[], o: DesignOptions): string {

@@ -56,7 +56,7 @@ describe('Etappe 64', () => {
     expect(fd.text[0]).toContain('Kapitel 4: Vertragsberechnung');
     for (const s of ['Abschnitte', 'Handlungsschritte', 'V3', 'Freigegeben am 20.10.2026']) expect(fd.text[0]).toContain(s);
     const fall = fd.text.join(' | ');
-    for (const s of ['1. Einleitung und fachlicher Auftrag', '2. Preismatrix und Fahrzeuggruppen', 'Hinweis', 'Tipp', 'Warnung', 'Siehe auch', '1.480,00 €', 'ONE_TIME', '[Entwurf]']) expect(fall).toContain(s);
+    for (const s of ['1. Einleitung und fachlicher Auftrag', '2. Preismatrix und Fahrzeuggruppen', 'Hinweis', 'Wichtig', 'Warnung', 'Siehe auch', '1.480,00 €', 'ONE_TIME', '[Entwurf]']) expect(fall).toContain(s);
     expect(fd.xml.join('')).toContain('<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table">');
 
     // gültiges PPTX: der eigene Import liest die Folien wieder

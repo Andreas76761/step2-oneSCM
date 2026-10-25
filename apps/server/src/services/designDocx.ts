@@ -9,7 +9,7 @@ import {
 import type { DesignIcon } from '../domain/designIcons.js';
 import { iconImage } from './designIconRaster.js';
 import {
-  BOX, cardTitle, chapterFacts, DEFAULT_THEMES, fachdokuFooter, fachdokuLabel, hasInteractiveLinks, processOverview, QR_ICON,
+  BOX, boxLabel, cardTitle, chapterFacts, DEFAULT_THEMES, fachdokuFooter, fachdokuLabel, hasInteractiveLinks, processOverview, QR_ICON,
   type Design, type DesignBlock, type DesignChapter, type DesignOptions, type DesignTheme,
 } from '../domain/designs.js';
 import { markdownToDocx, newListState, type ListState } from './docx.js';
@@ -88,10 +88,10 @@ async function qrBlock(b: DesignBlock, o: DesignDocxOptions, t: DesignTheme): Pr
       rows: [new TableRow({ children: [cell([new Paragraph({ children: [await icon('circle-alert', t.warn, 22)] })], 620), cell(md(o, b.text, W), 6280)] })],
     }), gap(80)];
   }
-  if (b.kind === 'note') return md(o, `**Hinweis**: ${b.text}`, W);
-  if (b.kind === 'xref') return md(o, `**Siehe auch**: ${b.text}`, W);
-  if (b.kind === 'tip') return [box(md(o, `**Tipp**: ${b.text}`, W), { left: line(hex(t.accent), 18), top: NONE, bottom: NONE, right: NONE }), gap(80)];
-  return md(o, b.text, W);
+  const l = boxLabel(b);
+  if (!l) return md(o, b.text, W);
+  const text = `**${l.label}**: ${l.text}`;
+  return b.kind === 'tip' ? [box(md(o, text, W), { left: line(hex(t.accent), 18), top: NONE, bottom: NONE, right: NONE }), gap(80)] : md(o, text, W);
 }
 
 async function card(title: string, ic: DesignIcon, content: (Paragraph | Table)[], t: DesignTheme) {
@@ -148,9 +148,10 @@ async function fdBlock(b: DesignBlock, o: DesignDocxOptions, t: DesignTheme): Pr
   const kind = BOX[b.kind];
   if (!kind) return md(o, b.text, 600);
   const c = FD_BOX[kind.cls](t);
-  const label = new Paragraph({ spacing: { after: 40 }, children: [await icon(kind.icon, `#${c.text ?? c.border}`, 13), new TextRun({ text: `  ${kind.label}`, bold: true, color: c.text })] });
+  const l = boxLabel(b)!;
+  const label = new Paragraph({ spacing: { after: 40 }, children: [await icon(kind.icon, `#${c.text ?? c.border}`, 13), new TextRun({ text: `  ${l.label}`, bold: true, color: c.text })] });
   const grey = line('D9DEE5', 4);
-  return [box([label, ...md(o, b.text, 560)], { left: line(c.border, 24), top: kind.cls === 'xref' ? grey : NONE, bottom: kind.cls === 'xref' ? grey : NONE, right: kind.cls === 'xref' ? grey : NONE }), gap(120)];
+  return [box([label, ...md(o, l.text, 560)], { left: line(c.border, 24), top: kind.cls === 'xref' ? grey : NONE, bottom: kind.cls === 'xref' ? grey : NONE, right: kind.cls === 'xref' ? grey : NONE }), gap(120)];
 }
 
 async function fachdokuChildren(chapters: DesignChapter[], o: DesignDocxOptions, t: DesignTheme) {

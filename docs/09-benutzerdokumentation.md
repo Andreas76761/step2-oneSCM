@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.70 (25.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.71 (25.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -120,6 +120,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
   - **Designvorlagen** (Auswahl „Design“ bei HTML, PDF, Word und PowerPoint):
     - **Quick Reference Guide:** A4 quer, kompakt, Profil Quick Guide.
     - **Handbuch-Kapitel (Fachdokumentation):** A4 hoch, ausführlich.
+    - Beginnt ein Hinweis, Tipp oder eine Warnung mit einem fett gesetzten Signalwort (z. B. **Wichtig:**), erscheint es als Beschriftung der Box.
   - Die Karte „Designvorlagen“ unten auf der Seite zeigt mit „Muster ansehen“ jede Vorlage mit fiktiven Inhalten. „Für den Export wählen“ stellt Format, Design und Profil ein.
   - **Prüfbericht Barrierefreiheit:** Nach jedem Export als PDF, Word, PowerPoint oder HTML zeigt die Karte „Barrierefreiheit (…)“, ob die Grundlagen erfüllt sind (Häkchen bzw. Kreuz je Prüfung):
 

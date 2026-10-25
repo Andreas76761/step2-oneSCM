@@ -7,7 +7,7 @@
 // Lange Inhalte laufen auf Folgefolien „(Fortsetzung)“ weiter. Icons als PNG (Lucide), Bilder eingebettet.
 import type { DesignIcon } from '../domain/designIcons.js';
 import {
-  BOX, cardTitle, chapterFacts, DEFAULT_THEMES, fachdokuFooter, fachdokuLabel, hasInteractiveLinks, processOverview, QR_ICON,
+  BOX, boxLabel, cardTitle, chapterFacts, DEFAULT_THEMES, fachdokuFooter, fachdokuLabel, hasInteractiveLinks, processOverview, QR_ICON,
   type Design, type DesignBlock, type DesignChapter, type DesignOptions, type DesignTheme,
 } from '../domain/designs.js';
 import { markdownParagraphs, paginate, renderPptx, runs, SLIDE, xfrm, esc, type RunStyle, type Slide, type SlideImage, type SlideParagraph } from '../domain/pptxWriter.js';
@@ -171,13 +171,17 @@ async function quickRefSlides(chapters: DesignChapter[], o: DesignPptxOptions, t
 
   // Karte als Folie(n)
   const card = async (title: string, ic: DesignIcon, blocks: DesignBlock[]) => {
-    const all = blocks.map((b) => ({ b, p: parts(b.text, o.media) }));
+    // Warnboxen zeigen keine Beschriftung, der Text bleibt vollständig; sonst steht das Signalwort als Präfix vorn
+    const all = blocks.map((b) => {
+      const l = b.kind === 'warning' ? null : boxLabel(b);
+      return { b, l, p: parts(l?.text ?? b.text, o.media) };
+    });
     const images = all.flatMap((x) => x.p.images);
     const warnings = all.filter((x) => x.b.kind === 'warning');
     const text: Para[] = [];
-    for (const { b, p } of all) {
+    for (const { b, l, p } of all) {
       if (b.kind === 'warning') continue;
-      const prefix = b.kind === 'note' ? 'Hinweis' : b.kind === 'tip' ? 'Tipp' : b.kind === 'xref' ? 'Siehe auch' : null;
+      const prefix = l?.label ?? null;
       p.paras.forEach((x, i) => text.push(paraOf({ ...x, text: i === 0 && prefix ? `**${prefix}:** ${x.text}` : x.text }, 1400)));
       if (p.table) p.table.forEach((r) => text.push({ text: r.join(' · '), size: 1200 }));
       if (p.code) p.code.split('\n').forEach((l) => text.push({ text: l, size: 1100, style: { font: 'Consolas' }, before: 0 }));
@@ -273,7 +277,8 @@ async function fachdokuSlides(chapters: DesignChapter[], o: DesignPptxOptions, t
       type Item = { h: number; draw: (sh: Shapes, y: number) => Promise<void> };
       const items: Item[] = [];
       for (const b of s.blocks) {
-        const p = parts(b.text, o.media);
+        const l = boxLabel(b);
+        const p = parts(l?.text ?? b.text, o.media);
         const kind = BOX[b.kind];
         if (kind) {
           const col = FD_COLORS[kind.cls](t);
@@ -283,7 +288,7 @@ async function fachdokuSlides(chapters: DesignChapter[], o: DesignPptxOptions, t
             if (kind.cls === 'xref') sh.rect(cm(1.2), y, cm(31.4), cm(h), { line: '#D9DEE5', lineW: 9525 });
             sh.rect(cm(1.2), y, cm(0.18), cm(h), { fill: col.bar });
             await iconPic(sh, kind.icon, `#${col.text ?? hex(col.bar)}`, cm(1.7), y + cm(0.25), cm(0.5));
-            sh.text(cm(2.3), y + cm(0.1), cm(29), cm(0.8), [{ text: kind.label, size: 1300, style: { bold: true, color: col.text }, before: 0 }], { anchor: 'ctr' });
+            sh.text(cm(2.3), y + cm(0.1), cm(29), cm(0.8), [{ text: l!.label, size: 1300, style: { bold: true, color: col.text }, before: 0 }], { anchor: 'ctr' });
             sh.text(cm(1.6), y + cm(0.85), cm(30.8), cm(h - 0.9), body.map((x) => ({ ...x, before: 100 })));
           } });
           continue;

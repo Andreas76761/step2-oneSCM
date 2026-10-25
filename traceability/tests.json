@@ -2998,5 +2998,23 @@
     "requirements": [
       "NFR-157"
     ]
+  },
+  {
+    "id": "T-389",
+    "title": "Feinschliff Designvorlagen: Signalwort als Boxbeschriftung ohne Dopplung (HTML, Word, PowerPoint), Quick Reference Guide am Bildschirm ausgeglichen, Kennzahlen ohne Listeneinzug",
+    "file": "apps/server/test/stage71.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-147"
+    ]
+  },
+  {
+    "id": "T-390",
+    "title": "Quick Reference Guide zweispaltig am Bildschirm, Kennzahlen bündig, Box „Wichtig“, Schweregrade auf Deutsch in den Einstellungen – axe ohne Befund",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-147"
+    ]
   }
 ]

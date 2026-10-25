@@ -26,7 +26,7 @@ Die gelieferten Muster tragen das Branding eines Herstellers. Dieses Branding da
   - Titel in Dunkelblau mit Untertitel.
   - Vier Kennzahlen-Karten mit Icon: Abschnitte, Handlungsschritte, Version und Freigabe, Hinweise.
   - Nummerierte Abschnitte mit Balken links; Tabellen mit grauem Kopf.
-  - Boxen: Hinweis (blau), Wichtig/Tipp (orange), Warnung (rot), Querverweis.
+  - Boxen: Hinweis (blau), Wichtig/Tipp (orange), Warnung (rot), Querverweis. Beginnt der Text mit einem fett gesetzten Signalwort (z. B. „**Wichtig:**“), ist es die Beschriftung der Box und steht nicht doppelt im Text (Etappe 71, `boxLabel`).
   - Code- und Ablaufdarstellungen.
   - Fußzeile mit Fußzeilentext und Titel.
 - **Firmen-Layout** um drei Felder erweitert, die nur die Administration ändern kann:

@@ -54,7 +54,7 @@ describe('Etappe 63', () => {
     expect(fd.header).toMatch(/PAGE[\s\S]*NUMPAGES/);
     expect(plain(fd.footer)).toContain('oneSCM · Fach- und Handbuchdokumentation (Muster)');
     const ft = plain(fd.doc);
-    for (const s of ['Kapitel 4: Vertragsberechnung', 'Abschnitte', 'Handlungsschritte', 'Freigegeben am 20.10.2026', 'gültig ab 2026.4', '1. Einleitung und fachlicher Auftrag', '4. Ergebnis und Zahlungsintervalle', 'Hinweis', 'Tipp', 'Warnung', 'Siehe auch', '1.480,00 €', 'ONE_TIME']) expect(ft).toContain(s);
+    for (const s of ['Kapitel 4: Vertragsberechnung', 'Abschnitte', 'Handlungsschritte', 'Freigegeben am 20.10.2026', 'gültig ab 2026.4', '1. Einleitung und fachlicher Auftrag', '4. Ergebnis und Zahlungsintervalle', 'Hinweis', 'Wichtig', 'Warnung', 'Siehe auch', '1.480,00 €', 'ONE_TIME']) expect(ft).toContain(s);
     // echte Formatvorlagen für Navigation: Überschrift 1/2 in der Hauptfarbe, Schrift der Anpassung
     expect(fd.doc).toContain('<w:pStyle w:val="Heading1"/>');
     expect(fd.doc).toContain('<w:pStyle w:val="Heading2"/>');

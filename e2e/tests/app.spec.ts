@@ -3571,3 +3571,33 @@ test('[T-388] Rollen, Sparten und Label-Gruppen mit Lucide-Icons statt Emoji: Ex
   expect(emoji.test(await groups.innerText())).toBe(false);
   expect(await axe()).toEqual([]);
 });
+
+test('[T-390] Feinschliff nach Sichtprüfung: Quick Reference Guide zweispaltig am Bildschirm, Kennzahlen bündig, Box „Wichtig“, Schweregrade auf Deutsch – barrierefrei', async ({ page }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  // Quick Reference Guide: Karten stehen in beiden Spalten
+  await page.goto('/api/v1/design-templates/quickref/sample');
+  const cols = page.locator('.qr-cols');
+  const box = (await cols.boundingBox())!;
+  const lefts = await page.locator('.qr-cols > *').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().left));
+  expect(lefts.some((x) => x > box.x + box.width / 2)).toBe(true);
+  expect(lefts.some((x) => x < box.x + box.width / 2)).toBe(true);
+  // Handbuch-Kapitel: Kennzahlen bündig mit dem Titel, Box „Wichtig“ ohne doppeltes Signalwort
+  await page.goto('/api/v1/design-templates/fachdoku/sample');
+  const h1 = (await page.locator('h1').first().boundingBox())!;
+  const kpis = (await page.locator('.fd-kpis').boundingBox())!;
+  expect(Math.abs(kpis.x - h1.x)).toBeLessThan(2);
+  const tip = page.locator('.fd-box.tip').first();
+  await expect(tip.locator('.t')).toHaveText('Wichtig');
+  await expect(tip).not.toContainText('Wichtig:');
+  expect(await axe()).toEqual([]);
+  // Einstellungen: Schweregrade auf Deutsch, Regelname im zugänglichen Namen
+  await page.goto('/einstellungen');
+  const sel = page.getByLabel('Schweregrad Negation (erlaubt vs. nicht erlaubt)');
+  await expect(sel).toBeVisible();
+  await expect(sel.locator('option')).toHaveText(['Blocker', 'Hoch', 'Mittel', 'Niedrig']);
+  await expect(sel).toHaveValue('blocker');
+  expect(await axe()).toEqual([]);
+});

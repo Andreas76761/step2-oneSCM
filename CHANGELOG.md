@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.71.0 – Etappe 71 (25.10.2026)
+
+### Behoben (Feinschliff nach Sichtprüfung)
+- **Quick Reference Guide:** Am Bildschirm stehen die Karten wieder in zwei Spalten. Bisher füllte `column-fill:auto` ohne Seitenhöhe nur die linke Spalte; im Druck bleibt die Füllung je Seite.
+- **Handbuch-Kapitel:** Die Kennzahlen-Karten stehen bündig mit Titel und Text. Die Listenregel `.fd ul` überschrieb seit Etappe 66 Einzug und Abstand.
+- **Boxbeschriftung:** Ein fett gesetztes Signalwort am Anfang („**Wichtig:**“, „**Achtung:**“ …) wird zur Beschriftung der Box und fällt aus dem Text – in HTML, PDF, Word und PowerPoint. Das Muster zeigt damit die Box „Wichtig“ statt „Tipp“ mit „Wichtig:“.
+- **Einstellungen:** Schweregrade je Widerspruchsregel auf Deutsch (Blocker, Hoch, Mittel, Niedrig); der zugängliche Name nennt die Regel statt ihres Codes.
+
+### Hinzugefügt
+- Tests T-389 und E2E T-390. T-368 und T-371 erwarten im Muster die Beschriftung „Wichtig“.
+
 ## 0.70.0 – Etappe 70 (25.10.2026)
 
 ### Geändert

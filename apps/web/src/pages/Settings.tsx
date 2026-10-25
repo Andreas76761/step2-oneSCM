@@ -7,6 +7,8 @@ import { DesignThemeCard } from './DesignThemeCard';
 
 import { Decision, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
+const SEVERITY_DE: Record<string, string> = { blocker: 'Blocker', high: 'Hoch', medium: 'Mittel', low: 'Niedrig' };
+
 export function SettingsPage() {
   const { ref, notify } = useApp();
   const s = useLoad<any>('/settings');
@@ -75,8 +77,8 @@ export function SettingsPage() {
                 <tr key={rule}>
                   <td>{ref?.contradictionRules[rule] ?? rule}</td>
                   <td>
-                    <select value={sev as string} onChange={(e) => setA('ruleSeverity', { ...a.ruleSeverity, [rule]: e.target.value })} aria-label={`Schweregrad ${rule}`}>
-                      {ref?.severities.map((x) => <option key={x}>{x}</option>)}
+                    <select value={sev as string} onChange={(e) => setA('ruleSeverity', { ...a.ruleSeverity, [rule]: e.target.value })} aria-label={`Schweregrad ${ref?.contradictionRules[rule] ?? rule}`}>
+                      {ref?.severities.map((x) => <option key={x} value={x}>{SEVERITY_DE[x] ?? x}</option>)}
                     </select>
                   </td>
                 </tr>
