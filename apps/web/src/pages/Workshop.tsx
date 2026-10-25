@@ -3,10 +3,7 @@ import { BlockerIcon, Ico, OkMark } from '../components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
-import {
-  Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad,
-  Modal, activatable,
-} from '../components/ui';
+import { Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad, Modal, activatable, statusLabel } from '../components/ui';
 import { DiagramStudio } from '../components/DiagramStudio';
 import { MarkedText, SentenceEditor, type Analysis } from './Style';
 import { SourceViewer } from './Sources';
@@ -118,7 +115,7 @@ export function WorkshopPage() {
           <div className="actions">
             {chapter && chapter.versions.length > 0 && (
               <select aria-label="Version" value={versionId ?? ''} onChange={(e) => setVersionId(e.target.value)}>
-                {chapter.versions.map((x: any) => <option key={x.id} value={x.id}>Version {x.versionNo} ({x.status})</option>)}
+                {chapter.versions.map((x: any) => <option key={x.id} value={x.id}>Version {x.versionNo} ({statusLabel(x.status)})</option>)}
               </select>
             )}
             {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}

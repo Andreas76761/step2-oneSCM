@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.72.0 – Etappe 72 (25.10.2026)
+
+### Behoben
+- **Status auf Deutsch:** Versionsauswahl der Kapitelwerkstatt, Evidenzansicht, Versionsvergleich, Abdeckung im Bildarchiv und „Letzte Analyse“ im Dashboard zeigten rohe Codes („Version 1 (draft)“). Sie nutzen jetzt die gemeinsame Bezeichnung (Entwurf, eingereicht, freigegeben …).
+
+### Hinzugefügt
+- **Seitenprüfung (E2E T-391):** Der Test geht alle 77 Seiten ohne Pfadparameter mit den Daten des E2E-Laufs durch. Er schlägt an bei rohen Status-Codes, farbigen Emoji, „undefined“, „NaN“, „[object Object]“ und Konsolenfehlern. Anforderung NFR-158.
+
 ## 0.71.0 – Etappe 71 (25.10.2026)
 
 ### Behoben (Feinschliff nach Sichtprüfung)

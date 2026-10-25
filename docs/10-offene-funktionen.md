@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.71, 25.10.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.72, 25.10.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -112,7 +112,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 23. **Etappe 69 – Barrierefreiheit HTML (✅ umgesetzt, ADR-121):** Prüfbericht auch für den HTML-Export.
 24. **Etappe 70 – Icons für Rollen, Sparten und Label-Gruppen (✅ umgesetzt, ADR-122):** Lucide statt Emoji (Entscheidung vom 25.10.2026).
 25. **Etappe 71 – Feinschliff nach Sichtprüfung (✅ umgesetzt):** Designvorlagen am Bildschirm, Boxbeschriftung, Schweregrade auf Deutsch.
-26. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+26. **Etappe 72 – Oberfläche durchgängig auf Deutsch (✅ umgesetzt):** Status mit deutscher Bezeichnung, automatische Seitenprüfung (T-391).
+27. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

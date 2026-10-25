@@ -1608,5 +1608,14 @@
     "documentation": [
       "docs/adr/ADR-122-icons-rollen-sparten.md"
     ]
+  },
+  {
+    "id": "NFR-158",
+    "title": "Oberfläche durchgängig auf Deutsch: keine rohen Status-Codes, keine farbigen Emoji, kein „undefined“/„NaN“, keine Konsolenfehler auf allen Seiten; automatisch geprüft",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/09-benutzerdokumentation.md"
+    ]
   }
 ]

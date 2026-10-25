@@ -3601,3 +3601,36 @@ test('[T-390] Feinschliff nach Sichtprüfung: Quick Reference Guide zweispaltig 
   await expect(sel).toHaveValue('blocker');
   expect(await axe()).toEqual([]);
 });
+
+test('[T-391] Alle Seiten auf Deutsch ohne rohe Status-Codes, farbige Emoji, „undefined“/„NaN“ und ohne Konsolenfehler', async ({ page }) => {
+  test.setTimeout(240_000);
+  // alle Seiten ohne Pfadparameter (wie in App.tsx); Traceability zeigt API-Pfade, die Labelverwaltung Codes – beides gewollt
+  const routes = ['/', '/agenten', '/agenten/goal', '/analytik', '/anleitungs-check', '/assistent', '/aufgaben', '/backlog', '/benutzer', '/bildarchiv', '/bilder',
+    '/cluster', '/dashboard', '/dopplungen', '/draft-manual', '/einstellungen', '/evidenz', '/export', '/fehlerliste', '/freigabe', '/generator', '/integrationen',
+    '/intern', '/kapitel-assistent', '/kapitelbewertung', '/kapitelsteuerung', '/kontexthilfe', '/lesen', '/lesen/druck', '/lesen/faq', '/lesen/lesezeichen',
+    '/metadaten', '/metadaten/befragung', '/metadaten/chunks', '/metadaten/dubletten', '/metadaten/einlesen', '/metadaten/fragen', '/metadaten/inhalte',
+    '/metadaten/kapitel-quellen', '/metadaten/qualitaet', '/metadaten/rueckfragen', '/metadaten/triage', '/metadaten/ueberschriften', '/metadaten/wissensnotizen',
+    '/metadaten/zugriffsmatrix', '/metadaten/zuordnung', '/optimierungen', '/pipeline', '/projekte', '/pruefprofile', '/quellen', '/quellenaenderungen',
+    '/release-abgleich', '/releaseletter', '/rollen', '/rueckmeldungen', '/schreibstil', '/sparten', '/stammdaten', '/stammdaten/abkuerzungen',
+    '/stammdaten/bildverzeichnis', '/stammdaten/faq', '/stammdaten/glossar', '/stammdaten/inhaltsverzeichnis', '/stammdaten/planung', '/suche', '/terminologie',
+    '/textbausteine', '/textvarianten', '/ueberarbeitung', '/uebersetzungen', '/uebersetzungen/glossar', '/uebersetzungen/speicher', '/veroeffentlichung',
+    '/vorher-nachher', '/werkstatt', '/widersprueche'];
+  // farbige Emoji (einfarbige Zeichen wie ✓ und Pfeile sind erlaubt, ADR-111)
+  const emoji = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}]/u;
+  const raw = /\b(draft|in_review|approved|rejected|pending|superseded|source_confirmed|manually_confirmed|unconfirmed|manually_edited|ai_rewritten|needs_regeneration|completed_with_errors|undefined|NaN)\b|\[object Object\]/;
+  const errors: string[] = [];
+  page.on('console', (m) => { if (m.type() === 'error') errors.push(`${page.url()}: ${m.text().slice(0, 160)}`); });
+  page.on('pageerror', (e) => errors.push(`${page.url()}: ${e.message.slice(0, 160)}`));
+  const findings: string[] = [];
+  for (const r of routes) {
+    await page.goto(r);
+    await page.waitForLoadState('networkidle');
+    const text = await page.locator('main').innerText();
+    const e = emoji.exec(text);
+    const c = raw.exec(text);
+    if (e) findings.push(`${r}: Emoji ${e[0]}`);
+    if (c) findings.push(`${r}: „${text.slice(Math.max(0, c.index - 30), c.index + c[0].length + 10).replace(/\s+/g, ' ')}“`);
+  }
+  expect(findings).toEqual([]);
+  expect(errors).toEqual([]);
+});

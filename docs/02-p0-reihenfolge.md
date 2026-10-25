@@ -61,6 +61,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **69** ✅ | Prüfbericht Barrierefreiheit für HTML (ADR-121) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-386 |
 | **70** ✅ | Lucide-Icons für Rollen, Sparten und Label-Gruppen (ADR-122) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-388 |
 | **71** ✅ | Feinschliff nach Sichtprüfung (Designvorlagen, Einstellungen) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-390 |
+| **72** ✅ | Status auf Deutsch, Seitenprüfung über alle Seiten | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-391 |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

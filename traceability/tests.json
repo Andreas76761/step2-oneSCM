@@ -3016,5 +3016,14 @@
     "requirements": [
       "NFR-147"
     ]
+  },
+  {
+    "id": "T-391",
+    "title": "Seitenprüfung über alle 77 Seiten ohne Pfadparameter: keine rohen Status-Codes, keine farbigen Emoji, kein „undefined“/„NaN“/„[object Object]“, keine Konsolenfehler",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-158"
+    ]
   }
 ]

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, del, forgetMedia, mediaUrl, patch, post, put } from '../api';
 import { readClipboardImage, usePasteImage } from '../components/clipboard';
-import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad, Status } from '../components/ui';
 
 // Bildarchiv (ADR-085, F-20, F-21, F-23): feste Bildnummer, Merkmale, Prüfregeln, Versionen, Platzhalter, Bildabdeckung je Kapitel
 
@@ -273,7 +273,7 @@ export function ImageArchivePage() {
               {cov.data.items.map((c: any) => (
                 <tr key={c.chapterId}>
                   <td><Link to={`/werkstatt/${c.chapterId}`}>{c.title}</Link></td>
-                  <td>{c.status}</td>
+                  <td><Status s={c.status} /></td>
                   <td>{c.images}</td>
                   <td>{c.placeholders || ''}</td>
                   <td>{c.missingAlt ? <span className="tag sev-high">{c.missingAlt}</span> : ''}</td>

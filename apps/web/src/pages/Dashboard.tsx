@@ -2,7 +2,7 @@ import { BlockerIcon } from '../components/icons';
 import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { post } from '../api';
-import { Badge, BarList, Card, ErrorBox, Page, Status, TYPE_LABEL, errorText, useApp, useLoad } from '../components/ui';
+import { Badge, BarList, Card, ErrorBox, Page, Status, TYPE_LABEL, errorText, useApp, useLoad, statusLabel } from '../components/ui';
 
 /**
  * Verlauf des durchschnittlichen Stilwerts (ADR-048): eine Linie (2px) mit Endpunkt-Beschriftung, Achse 0–100,
@@ -176,7 +176,7 @@ export function DashboardPage() {
             ))}
           </tbody>
         </table>
-        {d?.lastAnalysis && <p className="muted small">Letzte Analyse: {new Date(d.lastAnalysis.startedAt).toLocaleString('de-DE')} ({d.lastAnalysis.status})</p>}
+        {d?.lastAnalysis && <p className="muted small">Letzte Analyse: {new Date(d.lastAnalysis.startedAt).toLocaleString('de-DE')} ({statusLabel(d.lastAnalysis.status)})</p>}
       </Card>
     </Page>
   );
