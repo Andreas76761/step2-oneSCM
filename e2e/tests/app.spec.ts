@@ -239,6 +239,10 @@ test('[T-211] Handbuch-Version veröffentlichen, Änderungen ansehen, Online-Hil
 
 test('[T-212] Diskussion am Absatz: Erwähnung und Aufgabe, Hinweise und Aufgaben der erwähnten Person', async ({ page, request }) => {
   const h = { 'X-User-Id': 'u-admin' };
+  // Hinweise der Redaktion vor diesem Test: andere Abläufe (frühere Tests, Hintergrundaufträge) dürfen eigene Hinweise erzeugen
+  const red = { 'X-User-Id': 'u-redaktion' };
+  const unreadOf = async () => (await (await request.get('/api/v1/notifications?unread=true', { headers: red })).json()) as { unread: number; items: any[] };
+  const before = new Set((await unreadOf()).items.map((n) => n.id));
   const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '3. Benutzerverwaltung');
   await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h });
   await page.goto(`/werkstatt/${ch.id}`);
@@ -255,7 +259,19 @@ test('[T-212] Diskussion am Absatz: Erwähnung und Aufgabe, Hinweise und Aufgabe
 
   // als Redaktion: Zähler, Hinweise, Aufgabe erledigen
   await page.getByLabel('Demo-Benutzer').selectOption('u-redaktion');
-  await expect(page.getByRole('link', { name: /Aufgaben & Hinweise/ }).locator('.count')).toHaveText('2');
+  // genau ein Hinweis „erwähnt“ und einer „zugewiesen“ aus diesem Test
+  const fresh = (await unreadOf()).items.filter((n) => !before.has(n.id));
+  expect(fresh.filter((n) => n.type === 'mention').map((n) => n.text)).toEqual([expect.stringContaining('Bitte Formulierung prüfen')]);
+  expect(fresh.filter((n) => n.type === 'assigned').map((n) => n.text)).toEqual([expect.stringContaining('Screenshot ergänzen')]);
+  const all = await unreadOf();
+  if (all.unread !== 2) {
+    const list = all.items.map((n) => `${n.type} ${n.createdAt}: ${n.text.slice(0, 120)}`).join(' | ');
+    test.info().annotations.push({ type: 'weitere ungelesene Hinweise', description: list });
+    console.log(`[T-212] weitere ungelesene Hinweise der Redaktion: ${list}`);
+  }
+  // der Zähler zeigt die Zahl der ungelesenen Hinweise laut Server
+  const counter = page.getByRole('link', { name: /Aufgaben & Hinweise/ }).locator('.count');
+  await expect(async () => expect(await counter.textContent()).toBe(String((await unreadOf()).unread))).toPass({ timeout: 40_000 });
   await page.getByRole('link', { name: /Aufgaben & Hinweise/ }).click();
   await expect(page.getByText(/hat Sie erwähnt/)).toBeVisible();
   await expect(page.locator('.card', { hasText: 'Meine offenen Aufgaben' }).getByText('Screenshot ergänzen')).toBeVisible();

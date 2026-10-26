@@ -8,6 +8,7 @@
 
 ### Behoben
 - **Kapitelwerkstatt ohne Seitentitel:** Der Fenstertitel lautete nur „oneSCM Handbook Studio“.
+- **E2E T-212 weiter gelegentlich 3 statt 2 Hinweise:** Auch mit `WEEKLY_DIGEST=0` (Etappe 80) zählte die CI einmal einen dritten ungelesenen Hinweis für die Redaktion (Node 20, Stand `54d7bcd`). Die Wochenübersicht war also nicht die einzige Quelle. Der Test nahm an, dass die Redaktion vorher keine ungelesenen Hinweise hat. Andere Tests und Hintergrundaufträge dürfen aber Hinweise erzeugen. T-212 prüft jetzt über die API, dass genau ein Hinweis „erwähnt“ und einer „zugewiesen“ aus diesem Test entstehen, und dass der Zähler der Zahl der ungelesenen Hinweise laut Server entspricht. Weitere Hinweise schreibt der Test mit Typ, Zeit und Text ins Protokoll, damit ihre Quelle sichtbar wird.
 
 ## 0.81.0 – Etappe 81 (26.10.2026)
 
