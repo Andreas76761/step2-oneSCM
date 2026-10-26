@@ -3055,7 +3055,7 @@ test('[T-340] Vorher/Nachher mit Schieberegler und Gegenüberstellung im Archiv,
   await expect(page.getByText('Vorher/Nachher-Beleg angelegt.')).toBeVisible();
   await expect(page.getByRole('img', { name: 'Nachher: E2E Maske Verträge' }).first()).toBeVisible();
   await page.getByRole('slider', { name: 'Anteil Nachher: E2E Maske Verträge' }).first().fill('80');
-  await expect(page.getByText('(80 % Nachher sichtbar)').first()).toBeVisible();
+  await expect(page.locator('figure.ba output').first()).toHaveText('80 %');
   await page.getByLabel('Anlass').first().fill('Release 2026.3');
   await page.getByLabel('Änderung').first().fill('Schaltfläche Export oben rechts');
   await page.getByLabel('Wirkung').first().fill('Verträge lassen sich direkt exportieren');

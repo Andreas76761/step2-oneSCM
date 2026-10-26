@@ -17,6 +17,7 @@
 - **Erster Fokus im Dialog:** Er steht jetzt im ersten Eingabefeld statt auf „Schließen“. Dialoge ohne Eingabefeld beginnen weiter bei „Schließen“.
 - **Dialogname:** Der Name kommt aus der sichtbaren Überschrift (`aria-labelledby`). Tab überspringt ausgeblendete Elemente. Steht der Fokus außerhalb, holt Tab ihn in den Dialog zurück.
 - **E2E T-236:** Die Schaltfläche einer fehlenden Übersetzung heißt seit Etappe 83 „Englisch übersetzen“ wie ihr sichtbarer Text „Übersetzen“; der Test suchte noch „Englisch bearbeiten“.
+- **E2E T-340:** Der Vorher/Nachher-Regler zeigt seinen Wert seit Etappe 83 als „Anteil Nachher 80 %“; der Test prüft jetzt den Wert im `<output>`.
 - **Glossar-Erklärung:** Zwischen Begriff und Erklärung lagen 4 px Abstand. Wer die Maus auf die Erklärung bewegte, schloss sie. Esc schloss sie nur, wenn der Begriff den Fokus hatte.
 
 ## 0.83.0 – Etappe 83 (26.10.2026)
