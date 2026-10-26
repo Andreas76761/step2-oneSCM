@@ -6,12 +6,14 @@
 - **Einstellung `WEEKLY_DIGEST`:** `0` schaltet die automatische Wochenübersicht ab, z. B. für Test- und Schulungsinstanzen.
 - **Kontrast von Eingabefeldern und Fokusrahmen geprüft (E2E T-398, WCAG 1.4.11):** Auf allen 77 Seiten, hell und dunkel, braucht jedes Eingabefeld, jede Auswahlliste und jedes Textfeld einen Rand mit mindestens 3:1 Kontrast. Dieser Rand kann ein Rahmen oder die Feldfläche sein. Auch der Fokusrahmen muss mindestens 3:1 zum Hintergrund erreichen, in Seitenleiste und Inhaltsbereich. Schaltflächen erkennt man an ihrer Beschriftung; für sie gilt die Regel nicht.
 - **Farbwert `--field-border`** für Feldrahmen: hell `#7d8798` (mindestens 3,2:1), dunkel `#6b7894` (mindestens 3,5:1).
+- **Farbwert `--focus` und einheitlicher Fokusrahmen:** Alle Bedienelemente zeigen beim Fokus denselben Rahmen (`:focus-visible`, 2 px). Die Farbe ist hell `#1d63d8` (mindestens 4,8:1) und dunkel `#60a5fa` (mindestens 6,1:1). Bisher zeichnete der Browser bei Reitern, Chips und aufklappbaren Abschnitten (`summary`) seinen eigenen Ring. Dessen Farbe war im dunklen Modus nicht prüfbar, und er sah anders aus als der Rest der App.
 
 ### Behoben
 - **E2E T-212 montags instabil:** Die Wochenübersicht ist standardmäßig auf Montag eingestellt. Der Hintergrundauftrag verschickt sie zwei Minuten nach dem Serverstart, in der CI also ungefähr während T-212. Je nach Zeitpunkt zählte „Aufgaben & Hinweise“ deshalb 3 statt 2 ungelesene Hinweise, auf Node 20 in der CI für Etappe 79. Die automatische Wochenübersicht lässt sich jetzt mit `WEEKLY_DIGEST=0` abschalten, „Jetzt senden“ bleibt möglich. Die E2E-Tests nutzen diese Einstellung. Die Wochenübersicht prüft T-231 weiterhin über „Jetzt senden“.
 - **Feldrahmen kaum sichtbar:** Eingabefelder nutzten die Farbe der Kartenränder und erreichten nur 1,2 bis 1,9:1. Sie nutzen jetzt `--field-border`. Das Suchfeld in der Seitenleiste erreicht jetzt mindestens 5:1.
 - **Fokusrahmen in der Seitenleiste:** Die Hauptfarbe auf dem dunklen Blau der Seitenleiste erreichte nur 2,98:1. Der Fokusrahmen ist dort jetzt weiß.
-- **Bernsteinfarbener Fokusrahmen:** Drei Stellen nutzten die nicht vorhandene Variable `--focus` und damit Bernstein mit 2,05:1 auf Weiß. Betroffen waren Schaltflächen im Linkstil (u. a. Kapitelbewertung), „Entfernen“ in den Chunks und die Gliederungsliste in „Kapitel ↔ Quellen“. Sie nutzen jetzt die Hauptfarbe.
+- **Fokusrahmen im dunklen Modus:** Die Hauptfarbe `#2563eb` erreichte auf dem dunklen Hintergrund nur 2,8 bis 3,3:1, etwa bei Links in der Freigabe und bei Linkschaltflächen in der Werkstatt. Fokusrahmen nutzen jetzt `--focus`. Gefunden hat das T-398 in der CI mit den vollen Testdaten.
+- **Bernsteinfarbener Fokusrahmen:** Drei Stellen nutzten die nicht vorhandene Variable `--focus` und damit Bernstein mit 2,05:1 auf Weiß. Betroffen waren Schaltflächen im Linkstil (u. a. Kapitelbewertung), „Entfernen“ in den Chunks und die Gliederungsliste in „Kapitel ↔ Quellen“. Sie nutzen jetzt `--focus`.
 
 ## 0.79.0 – Etappe 79 (26.10.2026)
 
