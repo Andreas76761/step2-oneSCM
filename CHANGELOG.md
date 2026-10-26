@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.79.0 – Etappe 79 (26.10.2026)
+
+### Hinzugefügt
+- **Hinweise ohne Ortsangaben geprüft (E2E T-397, WCAG 1.3.3):** Der Test liest alle Oberflächentexte, auch die neun Sprachen der Leseransicht. Er schlägt an bei Hinweisen, die nur in einem Layout stimmen („Wählen Sie links …“, „on the left“, „à gauche“ …). Zusätzlich prüft er die Leseransicht in Smartphone-Breite.
+
+### Geändert
+- **Hinweise nennen den Namen der Liste statt ihrer Lage.** Auf dem Smartphone steht die Liste über dem Inhalt, nicht links davon.
+  - Leseransicht: „Wählen Sie unter „Inhalt“ ein Kapitel.“, in allen neun Sprachen.
+  - Bildarchiv: „Wählen Sie in der Liste „Bilder“ ein Bild.“
+  - Kapitelsteuerung: „Wählen Sie unter „Kapitel und Unterkapitel“ einen Eintrag.“
+  - Kapitelwerkstatt: „Wählen Sie im Kapitel einen Absatz …“ statt „Block in der Mitte auswählen“.
+  - Kapitel ↔ Quellen: Untertitel ohne „links“ und „rechts“.
+- **Benutzerdokumentation:** Projekt und Demo-Benutzer werden „in der Seitenleiste“ gewählt statt „oben links“.
+
 ## 0.78.0 – Etappe 78 (26.10.2026)
 
 ### Hinzugefügt

@@ -33,7 +33,7 @@ export function OutlineSourcesPage() {
   };
   const v = view.data;
   return (
-    <Page title="Kapitel ↔ Quellen" subtitle="Je Punkt der Gesamtgliederung: das Handbuchkapitel links, die zugeordneten Quellen rechts – mit Vorschlägen aus nicht zugeordneten Chunks">
+    <Page title="Kapitel ↔ Quellen" subtitle="Je Punkt der Gesamtgliederung: das Handbuchkapitel und die zugeordneten Quellen – mit Vorschlägen aus nicht zugeordneten Chunks">
       <ErrorBox error={cov.error ?? view.error} />
       {cov.data && (
         <div className="stat-row">

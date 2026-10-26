@@ -3070,5 +3070,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-397",
+    "title": "Hinweise ohne Ortsangaben in allen Oberflächentexten und Sprachen der Leseransicht; Leseransicht auf dem Smartphone verweist auf „Inhalt“",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

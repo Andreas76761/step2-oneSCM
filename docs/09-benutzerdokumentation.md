@@ -1,12 +1,12 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.78 (26.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.79 (26.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
-- **Anmelden:** Im Einzelplatz-Betrieb wählen Sie oben links einen Demo-Benutzer; im Team-Betrieb melden Sie sich mit dem Firmenkonto an.
+- **Anmelden:** Im Einzelplatz-Betrieb wählen Sie in der Seitenleiste unter „Demo-Benutzer“ einen Benutzer; im Team-Betrieb melden Sie sich mit dem Firmenkonto an.
 - **Rechte:** *Lesen* (ansehen, Fragen stellen, Befragungen beantworten), *Bearbeiten* (einlesen, schreiben, Labels, Testfragen), *Entscheiden* (Widersprüche, Entscheidungen der Agenten), *Freigeben* (Kapitel freigeben), *Administration* (Einstellungen, Benutzer, Projekte).
-- **Projekte:** Oben links wählen Sie das Projekt (z. B. ein Handbuch je Land oder Produkt). Alle Daten gehören zu einem Projekt.
+- **Projekte:** In der Seitenleiste unter „Projekt“ wählen Sie das Projekt (z. B. ein Handbuch je Land oder Produkt). Alle Daten gehören zu einem Projekt.
 - **Suche:** `/` öffnet die Suche über Kapitel, Quellen, Begriffe und Bilder.
 - **Menü nach Arbeitsablauf:** oneSCM_Metadaten · 1 Sammeln · 2 Schreiben · 3 Prüfen · 4 Veröffentlichen · Verwaltung.
 - **Navigation:** Jeder Eintrag hat ein Icon. Mit der Schaltfläche oben rechts neben dem Namen klappen Sie die Navigation auf die Icons ein; der Name erscheint dann beim Überfahren. Unter „Darstellung“ (unten links) wählen Sie hell, dunkel oder wie im System.

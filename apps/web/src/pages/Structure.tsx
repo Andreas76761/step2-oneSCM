@@ -121,7 +121,7 @@ export function StructurePage() {
         </Card>
         <div>
           {item ? <Editor key={item.id} kind={sel!.kind} item={item} chapter={selChapter} chapters={chapters} canEdit={canEdit} variant={!!outline} onChange={reload} />
-            : <Card title="Anweisung"><Empty>Wählen Sie links ein Kapitel oder Unterkapitel.</Empty></Card>}
+            : <Card title="Anweisung"><Empty>Wählen Sie unter „Kapitel und Unterkapitel“ einen Eintrag.</Empty></Card>}
           <LabelVersions isAdmin={isAdmin} onChange={reload} />
         </div>
       </div>

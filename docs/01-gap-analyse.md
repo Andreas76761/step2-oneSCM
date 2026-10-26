@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.81 Stand nach Etappe 79 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Hinweise ohne Ortsangaben (NFR-03, WCAG 1.3.3): Hinweise nennen den Namen der Liste statt ihrer Lage – Leseransicht in neun Sprachen, Bildarchiv, Kapitelsteuerung, Kapitelwerkstatt, Kapitel ↔ Quellen | ✅ T-397 |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
 ## 1.80 Stand nach Etappe 78 (26.10.2026)
 
 | Punkt | Ergebnis |

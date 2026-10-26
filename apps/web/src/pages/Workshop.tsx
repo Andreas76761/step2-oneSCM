@@ -172,7 +172,7 @@ export function WorkshopPage() {
         {tab === 'sources' && <SourcesTab block={selectedBlock} />}
         {tab === 'discussion' && (selectedBlock
           ? <DiscussionPanel entityType="block" entityId={selectedBlock.lineageId} canEdit={!!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin')} />
-          : <Empty>Block in der Mitte auswählen, um die Diskussion zu sehen – sie bleibt über neue Versionen erhalten.</Empty>)}
+          : <Empty>Wählen Sie im Kapitel einen Absatz, um die Diskussion zu sehen – sie bleibt über neue Versionen erhalten.</Empty>)}
         {tab === 'findings' && chapterId && <FindingsTab chapterId={chapterId} />}
         {tab === 'history' && <HistoryTab block={selectedBlock} editable={editable} onRestored={refresh} />}
         {tab === 'approval' && v && <ApprovalPanel version={v} onApproved={refresh} />}
@@ -638,7 +638,7 @@ function SourcesTab({ block }: { block?: any }) {
     if (!block) return;
     for (const s of block.sources) get<any>(`/snippets/${s.snippetId}`).then((sn) => setTexts((t) => ({ ...t, [s.snippetId]: sn.text }))).catch(() => undefined);
   }, [block?.id]);
-  if (!block) return <Empty>Block in der Mitte auswählen, um seine Quellen zu sehen.</Empty>;
+  if (!block) return <Empty>Wählen Sie im Kapitel einen Absatz, um seine Quellen zu sehen.</Empty>;
   if (!block.sources.length) return <Empty>{block.justification ? `Keine Quelle – manuelle Begründung: ${block.justification}` : 'Dieser Block hat weder Quelle noch Begründung (Qualitätsgate!).'}</Empty>;
   return (
     <div>

@@ -3796,3 +3796,27 @@ test('[T-396] Vergrößerung und Textabstände: alle Seiten bei 320 px (400 % Zo
   }
   expect(findings).toEqual([]);
 });
+
+test('[T-397] Hinweise ohne Ortsangaben: kein „Wählen Sie links …“ in den Oberflächentexten aller Sprachen, Leseransicht auf dem Smartphone verweist auf „Inhalt“ (WCAG 1.3.3)', async ({ page }) => {
+  const { readdirSync, readFileSync, statSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const root = join(__dirname, '..', '..', 'apps', 'web', 'src');
+  const files: string[] = [];
+  const walk = (d: string) => { for (const f of readdirSync(d)) { const p = join(d, f); if (statSync(p).isDirectory()) walk(p); else if (/\.tsx?$/.test(f)) files.push(p); } };
+  walk(root);
+  // Ortsangaben, die nur in einem Layout stimmen (auf dem Smartphone steht die Liste oben, nicht links)
+  const where = /Wählen Sie (links|rechts)|\b(links|rechts) ein(en|e)? (Kapitel|Bild|Eintrag|Absatz)|in der Mitte auswählen|on the (left|right)\b|à (gauche|droite)\b|a la (izquierda|derecha)|a (sinistra|destra)\b|\blinks een\b|po (lewej|prawej)|\b(vlevo|vpravo)\b|à (esquerda|direita)/;
+  const findings: string[] = [];
+  for (const f of files) {
+    readFileSync(f, 'utf8').split('\n').forEach((line, n) => {
+      if (/^\s*(\/\/|\*|\/\*)/.test(line)) return;
+      const m = where.exec(line);
+      if (m) findings.push(`${f.slice(root.length + 1)}:${n + 1}: „${m[0]}“`);
+    });
+  }
+  expect(findings).toEqual([]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/lesen');
+  await expect(page.getByText('Wählen Sie unter „Inhalt“ ein Kapitel.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Inhalt', exact: true })).toBeVisible();
+});

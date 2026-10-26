@@ -251,7 +251,7 @@ export function ImageArchivePage() {
               )}
               {canEdit && <p className="small muted">Tipp: Strg+V fügt einen Screenshot aus der Zwischenablage als neue Fassung ein. Zuschneiden und markieren Sie Screenshots in der Werkstatt (Screenshot markieren).</p>}
             </Card>
-          ) : <Card title="Bild"><Empty>Wählen Sie links ein Bild.</Empty></Card>}
+          ) : <Card title="Bild"><Empty>Wählen Sie in der Liste „Bilder“ ein Bild.</Empty></Card>}
           {canEdit && (
             <Card title="Platzhalter anlegen">
               <p className="small muted">Reserviert die nächste Bildnummer, bis der echte Screenshot vorliegt. Ein Platzhalter in einem freigegebenen Kapitel gilt als Fehler.</p>
