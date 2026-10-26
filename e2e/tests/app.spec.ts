@@ -167,7 +167,7 @@ test('[T-206] Projekte: anlegen, wechseln, Daten getrennt, Mitglied hinzufügen'
   const row = page.getByRole('row', { name: /E2E-Werkstatthandbuch/ });
   await row.getByRole('button', { name: 'Mitglieder' }).click();
   await page.getByLabel('Benutzerkennung').fill('u-leser');
-  await page.getByRole('checkbox', { name: 'bearbeiten' }).check();
+  await page.getByRole('checkbox', { name: 'Bearbeiten' }).check();
   await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('cell', { name: /u-leser/ })).toBeVisible();
 
@@ -3635,6 +3635,13 @@ test('[T-391] Alle Seiten auf Deutsch ohne rohe Status-Codes, farbige Emoji, „
     if (e) findings.push(`${r}: Emoji ${e[0]}`);
     if (c) findings.push(`${r}: „${text.slice(Math.max(0, c.index - 30), c.index + c[0].length + 10).replace(/\s+/g, ' ')}“`);
   }
+  // Seitenleiste (auf allen Seiten gleich): auch ohne Berechtigungs-Codes wie „read, edit“
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  const side = await page.locator('.sidebar').innerText();
+  for (const m of [emoji.exec(side), raw.exec(side), /\b(read|edit|decide|approve|admin)\b/.exec(side)]) {
+    if (m) findings.push(`Seitenleiste: „${side.slice(Math.max(0, m.index - 30), m.index + m[0].length + 10).replace(/\s+/g, ' ')}“`);
+  }
   expect(findings).toEqual([]);
   expect(errors).toEqual([]);
 });
@@ -3754,4 +3761,38 @@ test('[T-395] Tastaturbedienung aller Seiten: Sprunglink zuerst, sichtbarer und 
   await page.locator('.sidebar').getByRole('link', { name: 'Kapitelwerkstatt', exact: true }).click();
   await expect(page).toHaveURL(/\/werkstatt\/.+/);
   await expect(page.locator('main h1')).toBeFocused();
+});
+
+test('[T-396] Vergrößerung und Textabstände: alle Seiten bei 320 px (400 % Zoom) ohne waagerechtes Scrollen, mit vergrößerten Textabständen kein abgeschnittener Text (WCAG 1.4.10, 1.4.12)', async ({ page }) => {
+  test.setTimeout(360_000);
+  // Textabstände nach WCAG 1.4.12: Zeilenhöhe 1,5, Absatzabstand 2-fach, Buchstaben 0,12 em, Wörter 0,16 em
+  const spacing = '* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }';
+  const findings: string[] = [];
+  for (const width of [320, 1280]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const r of ALL_PAGES) {
+      await page.goto(r);
+      await page.waitForLoadState('networkidle');
+      await page.addStyleTag({ content: spacing });
+      const found = await page.evaluate(() => {
+        const f: string[] = [];
+        const over = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+        if (over > 1) f.push(`Seite ${over} px zu breit`);
+        const name = (e: Element) => `${e.tagName.toLowerCase()}${typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/).join('.') : ''} „${(e.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30)}“`;
+        // abgeschnitten: ein Element mit verstecktem Überlauf, dessen Text nicht hineinpasst
+        for (const el of document.querySelectorAll<HTMLElement>('body *')) {
+          const cs = getComputedStyle(el);
+          if (cs.display === 'none' || cs.visibility === 'hidden' || el.closest('.sr-only, [aria-hidden="true"], svg, select')) continue;
+          const clipX = cs.overflowX === 'hidden' || cs.overflowX === 'clip';
+          const clipY = cs.overflowY === 'hidden' || cs.overflowY === 'clip';
+          if ((!clipX && !clipY) || !(el.textContent || '').trim()) continue;
+          if (clipX && el.scrollWidth > el.clientWidth + 2 && !(cs.textOverflow === 'ellipsis' && el.title)) f.push(`abgeschnitten ${name(el)}`);
+          if (clipY && el.scrollHeight > el.clientHeight + 2) f.push(`abgeschnitten ${name(el)}`);
+        }
+        return f;
+      });
+      for (const x of found) findings.push(`${width} px ${r}: ${x}`);
+    }
+  }
+  expect(findings).toEqual([]);
 });

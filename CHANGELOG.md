@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.78.0 – Etappe 78 (26.10.2026)
+
+### Hinzugefügt
+- **Vergrößerung und Textabstände geprüft (E2E T-396):**
+  - Alle 77 Seiten bei 320 px Breite, das entspricht 400 % Zoom: Die Seite darf nicht waagerecht scrollen (WCAG 1.4.10).
+  - Mit vergrößerten Textabständen nach WCAG 1.4.12 (Zeilenhöhe 1,5, Absatzabstand doppelt, Buchstaben 0,12 em, Wörter 0,16 em) wird bei 320 und 1280 px kein Text abgeschnitten.
+- **T-391 prüft auch die Seitenleiste:** keine Codes, Emoji oder Berechtigungs-Codes.
+
+### Behoben
+- **320 px, also 400 % Zoom:** Vier Seiten waren 5 bis 25 px zu breit, mit vergrößerten Textabständen sechs Seiten bis 91 px.
+  - Beschriftete Auswahlfelder in Filterzeilen (Draft Manual, Druck, Lesezeichen, Planung) brechen jetzt um.
+  - Kapitelwerkstatt und Kapitel ↔ Quellen nutzen einspaltig `minmax(0, 1fr)`.
+  - Lange Wörter (Deckblatt „Benutzerhandbuch“, Dateipfade) brechen um, wenn sie sonst nicht in die Zeile passen (`overflow-wrap: break-word`).
+- **Berechtigungen auf Deutsch:** Die Seitenleiste zeigte „Berechtigungen: read, edit, decide, approve, admin“. Sie zeigt jetzt „Lesen, Bearbeiten, Entscheiden, Freigeben, Administration“. Die Projektverwaltung nutzt dieselben Bezeichnungen wie die Benutzerverwaltung (bisher „lesen, bearbeiten … administrieren“).
+
 ## 0.77.0 – Etappe 77 (25.10.2026)
 
 ### Hinzugefügt

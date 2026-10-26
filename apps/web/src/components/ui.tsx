@@ -133,6 +133,12 @@ export const statusLabel = (s: string) => STATUS_LABEL[s] ?? s;
 const STATUS_ICON: Record<string, LucideIcon> = { in_review: HourglassIcon, ai_rewritten: SparklesIcon, locked: LockIcon, needs_regeneration: RotateCwIcon };
 export const Status = ({ s }: { s: string }) => <span className={`tag st-${s}`}>{STATUS_ICON[s] && <Ico icon={STATUS_ICON[s]} size={14} />}{statusLabel(s)}</span>;
 
+// Technische Berechtigungen (ADR-009) mit deutscher Bezeichnung
+export const PERMS: { code: string; label: string }[] = [
+  { code: 'read', label: 'Lesen' }, { code: 'edit', label: 'Bearbeiten' }, { code: 'decide', label: 'Entscheiden' }, { code: 'approve', label: 'Freigeben' }, { code: 'admin', label: 'Administration' },
+];
+export const permLabel = (p: string) => PERMS.find((x) => x.code === p)?.label ?? p;
+
 export const TYPE_LABEL: Record<string, string> = { gap: 'Lücke', duplicate: 'Dopplung', contradiction: 'Widerspruch', terminology: 'Terminologie', privacy: 'Datenschutz', readability: 'Lesbarkeit' };
 
 // ---------- Layout-Bausteine ----------

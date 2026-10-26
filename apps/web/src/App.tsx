@@ -5,7 +5,7 @@ import {
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { currentProjectId, currentUserId, get, setCurrentProjectId, setCurrentUserId } from './api';
 import { initAuth, login, logout, type AuthConfig } from './auth';
-import { AppCtx, type Reference } from './components/ui';
+import { AppCtx, permLabel, type Reference } from './components/ui';
 import { Tour, tourDone } from './components/Tour';
 
 const StartPage = lazy(() => import('./pages/Start').then((m) => ({ default: m.StartPage })));
@@ -503,7 +503,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
               <option value="light">Hell</option>
               <option value="dark">Dunkel</option>
             </select>
-            <small title="Technische Berechtigungen – getrennt von fachlichen Rollen (ADR-009)">Berechtigungen: {me?.permissions.join(', ') || '–'}</small>
+            <small title="Technische Berechtigungen – getrennt von fachlichen Rollen (ADR-009)">Berechtigungen: {me?.permissions.map(permLabel).join(', ') || '–'}</small>
           </div>
         </aside>
         <main className="main" key={userId} id="main" ref={mainRef} tabIndex={-1}>

@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { currentProjectId, del, patch, post, put, setCurrentProjectId } from '../api';
-import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Card, Empty, ErrorBox, Page, errorText, permLabel, useApp, useLoad } from '../components/ui';
 
 const PERMS = ['read', 'edit', 'decide', 'approve', 'admin'];
-const PERM_LABEL: Record<string, string> = { read: 'lesen', edit: 'bearbeiten', decide: 'entscheiden', approve: 'freigeben', admin: 'administrieren' };
 
 /** Mandanten/Projekte (ADR-014): Übersicht, Anlegen, Sichtbarkeit, Archivierung und Mitglieder */
 export function ProjectsPage({ onChanged }: { onChanged: () => void }) {
@@ -42,7 +41,7 @@ export function ProjectsPage({ onChanged }: { onChanged: () => void }) {
                     <td>{p.visibility === 'open' ? 'offen' : 'eingeschränkt'}{p.languages?.length > 0 && <div className="small muted">Sprachen: de → {p.languages.join(', ')}</div>}</td>
                     <td>{p.chapters}</td>
                     <td>{p.sources}</td>
-                    <td className="small">{p.myPermissions.map((x: string) => PERM_LABEL[x] ?? x).join(', ')}</td>
+                    <td className="small">{p.myPermissions.map(permLabel).join(', ')}</td>
                     <td className="row-actions">
                       {p.id !== currentProjectId() && <button className="btn small" onClick={() => { setCurrentProjectId(p.id); window.location.assign('/'); }}>Öffnen</button>}
                       {isAdmin && (
@@ -112,7 +111,7 @@ function Members({ projectId, name }: { projectId: string; name: string }) {
             {members.data.map((m) => (
               <tr key={m.userId}>
                 <td>{m.name ?? m.userId} <span className="small muted">{m.userId}</span></td>
-                <td className="small">{m.permissions.map((x: string) => PERM_LABEL[x] ?? x).join(', ')}</td>
+                <td className="small">{m.permissions.map(permLabel).join(', ')}</td>
                 <td className="small">{m.addedBy} · {new Date(m.addedAt).toLocaleDateString('de-DE')}</td>
                 <td><button className="btn small danger" onClick={() => act(() => del(`/projects/${projectId}/members/${encodeURIComponent(m.userId)}`), 'Mitglied entfernt.')}>Entfernen</button></td>
               </tr>
@@ -131,7 +130,7 @@ function Members({ projectId, name }: { projectId: string; name: string }) {
         <legend>Berechtigungen im Projekt</legend>
         {PERMS.map((p) => (
           <label key={p}>
-            <input type="checkbox" checked={perms.includes(p)} disabled={p === 'read'} onChange={() => setPerms(perms.includes(p) ? perms.filter((x) => x !== p) : [...perms, p])} /> {PERM_LABEL[p]}
+            <input type="checkbox" checked={perms.includes(p)} disabled={p === 'read'} onChange={() => setPerms(perms.includes(p) ? perms.filter((x) => x !== p) : [...perms, p])} /> {permLabel(p)}
           </label>
         ))}
       </fieldset>

@@ -74,7 +74,7 @@
 :root[data-theme='dark'] .badge { color: var(--text); }
 
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; overflow-wrap: break-word; }
 h1 { font-size: 22px; margin: 0; }
 h2 { font-size: 16px; margin: 0; }
 h3 { font-size: 14px; margin: 14px 0 6px; }
@@ -272,7 +272,7 @@ dl.meta dd { margin: 0; }
 .export-preview { max-height: 60vh; overflow: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
 
 @media (max-width: 1200px) {
-  .workshop { grid-template-columns: 1fr; }
+  .workshop { grid-template-columns: minmax(0, 1fr); }
   .ws-left, .ws-right { position: static; max-height: none; }
 }
 /* Barrierefreiheit (ADR-016) */
@@ -429,6 +429,9 @@ ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px
 @media (max-width: 800px) {
   .btn, select, input:not([type='checkbox']):not([type='radio']) { min-height: 40px; }
   select { max-width: 100%; }
+  /* Beschriftete Felder in Filterzeilen brechen bei 320 px (400 % Zoom) um, statt die Seite zu verbreitern (WCAG 1.4.10) */
+  .filters > * { max-width: 100%; }
+  label.inline { flex-wrap: wrap; max-width: 100%; }
   .row-actions, .filters { flex-wrap: wrap; }
   .draft-snippet .row-actions select { flex: 1 1 100%; }
   .table { display: block; overflow-x: auto; position: relative; }
@@ -809,7 +812,7 @@ div.reader-lang-note p { margin: 0; }
 .oq-block { border-left: 3px solid var(--border); padding: 2px 8px; margin: 6px 0; }
 .oq-chunk { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin: 6px 0; }
 .oq-chunk.used { border-left: 3px solid var(--ok, #15803d); }
-@media (max-width: 900px) { .oq-layout, .oq-cols { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .oq-layout, .oq-cols { grid-template-columns: minmax(0, 1fr); } }
 
 /* Bildarchiv (ADR-085) */
 .ia-list { list-style: none; margin: 0; padding: 0; max-height: 70vh; overflow: auto; }

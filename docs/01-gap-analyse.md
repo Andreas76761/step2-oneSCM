@@ -195,6 +195,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.80 Stand nach Etappe 78 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Vergrößerung (NFR-03): alle 77 Seiten bei 320 px, entspricht 400 % Zoom, ohne waagerechtes Scrollen (WCAG 1.4.10) | ✅ T-396 |
+| Textabstände (NFR-03): Zeilenhöhe 1,5, Absatzabstand 2-fach, Buchstaben 0,12 em, Wörter 0,16 em – kein abgeschnittener Text bei 320 und 1280 px (WCAG 1.4.12) | ✅ T-396 |
+| Behoben | Beschriftete Auswahlfelder in Filterzeilen, Kapitelwerkstatt, Kapitel ↔ Quellen und lange Wörter (Deckblatt, Dateipfade) verbreiterten die Seite bei 320 px; Seitenleiste zeigte Berechtigungen als Codes („read, edit“) |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
 ## 1.79 Stand nach Etappe 77 (25.10.2026)
 
 | Punkt | Ergebnis |

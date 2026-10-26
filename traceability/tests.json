@@ -3061,5 +3061,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-396",
+    "title": "Alle 77 Seiten bei 320 px (400 % Zoom) ohne waagerechtes Scrollen; mit vergrößerten Textabständen bei 320 und 1280 px kein abgeschnittener Text",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]
