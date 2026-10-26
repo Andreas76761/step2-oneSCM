@@ -150,6 +150,7 @@ fieldset { border: 1px solid var(--border); border-radius: 8px; margin: 8px 0; p
 .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
 .filters input:not([type]) { min-width: 220px; }
 .slider { display: flex; gap: 8px; align-items: center; }
+.slider output { font-weight: 700; }
 
 .table { width: 100%; border-collapse: collapse; }
 .table-wrap { overflow-x: auto; position: relative; }

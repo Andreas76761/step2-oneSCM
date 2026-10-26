@@ -26,7 +26,7 @@ function Tree({ nodes }: { nodes: any[] }) {
             <details open={n.level <= 1}>
               <summary><strong>{n.title}</strong> <span className="muted small">({count(n)} Chunks)</span></summary>
               {/* Link außerhalb von <summary> (keine verschachtelten Bedienelemente) */}
-              <p className="small hd-open"><Link to={chunksLink(n.title)} aria-label={`Chunks zu ${n.title} öffnen`}>→ Chunks zu dieser Überschrift</Link></p>
+              <p className="small hd-open"><Link to={chunksLink(n.title)} aria-label={`Chunks zu dieser Überschrift: ${n.title}`}>→ Chunks zu dieser Überschrift</Link></p>
               {n.chunks.length > 0 && <ChunkList chunks={n.chunks} />}
               {n.children.length > 0 && <Tree nodes={n.children} />}
             </details>

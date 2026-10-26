@@ -37,8 +37,8 @@ const nameOf = (l: Pick<Label, 'nameDe' | 'nameEn'>, lang: Lang) => (lang === 'e
 
 function LangSwitch({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
   return (
-    <label className="small">Labels auf{' '}
-      <select value={lang} onChange={(e) => onChange(e.target.value as Lang)} aria-label="Sprache der Labels">
+    <label className="small">Sprache der Labels{' '}
+      <select value={lang} onChange={(e) => onChange(e.target.value as Lang)}>
         <option value="de">Deutsch</option>
         <option value="en">Englisch</option>
       </select>
@@ -511,7 +511,7 @@ export function MetadataQaPage() {
               </ul>
             )}
           </fieldset>
-          <label className="block">Notiz (optional) <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} aria-label="Notiz" /></label>
+          <label className="block">Notiz (optional) <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} /></label>
           <button className="btn primary" disabled={!form.question.trim() || !form.answer.trim()} onClick={save}>{editId ? 'Speichern' : 'Anlegen'}</button>
           {editId && <button className="btn" onClick={() => { setEditId(null); setForm(EMPTY_QA); }}>Abbrechen</button>}
         </Card>
@@ -749,7 +749,7 @@ export function AccessMatrixPage() {
         <Card title="Aus CSV übernehmen">
           <p className="small muted">Erste Spalte: Menüpunkt (Code, englischer UI-Begriff oder deutscher Name). Weitere Spalten: je Rolle (Code oder Name) V, L, – oder ?. Optional Spalte „Beleg“. Leere Felder bleiben unverändert. Trennzeichen Komma oder Semikolon.</p>
           <label className="block">CSV-Datei <input type="file" accept=".csv,text/csv" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setCsv(await f.text()); }} /></label>
-          <label className="block">oder Inhalt einfügen <textarea id="am-csv" rows={4} value={csv} onChange={(e) => setCsv(e.target.value)} aria-label="CSV-Inhalt" /></label>
+          <label className="block">oder Inhalt einfügen <textarea id="am-csv" rows={4} value={csv} onChange={(e) => setCsv(e.target.value)} /></label>
           <button className="btn primary" disabled={!csv.trim()} onClick={async () => {
             try {
               const r = await post('/metadata/access-matrix/import', { csv });

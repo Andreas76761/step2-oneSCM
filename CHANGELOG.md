@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.83.0 – Etappe 83 (26.10.2026)
+
+### Hinzugefügt
+- **Sichtbare Beschriftung im zugänglichen Namen geprüft (E2E T-402, WCAG 2.5.3):** Auf allen 77 Seiten, bei 1280 und 390 px, muss jede Schaltfläche, jeder Link und jedes Feld mit eigenem Namen (`aria-label`, `aria-labelledby`) seinen sichtbaren Text enthalten. Nur so finden Sprachsteuerungen wie Dragon oder die Sprachsteuerung von Windows und macOS ein Element über das, was auf dem Bildschirm steht. Werte von Schiebereglern zählen nicht zur Beschriftung.
+- **Benutzerdokumentation:** Abschnitt „Mit Sprachsteuerung“ in den Grundlagen.
+
+### Behoben
+- **19 Stellen auf 13 Seiten**, deren Name vom sichtbaren Text abwich:
+  - Lesezeichen: „Notiz speichern“ hieß „Notiz zu „…“ speichern“, jetzt „Notiz speichern: „…““.
+  - Häufige Fragen: „Übersetzen“ hieß „Französisch bearbeiten“, jetzt „Französisch übersetzen“.
+  - oneSCM_Metadaten: Die Beschriftung „Labels auf“ lautet jetzt wie der Name „Sprache der Labels“; die Links „→ Chunks zu dieser Überschrift“ heißen „Chunks zu dieser Überschrift: …“.
+  - Cluster: Die Auswahl zum Teilen heißt nach dem Text des Absatzes statt „Zum Teilen auswählen“.
+  - Felder mit sichtbarem Label und abweichendem Namen (u. a. „Beschreibung (optional)“, „Zu vermeiden (kommagetrennt)“, „Definition (optional)“, „Verglichen mit“, „oder Inhalt einfügen“, „Einleitung / Hinweise“) nutzen jetzt ihr Label als Namen.
+  - Schieberegler (Einstellungen, Widersprüche, Vorher/Nachher): Der Wert steht in einem `<output>` neben der Beschriftung; der Vorher/Nachher-Regler ist mit „Anteil Nachher“ beschriftet.
+
 ## 0.82.0 – Etappe 82 (26.10.2026)
 
 ### Hinzugefügt

@@ -33,8 +33,8 @@ export function TerminologyPage() {
       <div className="grid2">
         <Card title="Neuer Begriff">
           <label className="block">Bevorzugter Begriff <input value={form.preferred} onChange={(e) => setForm({ ...form, preferred: e.target.value })} aria-label="Bevorzugter Begriff" /></label>
-          <label className="block">Zu vermeiden (kommagetrennt) <input value={form.avoid} onChange={(e) => setForm({ ...form, avoid: e.target.value })} aria-label="Zu vermeidende Begriffe" /></label>
-          <label className="block">Definition (optional) <textarea rows={2} value={form.definition} onChange={(e) => setForm({ ...form, definition: e.target.value })} aria-label="Definition" /></label>
+          <label className="block">Zu vermeiden (kommagetrennt) <input value={form.avoid} onChange={(e) => setForm({ ...form, avoid: e.target.value })} /></label>
+          <label className="block">Definition (optional) <textarea rows={2} value={form.definition} onChange={(e) => setForm({ ...form, definition: e.target.value })} /></label>
           <button
             className="btn primary"
             disabled={!form.preferred.trim()}

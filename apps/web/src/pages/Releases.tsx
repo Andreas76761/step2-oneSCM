@@ -83,7 +83,7 @@ export function ReleasesPage() {
             <label>Titel <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} aria-label="Titel des Handbuchs" /></label>
           </div>
           <label className="block">Einleitung / Hinweise (Markdown, optional)
-            <textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} aria-label="Einleitung" />
+            <textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </label>
           <p className="small muted">{form.outlineId ? 'Enthalten sind die freigegebenen Kapitel der Variante, gefiltert nach Rollen, Sparten und Blueprint/Märkten; Abkürzungen, Glossar, Bildverzeichnis und FAQ werden als Verzeichnisse beigefügt.' : 'Enthalten sind alle Kapitel der Quellen mit freigegebener Version.'} Kapitel, deren „gültig ab“ nach der Versionsnummer liegt, bleiben bis zu ihrem Release draußen. Offene Blocker- oder Datenschutzbefunde verhindern die Veröffentlichung.</p>
           <button className="btn primary" disabled={!form.version.trim()} onClick={publish}>Veröffentlichen</button>

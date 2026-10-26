@@ -262,7 +262,7 @@ export function ReleaseLettersPage() {
                     <option value="">– wählen –</option>
                     {handbook.data.map((r: any) => <option key={r.id} value={r.id}>Version {r.version}</option>)}
                   </select></label>
-                  <label>Verglichen mit <select aria-label="Vergleichs-Release" value={cmp.fromReleaseId} onChange={(e) => setCmp({ ...cmp, fromReleaseId: e.target.value })}>
+                  <label>Verglichen mit <select value={cmp.fromReleaseId} onChange={(e) => setCmp({ ...cmp, fromReleaseId: e.target.value })}>
                     <option value="">Vorgänger-Release</option>
                     {handbook.data.filter((r: any) => r.id !== cmp.releaseId).map((r: any) => <option key={r.id} value={r.id}>Version {r.version}</option>)}
                   </select></label>

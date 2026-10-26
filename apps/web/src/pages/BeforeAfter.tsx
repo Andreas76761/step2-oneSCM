@@ -34,7 +34,7 @@ function Slider({ before, after, label }: { before: string; after: string; label
         {a && <img src={a} alt={`Nachher: ${label}`} className="ba-after" style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }} />}
         <span className="ba-line" style={{ left: `${pos}%` }} aria-hidden="true" />
       </div>
-      <label className="block small">Vorher ← Regler → Nachher ({pos} % Nachher sichtbar)
+      <label className="block small">Anteil Nachher <output>{pos} %</output>
         <input type="range" min={0} max={100} value={pos} onChange={(e) => setPos(Number(e.target.value))} aria-label={`Anteil Nachher: ${label}`} />
       </label>
       <figcaption className="small muted">links Nachher, rechts Vorher – den Regler nach rechts ziehen, um mehr vom Nachher zu sehen</figcaption>

@@ -106,7 +106,7 @@ test('[T-203] Freigabeworkflow in der UI: einreichen, freigeben; Terminologie pf
   // Terminologie pflegen
   await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Terminologie' }).click();
   await page.getByLabel('Bevorzugter Begriff').fill('Arbeitsliste');
-  await page.getByLabel('Zu vermeidende Begriffe').fill('Aufgabenliste, To-do-Liste');
+  await page.getByLabel('Zu vermeiden (kommagetrennt)').fill('Aufgabenliste, To-do-Liste');
   await page.getByRole('button', { name: 'Anlegen' }).click();
   await expect(page.locator('tr', { hasText: 'Arbeitsliste' })).toContainText('To-do-Liste');
 
@@ -1655,7 +1655,7 @@ test('[T-234] Lesen in Englisch mit Rückfall-Hinweis und übersetztem Glossar; 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Lesezeichen');
   await page.getByLabel('Lesezeichen filtern').fill('Packliste ändern');
   await page.getByRole('textbox', { name: 'Notiz zu „E2E Packliste ändern“' }).fill('Vor der Inventur prüfen');
-  await page.getByRole('button', { name: 'Notiz zu „E2E Packliste ändern“ speichern' }).click();
+  await page.getByRole('button', { name: 'Notiz speichern: „E2E Packliste ändern“' }).click();
   await expect(page.getByText('Notiz gespeichert.')).toBeVisible();
   await page.getByLabel('Lesezeichen filtern').fill('Inventur');
   await expect(page.getByRole('link', { name: 'E2E Packliste ändern' })).toBeVisible();
@@ -3948,4 +3948,54 @@ test('[T-401] Seitentitel: jede Seite mit eigenem Titel, Detailseiten nennen das
     ?? (await (await request.post('/api/v1/outlines', { headers: h, data: { name: 'E2E Titel-Gliederung', nodes: [{ title: 'Einführung' }] } })).json());
   await page.goto(`/stammdaten/inhaltsverzeichnis/${outline.id}`);
   await expect(page).toHaveTitle(`${outline.name} – Inhaltsverzeichnis${app}`);
+});
+
+test('[T-402] Sichtbare Beschriftung im zugänglichen Namen: Schaltflächen, Links und Felder mit eigenem Namen enthalten ihren sichtbaren Text (WCAG 2.5.3)', async ({ page }) => {
+  test.setTimeout(240_000);
+  const findings: string[] = [];
+  for (const width of [1280, 390]) {
+    await page.setViewportSize({ width, height: 800 });
+    for (const r of ALL_PAGES) {
+      await page.goto(r);
+      await page.waitForLoadState('networkidle');
+      // Nur Elemente mit aria-label oder aria-labelledby: Ohne sie ergibt sich der Name aus dem sichtbaren Text.
+      // Werte von Schiebereglern (<output>) gehören nicht zur Beschriftung; Zahlen und Zeichen allein zählen nicht.
+      const found = await page.evaluate(() => {
+        const norm = (s: string | null) => (s ?? '').toLowerCase().replace(/­/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+        const hidden = (el: Element | null) => {
+          for (let a = el; a; a = a.parentElement) {
+            const cs = getComputedStyle(a);
+            if (cs.display === 'none' || cs.visibility === 'hidden' || a.classList.contains('sr-only')) return true;
+          }
+          return false;
+        };
+        const visText = (el: Element) => {
+          let t = '';
+          const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          for (let n = w.nextNode(); n; n = w.nextNode()) if (!hidden(n.parentElement) && !n.parentElement?.closest('output, input, select, textarea')) t += ' ' + n.textContent;
+          return t;
+        };
+        const nameOf = (el: Element) => {
+          const ids = el.getAttribute('aria-labelledby');
+          return ids ? ids.split(/\s+/).map((id) => document.getElementById(id)?.textContent ?? '').join(' ') : el.getAttribute('aria-label');
+        };
+        const out: string[] = [];
+        const sel = 'a[href], button, summary, [role=button], [role=link], [role=tab], [role=menuitem], [role=checkbox], [role=radio], [role=switch], [role=option], input, select, textarea';
+        for (const el of document.querySelectorAll(sel)) {
+          if (!el.hasAttribute('aria-label') && !el.hasAttribute('aria-labelledby')) continue;
+          const rc = el.getBoundingClientRect();
+          if (!rc.width || !rc.height || hidden(el)) continue;
+          const vis = /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)
+            ? [...((el as HTMLInputElement).labels ?? [])].map(visText).join(' ')
+            : visText(el);
+          const v = norm(vis);
+          if (v.replace(/[0-9 ]/g, '').length < 2) continue;
+          if (!norm(nameOf(el)).includes(v)) out.push(`${el.tagName.toLowerCase()} sichtbar „${vis.trim().replace(/\s+/g, ' ').slice(0, 60)}“, Name „${(nameOf(el) ?? '').trim().slice(0, 80)}“`);
+        }
+        return out;
+      });
+      for (const f of found) findings.push(`${r} (${width} px): ${f}`);
+    }
+  }
+  expect([...new Set(findings)]).toEqual([]);
 });

@@ -38,8 +38,8 @@ export function SettingsPage() {
   const slider = (k: string, label: string, help: string) => (
     <div className="setting">
       <label className="slider">{label}
-        <input type="range" min={10} max={100} value={Math.round(a[k] * 100)} onChange={(e) => setA(k, Number(e.target.value) / 100)} aria-label={label} />
-        <strong>{Math.round(a[k] * 100)} %</strong>
+        <input type="range" min={10} max={100} value={Math.round(a[k] * 100)} onChange={(e) => setA(k, Number(e.target.value) / 100)} />
+        <output>{Math.round(a[k] * 100)} %</output>
       </label>
       <p className="small muted">{help}</p>
     </div>

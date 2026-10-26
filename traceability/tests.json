@@ -3115,5 +3115,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-402",
+    "title": "Sichtbare Beschriftung im zugänglichen Namen: Schaltflächen, Links und Felder mit eigenem Namen enthalten ihren sichtbaren Text",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

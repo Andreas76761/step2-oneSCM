@@ -484,7 +484,7 @@ function FaqTranslations({ faqId, question, canEdit, onChanged }: { faqId: strin
             {t.issues.length > 0 && <span className="small sev-text"> · Prüfbefund: {t.issues.map((i: string) => ISSUE_LABEL[i] ?? i).join(', ')}</span>}
             {t.question && <div className="small" lang={t.language}><em>{t.question}</em></div>}
             <span className="row-actions">
-              {canEdit && <button className="btn small" aria-label={`${t.languageName} bearbeiten`} onClick={() => setEdit({ language: t.language, question: t.question ?? '', answer: t.answer ?? '' })}>{t.status === 'missing' ? 'Übersetzen' : 'Bearbeiten'}</button>}
+              {canEdit && <button className="btn small" aria-label={`${t.languageName} ${t.status === 'missing' ? 'übersetzen' : 'bearbeiten'}`} onClick={() => setEdit({ language: t.language, question: t.question ?? '', answer: t.answer ?? '' })}>{t.status === 'missing' ? 'Übersetzen' : 'Bearbeiten'}</button>}
               {canEdit && <button className="btn small" aria-label={`${t.languageName}: KI-Vorschlag`} onClick={() => run(() => post(`/faq/${faqId}/translations/${t.language}/machine`, {}), `KI-Vorschlag ${t.languageName} erstellt – bitte prüfen und freigeben.`)}><Ico icon={SparklesIcon} />KI-Vorschlag</button>}
               {canApprove && t.status === 'draft' && !t.outdated && (() => {
                 // Freigabe nur ohne Prüfbefunde und durch eine andere Person als die zuletzt bearbeitende (Vier-Augen-Prinzip, ADR-077)

@@ -70,7 +70,7 @@ export function ProjectsPage({ onChanged }: { onChanged: () => void }) {
       {isAdmin && (
         <Card title="Neues Projekt">
             <label className="block">Name <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} aria-label="Projektname" /></label>
-            <label className="block">Beschreibung (optional) <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} aria-label="Projektbeschreibung" /></label>
+            <label className="block">Beschreibung (optional) <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
             <label className="block">Sichtbarkeit
               <select value={form.visibility} onChange={(e) => setForm({ ...form, visibility: e.target.value })}>
                 <option value="restricted">eingeschränkt (nur Mitglieder)</option>

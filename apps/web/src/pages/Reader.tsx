@@ -445,7 +445,7 @@ export function ReaderBookmarksPage() {
                       onChange={(e) => setNotes({ ...notes, [b.chapterId]: e.target.value })} />
                   </label>
                   <span className="row-actions">
-                    <button className="btn small primary" disabled={draft === undefined || draft === (b.note ?? '')} onClick={() => saveNote(b)} aria-label={`Notiz zu „${b.title}“ speichern`}>Notiz speichern</button>
+                    <button className="btn small primary" disabled={draft === undefined || draft === (b.note ?? '')} onClick={() => saveNote(b)} aria-label={`Notiz speichern: „${b.title}“`}>Notiz speichern</button>
                     <button className="btn small danger" onClick={() => remove(b)} aria-label={`Lesezeichen „${b.title}“ entfernen`}>Entfernen</button>
                   </span>
                 </li>

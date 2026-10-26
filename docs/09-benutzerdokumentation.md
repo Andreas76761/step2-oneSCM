@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.82 (26.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.83 (26.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -11,6 +11,7 @@ Stand: Version 0.82 (26.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 - **Menü nach Arbeitsablauf:** oneSCM_Metadaten · 1 Sammeln · 2 Schreiben · 3 Prüfen · 4 Veröffentlichen · Verwaltung.
 - **Navigation:** Jeder Eintrag hat ein Icon. Mit der Schaltfläche oben rechts neben dem Namen klappen Sie die Navigation auf die Icons ein; der Name erscheint dann beim Überfahren. Unter „Darstellung“ (unten links) wählen Sie hell, dunkel oder wie im System.
 - **Mit der Tastatur:** Der erste Druck auf die Tabulatortaste zeigt „Zum Inhalt springen“; mit der Eingabetaste überspringen Sie Kopf und Menü. Das gewählte Element ist immer umrandet. Nach einem Seitenwechsel steht der Fokus auf der Seitenüberschrift. Breite Tabellen erreichen Sie ebenfalls mit der Tabulatortaste und scrollen sie mit den Pfeiltasten.
+- **Mit Sprachsteuerung:** Sagen Sie, was auf dem Bildschirm steht, z. B. „Klicke auf Notiz speichern“. Jede Schaltfläche, jeder Link und jedes Feld trägt den sichtbaren Text auch im Namen für Sprachsteuerung und Screenreader.
 
 ## 2. oneSCM_Metadaten – Wissen einlesen, ordnen, befragen
 
