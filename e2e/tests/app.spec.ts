@@ -22,7 +22,7 @@ test('[T-201] Navigation, Import einer MD-Datei und Quellenliste', async ({ page
     mimeType: 'text/markdown',
     buffer: Buffer.from('# 9. E2E-Kapitel\n\n## 9.1 Test\n\nDieser Text wurde im E2E-Test für alle Sparten importiert.\n'),
   });
-  await expect(page.getByRole('status')).toContainText('Import abgeschlossen');
+  await expect(page.getByRole('status').filter({ hasText: 'Import abgeschlossen' })).toContainText('Import abgeschlossen');
   await expect(page.getByRole('cell', { name: 'e2e_hinweis.md' })).toBeVisible();
   await page.getByLabel('Suche', { exact: true }).fill('E2E-Test');
   await expect(page.getByRole('cell', { name: /im E2E-Test für alle Sparten/ })).toBeVisible();
@@ -40,7 +40,7 @@ test('[T-202] Widerspruch entscheiden, Kapitel generieren, Icons in der Kapitelw
   await dialog.getByLabel('Entscheidung').selectOption('take_a');
   await dialog.getByLabel('Begründung').fill('Pflicht laut aktueller Prozessbeschreibung');
   await dialog.getByRole('button', { name: 'Entscheidung speichern' }).click();
-  await expect(page.getByRole('status')).toContainText('protokolliert');
+  await expect(page.getByRole('status').filter({ hasText: 'protokolliert' })).toContainText('protokolliert');
 
   // Übrige Blocker über die API klären
   const h = { 'X-User-Id': 'u-fachpruefung' };
@@ -91,11 +91,11 @@ test('[T-203] Freigabeworkflow in der UI: einreichen, freigeben; Terminologie pf
   await versions.locator('tr', { hasText: '5. MO-Check' }).click();
   await page.getByLabel('Hinweis an die Freigabe (optional)').fill('Bitte fachlich prüfen');
   await page.getByRole('button', { name: 'Zur Freigabe einreichen' }).click();
-  await expect(page.getByRole('status')).toContainText('Zur Freigabe eingereicht');
+  await expect(page.getByRole('status').filter({ hasText: 'Zur Freigabe eingereicht' })).toContainText('Zur Freigabe eingereicht');
   await expect(versions.locator('tr', { hasText: '5. MO-Check' })).toContainText('eingereicht');
   await page.getByLabel('Kommentar (Pflicht)').fill('Fachlich geprüft');
   await page.getByRole('button', { name: 'Freigeben', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('freigegeben');
+  await expect(page.getByRole('status').filter({ hasText: 'freigegeben' })).toContainText('freigegeben');
   await expect(versions.locator('tr', { hasText: '5. MO-Check' })).toContainText('freigegeben');
 
   // Evidenzansicht der freigegebenen Version
@@ -308,7 +308,7 @@ test('[T-214] Import aus Fremdsystemen: HTML-Datei hochladen, Git-Repository ver
     mimeType: 'text/html',
     buffer: Buffer.from('<html><head><title>Handbuch : 12. Kasse</title></head><body><div id="main-content"><h1>Zweck</h1><p>Die Kasse bucht Zahlungen aus Confluence.</p></div></body></html>'),
   });
-  await expect(page.getByRole('status')).toContainText('Import abgeschlossen');
+  await expect(page.getByRole('status').filter({ hasText: 'Import abgeschlossen' })).toContainText('Import abgeschlossen');
   await page.getByLabel('Suche', { exact: true }).fill('aus Confluence');
   await expect(page.getByRole('cell', { name: /Die Kasse bucht Zahlungen aus Confluence/ })).toBeVisible();
 
@@ -328,7 +328,7 @@ test('[T-214] Import aus Fremdsystemen: HTML-Datei hochladen, Git-Repository ver
   await expect(hook.getByLabel('Geheimnis')).toHaveValue(/^whsec_/);
   await expect(hook.getByLabel('Payload-URL')).toHaveValue(/\/api\/v1\/hooks\/source-connections\/conn_/);
   await hook.getByRole('button', { name: 'Eingetragen' }).click();
-  await expect(page.getByRole('status')).toContainText('Abgleich „Handbuch-Repo“ abgeschlossen');
+  await expect(page.getByRole('status').filter({ hasText: 'Abgleich „Handbuch-Repo“ abgeschlossen' })).toContainText('Abgleich „Handbuch-Repo“ abgeschlossen');
   await expect(page.locator('tr', { hasText: 'Handbuch-Repo' }).getByText('aktuell')).toBeVisible();
   await page.getByLabel('Suche', { exact: true }).fill('Git-Repository');
   await expect(page.getByRole('cell', { name: /Das Lager kommt aus dem Git-Repository/ })).toBeVisible();
@@ -1977,7 +1977,7 @@ test('[T-243] Release-Abgleich und Releaseletter: Tickets je Release, Letter erz
   await expect(page.getByRole('row', { name: /E2ERL-2/ })).toContainText('Intern / Bug');
   await page.getByLabel('Ticketnummern (eine je Zeile oder durch Komma getrennt)').fill('E2ERL-1\nE2ERL-9');
   await page.getByRole('button', { name: 'Abgleichen' }).click();
-  await expect(page.getByRole('status')).toContainText('Es fehlen: E2ERL-9');
+  await expect(page.getByRole('status').filter({ hasText: 'Es fehlen: E2ERL-9' })).toContainText('Es fehlen: E2ERL-9');
   expect(await axe()).toEqual([]);
 
   // Releaseletter aus dem Release
@@ -3348,7 +3348,7 @@ test('[T-364] PDF im Design: Hinweis auf den lokalen Browser, Muster als PDF, Ex
   await page.getByLabel('Design').selectOption('quickref');
   await expect(page.getByLabel('Ausgabe')).toHaveValue('quickguide');
   await page.getByRole('button', { name: 'Export erstellen' }).click();
-  await expect(page.getByRole('status')).toContainText('Export erstellt');
+  await expect(page.getByRole('status').filter({ hasText: 'Export erstellt' })).toContainText('Export erstellt');
   const button = page.getByRole('button', { name: /onescm-handbuch-quickref-quickguide-.*\.pdf herunterladen/ });
   await expect(button).toBeVisible();
   const [file] = await Promise.all([page.waitForEvent('download'), button.click()]);
@@ -3417,7 +3417,7 @@ test('[T-370] Designvorlagen als Word: Muster als Word, Export Word im Design oh
   await expect(page.getByLabel(/Prüffassung für Word/)).toHaveCount(0);
   await page.getByLabel('Ausgabe').selectOption('full');
   await page.getByRole('button', { name: 'Export erstellen' }).click();
-  await expect(page.getByRole('status')).toContainText('Export erstellt');
+  await expect(page.getByRole('status').filter({ hasText: 'Export erstellt' })).toContainText('Export erstellt');
   await expect(page.getByText(/Word-Dokument erstellt/)).toBeVisible();
   const [file] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /onescm-handbuch-fachdoku-.*\.docx herunterladen/ }).click()]);
   expect(file.suggestedFilename()).toMatch(/^onescm-handbuch-fachdoku-\d{4}-\d{2}-\d{2}\.docx$/);
@@ -3439,7 +3439,7 @@ test('[T-373] Designvorlagen als PowerPoint: Muster als PowerPoint, Export Power
   await page.getByLabel('Design').selectOption('quickref');
   await expect(page.getByLabel('Ausgabe')).toHaveValue('quickguide');
   await page.getByRole('button', { name: 'Export erstellen' }).click();
-  await expect(page.getByRole('status')).toContainText('Export erstellt');
+  await expect(page.getByRole('status').filter({ hasText: 'Export erstellt' })).toContainText('Export erstellt');
   await expect(page.getByText(/PowerPoint-Präsentation erstellt/)).toBeVisible();
   const [file] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /onescm-handbuch-quickref-quickguide-.*\.pptx herunterladen/ }).click()]);
   expect(file.suggestedFilename()).toMatch(/^onescm-handbuch-quickref-quickguide-\d{4}-\d{2}-\d{2}\.pptx$/);
