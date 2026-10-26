@@ -175,7 +175,7 @@ export function GuidancePage() {
   const current = list.data?.chapters.find((c: any) => c.versionId === versionId);
   if (versionId) {
     return (
-      <Page title="Anleitungs-Check" subtitle={current ? `${current.title} · Version ${current.versionNo}` : 'Ist das Kapitel leicht zu befolgen?'}
+      <Page title="Anleitungs-Check" docTitle={current?.title} subtitle={current ? `${current.title} · Version ${current.versionNo}` : 'Ist das Kapitel leicht zu befolgen?'}
         actions={<><Link className="btn" to="/anleitungs-check">← Alle Kapitel</Link>{current && <Link className="btn" to={`/werkstatt/${current.chapterId}`}>In der Werkstatt öffnen</Link>}</>}>
         <Card><GuidancePanel versionId={versionId} canEdit={canEdit} onChanged={list.reload} /></Card>
       </Page>

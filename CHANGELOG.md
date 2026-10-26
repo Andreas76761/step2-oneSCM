@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.82.0 – Etappe 82 (26.10.2026)
+
+### Hinzugefügt
+- **Seitentitel geprüft (E2E T-401, WCAG 2.4.2):** Jede der 77 Seiten hat einen eigenen Fenstertitel. Gleiche Titel gibt es nur bei einer Weiterleitung. Detailseiten nennen das geöffnete Objekt.
+- **Titel mit geöffnetem Objekt:** Die Reihenfolge ist Objekt – Seite – App, z. B. „3. Benutzerverwaltung – Kapitelwerkstatt – oneSCM Handbook Studio“. Das gilt für Kapitelwerkstatt, Leseransicht, Anleitungs-Check, Kapitelbewertung, Evidenz, Versionsvergleich, Draft Manual und Inhaltsverzeichnis. Mehrere offene Tabs, der Verlauf und Screenreader unterscheiden die Seiten damit.
+
+### Behoben
+- **Kapitelwerkstatt ohne Seitentitel:** Der Fenstertitel lautete nur „oneSCM Handbook Studio“.
+
 ## 0.81.0 – Etappe 81 (26.10.2026)
 
 ### Hinzugefügt

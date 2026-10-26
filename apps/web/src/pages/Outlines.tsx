@@ -201,7 +201,7 @@ export function OutlinesPage() {
   };
 
   return (
-    <Page title="Inhaltsverzeichnis" subtitle="Gliederungen je Rolle, Sparte und Markt – versioniert, hochladbar, erweiterbar" actions={canEdit && <button className="btn primary" onClick={() => setCreating(true)}>Gliederung anlegen</button>}>
+    <Page title="Inhaltsverzeichnis" docTitle={list.data?.items.find((o: any) => o.id === selectedId)?.name} subtitle="Gliederungen je Rolle, Sparte und Markt – versioniert, hochladbar, erweiterbar" actions={canEdit && <button className="btn primary" onClick={() => setCreating(true)}>Gliederung anlegen</button>}>
       <ErrorBox error={list.error} />
       {isAdmin && list.data && <Card title="Märkte"><MarketsEditor markets={list.data.markets} onSaved={list.reload} /></Card>}
       <div className="grid2">

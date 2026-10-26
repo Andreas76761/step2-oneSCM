@@ -91,7 +91,7 @@ export function AssessmentPage() {
   const [open, setOpen] = useState<string | null>(versionId ?? null);
   const d = ov.data;
   return (
-    <Page title="Kapitelbewertung" subtitle="Fünf Kriterien je Kapitel mit Ampel – Sprache, Ziel, Tonalität, Quellenabgleich, Fakten – und Plausibilität je Aussage">
+    <Page title="Kapitelbewertung" docTitle={d?.items.find((i: any) => i.versionId === open)?.title} subtitle="Fünf Kriterien je Kapitel mit Ampel – Sprache, Ziel, Tonalität, Quellenabgleich, Fakten – und Plausibilität je Aussage">
       <ErrorBox error={ov.error} />
       {d && (
         <div className="stat-row">

@@ -32,7 +32,7 @@ export function ComparePage() {
   const option = (v: any) => <option key={v.id} value={v.id}>Version {v.versionNo} ({statusLabel(v.status)}, {new Date(v.generatedAt).toLocaleString('de-DE')})</option>;
 
   return (
-    <Page title="Versionsvergleich" subtitle={d ? `${d.chapterTitle}: Version ${d.from.versionNo} → Version ${d.to.versionNo}` : 'Zwei Kapitelversionen gegenüberstellen'} actions={chapterId && <Link className="btn" to={`/werkstatt/${chapterId}`}>Zur Kapitelwerkstatt</Link>}>
+    <Page title="Versionsvergleich" docTitle={d?.chapterTitle} subtitle={d ? `${d.chapterTitle}: Version ${d.from.versionNo} → Version ${d.to.versionNo}` : 'Zwei Kapitelversionen gegenüberstellen'} actions={chapterId && <Link className="btn" to={`/werkstatt/${chapterId}`}>Zur Kapitelwerkstatt</Link>}>
       <ErrorBox error={versions.error ?? cmp.error} />
       {versions.data && versions.data.length < 2 && <Empty>Für dieses Kapitel gibt es noch keine zwei Versionen.</Empty>}
       {versions.data && versions.data.length >= 2 && (

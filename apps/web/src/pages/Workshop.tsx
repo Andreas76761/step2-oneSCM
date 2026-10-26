@@ -3,7 +3,7 @@ import { BlockerIcon, Ico, OkMark } from '../components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
-import { Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad, Modal, activatable, statusLabel } from '../components/ui';
+import { Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad, Modal, activatable, statusLabel, useDocTitle } from '../components/ui';
 import { DiagramStudio } from '../components/DiagramStudio';
 import { MarkedText, SentenceEditor, type Analysis } from './Style';
 import { SourceViewer } from './Sources';
@@ -36,6 +36,7 @@ export function WorkshopPage() {
   const chapters = useLoad<any[]>('/chapters?outline=all');
   const outlines = useLoad<any>('/outlines');
   const chapter = chapters.data?.find((c) => c.id === chapterId);
+  useDocTitle('Kapitelwerkstatt', chapter?.title);
   const [versionId, setVersionId] = useState<string | null>(null);
   const version = useLoad<any>(versionId ? `/chapter-versions/${versionId}` : null, [versionId]);
   const llm = useLoad<any>('/llm/status');

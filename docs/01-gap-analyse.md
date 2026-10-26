@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.84 Stand nach Etappe 82 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Seitentitel (NFR-03, WCAG 2.4.2): jede der 77 Seiten mit eigenem Fenstertitel; Kapitelwerkstatt, Leseransicht, Anleitungs-Check, Kapitelbewertung, Evidenz, Versionsvergleich, Draft Manual und Inhaltsverzeichnis nennen das geöffnete Kapitel bzw. die Gliederung | ✅ T-401 |
+| Behoben | Die Kapitelwerkstatt zeigte nur „oneSCM Handbook Studio“; Detailseiten unterschieden sich im Titel nicht |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
 ## 1.83 Stand nach Etappe 81 (26.10.2026)
 
 | Punkt | Ergebnis |

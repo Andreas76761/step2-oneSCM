@@ -3106,5 +3106,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-401",
+    "title": "Seitentitel: eigener Titel je Seite, Detailseiten nennen das geöffnete Kapitel bzw. die Gliederung",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

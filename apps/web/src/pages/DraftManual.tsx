@@ -287,7 +287,7 @@ export function DraftManualPage() {
   const nodes = d?.nodes ?? [];
 
   return (
-    <Page title="Draft Manual" subtitle="Handbuchentwurf entlang einer Gliederung – Textschnipsel zuordnen und Auffälligkeiten klären">
+    <Page title="Draft Manual" docTitle={list.data?.items.find((o: any) => o.id === d?.outline?.id)?.name} subtitle="Handbuchentwurf entlang einer Gliederung – Textschnipsel zuordnen und Auffälligkeiten klären">
       <ErrorBox error={list.error ?? draft.error} />
       {list.data && !list.data.items.length && (
         <Empty>Noch keine Gliederung vorhanden. Legen Sie unter <Link to="/stammdaten/inhaltsverzeichnis">Stammdaten › Inhaltsverzeichnis</Link> eine an.</Empty>

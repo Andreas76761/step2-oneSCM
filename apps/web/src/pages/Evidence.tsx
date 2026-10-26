@@ -18,7 +18,7 @@ export function EvidencePage() {
   const rows = (d?.blocks ?? []).filter((b: any) => !onlyIssues || b.issues.length);
 
   return (
-    <Page title="Evidenz" subtitle="Quellen je Absatz: Herkunft, Revision, Bestätigung und Lücken der Nachweise">
+    <Page title="Evidenz" docTitle={withVersion.find((c) => c.versions.some((v: any) => v.id === effectiveId))?.title} subtitle="Quellen je Absatz: Herkunft, Revision, Bestätigung und Lücken der Nachweise">
       <div className="filters">
         <select aria-label="Kapitelversion" value={effectiveId ?? ''} onChange={(e) => navigate(`/evidenz/${e.target.value}`)}>
           {withVersion.flatMap((c) => c.versions.map((v: any) => <option key={v.id} value={v.id}>{c.title} – Version {v.versionNo} ({statusLabel(v.status)})</option>))}

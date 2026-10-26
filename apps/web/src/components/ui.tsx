@@ -143,11 +143,15 @@ export const TYPE_LABEL: Record<string, string> = { gap: 'Lücke', duplicate: 'D
 
 // ---------- Layout-Bausteine ----------
 
-export function Page({ title, subtitle, actions, children }: { title: string; subtitle?: string; actions?: ReactNode; children: ReactNode }) {
-  // Seitentitel für Browser-Tabs und Screenreader (WCAG 2.4.2)
+/** Seitentitel für Browser-Tabs, Verlauf und Screenreader (WCAG 2.4.2): geöffnetes Objekt – Seite – App */
+export function useDocTitle(page: string, item?: string | null) {
   useEffect(() => {
-    document.title = `${title} – oneSCM Handbook Studio`;
-  }, [title]);
+    document.title = [item, page, 'oneSCM Handbook Studio'].filter(Boolean).join(' – ');
+  }, [page, item]);
+}
+
+export function Page({ title, docTitle, subtitle, actions, children }: { title: string; docTitle?: string | null; subtitle?: string; actions?: ReactNode; children: ReactNode }) {
+  useDocTitle(title, docTitle);
   return (
     <div className="page">
       <header className="page-head">

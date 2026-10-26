@@ -608,7 +608,7 @@ export function ReaderPage() {
   return (
     <GlossaryProvider entries={glossary.data}>
     <ReaderTextProvider lang={lang}>
-    <Page title="Leseransicht" subtitle="Das Handbuch so lesen, wie Ihre Leserinnen und Leser es sehen"
+    <Page title="Leseransicht" docTitle={version.data?.title ?? current?.title} subtitle="Das Handbuch so lesen, wie Ihre Leserinnen und Leser es sehen"
       actions={<span className="no-print row-actions">
         {current && <button className="btn" onClick={() => window.print()}><PrinterIcon className="btn-icon" aria-hidden="true" size={16} />Kapitel drucken</button>}
         <Link className="btn" to={`/lesen/druck${drafts ? '?entwuerfe=1' : ''}`}><FileTextIcon className="btn-icon" aria-hidden="true" size={16} />Handbuch drucken</Link>

@@ -3905,3 +3905,31 @@ test('[T-400] Statusmeldungen für Screenreader: Live-Regionen von Anfang an vor
   await expect(status).toHaveText('');
   await page.unroute('**/api/v1/settings');
 });
+
+test('[T-401] Seitentitel: jede Seite mit eigenem Titel, Detailseiten nennen das geöffnete Kapitel bzw. die Gliederung (WCAG 2.4.2)', async ({ page, request }) => {
+  test.setTimeout(240_000);
+  const app = ' – oneSCM Handbook Studio';
+  const byTitle = new Map<string, string[]>();
+  const findings: string[] = [];
+  for (const r of ALL_PAGES) {
+    await page.goto(r);
+    await page.waitForLoadState('networkidle');
+    const title = await page.title();
+    if (!title.endsWith(app) || title === app.slice(3)) findings.push(`${r}: Titel „${title}“`);
+    byTitle.set(title, [...(byTitle.get(title) ?? []), r]);
+  }
+  // gleicher Titel nur, wenn eine Adresse auf die andere weiterleitet (/stammdaten → Inhaltsverzeichnis)
+  for (const [title, routes] of byTitle) if (routes.length > 1 && routes.join() !== '/stammdaten,/stammdaten/inhaltsverzeichnis') findings.push(`gleicher Titel „${title}“: ${routes.join(', ')}`);
+  expect(findings).toEqual([]);
+  // Detailseiten: geöffnetes Objekt – Seite – App
+  const h = { 'X-User-Id': 'u-admin' };
+  const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.versions?.length);
+  await page.goto(`/werkstatt/${ch.id}`);
+  await expect(page).toHaveTitle(`${ch.title} – Kapitelwerkstatt${app}`);
+  await page.goto(`/evidenz/${ch.versions[0].id}`);
+  await expect(page).toHaveTitle(`${ch.title} – Evidenz${app}`);
+  const outline = (await (await request.get('/api/v1/outlines', { headers: h })).json()).items[0]
+    ?? (await (await request.post('/api/v1/outlines', { headers: h, data: { name: 'E2E Titel-Gliederung', nodes: [{ title: 'Einführung' }] } })).json());
+  await page.goto(`/stammdaten/inhaltsverzeichnis/${outline.id}`);
+  await expect(page).toHaveTitle(`${outline.name} – Inhaltsverzeichnis${app}`);
+});
