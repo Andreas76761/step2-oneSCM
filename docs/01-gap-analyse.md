@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.82 Stand nach Etappe 80 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Kontrast von Bedienelementen (NFR-03, WCAG 1.4.11): Rahmen von Eingabefeldern, Auswahllisten und Textfeldern mindestens 3:1 zu Feld und Umgebung; Fokusrahmen mindestens 3:1 zum Hintergrund – hell und dunkel, alle 77 Seiten | ✅ T-398 |
+| Behoben | Feldrahmen hatten 1,2–1,9:1 (Farbe der Kartenränder); Fokusrahmen in der Seitenleiste 2,98:1; drei Fokusrahmen nutzten eine nicht vorhandene Variable und damit Bernstein (2,05:1) |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
 ## 1.81 Stand nach Etappe 79 (26.10.2026)
 
 | Punkt | Ergebnis |

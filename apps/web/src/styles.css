@@ -3,6 +3,7 @@
   --surface: #ffffff;
   --surface-2: #f8fafc;
   --border: #dfe4ec;
+  --field-border: #7d8798; /* Rahmen von Eingabefeldern: mind. 3:1 zu Fläche und Hintergrund (WCAG 1.4.11) */
   --text: #0f172a;
   --muted: #5b6474;
   --primary: #1d63d8;
@@ -29,6 +30,7 @@
     --surface: #151d2d;
     --surface-2: #1b2437;
     --border: #2a3550;
+    --field-border: #6b7894;
     --text: #e6ebf5;
     --muted: #9aa6bd;
     --primary: #2563eb;
@@ -55,6 +57,7 @@
   --surface: #151d2d;
   --surface-2: #1b2437;
   --border: #2a3550;
+  --field-border: #6b7894;
   --text: #e6ebf5;
   --muted: #9aa6bd;
   --primary: #2563eb;
@@ -130,7 +133,7 @@ code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .btn.link { border: none; background: none; color: var(--link); padding: 0; text-align: left; }
 .btn:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-input, select, textarea { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+input, select, textarea { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--field-border); border-radius: 6px; padding: 6px 8px; }
 textarea { width: 100%; }
 label.block { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
 label.block input, label.block select { width: 100%; }
@@ -412,9 +415,11 @@ ol.sources blockquote { margin: 4px 0 10px; padding-left: 10px; border-left: 3px
 
 /* Globale Suche (ADR-035) */
 .nav-search { margin: 0 0 10px; }
-.nav-search input { width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.08); color: #fff; font: inherit; }
+.nav-search input { width: 100%; padding: 7px 10px; border-radius: 6px; border: 1px solid #8090b0; background: rgba(255, 255, 255, 0.08); color: #fff; font: inherit; }
 .nav-search input::placeholder { color: var(--sidebar-ink); opacity: 0.8; }
 .nav-search input:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+/* In der dunklen Seitenleiste reicht die Hauptfarbe nicht für 3:1 – Fokusrahmen dort weiß (WCAG 1.4.11) */
+.sidebar a:focus-visible, .sidebar button:focus-visible, .sidebar select:focus-visible, .sidebar input:focus-visible { outline-color: #fff; }
 .sidebar.collapsed .nav-search { display: none; }
 .search-hits { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
 .search-hits mark { background: var(--warn-bg); color: inherit; padding: 0 1px; border-radius: 2px; }
@@ -721,7 +726,7 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .bookmark-note { font-style: italic; }
 /* Etappe 25: Notiz im Kapitel, Übersetzung anfordern */
 .linklike { background: none; border: 0; padding: 0; font: inherit; font-style: normal; color: var(--link, #1d4ed8); text-decoration: underline; cursor: pointer; min-height: 24px; }
-.linklike:focus-visible { outline: 3px solid var(--focus, #f59e0b); outline-offset: 2px; }
+.linklike:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 .chapter-note-add { margin: 0 0 8px; }
 .chapter-note-edit { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; margin: 0 0 10px; }
 .chapter-note-edit textarea { width: 100%; }
@@ -740,7 +745,7 @@ div.reader-lang-note p { margin: 0; }
 .md-label { border-left: 4px solid var(--border); display: inline-flex; align-items: center; gap: 2px; }
 .md-label.md-archived { opacity: 0.7; font-style: italic; }
 .md-remove { background: none; border: 0; padding: 0 2px; margin-left: 2px; cursor: pointer; color: var(--text); font: inherit; min-width: 24px; min-height: 24px; }
-.md-remove:focus-visible { outline: 3px solid var(--focus, #f59e0b); }
+.md-remove:focus-visible { outline: 3px solid var(--primary); }
 .md-multi { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .md-bulk { border-top: 1px solid var(--border); padding-top: 8px; margin-bottom: 0; }
 .md-text { white-space: pre-wrap; margin: 4px 0; }
@@ -806,7 +811,7 @@ div.reader-lang-note p { margin: 0; }
 .oq-list { list-style: none; padding: 0; margin: 0; max-height: 70vh; overflow: auto; }
 .oq-list li button { width: 100%; text-align: left; display: flex; justify-content: space-between; gap: 6px; padding: 4px 6px; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; border-radius: 6px; min-height: 28px; }
 .oq-list li button[aria-current="true"] { background: var(--info-bg); font-weight: 600; }
-.oq-list li button:focus-visible { outline: 3px solid var(--focus, #f59e0b); }
+.oq-list li button:focus-visible { outline: 3px solid var(--primary); }
 .oq-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .oq-cols > section { min-width: 0; }
 .oq-block { border-left: 3px solid var(--border); padding: 2px 8px; margin: 6px 0; }

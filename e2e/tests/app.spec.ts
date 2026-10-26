@@ -3820,3 +3820,55 @@ test('[T-397] Hinweise ohne Ortsangaben: kein „Wählen Sie links …“ in den
   await expect(page.getByText('Wählen Sie unter „Inhalt“ ein Kapitel.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Inhalt', exact: true })).toBeVisible();
 });
+
+test('[T-398] Kontrast von Eingabefeldern und Fokusrahmen: mindestens 3:1 auf allen Seiten, hell und dunkel (WCAG 1.4.11)', async ({ page }) => {
+  test.setTimeout(480_000);
+  // Hilfsfunktionen im Browser: Farben lesen, mischen, Kontrast nach WCAG; Hintergrund = erste deckende Fläche nach oben
+  const helpers = `
+    const parse = (c) => { const m = c && c.match(/rgba?\\(([^)]+)\\)/); if (!m) return null; const v = m[1].split(/[ ,\\/]+/).filter(Boolean).map(Number); return { r: v[0], g: v[1], b: v[2], a: v[3] ?? 1 }; };
+    const lum = ({ r, g, b }) => { const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b); };
+    const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+    const blend = (t, u) => ({ r: t.r * t.a + u.r * (1 - t.a), g: t.g * t.a + u.g * (1 - t.a), b: t.b * t.a + u.b * (1 - t.a), a: 1 });
+    const bgOf = (el) => { const st = []; for (let a = el; a; a = a.parentElement) { const c = parse(getComputedStyle(a).backgroundColor); if (c && c.a > 0) { st.push(c); if (c.a >= 1) break; } } let res = { r: 255, g: 255, b: 255, a: 1 }; for (let i = st.length - 1; i >= 0; i--) res = blend(st[i], res); return res; };
+    const name = (e) => e.tagName.toLowerCase() + (e.type ? '[' + e.type + ']' : '') + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\\s+/).slice(0, 3).join('.') : '');`;
+  // Eingabefelder brauchen einen erkennbaren Rand (Rahmen oder Fläche); Schaltflächen erkennt man an ihrer Beschriftung
+  const fieldCheck = `(() => {${helpers}
+    const f = [];
+    for (const el of document.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]), select, textarea')) {
+      const rc = el.getBoundingClientRect(); if (!rc.width || !rc.height) continue;
+      const cs = getComputedStyle(el); if (cs.visibility === 'hidden' || el.disabled || el.closest('.sr-only')) continue;
+      const outside = bgOf(el.parentElement), own = bgOf(el);
+      const bc = parse(cs.borderTopColor), bw = parseFloat(cs.borderTopWidth);
+      const border = bw > 0 && bc && cs.borderTopStyle !== 'none' ? Math.min(ratio(blend(bc, outside), outside), ratio(blend(bc, own), own)) : 0;
+      const best = Math.max(border, ratio(own, outside));
+      if (best < 3) f.push(name(el) + ' Feldrahmen ' + best.toFixed(2));
+    }
+    return f;
+  })()`;
+  const focusCheck = `(() => {${helpers}
+    const el = document.activeElement; if (!el || el === document.body) return null;
+    const cs = getComputedStyle(el);
+    if (cs.outlineStyle === 'none' || !parseFloat(cs.outlineWidth)) return null; // Fokus ohne Rahmen prüft T-395
+    const behind = (parseFloat(cs.outlineOffset) || 0) < 0 ? bgOf(el) : bgOf(el.parentElement);
+    const rr = ratio(blend(parse(cs.outlineColor), behind), behind);
+    return rr < 3 ? name(el) + ' Fokusrahmen ' + rr.toFixed(2) : null;
+  })()`;
+  const findings = new Set<string>();
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    for (const r of ALL_PAGES) {
+      await page.goto(r);
+      await page.waitForLoadState('networkidle');
+      for (const x of (await page.evaluate(fieldCheck)) as string[]) findings.add(`${scheme} ${r}: ${x}`);
+      // Sprunglink, Kopf und Menü (Seitenleiste) bzw. Inhaltsbereich: je bis zu 20 Tabstopps
+      await page.keyboard.press('Tab');
+      for (let i = 0; i < 21; i++) {
+        const x = (await page.evaluate(focusCheck)) as string | null;
+        if (x) findings.add(`${scheme} ${r}: ${x}`);
+        if (i === 0 && r !== '/') await page.keyboard.press('Enter');
+        await page.keyboard.press('Tab');
+      }
+    }
+  }
+  expect([...findings]).toEqual([]);
+});

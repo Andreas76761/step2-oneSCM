@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.79, 26.10.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.80, 26.10.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -120,7 +120,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 31. **Etappe 77 – Tastaturbedienung geprüft (✅ umgesetzt):** Sprunglink zuerst, sichtbarer und nicht verdeckter Fokus auf allen Seiten (T-395).
 32. **Etappe 78 – Vergrößerung und Textabstände geprüft (✅ umgesetzt):** 320 px ohne waagerechtes Scrollen, kein abgeschnittener Text bei vergrößerten Abständen (T-396).
 33. **Etappe 79 – Hinweise ohne Ortsangaben (✅ umgesetzt):** „Wählen Sie unter „Inhalt“ ein Kapitel“ statt „links“, in allen Sprachen (T-397).
-34. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+34. **Etappe 80 – Kontrast von Eingabefeldern und Fokusrahmen (✅ umgesetzt):** mindestens 3:1, hell und dunkel (T-398).
+35. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.80.0 – Etappe 80 (26.10.2026)
+
+### Hinzugefügt
+- **Kontrast von Eingabefeldern und Fokusrahmen geprüft (E2E T-398, WCAG 1.4.11):** Auf allen 77 Seiten, hell und dunkel, braucht jedes Eingabefeld, jede Auswahlliste und jedes Textfeld einen Rand mit mindestens 3:1 Kontrast. Dieser Rand kann ein Rahmen oder die Feldfläche sein. Auch der Fokusrahmen muss mindestens 3:1 zum Hintergrund erreichen, in Seitenleiste und Inhaltsbereich. Schaltflächen erkennt man an ihrer Beschriftung; für sie gilt die Regel nicht.
+- **Farbwert `--field-border`** für Feldrahmen: hell `#7d8798` (mindestens 3,2:1), dunkel `#6b7894` (mindestens 3,5:1).
+
+### Behoben
+- **Feldrahmen kaum sichtbar:** Eingabefelder nutzten die Farbe der Kartenränder und erreichten nur 1,2 bis 1,9:1. Sie nutzen jetzt `--field-border`. Das Suchfeld in der Seitenleiste erreicht jetzt mindestens 5:1.
+- **Fokusrahmen in der Seitenleiste:** Die Hauptfarbe auf dem dunklen Blau der Seitenleiste erreichte nur 2,98:1. Der Fokusrahmen ist dort jetzt weiß.
+- **Bernsteinfarbener Fokusrahmen:** Drei Stellen nutzten die nicht vorhandene Variable `--focus` und damit Bernstein mit 2,05:1 auf Weiß. Betroffen waren Schaltflächen im Linkstil (u. a. Kapitelbewertung), „Entfernen“ in den Chunks und die Gliederungsliste in „Kapitel ↔ Quellen“. Sie nutzen jetzt die Hauptfarbe.
+
 ## 0.79.0 – Etappe 79 (26.10.2026)
 
 ### Hinzugefügt

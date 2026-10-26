@@ -3079,5 +3079,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-398",
+    "title": "Eingabefelder und Fokusrahmen mit mindestens 3:1 Kontrast auf allen 77 Seiten, hell und dunkel",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]
