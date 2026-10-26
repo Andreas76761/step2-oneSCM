@@ -1,6 +1,6 @@
 import { HourglassIcon, ImagePlusIcon, LockIcon, RotateCwIcon, SparklesIcon, XIcon, type LucideIcon } from 'lucide-react';
 import { BlockerIcon, Ico, RefIcon } from './icons';
-import { Suspense, createContext, lazy, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { Suspense, createContext, lazy, useCallback, useContext, useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { ApiError, download, get, mediaUrl, post } from '../api';
 
 // ---------- Referenzdaten & Benachrichtigungen ----------
@@ -180,35 +180,46 @@ export const Card = ({ title, children, actions, className }: { title?: ReactNod
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/** Dialog: Fokus beim Öffnen hinein, Tab bleibt im Dialog, beim Schließen zurück zum Auslöser (WCAG 2.4.3). */
+/**
+ * Dialog: Fokus beim Öffnen hinein (erstes Eingabefeld, sonst „Schließen“), Tab bleibt im Dialog,
+ * Esc schließt, beim Schließen zurück zum Auslöser (WCAG 2.1.2, 2.4.3).
+ * Der Effekt läuft nur beim Öffnen: onClose ist oft eine neue Funktion je Render; sonst sprang der Fokus
+ * bei jedem Tastendruck in einem Dialogfeld zum Auslöser und zurück auf „Schließen“.
+ */
 export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
+  const close = useRef(onClose);
+  close.current = onClose;
+  const titleId = useId();
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
-    ref.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+    const body = ref.current?.querySelector('.modal-body');
+    (body?.querySelector<HTMLElement>('input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled])')
+      ?? ref.current?.querySelector<HTMLElement>(FOCUSABLE))?.focus();
     const h = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') { e.preventDefault(); close.current(); return; }
       if (e.key !== 'Tab' || !ref.current) return;
-      const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.getClientRects().length);
       if (!items.length) return;
       const [first, last] = [items[0], items[items.length - 1]];
-      if (e.shiftKey && document.activeElement === first) (e.preventDefault(), last.focus());
-      else if (!e.shiftKey && document.activeElement === last) (e.preventDefault(), first.focus());
+      const inside = ref.current.contains(document.activeElement);
+      if (e.shiftKey && (document.activeElement === first || !inside)) (e.preventDefault(), last.focus());
+      else if (!e.shiftKey && (document.activeElement === last || !inside)) (e.preventDefault(), first.focus());
     };
     window.addEventListener('keydown', h);
     return () => {
       window.removeEventListener('keydown', h);
-      opener?.focus?.();
+      if (opener?.isConnected) opener.focus();
     };
-  }, [onClose]);
+  }, []);
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div ref={ref} className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}>
         <div className="card-head">
-          <h2>{title}</h2>
-          <button className="btn ghost" onClick={onClose} aria-label="Schließen"><XIcon aria-hidden="true" size={18} /></button>
+          <h2 id={titleId}>{title}</h2>
+          <button type="button" className="btn ghost" onClick={onClose} aria-label="Schließen"><XIcon aria-hidden="true" size={18} /></button>
         </div>
-        {children}
+        <div className="modal-body">{children}</div>
       </div>
     </div>
   );

@@ -73,6 +73,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **81** ✅ | Statusmeldungen für Screenreader | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-400 |
 | **82** ✅ | Seitentitel mit geöffnetem Objekt | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-401 |
 | **83** ✅ | Sichtbare Beschriftung im zugänglichen Namen | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-402 |
+| **84** ✅ | Dialoge und Erklärungen per Tastatur | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-403 |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

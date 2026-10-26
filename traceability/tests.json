@@ -3124,5 +3124,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-403",
+    "title": "Dialoge und Erklärungen per Tastatur: Fokus im Dialog, Tippen ohne Fokusverlust, Esc schließt, Fokus zurück; Glossar-Erklärung erreichbar und mit Esc schließbar",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

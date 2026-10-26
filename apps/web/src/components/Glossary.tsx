@@ -1,6 +1,6 @@
 // Glossar in der Leseransicht (ADR-066): Fachbegriffe und Abkürzungen im Text werden beim ersten Vorkommen je Absatz
 // markiert und erklären sich bei Maus, Tastatur oder Antippen – WCAG 1.4.13: per Esc schließbar, überfahrbar, bleibt stehen.
-import { createContext, useContext, useId, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 
 export interface GlossaryEntry { term: string; text: string; kind: 'term' | 'abbreviation' }
 
@@ -55,6 +55,13 @@ export function GlossText({ text, seen }: { text: string; seen: Set<string> }) {
 export function GlossTerm({ entry, children }: { entry: GlossaryEntry; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const id = useId();
+  // Esc schließt die Erklärung auch, wenn sie per Maus geöffnet wurde und der Fokus woanders steht (WCAG 1.4.13)
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('keydown', h);
+    return () => document.removeEventListener('keydown', h);
+  }, [open]);
   return (
     <span className="gloss" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
       {/* Name = der Begriff selbst: steht er in einer Schritt-Beschriftung, bleibt deren zugänglicher Name unverändert */}

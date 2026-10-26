@@ -195,6 +195,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.86 Stand nach Etappe 84 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Dialoge per Tastatur (NFR-03, WCAG 2.1.2, 2.4.3): Fokus beim Öffnen im ersten Feld, Tippen ohne Fokusverlust, Tab und Umschalt+Tab bleiben im Dialog, Esc schließt, Fokus zurück zum Auslöser – geprüft an vier Dialogen | ✅ T-403 |
+| Glossar-Erklärungen (WCAG 1.4.13): mit der Maus erreichbar, ohne zu schließen; Esc schließt sie auch ohne Fokus auf dem Begriff | ✅ T-403 |
+| Behoben | Beim Tippen in einem Dialogfeld sprang der Fokus nach dem ersten Zeichen auf „Schließen“, die weiteren Zeichen gingen verloren (alle 18 Dialoge, nur per Tastatur) |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
 ## 1.85 Stand nach Etappe 83 (26.10.2026)
 
 | Punkt | Ergebnis |

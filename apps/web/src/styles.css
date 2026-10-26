@@ -678,6 +678,8 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 .gloss-term:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 2px; }
 .gloss-tip { position: absolute; left: 0; top: calc(100% + 4px); z-index: 30; width: max-content; max-width: min(320px, 80vw); background: var(--surface); color: var(--text);
   border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); padding: 8px 10px; font-size: 14px; font-weight: 400; line-height: 1.4; white-space: normal; }
+/* Brücke über den Abstand: Der Mauszeiger kann vom Begriff auf die Erklärung wechseln, ohne dass sie schließt (WCAG 1.4.13) */
+.gloss-tip::before { content: ''; position: absolute; left: 0; right: 0; top: -6px; height: 6px; }
 .print-cover-logo { max-height: 64px; max-width: 240px; object-fit: contain; display: block; margin-bottom: 16px; }
 .print-cover-subtitle { font-size: 16px; margin: 0 0 8px; }
 .print-cover-confidential { margin: 20px 0 0; font-weight: 700; letter-spacing: .04em; }

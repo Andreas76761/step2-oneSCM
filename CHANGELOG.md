@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.84.0 – Etappe 84 (26.10.2026)
+
+### Hinzugefügt
+- **Dialoge und Erklärungen per Tastatur geprüft (E2E T-403, WCAG 2.1.2, 2.4.3, 1.4.13):**
+  - Vier Dialoge (Aufgabe, Webhook, Quellverbindung, Pipeline-Eintrag) werden nur mit der Tastatur geöffnet.
+  - Der Fokus steht danach im ersten Feld.
+  - Eingaben werden Zeichen für Zeichen getippt; der Fokus bleibt dabei im Feld.
+  - Tab und Umschalt+Tab bleiben im Dialog.
+  - Esc schließt den Dialog, und der Fokus steht wieder auf dem Auslöser.
+  - Glossar: Die Erklärung bleibt offen, wenn die Maus vom Begriff auf sie wechselt. Esc schließt sie.
+- **Benutzerdokumentation:** Dialoge und Glossar-Erklärungen im Abschnitt „Mit der Tastatur“.
+
+### Behoben
+- **Tippen in Dialogen:** Nach dem ersten Zeichen sprang der Fokus auf „Schließen“, die weiteren Zeichen gingen verloren. Das betraf alle 18 Dialoge, aber nur bei Bedienung mit der Tastatur. Ursache: Der Dialog setzte den Fokus bei jeder neuen Darstellung neu, nicht nur beim Öffnen. Mit der Maus und in den bisherigen Tests (die Felder in einem Schritt füllen) fiel das nicht auf.
+- **Erster Fokus im Dialog:** Er steht jetzt im ersten Eingabefeld statt auf „Schließen“. Dialoge ohne Eingabefeld beginnen weiter bei „Schließen“.
+- **Dialogname:** Der Name kommt aus der sichtbaren Überschrift (`aria-labelledby`). Tab überspringt ausgeblendete Elemente. Steht der Fokus außerhalb, holt Tab ihn in den Dialog zurück.
+- **Glossar-Erklärung:** Zwischen Begriff und Erklärung lagen 4 px Abstand. Wer die Maus auf die Erklärung bewegte, schloss sie. Esc schloss sie nur, wenn der Begriff den Fokus hatte.
+
 ## 0.83.0 – Etappe 83 (26.10.2026)
 
 ### Hinzugefügt

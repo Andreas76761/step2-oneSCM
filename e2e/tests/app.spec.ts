@@ -3999,3 +3999,55 @@ test('[T-402] Sichtbare Beschriftung im zugänglichen Namen: Schaltflächen, Lin
   }
   expect([...new Set(findings)]).toEqual([]);
 });
+
+test('[T-403] Dialoge und Erklärungen per Tastatur: Fokus im Dialog, Tippen ohne Fokusverlust, Esc schließt, Fokus zurück; Glossar-Erklärung erreichbar und mit Esc schließbar (WCAG 2.1.2, 2.4.3, 1.4.13)', async ({ page, request }) => {
+  test.setTimeout(120_000);
+  const dialogs: [string, string][] = [
+    ['/agenten', 'Neue Aufgabe'],
+    ['/integrationen', 'Webhook anlegen'],
+    ['/quellen', 'Verbindung anlegen'],
+    ['/pipeline', 'Neuer Eintrag'],
+  ];
+  const inDialog = () => page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'));
+  for (const [route, opener] of dialogs) {
+    await page.goto(route);
+    const btn = page.getByRole('button', { name: opener, exact: true }).first();
+    await btn.focus();
+    await page.keyboard.press('Enter');
+    const dlg = page.getByRole('dialog');
+    await expect(dlg, route).toBeVisible();
+    // Fokus im Dialog, auf dem ersten Eingabefeld
+    expect(await page.evaluate(() => /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName ?? '') && !!document.activeElement?.closest('[role="dialog"]')), route).toBe(true);
+    // Tippen Zeichen für Zeichen: Der Fokus bleibt im Feld, kein Zeichen geht verloren
+    const field = dlg.locator('input[type="text"], input:not([type]), input[type="url"], textarea').first();
+    await field.focus();
+    await page.keyboard.type('Tastatur-Test', { delay: 20 });
+    await expect(field, route).toBeFocused();
+    await expect(field, route).toHaveValue(/Tastatur-Test$/);
+    // Tab und Umschalt+Tab bleiben im Dialog
+    for (let i = 0; i < 25; i++) { await page.keyboard.press('Tab'); expect(await inDialog(), `${route}: Tab ${i + 1}`).toBe(true); }
+    for (let i = 0; i < 8; i++) { await page.keyboard.press('Shift+Tab'); expect(await inDialog(), `${route}: Umschalt+Tab ${i + 1}`).toBe(true); }
+    // Esc schließt, der Fokus kehrt zum Auslöser zurück
+    await page.keyboard.press('Escape');
+    await expect(dlg).toHaveCount(0);
+    await expect(btn, route).toBeFocused();
+  }
+
+  // Glossar: Erklärung per Maus erreichbar (WCAG 1.4.13 „hoverable“) und mit Esc schließbar, auch ohne Fokus auf dem Begriff
+  const chapters = await (await request.get('/api/v1/chapters', { headers: { 'X-User-Id': 'u-admin' } })).json();
+  const ch = chapters.find((c: any) => c.title === 'E2E Lieferschein');
+  test.skip(!ch, 'Kapitel aus T-232 fehlt (Test einzeln gestartet)');
+  await page.goto(`/lesen/${ch.id}`);
+  const term = page.locator('article').getByRole('button', { name: 'DMS', exact: true }).first();
+  await term.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await term.hover();
+  const tip = page.getByRole('tooltip');
+  await expect(tip).toHaveText('DMS = Dealer-Management-System');
+  // Maus vom Begriff über den Abstand auf die Erklärung: Sie bleibt offen
+  const tb = (await term.boundingBox())!, pb = (await tip.boundingBox())!;
+  for (let y = tb.y + tb.height / 2; y <= pb.y + 8; y += 2) await page.mouse.move(tb.x + 4, y);
+  await expect(tip).toBeVisible();
+  await expect(term).not.toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(tip).toHaveCount(0);
+});
