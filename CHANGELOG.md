@@ -13,6 +13,7 @@
   - Beschriftete Auswahlfelder in Filterzeilen (Draft Manual, Druck, Lesezeichen, Planung) brechen jetzt um.
   - Kapitelwerkstatt und Kapitel ↔ Quellen nutzen einspaltig `minmax(0, 1fr)`.
   - Lange Wörter (Deckblatt „Benutzerhandbuch“, Dateipfade) brechen um, wenn sie sonst nicht in die Zeile passen (`overflow-wrap: break-word`).
+  - Kapitelüberschriften in Leseransicht und Druck passen ihre Größe an schmale Bildschirme an (19 bis 24 px) und werden getrennt, wenn ein Wort sonst nicht passt. In der CI war „/lesen/druck“ wegen anderer Schriften noch 23 px zu breit; geprüft ist jetzt auch 280 px, also mit Reserve.
 - **Berechtigungen auf Deutsch:** Die Seitenleiste zeigte „Berechtigungen: read, edit, decide, approve, admin“. Sie zeigt jetzt „Lesen, Bearbeiten, Entscheiden, Freigeben, Administration“. Die Projektverwaltung nutzt dieselben Bezeichnungen wie die Benutzerverwaltung (bisher „lesen, bearbeiten … administrieren“).
 
 ## 0.77.0 – Etappe 77 (25.10.2026)
