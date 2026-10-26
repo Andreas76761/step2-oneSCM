@@ -606,10 +606,10 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
         {tourOpen && <Tour onClose={() => setTourOpen(false)} />}
         {/* Ansage für Screenreader (WCAG 4.1.3): Die Live-Regionen sind immer vorhanden, sonst bleibt eine neu eingefügte Meldung oft
             stumm. Jede Meldung ist ein neuer Knoten, damit auch dieselbe Meldung ein zweites Mal angesagt wird; Fehler sofort (alert). */}
-        <div role="status" aria-live="polite" aria-atomic="true" data-live="status">
+        <div className="toast-region" role="status" aria-live="polite" aria-atomic="true" data-live="status">
           {toast?.kind === 'ok' && <div key={toast.id} className="toast ok">{toast.msg}</div>}
         </div>
-        <div role="alert" aria-atomic="true" data-live="alert">
+        <div className="toast-region" role="alert" aria-atomic="true" data-live="alert">
           {toast?.kind === 'error' && <div key={toast.id} className="toast error">{toast.msg}</div>}
         </div>
       </div>

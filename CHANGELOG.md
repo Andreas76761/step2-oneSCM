@@ -24,7 +24,7 @@
   - Bestätigungen stehen in einer Statusregion (`role="status"`, höflich), Fehler in einer Alarmregion (`role="alert"`, sofort).
   - Beide Regionen gibt es von Anfang an. Bisher entstand die Region erst mit der Meldung, und viele Screenreader (NVDA, JAWS, VoiceOver) sagen sie dann nicht an.
   - Fehler kamen bisher nur als höfliche Statusmeldung.
-  - Das Aussehen bleibt gleich.
+  - Das Aussehen bleibt gleich. Die Position am unteren Rand tragen die Live-Regionen selbst (`.toast-region`). Eine Live-Region ohne eigene Fläche gilt sonst als unsichtbar; das brach in der CI sechs Tests, die Meldungen mit `getByRole('status')` suchen.
 
 ### Behoben
 - **Server-Test T-147 mit eigenem Zeitlimit (120 s):** Der Test baut Suchindizes für drei Suchmaschinen, mit PostgreSQL auch pgvector. Lokal braucht er 2 s (SQLite) bzw. 10 s (PostgreSQL). Auf einem geteilten CI-Rechner mit langsamer Platte überschritt er das allgemeine Limit von 30 s (Node 20, Stand `adad5cb`).
