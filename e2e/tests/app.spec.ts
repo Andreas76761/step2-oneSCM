@@ -1774,7 +1774,7 @@ test('[T-236] Häufige Fragen übersetzen und freigeben, KI-Vorschlag; FAQ-Seite
   const entry = page.locator('details.faq-entry', { hasText: 'E2E Wie storniere ich eine Rechnung?' });
   await entry.locator('summary').click();
   const tr = entry.getByRole('region', { name: 'Übersetzungen zu „E2E Wie storniere ich eine Rechnung?“' });
-  await tr.getByRole('button', { name: 'Englisch bearbeiten' }).click();
+  await tr.getByRole('button', { name: 'Englisch übersetzen' }).click();
   await tr.getByLabel('Frage (Englisch)').fill('E2E How do I cancel an invoice?');
   await tr.getByLabel('Antwort (Englisch, Markdown)').fill('Open the invoice and click **Cancel**.');
   await tr.getByRole('button', { name: 'Speichern' }).click();
