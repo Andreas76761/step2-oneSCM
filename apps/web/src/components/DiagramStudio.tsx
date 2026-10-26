@@ -6,7 +6,7 @@ import { Ico } from './icons';
 import { useEffect, useState } from 'react';
 import { del, post } from '../api';
 import { storeRendition, svgDataUrl } from '../images';
-import { Card, Empty, errorText, useApp, useLoad } from './ui';
+import { Gated, Card, Empty, errorText, useApp, useLoad } from './ui';
 
 export type Kind = 'ascii' | 'clickpath' | 'process' | 'infographic';
 export const KINDS: { kind: Kind; label: string; hint: string }[] = [
@@ -235,7 +235,7 @@ export function DiagramStudio({ initialText = '', canEdit, onSaved, showSample =
           <div className="filters"><label className="inline"><input type="checkbox" checked={useAi} onChange={(e) => setUseAi(e.target.checked)} /> Struktur mit KI erkennen (sonst Regeln)</label></div>
         )}
         <div className="filters">
-          <button className="btn primary" disabled={busy || !text.trim() || !kinds.length} onClick={() => generate({ text, kinds, useAi: useAi && canEdit, ...(opts ? { options: opts } : {}) })}>Bilder erzeugen</button>
+          <Gated className="btn primary" busy={busy} missing={[!text.trim() && 'Text', !kinds.length && 'mindestens eine Bildart']} onClick={() => generate({ text, kinds, useAi: useAi && canEdit, ...(opts ? { options: opts } : {}) })}>Bilder erzeugen</Gated>
           {showSample && <button className="btn ghost" disabled={busy} onClick={() => setText(SAMPLE)}>Beispiel einfügen</button>}
         </div>
         <Templates canEdit={canEdit} current={draft && opts ? { structure: draft, options: opts, kinds } : null} onLoad={(t) => {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { patch, post } from '../api';
-import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 // Kapitelsteuerung (ADR-096): Kapitelanweisung je Kapitel und Unterkapitel, fehlende Kapitel ergänzen, Version
 // („gültig ab“), veraltete Funktionen ablösen – das Abgelöste kommt in die Historie
@@ -113,7 +113,7 @@ export function StructurePage() {
                   </select>
                 </label>
                 <label>Gültig ab (neues Kapitel) <input value={newCh.validFrom} size={10} maxLength={40} placeholder="2026.3" onChange={(e) => setNewCh({ ...newCh, validFrom: e.target.value })} /></label>
-                <button type="button" className="btn primary" disabled={newCh.title.trim().length < 3} onClick={addChapter}>Kapitel ergänzen</button>
+                <Gated type="button" className="btn primary" missing={[newCh.title.trim().length < 3 && 'Titel des Kapitels mit mindestens 3 Zeichen']} onClick={addChapter}>Kapitel ergänzen</Gated>
               </div>
               <p className="small muted">Eingelesene Quellen mit derselben Kapitelüberschrift werden diesem Kapitel zugeordnet.</p>
             </fieldset>
@@ -245,7 +245,7 @@ function Editor({ kind, item, chapter, chapters, canEdit, variant, onChange }: {
             <p className="small muted">HappyPath zeigt den Standardablauf, Edge die Ausnahmen (Abschnitt „Fehlerbehebung“); Intern und inPrüfung sind im Standard ausgeschlossen.</p>
           </fieldset>
         )}
-        {canEdit && <button type="button" className="btn primary" disabled={kind === 'chapter' && !levels.length} onClick={save}>Anweisung speichern</button>}
+        {canEdit && <Gated type="button" className="btn primary" missing={[kind === 'chapter' && !levels.length && 'mindestens ein Detaillevel']} onClick={save}>Anweisung speichern</Gated>}
       </fieldset>
       <p className="small muted">Der Generator lässt Quellen zu „Nicht beschreiben“ weg und meldet wichtige Themen ohne Quelle als Lücke; KI-Vorschläge und der Anleitungs-Check beachten die Anweisung. Im Arbeitsordner steht sie als <code>ANWEISUNG.md</code>.</p>
       {canEdit && kind === 'chapter' && !item.inHistory && !variant && (

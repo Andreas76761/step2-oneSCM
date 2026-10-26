@@ -5,7 +5,7 @@ import { contrast } from '../contrast';
 import { resetReadingStyle } from '../readingStyle';
 import { DesignThemeCard } from './DesignThemeCard';
 
-import { Decision, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Decision, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 const SEVERITY_DE: Record<string, string> = { blocker: 'Blocker', high: 'Hoch', medium: 'Mittel', low: 'Niedrig' };
 
@@ -310,7 +310,7 @@ function MarketReviewersCard() {
         <label>Sprache <input value={f.language} size={6} maxLength={8} placeholder="alle" onChange={(e) => setF({ ...f, language: e.target.value.toLowerCase() })} /></label>
         {person(f.userId, 'Ansprechperson', (v) => setF({ ...f, userId: v }))}
         {person(f.deputyUserId, 'Vertretung', (v) => setF({ ...f, deputyUserId: v }), true)}
-        <button type="button" className="btn" disabled={f.market.length !== 2 || !f.userId} onClick={() => void save()}>Ansprechperson speichern</button>
+        <Gated type="button" className="btn" missing={[f.market.length !== 2 && 'Markt mit 2 Buchstaben', !f.userId && 'Ansprechperson']} onClick={() => void save()}>Ansprechperson speichern</Gated>
       </div>
     </Card>
   );

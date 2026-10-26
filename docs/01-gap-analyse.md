@@ -195,13 +195,21 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.88 Stand nach Etappe 86 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Gesperrte Schaltflächen (NFR-03, WCAG 3.3.2): Jede gesperrte Hauptschaltfläche nennt die fehlenden Angaben („Noch nötig: Kennung mit mindestens 3 Zeichen, Name.“); der Hinweis steht sichtbar daneben und ist über `aria-describedby` verknüpft; Komponente `Gated` an 41 Stellen | ✅ T-405 (alle 77 Seiten) |
+| Bewusst ohne Hinweis | Kleine Zeilenaktionen (z. B. „Generieren“ je Kapitel, „Zuordnen“ je Domäne – das Auswahlfeld steht direkt daneben), Blättern, Verschieben und „läuft gerade“ |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
 ## 1.87 Stand nach Etappe 85 (26.10.2026)
 
 | Punkt | Ergebnis |
 |---|---|
 | Ziehbewegungen (NFR-03, WCAG 2.5.7): Rahmen, Pfeil, Unkenntlich machen, Lupe, Zuschneiden und Verschieben im Screenshot-Editor auch mit zwei einzelnen Klicks; Esc bricht ab; Hinweis in einer Live-Region | ✅ T-404 |
 | Geprüft, schon vorhanden | Gliederung (Pfeil-Schaltflächen statt Drag & Drop), Draft Manual (Auswahl und „Zuordnen“), Schwärzen im Bildarchiv (Felder in Prozent), Vorher/Nachher (Schieberegler per Tastatur) |
-| Offen | Deaktivierte Schaltflächen erklären nicht, welches Pflichtfeld fehlt (61 Stellen, WCAG 3.3.2) – Vorschlag für die nächste Etappe |
+| Offen (erledigt in Etappe 86) | Deaktivierte Schaltflächen erklärten nicht, welches Pflichtfeld fehlt (WCAG 3.3.2) |
 
 ## 1.86 Stand nach Etappe 84 (26.10.2026)
 

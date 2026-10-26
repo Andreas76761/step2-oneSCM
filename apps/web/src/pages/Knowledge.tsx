@@ -3,7 +3,7 @@ import { Ico } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { del, patch, post } from '../api';
-import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 // Kapitel ↔ Quellen (F-14) und Wissensnotizen (F-15), ADR-084
 
@@ -166,7 +166,7 @@ export function KnowledgeNotesPage() {
           </div>
           {hits && <p className="alert warning">Mögliche personenbezogene Daten: {hits.map((h) => `${h.kind} „${h.match}“`).join(', ')}</p>}
           <div className="filters">
-            <button className="btn primary" disabled={form.question.trim().length < 5 || form.insight.trim().length < 5 || !form.roles.length || !form.divisions.length} onClick={save}>{editId ? 'Ändern' : 'Speichern'}</button>
+            <Gated className="btn primary" missing={[form.question.trim().length < 5 && 'Frage bzw. Titel mit mindestens 5 Zeichen', form.insight.trim().length < 5 && 'Erkenntnis mit mindestens 5 Zeichen', !form.roles.length && 'mindestens eine Rolle', !form.divisions.length && 'mindestens eine Sparte']} onClick={save}>{editId ? 'Ändern' : 'Speichern'}</Gated>
             {editId && <button className="btn ghost" onClick={() => { setEditId(null); setForm(EMPTY); setImage(null); }}>Abbrechen</button>}
           </div>
         </Card>

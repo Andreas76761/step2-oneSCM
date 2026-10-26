@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, del, patch, post, put } from '../api';
-import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 // oneSCM_Metadaten › Expertenbefragung (ADR-092, F-16): Wissenslücken an Fachleute geben – Option und Freitext,
 // in der App oder per Excel; Übernahme als Frage & Antwort mit Label „Prüfen“
@@ -113,7 +113,7 @@ export function SurveysPage() {
               </select>
             </label>
             <label className="block">Antwortoptionen (mit Komma getrennt; Freitext ist immer möglich) <input value={form.options} onChange={(e) => setForm({ ...form, options: e.target.value })} /></label>
-            <button className="btn primary" disabled={!form.title.trim()} onClick={() => void create()}>Befragung anlegen</button>
+            <Gated className="btn primary" missing={[!form.title.trim() && 'Titel']} onClick={() => void create()}>Befragung anlegen</Gated>
           </Card>
         )}
         <Card title={`Befragungen (${list.data?.length ?? 0})`}>

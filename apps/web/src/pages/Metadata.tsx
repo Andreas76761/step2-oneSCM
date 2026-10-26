@@ -3,7 +3,7 @@ import { FormatIcon, Ico, RefIcon } from '../components/icons';
 import { Fragment, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { del, patch, post, put, qs } from '../api';
-import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 import { InlineMd } from '../components/InlineMd';
 
 // oneSCM_Metadaten (ADR-079): Übersicht, Chunks mit Labels, gespeicherte Fragen und Antworten, Labelkatalog
@@ -274,7 +274,7 @@ export function MetadataChunksPage() {
           <div className="filters md-bulk" role="group" aria-label="Ausgewählte Chunks labeln">
             <span className="small"><strong>{selected.length}</strong> ausgewählt</span>
             <LabelSelect labels={all} groups={groups} lang={lang} value={bulkLabel} onChange={setBulkLabel} ariaLabel="Label für die Auswahl" />
-            <button className="btn small primary" disabled={!selected.length || !bulkLabel} onClick={() => change(selected, { add: [bulkLabel] })}>Hinzufügen</button>
+            <Gated className="btn small primary" missing={[!selected.length && 'ausgewählte Chunks', !bulkLabel && 'Label']} onClick={() => change(selected, { add: [bulkLabel] })}>Hinzufügen</Gated>
             <button className="btn small" disabled={!selected.length || !bulkLabel} onClick={() => change(selected, { remove: [bulkLabel] })}>Entfernen</button>
             {selected.length > 0 && <button className="btn small ghost" onClick={() => setSelected([])}>Auswahl aufheben</button>}
           </div>
@@ -400,7 +400,7 @@ function AskCard({ canEdit, onTake }: { canEdit: boolean; onTake: (r: any) => vo
         <LabelMulti labels={labels.data ?? []} groups={groups} lang={lang} selected={labelIds} onChange={setLabelIds} ariaLabel="Nur Chunks mit Label" />
       </div>
       <div className="row-actions">
-        <button className="btn primary" disabled={busy || question.trim().length < 3} onClick={() => void ask()}>{busy ? 'Suche …' : 'Fragen'}</button>
+        <Gated className="btn primary" busy={busy} missing={[question.trim().length < 3 && 'Frage mit mindestens 3 Zeichen']} onClick={() => void ask()}>{busy ? 'Suche …' : 'Fragen'}</Gated>
         {result && canEdit && result.answer.length > 0 && <button className="btn" onClick={() => onTake(result)}>Als Frage & Antwort übernehmen</button>}
       </div>
       {result && <AskResult r={result} />}
@@ -512,7 +512,7 @@ export function MetadataQaPage() {
             )}
           </fieldset>
           <label className="block">Notiz (optional) <input value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} /></label>
-          <button className="btn primary" disabled={!form.question.trim() || !form.answer.trim()} onClick={save}>{editId ? 'Speichern' : 'Anlegen'}</button>
+          <Gated className="btn primary" missing={[!form.question.trim() && 'Frage', !form.answer.trim() && 'Antwort']} onClick={save}>{editId ? 'Speichern' : 'Anlegen'}</Gated>
           {editId && <button className="btn" onClick={() => { setEditId(null); setForm(EMPTY_QA); }}>Abbrechen</button>}
         </Card>
       )}
@@ -615,10 +615,10 @@ export function MetadataLabelsPage() {
             <input placeholder="Code, z. B. nav.orders" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} aria-label="Code" />
             <input placeholder="Name (Deutsch)" value={form.nameDe} onChange={(e) => setForm({ ...form, nameDe: e.target.value })} aria-label="Name Deutsch" />
             <input placeholder="Name (Englisch)" value={form.nameEn} onChange={(e) => setForm({ ...form, nameEn: e.target.value })} aria-label="Name Englisch" />
-            <button className="btn primary" disabled={!form.code.trim() || !form.nameDe.trim() || !form.nameEn.trim()}
+            <Gated className="btn primary" missing={[!form.code.trim() && 'Code', !form.nameDe.trim() && 'Name (Deutsch)', !form.nameEn.trim() && 'Name (Englisch)']}
               onClick={async () => (await run(() => post('/metadata/labels', form), `Label „${form.nameDe}“ angelegt.`)) && setForm({ ...form, code: '', nameDe: '', nameEn: '' })}>
               Anlegen
-            </button>
+            </Gated>
           </div>
         </Card>
       )}
@@ -750,7 +750,7 @@ export function AccessMatrixPage() {
           <p className="small muted">Erste Spalte: Menüpunkt (Code, englischer UI-Begriff oder deutscher Name). Weitere Spalten: je Rolle (Code oder Name) V, L, – oder ?. Optional Spalte „Beleg“. Leere Felder bleiben unverändert. Trennzeichen Komma oder Semikolon.</p>
           <label className="block">CSV-Datei <input type="file" accept=".csv,text/csv" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setCsv(await f.text()); }} /></label>
           <label className="block">oder Inhalt einfügen <textarea id="am-csv" rows={4} value={csv} onChange={(e) => setCsv(e.target.value)} /></label>
-          <button className="btn primary" disabled={!csv.trim()} onClick={async () => {
+          <Gated className="btn primary" missing={[!csv.trim() && 'CSV-Datei oder eingefügter Inhalt']} onClick={async () => {
             try {
               const r = await post('/metadata/access-matrix/import', { csv });
               setResult(r);
@@ -759,7 +759,7 @@ export function AccessMatrixPage() {
             } catch (e) {
               notify(errorText(e), 'error');
             }
-          }}>Übernehmen</button>
+          }}>Übernehmen</Gated>
           {result && (
             <ul className="small">
               <li>{result.written} Felder übernommen</li>

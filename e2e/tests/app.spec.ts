@@ -4096,3 +4096,35 @@ test('[T-404] Screenshot-Editor ohne Ziehen: Rahmen, Pfeil, Unkenntlich, Lupe, Z
   await twoClicks(10, 10, 390, 190);
   await expect(canvas).toHaveAttribute('aria-label', /, zugeschnitten$/);
 });
+
+test('[T-405] Gesperrte Schaltflächen sagen, was fehlt: jede gesperrte Hauptschaltfläche nennt die fehlenden Angaben und ist mit dem Hinweis verknüpft (WCAG 3.3.2)', async ({ page }) => {
+  test.setTimeout(240_000);
+  const findings: string[] = [];
+  for (const r of ALL_PAGES) {
+    await page.goto(r);
+    await page.waitForLoadState('networkidle');
+    // Hauptschaltflächen (primary, nicht klein): gesperrt nur mit Hinweis; kleine Zeilenaktionen und „läuft gerade“ zählen nicht
+    const found = await page.evaluate(() => [...document.querySelectorAll<HTMLButtonElement>('main button.primary[disabled]:not(.small)')]
+      .filter((b) => b.getClientRects().length)
+      .filter((b) => !(b.getAttribute('aria-describedby')?.split(/\s+/).map((id) => document.getElementById(id)?.textContent?.trim() ?? '').join('')))
+      .map((b) => `„${b.textContent?.trim()}“`));
+    for (const f of found) findings.push(`${r}: ${f} ohne Hinweis`);
+  }
+  expect(findings).toEqual([]);
+  // Beispiel Terminologie: Hinweis sichtbar und verknüpft, nach dem Ausfüllen weg
+  await page.goto('/terminologie');
+  const create = page.getByRole('button', { name: 'Anlegen', exact: true });
+  await expect(create).toBeDisabled();
+  await expect(create).toHaveAccessibleDescription('Noch nötig: Bevorzugter Begriff.');
+  await expect(page.getByText('Noch nötig: Bevorzugter Begriff.')).toBeVisible();
+  await page.getByLabel('Bevorzugter Begriff').fill('E2E Hinweisbegriff');
+  await expect(create).toBeEnabled();
+  await expect(create).toHaveAccessibleDescription('');
+  await expect(page.getByText('Noch nötig: Bevorzugter Begriff.')).toHaveCount(0);
+  // mehrere fehlende Angaben, in der Reihenfolge der Felder
+  await page.goto('/benutzer');
+  const user = page.getByRole('button', { name: 'Benutzer anlegen' });
+  await expect(user).toHaveAccessibleDescription('Noch nötig: Kennung mit mindestens 3 Zeichen, Name.');
+  await page.getByLabel('Kennung').fill('u-e2e-hinweis');
+  await expect(user).toHaveAccessibleDescription('Noch nötig: Name.');
+});

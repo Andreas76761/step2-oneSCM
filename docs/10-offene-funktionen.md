@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.85, 26.10.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.86, 26.10.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -126,7 +126,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 37. **Etappe 83 – Sichtbare Beschriftung im Namen (✅ umgesetzt):** Name für Screenreader und Sprachsteuerung enthält den sichtbaren Text (T-402).
 38. **Etappe 84 – Dialoge und Erklärungen per Tastatur (✅ umgesetzt):** Fokus bleibt beim Tippen im Feld, Esc schließt, Fokus zurück zum Auslöser; Glossar-Erklärung mit der Maus erreichbar (T-403).
 39. **Etappe 85 – Ohne Ziehbewegung (✅ umgesetzt):** alle Werkzeuge des Screenshot-Editors auch mit zwei Klicks (T-404).
-40. **Vorschlag:** deaktivierte Schaltflächen erklären – 61 Schaltflächen bleiben gesperrt, bis Pflichtfelder gefüllt sind, ohne zu sagen, welche (WCAG 3.3.2).
+40. **Etappe 86 – Gesperrte Schaltflächen erklärt (✅ umgesetzt):** „Noch nötig: …“ neben jeder gesperrten Hauptschaltfläche, verknüpft für Screenreader (T-405).
 41. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen

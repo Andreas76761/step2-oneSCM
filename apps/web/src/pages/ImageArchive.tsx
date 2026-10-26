@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, del, forgetMedia, mediaUrl, patch, post, put } from '../api';
 import { readClipboardImage, usePasteImage } from '../components/clipboard';
-import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad, Status } from '../components/ui';
+import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad, Status } from '../components/ui';
 
 // Bildarchiv (ADR-085, F-20, F-21, F-23): feste Bildnummer, Merkmale, Prüfregeln, Versionen, Platzhalter, Bildabdeckung je Kapitel
 
@@ -257,7 +257,7 @@ export function ImageArchivePage() {
               <p className="small muted">Reserviert die nächste Bildnummer, bis der echte Screenshot vorliegt. Ein Platzhalter in einem freigegebenen Kapitel gilt als Fehler.</p>
               <div className="filters">
                 <label className="grow">Was soll das Bild zeigen? <input value={phTitle} maxLength={200} placeholder="z. B. Vertragsliste mit Filter" onChange={(e) => setPhTitle(e.target.value)} /></label>
-                <button className="btn" disabled={phTitle.trim().length < 3} onClick={placeholder}>Platzhalter anlegen</button>
+                <Gated className="btn" missing={[phTitle.trim().length < 3 && 'Beschreibung mit mindestens 3 Zeichen']} onClick={placeholder}>Platzhalter anlegen</Gated>
               </div>
               {made && <p className="small">In den Text einfügen: <code>{made}</code></p>}
             </Card>
@@ -430,7 +430,7 @@ function ClickpathBuilder({ images, onDone }: { images: any[]; onDone: () => voi
       </ol>
       <div className="row-actions">
         {steps.length < 12 && <button type="button" className="btn" onClick={() => setSteps([...steps, empty()])}>+ Station</button>}
-        <button type="button" className="btn primary" disabled={!ready} onClick={() => void submit()}>{editId ? 'Klickstrecke aktualisieren' : 'Klickstrecke erstellen'}</button>
+        <Gated type="button" className="btn primary" missing={[title.trim().length < 3 && 'Titel mit mindestens 3 Zeichen', steps.length < 2 && 'mindestens 2 Stationen', !steps.every((s) => s.alternatives.every((a) => a.sha)) && 'ein Bild für jede Station']} onClick={() => void submit()}>{editId ? 'Klickstrecke aktualisieren' : 'Klickstrecke erstellen'}</Gated>
       </div>
       {result && (
         <div>

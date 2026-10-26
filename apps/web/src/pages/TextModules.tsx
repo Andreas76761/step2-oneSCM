@@ -2,7 +2,7 @@
 // Fassungen in die Entwürfe der Kapitel übernehmen
 import { useState } from 'react';
 import { patch, post } from '../api';
-import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 
 const KINDS: [string, string][] = [['paragraph', 'Absatz'], ['note', 'Hinweis'], ['tip', 'Tipp'], ['warning', 'Warnung'], ['list', 'Liste'], ['table', 'Tabelle']];
 const SECTIONS: [string, string][] = [['purpose', 'Zweck'], ['prerequisites', 'Voraussetzungen'], ['steps', 'Schrittweise Durchführung'], ['result', 'Ergebnis und Systemstatus'], ['hints', 'Hinweise, Tipps und Warnungen'], ['troubleshooting', 'Fehlerbehebung']];
@@ -136,7 +136,7 @@ export function TextModulesPage() {
               <label>Art <select value={form.kind} onChange={(e) => setForm({ ...form, kind: e.target.value })}>{KINDS.map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
             </div>
             <label className="block">Text (Markdown)<textarea rows={4} value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })} /></label>
-            <button type="button" className="btn primary" disabled={!form.title.trim() || !form.text.trim()} onClick={() => void create(form)}>Anlegen</button>
+            <Gated type="button" className="btn primary" missing={[!form.title.trim() && 'Titel', !form.text.trim() && 'Text']} onClick={() => void create(form)}>Anlegen</Gated>
           </Card>
         )}
       </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { download, post } from '../api';
-import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 
 const CHANGE: Record<string, { label: string; cls: string }> = {
   new: { label: 'neu', cls: 'st-approved' },
@@ -86,7 +86,7 @@ export function ReleasesPage() {
             <textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
           </label>
           <p className="small muted">{form.outlineId ? 'Enthalten sind die freigegebenen Kapitel der Variante, gefiltert nach Rollen, Sparten und Blueprint/Märkten; Abkürzungen, Glossar, Bildverzeichnis und FAQ werden als Verzeichnisse beigefügt.' : 'Enthalten sind alle Kapitel der Quellen mit freigegebener Version.'} Kapitel, deren „gültig ab“ nach der Versionsnummer liegt, bleiben bis zu ihrem Release draußen. Offene Blocker- oder Datenschutzbefunde verhindern die Veröffentlichung.</p>
-          <button className="btn primary" disabled={!form.version.trim()} onClick={publish}>Veröffentlichen</button>
+          <Gated className="btn primary" missing={[!form.version.trim() && 'Version']} onClick={publish}>Veröffentlichen</Gated>
         </Card>
       )}
       <Card title="Veröffentlichte Versionen">

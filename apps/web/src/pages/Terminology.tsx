@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react';
 import { patch, post } from '../api';
-import { Card, Empty, ErrorBox, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Page, Status, errorText, useApp, useLoad } from '../components/ui';
 
 /** Terminologieverwaltung (US-015): bevorzugte Begriffe, zu vermeidende Varianten, Definition */
 export function TerminologyPage() {
@@ -35,15 +35,15 @@ export function TerminologyPage() {
           <label className="block">Bevorzugter Begriff <input value={form.preferred} onChange={(e) => setForm({ ...form, preferred: e.target.value })} aria-label="Bevorzugter Begriff" /></label>
           <label className="block">Zu vermeiden (kommagetrennt) <input value={form.avoid} onChange={(e) => setForm({ ...form, avoid: e.target.value })} /></label>
           <label className="block">Definition (optional) <textarea rows={2} value={form.definition} onChange={(e) => setForm({ ...form, definition: e.target.value })} /></label>
-          <button
+          <Gated
             className="btn primary"
-            disabled={!form.preferred.trim()}
+            missing={[!form.preferred.trim() && 'Bevorzugter Begriff']}
             onClick={async () => {
               if (await save(() => post('/terminology', { preferred: form.preferred, avoid: list(form.avoid), definition: form.definition || null }), `Begriff „${form.preferred}“ angelegt.`)) setForm({ preferred: '', avoid: '', definition: '' });
             }}
           >
             Anlegen
-          </button>
+          </Gated>
           <p className="small muted">Neue Regeln wirken ab der nächsten Analyse (Dashboard → Analyse starten).</p>
         </Card>
         <Card title="Hinweise">

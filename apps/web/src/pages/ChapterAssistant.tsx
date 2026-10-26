@@ -5,7 +5,7 @@ import { Ico } from '../components/icons';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, download, get, post } from '../api';
-import { Card, Empty, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
 import { scoreLabel } from './Guidance';
 
 interface Line { text: string; snippetId?: string | null }
@@ -215,10 +215,10 @@ export function ChapterAssistantPage() {
               <LineList label="Hinweis" lines={hints} onChange={setHints} placeholder="z. B. Teillieferungen buchen Sie einzeln" />
             </>
           )}
-          {missing && step !== 1 && step !== 3 && <p className="small" role="status">{missing}</p>}
+          {missing && step !== 1 && step !== 3 && <p className="small" role="status" id="wizard-missing">{missing}</p>}
           <div className="row-actions wizard-nav">
             {step > 0 && <button className="btn" onClick={() => setStep(step - 1)}>← Zurück</button>}
-            {step < STEPS.length - 1 && <button className="btn primary" disabled={!!missing || loadingSugg} onClick={() => void next()}>{loadingSugg ? 'Suche Vorschläge …' : 'Weiter →'}</button>}
+            {step < STEPS.length - 1 && <button className="btn primary" disabled={!!missing || loadingSugg} aria-describedby={missing ? 'wizard-missing' : undefined} onClick={() => void next()}>{loadingSugg ? 'Suche Vorschläge …' : 'Weiter →'}</button>}
             {step === STEPS.length - 1 && <button className="btn primary" disabled={busy || !canEdit} onClick={() => void create()}>Kapitel anlegen</button>}
           </div>
           <div>
@@ -372,7 +372,7 @@ function TemplateEditor({ template, onClose, onSaved }: { template: any; onClose
         <label>Tipps <span className="small muted">(einer je Zeile)</span><textarea rows={3} value={f.hints} onChange={set('hints')} /></label>
         {!steps.length && <p className="small" role="alert">Eine Vorlage braucht mindestens einen Schritt.</p>}
         <div className="row-actions">
-          <button className="btn primary" disabled={busy || !f.name.trim() || !steps.length} onClick={save}>Speichern</button>
+          <Gated className="btn primary" busy={busy} missing={[!f.name.trim() && 'Name', !steps.length && 'mindestens ein Schritt']} onClick={save}>Speichern</Gated>
           <button className="btn" onClick={onClose}>Abbrechen</button>
         </div>
       </div>

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.86.0 – Etappe 86 (26.10.2026)
+
+### Hinzugefügt
+- **Gesperrte Schaltflächen sagen, was fehlt (E2E T-405, WCAG 3.3.2):** Neben einer gesperrten Schaltfläche steht „Noch nötig: …“ mit den fehlenden Angaben, in der Reihenfolge der Felder. Beispiel: „Noch nötig: Kennung mit mindestens 3 Zeichen, Name.“ Der Hinweis ist über `aria-describedby` mit der Schaltfläche verknüpft; Screenreader lesen ihn also mit vor. Sobald alles ausgefüllt ist, verschwindet er. Bisher blieb die Schaltfläche grau, ohne zu sagen, warum, und Mindestlängen (3 oder 5 Zeichen) waren nirgends genannt.
+- **Komponente `Gated`:** gesperrte Schaltfläche mit Hinweis, an 41 Stellen in 27 Dateien (Seiten und Dialoge). Beispiele: Benutzer, Projekte, Terminologie, Abkürzungen, FAQ, Textbausteine, Wissensnotizen, Fragen an alle Quellen, Releaseletter, Freigabe, Integrationen, Kapitelsteuerung. Der Kapitel-Assistent verknüpft seinen vorhandenen Hinweis mit „Weiter →“.
+- **E2E T-405:** Auf allen 77 Seiten braucht jede gesperrte Hauptschaltfläche einen verknüpften Hinweis. Ein Beispiel prüft Hinweis, Verknüpfung und Verschwinden; ein zweites prüft mehrere fehlende Angaben.
+- **Benutzerdokumentation:** Abschnitt „Gesperrte Schaltflächen“ in den Grundlagen.
+
+### Bewusst ohne Hinweis
+- Kleine Zeilenaktionen, deren Auswahlfeld direkt daneben steht (z. B. „Zuordnen“ je Domäne, „Generieren“ je Kapitel), dazu Blättern, Verschieben und Schaltflächen, die nur während einer laufenden Aktion gesperrt sind.
+
 ## 0.85.0 – Etappe 85 (26.10.2026)
 
 ### Hinzugefügt

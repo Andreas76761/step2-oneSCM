@@ -1,7 +1,7 @@
 // Textvarianten je Kapitel (ADR-105, S-05) und vier Prüferprofile (W-12)
 import { useState } from 'react';
 import { post } from '../api';
-import { Card, DownloadButton, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, DownloadButton, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 
 const TRAFFIC_CLS: Record<string, string> = { green: 'st-approved', yellow: 'sev-medium', red: 'sev-high' };
 const SEVERITY_CLS: Record<string, string> = { high: 'sev-high', medium: 'sev-medium', low: 'sev-low' };
@@ -109,7 +109,7 @@ export function ProfileReviewsPage() {
         </fieldset>
         <div className="form-row">
           <label className="inline"><input type="checkbox" checked={ai} onChange={(e) => setAi(e.target.checked)} /> Zusätzlich KI-Dienst je Profil (lokal)</label>
-          {canEdit && <button type="button" className="btn primary" disabled={!versionId || !chosen.length || busy} onClick={() => void run()}>Prüfung starten</button>}
+          {canEdit && <Gated type="button" className="btn primary" busy={busy} missing={[!versionId && 'Kapitel', !chosen.length && 'mindestens ein Profil']} onClick={() => void run()}>Prüfung starten</Gated>}
         </div>
       </Card>
       <ErrorBox error={r.error} />

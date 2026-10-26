@@ -1,6 +1,6 @@
 import { HourglassIcon, ImagePlusIcon, LockIcon, RotateCwIcon, SparklesIcon, XIcon, type LucideIcon } from 'lucide-react';
 import { BlockerIcon, Ico, RefIcon } from './icons';
-import { Suspense, createContext, lazy, useCallback, useContext, useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { Suspense, createContext, lazy, useCallback, useContext, useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { ApiError, download, get, mediaUrl, post } from '../api';
 
 // ---------- Referenzdaten & Benachrichtigungen ----------
@@ -273,6 +273,22 @@ const MarkdownView = lazy(preloadMarkdown);
 export function Md({ text }: { text: string }) {
   // bis der Renderer geladen ist: Text unformatiert, damit nichts springt oder fehlt
   return <Suspense fallback={<div className="md md-pending">{text}</div>}><MarkdownView text={text} /></Suspense>;
+}
+
+/**
+ * Schaltfläche, die gesperrt bleibt, solange Angaben fehlen – und sagt, welche (WCAG 3.3.2).
+ * `missing`: je fehlender Angabe ein kurzer Text, erfüllte Angaben als false; `busy` sperrt ohne Hinweis.
+ * Der Hinweis steht sichtbar neben der Schaltfläche und ist über aria-describedby mit ihr verknüpft.
+ */
+export function Gated({ missing, busy, children, ...rest }: { missing: (string | false | null | undefined)[]; busy?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  const id = useId();
+  const list = missing.filter((m): m is string => !!m);
+  return (
+    <>
+      <button {...rest} disabled={busy || list.length > 0} aria-describedby={list.length ? id : undefined}>{children}</button>
+      {list.length > 0 && <span id={id} className="gate-hint">Noch nötig: {list.join(', ')}.</span>}
+    </>
+  );
 }
 
 export const ErrorBox = ({ error }: { error: string | null }) => (error ? <div className="alert error" role="alert">{error}</div> : null);

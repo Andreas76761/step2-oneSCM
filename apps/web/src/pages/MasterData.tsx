@@ -4,7 +4,7 @@ import { Ico, RefIcon, WarnIcon } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, del, mediaUrl, patch, post, put } from '../api';
-import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 import { createRenditionFor } from '../images';
 
 function useCanEdit() {
@@ -111,7 +111,7 @@ export function AbbreviationsPage() {
             <label className="inline">Abkürzung <input value={form.abbreviation} onChange={(e) => setForm({ ...form, abbreviation: e.target.value })} /></label>
             <label className="inline">Bedeutung <input value={form.expansion} onChange={(e) => setForm({ ...form, expansion: e.target.value })} /></label>
             <label className="inline">Erläuterung <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-            <button className="btn primary" type="submit" disabled={!form.abbreviation.trim() || !form.expansion.trim()}>Hinzufügen</button>
+            <Gated className="btn primary" type="submit" missing={[!form.abbreviation.trim() && 'Abkürzung', !form.expansion.trim() && 'Langform']}>Hinzufügen</Gated>
           </form>
         </Card>
       )}
@@ -317,7 +317,7 @@ export function FaqPage() {
             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="draft">Entwurf</option><option value="published">veröffentlicht</option></select>
           </label>
           <div className="actions">
-            <button className="btn primary" disabled={form.question.trim().length < 3 || !form.answer.trim()} onClick={save}>Speichern</button>
+            <Gated className="btn primary" missing={[form.question.trim().length < 3 && 'Frage mit mindestens 3 Zeichen', !form.answer.trim() && 'Antwort']} onClick={save}>Speichern</Gated>
             <button className="btn" onClick={() => setForm(null)}>Abbrechen</button>
           </div>
         </Card>

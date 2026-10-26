@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { api, del, get, patch, post, qs } from '../api';
 import { RefIcon } from '../components/icons';
 import {
-  Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
+  Gated, Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
   activatable,
 } from '../components/ui';
 
@@ -377,7 +377,7 @@ function SemanticSearch({ chapters, onOpen }: { chapters: any[]; onOpen: (id: st
           <option value="">Alle Kapitel</option>
           {chapters.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
         </select>
-        <button className="btn primary" disabled={busy || !q.trim()}>{busy ? 'Suche …' : 'Suchen'}</button>
+        <Gated className="btn primary" busy={busy} missing={[!q.trim() && 'Suchbegriff']}>{busy ? 'Suche …' : 'Suchen'}</Gated>
       </form>
       <ErrorBox error={error} />
       {result && (
@@ -501,7 +501,7 @@ function Connections({ onSynced }: { onSynced: () => void }) {
             </label>
             <label className="block">Zugangsdaten aus Umgebungsvariable (optional)<input value={form.credentialEnv} placeholder={form.kind === 'confluence' ? 'CONFLUENCE_CREDENTIAL_HANDBUCH' : 'GIT_CREDENTIAL_HANDBUCH'} onChange={(e) => setForm({ ...form, credentialEnv: e.target.value })} /></label>
             <p className="small">Zugangsdaten werden nie gespeichert: Der Betrieb hinterlegt das Token als Umgebungsvariable {form.kind === 'confluence' ? 'CONFLUENCE_CREDENTIAL_… („E-Mail:API-Token“)' : 'GIT_CREDENTIAL_…'} des Servers.</p>
-            <div className="actions"><button className="btn primary" disabled={!form.name || !form.url || (form.kind === 'confluence' && !form.spaceKey)} onClick={() => void save()}>Anlegen und abgleichen</button></div>
+            <div className="actions"><Gated className="btn primary" missing={[!form.name && 'Name', !form.url && 'URL', form.kind === 'confluence' && !form.spaceKey && 'Bereichsschlüssel']} onClick={() => void save()}>Anlegen und abgleichen</Gated></div>
           </div>
         </Modal>
       )}

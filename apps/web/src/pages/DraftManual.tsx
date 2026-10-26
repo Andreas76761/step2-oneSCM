@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import type React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, download, patch, post, qs } from '../api';
-import { Card, Empty, ErrorBox, Md, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Md, Page, Status, errorText, useApp, useLoad } from '../components/ui';
 import { variantText } from './Outlines';
 
 type FlagType = 'duplicate' | 'contradiction' | 'gap' | 'warning';
@@ -79,7 +79,7 @@ function Candidates({ outline, nodes, canEdit, onAssigned }: { outline: any; nod
               {nodes.map((n) => <option key={n.id} value={n.id}>{n.level === 2 ? '  ' : ''}{n.number} {n.title}</option>)}
             </select>
           </label>
-          <button className="btn small primary" disabled={!target || !selected.length} onClick={assign}>{selected.length || ''} Zuordnen</button>
+          <Gated className="btn small primary" missing={[!target && 'Ziel', !selected.length && 'mindestens ein ausgewählter Schnipsel']} onClick={assign}>{selected.length || ''} Zuordnen</Gated>
         </div>
       )}
       <ErrorBox error={data.error} />

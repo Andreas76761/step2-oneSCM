@@ -3,7 +3,7 @@ import { BlockerIcon, Ico, OkMark } from '../components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
-import { Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad, Modal, activatable, statusLabel, useDocTitle } from '../components/ui';
+import { Gated, Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad, Modal, activatable, statusLabel, useDocTitle } from '../components/ui';
 import { DiagramStudio } from '../components/DiagramStudio';
 import { MarkedText, SentenceEditor, type Analysis } from './Style';
 import { SourceViewer } from './Sources';
@@ -751,7 +751,7 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
           <h3>Zur Freigabe einreichen</h3>
           <p className="small muted">Nach dem Einreichen ist die Version bis zur Entscheidung gesperrt (Freigabestufen des Projekts siehe Seite „Freigabe“).</p>
           <label className="block">Hinweis an die Freigabe (optional) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
-          <button className="btn primary" disabled={!gate.data?.passed} onClick={() => act('submit', { comment }, 'Zur Freigabe eingereicht.')}>Zur Freigabe einreichen</button>
+          <Gated className="btn primary" missing={[!gate.data?.passed && 'alle Prüfkriterien der Freigabe erfüllt (siehe oben)']} onClick={() => act('submit', { comment }, 'Zur Freigabe eingereicht.')}>Zur Freigabe einreichen</Gated>
         </>
       )}
       {version.workflow && (
@@ -776,8 +776,8 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
           <h3>Fachliche Entscheidung</h3>
           <label className="block">Kommentar (Pflicht) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
           <div className="row-actions">
-            <button className="btn primary" disabled={!gate.data?.passed || !comment.trim()} onClick={() => act('approve', { comment, decision: 'approved' }, version.workflow?.stages.length > 1 ? 'Zustimmung gespeichert.' : 'Kapitelversion freigegeben.')}>{version.workflow?.stages.length > 1 ? `Zustimmen (${version.workflow.stages[version.workflow.currentStage]?.name})` : 'Freigeben'}</button>
-            <button className="btn" disabled={!comment.trim()} onClick={() => act('approve', { comment, decision: 'rejected' }, 'Abgelehnt – Version ist wieder ein bearbeitbarer Entwurf.')}>Ablehnen</button>
+            <Gated className="btn primary" missing={[!gate.data?.passed && 'alle Prüfkriterien erfüllt', !comment.trim() && 'Kommentar']} onClick={() => act('approve', { comment, decision: 'approved' }, version.workflow?.stages.length > 1 ? 'Zustimmung gespeichert.' : 'Kapitelversion freigegeben.')}>{version.workflow?.stages.length > 1 ? `Zustimmen (${version.workflow.stages[version.workflow.currentStage]?.name})` : 'Freigeben'}</Gated>
+            <Gated className="btn" missing={[!comment.trim() && 'Kommentar']} onClick={() => act('approve', { comment, decision: 'rejected' }, 'Abgelehnt – Version ist wieder ein bearbeitbarer Entwurf.')}>Ablehnen</Gated>
             <button className="btn ghost" onClick={() => act('withdraw', { reason: comment }, 'Einreichung zurückgezogen.')}>Einreichung zurückziehen</button>
           </div>
         </>
@@ -807,7 +807,7 @@ function SaveTemplateButton({ versionId, title }: { versionId: string; title: st
           <label className="block">Name der Vorlage <input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></label>
           <label className="block">Beschreibung (optional) <input value={description} maxLength={300} onChange={(e) => setDescription(e.target.value)} placeholder="Wofür eignet sich die Vorlage?" /></label>
           <div className="row-actions">
-            <button className="btn primary" disabled={!name.trim()} onClick={async () => {
+            <Gated className="btn primary" missing={[!name.trim() && 'Name']} onClick={async () => {
               try {
                 await post('/chapter-templates', { name, description, fromVersionId: versionId });
                 notify(`Vorlage „${name}“ gespeichert – im Kapitel-Assistenten wählbar.`);
@@ -815,7 +815,7 @@ function SaveTemplateButton({ versionId, title }: { versionId: string; title: st
               } catch (e) {
                 notify(errorText(e), 'error');
               }
-            }}>Speichern</button>
+            }}>Speichern</Gated>
             <button className="btn" onClick={() => setOpen(false)}>Abbrechen</button>
           </div>
         </Modal>

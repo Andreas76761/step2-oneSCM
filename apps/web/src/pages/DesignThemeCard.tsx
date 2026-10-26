@@ -3,7 +3,7 @@ import { RotateCcwIcon, SaveIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api, del, put } from '../api';
 import { Ico, OkMark } from '../components/icons';
-import { Card, ErrorBox, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, ErrorBox, errorText, useApp, useLoad } from '../components/ui';
 import { contrast } from '../contrast';
 import { resetReadingStyle } from '../readingStyle';
 
@@ -95,7 +95,7 @@ export function DesignThemeCard() {
         </label>
       </div>
       <div className="actions">
-        <button className="btn primary" disabled={!valid} onClick={save}><Ico icon={SaveIcon} /> Anpassung speichern</button>
+        <Gated className="btn primary" missing={[!valid && 'Farben mit ausreichendem Kontrast']} onClick={save}><Ico icon={SaveIcon} /> Anpassung speichern</Gated>
         <button className="btn" onClick={() => setDraft({ ...tpl.defaultTheme })}>Standardwerte einsetzen</button>
         {tpl.customized && <button className="btn" onClick={reset}><Ico icon={RotateCcwIcon} /> Auf Standard zurücksetzen</button>}
       </div>

@@ -3142,5 +3142,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-405",
+    "title": "Gesperrte Schaltflächen sagen, was fehlt: jede gesperrte Hauptschaltfläche nennt die fehlenden Angaben und ist mit dem Hinweis verknüpft",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

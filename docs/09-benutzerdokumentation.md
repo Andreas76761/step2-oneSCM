@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.85 (26.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.86 (26.10.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -11,6 +11,7 @@ Stand: Version 0.85 (26.10.2026). oneSCM Handbook Studio erstellt aus vielen Que
 - **Menü nach Arbeitsablauf:** oneSCM_Metadaten · 1 Sammeln · 2 Schreiben · 3 Prüfen · 4 Veröffentlichen · Verwaltung.
 - **Navigation:** Jeder Eintrag hat ein Icon. Mit der Schaltfläche oben rechts neben dem Namen klappen Sie die Navigation auf die Icons ein; der Name erscheint dann beim Überfahren. Unter „Darstellung“ (unten links) wählen Sie hell, dunkel oder wie im System.
 - **Mit der Tastatur:** Der erste Druck auf die Tabulatortaste zeigt „Zum Inhalt springen“; mit der Eingabetaste überspringen Sie Kopf und Menü. Das gewählte Element ist immer umrandet. Nach einem Seitenwechsel steht der Fokus auf der Seitenüberschrift. Breite Tabellen erreichen Sie ebenfalls mit der Tabulatortaste und scrollen sie mit den Pfeiltasten. In einem Dialog steht der Fokus im ersten Feld; Esc schließt den Dialog und bringt Sie zur Schaltfläche zurück, mit der Sie ihn geöffnet haben. Esc schließt auch eine Glossar-Erklärung.
+- **Gesperrte Schaltflächen:** Ist eine Schaltfläche grau, steht daneben, was noch fehlt, z. B. „Noch nötig: Name.“ Screenreader lesen den Hinweis zusammen mit der Schaltfläche vor.
 - **Ohne Ziehen:** Im Screenshot-Editor ziehen Sie Rahmen, Pfeile und Bereiche entweder mit gedrückter Maustaste auf oder klicken nacheinander auf Anfangs- und Endpunkt. Zum Verschieben klicken Sie die Markierung an und dann die neue Stelle. Esc bricht ab.
 - **Mit Sprachsteuerung:** Sagen Sie, was auf dem Bildschirm steht, z. B. „Klicke auf Notiz speichern“. Jede Schaltfläche, jeder Link und jedes Feld trägt den sichtbaren Text auch im Namen für Sprachsteuerung und Screenreader.
 

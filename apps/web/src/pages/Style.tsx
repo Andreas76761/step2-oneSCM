@@ -5,7 +5,7 @@ import { Ico } from '../components/icons';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { api, currentProjectId, del, patch, post, put, qs } from '../api';
-import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export interface Fix { start: number; end: number; replacement: string; label: string }
 export interface Issue { rule: string; severity: 'warning' | 'info'; message: string; start: number; end: number; fix?: Fix }
@@ -217,7 +217,7 @@ function StyleEditor({ initial, onSave, saveLabel, canRewrite, chooseLanguage }:
         <textarea rows={8} value={text} onChange={(e) => { setText(e.target.value); setA(null); }} placeholder="Fließtext hier einfügen …" />
       </label>
       <div className="filters">
-        <button className="btn primary" disabled={!text.trim()} onClick={() => check()}>Prüfen</button>
+        <Gated className="btn primary" missing={[!text.trim() && 'Text']} onClick={() => check()}>Prüfen</Gated>
         <button className="btn" disabled={busy || !a?.fixable} onClick={autoFix}>Automatisch korrigieren{a?.fixable ? ` (${a.fixable})` : ''}</button>
         {canRewrite && lang === 'de' && <button className="btn" disabled={busy || !text.trim()} onClick={() => rewrite('professional')}>Professionell umformulieren</button>}
         {canRewrite && lang === 'de' && <button className="btn" disabled={busy || !text.trim()} onClick={() => rewrite('present')}>In Präsens umwandeln</button>}

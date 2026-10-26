@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, patch, post } from '../api';
-import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 const STATUS_CLS: Record<string, string> = { open: 'sev-medium', accepted: 'st-approved', rejected: 'sev-low', stale: 'sev-high' };
 const ORIGIN_DE: Record<string, string> = { word: 'Word-Prüfung', ai: 'KI-Lektorat' };
@@ -206,7 +206,7 @@ export function RevisionsPage() {
                       {versions.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
                     </select>
                   </label>
-                  <button type="button" className="btn primary" disabled={!versionId || busy} onClick={() => void lektorat()}>KI-Lektorat starten</button>
+                  <Gated type="button" className="btn primary" busy={busy} missing={[!versionId && 'Kapitel']} onClick={() => void lektorat()}>KI-Lektorat starten</Gated>
                 </div>
               </Card>
             </div>

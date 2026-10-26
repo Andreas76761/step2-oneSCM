@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { patch, post, qs } from '../api';
-import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 const TRAFFIC_CLS: Record<string, string> = { green: 'st-approved', yellow: 'sev-medium', red: 'sev-high' };
 const CLASS_CLS: Record<string, string> = { supported: 'st-approved', unsupported: 'sev-medium', contradiction: 'sev-high', missing: 'sev-low' };
@@ -233,7 +233,7 @@ export function LanguageErrorsPage() {
             <label className="block">Fehler <input value={form.error} onChange={(e) => setForm({ ...form, error: e.target.value })} /></label>
             <label className="block">Korrektur <input value={form.correction} onChange={(e) => setForm({ ...form, correction: e.target.value })} /></label>
             <label className="block">Kategorie <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{categories.map((c) => <option key={c} value={c}>{c}</option>)}</select></label>
-            <button type="button" className="btn primary" disabled={!form.location.trim() || !form.error.trim()} onClick={async () => {
+            <Gated type="button" className="btn primary" missing={[!form.location.trim() && 'Fundstelle', !form.error.trim() && 'Fehler']} onClick={async () => {
               try {
                 const r = await post<any>('/language-errors', form);
                 notify(`${r.nr} erfasst.`);
@@ -242,7 +242,7 @@ export function LanguageErrorsPage() {
               } catch (e) {
                 notify(errorText(e), 'error');
               }
-            }}>Erfassen</button>
+            }}>Erfassen</Gated>
           </Card>
           <Card title="FEHLERLISTE.csv einlesen">
             <p className="small muted">Einträge mit bekannter Nr. übernehmen Status, Korrektur und Begründung („abgelehnt (Begründung)“); neue Nr. werden angelegt. Erst prüfen, dann übernehmen.</p>

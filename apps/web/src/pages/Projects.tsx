@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { currentProjectId, del, patch, post, put, setCurrentProjectId } from '../api';
-import { Card, Empty, ErrorBox, Page, errorText, permLabel, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Page, errorText, permLabel, useApp, useLoad } from '../components/ui';
 
 const PERMS = ['read', 'edit', 'decide', 'approve', 'admin'];
 
@@ -77,9 +77,9 @@ export function ProjectsPage({ onChanged }: { onChanged: () => void }) {
                 <option value="open">offen (alle angemeldeten Benutzer)</option>
               </select>
             </label>
-            <button className="btn primary" disabled={!form.name.trim()} onClick={async () => {
+            <Gated className="btn primary" missing={[!form.name.trim() && 'Name']} onClick={async () => {
               if (await run(() => post('/projects', form), `Projekt „${form.name}“ angelegt.`)) setForm({ name: '', description: '', visibility: 'restricted' });
-            }}>Anlegen</button>
+            }}>Anlegen</Gated>
         </Card>
       )}
       {membersOf && isAdmin && <Members projectId={membersOf} name={projects.data?.find((p) => p.id === membersOf)?.name ?? ''} />}

@@ -5,7 +5,7 @@ import { Ico, RefIcon } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { currentProjectId, del, download, patch, post } from '../api';
-import { Card, Empty, ErrorBox, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export const SCOPE_LABEL: Record<string, string> = { blueprint: 'Blueprint', markets: 'Märkte' };
 const STATUS_LABEL: Record<string, string> = { draft: 'Entwurf', active: 'aktiv', archived: 'archiviert' };
@@ -101,7 +101,7 @@ function CreateOutline({ markets, onDone, onClose }: { markets: string[]; onDone
       </fieldset>
       <ErrorBox error={error} />
       <div className="actions">
-        <button className="btn primary" disabled={!form.name.trim() && start !== 'upload'} onClick={create}>Anlegen</button>
+        <Gated className="btn primary" missing={[!form.name.trim() && start !== 'upload' && 'Name']} onClick={create}>Anlegen</Gated>
         <button className="btn" onClick={onClose}>Abbrechen</button>
       </div>
     </Modal>
@@ -282,7 +282,7 @@ export function OutlinesPage() {
             {canEdit && (
               <form className="filters" onSubmit={(e) => (e.preventDefault(), newTitle.trim() && run(() => post(`/outlines/${o.id}/nodes`, { title: newTitle }), 'Kapitel hinzugefügt.').then(() => setNewTitle('')))}>
                 <label className="inline">Neues Kapitel <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Titel" /></label>
-                <button className="btn small primary" type="submit" disabled={!newTitle.trim()}>Hinzufügen</button>
+                <Gated className="btn small primary" type="submit" missing={[!newTitle.trim() && 'Titel']}>Hinzufügen</Gated>
               </form>
             )}
           </Card>

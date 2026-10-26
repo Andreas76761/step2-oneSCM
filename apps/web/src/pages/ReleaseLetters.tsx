@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { del, patch, post, put, qs } from '../api';
-import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 // Release-Abgleich und Releaseletter aus Jira-Tickets (ADR-083, F-02, F-03)
 
@@ -107,13 +107,13 @@ export function TicketReleasesPage() {
         <label className="block">Ticketnummern (eine je Zeile oder durch Komma getrennt)
           <textarea id="rl-keys" rows={4} value={keys} onChange={(e) => setKeys(e.target.value)} />
         </label>
-        <button className="btn primary" disabled={!keys.trim()} onClick={async () => {
+        <Gated className="btn primary" missing={[!keys.trim() && 'Ticketnummern']} onClick={async () => {
           try {
             setMatch(await post('/ticket-releases/match', { keys }));
           } catch (e) {
             notify(errorText(e), 'error');
           }
-        }}>Abgleichen</button>
+        }}>Abgleichen</Gated>
         {match && (
           <p className="small" role="status">
             {match.loaded.length} von {match.total} Tickets sind eingelesen.{match.missing.length ? <> Es fehlen: <strong>{match.missing.join(', ')}</strong> – diese Tickets im Jira-Export ergänzen.</> : ' Alle Tickets der Liste liegen vor.'}
@@ -250,7 +250,7 @@ export function ReleaseLettersPage() {
               <label>Markt <input value={form.country} maxLength={2} size={3} onChange={(e) => set('country', e.target.value.toUpperCase())} /></label>
               <label>Sparte <select value={form.division} onChange={(e) => set('division', e.target.value)}>{DIVISIONS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select></label>
             </div>
-            <button className="btn primary" disabled={!form.release && !form.keys.trim()} onClick={() => create('/release-letters', { ...form, release: form.release || undefined, keys: form.release ? undefined : form.keys }, 'Releaseletter erzeugt.')}>Erzeugen</button>
+            <Gated className="btn primary" missing={[!form.release && !form.keys.trim() && 'Release oder Ticketnummern']} onClick={() => create('/release-letters', { ...form, release: form.release || undefined, keys: form.release ? undefined : form.keys }, 'Releaseletter erzeugt.')}>Erzeugen</Gated>
             <p className="small muted">Nur Fakten aus den Tickets: Datum aus „Erstellt“, „PI TBD“ ohne Version, verknüpfte Tickets sind kein Inhalt, Status wörtlich, ein Test bleibt ein Testfall, Verfasser „oneSCM Team“. Stornierte Tickets entfallen.</p>
           </Card>
           <Card title="Aus Projektvergleich erzeugen">
