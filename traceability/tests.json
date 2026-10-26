@@ -3088,5 +3088,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-399",
+    "title": "WEEKLY_DIGEST=0 plant keine automatische Wochenübersicht ein; ohne die Einstellung bleibt sie eingeplant",
+    "file": "apps/server/test/stage80.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-51"
+    ]
   }
 ]

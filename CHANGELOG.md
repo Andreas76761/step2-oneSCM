@@ -3,10 +3,12 @@
 ## 0.80.0 – Etappe 80 (26.10.2026)
 
 ### Hinzugefügt
+- **Einstellung `WEEKLY_DIGEST`:** `0` schaltet die automatische Wochenübersicht ab, z. B. für Test- und Schulungsinstanzen.
 - **Kontrast von Eingabefeldern und Fokusrahmen geprüft (E2E T-398, WCAG 1.4.11):** Auf allen 77 Seiten, hell und dunkel, braucht jedes Eingabefeld, jede Auswahlliste und jedes Textfeld einen Rand mit mindestens 3:1 Kontrast. Dieser Rand kann ein Rahmen oder die Feldfläche sein. Auch der Fokusrahmen muss mindestens 3:1 zum Hintergrund erreichen, in Seitenleiste und Inhaltsbereich. Schaltflächen erkennt man an ihrer Beschriftung; für sie gilt die Regel nicht.
 - **Farbwert `--field-border`** für Feldrahmen: hell `#7d8798` (mindestens 3,2:1), dunkel `#6b7894` (mindestens 3,5:1).
 
 ### Behoben
+- **E2E T-212 montags instabil:** Die Wochenübersicht ist standardmäßig auf Montag eingestellt. Der Hintergrundauftrag verschickt sie zwei Minuten nach dem Serverstart, in der CI also ungefähr während T-212. Je nach Zeitpunkt zählte „Aufgaben & Hinweise“ deshalb 3 statt 2 ungelesene Hinweise, auf Node 20 in der CI für Etappe 79. Die automatische Wochenübersicht lässt sich jetzt mit `WEEKLY_DIGEST=0` abschalten, „Jetzt senden“ bleibt möglich. Die E2E-Tests nutzen diese Einstellung. Die Wochenübersicht prüft T-231 weiterhin über „Jetzt senden“.
 - **Feldrahmen kaum sichtbar:** Eingabefelder nutzten die Farbe der Kartenränder und erreichten nur 1,2 bis 1,9:1. Sie nutzen jetzt `--field-border`. Das Suchfeld in der Seitenleiste erreicht jetzt mindestens 5:1.
 - **Fokusrahmen in der Seitenleiste:** Die Hauptfarbe auf dem dunklen Blau der Seitenleiste erreichte nur 2,98:1. Der Fokusrahmen ist dort jetzt weiß.
 - **Bernsteinfarbener Fokusrahmen:** Drei Stellen nutzten die nicht vorhandene Variable `--focus` und damit Bernstein mit 2,05:1 auf Weiß. Betroffen waren Schaltflächen im Linkstil (u. a. Kapitelbewertung), „Entfernen“ in den Chunks und die Gliederungsliste in „Kapitel ↔ Quellen“. Sie nutzen jetzt die Hauptfarbe.

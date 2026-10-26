@@ -78,6 +78,7 @@ Alle Einstellungen sind Umgebungsvariablen; die vollständige Liste steht im REA
 | `LANGUAGETOOL_URL` | – | lokale Grammatikprüfung mit LanguageTool (ADR-108), z. B. `http://localhost:8081`; nur lokale bzw. interne Adressen – Start und Einrichtung siehe `tools/languagetool/README.md` |
 | `LANGUAGETOOL_TIMEOUT_MS` | 8000 | Zeitlimit je Prüfanfrage an LanguageTool |
 | `PDF_BROWSER_PATH` | – | PDF im Design (ADR-113): Pfad zu einem lokal installierten Chromium, Chrome oder Edge, z. B. `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe` oder `/usr/bin/chromium` |
+| `WEEKLY_DIGEST` | `1` | `0` = keine automatische Wochenübersicht (ADR-064), z. B. für Test- und Schulungsinstanzen; „Jetzt senden“ unter „Rückmeldungen“ bleibt möglich |
 | `PDF_BROWSER_TIMEOUT_MS` | 60000 | Zeitlimit je PDF |
 | `PDF_BROWSER_NO_SANDBOX` | aus | `1` startet den Browser ohne Sandbox – nur in Containern, in denen er als root läuft |
 | `OCR_CMD` | – | lokale Texterkennung gescannter PDF-Seiten, z. B. Tesseract |

@@ -179,7 +179,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     await ensureDailyJob(ctx);
     await ensureEscalationJob(ctx);
     await ensurePlanReminderJob(ctx);
-    await ensureDigestJob(ctx);
+    // WEEKLY_DIGEST=0: keine automatische Wochenübersicht (z. B. Test-Instanzen); „Jetzt senden“ bleibt möglich
+    if (process.env.WEEKLY_DIGEST !== '0') await ensureDigestJob(ctx);
     await jobs.start();
   }
 

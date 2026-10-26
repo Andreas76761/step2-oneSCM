@@ -247,6 +247,7 @@ Jeder Test trägt eine ID (`[T-xxx]`), die in [`traceability/tests.json`](tracea
 | `OIDC_PERMISSION_MAP` | Standardgruppen | JSON: `{"gruppe": ["read","edit"]}` |
 | `OIDC_JWKS_URI` / `OIDC_JWKS` | Discovery | abweichende JWKS-URL bzw. Inline-JWKS |
 | `JOB_WORKER` | `1` | `0` = Instanz ohne Hintergrund-Worker (nur API) |
+| `WEEKLY_DIGEST` | `1` | `0` = keine automatische Wochenübersicht (ADR-064), z. B. für Test-Instanzen; „Jetzt senden“ unter Rückmeldungen bleibt möglich |
 | `JOB_LEASE_MS` | 600000 | nach dieser Zeit gelten laufende Jobs abgestürzter Instanzen als verwaist und werden wiederholt |
 | `UPLOAD_MAX_BYTES` | 50 MB | maximale Uploadgröße |
 | `ZIP_MAX_FILES` | 5000 | maximale Dateien je ZIP |
