@@ -3097,5 +3097,14 @@
     "requirements": [
       "NFR-51"
     ]
+  },
+  {
+    "id": "T-400",
+    "title": "Statusmeldungen für Screenreader: Live-Regionen von Anfang an vorhanden, gleiche Meldung erneut angesagt, Fehler als Alarm",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

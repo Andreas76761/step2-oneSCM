@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.81.0 – Etappe 81 (26.10.2026)
+
+### Hinzugefügt
+- **Statusmeldungen für Screenreader geprüft (E2E T-400, WCAG 4.1.3):**
+  - Beide Live-Regionen sind beim Laden der Seite vorhanden und leer.
+  - Eine Bestätigung erscheint in der Statusregion.
+  - Dieselbe Bestätigung ein zweites Mal wird als neuer Knoten eingefügt und dadurch erneut angesagt.
+  - Ein Fehler erscheint in der Alarmregion.
+
+### Geändert
+- **Meldungen der App (Toasts):**
+  - Bestätigungen stehen in einer Statusregion (`role="status"`, höflich), Fehler in einer Alarmregion (`role="alert"`, sofort).
+  - Beide Regionen gibt es von Anfang an. Bisher entstand die Region erst mit der Meldung, und viele Screenreader (NVDA, JAWS, VoiceOver) sagen sie dann nicht an.
+  - Fehler kamen bisher nur als höfliche Statusmeldung.
+  - Das Aussehen bleibt gleich.
+
 ## 0.80.0 – Etappe 80 (26.10.2026)
 
 ### Hinzugefügt

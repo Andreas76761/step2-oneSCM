@@ -240,7 +240,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   const [ref, setRef] = useState<Reference | null>(null);
   const [me, setMe] = useState<{ id: string; name: string; permissions: string[] } | null>(null);
   const [userId, setUser] = useState(currentUserId());
-  const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'error' } | null>(null);
+  const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'error'; id: number } | null>(null);
+  const toastSeq = useRef(0);
   const [projects, setProjects] = useState<{ id: string; name: string; archivedAt: string | null }[]>([]);
   const projectId = currentProjectId();
   const [navOpen, setNavOpen] = useState(false);
@@ -410,7 +411,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   };
 
   return (
-    <AppCtx.Provider value={{ ref, reloadRef, notify: (msg, kind = 'ok') => setToast({ msg, kind }), userId, setUserId }}>
+    <AppCtx.Provider value={{ ref, reloadRef, notify: (msg, kind = 'ok') => setToast({ msg, kind, id: ++toastSeq.current }), userId, setUserId }}>
       <a className="skip-link" href="#main">Zum Inhalt springen</a>
       <div className={`shell${collapsed ? " nav-collapsed" : ""}`}>
         <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
@@ -603,11 +604,14 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
           </Suspense>
         </main>
         {tourOpen && <Tour onClose={() => setTourOpen(false)} />}
-        {toast && (
-          <div className={`toast ${toast.kind}`} role="status" aria-live="polite">
-            {toast.msg}
-          </div>
-        )}
+        {/* Ansage für Screenreader (WCAG 4.1.3): Die Live-Regionen sind immer vorhanden, sonst bleibt eine neu eingefügte Meldung oft
+            stumm. Jede Meldung ist ein neuer Knoten, damit auch dieselbe Meldung ein zweites Mal angesagt wird; Fehler sofort (alert). */}
+        <div role="status" aria-live="polite" aria-atomic="true" data-live="status">
+          {toast?.kind === 'ok' && <div key={toast.id} className="toast ok">{toast.msg}</div>}
+        </div>
+        <div role="alert" aria-atomic="true" data-live="alert">
+          {toast?.kind === 'error' && <div key={toast.id} className="toast error">{toast.msg}</div>}
+        </div>
       </div>
     </AppCtx.Provider>
   );

@@ -3872,3 +3872,36 @@ test('[T-398] Kontrast von Eingabefeldern und Fokusrahmen: mindestens 3:1 auf al
   }
   expect([...findings]).toEqual([]);
 });
+
+test('[T-400] Statusmeldungen für Screenreader: Live-Regionen von Anfang an vorhanden, jede Meldung neu angesagt, Fehler als Alarm (WCAG 4.1.3)', async ({ page }) => {
+  await page.goto('/einstellungen');
+  const status = page.locator('[data-live="status"]');
+  const alarm = page.locator('[data-live="alert"]');
+  // vor der ersten Meldung: beide Regionen vorhanden und leer (sonst sagen viele Screenreader die erste Meldung nicht an)
+  await expect(status).toHaveAttribute('role', 'status');
+  await expect(status).toHaveAttribute('aria-live', 'polite');
+  await expect(alarm).toHaveAttribute('role', 'alert');
+  await expect(status).toHaveText('');
+  await expect(alarm).toHaveText('');
+  await page.evaluate(() => {
+    (window as any).__liveAdds = 0;
+    new MutationObserver((m) => { (window as any).__liveAdds += m.reduce((n, r) => n + r.addedNodes.length, 0); })
+      .observe(document.querySelector('[data-live="status"]')!, { childList: true, subtree: true });
+  });
+  const save = page.getByRole('button', { name: 'Speichern', exact: true });
+  await save.click();
+  await expect(status).toHaveText('Einstellungen gespeichert.');
+  await expect.poll(() => page.evaluate(() => (window as any).__liveAdds)).toBe(1);
+  // dieselbe Meldung noch einmal: neuer Knoten, also erneute Ansage
+  await save.click();
+  await expect.poll(() => page.evaluate(() => (window as any).__liveAdds)).toBe(2);
+  await expect(status).toHaveText('Einstellungen gespeichert.');
+  // Fehler: im Alarm-Bereich, nicht als höfliche Statusmeldung
+  await page.route('**/api/v1/settings', (route) => (route.request().method() === 'PUT'
+    ? route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({ error: 'E2E', message: 'E2E-Testfehler beim Speichern' }) })
+    : route.continue()));
+  await save.click();
+  await expect(alarm).not.toHaveText('');
+  await expect(status).toHaveText('');
+  await page.unroute('**/api/v1/settings');
+});

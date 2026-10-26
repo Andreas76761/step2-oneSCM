@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.83 Stand nach Etappe 81 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Statusmeldungen (NFR-03, WCAG 4.1.3): Bestätigungen in einer höflichen Live-Region, Fehler als Alarm; beide Regionen sind ab dem Laden der Seite vorhanden, jede Meldung wird als neuer Knoten eingefügt und dadurch auch bei gleichem Text erneut angesagt | ✅ T-400 |
+| Behoben | Die Meldung erschien bisher zusammen mit ihrer Live-Region – viele Screenreader sagen sie dann nicht an; Fehler kamen nur als höfliche Statusmeldung |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
 ## 1.82 Stand nach Etappe 80 (26.10.2026)
 
 | Punkt | Ergebnis |
