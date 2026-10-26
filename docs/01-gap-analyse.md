@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.87 Stand nach Etappe 85 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Ziehbewegungen (NFR-03, WCAG 2.5.7): Rahmen, Pfeil, Unkenntlich machen, Lupe, Zuschneiden und Verschieben im Screenshot-Editor auch mit zwei einzelnen Klicks; Esc bricht ab; Hinweis in einer Live-Region | ✅ T-404 |
+| Geprüft, schon vorhanden | Gliederung (Pfeil-Schaltflächen statt Drag & Drop), Draft Manual (Auswahl und „Zuordnen“), Schwärzen im Bildarchiv (Felder in Prozent), Vorher/Nachher (Schieberegler per Tastatur) |
+| Offen | Deaktivierte Schaltflächen erklären nicht, welches Pflichtfeld fehlt (61 Stellen, WCAG 3.3.2) – Vorschlag für die nächste Etappe |
+
 ## 1.86 Stand nach Etappe 84 (26.10.2026)
 
 | Punkt | Ergebnis |

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.85.0 – Etappe 85 (26.10.2026)
+
+### Hinzugefügt
+- **Screenshot-Editor ohne Ziehbewegung (E2E T-404, WCAG 2.5.7):** Rahmen, Pfeil, Unkenntlich machen, Lupe und Zuschneiden gelingen auch mit zwei einzelnen Klicks: erst der Anfangspunkt, dann der Endpunkt. Zum Verschieben klicken Sie eine Markierung an und dann die neue Stelle. Bis zum zweiten Klick zeigt eine Vorschau das Ergebnis. Ein Hinweis in einer Live-Region sagt, was als Nächstes kommt. Esc oder ein Werkzeugwechsel bricht ab. Ziehen mit gedrückter Maustaste funktioniert weiter wie bisher. Wichtig ist das für Menschen, die eine Maustaste nicht gedrückt halten können, etwa mit Kopfmaus, Augensteuerung oder Tremor.
+- **Benutzerdokumentation:** Abschnitt „Ohne Ziehen“ in den Grundlagen.
+
+### Geprüft
+- Andere Ziehbewegungen der App haben schon eine Alternative:
+  - Gliederung: Pfeil-Schaltflächen und „zum Kapitel machen“.
+  - Draft Manual: Auswahl und „Zuordnen“.
+  - Schwärzen im Bildarchiv: Felder in Prozent.
+  - Vorher/Nachher: Schieberegler, auch per Tastatur.
+- Offen für eine nächste Etappe: 61 Schaltflächen bleiben gesperrt, bis Pflichtfelder gefüllt sind, ohne zu sagen, welche (WCAG 3.3.2).
+
 ## 0.84.0 – Etappe 84 (26.10.2026)
 
 ### Hinzugefügt

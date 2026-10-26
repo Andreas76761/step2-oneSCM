@@ -3133,5 +3133,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-404",
+    "title": "Screenshot-Editor ohne Ziehen: Rahmen, Pfeil, Unkenntlich, Lupe, Zuschneiden und Verschieben mit zwei Klicks; Esc bricht ab",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

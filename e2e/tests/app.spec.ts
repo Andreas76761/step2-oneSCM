@@ -4051,3 +4051,48 @@ test('[T-403] Dialoge und Erklärungen per Tastatur: Fokus im Dialog, Tippen ohn
   await page.keyboard.press('Escape');
   await expect(tip).toHaveCount(0);
 });
+
+test('[T-404] Screenshot-Editor ohne Ziehen: Rahmen, Pfeil, Unkenntlich, Lupe, Zuschneiden und Verschieben mit zwei Klicks; Esc bricht ab (WCAG 2.5.7)', async ({ page }) => {
+  await page.goto('/bilder');
+  await page.getByRole('tab', { name: 'Screenshot markieren' }).click();
+  await page.getByTestId('screenshot-input').setInputFiles({ name: 'klicks.png', mimeType: 'image/png', buffer: png(400, 200, [240, 240, 240]) });
+  const canvas = page.getByTestId('screenshot-canvas');
+  await expect(canvas).toBeVisible();
+  const hint = page.getByTestId('two-click-hint');
+  // nur Klicks an zwei Stellen, ohne Bewegung bei gedrückter Taste
+  const twoClicks = async (x1: number, y1: number, x2: number, y2: number) => {
+    await canvas.click({ position: { x: x1, y: y1 } });
+    await expect(hint).toHaveText('Anfangspunkt gesetzt – klicken Sie jetzt auf den Endpunkt. Esc bricht ab.');
+    await canvas.click({ position: { x: x2, y: y2 } });
+    await expect(hint).toHaveText('');
+  };
+  await page.getByRole('button', { name: '▭ Rahmen ziehen' }).click();
+  await twoClicks(20, 20, 120, 80);
+  await page.getByRole('button', { name: 'Pfeil ziehen' }).click();
+  await twoClicks(150, 20, 250, 80);
+  // Esc verwirft den Anfangspunkt: der nächste Klick beginnt neu
+  await canvas.click({ position: { x: 300, y: 30 } });
+  await page.keyboard.press('Escape');
+  await expect(hint).toHaveText('');
+  await canvas.click({ position: { x: 320, y: 60 } });
+  await expect(hint).not.toHaveText('');
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: '▦ Unkenntlich machen' }).click();
+  await twoClicks(20, 110, 100, 160);
+  await page.getByRole('button', { name: 'Lupe' }).click();
+  await twoClicks(130, 120, 160, 140);
+  await expect(canvas).toHaveAttribute('aria-label', 'Screenshot mit 0 Nummern und 1 Rahmen, 1 Pfeilen, 1 unkenntlichen Bereichen, 1 Lupen');
+  // Verschieben: Nummer anklicken, dann die neue Stelle
+  await page.getByRole('button', { name: '① Nummer setzen' }).click();
+  await canvas.click({ position: { x: 200, y: 100 } });
+  const x = page.getByLabel('Nummer 1 X in Prozent');
+  await expect(x).toHaveValue('50');
+  await page.getByRole('button', { name: 'Verschieben' }).click();
+  await canvas.click({ position: { x: 200, y: 100 } });
+  await expect(hint).toHaveText('Markierung angefasst – klicken Sie jetzt auf die neue Stelle. Esc bricht ab.');
+  await canvas.click({ position: { x: 300, y: 100 } });
+  await expect(x).toHaveValue('75');
+  await page.getByRole('button', { name: 'Zuschneiden' }).click();
+  await twoClicks(10, 10, 390, 190);
+  await expect(canvas).toHaveAttribute('aria-label', /, zugeschnitten$/);
+});
