@@ -429,7 +429,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
               {!projects.some((p) => p.id === projectId) && <option value={projectId}>{projectId}</option>}
             </select>
           </div>
-          <form role="search" className="nav-search" onSubmit={(e) => { e.preventDefault(); if (search.trim().length >= 2) navigate(`/suche?q=${encodeURIComponent(search.trim())}`); }}>
+          <form role="search" aria-label="Suche im Projekt" className="nav-search" onSubmit={(e) => { e.preventDefault(); if (search.trim().length >= 2) navigate(`/suche?q=${encodeURIComponent(search.trim())}`); }}>
             <label htmlFor="global-search" className="sr-only">Suche im Projekt</label>
             <input id="global-search" ref={searchRef} type="search" placeholder="Suchen … ( / )" value={search} onChange={(e) => setSearch(e.target.value)} />
           </form>

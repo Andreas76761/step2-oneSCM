@@ -4128,3 +4128,28 @@ test('[T-405] Gesperrte Schaltflächen sagen, was fehlt: jede gesperrte Hauptsch
   await page.getByLabel('Kennung').fill('u-e2e-hinweis');
   await expect(user).toHaveAccessibleDescription('Noch nötig: Name.');
 });
+
+test('[T-406] Gliederung jeder Seite: genau eine Überschrift erster Ebene am Anfang, keine übersprungenen Ebenen, aller Inhalt in Bereichen, Bereiche eindeutig benannt (WCAG 1.3.1, 2.4.6)', async ({ page }) => {
+  test.setTimeout(240_000);
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const findings: string[] = [];
+  for (const r of ALL_PAGES) {
+    await page.goto(r);
+    await page.waitForLoadState('networkidle');
+    // axe führt diese Regeln unter „best-practice“; die WCAG-Prüfungen T-392/T-393 schließen sie nicht ein
+    const res = await new AxeBuilder({ page }).withRules(['heading-order', 'page-has-heading-one', 'empty-heading', 'region', 'landmark-one-main', 'landmark-unique',
+      'landmark-no-duplicate-main', 'landmark-main-is-top-level', 'landmark-complementary-is-top-level']).analyze();
+    for (const v of res.violations) findings.push(`${r}: ${v.id} – ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`);
+    const own = await page.evaluate(() => {
+      const vis = (e: Element) => e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden';
+      const h1 = [...document.querySelectorAll('h1')].filter(vis);
+      const first = [...document.querySelectorAll('main :is(h1, h2, h3, h4, h5, h6)')].find(vis);
+      const out: string[] = [];
+      if (h1.length !== 1) out.push(`${h1.length} Überschriften erster Ebene`);
+      if (first && first.tagName !== 'H1') out.push(`erste Überschrift im Inhalt ist ${first.tagName}`);
+      return out;
+    });
+    for (const f of own) findings.push(`${r}: ${f}`);
+  }
+  expect(findings).toEqual([]);
+});

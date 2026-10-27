@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.87.0 – Etappe 87 (27.10.2026)
+
+### Hinzugefügt
+- **Gliederung jeder Seite geprüft (E2E T-406, WCAG 1.3.1, 2.4.6):** Auf allen 77 Seiten gelten jetzt diese Regeln:
+  - genau eine Überschrift erster Ebene, am Anfang des Inhalts;
+  - keine übersprungenen Ebenen und keine leeren Überschriften;
+  - aller Inhalt liegt in Bereichen (Kopf, Navigation, Inhalt);
+  - gleichartige Bereiche haben eindeutige Namen.
+- Screenreader springen damit gezielt von Überschrift zu Überschrift oder von Bereich zu Bereich. axe führt diese Regeln unter „best-practice“; die WCAG-Prüfungen T-392 und T-393 schlossen sie bisher nicht ein.
+
+### Behoben
+- **Kapitelwerkstatt:** Das Inhaltsverzeichnis mit seiner Überschrift der zweiten Ebene stand vor der Seitenüberschrift. Der Seitenkopf mit Titel und Aktionen steht jetzt über Inhaltsverzeichnis, Kapitel und Seitenleiste. Die Reihenfolge beim Tabben ist Kopf, Inhaltsverzeichnis, Kapitel.
+- **Leseransicht:** Die Suche der App und die Suche im Handbuch waren zwei Suchbereiche ohne Namen. Sie heißen jetzt „Suche im Projekt“ und „Im Handbuch suchen“ (in der jeweiligen Sprache der Leseransicht).
+
 ## 0.86.0 – Etappe 86 (26.10.2026)
 
 ### Hinzugefügt

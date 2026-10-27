@@ -79,7 +79,29 @@ export function WorkshopPage() {
     }
   };
 
+  // Seitenkopf vor dem Raster: Die Seite beginnt mit der Überschrift der ersten Ebene, danach Inhaltsverzeichnis und Kapitel
   return (
+    <>
+    <header className="page-head">
+      <div>
+        <h1>Kapitelwerkstatt</h1>
+        <p className="muted">{chapter?.title ?? 'Kapitel wählen'}</p>
+      </div>
+      <div className="actions">
+        {chapter && chapter.versions.length > 0 && (
+          <select aria-label="Version" value={versionId ?? ''} onChange={(e) => setVersionId(e.target.value)}>
+            {chapter.versions.map((x: any) => <option key={x.id} value={x.id}>Version {x.versionNo} ({statusLabel(x.status)})</option>)}
+          </select>
+        )}
+        {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}
+        {v && <Link className="btn" to={`/anleitungs-check/${v.id}`}><ListChecksIcon className="btn-icon" aria-hidden="true" size={16} />Anleitungs-Check</Link>}
+        {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}><SpellCheckIcon className="btn-icon" aria-hidden="true" size={16} />Stil anzeigen</button>}
+        {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}><WandSparklesIcon className="btn-icon" aria-hidden="true" size={16} />Stil korrigieren</button>}
+        {v && me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin') && <SaveTemplateButton versionId={v.id} title={v.title} />}
+        {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}><SparklesIcon className="btn-icon" aria-hidden="true" size={16} />Kapitel umformulieren</button>}
+        {chapter && <button className="btn primary" onClick={regenerate}>{chapter.versions.length ? 'Neu generieren' : 'Generieren'}</button>}
+      </div>
+    </header>
     <div className="workshop">
       <aside className="ws-left" aria-label="Inhaltsverzeichnis">
         <h2>Inhaltsverzeichnis</h2>
@@ -108,26 +130,6 @@ export function WorkshopPage() {
       </aside>
 
       <section className="ws-main">
-        <header className="page-head">
-          <div>
-            <h1>Kapitelwerkstatt</h1>
-            <p className="muted">{chapter?.title ?? 'Kapitel wählen'}</p>
-          </div>
-          <div className="actions">
-            {chapter && chapter.versions.length > 0 && (
-              <select aria-label="Version" value={versionId ?? ''} onChange={(e) => setVersionId(e.target.value)}>
-                {chapter.versions.map((x: any) => <option key={x.id} value={x.id}>Version {x.versionNo} ({statusLabel(x.status)})</option>)}
-              </select>
-            )}
-            {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}
-            {v && <Link className="btn" to={`/anleitungs-check/${v.id}`}><ListChecksIcon className="btn-icon" aria-hidden="true" size={16} />Anleitungs-Check</Link>}
-            {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}><SpellCheckIcon className="btn-icon" aria-hidden="true" size={16} />Stil anzeigen</button>}
-            {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}><WandSparklesIcon className="btn-icon" aria-hidden="true" size={16} />Stil korrigieren</button>}
-            {v && me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin') && <SaveTemplateButton versionId={v.id} title={v.title} />}
-            {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}><SparklesIcon className="btn-icon" aria-hidden="true" size={16} />Kapitel umformulieren</button>}
-            {chapter && <button className="btn primary" onClick={regenerate}>{chapter.versions.length ? 'Neu generieren' : 'Generieren'}</button>}
-          </div>
-        </header>
         <ErrorBox error={version.error} />
         {chapterId && <InstructionBanner chapterId={chapterId} />}
         {chapterId && <PipelineBanner chapterId={chapterId} />}
@@ -179,6 +181,7 @@ export function WorkshopPage() {
         {tab === 'approval' && v && <ApprovalPanel version={v} onApproved={refresh} />}
       </aside>
     </div>
+    </>
   );
 }
 

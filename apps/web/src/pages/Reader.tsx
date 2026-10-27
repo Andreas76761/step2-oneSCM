@@ -623,8 +623,8 @@ export function ReaderPage() {
               </select>
             </label>
           )}
-          <div role="search" className="reader-search">
-            <label className="reader-search-label" htmlFor="reader-q">{t('search')}</label>
+          <div role="search" className="reader-search" aria-labelledby="reader-q-label">
+            <label className="reader-search-label" htmlFor="reader-q" id="reader-q-label">{t('search')}</label>
             <div className="reader-search-row">
               <input id="reader-q" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('searchPlaceholder')}
                 aria-describedby="reader-q-status" autoComplete="off" />

@@ -3151,5 +3151,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-406",
+    "title": "Gliederung jeder Seite: genau eine Überschrift erster Ebene am Anfang, keine übersprungenen Ebenen, aller Inhalt in Bereichen, Bereiche eindeutig benannt",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]
