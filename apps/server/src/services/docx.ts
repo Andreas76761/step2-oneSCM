@@ -91,9 +91,14 @@ function blocks(tokens: Token[], c: Ctx, indent = 0): (Paragraph | Table)[] {
         const level = Math.min(Math.round(indent / 360), 3);
         // eigene Zählung je Liste (Word-Instanz); Fortsetzung ab n > 1 behält die vorige
         let instance: number | undefined;
+        // „last“ merkt sich nur Listen der obersten Ebene – eine verschachtelte Liste überschreibt sie nicht,
+        // sonst zählte die Fortsetzung der äußeren Liste mit der Instanz der inneren wieder ab 1
         if (l.ordered && c.lists) {
-          if (Number(l.start || 1) > 1 && c.lists.last) instance = c.lists.last;
-          else instance = c.lists.last = c.lists.next++;
+          if (Number(l.start || 1) > 1 && c.lists.last && level === 0) instance = c.lists.last;
+          else {
+            instance = c.lists.next++;
+            if (level === 0) c.lists.last = instance;
+          }
         }
         for (const item of l.items) {
           const [first, ...rest] = item.tokens;

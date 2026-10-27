@@ -16,7 +16,7 @@ import { escapeHtml, markdownToHtml, type ImageSource } from './render.js';
 import { inlineMedia, loadMedia, type MediaFile } from './media.js';
 import { applyVariants } from './imageArchive.js';
 import { MIME_EXT } from '../domain/media.js';
-import { normalizeTheme, readingCss, readingIcon, type DesignTheme, signalLabel } from '../domain/designs.js';
+import { readingCss, readingIcon, readingTheme, type DesignTheme, signalLabel } from '../domain/designs.js';
 import { projectLanguages, translatedChapter } from './translations.js';
 import { LANGUAGES } from '../domain/translate.js';
 
@@ -144,7 +144,7 @@ async function buildSite(
   if (layout) {
     const logoFile = layout.logo ? `bilder/logo.${MIME_EXT[layout.logo.mime] ?? 'png'}` : null;
     if (layout.logo && logoFile) zip.file(logoFile, layout.logo.data);
-    brand = { color: layout.primaryColor, logoFile, company: layout.companyName, footer: layout.footerText, ...(layout.readingStyle === 'fachdoku' ? { reading: normalizeTheme('fachdoku', layout.designThemes?.fachdoku ?? {}).theme } : {}) };
+    brand = { color: layout.primaryColor, logoFile, company: layout.companyName, footer: layout.footerText, ...(readingTheme(layout) ? { reading: readingTheme(layout) } : {}) };
   }
   const page = (title: string, label: string, body: string, lang = 'de', sw = '') => pageOf(title, label, body, lang, sw, brand);
   // Bilder (ADR-029) als Dateien unter bilder/ – einmal je Inhalt, von allen Sprachen gemeinsam genutzt

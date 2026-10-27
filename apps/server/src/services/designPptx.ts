@@ -186,13 +186,17 @@ async function quickRefSlides(chapters: DesignChapter[], o: DesignPptxOptions, t
       if (p.table) p.table.forEach((r) => text.push({ text: r.join(' · '), size: 1200 }));
       if (p.code) p.code.split('\n').forEach((l) => text.push({ text: l, size: 1100, style: { font: 'Consolas' }, before: 0 }));
     }
-    const pages = text.length ? paginate(text.map((x) => ({ ...x, text: x.text })), warnings.length ? 7 : 9, 120) as unknown as Para[][] : [[]];
+    // je Warnbox (1,6 cm) zwei Textzeilen weniger, damit Text und Warnungen auf der letzten Folie nicht übereinanderliegen
+    const perPage = warnings.length ? Math.max(2, 9 - 2 * warnings.length) : 9;
+    const pages = text.length ? paginate(text.map((x) => ({ ...x, text: x.text })), perPage, 120) as unknown as Para[][] : [[]];
+    // jedes Bild auf eine Folie: reichen die Textfolien nicht, kommen Fortsetzungsfolien nur mit Bild dazu
+    while (pages.length < images.length) pages.push([]);
     pages.forEach((page, pi) => builders.push(async (n, total) => {
       const sh = new Shapes();
       sh.rect(cm(1.2), cm(0.9), cm(31.4), cm(16.6), { geom: 'roundRect', radius: 4000, line: t.accent, lineW: 19050 });
       await iconPic(sh, ic, t.primary, cm(1.8), cm(1.45), cm(0.7));
       sh.text(cm(2.7), cm(1.2), cm(28), cm(1.2), [{ text: pi ? `${title} (Fortsetzung)` : title, size: 2200, style: { font: H, color: '1B1B1B' }, before: 0 }], { anchor: 'ctr', name: 'Titel' });
-      const img = pi === 0 ? images[0] : undefined;
+      const img = images[pi];
       const textW = img ? cm(17.6) : cm(29.6);
       const warnH = pi === pages.length - 1 && warnings.length ? cm(1.6) * warnings.length + cm(0.3) : 0;
       sh.text(cm(1.8), cm(2.6), textW, cm(14.4) - warnH, page as Para[]);
@@ -294,9 +298,19 @@ async function fachdokuSlides(chapters: DesignChapter[], o: DesignPptxOptions, t
           continue;
         }
         if (p.paras.length) {
-          const body = p.paras.map((x) => paraOf(x, 1300));
-          const h = body.reduce((a, x) => a + lineCm(x.text, 105) + 0.1, 0) + 0.3;
-          items.push({ h, draw: async (sh, y) => sh.text(cm(1.2), y, cm(31.4), cm(h), body.map((x) => ({ ...x, before: 150 }))) });
+          // in Gruppen, die je auf eine Folie passen (Platz unter der Überschrift: 14,3 cm)
+          const groups: Para[][] = [[]];
+          let gh = 0.3;
+          for (const x of p.paras.map((y) => paraOf(y, 1300))) {
+            const xh = lineCm(x.text, 105) + 0.1;
+            if (groups[groups.length - 1].length && gh + xh > 13.5) { groups.push([]); gh = 0.3; }
+            groups[groups.length - 1].push(x);
+            gh += xh;
+          }
+          for (const body of groups) {
+            const h = body.reduce((a, x) => a + lineCm(x.text, 105) + 0.1, 0) + 0.3;
+            items.push({ h, draw: async (sh, y) => sh.text(cm(1.2), y, cm(31.4), cm(h), body.map((x) => ({ ...x, before: 150 }))) });
+          }
         }
         if (p.table) {
           const rows = p.table;

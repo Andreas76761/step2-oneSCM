@@ -15,7 +15,8 @@ import { markdownToHtml } from './render.js';
 type TemplateId = Exclude<Design, 'standard'>;
 
 function templateId(id: string): TemplateId {
-  if (!(id in DESIGN_INFO)) throw notFound(`Designvorlage ${id}`);
+  // nur eigene Schlüssel: „constructor“ oder „__proto__“ sind keine Vorlagen
+  if (!Object.hasOwn(DESIGN_INFO, id)) throw notFound(`Designvorlage ${id}`);
   return id as TemplateId;
 }
 
@@ -79,8 +80,9 @@ export async function designSampleOffice(ctx: Ctx, rawId: string, format: 'docx'
 
 /** Muster als PDF (ADR-113) */
 export async function designSamplePdf(ctx: Ctx, id: string): Promise<Buffer> {
-  const html = await designSample(ctx, id);
+  // erst prüfen, ob gedruckt werden kann, dann das Muster aufbauen
   if (!pdfBrowserAvailable(ctx.config.pdfBrowser)) throw badRequest('PDF im Design braucht einen lokal installierten Chromium, Chrome oder Edge (PDF_BROWSER_PATH).');
+  const html = await designSample(ctx, id);
   return htmlToPdf(ctx.config.pdfBrowser, html).catch((e: Error) => {
     throw new Problem(503, 'Service Unavailable', `PDF im Design konnte nicht erzeugt werden: ${e.message}`);
   });

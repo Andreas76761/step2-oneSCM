@@ -56,6 +56,11 @@ export const THEME_CONTRAST = { primary: 4.5, accent: 3, warn: 4.5 } as const;
 const COLOR_LABEL = { primary: 'Hauptfarbe', accent: 'Akzentfarbe', warn: 'Warnfarbe' } as const;
 
 /** Anpassung prüfen und mit dem Standard der Vorlage vervollständigen; Fehler als Liste verständlicher Sätze */
+/** Lesestil eines Projekts (ADR-117/119): „Handbuch-Kapitel“ mit dessen Anpassung, sonst keiner – eine Regel für Releases und Kontexthilfe */
+export function readingTheme(l: { readingStyle?: string | null; designThemes?: Partial<Record<Exclude<Design, 'standard'>, Partial<DesignTheme>>> | null }): DesignTheme | undefined {
+  return l.readingStyle === 'fachdoku' ? normalizeTheme('fachdoku', l.designThemes?.fachdoku ?? {}).theme : undefined;
+}
+
 export function normalizeTheme(design: Exclude<Design, 'standard'>, input: Partial<Record<keyof DesignTheme, unknown>>): { theme: DesignTheme; issues: string[] } {
   const base = DEFAULT_THEMES[design];
   const theme: DesignTheme = { ...base };
@@ -85,7 +90,7 @@ export function normalizeTheme(design: Exclude<Design, 'standard'>, input: Parti
 
 export interface DesignBlock { kind: string; text: string }
 export interface DesignSection { code: string; title: string; blocks: DesignBlock[] }
-export interface DesignChapter { title: string; versionNo?: number; approvedAt?: string | null; validFrom?: string | null; sections: DesignSection[] }
+export interface DesignChapter { title: string; versionNo?: number; approvedAt?: string | null; validFrom?: string | null; sections: DesignSection[]; /** Lesefassung: keine Versions- und Freigabeangaben */ hideVersion?: boolean }
 export interface DesignOptions {
   title: string;
   /** Marke im Kopf (Name neben dem Logo); Standard „oneSCM“ */
@@ -110,6 +115,9 @@ export interface DesignOptions {
   theme?: DesignTheme;
 }
 
+/** Text für einen CSS-Inhalt („content: "…"“) im <style>-Block: ohne Anführungszeichen und Rückstrich, „<“ als CSS-Escape – sonst
+ * beendete ein Titel wie „</style>“ den Stilblock und der Rest würde als HTML gelesen */
+const cssText = (s: string) => s.replace(/["\\]/g, '').replace(/</g, '\\3C ').replace(/[\r\n]+/g, ' ');
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 const roman = (i: number) => ROMAN[i] ?? String(i + 1);
@@ -205,7 +213,8 @@ export function chapterFacts(c: DesignChapter): { sub: string; kpis: [DesignIcon
     kpis: [
       ['layers', String(c.sections.length), 'Abschnitte'],
       ['list-ordered', String(steps), 'Handlungsschritte'],
-      ['shield-check', c.versionNo ? `V${c.versionNo}` : '–', c.approvedAt ? `Freigegeben am ${c.approvedAt.slice(8, 10)}.${c.approvedAt.slice(5, 7)}.${c.approvedAt.slice(0, 4)}` : 'Freigabestand'],
+      // Lesefassung: keine Versions- und Freigabeangaben (wie im Standard-Export)
+      c.hideVersion ? ['shield-check', '✓', 'Freigegeben'] : ['shield-check', c.versionNo ? `V${c.versionNo}` : '–', c.approvedAt ? `Freigegeben am ${c.approvedAt.slice(8, 10)}.${c.approvedAt.slice(5, 7)}.${c.approvedAt.slice(0, 4)}` : 'Freigabestand'],
       ['triangle-alert', String(hints), c.validFrom ? `Hinweise · gültig ab ${c.validFrom}` : 'Hinweise und Warnungen'],
     ],
   };
@@ -232,7 +241,7 @@ const QR_CSS = (o: DesignOptions, t: DesignTheme) => `
 :root{--qr-line:${t.accent};--qr-ink:#1d1d1b;--qr-blue:${t.primary};--qr-title:#1b1b1b;--qr-red:${t.warn};--qr-redbg:color-mix(in srgb,${t.warn} 6%,#fff);--qr-muted:#6b7280}
 *{box-sizing:border-box}
 @page{size:A4 landscape;margin:12mm 10mm 13mm;
- @bottom-left{content:${o.footerText ? `"Hinweis: ${o.footerText.replace(/["\\]/g, '')}"` : 'none'};font:8pt system-ui,sans-serif;color:#1d1d1b}
+ @bottom-left{content:${o.footerText ? `"Hinweis: ${cssText(o.footerText)}"` : 'none'};font:8pt system-ui,sans-serif;color:#1d1d1b}
  @bottom-right{content:"STAND: ${o.asOf} | " counter(page) "/" counter(pages);font:8pt system-ui,sans-serif;letter-spacing:.18em;color:#4b5563}}
 body{margin:0;font:10.5pt/1.42 ${FONTS[t.bodyFont]};color:var(--qr-ink);background:#fff}
 .qr{max-width:297mm;margin:0 auto;padding:10px 14px}
@@ -334,10 +343,10 @@ const FD_CSS = (o: DesignOptions, label: string, t: DesignTheme) => `
 :root{--fd-navy:${t.primary};--fd-blue:${t.accent};--fd-ink:#1f2933;--fd-muted:#5f6b7a;--fd-line:#d9dee5;--fd-th:#5f6b7a}
 *{box-sizing:border-box}
 @page{size:A4;margin:18mm 16mm 16mm;
- @top-left{content:"${label.replace(/["\\]/g, '')}";font:700 8pt "Segoe UI",system-ui,sans-serif;letter-spacing:.04em;color:${t.primary};border-bottom:1.5px solid ${t.primary};vertical-align:bottom;padding-bottom:3mm}
+ @top-left{content:"${cssText(label)}";font:700 8pt "Segoe UI",system-ui,sans-serif;letter-spacing:.04em;color:${t.primary};border-bottom:1.5px solid ${t.primary};vertical-align:bottom;padding-bottom:3mm}
  @top-right{content:"Seite " counter(page) " von " counter(pages);font:8pt "Segoe UI",system-ui,sans-serif;color:#1f2933;border-bottom:1.5px solid ${t.primary};vertical-align:bottom;padding-bottom:3mm}
- @bottom-left{content:"${fachdokuFooter(o).replace(/["\\]/g, '')}";font:7.5pt "Segoe UI",system-ui,sans-serif;color:#5f6b7a;border-top:1px solid #d9dee5;vertical-align:top;padding-top:2mm}
- @bottom-right{content:"${o.title.replace(/["\\]/g, '')}";font:7.5pt "Segoe UI",system-ui,sans-serif;color:#5f6b7a;border-top:1px solid #d9dee5;vertical-align:top;padding-top:2mm}}
+ @bottom-left{content:"${cssText(fachdokuFooter(o))}";font:7.5pt "Segoe UI",system-ui,sans-serif;color:#5f6b7a;border-top:1px solid #d9dee5;vertical-align:top;padding-top:2mm}
+ @bottom-right{content:"${cssText(o.title)}";font:7.5pt "Segoe UI",system-ui,sans-serif;color:#5f6b7a;border-top:1px solid #d9dee5;vertical-align:top;padding-top:2mm}}
 body{margin:0;font:9.5pt/1.55 ${FONTS[t.bodyFont]};color:var(--fd-ink);background:#fff;text-align:justify;hyphens:auto}
 .fd{max-width:210mm;margin:0 auto;padding:0}
 .fd-run{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1.5px solid var(--fd-navy);padding-bottom:4px;margin-bottom:14px;font-size:8pt}

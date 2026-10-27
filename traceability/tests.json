@@ -3169,5 +3169,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-408",
+    "title": "Word: Fortsetzung einer nummerierten Liste nach einer verschachtelten Liste zählt mit der äußeren Liste weiter",
+    "file": "apps/server/test/stage89.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-409",
+    "title": "Designvorlagen: Titel und Fußzeile können den Stilblock nicht beenden; Lesefassung ohne Version; nur echte Vorlagen; gleiche Bilder in PowerPoint einmal",
+    "file": "apps/server/test/stage90.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

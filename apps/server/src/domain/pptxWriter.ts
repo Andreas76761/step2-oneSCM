@@ -1,5 +1,6 @@
 // Ausgabe als PowerPoint (ADR-106, W-07): schlanker OOXML-Generator (16:9) mit Titel- und Inhaltsfolien, Aufzählungen,
 // Fettdruck und Bildern. Ohne Fremdbibliothek; das Ergebnis liest der eigene PPTX-Import (domain/pptx) wieder ein.
+import { createHash } from 'node:crypto';
 import JSZip from 'jszip';
 
 export interface SlideImage { data: Buffer; mime: string; width: number | null; height: number | null; alt: string; /** Schmuck (Icon): als „dekorativ“ markiert statt Alternativtext (ADR-120) */ decorative?: boolean }
@@ -113,6 +114,7 @@ export async function renderPptx(slides: Slide[], opts: { title: string; color?:
   const zip = new JSZip();
   const created = opts.created ?? new Date().toISOString().replace(/\.\d+Z$/, 'Z');
   const images: { file: string; mime: string }[] = [];
+  const stored = new Map<string, string>();
   const exts = new Set<string>();
   slides.forEach((s, i) => {
     const n = i + 1;
@@ -122,9 +124,15 @@ export async function renderPptx(slides: Slide[], opts: { title: string; color?:
     pics.forEach((img, k) => {
       const ext = EXT[img.mime] ?? 'png';
       exts.add(ext);
-      const file = `image${images.length + 1}.${ext}`;
-      images.push({ file, mime: img.mime });
-      zip.file(`ppt/media/${file}`, img.data);
+      // gleiche Bilder (z. B. dasselbe Icon auf vielen Folien) nur einmal ablegen und mehrfach verweisen
+      const key = createHash('sha1').update(img.data).digest('hex');
+      let file = stored.get(key);
+      if (!file) {
+        file = `image${images.length + 1}.${ext}`;
+        stored.set(key, file);
+        images.push({ file, mime: img.mime });
+        zip.file(`ppt/media/${file}`, img.data);
+      }
       r.push(rel(`rId${k + 2}`, 'image', `../media/${file}`));
     });
     if (s.kind === 'image') imageRel = 'rId2';

@@ -12,7 +12,7 @@ import { submitFeedback } from '../services/feedback.js';
 import { withProject } from '../services/projects.js';
 import { escapeHtml } from '../services/render.js';
 import { getLayout } from '../services/layout.js';
-import { normalizeTheme, readingCss, readingIcon, signalLabel, type DesignTheme } from '../domain/designs.js';
+import { readingCss, readingIcon, readingTheme, signalLabel, type DesignTheme } from '../domain/designs.js';
 import { svgIcon } from '../domain/designIcons.js';
 import { frameTexts } from '../domain/frameTexts.js';
 import { userOf } from './helpers.js';
@@ -95,7 +95,7 @@ interface EmbedState {
 /** Lesestil des Projekts für die Kontexthilfe (ADR-119): Handbuch-Kapitel mit Anpassung, sonst keiner */
 async function readingOf(ctx: Ctx): Promise<DesignTheme | undefined> {
   const l = await getLayout(ctx);
-  return l.readingStyle === 'fachdoku' ? normalizeTheme('fachdoku', l.designThemes?.fachdoku ?? {}).theme : undefined;
+  return readingTheme(l);
 }
 
 /** Hinweisboxen im Lesestil mit Beschriftung und Icon in der Sprache der Hilfe */

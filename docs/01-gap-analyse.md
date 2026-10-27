@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.92 Stand nach Etappe 90 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 60–69 (Designvorlagen und barrierefreie Ausgabe): zehn Funde, neun behoben, einer bereits in Etappe 89 | ✅ T-408, T-409; Server-Tests auf SQLite und PostgreSQL |
+| Sicherheit | Titel, Kapitelnamen und Fußzeile standen als CSS-Inhalt im Stilblock; „</style>“ beendete ihn, der Rest wurde als HTML gelesen (Skripte blieben durch die CSP gesperrt). Jetzt als CSS-Escape |
+| Inhalt | Lesefassung im Design zeigte Version und Freigabedatum; im Quick-Reference-Foliensatz fehlten alle Bilder außer dem ersten; lange Abschnitte im Handbuch-Kapitel-Foliensatz liefen über die Fußlinie; viele Warnungen überdeckten den Text |
+| Word | Nach einer verschachtelten Liste zählte die Fortsetzung der äußeren Liste wieder ab 1 |
+| Kleinere | Vorlagen-Kennung „constructor“ o. Ä. galt als gültig; gleiche Icons mehrfach im Foliensatz gespeichert; PDF-Muster ohne Browser erst aufgebaut, dann abgelehnt; Lesestil-Regel an drei Stellen |
+
 ## 1.91 Stand nach Etappe 89 (27.10.2026)
 
 | Punkt | Ergebnis |

@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.90.0 – Etappe 90 (27.10.2026)
+
+### Hinzugefügt
+- **Code-Review der Etappen 60–69** (Designvorlagen, barrierefreie Ausgabe): zehn Funde. Neun sind behoben. Einer (doppeltes Signalwort in der Kontexthilfe) war schon mit Etappe 89 erledigt.
+- **Tests T-408 und T-409:** Beide scheitern ohne die Korrekturen.
+  - T-408 prüft die Word-Nummerierung nach verschachtelten Listen.
+  - T-409 prüft Stilblock, Lesefassung, Vorlagen-Kennungen und Bilder im Foliensatz.
+
+### Sicherheit
+- **Stilblock der Designvorlagen (HTML, PDF):** Titel, Kapitelnamen und Fußzeile stehen als Text in den Kopf- und Fußzeilen des Drucks (`@page`). Bisher wurden dafür nur Anführungszeichen entfernt. Ein Titel wie „Tabellen </style><h1>X</h1>“ beendete den Stilblock, und der Rest wurde als HTML gelesen. Skripte blieben durch die CSP gesperrt, Aussehen und Inhalt ließen sich aber verfälschen. „<“ steht dort jetzt als CSS-Escape.
+
+### Behoben
+- **Lesefassung im Design:** Die Kennzahl zeigte Version und Freigabedatum, die die Lesefassung gerade weglässt. Jetzt steht dort nur „Freigegeben“.
+- **Quick Reference als PowerPoint:**
+  - Gezeigt wurde nur das erste Bild eines Abschnitts. Jetzt kommt je Folie ein Bild, bei Bedarf auf Fortsetzungsfolien.
+  - Bei mehreren Warnungen passen weniger Textzeilen auf die letzte Folie, damit nichts übereinanderliegt.
+- **Handbuch-Kapitel als PowerPoint:** Ein langer Abschnitt, etwa mit 25 Schritten, lief über die Fußlinie. Seine Absätze werden jetzt auf Folien verteilt. Hinweisboxen bleiben als Ganzes zusammen.
+- **Word:** Nach einer verschachtelten nummerierten Liste zählte die Fortsetzung der äußeren Liste wieder ab 1.
+- **Vorlagen-Kennung:** „constructor“, „toString“ oder „__proto__“ galten als Vorlagen; jetzt antwortet die API mit 404.
+- **Foliensätze:** Dasselbe Icon wurde auf jeder Folie neu gespeichert. Jetzt liegt jedes Bild nur einmal in der Datei.
+- **PDF-Muster:** Ohne Browser zum Drucken wird jetzt sofort abgelehnt, ohne das Muster vorher aufzubauen.
+- **Lesestil:** Die Regel für den Lesestil stand an drei Stellen und steht jetzt in einer (`readingTheme`).
+
 ## 0.89.0 – Etappe 89 (27.10.2026)
 
 ### Hinzugefügt
