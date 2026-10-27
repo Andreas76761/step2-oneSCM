@@ -140,12 +140,40 @@ export interface ValeImport { rules: ValeRule[]; unsupported: { name: string; re
 const MAX_TOKENS = 500;
 const MAX_TOKEN_LEN = 300;
 
+/** true, wenn eine wiederholte Gruppe (+, *, {n,}) innen eine Wiederholung oder Alternative enthält */
+function riskyRepetition(p: string): boolean {
+  const stack: { inner: boolean }[] = [];
+  for (let i = 0; i < p.length; i++) {
+    const c = p[i];
+    if (c === '\\') { i++; continue; }
+    if (c === '[') { // Zeichenklasse überspringen
+      for (i++; i < p.length && p[i] !== ']'; i++) if (p[i] === '\\') i++;
+      continue;
+    }
+    if (c === '(') { stack.push({ inner: false }); continue; }
+    const top = stack.at(-1);
+    if (c === '|' && top) { top.inner = true; continue; }
+    const quant = c === '+' || c === '*' || (c === '{' && /^\{\d*,\d*\}/.test(p.slice(i)) && !/^\{\d+\}/.test(p.slice(i)));
+    if (c === ')') {
+      const g = stack.pop();
+      const next = p[i + 1];
+      const repeated = next === '+' || next === '*' || (next === '{' && /^\{\d*,\d*\}/.test(p.slice(i + 1)) && !/^\{\d+\}/.test(p.slice(i + 1)));
+      if (g?.inner && repeated) return true;
+      if (g?.inner && stack.length) stack.at(-1)!.inner = true;
+      continue;
+    }
+    if (quant && top) top.inner = true;
+  }
+  return false;
+}
+
 /** Regex aus Vale (RE2) für JavaScript prüfen; Lookbehind und Rückverweise gibt es in RE2 nicht, sie bleiben abgelehnt */
 function safePattern(p: string): string | null {
   if (typeof p !== 'string' || !p || p.length > MAX_TOKEN_LEN) return null;
   if (/\\[1-9]|\(\?<[=!]/.test(p)) return null;
-  // verschachtelte Wiederholungen wie (a+)+ können sehr langsam werden
-  if (/\([^)]*[+*][^)]*\)[+*{]/.test(p)) return null;
+  // Gruppen, die selbst wiederholt werden und eine Wiederholung oder Alternative enthalten ((a+)+, ((a+))+, (a|aa)+),
+  // können katastrophal zurückspringen und den Server blockieren
+  if (riskyRepetition(p)) return null;
   try {
     new RegExp(p, 'u');
     return p;

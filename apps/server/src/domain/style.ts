@@ -341,9 +341,11 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
     }
   }
   // Funde des externen Dienstes dem Satz zuordnen; was eine eigene Regel an derselben Stelle meldet, zählt nur einmal
+  // Satzweite Befunde (langer Satz, Nominalstil, Passiv) und ausgeschaltete Regeln verdrängen keinen Fund des Dienstes
+  const WIDE = new Set(['long_sentence', 'nominal', 'passive']);
   for (const x of opts.extraIssues ?? []) {
     const s = sentences.find((y) => x.start >= y.start && x.start < Math.max(y.end, y.start + 1));
-    if (!s || s.issues.some((i) => i.start < x.end && x.start < i.end)) continue;
+    if (!s || s.issues.some((i) => !WIDE.has(i.rule) && !opts.disabled?.includes(i.rule) && i.start < x.end && x.start < i.end)) continue;
     s.issues.push(x);
   }
   // Funde der Regelsätze: eigene Prüfungen, daher ohne Abgleich mit den übrigen Regeln (nur gleiche Meldung an gleicher Stelle einmal)

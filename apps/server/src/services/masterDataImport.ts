@@ -95,14 +95,17 @@ export async function importMasterData(ctx: Ctx, kind: string, fileName: string,
     try {
       if (!key) throw badRequest(`${spec.fields[spec.required[0]][0]} fehlt.`);
       if (seen.has(key.toLowerCase())) throw badRequest('Doppelt in der Datei – nur die erste Zeile zählt.');
-      seen.add(key.toLowerCase());
-      // Terminologie aus SYNONYME.csv: offene Begriffe und Vorschläge warten auf die Entscheidung
-      const termStatus = k === 'glossary' ? get('status')?.toLowerCase() : undefined;
-      if (termStatus && ['offen', 'vorschlag', 'open', 'proposal'].includes(termStatus)) {
+      // Terminologie aus SYNONYME.csv: nur entschiedene Zeilen (oder ohne Status); offen, Vorschlag und verworfen nicht.
+      // Eine übersprungene Zeile zählt nicht als „erste Zeile“ – eine spätere entschiedene Zeile desselben Begriffs gilt.
+      const termStatus = k === 'glossary' ? get('status')?.trim().toLowerCase() : undefined;
+      if (termStatus && !['entschieden', 'decided', 'aktiv', 'active', 'freigegeben', 'approved'].includes(termStatus)) {
         r.action = 'skipped';
-        r.message = `Status „${get('status')}“ – wird erst nach der Entscheidung übernommen.`;
+        r.message = ['verworfen', 'abgelehnt', 'rejected', 'discarded'].includes(termStatus)
+          ? `Status „${get('status')}“ – verworfene Begriffe werden nicht übernommen.`
+          : `Status „${get('status')}“ – wird erst nach der Entscheidung übernommen.`;
         continue;
       }
+      seen.add(key.toLowerCase());
       const input = toInput(k, get);
       if (id && sameAs(existing.rows.get(id)!, input)) {
         r.action = 'unchanged';

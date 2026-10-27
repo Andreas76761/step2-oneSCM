@@ -386,17 +386,18 @@ export async function requestReview(ctx: Ctx, translationId: string, input: { re
   const contact = market ? await marketReviewerFor(ctx, market, t.language) : null;
   let reviewer = String(input.reviewer ?? '').trim();
   let deputy: string | null = null;
+  // nur aktive Konten werden Prüferin, Prüfer oder Vertretung – auch wenn die Ansprechperson von Hand gewählt wird
+  const active = async (id: string | null | undefined) => !!id && !!(await ctx.db.get('SELECT 1 FROM users WHERE id = ? AND disabled_at IS NULL', id));
   let assignedBy = 'manual';
   if (!reviewer) {
     if (!market) throw badRequest('reviewer oder market angeben.');
     if (!contact) throw badRequest(`Für den Markt ${market} ist keine Ansprechperson hinterlegt – bitte unter „Ansprechpersonen je Markt“ eintragen oder eine Prüferin bzw. einen Prüfer wählen.`);
     // Ansprechperson, bei deaktiviertem Konto die Vertretung
-    const active = async (id: string | null) => !!id && !!(await ctx.db.get('SELECT 1 FROM users WHERE id = ? AND disabled_at IS NULL', id));
     if (await active(contact.user_id)) (reviewer = contact.user_id, deputy = (await active(contact.deputy_user_id)) ? contact.deputy_user_id : null);
     else if (await active(contact.deputy_user_id)) reviewer = contact.deputy_user_id;
     else throw badRequest(`Ansprechperson und Vertretung für den Markt ${market} sind nicht aktiv.`);
     assignedBy = 'market';
-  } else if (contact && contact.user_id === reviewer) deputy = contact.deputy_user_id ?? null;
+  } else if (contact && contact.user_id === reviewer && (await active(contact.deputy_user_id))) deputy = contact.deputy_user_id;
   const u = await ctx.db.get('SELECT id, disabled_at FROM users WHERE id = ?', reviewer);
   if (!u || u.disabled_at) throw badRequest('reviewer muss ein aktiver Benutzer sein.');
   if (await ctx.db.get("SELECT 1 FROM translation_reviews WHERE translation_id = ? AND status = 'open'", translationId)) throw conflict('Es läuft bereits ein Länderreview.');
@@ -439,6 +440,7 @@ export async function setMarketReviewer(ctx: Ctx, input: { market?: unknown; lan
   const language = typeof input.language === 'string' ? input.language.trim().toLowerCase() : '';
   if (language && !LANGUAGES[language]) throw badRequest(`language muss eine der Sprachen sein (${Object.keys(LANGUAGES).join(', ')}) oder leer.`);
   const userId = String(input.userId ?? '').trim();
+  if (!userId) throw badRequest('userId (Ansprechperson) ist Pflicht.');
   const deputy = typeof input.deputyUserId === 'string' && input.deputyUserId.trim() ? input.deputyUserId.trim() : null;
   for (const id of [userId, deputy].filter(Boolean) as string[]) {
     const u = await ctx.db.get('SELECT disabled_at FROM users WHERE id = ?', id);

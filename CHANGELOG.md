@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.91.0 – Etappe 91 (27.10.2026)
+
+### Hinzugefügt
+- **Code-Review der Etappen 55–59:** Geprüft wurden LanguageTool, die Ansprechpersonen je Markt, die Regelsätze, die UI-Begriffe und die Icons. Es gab zehn Funde. Ich habe sie einzeln geprüft: Neun sind behoben, einer ist begründet belassen.
+- **Tests T-410 und T-411:** Beide scheitern ohne die Korrekturen.
+
+### Sicherheit und Betrieb
+- **Vale-Stil als ZIP:** Die Größe jeder Datei wird jetzt vor dem Entpacken geprüft. Bisher wurde zuerst entpackt; eine kleine ZIP-Datei mit sehr großem Inhalt (Zip-Bombe) hätte den Speicher des Servers füllen können.
+- **Muster in Vale-Stilen:** Wiederholte Gruppen, die selbst eine Wiederholung oder Alternative enthalten, werden nicht übernommen, z. B. `(a|aa)+` oder `((a+))+`. Bisher fing die Prüfung nur `(a+)+` ab. Solche Muster können bei passenden Texten sehr lange rechnen und den Server blockieren.
+- **LanguageTool nicht erreichbar:** Nach einer Zeitüberschreitung oder einem Verbindungsfehler pausiert die Prüfung für eine Minute. Bisher wartete jeder Absatz die volle Zeitgrenze ab, bei 120 Absätzen etwa 4 Minuten.
+
+### Behoben
+- **LanguageTool-Funde:** Meldete eine eigene Regel den ganzen Satz („Langer Satz“, Passiv, Nominalstil) oder war die eigene Regel ausgeschaltet, ging der Grammatikfund von LanguageTool verloren. Jetzt zählen dabei nur gleiche Stellen.
+- **SYNONYME.csv:**
+  - Begriffe mit Status „verworfen“ wurden als gültig übernommen; jetzt werden nur entschiedene Zeilen übernommen.
+  - Nach einer übersprungenen Zeile galt eine spätere entschiedene Zeile desselben Begriffs als doppelt; jetzt wird sie übernommen.
+- **UI-Begriffe in der Analyse:** Die Stilprüfung erlaubte „MO Checks“ in Menüpfaden schon, die Analyse meldete den Begriff dort aber weiter als zu vermeiden.
+- **Ansprechperson je Markt:** Ein Eintrag ohne Person ließ sich speichern. Wählte man die Ansprechperson als Prüferin von Hand, bekam sie auch eine deaktivierte Vertretung.
+- **Vale-Stile:**
+  - Ein Stil mit ähnlichem Namen („Haus Stil“ ↔ „haus-stil“) ersetzte einen anderen still.
+  - Beim erneuten Einlesen gingen die Einstellung Ein/Aus und die ausgeschalteten Regeln verloren.
+
+### Belassen
+- **„Meine Länderreviews“:** Die Seite fragt je Review einzeln nach Namen und Wortzahl. Eine Person hat aber nur wenige offene Reviews, und jede Abfrage dauert unter einer Millisekunde.
+
 ## 0.90.0 – Etappe 90 (27.10.2026)
 
 ### Hinzugefügt

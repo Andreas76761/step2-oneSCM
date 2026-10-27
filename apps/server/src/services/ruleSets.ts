@@ -92,6 +92,8 @@ export async function valeFiles(fileName: string, data: Buffer): Promise<{ name:
   if (entries.length > MAX_FILES) throw badRequest(`Höchstens ${MAX_FILES} Regeln je Stil.`);
   const out: { name: string; content: string }[] = [];
   for (const f of entries) {
+    // angegebene Größe vor dem Entpacken prüfen – sonst entpackte eine Zip-Bombe erst alles in den Speicher
+    if (((f as any)._data?.uncompressedSize ?? 0) > MAX_FILE_BYTES) throw badRequest(`${f.name}: größer als ${MAX_FILE_BYTES / 1024} KB.`);
     const buf = await f.async('nodebuffer');
     if (buf.length > MAX_FILE_BYTES) throw badRequest(`${f.name}: größer als ${MAX_FILE_BYTES / 1024} KB.`);
     out.push({ name: f.name, content: buf.toString('utf8') });
@@ -112,11 +114,17 @@ export async function importValeStyle(ctx: Ctx, input: { name?: unknown; languag
   const parsed = parseValeStyle(files as { name: string; content: string }[]);
   if (!parsed.rules.length) throw badRequest('Keine unterstützte Regel im Stil gefunden.', { unsupported: parsed.unsupported });
   const key = `vale:${name.toLowerCase().replace(/\s+/g, '-')}`;
-  if (BUILTIN_SETS.some((b) => b.key === key)) throw badRequest('Dieser Name ist vergeben.');
+  const before = await ctx.db.get('SELECT name, enabled, disabled_rules FROM style_rule_sets WHERE project_id = ? AND set_key = ?', ctx.projectId, key);
+  // ein anderer Stil mit ähnlichem Namen („Haus Stil“ ↔ „haus-stil“) wird nicht still ersetzt
+  if (before && before.name !== name) throw badRequest(`Ein Stil mit ähnlichem Namen ist schon vorhanden: „${before.name}“. Bitte diesen Namen verwenden oder einen anderen wählen.`);
+  // beim erneuten Einlesen bleiben Ein/Aus und ausgeschaltete Regeln erhalten, soweit es die Regeln noch gibt
+  const ids = new Set(parsed.rules.map((r) => r.name));
+  const disabledRules = before ? parseJson<string[]>(before.disabled_rules, []).filter((r) => ids.has(r)) : [];
+  const enabled = before ? Number(before.enabled) : 1;
   await ctx.db.tx(async () => {
     await ctx.db.run('DELETE FROM style_rule_sets WHERE project_id = ? AND set_key = ?', ctx.projectId, key);
-    await ctx.db.run("INSERT INTO style_rule_sets (project_id, set_key, name, kind, language, enabled, disabled_rules, rules, unsupported, updated_by, updated_at) VALUES (?, ?, ?, 'vale', ?, 1, '[]', ?, ?, ?, ?)",
-      ctx.projectId, key, name, language, json(parsed.rules), json(parsed.unsupported), user.id, now());
+    await ctx.db.run("INSERT INTO style_rule_sets (project_id, set_key, name, kind, language, enabled, disabled_rules, rules, unsupported, updated_by, updated_at) VALUES (?, ?, ?, 'vale', ?, ?, ?, ?, ?, ?, ?)",
+      ctx.projectId, key, name, language, enabled, json(disabledRules), json(parsed.rules), json(parsed.unsupported), user.id, now());
     await audit(ctx, user.id, 'style.vale_imported', 'project', ctx.projectId, { key, rules: parsed.rules.length, unsupported: parsed.unsupported.length });
   });
   return (await listRuleSets(ctx)).sets.find((s) => s.key === key)!;

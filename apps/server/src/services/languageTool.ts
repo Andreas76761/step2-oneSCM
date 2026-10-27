@@ -87,6 +87,10 @@ async function post(url: string, body: URLSearchParams, timeoutMs: number) {
   }
 }
 
+const DOWN_MS = 60_000;
+let downUntil = 0;
+let downReason = '';
+
 /** Text prüfen; null = Dienst nicht eingerichtet bzw. nicht erreichbar (dann zählen nur die eigenen Regeln) */
 export async function languageToolIssues(cfg: LtConfig, text: string, language = 'de'): Promise<{ issues: StyleIssue[]; error: string | null } | null> {
   const url = languageToolUrl(cfg);
@@ -95,6 +99,8 @@ export async function languageToolIssues(cfg: LtConfig, text: string, language =
   const key = createHash('sha256').update(`${lang}\u0000${text}`).digest('hex');
   const hit = cache.get(key);
   if (hit) return { issues: hit, error: null };
+  // war der Dienst eben nicht erreichbar, nicht für jeden Absatz erneut die volle Zeitgrenze abwarten
+  if (Date.now() < downUntil) return { issues: [], error: downReason };
   try {
     const masked = maskMarkdown(text);
     const r = await post(url, new URLSearchParams({ text: masked, language: lang, disabledRules: DISABLED_RULES.join(',') }), cfg.timeoutMs);
@@ -103,7 +109,10 @@ export async function languageToolIssues(cfg: LtConfig, text: string, language =
     cache.set(key, issues);
     return { issues, error: null };
   } catch (e) {
-    return { issues: [], error: (e as Error).name === 'AbortError' ? 'Zeitüberschreitung' : (e as Error).message };
+    const error = (e as Error).name === 'AbortError' ? 'Zeitüberschreitung' : (e as Error).message;
+    // Zeitüberschreitung oder keine Verbindung: eine Minute Pause (HTTP-Fehler einzelner Texte zählen nicht)
+    if (!/^HTTP /.test(error)) (downUntil = Date.now() + DOWN_MS, downReason = `${error} (Dienst pausiert)`);
+    return { issues: [], error };
   }
 }
 
@@ -136,4 +145,4 @@ export async function languageToolMany(cfg: LtConfig, texts: string[], language 
   return out;
 }
 
-export const clearLanguageToolCache = () => cache.clear();
+export const clearLanguageToolCache = () => (cache.clear(), (downUntil = 0));

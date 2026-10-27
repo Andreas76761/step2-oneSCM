@@ -3187,5 +3187,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-410",
+    "title": "LanguageTool-Funde neben satzweiten Befunden, Pause nach Verbindungsfehler, unsichere Vale-Muster abgelehnt",
+    "file": "apps/server/test/stage91.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-411",
+    "title": "Ansprechperson ist Pflicht; verworfene Begriffe nicht übernommen; Vale-Stil behält Einstellungen beim erneuten Einlesen",
+    "file": "apps/server/test/stage91.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]
