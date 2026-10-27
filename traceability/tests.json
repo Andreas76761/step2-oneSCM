@@ -3241,5 +3241,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-416",
+    "title": "Wortgrenzen mit Umlauten in der Triage; ausgeschaltete Stellen bleiben bei erneuter Erkennung aus",
+    "file": "apps/server/test/stage94.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-417",
+    "title": "Inhalts-Dashboard ohne ausgeschlossene Chunks, GOAL-Anteil „freigegeben“ höchstens 100 %, erneute Erkennung behält ausgeschaltete Stellen",
+    "file": "apps/server/test/stage94.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

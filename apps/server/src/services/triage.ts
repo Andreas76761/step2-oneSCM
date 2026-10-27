@@ -463,7 +463,8 @@ export async function contentDashboard(ctx: Ctx) {
   );
   const lbl = await ctx.db.all(
     `SELECT x.snippet_id, l.code, l.label_group, l.name_de, x.origin FROM metadata_chunk_labels x JOIN metadata_labels l ON l.id = x.label_id
-     JOIN text_snippets s ON s.id = x.snippet_id JOIN source_revisions r ON r.id = s.revision_id WHERE x.project_id = ? AND r.is_current = 1`, ctx.projectId,
+     JOIN text_snippets s ON s.id = x.snippet_id JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
+     WHERE x.project_id = ? AND r.is_current = 1 AND d.removed_at IS NULL AND s.excluded_reason IS NULL`, ctx.projectId, // wie die gezählten Chunks
   );
   const bySnippet = new Map<string, { code: string; group: string; name: string; origin: string }[]>();
   for (const l of lbl) bySnippet.set(l.snippet_id, [...(bySnippet.get(l.snippet_id) ?? []), { code: l.code, group: l.label_group, name: l.name_de, origin: l.origin }]);

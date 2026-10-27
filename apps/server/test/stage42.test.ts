@@ -126,10 +126,11 @@ describe('Etappe 42', () => {
       expect(await pixel(again, 240, 225)).toEqual(await pixel(shot, 240, 225)); // Adresse ausgeschaltet
       expect((await call('PATCH', `/image-archive/${sha}/redaction`, { remove: ['r1'] }, 'u-redaktion')).status).toBe(400); // erkannte Stelle nur ausschalten
       expect((await call('PATCH', `/image-archive/${sha}/redaction`, { add: [{ x: 0.1, y: 0.1, w: 0, h: 0.1 }] }, 'u-redaktion')).status).toBe(400);
-      // erneut erkennen: manuelle Stelle bleibt, Schalter bleibt
+      // erneut erkennen: manuelle Stelle bleibt, Schalter bleibt, ausgeschaltete Adresse bleibt aus (Etappe 94)
       red = (await call('POST', `/image-archive/${sha}/redaction/detect`, {}, 'u-redaktion')).json;
       expect(red.regions.filter((r: any) => r.source === 'manual')).toHaveLength(1);
-      expect(red).toMatchObject({ enabled: true, active: 5 });
+      expect(red.regions.find((r: any) => r.kind === 'address')).toMatchObject({ active: false });
+      expect(red).toMatchObject({ enabled: true, active: 4 });
 
       // Export enthält die unkenntliche Fassung
       await importFile(built, 'k.md', `${FM}# 1. Vertrag\n\nÖffnen Sie die Liste.\n\n![Vertragsliste](bilder/vertrag.png)\n`);

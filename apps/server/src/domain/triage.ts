@@ -2,6 +2,16 @@
 // und Begründung je Gruppe. Unsichere Gruppen machen den Chunk „zu prüfen“; menschliche Zuordnungen gehen immer vor.
 import type { DetailLevel } from './metadataLabels.js';
 
+/**
+ * Wortgrenze für Unicode: `\b` kennt in JavaScript nur ASCII – „öffnen Sie“ oder „že“ würden nie erkannt. Ersetzt `\b`
+ * durch eine Grenze zwischen Buchstabe/Ziffer und Nicht-Buchstabe.
+ */
+function ub(re: RegExp): RegExp {
+  const w = '[\\p{L}\\p{N}_]';
+  const flags = re.flags.includes('u') ? re.flags : `${re.flags}u`;
+  return new RegExp(re.source.replace(/\\b/g, `(?:(?<!${w})(?=${w})|(?<=${w})(?!${w}))`), flags);
+}
+
 export interface TriageInput {
   text: string;
   kind: string;
@@ -24,12 +34,12 @@ const lower = (s: string) => s.toLocaleLowerCase('de');
 // ---------------------------------------------------------------- Sprache
 
 const LANG_WORDS: Record<string, RegExp> = {
-  de: /\b(?:der|die|das|und|ist|nicht|mit|für|wird|den|ein|eine|sie|im|auf|zu|von)\b/giu,
-  en: /\b(?:the|and|is|not|with|for|to|of|in|on|you|this|that|are|be|a)\b/giu,
-  fr: /\b(?:le|la|les|et|des|est|une|pour|dans|vous|sur|du)\b/giu,
-  it: /\b(?:il|la|che|di|per|una|sono|con|non|del|della)\b/giu,
-  es: /\b(?:el|los|las|y|que|para|una|con|por|del|es)\b/giu,
-  cs: /\b(?:je|se|na|že|pro|jsou|nebo|jako|také)\b/giu,
+  de: ub(/\b(?:der|die|das|und|ist|nicht|mit|für|wird|den|ein|eine|sie|im|auf|zu|von)\b/giu),
+  en: ub(/\b(?:the|and|is|not|with|for|to|of|in|on|you|this|that|are|be|a)\b/giu),
+  fr: ub(/\b(?:le|la|les|et|des|est|une|pour|dans|vous|sur|du)\b/giu),
+  it: ub(/\b(?:il|la|che|di|per|una|sono|con|non|del|della)\b/giu),
+  es: ub(/\b(?:el|los|las|y|que|para|una|con|por|del|es)\b/giu),
+  cs: ub(/\b(?:je|se|na|že|pro|jsou|nebo|jako|také)\b/giu),
 };
 export const LANGUAGE_NAMES: Record<string, [string, string]> = {
   de: ['Deutsch', 'German'], en: ['Englisch', 'English'], fr: ['Französisch', 'French'], it: ['Italienisch', 'Italian'], es: ['Spanisch', 'Spanish'], cs: ['Tschechisch', 'Czech'],
@@ -48,19 +58,19 @@ export function detectLanguage(text: string): Pick {
 // ---------------------------------------------------------------- Rolle (Dealer, MO, Market, HQ, Sonstiges)
 
 const ROLE_PATTERNS: [string, RegExp][] = [
-  ['dealer', /\b(?:dealer|händler|haendler|autohaus|autohäuser|vertragspartner)\w*/iu],
-  ['mo', /\b(?:mo|market operations?|mo[- ]checks?|mo[- ]prüfung\w*)\b/iu],
-  ['market', /\b(?:market|markt(?:organisation|verantwortlich\w*)?|mpc\d?)\b/iu],
-  ['hq', /\b(?:hq|zentrale|headquarters?|hauptverwaltung)\b/iu],
+  ['dealer', ub(/\b(?:dealer|händler|haendler|autohaus|autohäuser|vertragspartner)\w*/iu)],
+  ['mo', ub(/\b(?:mo|market operations?|mo[- ]checks?|mo[- ]prüfung\w*)\b/iu)],
+  ['market', ub(/\b(?:market|markt(?:organisation|verantwortlich\w*)?|mpc\d?)\b/iu)],
+  ['hq', ub(/\b(?:hq|zentrale|headquarters?|hauptverwaltung)\b/iu)],
 ];
 const FRONT_ROLE: Record<string, string> = { dealer: 'dealer', mo: 'mo', market: 'market', hq: 'hq' };
 
 export function detectRoles(t: TriageInput): Pick {
   const text = `${t.headingPath.join(' ')} ${t.text}`;
   // „MO“ nur groß geschrieben als Rolle (nicht „mo“ wie Montag)
-  const found = ROLE_PATTERNS.filter(([code, re]) => (code === 'mo' ? /\bMO\b|market operation/i.test(text) : re.test(text))).map(([c]) => c);
+  const found = ROLE_PATTERNS.filter(([code, re]) => (code === 'mo' ? ub(/\bMO\b|market operation/i).test(text) : re.test(text))).map(([c]) => c);
   // „Markt“ allein ist meist der Ländermarkt, nicht die Rolle: nur mit Rollenbezug
-  const market = found.includes('market') && !/\b(?:markt|market)\s+(?:prüft|gibt|legt|pflegt|sieht|freigabe|approves|reviews)|\bmpc\d?\b|marktorganisation|marktverantwortlich/iu.test(text);
+  const market = found.includes('market') && !ub(/\b(?:markt|market)\s+(?:prüft|gibt|legt|pflegt|sieht|freigabe|approves|reviews)|\bmpc\d?\b|marktorganisation|marktverantwortlich/iu).test(text);
   const codes = found.filter((c) => !(c === 'market' && market));
   const front = t.roles.filter((r) => FRONT_ROLE[r]).map((r) => FRONT_ROLE[r]);
   if (t.roles.includes('all')) return { codes: ['dealer', 'mo', 'market', 'hq'], confidence: 0.8, reason: 'Quelle gilt für alle Rollen' };
@@ -77,8 +87,8 @@ export function detectDivision(t: TriageInput): Pick {
   if (t.divisions.includes('all') || specific.length === 2) return { codes: ['all'], confidence: 0.85, reason: 'Quelle gilt für Pkw und Van' };
   if (specific.length === 1) return { codes: specific, confidence: 0.9, reason: `Sparte aus den Quellangaben (${specific[0] === 'car' ? 'Pkw' : 'Van'})` };
   const text = `${t.headingPath.join(' ')} ${t.text}`;
-  const car = /\b(?:pkw|car|cars|personenwagen)\b/iu.test(text);
-  const van = /\b(?:van|vans|transporter|kleintransporter)\b/iu.test(text);
+  const car = ub(/\b(?:pkw|car|cars|personenwagen)\b/iu).test(text);
+  const van = ub(/\b(?:van|vans|transporter|kleintransporter)\b/iu).test(text);
   if (car && van) return { codes: ['all'], confidence: 0.7, reason: 'Pkw und Van im Text' };
   if (car || van) return { codes: [car ? 'car' : 'van'], confidence: 0.65, reason: `${car ? 'Pkw' : 'Van'} im Text` };
   return { codes: ['all'], confidence: 0.5, reason: 'keine Sparte genannt – gilt für Pkw+Van' };
@@ -86,7 +96,7 @@ export function detectDivision(t: TriageInput): Pick {
 
 // ---------------------------------------------------------------- Markt
 
-const MARKET_RE = /\b(?:[Mm]arkt|[Mm]arket|[Ll]and|[Cc]ountry)\s+([A-Z]{2})\b|\(([A-Z]{2})\)/g;
+const MARKET_RE = ub(/\b(?:[Mm]arkt|[Mm]arket|[Ll]and|[Cc]ountry)\s+([A-Z]{2})\b|\(([A-Z]{2})\)/g);
 const ISO = new Set(['DE', 'AT', 'CH', 'FR', 'IT', 'ES', 'PT', 'NL', 'BE', 'LU', 'GB', 'IE', 'PL', 'CZ', 'SK', 'HU', 'SE', 'DK', 'NO', 'FI', 'KR', 'MY', 'JP', 'CN', 'US', 'TR', 'IN']);
 
 export function detectMarkets(t: TriageInput): Pick {
@@ -102,7 +112,7 @@ export function detectMarkets(t: TriageInput): Pick {
 
 // ---------------------------------------------------------------- Version
 
-const VERSION_RE = /\b(?:PI\s?(\d{1,3})|Release\s+(\d{2,4}(?:\.\d{1,2})?)|Version\s+(\d+(?:\.\d+){0,2})|v(\d+\.\d+(?:\.\d+)?)|(20\d{2}\.\d{1,2}))\b/i;
+const VERSION_RE = ub(/\b(?:PI\s?(\d{1,3})|Release\s+(\d{2,4}(?:\.\d{1,2})?)|Version\s+(\d+(?:\.\d+){0,2})|v(\d+\.\d+(?:\.\d+)?)|(20\d{2}\.\d{1,2}))\b/i);
 
 export function versionSlug(v: string) {
   return v.trim().toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9.-]/g, '-').slice(0, 40);
@@ -131,11 +141,11 @@ export function detectStatus(t: TriageInput): Pick {
 
 // ---------------------------------------------------------------- Detaillevel
 
-const EDGE = /\b(?:ausnahme\w*|sonderfall\w*|sonderregel\w*|fehler\w*|fehlermeldung\w*|falls\s+(?:nicht|kein)\w*|wenn\s+\S+(?:\s+\S+){0,4}\s+nicht\b|abgelehnt\w*|ablehnung\w*|abbruch|abbrechen|storn\w*|ungültig\w*|nicht\s+möglich|gesperrt|exception|error|failed|rejected|[A-Z]{1,4}-\d{3,5})/iu;
-const STEPS = /(?:^|\n)\s*(?:\d+\.|[-*])\s+\S|\b(?:öffnen|klicken|wählen|geben|speichern|bestätigen|markieren)\s+sie\b|\b(?:open|click|select|enter|save)\b/iu;
-const ADDITIONAL = /\b(?:tipp|hinweis|beispiel|optional\w*|zusätzlich\w*|alternativ\w*|auch\s+möglich|note|tip|example)\b/iu;
-const INTERNAL = /\b(?:intern\w*|nur\s+für\s+(?:die\s+)?redaktion|testfall\w*|testdaten|testing|migration\w*|deployment|rollout|systemlandschaft|bug)\b/iu;
-const DEFINITION = /\b(?:ist|sind|bezeichnet|bedeutet|beschreibt|dient|umfasst)\b/iu;
+const EDGE = ub(/\b(?:ausnahme\w*|sonderfall\w*|sonderregel\w*|fehler\w*|fehlermeldung\w*|falls\s+(?:nicht|kein)\w*|wenn\s+\S+(?:\s+\S+){0,4}\s+nicht\b|abgelehnt\w*|ablehnung\w*|abbruch|abbrechen|storn\w*|ungültig\w*|nicht\s+möglich|gesperrt|exception|error|failed|rejected|[A-Z]{1,4}-\d{3,5})/iu);
+const STEPS = ub(/(?:^|\n)\s*(?:\d+\.|[-*])\s+\S|\b(?:öffnen|klicken|wählen|geben|speichern|bestätigen|markieren)\s+sie\b|\b(?:open|click|select|enter|save)\b/iu);
+const ADDITIONAL = ub(/\b(?:tipp|hinweis|beispiel|optional\w*|zusätzlich\w*|alternativ\w*|auch\s+möglich|note|tip|example)\b/iu);
+const INTERNAL = ub(/\b(?:intern\w*|nur\s+für\s+(?:die\s+)?redaktion|testfall\w*|testdaten|testing|migration\w*|deployment|rollout|systemlandschaft|bug)\b/iu);
+const DEFINITION = ub(/\b(?:ist|sind|bezeichnet|bedeutet|beschreibt|dient|umfasst)\b/iu);
 
 export function detectDetail(t: TriageInput): Pick & { codes: DetailLevel[] } {
   const text = `${t.headingPath.slice(-1).join(' ')}\n${t.text}`;

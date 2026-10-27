@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.96 Stand nach Etappe 94 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Die fünf weiteren Hinweise aus dem Review der Etappen 42–47 (1.95): vier behoben, einer begründet belassen | ✅ T-416, T-417; T-289 erwartet jetzt, dass eine ausgeschaltete Stelle aus bleibt |
+| Triage | `\b` kennt in JavaScript nur ASCII: „öffnen Sie“, „wählen Sie“ (Standardablauf) und „že“ (Tschechisch) wurden nie erkannt; alle Muster der Triage nutzen jetzt eine Wortgrenze für Unicode |
+| Datenschutz im Bild | erneute Erkennung schaltete von Hand ausgeschaltete Stellen wieder ein; gleiche Art mit Überdeckung ab 50 % bleibt jetzt aus |
+| Inhalts-Dashboard und GOAL | Gesamtzahlen der Labels enthielten ausgeschlossene Chunks und entfernte Dokumente; der Anteil „freigegeben“ zählte abgelöste und leere Kapitel und konnte über 100 % liegen |
+| Belassen | neues Unterkapitel der Triage mit dem Schlüssel eines abgelösten Unterkapitels: Der Import ordnet genauso zu, der Schlüssel ist je Kapitel eindeutig, und die Historie sammelt gerade Inhalte abgelöster Funktionen |
+
 ## 1.95 Stand nach Etappe 93 (27.10.2026)
 
 | Punkt | Ergebnis |

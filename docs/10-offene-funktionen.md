@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.93, 27.10.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.94, 27.10.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -134,7 +134,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 45. **Etappe 91 – Code-Review der Etappen 55–59 (✅ umgesetzt):** neun Funde behoben, einer begründet belassen.
 46. **Etappe 92 – Code-Review der Etappen 48–54 (✅ umgesetzt):** neun Funde behoben; der zehnte (Lektorat) war schon über die Projektprüfung der Pfadparameter abgesichert.
 47. **Etappe 93 – Code-Review der Etappen 42–47 (✅ umgesetzt):** acht Funde behoben, zwei waren mit Etappe 92 schon erledigt.
-48. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+48. **Etappe 94 – Hinweise aus dem Review der Etappen 42–47 (✅ umgesetzt):** vier von fünf behoben, einer begründet belassen.
+49. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

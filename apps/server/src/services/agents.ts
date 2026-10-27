@@ -201,7 +201,9 @@ async function measure(ctx: Ctx) {
   const chapters = await ctx.db.all("SELECT id, title, instruction, key FROM chapters WHERE project_id = ? AND outline_family_id IS NULL AND history_at IS NULL AND key NOT IN ('__none__', 'jira-tickets', 'wissensnotizen')", ctx.projectId);
   const withChunks = dash.chapters.filter((c) => c.chunks > 0 && chapters.some((x) => x.id === c.chapterId));
   const happyEdge = withChunks.filter((c) => (c.detail['happy-path'] ?? 0) > 0 && (c.detail.edge ?? 0) > 0).length;
-  const approved = await n(`SELECT COUNT(DISTINCT v.chapter_id) AS n FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved' AND c.outline_family_id IS NULL`, ctx.projectId);
+  // Anteil unter den Kapiteln mit Chunks (Nenner) – abgelöste oder leere Kapitel zählen nicht mit (sonst über 100 %)
+  const approvedIds = new Set((await ctx.db.all("SELECT DISTINCT v.chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved'", ctx.projectId)).map((r) => r.chapter_id as string));
+  const approved = withChunks.filter((c) => approvedIds.has(c.chapterId)).length;
   const collectorChunks = dash.chapters.filter((c) => !chapters.some((x) => x.id === c.chapterId)).reduce((s, c) => s + c.chunks, 0);
   const lastEval = await ctx.db.get('SELECT r.metrics FROM metadata_eval_runs r WHERE r.project_id = ? ORDER BY r.created_at DESC LIMIT 1', ctx.projectId);
   return {

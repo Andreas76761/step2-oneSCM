@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.94.0 – Etappe 94 (27.10.2026)
+
+### Hinzugefügt
+- **Hinweise aus dem Review der Etappen 42–47:** Die fünf kleineren Punkte aus Etappe 93 habe ich einzeln geprüft. Vier sind behoben, einer ist begründet belassen.
+- **Tests T-416 und T-417:** Jeder Teil scheitert ohne seine Korrektur.
+
+### Behoben
+- **Triage erkennt Wörter mit Umlauten:** `\b` kennt in JavaScript nur ASCII-Buchstaben. Darum wurden „öffnen Sie“ und „wählen Sie“ nie als Standardablauf erkannt und „že“ nie als Tschechisch. Alle Muster der Triage nutzen jetzt eine Wortgrenze, die Umlaute und andere Buchstaben kennt.
+- **Datenschutz im Bild:** Eine erneute Erkennung schaltete von Hand ausgeschaltete Stellen wieder ein, etwa eine bewusst lesbare Adresse. Findet die Erkennung dieselbe Stelle wieder (gleiche Art, Überdeckung ab 50 %), bleibt sie aus. T-289 prüft jetzt dieses Verhalten.
+- **Inhalts-Dashboard:** Die Gesamtzahlen der Labels zählten auch ausgeschlossene Chunks und entfernte Dokumente mit.
+- **GOAL:** Der Anteil „Kapitel mit freigegebener Fassung“ zählte auch abgelöste und leere Kapitel und konnte über 100 % liegen.
+
+### Belassen
+- **Neues Unterkapitel der Triage:** Trägt es den Schlüssel eines abgelösten Unterkapitels, landet der Chunk dort. Der Import ordnet genauso zu, und der Schlüssel ist je Kapitel eindeutig. Die Historie sammelt gerade Inhalte abgelöster Funktionen.
+
 ## 0.93.0 – Etappe 93 (27.10.2026)
 
 ### Hinzugefügt

@@ -4,7 +4,7 @@
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { audit, privacyNames, type Ctx, type User } from '../context.js';
 import { json, now, parseJson } from '../db.js';
-import { cleanRegion, findRegions, pixelBlock, type RedactionRegion } from '../domain/imageRedaction.js';
+import { carryInactive, cleanRegion, findRegions, pixelBlock, type RedactionRegion } from '../domain/imageRedaction.js';
 import { badRequest, notFound } from '../problem.js';
 import { ocrBoxesCommand, ocrWords } from './mediaTools.js';
 import { storeMedia } from './media.js';
@@ -141,7 +141,7 @@ export async function detectRedaction(ctx: Ctx, sha: string, actor: string) {
       // Maße aus dem Upload fehlen bei manchen JPEG/WebP – dann aus dem Bild selbst (sonst Stellen mit NaN, nichts unkenntlich)
       let [w, h] = [Number(a.width), Number(a.height)];
       if (!(w > 0 && h > 0)) ({ width: w, height: h } = await loadImage(data));
-      found = findRegions(words, w, h, { names: await privacyNames(ctx.db) });
+      found = carryInactive(findRegions(words, w, h, { names: await privacyNames(ctx.db) }), prev ? parseJson<RedactionRegion[]>(prev.regions, []) : []);
     }
   } catch (e) {
     status = 'failed';

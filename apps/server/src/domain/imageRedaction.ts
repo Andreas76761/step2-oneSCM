@@ -87,3 +87,21 @@ export function cleanRegion(v: any): { x: number; y: number; w: number; h: numbe
 
 /** Kantenlänge der Pixelblöcke: grob genug, dass Text nicht rekonstruierbar ist */
 export const pixelBlock = (regionHeightPx: number) => Math.max(8, Math.round(regionHeightPx / 2));
+
+/** Überdeckung zweier Stellen (Schnitt durch Vereinigung, 0…1) */
+const overlap = (a: RedactionRegion, b: RedactionRegion) => {
+  const w = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x));
+  const h = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+  const inter = w * h;
+  const union = a.w * a.h + b.w * b.h - inter;
+  return union > 0 ? inter / union : 0;
+};
+
+/**
+ * Erneute Erkennung: von Hand ausgeschaltete Stellen bleiben aus, wenn die neue Erkennung dieselbe Stelle (gleiche Art,
+ * Überdeckung ab 50 %) wieder findet – sonst würde etwa eine bewusst lesbare Feldbezeichnung erneut unkenntlich.
+ */
+export function carryInactive(found: RedactionRegion[], previous: RedactionRegion[]): RedactionRegion[] {
+  const off = previous.filter((p) => p.source === 'ocr' && !p.active);
+  return found.map((f) => (off.some((p) => p.kind === f.kind && overlap(p, f) >= 0.5) ? { ...f, active: false } : f));
+}
