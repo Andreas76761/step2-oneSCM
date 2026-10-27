@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { parseValeStyle } from '../src/domain/ruleSets.js';
-import { analyzeStyle } from '../src/domain/style.js';
+import { analyzeStyle, type StyleIssue } from '../src/domain/style.js';
 import { clearLanguageToolCache, languageToolIssues } from '../src/services/languageTool.js';
 import { client, uploadFile } from './api-helpers.js';
 import { freshDatabase, tempDir } from './helpers.js';
@@ -14,7 +14,7 @@ describe('Etappe 91', () => {
   it('[T-410] LanguageTool-Funde neben satzweiten Befunden, Pause nach Verbindungsfehler, unsichere Vale-Muster abgelehnt (Einheit)', async () => {
     // ein Satz mit 30 Wörtern: „Langer Satz“ deckt den ganzen Satz ab, der Grammatikfund bleibt trotzdem
     const long = `Die Benutzer klickt ${Array.from({ length: 28 }, (_, i) => `wort${i}`).join(' ')}.`;
-    const lt = { rule: 'grammar', severity: 'warning' as const, message: 'LanguageTool: Kongruenz', start: 4, end: 20 };
+    const lt: StyleIssue = { rule: 'grammar', severity: 'warning', message: 'LanguageTool: Kongruenz', start: 4, end: 20 };
     const issues = analyzeStyle(long, { extraIssues: [lt] }).sentences[0].issues;
     expect(issues.some((i) => i.rule === 'long_sentence')).toBe(true);
     expect(issues.some((i) => i.rule === 'grammar')).toBe(true);
