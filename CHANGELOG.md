@@ -15,7 +15,7 @@
 - **Gesperrte Schaltflächen:**
   - Abkürzungen: Der Hinweis nannte „Langform“; das Feld heißt „Bedeutung“.
   - Freigabe: Solange die Prüfung noch lädt, steht kein falscher Hinweis mehr da. „Kommentar“ steht nur einmal, an „Freigeben“.
-  - Kapitelvorlage: Der Hinweis auf fehlende Schritte erschien doppelt.
+  - Kapitelvorlage: Der Hinweis auf fehlende Schritte erschien doppelt. T-231 prüft jetzt den Hinweis an „Speichern“.
   - Klickstrecke: Die Bedingungen standen an zwei Stellen und sind jetzt zusammengeführt.
   - `Gated` übernimmt jetzt `disabled` und `aria-describedby` des Aufrufers, statt sie zu überschreiben.
 

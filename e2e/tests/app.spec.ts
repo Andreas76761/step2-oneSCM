@@ -1379,8 +1379,9 @@ test('[T-231] Vorlage vollständig bearbeiten, Druck mit Deckblatt und Seitenzah
   await dlg.getByLabel('Titelvorschlag').fill('Lieferschein drucken');
   await dlg.getByLabel(/^Voraussetzungen/).fill('Sie haben die Berechtigung Lager');
   await dlg.getByLabel(/^Schritte/).fill('');
-  await expect(dlg.getByRole('alert')).toHaveText('Eine Vorlage braucht mindestens einen Schritt.');
+  // seit Etappe 86/88: der Hinweis steht an der gesperrten Schaltfläche (statt zusätzlich als Alarm)
   await expect(dlg.getByRole('button', { name: 'Speichern' })).toBeDisabled();
+  await expect(dlg.getByRole('button', { name: 'Speichern' })).toHaveAccessibleDescription('Noch nötig: mindestens ein Schritt.');
   await dlg.getByLabel(/^Schritte/).fill('Öffnen Sie **Lager › Lieferscheine**\nWählen Sie den Auftrag\nKlicken Sie auf **Drucken**');
   await expect(dlg).toContainText('3 erkannt');
   await dlg.getByLabel(/^Tipps/).fill('Mehrere Aufträge gleichzeitig markieren');
