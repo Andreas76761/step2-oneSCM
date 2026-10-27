@@ -3998,6 +3998,11 @@ test('[T-402] Sichtbare Beschriftung im zugänglichen Namen: Schaltflächen, Lin
     }
   }
   expect([...new Set(findings)]).toEqual([]);
+  // Schieberegler: fester Name ohne den Wert, Wert mit Einheit über aria-valuetext
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/einstellungen');
+  const slider = page.getByRole('slider', { name: 'Clusterschwelle', exact: true });
+  await expect(slider).toHaveAttribute('aria-valuetext', /^\d+ %$/);
 });
 
 test('[T-403] Dialoge und Erklärungen per Tastatur: Fokus im Dialog, Tippen ohne Fokusverlust, Esc schließt, Fokus zurück; Glossar-Erklärung erreichbar und mit Esc schließbar (WCAG 2.1.2, 2.4.3, 1.4.13)', async ({ page, request }) => {
@@ -4077,6 +4082,17 @@ test('[T-404] Screenshot-Editor ohne Ziehen: Rahmen, Pfeil, Unkenntlich, Lupe, Z
   await canvas.click({ position: { x: 320, y: 60 } });
   await expect(hint).not.toHaveText('');
   await page.keyboard.press('Escape');
+  // zweiter Druck mit leichter Mausbewegung: bleibt der Endpunkt zum gesetzten Anfangspunkt
+  await page.getByRole('button', { name: '▭ Rahmen ziehen' }).click();
+  await canvas.click({ position: { x: 300, y: 120 } });
+  const cb = (await canvas.boundingBox())!;
+  await page.mouse.move(cb.x + 380, cb.y + 180);
+  await page.mouse.down();
+  await page.mouse.move(cb.x + 386, cb.y + 186, { steps: 3 });
+  await page.mouse.up();
+  await expect(hint).toHaveText('');
+  await expect(canvas).toHaveAttribute('aria-label', 'Screenshot mit 0 Nummern und 2 Rahmen, 1 Pfeilen');
+  await page.getByRole('button', { name: 'Rückgängig' }).click();
   await page.getByRole('button', { name: '▦ Unkenntlich machen' }).click();
   await twoClicks(20, 110, 100, 160);
   await page.getByRole('button', { name: 'Lupe' }).click();

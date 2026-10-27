@@ -365,7 +365,7 @@ function ClickpathBuilder({ images, onDone }: { images: any[]; onDone: () => voi
     setSteps(next);
   };
   const label = (i: number, k: number) => (steps[i].alternatives.length > 1 ? `${i + 1}${String.fromCharCode(97 + k)}` : String(i + 1));
-  const ready = title.trim().length >= 3 && steps.length >= 2 && steps.every((s) => s.alternatives.every((a) => a.sha));
+  const missing = [title.trim().length < 3 && 'Titel mit mindestens 3 Zeichen', steps.length < 2 && 'mindestens 2 Stationen', !steps.every((s) => s.alternatives.every((a) => a.sha)) && 'ein Bild für jede Station'];
   const submit = async () => {
     try {
       const body = { title, perRow, steps };
@@ -430,7 +430,7 @@ function ClickpathBuilder({ images, onDone }: { images: any[]; onDone: () => voi
       </ol>
       <div className="row-actions">
         {steps.length < 12 && <button type="button" className="btn" onClick={() => setSteps([...steps, empty()])}>+ Station</button>}
-        <Gated type="button" className="btn primary" missing={[title.trim().length < 3 && 'Titel mit mindestens 3 Zeichen', steps.length < 2 && 'mindestens 2 Stationen', !steps.every((s) => s.alternatives.every((a) => a.sha)) && 'ein Bild für jede Station']} onClick={() => void submit()}>{editId ? 'Klickstrecke aktualisieren' : 'Klickstrecke erstellen'}</Gated>
+        <Gated type="button" className="btn primary" missing={missing} onClick={() => void submit()}>{editId ? 'Klickstrecke aktualisieren' : 'Klickstrecke erstellen'}</Gated>
       </div>
       {result && (
         <div>

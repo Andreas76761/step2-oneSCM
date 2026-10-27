@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.88.0 – Etappe 88 (27.10.2026)
+
+### Hinzugefügt
+- **Code-Review der Etappen 79–87** (Wahl des Auftraggebers vom 27.10.2026): Zehn Funde wurden einzeln geprüft und alle behoben. Die Tests T-399, T-402 und T-404 decken die Fehler jetzt mit ab.
+
+### Behoben
+- **Wochenübersicht trotz `WEEKLY_DIGEST=0`:** Die Einstellung verhinderte nur das erste Einplanen beim Start. Ein Auftrag, der schon in der Datenbank stand (z. B. aus dem Anlegen der Demodaten oder einem früheren Start), lief trotzdem, sendete die Übersicht und plante sich neu ein. Der Auftrag tut mit `WEEKLY_DIGEST=0` jetzt nichts mehr. T-399 prüft das mit einem schon eingeplanten Auftrag; ohne die Korrektur scheitert der Test.
+- **Schieberegler (Einstellungen, Widersprüche):** Seit Etappe 83 stand der Wert in einem `<output>` innerhalb der Beschriftung und wurde damit Teil des Namens („Clusterschwelle 55 %“). Der Name änderte sich bei jeder Bewegung, und der Wert wurde doppelt angesagt. Der Regler heißt jetzt fest „Clusterschwelle“ und meldet seinen Wert mit Einheit über `aria-valuetext` („55 %“). Die sichtbare Anzeige ist für Screenreader ausgeblendet.
+- **Vorher/Nachher-Regler:** Das `<output>` stand vor dem Regler. Die Beschriftung gehörte damit zum `<output>`, und ein Klick auf „Anteil Nachher“ erreichte den Regler nicht. Die Anzeige steht jetzt hinter dem Regler.
+- **Screenshot-Editor:**
+  - Ein angefangener Zwei-Klick-Vorgang blieb nach dem Laden eines neuen Bildes bestehen; jetzt wird er verworfen.
+  - Bewegte sich die Maus beim zweiten Klick ein wenig, ging der Anfangspunkt verloren. Der zweite Druck ist jetzt immer der Endpunkt.
+- **Gesperrte Schaltflächen:**
+  - Abkürzungen: Der Hinweis nannte „Langform“; das Feld heißt „Bedeutung“.
+  - Freigabe: Solange die Prüfung noch lädt, steht kein falscher Hinweis mehr da. „Kommentar“ steht nur einmal, an „Freigeben“.
+  - Kapitelvorlage: Der Hinweis auf fehlende Schritte erschien doppelt.
+  - Klickstrecke: Die Bedingungen standen an zwei Stellen und sind jetzt zusammengeführt.
+  - `Gated` übernimmt jetzt `disabled` und `aria-describedby` des Aufrufers, statt sie zu überschreiben.
+
 ## 0.87.0 – Etappe 87 (27.10.2026)
 
 ### Hinzugefügt

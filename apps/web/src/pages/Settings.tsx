@@ -38,8 +38,9 @@ export function SettingsPage() {
   const slider = (k: string, label: string, help: string) => (
     <div className="setting">
       <label className="slider">{label}
-        <input type="range" min={10} max={100} value={Math.round(a[k] * 100)} onChange={(e) => setA(k, Number(e.target.value) / 100)} />
-        <output>{Math.round(a[k] * 100)} %</output>
+        <input type="range" min={10} max={100} value={Math.round(a[k] * 100)} onChange={(e) => setA(k, Number(e.target.value) / 100)} aria-label={label} aria-valuetext={`${Math.round(a[k] * 100)} %`} />
+        {/* Wert nur zum Sehen: Screenreader hören ihn über aria-valuetext, nicht ein zweites Mal im Namen */}
+        <output aria-hidden="true">{Math.round(a[k] * 100)} %</output>
       </label>
       <p className="small muted">{help}</p>
     </div>

@@ -226,6 +226,9 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
       setHistory([]);
       setCrop(null);
       setTitle(file.name.replace(/\.[^.]+$/, ''));
+      setAnchor(null);
+      setPicked(null);
+      setPreview(null);
     };
     i.onerror = () => notify('Bild konnte nicht geladen werden.', 'error');
     i.src = url;
@@ -319,7 +322,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
   });
   const onMove = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     if (moving) return moveTo(moving, pos(e));
-    const from = drag ?? anchor;
+    const from = anchor ?? drag;
     if (from) setPreview({ tool, ...shape(from, pos(e)) });
   };
   const onUp = (e: ReactPointerEvent<HTMLCanvasElement>) => {
@@ -330,13 +333,11 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
       return setMoving(null);
     }
     if (!drag) return;
-    let start = drag;
     setDrag(null);
-    if (near(drag, p)) {
-      // Klick statt Ziehen: erster Klick setzt den Anfangspunkt, der zweite den Endpunkt
-      if (!anchor) { setAnchor(drag); return; }
-      start = anchor;
-    }
+    // Klick statt Ziehen: der erste Klick setzt den Anfangspunkt, der zweite Druck ist immer der Endpunkt –
+    // auch wenn die Maus dabei etwas wandert
+    if (!anchor && near(drag, p)) { setAnchor(drag); return; }
+    const start = anchor ?? drag;
     setAnchor(null);
     setPreview(null);
     const { f, a } = shape(start, p);

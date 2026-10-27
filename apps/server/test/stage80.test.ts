@@ -17,6 +17,11 @@ describe('Etappe 80', () => {
       const off = await build('digest-off');
       try {
         expect(await digestJob(off)).toBeUndefined();
+        // ein schon eingeplanter Auftrag läuft durch, ohne zu senden und ohne sich neu einzuplanen
+        const id = await off.ctx.jobs.enqueue('weekly-digest', {}, 1);
+        await expect.poll(async () => (await off.ctx.db.get<{ status: string }>('SELECT status FROM jobs WHERE id = ?', id))?.status, { timeout: 15_000 }).toBe('completed');
+        expect(await digestJob(off)).toBeUndefined();
+        expect(await off.ctx.db.get("SELECT id FROM notifications WHERE type = 'digest'")).toBeUndefined();
       } finally {
         await off.app.close();
       }

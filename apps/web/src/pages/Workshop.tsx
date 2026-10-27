@@ -754,7 +754,7 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
           <h3>Zur Freigabe einreichen</h3>
           <p className="small muted">Nach dem Einreichen ist die Version bis zur Entscheidung gesperrt (Freigabestufen des Projekts siehe Seite „Freigabe“).</p>
           <label className="block">Hinweis an die Freigabe (optional) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
-          <Gated className="btn primary" missing={[!gate.data?.passed && 'alle Prüfkriterien der Freigabe erfüllt (siehe oben)']} onClick={() => act('submit', { comment }, 'Zur Freigabe eingereicht.')}>Zur Freigabe einreichen</Gated>
+          <Gated className="btn primary" busy={!gate.data} missing={[gate.data && !gate.data.passed && 'alle Prüfkriterien der Freigabe erfüllt (siehe oben)']} onClick={() => act('submit', { comment }, 'Zur Freigabe eingereicht.')}>Zur Freigabe einreichen</Gated>
         </>
       )}
       {version.workflow && (
@@ -779,8 +779,9 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
           <h3>Fachliche Entscheidung</h3>
           <label className="block">Kommentar (Pflicht) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
           <div className="row-actions">
-            <Gated className="btn primary" missing={[!gate.data?.passed && 'alle Prüfkriterien erfüllt', !comment.trim() && 'Kommentar']} onClick={() => act('approve', { comment, decision: 'approved' }, version.workflow?.stages.length > 1 ? 'Zustimmung gespeichert.' : 'Kapitelversion freigegeben.')}>{version.workflow?.stages.length > 1 ? `Zustimmen (${version.workflow.stages[version.workflow.currentStage]?.name})` : 'Freigeben'}</Gated>
-            <Gated className="btn" missing={[!comment.trim() && 'Kommentar']} onClick={() => act('approve', { comment, decision: 'rejected' }, 'Abgelehnt – Version ist wieder ein bearbeitbarer Entwurf.')}>Ablehnen</Gated>
+            <Gated className="btn primary" busy={!gate.data} missing={[gate.data && !gate.data.passed && 'alle Prüfkriterien erfüllt', !comment.trim() && 'Kommentar']} onClick={() => act('approve', { comment, decision: 'approved' }, version.workflow?.stages.length > 1 ? 'Zustimmung gespeichert.' : 'Kapitelversion freigegeben.')}>{version.workflow?.stages.length > 1 ? `Zustimmen (${version.workflow.stages[version.workflow.currentStage]?.name})` : 'Freigeben'}</Gated>
+            {/* braucht ebenfalls einen Kommentar; den Hinweis zeigt die Schaltfläche daneben */}
+            <button className="btn" disabled={!comment.trim()} onClick={() => act('approve', { comment, decision: 'rejected' }, 'Abgelehnt – Version ist wieder ein bearbeitbarer Entwurf.')}>Ablehnen</button>
             <button className="btn ghost" onClick={() => act('withdraw', { reason: comment }, 'Einreichung zurückgezogen.')}>Einreichung zurückziehen</button>
           </div>
         </>

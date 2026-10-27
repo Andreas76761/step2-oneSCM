@@ -172,6 +172,8 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     await ensurePlanReminderJob(ctx, true);
   }, undefined, { background: true });
   jobs.register('weekly-digest', async () => {
+    // Auch ein schon eingeplanter Auftrag (z. B. aus einem früheren Start) sendet und plant mit WEEKLY_DIGEST=0 nichts mehr
+    if (process.env.WEEKLY_DIGEST === '0') return;
     await runDigests(ctx, (id) => withProject(ctx, id));
     await ensureDigestJob(ctx, true);
   }, undefined, { background: true });

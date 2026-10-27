@@ -280,12 +280,13 @@ export function Md({ text }: { text: string }) {
  * `missing`: je fehlender Angabe ein kurzer Text, erfüllte Angaben als false; `busy` sperrt ohne Hinweis.
  * Der Hinweis steht sichtbar neben der Schaltfläche und ist über aria-describedby mit ihr verknüpft.
  */
-export function Gated({ missing, busy, children, ...rest }: { missing: (string | false | null | undefined)[]; busy?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
+export function Gated({ missing, busy, children, disabled, 'aria-describedby': describedBy, ...rest }: { missing: (string | false | null | undefined)[]; busy?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
   const id = useId();
   const list = missing.filter((m): m is string => !!m);
+  const ids = [describedBy, list.length ? id : undefined].filter(Boolean).join(' ') || undefined;
   return (
     <>
-      <button {...rest} disabled={busy || list.length > 0} aria-describedby={list.length ? id : undefined}>{children}</button>
+      <button {...rest} disabled={busy || disabled || list.length > 0} aria-describedby={ids}>{children}</button>
       {list.length > 0 && <span id={id} className="gate-hint">Noch nötig: {list.join(', ')}.</span>}
     </>
   );

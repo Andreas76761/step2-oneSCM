@@ -111,7 +111,7 @@ export function AbbreviationsPage() {
             <label className="inline">Abkürzung <input value={form.abbreviation} onChange={(e) => setForm({ ...form, abbreviation: e.target.value })} /></label>
             <label className="inline">Bedeutung <input value={form.expansion} onChange={(e) => setForm({ ...form, expansion: e.target.value })} /></label>
             <label className="inline">Erläuterung <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-            <Gated className="btn primary" type="submit" missing={[!form.abbreviation.trim() && 'Abkürzung', !form.expansion.trim() && 'Langform']}>Hinzufügen</Gated>
+            <Gated className="btn primary" type="submit" missing={[!form.abbreviation.trim() && 'Abkürzung', !form.expansion.trim() && 'Bedeutung']}>Hinzufügen</Gated>
           </form>
         </Card>
       )}

@@ -370,7 +370,6 @@ function TemplateEditor({ template, onClose, onSaved }: { template: any; onClose
         <label>Schritte <span className="small muted">(einer je Zeile · {steps.length} erkannt)</span><textarea rows={6} value={f.steps} onChange={set('steps')} /></label>
         <label>Ergebnis <textarea rows={2} value={f.result} onChange={set('result')} /></label>
         <label>Tipps <span className="small muted">(einer je Zeile)</span><textarea rows={3} value={f.hints} onChange={set('hints')} /></label>
-        {!steps.length && <p className="small" role="alert">Eine Vorlage braucht mindestens einen Schritt.</p>}
         <div className="row-actions">
           <Gated className="btn primary" busy={busy} missing={[!f.name.trim() && 'Name', !steps.length && 'mindestens ein Schritt']} onClick={save}>Speichern</Gated>
           <button className="btn" onClick={onClose}>Abbrechen</button>

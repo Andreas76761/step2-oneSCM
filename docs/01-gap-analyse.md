@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.90 Stand nach Etappe 88 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 79–87 (Wahl des Auftraggebers vom 27.10.2026): zehn Funde, alle geprüft und behoben | ✅ T-399, T-402, T-404 erweitert; Server-Tests auf SQLite und PostgreSQL |
+| Wochenübersicht | `WEEKLY_DIGEST=0` stoppte nur das erste Einplanen; ein schon eingeplanter Auftrag sendete weiter und plante sich neu ein |
+| Schieberegler | Der Wert im `<output>` gehörte zum Namen („Clusterschwelle 55 %“), beim Vorher/Nachher-Regler gehörte die Beschriftung zum `<output>` statt zum Regler |
+| Screenshot-Editor | ein angefangener Zwei-Klick-Vorgang blieb nach einem neuen Bild bestehen; leichte Mausbewegung beim zweiten Klick verwarf den Anfangspunkt |
+| Gesperrte Schaltflächen | falscher Feldname („Langform“ statt „Bedeutung“), Hinweis während des Ladens der Freigabeprüfung, doppelte Hinweise, `Gated` überschrieb `disabled` und `aria-describedby` des Aufrufers, doppelte Bedingungen in der Klickstrecke |
+
 ## 1.89 Stand nach Etappe 87 (27.10.2026)
 
 | Punkt | Ergebnis |
