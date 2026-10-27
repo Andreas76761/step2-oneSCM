@@ -322,7 +322,7 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
     // Tonalität (ADR-102): Werbesprache, Verkürzungen, Floskeln, harte Formulierungen je nach Ton
     if (opts.tone) for (const h of toneHits(t, opts.tone, { longReported: words > maxWords })) if (!inCode(h.start, h.end)) add('tone', h.severity, h.message, h.start, h.end);
     for (const w of HEDGING) for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(w)}(?![\p{L}])`, 'giu'))) add('hedging', 'info', `Unklare Anweisung „${m[0]}“ – eindeutig formulieren`, m.index!, m.index! + m[0].length);
-    const nominal = [...t.matchAll(/\b[\p{Lu}][\p{Ll}]+(?:ung|heit|keit|ion|ierung|schaft)(?:en)?\b/gu)];
+    const nominal = [...t.matchAll(/(?<![\p{L}\p{N}])[\p{Lu}][\p{Ll}]+(?:ung|heit|keit|ion|ierung|schaft)(?:en)?(?![\p{L}\p{N}])/gu)];
     if (nominal.length >= 3) add('nominal', 'info', `Nominalstil (${nominal.map((n) => n[0]).slice(0, 4).join(', ')}) – mit Verben formulieren`, nominal[0].index!, nominal.at(-1)!.index! + nominal.at(-1)![0].length);
     for (const [wrong, right] of Object.entries(SPELLING)) {
       if (wrong === right) continue;

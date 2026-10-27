@@ -468,7 +468,8 @@ export async function createExport(ctx: Ctx, input: ExportInput, actor: string) 
 
   const vf = outline ? variantFilter(outline) : null;
   const filter: ExportFilter = {
-    roles: input.roles ?? (vf?.roles.length ? vf.roles : undefined), divisions: input.divisions ?? (vf?.divisions.length ? vf.divisions : undefined),
+    // leere Auswahl (die Oberfläche schickt [] ohne Häkchen) heißt „wie die Variante“, nicht „ohne Filter“
+    roles: input.roles?.length ? input.roles : vf?.roles.length ? vf.roles : input.roles, divisions: input.divisions?.length ? input.divisions : vf?.divisions.length ? vf.divisions : input.divisions,
     market: input.market ?? vf?.market ?? null, release: input.release ?? null,
     ...(vf ? { blueprint: vf.blueprint, markets: vf.markets } : {}),
   };

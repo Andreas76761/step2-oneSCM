@@ -365,7 +365,7 @@ export async function exportTranslation(ctx: Ctx, id: string, format: string) {
 /** Übersetzungsstand je Zielsprache für das Dashboard (ADR-021) */
 export async function translationStatus(ctx: Ctx) {
   const current = await ctx.db.all(
-    "SELECT v.id, v.chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND v.status = 'approved'",
+    "SELECT v.id, v.chapter_id FROM generated_chapter_versions v JOIN chapters c ON c.id = v.chapter_id WHERE c.project_id = ? AND c.outline_family_id IS NULL AND v.status = 'approved'",
     ctx.projectId,
   );
   const currentIds = new Set(current.map((v) => v.id as string));

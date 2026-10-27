@@ -12,7 +12,7 @@ import { guidanceGateChecks } from './guidanceBase.js';
 import { mentions, mergeInstructions } from '../domain/chapterInstruction.js';
 import { instructionOf, subchapterInstructions } from './structure.js';
 import { excludedTicketDocuments } from './ticketClasses.js';
-import { snippetScope, variantSnippetRefs } from './variantSnippets.js';
+import { idScope, snippetScope, variantSnippetRefs } from './variantSnippets.js';
 import { checkDecider, clearWorkflowSql, recordApproval, startWorkflow, workflowState } from './workflow.js';
 
 // ---------- Kapitel ----------
@@ -31,12 +31,15 @@ export async function listChapters(ctx: Ctx, opts: { outlineFamilyId?: string; o
 
 async function chapterSummary(ctx: Ctx, c: Row) {
   const { db } = ctx;
-  const scope = await snippetScope(ctx, c);
+  // Variantenkapitel: Zuordnungen einmal ermitteln – an der übergebenen Gliederungsversion (outline_id), auch für die Befunde
+  const variant = c.outline_family_id ? await variantSnippetRefs(ctx, c) : null;
+  const variantIds = variant?.refs.map((r) => r.snippetId);
+  const scope = variantIds ? idScope(variantIds) : await snippetScope(ctx, c);
   const counts = (await db.get(
     `SELECT COUNT(*) AS total, SUM(CASE WHEN s.evidence_status IN ('source_confirmed','manually_confirmed') THEN 1 ELSE 0 END) AS confirmed
      FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE ${scope.sql} AND r.is_current = 1`, ...scope.params,
   ))!;
-  const findings = await chapterFindings(ctx, c.id);
+  const findings = await chapterFindings(ctx, c.id, variantIds);
   const versions = await db.all('SELECT id, version_no, status, generated_at, approved_at FROM generated_chapter_versions WHERE chapter_id = ? ORDER BY version_no DESC', c.id);
   const coverage = {
     roles: await db.all(
@@ -53,8 +56,8 @@ async function chapterSummary(ctx: Ctx, c: Row) {
     outlineFamilyId: c.outline_family_id ?? null,
     validFrom: c.valid_from ?? null,
     inHistory: !!c.history_at,
-    subchapters: c.outline_family_id
-      ? (await variantSnippetRefs(ctx, c)).subchapters
+    subchapters: variant
+      ? variant.subchapters
       : await db.all('SELECT id, title, position, valid_from AS "validFrom" FROM subchapters WHERE chapter_id = ? AND history_at IS NULL ORDER BY position', c.id),
     snippetCount: counts.total ?? 0,
     confirmedSnippetCount: counts.confirmed ?? 0,
@@ -72,12 +75,12 @@ export async function getChapter(ctx: Ctx, id: string) {
 }
 
 /** Alle Befunde, die ein Kapitel betreffen (direkt oder über eine der beiden Aussagen). */
-async function chapterFindings(ctx: Ctx, chapterId: string) {
+async function chapterFindings(ctx: Ctx, chapterId: string, variantIds?: string[]) {
   type F = { id: string; seq: number; type: string; severity: string; status: string; reason: string };
-  const chapter = await ctx.db.get('SELECT * FROM chapters WHERE id = ?', chapterId);
-  if (chapter?.outline_family_id) {
+  const chapter = variantIds ? null : await ctx.db.get('SELECT * FROM chapters WHERE id = ?', chapterId);
+  if (variantIds || chapter?.outline_family_id) {
     // Handbuch-Variante: Befunde der zugeordneten Schnipsel (ADR-034)
-    const ids = (await variantSnippetRefs(ctx, chapter)).refs.map((r) => r.snippetId);
+    const ids = variantIds ?? (await variantSnippetRefs(ctx, chapter!)).refs.map((r) => r.snippetId);
     if (!ids.length) return [] as F[];
     const marks = ids.map(() => '?').join(',');
     return ctx.db.all<F>(

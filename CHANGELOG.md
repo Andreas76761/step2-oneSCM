@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.97.0 – Etappe 97 (27.10.2026)
+
+### Hinzugefügt
+- **Zweites Code-Review der Etappen 11–16:** Geprüft wurden Stammdaten, Draft Manual, Handbuch-Varianten, Abgleich mit dem Blueprint, Firmen-Layout, Word-Export, Schreibstil, Bilder und Benutzerverwaltung, jeweils am heutigen Stand. Von zehn Funden sind sechs behoben und zwei waren schon erledigt: Nummerierte Listen im Word-Export beginnen je Liste neu, und das Bildarchiv liest die Verwendungen in einem Durchgang. Zwei bleiben begründet bestehen, siehe unten.
+- **Tests T-422 und T-423:** Jeder Teil scheitert ohne seine Korrektur. Das wurde je Datei einzeln geprüft.
+
+### Behoben
+- **Varianten-Export:** Ohne Häkchen bei Rollen und Sparten schickt die Oberfläche leere Listen. Der Export galt dann als ungefiltert, und Absätze anderer Rollen landeten im Handbuch der Variante. Jetzt gilt bei leerer Auswahl der Filter der Variante.
+- **Variantenkapitel:** Die offenen Befunde wurden an der Gliederungsversion gezählt, aus der das Kapitel erzeugt wurde, Schnipsel und Abdeckung dagegen an der angefragten Version. Jetzt zählt alles an derselben Version, und die Zuordnungen werden je Kapitel nur einmal ermittelt statt dreimal.
+- **Abgleich mit dem Blueprint:** Stand derselbe Schnipsel in einer Anfrage doppelt, brach die Übernahme mit einem Serverfehler (500) ab. Jetzt wird er einmal zugeordnet.
+- **Gesperrte Benutzer:** Sie erschienen weiter als Beteiligte des Projekts. Sie konnten erwähnt und als Zuständige gewählt werden und bekamen Freigabe-, Wochen- und Planungshinweise. War eine überfällige Planung einem gesperrten Benutzer zugewiesen, ging der Hinweis an ihn statt an die Administratoren.
+- **Dashboard:** Der Übersetzungsstand zählte Variantenkapitel als „fehlt“, obwohl Leseransicht und Variantenhandbuch deutsch sind. Die übrigen Kennzahlen zählten sie schon nicht.
+- **Schreibstil:** Der Hinweis auf Nominalstil übersah Wörter mit Umlaut am Anfang, etwa Änderung, Übertragung oder Überprüfung.
+
+### Bewusst belassen
+- **Demo-Modus:** Sperrt man den Demo-Benutzer, mit dem der eigene Browser arbeitet, antwortet der Server diesem Browser nur noch mit 403. Das betrifft nur den Demo-Modus. Abhilfe: den Benutzer aus einem anderen Browser entsperren.
+- **Hilfsfunktionen für Gliederungen:** Sie gibt es doppelt. Ein Fehlverhalten ergibt sich daraus nicht.
+
 ## 0.96.0 – Etappe 96 (27.10.2026)
 
 ### Hinzugefügt

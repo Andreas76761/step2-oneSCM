@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.99 Stand nach Etappe 97 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Zweites Code-Review der Etappen 11–16 (Stammdaten, Draft Manual, Handbuch-Varianten, Abgleich, Firmen-Layout, Word, Schreibstil, Bilder, Benutzerverwaltung): zehn Funde, sechs behoben | ✅ T-422, T-423; Server-Tests auf SQLite und PostgreSQL |
+| Handbuch-Varianten | Export ohne Häkchen bei Rollen und Sparten ignorierte den Filter der Variante (die Oberfläche schickt leere Listen); Befunde eines Variantenkapitels wurden an der Gliederungsversion des Kapitels statt an der angefragten gezählt; doppelte Schnipsel in einer Abgleich-Anfrage ergaben 500 |
+| Benutzer und Anzeige | gesperrte Benutzer erhielten weiter Erwähnungen, Zuweisungen, Freigabe- und Planungshinweise; Übersetzungsstand zählte Variantenkapitel mit; Nominalstil übersah Wörter mit Umlaut am Anfang (Änderung, Übertragung) |
+| Schon erledigt | Nummerierte Listen im Word-Export beginnen je Liste neu; Bildarchiv liest die Verwendungen in einem Durchgang |
+| Begründet belassen | Demo-Modus nach Sperren des eigenen Demo-Benutzers (nur Demo, Abhilfe: entsperren); doppelte Hilfsfunktionen für Gliederungen ohne Fehlverhalten |
+
 ## 1.98 Stand nach Etappe 96 (27.10.2026)
 
 | Punkt | Ergebnis |

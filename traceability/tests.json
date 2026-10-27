@@ -3295,5 +3295,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-422",
+    "title": "Varianten-Export mit leerer Rollenauswahl, Befunde an der Gliederungsversion, Übersetzungsstand ohne Variantenkapitel, doppelte Schnipsel beim Abgleich",
+    "file": "apps/server/test/stage97.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-423",
+    "title": "Gesperrte Benutzer nicht mehr als Beteiligte, Nominalstil auch mit Umlaut am Wortanfang",
+    "file": "apps/server/test/stage97.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]
