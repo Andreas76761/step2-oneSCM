@@ -131,12 +131,27 @@ export const BOX: Record<string, { cls: string; icon: DesignIcon; label: string 
  * Beschriftung und fällt aus dem Text – sonst gilt die Beschriftung der Art. So steht nichts doppelt da (ADR-112: Wichtig/Tipp).
  */
 const SIGNAL = /^\*\*(Wichtig|Hinweis|Tipp|Warnung|Achtung|Siehe auch)\s*:?\s*\*\*\s*:?\s*/i;
+/** Signalwörter, die zur Art der Box passen: eine Hinweisbox wird nicht zur „Warnung“, eine Warnung nicht zum „Tipp“ */
+const SIGNAL_FOR: Record<string, string[]> = {
+  note: ['Hinweis', 'Wichtig'], tip: ['Tipp', 'Hinweis', 'Wichtig'], warning: ['Warnung', 'Achtung', 'Wichtig'], xref: ['Siehe auch'],
+};
+/**
+ * Signalwort am Textanfang einer Box für Ausgaben außerhalb der Designvorlagen (Leseransicht, Releases, Kontexthilfe):
+ * passt es zur Art und ist die Sprache Deutsch, wird es zur Beschriftung und fällt aus dem Text; sonst null.
+ */
+export function signalLabel(kind: string, text: string, lang = 'de'): { label: string; text: string } | null {
+  if (!lang.startsWith('de') || !BOX[kind]) return null;
+  const l = boxLabel({ kind, text } as DesignBlock);
+  return l && l.text !== text ? l : null;
+}
 export function boxLabel(b: DesignBlock): { label: string; text: string } | null {
   const box = BOX[b.kind];
   if (!box) return null;
   const m = SIGNAL.exec(b.text);
   if (!m) return { label: box.label, text: b.text };
   const word = m[1].toLowerCase() === 'siehe auch' ? 'Siehe auch' : m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
+  // passt das Signalwort nicht zur Art, bleibt es im Text und die Box trägt ihre eigene Beschriftung
+  if (!(SIGNAL_FOR[b.kind] ?? []).includes(word)) return { label: box.label, text: b.text };
   return { label: word, text: b.text.slice(m[0].length) };
 }
 
@@ -278,7 +293,9 @@ function qrBlock(b: DesignBlock, o: DesignOptions): string {
   if (b.kind === 'warning') return `<div class="qr-warn">${svgIcon('circle-alert', 26)}<div>${o.md(b.text)}</div></div>`;
   const l = boxLabel(b);
   if (!l) return o.md(b.text);
-  const html = o.md(l.text).replace(/^<p>/, `<p><strong>${esc(l.label)}</strong>: `);
+  // Beschriftung vor den ersten Absatz; beginnt der Text mit einer Liste, Tabelle o. Ä. (oder fehlt), als eigener Absatz davor
+  const body = o.md(l.text);
+  const html = /^<p>/.test(body) ? body.replace(/^<p>/, `<p><strong>${esc(l.label)}</strong>: `) : `<p><strong>${esc(l.label)}</strong></p>${body}`;
   return b.kind === 'tip' ? `<div class="qr-tip">${html}</div>` : `<div class="qr-hint">${html}</div>`;
 }
 

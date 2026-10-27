@@ -16,6 +16,12 @@ describe('Etappe 70', () => {
 
   it('[T-387] Rollen, Sparten und Label-Gruppen mit Lucide-Icons statt Emoji; Kapiteltext und Exporte nennen nur den Namen', async () => {
     for (const x of [...ROLES, ...DIVISIONS, ...LABEL_GROUPS]) expect(x.icon, x.code).toMatch(/^[a-z][a-z0-9-]*$/);
+    // jeder Name hat ein Icon in der Oberfläche (REF in icons.tsx) – sonst zeigte sie still ein neutrales Etikett
+    const web = fs.readFileSync(new URL('../../web/src/components/icons.tsx', import.meta.url), 'utf8');
+    const refBlock = /const REF: Record<string, LucideIcon> = \{([\s\S]*?)\};/.exec(web)?.[1] ?? '';
+    const refNames = new Set([...refBlock.matchAll(/'?([a-z][a-z0-9-]*)'?\s*:\s*[A-Z]\w*Icon/g)].map((m) => m[1]));
+    expect(refNames.size).toBeGreaterThan(10);
+    expect([...ROLES, ...DIVISIONS, ...LABEL_GROUPS].map((x) => x.icon).filter((i) => !refNames.has(i))).toEqual([]);
 
     const database = await freshDatabase(dataDir, 'icons');
     const built = await buildApp({ dataDir, database, logger: false, webDist: null, authMode: 'demo', llm: { provider: 'demo', model: 'demo-extractive' } } as any);

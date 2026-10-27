@@ -16,6 +16,18 @@ const CALLOUT: Record<string, { icon: LucideIcon; label: 'tip' | 'warning' | 'no
   warning: { icon: TriangleAlertIcon, label: 'warning' },
   note: { icon: InfoIcon, label: 'note' },
 };
+/**
+ * Signalwort am Textanfang („**Wichtig:**“) als Beschriftung der Box, wie in Designvorlagen und Releases (Server: signalLabel);
+ * nur in deutschen Texten und nur, wenn es zur Art passt – sonst stünde „Tipp: Wichtig:“ doppelt da.
+ */
+const SIGNAL = /^\*\*(Wichtig|Hinweis|Tipp|Warnung|Achtung)\s*:?\s*\*\*\s*:?\s*/i;
+const SIGNAL_FOR: Record<string, string[]> = { note: ['Hinweis', 'Wichtig'], tip: ['Tipp', 'Hinweis', 'Wichtig'], warning: ['Warnung', 'Achtung', 'Wichtig'] };
+function signalLabel(kind: string, text: string, lang: string): { label: string; text: string } | null {
+  const m = lang.startsWith('de') ? SIGNAL.exec(text) : null;
+  if (!m) return null;
+  const word = m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
+  return SIGNAL_FOR[kind]?.includes(word) ? { label: word, text: text.slice(m[0].length) } : null;
+}
 // Verwaltungsabschnitt und Lückenhinweise gehören nicht in die Leseransicht
 const HIDDEN_SECTIONS = new Set(['status']);
 
@@ -135,7 +147,10 @@ export function ChapterContent({ version, role }: { version: any; role?: string 
         <section key={s.code} className="reader-section">
           <h3>{s.title}</h3>
           {s.blocks.map((b: any) => {
-            if (CALLOUT[b.kind]) return <div key={b.id} className={`callout ${b.kind}`}><strong><Ico icon={CALLOUT[b.kind].icon} />{t(CALLOUT[b.kind].label)}:</strong> <Md text={b.text} /></div>;
+            if (CALLOUT[b.kind]) {
+              const sig = signalLabel(b.kind, b.text, version.language ?? 'de');
+              return <div key={b.id} className={`callout ${b.kind}`}><strong><Ico icon={CALLOUT[b.kind].icon} />{sig?.label ?? t(CALLOUT[b.kind].label)}:</strong> <Md text={sig?.text ?? b.text} /></div>;
+            }
             if (s.code === 'steps' && b.kind === 'list') return <StepList key={b.id} versionId={version.id} blockId={b.id} text={b.text} />;
             return <Md key={b.id} text={b.text} />;
           })}

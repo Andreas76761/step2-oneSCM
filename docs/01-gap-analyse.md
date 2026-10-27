@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.91 Stand nach Etappe 89 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 70–78 (Fortsetzung der Wahl vom 27.10.2026): zehn Funde, neun behoben, einer begründet belassen | ✅ T-407 neu, T-387 erweitert; Server-Tests auf SQLite und PostgreSQL |
+| Hinweisboxen | Signalwort als Beschriftung nur, wenn es zur Art passt; im Quick Reference Guide ging die Beschriftung verloren, wenn der Text mit einer Liste begann; Leseransicht, veröffentlichte Releases und Kontexthilfe zeigten „Tipp: Wichtig: …“ doppelt |
+| Tabellen | Tabstopp auch bei Tabellen, die nur gesperrte oder per tabindex="-1" ausgenommene Elemente enthalten; mehrere bzw. rechts fixierte Spalten beim Scrollen zum Fokus berücksichtigt |
+| Doppelte Listen | Berechtigungen und Schweregrade aus einer Quelle; Icon-Namen der Stammdaten gegen die Oberfläche geprüft |
+| Belassen | Beobachter für Tabellen-Tabstopps: läuft höchstens einmal je Bild und nur bei Änderungen im Dokument – ein Umbau auf ResizeObserver brächte hier keinen messbaren Gewinn |
+
 ## 1.90 Stand nach Etappe 88 (27.10.2026)
 
 | Punkt | Ergebnis |

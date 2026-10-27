@@ -3160,5 +3160,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-407",
+    "title": "Beschriftung der Hinweisboxen: Signalwort nur, wenn es zur Art passt; Standardbeschriftung „Tipp“; Beschriftung auch vor Listen",
+    "file": "apps/server/test/stage89.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

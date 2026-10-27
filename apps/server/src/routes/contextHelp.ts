@@ -12,7 +12,7 @@ import { submitFeedback } from '../services/feedback.js';
 import { withProject } from '../services/projects.js';
 import { escapeHtml } from '../services/render.js';
 import { getLayout } from '../services/layout.js';
-import { normalizeTheme, readingCss, readingIcon, type DesignTheme } from '../domain/designs.js';
+import { normalizeTheme, readingCss, readingIcon, signalLabel, type DesignTheme } from '../domain/designs.js';
 import { svgIcon } from '../domain/designIcons.js';
 import { frameTexts } from '../domain/frameTexts.js';
 import { userOf } from './helpers.js';
@@ -101,7 +101,12 @@ async function readingOf(ctx: Ctx): Promise<DesignTheme | undefined> {
 /** Hinweisboxen im Lesestil mit Beschriftung und Icon in der Sprache der Hilfe */
 function labelBoxes(html: string, lang: string) {
   const F = frameTexts(lang);
-  return html.replace(/<div class="block kind-(note|tip|warning)">/g, (all, kind: 'note' | 'tip' | 'warning') => `${all}<p class="label">${readingIcon(kind)}${escapeHtml(F[kind])}</p>`);
+  // ein passendes Signalwort am Anfang („**Wichtig:**“) wird zur Beschriftung, statt nach „Tipp“ noch einmal dazustehen
+  return html.replace(/<div class="block kind-(note|tip|warning)">(?:<p><strong>([^<]{2,20})<\/strong>\s*)?/g, (all, kind: 'note' | 'tip' | 'warning', word?: string) => {
+    const sig = word ? signalLabel(kind, `**${word}**`, lang) : null;
+    const open = `<div class="block kind-${kind}">`;
+    return sig ? `${open}<p class="label">${readingIcon(kind)}${escapeHtml(sig.label)}</p><p>` : `${open}<p class="label">${readingIcon(kind)}${escapeHtml(F[kind])}</p>${all.slice(open.length)}`;
+  });
 }
 
 /** „Siehe auch“ und passende FAQ (ADR-072): Verweise auf das Hilfethema des Zielkapitels, sonst nur der Titel */

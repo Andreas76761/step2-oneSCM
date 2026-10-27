@@ -119,7 +119,11 @@ export function DivisionBadges({ codes }: { codes: (string | { code: string; evi
   );
 }
 
-const SEV_LABEL: Record<string, string> = { blocker: 'Blocker', high: '▲ hoch', medium: '■ mittel', low: '▽ niedrig' };
+/** Schweregrade auf Deutsch, eine Quelle für Auswahllisten und Kennzeichen */
+export const SEVERITY_NAME: Record<string, string> = { blocker: 'Blocker', high: 'Hoch', medium: 'Mittel', low: 'Niedrig' };
+// im Kennzeichen zusätzlich ein Symbol, damit der Grad nicht nur an der Farbe hängt
+const SEV_SYMBOL: Record<string, string> = { high: '▲', medium: '■', low: '▽' };
+const SEV_LABEL: Record<string, string> = Object.fromEntries(Object.entries(SEVERITY_NAME).map(([k, v]) => [k, SEV_SYMBOL[k] ? `${SEV_SYMBOL[k]} ${v.toLowerCase()}` : v]));
 export const Severity = ({ s }: { s: string }) => <span className={`tag sev-${s}`}>{s === 'blocker' && <BlockerIcon />}{SEV_LABEL[s] ?? s}</span>;
 
 const STATUS_LABEL: Record<string, string> = {

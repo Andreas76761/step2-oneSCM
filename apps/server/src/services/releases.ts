@@ -16,7 +16,7 @@ import { escapeHtml, markdownToHtml, type ImageSource } from './render.js';
 import { inlineMedia, loadMedia, type MediaFile } from './media.js';
 import { applyVariants } from './imageArchive.js';
 import { MIME_EXT } from '../domain/media.js';
-import { normalizeTheme, readingCss, readingIcon, type DesignTheme } from '../domain/designs.js';
+import { normalizeTheme, readingCss, readingIcon, type DesignTheme, signalLabel } from '../domain/designs.js';
 import { projectLanguages, translatedChapter } from './translations.js';
 import { LANGUAGES } from '../domain/translate.js';
 
@@ -111,8 +111,10 @@ function chapterHtml(ch: ExportChapter, lang = 'de', fallback = false, images?: 
       out.push(`<div class="block kind-${escapeHtml(b.kind)}">`);
       if (badges) out.push(`<p class="badges">${escapeHtml(badges)}</p>`);
       // Rahmentexte in der Sprache der Seite (U-08)
-      if (KIND_LABEL[b.kind] && b.kind !== 'xref') out.push(`<p class="label">${reading ? readingIcon(b.kind) : ''}${escapeHtml(frameTexts(lang)[b.kind as 'note' | 'tip' | 'warning'] ?? KIND_LABEL[b.kind])}</p>`);
-      out.push(markdownToHtml(b.text, images), '</div>');
+      // ein passendes Signalwort am Anfang („**Wichtig:**“) wird zur Beschriftung, statt doppelt dazustehen (wie in den Designvorlagen)
+      const sig = b.kind !== 'xref' ? signalLabel(b.kind, b.text, lang) : null;
+      if (KIND_LABEL[b.kind] && b.kind !== 'xref') out.push(`<p class="label">${reading ? readingIcon(b.kind) : ''}${escapeHtml(sig?.label ?? frameTexts(lang)[b.kind as 'note' | 'tip' | 'warning'] ?? KIND_LABEL[b.kind])}</p>`);
+      out.push(markdownToHtml(sig?.text ?? b.text, images), '</div>');
     }
   }
   return out.join('\n');

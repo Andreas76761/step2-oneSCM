@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { currentProjectId, del, patch, post, put, setCurrentProjectId } from '../api';
-import { Gated, Card, Empty, ErrorBox, Page, errorText, permLabel, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, PERMS, Page, errorText, permLabel, useApp, useLoad } from '../components/ui';
 
-const PERMS = ['read', 'edit', 'decide', 'approve', 'admin'];
 
 /** Mandanten/Projekte (ADR-014): Übersicht, Anlegen, Sichtbarkeit, Archivierung und Mitglieder */
 export function ProjectsPage({ onChanged }: { onChanged: () => void }) {
@@ -128,7 +127,7 @@ function Members({ projectId, name }: { projectId: string; name: string }) {
       </div>
       <fieldset className="checks">
         <legend>Berechtigungen im Projekt</legend>
-        {PERMS.map((p) => (
+        {PERMS.map(({ code: p }) => (
           <label key={p}>
             <input type="checkbox" checked={perms.includes(p)} disabled={p === 'read'} onChange={() => setPerms(perms.includes(p) ? perms.filter((x) => x !== p) : [...perms, p])} /> {permLabel(p)}
           </label>

@@ -285,7 +285,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   // Waagerecht scrollende Tabellen ohne fokussierbaren Inhalt per Tastatur erreichbar machen (WCAG 2.1.1, axe
   // scrollable-region-focusable) – mobil werden Tabellen zum Scrollbereich (styles.css); gilt für alle Seiten
   useEffect(() => {
-    const focusable = 'a[href], button, input, select, textarea, [tabindex]';
+    // nur per Tab erreichbare Elemente: gesperrte Felder und tabindex="-1" zählen nicht
+    const focusable = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
     const update = () => {
       for (const t of document.querySelectorAll<HTMLElement>('.table, .table-wrap')) {
         const scrolls = t.scrollWidth > t.clientWidth + 1 && getComputedStyle(t).overflowX !== 'visible';
@@ -325,12 +326,20 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
       let box: HTMLElement | null = row.parentElement;
       while (box && !(box.scrollWidth > box.clientWidth + 1 && getComputedStyle(box).overflowX !== 'visible')) box = box.parentElement;
       if (!box) return;
+      // alle fixierten Zellen auf einmal betrachten: links fixierte verdecken bis zu ihrer rechten Kante, rechts fixierte ab ihrer linken
       const r = el.getBoundingClientRect();
+      let coverLeft = -Infinity;
+      let coverRight = Infinity;
       for (const cell of row.querySelectorAll<HTMLElement>(':scope > th, :scope > td')) {
-        if (cell.contains(el) || getComputedStyle(cell).position !== 'sticky') continue;
+        const cs = getComputedStyle(cell);
+        if (cell.contains(el) || cs.position !== 'sticky') continue;
         const c = cell.getBoundingClientRect();
-        if (r.left < c.right && r.right > c.left) box.scrollLeft -= c.right - r.left + 8;
+        if (!(r.left < c.right && r.right > c.left)) continue;
+        if (cs.left !== 'auto') coverLeft = Math.max(coverLeft, c.right);
+        else if (cs.right !== 'auto') coverRight = Math.min(coverRight, c.left);
       }
+      if (coverLeft > r.left) box.scrollLeft -= coverLeft - r.left + 8;
+      else if (coverRight < r.right) box.scrollLeft += r.right - coverRight + 8;
     };
     document.addEventListener('focusin', onFocus);
     return () => document.removeEventListener('focusin', onFocus);

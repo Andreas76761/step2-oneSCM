@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.89.0 – Etappe 89 (27.10.2026)
+
+### Hinzugefügt
+- **Code-Review der Etappen 70–78:** zehn Funde. Neun sind behoben, einer ist begründet belassen (siehe unten).
+- **Unit-Test T-407:** prüft die Beschriftung der Hinweisboxen.
+  - Die Standardbeschriftung „Tipp“ bzw. „Hinweis“.
+  - Signalwörter, die zur Art passen oder eben nicht.
+  - Die Beschriftung vor Listen.
+  - Ohne die Korrektur scheitert der Test.
+- **T-387 erweitert:** Jeder Icon-Name der Stammdaten muss in der Oberfläche ein Icon haben; sonst zeigte sie still ein neutrales Etikett.
+
+### Behoben
+- **Hinweisboxen:**
+  - Im Quick Reference Guide fiel die Beschriftung weg, wenn der Text nach dem Signalwort mit einer Liste, Tabelle oder einem Bild begann. Jetzt steht sie als eigener Absatz davor.
+  - Ein Signalwort wird nur noch zur Beschriftung, wenn es zur Art der Box passt. Eine Hinweisbox heißt also nicht mehr „Warnung“ und bleibt blau.
+  - Leseransicht, veröffentlichte Releases und die Kontexthilfe im Lesestil zeigten „Tipp: **Wichtig:** …“ doppelt. Jetzt gilt dort dieselbe Regel wie in den Designvorlagen, für deutsche Texte.
+- **Tabellen, die waagerecht scrollen:**
+  - Enthielten sie nur gesperrte Schaltflächen oder Elemente mit `tabindex="-1"`, bekamen sie keinen Tabstopp.
+  - Beim Scrollen zum Fokus unter fixierten Spalten werden jetzt mehrere und auch rechts fixierte Spalten auf einmal berücksichtigt; vorher schob der Bereich zu weit oder in die falsche Richtung.
+- **Eine Quelle statt zwei Listen:** Die Projektverwaltung nutzt die Berechtigungen aus `ui.tsx`. Die Schweregrade in den Einstellungen und in den Kennzeichen kommen aus einer Liste; die Kennzeichen tragen zusätzlich ihr Symbol.
+
+### Belassen
+- **Beobachter für die Tabstopps an Tabellen:** Er läuft höchstens einmal je Bild und nur, wenn sich das Dokument ändert. Ein Umbau auf `ResizeObserver` brächte bei der Zahl der Tabellen je Seite keinen messbaren Gewinn.
+
 ## 0.88.0 – Etappe 88 (27.10.2026)
 
 ### Hinzugefügt

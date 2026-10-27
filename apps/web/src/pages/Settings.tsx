@@ -5,9 +5,8 @@ import { contrast } from '../contrast';
 import { resetReadingStyle } from '../readingStyle';
 import { DesignThemeCard } from './DesignThemeCard';
 
-import { Gated, Decision, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Decision, Card, Empty, ErrorBox, Page, SEVERITY_NAME, errorText, useApp, useLoad } from '../components/ui';
 
-const SEVERITY_DE: Record<string, string> = { blocker: 'Blocker', high: 'Hoch', medium: 'Mittel', low: 'Niedrig' };
 
 export function SettingsPage() {
   const { ref, notify } = useApp();
@@ -79,7 +78,7 @@ export function SettingsPage() {
                   <td>{ref?.contradictionRules[rule] ?? rule}</td>
                   <td>
                     <select value={sev as string} onChange={(e) => setA('ruleSeverity', { ...a.ruleSeverity, [rule]: e.target.value })} aria-label={`Schweregrad ${ref?.contradictionRules[rule] ?? rule}`}>
-                      {ref?.severities.map((x) => <option key={x} value={x}>{SEVERITY_DE[x] ?? x}</option>)}
+                      {ref?.severities.map((x) => <option key={x} value={x}>{SEVERITY_NAME[x] ?? x}</option>)}
                     </select>
                   </td>
                 </tr>
