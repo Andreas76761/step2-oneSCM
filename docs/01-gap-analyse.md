@@ -195,6 +195,17 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.98 Stand nach Etappe 96 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 17–26 (Rollenvorlagen, Anleitungs-Check, Leseransicht, Rückmeldungen, Vorlagen, Druck, Glossar, Siehe auch, Übersetzungswünsche, FAQ-Übersetzung): zehn Funde, alle behoben | ✅ T-420, T-421, T-233 erweitert; Server-Tests auf SQLite und PostgreSQL |
+| Übersetzungswünsche | ohne Zyklus: nach dem Veralten einer Übersetzung erreichte ein neuer Wunsch die Redaktion nicht mehr, frühere Wünschende standen für immer auf „gewünscht“ und erhielten bei jeder Freigabe erneut einen Hinweis (Migration 066) |
+| Online-Hilfe | FAQ ohne Rollen- und Spartenfilter; „Siehe auch“ und FAQ bei jedem öffentlichen Aufruf neu berechnet (jetzt 60 s je Release und Sprache vorgehalten) |
+| Sicherheit | CSV-Export der Stilregeln ohne Schutz vor Formeln (Excel) |
+| Robustheit | fehlerhafter JSON-Import der Stilregeln ergab 500; leerer bzw. null-Blocktyp, -Abschnitt, -Modus und -Geltungsstand wurden gespeichert; zwei Klicks legten aus einer Rückmeldung zwei Aufgaben an |
+| Leistung und Anzeige | Stilwert-Verlauf lud die ganze Historie; Trefferzahl der Suche ab 100 Treffern ohne Titeltreffer um 100 zu niedrig; Hinweis „neu/geändert“ ging beim direkten Aufruf eines Kapitels verloren |
+
 ## 1.97 Stand nach Etappe 95 (27.10.2026)
 
 | Punkt | Ergebnis |

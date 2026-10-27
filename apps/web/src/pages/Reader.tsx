@@ -602,14 +602,17 @@ export function ReaderPage() {
   const updates: Record<string, 'changed' | 'new'> = mine.data?.updates ?? {};
   // Stand des geöffneten Kapitels vor dem Speichern des Besuchs (danach entfällt seine Markierung)
   const [openedAs, setOpenedAs] = useState<{ chapterId: string; kind: 'changed' | 'new' } | null>(null);
+  // erst, wenn der eigene Stand geladen ist: sonst ginge beim direkten Aufruf (Link aus einem Hinweis) der Hinweis
+  // „neu/geändert“ verloren, weil der Besuch schon gespeichert wäre
+  const mineReady = mine.data !== null || !!mine.error;
   useEffect(() => {
     // Besuch merken, sobald das Kapitel angezeigt wird; danach Hinweise „neu/geändert“ aktualisieren
-    if (!current || !version.data) return;
+    if (!current || !version.data || !mineReady) return;
     const kind = mine.data?.updates?.[current.id];
     setOpenedAs(kind ? { chapterId: current.id, kind } : null);
     post('/reader/visits', { chapterId: current.id, versionId: version.data.id }).then(() => mine.reload(), () => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version.data?.id]);
+  }, [version.data?.id, mineReady]);
   // übrige markierte Kapitel – live gezählt, sinkt mit jedem gelesenen
   const otherUpdates = Object.keys(updates).filter((id) => id !== current?.id).length;
   const bookmarked = !!mine.data?.bookmarks.some((b: any) => b.chapterId === current?.id);

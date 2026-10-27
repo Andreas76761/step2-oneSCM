@@ -157,6 +157,8 @@ export async function deleteFaqTranslation(ctx: Ctx, faqId: string, lang: string
 
 export interface ReaderFaq {
   id: string; question: string; answer: string; language: string; translated: boolean;
+  /** Zielgruppe wie im Eintrag (leer oder „all“ = alle) – die Online-Hilfe filtert danach wie die Kapitel */
+  roles: string[]; divisions: string[];
   /** deutsche Quelle (bei deutschen und übersetzten Einträgen) – für sprachunabhängige Ähnlichkeit */
   source: { question: string; answer: string } | null;
 }
@@ -166,15 +168,16 @@ export interface ReaderFaq {
  * `translated: false`), dazu direkt in dieser Sprache verfasste Einträge – in der gepflegten Reihenfolge.
  */
 export async function readerFaqEntries(ctx: Ctx, lang: string): Promise<ReaderFaq[]> {
-  const rows = await ctx.db.all("SELECT id, question, answer, language FROM faq_entries WHERE project_id = ? AND status = 'published' AND language IN ('de', ?) ORDER BY position, created_at", ctx.projectId, lang);
+  const rows = await ctx.db.all("SELECT id, question, answer, language, roles, divisions FROM faq_entries WHERE project_id = ? AND status = 'published' AND language IN ('de', ?) ORDER BY position, created_at", ctx.projectId, lang);
   const src = (r: Row) => ({ question: String(r.question), answer: String(r.answer) });
-  if (lang === 'de') return rows.map((r) => ({ id: r.id as string, ...src(r), language: 'de', translated: true, source: src(r) }));
+  const scope = (r: Row) => ({ roles: parseJson<string[]>(r.roles, []), divisions: parseJson<string[]>(r.divisions, []) });
+  if (lang === 'de') return rows.map((r) => ({ id: r.id as string, ...src(r), ...scope(r), language: 'de', translated: true, source: src(r) }));
   const tr = await ctx.db.all("SELECT faq_id, question, answer, source_hash FROM faq_translations WHERE project_id = ? AND language = ? AND status = 'approved'", ctx.projectId, lang);
   const byId = new Map(tr.map((t) => [t.faq_id as string, t]));
   return rows.map((r) => {
-    if (r.language === lang) return { id: r.id as string, ...src(r), language: lang, translated: true, source: null };
+    if (r.language === lang) return { id: r.id as string, ...src(r), ...scope(r), language: lang, translated: true, source: null };
     const t = byId.get(r.id as string);
-    if (t && t.source_hash === faqHash(String(r.question), String(r.answer))) return { id: r.id as string, question: String(t.question), answer: String(t.answer), language: lang, translated: true, source: src(r) };
-    return { id: r.id as string, ...src(r), language: 'de', translated: false, source: src(r) };
+    if (t && t.source_hash === faqHash(String(r.question), String(r.answer))) return { id: r.id as string, question: String(t.question), answer: String(t.answer), ...scope(r), language: lang, translated: true, source: src(r) };
+    return { id: r.id as string, ...src(r), ...scope(r), language: 'de', translated: false, source: src(r) };
   });
 }

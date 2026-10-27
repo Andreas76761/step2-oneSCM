@@ -363,10 +363,13 @@ async function versionScore(ctx: Ctx, versionId: string, opts: Opts) {
 
 /** Verlauf fortschreiben (ADR-048): neuer Eintrag nur, wenn sich Version, Stilwert oder Problemsätze geändert haben */
 async function recordScore(ctx: Ctx, c: { chapterId: string; versionId: string; versionNo: number; score: number; sentences: number; problemSentences: number }) {
-  const last = await ctx.db.get('SELECT version_id, score, problem_sentences FROM style_scores WHERE project_id = ? AND chapter_id = ? ORDER BY recorded_at DESC, id DESC LIMIT 1', ctx.projectId, c.chapterId);
-  if (last && last.version_id === c.versionId && Number(last.score) === c.score && Number(last.problem_sentences) === c.problemSentences) return;
-  await ctx.db.run('INSERT INTO style_scores (id, project_id, chapter_id, version_id, version_no, score, sentences, problem_sentences, recorded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    newId('ss'), ctx.projectId, c.chapterId, c.versionId, c.versionNo, c.score, c.sentences, c.problemSentences, now());
+  // Prüfen und Eintragen zusammen: zwei gleichzeitige Aufrufe der Übersicht schrieben sonst denselben Punkt doppelt
+  await ctx.db.tx(async () => {
+    const last = await ctx.db.get('SELECT version_id, score, problem_sentences FROM style_scores WHERE project_id = ? AND chapter_id = ? ORDER BY recorded_at DESC, id DESC LIMIT 1', ctx.projectId, c.chapterId);
+    if (last && last.version_id === c.versionId && Number(last.score) === c.score && Number(last.problem_sentences) === c.problemSentences) return;
+    await ctx.db.run('INSERT INTO style_scores (id, project_id, chapter_id, version_id, version_no, score, sentences, problem_sentences, recorded_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      newId('ss'), ctx.projectId, c.chapterId, c.versionId, c.versionNo, c.score, c.sentences, c.problemSentences, now());
+  });
 }
 
 /** Stilwert der neuesten Version eines Kapitels neu berechnen und im Verlauf festhalten (nach Korrekturen) */
@@ -408,8 +411,14 @@ export async function styleHistory(ctx: Ctx, q: { chapterId?: string; days?: num
   const days = Math.min(Math.max(Math.round(q.days ?? 90), 1), 730);
   if (q.chapterId) await assertIdsInProject(ctx, 'chapterId', [q.chapterId]);
   const since = new Date(Date.now() - days * 86_400_000).toISOString();
-  // der letzte Wert vor dem Zeitraum gehört als Startwert dazu
-  const rows = await ctx.db.all('SELECT chapter_id, version_no, score, sentences, problem_sentences, recorded_at FROM style_scores WHERE project_id = ? ORDER BY recorded_at, id', ctx.projectId);
+  // der Zeitraum und je Kapitel der letzte Wert davor (Startwert) – nicht die ganze Historie des Projekts
+  const cols = 's.chapter_id, s.version_no, s.score, s.sentences, s.problem_sentences, s.recorded_at, s.id';
+  const before = await ctx.db.all(
+    `SELECT ${cols} FROM style_scores s JOIN (SELECT chapter_id, MAX(recorded_at) AS m FROM style_scores WHERE project_id = ? AND recorded_at < ? GROUP BY chapter_id) x
+     ON x.chapter_id = s.chapter_id AND x.m = s.recorded_at WHERE s.project_id = ?`, ctx.projectId, since, ctx.projectId,
+  );
+  const within = await ctx.db.all(`SELECT ${cols} FROM style_scores s WHERE s.project_id = ? AND s.recorded_at >= ?`, ctx.projectId, since);
+  const rows = [...before, ...within].sort((a, b) => String(a.recorded_at).localeCompare(String(b.recorded_at)) || String(a.id).localeCompare(String(b.id)));
   const titles = new Map((await ctx.db.all('SELECT id, title FROM chapters WHERE project_id = ?', ctx.projectId)).map((c) => [c.id as string, c.title as string]));
   const point = (r: any) => ({ at: r.recorded_at as string, score: Number(r.score), versionNo: Number(r.version_no), problemSentences: Number(r.problem_sentences) });
   if (q.chapterId) {
@@ -524,7 +533,13 @@ export async function applyChapterTexts(ctx: Ctx, versionId: string, input: { bl
 
 // ---------- Stilregeln austauschen (ADR-047) ----------
 
-const csvCell = (v: string) => (/[;"\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+// Formeln entschärfen (CSV-Injection in Excel) wie bei den übrigen Exporten; das Apostroph nimmt der Import wieder ab
+const FORMULA = /^[=+\-@\t\r]/;
+const csvCell = (raw: string) => {
+  const v = FORMULA.test(raw) ? `'${raw}` : raw;
+  return /[;"\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+};
+const uncell = (v: string) => (v.startsWith("'") && FORMULA.test(v.slice(1)) ? v.slice(1) : v);
 const ACTION = (p: StylePhrase) => (p.use === null || p.use === undefined ? 'hinweis' : p.use === '' ? 'streichen' : 'ersetzen');
 
 /** Formulierungen als CSV (Semikolon, BOM – öffnet in Excel direkt richtig) */
@@ -548,7 +563,7 @@ export function phrasesFromCsv(csv: string): StylePhrase[] {
   const cols = mapHeader(rows[0], { avoid: ['vermeiden', 'avoid', 'begriff', 'formulierung', 'falsch'], action: ['aktion', 'action'], use: ['ersetzen durch', 'ersetzen', 'use', 'ersatz', 'richtig'], note: ['hinweis', 'note', 'bemerkung'], language: ['sprache', 'language'] });
   if (cols.avoid === undefined) throw badRequest('Spalte „vermeiden“ fehlt.');
   return rows.slice(1).map((r) => {
-    const cell = (k: string) => (cols[k] === undefined ? '' : (r[cols[k]] ?? '').trim());
+    const cell = (k: string) => (cols[k] === undefined ? '' : uncell((r[cols[k]] ?? '').trim()));
     const action = cell('action').toLowerCase();
     const use = action === 'hinweis' ? null : action === 'streichen' ? '' : cell('use') || (action === 'ersetzen' ? '' : null);
     const language = cell('language').toLowerCase();
@@ -578,7 +593,8 @@ export async function importStyleRules(ctx: Ctx, input: { csv?: unknown; rules?:
   else if (input.rules && typeof input.rules === 'object') {
     const r = input.rules as Record<string, unknown>;
     if (!Array.isArray(r.phrases)) throw badRequest('rules.phrases fehlt.');
-    incoming = r.phrases as StylePhrase[];
+    // vor dem Zusammenführen prüfen: ein Eintrag ohne „avoid“ oder ein null ergab sonst 500 statt 400
+    incoming = cleanPhrases(r.phrases);
     // Einstellungen aus einem JSON-Export übernehmen
     rest = { disabled: r.disabled, address: r.address, maxSentenceWords: r.maxSentenceWords, allowed: r.allowed, audience: r.audience, tone: r.tone };
     for (const k of Object.keys(rest) as (keyof StyleRules)[]) if (rest[k] === undefined) delete rest[k];

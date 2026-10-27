@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.96.0 – Etappe 96 (27.10.2026)
+
+### Hinzugefügt
+- **Code-Review der Etappen 17–26:** Geprüft wurden Rollenvorlagen, Anleitungs-Check, Leseransicht, Rückmeldungen, Vorlagen, Druck, Glossar, „Siehe auch“, Übersetzungswünsche und FAQ-Übersetzung. Es gab zehn Funde, alle sind behoben. Die Etappen bis 16 hatten schon eigene Reviews.
+- **Tests T-420 und T-421; T-233 erweitert:** Jeder Teil scheitert ohne seine Korrektur. Ausnahme ist das gleichzeitige Anlegen von Aufgaben, das sich im Test nicht zuverlässig erzwingen lässt.
+
+### Sicherheit
+- **CSV-Export der Stilregeln:** Werte, die mit `=`, `+`, `-` oder `@` beginnen, werden wie bei allen anderen Exporten entschärft. Excel führte sie sonst als Formel aus. Beim erneuten Einlesen kommt der ursprüngliche Wert zurück.
+
+### Behoben
+- **Übersetzungswünsche:**
+  - Ein Wunsch blieb für immer bestehen, und die Redaktion bekam je Kapitel und Sprache nur einmal im Leben einen Hinweis. Veraltete eine Übersetzung später, erreichte ein neuer Wunsch niemanden mehr.
+  - Wer früher gewünscht hatte, stand für immer auf „gewünscht“ und bekam bei jeder Freigabe erneut einen Hinweis.
+  - Jetzt gilt ein Wunsch mit der Freigabe einer aktuellen Übersetzung als erfüllt (Migration 066). Danach kann man erneut wünschen, und die Redaktion erfährt es wieder.
+- **Online-Hilfe:** Häufige Fragen mit Zielgruppe erschienen für alle Rollen und Sparten. Jetzt wird wie bei den Absätzen des Kapitels gefiltert.
+- **Rückmeldung als Aufgabe:** Zwei Klicks kurz hintereinander legten zwei Aufgaben an. Jetzt wird erledigt und angelegt in einer Transaktion.
+- **Stilregeln:** Ein fehlerhafter JSON-Import, etwa ein Eintrag ohne „vermeiden“, ergab einen Serverfehler (500) statt einer Meldung.
+- **Absätze:** Ein leerer oder fehlender Blocktyp, Abschnitt, Modus oder Geltungsstand wurde ohne Prüfung gespeichert.
+- **Suche in der Leseransicht:** Ab 100 Treffern ohne Titeltreffer stand die Trefferzahl um 100 zu niedrig da.
+- **Leseransicht:** Wurde ein Kapitel direkt über einen Link geöffnet, etwa aus einem Hinweis, ging der Hinweis „neu“ bzw. „geändert“ verloren. Der Besuch wurde gespeichert, bevor der eigene Stand geladen war.
+
+### Leistung
+- **Online-Hilfe:** „Siehe auch“ und passende FAQ eines Releases wurden bei jedem öffentlichen Aufruf und jeder Rückmeldung neu berechnet. Jetzt wird das Ergebnis je Release und Sprache 60 s vorgehalten.
+- **Stilwert-Verlauf:** Bisher wurde die ganze Historie des Projekts geladen. Jetzt sind es nur der Zeitraum und je Kapitel der letzte Wert davor. Prüfen und Eintragen eines Messpunkts laufen in einer Transaktion.
+
 ## 0.95.0 – Etappe 95 (27.10.2026)
 
 ### Hinzugefügt

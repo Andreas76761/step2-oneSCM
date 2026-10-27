@@ -418,13 +418,14 @@ export interface BlockPatch {
   expectedVersionNo?: number;
 }
 
+// geprüft wird jeder übergebene Wert – auch '' oder null, die sonst ungeprüft gespeichert würden (patchBlock schreibt bei !== undefined)
 function validatePatch(p: BlockPatch) {
-  if (p.section && !SECTION_CODES.includes(p.section)) throw badRequest(`Unbekannter Abschnitt. Erlaubt: ${SECTION_CODES.join(', ')}`);
-  if (p.kind && !(BLOCK_KINDS as readonly string[]).includes(p.kind)) throw badRequest(`Unbekannter Blocktyp. Erlaubt: ${BLOCK_KINDS.join(', ')}`);
+  if (p.section !== undefined && !SECTION_CODES.includes(p.section)) throw badRequest(`Unbekannter Abschnitt. Erlaubt: ${SECTION_CODES.join(', ')}`);
+  if (p.kind !== undefined && !(BLOCK_KINDS as readonly string[]).includes(p.kind)) throw badRequest(`Unbekannter Blocktyp. Erlaubt: ${BLOCK_KINDS.join(', ')}`);
   if (p.roles?.some((r) => !ROLE_CODES.includes(r))) throw badRequest('Unbekannte Rolle.');
   if (p.divisions?.some((d) => !DIVISION_CODES.includes(d))) throw badRequest('Unbekannte Sparte.');
-  if (p.mode && !['locked', 'manually_edited', 'generated'].includes(p.mode)) throw badRequest('mode muss locked, manually_edited oder generated sein.');
-  if (p.scopeStatus && !['confirmed', 'general', 'unconfirmed'].includes(p.scopeStatus)) throw badRequest('scopeStatus muss confirmed, general oder unconfirmed sein.');
+  if (p.mode !== undefined && !['locked', 'manually_edited', 'generated'].includes(p.mode)) throw badRequest('mode muss locked, manually_edited oder generated sein.');
+  if (p.scopeStatus !== undefined && !['confirmed', 'general', 'unconfirmed'].includes(p.scopeStatus)) throw badRequest('scopeStatus muss confirmed, general oder unconfirmed sein.');
 }
 
 export async function patchBlock(ctx: Ctx, id: string, p: BlockPatch, actor: string) {

@@ -154,6 +154,9 @@ export async function latestRelease(ctx: Ctx) {
  * Hilfe zu einer Kontext-ID. `approved`: aktuell freigegebene Kapitelversion (angemeldete Nutzung, API);
  * `release`: Stand des neuesten veröffentlichten Releases (öffentliche Einbettung).
  */
+/** leer oder „all“ = für alle (wie listFaq) */
+const fits = (codes: string[], want?: string) => !want || !codes.length || codes.includes('all') || codes.includes(want);
+
 export async function resolveHelp(ctx: Ctx, rawKey: string, q: HelpQuery, source: 'approved' | 'release'): Promise<ResolvedHelp> {
   const key = String(rawKey ?? '').trim().toLowerCase();
   const row = CONTEXT_KEY.test(key) ? await ctx.db.get(`${SELECT} WHERE h.project_id = ? AND h.context_key = ?`, ctx.projectId, key) : undefined;
@@ -203,6 +206,8 @@ export async function resolveHelp(ctx: Ctx, rawKey: string, q: HelpQuery, source
     language: fallback ? 'de' : language, fallback, source, release, sections, html,
     deepLink: `/hilfe/${encodeURIComponent(key)}${params.size ? `?${params}` : ''}`, versionIds,
     related: targets.map((t) => ({ chapterId: t.chapterId, title: t.title, contextKey: keys.get(t.chapterId) ?? null })),
-    faq: rel.faq.map((f) => ({ question: f.question, answer: f.answer, language: f.language, html: markdownToHtml(f.answer, images) })),
+    // FAQ mit Zielgruppe nur für diese Rolle bzw. Sparte – wie die Absätze des Kapitels
+    faq: rel.faq.filter((f) => fits(f.roles, q.role) && fits(f.divisions, q.division))
+      .map((f) => ({ question: f.question, answer: f.answer, language: f.language, html: markdownToHtml(f.answer, images) })),
   };
 }

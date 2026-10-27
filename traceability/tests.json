@@ -3277,5 +3277,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-420",
+    "title": "Übersetzungswunsch mit Zyklus: erfüllt, veraltet, erneut gewünscht und gemeldet",
+    "file": "apps/server/test/stage96.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-421",
+    "title": "FAQ der Online-Hilfe nach Rolle, Rückmeldung nur eine Aufgabe, Stilregeln (CSV-Formeln, fehlerhafter Import), Blocktyp, Trefferzahl der Suche",
+    "file": "apps/server/test/stage96.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]
