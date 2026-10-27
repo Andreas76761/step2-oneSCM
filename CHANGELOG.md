@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.98.0 – Etappe 98 (27.10.2026)
+
+### Hinzugefügt
+- **Zweites Code-Review der Etappen 2–10:** Geprüft wurden Jobqueue, Projekte, API-Tokens, Webhooks, Git- und Confluence-Abgleich, Bilder, Kontexthilfe, Release-Pipeline und Helm-Chart, jeweils am heutigen Stand. Von elf Funden sind neun behoben und einer war schon erledigt (Sprache der eingebetteten Hilfe). Einer bleibt begründet bestehen, siehe unten.
+- **Tests T-424 und T-425:** Jeder Teil scheitert ohne seine Korrektur. Das wurde je Datei einzeln geprüft. Ausnahme ist die Größengrenze beim Bild-Upload, deren Wirkung auf den Speicher sich im Test nicht messen lässt.
+
+### Sicherheit
+- **API-Tokens:** Ein Token behielt seine Rechte im Projekt, auch nachdem der Ersteller aus dem Projekt entfernt oder herabgestuft wurde. Jetzt gilt ein Token höchstens mit den heutigen Rechten des Erstellers im Projekt. Ohne Zugriff des Erstellers gilt es dort nicht mehr.
+- **Webhooks und Confluence:** Die Zieladresse wurde nur vor dem Verbindungsaufbau geprüft. Ein Name, der beim zweiten Auflösen intern zeigt (DNS-Rebinding), erreichte so das interne Netz. Jetzt wird genau die Adresse geprüft, mit der verbunden wird, auch für die Weiter- und Download-Links von Confluence.
+
+### Behoben
+- **Abgleich mit Git:**
+  - Kam ein Push-Webhook, während ein Abgleich lief, ging er verloren. Die Antwort lautete trotzdem „queued“. Jetzt wird er vorgemerkt, und nach dem laufenden Abgleich startet ein weiterer (Migration 067).
+  - Brach ein geplanter Abgleich ab, etwa durch einen Neustart beim Klonen, oder lief er in einem archivierten Projekt, glich die Verbindung danach nie wieder von selbst ab. Jetzt wird der nächste Abgleich geplant.
+- **Kontexthilfe:**
+  - Das Widget übernimmt die Sprache der oneSCM-Seite (`<html lang>`). Ist sie keine Zielsprache des Projekts, zeigte die Einbettung „keine Hilfe“. Jetzt erscheint die deutsche Fassung. Die angemeldete API meldet eine unbekannte Sprache weiter mit 400.
+  - Eine Kontext-ID aus dem Front-Matter blieb beim alten Kapitel, wenn die Datei in ein anderes Kapitel wanderte. Von Hand gepflegte Zuordnungen haben weiter Vorrang.
+- **Helm-Chart:** Der Chart verwies auf ein Image, das die Release-Pipeline nicht veröffentlicht. Die Pods kamen nicht hoch (ImagePullBackOff). Außerdem lag eine fremde Datei im Chart-Ordner, die in jedes veröffentlichte Chart gepackt wurde. Sie ist entfernt.
+- **Bild-Upload:** Ein Bild lag vor der Prüfung der Größe vollständig im Speicher, bis zu 512 MB je Anfrage. Jetzt bricht das Einlesen an der Grenze ab.
+
+### Bewusst belassen
+- **Git-Verbindungen zu internen Adressen:** Interne Git-Server sind ein gewollter Einsatz, denn die Daten bleiben lokal. Verbindungen legen nur Administratoren an, und es ist nur https erlaubt.
+
 ## 0.97.0 – Etappe 97 (27.10.2026)
 
 ### Hinzugefügt

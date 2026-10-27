@@ -94,14 +94,18 @@ export async function setHelpPublic(ctx: Ctx, value: boolean, user: User) {
   return listContexts(ctx);
 }
 
-/** Kontext-IDs aus dem Front-Matter einer Quelldatei (`help_context: order.create` oder Liste) – manuelle Zuordnungen haben Vorrang */
+/**
+ * Kontext-IDs aus dem Front-Matter einer Quelldatei (`help_context: order.create` oder Liste) – manuelle Zuordnungen haben Vorrang;
+ * eine aus dem Front-Matter stammende Zuordnung folgt der Datei, wenn sie in ein anderes Kapitel wandert.
+ */
 export async function contextsFromFrontMatter(ctx: Ctx, frontMatter: Record<string, unknown>, chapterId: string, actor: string) {
   const raw = frontMatter.help_context ?? frontMatter.help_contexts;
   const list = (Array.isArray(raw) ? raw : raw ? [raw] : []).map((x) => String(x).trim().toLowerCase()).filter((k) => CONTEXT_KEY.test(k));
   for (const key of [...new Set(list)].slice(0, 20)) {
     await ctx.db.run(
       `INSERT INTO help_contexts (id, project_id, context_key, chapter_id, section_code, description, origin, created_by, created_at)
-       VALUES (?, ?, ?, ?, NULL, NULL, 'front_matter', ?, ?) ON CONFLICT (project_id, context_key) DO NOTHING`,
+       VALUES (?, ?, ?, ?, NULL, NULL, 'front_matter', ?, ?)
+       ON CONFLICT (project_id, context_key) DO UPDATE SET chapter_id = excluded.chapter_id WHERE help_contexts.origin = 'front_matter'`,
       newId('hc'), ctx.projectId, key, chapterId, actor, now(),
     );
   }
@@ -136,12 +140,16 @@ export interface ResolvedHelp {
   faq: { question: string; answer: string; language: string; html: string }[];
 }
 
-function validQuery(q: HelpQuery, languages: string[]) {
+/** `lenient` (öffentliche Einbettung): eine Sprache, die keine Zielsprache ist (z. B. aus `<html lang>` der Seite), zeigt die deutsche Fassung */
+function validQuery(q: HelpQuery, languages: string[], lenient = false) {
   if (q.role && !(ROLE_CODES as readonly string[]).includes(q.role)) throw badRequest(`Unbekannte Rolle „${q.role}“.`);
   if (q.division && !(DIVISION_CODES as readonly string[]).includes(q.division)) throw badRequest(`Unbekannte Sparte „${q.division}“.`);
   const language = q.language || 'de';
-  if (language !== 'de' && !languages.includes(language)) throw badRequest(`Sprache „${language}“ ist keine Zielsprache des Projekts.`);
-  return language;
+  if (language !== 'de' && !languages.includes(language)) {
+    if (lenient) return { language: 'de', unsupported: true };
+    throw badRequest(`Sprache „${language}“ ist keine Zielsprache des Projekts.`);
+  }
+  return { language, unsupported: false };
 }
 
 /** Neuestes Release des Projekts (Grundlage der öffentlichen Einbettung) */
@@ -161,7 +169,7 @@ export async function resolveHelp(ctx: Ctx, rawKey: string, q: HelpQuery, source
   const key = String(rawKey ?? '').trim().toLowerCase();
   const row = CONTEXT_KEY.test(key) ? await ctx.db.get(`${SELECT} WHERE h.project_id = ? AND h.context_key = ?`, ctx.projectId, key) : undefined;
   if (!row) throw notFound(`Hilfethema zur Kontext-ID „${key}“`);
-  const language = validQuery(q, await projectLanguages(ctx));
+  const { language, unsupported } = validQuery(q, await projectLanguages(ctx), source === 'release');
   let versionId: string | undefined;
   let release: ResolvedHelp['release'] = null;
   let versionIds: string[];
@@ -177,7 +185,7 @@ export async function resolveHelp(ctx: Ctx, rawKey: string, q: HelpQuery, source
     versionIds = [];
   }
   let chapter: ExportChapter = await getChapterVersion(ctx, versionId);
-  let fallback = false;
+  let fallback = unsupported;
   if (language !== 'de') {
     const tr = await ctx.db.get("SELECT id FROM translations WHERE chapter_version_id = ? AND language = ? AND status = 'approved'", versionId, language);
     if (tr) chapter = await translatedChapter(ctx, tr.id);

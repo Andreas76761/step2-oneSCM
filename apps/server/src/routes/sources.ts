@@ -63,11 +63,13 @@ export function sourceRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.post('/media', async (req, reply) => {
     const user = userOf(req.ctx, req, 'edit');
     if (!req.isMultipart()) throw badRequest('Erwartet multipart/form-data mit Feld „file“.');
-    const file = await req.file();
-    if (!file) throw badRequest('Feld „file“ fehlt.');
-    const data = await file.toBuffer();
+    // Grenze schon beim Einlesen: größere Bilder brechen ab, statt erst vollständig im Speicher zu landen
     const max = (await getSettings(req.ctx.db)).import.maxEntryBytes;
-    if (data.length > max) throw new Problem(413, 'Content Too Large', `Bild überschreitet ${max} Bytes.`);
+    const file = await req.file({ limits: { fileSize: max } });
+    if (!file) throw badRequest('Feld „file“ fehlt.');
+    const data = await file.toBuffer().catch((e) => {
+      throw e?.code === 'FST_REQ_FILE_TOO_LARGE' ? new Problem(413, 'Content Too Large', `Bild überschreitet ${max} Bytes.`) : e;
+    });
     const m = await storeMedia(req.ctx, data, file.filename);
     await queueRedaction(req.ctx, m.sha, m.mime);
     await audit(req.ctx, user.id, 'media.uploaded', 'media', m.sha, { fileName: file.filename, mime: m.mime, byteSize: data.length });

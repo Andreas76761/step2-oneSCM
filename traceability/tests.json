@@ -3313,5 +3313,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-424",
+    "title": "Abgleich: Push während des laufenden Abgleichs wird nachgeholt, abgebrochener Abgleich plant weiter; API-Token mit den heutigen Rechten des Erstellers",
+    "file": "apps/server/test/stage98.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-425",
+    "title": "Kontexthilfe: Seitensprache ohne Übersetzung zeigt Deutsch, Kontext-ID folgt der Datei; Verbindungsaufbau prüft die Adresse; Bild-Upload mit Grenze; Helm-Chart",
+    "file": "apps/server/test/stage98.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

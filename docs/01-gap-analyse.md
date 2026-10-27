@@ -195,6 +195,18 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.100 Stand nach Etappe 98 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Zweites Code-Review der Etappen 2–10 (Jobqueue, Projekte, Integrationen, Webhooks, Git- und Confluence-Abgleich, Bilder, Kontexthilfe, Release-Pipeline, Helm): elf Funde, neun behoben | ✅ T-424, T-425; Server-Tests auf SQLite und PostgreSQL |
+| Abgleich | Push-Webhook während eines laufenden Abgleichs ging verloren (Migration 067: vorgemerkt und nachgeholt); abgebrochener geplanter Abgleich beendete die Planung für immer |
+| Sicherheit | API-Token behielt seine Rechte im Projekt, nachdem der Ersteller entfernt oder herabgestuft wurde; Webhooks und Confluence prüften die Zieladresse nur vor dem Verbindungsaufbau (DNS-Rebinding) |
+| Kontexthilfe | Seitensprache ohne Übersetzung (z. B. `<html lang="en">`) ergab „keine Hilfe“ statt der deutschen Fassung; Kontext-ID aus dem Front-Matter blieb beim alten Kapitel |
+| Betrieb | Helm-Chart verwies auf ein Image, das die Pipeline nicht veröffentlicht, und enthielt eine fremde Datei; Bild-Upload lag vor der Größenprüfung vollständig im Speicher |
+| Schon erledigt | Sprache der eingebetteten Hilfe für Sprachen ohne Oberflächentexte |
+| Begründet belassen | Git-Verbindungen zu internen Adressen: interne Git-Server sind ein gewollter Einsatz (Daten bleiben lokal), nur Administratoren legen Verbindungen an |
+
 ## 1.99 Stand nach Etappe 97 (27.10.2026)
 
 | Punkt | Ergebnis |

@@ -51,7 +51,12 @@ export async function resolveProject(ctx: Ctx, user: User, projectId: string | u
     if (id !== user.token.projectId) throw forbidden('Das API-Token gilt nicht für dieses Projekt.');
     const p = await ctx.db.get('SELECT * FROM projects WHERE id = ?', id);
     if (!p) throw new Problem(404, 'Not Found', `Projekt ${id} wurde nicht gefunden.`);
-    const perms = p.archived_at ? user.token.scopes.filter((s) => s === 'read') : user.token.scopes;
+    // höchstens die heutigen Rechte des Erstellers im Projekt: entfernt oder herabgestuft → Token entsprechend eingeschränkt
+    const creator = user.token.createdBy ? await ctx.db.get('SELECT id, name, permissions FROM users WHERE id = ?', user.token.createdBy) : undefined;
+    const own = creator ? await effectiveUser(ctx, { id: creator.id, name: creator.name, permissions: parseJson<string[]>(creator.permissions, []) }, p) : null;
+    if (!own) throw forbidden('Der Ersteller des API-Tokens hat keinen Zugriff mehr auf dieses Projekt.');
+    const allowed = (s: string) => own.permissions.includes(s) || own.permissions.includes('admin');
+    const perms = user.token.scopes.filter(allowed).filter((s) => !p.archived_at || s === 'read');
     return { ctx: withProject(ctx, id), user: { ...user, permissions: perms } };
   }
   const id = projectId?.trim() || DEFAULT_PROJECT_ID;

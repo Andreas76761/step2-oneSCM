@@ -33,7 +33,7 @@ export interface User {
   name: string;
   permissions: string[];
   /** API-Token (ADR-028): gebunden an ein Projekt, wirksame Berechtigungen = Scopes */
-  token?: { id: string; projectId: string; scopes: string[] };
+  token?: { id: string; projectId: string; scopes: string[]; createdBy?: string };
 }
 
 export async function seedReferenceData(db: Db, authMode: AppConfig['authMode']) {
