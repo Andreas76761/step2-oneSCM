@@ -93,11 +93,17 @@ export async function createLabel(ctx: Ctx, input: { code?: string; group?: stri
   const nameEn = cleanName(input.nameEn, 'nameEn');
   const code = String(input.code ?? '').trim().toLowerCase();
   if (!LABEL_CODE_RE.test(code)) throw badRequest('code: 2–60 Zeichen aus Kleinbuchstaben, Ziffern, Punkt und Bindestrich.');
-  if (await ctx.db.get('SELECT id FROM metadata_labels WHERE project_id = ? AND code = ?', ctx.projectId, code)) throw conflict(`Label „${code}“ existiert bereits.`);
+  const have = await ctx.db.get('SELECT id, origin FROM metadata_labels WHERE project_id = ? AND code = ?', ctx.projectId, code);
+  if (have && have.origin !== 'deleted') throw conflict(`Label „${code}“ existiert bereits.`);
   const max = await ctx.db.get<{ n: number | null }>('SELECT MAX(position) AS n FROM metadata_labels WHERE project_id = ? AND label_group = ?', ctx.projectId, group);
-  const id = newId('lbl');
+  const id = have ? (have.id as string) : newId('lbl');
   await ctx.db.tx(async () => {
-    await ctx.db.run(
+    // gelöschtes Label (Löschvermerk): bewusst neu angelegt → wieder ein eigenes Label
+    if (have) await ctx.db.run(
+      "UPDATE metadata_labels SET label_group = ?, name_de = ?, name_en = ?, description = ?, position = ?, origin = 'custom', archived_at = NULL, updated_by = ?, updated_at = ? WHERE id = ?",
+      group, nameDe, nameEn, input.description?.trim().slice(0, 1000) || null, Number(max?.n ?? 0) + 1, user.id, now(), id,
+    );
+    else await ctx.db.run(
       `INSERT INTO metadata_labels (id, project_id, code, label_group, name_de, name_en, description, position, origin, archived_at, updated_by, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'custom', NULL, ?, ?)`,
       id, ctx.projectId, code, group, nameDe, nameEn, input.description?.trim().slice(0, 1000) || null, Number(max?.n ?? 0) + 1, user.id, now(),
@@ -147,7 +153,8 @@ export async function deleteLabel(ctx: Ctx, id: string, user: User) {
     await ctx.db.run('DELETE FROM metadata_qa_labels WHERE label_id = ?', id);
     await ctx.db.run('DELETE FROM media_labels WHERE label_id = ?', id);
     await ctx.db.run('DELETE FROM metadata_label_links WHERE domain_label_id = ? OR target_label_id = ?', id, id);
-    if (r.origin === 'catalog') await ctx.db.run("UPDATE metadata_labels SET origin = 'deleted', archived_at = ?, updated_by = ?, updated_at = ? WHERE id = ?", now(), user.id, now(), id);
+    // Katalog- und Triage-Labels: Löschvermerk, sonst legt der nächste Lauf sie wieder an
+    if (r.origin === 'catalog' || r.origin === 'triage') await ctx.db.run("UPDATE metadata_labels SET origin = 'deleted', archived_at = ?, updated_by = ?, updated_at = ? WHERE id = ?", now(), user.id, now(), id);
     else await ctx.db.run('DELETE FROM metadata_labels WHERE id = ?', id);
     await audit(ctx, user.id, 'metadata.label.deleted', 'metadata_label', id, { code: r.code, group: r.label_group, ...counts });
   });

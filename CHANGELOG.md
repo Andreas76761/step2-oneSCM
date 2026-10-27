@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.93.0 – Etappe 93 (27.10.2026)
+
+### Hinzugefügt
+- **Code-Review der Etappen 42–47:** Geprüft wurden Datenschutz im Bild, Kapitelsteuerung, Grammatik und Sprachstil, Pipeline und Backlog, RAG sowie TRIAGE und Agenten. Es gab zehn Funde. Ich habe sie einzeln geprüft: Acht sind behoben, zwei (Triage-Lauf ohne Fehlerstatus, gleichzeitige Läufe) waren mit Etappe 92 schon erledigt.
+- **Tests T-414 und T-415:** Jeder Teil scheitert ohne seine Korrektur.
+
+### Sicherheit
+- **Lokale Adressen:** Ob ein KI-Dienst oder LanguageTool als lokal gilt, wurde nur am Anfang des Namens geprüft. Öffentliche Namen wie „10.example.com“ oder „127.attacker.net“ galten damit als lokal: Fragen an alle Quellen liefen ohne Filter für personenbezogene Daten, und LanguageTool hätte Texte außer Haus geschickt. Die privaten Bereiche (127, 10, 172.16–31, 192.168) gelten jetzt nur für echte IPv4-Adressen.
+
+### Behoben
+- **Datenschutz im Bild:** Bei manchen JPEG- und WebP-Dateien erkennt der Upload die Bildmaße nicht. Die erkannten Stellen hatten dann ungültige Koordinaten, und nichts wurde unkenntlich, obwohl „erledigt“ angezeigt wurde. Die Maße kommen in diesem Fall jetzt aus dem Bild selbst.
+- **Triage:**
+  - Bei einem Lauf mit mehr als 500 Ergebnissen kam nach einer Entscheidung meist eine leere Antwort zurück.
+  - Ein gelöschtes Label, das die Triage angelegt hatte, legte der nächste Lauf wieder an und vergab es erneut. Jetzt bleibt ein Löschvermerk. Legen Sie denselben Code von Hand an, gibt es das Label wieder.
+  - Hatte die Redaktion einen übernommenen Chunk danach von Hand verschoben, schlug jeder Lauf vor, ihn zurückzuschieben. Die gemerkte Zuordnung gilt jetzt nur für einen anderen Chunk mit gleichem Text, etwa nach einem erneuten Einlesen.
+- **Orchestrator:**
+  - „alle übernehmen“ bzw. „verwerfen“ galt auch für Vorschläge, die erst nach der Entscheidung entstanden. Jetzt gilt sie nur für die Vorschläge, die es bei der Entscheidung schon gab.
+  - Kapitel ab Position 50 bekamen keine Aufgabe, auch wenn Standardablauf oder Ausnahmen fehlten.
+- **Pipeline:** Ein Backlog-Ticket, das zwischen zwei Abgleichen schon produktiv ging, blieb für immer „offen“ im Backlog. Es kommt jetzt in die Pipeline und ist „bereit“.
+
+### Weitere Hinweise (nicht bearbeitet)
+- Das Review nannte außerdem fünf kleinere Punkte. Sie stehen in docs/01, Abschnitt 1.95.
+
 ## 0.92.0 – Etappe 92 (27.10.2026)
 
 ### Hinzugefügt

@@ -197,11 +197,12 @@ async function triageRun(ctx: Ctx, runId: string, scope: string, input: { import
   const qOf = (t: string) => analyzeQuery(stripNumber(t) || t, index, lexicon);
   const outlineQ = outline.map((c) => ({ ...c, q: qOf(c.title), subs: c.subs.map((s) => ({ ...s, q: qOf(s.title) })) }));
   // früher übernommene Zuordnung für gleichen Text (z. B. nach einem erneuten Import) wiederverwenden
-  const remembered = new Map<string, { chapterId: string; subchapterId: string | null }>();
+  // – nur für einen anderen Chunk (neue Kennung): beim selben Chunk gilt sein Platz, auch wenn die Redaktion ihn danach verschoben hat
+  const remembered = new Map<string, { chapterId: string; subchapterId: string | null; snippetId: string }>();
   for (const r of await ctx.db.all(
-    `SELECT s.norm_hash, t.chapter_id, t.subchapter_id FROM triage_results t JOIN text_snippets s ON s.id = t.snippet_id
+    `SELECT s.norm_hash, t.snippet_id, t.chapter_id, t.subchapter_id FROM triage_results t JOIN text_snippets s ON s.id = t.snippet_id
      WHERE t.project_id = ? AND t.status = 'accepted' AND t.chapter_id IS NOT NULL ORDER BY t.decided_at`, ctx.projectId,
-  )) remembered.set(r.norm_hash, { chapterId: r.chapter_id, subchapterId: r.subchapter_id ?? null });
+  )) remembered.set(r.norm_hash, { chapterId: r.chapter_id, subchapterId: r.subchapter_id ?? null, snippetId: r.snippet_id });
   const jiraStatus = new Map<string, string | null>();
   const stats = { chunks: chunks.length, labels: 0, keptManual: 0, kept: 0, move: 0, newSubchapter: 0, unassigned: 0, remembered: 0, review: 0, createdLabels: 0 };
   const at = now();
@@ -238,9 +239,9 @@ async function triageRun(ctx: Ctx, runId: string, scope: string, input: { import
           const tokens = new Set([...index.docs[i].body, ...index.docs[i].head]);
           const headTokens = new Set(index.docs[i].head);
           const memo = remembered.get(c.normHash);
-          if (memo && (memo.chapterId !== c.chapterId || memo.subchapterId !== c.subchapterId)) {
+          if (memo && memo.snippetId !== c.id && (memo.chapterId !== c.chapterId || memo.subchapterId !== c.subchapterId)) {
             placement = 'move';
-            target = { ...memo, newTitle: null, confidence: 0.95, reason: 'wie bei gleichem Text zuvor übernommen' };
+            target = { chapterId: memo.chapterId, subchapterId: memo.subchapterId, newTitle: null, confidence: 0.95, reason: 'wie bei gleichem Text zuvor übernommen' };
             stats.remembered++;
           } else if (!outlineIds.has(c.chapterId) && c.format !== 'jira') {
             let best: { chapterId: string; subchapterId: string | null; score: number; title: string; head: number } | null = null;
@@ -352,14 +353,15 @@ export async function getRun(ctx: Ctx, runId: string) {
 }
 
 /** Ergebnisse eines Laufs (oder offene Vorschläge über alle Läufe) mit Text, Kapitel vorher/nachher */
-export async function listResults(ctx: Ctx, opts: { runId?: string; status?: string; review?: boolean; placement?: string; limit?: number }) {
+export async function listResults(ctx: Ctx, opts: { id?: string; runId?: string; status?: string; review?: boolean; placement?: string; limit?: number }) {
   const where = ['t.project_id = ?'];
   const params: unknown[] = [ctx.projectId];
+  if (opts.id) (where.push('t.id = ?'), params.push(opts.id));
   if (opts.runId) (where.push('t.run_id = ?'), params.push(opts.runId));
   if (opts.status) (where.push('t.status = ?'), params.push(opts.status));
   if (opts.review) where.push('t.review = 1');
   if (opts.placement) (where.push('t.placement = ?'), params.push(opts.placement));
-  if (!opts.runId && !opts.status) where.push("t.status <> 'superseded'");
+  if (!opts.id && !opts.runId && !opts.status) where.push("t.status <> 'superseded'");
   const limit = Math.min(500, Math.max(1, opts.limit ?? 200));
   const rows = await ctx.db.all(
     `SELECT t.*, s.text, s.heading_path, d.path, cb.title AS chapter_before_title, sb.title AS sub_before_title, ca.title AS chapter_title, sa.title AS sub_title
@@ -410,14 +412,16 @@ export async function decideResult(ctx: Ctx, id: string, decision: unknown, user
     }
     await audit(ctx, user.id, `triage.${decision}ed`, 'triage_result', id, { snippetId: r.snippet_id, placement: r.placement });
   });
-  return (await listResults(ctx, { runId: r.run_id, limit: 500 })).find((x) => x.id === id);
+  // gezielt dieses Ergebnis (ein Lauf kann mehr als 500 Ergebnisse mit gleichem Zeitstempel haben)
+  return (await listResults(ctx, { id }))[0];
 }
 
 /** Alle offenen Vorschläge übernehmen (optional nur eines Laufs bzw. einer Art) */
-export async function acceptAll(ctx: Ctx, input: { runId?: string; placement?: string }, user: User) {
+export async function acceptAll(ctx: Ctx, input: { runId?: string; placement?: string; createdUpTo?: string }, user: User) {
   const where = ["project_id = ?", "status = 'proposed'"];
   const params: unknown[] = [ctx.projectId];
   if (input.runId) (where.push('run_id = ?'), params.push(input.runId));
+  if (input.createdUpTo) (where.push('created_at <= ?'), params.push(input.createdUpTo));
   if (input.placement) {
     if (!['move', 'new_subchapter'].includes(input.placement)) throw badRequest('placement muss move oder new_subchapter sein.');
     (where.push('placement = ?'), params.push(input.placement));

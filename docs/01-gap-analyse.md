@@ -195,6 +195,17 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.95 Stand nach Etappe 93 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 42–47 (Datenschutz im Bild, Kapitelsteuerung, Grammatik, Pipeline/Backlog, RAG, TRIAGE und Agenten): zehn Funde, acht behoben, zwei mit Etappe 92 schon erledigt | ✅ T-414, T-415; Server-Tests auf SQLite und PostgreSQL |
+| Sicherheit | `isLocalUrl` hielt öffentliche Namen wie „10.example.com“ oder „127.attacker.net“ für lokal – KI-Dienst ohne Datenschutzfilter, LanguageTool außer Haus; private Bereiche gelten jetzt nur für echte IPv4-Adressen |
+| Datenschutz im Bild | ohne Bildmaße aus dem Upload (manche JPEG/WebP) lagen die Stellen bei NaN, nichts wurde unkenntlich; die Maße kommen jetzt aus dem Bild |
+| Triage und Orchestrator | Antwort der Entscheidung leer bei Läufen über 500 Ergebnisse; gelöschte Triage-Labels legte der nächste Lauf wieder an; „alle übernehmen“ bzw. „verwerfen“ galt auch für später entstandene Vorschläge; die gemerkte Zuordnung überstimmte eine spätere Verschiebung von Hand; Kapitel ab Position 50 bekamen keine Aufgabe |
+| Pipeline | Backlog-Ticket, das zwischen zwei Abgleichen produktiv ging, blieb für immer „offen“ im Backlog |
+| Weitere Hinweise (nicht bearbeitet) | neues Unterkapitel der Triage berücksichtigt abgelöste Unterkapitel nicht; erneute Erkennung schaltet ausgeschaltete Stellen wieder ein; Zähler im Inhalts-Dashboard mit ausgeschlossenen Quellen; Anteil „freigegeben“ in GOAL kann über 1 liegen; `\b` in Sprach- und Zahlmustern bei Umlauten |
+
 ## 1.94 Stand nach Etappe 92 (27.10.2026)
 
 | Punkt | Ergebnis |

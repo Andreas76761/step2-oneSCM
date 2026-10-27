@@ -279,10 +279,12 @@ export async function orchestrate(ctx: Ctx, user: User) {
   if (dash.totals.review > 0) steps.push({ key: 'triage:review', agent: 'pruefer', priority: 2, link: '/metadaten/triage', title: `${dash.totals.review} Chunks „zu prüfen“ sichten`, detail: 'Unsichere Labels bestätigen oder korrigieren; danach Label „geprüft“.' });
   if ((values.new_confirmed ?? 0) > 0) steps.push({ key: 'structure:new', agent: 'gliederungs-pfleger', priority: 2, link: '/kapitelsteuerung', title: `${values.new_confirmed} Unterkapitel „neu“ bestätigen`, detail: 'Von der Triage angelegt: bestätigen, umbenennen oder ablösen.',
     decision: { question: `${values.new_confirmed} neue Unterkapitel der Triage in die Gliederung aufnehmen?`, options: ['aufnehmen', 'einzeln prüfen', 'nicht aufnehmen'], context: 'Kapitelsteuerung – Kennung „neu“' } });
-  for (const c of withChunks.slice(0, 50)) {
+  // erst die Kapitel mit Lücken, dann begrenzen – sonst bekämen Kapitel ab Position 50 nie eine Aufgabe
+  const lacking = withChunks.filter((c) => !((c.detail['happy-path'] ?? 0) > 0) || !((c.detail.edge ?? 0) > 0));
+  for (const c of lacking.slice(0, 50)) {
     const happy = (c.detail['happy-path'] ?? 0) > 0;
     const edge = (c.detail.edge ?? 0) > 0;
-    if (!happy || !edge) steps.push({ key: `chapter:detail:${c.chapterId}`, agent: 'kapitel-redakteur', priority: 3, link: `/werkstatt/${c.chapterId}`, title: `${c.title}: ${!happy && !edge ? 'Standardablauf und Ausnahmen' : !happy ? 'Standardablauf (HappyPath)' : 'Ausnahmen (Edge)'} fehlen`, detail: 'Quellen ergänzen oder Expertenbefragung anlegen.' });
+    steps.push({ key: `chapter:detail:${c.chapterId}`, agent: 'kapitel-redakteur', priority: 3, link: `/werkstatt/${c.chapterId}`, title: `${c.title}: ${!happy && !edge ? 'Standardablauf und Ausnahmen' : !happy ? 'Standardablauf (HappyPath)' : 'Ausnahmen (Edge)'} fehlen`, detail: 'Quellen ergänzen oder Expertenbefragung anlegen.' });
   }
   const unapproved = await ctx.db.all(
     `SELECT c.id, c.title FROM chapters c WHERE c.project_id = ? AND c.outline_family_id IS NULL AND c.history_at IS NULL AND c.key NOT IN ('__none__', 'jira-tickets', 'wissensnotizen')
@@ -345,10 +347,12 @@ async function executeDecisions(ctx: Ctx, user: User) {
   const done: { decisionId: string; key: string; decision: string; result: string }[] = [];
   for (const d of await ctx.db.all("SELECT * FROM agent_decisions WHERE project_id = ? AND status = 'decided' AND executed_at IS NULL AND decision_key IS NOT NULL", ctx.projectId)) {
     let result = 'keine Aktion (Redaktion entscheidet einzeln)';
-    if (d.decision_key === 'triage:proposals' && d.decision === 'alle übernehmen') result = `${(await acceptAll(ctx, {}, user)).accepted} Vorschläge übernommen`;
+    // nur Vorschläge, die es bei der Entscheidung schon gab – spätere (neuer Import) prüft die Redaktion bzw. die nächste Frage
+    const asOf = String(d.decided_at ?? now());
+    if (d.decision_key === 'triage:proposals' && d.decision === 'alle übernehmen') result = `${(await acceptAll(ctx, { createdUpTo: asOf }, user)).accepted} Vorschläge übernommen`;
     else if (d.decision_key === 'triage:proposals' && d.decision === 'verwerfen') {
-      const n = Number((await ctx.db.get("SELECT COUNT(*) AS n FROM triage_results WHERE project_id = ? AND status = 'proposed'", ctx.projectId))?.n ?? 0);
-      await ctx.db.run("UPDATE triage_results SET status = 'rejected', decided_by = ?, decided_at = ? WHERE project_id = ? AND status = 'proposed'", user.id, now(), ctx.projectId);
+      const n = Number((await ctx.db.get("SELECT COUNT(*) AS n FROM triage_results WHERE project_id = ? AND status = 'proposed' AND created_at <= ?", ctx.projectId, asOf))?.n ?? 0);
+      await ctx.db.run("UPDATE triage_results SET status = 'rejected', decided_by = ?, decided_at = ? WHERE project_id = ? AND status = 'proposed' AND created_at <= ?", user.id, now(), ctx.projectId, asOf);
       result = `${n} Vorschläge verworfen`;
     } else if (d.decision_key === 'structure:new' && d.decision === 'aufnehmen') {
       const subs = await listNew(ctx);

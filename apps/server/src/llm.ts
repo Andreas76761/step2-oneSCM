@@ -1,6 +1,7 @@
 // Anbindung von KI-Diensten für die Umformulierung (ADR-013, ENTSCHEIDUNG E-16).
 // Adapter: Anthropic Claude (Messages API), OpenAI-kompatible Chat-API (OpenAI, Azure, vLLM, Ollama …) und ein
 // Demo-Anbieter ohne Netzwerkzugriff (nur für Demo und Tests). Standard: keine Anbindung.
+import { isIPv4 } from 'node:net';
 import { extractiveAnswer } from './domain/assistant.js';
 import { pseudoLocalize, toSwissGerman, unpseudo } from './domain/translate.js';
 import { translateSignalWords } from './domain/warnings.js';
@@ -31,8 +32,9 @@ export function isLocalUrl(url: string | undefined): boolean {
   } catch {
     return false;
   }
-  return host === 'localhost' || host === '::1' || host.endsWith('.local') || host.endsWith('.localhost')
-    || /^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+  if (host === 'localhost' || host === '::1' || host.endsWith('.local') || host.endsWith('.localhost')) return true;
+  // Bereiche nur für echte IPv4-Adressen – „10.example.com“ oder „127.attacker.net“ sind öffentliche Namen
+  return isIPv4(host) && (/^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host));
 }
 
 export interface LlmRequest {

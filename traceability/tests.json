@@ -3223,5 +3223,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-414",
+    "title": "Lokale Adressen: private Bereiche nur als echte IPv4-Adresse",
+    "file": "apps/server/test/stage93.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-415",
+    "title": "Triage-Entscheidung bei großen Läufen, gelöschte Triage-Labels bleiben weg, Entscheidung nur für frühere Vorschläge, gemerkte Zuordnung, Backlog → produktiv, Bild ohne Maße, Aufgaben nach Kapitel 50",
+    "file": "apps/server/test/stage93.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

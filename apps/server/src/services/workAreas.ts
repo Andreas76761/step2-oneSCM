@@ -277,6 +277,11 @@ export async function syncFromJira(ctx: Ctx, user: User) {
         area = place;
         stats.moved++;
       }
+      // ein Backlog-Ticket, das zwischen zwei Abgleichen schon produktiv ging, gehört in die Pipeline und ist bereit
+      if (place === 'live' && area === 'backlog') {
+        area = 'pipeline';
+        stats.moved++;
+      }
       if (place === 'live' && area === 'pipeline' && state !== 'ready' && state !== 'cancelled') {
         state = 'ready';
         stats.ready++;

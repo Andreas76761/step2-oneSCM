@@ -134,9 +134,15 @@ export async function detectRedaction(ctx: Ctx, sha: string, actor: string) {
   let status = 'done';
   let error: string | null = null;
   try {
-    const words = await ocrWords(ctx.config.mediaTools, await ctx.store.get(a.storage_key), EXT[a.mime]);
+    const data = await ctx.store.get(a.storage_key);
+    const words = await ocrWords(ctx.config.mediaTools, data, EXT[a.mime]);
     if (words === null) status = 'unavailable';
-    else found = findRegions(words, Number(a.width), Number(a.height), { names: await privacyNames(ctx.db) });
+    else {
+      // Maße aus dem Upload fehlen bei manchen JPEG/WebP – dann aus dem Bild selbst (sonst Stellen mit NaN, nichts unkenntlich)
+      let [w, h] = [Number(a.width), Number(a.height)];
+      if (!(w > 0 && h > 0)) ({ width: w, height: h } = await loadImage(data));
+      found = findRegions(words, w, h, { names: await privacyNames(ctx.db) });
+    }
   } catch (e) {
     status = 'failed';
     error = (e as Error).message.slice(0, 500);

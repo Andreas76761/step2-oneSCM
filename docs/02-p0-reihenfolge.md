@@ -82,6 +82,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **90** ✅ | Code-Review der Etappen 60–69 mit Korrekturen | Server-Tests grün auf SQLite und PostgreSQL; T-408, T-409 |
 | **91** ✅ | Code-Review der Etappen 55–59 mit Korrekturen | Server-Tests grün auf SQLite und PostgreSQL; T-410, T-411 |
 | **92** ✅ | Code-Review der Etappen 48–54 mit Korrekturen | Server-Tests grün auf SQLite und PostgreSQL; T-412, T-413 |
+| **93** ✅ | Code-Review der Etappen 42–47 mit Korrekturen | Server-Tests grün auf SQLite und PostgreSQL; T-414, T-415 |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |
