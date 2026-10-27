@@ -195,6 +195,17 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.94 Stand nach Etappe 92 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 48–54 (Übersetzung, Tonalität, Kapitelbewertung, Änderungsvorschläge, Textvarianten, Vorher/Nachher, Textbausteine): zehn Funde, neun behoben | ✅ T-412, T-413; Server-Tests auf SQLite und PostgreSQL |
+| Änderungsvorschläge | mehrere neue Absätze hinter demselben Absatz standen nach dem Übernehmen in umgekehrter Reihenfolge; Vorschläge mit gleichem Zeitstempel sortierten zufällig |
+| Triage und Übersicht | zwei Läufe gleichzeitig verdrängten sich die Vorschläge (jetzt höchstens einer je Projekt); die Übersicht wurde vor dem COMMIT verworfen und konnte 30 s einen alten Stand zeigen |
+| Übersetzung | XLIFF mit vollem Gebietsschema („fr-FR“) abgelehnt; 100-%-Treffer mit voller Ähnlichkeitssuche statt einer Abfrage |
+| Betrieb | Zwischenbilder hielten bis zu 2400 volle Bilder im Speicher; jede Kapitelerzeugung las alle Jira-Tickets aus dem Objektspeicher; Fehlerliste ohne Projektprüfung der Kapitelversion |
+| Ohne Änderung | Lektorat: die Kapitelversion im Pfad prüft schon der globale Projekt-Hook |
+
 ## 1.93 Stand nach Etappe 91 (27.10.2026)
 
 | Punkt | Ergebnis |

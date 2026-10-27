@@ -7,6 +7,7 @@ import { RULE_LABEL, type StyleRule } from '../domain/style.js';
 import { mapHeader, parseCsv } from '../domain/tabular.js';
 import { germanDate } from '../domain/workAreas.js';
 import { badRequest, conflict, notFound } from '../problem.js';
+import { assertVersion } from './assessment.js';
 import { checkChapterVersion } from './style.js';
 
 export const ERROR_STATUSES = ['open', 'fixed', 'rejected', 'rule_missing'] as const;
@@ -69,6 +70,8 @@ export async function listLanguageErrors(ctx: Ctx, q: { status?: string; chapter
 export async function collectFromVersion(ctx: Ctx, input: { versionId?: unknown; includeInfo?: unknown }, user: User) {
   const versionId = typeof input.versionId === 'string' ? input.versionId : '';
   if (!versionId) throw badRequest('versionId ist Pflicht.');
+  // Kennung aus dem Body: die Projektprüfung der Pfadparameter greift hier nicht
+  await assertVersion(ctx, versionId);
   const check = await checkChapterVersion(ctx, versionId);
   const chapterId = check.version.chapterId as string;
   const chapterTitle = check.version.title as string;

@@ -18,6 +18,14 @@ const LANGUAGE_EN: Record<string, string> = {
 };
 /** Sprachcode ohne Land (de-ch → de) – für Begriffe, Signalwörter und Abschnittstitel der Grundsprache */
 export const baseLanguage = (language: string) => language.split('-')[0];
+/**
+ * Zielsprache einer XLIFF-Datei passt zur Übersetzung: gleich oder – bei einer Sprache ohne Region – ein Gebietsschema
+ * dieser Sprache (Büros schreiben oft „fr-FR“ für „fr“). „fr-FR“ passt nicht zu „fr-ch“.
+ */
+export const xliffLanguageFits = (fileLanguage: string, language: string) => {
+  const f = fileLanguage.replace(/_/g, '-').toLowerCase();
+  return f === language || (!language.includes('-') && baseLanguage(f) === language);
+};
 /** HTML-Sprachkennung (de-ch → de-CH) */
 export const htmlLang = (language: string) => language.replace(/-([a-z]{2})$/, (_m, c: string) => `-${c.toUpperCase()}`);
 

@@ -74,11 +74,11 @@ export function selectTransients(frames: Gray[], opts: { minRatio?: number; maxF
     let end = -1;
     let best = { index: i, ...c };
     for (let k = i + 1; k < frames.length && k - i <= maxFrames; k++) {
-      if (changeOf(base, frames[k]).ratio < minRatio) {
+      const ck = changeOf(base, frames[k]);
+      if (ck.ratio < minRatio) {
         end = k;
         break;
       }
-      const ck = changeOf(base, frames[k]);
       if (ck.ratio > best.ratio) best = { index: k, ...ck };
     }
     if (end > 0) {

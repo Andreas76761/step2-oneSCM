@@ -14,7 +14,7 @@ import {
 } from '../domain/translate.js';
 import { frameTexts } from '../domain/frameTexts.js';
 import { imageVariantHints } from './imageArchive.js';
-import { latestBackcheck, latestReview, reopenReviews, reviewBlocker, tmLookup, tmRecord, tmTouch } from './translationWorkflow.js';
+import { latestBackcheck, latestReview, reopenReviews, reviewBlocker, tmExact, tmRecord, tmTouch } from './translationWorkflow.js';
 import { LlmError } from '../llm.js';
 import { badRequest, conflict, notFound, Problem, unprocessable } from '../problem.js';
 import { getChapterVersion } from './chapters.js';
@@ -96,7 +96,7 @@ export async function createTranslation(ctx: Ctx, input: { chapterId?: string; l
     for (const b of version.sections.flatMap((s) => s.blocks)) {
       if (!TRANSLATABLE.includes(b.kind) || b.section === 'status') continue;
       // Übersetzungsspeicher (U-01): freigegebene 100-%-Treffer sofort übernehmen
-      const hit = (await tmLookup(ctx, 'de', language, b.text, 1)).find((m) => m.score === 1 && m.status === 'approved');
+      const hit = await tmExact(ctx, 'de', language, b.text);
       if (hit) {
         await ctx.db.run(
           "INSERT INTO translation_blocks (id, translation_id, block_id, source_text, text, issues, mode, tm_id, tm_score, updated_by, updated_at) VALUES (?, ?, ?, ?, ?, ?, 'memory', ?, 1, ?, ?)",
@@ -218,7 +218,7 @@ export async function runMachineTranslation(ctx: Ctx, id: string, actor: string)
   let failed = 0;
   let fromMemory = 0;
   for (const b of blocks) {
-    const hit = (await tmLookup(ctx, 'de', t.language, b.source_text, 1)).find((m) => m.score === 1 && m.status === 'approved');
+    const hit = await tmExact(ctx, 'de', t.language, b.source_text);
     const reuse = hit?.targetText ?? frBase.get(b.block_id);
     if (reuse) {
       await ctx.db.run(

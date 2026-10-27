@@ -150,7 +150,7 @@ export async function removeNote(ctx: Ctx, id: string, user: User) {
   await ctx.db.tx(async () => {
     await ctx.db.run("UPDATE knowledge_notes SET status = 'removed', updated_by = ?, updated_at = ? WHERE id = ?", user.id, now(), id);
     await ctx.db.run('UPDATE source_documents SET removed_at = ? WHERE project_id = ? AND path = ? AND removed_at IS NULL', now(), ctx.projectId, r.document_path);
-    touchMetadata(ctx.projectId);
+    touchMetadata(ctx);
     await audit(ctx, user.id, 'knowledge_note.removed', 'knowledge_note', id, {});
   });
 }

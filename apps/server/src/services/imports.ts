@@ -285,7 +285,7 @@ export async function processImport(ctx: Ctx, importId: string, fileName: string
   // Bilder zählen nicht als Dokumente: schlagen alle Dokumente fehl, ist der Import fehlgeschlagen
   const status = stats.failed === 0 ? 'completed' : stats.failed === stats.files - mediaItems.size ? 'failed' : 'completed_with_errors';
   await db.run('UPDATE imports SET status = ?, finished_at = ?, stats = ? WHERE id = ?', status, now(), json(stats), importId);
-  touchMetadata(ctx.projectId);
+  touchMetadata(ctx);
   await audit(ctx, 'system', 'import.finished', 'import', importId, { status, ...stats });
   await finishConnectionImport(ctx, importId, status, stats.failed ? `${stats.failed} von ${stats.files} Dateien fehlerhaft (Import ${importId})` : null);
 }
@@ -311,7 +311,7 @@ async function markRemoved(ctx: Ctx, importId: string, seen: Set<string>) {
       await ctx.db.run('UPDATE source_documents SET removed_at = ?, removed_in_import = ? WHERE id = ?', now(), importId, d.id);
       await ctx.db.run('UPDATE source_revisions SET is_current = 0 WHERE document_id = ?', d.id);
     }
-    touchMetadata(ctx.projectId);
+    touchMetadata(ctx);
     await audit(ctx, 'system', 'source.removed', 'import', importId, { documents: removed.map((d) => d.path).slice(0, 100), count: removed.length });
   });
   return removed as { id: string; path: string }[];
@@ -333,7 +333,7 @@ async function reviveDocument(ctx: Ctx, documentId: string) {
   await ctx.db.run('UPDATE source_documents SET removed_at = NULL, removed_in_import = NULL WHERE id = ?', documentId);
   const latest = await ctx.db.get('SELECT id FROM source_revisions WHERE document_id = ? ORDER BY revision_no DESC LIMIT 1', documentId);
   if (latest) await ctx.db.run('UPDATE source_revisions SET is_current = 1 WHERE id = ?', latest.id);
-  touchMetadata(ctx.projectId);
+  touchMetadata(ctx);
 }
 
 interface Original {
@@ -464,7 +464,7 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
       await db.run('INSERT INTO source_documents (id, project_id, path, file_name, created_at) VALUES (?, ?, ?, ?, ?)', doc.id, ctx.projectId, filePath, path.basename(filePath), now());
     }
     await db.run('UPDATE source_revisions SET is_current = 0 WHERE document_id = ?', doc.id);
-    touchMetadata(ctx.projectId);
+    touchMetadata(ctx);
     await db.run(
       'INSERT INTO source_revisions (id, document_id, import_id, revision_no, sha256, storage_key, byte_size, front_matter, is_current, imported_at, source_format, original_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)',
       revisionId, doc.id, importId, revisionNo, hash, `sources/${hash}`, data.length, json(parsed.frontMatter), now(), original?.format ?? 'markdown', originalKey,

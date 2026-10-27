@@ -134,12 +134,48 @@ const firstPick = (p: Pick) => p.codes[0];
  */
 /** Chunks je Transaktion der Triage */
 const TRIAGE_BATCH = 250;
+/** ein Lauf, der so lange „running“ ist, gilt als abgebrochen (Neustart während des Laufs) */
+const STALE_RUN_MS = 2 * 60 * 60_000;
+/** Lauf nach einem Import: so lange auf einen laufenden Lauf warten */
+const WAIT_RUN_MS = 10 * 60_000;
+const isUniqueViolation = (e: any) => e?.code === '23505' || /UNIQUE constraint failed/i.test(String(e?.message));
+
+/**
+ * Lauf anlegen – höchstens einer je Projekt (eindeutiger Index): Läufe in Teilschritten würden sich sonst gegenseitig
+ * die Vorschläge verdrängen. Von Hand gestartet → 409; nach einem Import wird gewartet.
+ */
+async function startRun(ctx: Ctx, scope: string, actor: string, wait: boolean) {
+  const runId = newId('trg');
+  const until = Date.now() + WAIT_RUN_MS;
+  for (;;) {
+    try {
+      await ctx.db.tx(async () => {
+        await ctx.db.run("UPDATE triage_runs SET status = 'failed', finished_at = ? WHERE project_id = ? AND status = 'running' AND started_at < ?",
+          now(), ctx.projectId, new Date(Date.now() - STALE_RUN_MS).toISOString());
+        await ctx.db.run("INSERT INTO triage_runs (id, project_id, scope, status, stats, started_by, started_at) VALUES (?, ?, ?, 'running', '{}', ?, ?)", runId, ctx.projectId, scope, actor, now());
+      });
+      return runId;
+    } catch (e) {
+      if (!isUniqueViolation(e)) throw e;
+      if (!wait || Date.now() > until) throw conflict('Es läuft bereits ein Triage-Lauf in diesem Projekt – bitte warten, bis er fertig ist.');
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
+}
 
 export async function runTriage(ctx: Ctx, input: { scope?: unknown; importId?: string }, actor: string) {
   const scope = input.importId ? `import:${input.importId}` : String(input.scope ?? 'missing');
   if (!input.importId && !['all', 'missing'].includes(scope)) throw badRequest('scope muss all oder missing sein.');
-  const runId = newId('trg');
-  await ctx.db.run("INSERT INTO triage_runs (id, project_id, scope, status, stats, started_by, started_at) VALUES (?, ?, ?, 'running', '{}', ?, ?)", runId, ctx.projectId, scope, actor, now());
+  const runId = await startRun(ctx, scope, actor, !!input.importId);
+  try {
+    return await triageRun(ctx, runId, scope, input, actor);
+  } catch (e) {
+    await ctx.db.run("UPDATE triage_runs SET status = 'failed', finished_at = ? WHERE id = ? AND status = 'running'", now(), runId);
+    throw e;
+  }
+}
+
+async function triageRun(ctx: Ctx, runId: string, scope: string, input: { importId?: string }, actor: string) {
   let chunks = await loadChunks(ctx, { importId: input.importId });
   const labels = await labelIndex(ctx);
   // vorhandene Zuordnungen je Chunk und Gruppe
@@ -261,7 +297,7 @@ export async function runTriage(ctx: Ctx, input: { scope?: unknown; importId?: s
               if (l) ids.push(l.id);
             }
             const old = have.filter((a) => a.group === g && a.origin === 'triage').map((a) => a.labelId);
-            touchMetadata(ctx.projectId);
+            touchMetadata(ctx);
             if (old.length) await ctx.db.run(`DELETE FROM metadata_chunk_labels WHERE snippet_id = ? AND label_id IN (${old.map(() => '?').join(',')})`, c.id, ...old);
             for (const id of ids) {
               await ctx.db.run(

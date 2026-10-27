@@ -8,7 +8,7 @@ import { detectPrivacy } from '../domain/privacy.js';
 import { type Audience } from '../domain/releaseLetter.js';
 import { RewriteParseError } from '../domain/rewrite.js';
 import {
-  backSimilarity, BACK_MIN, baseLanguage, buildTranslatePrompt, buildXliff, checkTranslation, countWords, LANGUAGES, MQM_CATEGORIES, MQM_PASS_PER_1000, MQM_SEVERITY_LABEL,
+  backSimilarity, BACK_MIN, baseLanguage, xliffLanguageFits, buildTranslatePrompt, buildXliff, checkTranslation, countWords, LANGUAGES, MQM_CATEGORIES, MQM_PASS_PER_1000, MQM_SEVERITY_LABEL,
   MQM_WEIGHTS, mqmScore, parseTranslateResponse, parseXliff, sampleEvery, TM_FUZZY_MIN, tmNormalize, tmSimilarity, TRANSLATION_ISSUE_LABELS, XliffError, type TranslationIssue,
 } from '../domain/translate.js';
 import { signalLevels } from '../domain/warnings.js';
@@ -69,6 +69,14 @@ export async function tmLookup(ctx: Ctx, sourceLang: string, targetLang: string,
     if (score >= TM_FUZZY_MIN) out.push({ id: r.id, sourceText: r.source_text, targetText: r.target_text, score, status: r.status, origin: r.origin, originRef: r.origin_ref ?? null });
   }
   return out.sort((a, b) => b.score - a.score).slice(0, limit);
+}
+
+/** nur der freigegebene 100-%-Treffer (Übernahme ohne Rückfrage) – eine Abfrage über den Index statt der Ähnlichkeitssuche */
+export async function tmExact(ctx: Ctx, sourceLang: string, targetLang: string, text: string): Promise<TmMatch | null> {
+  const norm = tmNormalize(text);
+  if (!norm) return null;
+  const r = await ctx.db.get("SELECT * FROM translation_memory WHERE project_id = ? AND source_lang = ? AND target_lang = ? AND source_norm = ? AND status = 'approved'", ctx.projectId, sourceLang, targetLang, norm);
+  return r ? { id: r.id, sourceText: r.source_text, targetText: r.target_text, score: 1, status: r.status, origin: r.origin, originRef: r.origin_ref ?? null } : null;
 }
 
 export async function tmTouch(ctx: Ctx, id: string) {
@@ -296,8 +304,8 @@ export async function importTranslationFile(ctx: Ctx, id: string, fileName: stri
   if (/\.(xlf|xliff|xml)$/i.test(fileName)) {
     try {
       const x = parseXliff(data.toString('utf8'));
-      const lang = x.targetLanguage?.replace('_', '-');
-      if (lang && lang !== t.language) throw badRequest(`Die Datei ist für ${lang}, die Übersetzung für ${t.language}.`);
+      const lang = x.targetLanguage;
+      if (lang && !xliffLanguageFits(lang, t.language)) throw badRequest(`Die Datei ist für ${lang}, die Übersetzung für ${t.language}.`);
       parsed = x.units;
     } catch (e) {
       if (e instanceof XliffError) throw badRequest(e.message);
@@ -609,7 +617,7 @@ export async function translateReleaseLetter(ctx: Ctx, id: string, user: User) {
   const todo: { i: number; line: string }[] = [];
   let fromMemory = 0;
   for (const s of segments) {
-    const hit = (await tmLookup(ctx, r.language, target, s.line, 1)).find((m) => m.score === 1 && m.status === 'approved');
+    const hit = await tmExact(ctx, r.language, target, s.line);
     if (hit) {
       lines[s.i] = hit.targetText;
       await tmTouch(ctx, hit.id);

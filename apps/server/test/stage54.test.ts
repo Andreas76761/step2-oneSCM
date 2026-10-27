@@ -36,7 +36,7 @@ describe('Etappe 54', () => {
     expect(await cachedOverview('p1', compute, 20_000)).toBe(1);
     expect(await cachedOverview('p2', compute, 20_000)).toBe(2);
     expect(await cachedOverview('p1', compute, 31_001)).toBe(3);
-    touchMetadata('p1');
+    touchMetadata({ projectId: 'p1', db: { afterCommit: (f: () => void) => f() } as any });
     expect(await cachedOverview('p1', compute, 31_002)).toBe(4);
   });
 

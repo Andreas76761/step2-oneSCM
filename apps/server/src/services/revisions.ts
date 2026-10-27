@@ -41,10 +41,12 @@ async function versionFor(ctx: Ctx, title: string, fromExport: Map<string, strin
 }
 
 async function insertProposal(ctx: Ctx, p: Record<string, unknown>, user: User) {
+  // laufende Nummer je Liste: Reihenfolge wie in der Datei (Zeitstempel sind oft gleich)
+  const seq = Number((await ctx.db.get('SELECT MAX(seq) AS m FROM revision_proposals WHERE batch_id = ?', p.batchId))?.m ?? 0) + 1;
   await ctx.db.run(
-    `INSERT INTO revision_proposals (id, project_id, batch_id, chapter_id, chapter_version_id, lineage_id, section_code, change, original_text, proposed_text, criterion, status, created_by, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)`,
-    newId('rvp'), ctx.projectId, p.batchId, p.chapterId, p.versionId, p.lineageId ?? null, p.section, p.change, p.original ?? null, p.proposed ?? null, p.criterion ?? null, user.id, now(),
+    `INSERT INTO revision_proposals (id, project_id, batch_id, chapter_id, chapter_version_id, lineage_id, section_code, change, original_text, proposed_text, criterion, status, created_by, created_at, seq)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', ?, ?, ?)`,
+    newId('rvp'), ctx.projectId, p.batchId, p.chapterId, p.versionId, p.lineageId ?? null, p.section, p.change, p.original ?? null, p.proposed ?? null, p.criterion ?? null, user.id, now(), seq,
   );
 }
 
@@ -170,7 +172,7 @@ export async function getBatch(ctx: Ctx, id: string) {
   const b = await ctx.db.get('SELECT * FROM revision_batches WHERE id = ? AND project_id = ?', id, ctx.projectId);
   if (!b) throw notFound(`Vorschlagsliste ${id}`);
   const rows = await ctx.db.all(
-    `SELECT p.*, c.title AS chapter_title, c.position FROM revision_proposals p JOIN chapters c ON c.id = p.chapter_id WHERE p.batch_id = ? ORDER BY c.position, p.created_at, p.id`, id,
+    `SELECT p.*, c.title AS chapter_title, c.position FROM revision_proposals p JOIN chapters c ON c.id = p.chapter_id WHERE p.batch_id = ? ORDER BY c.position, p.created_at, p.seq, p.id`, id,
   );
   type Group = { chapterId: string; title: string; proposals: Awaited<ReturnType<typeof proposalDto>>[] };
   const chapters = new Map<string, Group>();
@@ -211,8 +213,21 @@ async function apply(ctx: Ctx, p: Row, text: string | null, actor: string) {
   const block = p.lineage_id ? await ctx.db.get('SELECT * FROM content_blocks WHERE chapter_version_id = ? AND lineage_id = ? AND deleted_at IS NULL', draft, p.lineage_id) : null;
   const reason = `Änderungsvorschlag übernommen${p.criterion ? ` (Fertig, wenn: ${String(p.criterion).slice(0, 120)})` : ''}`;
   if (p.change === 'added') {
-    const anchor = block;
-    await createBlock(ctx, draft, { section: p.section_code, text: text ?? p.proposed_text, position: anchor && anchor.section_code === p.section_code ? Number(anchor.position) + 5 : -1, reason, justification: 'Ergänzung aus Änderungsvorschlag (Prüfung in Word bzw. Lektorat)' } as any, actor);
+    // hinter den Absatz davor – oder hinter den zuletzt übernommenen neuen Absatz, der in der Datei davor stand
+    let after = block && block.section_code === p.section_code ? Number(block.position) : null;
+    const siblings = await ctx.db.all(
+      `SELECT id, applied_lineage_id FROM revision_proposals WHERE batch_id = ? AND chapter_id = ? AND section_code = ? AND change = 'added' AND ${p.lineage_id ? 'lineage_id = ?' : 'lineage_id IS NULL'}
+       ORDER BY created_at, seq, id`, p.batch_id, p.chapter_id, p.section_code, ...(p.lineage_id ? [p.lineage_id] : []),
+    );
+    for (const s of siblings.slice(0, siblings.findIndex((s) => s.id === p.id)).reverse()) {
+      const prev = s.applied_lineage_id && await ctx.db.get('SELECT position FROM content_blocks WHERE chapter_version_id = ? AND lineage_id = ? AND section_code = ? AND deleted_at IS NULL', draft, s.applied_lineage_id, p.section_code);
+      if (prev) {
+        after = Number(prev.position);
+        break;
+      }
+    }
+    const created = await createBlock(ctx, draft, { section: p.section_code, text: text ?? p.proposed_text, position: after === null ? -1 : after + 5, reason, justification: 'Ergänzung aus Änderungsvorschlag (Prüfung in Word bzw. Lektorat)' } as any, actor);
+    await ctx.db.run('UPDATE revision_proposals SET applied_lineage_id = ? WHERE id = ?', created.lineageId, p.id);
   } else {
     if (!block || normalizeText(block.text) !== normalizeText(p.original_text ?? '')) return null;
     if (p.change === 'removed') await deleteBlock(ctx, block.id, reason, actor);
@@ -257,7 +272,7 @@ export async function acceptAll(ctx: Ctx, batchId: string, input: { chapterId?: 
   const b = await ctx.db.get('SELECT id FROM revision_batches WHERE id = ? AND project_id = ?', batchId, ctx.projectId);
   if (!b) throw notFound(`Vorschlagsliste ${batchId}`);
   const chapterId = typeof input.chapterId === 'string' && input.chapterId ? input.chapterId : null;
-  const rows = await ctx.db.all(`SELECT * FROM revision_proposals WHERE batch_id = ? AND status = 'open'${chapterId ? ' AND chapter_id = ?' : ''} ORDER BY created_at, id`, batchId, ...(chapterId ? [chapterId] : []));
+  const rows = await ctx.db.all(`SELECT * FROM revision_proposals WHERE batch_id = ? AND status = 'open'${chapterId ? ' AND chapter_id = ?' : ''} ORDER BY created_at, seq, id`, batchId, ...(chapterId ? [chapterId] : []));
   let accepted = 0;
   let stale = 0;
   await ctx.db.tx(async () => {

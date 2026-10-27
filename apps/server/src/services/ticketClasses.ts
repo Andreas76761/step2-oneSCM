@@ -8,11 +8,13 @@ import { badRequest, notFound } from '../problem.js';
 const MAX_NOTE = 500;
 const MAX_BULK = 500;
 
-/** Aktuelle Jira-Tickets: Schlüssel, Typ und Quelldokument */
-export async function jiraTicketDocs(ctx: Ctx) {
+/** Aktuelle Jira-Tickets: Schlüssel, Typ und Quelldokument (optional nur diese Quelldokumente) */
+export async function jiraTicketDocs(ctx: Ctx, documentIds?: string[]) {
+  if (documentIds && !documentIds.length) return [];
   const rows = await ctx.db.all(
     `SELECT d.id AS document_id, r.original_key FROM source_documents d JOIN source_revisions r ON r.document_id = d.id
-     WHERE d.project_id = ? AND d.removed_at IS NULL AND r.is_current = 1 AND r.source_format = 'jira'`, ctx.projectId,
+     WHERE d.project_id = ? AND d.removed_at IS NULL AND r.is_current = 1 AND r.source_format = 'jira'${documentIds ? ` AND d.id IN (${documentIds.map(() => '?').join(',')})` : ''}`,
+    ctx.projectId, ...(documentIds ?? []),
   );
   const out: { key: string; type: string; documentId: string }[] = [];
   for (const r of rows) {
@@ -41,9 +43,9 @@ export async function ticketClassMap(ctx: Ctx, tickets: { key: string; type: str
   return out;
 }
 
-/** Quelldokumente von Tickets, die nicht ins Handbuch fließen (intern, Background) */
-export async function excludedTicketDocuments(ctx: Ctx) {
-  const docs = await jiraTicketDocs(ctx);
+/** Quelldokumente von Tickets, die nicht ins Handbuch fließen (intern, Background); optional nur unter diesen Dokumenten */
+export async function excludedTicketDocuments(ctx: Ctx, documentIds?: string[]) {
+  const docs = await jiraTicketDocs(ctx, documentIds);
   if (!docs.length) return new Map<string, TicketClass>();
   const cls = await ticketClassMap(ctx, docs);
   const out = new Map<string, TicketClass>();

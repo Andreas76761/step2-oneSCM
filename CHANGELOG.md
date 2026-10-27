@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.92.0 – Etappe 92 (27.10.2026)
+
+### Hinzugefügt
+- **Code-Review der Etappen 48–54:** Geprüft wurden Übersetzung, Tonalität, Kapitelbewertung, Änderungsvorschläge, Textvarianten, Vorher/Nachher und Textbausteine. Es gab zehn Funde. Ich habe sie einzeln geprüft: Neun sind behoben. Der zehnte (Lektorat) war schon abgesichert.
+- **Tests T-412 und T-413:** Beide scheitern ohne die Korrekturen.
+- **Datenbank:** `afterCommit` führt eine Aufgabe erst nach dem COMMIT aus und nach einem ROLLBACK nie.
+
+### Behoben
+- **Änderungsvorschläge aus Word:**
+  - Mehrere neue Absätze hinter demselben Absatz standen nach dem Übernehmen in umgekehrter Reihenfolge. Jetzt gilt die Reihenfolge der Word-Datei, auch wenn Sie die Vorschläge einzeln und in anderer Reihenfolge übernehmen.
+  - Vorschläge mit gleichem Zeitstempel wurden in zufälliger Reihenfolge angezeigt; sie tragen jetzt eine laufende Nummer.
+- **Triage:**
+  - Zwei Läufe gleichzeitig (etwa nach einem Import und von Hand) verdrängten sich gegenseitig die Vorschläge. Jetzt läuft höchstens ein Lauf je Projekt.
+  - Ein zweiter Lauf von Hand wird mit einer Meldung abgelehnt. Der Lauf nach einem Import wartet bis zu 10 Minuten.
+  - Ein Lauf, der seit über 2 Stunden als „läuft“ steht (etwa nach einem Neustart), gilt als abgebrochen.
+- **Übersicht oneSCM_Metadaten:** Der Zwischenspeicher wurde vor dem COMMIT verworfen. Eine Anfrage in diesem Moment konnte bis zu 30 s einen alten Stand festhalten. Jetzt wird er auch nach dem COMMIT verworfen, und eine Berechnung, während der geschrieben wurde, wird nicht gespeichert.
+- **XLIFF vom Übersetzungsbüro:** Dateien mit vollem Gebietsschema („fr-FR“, „en-GB“) wurden für „fr“ bzw. „en“ abgelehnt. Sie passen jetzt; „fr-FR“ passt weiter nicht zu „fr-CH“.
+- **Fehlerliste:** „Aus Kapitel sammeln“ prüfte nicht, ob die Kapitelversion zum Projekt gehört.
+
+### Leistung
+- **Zwischenbilder aus Videos:** Der zweite Durchgang hielt bis zu 2400 volle Bilder gleichzeitig im Speicher, bei 20 Minuten Video etwa 9 GB. Jetzt bleiben nur kleine Graubilder im Speicher, und die vollen Bilder werden nur für die behaltenen Stellen geladen. Das gilt auch für die Standbilder. Die Änderung je Bild wird nur noch einmal berechnet.
+- **Übersetzungsspeicher:** Für die Übernahme ohne Rückfrage zählen nur freigegebene 100-%-Treffer. Diese kommen jetzt aus einer einzigen Abfrage über den Index, ohne Ähnlichkeitssuche über bis zu 5000 Segmente je Absatz. Das betrifft das Anlegen einer Übersetzung, die maschinelle Übersetzung und den Releaseletter.
+- **Kapitel erzeugen:** Es werden nur noch die Jira-Tickets aus dem Objektspeicher gelesen, deren Quellen im Kapitel vorkommen, nicht mehr alle Tickets des Projekts.
+
+### Ohne Änderung
+- **KI-Lektorat:** Die Kapitelversion im Pfad prüft schon der globale Projekt-Hook für Pfadparameter. Eine fremde Kennung ergibt 404.
+
 ## 0.91.0 – Etappe 91 (27.10.2026)
 
 ### Hinzugefügt

@@ -72,7 +72,8 @@ const FINE_SECONDS = 0.5;
 const FINE_MAX_FRAMES = 2400;
 const TRANSIENT_MAX_FRAMES = 4;
 
-type Frame = { img: Awaited<ReturnType<typeof loadImage>>; gray: ReturnType<typeof toGray> };
+/** je Bild nur das Graubild 64×36 und der Pfad; das volle Bild wird erst für die behaltenen Bilder geladen (Speicher) */
+type Frame = { file: string; gray: ReturnType<typeof toGray> };
 
 async function sampleFrames(cfg: MediaToolsConfig, input: string, dir: string, seconds: number, max: number): Promise<Frame[]> {
   await fs.mkdir(dir, { recursive: true });
@@ -82,15 +83,16 @@ async function sampleFrames(cfg: MediaToolsConfig, input: string, dir: string, s
   const sctx = small.getContext('2d');
   const frames: Frame[] = [];
   for (const f of files) {
-    const img = await loadImage(await fs.readFile(path.join(dir, f)));
-    sctx.drawImage(img, 0, 0, 64, 36);
-    frames.push({ img, gray: toGray(sctx.getImageData(0, 0, 64, 36).data, 64, 36) });
+    const file = path.join(dir, f);
+    sctx.drawImage(await loadImage(await fs.readFile(file)), 0, 0, 64, 36);
+    frames.push({ file, gray: toGray(sctx.getImageData(0, 0, 64, 36).data, 64, 36) });
   }
   return frames;
 }
 
 /** Bild als PNG mit rotem Rahmen um den geänderten Bereich (mit etwas Rand) */
-async function framed(img: Frame['img'], box: { x: number; y: number; w: number; h: number } | null) {
+async function framed(frame: Frame, box: { x: number; y: number; w: number; h: number } | null) {
+  const img = await loadImage(await fs.readFile(frame.file));
   const canvas = createCanvas(img.width, img.height);
   const g = canvas.getContext('2d');
   g.drawImage(img, 0, 0);
@@ -120,7 +122,7 @@ export async function extractStills(cfg: MediaToolsConfig, video: Buffer, store:
     const out: Still[] = [];
     for (const c of selectChanges(images.map((i) => i.gray))) {
       const time = c.index * SAMPLE_SECONDS;
-      const sha = await store(await framed(images[c.index].img, c.box), `standbild-${timeLabel(time).replace(/:/g, '-')}.png`);
+      const sha = await store(await framed(images[c.index], c.box), `standbild-${timeLabel(time).replace(/:/g, '-')}.png`);
       out.push({ time, sha, alt: `Standbild bei ${timeLabel(time)}${c.box ? ' – Änderung rot markiert' : ''}` });
     }
     if (cfg.transientStills !== false) {
@@ -129,7 +131,7 @@ export async function extractStills(cfg: MediaToolsConfig, video: Buffer, store:
         const time = Math.round(t.index * FINE_SECONDS * 10) / 10;
         // schon als Standbild erfasst
         if (out.some((s) => Math.abs(s.time - time) < FINE_SECONDS)) continue;
-        const sha = await store(await framed(fine[t.index].img, t.box), `zwischenbild-${timeLabel(time).replace(/:/g, '-')}.png`);
+        const sha = await store(await framed(fine[t.index], t.box), `zwischenbild-${timeLabel(time).replace(/:/g, '-')}.png`);
         out.push({ time, sha, alt: `Zwischenbild bei ${timeLabel(time)} – kurz sichtbar (Menü oder Dialog)${t.box ? ', rot markiert' : ''}`, kind: 'transient' });
       }
       out.sort((a, b) => a.time - b.time);

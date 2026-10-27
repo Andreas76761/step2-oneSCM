@@ -143,7 +143,7 @@ export async function deleteLabel(ctx: Ctx, id: string, user: User) {
   };
   await ctx.db.tx(async () => {
     await ctx.db.run('DELETE FROM metadata_chunk_labels WHERE label_id = ?', id);
-    touchMetadata(ctx.projectId);
+    touchMetadata(ctx);
     await ctx.db.run('DELETE FROM metadata_qa_labels WHERE label_id = ?', id);
     await ctx.db.run('DELETE FROM media_labels WHERE label_id = ?', id);
     await ctx.db.run('DELETE FROM metadata_label_links WHERE domain_label_id = ? OR target_label_id = ?', id, id);
@@ -277,7 +277,7 @@ export async function setChunkLabels(ctx: Ctx, input: { snippetIds?: unknown; ad
       }
       for (const l of remove) removed += (await ctx.db.run('DELETE FROM metadata_chunk_labels WHERE snippet_id = ? AND label_id = ?', s, l)).changes;
     }
-    touchMetadata(ctx.projectId);
+    touchMetadata(ctx);
     await audit(ctx, user.id, 'metadata.chunk_labels.changed', 'text_snippet', snippetIds.length === 1 ? snippetIds[0] : `${snippetIds.length} Chunks`, { snippetIds, add, remove, added, removed });
   });
   return { chunks: snippetIds.length, added, removed };

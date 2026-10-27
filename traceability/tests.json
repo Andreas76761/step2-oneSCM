@@ -3205,5 +3205,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-412",
+    "title": "Übersicht nach dem COMMIT verworfen, keine Berechnung aus der Zeit eines Schreibzugriffs gespeichert; XLIFF mit Gebietsschema",
+    "file": "apps/server/test/stage92.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-413",
+    "title": "Neue Absätze aus Word in der Reihenfolge der Datei; Fehlerliste nur im eigenen Projekt; nur ein Triage-Lauf zugleich",
+    "file": "apps/server/test/stage92.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]
