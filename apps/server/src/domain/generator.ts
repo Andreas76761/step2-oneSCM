@@ -27,6 +27,8 @@ export interface GenSnippet {
   scopeStatus: string; // Markt/Release bestätigt?
   sourceLabel: string; // Datei + Revision
   canonicalRedirect?: { topicId: string; topicTitle: string; leadChapterTitle: string } | null;
+  /** Detaillevel aus TRIAGE bzw. Label (ADR-100): edge → Abschnitt „Fehler und Ausnahmen“ */
+  detail?: string | null;
 }
 
 export interface GenBlock {
@@ -93,6 +95,8 @@ export function scopeStatusOf(snippets: Pick<GenSnippet, 'roles' | 'divisions' |
 
 export function assignSection(s: GenSnippet, ctx: { first: boolean; roleMajority: string; divMajority: string }): { section: SectionCode; kind: string } {
   const hk = hintKind(s.text);
+  // Edge = Ausnahmen und Sonderfälle (ADR-100): getrennt vom Standardablauf (HappyPath)
+  if (s.detail === 'edge') return { section: 'troubleshooting', kind: hk ?? (s.kind === 'ordered_list' || s.kind === 'list' ? 'list' : 'paragraph') };
   const baseKind = s.kind === 'ordered_list' || s.kind === 'list' ? 'list' : s.kind === 'table' ? 'table' : s.kind === 'code' ? 'code' : 'paragraph';
   const heading = H([s.subchapterTitle ?? '', ...s.headingPath].filter(Boolean).slice(-2).join(' '));
   const headingSection = HEADING_RULES.find(([re]) => re.test(heading))?.[1];
@@ -163,7 +167,7 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
     const confirmedRoles = new Map<string, string[]>();
     for (const s of unique) for (const r of s.roles) if (isConfirmed(r)) confirmedRoles.set(r.code, [...(confirmedRoles.get(r.code) ?? []), s.id]);
     if (confirmedRoles.size) {
-      const lines = ROLES.filter((r) => confirmedRoles.has(r.code)).map((r) => `- ${r.icon} ${r.label} (${r.description})`);
+      const lines = ROLES.filter((r) => confirmedRoles.has(r.code)).map((r) => `- ${r.label} (${r.description})`);
       blocks.push({ section: 'responsibilities', kind: 'list', text: `Dieses Kapitel betrifft folgende Rollen:\n\n${lines.join('\n')}`, sourceIds: [...new Set([...confirmedRoles.values()].flat())], roles: [...confirmedRoles.keys()], divisions: ['all'], market: null, release: null, scopeStatus: 'general' });
     }
   }

@@ -6,6 +6,7 @@ import { detectContradictions, RULE_LABELS, type Statement } from '../domain/con
 import { detectPrivacy } from '../domain/privacy.js';
 import { DECISION_CODES, DECISIONS, SEVERITIES, type Severity } from '../domain/reference.js';
 import { clusterPairs, TfidfEngine, type SimilarityPair } from '../domain/similarity.js';
+import { inUiContext } from '../domain/style.js';
 import { badRequest, notFound, unprocessable } from '../problem.js';
 import { listTerms } from './terminology.js';
 import { assertIdsInProject } from './projects.js';
@@ -158,12 +159,14 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
 
   // Datenschutz, Terminologie, Lesbarkeit je Textabschnitt
   for (const s of snippets) {
-    const privacy = detectPrivacy(s.text);
+    const privacy = detectPrivacy(s.text, { names: all.privacy.names });
     if (privacy.length) {
       found.push({ type: 'privacy', subtype: privacy[0].kind, severity: 'blocker', chapterId: s.chapter_id, a: s.id, method: 'privacy-patterns-1.0', reason: `Mögliche personenbezogene Daten: ${privacy.map((h) => `${h.kind} (${h.match})`).join(', ')}`, details: { hits: privacy } });
     }
     for (const t of terms) {
-      const hit = t.avoid.find((w) => new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(s.text));
+      // UI-Begriffe (ADR-110): in Menüpfaden und Anführungszeichen erlaubt – wie in der Stilprüfung (inUiContext)
+      const hit = t.avoid.find((w) => [...s.text.matchAll(new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi'))]
+        .some((m) => !t.uiAllowed || !inUiContext(s.text, m.index!, m.index! + m[0].length)));
       if (hit) found.push({ type: 'terminology', subtype: 'avoid_term', severity: 'low', chapterId: s.chapter_id, a: s.id, method: 'terminology-list', reason: `„${hit}“ → bevorzugt „${t.preferred}“`, details: { term: hit, preferred: t.preferred } });
     }
     const long = s.text.split(/(?<=[.!?])\s+/).filter((x: string) => x.split(/\s+/).length > all.readability.maxSentenceWords);

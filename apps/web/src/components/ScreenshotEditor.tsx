@@ -2,9 +2,12 @@
 // Pfeile und Textfelder einzeichnen, vertrauliche Bereiche unkenntlich machen (verpixelt – im gespeicherten PNG nicht umkehrbar),
 // Legende pflegen, als PNG speichern. Nummern und Textfelder lassen sich auch per Tastatur (Koordinaten in Prozent) anlegen.
 // Etappe 17 (ADR-049): Ausschnitt zuschneiden, Lupe (vergrößerter Bereich mit Verbindungslinie), Markierungen per Maus verschieben.
+import { ClipboardPasteIcon, CropIcon, MoveIcon, MoveRightIcon, XIcon, ZoomInIcon } from 'lucide-react';
+import { Ico } from './icons';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { patch, post } from '../api';
 import { Card, errorText, useApp } from './ui';
+import { readClipboardImage, usePasteImage } from './clipboard';
 
 // jede Markierung hat eine Kennung, damit Rückgängig und Entfernen einander nicht in die Quere kommen
 interface Marker { id?: number; x: number; y: number; text: string }
@@ -13,6 +16,7 @@ interface Arrow { id?: number; x1: number; y1: number; x2: number; y2: number }
 interface Label { id?: number; x: number; y: number; text: string }
 /** Lupe: Quellbereich (x, y, w, h) vergrößert um „zoom“ an der Zielmitte (cx, cy) – alles in Prozent */
 interface Mag { id?: number; x: number; y: number; w: number; h: number; cx: number; cy: number; zoom: number }
+const TWO_CLICKS = ' – oder Anfangs- und Endpunkt nacheinander anklicken.';
 let nextShapeId = 1;
 type ShapeTool = 'marker' | 'frame' | 'arrow' | 'text' | 'blur' | 'magnify';
 type Tool = ShapeTool | 'crop' | 'move';
@@ -193,11 +197,22 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
   const [zoom, setZoom] = useState(2);
   // laufendes Verschieben: welche Markierung, welcher Teil, Startpunkt und Ausgangslage
   const [moving, setMoving] = useState<{ key: keyof Shapes; id: number; part: 'all' | 'p1' | 'p2' | 'target'; start: { x: number; y: number }; orig: any } | null>(null);
+  // Ohne Ziehen (WCAG 2.5.7): erster Klick setzt den Anfangspunkt bzw. fasst eine Markierung an, der zweite Klick schließt ab
+  const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
+  const [picked, setPicked] = useState<NonNullable<typeof moving> | null>(null);
   const { mags } = sh;
 
   useEffect(() => {
     if (img && canvas.current) draw(canvas.current, img, sh, color, preview, crop, true);
   }, [img, sh, color, preview, crop]);
+  // Werkzeugwechsel oder Esc verwirft einen begonnenen Zwei-Klick-Vorgang
+  useEffect(() => { setAnchor(null); setPicked(null); setPreview(null); }, [tool]);
+  useEffect(() => {
+    if (!anchor && !picked) return;
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') { setAnchor(null); setPicked(null); setPreview(null); } };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [anchor, picked]);
 
   const load = (file: File | undefined) => {
     if (!file) return;
@@ -211,9 +226,22 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
       setHistory([]);
       setCrop(null);
       setTitle(file.name.replace(/\.[^.]+$/, ''));
+      setAnchor(null);
+      setPicked(null);
+      setPreview(null);
     };
     i.onerror = () => notify('Bild konnte nicht geladen werden.', 'error');
     i.src = url;
+  };
+
+  // F-23: Screenshot direkt aus der Zwischenablage (Strg+V oder Schaltfläche), danach zuschneiden und markieren
+  usePasteImage(load);
+  const paste = async () => {
+    try {
+      load(await readClipboardImage());
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
   };
 
   const pos = (e: ReactPointerEvent<HTMLCanvasElement>) => {
@@ -254,8 +282,25 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
     for (const b of [...blurs].reverse()) if (inside(b)) return { key: 'blurs' as const, item: b, part: 'all' as const };
     return null;
   };
+  const moveTo = (m: NonNullable<typeof moving>, p: { x: number; y: number }) => {
+    const dx = p.x - m.start.x;
+    const dy = p.y - m.start.y;
+    const o = m.orig;
+    const moved = m.key === 'arrows'
+      ? m.part === 'p1' ? { ...o, x1: clamp(o.x1 + dx), y1: clamp(o.y1 + dy) } : { ...o, x2: clamp(o.x2 + dx), y2: clamp(o.y2 + dy) }
+      : m.key === 'mags' && m.part === 'target' ? { ...o, cx: clamp(o.cx + dx), cy: clamp(o.cy + dy) }
+      : m.key === 'mags' ? { ...o, x: clamp(o.x + dx), y: clamp(o.y + dy), cx: clamp(o.cx + dx), cy: clamp(o.cy + dy) }
+      : { ...o, x: clamp(o.x + dx), y: clamp(o.y + dy) };
+    setSh((x) => ({ ...x, [m.key]: (x[m.key] as { id?: number }[]).map((it) => (it.id === m.id ? moved : it)) }));
+  };
+  const near = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y) < 1;
   const onDown = (e: ReactPointerEvent<HTMLCanvasElement>) => {
     const p = pos(e);
+    if (tool === 'move' && picked) {
+      moveTo(picked, p);
+      setPicked(null);
+      return;
+    }
     if (tool === 'move') {
       const h = hit(p);
       if (h?.item.id !== undefined) {
@@ -276,28 +321,26 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
     a: { x1: a.x, y1: a.y, x2: b.x, y2: b.y },
   });
   const onMove = (e: ReactPointerEvent<HTMLCanvasElement>) => {
-    if (moving) {
-      const p = pos(e);
-      const dx = p.x - moving.start.x;
-      const dy = p.y - moving.start.y;
-      const o = moving.orig;
-      const moved = moving.key === 'arrows'
-        ? moving.part === 'p1' ? { ...o, x1: clamp(o.x1 + dx), y1: clamp(o.y1 + dy) } : { ...o, x2: clamp(o.x2 + dx), y2: clamp(o.y2 + dy) }
-        : moving.key === 'mags' && moving.part === 'target' ? { ...o, cx: clamp(o.cx + dx), cy: clamp(o.cy + dy) }
-        : moving.key === 'mags' ? { ...o, x: clamp(o.x + dx), y: clamp(o.y + dy), cx: clamp(o.cx + dx), cy: clamp(o.cy + dy) }
-        : { ...o, x: clamp(o.x + dx), y: clamp(o.y + dy) };
-      setSh((x) => ({ ...x, [moving.key]: (x[moving.key] as { id?: number }[]).map((it) => (it.id === moving.id ? moved : it)) }));
-      return;
-    }
-    if (!drag) return;
-    setPreview({ tool, ...shape(drag, pos(e)) });
+    if (moving) return moveTo(moving, pos(e));
+    const from = anchor ?? drag;
+    if (from) setPreview({ tool, ...shape(from, pos(e)) });
   };
   const onUp = (e: ReactPointerEvent<HTMLCanvasElement>) => {
-    if (moving) return setMoving(null);
+    const p = pos(e);
+    if (moving) {
+      // nur angeklickt, nicht gezogen: Markierung bleibt angefasst, der nächste Klick setzt sie ab
+      if (near(moving.start, p)) setPicked(moving);
+      return setMoving(null);
+    }
     if (!drag) return;
-    const { f, a } = shape(drag, pos(e));
     setDrag(null);
+    // Klick statt Ziehen: der erste Klick setzt den Anfangspunkt, der zweite Druck ist immer der Endpunkt –
+    // auch wenn die Maus dabei etwas wandert
+    if (!anchor && near(drag, p)) { setAnchor(drag); return; }
+    const start = anchor ?? drag;
+    setAnchor(null);
     setPreview(null);
+    const { f, a } = shape(start, p);
     if (tool === 'arrow') {
       if (Math.hypot(a.x2 - a.x1, a.y2 - a.y1) >= 2) add('arrow', a);
     } else if (tool === 'crop') {
@@ -365,17 +408,18 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
       <label className="block">Bildschirmfoto (PNG oder JPEG)
         <input type="file" accept="image/png,image/jpeg" data-testid="screenshot-input" onChange={(e) => load(e.target.files?.[0])} />
       </label>
+      <p className="small muted">oder <button type="button" className="btn small" onClick={() => void paste()}><Ico icon={ClipboardPasteIcon} />Aus Zwischenablage einfügen</button> – bzw. Strg+V drücken. Danach mit „Zuschneiden“ den Ausschnitt wählen.</p>
       {img && (
         <>
           <div className="filters" role="group" aria-label="Werkzeug">
             <button className={`chip${tool === 'marker' ? ' active' : ''}`} aria-pressed={tool === 'marker'} onClick={() => setTool('marker')}>① Nummer setzen</button>
             <button className={`chip${tool === 'frame' ? ' active' : ''}`} aria-pressed={tool === 'frame'} onClick={() => setTool('frame')}>▭ Rahmen ziehen</button>
-            <button className={`chip${tool === 'arrow' ? ' active' : ''}`} aria-pressed={tool === 'arrow'} onClick={() => setTool('arrow')}>➜ Pfeil ziehen</button>
+            <button className={`chip${tool === 'arrow' ? ' active' : ''}`} aria-pressed={tool === 'arrow'} onClick={() => setTool('arrow')}><Ico icon={MoveRightIcon} />Pfeil ziehen</button>
             <button className={`chip${tool === 'text' ? ' active' : ''}`} aria-pressed={tool === 'text'} onClick={() => setTool('text')}>T Textfeld setzen</button>
             <button className={`chip${tool === 'blur' ? ' active' : ''}`} aria-pressed={tool === 'blur'} onClick={() => setTool('blur')}>▦ Unkenntlich machen</button>
-            <button className={`chip${tool === 'magnify' ? ' active' : ''}`} aria-pressed={tool === 'magnify'} onClick={() => setTool('magnify')}>🔍 Lupe</button>
-            <button className={`chip${tool === 'crop' ? ' active' : ''}`} aria-pressed={tool === 'crop'} onClick={() => setTool('crop')}>✂ Zuschneiden</button>
-            <button className={`chip${tool === 'move' ? ' active' : ''}`} aria-pressed={tool === 'move'} onClick={() => setTool('move')}>✥ Verschieben</button>
+            <button className={`chip${tool === 'magnify' ? ' active' : ''}`} aria-pressed={tool === 'magnify'} onClick={() => setTool('magnify')}><Ico icon={ZoomInIcon} />Lupe</button>
+            <button className={`chip${tool === 'crop' ? ' active' : ''}`} aria-pressed={tool === 'crop'} onClick={() => setTool('crop')}><Ico icon={CropIcon} />Zuschneiden</button>
+            <button className={`chip${tool === 'move' ? ' active' : ''}`} aria-pressed={tool === 'move'} onClick={() => setTool('move')}><Ico icon={MoveIcon} />Verschieben</button>
             <label className="inline">Farbe <input type="color" value={color} onChange={(e) => setColor(e.target.value)} /></label>
             <button className="btn small" disabled={!history.length} onClick={undo}>Rückgängig</button>
             <button className="btn small" disabled={!history.length} onClick={() => { setSh(EMPTY); setHistory([]); }}>Alles entfernen</button>
@@ -386,17 +430,18 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
             </label>
           )}
           {crop && (
-            <p className="small">✂ Zuschnitt {Math.round(crop.w)} % × {Math.round(crop.h)} % des Bildes – gespeichert wird nur der helle Ausschnitt.{' '}
+            <p className="small"><Ico icon={CropIcon} />Zuschnitt {Math.round(crop.w)} % × {Math.round(crop.h)} % des Bildes – gespeichert wird nur der helle Ausschnitt.{' '}
               <button className="btn small" onClick={() => setCrop(null)}>Zuschnitt aufheben</button>
             </p>
           )}
           {tool === 'text' && <label className="inline">Beschriftung <input value={labelText} onChange={(e) => setLabelText(e.target.value)} placeholder="z. B. Pflichtfeld" /></label>}
           <p className="small muted">{{
-            marker: 'Ins Bild klicken, um die nächste Nummer zu setzen.', frame: 'Mit gedrückter Maustaste einen Rahmen aufziehen.', arrow: 'Mit gedrückter Maustaste vom Anfang zur Spitze des Pfeils ziehen.',
-            text: 'Ins Bild klicken, um das Textfeld zu setzen (linke Kante, Mitte).', blur: 'Bereich aufziehen, der unkenntlich werden soll (z. B. Kundendaten) – im gespeicherten Bild nicht wiederherstellbar.',
-            magnify: 'Bereich aufziehen, der vergrößert daneben erscheinen soll.', crop: 'Ausschnitt aufziehen, der gespeichert werden soll.',
-            move: 'Nummer, Textfeld, Pfeilende, Rahmen oder Lupe anfassen und verschieben.',
+            marker: 'Ins Bild klicken, um die nächste Nummer zu setzen.', frame: `Mit gedrückter Maustaste einen Rahmen aufziehen${TWO_CLICKS}`, arrow: `Mit gedrückter Maustaste vom Anfang zur Spitze des Pfeils ziehen${TWO_CLICKS}`,
+            text: 'Ins Bild klicken, um das Textfeld zu setzen (linke Kante, Mitte).', blur: `Bereich aufziehen, der unkenntlich werden soll (z. B. Kundendaten) – im gespeicherten Bild nicht wiederherstellbar${TWO_CLICKS}`,
+            magnify: `Bereich aufziehen, der vergrößert daneben erscheinen soll${TWO_CLICKS}`, crop: `Ausschnitt aufziehen, der gespeichert werden soll${TWO_CLICKS}`,
+            move: 'Nummer, Textfeld, Pfeilende, Rahmen oder Lupe anfassen und verschieben – oder anklicken und dann die neue Stelle anklicken.',
           }[tool]} {name}</p>
+          <p className="small two-click-hint" aria-live="polite" data-testid="two-click-hint">{anchor ? 'Anfangspunkt gesetzt – klicken Sie jetzt auf den Endpunkt. Esc bricht ab.' : picked ? 'Markierung angefasst – klicken Sie jetzt auf die neue Stelle. Esc bricht ab.' : ''}</p>
           <div className="shot-canvas">
             <canvas ref={canvas} role="img" aria-label={describe}
               onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} data-testid="screenshot-canvas" />
@@ -409,7 +454,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
                   <input aria-label={`Nummer ${i + 1} Beschreibung`} placeholder="Was wird hier geklickt?" value={m.text} onChange={(e) => setMarkers(markers.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
                   <input aria-label={`Nummer ${i + 1} X in Prozent`} type="number" min={0} max={100} value={m.x} style={{ width: '5em' }} onChange={(e) => setMarkers(markers.map((x, j) => (j === i ? { ...x, x: clamp(Number(e.target.value)) } : x)))} />
                   <input aria-label={`Nummer ${i + 1} Y in Prozent`} type="number" min={0} max={100} value={m.y} style={{ width: '5em' }} onChange={(e) => setMarkers(markers.map((x, j) => (j === i ? { ...x, y: clamp(Number(e.target.value)) } : x)))} />
-                  <button className="btn small danger" aria-label={`Nummer ${i + 1} entfernen`} onClick={() => { setMarkers(markers.filter((_, j) => j !== i)); dropHistory(m.id); }}>✕</button>
+                  <button className="btn small danger" aria-label={`Nummer ${i + 1} entfernen`} onClick={() => { setMarkers(markers.filter((_, j) => j !== i)); dropHistory(m.id); }}><Ico icon={XIcon} /></button>
                 </li>
               ))}
             </ol>
@@ -424,7 +469,7 @@ export function ScreenshotEditor({ canEdit, onSaved }: { canEdit: boolean; onSav
                     <input aria-label={`Textfeld ${i + 1}`} value={l.text} onChange={(e) => setLabels(labels.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} />
                     <input aria-label={`Textfeld ${i + 1} X in Prozent`} type="number" min={0} max={100} value={l.x} style={{ width: '5em' }} onChange={(e) => setLabels(labels.map((x, j) => (j === i ? { ...x, x: clamp(Number(e.target.value)) } : x)))} />
                     <input aria-label={`Textfeld ${i + 1} Y in Prozent`} type="number" min={0} max={100} value={l.y} style={{ width: '5em' }} onChange={(e) => setLabels(labels.map((x, j) => (j === i ? { ...x, y: clamp(Number(e.target.value)) } : x)))} />
-                    <button className="btn small danger" aria-label={`Textfeld ${i + 1} entfernen`} onClick={() => { setLabels(labels.filter((_, j) => j !== i)); dropHistory(l.id); }}>✕</button>
+                    <button className="btn small danger" aria-label={`Textfeld ${i + 1} entfernen`} onClick={() => { setLabels(labels.filter((_, j) => j !== i)); dropHistory(l.id); }}><Ico icon={XIcon} /></button>
                   </li>
                 ))}
               </ul>

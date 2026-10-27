@@ -1,22 +1,23 @@
 // Referenzdaten gemäß Masterprompt §2 (US-003, US-004, US-010).
-// ENTSCHEIDUNG(E-04, E-11): Liste, Icons und Farben wie im Masterprompt; Farbe trägt keine eigene Bedeutung,
-// sie wird immer zusammen mit Icon und Textlabel verwendet.
+// ENTSCHEIDUNG(E-04, E-11): Liste und Farben wie im Masterprompt; Farbe trägt keine eigene Bedeutung,
+// sie wird immer zusammen mit Icon und Textlabel verwendet. Icons seit Etappe 70 als Name eines Lucide-Icons statt
+// Emoji (E-11 geändert am 25.10.2026, ADR-122); die Oberfläche zeichnet das Icon, Texte und Exporte nennen nur den Namen.
 
 export const ROLES = [
-  { code: 'dealer', label: 'Dealer', icon: '🏪', color: '#b45309', description: 'operative Vertragsbearbeitung im Autohaus' },
-  { code: 'market', label: 'Markt', icon: '🌍', color: '#0369a1', description: 'nationale/lokale Marktorganisation und Markteinstellungen' },
-  { code: 'mo', label: 'MO', icon: '✅', color: '#15803d', description: 'Market Operation, Prüfung und Freigabe, einschließlich MO-Check' },
-  { code: 'hq', label: 'HQ', icon: '🏢', color: '#6d28d9', description: 'zentrale Produkt-, Preis- und Systempflege' },
-  { code: 'all', label: 'Alle', icon: '👥', color: '#475569', description: 'rollenübergreifender Inhalt' },
+  { code: 'dealer', label: 'Dealer', icon: 'store', color: '#b45309', description: 'operative Vertragsbearbeitung im Autohaus' },
+  { code: 'market', label: 'Markt', icon: 'globe', color: '#0369a1', description: 'nationale/lokale Marktorganisation und Markteinstellungen' },
+  { code: 'mo', label: 'MO', icon: 'badge-check', color: '#15803d', description: 'Market Operation, Prüfung und Freigabe, einschließlich MO-Check' },
+  { code: 'hq', label: 'HQ', icon: 'building-2', color: '#6d28d9', description: 'zentrale Produkt-, Preis- und Systempflege' },
+  { code: 'all', label: 'Alle', icon: 'users', color: '#475569', description: 'rollenübergreifender Inhalt' },
 ] as const;
 
 export const DIVISIONS = [
-  { code: 'car', label: 'PKW', icon: '🚘', color: '#1d4ed8' },
-  { code: 'van', label: 'VAN', icon: '🚐', color: '#0f766e' },
-  { code: 'truck', label: 'Truck', icon: '🚛', color: '#b91c1c' },
-  { code: 'bus', label: 'Bus', icon: '🚌', color: '#a16207' },
-  { code: 'all', label: 'Alle', icon: '🔄', color: '#475569' },
-  { code: 'unconfirmed', label: 'Ungeklärt', icon: '❓', color: '#64748b' },
+  { code: 'car', label: 'PKW', icon: 'car', color: '#1d4ed8' },
+  { code: 'van', label: 'VAN', icon: 'van', color: '#0f766e' },
+  { code: 'truck', label: 'Truck', icon: 'truck', color: '#b91c1c' },
+  { code: 'bus', label: 'Bus', icon: 'bus', color: '#a16207' },
+  { code: 'all', label: 'Alle', icon: 'layers', color: '#475569' },
+  { code: 'unconfirmed', label: 'Ungeklärt', icon: 'circle-help', color: '#64748b' },
 ] as const;
 
 export type RoleCode = (typeof ROLES)[number]['code'];

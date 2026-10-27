@@ -1,9 +1,11 @@
 // Stammdaten › Inhaltsverzeichnis (ADR-032): Gliederungen je Variante (Rolle, Sparte, Blueprint oder Märkte),
 // Versionen speichern, hochladen, bearbeiten, erweitern, exportieren
+import { PencilIcon, XIcon } from 'lucide-react';
+import { Ico, RefIcon } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { currentProjectId, del, download, patch, post } from '../api';
-import { Card, Empty, ErrorBox, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
 
 export const SCOPE_LABEL: Record<string, string> = { blueprint: 'Blueprint', markets: 'Märkte' };
 const STATUS_LABEL: Record<string, string> = { draft: 'Entwurf', active: 'aktiv', archived: 'archiviert' };
@@ -34,13 +36,13 @@ function VariantFields({ form, setForm, markets }: { form: VariantForm; setForm:
       <fieldset className="checks">
         <legend>Rollen (keine Auswahl = alle)</legend>
         {ref?.roles.filter((r) => r.code !== 'all').map((r) => (
-          <label key={r.code} className="inline"><input type="checkbox" checked={form.roles.includes(r.code)} onChange={() => setForm({ ...form, roles: toggle(form.roles, r.code) })} /> {r.icon} {r.label}</label>
+          <label key={r.code} className="inline"><input type="checkbox" checked={form.roles.includes(r.code)} onChange={() => setForm({ ...form, roles: toggle(form.roles, r.code) })} /> <RefIcon name={r.icon} /> {r.label}</label>
         ))}
       </fieldset>
       <fieldset className="checks">
         <legend>Sparten (keine Auswahl = alle)</legend>
         {ref?.divisions.filter((d) => d.code !== 'all' && d.code !== 'unconfirmed').map((d) => (
-          <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> {d.icon} {d.label}</label>
+          <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> <RefIcon name={d.icon} /> {d.label}</label>
         ))}
       </fieldset>
       <fieldset className="checks">
@@ -99,7 +101,7 @@ function CreateOutline({ markets, onDone, onClose }: { markets: string[]; onDone
       </fieldset>
       <ErrorBox error={error} />
       <div className="actions">
-        <button className="btn primary" disabled={!form.name.trim() && start !== 'upload'} onClick={create}>Anlegen</button>
+        <Gated className="btn primary" missing={[!form.name.trim() && start !== 'upload' && 'Name']} onClick={create}>Anlegen</Gated>
         <button className="btn" onClick={onClose}>Abbrechen</button>
       </div>
     </Modal>
@@ -199,7 +201,7 @@ export function OutlinesPage() {
   };
 
   return (
-    <Page title="Inhaltsverzeichnis" subtitle="Gliederungen je Rolle, Sparte und Markt – versioniert, hochladbar, erweiterbar" actions={canEdit && <button className="btn primary" onClick={() => setCreating(true)}>Gliederung anlegen</button>}>
+    <Page title="Inhaltsverzeichnis" docTitle={list.data?.items.find((o: any) => o.id === selectedId)?.name} subtitle="Gliederungen je Rolle, Sparte und Markt – versioniert, hochladbar, erweiterbar" actions={canEdit && <button className="btn primary" onClick={() => setCreating(true)}>Gliederung anlegen</button>}>
       <ErrorBox error={list.error} />
       {isAdmin && list.data && <Card title="Märkte"><MarketsEditor markets={list.data.markets} onSaved={list.reload} /></Card>}
       <div className="grid2">
@@ -265,12 +267,12 @@ export function OutlinesPage() {
                   ) : <span className="title">{n.title} {n.snippets > 0 && <span className="small muted">({n.snippets})</span>}</span>}
                   {canEdit && editing?.id !== n.id && (
                     <span className="row-actions">
-                      <button className="btn small" aria-label={`${n.title} umbenennen`} onClick={() => setEditing({ id: n.id, title: n.title })}>✎</button>
+                      <button className="btn small" aria-label={`${n.title} umbenennen`} onClick={() => setEditing({ id: n.id, title: n.title })}><Ico icon={PencilIcon} /></button>
                       <button className="btn small" aria-label={`${n.title} nach oben`} onClick={() => run(() => patch(`/outline-nodes/${n.id}`, { move: 'up' }))}>↑</button>
                       <button className="btn small" aria-label={`${n.title} nach unten`} onClick={() => run(() => patch(`/outline-nodes/${n.id}`, { move: 'down' }))}>↓</button>
                       {n.level === 1 && <button className="btn small" aria-label={`Unterkapitel zu ${n.title} hinzufügen`} onClick={() => { const t = prompt(`Neues Unterkapitel in ${n.number} ${n.title}`); if (t?.trim()) void run(() => post(`/outlines/${o.id}/nodes`, { title: t, parentId: n.id }), 'Unterkapitel hinzugefügt.'); }}>+ Unterkapitel</button>}
                       {n.level === 2 && i > 0 && <button className="btn small" aria-label={`${n.title} zum Kapitel machen`} onClick={() => run(() => patch(`/outline-nodes/${n.id}`, { parentId: null }), 'Zum Kapitel gemacht.')}>⇤</button>}
-                      <button className="btn small danger" aria-label={`${n.title} löschen`} onClick={() => confirm(`„${n.number} ${n.title}“${n.level === 1 ? ' mit Unterkapiteln' : ''} löschen? Zuordnungen werden gelöst.`) && run(() => del(`/outline-nodes/${n.id}`), 'Gelöscht.')}>✕</button>
+                      <button className="btn small danger" aria-label={`${n.title} löschen`} onClick={() => confirm(`„${n.number} ${n.title}“${n.level === 1 ? ' mit Unterkapiteln' : ''} löschen? Zuordnungen werden gelöst.`) && run(() => del(`/outline-nodes/${n.id}`), 'Gelöscht.')}><Ico icon={XIcon} /></button>
                     </span>
                   )}
                 </li>
@@ -280,7 +282,7 @@ export function OutlinesPage() {
             {canEdit && (
               <form className="filters" onSubmit={(e) => (e.preventDefault(), newTitle.trim() && run(() => post(`/outlines/${o.id}/nodes`, { title: newTitle }), 'Kapitel hinzugefügt.').then(() => setNewTitle('')))}>
                 <label className="inline">Neues Kapitel <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Titel" /></label>
-                <button className="btn small primary" type="submit" disabled={!newTitle.trim()}>Hinzufügen</button>
+                <Gated className="btn small primary" type="submit" missing={[!newTitle.trim() && 'Titel']}>Hinzufügen</Gated>
               </form>
             )}
           </Card>

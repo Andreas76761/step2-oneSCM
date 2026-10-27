@@ -1,12 +1,7 @@
 // Benutzerverwaltung (ADR-045): Benutzer anlegen, bearbeiten, sperren; Projektzugriffe je Benutzer – nur Administration.
 import { useEffect, useState } from 'react';
 import { del, patch, post, put } from '../api';
-import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
-
-const PERMS: { code: string; label: string }[] = [
-  { code: 'read', label: 'Lesen' }, { code: 'edit', label: 'Bearbeiten' }, { code: 'decide', label: 'Entscheiden' }, { code: 'approve', label: 'Freigeben' }, { code: 'admin', label: 'Administration' },
-];
-const permLabel = (p: string) => PERMS.find((x) => x.code === p)?.label ?? p;
+import { Gated, Card, Empty, ErrorBox, PERMS, Page, errorText, permLabel, useApp, useLoad } from '../components/ui';
 const ORIGIN: Record<string, string> = { demo: 'Demo', local: 'lokal', oidc: 'OIDC (Identity Provider)' };
 
 function PermChecks({ value, onChange, disabled, legend }: { value: string[]; onChange: (v: string[]) => void; disabled?: boolean; legend: string }) {
@@ -57,7 +52,7 @@ function NewUser({ onCreated, templates }: { onCreated: (id: string) => void; te
       </div>
       <TemplateSelect label="Rollenvorlage" templates={templates} value={f.id.startsWith('oidc:') ? '' : f.roleTemplateId} disabled={f.id.startsWith('oidc:')} onChange={(roleTemplateId) => setF({ ...f, roleTemplateId })} />
       {!f.roleTemplateId && <PermChecks legend="Berechtigungen (OIDC-Benutzer erhalten sie vom Identity Provider)" value={f.permissions} onChange={(permissions) => setF({ ...f, permissions })} disabled={f.id.startsWith('oidc:')} />}
-      <button className="btn primary" disabled={f.id.length < 3 || !f.name.trim()} onClick={create}>Benutzer anlegen</button>
+      <Gated className="btn primary" missing={[f.id.length < 3 && 'Kennung mit mindestens 3 Zeichen', !f.name.trim() && 'Name']} onClick={create}>Benutzer anlegen</Gated>
     </Card>
   );
 }

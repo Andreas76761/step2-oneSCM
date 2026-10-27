@@ -1,8 +1,10 @@
 // Stammdaten (ADR-032): Abkürzungen, Glossar, Bildverzeichnis, FAQ, Redaktionsplanung
+import { PencilIcon, SparklesIcon } from 'lucide-react';
+import { Ico, RefIcon, WarnIcon } from '../components/icons';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, del, mediaUrl, patch, post, put } from '../api';
-import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 import { createRenditionFor } from '../images';
 
 function useCanEdit() {
@@ -28,7 +30,7 @@ function useRun(reload: () => void) {
 // ---------- Import aus CSV/Excel (ADR-036) ----------
 
 const ACTION: Record<string, { label: string; cls: string }> = {
-  create: { label: 'neu', cls: 'st-approved' }, update: { label: 'aktualisieren', cls: 'st-in_review' }, unchanged: { label: 'unverändert', cls: '' }, error: { label: 'Fehler', cls: 'st-failed' },
+  create: { label: 'neu', cls: 'st-approved' }, update: { label: 'aktualisieren', cls: 'st-in_review' }, unchanged: { label: 'unverändert', cls: '' }, skipped: { label: 'übersprungen', cls: '' }, error: { label: 'Fehler', cls: 'st-failed' },
 };
 const COLUMNS: Record<string, string> = {
   abbreviations: 'Abkürzung; Bedeutung; Beschreibung', glossary: 'Begriff; Definition; Vermeiden', faq: 'Frage; Antwort; Rollen; Sparten; Status',
@@ -71,7 +73,7 @@ function MasterDataImport({ kind, onDone }: { kind: 'abbreviations' | 'glossary'
       </div>
       {result && (
         <>
-          <p className="small" role="status">{result.applied ? 'Übernommen' : 'Vorschau'}: {result.summary.rows} Zeilen · {result.summary.create} neu · {result.summary.update} aktualisieren · {result.summary.unchanged} unverändert · {result.summary.error} Fehler</p>
+          <p className="small" role="status">{result.applied ? 'Übernommen' : 'Vorschau'}: {result.summary.rows} Zeilen · {result.summary.create} neu · {result.summary.update} aktualisieren · {result.summary.unchanged} unverändert{result.summary.skipped ? ` · ${result.summary.skipped} übersprungen` : ''} · {result.summary.error} Fehler</p>
           <div className="table-wrap" role="region" aria-label="Importvorschau" tabIndex={0}>
             <table className="table compact">
               <thead><tr><th>Zeile</th><th>Eintrag</th><th>Aktion</th><th>Hinweis</th></tr></thead>
@@ -109,7 +111,7 @@ export function AbbreviationsPage() {
             <label className="inline">Abkürzung <input value={form.abbreviation} onChange={(e) => setForm({ ...form, abbreviation: e.target.value })} /></label>
             <label className="inline">Bedeutung <input value={form.expansion} onChange={(e) => setForm({ ...form, expansion: e.target.value })} /></label>
             <label className="inline">Erläuterung <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-            <button className="btn primary" type="submit" disabled={!form.abbreviation.trim() || !form.expansion.trim()}>Hinzufügen</button>
+            <Gated className="btn primary" type="submit" missing={[!form.abbreviation.trim() && 'Abkürzung', !form.expansion.trim() && 'Bedeutung']}>Hinzufügen</Gated>
           </form>
         </Card>
       )}
@@ -199,7 +201,7 @@ export function GlossaryPage() {
                   ) : (
                     <>
                       {t.definition ?? <span className="muted">Keine Definition.</span>}
-                      {canEdit && <> <button className="btn small" aria-label={`Definition von ${t.preferred} bearbeiten`} onClick={() => setEdit({ id: t.id, definition: t.definition ?? '' })}>✎</button></>}
+                      {canEdit && <> <button className="btn small" aria-label={`Definition von ${t.preferred} bearbeiten`} onClick={() => setEdit({ id: t.id, definition: t.definition ?? '' })}><Ico icon={PencilIcon} /></button></>}
                     </>
                   )}
                 </dd>
@@ -258,7 +260,7 @@ export function ImageIndexPage() {
                       </form>
                     ) : m.title ?? ''}
                   </td>
-                  <td>{m.altTexts.filter(Boolean).join(' / ') || <span className="muted">–</span>}{m.missingAlt && <div><span className="flag flag-warning">⚠ Alternativtext fehlt</span></div>}</td>
+                  <td>{m.altTexts.filter(Boolean).join(' / ') || <span className="muted">–</span>}{m.missingAlt && <div><span className="flag flag-warning"><WarnIcon />Alternativtext fehlt</span></div>}</td>
                   <td className="small">
                     {m.usedIn.chapters.map((c: any) => <div key={`${c.chapterId}-${c.versionNo}`}><Link to={`/werkstatt/${c.chapterId}`}>{c.chapter}</Link> V{c.versionNo}</div>)}
                     {m.usedIn.sources.map((s: any) => <div key={s.seq}>Quelle #{s.seq} ({s.chapter})</div>)}
@@ -306,16 +308,16 @@ export function FaqPage() {
           <label className="block">Frage <input value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} /></label>
           <label className="block">Antwort (Markdown) <textarea rows={4} value={form.answer} onChange={(e) => setForm({ ...form, answer: e.target.value })} /></label>
           <fieldset className="checks"><legend>Rollen (keine = alle)</legend>
-            {ref?.roles.filter((r) => r.code !== 'all').map((r) => <label key={r.code} className="inline"><input type="checkbox" checked={form.roles.includes(r.code)} onChange={() => setForm({ ...form, roles: toggle(form.roles, r.code) })} /> {r.icon} {r.label}</label>)}
+            {ref?.roles.filter((r) => r.code !== 'all').map((r) => <label key={r.code} className="inline"><input type="checkbox" checked={form.roles.includes(r.code)} onChange={() => setForm({ ...form, roles: toggle(form.roles, r.code) })} /> <RefIcon name={r.icon} /> {r.label}</label>)}
           </fieldset>
           <fieldset className="checks"><legend>Sparten (keine = alle)</legend>
-            {ref?.divisions.filter((d) => d.code !== 'all' && d.code !== 'unconfirmed').map((d) => <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> {d.icon} {d.label}</label>)}
+            {ref?.divisions.filter((d) => d.code !== 'all' && d.code !== 'unconfirmed').map((d) => <label key={d.code} className="inline"><input type="checkbox" checked={form.divisions.includes(d.code)} onChange={() => setForm({ ...form, divisions: toggle(form.divisions, d.code) })} /> <RefIcon name={d.icon} /> {d.label}</label>)}
           </fieldset>
           <label className="inline">Status
             <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option value="draft">Entwurf</option><option value="published">veröffentlicht</option></select>
           </label>
           <div className="actions">
-            <button className="btn primary" disabled={form.question.trim().length < 3 || !form.answer.trim()} onClick={save}>Speichern</button>
+            <Gated className="btn primary" missing={[form.question.trim().length < 3 && 'Frage mit mindestens 3 Zeichen', !form.answer.trim() && 'Antwort']} onClick={save}>Speichern</Gated>
             <button className="btn" onClick={() => setForm(null)}>Abbrechen</button>
           </div>
         </Card>
@@ -452,7 +454,10 @@ export function PlanningPage() {
 
 const TR_LABEL: Record<string, string> = { missing: 'fehlt', draft: 'Entwurf', approved: 'freigegeben', outdated: 'veraltet' };
 const TR_ICON: Record<string, string> = { missing: '–', draft: '✎', approved: '✓', outdated: '⚠' };
-const ISSUE_LABEL: Record<string, string> = { empty: 'leer', numbers_changed: 'Zahlen abweichend', structure_changed: 'Aufzählung abweichend', no_sources: 'ohne Quellsatz', unknown_source: 'unbekannter Quellsatz', uncovered_source: 'Satz fehlt' };
+const ISSUE_LABEL: Record<string, string> = {
+  empty: 'leer', numbers_changed: 'Zahlen abweichend', structure_changed: 'Aufbau abweichend', no_sources: 'ohne Quellsatz', unknown_source: 'unbekannter Quellsatz', uncovered_source: 'Satz fehlt',
+  placeholders_changed: 'Platzhalter abweichend', formatting_changed: 'Fettung abweichend', signal_word_missing: 'Signalwort fehlt', term_translation: 'Begriff nicht wie vorgegeben',
+};
 
 /** Übersetzungen eines FAQ-Eintrags (ADR-077): je Projektsprache von Hand oder als KI-Vorschlag, dann freigeben */
 function FaqTranslations({ faqId, question, canEdit, onChanged }: { faqId: string; question: string; canEdit: boolean; onChanged: () => void }) {
@@ -479,8 +484,8 @@ function FaqTranslations({ faqId, question, canEdit, onChanged }: { faqId: strin
             {t.issues.length > 0 && <span className="small sev-text"> · Prüfbefund: {t.issues.map((i: string) => ISSUE_LABEL[i] ?? i).join(', ')}</span>}
             {t.question && <div className="small" lang={t.language}><em>{t.question}</em></div>}
             <span className="row-actions">
-              {canEdit && <button className="btn small" aria-label={`${t.languageName} bearbeiten`} onClick={() => setEdit({ language: t.language, question: t.question ?? '', answer: t.answer ?? '' })}>{t.status === 'missing' ? 'Übersetzen' : 'Bearbeiten'}</button>}
-              {canEdit && <button className="btn small" aria-label={`${t.languageName}: KI-Vorschlag`} onClick={() => run(() => post(`/faq/${faqId}/translations/${t.language}/machine`, {}), `KI-Vorschlag ${t.languageName} erstellt – bitte prüfen und freigeben.`)}>✨ KI-Vorschlag</button>}
+              {canEdit && <button className="btn small" aria-label={`${t.languageName} ${t.status === 'missing' ? 'übersetzen' : 'bearbeiten'}`} onClick={() => setEdit({ language: t.language, question: t.question ?? '', answer: t.answer ?? '' })}>{t.status === 'missing' ? 'Übersetzen' : 'Bearbeiten'}</button>}
+              {canEdit && <button className="btn small" aria-label={`${t.languageName}: KI-Vorschlag`} onClick={() => run(() => post(`/faq/${faqId}/translations/${t.language}/machine`, {}), `KI-Vorschlag ${t.languageName} erstellt – bitte prüfen und freigeben.`)}><Ico icon={SparklesIcon} />KI-Vorschlag</button>}
               {canApprove && t.status === 'draft' && !t.outdated && (() => {
                 // Freigabe nur ohne Prüfbefunde und durch eine andere Person als die zuletzt bearbeitende (Vier-Augen-Prinzip, ADR-077)
                 const why = t.issues.length ? 'erst die Prüfbefunde beheben' : t.updatedBy === me.data?.id ? 'Freigabe durch eine andere Person (Vier-Augen-Prinzip)' : null;

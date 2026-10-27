@@ -1,15 +1,17 @@
 // Startseite (ADR-053): „Was möchten Sie tun?“ – die Hauptaufgaben auf einen Blick, der Fortschritt zum fertigen Handbuch
 // und die Kapitel, die als Nächstes Aufmerksamkeit brauchen.
+import { CompassIcon, FolderInputIcon, ListChecksIcon, MessageSquareIcon, PartyPopperIcon, PenLineIcon, RocketIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { Link } from 'react-router-dom';
 import { Card, Page, useLoad } from '../components/ui';
 import { scoreLabel } from './Guidance';
 
 const TASKS = [
-  { to: '/quellen', icon: '📥', title: 'Quellen hochladen', text: 'Vorhandene Dokumente, Notizen oder Exporte als Grundlage einlesen.' },
-  { to: '/kapitel-assistent', icon: '🧭', title: 'Neues Kapitel schreiben', text: 'Geführt in vier Schritten – mit Vorschlägen aus den Quellen.' },
-  { to: '/werkstatt', icon: '✏️', title: 'Kapitel überarbeiten', text: 'Absätze bearbeiten, Bilder einfügen, Stil korrigieren.' },
-  { to: '/anleitungs-check', icon: '🔍', title: 'Verständlichkeit prüfen', text: 'Sind die Anleitungen leicht zu befolgen? Mit Korrekturen per Klick.' },
-  { to: '/veroeffentlichung', icon: '📚', title: 'Handbuch veröffentlichen', text: 'Freigegebene Kapitel als Version bereitstellen und exportieren.' },
+  { to: '/quellen', icon: FolderInputIcon, title: 'Quellen hochladen', text: 'Vorhandene Dokumente, Notizen oder Exporte als Grundlage einlesen.' },
+  { to: '/kapitel-assistent', icon: CompassIcon, title: 'Neues Kapitel schreiben', text: 'Geführt in vier Schritten – mit Vorschlägen aus den Quellen.' },
+  { to: '/werkstatt', icon: PenLineIcon, title: 'Kapitel überarbeiten', text: 'Absätze bearbeiten, Bilder einfügen, Stil korrigieren.' },
+  { to: '/anleitungs-check', icon: ListChecksIcon, title: 'Verständlichkeit prüfen', text: 'Sind die Anleitungen leicht zu befolgen? Mit Korrekturen per Klick.' },
+  { to: '/veroeffentlichung', icon: RocketIcon, title: 'Handbuch veröffentlichen', text: 'Freigegebene Kapitel als Version bereitstellen und exportieren.' },
 ];
 
 export function StartPage() {
@@ -37,7 +39,7 @@ export function StartPage() {
       <nav aria-label="Hauptaufgaben" className="task-grid">
         {TASKS.map((t) => (
           <Link key={t.to} to={t.to} className="task-tile">
-            <span className="task-icon" aria-hidden="true">{t.icon}</span>
+            <span className="task-icon" aria-hidden="true"><t.icon size={22} strokeWidth={1.75} /></span>
             <strong>{t.title}</strong>
             <span className="small">{t.text}</span>
           </Link>
@@ -56,7 +58,7 @@ export function StartPage() {
                   </li>
                 ))}
               </ol>
-              <p className="small">{nextStep ? <>Als Nächstes: <Link to={nextStep.to}><strong>{nextStep.label}</strong></Link></> : '🎉 Alle Schritte erledigt.'} · {steps.filter((s) => s.done).length} von {steps.length} erledigt</p>
+              <p className="small">{nextStep ? <>Als Nächstes: <Link to={nextStep.to}><strong>{nextStep.label}</strong></Link></> : <><Ico icon={PartyPopperIcon} />Alle Schritte erledigt.</>} · {steps.filter((s) => s.done).length} von {steps.length} erledigt</p>
             </>
           )}
         </Card>
@@ -72,7 +74,7 @@ export function StartPage() {
               ))}
             </ul>
           )}
-          {openFeedback > 0 && <p className="small">💬 <Link to="/anleitungs-check"><strong>{openFeedback} {openFeedback === 1 ? 'Rückmeldung' : 'Rückmeldungen'} von Lesern</strong></Link> warten auf die Redaktion.</p>}
+          {openFeedback > 0 && <p className="small"><Ico icon={MessageSquareIcon} /><Link to="/anleitungs-check"><strong>{openFeedback} {openFeedback === 1 ? 'Rückmeldung' : 'Rückmeldungen'} von Lesern</strong></Link> warten auf die Redaktion.</p>}
           <p className="small"><Link to="/anleitungs-check">Alle Kapitel im Anleitungs-Check →</Link> · <Link to="/lesen">Handbuch in der Leseransicht →</Link></p>
         </Card>
       </div>

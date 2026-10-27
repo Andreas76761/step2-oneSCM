@@ -1,8 +1,10 @@
 // Handbuch-Assistent (ADR-026): Fragen an das freigegebene Handbuch, Antwort mit Quellen je Satz
+import { ThumbsDownIcon, ThumbsUpIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { currentProjectId, post } from '../api';
-import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 import { RefSelect } from './Sources';
 
 export const LANG_NAMES: Record<string, string> = { de: 'Deutsch', en: 'Englisch', fr: 'Französisch', es: 'Spanisch', it: 'Italienisch', nl: 'Niederländisch', pl: 'Polnisch', cs: 'Tschechisch', pt: 'Portugiesisch' };
@@ -59,7 +61,7 @@ export function AssistantPage() {
             </select>
             <RefSelect kind="roles" value={role} onChange={setRole} />
             <RefSelect kind="divisions" value={division} onChange={setDivision} />
-            <button className="btn primary" type="submit" disabled={busy || question.trim().length < 3}>{busy ? 'Suche …' : 'Fragen'}</button>
+            <Gated className="btn primary" type="submit" busy={busy} missing={[question.trim().length < 3 && 'Frage mit mindestens 3 Zeichen']}>{busy ? 'Suche …' : 'Fragen'}</Gated>
           </div>
         </form>
       </Card>
@@ -89,8 +91,8 @@ export function AssistantPage() {
           )}
           <div className="actions">
             <span className="small">War die Antwort hilfreich?</span>
-            <button className="btn small" aria-pressed={rated === 1} disabled={rated !== null} onClick={() => void rate(true)}>👍 Ja</button>
-            <button className="btn small ghost" aria-pressed={rated === -1} disabled={rated !== null} onClick={() => void rate(false)}>👎 Nein</button>
+            <button className="btn small" aria-pressed={rated === 1} disabled={rated !== null} onClick={() => void rate(true)}><Ico icon={ThumbsUpIcon} />Ja</button>
+            <button className="btn small ghost" aria-pressed={rated === -1} disabled={rated !== null} onClick={() => void rate(false)}><Ico icon={ThumbsDownIcon} />Nein</button>
           </div>
         </Card>
       )}

@@ -161,6 +161,621 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.39 Stand nach Etappe 37 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Fragen über alle Quellen mit hybrider Suche, Filtern und Belegen je Satz (M5, NFR-87) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
+| Speichern mit Rahmen, erneut fragen mit Vergleich, Export CSV/Excel/JSON (NFR-88) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
+| Rückfragen: Fragenkatalog einlesen und mit Belegen beantworten (NFR-89) | ✅ ([ADR-089](adr/ADR-089-fragen-alle-quellen.md)) |
+| Offen | Etappen M6 (Video, OCR) und M7 (Antwortqualität) |
+
+## 1.40 Stand nach Etappe 38 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Untertitel und Video mit Zeitmarke je Absatz, Text aus Untertiteln oder lokaler Transkription (M6, NFR-90) | ✅ ([ADR-090](adr/ADR-090-video-untertitel-ocr.md)) |
+| Standbilder bei Änderung mit rotem Rahmen (F-26) und Texterkennung gescannter PDF-Seiten, nur lokale Werkzeuge (NFR-91) | ✅ ([ADR-090](adr/ADR-090-video-untertitel-ocr.md)) |
+| Offen | Etappe M7 (Antwortqualität); lokale Werkzeuge (whisper.cpp, Tesseract, ffmpeg) im Betrieb einrichten |
+
+## 1.41 Stand nach Etappe 39 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Testfragensätze mit erwarteten Quellen, Stichworten und Lückenfragen (M7, NFR-92) | ✅ ([ADR-091](adr/ADR-091-antwortqualitaet.md)) |
+| Prüfläufe mit Trefferquote, MRR, Beleg, Lücken richtig, Vergleich und Export (NFR-93) | ✅ ([ADR-091](adr/ADR-091-antwortqualitaet.md)) |
+| Offen | Plan M1–M7 abgeschlossen; Testfragen aus Wissens-Check und Lückenanalyse (D-08) einlesen und erste Prüfläufe mit echten Quellen; lokale Werkzeuge im Betrieb einrichten |
+
+## 1.42 Stand nach Etappe 40 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Punktmodell Muss/Soll im Anleitungs-Check, „alle Muss-Punkte“ als Freigabebedingung (F-08, NFR-94) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
+| Expertenbefragung zu Wissenslücken mit Excel hin und zurück, Übernahme mit Label „Prüfen“ (F-16, NFR-95) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
+| Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
+| Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
+
+## 1.100 Stand nach Etappe 98 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Zweites Code-Review der Etappen 2–10 (Jobqueue, Projekte, Integrationen, Webhooks, Git- und Confluence-Abgleich, Bilder, Kontexthilfe, Release-Pipeline, Helm): elf Funde, neun behoben | ✅ T-424, T-425; Server-Tests auf SQLite und PostgreSQL |
+| Abgleich | Push-Webhook während eines laufenden Abgleichs ging verloren (Migration 067: vorgemerkt und nachgeholt); abgebrochener geplanter Abgleich beendete die Planung für immer |
+| Sicherheit | API-Token behielt seine Rechte im Projekt, nachdem der Ersteller entfernt oder herabgestuft wurde; Webhooks und Confluence prüften die Zieladresse nur vor dem Verbindungsaufbau (DNS-Rebinding) |
+| Kontexthilfe | Seitensprache ohne Übersetzung (z. B. `<html lang="en">`) ergab „keine Hilfe“ statt der deutschen Fassung; Kontext-ID aus dem Front-Matter blieb beim alten Kapitel |
+| Betrieb | Helm-Chart verwies auf ein Image, das die Pipeline nicht veröffentlicht, und enthielt eine fremde Datei; Bild-Upload lag vor der Größenprüfung vollständig im Speicher |
+| Schon erledigt | Sprache der eingebetteten Hilfe für Sprachen ohne Oberflächentexte |
+| Begründet belassen | Git-Verbindungen zu internen Adressen: interne Git-Server sind ein gewollter Einsatz (Daten bleiben lokal), nur Administratoren legen Verbindungen an |
+
+## 1.99 Stand nach Etappe 97 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Zweites Code-Review der Etappen 11–16 (Stammdaten, Draft Manual, Handbuch-Varianten, Abgleich, Firmen-Layout, Word, Schreibstil, Bilder, Benutzerverwaltung): zehn Funde, sechs behoben | ✅ T-422, T-423; Server-Tests auf SQLite und PostgreSQL |
+| Handbuch-Varianten | Export ohne Häkchen bei Rollen und Sparten ignorierte den Filter der Variante (die Oberfläche schickt leere Listen); Befunde eines Variantenkapitels wurden an der Gliederungsversion des Kapitels statt an der angefragten gezählt; doppelte Schnipsel in einer Abgleich-Anfrage ergaben 500 |
+| Benutzer und Anzeige | gesperrte Benutzer erhielten weiter Erwähnungen, Zuweisungen, Freigabe- und Planungshinweise; Übersetzungsstand zählte Variantenkapitel mit; Nominalstil übersah Wörter mit Umlaut am Anfang (Änderung, Übertragung) |
+| Schon erledigt | Nummerierte Listen im Word-Export beginnen je Liste neu; Bildarchiv liest die Verwendungen in einem Durchgang |
+| Begründet belassen | Demo-Modus nach Sperren des eigenen Demo-Benutzers (nur Demo, Abhilfe: entsperren); doppelte Hilfsfunktionen für Gliederungen ohne Fehlverhalten |
+
+## 1.98 Stand nach Etappe 96 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 17–26 (Rollenvorlagen, Anleitungs-Check, Leseransicht, Rückmeldungen, Vorlagen, Druck, Glossar, Siehe auch, Übersetzungswünsche, FAQ-Übersetzung): zehn Funde, alle behoben | ✅ T-420, T-421, T-233 erweitert; Server-Tests auf SQLite und PostgreSQL |
+| Übersetzungswünsche | ohne Zyklus: nach dem Veralten einer Übersetzung erreichte ein neuer Wunsch die Redaktion nicht mehr, frühere Wünschende standen für immer auf „gewünscht“ und erhielten bei jeder Freigabe erneut einen Hinweis (Migration 066) |
+| Online-Hilfe | FAQ ohne Rollen- und Spartenfilter; „Siehe auch“ und FAQ bei jedem öffentlichen Aufruf neu berechnet (jetzt 60 s je Release und Sprache vorgehalten) |
+| Sicherheit | CSV-Export der Stilregeln ohne Schutz vor Formeln (Excel) |
+| Robustheit | fehlerhafter JSON-Import der Stilregeln ergab 500; leerer bzw. null-Blocktyp, -Abschnitt, -Modus und -Geltungsstand wurden gespeichert; zwei Klicks legten aus einer Rückmeldung zwei Aufgaben an |
+| Leistung und Anzeige | Stilwert-Verlauf lud die ganze Historie; Trefferzahl der Suche ab 100 Treffern ohne Titeltreffer um 100 zu niedrig; Hinweis „neu/geändert“ ging beim direkten Aufruf eines Kapitels verloren |
+
+## 1.97 Stand nach Etappe 95 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 27–41 (Modul oneSCM_Metadaten M1–M7, Jira, Releaseletter, Bildarchiv, Quick Guide, Punktmodell, Varianten): zehn Funde, neun behoben, einer (Standbilder im Speicher) mit Etappe 92 schon erledigt | ✅ T-418, T-419; Server-Tests auf SQLite und PostgreSQL |
+| Anleitungs-Check | Muss-Punkt „Warnhinweise nach Schema“ verlangte das Signalwort im Text eines Warnblocks, obwohl der Export es als Beschriftung setzt – korrekte Kapitel fielen durch das Gate |
+| Datenschutz | maschinelle FAQ-Übersetzung prüfte vor einem externen KI-Dienst ohne die gepflegte Namensliste |
+| Einlesen | Text vor der ersten Kapitelmarke eines Videos fiel weg; gespeicherte Importeinstellungen von vor v0.29 sperrten Jira, PowerPoint, PDF, Video und Untertitel (Migration 065) |
+| Ausgabe | Quick Guide zeigte Warnungen aus „Voraussetzungen“ und „Ergebnis“ doppelt |
+| Fragen an alle Quellen | über 20 000 Chunks still gekürzt – jetzt mit Hinweis und Empfehlung für Filter; Grenze über `ASK_MAX_UNITS` einstellbar |
+| Leistung | Namensliste als ein Ausdruck je Liste statt je Name und Text; Dubletten nicht bei jeder Anfrage neu aufgebaut, wenn kein Abschnitt die Mindestlänge erreicht; Bildarchiv und Deckungsmatrix mit zwei Abfragen statt zwei je Bild |
+
+## 1.96 Stand nach Etappe 94 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Die fünf weiteren Hinweise aus dem Review der Etappen 42–47 (1.95): vier behoben, einer begründet belassen | ✅ T-416, T-417; T-289 erwartet jetzt, dass eine ausgeschaltete Stelle aus bleibt |
+| Triage | `\b` kennt in JavaScript nur ASCII: „öffnen Sie“, „wählen Sie“ (Standardablauf) und „že“ (Tschechisch) wurden nie erkannt; alle Muster der Triage nutzen jetzt eine Wortgrenze für Unicode |
+| Datenschutz im Bild | erneute Erkennung schaltete von Hand ausgeschaltete Stellen wieder ein; gleiche Art mit Überdeckung ab 50 % bleibt jetzt aus |
+| Inhalts-Dashboard und GOAL | Gesamtzahlen der Labels enthielten ausgeschlossene Chunks und entfernte Dokumente; der Anteil „freigegeben“ zählte abgelöste und leere Kapitel und konnte über 100 % liegen |
+| Belassen | neues Unterkapitel der Triage mit dem Schlüssel eines abgelösten Unterkapitels: Der Import ordnet genauso zu, der Schlüssel ist je Kapitel eindeutig, und die Historie sammelt gerade Inhalte abgelöster Funktionen |
+
+## 1.95 Stand nach Etappe 93 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 42–47 (Datenschutz im Bild, Kapitelsteuerung, Grammatik, Pipeline/Backlog, RAG, TRIAGE und Agenten): zehn Funde, acht behoben, zwei mit Etappe 92 schon erledigt | ✅ T-414, T-415; Server-Tests auf SQLite und PostgreSQL |
+| Sicherheit | `isLocalUrl` hielt öffentliche Namen wie „10.example.com“ oder „127.attacker.net“ für lokal – KI-Dienst ohne Datenschutzfilter, LanguageTool außer Haus; private Bereiche gelten jetzt nur für echte IPv4-Adressen |
+| Datenschutz im Bild | ohne Bildmaße aus dem Upload (manche JPEG/WebP) lagen die Stellen bei NaN, nichts wurde unkenntlich; die Maße kommen jetzt aus dem Bild |
+| Triage und Orchestrator | Antwort der Entscheidung leer bei Läufen über 500 Ergebnisse; gelöschte Triage-Labels legte der nächste Lauf wieder an; „alle übernehmen“ bzw. „verwerfen“ galt auch für später entstandene Vorschläge; die gemerkte Zuordnung überstimmte eine spätere Verschiebung von Hand; Kapitel ab Position 50 bekamen keine Aufgabe |
+| Pipeline | Backlog-Ticket, das zwischen zwei Abgleichen produktiv ging, blieb für immer „offen“ im Backlog |
+| Weitere Hinweise (nicht bearbeitet) | neues Unterkapitel der Triage berücksichtigt abgelöste Unterkapitel nicht; erneute Erkennung schaltet ausgeschaltete Stellen wieder ein; Zähler im Inhalts-Dashboard mit ausgeschlossenen Quellen; Anteil „freigegeben“ in GOAL kann über 1 liegen; `\b` in Sprach- und Zahlmustern bei Umlauten |
+
+## 1.94 Stand nach Etappe 92 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 48–54 (Übersetzung, Tonalität, Kapitelbewertung, Änderungsvorschläge, Textvarianten, Vorher/Nachher, Textbausteine): zehn Funde, neun behoben | ✅ T-412, T-413; Server-Tests auf SQLite und PostgreSQL |
+| Änderungsvorschläge | mehrere neue Absätze hinter demselben Absatz standen nach dem Übernehmen in umgekehrter Reihenfolge; Vorschläge mit gleichem Zeitstempel sortierten zufällig |
+| Triage und Übersicht | zwei Läufe gleichzeitig verdrängten sich die Vorschläge (jetzt höchstens einer je Projekt); die Übersicht wurde vor dem COMMIT verworfen und konnte 30 s einen alten Stand zeigen |
+| Übersetzung | XLIFF mit vollem Gebietsschema („fr-FR“) abgelehnt; 100-%-Treffer mit voller Ähnlichkeitssuche statt einer Abfrage |
+| Betrieb | Zwischenbilder hielten bis zu 2400 volle Bilder im Speicher; jede Kapitelerzeugung las alle Jira-Tickets aus dem Objektspeicher; Fehlerliste ohne Projektprüfung der Kapitelversion |
+| Ohne Änderung | Lektorat: die Kapitelversion im Pfad prüft schon der globale Projekt-Hook |
+
+## 1.93 Stand nach Etappe 91 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 55–59 (LanguageTool, Ansprechpersonen, Regelsätze, UI-Begriffe, Icons): zehn Funde, neun behoben, einer begründet belassen | ✅ T-410, T-411; Server-Tests auf SQLite und PostgreSQL |
+| Sicherheit und Betrieb | Vale-ZIP: angegebene Größe vor dem Entpacken geprüft (Zip-Bombe); Muster mit katastrophalem Zurückspringen ((a\|aa)+, ((a+))+) abgelehnt; LanguageTool nach Zeitüberschreitung oder Verbindungsfehler eine Minute pausiert statt je Absatz zu warten |
+| Inhalt | LanguageTool-Funde gingen neben satzweiten Befunden („Langer Satz“, Passiv, Nominalstil) verloren; verworfene Begriffe aus SYNONYME.csv wurden aktiv; die Analyse meldete UI-Begriffe in Menüpfaden weiter als zu vermeiden |
+| Ansprechpersonen | Ansprechperson ohne Person speicherbar; von Hand gewählte Prüferin bekam eine deaktivierte Vertretung |
+| Vale-Stile | ähnliche Namen ersetzten still einen anderen Stil; erneutes Einlesen setzte Ein/Aus und ausgeschaltete Regeln zurück |
+| Belassen | „Meine Länderreviews“ fragt je Review einzeln nach: bei wenigen offenen Reviews je Person und Abfragen unter einer Millisekunde kein messbarer Nutzen eines Umbaus |
+
+## 1.92 Stand nach Etappe 90 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 60–69 (Designvorlagen und barrierefreie Ausgabe): zehn Funde, neun behoben, einer bereits in Etappe 89 | ✅ T-408, T-409; Server-Tests auf SQLite und PostgreSQL |
+| Sicherheit | Titel, Kapitelnamen und Fußzeile standen als CSS-Inhalt im Stilblock; „</style>“ beendete ihn, der Rest wurde als HTML gelesen (Skripte blieben durch die CSP gesperrt). Jetzt als CSS-Escape |
+| Inhalt | Lesefassung im Design zeigte Version und Freigabedatum; im Quick-Reference-Foliensatz fehlten alle Bilder außer dem ersten; lange Abschnitte im Handbuch-Kapitel-Foliensatz liefen über die Fußlinie; viele Warnungen überdeckten den Text |
+| Word | Nach einer verschachtelten Liste zählte die Fortsetzung der äußeren Liste wieder ab 1 |
+| Kleinere | Vorlagen-Kennung „constructor“ o. Ä. galt als gültig; gleiche Icons mehrfach im Foliensatz gespeichert; PDF-Muster ohne Browser erst aufgebaut, dann abgelehnt; Lesestil-Regel an drei Stellen |
+
+## 1.91 Stand nach Etappe 89 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 70–78 (Fortsetzung der Wahl vom 27.10.2026): zehn Funde, neun behoben, einer begründet belassen | ✅ T-407 neu, T-387 erweitert; Server-Tests auf SQLite und PostgreSQL |
+| Hinweisboxen | Signalwort als Beschriftung nur, wenn es zur Art passt; im Quick Reference Guide ging die Beschriftung verloren, wenn der Text mit einer Liste begann; Leseransicht, veröffentlichte Releases und Kontexthilfe zeigten „Tipp: Wichtig: …“ doppelt |
+| Tabellen | Tabstopp auch bei Tabellen, die nur gesperrte oder per tabindex="-1" ausgenommene Elemente enthalten; mehrere bzw. rechts fixierte Spalten beim Scrollen zum Fokus berücksichtigt |
+| Doppelte Listen | Berechtigungen und Schweregrade aus einer Quelle; Icon-Namen der Stammdaten gegen die Oberfläche geprüft |
+| Belassen | Beobachter für Tabellen-Tabstopps: läuft höchstens einmal je Bild und nur bei Änderungen im Dokument – ein Umbau auf ResizeObserver brächte hier keinen messbaren Gewinn |
+
+## 1.90 Stand nach Etappe 88 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 79–87 (Wahl des Auftraggebers vom 27.10.2026): zehn Funde, alle geprüft und behoben | ✅ T-399, T-402, T-404 erweitert; Server-Tests auf SQLite und PostgreSQL |
+| Wochenübersicht | `WEEKLY_DIGEST=0` stoppte nur das erste Einplanen; ein schon eingeplanter Auftrag sendete weiter und plante sich neu ein |
+| Schieberegler | Der Wert im `<output>` gehörte zum Namen („Clusterschwelle 55 %“), beim Vorher/Nachher-Regler gehörte die Beschriftung zum `<output>` statt zum Regler |
+| Screenshot-Editor | ein angefangener Zwei-Klick-Vorgang blieb nach einem neuen Bild bestehen; leichte Mausbewegung beim zweiten Klick verwarf den Anfangspunkt |
+| Gesperrte Schaltflächen | falscher Feldname („Langform“ statt „Bedeutung“), Hinweis während des Ladens der Freigabeprüfung, doppelte Hinweise, `Gated` überschrieb `disabled` und `aria-describedby` des Aufrufers, doppelte Bedingungen in der Klickstrecke |
+
+## 1.89 Stand nach Etappe 87 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Gliederung (NFR-03, WCAG 1.3.1, 2.4.6): auf allen 77 Seiten genau eine Überschrift erster Ebene, sie steht am Anfang des Inhalts; keine übersprungenen Ebenen, keine leeren Überschriften; aller Inhalt in Bereichen; gleichartige Bereiche eindeutig benannt (axe-Regeln „best-practice“, die T-392/T-393 nicht einschließen) | ✅ T-406 |
+| Behoben | Kapitelwerkstatt: das Inhaltsverzeichnis (Ebene 2) stand vor der Seitenüberschrift – der Seitenkopf steht jetzt über beiden Spalten. Leseransicht: zwei Suchbereiche ohne Namen, jetzt „Suche im Projekt“ und „Im Handbuch suchen“ |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.88 Stand nach Etappe 86 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Gesperrte Schaltflächen (NFR-03, WCAG 3.3.2): Jede gesperrte Hauptschaltfläche nennt die fehlenden Angaben („Noch nötig: Kennung mit mindestens 3 Zeichen, Name.“); der Hinweis steht sichtbar daneben und ist über `aria-describedby` verknüpft; Komponente `Gated` an 41 Stellen | ✅ T-405 (alle 77 Seiten) |
+| Bewusst ohne Hinweis | Kleine Zeilenaktionen (z. B. „Generieren“ je Kapitel, „Zuordnen“ je Domäne – das Auswahlfeld steht direkt daneben), Blättern, Verschieben und „läuft gerade“ |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.87 Stand nach Etappe 85 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Ziehbewegungen (NFR-03, WCAG 2.5.7): Rahmen, Pfeil, Unkenntlich machen, Lupe, Zuschneiden und Verschieben im Screenshot-Editor auch mit zwei einzelnen Klicks; Esc bricht ab; Hinweis in einer Live-Region | ✅ T-404 |
+| Geprüft, schon vorhanden | Gliederung (Pfeil-Schaltflächen statt Drag & Drop), Draft Manual (Auswahl und „Zuordnen“), Schwärzen im Bildarchiv (Felder in Prozent), Vorher/Nachher (Schieberegler per Tastatur) |
+| Offen (erledigt in Etappe 86) | Deaktivierte Schaltflächen erklärten nicht, welches Pflichtfeld fehlt (WCAG 3.3.2) |
+
+## 1.86 Stand nach Etappe 84 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Dialoge per Tastatur (NFR-03, WCAG 2.1.2, 2.4.3): Fokus beim Öffnen im ersten Feld, Tippen ohne Fokusverlust, Tab und Umschalt+Tab bleiben im Dialog, Esc schließt, Fokus zurück zum Auslöser – geprüft an vier Dialogen | ✅ T-403 |
+| Glossar-Erklärungen (WCAG 1.4.13): mit der Maus erreichbar, ohne zu schließen; Esc schließt sie auch ohne Fokus auf dem Begriff | ✅ T-403 |
+| Behoben | Beim Tippen in einem Dialogfeld sprang der Fokus nach dem ersten Zeichen auf „Schließen“, die weiteren Zeichen gingen verloren (alle 18 Dialoge, nur per Tastatur) |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.85 Stand nach Etappe 83 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Sichtbare Beschriftung im zugänglichen Namen (NFR-03, WCAG 2.5.3): Schaltflächen, Links und Felder mit `aria-label` oder `aria-labelledby` enthalten ihren sichtbaren Text, auf allen 77 Seiten bei 1280 und 390 px | ✅ T-402 |
+| Behoben | 19 Stellen auf 13 Seiten, u. a. „Notiz speichern“ (Name „Notiz zu … speichern“), „Übersetzen“ (Name „Französisch bearbeiten“), „Labels auf“ (Name „Sprache der Labels“), Felder mit „(optional)“ und Schieberegler, deren Wert im Label stand |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.84 Stand nach Etappe 82 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Seitentitel (NFR-03, WCAG 2.4.2): jede der 77 Seiten mit eigenem Fenstertitel; Kapitelwerkstatt, Leseransicht, Anleitungs-Check, Kapitelbewertung, Evidenz, Versionsvergleich, Draft Manual und Inhaltsverzeichnis nennen das geöffnete Kapitel bzw. die Gliederung | ✅ T-401 |
+| Behoben | Die Kapitelwerkstatt zeigte nur „oneSCM Handbook Studio“; Detailseiten unterschieden sich im Titel nicht |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.83 Stand nach Etappe 81 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Statusmeldungen (NFR-03, WCAG 4.1.3): Bestätigungen in einer höflichen Live-Region, Fehler als Alarm; beide Regionen sind ab dem Laden der Seite vorhanden, jede Meldung wird als neuer Knoten eingefügt und dadurch auch bei gleichem Text erneut angesagt | ✅ T-400 |
+| Behoben | Die Meldung erschien bisher zusammen mit ihrer Live-Region – viele Screenreader sagen sie dann nicht an; Fehler kamen nur als höfliche Statusmeldung |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.82 Stand nach Etappe 80 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Kontrast von Bedienelementen (NFR-03, WCAG 1.4.11): Rahmen von Eingabefeldern, Auswahllisten und Textfeldern mindestens 3:1 zu Feld und Umgebung; Fokusrahmen mindestens 3:1 zum Hintergrund – hell und dunkel, alle 77 Seiten | ✅ T-398 |
+| Behoben | Feldrahmen hatten 1,2–1,9:1 (Farbe der Kartenränder); Fokusrahmen in der Seitenleiste 2,98:1; drei Fokusrahmen nutzten eine nicht vorhandene Variable und damit Bernstein (2,05:1) |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.81 Stand nach Etappe 79 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Hinweise ohne Ortsangaben (NFR-03, WCAG 1.3.3): Hinweise nennen den Namen der Liste statt ihrer Lage – Leseransicht in neun Sprachen, Bildarchiv, Kapitelsteuerung, Kapitelwerkstatt, Kapitel ↔ Quellen | ✅ T-397 |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.80 Stand nach Etappe 78 (26.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Vergrößerung (NFR-03): alle 77 Seiten bei 320 px, entspricht 400 % Zoom, ohne waagerechtes Scrollen (WCAG 1.4.10) | ✅ T-396 |
+| Textabstände (NFR-03): Zeilenhöhe 1,5, Absatzabstand 2-fach, Buchstaben 0,12 em, Wörter 0,16 em – kein abgeschnittener Text bei 320 und 1280 px (WCAG 1.4.12) | ✅ T-396 |
+| Behoben | Beschriftete Auswahlfelder in Filterzeilen, Kapitelwerkstatt, Kapitel ↔ Quellen und lange Wörter (Deckblatt, Dateipfade) verbreiterten die Seite bei 320 px; Seitenleiste zeigte Berechtigungen als Codes („read, edit“) |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.79 Stand nach Etappe 77 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Tastaturbedienung (NFR-03): auf allen 77 Seiten „Zum Inhalt springen“ als erster Tabstopp, sichtbarer Fokus (WCAG 2.4.7), Fokus nicht verdeckt (2.4.11), kein Kreisen (2.1.2); Kopf und Menü einmal vollständig | ✅ T-395 |
+| Behoben | Weiterleitungen beim Laden (/stammdaten, /werkstatt) setzten den Fokus auf die Überschrift und übersprangen den Sprunglink; in der Zugriffsmatrix lag das fokussierte Feld unter der fixierten ersten Spalte |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.78 Stand nach Etappe 76 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Responsive Oberfläche (NFR-03): alle 77 Seiten bei 390 px ohne waagerechtes Scrollen, axe ohne Befund; scrollende Tabellen per Tastatur erreichbar | ✅ T-394 |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.77 Stand nach Etappe 75 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| axe über alle 77 Seiten auch im dunklen Modus (NFR-03) | ✅ T-393 |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.76 Stand nach Etappe 74 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| T-202 lokal: Absatzauswahl über die Kopfzeile statt Klick in die Mitte | ✅ alle E2E-Tests auch lokal grün |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.75 Stand nach Etappe 73 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| axe (WCAG 2.2 AA) über alle 77 Seiten (NFR-03); Prüfkriterium der Freigabe ohne Code; Links der Wochenübersicht mit Mindestgröße 24 px | ✅ T-392; lokal 130 von 131 E2E-Tests grün (T-231 wieder grün) |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.74 Stand nach Etappe 72 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Status auf Deutsch an fünf Stellen; automatische Seitenprüfung über alle 77 Seiten (NFR-158) | ✅ T-391 |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.73 Stand nach Etappe 71 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Feinschliff nach Sichtprüfung: Quick Reference Guide zweispaltig am Bildschirm, Kennzahlen bündig, Signalwort als Boxbeschriftung, Schweregrade auf Deutsch | ✅ T-389, T-390 (axe) |
+| Offen | S-04-Begriffe: Funktion vorhanden (Etappe 44); die Schreibweise je Begriff trägt die Redaktion in ihrer Instanz ein |
+
+## 1.72 Stand nach Etappe 70 (25.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Rollen, Sparten und Label-Gruppen mit Lucide-Icons statt Emoji; Exporte und Kapiteltext ohne Zeichen (NFR-157) | ✅ ([ADR-122](adr/ADR-122-icons-rollen-sparten.md)), T-387, T-388 (axe) |
+| U-07 weitere Sprachen | am 25.10.2026 vorerst zurückgestellt |
+| Offen | S-04-Begriffe (Redaktion) |
+
+## 1.71 Stand nach Etappe 69 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Prüfbericht Barrierefreiheit für den HTML-Export; Standard-HTML mit Hauptbereich (NFR-156) | ✅ ([ADR-121](adr/ADR-121-barrierefreiheit-html.md)), T-384, T-385, T-386 (axe) |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
+## 1.70 Stand nach Etappe 68 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Prüfbericht Barrierefreiheit für Word und PowerPoint; Icons dekorativ, Sprache, Folientitel als Platzhalter (NFR-155) | ✅ ([ADR-120](adr/ADR-120-barrierefreiheit-word-powerpoint.md)), T-381, T-382, T-383 (axe) |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
+## 1.69 Stand nach Etappe 67 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Kontexthilfe im Lesestil Handbuch-Kapitel; Hinweisboxen mit Icon und Beschriftung; Rückmeldung mit Icons statt Emoji (NFR-154) | ✅ ([ADR-119](adr/ADR-119-kontexthilfe-lesestil.md)), T-379, T-380 (axe) |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
+## 1.68 Stand nach Etappe 66 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht nach jedem PDF-Export (NFR-153) | ✅ ([ADR-118](adr/ADR-118-barrierefreies-pdf.md)), T-376–T-378, mit Chromium 141 alle neun Prüfungen bestanden |
+| Offen | vollständige PDF/UA-Prüfung (PAC/veraPDF) außerhalb der App; Standard-PDF ungetaggt; S-04-Begriffe; U-07 |
+
+## 1.67 Stand nach Etappe 65 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (NFR-152) | ✅ ([ADR-117](adr/ADR-117-lesestil-handbuch-kapitel.md)), T-374, T-375 |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
+## 1.66 Stand nach Etappe 64 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Designvorlagen als PowerPoint mit Titelfolie, Karten/Abschnittsfolien, Tabellen, Boxen, Fortsetzung und Nummerierung mit Startwert (NFR-151) | ✅ ([ADR-116](adr/ADR-116-designvorlagen-powerpoint.md)), T-371–T-373, mit LibreOffice und eigenem Import geprüft |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
+## 1.65 Stand nach Etappe 63 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Designvorlagen als Word: gleiche Inhalte, Anpassung, Formatvorlagen, Icons, Kopf-/Fußzeilen mit Feldern; Nummerierung je Liste auch im Standard-Word (NFR-150) | ✅ ([ADR-115](adr/ADR-115-designvorlagen-word.md)), T-368–T-370, mit LibreOffice geprüft |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
+## 1.64 Stand nach Etappe 62 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Designvorlagen anpassen: Farben mit Kontrastprüfung, Schriften, Logo-Position, Vorschau, speichern und zurücksetzen (NFR-149) | ✅ ([ADR-114](adr/ADR-114-designvorlagen-anpassen.md)), T-365–T-367 |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
+## 1.63 Stand nach Etappe 61 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| PDF im Design: Quick Reference Guide und Handbuch-Kapitel direkt als PDF über einen lokalen Browser, ohne Netz; Muster als PDF (NFR-148) | ✅ ([ADR-113](adr/ADR-113-pdf-im-design.md)), T-362–T-364, mit Chromium 141 geprüft |
+| Offen | S-04-Begriffe (Redaktion); U-07 |
+
+## 1.62 Stand nach Etappe 60 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Designvorlagen Quick Reference Guide (A4 quer) und Handbuch-Kapitel (A4 hoch) nach den gelieferten Mustern, mit Lucide-Icons, ohne Marke Dritter, Muster mit fiktiven Inhalten (NFR-147) | ✅ ([ADR-112](adr/ADR-112-designvorlagen.md)), T-359–T-361, axe ohne Befund auch für die Muster |
+| Offen | PDF direkt im Design (bis dahin: HTML im Browser als PDF speichern); S-04-Begriffe (Redaktion); U-07 |
+
+## 1.61 Stand nach Etappe 59 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Restliche Emoji der Oberfläche als Lucide-Icons: Quellformate, Blocker/Warnungen, Hinweisarten, Screenshot-Editor, Leseransicht in neun Sprachen (NFR-146) | ✅ ([ADR-111](adr/ADR-111-icons-lucide.md)), E2E T-358 |
+| Offen | Rollen- und Spartenzeichen der Stammdaten (Daten, bewusst unverändert); S-04-Begriffe (Redaktion); U-07 |
+
+## 1.60 Stand nach Etappe 58 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Oberfläche mit einheitlichen SVG-Icons (Lucide) statt Emoji: Navigation, Kopf, Startseite, Hauptschaltflächen (NFR-146) | ✅ ([ADR-111](adr/ADR-111-icons-lucide.md)), axe hell und dunkel ohne Befund |
+| Offen | Emoji in Inhalten, Befunden und Schaltflächen seltener Seiten (später); Systemnamen, „Grace Period“ u. a. (S-04, Redaktion); U-07 |
+
+## 1.59 Stand nach Etappe 57 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| „MO-Prüfungen“ im Fließtext, „MO Checks“ als UI-Begriff in Menüpfaden und Anführungszeichen (S-04, NFR-145; Entscheidung 24.10.2026) | ✅ ([ADR-110](adr/ADR-110-ui-begriffe-mo-pruefungen.md)) |
+| SYNONYME.csv in die Terminologie übernehmen, nur entschiedene Begriffe (NFR-145) | ✅ |
+| Offen | Schreibweise der Systemnamen (später nach Oberfläche); „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ (Redaktion); U-07 weitere Sprachen (ohne Auswahl) |
+
+## 1.58 Stand nach Etappe 56 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Zuschaltbare Regelsätze: Regelbasiertes Schreiben (Deutsch), Simplified Technical English (Englisch, ohne Wörterbuch), Regeln einzeln abschaltbar (S-06, NFR-142) | ✅ ([ADR-109](adr/ADR-109-regelsaetze-benachrichtigung.md)) |
+| Vale-Stile einlesen (YAML oder ZIP; existence, substitution, occurrence), Prüfung lokal (S-06, NFR-143) | ✅ |
+| Benachrichtigung zum Länderreview an Prüferin/Prüfer und Vertretung, Ergebnis an die anfordernde Person (NFR-144) | ✅ – schließt den offenen Punkt aus Etappe 55 |
+| Offen | U-07 weitere Sprachen und Märkte (ohne Auswahl am 24.10.2026); Schreibweise offener Begriffe (S-04, entscheidet die Redaktion) |
+
+## 1.57 Stand nach Etappe 55 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Lokale Grammatikprüfung mit LanguageTool als Java-Dienst (G-04, NFR-140; Entscheidung 24.10.2026) | ✅ ([ADR-108](adr/ADR-108-languagetool-ansprechperson-markt.md)), mit echtem LanguageTool 6.6 geprüft |
+| Ansprechperson je Land/Markt mit Vertretung im Länderreview (O-09, NFR-141; Entscheidung 24.10.2026) | ✅ |
+| Offen | U-07 weitere Sprachen und Märkte (ohne Auswahl am 24.10.2026); Schreibweise offener Begriffe (S-04, entscheidet die Redaktion); Benachrichtigung der Ansprechperson |
+
+## 1.56 Stand nach Etappe 54 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Textbausteine mit Fassungen, Verwendung, Aktualisieren in Entwürfen, Kandidaten aus wiederkehrenden Absätzen (W-11, NFR-138) | ✅ ([ADR-107](adr/ADR-107-textbausteine-uebersicht.md)) |
+| Übersicht oneSCM_Metadaten mit Zwischenspeicher (NFR-139, Lasttest Etappe 49) | ✅ |
+| Offen – Entscheidung des Auftraggebers | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09 |
+
+## 1.55 Stand nach Etappe 53 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Vorher/Nachher-Belege mit Schieberegler, Anlass/Änderung/Wirkung, Gegenüberstellung im Archiv (W-05, NFR-135) | ✅ ([ADR-106](adr/ADR-106-vorher-nachher-pptx-zwischenbilder.md)) |
+| Ausgabe als PowerPoint, Klickstrecke als BPMN 2.0 mit Diagramm (W-07, NFR-136) | ✅ |
+| Zwischenbilder kurzer Zustände aus Videos (W-10, NFR-137) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; W-11 Textbausteine (später); schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
+## 1.54 Stand nach Etappe 52 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Textvarianten je Kapitel: Endanwender, Fachtext, Kurzfassung (~¼), Exportprofil „Kurzfassung“ (S-05, NFR-133) | ✅ ([ADR-105](adr/ADR-105-textvarianten-pruefprofile.md)) |
+| Vier Prüferprofile fachlich, Redaktion, Compliance, Endanwender mit Wert, Ampel, Funden und optional lokalem KI-Dienst (W-12, NFR-134) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; optional W-05, W-07, W-10; schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
+## 1.53 Stand nach Etappe 51 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Word-Prüffassung mit „Fertig, wenn …“ exportieren und zurücklesen, Abweichungen als Vorschläge (W-06, NFR-130) | ✅ ([ADR-104](adr/ADR-104-aenderungsvorschlaege-word-lektorat.md)) |
+| KI-Lektorat je Kapitel mit Wortvergleich, Übernahme je Vorschlag oder je Kapitel (G-07, NFR-131) | ✅ |
+| Interne Kommentare nie im Export, Drei-Spalten-Ansicht Stand – Vorschlag – Neu (W-08, NFR-132) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
+## 1.52 Stand nach Etappe 50 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Plausibilität Text ↔ Quellen je Aussage mit Wert 0–100 (W-02, NFR-127) | ✅ ([ADR-103](adr/ADR-103-kapitelbewertung-fehlerliste.md)) |
+| Kapitelbewertung mit fünf Kriterien und Ampel, Übersicht (S-07, NFR-128) | ✅ |
+| Fehlerliste in der App mit Abgleich FEHLERLISTE.csv (G-05, NFR-129) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Schreibweise offener Begriffe (S-04); O-09; schnellere Übersicht oneSCM_Metadaten (Lasttest Etappe 49) |
+
+## 1.51 Stand nach Etappe 49 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Tonalität je Produktart und Rolle, Prüfregel „Tonalität“, Ton in den KI-Vorschlägen (S-02, NFR-123) | ✅ ([ADR-102](adr/ADR-102-tonalitaet-tickets-releasevergleich.md)) |
+| Ticket-Einstufung genehmigt / in Prüfung / intern / Background, ohne interne Tickets in Kapiteln (W-03, NFR-124) | ✅ |
+| Releaseletter-Entwurf aus dem Projektvergleich zweier Handbuch-Releases (W-04, NFR-125) | ✅ |
+| Zukunfts-Inhalte in Export und Release ausgeblendet (W-09, NFR-126) | ✅ |
+| Offen | G-04 LanguageTool lokal; weitere Märkte und Sprachen (U-07); Zukunfts-Inhalte je Unterkapitel; Schreibweise offener Begriffe (S-04) |
+
+## 1.50 Stand nach Etappe 48 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Übersetzungsspeicher mit 100 % und ähnlichen Treffern, SPEICHER.csv hin und zurück (U-01, NFR-118) | ✅ ([ADR-101](adr/ADR-101-uebersetzung.md)) |
+| Weitere Prüfungen, Glossar je Sprache, XLIFF 1.2 und Excel (U-02, U-04, U-05, NFR-119) | ✅ |
+| Länderreview mit MQM, Rückübersetzung der Sicherheitshinweise (U-03, U-06, NFR-120) | ✅ |
+| de-CH und fr-CH, Rahmentexte je Sprache, Hinweis auf Bildvarianten (U-07, U-08, U-10, NFR-121) | ✅ |
+| Releaseletter DE↔EN (U-09, NFR-122) | ✅ |
+| Offen | weitere Märkte und Sprachen (U-07); Pflicht-Länderreview je Sprache; Ansprechperson je Land (O-09); Satzsegmentierung (SRX) für den Speicher; G-04 LanguageTool |
+
+## 1.49 Stand nach Etappe 47 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| TRIAGE nach dem Einlesen: Pflichtlabels je Chunk mit Sicherheit, Mensch geht vor, Labels löschen (NFR-114) | ✅ ([ADR-100](adr/ADR-100-triage-agenten.md)) |
+| Kapitel- und Unterkapitelvorschläge für gemischte Quellen, neue Unterkapitel „neu“ (NFR-115) | ✅ |
+| Detaillevel steuern das Kapitel (HappyPath, Edge), Detaillierung je Kapitel, Inhalts-Dashboard (NFR-116) | ✅ |
+| Agenten in der App: ORCHESTRATOR, Aufgaben, Entscheidungen, GOAL; Ordner `12_Goal`, `00_Dokumentation/Agenten` (NFR-117) | ✅ |
+| Offen | Erkennung weiterer Sprachen; Zuordnung über ein lokales Sprachmodell oder Embeddings (Entscheidung lokaler Dienst); Domänennamen aus echten Quellen ergänzen; Übersetzung U-01 … U-10 |
+
+## 1.48 Stand nach Etappe 46 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Suche v2: Morphologie, Komposita, Kennungen, Abfrageerweiterung, BM25 + Vektor per RRF, MMR (NFR-111) | ✅ ([ADR-099](adr/ADR-099-rag-retrieval-v2.md), Messung [docs/11](11-rag-messung.md)) |
+| Relevanzschwelle mit begründeter Enthaltung, Antwortauswahl (NFR-112) | ✅ |
+| Prüflauf je Verfahren mit nDCG@6, Messbestand mit Regressionsschutz, lokale KI-/Embedding-Dienste (NFR-113) | ✅ |
+| Offen | englische Fragen auf deutsche Quellen ohne Terminologie-Eintrag (lokales mehrsprachiges Modell, nicht gemessen); lokaler neuronaler Reranker; Treueprüfung der KI-Antworten; Übersetzung U-01 … U-10 |
+
+## 1.47 Stand nach Etappe 45 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Pipeline: Jira-Tickets in Bearbeitung je Gliederung mit Erstelldatum, Stream, Produktionsdatum, vorab dokumentiert, Übernahme wenn produktiv (NFR-108) | ✅ ([ADR-098](adr/ADR-098-pipeline-backlog-intern.md)) |
+| Backlog und Intern (Testing, Reporting, Systeme, Migration, Rollout, Other), nie im Handbuch (NFR-109) | ✅ |
+| Arbeitsordner `09_Pipeline`, `10_Backlog`, `11_Intern`, Grundregel 9, Agent pipeline-redakteur, Abgleich mit der App (NFR-110) | ✅ |
+| Offen | Feldnamen für Stream und Produktionsdatum im echten Jira-Export bestätigen; Übersetzung U-01 … U-10 (Etappe 46); G-04 (LanguageTool – Entscheidung) |
+
+## 1.46 Stand nach Etappe 44 (24.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Hausregeln, Rechtschreibliste, erlaubte Begriffe (G-01–G-03, NFR-104) | ✅ ([ADR-097](adr/ADR-097-grammatik-sprachstil.md)) |
+| Englisch, Sprache je Regel, Prüfung der Übersetzungen, „nicht übersetzen“ (G-06, S-03, S-04, NFR-105) | ✅ |
+| Lesbarkeit mit Sollwerten je Zielgruppe, Bildunterschriften (S-01, S-08, NFR-106) | ✅ |
+| Kapitelanweisung für Handbuch-Varianten (W-01, NFR-107) | ✅ |
+| Offen | G-04 (LanguageTool lokal – Entscheidung), G-05, S-02, Übersetzung U-01 … U-10 (damals für Etappe 45 geplant, jetzt Etappe 46) |
+
+## 1.45 Stand nach Etappe 43 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Kapitelanweisung je Kapitel und Unterkapitel mit Vorrang für Generator, KI, Check, Agenten; Kapitel ergänzen (NFR-101) | ✅ ([ADR-096](adr/ADR-096-kapitelsteuerung-historie.md)) |
+| Version „gültig ab“ an Kapiteln, Unterkapiteln, Labels im Output (NFR-102) | ✅ |
+| Abgelöste Funktionen in der Historie, Anhang „Historie“, zurückholbar (NFR-103) | ✅ |
+| Offen | Anweisung für Handbuch-Varianten nur über die Quellkapitel; optional F-10, F-11; später F-19, F-31 |
+
+## 1.44 Stand nach Etappe 42 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Namen, User-ID, Adresse, FIN in Bildern erkennen und verpixeln; an/aus, je Stelle, manuelle Stellen; Original bleibt (NFR-99) | ✅ ([ADR-095](adr/ADR-095-datenschutz-bild-labels.md)) |
+| Mehrere Labels (Domäne, Rolle, Gliederung …) und Kapitel je Bild, Filter, Deckungsmatrix je Gliederungspunkt (NFR-100) | ✅ ([ADR-095](adr/ADR-095-datenschutz-bild-labels.md)) |
+| Offen | Gesichter/Unterschriften nur manuell; optional F-10, F-11; später F-19, F-31; fastify-Hinweis „low“ |
+
+## 1.43 Stand nach Etappe 41 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Varianten einer Maske mit passender Fassung in Export, Release und Übersetzung (F-22, NFR-97) | ✅ ([ADR-093](adr/ADR-093-varianten-klickstrecke.md)) |
+| Klickstrecke aus Screenshots mit parallelen Wegen 3a/3b, neue Fassung bei Änderung (F-24, NFR-98) | ✅ ([ADR-093](adr/ADR-093-varianten-klickstrecke.md)) |
+| Offen | optional F-10, F-11; später F-19, F-31; fastify-Hinweis „low“ |
+
+## 1.38 Stand nach Etappe 36 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Dubletten je Abschnitt über alle Formate, exakt und ab 85 %, Gruppen (M4, NFR-85) | ✅ ([ADR-088](adr/ADR-088-dubletten-formatuebergreifend.md)) |
+| Nach jedem Import nur geänderte Dateien; Entscheidung führende Fassung / kein Duplikat mit Unterschieden (NFR-86) | ✅ ([ADR-088](adr/ADR-088-dubletten-formatuebergreifend.md)) |
+| Offen | Etappen M5 (Fragen über alle Quellen mit Teilstücken), M6 (Video, OCR), M7 (Antwortqualität) |
+
+## 1.37 Stand nach Etappe 35 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Teilstücke langer Chunks 300–800 Zeichen mit 1 Satz Überlappung, ohne E-02 zu ändern (M3, NFR-83) | ✅ ([ADR-087](adr/ADR-087-teilstuecke-ueberschriften.md)) |
+| Quellen je Überschrift (je Datei, zusammengeführt), Filter „Überschrift“ (M3, NFR-84) | ✅ ([ADR-087](adr/ADR-087-teilstuecke-ueberschriften.md)) |
+| Offen | Etappen M4 (formatübergreifende Dopplungen), M5 (Fragen über alle Quellen mit Teilstücken), M6 (Video, OCR), M7 (Antwortqualität) |
+
+## 1.36 Stand nach Etappe 34 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| PowerPoint und PDF einlesen, Fundstelle je Folie, Seite bzw. Abschnitt, Seite „Einlesen“ (M2, NFR-81) | ✅ ([ADR-086](adr/ADR-086-pptx-pdf-fundstellen.md)) |
+| Bild → Gliederungsstelle über den Folientext (F-25, NFR-82) | ✅ ([ADR-086](adr/ADR-086-pptx-pdf-fundstellen.md)) |
+| Offen | Feinabstimmung mit echten PPTX-/PDF-Beispieldateien; F-22, F-24, F-30 (optional); Etappen M3 (Rest) bis M7, F-26 mit M6 |
+
+## 1.35 Stand nach Etappe 33 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Bildarchiv: Bildnummer, Merkmale, Prüfregeln, Bildabdeckung, Versionen, Platzhalter, Zwischenablage (F-20, F-21, F-23, NFR-79) | ✅ ([ADR-085](adr/ADR-085-bilder-ausgabe.md)) |
+| Quick Guide, One Pager, Lesefassung, Wasserzeichen, Übergänge „Weiter mit …“ (F-27, F-28, F-29, NFR-80) | ✅ ([ADR-085](adr/ADR-085-bilder-ausgabe.md)) |
+| Offen | F-22, F-24, F-30 (optional), F-25 mit M2, F-26 mit M6; Etappen M2 (PPTX/PDF, Beispieldateien nötig) bis M7 |
+
+## 1.34 Stand nach Etappe 32 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Gliederungs-Vorschlag je Chunk, Kapitel ↔ Quellen, Zielkapitel je Dopplung (F-13, F-14, F-18, NFR-77) | ✅ ([ADR-084](adr/ADR-084-gliederung-wissen.md)) |
+| Wissensnotizen, Ausschlussliste (F-15, F-17, NFR-78) | ✅ ([ADR-084](adr/ADR-084-gliederung-wissen.md)) |
+| Offen | Bilder und Ausgabe (F-20 … F-30), Etappen M2 (PPTX/PDF, Beispieldateien nötig) bis M7 |
+
+## 1.33 Stand nach Etappe 31 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Release-Abgleich (F-03) | ✅ Tickets je Release, Bug = intern, Kapitelbezug, Änderungen, Ticketliste ([ADR-083](adr/ADR-083-releaseletter-lektorat.md)) |
+| Releaseletter (F-02, NFR-75) | ✅ aus Tickets mit Guardrails, Prüfregeln und Urteil, auch für eingefügte Letter ([ADR-083](adr/ADR-083-releaseletter-lektorat.md)) |
+| Warnhinweis-Schema, Übersetzungsprüfung, feste Übersetzungen (F-07, F-09, F-12, NFR-76) | ✅ ([ADR-083](adr/ADR-083-releaseletter-lektorat.md)) |
+| Offen | KI-Formulierung des Letters mit lokalem Modell (optional); weitere Funktionen aus docs/07 (F-13 ff.); Etappen M2–M7 |
+
+## 1.32 Stand nach Etappe 30 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Menüpunkte Contract Management 3.1–3.5 | ✅ eigene Navigations-Labels, Zugriffsmatrix vollständig ([ADR-082](adr/ADR-082-zuordnung-domaene-ordner.md)) |
+| Zuordnung Domäne → Gliederung → Ordner (NFR-74) | ✅ Seite „Zuordnung“ mit Kapitel- und Unterordnern, Vorschlägen aus Chunks, CSV ([ADR-082](adr/ADR-082-zuordnung-domaene-ordner.md)) |
+| Steuerungsordner im Arbeitsordner | ✅ 05_I_Output, 06_II_Stil_und_Design, 07_III_Grammatik_Synonyme_Fehlerliste, 08_IV_Translation mit Agenten |
+| Offen | englische UI-Begriffe für 3.1–3.5 bestätigen; Domänenzuordnung fachlich prüfen; F-02, F-03, M2–M7 |
+
+## 1.31 Stand nach Etappe 29 (23.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Jira-Import als Datei (NFR-71) | ✅ XML/CSV, je Ticket eine Quelle, ohne Personenfelder ([ADR-081](adr/ADR-081-jira-update-zugriff.md)) |
+| Update-Eingang (NFR-72) | ✅ geänderte, entfallene, neue Quellabschnitte absatzweise übernehmen ([ADR-081](adr/ADR-081-jira-update-zugriff.md)) |
+| Zugriffsmatrix (NFR-73) | ✅ Rolle × Menüpunkt mit Beleg, CSV-Import/-Export ([ADR-081](adr/ADR-081-jira-update-zugriff.md)) |
+| Offen | Releaseletter aus Tickets (F-02), Release-Abgleich (F-03), weitere Funktionen aus docs/07, Etappen M2–M7 |
+
+## 1.30 Stand nach Etappe 28 (23.10.2026)
+
+Umfang vom Auftraggeber am 23.10.2026 festgelegt: Empfehlungen der Entscheidungsvorlage ([07](07-bestehende-artefakte.md)) übernommen, Start mit Labelkatalog und Datenschutz.
+
+| Punkt | Ergebnis |
+|---|---|
+| Labelkatalog nach echtem oneSCM (NFR-69) | ✅ 153 Labels in neun Gruppen, Abgleich bestehender Projekte ([ADR-080](adr/ADR-080-katalog-onescm-datenschutz.md)) |
+| Erweiterte Datenschutzprüfung (NFR-70) | ✅ FIN, Kennzeichen, Benutzerkennung, Adresse, Namen, Namensliste, Pseudonymisierung ([ADR-080](adr/ADR-080-katalog-onescm-datenschutz.md)) |
+| Offen | übrige Funktionen aus docs/07 (Jira-Import, Releaseletter, Update-Eingang, Zugriffsmatrix …) und Etappen M2–M7 |
+
+## 1.29 Stand nach Etappe 27 (23.10.2026)
+
+Umfang vom Auftraggeber am 23.10.2026 festgelegt: oneSCM_Metadaten nach Plan [06](06-plan-onescm-metadaten.md), Etappe M1; Annahmen M-01 … M-10 übernommen, Daten bleiben lokal, 100 vordefinierte Labels, Deutsch und Englisch.
+
+| Punkt | Ergebnis |
+|---|---|
+| Vordefinierte Labels (NFR-66) | ✅ 100 Labels in sechs Gruppen (Gliederung, Rollen, Navigation, Inhaltstyp, Sparte, Qualität), Deutsch/Englisch, Pflege durch die Administration ([ADR-079](adr/ADR-079-onescm-metadaten.md)) |
+| Chunks je Überschrift labeln (NFR-67) | ✅ Ansicht je Überschrift und Tabelle, Fundstelle, Filter, Einzel- und Sammel-Labeln ([ADR-079](adr/ADR-079-onescm-metadaten.md)) |
+| Fragen und Antworten speichern (NFR-68) | ✅ mit Quell-Chunks samt Auszug, Labels, Sprache, Notiz ([ADR-079](adr/ADR-079-onescm-metadaten.md)) |
+| Offen für M2 … M7 | PowerPoint, PDF und Video einlesen, Fundstellen je Seite/Folie/Zeitmarke, Dopplungen über alle Formate, automatische Antworten aus allen Quellen, Qualitätsmessung |
+
 ## 1.28 Stand nach Etappe 26 (27.09.2026)
 
 Umfang vom Auftraggeber am 27.09.2026 festgelegt: Häufige Fragen übersetzen, weitere Sprachen vollständig.

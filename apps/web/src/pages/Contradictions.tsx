@@ -15,8 +15,8 @@ export function ContradictionsPage() {
       <Card>
         <div className="filters">
           <label className="slider">Treffer ab Ähnlichkeit
-            <input type="range" min={10} max={100} value={minScore} onChange={(e) => setMinScore(Number(e.target.value))} aria-label="Mindestähnlichkeit" />
-            <strong>{minScore} %</strong>
+            <input type="range" min={10} max={100} value={minScore} onChange={(e) => setMinScore(Number(e.target.value))} aria-label="Treffer ab Ähnlichkeit" aria-valuetext={`${minScore} %`} />
+            <output aria-hidden="true">{minScore} %</output>
           </label>
           <label><input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)} /> Nur offene Hinweise</label>
           <button className="btn ghost" onClick={findings.reload}>⟳ Aktualisieren</button>

@@ -73,5 +73,5 @@ export async function tokenPrincipal(db: Ctx['db'], bearer: string): Promise<Use
   if (!r.last_used_at || Date.parse(r.last_used_at) < Date.now() - 300_000) await db.run('UPDATE api_tokens SET last_used_at = ? WHERE id = ?', now(), r.id);
   const scopes = parseJson<string[]>(r.scopes, []);
   // global ohne Berechtigungen – wirksam sind nur die Scopes im gebundenen Projekt
-  return { id: `token:${r.id}`, name: `API-Token „${r.name}“`, permissions: [], token: { id: r.id, projectId: r.project_id, scopes } };
+  return { id: `token:${r.id}`, name: `API-Token „${r.name}“`, permissions: [], token: { id: r.id, projectId: r.project_id, scopes, createdBy: r.created_by } };
 }

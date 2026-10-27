@@ -520,7 +520,7 @@
   },
   {
     "id": "T-209",
-    "title": "UI: Tastaturbedienung, Fokusführung, schmale Bildschirme",
+    "title": "Label-Katalog: vordefinierte Labels je Gruppe (Deutsch, Englisch), auch in neuen Projekten; Pflege nur durch die Administration",
     "file": "e2e/tests/a11y.spec.ts",
     "level": "e2e",
     "requirements": [
@@ -1473,6 +1473,1863 @@
     "requirements": [
       "NFR-64",
       "NFR-65"
+    ]
+  },
+  {
+    "id": "T-209",
+    "title": "Label-Katalog: vordefinierte Labels je Gruppe (Deutsch, Englisch), auch in neuen Projekten; Pflege nur durch die Administration",
+    "file": "apps/server/test/stage27.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-66"
+    ]
+  },
+  {
+    "id": "T-210",
+    "title": "Chunks je Überschrift mit Fundstelle anzeigen, filtern und labeln (einzeln und gesammelt), Übersicht je Format",
+    "file": "apps/server/test/stage27.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-67"
+    ]
+  },
+  {
+    "id": "T-211",
+    "title": "Fragen und Antworten mit Quellen (Datei, Überschrift, Auszug) und Labels speichern, filtern, ändern, löschen",
+    "file": "apps/server/test/stage27.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-68"
+    ]
+  },
+  {
+    "id": "T-237",
+    "title": "oneSCM_Metadaten: Übersicht, Chunks je Überschrift labeln und filtern, Frage und Antwort mit Quelle und Labels speichern, Labelkatalog auf Englisch (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-66",
+      "NFR-67",
+      "NFR-68",
+      "NFR-69"
+    ]
+  },
+  {
+    "id": "T-212",
+    "title": "Labelkatalog nach echtem oneSCM: Gesamtgliederung, Menü der Oberfläche, Rollen (MO = Market Operation), nur Pkw und Van; ältere Katalog-Labels werden ausgeblendet, Zuordnungen und Anpassungen bleiben",
+    "file": "apps/server/test/stage28.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-69"
+    ]
+  },
+  {
+    "id": "T-213",
+    "title": "Datenschutz: FIN, Kennzeichen, Benutzerkennung, Adresse, Namen aus Metadaten und Namensliste; Pseudonymisierung; Prüf-Endpunkt; Namensliste wirkt in der Analyse",
+    "file": "apps/server/test/stage28.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-70"
+    ]
+  },
+  {
+    "id": "T-214",
+    "title": "Jira-Import als Datei: XML- und CSV-Export, je Ticket eine Quelle unter jira/, Felder und Verknüpfungen, ohne Personenfelder, Text pseudonymisiert, erneuter Import nur bei Änderung",
+    "file": "apps/server/test/stage29.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-71"
+    ]
+  },
+  {
+    "id": "T-215",
+    "title": "Update-Eingang: geänderte, entfallene und neue Quellabschnitte je Absatz; Text übernehmen, Quelle aktualisieren, ergänzen, entfernen, verwerfen; nur Entwürfe änderbar",
+    "file": "apps/server/test/stage29.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-72"
+    ]
+  },
+  {
+    "id": "T-216",
+    "title": "Zugriffsmatrix Rolle × Menüpunkt: Stufen V, L, –, ? mit Beleg, Pflege mit Bearbeitungsrecht, CSV-Import mit Namen oder Codes, Export ohne Formel-Einschleusung",
+    "file": "apps/server/test/stage29.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-73"
+    ]
+  },
+  {
+    "id": "T-238",
+    "title": "Jira-Export einlesen, Quellenänderungen absatzweise übernehmen, Zugriffsmatrix mit Beleg pflegen (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-71",
+      "NFR-72",
+      "NFR-73"
+    ]
+  },
+  {
+    "id": "T-240",
+    "title": "Zuordnung Domäne → Gliederungspunkt → Ordner: Katalogvorschlag, Contract Management 3.1–3.5 als Menüpunkte, Unterordner aus einer App-Gliederung, Vorschläge aus Chunks, Pflege mit Bearbeitungsrecht, CSV",
+    "file": "apps/server/test/stage30.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-74"
+    ]
+  },
+  {
+    "id": "T-239",
+    "title": "Zuordnung: Domäne zu Gliederungspunkt, Menüpunkt und Ordner, Unterordner aus einer Gliederung, lösen und ergänzen (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-74"
+    ]
+  },
+  {
+    "id": "T-241",
+    "title": "Release-Abgleich und Releaseletter aus Jira-Tickets: Releases, Bug = intern, Lücken, Änderungen, Ticketliste, Letter mit Guardrails, Prüfregeln und Urteil, Freigabe, Export",
+    "file": "apps/server/test/stage31.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-75"
+    ]
+  },
+  {
+    "id": "T-242",
+    "title": "Warnhinweis-Schema, Platzhalter- und Strukturvergleich beim Übersetzen, feste Übersetzungen, Begriffskandidaten aus Tickets, neue Ausgabesprachen",
+    "file": "apps/server/test/stage31.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-76"
+    ]
+  },
+  {
+    "id": "T-243",
+    "title": "Release-Abgleich und Releaseletter in der Oberfläche, fremden Letter prüfen, Begriffskandidaten (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-75",
+      "NFR-76"
+    ]
+  },
+  {
+    "id": "T-244",
+    "title": "Ausschlussliste „nicht einlesen“: Muster für Dateinamen und Ordner, im ZIP und als Einzeldatei, Pflege nur durch die Administration",
+    "file": "apps/server/test/stage32.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-78"
+    ]
+  },
+  {
+    "id": "T-245",
+    "title": "Gliederungs-Vorschlag je Chunk mit Trefferwert (nie automatisch), Übersicht je Gliederungspunkt, Kapitel ↔ Quellen zweispaltig",
+    "file": "apps/server/test/stage32.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-77"
+    ]
+  },
+  {
+    "id": "T-246",
+    "title": "Wissensnotizen als eigene Quelle mit Screenshot und Revisionen, Datenschutz; Zielkapitel je Dopplung",
+    "file": "apps/server/test/stage32.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-77",
+      "NFR-78"
+    ]
+  },
+  {
+    "id": "T-247",
+    "title": "Wissensnotiz, Gliederungs-Vorschlag übernehmen, Kapitel ↔ Quellen, Zielkapitel, Ausschlussliste in der Oberfläche (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-77",
+      "NFR-78"
+    ]
+  },
+  {
+    "id": "T-248",
+    "title": "Bildarchiv: feste Bildnummer, Merkmale, Prüfregeln; neue Fassung ersetzt das Bild überall, Original bleibt abrufbar (ETag/304); Platzhalter mit reservierter Nummer",
+    "file": "apps/server/test/stage33.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-79"
+    ]
+  },
+  {
+    "id": "T-249",
+    "title": "Ausgabeprofile Quick Guide und One Pager, Lesefassung ohne Badges, Versionszeile und Quellenstatus (Einheit)",
+    "file": "apps/server/test/stage33.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-80"
+    ]
+  },
+  {
+    "id": "T-250",
+    "title": "„Weiter zu Kapitel …“: Übergang pflegen, Standard = nächstes Kapitel, im Export; Profile und Lesefassung im Export",
+    "file": "apps/server/test/stage33.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-80"
+    ]
+  },
+  {
+    "id": "T-251",
+    "title": "Bildarchiv mit Platzhalter und Fassung aus der Zwischenablage, „Weiter mit …“ in Leseransicht und Druck, Wasserzeichen, Quick Guide als Lesefassung (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-79",
+      "NFR-80"
+    ]
+  },
+  {
+    "id": "T-252",
+    "title": "PowerPoint: je Folie ein Abschnitt mit Fundstelle, Ebenen, Tabelle, Bild mit Alternativtext, Notizen; ausgeblendete Folien entfallen (Einheit)",
+    "file": "apps/server/test/stage34.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-81"
+    ]
+  },
+  {
+    "id": "T-253",
+    "title": "PDF: Überschriften nach Schriftgröße, Absätze, Liste, Fundstelle je Seite; Kopf-/Fußzeilen und Seitenzahlen entfallen (Einheit)",
+    "file": "apps/server/test/stage34.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-81"
+    ]
+  },
+  {
+    "id": "T-254",
+    "title": "Einlesen über die API: Fundstelle je Chunk (Folie, Seite, Abschnitt), Bild mit Gliederungs-Vorschlag aus dem Folientext (F-25), nur von Hand übernommen",
+    "file": "apps/server/test/stage34.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-81",
+      "NFR-82"
+    ]
+  },
+  {
+    "id": "T-255",
+    "title": "Abschnitts-Anker für HTML und Word (Einheit)",
+    "file": "apps/server/test/stage34.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-81"
+    ]
+  },
+  {
+    "id": "T-256",
+    "title": "Einlesen von PowerPoint und PDF in der Oberfläche mit Fundstelle, Gliederungs-Vorschlag im Bildarchiv übernehmen (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-81",
+      "NFR-82"
+    ]
+  },
+  {
+    "id": "T-257",
+    "title": "Teilstücke langer Chunks: 300–800 Zeichen an Satzgrenzen, 1 Satz Überlappung, Tabellen und Listen bleiben ganz (Einheit)",
+    "file": "apps/server/test/stage35.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-83"
+    ]
+  },
+  {
+    "id": "T-258",
+    "title": "Quellen je Überschrift: Baum je Datei, zusammengeführt über Dateien, Filter nach Überschrift, Teilstücke im Chunk",
+    "file": "apps/server/test/stage35.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-83",
+      "NFR-84"
+    ]
+  },
+  {
+    "id": "T-259",
+    "title": "Quellen je Überschrift in der Oberfläche, Sprung zu den Chunks mit Überschriftenfilter und Teilstücken (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-83",
+      "NFR-84"
+    ]
+  },
+  {
+    "id": "T-260",
+    "title": "Abschnittstext formatneutral normalisieren, Unterschiede wortweise (Einheit)",
+    "file": "apps/server/test/stage36.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-85",
+      "NFR-86"
+    ]
+  },
+  {
+    "id": "T-261",
+    "title": "Dubletten über Formate: Folie und PDF-Abschnitt exakt gleich, ähnliche Fassung ab 85 %, nur geänderte Dateien neu, Entscheidung überlebt erneutes Einlesen",
+    "file": "apps/server/test/stage36.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-85",
+      "NFR-86"
+    ]
+  },
+  {
+    "id": "T-262",
+    "title": "Dubletten über alle Formate in der Oberfläche: Unterschiede zeigen, führende Fassung festlegen (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-85",
+      "NFR-86"
+    ]
+  },
+  {
+    "id": "T-263",
+    "title": "Frage an alle Quellen: nur aus den Auszügen, Datei und Überschrift je Auszug, Daten statt Anweisung (Einheit)",
+    "file": "apps/server/test/stage37.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-87"
+    ]
+  },
+  {
+    "id": "T-264",
+    "title": "Fragen mit Belegen über PDF und Markdown: Filter, Teilstücke, Speichern mit Rahmen, erneut fragen mit Vergleich, Export CSV/Excel/JSON",
+    "file": "apps/server/test/stage37.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-87",
+      "NFR-88"
+    ]
+  },
+  {
+    "id": "T-265",
+    "title": "Ohne KI-Dienst: extraktive Antwort aus den Belegen",
+    "file": "apps/server/test/stage37.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-87"
+    ]
+  },
+  {
+    "id": "T-266",
+    "title": "Frage an alle Quellen in der Oberfläche: Antwort mit Belegen, übernehmen, erneut fragen, Export (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-87",
+      "NFR-88"
+    ]
+  },
+  {
+    "id": "T-267",
+    "title": "Fragenkatalog einlesen: HTML-App (Daten im Skript, Tabelle, Überschriften), CSV, JSON, Text – mit Kapitel, ohne Doppelungen (Einheit)",
+    "file": "apps/server/test/stage37.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-89"
+    ]
+  },
+  {
+    "id": "T-268",
+    "title": "Fragenkatalog: einlesen, alle mit Belegen beantworten, Frage ohne Aussage markieren, als Frage & Antwort übernehmen, exportieren",
+    "file": "apps/server/test/stage37.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-87",
+      "NFR-89"
+    ]
+  },
+  {
+    "id": "T-269",
+    "title": "Rückfragen in der Oberfläche: HTML-App einlesen, mit Belegen beantworten, speichern (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-89"
+    ]
+  },
+  {
+    "id": "T-270",
+    "title": "Untertitel (WebVTT, SRT): Formatierung entfernt, Kapitelmarken als Abschnitte, Zeitmarke je Absatz, Standbilder an ihrer Zeit (Einheit)",
+    "file": "apps/server/test/stage38.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-90"
+    ]
+  },
+  {
+    "id": "T-271",
+    "title": "Standbilder nur bei sichtbarer Änderung mit Bereich, Befehlsvorlage ohne Shell (Einheit)",
+    "file": "apps/server/test/stage38.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-91"
+    ]
+  },
+  {
+    "id": "T-272",
+    "title": "Video mit Untertiteln daneben, einzelne Untertitel, Video ohne Werkzeug übersprungen; Fundstelle Zeitmarke, Formatfilter, Werkzeugstatus",
+    "file": "apps/server/test/stage38.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-90"
+    ]
+  },
+  {
+    "id": "T-273",
+    "title": "Lokale Werkzeuge: Transkription, Standbilder mit rotem Rahmen (F-26), Texterkennung gescannter PDF-Seiten",
+    "file": "apps/server/test/stage38.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-90",
+      "NFR-91"
+    ]
+  },
+  {
+    "id": "T-274",
+    "title": "Einlesen: Untertitel mit Zeitmarke je Chunk, Video ohne Transkription übersprungen, Status der lokalen Werkzeuge",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-90",
+      "NFR-91"
+    ]
+  },
+  {
+    "id": "T-275",
+    "title": "Bewertung je Testfrage und Kennzahlen: Treffer@k, MRR, Beleg, Stichworte, Lückenfragen; Einlesen aus Tabelle und JSON (Einheit)",
+    "file": "apps/server/test/stage39.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-92",
+      "NFR-93"
+    ]
+  },
+  {
+    "id": "T-276",
+    "title": "Testfragensatz aus CSV, Prüflauf mit Kennzahlen, Korrektur, zweiter Lauf mit Vergleich, Export; kein Eintrag im Frageprotokoll",
+    "file": "apps/server/test/stage39.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-92",
+      "NFR-93"
+    ]
+  },
+  {
+    "id": "T-277",
+    "title": "Testfragen aus gespeicherten Fragen & Antworten: erwartete Quelle aus den Belegen; leerer Satz und JSON-Fehler",
+    "file": "apps/server/test/stage39.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-92"
+    ]
+  },
+  {
+    "id": "T-278",
+    "title": "Antwortqualität: Testfragen einlesen, Prüflauf mit Kennzahlen, nicht bestandene Fragen, Testfrage ergänzen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-92",
+      "NFR-93"
+    ]
+  },
+  {
+    "id": "T-279",
+    "title": "Punktmodell Muss/Soll (F-08) und Deckungsmatrix Stelle × Sprache/Rolle/Sparte (F-30) (Einheit)",
+    "file": "apps/server/test/stage40.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-94",
+      "NFR-96"
+    ]
+  },
+  {
+    "id": "T-280",
+    "title": "Muss/Soll je Projekt einstellbar, „alle Muss-Punkte“ als Freigabebedingung, Punkte in der Übersicht",
+    "file": "apps/server/test/stage40.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-94"
+    ]
+  },
+  {
+    "id": "T-281",
+    "title": "Deckungsmatrix über die API: Reiter bzw. Kapitel × Sprache/Rolle/Sparte, Platzhalter, Lücken, Export",
+    "file": "apps/server/test/stage40.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-96"
+    ]
+  },
+  {
+    "id": "T-282",
+    "title": "Expertenbefragung zu Wissenslücken (F-16): aus Fragenkatalog und Prüflauf, antworten mit Option und Freitext, Excel hin und zurück, Übernahme mit Label „Prüfen“",
+    "file": "apps/server/test/stage40.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-95"
+    ]
+  },
+  {
+    "id": "T-283",
+    "title": "Expertenbefragung beantworten und übernehmen, Punktmodell Muss/Soll im Anleitungs-Check, Deckungsmatrix im Bildarchiv",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-94",
+      "NFR-95",
+      "NFR-96"
+    ]
+  },
+  {
+    "id": "T-284",
+    "title": "Variante wählen nach Sprache, Rolle, Sparte, Markt; Nummern 3a/3b und Alternativtext der Klickstrecke (Einheit)",
+    "file": "apps/server/test/stage41.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-97",
+      "NFR-98"
+    ]
+  },
+  {
+    "id": "T-285",
+    "title": "Varianten einer Maske verknüpfen, doppelte Merkmale melden, passende Fassung im Export und in der Übersetzung, Deckungsmatrix je Maske",
+    "file": "apps/server/test/stage41.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-97"
+    ]
+  },
+  {
+    "id": "T-286",
+    "title": "Klickstrecke aus Screenshots: Bild mit Nummern und parallelen Schritten, im Archiv, Änderung als neue Fassung",
+    "file": "apps/server/test/stage41.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-98"
+    ]
+  },
+  {
+    "id": "T-287",
+    "title": "Bildarchiv: Varianten einer Maske verknüpfen, Klickstrecke aus Screenshots mit parallelem Weg erstellen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-97",
+      "NFR-98"
+    ]
+  },
+  {
+    "id": "T-288",
+    "title": "Wortpositionen aus der Texterkennung → Stellen mit Name, User-ID, FIN und Adresse; Feldbezeichnung bleibt lesbar (Einheit)",
+    "file": "apps/server/test/stage42.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-99"
+    ]
+  },
+  {
+    "id": "T-289",
+    "title": "Screenshot einlesen → automatisch unkenntlich; ausschalten zeigt das Original, einzelne und manuelle Stellen; Original nur mit Bearbeitungsrecht",
+    "file": "apps/server/test/stage42.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-99"
+    ]
+  },
+  {
+    "id": "T-290",
+    "title": "Mehrere Labels (Domäne, Rolle, Gliederung) und Kapitel je Bild, Filter, Deckungsmatrix je Gliederungspunkt; ohne Texterkennung nur manuell",
+    "file": "apps/server/test/stage42.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-100",
+      "NFR-99"
+    ]
+  },
+  {
+    "id": "T-291",
+    "title": "Bildarchiv: Stelle im Bild unkenntlich machen und rückgängig, mehrere Labels (Domäne, Gliederung) und Kapitel je Bild",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-99",
+      "NFR-100"
+    ]
+  },
+  {
+    "id": "T-292",
+    "title": "Kapitelanweisung: Themen erkennen, bereinigen, Kapitel und Unterkapitel zusammenführen, Prüfung, Markdown, KI-Anfrage (Einheit)",
+    "file": "apps/server/test/stage43.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-101"
+    ]
+  },
+  {
+    "id": "T-293",
+    "title": "Fehlende Kapitel und Unterkapitel ergänzen, Anweisung setzen; Generator lässt ausgeschlossene Themen weg und meldet fehlende wichtige Themen; Anleitungs-Check",
+    "file": "apps/server/test/stage43.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-101"
+    ]
+  },
+  {
+    "id": "T-294",
+    "title": "Version an Labels und Kapiteln im Output; veraltete Funktion ablösen → Historie (nicht im Handbuch, Anhang „Historie“), Zuordnungen übertragen, zurückholen",
+    "file": "apps/server/test/stage43.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-102",
+      "NFR-103"
+    ]
+  },
+  {
+    "id": "T-295",
+    "title": "Kapitelsteuerung: Kapitel und Unterkapitel ergänzen, Kapitelanweisung mit Version, Anzeige in der Werkstatt, Unterkapitel ablösen → Historie und zurückholen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-101",
+      "NFR-102",
+      "NFR-103"
+    ]
+  },
+  {
+    "id": "T-296",
+    "title": "Hausregeln (Typografie, Zahlen, Datum, Produktname), Englisch (a/an, „I“, Rechtschreibung), Wortliste je Sprache, erlaubte Begriffe (Einheit)",
+    "file": "apps/server/test/stage44.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-104",
+      "NFR-105"
+    ]
+  },
+  {
+    "id": "T-297",
+    "title": "Lesbarkeit (LIX, Flesch-Amstad, Sollwerte je Zielgruppe) und Bildunterschriften (Einheit)",
+    "file": "apps/server/test/stage44.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-106"
+    ]
+  },
+  {
+    "id": "T-298",
+    "title": "Stilregeln mit Zielgruppe, erlaubten Begriffen und Sprache je Regel; Prüfung in Englisch; Lesbarkeit im Anleitungs-Check; „nicht übersetzen“; Sprachprüfung der Übersetzung; Bildunterschrift im Archiv",
+    "file": "apps/server/test/stage44.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-104",
+      "NFR-105",
+      "NFR-106"
+    ]
+  },
+  {
+    "id": "T-299",
+    "title": "Kapitelanweisung für Handbuch-Varianten: eigene Anweisung des Variantenkapitels und die der Quellkapitel gelten beim Generieren; Export mit Varianten",
+    "file": "apps/server/test/stage44.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-107"
+    ]
+  },
+  {
+    "id": "T-300",
+    "title": "Schreibstil: Hausregeln (Anführungszeichen, Zahlen, Datum) automatisch korrigieren, Englisch prüfen, Zielgruppe und erlaubte Begriffe; Lesbarkeit je Kapitel",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-104",
+      "NFR-105",
+      "NFR-106"
+    ]
+  },
+  {
+    "id": "T-301",
+    "title": "Einordnung nach Status und Produktionsdatum, Datum, Kapitelvorschlag, Stream und Produktionsdatum aus dem Jira-Export",
+    "file": "apps/server/test/stage45.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-108"
+    ]
+  },
+  {
+    "id": "T-302",
+    "title": "Jira-Tickets → Pipeline je Gliederung (Erstelldatum, Stream, Produktionsdatum), Backlog, Statuswechsel, produktiv → übernehmen",
+    "file": "apps/server/test/stage45.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-108",
+      "NFR-109"
+    ]
+  },
+  {
+    "id": "T-303",
+    "title": "Intern mit sechs Themen, eigene Einträge, Datenschutz, Übernahme ins Handbuch als Quelle des Unterkapitels, Export für den Arbeitsordner",
+    "file": "apps/server/test/stage45.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-108",
+      "NFR-109",
+      "NFR-110"
+    ]
+  },
+  {
+    "id": "T-304",
+    "title": "Pipeline, Backlog, Intern: Jira-Tickets je Gliederung mit Erstelldatum, Stream und Produktionsdatum, vorab dokumentieren, interne Themen",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-108",
+      "NFR-109"
+    ]
+  },
+  {
+    "id": "T-305",
+    "title": "Morphologie, Komposita, Kennungen, Abfrageerweiterung, Relevanzschwelle, RRF und MMR",
+    "file": "apps/server/test/stage46.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-111",
+      "NFR-112"
+    ]
+  },
+  {
+    "id": "T-306",
+    "title": "Messbestand: v2 übertrifft v1 im Abstimmungs- und im Prüfsatz, enthält sich bei Lückenfragen, keine Dubletten unter den Belegen",
+    "file": "apps/server/test/stage46.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-111",
+      "NFR-112",
+      "NFR-113"
+    ]
+  },
+  {
+    "id": "T-307",
+    "title": "Frage an alle Quellen mit Erweiterung und Enthaltung, Prüflauf je Verfahren mit nDCG@6, lokaler KI- und Embedding-Dienst",
+    "file": "apps/server/test/stage46.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-111",
+      "NFR-112",
+      "NFR-113"
+    ]
+  },
+  {
+    "id": "T-308",
+    "title": "RAG v2: Frage mit Abkürzung wird erweitert und belegt, Lückenfrage nennt unbekannte Begriffe; Prüflauf je Verfahren mit nDCG@6",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-111",
+      "NFR-112",
+      "NFR-113"
+    ]
+  },
+  {
+    "id": "T-309",
+    "title": "TRIAGE-Regeln: Rolle, Sparte, Markt, Version, Status, Sprache und Detaillevel mit Sicherheit (Einheit)",
+    "file": "apps/server/test/stage47.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-114"
+    ]
+  },
+  {
+    "id": "T-310",
+    "title": "Nach dem Einlesen: Pflichtlabels für jeden Chunk, Kapitel- und Unterkapitelvorschläge, neues Unterkapitel „neu“, übernehmen, menschliche Labels bleiben, Labels löschen",
+    "file": "apps/server/test/stage47.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-114",
+      "NFR-115"
+    ]
+  },
+  {
+    "id": "T-311",
+    "title": "Detaillevel steuern das Kapitel: HappyPath und Edge getrennt, Detaillierung je Kapitel; Dashboard je Kapitel und Domäne",
+    "file": "apps/server/test/stage47.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-116"
+    ]
+  },
+  {
+    "id": "T-312",
+    "title": "Agenten in der App: ORCHESTRATOR plant, legt Entscheidungen vor, führt sie aus und verfeinert; GOAL vergleicht mit dem Ziel; Aufgaben und Export",
+    "file": "apps/server/test/stage47.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-117"
+    ]
+  },
+  {
+    "id": "T-313",
+    "title": "TRIAGE nach dem Einlesen, Vorschlag übernehmen, Inhalts-Dashboard, Agenten mit Plan und Aufgaben, GOAL-Abgleich – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-114",
+      "NFR-115",
+      "NFR-116",
+      "NFR-117"
+    ]
+  },
+  {
+    "id": "T-314",
+    "title": "Prüfregeln und Verfahren der Übersetzung: Länge, deutsche Wörter, Werte nur auf einer Seite, Schweizer Hochdeutsch, Speicher-Ähnlichkeit, MQM, XLIFF 1.2, Rückübersetzung, Rahmentexte (Einheit)",
+    "file": "apps/server/test/stage48.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-118",
+      "NFR-119",
+      "NFR-120",
+      "NFR-121"
+    ]
+  },
+  {
+    "id": "T-315",
+    "title": "Übersetzungsspeicher (100 % und ähnlich), Export/Import wie SPEICHER.csv, XLIFF 1.2 und Excel hin und zurück mit Prüfung, Glossar je Sprache mit Rückimport",
+    "file": "apps/server/test/stage48.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-118",
+      "NFR-119"
+    ]
+  },
+  {
+    "id": "T-316",
+    "title": "Länderreview mit MQM und „zurück an Übersetzung“, Rückübersetzung, de-CH nach Regeln, fr-CH aus Französisch, fehlende Bildvarianten, Rahmentexte im Export",
+    "file": "apps/server/test/stage48.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-120",
+      "NFR-121"
+    ]
+  },
+  {
+    "id": "T-317",
+    "title": "Releaseletter DE→EN übersetzen und prüfen: Speicher, KI, Prüfbefunde je Zeile, Freigabe übernimmt in den Speicher",
+    "file": "apps/server/test/stage48.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-122"
+    ]
+  },
+  {
+    "id": "T-318",
+    "title": "Übersetzung: KI-Übersetzung, Büro-Austausch (XLIFF), Länderreview mit MQM und „zurück an Übersetzung“, Übersetzungsspeicher und Glossar je Sprache – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-118",
+      "NFR-119",
+      "NFR-120"
+    ]
+  },
+  {
+    "id": "T-319",
+    "title": "Tonalität, Reihenfolge von Releases, Ticket-Einstufung und Letter aus dem Projektvergleich (Einheit)",
+    "file": "apps/server/test/stage49.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-123",
+      "NFR-124",
+      "NFR-125",
+      "NFR-126"
+    ]
+  },
+  {
+    "id": "T-320",
+    "title": "Tonalität je Produktart und Rolle: Einstellung, Prüfung freier Texte und Kapitel, KI-Umformulierung mit Ton",
+    "file": "apps/server/test/stage49.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-123"
+    ]
+  },
+  {
+    "id": "T-321",
+    "title": "Ticket-Einstufung: genehmigt, in Prüfung, intern, Background – Lückenanalyse, Releaseletter, Generierung ohne interne Tickets",
+    "file": "apps/server/test/stage49.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-124"
+    ]
+  },
+  {
+    "id": "T-322",
+    "title": "Zukunfts-Inhalte im Export und Release; Projektvergleich zweier Releases und Releaseletter-Entwurf daraus",
+    "file": "apps/server/test/stage49.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-125",
+      "NFR-126"
+    ]
+  },
+  {
+    "id": "T-323",
+    "title": "Tonalität je Rolle in der Stilprüfung, Ticket-Einstufung im Release-Abgleich, Zukunfts-Inhalte im Export, Releaseletter aus dem Projektvergleich – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-123",
+      "NFR-124",
+      "NFR-125",
+      "NFR-126"
+    ]
+  },
+  {
+    "id": "T-324",
+    "title": "Plausibilität je Aussage, Fakten-Wert, Ampel und Gesamtbewertung (Einheit)",
+    "file": "apps/server/test/stage50.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-127",
+      "NFR-128"
+    ]
+  },
+  {
+    "id": "T-325",
+    "title": "Kapitelbewertung mit fünf Kriterien und Ampel, Plausibilität je Aussage, Übersicht aller Kapitel",
+    "file": "apps/server/test/stage50.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-127",
+      "NFR-128"
+    ]
+  },
+  {
+    "id": "T-326",
+    "title": "Fehlerliste: Funde der Stilprüfung übernehmen, Status mit Begründung, Abgleich nach Korrektur, Export und Rückimport wie FEHLERLISTE.csv",
+    "file": "apps/server/test/stage50.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-129"
+    ]
+  },
+  {
+    "id": "T-327",
+    "title": "Kapitelbewertung mit Ampel und Plausibilität je Aussage, Funde in die Fehlerliste, Status mit Begründung – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-127",
+      "NFR-128",
+      "NFR-129"
+    ]
+  },
+  {
+    "id": "T-328",
+    "title": "Prüffassung zerlegen (Kapitel, Abschnitte, Absätze, Kriterium, Kästen), Absätze zuordnen auch bei mehrteiligen Absätzen, Wortvergleich",
+    "file": "apps/server/test/stage51.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-130",
+      "NFR-131"
+    ]
+  },
+  {
+    "id": "T-329",
+    "title": "Word-Prüffassung exportieren, geändert zurücklesen, Vorschläge mit eigener Fassung und Kommentar übernehmen, alle übernehmen, veraltete Vorschläge; interne Kommentare in keinem Export",
+    "file": "apps/server/test/stage51.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-130",
+      "NFR-132"
+    ]
+  },
+  {
+    "id": "T-330",
+    "title": "KI-Lektorat je Kapitel mit Wortvergleich, Verwerfen und alle übernehmen in einen Entwurf, eingereichte Version gesperrt",
+    "file": "apps/server/test/stage51.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-131"
+    ]
+  },
+  {
+    "id": "T-331",
+    "title": "Überarbeitung: Prüffassung exportieren, KI-Lektorat starten, Drei-Spalten-Ansicht mit Wortvergleich, eigene Fassung übernehmen, interner Kommentar – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-130",
+      "NFR-131",
+      "NFR-132"
+    ]
+  },
+  {
+    "id": "T-332",
+    "title": "Kurzfassung extraktiv (Zweck, Ergebnis, Warnung, Ablauf, ~¼ der Länge), erfundene Zahlen erkennen, Prüferprofile: Zusagen, fehlender Warnhinweis, lange Sätze, Fachjargon, Wert, KI-Funde prüfen (Einheit)",
+    "file": "apps/server/test/stage52.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-133",
+      "NFR-134"
+    ]
+  },
+  {
+    "id": "T-333",
+    "title": "Textvarianten einer Kapitelversion mit Wortzahl, KI-Kurzfassung, Download und Exportprofil Kurzfassung",
+    "file": "apps/server/test/stage52.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-133"
+    ]
+  },
+  {
+    "id": "T-334",
+    "title": "Prüferprofile: alle vier oder Auswahl prüfen, Funde je Profil (Widerspruch/unbelegt, Stil, Compliance, Endanwender), Verlauf, Berechtigung",
+    "file": "apps/server/test/stage52.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-134"
+    ]
+  },
+  {
+    "id": "T-335",
+    "title": "Textvarianten und Prüferprofile in der Oberfläche – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-133",
+      "NFR-134"
+    ]
+  },
+  {
+    "id": "T-336",
+    "title": "Zwischenbilder erkennen, Klickstrecke als BPMN (Aufgaben, Gateways, Flüsse, Diagramm), PowerPoint-Folien und Rücklesen (Einheit)",
+    "file": "apps/server/test/stage53.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-136",
+      "NFR-137"
+    ]
+  },
+  {
+    "id": "T-337",
+    "title": "PowerPoint-Export freigegebener Kapitel mit Bildern, Klickstrecke als BPMN herunterladen",
+    "file": "apps/server/test/stage53.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-136"
+    ]
+  },
+  {
+    "id": "T-338",
+    "title": "Vorher/Nachher-Belege: Fassungen gegenüberstellen, Anlass/Änderung/Wirkung, Gegenüberstellung als neue Fassung im Archiv, Berechtigung",
+    "file": "apps/server/test/stage53.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-135"
+    ]
+  },
+  {
+    "id": "T-339",
+    "title": "Zwischenbilder aus dem Video zusätzlich zu den Standbildern, abschaltbar",
+    "file": "apps/server/test/stage53.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-137"
+    ]
+  },
+  {
+    "id": "T-340",
+    "title": "Vorher/Nachher mit Schieberegler und Gegenüberstellung im Archiv, PowerPoint im Export – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-135",
+      "NFR-136"
+    ]
+  },
+  {
+    "id": "T-341",
+    "title": "Zwischenspeicher der Übersicht: höchstens 30 s, sofort verworfen bei Änderungen (Einheit)",
+    "file": "apps/server/test/stage54.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-139"
+    ]
+  },
+  {
+    "id": "T-342",
+    "title": "Übersicht oneSCM_Metadaten bleibt nach Import und Labeln aktuell",
+    "file": "apps/server/test/stage54.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-139"
+    ]
+  },
+  {
+    "id": "T-343",
+    "title": "Textbausteine: anlegen, wiederkehrenden Absatz verknüpfen, einfügen, neue Fassung in Entwürfe übernehmen, eingereichte Kapitel überspringen, eigener Text löst die Verknüpfung, ablegen",
+    "file": "apps/server/test/stage54.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-138"
+    ]
+  },
+  {
+    "id": "T-344",
+    "title": "Textbausteine in der Oberfläche: wiederkehrenden Absatz übernehmen, verknüpfen, neue Fassung in Kapitel übernehmen – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-138"
+    ]
+  },
+  {
+    "id": "T-345",
+    "title": "LanguageTool: Markdown neutralisieren ohne Stellen zu verschieben, Treffer übernehmen, Maskierungsfehler und doppelte Funde vermeiden, nur lokale Adressen (Einheit)",
+    "file": "apps/server/test/stage55.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-140"
+    ]
+  },
+  {
+    "id": "T-346",
+    "title": "Stilprüfung mit lokalem LanguageTool: Funde mit Korrektur, Kapitelprüfung mit Zwischenspeicher, Status; nicht erreichbar bzw. nicht lokal: eigene Regeln",
+    "file": "apps/server/test/stage55.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-140"
+    ]
+  },
+  {
+    "id": "T-347",
+    "title": "Ansprechperson je Markt mit Vertretung: Länderreview automatisch zuweisen, Vertretung prüft, gesperrte Ansprechperson, „Meine Länderreviews“, Berechtigung",
+    "file": "apps/server/test/stage55.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-141"
+    ]
+  },
+  {
+    "id": "T-348",
+    "title": "Ansprechperson je Markt in den Einstellungen, Länderreview automatisch, „Meine Länderreviews“ der Vertretung, Status LanguageTool – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-140",
+      "NFR-141"
+    ]
+  },
+  {
+    "id": "T-349",
+    "title": "Regelsätze: Regelbasiertes Schreiben und STE-Grundregeln mit Fundstellen, Regeln abschaltbar",
+    "file": "apps/server/test/stage56.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-142"
+    ]
+  },
+  {
+    "id": "T-350",
+    "title": "Vale-Stile lesen: existence, substitution mit Korrektur, occurrence; nicht unterstützte Regeln und unsichere Muster",
+    "file": "apps/server/test/stage56.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-143"
+    ]
+  },
+  {
+    "id": "T-351",
+    "title": "Regelsätze je Projekt: einschalten, Regel abschalten, Vale-Stil als JSON und ZIP, Wirkung in Stil- und Kapitelprüfung, Berechtigung",
+    "file": "apps/server/test/stage56.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-142",
+      "NFR-143"
+    ]
+  },
+  {
+    "id": "T-352",
+    "title": "Benachrichtigung zum Länderreview an Ansprechperson und Vertretung, Ergebnis an die anfordernde Person",
+    "file": "apps/server/test/stage56.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-144"
+    ]
+  },
+  {
+    "id": "T-353",
+    "title": "Regelsätze im Schreibstil einschalten, Vale-Stil einlesen, Fund in der Prüfung; Benachrichtigung führt zur Übersetzung – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-142",
+      "NFR-143",
+      "NFR-144"
+    ]
+  },
+  {
+    "id": "T-354",
+    "title": "UI-Begriff: im Fließtext gemeldet, in Menüpfad und Anführungszeichen erlaubt, KI-Hinweis",
+    "file": "apps/server/test/stage57.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-145"
+    ]
+  },
+  {
+    "id": "T-355",
+    "title": "Terminologie: Merkmal UI-Begriff pflegen, Wirkung in der Stilprüfung, SYNONYME.csv übernehmen (nur entschiedene Zeilen)",
+    "file": "apps/server/test/stage57.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-145"
+    ]
+  },
+  {
+    "id": "T-356",
+    "title": "Terminologie „MO-Prüfungen“ mit UI-Begriff „MO Checks“ in der Oberfläche, Stilprüfung mit Korrektur – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-145"
+    ]
+  },
+  {
+    "id": "T-357",
+    "title": "Einheitliche SVG-Icons in Navigation und Startseite, ohne Emoji, für Screenreader ausgeblendet, eingeklappt und dunkel – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-146"
+    ]
+  },
+  {
+    "id": "T-358",
+    "title": "Seiten ohne bunte Emoji (Einlesen, Schreibstil, Optimierungen, Rückmeldungen, Leseransicht, Kapitel-Assistent), Format-Icons – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-146"
+    ]
+  },
+  {
+    "id": "T-359",
+    "title": "Designvorlagen rendern: Quick Reference Guide und Handbuch-Kapitel (Seitenformat, Kopf-/Fußzeile, Überblick, Boxen, Icons, keine Skripte, Maskierung)",
+    "file": "apps/server/test/stage60.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-147"
+    ]
+  },
+  {
+    "id": "T-360",
+    "title": "Export html mit design quickref/fachdoku, Muster je Vorlage, Layoutfelder Zusatz/Dokumentart/Links, Prüfungen",
+    "file": "apps/server/test/stage60.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-147"
+    ]
+  },
+  {
+    "id": "T-361",
+    "title": "Designvorlagen in der Oberfläche: Muster ansehen, für den Export wählen, Layoutfelder – barrierefrei (auch die Muster)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-147"
+    ]
+  },
+  {
+    "id": "T-362",
+    "title": "Browser-Druck: Argumente (headless, ohne Netz, eigenes Profil, Sandbox nur abschaltbar), PDF-Prüfung, verständliche Fehler, Temp-Ordner aufgeräumt",
+    "file": "apps/server/test/stage61.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-148"
+    ]
+  },
+  {
+    "id": "T-363",
+    "title": "Export pdf mit design und Muster als PDF mit Ersatzbrowser; formats; ohne Browser 400, defekter Browser 503; PDF ohne Design unverändert",
+    "file": "apps/server/test/stage61.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-148"
+    ]
+  },
+  {
+    "id": "T-364",
+    "title": "PDF im Design in der Oberfläche: Hinweis, Muster als PDF, Export als Quick Reference Guide und Handbuch-Kapitel – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-148"
+    ]
+  },
+  {
+    "id": "T-365",
+    "title": "Anpassung je Vorlage: Farben, Schriften und Logo-Position im CSS, Standard unverändert, Prüfung von Format, Kontrast und Auswahl",
+    "file": "apps/server/test/stage62.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-149"
+    ]
+  },
+  {
+    "id": "T-366",
+    "title": "Anpassung speichern (Administration), Vorschau ohne Speichern, Wirkung in Muster und Export, Firmen-Layout lässt sie stehen, zurücksetzen, Audit",
+    "file": "apps/server/test/stage62.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-149"
+    ]
+  },
+  {
+    "id": "T-367",
+    "title": "Designvorlagen anpassen in den Einstellungen: Kontrastprüfung sperrt Speichern, Vorschau folgt, speichern und zurücksetzen – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-149"
+    ]
+  },
+  {
+    "id": "T-368",
+    "title": "Designvorlagen als Word: Querformat mit zwei Spalten bzw. Hochformat mit Kopfzeile, Inhalte, Icons, Anpassung, Formatvorlagen, Nummerierung je Liste",
+    "file": "apps/server/test/stage63.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-150"
+    ]
+  },
+  {
+    "id": "T-369",
+    "title": "Export und Muster als Word im Design; Prüffassung nur im Standard; Standard-Word nummeriert je Liste neu",
+    "file": "apps/server/test/stage63.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-150"
+    ]
+  },
+  {
+    "id": "T-370",
+    "title": "Muster als Word und Export Word im Design ohne Prüffassung in der Oberfläche – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-150"
+    ]
+  },
+  {
+    "id": "T-371",
+    "title": "Designvorlagen als Foliensatz: Titelfolie mit Überblick, Karten, Kennzahlen, Boxen, Tabelle, Fortsetzung, Nummerierung, Anpassung, eigener Import",
+    "file": "apps/server/test/stage64.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-151"
+    ]
+  },
+  {
+    "id": "T-372",
+    "title": "Export und Muster als PowerPoint im Design; Standard-PowerPoint unverändert",
+    "file": "apps/server/test/stage64.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-151"
+    ]
+  },
+  {
+    "id": "T-373",
+    "title": "Muster als PowerPoint und Export PowerPoint im Design in der Oberfläche – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-151"
+    ]
+  },
+  {
+    "id": "T-374",
+    "title": "Lesestil Handbuch-Kapitel: Einstellung (nur Administration, geprüft), Online-Hilfe mit Farben, Schriften, Balken und Icons der Anpassung; Standard unverändert",
+    "file": "apps/server/test/stage65.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-152"
+    ]
+  },
+  {
+    "id": "T-375",
+    "title": "Lesestil in den Einstellungen wählen, Leseransicht mit Hauptfarbe und Balken, zurück auf Standard – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-152"
+    ]
+  },
+  {
+    "id": "T-376",
+    "title": "Prüfbericht Barrierefreiheit (neun Prüfungen) für getaggte und ungetaggte PDFs, Druckschalter für Tags und Lesezeichen, Kennzahlen als Liste",
+    "file": "apps/server/test/stage66.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-153"
+    ]
+  },
+  {
+    "id": "T-377",
+    "title": "Export als PDF mit Prüfbericht: im Design getaggt, im Standard mit Lücken; andere Formate ohne Bericht",
+    "file": "apps/server/test/stage66.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-153"
+    ]
+  },
+  {
+    "id": "T-378",
+    "title": "Barrierefreies PDF im Design mit Chromium: Prüfbericht ohne Befund, Standard-PDF mit Hinweis – barrierefrei",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-153"
+    ]
+  },
+  {
+    "id": "T-379",
+    "title": "Kontexthilfe im Lesestil: CSS der Anpassung, Warnbox mit Icon und Beschriftung, Schaltflächen in der Hauptfarbe; Rückmeldung mit Icons statt Emoji; ohne Skripte",
+    "file": "apps/server/test/stage67.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-154"
+    ]
+  },
+  {
+    "id": "T-380",
+    "title": "Eingebettete Kontexthilfe im Lesestil im Browser: Balken, Farbe, Box mit Icon, Schaltfläche „Ja“ – axe ohne Befund",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-154"
+    ]
+  },
+  {
+    "id": "T-381",
+    "title": "Prüfbericht Word und PowerPoint: Designvorlagen ohne Befund, Icons dekorativ, eindeutige Bild-IDs, Folientitel; Lücken (Alternativtext, Kopfzeile, Überschrift, Titel, Folientitel) werden erkannt",
+    "file": "apps/server/test/stage68.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-155"
+    ]
+  },
+  {
+    "id": "T-382",
+    "title": "Export als Word und PowerPoint im Standard und in beiden Designvorlagen mit Prüfbericht ohne Befund; Sprache de-DE",
+    "file": "apps/server/test/stage68.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-155"
+    ]
+  },
+  {
+    "id": "T-383",
+    "title": "Prüfbericht Barrierefreiheit (Word) und (PowerPoint) nach dem Export im Design ohne Befund – axe ohne Befund",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-155"
+    ]
+  },
+  {
+    "id": "T-384",
+    "title": "Prüfbericht HTML: Designvorlagen und Standard ohne Befund; Lücken (Sprache, Titel, Hauptbereich, Überschriftensprung, Alternativtext, unbenanntes Icon, Tabelle ohne Kopfzelle, Link ohne Namen) werden erkannt",
+    "file": "apps/server/test/stage69.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-156"
+    ]
+  },
+  {
+    "id": "T-385",
+    "title": "Export als HTML im Standard und in beiden Designvorlagen mit Prüfbericht ohne Befund; Markdown und JSON ohne Bericht",
+    "file": "apps/server/test/stage69.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-156"
+    ]
+  },
+  {
+    "id": "T-386",
+    "title": "Prüfbericht Barrierefreiheit (HTML) nach dem Export im Design und im Standard ohne Befund – axe ohne Befund",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-156"
+    ]
+  },
+  {
+    "id": "T-387",
+    "title": "Stammdaten mit Lucide-Namen statt Emoji (auch über die API), Kapitelgenerator und Markdown-Export ohne Bildzeichen",
+    "file": "apps/server/test/stage70.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-157"
+    ]
+  },
+  {
+    "id": "T-388",
+    "title": "Badges der Rollen und Sparten im Export-Filter und Label-Gruppen in oneSCM_Metadaten mit SVG-Icons, ohne Emoji – axe ohne Befund",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-157"
+    ]
+  },
+  {
+    "id": "T-389",
+    "title": "Feinschliff Designvorlagen: Signalwort als Boxbeschriftung ohne Dopplung (HTML, Word, PowerPoint), Quick Reference Guide am Bildschirm ausgeglichen, Kennzahlen ohne Listeneinzug",
+    "file": "apps/server/test/stage71.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-147"
+    ]
+  },
+  {
+    "id": "T-390",
+    "title": "Quick Reference Guide zweispaltig am Bildschirm, Kennzahlen bündig, Box „Wichtig“, Schweregrade auf Deutsch in den Einstellungen – axe ohne Befund",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-147"
+    ]
+  },
+  {
+    "id": "T-391",
+    "title": "Seitenprüfung über alle 77 Seiten ohne Pfadparameter: keine rohen Status-Codes, keine farbigen Emoji, kein „undefined“/„NaN“/„[object Object]“, keine Konsolenfehler",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-158"
+    ]
+  },
+  {
+    "id": "T-392",
+    "title": "axe (WCAG 2.2 AA) ohne Befund auf allen 77 Seiten ohne Pfadparameter, mit den Daten des E2E-Laufs",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-393",
+    "title": "axe (WCAG 2.2 AA, u. a. Kontrast) ohne Befund auf allen 77 Seiten im dunklen Modus, mit den Daten des E2E-Laufs",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-394",
+    "title": "Alle 77 Seiten bei 390 px Breite: kein waagerechtes Scrollen der Seite (WCAG 1.4.10), axe ohne Befund, scrollende Tabellen per Tastatur erreichbar",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-395",
+    "title": "Tastaturbedienung aller 77 Seiten: Sprunglink als erster Tabstopp, sichtbarer und nicht verdeckter Fokus, kein Kreisen; Fokus auf der Überschrift nach Weiterleitung per Klick",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-396",
+    "title": "Alle 77 Seiten bei 320 px (400 % Zoom) ohne waagerechtes Scrollen; mit vergrößerten Textabständen bei 320 und 1280 px kein abgeschnittener Text",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-397",
+    "title": "Hinweise ohne Ortsangaben in allen Oberflächentexten und Sprachen der Leseransicht; Leseransicht auf dem Smartphone verweist auf „Inhalt“",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-398",
+    "title": "Eingabefelder und Fokusrahmen mit mindestens 3:1 Kontrast auf allen 77 Seiten, hell und dunkel",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-399",
+    "title": "WEEKLY_DIGEST=0 plant keine automatische Wochenübersicht ein; ohne die Einstellung bleibt sie eingeplant",
+    "file": "apps/server/test/stage80.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-51"
+    ]
+  },
+  {
+    "id": "T-400",
+    "title": "Statusmeldungen für Screenreader: Live-Regionen von Anfang an vorhanden, gleiche Meldung erneut angesagt, Fehler als Alarm",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-401",
+    "title": "Seitentitel: eigener Titel je Seite, Detailseiten nennen das geöffnete Kapitel bzw. die Gliederung",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-402",
+    "title": "Sichtbare Beschriftung im zugänglichen Namen: Schaltflächen, Links und Felder mit eigenem Namen enthalten ihren sichtbaren Text",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-403",
+    "title": "Dialoge und Erklärungen per Tastatur: Fokus im Dialog, Tippen ohne Fokusverlust, Esc schließt, Fokus zurück; Glossar-Erklärung erreichbar und mit Esc schließbar",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-404",
+    "title": "Screenshot-Editor ohne Ziehen: Rahmen, Pfeil, Unkenntlich, Lupe, Zuschneiden und Verschieben mit zwei Klicks; Esc bricht ab",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-405",
+    "title": "Gesperrte Schaltflächen sagen, was fehlt: jede gesperrte Hauptschaltfläche nennt die fehlenden Angaben und ist mit dem Hinweis verknüpft",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-406",
+    "title": "Gliederung jeder Seite: genau eine Überschrift erster Ebene am Anfang, keine übersprungenen Ebenen, aller Inhalt in Bereichen, Bereiche eindeutig benannt",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-407",
+    "title": "Beschriftung der Hinweisboxen: Signalwort nur, wenn es zur Art passt; Standardbeschriftung „Tipp“; Beschriftung auch vor Listen",
+    "file": "apps/server/test/stage89.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-408",
+    "title": "Word: Fortsetzung einer nummerierten Liste nach einer verschachtelten Liste zählt mit der äußeren Liste weiter",
+    "file": "apps/server/test/stage89.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-409",
+    "title": "Designvorlagen: Titel und Fußzeile können den Stilblock nicht beenden; Lesefassung ohne Version; nur echte Vorlagen; gleiche Bilder in PowerPoint einmal",
+    "file": "apps/server/test/stage90.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-410",
+    "title": "LanguageTool-Funde neben satzweiten Befunden, Pause nach Verbindungsfehler, unsichere Vale-Muster abgelehnt",
+    "file": "apps/server/test/stage91.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-411",
+    "title": "Ansprechperson ist Pflicht; verworfene Begriffe nicht übernommen; Vale-Stil behält Einstellungen beim erneuten Einlesen",
+    "file": "apps/server/test/stage91.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-412",
+    "title": "Übersicht nach dem COMMIT verworfen, keine Berechnung aus der Zeit eines Schreibzugriffs gespeichert; XLIFF mit Gebietsschema",
+    "file": "apps/server/test/stage92.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-413",
+    "title": "Neue Absätze aus Word in der Reihenfolge der Datei; Fehlerliste nur im eigenen Projekt; nur ein Triage-Lauf zugleich",
+    "file": "apps/server/test/stage92.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-414",
+    "title": "Lokale Adressen: private Bereiche nur als echte IPv4-Adresse",
+    "file": "apps/server/test/stage93.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-415",
+    "title": "Triage-Entscheidung bei großen Läufen, gelöschte Triage-Labels bleiben weg, Entscheidung nur für frühere Vorschläge, gemerkte Zuordnung, Backlog → produktiv, Bild ohne Maße, Aufgaben nach Kapitel 50",
+    "file": "apps/server/test/stage93.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-416",
+    "title": "Wortgrenzen mit Umlauten in der Triage; ausgeschaltete Stellen bleiben bei erneuter Erkennung aus",
+    "file": "apps/server/test/stage94.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-417",
+    "title": "Inhalts-Dashboard ohne ausgeschlossene Chunks, GOAL-Anteil „freigegeben“ höchstens 100 %, erneute Erkennung behält ausgeschaltete Stellen",
+    "file": "apps/server/test/stage94.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-418",
+    "title": "Warnblock ohne Signalwort im Text, Einleitung vor der ersten Kapitelmarke, Namen in einem Ausdruck, alte Importeinstellungen",
+    "file": "apps/server/test/stage95.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-419",
+    "title": "FAQ-Übersetzung mit Namensliste, Quick Guide ohne doppelte Warnungen, Grenze der Suche gemeldet, Bildarchiv",
+    "file": "apps/server/test/stage95.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-420",
+    "title": "Übersetzungswunsch mit Zyklus: erfüllt, veraltet, erneut gewünscht und gemeldet",
+    "file": "apps/server/test/stage96.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-421",
+    "title": "FAQ der Online-Hilfe nach Rolle, Rückmeldung nur eine Aufgabe, Stilregeln (CSV-Formeln, fehlerhafter Import), Blocktyp, Trefferzahl der Suche",
+    "file": "apps/server/test/stage96.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-422",
+    "title": "Varianten-Export mit leerer Rollenauswahl, Befunde an der Gliederungsversion, Übersetzungsstand ohne Variantenkapitel, doppelte Schnipsel beim Abgleich",
+    "file": "apps/server/test/stage97.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-423",
+    "title": "Gesperrte Benutzer nicht mehr als Beteiligte, Nominalstil auch mit Umlaut am Wortanfang",
+    "file": "apps/server/test/stage97.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-424",
+    "title": "Abgleich: Push während des laufenden Abgleichs wird nachgeholt, abgebrochener Abgleich plant weiter; API-Token mit den heutigen Rechten des Erstellers",
+    "file": "apps/server/test/stage98.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-425",
+    "title": "Kontexthilfe: Seitensprache ohne Übersetzung zeigt Deutsch, Kontext-ID folgt der Datei; Verbindungsaufbau prüft die Adresse; Bild-Upload mit Grenze; Helm-Chart",
+    "file": "apps/server/test/stage98.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
     ]
   }
 ]

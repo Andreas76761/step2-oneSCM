@@ -91,7 +91,7 @@ export function evaluateGate(blocks: GateBlock[], findings: GateFinding[], opts:
     const stale = blocks.filter((b) => b.mode === 'needs_regeneration');
     checks.push({
       code: 'no_stale_blocks',
-      label: 'Keine Blöcke mit Status „needs_regeneration“',
+      label: 'Keine Absätze, die nach einer Quellenänderung neu zu generieren sind (Status „prüfen“)',
       passed: stale.length === 0,
       details: stale.map((b) => `Block ${b.id}`),
     });

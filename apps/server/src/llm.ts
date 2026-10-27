@@ -1,7 +1,10 @@
 // Anbindung von KI-Diensten für die Umformulierung (ADR-013, ENTSCHEIDUNG E-16).
 // Adapter: Anthropic Claude (Messages API), OpenAI-kompatible Chat-API (OpenAI, Azure, vLLM, Ollama …) und ein
 // Demo-Anbieter ohne Netzwerkzugriff (nur für Demo und Tests). Standard: keine Anbindung.
+import { isIPv4 } from 'node:net';
 import { extractiveAnswer } from './domain/assistant.js';
+import { pseudoLocalize, toSwissGerman, unpseudo } from './domain/translate.js';
+import { translateSignalWords } from './domain/warnings.js';
 import { extractPromptData } from './domain/rewrite.js';
 import { parseStructure } from './domain/diagrams.js';
 import { autoFix, PRESENT_RULES, type StylePhrase } from './domain/style.js';
@@ -16,6 +19,22 @@ export interface LlmConfig {
   baseUrl?: string;
   timeoutMs?: number;
   maxTokens?: number;
+  /** selbst betriebener Dienst auf diesem Rechner bzw. im eigenen Netz (z. B. Ollama): Daten verlassen die Umgebung nicht (ADR-099) */
+  local?: boolean;
+}
+
+/** Adresse liegt auf diesem Rechner oder in einem privaten Netz (Loopback, 10/8, 172.16/12, 192.168/16, .local) */
+export function isLocalUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  let host: string;
+  try {
+    host = new URL(url).hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  } catch {
+    return false;
+  }
+  if (host === 'localhost' || host === '::1' || host.endsWith('.local') || host.endsWith('.localhost')) return true;
+  // Bereiche nur für echte IPv4-Adressen – „10.example.com“ oder „127.attacker.net“ sind öffentliche Namen
+  return isIPv4(host) && (/^127\./.test(host) || /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host));
 }
 
 export interface LlmRequest {
@@ -94,10 +113,12 @@ export class AnthropicProvider implements LlmProvider {
 
 export class OpenAiCompatibleProvider implements LlmProvider {
   readonly id = 'openai' as const;
-  readonly external = true;
+  readonly external: boolean;
   readonly model: string;
   constructor(private readonly cfg: LlmConfig) {
     this.model = cfg.model;
+    // nur ausdrücklich als lokal erklärt und mit lokaler Adresse gilt der Dienst als intern
+    this.external = !(cfg.local && isLocalUrl(cfg.baseUrl));
   }
   async complete(req: LlmRequest): Promise<LlmResponse> {
     const base = (this.cfg.baseUrl ?? 'https://api.openai.com/v1').replace(/\/+$/, '');
@@ -133,23 +154,41 @@ export class DemoProvider implements LlmProvider {
       const sentences = extractiveAnswer(qa.question, qa.passages.map((p) => ({ label: p.id, text: p.text, chapter: p.chapter, section: p.section })));
       return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
     }
+    // Fragen über alle Quellen (ADR-089): ebenso extraktiv aus den Auszügen
+    const ex = data as unknown as { question?: string; excerpts?: { id: string; text: string; heading: string }[] };
+    if (ex.question && ex.excerpts) {
+      const sentences = extractiveAnswer(ex.question, ex.excerpts.map((p) => ({ label: p.id, text: p.text, chapter: p.heading, section: '' })));
+      return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
+    }
     // Schreibstil (ADR-040): automatische Regelkorrekturen statt echter Umformulierung
     const st = data as unknown as { task?: string; mode?: string; text?: string; terminology?: { preferred: string; avoid: string[] }[]; phrases?: StylePhrase[] };
     if (st.task === 'style' && typeof st.text === 'string') {
       const fixed = autoFix(st.text, st.mode === 'present' ? { rules: PRESENT_RULES } : { terms: st.terminology ?? [], phrases: st.phrases ?? [] }).text;
       return { text: JSON.stringify({ text: fixed }), usage: { inputTokens: 0, outputTokens: 0 } };
     }
+    // Kurzfassung (ADR-105, S-05): der regelbasierte Entwurf; Prüferprofile: keine zusätzlichen Funde
+    const sv = data as unknown as { task?: string; draft?: string };
+    if (sv.task === 'summary' && typeof sv.draft === 'string') return { text: JSON.stringify({ text: sv.draft }), usage: { inputTokens: 0, outputTokens: 0 } };
+    if (sv.task === 'review') return { text: JSON.stringify({ findings: [] }), usage: { inputTokens: 0, outputTokens: 0 } };
     // Bilder aus Text (ADR-041): regelbasierte Struktur statt echter Analyse
     if (st.task === 'diagram' && typeof st.text === 'string') {
       return { text: JSON.stringify(parseStructure(st.text)), usage: { inputTokens: 0, outputTokens: 0 } };
     }
     // Übersetzung (ADR-020): kennzeichnet den Text mit der Zielsprache statt wirklich zu übersetzen
-    const tr = data as unknown as { targetLanguage?: string; sentences: { n: number; text: string }[] };
+    const tr = data as unknown as { targetLanguage?: string; sourceLanguage?: string; sentences: { n: number; text: string }[] };
+    // ins Deutsche (Rückübersetzung, Releaseletter EN→DE): Pseudo-Lokalisierung rückgängig
+    if (tr.targetLanguage === 'de') {
+      const sentences = tr.sentences.map((s) => ({ text: unpseudo(s.text, tr.sourceLanguage ?? 'en'), sources: [s.n] }));
+      return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
+    }
     if (tr.targetLanguage) {
       const tag = `[${tr.targetLanguage.toUpperCase()}]`;
       const sentences = tr.sentences.map((s) => {
         const marker = s.text.match(/^\s*(?:\d+\.|[-*])\s+/)?.[0] ?? '';
-        return { text: `${marker}${tag} ${s.text.slice(marker.length)}`, sources: [s.n] };
+        // feste Bestandteile wie eine echte Übersetzung: Signalwörter der Zielsprache (ADR-083)
+        // Pseudo-Lokalisierung statt deutschem Text (Prüfung „deutsche Wörter im Zieltext“, U-02); Schweizer Hochdeutsch nach Regeln
+        const body = translateSignalWords(s.text.slice(marker.length), tr.targetLanguage!);
+        return { text: `${marker}${tag} ${tr.targetLanguage === 'de-ch' ? toSwissGerman(body) : pseudoLocalize(body)}`, sources: [s.n] };
       });
       return { text: JSON.stringify({ sentences }), usage: { inputTokens: 0, outputTokens: 0 } };
     }

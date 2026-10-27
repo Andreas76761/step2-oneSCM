@@ -1,10 +1,9 @@
+import { ArrowUpRightIcon, CircleDashedIcon, CircleXIcon, InfoIcon, LightbulbIcon, ListChecksIcon, LockIcon, LockOpenIcon, MessageSquareIcon, PaletteIcon, PuzzleIcon, SaveIcon, SparklesIcon, SpellCheckIcon, TriangleAlertIcon, WandSparklesIcon, XIcon, type LucideIcon } from 'lucide-react';
+import { BlockerIcon, Ico, OkMark } from '../components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, get, patch, post } from '../api';
-import {
-  Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad,
-  Modal, activatable,
-} from '../components/ui';
+import { Gated, Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad, Modal, activatable, statusLabel, useDocTitle } from '../components/ui';
 import { DiagramStudio } from '../components/DiagramStudio';
 import { MarkedText, SentenceEditor, type Analysis } from './Style';
 import { SourceViewer } from './Sources';
@@ -12,7 +11,8 @@ import { DiscussionPanel } from './Discussion';
 
 const REWRITABLE = ['paragraph', 'list', 'note', 'tip', 'warning'];
 
-const KIND_LABEL: Record<string, string> = { paragraph: 'Absatz', list: 'Liste', note: 'ℹ️ Hinweis', tip: '💡 Tipp', warning: '⚠️ Warnung', xref: '↗️ Querverweis', gap: '⚠ Lücke', table: 'Tabelle', code: 'Code' };
+const KIND_ICON: Record<string, LucideIcon> = { note: InfoIcon, tip: LightbulbIcon, warning: TriangleAlertIcon, xref: ArrowUpRightIcon, gap: CircleDashedIcon };
+const KIND_LABEL: Record<string, string> = { paragraph: 'Absatz', list: 'Liste', note: 'Hinweis', tip: 'Tipp', warning: 'Warnung', xref: 'Querverweis', gap: 'Lücke', table: 'Tabelle', code: 'Code' };
 
 /** Kapitel nach Handbuch gruppieren: Quellenkapitel zuerst, danach je Handbuch-Variante (ADR-034) */
 function groupByHandbook(chapters: any[], outlines: any[]) {
@@ -36,6 +36,7 @@ export function WorkshopPage() {
   const chapters = useLoad<any[]>('/chapters?outline=all');
   const outlines = useLoad<any>('/outlines');
   const chapter = chapters.data?.find((c) => c.id === chapterId);
+  useDocTitle('Kapitelwerkstatt', chapter?.title);
   const [versionId, setVersionId] = useState<string | null>(null);
   const version = useLoad<any>(versionId ? `/chapter-versions/${versionId}` : null, [versionId]);
   const llm = useLoad<any>('/llm/status');
@@ -78,7 +79,29 @@ export function WorkshopPage() {
     }
   };
 
+  // Seitenkopf vor dem Raster: Die Seite beginnt mit der Überschrift der ersten Ebene, danach Inhaltsverzeichnis und Kapitel
   return (
+    <>
+    <header className="page-head">
+      <div>
+        <h1>Kapitelwerkstatt</h1>
+        <p className="muted">{chapter?.title ?? 'Kapitel wählen'}</p>
+      </div>
+      <div className="actions">
+        {chapter && chapter.versions.length > 0 && (
+          <select aria-label="Version" value={versionId ?? ''} onChange={(e) => setVersionId(e.target.value)}>
+            {chapter.versions.map((x: any) => <option key={x.id} value={x.id}>Version {x.versionNo} ({statusLabel(x.status)})</option>)}
+          </select>
+        )}
+        {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}
+        {v && <Link className="btn" to={`/anleitungs-check/${v.id}`}><ListChecksIcon className="btn-icon" aria-hidden="true" size={16} />Anleitungs-Check</Link>}
+        {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}><SpellCheckIcon className="btn-icon" aria-hidden="true" size={16} />Stil anzeigen</button>}
+        {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}><WandSparklesIcon className="btn-icon" aria-hidden="true" size={16} />Stil korrigieren</button>}
+        {v && me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin') && <SaveTemplateButton versionId={v.id} title={v.title} />}
+        {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}><SparklesIcon className="btn-icon" aria-hidden="true" size={16} />Kapitel umformulieren</button>}
+        {chapter && <button className="btn primary" onClick={regenerate}>{chapter.versions.length ? 'Neu generieren' : 'Generieren'}</button>}
+      </div>
+    </header>
     <div className="workshop">
       <aside className="ws-left" aria-label="Inhaltsverzeichnis">
         <h2>Inhaltsverzeichnis</h2>
@@ -91,7 +114,7 @@ export function WorkshopPage() {
               <button className="btn link" onClick={() => navigate(`/werkstatt/${c.id}`)}>{c.title}</button>
               <div className="small">
                 {c.versions[0] ? <Status s={c.versions[0].status} /> : <span className="muted">nicht generiert</span>}
-                {c.openBlockers > 0 && <span className="tag sev-blocker">⛔ {c.openBlockers}</span>}
+                {c.openBlockers > 0 && <span className="tag sev-blocker"><BlockerIcon />{c.openBlockers}<span className="sr-only"> offene Blocker</span></span>}
               </div>
               {c.id === chapterId && (
                 <div className="coverage small">
@@ -107,27 +130,9 @@ export function WorkshopPage() {
       </aside>
 
       <section className="ws-main">
-        <header className="page-head">
-          <div>
-            <h1>Kapitelwerkstatt</h1>
-            <p className="muted">{chapter?.title ?? 'Kapitel wählen'}</p>
-          </div>
-          <div className="actions">
-            {chapter && chapter.versions.length > 0 && (
-              <select aria-label="Version" value={versionId ?? ''} onChange={(e) => setVersionId(e.target.value)}>
-                {chapter.versions.map((x: any) => <option key={x.id} value={x.id}>Version {x.versionNo} ({x.status})</option>)}
-              </select>
-            )}
-            {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}
-            {v && <Link className="btn" to={`/anleitungs-check/${v.id}`}>🔍 Anleitungs-Check</Link>}
-            {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}>🖋️ Stil anzeigen</button>}
-            {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}>🖋️ Stil korrigieren</button>}
-            {v && me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin') && <SaveTemplateButton versionId={v.id} title={v.title} />}
-            {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}>✨ Kapitel umformulieren</button>}
-            {chapter && <button className="btn primary" onClick={regenerate}>{chapter.versions.length ? 'Neu generieren' : 'Generieren'}</button>}
-          </div>
-        </header>
         <ErrorBox error={version.error} />
+        {chapterId && <InstructionBanner chapterId={chapterId} />}
+        {chapterId && <PipelineBanner chapterId={chapterId} />}
         {!v && <Empty>Für dieses Kapitel gibt es noch keine generierte Version.</Empty>}
         {styleOn && styleData.data && (
           <p className="small" role="status">
@@ -170,12 +175,13 @@ export function WorkshopPage() {
         {tab === 'sources' && <SourcesTab block={selectedBlock} />}
         {tab === 'discussion' && (selectedBlock
           ? <DiscussionPanel entityType="block" entityId={selectedBlock.lineageId} canEdit={!!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin')} />
-          : <Empty>Block in der Mitte auswählen, um die Diskussion zu sehen – sie bleibt über neue Versionen erhalten.</Empty>)}
+          : <Empty>Wählen Sie im Kapitel einen Absatz, um die Diskussion zu sehen – sie bleibt über neue Versionen erhalten.</Empty>)}
         {tab === 'findings' && chapterId && <FindingsTab chapterId={chapterId} />}
         {tab === 'history' && <HistoryTab block={selectedBlock} editable={editable} onRestored={refresh} />}
         {tab === 'approval' && v && <ApprovalPanel version={v} onApproved={refresh} />}
       </aside>
     </div>
+    </>
   );
 }
 
@@ -223,13 +229,14 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
   return (
     <article className={`block kind-${b.kind} mode-${b.mode} ${selected ? 'selected' : ''}`} {...activatable(onSelect)} aria-current={selected ? 'true' : undefined} aria-label={`Block ${KIND_LABEL[b.kind] ?? b.kind}`}>
       <div className="block-meta">
-        <span className="tag">{KIND_LABEL[b.kind] ?? b.kind}</span>
+        <span className="tag">{KIND_ICON[b.kind] && <Ico icon={KIND_ICON[b.kind]} size={14} />}{KIND_LABEL[b.kind] ?? b.kind}</span>
         <Status s={b.mode} />
         {b.scopeStatus !== 'confirmed' && <Status s={b.scopeStatus} />}
         <RoleBadges codes={b.roles.filter((r: string) => r !== 'all')} />
         <DivisionBadges codes={b.divisions.filter((d: string) => d !== 'all')} />
         {b.market && <span className="tag">Markt {b.market}</span>}
         {b.release && <span className="tag">Release {b.release}</span>}
+        {b.moduleId && <span className="tag" title="Absatz aus einem Textbaustein – gepflegt unter „Textbausteine“; eigener Text löst die Verknüpfung"><Ico icon={PuzzleIcon} />Textbaustein F{b.moduleVersion}</span>}
         <span className="small muted">{b.sources.length ? `${b.sources.length} Quelle(n)` : b.justification ? 'manuell begründet' : 'ohne Evidenz'} · v{b.versionNo}</span>
       </div>
       {mode === 'edit' ? (
@@ -260,7 +267,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
       )}
       {proposal && <RewriteProposal proposal={proposal} block={b} llm={llm} onClose={() => setProposal(null)} onDecided={() => (setProposal(null), onChanged())} />}
       {b.justification && <p className="small muted">Begründung: {b.justification}</p>}
-      {b.comment && <p className="small comment">💬 {b.comment}</p>}
+      {b.comment && <p className="small comment"><Ico icon={MessageSquareIcon} />{b.comment}</p>}
       {mode === 'classify' && <ClassifyForm block={b} onDone={() => (setMode('view'), onChanged())} />}
       {imageOpen && (
         // Bild aus diesem Absatz (ADR-042): gespeicherte Bilder werden an den Absatz angehängt
@@ -277,8 +284,8 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
         <div className="row-actions" onClick={(e) => e.stopPropagation()}>
           {!locked && <button className="btn small" onClick={() => setMode('edit')}>Bearbeiten</button>}
           {!locked && <button className="btn small" onClick={() => setMode('classify')}>Zuordnen</button>}
-          {!locked && <button className="btn small" onClick={() => setImageOpen(true)}>🎨 Bild erzeugen</button>}
-          {!locked && canRewrite && !proposal && <button className="btn small" disabled={busy} onClick={requestRewrite}>{busy ? 'KI formuliert …' : '✨ KI-Vorschlag'}</button>}
+          {!locked && <button className="btn small" onClick={() => setImageOpen(true)}><PaletteIcon className="btn-icon" aria-hidden="true" size={16} />Bild erzeugen</button>}
+          {!locked && canRewrite && !proposal && <button className="btn small" disabled={busy} onClick={requestRewrite}>{busy ? 'KI formuliert …' : <><SparklesIcon className="btn-icon" aria-hidden="true" size={16} />KI-Vorschlag</>}</button>}
           {!locked && prev && <button className="btn small" aria-label="nach oben" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { position: prev.position - 5 }), 'Verschoben.')}>↑</button>}
           {!locked && next && <button className="btn small" aria-label="nach unten" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { position: next.position + 5 }), 'Verschoben.')}>↓</button>}
           {!locked && (
@@ -287,8 +294,8 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
               {ref?.sections.filter((s) => s.code !== b.section).map((s) => <option key={s.code} value={s.code}>{s.title}</option>)}
             </select>
           )}
-          <button className="btn small" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { mode: locked ? 'manually_edited' : 'locked' }), locked ? 'Block entsperrt.' : 'Block gesperrt.')}>{locked ? '🔓 Entsperren' : '🔒 Sperren'}</button>
-          <button className="btn small" onClick={() => { const c = prompt('Kommentar', b.comment ?? ''); if (c !== null) void run(() => patch(`/content-blocks/${b.id}`, { comment: c }), 'Kommentar gespeichert.'); }}>💬</button>
+          <button className="btn small" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { mode: locked ? 'manually_edited' : 'locked' }), locked ? 'Block entsperrt.' : 'Block gesperrt.')}>{locked ? <><Ico icon={LockOpenIcon} />Entsperren</> : <><Ico icon={LockIcon} />Sperren</>}</button>
+          <button className="btn small" onClick={() => { const c = prompt('Kommentar', b.comment ?? ''); if (c !== null) void run(() => patch(`/content-blocks/${b.id}`, { comment: c }), 'Kommentar gespeichert.'); }} aria-label="Kommentar" title="Kommentar"><Ico icon={MessageSquareIcon} /></button>
           {!locked && <button className="btn small danger" onClick={() => { const r = prompt('Grund für das Löschen (wird protokolliert)'); if (r !== null) void run(() => del(`/content-blocks/${b.id}?reason=${encodeURIComponent(r)}`), 'Block gelöscht – über Historie wiederherstellbar.'); }}>Löschen</button>}
         </div>
       )}
@@ -334,7 +341,7 @@ function StyleBatch({ version, llm, onClose, onChanged }: { version: any; llm: a
           const r = await post<any>('/style/rewrite', { text: b.text, mode: m });
           if (r.text.trim() !== b.text.trim()) {
             out.push({ id: b.id, section: b.sectionTitle, versionNo: b.versionNo, before: b.text, after: r.text, lostNumbers: r.lostNumbers,
-              note: r.lostNumbers.length ? `⚠ Zahlen fehlen: ${r.lostNumbers.join(', ')}` : r.method === 'ai' ? 'KI-Vorschlag' : 'Regelkorrektur' });
+              note: r.lostNumbers.length ? `Zahlen fehlen: ${r.lostNumbers.join(', ')}` : r.method === 'ai' ? 'KI-Vorschlag' : 'Regelkorrektur' });
           }
         } catch (e) {
           out.push({ id: b.id, section: b.sectionTitle, versionNo: b.versionNo, before: b.text, after: null, note: `nicht umformuliert: ${errorText(e)}` });
@@ -377,8 +384,8 @@ function StyleBatch({ version, llm, onClose, onChanged }: { version: any; llm: a
     <Modal title="Schreibstil: Kapitel automatisch korrigieren" wide onClose={onClose}>
       <div className="filters" role="group" aria-label="Art der Überarbeitung">
         <button className={`chip${mode === 'rules' ? ' active' : ''}`} aria-pressed={mode === 'rules'} disabled={!!progress} onClick={() => setMode('rules')}>Regelkorrekturen</button>
-        {llm?.enabled && <button className={`chip${mode === 'professional' ? ' active' : ''}`} aria-pressed={mode === 'professional'} disabled={!!progress} onClick={() => setMode('professional')}>✨ KI: professionell umformulieren</button>}
-        {llm?.enabled && <button className={`chip${mode === 'present' ? ' active' : ''}`} aria-pressed={mode === 'present'} disabled={!!progress} onClick={() => setMode('present')}>✨ KI: ins Präsens</button>}
+        {llm?.enabled && <button className={`chip${mode === 'professional' ? ' active' : ''}`} aria-pressed={mode === 'professional'} disabled={!!progress} onClick={() => setMode('professional')}><Ico icon={SparklesIcon} />KI: professionell umformulieren</button>}
+        {llm?.enabled && <button className={`chip${mode === 'present' ? ' active' : ''}`} aria-pressed={mode === 'present'} disabled={!!progress} onClick={() => setMode('present')}><Ico icon={SparklesIcon} />KI: ins Präsens</button>}
       </div>
       {progress && (
         <div role="status">
@@ -455,8 +462,8 @@ function ChapterRewrite({ version: v, llm, editable, open, onClose, onChanged }:
   return (
     <section className="card rewrite-batch" aria-label="KI-Umformulierung des Kapitels">
       <div className="card-head">
-        <h2>✨ KI-Umformulierung des Kapitels</h2>
-        {open && <button className="btn ghost small" onClick={onClose} aria-label="Schließen">✕</button>}
+        <h2><Ico icon={SparklesIcon} />KI-Umformulierung des Kapitels</h2>
+        {open && <button className="btn ghost small" onClick={onClose} aria-label="Schließen"><Ico icon={XIcon} /></button>}
       </div>
       {open && !running && editable && (
         <div className="form-row">
@@ -526,7 +533,7 @@ function RewriteProposal({ proposal: p, block: b, llm, onClose, onDecided }: { p
   return (
     <div className="rewrite" onClick={(e) => e.stopPropagation()} aria-label="KI-Vorschlag">
       <div className="block-meta">
-        <strong>✨ KI-Vorschlag</strong>
+        <strong><Ico icon={SparklesIcon} />KI-Vorschlag</strong>
         <span className="small muted">{p.provider} · {p.model}</span>
         <span className={`tag ${p.valid ? 'st-approved' : 'sev-blocker'}`}>{p.valid ? 'jeder Satz belegt' : 'Satzprüfung nicht bestanden'}</span>
       </div>
@@ -537,7 +544,7 @@ function RewriteProposal({ proposal: p, block: b, llm, onClose, onDecided }: { p
             {s.text}{' '}
             {s.sourceIds.map((id: string) => <span key={id} className="tag">#{seqOf(id)}</span>)}
             <span className="muted"> · Abdeckung {Math.round(s.support * 100)} %</span>
-            {s.issues.map((x: string) => <div key={x} className="sev-text">✖ {llm?.issueLabels?.[x] ?? x}</div>)}
+            {s.issues.map((x: string) => <div key={x} className="sev-text"><Ico icon={CircleXIcon} />{llm?.issueLabels?.[x] ?? x}</div>)}
             {s.details.map((d: string, j: number) => <div key={j} className="muted">{d}</div>)}
           </li>
         ))}
@@ -635,7 +642,7 @@ function SourcesTab({ block }: { block?: any }) {
     if (!block) return;
     for (const s of block.sources) get<any>(`/snippets/${s.snippetId}`).then((sn) => setTexts((t) => ({ ...t, [s.snippetId]: sn.text }))).catch(() => undefined);
   }, [block?.id]);
-  if (!block) return <Empty>Block in der Mitte auswählen, um seine Quellen zu sehen.</Empty>;
+  if (!block) return <Empty>Wählen Sie im Kapitel einen Absatz, um seine Quellen zu sehen.</Empty>;
   if (!block.sources.length) return <Empty>{block.justification ? `Keine Quelle – manuelle Begründung: ${block.justification}` : 'Dieser Block hat weder Quelle noch Begründung (Qualitätsgate!).'}</Empty>;
   return (
     <div>
@@ -736,7 +743,7 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
       <ul className="gate">
         {gate.data?.checks.map((c: any) => (
           <li key={c.code} className={c.passed ? 'ok' : 'fail'}>
-            {c.passed ? '✔' : '✖'} {c.label}
+            <OkMark ok={c.passed} /> {c.label}
             {!c.passed && <ul className="small">{c.details.slice(0, 6).map((d: string, i: number) => <li key={i}>{d}</li>)}{c.details.length > 6 && <li>… {c.details.length - 6} weitere</li>}</ul>}
           </li>
         ))}
@@ -747,7 +754,7 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
           <h3>Zur Freigabe einreichen</h3>
           <p className="small muted">Nach dem Einreichen ist die Version bis zur Entscheidung gesperrt (Freigabestufen des Projekts siehe Seite „Freigabe“).</p>
           <label className="block">Hinweis an die Freigabe (optional) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
-          <button className="btn primary" disabled={!gate.data?.passed} onClick={() => act('submit', { comment }, 'Zur Freigabe eingereicht.')}>Zur Freigabe einreichen</button>
+          <Gated className="btn primary" busy={!gate.data} missing={[gate.data && !gate.data.passed && 'alle Prüfkriterien der Freigabe erfüllt (siehe oben)']} onClick={() => act('submit', { comment }, 'Zur Freigabe eingereicht.')}>Zur Freigabe einreichen</Gated>
         </>
       )}
       {version.workflow && (
@@ -772,7 +779,8 @@ export function ApprovalPanel({ version, onApproved }: { version: any; onApprove
           <h3>Fachliche Entscheidung</h3>
           <label className="block">Kommentar (Pflicht) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
           <div className="row-actions">
-            <button className="btn primary" disabled={!gate.data?.passed || !comment.trim()} onClick={() => act('approve', { comment, decision: 'approved' }, version.workflow?.stages.length > 1 ? 'Zustimmung gespeichert.' : 'Kapitelversion freigegeben.')}>{version.workflow?.stages.length > 1 ? `Zustimmen (${version.workflow.stages[version.workflow.currentStage]?.name})` : 'Freigeben'}</button>
+            <Gated className="btn primary" busy={!gate.data} missing={[gate.data && !gate.data.passed && 'alle Prüfkriterien erfüllt', !comment.trim() && 'Kommentar']} onClick={() => act('approve', { comment, decision: 'approved' }, version.workflow?.stages.length > 1 ? 'Zustimmung gespeichert.' : 'Kapitelversion freigegeben.')}>{version.workflow?.stages.length > 1 ? `Zustimmen (${version.workflow.stages[version.workflow.currentStage]?.name})` : 'Freigeben'}</Gated>
+            {/* braucht ebenfalls einen Kommentar; den Hinweis zeigt die Schaltfläche daneben */}
             <button className="btn" disabled={!comment.trim()} onClick={() => act('approve', { comment, decision: 'rejected' }, 'Abgelehnt – Version ist wieder ein bearbeitbarer Entwurf.')}>Ablehnen</button>
             <button className="btn ghost" onClick={() => act('withdraw', { reason: comment }, 'Einreichung zurückgezogen.')}>Einreichung zurückziehen</button>
           </div>
@@ -796,14 +804,14 @@ function SaveTemplateButton({ versionId, title }: { versionId: string; title: st
   const [description, setDescription] = useState('');
   return (
     <>
-      <button className="btn" onClick={() => { setName(title.replace(/^\d+(\.\d+)*\.?\s*/, '')); setOpen(true); }}>💾 Als Vorlage</button>
+      <button className="btn" onClick={() => { setName(title.replace(/^\d+(\.\d+)*\.?\s*/, '')); setOpen(true); }}><SaveIcon className="btn-icon" aria-hidden="true" size={16} />Als Vorlage</button>
       {open && (
         <Modal title="Als Vorlage speichern" onClose={() => setOpen(false)}>
           <p className="small">Zweck, Voraussetzungen, Schritte, Ergebnis und Tipps dieses Kapitels werden zur Vorlage im Kapitel-Assistenten. Ersetzen Sie danach konkrete Begriffe bei Bedarf durch „…“.</p>
           <label className="block">Name der Vorlage <input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></label>
           <label className="block">Beschreibung (optional) <input value={description} maxLength={300} onChange={(e) => setDescription(e.target.value)} placeholder="Wofür eignet sich die Vorlage?" /></label>
           <div className="row-actions">
-            <button className="btn primary" disabled={!name.trim()} onClick={async () => {
+            <Gated className="btn primary" missing={[!name.trim() && 'Name']} onClick={async () => {
               try {
                 await post('/chapter-templates', { name, description, fromVersionId: versionId });
                 notify(`Vorlage „${name}“ gespeichert – im Kapitel-Assistenten wählbar.`);
@@ -811,11 +819,46 @@ function SaveTemplateButton({ versionId, title }: { versionId: string; title: st
               } catch (e) {
                 notify(errorText(e), 'error');
               }
-            }}>Speichern</button>
+            }}>Speichern</Gated>
             <button className="btn" onClick={() => setOpen(false)}>Abbrechen</button>
           </div>
         </Modal>
       )}
     </>
+  );
+}
+
+/** Pipeline (ADR-098): Tickets dieses Kapitels in Bearbeitung – vorab dokumentiert, aber noch nicht produktiv */
+function PipelineBanner({ chapterId }: { chapterId: string }) {
+  const r = useLoad<any>(`/work-areas?area=pipeline&chapterId=${encodeURIComponent(chapterId)}`, [chapterId]);
+  const items = (r.data?.items ?? []).filter((i: any) => i.state !== 'cancelled' && i.state !== 'live');
+  if (!items.length) return null;
+  const ready = items.filter((i: any) => i.state === 'ready').length;
+  return (
+    <aside className="alert info ws-instruction" aria-label="Pipeline">
+      <strong>Pipeline:</strong> {items.length} Ticket{items.length === 1 ? '' : 's'} für dieses Kapitel in Bearbeitung ({items.map((i: any) => i.jiraKey ?? i.title).join(', ')}) – noch nicht produktiv, nicht ins Kapitel schreiben.
+      {ready > 0 && <> {ready} davon produktiv – übernehmen.</>} <Link to="/pipeline" className="small">zur Pipeline</Link>
+    </aside>
+  );
+}
+
+/** Kapitelanweisung (ADR-096) oben in der Werkstatt – mit Vorrang für Generator und KI-Vorschläge */
+function InstructionBanner({ chapterId }: { chapterId: string }) {
+  const r = useLoad<any>(`/chapters/${chapterId}/instruction`, [chapterId]);
+  const c = r.data?.chapter;
+  const subs = (r.data?.subchapters ?? []).filter((s: any) => s.instruction.text || s.instruction.topics.length || s.instruction.excluded.length);
+  if (!c || (!c.text && !c.topics.length && !c.excluded.length && !subs.length)) return null;
+  const part = (i: any) => (
+    <>
+      {i.text && <span>{i.text} </span>}
+      {i.topics.length > 0 && <span><strong>Wichtig:</strong> {i.topics.join(', ')}. </span>}
+      {i.excluded.length > 0 && <span><strong>Nicht beschreiben:</strong> {i.excluded.join(', ')}.</span>}
+    </>
+  );
+  return (
+    <aside className="alert info ws-instruction" aria-label="Kapitelanweisung">
+      <strong>Kapitelanweisung:</strong> {part(c)} <Link to="/kapitelsteuerung" className="small">bearbeiten</Link>
+      {subs.length > 0 && <ul className="small">{subs.map((s: any) => <li key={s.id}><em>{s.title}:</em> {part(s.instruction)}</li>)}</ul>}
+    </aside>
   );
 }

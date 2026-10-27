@@ -138,7 +138,7 @@ export async function readerSearch(ctx: Ctx, q: unknown, drafts: boolean, lang?:
   const words = [...new Set(lower(query).split(/\s+/).filter((w) => w.length >= 2))];
   if (!words.length) throw badRequest('q: mindestens ein Suchwort mit zwei Zeichen.');
   const { shown, blocksOf, translated } = await loadShown(ctx, drafts, { lang: await readerLanguage(ctx, lang) });
-  const results: { chapterId: string; title: string; versionId: string; draft: boolean; translated: boolean; hits: number; snippet: string }[] = [];
+  const results: { chapterId: string; title: string; versionId: string; draft: boolean; translated: boolean; hits: number; titleMatch: boolean; snippet: string }[] = [];
   for (const [chapterId, v] of shown) {
     const blocks = blocksOf.get(v.id as string) ?? [];
     const title = String(v.title);
@@ -149,10 +149,11 @@ export async function readerSearch(ctx: Ctx, q: unknown, drafts: boolean, lang?:
     const block = blocks.find((b) => words.some((w) => lower(b).includes(w))) ?? blocks[0] ?? '';
     const at = Math.max(0, Math.min(...words.map((w) => lower(block).indexOf(w)).filter((i) => i >= 0), block.length) - 60);
     const snippet = `${at > 0 ? '… ' : ''}${block.slice(at, at + 180).trim()}${at + 180 < block.length ? ' …' : ''}`;
-    results.push({ chapterId, title, versionId: v.id as string, draft: v.status !== 'approved', translated: translated.has(chapterId), hits: hits + (words.some((w) => lower(title).includes(w)) ? 100 : 0), snippet });
+    // Treffer im Titel zuerst – als eigenes Kennzeichen, nicht als Zuschlag auf die Trefferzahl
+    results.push({ chapterId, title, versionId: v.id as string, draft: v.status !== 'approved', translated: translated.has(chapterId), hits, titleMatch: words.some((w) => lower(title).includes(w)), snippet });
   }
-  results.sort((a, b) => b.hits - a.hits);
-  return { q: query, words, total: results.length, results: results.slice(0, 30).map((r) => ({ ...r, hits: r.hits >= 100 ? r.hits - 100 : r.hits })) };
+  results.sort((a, b) => Number(b.titleMatch) - Number(a.titleMatch) || b.hits - a.hits);
+  return { q: query, words, total: results.length, results: results.slice(0, 30).map(({ titleMatch: _t, ...r }) => r) };
 }
 
 /** Begriffe mit Erklärung: Terminologie (bevorzugter Begriff mit Definition) und Abkürzungen – längste zuerst */
@@ -201,7 +202,7 @@ type Related = {
   manual: { chapterId: string; title: string }[];
   automatic: { chapterId: string; title: string; score: number }[];
   hidden: { chapterId: string; title: string }[];
-  faq: { id: string; question: string; answer: string; language: string; score: number }[];
+  faq: { id: string; question: string; answer: string; language: string; roles: string[]; divisions: string[]; score: number }[];
 };
 
 /**
@@ -244,7 +245,7 @@ async function relatedAll(ctx: Ctx, drafts: boolean, opts: { lang?: string; vers
     const automatic = [...docs].filter(([id]) => id !== chapterId && !manualIds.includes(id) && !hiddenIds.has(id))
       .map(([id, vec]) => ({ chapterId: id, title: titleOf(id), score: Math.round(cosine(me, vec, idf) * 100) / 100 }))
       .filter((r) => r.score >= MIN_RELATED).sort((a, b) => b.score - a.score).slice(0, Math.max(0, MAX_RELATED - manual.length));
-    const faq = faqDocs.map(({ f, vec, side }) => ({ id: f.id, question: f.question, answer: f.answer, language: f.language,
+    const faq = faqDocs.map(({ f, vec, side }) => ({ id: f.id, question: f.question, answer: f.answer, language: f.language, roles: f.roles, divisions: f.divisions,
       score: Math.round(cosine(side.get(chapterId)!, vec, side === docs ? idf : shownIdf) * 100) / 100 }))
       .filter((f) => f.score >= MIN_FAQ).sort((a, b) => b.score - a.score).slice(0, 3);
     return { chapterId, manual, automatic, hidden, faq };
@@ -272,9 +273,22 @@ export async function readerRelatedMap(ctx: Ctx, drafts: boolean, lang?: unknown
   }));
 }
 
-/** Für feste Fassungen, z. B. eines Releases (Online-Hilfe, ADR-072) */
+/**
+ * Für feste Fassungen, z. B. eines Releases (Online-Hilfe, ADR-072). Die öffentliche Hilfe ruft das bei jedem Aufruf und
+ * jeder Rückmeldung auf: das Ergebnis je Release und Sprache 60 s vorhalten (Verweise und FAQ ändern sich selten).
+ */
+const RELATED_TTL_MS = 60_000;
+const relatedCache = new Map<string, { at: number; value: Promise<Awaited<ReturnType<typeof relatedAll>>> }>();
 export async function relatedForVersions(ctx: Ctx, versionIds: string[], chapterId: string, lang: string) {
-  return (await relatedAll(ctx, false, { lang, versionIds })).of(chapterId);
+  const key = `${ctx.projectId}|${lang}|${versionIds.join(',')}`;
+  let hit = relatedCache.get(key);
+  if (!hit || Date.now() - hit.at > RELATED_TTL_MS) {
+    hit = { at: Date.now(), value: relatedAll(ctx, false, { lang, versionIds }) };
+    hit.value.catch(() => relatedCache.delete(key));
+    if (relatedCache.size >= 50) relatedCache.delete(relatedCache.keys().next().value!);
+    relatedCache.set(key, hit);
+  }
+  return (await hit.value).of(chapterId);
 }
 
 /** Verweise pflegen (Bearbeitungsrecht): Liste manueller Verweise in Reihenfolge und ausgeblendeter Vorschläge – ersetzt beide */

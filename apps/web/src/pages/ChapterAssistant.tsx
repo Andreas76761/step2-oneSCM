@@ -1,9 +1,11 @@
 // Kapitel-Assistent (ADR-052): ein Kapitel in vier Schritten schreiben – Aufgabe, Voraussetzungen, Schritte, Ergebnis –
 // mit Vorschlägen aus den Quellen statt eines leeren Editors.
+import { DownloadIcon, PencilIcon, UploadIcon, XIcon } from 'lucide-react';
+import { Ico } from '../components/icons';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, download, get, post } from '../api';
-import { Card, Empty, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
 import { scoreLabel } from './Guidance';
 
 interface Line { text: string; snippetId?: string | null }
@@ -42,7 +44,7 @@ function LineList({ label, lines, onChange, numbered, placeholder }: { label: st
               <span className="row-actions">
                 <button className="btn small" disabled={i === 0} aria-label={`${label} ${i + 1} nach oben`} onClick={() => move(i, -1)}>↑</button>
                 <button className="btn small" disabled={i === lines.length - 1} aria-label={`${label} ${i + 1} nach unten`} onClick={() => move(i, 1)}>↓</button>
-                <button className="btn small danger" aria-label={`${label} ${i + 1} entfernen`} onClick={() => onChange(lines.filter((_, j) => j !== i))}>✕</button>
+                <button className="btn small danger" aria-label={`${label} ${i + 1} entfernen`} onClick={() => onChange(lines.filter((_, j) => j !== i))}><Ico icon={XIcon} /></button>
               </span>
             </li>
           ))}
@@ -213,10 +215,10 @@ export function ChapterAssistantPage() {
               <LineList label="Hinweis" lines={hints} onChange={setHints} placeholder="z. B. Teillieferungen buchen Sie einzeln" />
             </>
           )}
-          {missing && step !== 1 && step !== 3 && <p className="small" role="status">{missing}</p>}
+          {missing && step !== 1 && step !== 3 && <p className="small" role="status" id="wizard-missing">{missing}</p>}
           <div className="row-actions wizard-nav">
             {step > 0 && <button className="btn" onClick={() => setStep(step - 1)}>← Zurück</button>}
-            {step < STEPS.length - 1 && <button className="btn primary" disabled={!!missing || loadingSugg} onClick={() => void next()}>{loadingSugg ? 'Suche Vorschläge …' : 'Weiter →'}</button>}
+            {step < STEPS.length - 1 && <button className="btn primary" disabled={!!missing || loadingSugg} aria-describedby={missing ? 'wizard-missing' : undefined} onClick={() => void next()}>{loadingSugg ? 'Suche Vorschläge …' : 'Weiter →'}</button>}
             {step === STEPS.length - 1 && <button className="btn primary" disabled={busy || !canEdit} onClick={() => void create()}>Kapitel anlegen</button>}
           </div>
           <div>
@@ -304,21 +306,21 @@ function OwnTemplates({ templates, builtins, onChanged }: { templates: any[]; bu
           </select>
         </label>
         <button className="btn small" disabled={!copyFrom} onClick={async () => { const id = copyFrom; setCopyFrom(''); await duplicate(id); }}>Als eigene Vorlage kopieren</button>
-        <button className="btn small" disabled={!templates.length} onClick={() => download('/api/v1/chapter-templates/export', 'kapitelvorlagen.json').catch((e) => notify(errorText(e), 'error'))}>📤 Alle exportieren</button>
-        <label className="btn small file-btn">📥 Importieren
+        <button className="btn small" disabled={!templates.length} onClick={() => download('/api/v1/chapter-templates/export', 'kapitelvorlagen.json').catch((e) => notify(errorText(e), 'error'))}><Ico icon={DownloadIcon} />Alle exportieren</button>
+        <label className="btn small file-btn"><Ico icon={UploadIcon} />Importieren
           <input type="file" accept=".json,application/json" className="sr-only" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void importFile(f); }} />
         </label>
       </div>
-      {!templates.length ? <p className="small muted">Noch keine eigenen Vorlagen. In der Kapitelwerkstatt macht „💾 Als Vorlage“ aus einem gelungenen Kapitel eine Vorlage; oder kopieren Sie oben eine mitgelieferte Vorlage und passen sie an. Vorlagen aus anderen Projekten übernehmen Sie per Export und Import.</p> : (
+      {!templates.length ? <p className="small muted">Noch keine eigenen Vorlagen. In der Kapitelwerkstatt macht „Als Vorlage“ aus einem gelungenen Kapitel eine Vorlage; oder kopieren Sie oben eine mitgelieferte Vorlage und passen sie an. Vorlagen aus anderen Projekten übernehmen Sie per Export und Import.</p> : (
         <ul className="plain own-templates">
           {templates.map((t) => (
             <li key={t.id}>
               <strong>{t.name}</strong>
               <span className="small muted">{t.steps.length} Schritte{t.description ? ` · ${t.description}` : ''}</span>
               <span className="row-actions">
-                <button className="btn small" onClick={() => setEditing(t)} aria-label={`Vorlage „${t.name}“ bearbeiten`}>✏️ Bearbeiten</button>
+                <button className="btn small" onClick={() => setEditing(t)} aria-label={`Vorlage „${t.name}“ bearbeiten`}><Ico icon={PencilIcon} />Bearbeiten</button>
                 <button className="btn small" onClick={() => duplicate(t.id)} aria-label={`Vorlage „${t.name}“ duplizieren`}>Duplizieren</button>
-                <button className="btn small" onClick={() => download(`/api/v1/chapter-templates/export?ids=${t.id}`, 'kapitelvorlage.json').catch((e) => notify(errorText(e), 'error'))} aria-label={`Vorlage „${t.name}“ exportieren`}>📤</button>
+                <button className="btn small" onClick={() => download(`/api/v1/chapter-templates/export?ids=${t.id}`, 'kapitelvorlage.json').catch((e) => notify(errorText(e), 'error'))} aria-label={`Vorlage „${t.name}“ exportieren`}><Ico icon={DownloadIcon} /></button>
                 <button className="btn small danger" onClick={() => run(() => api('DELETE', `/chapter-templates/${t.id}`), () => `Vorlage „${t.name}“ gelöscht.`)} aria-label={`Vorlage „${t.name}“ löschen`}>Löschen</button>
               </span>
             </li>
@@ -368,9 +370,8 @@ function TemplateEditor({ template, onClose, onSaved }: { template: any; onClose
         <label>Schritte <span className="small muted">(einer je Zeile · {steps.length} erkannt)</span><textarea rows={6} value={f.steps} onChange={set('steps')} /></label>
         <label>Ergebnis <textarea rows={2} value={f.result} onChange={set('result')} /></label>
         <label>Tipps <span className="small muted">(einer je Zeile)</span><textarea rows={3} value={f.hints} onChange={set('hints')} /></label>
-        {!steps.length && <p className="small" role="alert">Eine Vorlage braucht mindestens einen Schritt.</p>}
         <div className="row-actions">
-          <button className="btn primary" disabled={busy || !f.name.trim() || !steps.length} onClick={save}>Speichern</button>
+          <Gated className="btn primary" busy={busy} missing={[!f.name.trim() && 'Name', !steps.length && 'mindestens ein Schritt']} onClick={save}>Speichern</Gated>
           <button className="btn" onClick={onClose}>Abbrechen</button>
         </div>
       </div>

@@ -1,0 +1,19 @@
+# ADR-085 Bildarchiv mit Bildnummer, Versionen und Platzhaltern; Quick Guide, One Pager, Lesefassung, Übergänge
+
+**Status:** akzeptiert, umgesetzt in Etappe 33 (F-20, F-21, F-23, F-27, F-28, F-29 aus [docs/07](../07-bestehende-artefakte.md); erweitert ADR-029, ADR-036, ADR-042, ADR-060, ADR-063)
+
+## Kontext
+Aus den Artefakten „Screenarchiv“, „DokuPress“, „Struktur und Klickstrecke“ und „Handbuch-Werkstatt V4“ wurden am 23.10.2026 übernommen: Merkmale und Prüfregeln je Bild mit Bildabdeckung je Kapitel, Bildversionen und Platzhalterbilder, Screenshots aus der Zwischenablage, die Ausgaben „Quick Guide“ und „One Pager“, eine Lesefassung ohne Quellenbezüge mit Wasserzeichen „Entwurf“ im Druck sowie Übergänge „weiter zu Kapitel …“. Daten bleiben lokal, ohne KI.
+
+## Entscheidung
+- **Bildarchiv (F-20):** Seite „2 Schreiben › Bildarchiv“. Jedes Bild bekommt beim ersten Aufruf eine feste Bildnummer je Projekt (`B-0001` …, in der Reihenfolge des Eingangs, nie neu vergeben). Merkmale: Sprache der Oberfläche, Rollen, Sparten (nur Pkw, Van), Märkte, Release, Reiter/Menüpunkt (Navigations-Label, ADR-080) und Bildunterschrift (Bildverzeichnis). Prüfregeln je Bild: `alt_missing` (Fehler, ADR-029), `placeholder_approved` (Fehler), `placeholder_used`, `caption_missing`, `low_resolution` (< 600 px), `too_large` (> 2 MB) als Warnung, `language_missing`, `scope_missing`, `unused` als Hinweis. Bildabdeckung je Kapitel aus der neuesten Version: Bilder, Platzhalter, fehlende Alternativtexte und Schrittabsätze mit Bild (Abdeckung in %).
+- **Versionen (F-21):** Eine neue Fassung wird unter der Kennung des ersten Bildes geführt (`media_versions`); `GET /media/<sha>` liefert überall die neueste Fassung, `?original=1` genau die angefragte. Weil sich der Inhalt hinter einer Kennung ändern kann, liefert der Server `ETag` mit der Kennung der Fassung und `Cache-Control: private, no-cache` (304 bei `If-None-Match`) statt `immutable`. Eine Datei, die schon Fassung oder eigenes Bild ist, wird abgewiesen (409).
+- **Platzhalter (F-21):** SVG mit „B-000n · Platzhalter“ und Titel reserviert die nächste Bildnummer; die erste echte Fassung hebt den Platzhalter auf. Ein Platzhalter in einem freigegebenen Kapitel ist ein Fehler im Bildarchiv.
+- **Zwischenablage (F-23):** Strg+V oder „📋 Aus Zwischenablage“ (Clipboard API) lädt einen Screenshot in den Screenshot-Editor (danach ✂ Zuschneiden, ADR-049) bzw. als neue Fassung ins Bildarchiv. Nur Rasterbilder; Text in der Zwischenablage bleibt unberührt.
+- **Quick Guide und One Pager (F-27):** Export-Parameter `profile` = `full` (Standard), `quickguide` (Voraussetzungen, Schritte, Ergebnis, Warnungen als „Wichtige Hinweise“) oder `onepager` (Zweck in zwei Sätzen, Schritte, Warnungen); Kapitel ohne Schritte entfallen. Gilt für alle Formate und je Variante (`outlineId`); Titel und Dateiname tragen das Profil.
+- **Lesefassung (F-28):** `reading: true` entfernt Rollen-/Sparten-/Markt-/Release-Badges, die Versionszeile und den Abschnitt „Quellen- und Freigabestatus“. Im Browser-Druck mit Entwürfen erscheint auf jeder Seite das Wasserzeichen „ENTWURF“ (in der Druck-Sprache).
+- **Übergänge (F-29):** Tabelle `chapter_transitions` je Kapitel: Übergangstext (≤ 500 Zeichen) und optional ein anderes Folgekapitel; ohne Eintrag gilt das nächste Kapitel derselben Gliederung. Pflege in der Leseransicht (Bearbeitungsrecht); Anzeige als „Weiter mit „…““ in der Leseransicht, im Druck (nur wenn das Folgekapitel mitgedruckt wird) und im Export (`transitions`: Standard gepflegte, `true` zusätzlich automatisch, `false` keine; nur im vollständigen Handbuch, nur auf exportierte Kapitel).
+
+## Folgen
+- Migration `040_image_archive.sql`; Tests T-248 … T-250, E2E T-251; Anforderungen NFR-79, NFR-80.
+- Offen aus dem Bildbereich: F-22 (Varianten einer Maske verknüpfen), F-24 (Klickstrecke aus Screenshots), F-30 (Deckungsmatrix) – optional; F-25 mit M2, F-26 mit M6.
