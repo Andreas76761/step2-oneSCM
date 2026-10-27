@@ -59,7 +59,8 @@ export function subtitlesToMarkdown(text: string, title: string, stills: Still[]
   if (!cues.length) return { markdown: '', warnings, locators: [], skip: 'Untertitel ohne Text – übersprungen' };
   const out: string[] = [`# ${title.replace(/^#+\s*/, '')}`, ''];
   const sections = chapters.length
-    ? chapters.map((c, i) => ({ start: c.start, end: chapters[i + 1]?.start ?? Infinity, title: c.text }))
+    // was vor der ersten Kapitelmarke kommt (Einleitung), bekommt einen eigenen Abschnitt mit Zeitraum als Überschrift
+    ? [...(chapters[0].start > 0 ? [{ start: 0, end: chapters[0].start, title: '' }] : []), ...chapters.map((c, i) => ({ start: c.start, end: chapters[i + 1]?.start ?? Infinity, title: c.text }))]
     : Array.from({ length: Math.ceil((cues[cues.length - 1].end + 0.001) / BLOCK_SECONDS) }, (_, i) => ({ start: i * BLOCK_SECONDS, end: (i + 1) * BLOCK_SECONDS, title: '' }));
   const rest = [...stills].sort((a, b) => a.time - b.time);
   for (const s of sections) {

@@ -177,9 +177,10 @@ export function shapeChapters(chapters: ExportChapter[], f: ExportFilter, opts: 
       const text = extractiveSummary(sections.map((s: any) => ({ code: s.code, title: s.title, blocks: s.blocks.filter((b: any) => b.kind !== 'gap') })));
       sections = [{ code: 'summary', title: 'Kurzfassung', blocks: [{ kind: 'paragraph', text, roles: [], divisions: [], market: null, release: null }] }];
     } else if (profile !== 'full') {
-      const warnings = sections.flatMap((s: any) => s.blocks.filter((b: any) => b.kind === 'warning' && s.code !== 'steps'));
       const purpose = sections.find((s: any) => s.code === 'purpose')?.blocks[0];
       const keep = profile === 'quickguide' ? ['prerequisites', 'steps', 'result'] : ['steps'];
+      // nur Warnungen aus Abschnitten, die wegfallen – sonst stünden sie doppelt da
+      const warnings = sections.flatMap((s: any) => (keep.includes(s.code) ? [] : s.blocks.filter((b: any) => b.kind === 'warning')));
       sections = [
         ...(profile === 'onepager' && purpose ? [{ code: 'purpose', title: 'Zweck', blocks: [{ ...purpose, text: firstSentences(purpose.text, 2) }] }] : []),
         ...sections.filter((s: any) => keep.includes(s.code)),

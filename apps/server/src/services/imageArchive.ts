@@ -83,7 +83,31 @@ async function baseOf(ctx: Ctx, sha: string) {
 }
 
 /** Verwendung je Fassung in den neuesten Kapitelversionen und in Quellen, mit Alternativtext je Vorkommen */
-async function usage(ctx: Ctx, shas: string[]) {
+/** Verwendung aller Bilder auf einmal (Liste, Deckungsmatrix): je Bild die Absätze und Chunks – zwei Abfragen statt zwei je Bild */
+type UsageIndex = { blocks: Map<string, Row[]>; snippets: Map<string, Row[]> };
+async function usageIndex(ctx: Ctx): Promise<UsageIndex> {
+  const blocks = await ctx.db.all(
+    `SELECT b.id, b.text, b.section_code, c.id AS chapter_id, c.title, v.status FROM content_blocks b
+     JOIN generated_chapter_versions v ON v.id = b.chapter_version_id JOIN chapters c ON c.id = v.chapter_id
+     WHERE c.project_id = ? AND b.deleted_at IS NULL AND ${LATEST} AND b.text LIKE '%media:%'`, ctx.projectId,
+  );
+  const snippets = await ctx.db.all(
+    `SELECT s.id, s.text FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
+     WHERE d.project_id = ? AND r.is_current = 1 AND d.removed_at IS NULL AND s.text LIKE '%media:%'`, ctx.projectId,
+  );
+  const bySha = (rows: Row[]) => {
+    const m = new Map<string, Row[]>();
+    for (const r of rows) for (const sha of new Set([...String(r.text).matchAll(/media:([a-f0-9]{64})/g)].map((x) => x[1]))) m.set(sha, [...(m.get(sha) ?? []), r]);
+    return m;
+  };
+  return { blocks: bySha(blocks), snippets: bySha(snippets) };
+}
+
+async function usage(ctx: Ctx, shas: string[], idx?: UsageIndex) {
+  if (idx) {
+    const pick = (m: Map<string, Row[]>) => [...new Map(shas.flatMap((s) => m.get(s) ?? []).map((r) => [r.id as string, r])).values()];
+    return usageOf(shas, pick(idx.blocks), pick(idx.snippets).length);
+  }
   const like = shas.map(() => 'b.text LIKE ?').join(' OR ');
   const blocks = shas.length ? await ctx.db.all(
     `SELECT b.id, b.text, b.section_code, c.id AS chapter_id, c.title, v.status FROM content_blocks b
@@ -96,6 +120,10 @@ async function usage(ctx: Ctx, shas: string[]) {
      WHERE d.project_id = ? AND r.is_current = 1 AND d.removed_at IS NULL AND (${shas.map(() => 's.text LIKE ?').join(' OR ')})`,
     ctx.projectId, ...shas.map((s) => `%media:${s}%`),
   ))?.n ?? 0) : 0;
+  return usageOf(shas, blocks, snippets);
+}
+
+function usageOf(shas: string[], blocks: Row[], snippets: number) {
   const set = new Set(shas);
   const refs = blocks.flatMap((b) => imageRefs(b.text).filter((x) => x.sha && set.has(x.sha)).map((x) => ({ ...x, b })));
   const chapters = [...new Map(blocks.map((b) => [b.chapter_id, { chapterId: b.chapter_id, title: b.title, status: b.status }])).values()];
@@ -118,13 +146,13 @@ function checksFor(cur: Row, meta: Row, use: Awaited<ReturnType<typeof usage>>, 
   return out;
 }
 
-async function item(ctx: Ctx, base: Row, nav: Map<string, Row>) {
+async function item(ctx: Ctx, base: Row, nav: Map<string, Row>, idx?: UsageIndex) {
   const meta = await ctx.db.get('SELECT * FROM media_meta WHERE project_id = ? AND base_sha = ?', ctx.projectId, base.sha256);
   const versions = await ctx.db.all('SELECT * FROM media_versions WHERE project_id = ? AND base_sha = ? ORDER BY version_no', ctx.projectId, base.sha256);
   const current = versions.length ? versions[versions.length - 1].sha : base.sha256;
   const cur = (current === base.sha256 ? base : await ctx.db.get('SELECT * FROM media_assets WHERE project_id = ? AND sha256 = ?', ctx.projectId, current)) ?? base;
   const shas = versions.length ? versions.map((v) => v.sha as string) : [base.sha256 as string];
-  const use = await usage(ctx, shas);
+  const use = await usage(ctx, shas, idx);
   const n = nav.get(meta?.nav_label_id);
   // Herkunft aus einer Folie mit Gliederungs-Vorschlag (F-25) und übernommener Gliederungspunkt
   const src = await ctx.db.get('SELECT * FROM media_context WHERE project_id = ? AND sha = ?', ctx.projectId, base.sha256);
@@ -182,7 +210,8 @@ export async function listImageArchive(ctx: Ctx, opts: { q?: string; labelId?: s
   const rows = await bases(ctx);
   await ensureNumbers(ctx, rows);
   const nav = new Map((await ctx.db.all("SELECT id, name_de, name_en FROM metadata_labels WHERE project_id = ? AND label_group = 'navigation'", ctx.projectId)).map((r) => [r.id, r]));
-  let items = await Promise.all(rows.map((r) => item(ctx, r, nav)));
+  const idx = await usageIndex(ctx);
+  let items = await Promise.all(rows.map((r) => item(ctx, r, nav, idx)));
   if (opts.q?.trim()) {
     const q = opts.q.trim().toLowerCase();
     items = items.filter((i) => `${i.imageNo} ${i.title ?? ''} ${i.navigation?.nameDe ?? ''} ${i.release ?? ''} ${i.labels.map((l) => l.nameDe).join(' ')}`.toLowerCase().includes(q));

@@ -22,7 +22,8 @@ export const PASSAGES = 6;
 /** Mindestrelevanz eines Belegs: Anteil der Inhaltswörter der Frage bzw. deutliche Bedeutungsähnlichkeit */
 export const MIN_KEYWORDS = 0.3;
 export const MIN_SIMILARITY = 0.6;
-const MAX_UNITS = 20000;
+/** höchstens so viele Chunks je Frage (Speicher je Anfrage); `ASK_MAX_UNITS` überschreibt den Wert */
+const maxUnits = () => Number(process.env.ASK_MAX_UNITS) || 20000;
 const FORMATS = ['markdown', 'html', 'docx', 'pptx', 'pdf', 'mp4', 'subtitles', 'jira'];
 
 export interface AskFilters { format?: string; documentId?: string; heading?: string; labelIds?: string[] }
@@ -54,8 +55,11 @@ async function units(ctx: Ctx, f: AskFilters) {
   }
   const rows = await ctx.db.all(
     `SELECT s.id, s.seq, s.text, s.kind, s.heading_path, s.locator, s.line_start, s.line_end, d.id AS document_id, d.path, r.source_format, c.title AS chapter_title, sc.title AS subchapter_title
-     ${CHUNK_FROM} WHERE ${where.join(' AND ')} ORDER BY d.path, s.position LIMIT ${MAX_UNITS}`, ...params,
+     ${CHUNK_FROM} WHERE ${where.join(' AND ')} ORDER BY d.path, s.position LIMIT ${maxUnits() + 1}`, ...params,
   );
+  // Obergrenze (Speicher je Anfrage): darüber hinaus nicht still kürzen, sondern melden
+  const truncated = rows.length > maxUnits();
+  if (truncated) rows.length = maxUnits();
   const heading = f.heading?.toLowerCase();
   const out: { snippetId: string; seq: number; part: number | null; parts: number; text: string; context: string | null; documentId: string; path: string; format: string; headingPath: string[]; locator: unknown; lineStart: number; lineEnd: number }[] = [];
   for (const r of rows) {
@@ -68,7 +72,7 @@ async function units(ctx: Ctx, f: AskFilters) {
     if (!parts.length) out.push({ ...base, part: null, parts: 0, text: r.text, context: null });
     else for (const p of parts) out.push({ ...base, part: p.no, parts: parts.length, text: p.text, context: p.overlap });
   }
-  return out;
+  return { list: out, truncated };
 }
 
 /** Neugewichtung der Kandidaten: Überschriften-Treffer und gemeinsame Wortpaare zählen zusätzlich */
@@ -125,7 +129,8 @@ export async function askSources(ctx: Ctx, input: any, user: User, opts: { log?:
     throw unprocessable('Die Frage enthält mögliche personenbezogene Daten und wird nicht an externe Dienste übertragen.');
   }
   const sensitive = (text: string) => detectPrivacy(text, { names }).length > 0;
-  const all = (await units(ctx, filters)).filter((u) => !(ctx.embeddings.external && sensitive(u.text)));
+  const found = await units(ctx, filters);
+  const all = found.list.filter((u) => !(ctx.embeddings.external && sensitive(u.text)));
 
   // 1. hybride Suche: Begriffe (Stämme) für alle Einheiten, Vektor nur für die besten 200 nach Begriffen und alle ohne Treffer
   // aus kleinen Beständen – so bleibt die Zahl der Embeddings begrenzt
@@ -186,6 +191,7 @@ export async function askSources(ctx: Ctx, input: any, user: User, opts: { log?:
     mode = sentences.length ? 'extractive' : 'none';
   }
   if (!sentences.length) notice ??= all.length ? 'Die Quellen enthalten dazu keine Aussage.' : 'Keine Quellen im gewählten Rahmen.';
+  if (found.truncated) notice = `${notice ? `${notice} ` : ''}Durchsucht wurden nur die ersten ${maxUnits().toLocaleString('de-DE')} Chunks (nach Dateipfad) – grenzen Sie die Frage mit Filtern ein (Dokument, Label, Überschrift, Format).`;
 
   const cited = [...new Set(sentences.flatMap((s) => s.sources))];
   const sources = cited.map((label, i) => {
@@ -206,7 +212,7 @@ export async function askSources(ctx: Ctx, input: any, user: User, opts: { log?:
     if (mode === 'llm') await audit(ctx, user.id, 'metadata.asked', 'metadata_ask', id, { provider: ctx.llm!.id, model: ctx.llm!.model, promptVersion: SOURCES_PROMPT_VERSION, passages: ranked.map((u) => u.snippetId), external: ctx.llm!.external });
   });
   return {
-    id, question, language, filters, mode, answer, sources, notice, dropped, candidates: ranked.length, searched: all.length, retrieval,
+    id, question, language, filters, mode, answer, sources, notice, dropped, candidates: ranked.length, searched: all.length, truncated: found.truncated, retrieval,
     // alle gefundenen Stellen in Rangfolge (auch nicht zitierte) – für die Trefferquote (ADR-091)
     retrieved: ranked.map((u, i) => ({ rank: i + 1, snippetId: u.snippetId, documentId: u.documentId, path: u.path, format: u.format, headingPath: u.headingPath, locator: u.locator, lineStart: u.lineStart, score: Math.round(u.score * 100) / 100 })),
     // Antworttext mit Belegnummern, z. B. zum Speichern als Frage & Antwort

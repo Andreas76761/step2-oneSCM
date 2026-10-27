@@ -195,6 +195,18 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.97 Stand nach Etappe 95 (27.10.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 27–41 (Modul oneSCM_Metadaten M1–M7, Jira, Releaseletter, Bildarchiv, Quick Guide, Punktmodell, Varianten): zehn Funde, neun behoben, einer (Standbilder im Speicher) mit Etappe 92 schon erledigt | ✅ T-418, T-419; Server-Tests auf SQLite und PostgreSQL |
+| Anleitungs-Check | Muss-Punkt „Warnhinweise nach Schema“ verlangte das Signalwort im Text eines Warnblocks, obwohl der Export es als Beschriftung setzt – korrekte Kapitel fielen durch das Gate |
+| Datenschutz | maschinelle FAQ-Übersetzung prüfte vor einem externen KI-Dienst ohne die gepflegte Namensliste |
+| Einlesen | Text vor der ersten Kapitelmarke eines Videos fiel weg; gespeicherte Importeinstellungen von vor v0.29 sperrten Jira, PowerPoint, PDF, Video und Untertitel (Migration 065) |
+| Ausgabe | Quick Guide zeigte Warnungen aus „Voraussetzungen“ und „Ergebnis“ doppelt |
+| Fragen an alle Quellen | über 20 000 Chunks still gekürzt – jetzt mit Hinweis und Empfehlung für Filter; Grenze über `ASK_MAX_UNITS` einstellbar |
+| Leistung | Namensliste als ein Ausdruck je Liste statt je Name und Text; Dubletten nicht bei jeder Anfrage neu aufgebaut, wenn kein Abschnitt die Mindestlänge erreicht; Bildarchiv und Deckungsmatrix mit zwei Abfragen statt zwei je Bild |
+
 ## 1.96 Stand nach Etappe 94 (27.10.2026)
 
 | Punkt | Ergebnis |

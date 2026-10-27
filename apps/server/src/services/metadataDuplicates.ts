@@ -96,9 +96,16 @@ export async function refreshDuplicates(ctx: Ctx, documentIds?: string[]) {
 }
 
 /** Beim ersten Aufruf eines Projekts (Bestand von vor Etappe 36) einmal alles berechnen */
+/**
+ * Bestände von vor M4 einmal aufbauen. Erreicht kein Abschnitt die Mindestlänge (nur Tickets, kurze Folien), entsteht
+ * keine Zeile – ohne Vermerk würde dann jede Anfrage alles neu vergleichen. Danach hält der Import den Stand aktuell.
+ */
+const built = new Set<string>();
 async function ensureBuilt(ctx: Ctx) {
+  if (built.has(ctx.projectId)) return;
   const has = await ctx.db.get('SELECT 1 FROM metadata_sections WHERE project_id = ? LIMIT 1', ctx.projectId);
   if (!has && (await ctx.db.get('SELECT 1 FROM source_documents WHERE project_id = ? AND removed_at IS NULL LIMIT 1', ctx.projectId))) await refreshDuplicates(ctx);
+  built.add(ctx.projectId);
 }
 
 const sectionDto = (s: Row, prefix: string) => ({

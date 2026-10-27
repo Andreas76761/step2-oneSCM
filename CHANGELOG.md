@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.95.0 – Etappe 95 (27.10.2026)
+
+### Hinzugefügt
+- **Code-Review der Etappen 27–41:** Geprüft wurden das Modul oneSCM_Metadaten (M1–M7), Jira-Import, Releaseletter, Bildarchiv, Quick Guide, Punktmodell sowie Varianten und Klickstrecken. Es gab zehn Funde. Ich habe sie einzeln geprüft: Neun sind behoben, einer (Standbilder im Speicher) war mit Etappe 92 schon erledigt.
+- **Tests T-418 und T-419:** Jeder Teil scheitert ohne seine Korrektur. Ausnahme sind die drei reinen Leistungsänderungen, deren Verhalten gleich bleibt.
+- **Einstellung `ASK_MAX_UNITS`:** So viele Chunks durchsucht eine Frage an alle Quellen höchstens (Standard 20 000).
+
+### Behoben
+- **Anleitungs-Check:** Der Muss-Punkt „Warnhinweise nach Schema“ verlangte im Text eines Warnblocks ein Signalwort. Der Export setzt es aber selbst als Beschriftung („Warnung“). Korrekte Warnblöcke fielen deshalb durch, und das Kapitel ließ sich nicht freigeben. Jetzt gilt die Art des Blocks als Signalwort. Folge und Vermeidung werden weiter geprüft.
+- **FAQ-Übersetzung mit KI:** Vor einem externen KI-Dienst wurde ohne die gepflegte Namensliste geprüft, sodass Klarnamen hinausgehen konnten. Jetzt wird wie bei allen anderen Wegen mit der Namensliste geprüft.
+- **Untertitel und Video:** Text vor der ersten Kapitelmarke, etwa eine Einleitung, fiel beim Einlesen weg. Er steht jetzt in einem eigenen Abschnitt.
+- **Importeinstellungen:** Wurden sie vor v0.29 gespeichert, blieben Jira-Dateien (XML, CSV), PowerPoint, PDF, Video und Untertitel gesperrt (415). Migration 065 ergänzt die Formate.
+- **Quick Guide:** Warnungen aus „Voraussetzungen“ und „Ergebnis“ standen doppelt da, im Abschnitt selbst und unter „Wichtige Hinweise“.
+- **Fragen an alle Quellen:** Über 20 000 Chunks wurde still gekürzt. Jetzt nennt die Antwort die Grenze und empfiehlt Filter (Dokument, Label, Überschrift, Format).
+
+### Leistung
+- **Datenschutzprüfung:** Je Namensliste gibt es jetzt einen gemeinsamen Ausdruck statt eines neuen je Name und Text. Mit 1 000 Namen und vielen Abschnitten dauerte eine Frage sonst Sekunden.
+- **Dubletten:** Erreicht kein Abschnitt die Mindestlänge (nur Tickets oder kurze Folien), wurde bei jeder Anfrage alles neu verglichen. Jetzt geschieht das einmal je Projekt.
+- **Bildarchiv und Deckungsmatrix:** Die Verwendung aller Bilder kommt aus zwei Abfragen statt aus zwei Volltextsuchen je Bild.
+
 ## 0.94.0 – Etappe 94 (27.10.2026)
 
 ### Hinzugefügt

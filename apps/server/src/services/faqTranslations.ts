@@ -1,7 +1,7 @@
 // Übersetzungen häufiger Fragen (ADR-077): je deutschem FAQ-Eintrag und Projektsprache eine Übersetzung – von Hand oder als
 // KI-Vorschlag, mit Freigabe. Leseransicht, Druck und Online-Hilfe zeigen die freigegebene, aktuelle Übersetzung, sonst deutsch.
 import { createHash } from 'node:crypto';
-import { audit, type Ctx, type User } from '../context.js';
+import { audit, privacyNames, type Ctx, type User } from '../context.js';
 import { json, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
 import { fixedTranslations } from './terminology.js';
@@ -103,7 +103,7 @@ export async function machineFaqTranslation(ctx: Ctx, faqId: string, lang: strin
   const q = String(source.question);
   const a = String(source.answer);
   // keine personenbezogenen Daten an externe Dienste (ADR-013)
-  if (provider.external && detectPrivacy(`${q}\n${a}`).length) throw badRequest('Der Eintrag enthält personenbezogene Daten und wird nicht an den externen KI-Dienst gesendet.');
+  if (provider.external && detectPrivacy(`${q}\n${a}`, { names: await privacyNames(ctx.db) }).length) throw badRequest('Der Eintrag enthält personenbezogene Daten und wird nicht an den externen KI-Dienst gesendet.');
   const fixed = await fixedTranslations(ctx);
   const terms = fixed.map((x) => ({ preferred: x.preferred, fixed: x.translations[lang] ?? x.translations[lang.split('-')[0]] ?? null }));
   const run = async (text: string, kind: string) => {

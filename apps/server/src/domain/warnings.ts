@@ -74,7 +74,9 @@ export function checkWarning(text: string, opts: { kind?: string } = {}): Warnin
   const rest = m ? text.slice((m.index ?? 0) + m[0].length) : text;
   const level = signal ? levelOf(signal) : null;
   const missing: WarningFinding['missing'] = [];
-  if (!signal || !level) missing.push('standard_signal');
+  // Block der Art „Warnung“ ohne Signalwort im Text: das Signalwort setzt der Export (Beschriftung „Warnung“)
+  const fromKind = !signal && opts.kind === 'warning';
+  if (!fromKind && (!signal || !level)) missing.push('standard_signal');
   else if (signal !== signal.toUpperCase()) missing.push('uppercase');
   const plain = rest.replace(/\*\*|__|`/g, '').trim();
   if (plain.split(/\s+/).filter(Boolean).length < 3) missing.push('hazard');
@@ -85,7 +87,7 @@ export function checkWarning(text: string, opts: { kind?: string } = {}): Warnin
     const word = level ? GERMAN[level] : GERMAN.notice;
     fixed = text.slice(0, m.index! + m[0].indexOf(signal)) + word + text.slice(m.index! + m[0].indexOf(signal) + signal.length);
   }
-  return { signal, level, missing, fixed };
+  return { signal, level: fromKind ? 'warning' : level, missing, fixed };
 }
 
 /** Signalwörter eines deutschen Textes in Reihenfolge (für den Vergleich mit der Übersetzung) */

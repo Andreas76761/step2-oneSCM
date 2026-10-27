@@ -3259,5 +3259,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-418",
+    "title": "Warnblock ohne Signalwort im Text, Einleitung vor der ersten Kapitelmarke, Namen in einem Ausdruck, alte Importeinstellungen",
+    "file": "apps/server/test/stage95.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-419",
+    "title": "FAQ-Übersetzung mit Namensliste, Quick Guide ohne doppelte Warnungen, Grenze der Suche gemeldet, Bildarchiv",
+    "file": "apps/server/test/stage95.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

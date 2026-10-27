@@ -1,6 +1,6 @@
 # 08 Installation und Betrieb
 
-Stand: Version 0.94 (27.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
+Stand: Version 0.95 (27.10.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
 
 ## 1. Welche Installation passt?
 
@@ -76,6 +76,7 @@ Alle Einstellungen sind Umgebungsvariablen; die vollständige Liste steht im REA
 | `FFMPEG_PATH` | – | ffmpeg für Standbilder aus Videos |
 | `MEDIA_TRANSIENT_STILLS` | an | `false` schaltet die Zwischenbilder kurzer Zustände (Menü, Dialog) aus Videos ab (ADR-106) |
 | `LANGUAGETOOL_URL` | – | lokale Grammatikprüfung mit LanguageTool (ADR-108), z. B. `http://localhost:8081`; nur lokale bzw. interne Adressen – Start und Einrichtung siehe `tools/languagetool/README.md` |
+| `ASK_MAX_UNITS` | `20000` | höchstens so viele Chunks durchsucht eine Frage an alle Quellen (Speicher je Anfrage); werden es mehr, nennt die Antwort die Grenze und empfiehlt Filter |
 | `LANGUAGETOOL_TIMEOUT_MS` | 8000 | Zeitlimit je Prüfanfrage an LanguageTool |
 | `PDF_BROWSER_PATH` | – | PDF im Design (ADR-113): Pfad zu einem lokal installierten Chromium, Chrome oder Edge, z. B. `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe` oder `/usr/bin/chromium` |
 | `WEEKLY_DIGEST` | `1` | `0` = keine automatische Wochenübersicht (ADR-064), z. B. für Test- und Schulungsinstanzen; „Jetzt senden“ unter „Rückmeldungen“ bleibt möglich |

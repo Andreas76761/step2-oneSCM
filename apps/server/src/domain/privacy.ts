@@ -59,10 +59,24 @@ function findRaw(text: string, opts: PrivacyOptions = {}): RawHit[] {
   for (const m of [...rest.matchAll(USER_ID)]) take('user_id', m.index! + m[0].length - m[1].length, m[1]);
   for (const m of [...rest.matchAll(ADDRESS)]) take('address', m.index!, m[0]);
   for (const m of [...rest.matchAll(NAME_FIELD)]) take('name', m.index! + m[0].length - m[1].length, m[1]);
-  for (const n of (opts.names ?? []).map((x) => x.trim()).filter((x) => x.length >= 3)) {
-    for (const m of [...rest.matchAll(new RegExp(`(?<![\\p{L}\\d])${escapeRe(n)}(?![\\p{L}\\d])`, 'giu'))]) take('name', m.index!, m[0]);
-  }
+  const names = namesRe(opts.names ?? []);
+  if (names) for (const m of rest.matchAll(names)) take('name', m.index!, m[0]);
   return hits;
+}
+
+/**
+ * Ein Ausdruck je Namensliste (längste Namen zuerst), zwischengespeichert: die Prüfung läuft in Schleifen über tausende
+ * Abschnitte – je Name und Text einen neuen Ausdruck zu bauen, kostete bei 1000 Namen Sekunden je Anfrage.
+ */
+const NAMES_CACHE = new Map<string, RegExp | null>();
+function namesRe(list: string[]): RegExp | null {
+  const key = list.join('\u0000');
+  if (NAMES_CACHE.has(key)) return NAMES_CACHE.get(key)!;
+  const names = [...new Set(list.map((x) => x.trim()).filter((x) => x.length >= 3))].sort((a, b) => b.length - a.length);
+  const re = names.length ? new RegExp(`(?<![\\p{L}\\d])(?:${names.map(escapeRe).join('|')})(?![\\p{L}\\d])`, 'giu') : null;
+  if (NAMES_CACHE.size >= 20) NAMES_CACHE.delete(NAMES_CACHE.keys().next().value!);
+  NAMES_CACHE.set(key, re);
+  return re;
 }
 
 /** Treffer mit Position (Zeichen) und maskiertem Wert – z. B. um Fundstellen in Bildern unkenntlich zu machen (ADR-095) */
