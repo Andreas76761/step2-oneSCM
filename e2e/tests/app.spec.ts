@@ -2458,11 +2458,12 @@ test('[T-287] Bildarchiv: Varianten einer Maske verknüpfen, Klickstrecke aus Sc
   const { default: AxeBuilder } = await import('@axe-core/playwright');
   const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
     .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  // die Optionen kommen mit dem Archiv nach dem Anlegen nach – warten, bis die gesuchte da ist (in der CI langsamer)
   const pick = async (label: string, text: string) => {
     const select = page.getByRole('combobox', { name: label, exact: true });
-    const value = await select.evaluate((el, t) => [...(el as HTMLSelectElement).options].find((o) => o.text.includes(t))?.value ?? '', text);
-    expect(value).not.toBe('');
-    await select.selectOption(value);
+    const valueOf = () => select.evaluate((el, t) => [...(el as HTMLSelectElement).options].find((o) => o.text.includes(t))?.value ?? '', text);
+    await expect.poll(valueOf).not.toBe('');
+    await select.selectOption(await valueOf());
   };
   await page.goto('/');
   await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
