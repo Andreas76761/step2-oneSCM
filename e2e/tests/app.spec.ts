@@ -1919,6 +1919,9 @@ test('[T-238] Jira-Export einlesen, Quellenänderungen absatzweise übernehmen, 
 
   // Zugriffsmatrix: Stufe wählen, Beleg speichern
   await page.goto('/metadaten/zugriffsmatrix');
+  // langsamer Server: „Beleg speichern“ kommt, bevor die gewählte Stufe gespeichert ist (in der CI überschrieb es sonst „V“ mit „?“)
+  const slow = '**/api/v1/metadata/access-matrix/cells';
+  await page.route(slow, async (route) => (await new Promise((r) => setTimeout(r, 800)), route.continue()));
   const sel = page.getByLabel('Vertragserstellung › MO Checks – MO (Market Operation)');
   await sel.focus();
   await sel.selectOption('V');
@@ -1926,6 +1929,7 @@ test('[T-238] Jira-Export einlesen, Quellenänderungen absatzweise übernehmen, 
   await page.getByRole('button', { name: 'Beleg speichern' }).click();
   await expect(page.getByText('Beleg gespeichert.')).toBeVisible();
   await expect(sel).toHaveValue('V');
+  await page.unroute(slow);
   expect(await axe()).toEqual([]);
 });
 

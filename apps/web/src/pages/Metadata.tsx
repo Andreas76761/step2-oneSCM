@@ -1,6 +1,6 @@
 import { CompassIcon, FolderIcon, FolderInputIcon, FolderOpenIcon, FolderTreeIcon, PuzzleIcon, TagsIcon } from 'lucide-react';
 import { FormatIcon, Ico, RefIcon } from '../components/icons';
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { del, patch, post, put, qs } from '../api';
 import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
@@ -681,12 +681,28 @@ export function AccessMatrixPage() {
   const [csv, setCsv] = useState('');
   const [result, setResult] = useState<any | null>(null);
   const cell = (roleId: string, navId: string) => m.data?.cells.find((c: any) => c.roleId === roleId && c.navId === navId);
-  const save = async (roleId: string, navId: string, level: string, ev?: string | null) => {
-    try {
-      m.setData(await put('/metadata/access-matrix/cells', { roleId, navId, level, evidence: ev !== undefined ? ev : cell(roleId, navId)?.evidence ?? null }));
-    } catch (e) {
-      notify(errorText(e), 'error');
-    }
+  // Stufe und Beleg je Feld sofort merken und der Reihe nach speichern: sonst überschrieb „Beleg speichern“ eine gerade
+  // gewählte Stufe mit dem alten Stand, solange deren Antwort noch ausstand
+  const pending = useRef(new Map<string, { level: string; evidence: string | null }>());
+  const queue = useRef<Promise<void>>(Promise.resolve());
+  const save = (roleId: string, navId: string, change: { level?: string; evidence?: string | null }) => {
+    const k = `${roleId}|${navId}`;
+    const c = cell(roleId, navId);
+    const next = { level: c?.level ?? '?', evidence: c?.evidence ?? null, ...pending.current.get(k), ...change };
+    pending.current.set(k, next);
+    const done = queue.current.then(async () => {
+      try {
+        m.setData(await put('/metadata/access-matrix/cells', { roleId, navId, ...next }));
+        if (pending.current.get(k) === next) pending.current.delete(k);
+        return true;
+      } catch (e) {
+        pending.current.delete(k);
+        notify(errorText(e), 'error');
+        return false;
+      }
+    });
+    queue.current = done.then(() => undefined);
+    return done;
   };
   const choose = (roleId: string, navId: string) => {
     setSel({ roleId, navId });
@@ -723,7 +739,7 @@ export function AccessMatrixPage() {
                       return (
                         <td key={r.id} className={`am-cell am-${lv === '-' ? 'none' : lv === '?' ? 'open' : lv}${active ? ' am-active' : ''}`} title={c?.evidence ? `Beleg: ${c.evidence}` : 'ohne Beleg'}>
                           {canEdit ? (
-                            <select value={lv} aria-label={`${nameOf(n, lang)} – ${nameOf(r, lang)}`} onFocus={() => choose(r.id, n.id)} onChange={(e) => save(r.id, n.id, e.target.value)}>
+                            <select value={lv} aria-label={`${nameOf(n, lang)} – ${nameOf(r, lang)}`} onFocus={() => choose(r.id, n.id)} onChange={(e) => save(r.id, n.id, { level: e.target.value })}>
                               {Object.keys(LEVEL_TEXT).map((k) => <option key={k} value={k}>{k === '-' ? '–' : k}</option>)}
                             </select>
                           ) : <span>{lv === '-' ? '–' : lv}</span>}
@@ -741,7 +757,7 @@ export function AccessMatrixPage() {
           <div className="filters am-evidence">
             <span className="small"><strong>{nameOf(selNav, lang)}</strong> · {nameOf(selRole, lang)}: {LEVEL_TEXT[cell(sel.roleId, sel.navId)?.level ?? '?']}</span>
             <label className="grow"><span className="sr-only">Beleg</span><input value={evidence} placeholder="Beleg, z. B. Navigation_oneSCM_Version3.docx, S. 4" aria-label="Beleg für das gewählte Feld" onChange={(e) => setEvidence(e.target.value)} /></label>
-            <button className="btn small primary" onClick={async () => { await save(sel.roleId, sel.navId, cell(sel.roleId, sel.navId)?.level ?? '?', evidence); notify('Beleg gespeichert.'); }}>Beleg speichern</button>
+            <button className="btn small primary" onClick={async () => { if (await save(sel.roleId, sel.navId, { evidence })) notify('Beleg gespeichert.'); }}>Beleg speichern</button>
           </div>
         )}
       </Card>

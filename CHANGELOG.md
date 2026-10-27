@@ -13,6 +13,7 @@
 - **Untertitel und Video:** Text vor der ersten Kapitelmarke, etwa eine Einleitung, fiel beim Einlesen weg. Er steht jetzt in einem eigenen Abschnitt.
 - **Importeinstellungen:** Wurden sie vor v0.29 gespeichert, blieben Jira-Dateien (XML, CSV), PowerPoint, PDF, Video und Untertitel gesperrt (415). Migration 065 ergänzt die Formate.
 - **Quick Guide:** Warnungen aus „Voraussetzungen“ und „Ergebnis“ standen doppelt da, im Abschnitt selbst und unter „Wichtige Hinweise“.
+- **Zugriffsmatrix:** Wer kurz nach dem Wählen einer Stufe „Beleg speichern“ klickte, überschrieb die Stufe mit dem alten Stand („?“), solange die Antwort noch ausstand. Gefunden durch T-238 in der CI. Stufe und Beleg werden jetzt sofort gemerkt und der Reihe nach gespeichert. „Beleg gespeichert.“ erscheint nur noch, wenn das Speichern gelang.
 - **Fragen an alle Quellen:** Über 20 000 Chunks wurde still gekürzt. Jetzt nennt die Antwort die Grenze und empfiehlt Filter (Dokument, Label, Überschrift, Format).
 
 ### Leistung
