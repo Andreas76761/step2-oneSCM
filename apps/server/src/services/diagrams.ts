@@ -1,6 +1,6 @@
 // Bilder aus Text (ADR-041): Struktur regelbasiert oder über den KI-Dienst erkennen, Bildarten zeichnen (Farbe aus dem
 // Projekt-Layout) und ausgewählte Bilder als bereinigtes SVG in der Bildablage speichern (mit Titel fürs Bildverzeichnis).
-import { audit, type Ctx, type User } from '../context.js';
+import { audit, privacyNames, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson } from '../db.js';
 import { DIAGRAM_KINDS, normalizeOptions, normalizeStructure, parseStructure, renderDiagrams, type DiagramKind, type DiagramStructure } from '../domain/diagrams.js';
 import { detectPrivacy } from '../domain/privacy.js';
@@ -45,7 +45,7 @@ export async function generateDiagrams(ctx: Ctx, input: { text?: unknown; kinds?
     if (!text.trim()) throw badRequest('text ist Pflicht.');
     const llm = ctx.llm;
     if (input.useAi === true && llm) {
-      const hits = llm.external ? detectPrivacy(text) : [];
+      const hits = llm.external ? detectPrivacy(text, { names: await privacyNames(ctx.db) }) : [];
       if (hits.length) throw unprocessable('Übertragung gesperrt: Der Text enthält mögliche personenbezogene Daten.', { hits });
       let raw: string;
       try {

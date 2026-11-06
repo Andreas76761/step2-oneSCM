@@ -1,7 +1,10 @@
 // Ausgehende Webhooks (ADR-028): Abos je Projekt, HMAC-signierte Zustellung über die Jobqueue mit Wiederholung.
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import { lookup as dnsLookup, type LookupAddress } from 'node:dns';
 import { lookup } from 'node:dns/promises';
+import https from 'node:https';
 import { BlockList, isIP } from 'node:net';
+import { Readable } from 'node:stream';
 import { audit, WEBHOOK_EVENTS, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { badRequest, notFound } from '../problem.js';
@@ -60,6 +63,43 @@ export async function assertSafeUrl(raw: string, allowInsecure: boolean, resolve
   if (!addresses.length) throw badRequest(`Host ${host} ist nicht auflösbar.`);
   if (addresses.some(isPrivateAddress)) throw badRequest('Ziele im internen Netz sind nicht erlaubt.');
   return url;
+}
+
+/**
+ * Namensauflösung beim Verbindungsaufbau: dieselbe Prüfung wie assertSafeUrl, aber für genau die Adresse, mit der verbunden wird.
+ * Sonst könnte ein Name zuerst öffentlich und beim zweiten Auflösen intern auflösen (DNS-Rebinding).
+ */
+export function guardedLookup(host: string, opts: { all?: boolean; family?: number | string }, cb: (err: Error | null, address?: string | LookupAddress[], family?: number) => void) {
+  dnsLookup(host, { family: typeof opts.family === 'number' ? opts.family : 0, all: true }, (err, list: LookupAddress[]) => {
+    if (err) return cb(err);
+    if (!list.length) return cb(new Error(`Host ${host} ist nicht auflösbar.`));
+    if (list.some((a) => isPrivateAddress(a.address))) return cb(Object.assign(new Error('Ziele im internen Netz sind nicht erlaubt.'), { code: 'EPRIVATE' }));
+    if (opts.all) cb(null, list);
+    else cb(null, list[0].address, list[0].family);
+  });
+}
+
+/**
+ * Ausgehende Anfrage an eine von Nutzern gepflegte Adresse (Webhooks, Confluence): Ziel geprüft, Weiterleitungen nicht verfolgt,
+ * interne Adressen auch beim Verbindungsaufbau gesperrt. Mit allowInsecure (Entwicklung, Tests) normales fetch.
+ */
+export async function safeFetch(raw: string, init: { method?: string; headers?: Record<string, string>; body?: string; timeoutMs: number }, allowInsecure: boolean): Promise<Response> {
+  const url = await assertSafeUrl(raw, allowInsecure);
+  if (allowInsecure) return fetch(raw, { method: init.method, headers: init.headers, body: init.body, redirect: 'manual', signal: AbortSignal.timeout(init.timeoutMs) });
+  return new Promise<Response>((resolve, reject) => {
+    const req = https.request(url, { method: init.method ?? 'GET', headers: init.headers, lookup: guardedLookup as any, timeout: init.timeoutMs }, (res) => {
+      const headers = new Headers();
+      for (const [k, v] of Object.entries(res.headers)) if (v !== undefined) headers.set(k, Array.isArray(v) ? v.join(', ') : v);
+      const status = res.statusCode ?? 502;
+      const empty = [204, 205, 304].includes(status);
+      if (empty) res.resume();
+      resolve(new Response(empty ? null : (Readable.toWeb(res) as ReadableStream), { status, headers }));
+    });
+    req.on('timeout', () => req.destroy(new Error('Zeitüberschreitung der Anfrage.')));
+    req.on('error', reject);
+    if (init.body) req.write(init.body);
+    req.end();
+  });
 }
 
 function subDto(r: Row, deliveries?: Row[]) {
@@ -173,17 +213,16 @@ export async function deliverWebhook(ctx: Ctx, payload: { deliveryId: string }) 
   await ctx.db.run('UPDATE webhook_deliveries SET attempts = attempts + 1 WHERE id = ?', d.id);
   let code: number | null = null;
   try {
-    await assertSafeUrl(d.url, ctx.config.integrations.allowInsecure);
-    const res = await fetch(d.url, {
+    // keine Weiterleitung ins interne Netz, Zieladresse auch beim Verbindungsaufbau geprüft
+    const res = await safeFetch(d.url, {
       method: 'POST',
-      redirect: 'manual', // keine Weiterleitung ins interne Netz
-      signal: AbortSignal.timeout(10_000),
+      timeoutMs: 10_000,
       headers: {
         'content-type': 'application/json', 'user-agent': 'oneSCM-Handbook-Studio-Webhook/1',
         'x-onescm-event': d.event, 'x-onescm-delivery': d.id, 'x-onescm-timestamp': timestamp, [SIGNATURE_HEADER]: sign(d.secret, timestamp, body),
       },
       body,
-    });
+    }, ctx.config.integrations.allowInsecure);
     code = res.status;
     if (res.status < 200 || res.status >= 300) throw new Error(`Empfänger antwortete mit ${res.status}`);
     await ctx.db.run("UPDATE webhook_deliveries SET status = 'delivered', response_code = ?, error = NULL, delivered_at = ? WHERE id = ?", code, now(), d.id);

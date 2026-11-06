@@ -62,8 +62,10 @@ export interface ContradictionHit {
 const NEGATION = /\b(nicht|kein|keine|keinen|keinem|keiner|nie|niemals|verboten|untersagt|unzulässig)\b/i;
 const MANDATORY = /\b(muss|müssen|muessen|pflicht\w*|zwingend|verpflichtend|erforderlich|obligatorisch|ist notwendig)\b/i;
 const OPTIONAL = /\b(optional|kann|können|koennen|freiwillig|wahlweise|nicht erforderlich|nicht notwendig)\b/i;
-const DEADLINE = /(\d+(?:[.,]\d+)?)\s*(arbeitstag\w*|werktag\w*|tag\w*|stunde\w*|std\.?|woche\w*|monat\w*|minute\w*|min\.?|jahr\w*)/gi;
-const NUMBER = /(?<![\w.])(\d+(?:[.,]\d+)?)(?![\w.])/g;
+// nur die Einheit selbst mit Endung (Tage, Werktagen, Std.) – nicht „Tagesbericht“ oder „Mindestmenge“
+const DEADLINE = /(\d+(?:[.,]\d+)?)\s*(arbeitstag(?:e|en)?|werktag(?:e|en)?|tag(?:e|en)?|stunden?|std\.?|wochen?|monat(?:e|en)?|minuten?|min\.?|jahr(?:e|en)?)(?![\p{L}\p{N}])/giu;
+// auch vor dem Satzpunkt („beträgt 50.“); ausgeschlossen sind nur weitere Ziffern bzw. Buchstaben
+const NUMBER = /(?<![\w.])(\d+(?:[.,]\d+)?)(?!\w|[.,]\d)/g;
 const ACTOR = /\b(dealer|händler|autohaus|marktorganisation|markt|MO|market operation|HQ|zentrale|administrator\w*|benutzer\w*|freigeber\w*)\b/gi;
 
 function unitKey(unit: string): string {

@@ -1,4 +1,6 @@
-import { Suspense, createContext, lazy, useCallback, useContext, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { HourglassIcon, ImagePlusIcon, LockIcon, RotateCwIcon, SparklesIcon, XIcon, type LucideIcon } from 'lucide-react';
+import { BlockerIcon, Ico, RefIcon } from './icons';
+import { Suspense, createContext, lazy, useCallback, useContext, useEffect, useId, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import { ApiError, download, get, mediaUrl, post } from '../api';
 
 // ---------- Referenzdaten & Benachrichtigungen ----------
@@ -75,7 +77,7 @@ export function Badge({ item, compact }: { item?: RefItem; compact?: boolean }) 
   if (!item) return null;
   return (
     <span className="badge" style={{ '--badge': item.color } as CSSProperties} title={item.description ?? item.label}>
-      <span aria-hidden="true">{item.icon}</span> {compact ? <span className="sr-only">{item.label}</span> : item.label}
+      <RefIcon name={item.icon} /> {compact ? <span className="sr-only">{item.label}</span> : item.label}
     </span>
   );
 }
@@ -117,28 +119,43 @@ export function DivisionBadges({ codes }: { codes: (string | { code: string; evi
   );
 }
 
-const SEV_LABEL: Record<string, string> = { blocker: '⛔ Blocker', high: '▲ hoch', medium: '■ mittel', low: '▽ niedrig' };
-export const Severity = ({ s }: { s: string }) => <span className={`tag sev-${s}`}>{SEV_LABEL[s] ?? s}</span>;
+/** Schweregrade auf Deutsch, eine Quelle für Auswahllisten und Kennzeichen */
+export const SEVERITY_NAME: Record<string, string> = { blocker: 'Blocker', high: 'Hoch', medium: 'Mittel', low: 'Niedrig' };
+// im Kennzeichen zusätzlich ein Symbol, damit der Grad nicht nur an der Farbe hängt
+const SEV_SYMBOL: Record<string, string> = { high: '▲', medium: '■', low: '▽' };
+const SEV_LABEL: Record<string, string> = Object.fromEntries(Object.entries(SEVERITY_NAME).map(([k, v]) => [k, SEV_SYMBOL[k] ? `${SEV_SYMBOL[k]} ${v.toLowerCase()}` : v]));
+export const Severity = ({ s }: { s: string }) => <span className={`tag sev-${s}`}>{s === 'blocker' && <BlockerIcon />}{SEV_LABEL[s] ?? s}</span>;
 
 const STATUS_LABEL: Record<string, string> = {
   open: 'offen', deferred: 'zurückgestellt', resolved: 'entschieden', ignored: 'ignoriert', obsolete: 'obsolet',
-  draft: 'Entwurf', in_review: '⏳ eingereicht', rejected: 'abgelehnt', approved: 'freigegeben', superseded: 'ersetzt', proposed: 'Vorschlag', confirmed: 'bestätigt', dissolved: 'aufgelöst',
-  generated: 'generiert', manually_edited: 'manuell bearbeitet', ai_rewritten: '✨ KI-umformuliert', invalid: 'ungültig', accepted: 'übernommen', stale: 'veraltet', locked: '🔒 gesperrt', needs_regeneration: '⟳ prüfen', queued: 'wartet', processing: 'läuft',
+  draft: 'Entwurf', in_review: 'eingereicht', rejected: 'abgelehnt', approved: 'freigegeben', superseded: 'ersetzt', proposed: 'Vorschlag', confirmed: 'bestätigt', dissolved: 'aufgelöst',
+  generated: 'generiert', manually_edited: 'manuell bearbeitet', ai_rewritten: 'KI-umformuliert', invalid: 'ungültig', accepted: 'übernommen', stale: 'veraltet', locked: 'gesperrt', needs_regeneration: 'prüfen', queued: 'wartet', processing: 'läuft',
   completed: 'abgeschlossen', completed_with_errors: 'mit Fehlern', cancelled: 'abgebrochen', failed: 'fehlgeschlagen', imported: 'importiert', identical: 'identisch', skipped: 'übersprungen', removed: 'entfernt', media: 'Bild', idle: 'aktuell', syncing: 'gleicht ab', importing: 'importiert gerade',
   source_confirmed: 'Quelle bestätigt', manually_confirmed: 'manuell bestätigt', unconfirmed: 'unbestätigt', open_question: 'offene Frage', general: 'allgemein',
 };
 export const statusLabel = (s: string) => STATUS_LABEL[s] ?? s;
-export const Status = ({ s }: { s: string }) => <span className={`tag st-${s}`}>{statusLabel(s)}</span>;
+const STATUS_ICON: Record<string, LucideIcon> = { in_review: HourglassIcon, ai_rewritten: SparklesIcon, locked: LockIcon, needs_regeneration: RotateCwIcon };
+export const Status = ({ s }: { s: string }) => <span className={`tag st-${s}`}>{STATUS_ICON[s] && <Ico icon={STATUS_ICON[s]} size={14} />}{statusLabel(s)}</span>;
+
+// Technische Berechtigungen (ADR-009) mit deutscher Bezeichnung
+export const PERMS: { code: string; label: string }[] = [
+  { code: 'read', label: 'Lesen' }, { code: 'edit', label: 'Bearbeiten' }, { code: 'decide', label: 'Entscheiden' }, { code: 'approve', label: 'Freigeben' }, { code: 'admin', label: 'Administration' },
+];
+export const permLabel = (p: string) => PERMS.find((x) => x.code === p)?.label ?? p;
 
 export const TYPE_LABEL: Record<string, string> = { gap: 'Lücke', duplicate: 'Dopplung', contradiction: 'Widerspruch', terminology: 'Terminologie', privacy: 'Datenschutz', readability: 'Lesbarkeit' };
 
 // ---------- Layout-Bausteine ----------
 
-export function Page({ title, subtitle, actions, children }: { title: string; subtitle?: string; actions?: ReactNode; children: ReactNode }) {
-  // Seitentitel für Browser-Tabs und Screenreader (WCAG 2.4.2)
+/** Seitentitel für Browser-Tabs, Verlauf und Screenreader (WCAG 2.4.2): geöffnetes Objekt – Seite – App */
+export function useDocTitle(page: string, item?: string | null) {
   useEffect(() => {
-    document.title = `${title} – oneSCM Handbook Studio`;
-  }, [title]);
+    document.title = [item, page, 'oneSCM Handbook Studio'].filter(Boolean).join(' – ');
+  }, [page, item]);
+}
+
+export function Page({ title, docTitle, subtitle, actions, children }: { title: string; docTitle?: string | null; subtitle?: string; actions?: ReactNode; children: ReactNode }) {
+  useDocTitle(title, docTitle);
   return (
     <div className="page">
       <header className="page-head">
@@ -167,35 +184,46 @@ export const Card = ({ title, children, actions, className }: { title?: ReactNod
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/** Dialog: Fokus beim Öffnen hinein, Tab bleibt im Dialog, beim Schließen zurück zum Auslöser (WCAG 2.4.3). */
+/**
+ * Dialog: Fokus beim Öffnen hinein (erstes Eingabefeld, sonst „Schließen“), Tab bleibt im Dialog,
+ * Esc schließt, beim Schließen zurück zum Auslöser (WCAG 2.1.2, 2.4.3).
+ * Der Effekt läuft nur beim Öffnen: onClose ist oft eine neue Funktion je Render; sonst sprang der Fokus
+ * bei jedem Tastendruck in einem Dialogfeld zum Auslöser und zurück auf „Schließen“.
+ */
 export function Modal({ title, onClose, children, wide }: { title: string; onClose: () => void; children: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
+  const close = useRef(onClose);
+  close.current = onClose;
+  const titleId = useId();
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
-    ref.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+    const body = ref.current?.querySelector('.modal-body');
+    (body?.querySelector<HTMLElement>('input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled])')
+      ?? ref.current?.querySelector<HTMLElement>(FOCUSABLE))?.focus();
     const h = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') { e.preventDefault(); close.current(); return; }
       if (e.key !== 'Tab' || !ref.current) return;
-      const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.getClientRects().length);
       if (!items.length) return;
       const [first, last] = [items[0], items[items.length - 1]];
-      if (e.shiftKey && document.activeElement === first) (e.preventDefault(), last.focus());
-      else if (!e.shiftKey && document.activeElement === last) (e.preventDefault(), first.focus());
+      const inside = ref.current.contains(document.activeElement);
+      if (e.shiftKey && (document.activeElement === first || !inside)) (e.preventDefault(), last.focus());
+      else if (!e.shiftKey && (document.activeElement === last || !inside)) (e.preventDefault(), first.focus());
     };
     window.addEventListener('keydown', h);
     return () => {
       window.removeEventListener('keydown', h);
-      opener?.focus?.();
+      if (opener?.isConnected) opener.focus();
     };
-  }, [onClose]);
+  }, []);
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div ref={ref} className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} className={`modal ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}>
         <div className="card-head">
-          <h2>{title}</h2>
-          <button className="btn ghost" onClick={onClose} aria-label="Schließen">✕</button>
+          <h2 id={titleId}>{title}</h2>
+          <button type="button" className="btn ghost" onClick={onClose} aria-label="Schließen"><XIcon aria-hidden="true" size={18} /></button>
         </div>
-        {children}
+        <div className="modal-body">{children}</div>
       </div>
     </div>
   );
@@ -208,7 +236,7 @@ export function ImageInsert({ onInsert }: { onInsert: (markdown: string) => void
   const [alt, setAlt] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  if (!open) return <button type="button" className="btn small" onClick={() => setOpen(true)}>🖼️ Bild einfügen</button>;
+  if (!open) return <button type="button" className="btn small" onClick={() => setOpen(true)}><ImagePlusIcon className="btn-icon" aria-hidden="true" size={16} />Bild einfügen</button>;
   const insert = async () => {
     if (!file || !alt.trim()) return;
     setBusy(true);
@@ -249,6 +277,23 @@ const MarkdownView = lazy(preloadMarkdown);
 export function Md({ text }: { text: string }) {
   // bis der Renderer geladen ist: Text unformatiert, damit nichts springt oder fehlt
   return <Suspense fallback={<div className="md md-pending">{text}</div>}><MarkdownView text={text} /></Suspense>;
+}
+
+/**
+ * Schaltfläche, die gesperrt bleibt, solange Angaben fehlen – und sagt, welche (WCAG 3.3.2).
+ * `missing`: je fehlender Angabe ein kurzer Text, erfüllte Angaben als false; `busy` sperrt ohne Hinweis.
+ * Der Hinweis steht sichtbar neben der Schaltfläche und ist über aria-describedby mit ihr verknüpft.
+ */
+export function Gated({ missing, busy, children, disabled, 'aria-describedby': describedBy, ...rest }: { missing: (string | false | null | undefined)[]; busy?: boolean } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  const id = useId();
+  const list = missing.filter((m): m is string => !!m);
+  const ids = [describedBy, list.length ? id : undefined].filter(Boolean).join(' ') || undefined;
+  return (
+    <>
+      <button {...rest} disabled={busy || disabled || list.length > 0} aria-describedby={ids}>{children}</button>
+      {list.length > 0 && <span id={id} className="gate-hint">Noch nötig: {list.join(', ')}.</span>}
+    </>
+  );
 }
 
 export const ErrorBox = ({ error }: { error: string | null }) => (error ? <div className="alert error" role="alert">{error}</div> : null);

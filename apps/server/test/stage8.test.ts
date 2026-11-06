@@ -520,7 +520,7 @@ describe('Skalierung der semantischen Suche (ADR-024)', () => {
     } finally {
       await auto.app.close();
     }
-  });
+  }, 120_000); // baut Indizes für drei Suchmaschinen (mit PostgreSQL auch pgvector); auf geteilten CI-Rechnern mit langsamer Platte über 30 s
 
   it('[T-148] Hybride Analyse großer Bestände: kNN über HNSW statt n²-Vergleich', async () => {
     const built = await buildApp({ dataDir, database: await freshDatabase(dataDir, 'knn'), logger: false, webDist: null, authMode: 'demo' });

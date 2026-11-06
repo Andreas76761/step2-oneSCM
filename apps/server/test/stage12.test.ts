@@ -275,7 +275,7 @@ describe('Etappe 12: Handbuch-Varianten aus dem Draft Manual (ADR-034)', () => {
       const csv = 'Abkürzung;Bedeutung;Beschreibung\nDMS;Dealer-Management-System;\nVIN;Fahrzeug-Identifizierungsnummer;17 Zeichen\nSAP;;\nVIN;doppelt;\n';
       expect((await upload(built, '/master-data/import?kind=abbreviations', 'abk.csv', csv, 'u-leser')).status).toBe(403);
       const preview = (await upload(built, '/master-data/import?kind=abbreviations', 'abk.csv', csv)).json;
-      expect(preview.summary).toEqual({ rows: 4, create: 1, update: 0, unchanged: 1, error: 2 });
+      expect(preview.summary).toEqual({ rows: 4, create: 1, update: 0, unchanged: 1, skipped: 0, error: 2 });
       expect(preview.rows.map((r: any) => r.action)).toEqual(['unchanged', 'create', 'error', 'error']);
       expect((await call('GET', '/abbreviations')).json).toHaveLength(1);
       const applied = (await upload(built, '/master-data/import?kind=abbreviations&apply=true', 'abk.csv', csv)).json;

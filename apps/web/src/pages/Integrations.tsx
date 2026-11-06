@@ -1,7 +1,7 @@
 // Integrationen (ADR-028): API-Tokens und ausgehende Webhooks des Projekts
 import { useState } from 'react';
 import { del, patch, post } from '../api';
-import { Card, Empty, ErrorBox, Modal, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Modal, Page, Status, errorText, useApp, useLoad } from '../components/ui';
 
 const SCOPES = [
   { code: 'read', label: 'Lesen' },
@@ -65,7 +65,7 @@ export function IntegrationsPage() {
             ))}
           </fieldset>
           <label className="inline">Gültig (Tage) <input type="number" min={1} max={365} value={tokenForm.expiresInDays} onChange={(e) => setTokenForm({ ...tokenForm, expiresInDays: e.target.value })} /></label>
-          <button className="btn primary" type="submit" disabled={!tokenForm.name.trim() || !tokenForm.scopes.length}>Token erstellen</button>
+          <Gated className="btn primary" type="submit" missing={[!tokenForm.name.trim() && 'Name', !tokenForm.scopes.length && 'mindestens eine Berechtigung']}>Token erstellen</Gated>
         </form>
         {!tokens.data?.length ? <Empty>Keine API-Tokens.</Empty> : (
           <table className="table compact">
@@ -131,11 +131,11 @@ export function IntegrationsPage() {
             ))}
           </fieldset>
           <div className="actions">
-            <button className="btn primary" disabled={!hookForm.url || !hookForm.events.length} onClick={() => void run(async () => {
+            <Gated className="btn primary" missing={[!hookForm.url && 'URL', !hookForm.events.length && 'mindestens ein Ereignis']} onClick={() => void run(async () => {
               const h = await post('/webhooks', hookForm);
               setHookForm(null);
               setSecret({ label: 'Webhook-Geheimnis', value: h.secret });
-            })}>Anlegen</button>
+            })}>Anlegen</Gated>
           </div>
         </Modal>
       )}

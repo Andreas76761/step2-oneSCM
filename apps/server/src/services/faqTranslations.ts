@@ -1,9 +1,10 @@
 // Übersetzungen häufiger Fragen (ADR-077): je deutschem FAQ-Eintrag und Projektsprache eine Übersetzung – von Hand oder als
 // KI-Vorschlag, mit Freigabe. Leseransicht, Druck und Online-Hilfe zeigen die freigegebene, aktuelle Übersetzung, sonst deutsch.
 import { createHash } from 'node:crypto';
-import { audit, type Ctx, type User } from '../context.js';
+import { audit, privacyNames, type Ctx, type User } from '../context.js';
 import { json, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
+import { fixedTranslations } from './terminology.js';
 import { buildTranslatePrompt, checkTranslation, LANGUAGES, parseTranslateResponse, splitSentences, TRANSLATION_ISSUE_LABELS, type TranslationIssue } from '../domain/translate.js';
 import { badRequest, conflict, notFound, Problem } from '../problem.js';
 
@@ -84,7 +85,8 @@ export async function saveFaqTranslation(ctx: Ctx, faqId: string, lang: string, 
   const source = await sourceOf(ctx, faqId);
   await targetLanguage(ctx, lang);
   const text = fields(input);
-  const issues = [...new Set([...checkTranslation(String(source.question), text.question), ...checkTranslation(String(source.answer), text.answer)])];
+  const opts = { language: lang, terms: await fixedTranslations(ctx) };
+  const issues = [...new Set([...checkTranslation(String(source.question), text.question, null, opts), ...checkTranslation(String(source.answer), text.answer, null, opts)])];
   await ctx.db.tx(async () => {
     await upsert(ctx, source, lang, text, 'manual', issues, user);
     await audit(ctx, user.id, 'faq.translation_saved', 'faq', faqId, { language: lang });
@@ -101,12 +103,13 @@ export async function machineFaqTranslation(ctx: Ctx, faqId: string, lang: strin
   const q = String(source.question);
   const a = String(source.answer);
   // keine personenbezogenen Daten an externe Dienste (ADR-013)
-  if (provider.external && detectPrivacy(`${q}\n${a}`).length) throw badRequest('Der Eintrag enthält personenbezogene Daten und wird nicht an den externen KI-Dienst gesendet.');
-  const terms = (await ctx.db.all("SELECT preferred FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId)).map((x) => ({ preferred: String(x.preferred) }));
+  if (provider.external && detectPrivacy(`${q}\n${a}`, { names: await privacyNames(ctx.db) }).length) throw badRequest('Der Eintrag enthält personenbezogene Daten und wird nicht an den externen KI-Dienst gesendet.');
+  const fixed = await fixedTranslations(ctx);
+  const terms = fixed.map((x) => ({ preferred: x.preferred, fixed: x.translations[lang] ?? x.translations[lang.split('-')[0]] ?? null }));
   const run = async (text: string, kind: string) => {
     const out = parseTranslateResponse((await provider.complete(buildTranslatePrompt({ language: lang, kind, sentences: splitSentences(text, kind), terms }))).text);
     const joined = out.map((s) => s.text).filter(Boolean).join(/^\s*(\d+\.|[-*])\s+/m.test(text) ? '\n' : ' ');
-    return { text: joined, issues: checkTranslation(text, joined, out) };
+    return { text: joined, issues: checkTranslation(text, joined, out, { language: lang, terms: fixed }) };
   };
   let tq: Awaited<ReturnType<typeof run>>;
   let ta: Awaited<ReturnType<typeof run>>;
@@ -154,6 +157,8 @@ export async function deleteFaqTranslation(ctx: Ctx, faqId: string, lang: string
 
 export interface ReaderFaq {
   id: string; question: string; answer: string; language: string; translated: boolean;
+  /** Zielgruppe wie im Eintrag (leer oder „all“ = alle) – die Online-Hilfe filtert danach wie die Kapitel */
+  roles: string[]; divisions: string[];
   /** deutsche Quelle (bei deutschen und übersetzten Einträgen) – für sprachunabhängige Ähnlichkeit */
   source: { question: string; answer: string } | null;
 }
@@ -163,15 +168,16 @@ export interface ReaderFaq {
  * `translated: false`), dazu direkt in dieser Sprache verfasste Einträge – in der gepflegten Reihenfolge.
  */
 export async function readerFaqEntries(ctx: Ctx, lang: string): Promise<ReaderFaq[]> {
-  const rows = await ctx.db.all("SELECT id, question, answer, language FROM faq_entries WHERE project_id = ? AND status = 'published' AND language IN ('de', ?) ORDER BY position, created_at", ctx.projectId, lang);
+  const rows = await ctx.db.all("SELECT id, question, answer, language, roles, divisions FROM faq_entries WHERE project_id = ? AND status = 'published' AND language IN ('de', ?) ORDER BY position, created_at", ctx.projectId, lang);
   const src = (r: Row) => ({ question: String(r.question), answer: String(r.answer) });
-  if (lang === 'de') return rows.map((r) => ({ id: r.id as string, ...src(r), language: 'de', translated: true, source: src(r) }));
+  const scope = (r: Row) => ({ roles: parseJson<string[]>(r.roles, []), divisions: parseJson<string[]>(r.divisions, []) });
+  if (lang === 'de') return rows.map((r) => ({ id: r.id as string, ...src(r), ...scope(r), language: 'de', translated: true, source: src(r) }));
   const tr = await ctx.db.all("SELECT faq_id, question, answer, source_hash FROM faq_translations WHERE project_id = ? AND language = ? AND status = 'approved'", ctx.projectId, lang);
   const byId = new Map(tr.map((t) => [t.faq_id as string, t]));
   return rows.map((r) => {
-    if (r.language === lang) return { id: r.id as string, ...src(r), language: lang, translated: true, source: null };
+    if (r.language === lang) return { id: r.id as string, ...src(r), ...scope(r), language: lang, translated: true, source: null };
     const t = byId.get(r.id as string);
-    if (t && t.source_hash === faqHash(String(r.question), String(r.answer))) return { id: r.id as string, question: String(t.question), answer: String(t.answer), language: lang, translated: true, source: src(r) };
-    return { id: r.id as string, ...src(r), language: 'de', translated: false, source: src(r) };
+    if (t && t.source_hash === faqHash(String(r.question), String(r.answer))) return { id: r.id as string, question: String(t.question), answer: String(t.answer), ...scope(r), language: lang, translated: true, source: src(r) };
+    return { id: r.id as string, ...src(r), ...scope(r), language: 'de', translated: false, source: src(r) };
   });
 }

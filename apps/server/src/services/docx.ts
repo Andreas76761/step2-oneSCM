@@ -1,6 +1,9 @@
 // Word-Export (ADR-038): .docx mit Formatvorlagen (Titel, Überschrift 1–3), Inhaltsverzeichnis-Feld, Tabellen, Bildern,
 // Kopf- und Fußzeile mit Seitenzahl sowie optionaler Firmenvorlage (Formatvorlagen aus .dotx/.docx).
 // Markdown wird über dieselben Tokens wie beim PDF übersetzt; eingebettetes HTML erscheint als Text, Links nur http(s)/mailto.
+import { frameTexts, type FrameTexts } from '../domain/frameTexts.js';
+import { CRITERION_PREFIX } from '../domain/revision.js';
+import { HISTORY_TITLE, historySpan } from './appendixRender.js';
 import {
   AlignmentType, BorderStyle, Document, ExternalHyperlink, Footer, Header, ImageRun, LevelFormat, Packer, PageBreak, PageNumber, Paragraph,
   ShadingType, Table, TableCell, TableOfContents, TableRow, TextRun, WidthType, type IStylesOptions, type ParagraphChild,
@@ -10,9 +13,10 @@ import { now } from '../db.js';
 import type { MediaFile } from './media.js';
 import type { ResolvedLayout } from './layout.js';
 import type { Appendices } from './variants.js';
+import { finishDocx } from '../domain/officeAccessibility.js';
 
 export interface DocxBlock { kind: string; text: string; badges: string; label: string | null }
-export interface DocxChapter { title: string; meta: string; sections: { title: string; blocks: DocxBlock[] }[] }
+export interface DocxChapter { title: string; meta: string; /** Prüffassung (ADR-104, W-06): Zeile „Fertig, wenn: …“ */ criterion?: string | null; sections: { title: string; blocks: DocxBlock[] }[] }
 
 const SAFE_URL = /^(https?:|mailto:)/i;
 const marked = new Marked({ gfm: true, async: false });
@@ -22,7 +26,10 @@ const IMG_TYPES: Record<string, 'png' | 'jpg' | 'gif'> = { 'image/png': 'png', '
 const decode = (s: string) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 const hex = (c: string) => c.replace('#', '').toUpperCase();
 
-interface Ctx { media: Map<string, MediaFile>; color: string }
+/** Nummerierte Listen je Dokument: eine Liste ab 1 beginnt neu, eine fortgesetzte (z. B. ab 6) zählt die vorige weiter */
+export interface ListState { next: number; last: number }
+export const newListState = (): ListState => ({ next: 1, last: 0 });
+interface Ctx { media: Map<string, MediaFile>; color: string; /** größte Bildbreite in px (Satzspiegel) */ maxWidth?: number; lists?: ListState; /** Bild in eigener Zeile (Designvorlagen) */ imageBreak?: boolean }
 
 function image(t: Tokens.Image, c: Ctx): ParagraphChild {
   const sha = /^media:([a-f0-9]{64})$/.exec(t.href)?.[1];
@@ -33,7 +40,7 @@ function image(t: Tokens.Image, c: Ctx): ParagraphChild {
   if (!m || (!type && !svgFallback)) return new TextRun({ text: `[Bild: ${t.text || 'ohne Alternativtext'}]`, italics: true });
   const w = m.width ?? svgFallback?.width ?? MAX_WIDTH;
   const h = m.height ?? svgFallback?.height ?? Math.round(w * 0.6);
-  const scale = Math.min(1, MAX_WIDTH / w);
+  const scale = Math.min(1, (c.maxWidth ?? MAX_WIDTH) / w);
   const transformation = { width: Math.round(w * scale), height: Math.round(h * scale) };
   const altText = { name: t.text || 'Bild', description: t.text || '', title: t.text || '' };
   if (svgFallback) return new ImageRun({ type: 'svg', data: m.data, fallback: { type: 'png', data: svgFallback.data }, transformation, altText });
@@ -49,7 +56,11 @@ function inline(tokens: Token[] | undefined, c: Ctx, style: { bold?: boolean; it
       case 'del': out.push(...inline((t as Tokens.Del).tokens, c, style)); break;
       case 'codespan': out.push(new TextRun({ text: decode((t as Tokens.Codespan).text), font: 'Consolas', ...style })); break;
       case 'br': out.push(new TextRun({ text: '', break: 1 })); break;
-      case 'image': out.push(image(t as Tokens.Image, c)); break;
+      case 'image':
+        if (c.imageBreak && out.length) out.push(new TextRun({ text: '', break: 1 }));
+        out.push(image(t as Tokens.Image, c));
+        if (c.imageBreak) out.push(new TextRun({ text: '', break: 1 }));
+        break;
       case 'link': {
         const l = t as Tokens.Link;
         const children = inline(l.tokens, c, style).filter((x): x is TextRun => x instanceof TextRun);
@@ -78,10 +89,21 @@ function blocks(tokens: Token[], c: Ctx, indent = 0): (Paragraph | Table)[] {
       case 'list': {
         const l = t as Tokens.List;
         const level = Math.min(Math.round(indent / 360), 3);
+        // eigene Zählung je Liste (Word-Instanz); Fortsetzung ab n > 1 behält die vorige
+        let instance: number | undefined;
+        // „last“ merkt sich nur Listen der obersten Ebene – eine verschachtelte Liste überschreibt sie nicht,
+        // sonst zählte die Fortsetzung der äußeren Liste mit der Instanz der inneren wieder ab 1
+        if (l.ordered && c.lists) {
+          if (Number(l.start || 1) > 1 && c.lists.last && level === 0) instance = c.lists.last;
+          else {
+            instance = c.lists.next++;
+            if (level === 0) c.lists.last = instance;
+          }
+        }
         for (const item of l.items) {
           const [first, ...rest] = item.tokens;
           const head = first && (first.type === 'text' || first.type === 'paragraph') ? inline((first as Tokens.Text).tokens ?? [first], c) : [];
-          out.push(new Paragraph({ children: head, ...(l.ordered ? { numbering: { reference: 'onescm-numbered', level } } : { bullet: { level } }) }));
+          out.push(new Paragraph({ children: head, ...(l.ordered ? { numbering: { reference: 'onescm-numbered', level, ...(instance ? { instance } : {}) } } : { bullet: { level } }) }));
           out.push(...blocks(first && (first.type === 'text' || first.type === 'paragraph') ? rest : item.tokens, c, indent + 360));
         }
         break;
@@ -108,8 +130,8 @@ function blocks(tokens: Token[], c: Ctx, indent = 0): (Paragraph | Table)[] {
   return out;
 }
 
-export function markdownToDocx(md: string, media: Map<string, MediaFile>, color = '#1d63d8') {
-  return blocks(marked.lexer(md), { media, color });
+export function markdownToDocx(md: string, media: Map<string, MediaFile>, color = '#1d63d8', opts: { maxWidth?: number; lists?: ListState; imageBreak?: boolean } = {}) {
+  return blocks(marked.lexer(md), { media, color, ...opts });
 }
 
 function appendixDocx(a: Appendices, c: Ctx, heading: (text: string, level: 1 | 2) => Paragraph): (Paragraph | Table)[] {
@@ -137,6 +159,10 @@ function appendixDocx(a: Appendices, c: Ctx, heading: (text: string, level: 1 | 
       out.push(...blocks(marked.lexer(f.answer), c));
     }
   }
+  if (a.history?.length) {
+    out.push(heading(HISTORY_TITLE, 1));
+    out.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: [row(['Art', 'Funktion', 'gültig', 'ersetzt durch', 'Hinweis'], true), ...a.history.map((h) => row([h.kind, h.title, historySpan(h), h.replacedBy ?? '–', h.note ?? '']))] }));
+  }
   return out;
 }
 
@@ -145,11 +171,12 @@ function appendixDocx(a: Appendices, c: Ctx, heading: (text: string, level: 1 | 
  * Formatvorlagen (Titel, Überschrift 1–3) verwendet. Das Inhaltsverzeichnis ist ein Word-Feld, das Word beim Öffnen aktualisiert.
  */
 export async function renderDocx(
-  chapters: DocxChapter[], opts: { title: string; filterLine: string; media: Map<string, MediaFile>; layout: ResolvedLayout; appendices?: Appendices | null },
+  chapters: DocxChapter[], opts: { title: string; filterLine: string; media: Map<string, MediaFile>; layout: ResolvedLayout; appendices?: Appendices | null; frame?: FrameTexts; customProperties?: { name: string; value: string }[] },
 ): Promise<Buffer> {
   const { layout: l } = opts;
   const color = hex(l.primaryColor);
-  const c: Ctx = { media: opts.media, color: l.primaryColor };
+  const lists = newListState();
+  const c: Ctx = { media: opts.media, color: l.primaryColor, lists };
   const tpl = l.stylesXml && l.docxTemplate ? l.docxTemplate.styles : null;
   const heading = (text: string, level: 1 | 2 | 3) => {
     const style = tpl?.[`heading${level}`];
@@ -166,18 +193,20 @@ export async function renderDocx(
   if (l.cover && l.companyName) children.push(new Paragraph({ children: [new TextRun({ text: l.companyName, color, bold: true, size: 28 })], spacing: { before: l.logo ? 0 : 1600 } }));
   children.push(new Paragraph(tpl?.title ? { text: opts.title, style: tpl.title } : { text: opts.title, heading: 'Title' }));
   if (l.cover && l.coverSubtitle) children.push(new Paragraph({ children: [new TextRun({ text: l.coverSubtitle, size: 28 })], spacing: { after: 240 } }));
-  children.push(new Paragraph({ children: [new TextRun({ text: `Stand ${now().slice(0, 10)} · ${opts.filterLine}`, color: '5B6474', size: 18 })] }));
+  const F = opts.frame ?? frameTexts('de');
+  children.push(new Paragraph({ children: [new TextRun({ text: `${F.asOf} ${now().slice(0, 10)} · ${opts.filterLine}`, color: '5B6474', size: 18 })] }));
   if (l.cover && l.confidentiality) children.push(new Paragraph({ children: [new TextRun({ text: l.confidentiality, bold: true, color: 'B91C1C' })], spacing: { before: 480 } }));
   if (l.cover) children.push(new Paragraph({ children: [new PageBreak()] }));
 
-  children.push(new Paragraph({ children: [new TextRun({ text: 'Inhalt', bold: true, size: 28, color })], spacing: { after: 120 } }));
-  children.push(new TableOfContents('Inhalt', { hyperlink: true, headingStyleRange: '1-2' }));
+  children.push(new Paragraph({ children: [new TextRun({ text: F.contents, bold: true, size: 28, color })], spacing: { after: 120 } }));
+  children.push(new TableOfContents(F.contents, { hyperlink: true, headingStyleRange: '1-2' }));
   children.push(new Paragraph({ children: [new PageBreak()] }));
 
   chapters.forEach((ch, i) => {
     if (i > 0) children.push(new Paragraph({ children: [new PageBreak()] }));
     children.push(heading(ch.title, 1));
     children.push(new Paragraph({ children: [new TextRun({ text: ch.meta, italics: true, color: '5B6474', size: 18 })], spacing: { after: 120 } }));
+    if (ch.criterion) children.push(new Paragraph({ children: [new TextRun({ text: `${CRITERION_PREFIX} ${ch.criterion}`, bold: true })], spacing: { after: 160 } }));
     for (const s of ch.sections) {
       children.push(heading(s.title, 2));
       for (const b of s.blocks) {
@@ -185,7 +214,7 @@ export async function renderDocx(
         const inner: (Paragraph | Table)[] = [];
         if (b.badges) inner.push(new Paragraph({ children: [new TextRun({ text: b.badges, size: 16, color: '334155' })] }));
         if (b.label) inner.push(new Paragraph({ children: [new TextRun({ text: b.label, bold: true })] }));
-        inner.push(...markdownToDocx(b.text, opts.media, l.primaryColor));
+        inner.push(...markdownToDocx(b.text, opts.media, l.primaryColor, { lists }));
         if (box) {
           children.push(new Table({
             width: { size: 100, type: WidthType.PERCENTAGE },
@@ -205,7 +234,7 @@ export async function renderDocx(
   const headerText = l.headerText ?? [l.companyName, opts.title].filter(Boolean).join(' · ');
   const footerRuns = [
     ...(l.footerText ? [new TextRun({ text: `${l.footerText} · ` })] : []),
-    new TextRun({ children: ['Seite ', PageNumber.CURRENT, ' von ', PageNumber.TOTAL_PAGES] }),
+    new TextRun({ children: [`${F.page} `, PageNumber.CURRENT, ` ${F.of} `, PageNumber.TOTAL_PAGES] }),
   ];
   const styles: IStylesOptions = {
     default: {
@@ -219,6 +248,7 @@ export async function renderDocx(
   const doc = new Document({
     creator: 'oneSCM Handbook Studio', title: opts.title, description: opts.filterLine,
     features: { updateFields: true },
+    ...(opts.customProperties?.length ? { customProperties: opts.customProperties } : {}),
     ...(l.stylesXml ? { externalStyles: l.stylesXml } : { styles }),
     numbering: {
       config: [{
@@ -233,5 +263,6 @@ export async function renderDocx(
       children,
     }],
   });
-  return Packer.toBuffer(doc);
+  // Sprache, dekorative Icons, eindeutige Bild-IDs (ADR-120)
+  return finishDocx(await Packer.toBuffer(doc));
 }

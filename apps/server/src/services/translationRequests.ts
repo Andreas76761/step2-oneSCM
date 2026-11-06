@@ -30,11 +30,13 @@ export async function requestTranslation(ctx: Ctx, input: { chapterId?: unknown;
   if (state === 'done') throw badRequest('Dieses Kapitel liegt bereits aktuell übersetzt vor.');
   let count = 0;
   await ctx.db.tx(async () => {
+    // ein früherer, schon erfüllter Wunsch derselben Person wird wieder offen
     const fresh = await ctx.db.run(
-      'INSERT INTO translation_requests (project_id, chapter_id, language, user_id, created_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING',
+      `INSERT INTO translation_requests (project_id, chapter_id, language, user_id, created_at) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT (project_id, chapter_id, language, user_id) DO UPDATE SET created_at = excluded.created_at, fulfilled_at = NULL WHERE translation_requests.fulfilled_at IS NOT NULL`,
       ctx.projectId, chapterId, language, user.id, now(),
     );
-    count = Number((await ctx.db.get('SELECT COUNT(*) AS n FROM translation_requests WHERE project_id = ? AND chapter_id = ? AND language = ?', ctx.projectId, chapterId, language))?.n ?? 0);
+    count = Number((await ctx.db.get('SELECT COUNT(*) AS n FROM translation_requests WHERE project_id = ? AND chapter_id = ? AND language = ? AND fulfilled_at IS NULL', ctx.projectId, chapterId, language))?.n ?? 0);
     if (!fresh.changes) return;
     await audit(ctx, user.id, 'translation.requested', 'chapter', chapterId, { language, count });
     // erster Wunsch: Hinweis im Kapitel an Autorin/Autor und Einreichende der neuesten Fassung (wie Leser-Rückmeldungen).
@@ -56,15 +58,15 @@ export async function requestTranslation(ctx: Ctx, input: { chapterId?: unknown;
 
 /** Eigene offene Wünsche (für die Leseransicht) */
 export async function myTranslationRequests(ctx: Ctx, userId: string) {
-  const rows = await ctx.db.all('SELECT chapter_id, language FROM translation_requests WHERE project_id = ? AND user_id = ?', ctx.projectId, userId);
+  const rows = await ctx.db.all('SELECT chapter_id, language FROM translation_requests WHERE project_id = ? AND user_id = ? AND fulfilled_at IS NULL', ctx.projectId, userId);
   return rows.map((r) => ({ chapterId: r.chapter_id as string, language: r.language as string }));
 }
 
-/** Wünsche gesammelt je Kapitel und Sprache, meistgewünschte zuerst; erledigte (aktuell übersetzt) nur mit `all` */
+/** Offene Wünsche gesammelt je Kapitel und Sprache, meistgewünschte zuerst; mit `all` auch erfüllte (für die Statistik) */
 export async function listTranslationRequests(ctx: Ctx, all = false) {
   const rows = await ctx.db.all(
     `SELECT r.chapter_id, r.language, c.title, COUNT(*) AS n, MIN(r.created_at) AS first_at, MAX(r.created_at) AS last_at
-     FROM translation_requests r JOIN chapters c ON c.id = r.chapter_id WHERE r.project_id = ? GROUP BY r.chapter_id, r.language, c.title`, ctx.projectId,
+     FROM translation_requests r JOIN chapters c ON c.id = r.chapter_id WHERE r.project_id = ?${all ? '' : ' AND r.fulfilled_at IS NULL'} GROUP BY r.chapter_id, r.language, c.title`, ctx.projectId,
   );
   const out = [];
   for (const r of rows) {
@@ -79,15 +81,20 @@ export async function listTranslationRequests(ctx: Ctx, all = false) {
 }
 
 /**
- * Nach der Freigabe einer Übersetzung: alle, die sie gewünscht haben, erhalten einen Hinweis mit Link in die Leseransicht.
- * Läuft in der Transaktion der Freigabe; die Wünsche bleiben für die Statistik erhalten (Stand „erledigt“).
+ * Nach der Freigabe einer Übersetzung: wer sie (noch offen) gewünscht hat, erhält einen Hinweis mit Link in die
+ * Leseransicht; die Wünsche gelten als erfüllt und bleiben für die Statistik erhalten. Gilt nur, wenn die Übersetzung
+ * damit aktuell ist – nicht bei der Freigabe einer Übersetzung zu einer älteren Fassung. Läuft in der Transaktion der Freigabe.
  */
 export async function notifyTranslationReady(ctx: Ctx, chapterId: string, language: string, title: string, actor: string) {
-  const rows = await ctx.db.all('SELECT user_id FROM translation_requests WHERE project_id = ? AND chapter_id = ? AND language = ?', ctx.projectId, chapterId, language);
+  if ((await stateOf(ctx, chapterId, language)) !== 'done') return 0;
+  const rows = await ctx.db.all('SELECT user_id FROM translation_requests WHERE project_id = ? AND chapter_id = ? AND language = ? AND fulfilled_at IS NULL', ctx.projectId, chapterId, language);
   const name = LANGUAGES[language] ?? language;
   for (const r of rows) {
     if (r.user_id === actor) continue;
     await projectNotice(ctx, r.user_id as string, `Ihre gewünschte Übersetzung ist da: „${title}“ auf ${name}.`, 'translation_ready', `/lesen/${chapterId}?lang=${language}`);
   }
+  await ctx.db.run('UPDATE translation_requests SET fulfilled_at = ? WHERE project_id = ? AND chapter_id = ? AND language = ? AND fulfilled_at IS NULL', now(), ctx.projectId, chapterId, language);
+  // der nächste Wunsch (wenn die Übersetzung veraltet) benachrichtigt die Redaktion wieder
+  await ctx.db.run('DELETE FROM translation_request_notices WHERE project_id = ? AND chapter_id = ? AND language = ?', ctx.projectId, chapterId, language);
   return rows.length;
 }

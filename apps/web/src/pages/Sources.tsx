@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api, del, get, patch, post, qs } from '../api';
+import { RefIcon } from '../components/icons';
 import {
-  Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
+  Gated, Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
   activatable,
 } from '../components/ui';
 
@@ -83,11 +84,11 @@ export function SourcesPage() {
               void upload(e.dataTransfer.files[0]);
             }}
           >
-            <input type="file" accept=".zip,.md,.markdown,.html,.htm,.docx" data-testid="file-input" disabled={busy} onChange={(e) => void upload(e.target.files?.[0] ?? undefined)} />
-            <span>{busy ? 'Import läuft …' : 'ZIP-, Markdown-, HTML- oder Word-Datei hierher ziehen oder auswählen'}</span>
+            <input type="file" accept=".zip,.md,.markdown,.html,.htm,.docx,.pptx,.pdf,.mp4,.vtt,.srt,.xml,.csv" data-testid="file-input" disabled={busy} onChange={(e) => void upload(e.target.files?.[0] ?? undefined)} />
+            <span>{busy ? 'Import läuft …' : 'ZIP-, Markdown-, HTML-, Word-, PowerPoint- oder PDF-Datei hierher ziehen oder auswählen'}</span>
           </label>
           <label className="inline small"><input type="checkbox" checked={snapshot} onChange={(e) => setSnapshot(e.target.checked)} /> ZIP ist der vollständige Stand – fehlende Dateien als entfernt markieren</label>
-          <Decision id="E-01">Erlaubt sind .md, .markdown, .zip sowie Confluence-/HTML-Export und Word (.docx), die in Markdown umgewandelt werden (Original bleibt erhalten); Grenzen unter Einstellungen. Identische Inhalte (gleicher Pfad, gleicher SHA-256) erzeugen keine neue Revision.</Decision>
+          <Decision id="E-01">Erlaubt sind .md, .markdown, .zip sowie Confluence-/HTML-Export, Word (.docx), PowerPoint (.pptx) und PDF, die in Markdown umgewandelt werden – mit Fundstelle je Folie, Seite bzw. Abschnitt (Original bleibt erhalten), sowie Jira-Exporte als XML oder CSV – je Ticket eine Quelle unter jira/, ohne Personenfelder; Grenzen unter Einstellungen. Identische Inhalte (gleicher Pfad, gleicher SHA-256) erzeugen keine neue Revision.</Decision>
         </Card>
         <Card title="Importprotokoll">
           <ErrorBox error={imports.error} />
@@ -188,7 +189,7 @@ export function RefSelect({ kind, value, onChange, label }: { kind: 'roles' | 'd
   return (
     <select aria-label={label ?? (kind === 'roles' ? 'Rolle' : 'Sparte')} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
       <option value="">{kind === 'roles' ? 'Alle Rollen' : 'Alle Sparten'}</option>
-      {ref?.[kind].map((r) => <option key={r.code} value={r.code}>{r.icon} {r.label}</option>)}
+      {ref?.[kind].map((r) => <option key={r.code} value={r.code}>{r.label}</option>)}
     </select>
   );
 }
@@ -322,13 +323,13 @@ function SnippetDialog({ snippet, onClose, onSaved }: { snippet: any; onClose: (
           <fieldset className="checks">
             <legend>Fachliche Rollen (Mehrfachauswahl)</legend>
             {ref?.roles.map((r) => (
-              <label key={r.code}><input type="checkbox" checked={roles.includes(r.code)} onChange={() => toggle(roles, setRoles, r.code)} /> {r.icon} {r.label}</label>
+              <label key={r.code}><input type="checkbox" checked={roles.includes(r.code)} onChange={() => toggle(roles, setRoles, r.code)} /> <RefIcon name={r.icon} /> {r.label}</label>
             ))}
           </fieldset>
           <fieldset className="checks">
             <legend>Sparten (Mehrfachauswahl)</legend>
             {ref?.divisions.map((r) => (
-              <label key={r.code}><input type="checkbox" checked={divs.includes(r.code)} onChange={() => toggle(divs, setDivs, r.code)} /> {r.icon} {r.label}</label>
+              <label key={r.code}><input type="checkbox" checked={divs.includes(r.code)} onChange={() => toggle(divs, setDivs, r.code)} /> <RefIcon name={r.icon} /> {r.label}</label>
             ))}
           </fieldset>
           <div className="form-row">
@@ -376,7 +377,7 @@ function SemanticSearch({ chapters, onOpen }: { chapters: any[]; onOpen: (id: st
           <option value="">Alle Kapitel</option>
           {chapters.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
         </select>
-        <button className="btn primary" disabled={busy || !q.trim()}>{busy ? 'Suche …' : 'Suchen'}</button>
+        <Gated className="btn primary" busy={busy} missing={[!q.trim() && 'Suchbegriff']}>{busy ? 'Suche …' : 'Suchen'}</Gated>
       </form>
       <ErrorBox error={error} />
       {result && (
@@ -500,7 +501,7 @@ function Connections({ onSynced }: { onSynced: () => void }) {
             </label>
             <label className="block">Zugangsdaten aus Umgebungsvariable (optional)<input value={form.credentialEnv} placeholder={form.kind === 'confluence' ? 'CONFLUENCE_CREDENTIAL_HANDBUCH' : 'GIT_CREDENTIAL_HANDBUCH'} onChange={(e) => setForm({ ...form, credentialEnv: e.target.value })} /></label>
             <p className="small">Zugangsdaten werden nie gespeichert: Der Betrieb hinterlegt das Token als Umgebungsvariable {form.kind === 'confluence' ? 'CONFLUENCE_CREDENTIAL_… („E-Mail:API-Token“)' : 'GIT_CREDENTIAL_…'} des Servers.</p>
-            <div className="actions"><button className="btn primary" disabled={!form.name || !form.url || (form.kind === 'confluence' && !form.spaceKey)} onClick={() => void save()}>Anlegen und abgleichen</button></div>
+            <div className="actions"><Gated className="btn primary" missing={[!form.name && 'Name', !form.url && 'URL', form.kind === 'confluence' && !form.spaceKey && 'Bereichsschlüssel']} onClick={() => void save()}>Anlegen und abgleichen</Gated></div>
           </div>
         </Modal>
       )}

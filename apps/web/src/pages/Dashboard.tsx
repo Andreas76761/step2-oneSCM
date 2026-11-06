@@ -1,7 +1,8 @@
+import { BlockerIcon } from '../components/icons';
 import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { post } from '../api';
-import { Badge, BarList, Card, ErrorBox, Page, Status, TYPE_LABEL, errorText, useApp, useLoad } from '../components/ui';
+import { Badge, BarList, Card, ErrorBox, Page, Status, TYPE_LABEL, errorText, useApp, useLoad, statusLabel } from '../components/ui';
 
 /**
  * Verlauf des durchschnittlichen Stilwerts (ADR-048): eine Linie (2px) mit Endpunkt-Beschriftung, Achse 0–100,
@@ -168,14 +169,14 @@ export function DashboardPage() {
                 <td>{c.snippetCount}</td>
                 <td>{c.confirmedSnippetCount}</td>
                 <td>{c.openFindings}</td>
-                <td>{c.openBlockers ? <span className="tag sev-blocker">⛔ {c.openBlockers}</span> : '–'}</td>
+                <td>{c.openBlockers ? <span className="tag sev-blocker"><BlockerIcon />{c.openBlockers}<span className="sr-only"> offene Blocker</span></span> : '–'}</td>
                 <td>{c.versions[0] ? <>V{c.versions[0].versionNo} <Status s={c.versions[0].status} /></> : '–'}</td>
                 <td><Link to={`/werkstatt/${c.id}`}>Werkstatt →</Link></td>
               </tr>
             ))}
           </tbody>
         </table>
-        {d?.lastAnalysis && <p className="muted small">Letzte Analyse: {new Date(d.lastAnalysis.startedAt).toLocaleString('de-DE')} ({d.lastAnalysis.status})</p>}
+        {d?.lastAnalysis && <p className="muted small">Letzte Analyse: {new Date(d.lastAnalysis.startedAt).toLocaleString('de-DE')} ({statusLabel(d.lastAnalysis.status)})</p>}
       </Card>
     </Page>
   );

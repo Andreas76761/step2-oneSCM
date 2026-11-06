@@ -1,6 +1,6 @@
 // Handbuch-Assistent (ADR-026): Fragen an das freigegebene Handbuch mit Quellenangabe je Satz.
 // Grundlage sind ausschließlich Absätze freigegebener Kapitelversionen bzw. freigegebener Übersetzungen.
-import { audit, getSettings, type Ctx, type User } from '../context.js';
+import { audit, getSettings, privacyNames, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson } from '../db.js';
 import { ASSISTANT_PROMPT_VERSION, buildAssistantPrompt, extractiveAnswer, keywordScore, parseAssistantResponse, type Passage } from '../domain/assistant.js';
 import { detectPrivacy } from '../domain/privacy.js';
@@ -75,7 +75,7 @@ async function approvedPassages(ctx: Ctx, opts: { language: string; role?: strin
 }
 
 /** Vektoren je Text-Hash (dauerhaft zwischengespeichert, modellbezogen) */
-async function embedTexts(ctx: Ctx, texts: string[]): Promise<Float32Array[]> {
+export async function embedTexts(ctx: Ctx, texts: string[]): Promise<Float32Array[]> {
   const model = ctx.embeddings.model;
   const hashes = texts.map((t) => sha256(t));
   const known = new Map<string, Float32Array>();
@@ -124,12 +124,13 @@ export async function ask(ctx: Ctx, input: AskInput, user: User, opts: { version
   if (input.role && !(ROLE_CODES as readonly string[]).includes(input.role)) throw badRequest(`Unbekannte Rolle „${input.role}“.`);
   if (input.division && !(DIVISION_CODES as readonly string[]).includes(input.division)) throw badRequest(`Unbekannte Sparte „${input.division}“.`);
   // Datenschutz: personenbezogene Daten in der Frage nicht an externe Dienste
-  if ((ctx.embeddings.external || ctx.llm?.external) && detectPrivacy(question).length) {
+  const names = await privacyNames(ctx.db);
+  if ((ctx.embeddings.external || ctx.llm?.external) && detectPrivacy(question, { names }).length) {
     throw unprocessable('Die Frage enthält mögliche personenbezogene Daten und wird nicht an externe Dienste übertragen.');
   }
 
   // Passagen mit personenbezogenen Mustern nie an externe Dienste (wie beim semantischen Index, ADR-017)
-  const sensitive = (p: HandbookPassage) => detectPrivacy(p.text).length > 0;
+  const sensitive = (p: HandbookPassage) => detectPrivacy(p.text, { names }).length > 0;
   const all = (await approvedPassages(ctx, { language, role: input.role, division: input.division, versionIds: opts.versionIds })).filter((p) => !(ctx.embeddings.external && sensitive(p)));
   let ranked: (HandbookPassage & { score: number })[] = [];
   if (all.length) {

@@ -1,8 +1,11 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
-import { NavLink, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import {
+  ArchiveIcon, ArrowLeftRightIcon, BadgeCheckIcon, BadgeHelpIcon, BellIcon, BlocksIcon, BookAIcon, BookMarkedIcon, BookOpenIcon, BookOpenCheckIcon, BotIcon, BoxesIcon, CalendarDaysIcon, CarIcon, CaseSensitiveIcon, ChartLineIcon, ChartPieIcon, ChevronDownIcon, ChevronRightIcon, CircleCheckIcon, CircleHelpIcon, ClipboardListIcon, CompassIcon, ConstructionIcon, CopyIcon, CopyCheckIcon, DatabaseIcon, EllipsisIcon, FileInputIcon, FileOutputIcon, FilePenIcon, FileTextIcon, FilesIcon, FlagIcon, FolderInputIcon, FolderKanbanIcon, GaugeIcon, GitCompareIcon, GitCompareArrowsIcon, GroupIcon, HouseIcon, ImageIcon, ImagesIcon, LanguagesIcon, LayoutDashboardIcon, LibraryIcon, LifeBuoyIcon, LinkIcon, ListChecksIcon, ListFilterIcon, ListOrderedIcon, ListTreeIcon, LockIcon, MenuIcon, MessageCircleQuestionIcon, MessageSquareIcon, MessagesSquareIcon, NetworkIcon, NewspaperIcon, PaletteIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PenLineIcon, PlugIcon, PuzzleIcon, RefreshCwIcon, RocketIcon, ScaleIcon, SearchCheckIcon, SettingsIcon, ShieldCheckIcon, SlidersHorizontalIcon, SparklesIcon, SpellCheckIcon, StickyNoteIcon, TagsIcon, TargetIcon, UserCogIcon, UserRoundSearchIcon, UsersIcon, UsersRoundIcon, WandSparklesIcon, XIcon, type LucideIcon,
+} from 'lucide-react';
+import { NavLink, Navigate, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { currentProjectId, currentUserId, get, setCurrentProjectId, setCurrentUserId } from './api';
 import { initAuth, login, logout, type AuthConfig } from './auth';
-import { AppCtx, type Reference } from './components/ui';
+import { AppCtx, permLabel, type Reference } from './components/ui';
 import { Tour, tourDone } from './components/Tour';
 
 const StartPage = lazy(() => import('./pages/Start').then((m) => ({ default: m.StartPage })));
@@ -31,6 +34,8 @@ const UsersPage = lazy(() => import('./pages/Users').then((m) => ({ default: m.U
 const ReleasesPage = lazy(() => import('./pages/Releases').then((m) => ({ default: m.ReleasesPage })));
 const InboxPage = lazy(() => import('./pages/Discussion').then((m) => ({ default: m.InboxPage })));
 const TranslationsPage = lazy(() => import('./pages/Translations').then((m) => ({ default: m.TranslationsPage })));
+const TranslationMemoryPage = lazy(() => import('./pages/TranslationTools').then((m) => ({ default: m.TranslationMemoryPage })));
+const TranslationGlossaryPage = lazy(() => import('./pages/TranslationTools').then((m) => ({ default: m.TranslationGlossaryPage })));
 const AnalyticsPage = lazy(() => import('./pages/Analytics').then((m) => ({ default: m.AnalyticsPage })));
 const AssistantPage = lazy(() => import('./pages/Assistant').then((m) => ({ default: m.AssistantPage })));
 const IntegrationsPage = lazy(() => import('./pages/Integrations').then((m) => ({ default: m.IntegrationsPage })));
@@ -44,66 +49,141 @@ const GlossaryPage = lazy(() => import('./pages/MasterData').then((m) => ({ defa
 const ImageIndexPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.ImageIndexPage })));
 const PlanningPage = lazy(() => import('./pages/MasterData').then((m) => ({ default: m.PlanningPage })));
 const GuidancePage = lazy(() => import('./pages/Guidance').then((m) => ({ default: m.GuidancePage })));
+const TextModulesPage = lazy(() => import('./pages/TextModules').then((m) => ({ default: m.TextModulesPage })));
+const BeforeAfterPage = lazy(() => import('./pages/BeforeAfter').then((m) => ({ default: m.BeforeAfterPage })));
+const TextVariantsPage = lazy(() => import('./pages/Audience').then((m) => ({ default: m.TextVariantsPage })));
+const ProfileReviewsPage = lazy(() => import('./pages/Audience').then((m) => ({ default: m.ProfileReviewsPage })));
+const RevisionsPage = lazy(() => import('./pages/Revisions').then((m) => ({ default: m.RevisionsPage })));
+const AssessmentPage = lazy(() => import('./pages/Assessment').then((m) => ({ default: m.AssessmentPage })));
+const LanguageErrorsPage = lazy(() => import('./pages/Assessment').then((m) => ({ default: m.LanguageErrorsPage })));
 const ChapterAssistantPage = lazy(() => import('./pages/ChapterAssistant').then((m) => ({ default: m.ChapterAssistantPage })));
 const PrintPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.PrintPage })));
 const ReaderBookmarksPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderBookmarksPage })));
 const ReaderFaqPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderFaqPage })));
 const ReaderPage = lazy(() => import('./pages/Reader').then((m) => ({ default: m.ReaderPage })));
+const MetadataOverviewPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataOverviewPage })));
+const MetadataChunksPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataChunksPage })));
+const MetadataQaPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataQaPage })));
+const AccessMatrixPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.AccessMatrixPage })));
+const DomainMapPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.DomainMapPage })));
+const MetadataLabelsPage = lazy(() => import('./pages/Metadata').then((m) => ({ default: m.MetadataLabelsPage })));
+const SourceUpdatesPage = lazy(() => import('./pages/SourceUpdates').then((m) => ({ default: m.SourceUpdatesPage })));
+const TicketReleasesPage = lazy(() => import('./pages/ReleaseLetters').then((m) => ({ default: m.TicketReleasesPage })));
+const ReleaseLettersPage = lazy(() => import('./pages/ReleaseLetters').then((m) => ({ default: m.ReleaseLettersPage })));
+const OutlineSourcesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.OutlineSourcesPage })));
+const KnowledgeNotesPage = lazy(() => import('./pages/Knowledge').then((m) => ({ default: m.KnowledgeNotesPage })));
+const QuestionCatalogPage = lazy(() => import('./pages/QuestionCatalog').then((m) => ({ default: m.QuestionCatalogPage })));
+const AnswerQualityPage = lazy(() => import('./pages/AnswerQuality').then((m) => ({ default: m.AnswerQualityPage })));
+const SurveysPage = lazy(() => import('./pages/Surveys').then((m) => ({ default: m.SurveysPage })));
+const MetaDuplicatesPage = lazy(() => import('./pages/MetaDuplicates').then((m) => ({ default: m.MetaDuplicatesPage })));
+const HeadingsPage = lazy(() => import('./pages/Headings').then((m) => ({ default: m.HeadingsPage })));
+const IngestPage = lazy(() => import('./pages/Ingest').then((m) => ({ default: m.IngestPage })));
+const ImageArchivePage = lazy(() => import('./pages/ImageArchive').then((m) => ({ default: m.ImageArchivePage })));
+const StructurePage = lazy(() => import('./pages/Structure').then((m) => ({ default: m.StructurePage })));
+const TriagePage = lazy(() => import('./pages/Triage').then((m) => ({ default: m.TriagePage })));
+const ContentDashboardPage = lazy(() => import('./pages/Triage').then((m) => ({ default: m.ContentDashboardPage })));
+const AgentsPage = lazy(() => import('./pages/Agents').then((m) => ({ default: m.AgentsPage })));
+const GoalPage = lazy(() => import('./pages/Agents').then((m) => ({ default: m.GoalPage })));
+const WorkAreaPage = lazy(() => import('./pages/WorkAreas').then((m) => ({ default: m.WorkAreaPage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
-type NavItem = { to: string; label: string; icon: string };
+type NavItem = { to: string; label: string; icon: LucideIcon };
 const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
+  // oneSCM_Metadaten (ADR-079): Quellen einlesen, je Überschrift labeln und befragen
+  { id: 'metadaten', label: 'oneSCM_Metadaten', items: [
+    { to: '/metadaten', label: 'Übersicht', icon: GaugeIcon },
+    { to: '/metadaten/einlesen', label: 'Einlesen', icon: FileInputIcon },
+    { to: '/metadaten/triage', label: 'Triage', icon: ListFilterIcon },
+    { to: '/metadaten/inhalte', label: 'Inhalts-Dashboard', icon: ChartPieIcon },
+    { to: '/metadaten/ueberschriften', label: 'Quellen je Überschrift', icon: ListTreeIcon },
+    { to: '/metadaten/chunks', label: 'Chunks', icon: BlocksIcon },
+    { to: '/metadaten/dubletten', label: 'Dubletten (alle Formate)', icon: CopyIcon },
+    { to: '/metadaten/kapitel-quellen', label: 'Kapitel ↔ Quellen', icon: ArrowLeftRightIcon },
+    { to: '/metadaten/wissensnotizen', label: 'Wissensnotizen', icon: StickyNoteIcon },
+    { to: '/metadaten/fragen', label: 'Fragen & Antworten', icon: MessageCircleQuestionIcon },
+    { to: '/metadaten/rueckfragen', label: 'Rückfragen', icon: CircleHelpIcon },
+    { to: '/metadaten/qualitaet', label: 'Antwortqualität', icon: TargetIcon },
+    { to: '/metadaten/befragung', label: 'Expertenbefragung', icon: UserRoundSearchIcon },
+    { to: '/metadaten/zugriffsmatrix', label: 'Zugriffsmatrix', icon: ShieldCheckIcon },
+    { to: '/metadaten/zuordnung', label: 'Zuordnung', icon: NetworkIcon },
+    { to: '/metadaten/labels', label: 'Labels', icon: TagsIcon },
+  ] },
+  // Agenten in der App (ADR-100): Orchestrator, Aufgaben, Entscheidungen, Ziel-Abgleich GOAL
+  { id: 'agenten', label: 'Agenten', items: [
+    { to: '/agenten', label: 'Aufgaben & Entscheidungen', icon: BotIcon },
+    { to: '/agenten/goal', label: 'GOAL – Ziel-Abgleich', icon: FlagIcon },
+  ] },
   { id: 'sammeln', label: '1 Sammeln', items: [
-    { to: '/quellen', label: 'Quellen', icon: '📥' },
-    { to: '/cluster', label: 'Textcluster', icon: '🧩' },
-    { to: '/widersprueche', label: 'Widersprüche', icon: '⚖️' },
-    { to: '/dopplungen', label: 'Dopplungen', icon: '📑' },
+    { to: '/quellen', label: 'Quellen', icon: FolderInputIcon },
+    { to: '/quellenaenderungen', label: 'Quellenänderungen', icon: RefreshCwIcon },
+    { to: '/cluster', label: 'Textcluster', icon: GroupIcon },
+    { to: '/widersprueche', label: 'Widersprüche', icon: ScaleIcon },
+    { to: '/dopplungen', label: 'Dopplungen', icon: CopyCheckIcon },
+  ] },
+  // Arbeitsbereiche (ADR-098): kommende Funktionen vorab dokumentieren, Backlog, interne Themen – nicht im Handbuch
+  { id: 'bereiche', label: 'Pipeline, Backlog, Intern', items: [
+    { to: '/pipeline', label: 'Pipeline', icon: ConstructionIcon },
+    { to: '/backlog', label: 'Backlog', icon: ArchiveIcon },
+    { to: '/intern', label: 'Intern', icon: LockIcon },
   ] },
   { id: 'schreiben', label: '2 Schreiben', items: [
-    { to: '/kapitel-assistent', label: 'Kapitel-Assistent', icon: '🧭' },
-    { to: '/generator', label: 'Kapitelgenerator', icon: '⚙️' },
-    { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: '✏️' },
-    { to: '/draft-manual', label: 'Draft Manual', icon: '📝' },
-    { to: '/bilder', label: 'Bilder', icon: '🎨' },
+    { to: '/kapitelsteuerung', label: 'Kapitelsteuerung', icon: SlidersHorizontalIcon },
+    { to: '/kapitel-assistent', label: 'Kapitel-Assistent', icon: CompassIcon },
+    { to: '/generator', label: 'Kapitelgenerator', icon: WandSparklesIcon },
+    { to: '/werkstatt', label: 'Kapitelwerkstatt', icon: PenLineIcon },
+    { to: '/draft-manual', label: 'Draft Manual', icon: FileTextIcon },
+    { to: '/textbausteine', label: 'Textbausteine', icon: PuzzleIcon },
+    { to: '/bilder', label: 'Bilder', icon: PaletteIcon },
+    { to: '/bildarchiv', label: 'Bildarchiv', icon: ImagesIcon },
+    { to: '/vorher-nachher', label: 'Vorher/Nachher', icon: GitCompareArrowsIcon },
   ] },
   { id: 'pruefen', label: '3 Prüfen', items: [
-    { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: '🔍' },
-    { to: '/rueckmeldungen', label: 'Rückmeldungen', icon: '💬' },
-    { to: '/schreibstil', label: 'Schreibstil', icon: '🖋️' },
-    { to: '/terminologie', label: 'Terminologie', icon: '📖' },
-    { to: '/evidenz', label: 'Evidenz', icon: '🔎' },
-    { to: '/freigabe', label: 'Freigabe', icon: '✅' },
+    { to: '/anleitungs-check', label: 'Anleitungs-Check', icon: ListChecksIcon },
+    { to: '/kapitelbewertung', label: 'Kapitelbewertung', icon: BadgeCheckIcon },
+    { to: '/ueberarbeitung', label: 'Überarbeitung', icon: FilePenIcon },
+    { to: '/pruefprofile', label: 'Prüferprofile', icon: UsersRoundIcon },
+    { to: '/rueckmeldungen', label: 'Rückmeldungen', icon: MessageSquareIcon },
+    { to: '/schreibstil', label: 'Schreibstil', icon: SpellCheckIcon },
+    { to: '/fehlerliste', label: 'Fehlerliste', icon: ClipboardListIcon },
+    { to: '/terminologie', label: 'Terminologie', icon: BookAIcon },
+    { to: '/evidenz', label: 'Evidenz', icon: SearchCheckIcon },
+    { to: '/freigabe', label: 'Freigabe', icon: CircleCheckIcon },
   ] },
   { id: 'veroeffentlichen', label: '4 Veröffentlichen', items: [
-    { to: '/lesen', label: 'Leseransicht', icon: '📖' },
-    { to: '/export', label: 'Export', icon: '📤' },
-    { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: '📚' },
-    { to: '/uebersetzungen', label: 'Übersetzungen', icon: '🌐' },
+    { to: '/lesen', label: 'Leseransicht', icon: BookOpenIcon },
+    { to: '/export', label: 'Export', icon: FileOutputIcon },
+    { to: '/textvarianten', label: 'Textvarianten', icon: FilesIcon },
+    { to: '/veroeffentlichung', label: 'Veröffentlichung', icon: RocketIcon },
+    { to: '/uebersetzungen', label: 'Übersetzungen', icon: LanguagesIcon },
+    { to: '/uebersetzungen/speicher', label: 'Übersetzungsspeicher', icon: DatabaseIcon },
+    { to: '/uebersetzungen/glossar', label: 'Glossar je Sprache', icon: BookMarkedIcon },
+    { to: '/release-abgleich', label: 'Release-Abgleich', icon: GitCompareIcon },
+    { to: '/releaseletter', label: 'Releaseletter', icon: NewspaperIcon },
   ] },
 ];
 const NAV_MORE: NavItem[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { to: '/rollen', label: 'Rollenansichten', icon: '👥' },
-  { to: '/sparten', label: 'Spartenansichten', icon: '🚘' },
-  { to: '/optimierungen', label: 'Optimierungen', icon: '✨' },
-  { to: '/assistent', label: 'Assistent', icon: '💬' },
-  { to: '/kontexthilfe', label: 'Kontexthilfe', icon: '❓' },
-  { to: '/analytik', label: 'Analytik', icon: '📈' },
-  { to: '/traceability', label: 'Traceability', icon: '🔗' },
-  { to: '/projekte', label: 'Projekte', icon: '🗂️' },
-  { to: '/benutzer', label: 'Benutzer', icon: '👤' },
-  { to: '/integrationen', label: 'Integrationen', icon: '🔌' },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
+  { to: '/rollen', label: 'Rollenansichten', icon: UsersIcon },
+  { to: '/sparten', label: 'Spartenansichten', icon: CarIcon },
+  { to: '/optimierungen', label: 'Optimierungen', icon: SparklesIcon },
+  { to: '/assistent', label: 'Assistent', icon: MessagesSquareIcon },
+  { to: '/kontexthilfe', label: 'Kontexthilfe', icon: LifeBuoyIcon },
+  { to: '/analytik', label: 'Analytik', icon: ChartLineIcon },
+  { to: '/traceability', label: 'Traceability', icon: LinkIcon },
+  { to: '/projekte', label: 'Projekte', icon: FolderKanbanIcon },
+  { to: '/benutzer', label: 'Benutzer', icon: UserCogIcon },
+  { to: '/integrationen', label: 'Integrationen', icon: PlugIcon },
 ];
 
 // Stammdaten (ADR-032): unten in der Navigation, mit Untermenü
 const MASTER_DATA = [
-  { to: '/stammdaten/inhaltsverzeichnis', label: 'Inhaltsverzeichnis', icon: '🗂' },
-  { to: '/stammdaten/abkuerzungen', label: 'Abkürzungen', icon: '🔤' },
-  { to: '/stammdaten/glossar', label: 'Glossar', icon: '📘' },
-  { to: '/stammdaten/bildverzeichnis', label: 'Bildverzeichnis', icon: '🖼️' },
-  { to: '/stammdaten/faq', label: 'FAQ', icon: '❔' },
-  { to: '/stammdaten/planung', label: 'Planung', icon: '📅' },
+  { to: '/stammdaten/inhaltsverzeichnis', label: 'Inhaltsverzeichnis', icon: ListOrderedIcon },
+  { to: '/stammdaten/abkuerzungen', label: 'Abkürzungen', icon: CaseSensitiveIcon },
+  { to: '/stammdaten/glossar', label: 'Glossar', icon: LibraryIcon },
+  { to: '/stammdaten/bildverzeichnis', label: 'Bildverzeichnis', icon: ImageIcon },
+  { to: '/stammdaten/faq', label: 'FAQ', icon: BadgeHelpIcon },
+  { to: '/stammdaten/planung', label: 'Planung', icon: CalendarDaysIcon },
 ];
 
 const COLLAPSE_KEY = 'onescm.nav.collapsed';
@@ -160,7 +240,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   const [ref, setRef] = useState<Reference | null>(null);
   const [me, setMe] = useState<{ id: string; name: string; permissions: string[] } | null>(null);
   const [userId, setUser] = useState(currentUserId());
-  const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'error' } | null>(null);
+  const [toast, setToast] = useState<{ msg: string; kind: 'ok' | 'error'; id: number } | null>(null);
+  const toastSeq = useRef(0);
   const [projects, setProjects] = useState<{ id: string; name: string; archivedAt: string | null }[]>([]);
   const projectId = currentProjectId();
   const [navOpen, setNavOpen] = useState(false);
@@ -201,6 +282,68 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
+  // Waagerecht scrollende Tabellen ohne fokussierbaren Inhalt per Tastatur erreichbar machen (WCAG 2.1.1, axe
+  // scrollable-region-focusable) – mobil werden Tabellen zum Scrollbereich (styles.css); gilt für alle Seiten
+  useEffect(() => {
+    // nur per Tab erreichbare Elemente: gesperrte Felder und tabindex="-1" zählen nicht
+    const focusable = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const update = () => {
+      for (const t of document.querySelectorAll<HTMLElement>('.table, .table-wrap')) {
+        const scrolls = t.scrollWidth > t.clientWidth + 1 && getComputedStyle(t).overflowX !== 'visible';
+        const needsStop = scrolls && !t.querySelector(focusable);
+        // nur selbst gesetzte Tabstopps wieder entfernen
+        if (needsStop && !t.hasAttribute('tabindex')) {
+          t.setAttribute('tabindex', '0');
+          t.dataset.scrollStop = '';
+        } else if (!needsStop && t.dataset.scrollStop !== undefined) {
+          t.removeAttribute('tabindex');
+          delete t.dataset.scrollStop;
+        }
+      }
+    };
+    let frame = 0;
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    };
+    const observer = new MutationObserver(schedule);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('resize', schedule);
+    schedule();
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', schedule);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+  // Fixierte erste Spalte (z. B. Zugriffsmatrix): Beim Tabben schiebt der Browser das Feld nur knapp ins Bild und
+  // damit unter die fixierte Spalte. Dann den Scrollbereich so weit schieben, dass der Fokus sichtbar ist (WCAG 2.4.11).
+  useEffect(() => {
+    const onFocus = (e: FocusEvent) => {
+      const el = e.target as HTMLElement;
+      const row = el.closest?.('tr');
+      if (!row) return;
+      let box: HTMLElement | null = row.parentElement;
+      while (box && !(box.scrollWidth > box.clientWidth + 1 && getComputedStyle(box).overflowX !== 'visible')) box = box.parentElement;
+      if (!box) return;
+      // alle fixierten Zellen auf einmal betrachten: links fixierte verdecken bis zu ihrer rechten Kante, rechts fixierte ab ihrer linken
+      const r = el.getBoundingClientRect();
+      let coverLeft = -Infinity;
+      let coverRight = Infinity;
+      for (const cell of row.querySelectorAll<HTMLElement>(':scope > th, :scope > td')) {
+        const cs = getComputedStyle(cell);
+        if (cell.contains(el) || cs.position !== 'sticky') continue;
+        const c = cell.getBoundingClientRect();
+        if (!(r.left < c.right && r.right > c.left)) continue;
+        if (cs.left !== 'auto') coverLeft = Math.max(coverLeft, c.right);
+        else if (cs.right !== 'auto') coverRight = Math.min(coverRight, c.left);
+      }
+      if (coverLeft > r.left) box.scrollLeft -= coverLeft - r.left + 8;
+      else if (coverRight < r.right) box.scrollLeft += r.right - coverRight + 8;
+    };
+    document.addEventListener('focusin', onFocus);
+    return () => document.removeEventListener('focusin', onFocus);
+  }, []);
   // Einführung (ADR-056): beim ersten Besuch der Startseite; automatisierte Browser (Tests) starten sie nicht selbst
   const [tourOpen, setTourOpen] = useState(false);
   useEffect(() => {
@@ -218,6 +361,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   }, [inMasterData]);
   const mainRef = useRef<HTMLElement>(null);
   const firstRender = useRef(true);
+  const navigationType = useNavigationType();
+  const userNavigated = useRef(false);
   const [unread, setUnread] = useState(0);
   const reloadUnread = useCallback(() => {
     get<any>('/notifications?unread=true').then((n) => setUnread(n.unread)).catch(() => setUnread(0));
@@ -234,6 +379,10 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
       firstRender.current = false;
       return;
     }
+    // Weiterleitungen beim ersten Laden (z. B. /stammdaten → Inhaltsverzeichnis) sind kein Seitenwechsel:
+    // Der Fokus bleibt am Seitenanfang, der erste Tabstopp ist „Zum Inhalt springen“.
+    if (navigationType === 'REPLACE' && !userNavigated.current) return;
+    userNavigated.current = true;
     const t = setTimeout(() => {
       const h1 = mainRef.current?.querySelector<HTMLElement>('h1');
       if (h1) {
@@ -271,15 +420,15 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
   };
 
   return (
-    <AppCtx.Provider value={{ ref, reloadRef, notify: (msg, kind = 'ok') => setToast({ msg, kind }), userId, setUserId }}>
+    <AppCtx.Provider value={{ ref, reloadRef, notify: (msg, kind = 'ok') => setToast({ msg, kind, id: ++toastSeq.current }), userId, setUserId }}>
       <a className="skip-link" href="#main">Zum Inhalt springen</a>
       <div className={`shell${collapsed ? " nav-collapsed" : ""}`}>
         <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
           <div className="brand">
-            <strong>oneSCM Handbook Studio</strong>
+            <strong><BookOpenCheckIcon className="brand-logo" aria-hidden="true" size={22} strokeWidth={2} />oneSCM Handbook Studio</strong>
             <span>v{__APP_VERSION__}</span>
             <button type="button" className="collapse-toggle" aria-expanded={!collapsed} aria-controls="main-nav" aria-label={collapsed ? 'Navigation ausklappen' : 'Navigation einklappen'} title={collapsed ? 'Navigation ausklappen' : 'Navigation einklappen'} onClick={toggleCollapsed}>
-              {collapsed ? '»' : '«'}
+              {collapsed ? <PanelLeftOpenIcon aria-hidden="true" size={18} /> : <PanelLeftCloseIcon aria-hidden="true" size={18} />}
             </button>
           </div>
           <div className="project-box">
@@ -289,53 +438,54 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
               {!projects.some((p) => p.id === projectId) && <option value={projectId}>{projectId}</option>}
             </select>
           </div>
-          <form role="search" className="nav-search" onSubmit={(e) => { e.preventDefault(); if (search.trim().length >= 2) navigate(`/suche?q=${encodeURIComponent(search.trim())}`); }}>
+          <form role="search" aria-label="Suche im Projekt" className="nav-search" onSubmit={(e) => { e.preventDefault(); if (search.trim().length >= 2) navigate(`/suche?q=${encodeURIComponent(search.trim())}`); }}>
             <label htmlFor="global-search" className="sr-only">Suche im Projekt</label>
             <input id="global-search" ref={searchRef} type="search" placeholder="Suchen … ( / )" value={search} onChange={(e) => setSearch(e.target.value)} />
           </form>
           <button className="btn nav-toggle" aria-expanded={navOpen} aria-controls="main-nav" onClick={() => setNavOpen(!navOpen)}>
-            {navOpen ? '✕ Menü schließen' : '☰ Menü'}
+            {navOpen ? <><XIcon aria-hidden="true" size={18} /> Menü schließen</> : <><MenuIcon aria-hidden="true" size={18} /> Menü</>}
           </button>
           <nav id="main-nav" aria-label="Hauptnavigation" className={navOpen ? 'open' : ''}>
             <NavLink to="/aufgaben" title="Aufgaben & Hinweise" className={({ isActive }) => (isActive ? 'active' : '')}>
-              <span aria-hidden="true" className="nav-icon">🔔</span> <span className="nav-label">Aufgaben & Hinweise</span>{unread > 0 && <span className="count" aria-label={`${unread} ungelesen`}>{unread}</span>}
+              <BellIcon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">Aufgaben & Hinweise</span>{unread > 0 && <span className="count" aria-label={`${unread} ungelesen`}>{unread}</span>}
             </NavLink>
             <NavLink to="/" end title="Start" className={({ isActive }) => (isActive ? 'active' : '')}>
-              <span aria-hidden="true" className="nav-icon">🏠</span> <span className="nav-label">Start</span>
+              <HouseIcon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">Start</span>
             </NavLink>
             {NAV_GROUPS.map((g) => (
               <div key={g.id} role="group" aria-labelledby={`nav-h-${g.id}`} className="nav-section">
                 <span id={`nav-h-${g.id}`} className="nav-heading">{g.label}</span>
                 {g.items.map((n) => (
-                  <NavLink key={n.to} to={n.to} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
-                    <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
+                  // Übersicht nur bei genauer Übereinstimmung aktiv, wenn Unterseiten eigene Einträge haben
+                  <NavLink key={n.to} to={n.to} end={g.items.some((o) => o.to.startsWith(`${n.to}/`))} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
+                    <n.icon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">{n.label}</span>
                   </NavLink>
                 ))}
               </div>
             ))}
             <button type="button" className={`nav-group${inMore ? ' active-group' : ''}`} aria-expanded={moreOpen} aria-controls="nav-weitere" title="Weitere" onClick={() => setMoreOpen(!moreOpen)}>
-              <span aria-hidden="true" className="nav-icon">⋯</span> <span className="nav-label">Weitere</span><span aria-hidden="true" className="nav-caret">{moreOpen ? '▾' : '▸'}</span>
+              <EllipsisIcon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">Weitere</span><span aria-hidden="true" className="nav-caret">{moreOpen ? <ChevronDownIcon size={16} /> : <ChevronRightIcon size={16} />}</span>
             </button>
             <div id="nav-weitere" className="nav-sub" hidden={!moreOpen}>
               {NAV_MORE.map((n) => (
                 <NavLink key={n.to} to={n.to} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
-                  <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
+                  <n.icon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">{n.label}</span>
                 </NavLink>
               ))}
             </div>
             <div className="nav-bottom">
               <button type="button" className={`nav-group${inMasterData ? ' active-group' : ''}`} aria-expanded={masterOpen} aria-controls="nav-stammdaten" title="Stammdaten" onClick={() => setMasterOpen(!masterOpen)}>
-                <span aria-hidden="true" className="nav-icon">🗃</span> <span className="nav-label">Stammdaten</span><span aria-hidden="true" className="nav-caret">{masterOpen ? '▾' : '▸'}</span>
+                <BoxesIcon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">Stammdaten</span><span aria-hidden="true" className="nav-caret">{masterOpen ? <ChevronDownIcon size={16} /> : <ChevronRightIcon size={16} />}</span>
               </button>
               <div id="nav-stammdaten" className="nav-sub" hidden={!masterOpen}>
                 {MASTER_DATA.map((n) => (
                   <NavLink key={n.to} to={n.to} title={n.label} className={({ isActive }) => (isActive ? 'active' : '')}>
-                    <span aria-hidden="true" className="nav-icon">{n.icon}</span> <span className="nav-label">{n.label}</span>
+                    <n.icon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">{n.label}</span>
                   </NavLink>
                 ))}
               </div>
               <NavLink to="/einstellungen" title="Einstellungen" className={({ isActive }) => (isActive ? 'active' : '')}>
-                <span aria-hidden="true" className="nav-icon">⚙</span> <span className="nav-label">Einstellungen</span>
+                <SettingsIcon className="nav-icon" aria-hidden="true" size={18} strokeWidth={1.75} /> <span className="nav-label">Einstellungen</span>
               </NavLink>
             </div>
           </nav>
@@ -363,7 +513,7 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
               <option value="light">Hell</option>
               <option value="dark">Dunkel</option>
             </select>
-            <small title="Technische Berechtigungen – getrennt von fachlichen Rollen (ADR-009)">Berechtigungen: {me?.permissions.join(', ') || '–'}</small>
+            <small title="Technische Berechtigungen – getrennt von fachlichen Rollen (ADR-009)">Berechtigungen: {me?.permissions.map(permLabel).join(', ') || '–'}</small>
           </div>
         </aside>
         <main className="main" key={userId} id="main" ref={mainRef} tabIndex={-1}>
@@ -373,6 +523,13 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/anleitungs-check" element={<GuidancePage />} />
             <Route path="/anleitungs-check/:versionId" element={<GuidancePage />} />
+            <Route path="/kapitelbewertung" element={<AssessmentPage />} />
+            <Route path="/kapitelbewertung/:versionId" element={<AssessmentPage />} />
+            <Route path="/fehlerliste" element={<LanguageErrorsPage />} />
+            <Route path="/ueberarbeitung" element={<RevisionsPage />} />
+            <Route path="/pruefprofile" element={<ProfileReviewsPage />} />
+            <Route path="/textvarianten" element={<TextVariantsPage />} />
+            <Route path="/ueberarbeitung/:batchId" element={<RevisionsPage />} />
             <Route path="/kapitel-assistent" element={<ChapterAssistantPage />} />
             <Route path="/lesen" element={<ReaderPage />} />
             <Route path="/lesen/druck" element={<PrintPage />} />
@@ -380,7 +537,24 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/lesen/lesezeichen" element={<ReaderBookmarksPage />} />
             <Route path="/rueckmeldungen" element={<FeedbackPage />} />
             <Route path="/lesen/:chapterId" element={<ReaderPage />} />
+            <Route path="/metadaten" element={<MetadataOverviewPage />} />
+            <Route path="/metadaten/chunks" element={<MetadataChunksPage />} />
+            <Route path="/metadaten/fragen" element={<MetadataQaPage />} />
+            <Route path="/metadaten/zugriffsmatrix" element={<AccessMatrixPage />} />
+            <Route path="/metadaten/zuordnung" element={<DomainMapPage />} />
+            <Route path="/metadaten/kapitel-quellen" element={<OutlineSourcesPage />} />
+            <Route path="/metadaten/wissensnotizen" element={<KnowledgeNotesPage />} />
+            <Route path="/metadaten/einlesen" element={<IngestPage />} />
+            <Route path="/metadaten/ueberschriften" element={<HeadingsPage />} />
+            <Route path="/metadaten/dubletten" element={<MetaDuplicatesPage />} />
+            <Route path="/metadaten/rueckfragen" element={<QuestionCatalogPage />} />
+            <Route path="/metadaten/qualitaet" element={<AnswerQualityPage />} />
+            <Route path="/metadaten/befragung" element={<SurveysPage />} />
+            <Route path="/release-abgleich" element={<TicketReleasesPage />} />
+            <Route path="/releaseletter" element={<ReleaseLettersPage />} />
+            <Route path="/metadaten/labels" element={<MetadataLabelsPage />} />
             <Route path="/quellen" element={<SourcesPage />} />
+            <Route path="/quellenaenderungen" element={<SourceUpdatesPage />} />
             <Route path="/cluster" element={<ClustersPage />} />
             <Route path="/widersprueche" element={<ContradictionsPage />} />
             <Route path="/dopplungen" element={<DuplicatesPage />} />
@@ -396,8 +570,21 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/vergleich/:chapterId" element={<ComparePage />} />
             <Route path="/freigabe" element={<ApprovalPage />} />
             <Route path="/export" element={<ExportPage />} />
+            <Route path="/bildarchiv" element={<ImageArchivePage />} />
+            <Route path="/vorher-nachher" element={<BeforeAfterPage />} />
+            <Route path="/textbausteine" element={<TextModulesPage />} />
+            <Route path="/kapitelsteuerung" element={<StructurePage />} />
+            <Route path="/metadaten/triage" element={<TriagePage />} />
+            <Route path="/metadaten/inhalte" element={<ContentDashboardPage />} />
+            <Route path="/agenten" element={<AgentsPage />} />
+            <Route path="/agenten/goal" element={<GoalPage />} />
+            <Route path="/pipeline" element={<WorkAreaPage area="pipeline" />} />
+            <Route path="/backlog" element={<WorkAreaPage area="backlog" />} />
+            <Route path="/intern" element={<WorkAreaPage area="intern" />} />
             <Route path="/veroeffentlichung" element={<ReleasesPage />} />
             <Route path="/uebersetzungen" element={<TranslationsPage />} />
+            <Route path="/uebersetzungen/speicher" element={<TranslationMemoryPage />} />
+            <Route path="/uebersetzungen/glossar" element={<TranslationGlossaryPage />} />
             <Route path="/aufgaben" element={<InboxPage onRead={reloadUnread} />} />
             <Route path="/analytik" element={<AnalyticsPage />} />
             <Route path="/assistent" element={<AssistantPage />} />
@@ -426,11 +613,14 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
           </Suspense>
         </main>
         {tourOpen && <Tour onClose={() => setTourOpen(false)} />}
-        {toast && (
-          <div className={`toast ${toast.kind}`} role="status" aria-live="polite">
-            {toast.msg}
-          </div>
-        )}
+        {/* Ansage für Screenreader (WCAG 4.1.3): Die Live-Regionen sind immer vorhanden, sonst bleibt eine neu eingefügte Meldung oft
+            stumm. Jede Meldung ist ein neuer Knoten, damit auch dieselbe Meldung ein zweites Mal angesagt wird; Fehler sofort (alert). */}
+        <div className="toast-region" role="status" aria-live="polite" aria-atomic="true" data-live="status">
+          {toast?.kind === 'ok' && <div key={toast.id} className="toast ok">{toast.msg}</div>}
+        </div>
+        <div className="toast-region" role="alert" aria-atomic="true" data-live="alert">
+          {toast?.kind === 'error' && <div key={toast.id} className="toast error">{toast.msg}</div>}
+        </div>
       </div>
     </AppCtx.Provider>
   );

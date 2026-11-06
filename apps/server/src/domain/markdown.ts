@@ -129,10 +129,12 @@ export function parseMarkdown(input: string): ParsedDocument {
     if (fence) {
       flush();
       const marker = fence[1];
+      // Schlusszeile wie CommonMark: höchstens 3 Leerzeichen, dasselbe Zeichen, mindestens so lang, danach nichts mehr
+      const closing = new RegExp(`^ {0,3}${marker[0] === '`' ? '`' : '~'}{${marker.length},}[ \\t]*$`);
       const start = lineNo;
       const code: string[] = [line];
       i++;
-      while (i < lines.length && !lines[i].trimStart().startsWith(marker)) code.push(lines[i++]);
+      while (i < lines.length && !closing.test(lines[i])) code.push(lines[i++]);
       if (i < lines.length) code.push(lines[i]);
       pushBlock('code', code, start, Math.min(i + 1, lines.length));
       continue;

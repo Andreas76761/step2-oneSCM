@@ -1,7 +1,7 @@
 # oneSCM Handbook Studio (ADR-027). Mehrinstanzbetrieb setzt PostgreSQL und einen S3-kompatiblen Object-Store voraus.
 
 image:
-  repository: ghcr.io/andreas76761/onescm-handbook-studio
+  repository: ghcr.io/andreas76761/step2-onescm   # wie die Release-Pipeline (ghcr.io/<owner>/<repo>, klein)
   tag: ""                # Standard: appVersion des Charts
   pullPolicy: IfNotPresent
 imagePullSecrets: []

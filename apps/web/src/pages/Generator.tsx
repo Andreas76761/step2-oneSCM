@@ -1,3 +1,4 @@
+import { BlockerIcon } from '../components/icons';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { post } from '../api';
@@ -38,7 +39,7 @@ export function GeneratorPage() {
                 <td>{c.snippetCount}</td>
                 <td>{c.confirmedSnippetCount}</td>
                 <td>{c.openFindings}</td>
-                <td>{c.openBlockers ? <span className="tag sev-blocker">⛔ {c.openBlockers}</span> : '–'}</td>
+                <td>{c.openBlockers ? <span className="tag sev-blocker"><BlockerIcon />{c.openBlockers}<span className="sr-only"> offene Blocker</span></span> : '–'}</td>
                 <td className="small">{c.versions.slice(0, 3).map((v: any) => <div key={v.id}>V{v.versionNo} <Status s={v.status} /></div>)}</td>
                 <td className="row-actions">
                   <button className="btn primary small" onClick={() => generate(c)} disabled={!c.confirmedSnippetCount}>Generieren</button>

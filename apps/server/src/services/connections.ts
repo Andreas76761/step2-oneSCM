@@ -14,7 +14,7 @@ import { CONVERTIBLE } from '../domain/convert.js';
 import { MEDIA_EXT } from '../domain/media.js';
 import { badRequest, notFound } from '../problem.js';
 import { createImport } from './imports.js';
-import { assertSafeUrl } from './webhooks.js';
+import { assertSafeUrl, safeFetch } from './webhooks.js';
 import { sha256 } from '../domain/similarity.js';
 import { withProject } from './projects.js';
 import { Problem } from '../problem.js';
@@ -187,13 +187,24 @@ export async function deleteConnection(ctx: Ctx, id: string, actor: string) {
 
 export async function requestSync(ctx: Ctx, id: string, actor: string, force = false) {
   const c = await load(ctx, id);
-  if (['queued', 'syncing', 'importing'].includes(c.status)) return dto(c);
+  if (c.status === 'queued') return dto(c); // der wartende Abgleich holt ohnehin den neuesten Stand
+  if (c.status === 'syncing' || c.status === 'importing') {
+    // läuft gerade: vormerken, sonst ginge z. B. ein zweiter Push verloren (Abgleich startet nach dem laufenden erneut)
+    await ctx.db.run('UPDATE source_connections SET resync_requested = 1 WHERE id = ?', id);
+    return getConnection(ctx, id);
+  }
   await ctx.db.tx(async () => {
-    await ctx.db.run("UPDATE source_connections SET status = 'queued' WHERE id = ?", id);
+    await ctx.db.run("UPDATE source_connections SET status = 'queued', resync_requested = 0 WHERE id = ?", id);
     await ctx.jobs.enqueue('source-sync', { connectionId: id, actor, force }, 1);
   });
   ctx.jobs.wake();
   return getConnection(ctx, id);
+}
+
+/** Vorgemerkten Abgleich starten, sobald der laufende fertig ist (idle oder failed) */
+async function resyncIfRequested(ctx: Ctx, id: string) {
+  const r = await ctx.db.run('UPDATE source_connections SET resync_requested = 0 WHERE id = ? AND resync_requested = 1', id);
+  if (r.changes) await requestSync(ctx, id, 'system', true);
 }
 
 /** Nächsten Abgleich planen. Ein neues Token macht ältere geplante Jobs wirkungslos (keine doppelten Ketten). */
@@ -288,11 +299,18 @@ export async function runSync(ctx: Ctx, payload: { connectionId: string; token?:
     await audit(ctx, actor, 'source_connection.failed', 'source_connection', c.id, { error: msg });
   }
   await schedule(ctx, c.id, c.interval_minutes);
+  // ohne gestarteten Import ist der Abgleich hier zu Ende; sonst nach dem Import (finishConnectionImport)
+  if ((await ctx.db.get('SELECT status FROM source_connections WHERE id = ?', c.id))?.status !== 'importing') await resyncIfRequested(ctx, c.id);
 }
 
 /** Job endgültig abgebrochen (z. B. Neustart während des Klonens) */
-export async function failSync(ctx: Ctx, payload: { connectionId: string }, error: string) {
-  await ctx.db.run("UPDATE source_connections SET status = 'failed', last_error = ? WHERE id = ?", error, payload.connectionId);
+export async function failSync(ctx: Ctx, payload: { connectionId: string; token?: string }, error: string) {
+  const c = await ctx.db.get('SELECT id, interval_minutes, schedule_token FROM source_connections WHERE id = ?', payload.connectionId);
+  if (!c) return;
+  await ctx.db.run("UPDATE source_connections SET status = 'failed', last_error = ? WHERE id = ?", error, c.id);
+  // abgebrochener geplanter Abgleich: Kette weiterführen, sonst gleicht die Verbindung nie wieder von selbst ab
+  if (!payload.token || payload.token === c.schedule_token) await schedule(ctx, c.id, c.interval_minutes);
+  await resyncIfRequested(ctx, c.id);
 }
 
 /** Nach Abschluss eines Imports: Commit der Verbindung übernehmen (Erfolg) oder Fehler melden (Import fehlgeschlagen). */
@@ -301,6 +319,7 @@ export async function finishConnectionImport(ctx: Ctx, importId: string, status:
   if (!c) return;
   if (status === 'failed') {
     await ctx.db.run("UPDATE source_connections SET status = 'failed', pending_commit = NULL, last_error = ? WHERE id = ?", `Import fehlgeschlagen: ${detail ?? 'unbekannter Fehler'}`, c.id);
+    await resyncIfRequested(ctx, c.id);
     return;
   }
   // teilweise fehlerhafte Dateien: Stand übernehmen (ein erneuter Import desselben Commits ändert nichts), Fehler sichtbar machen
@@ -308,6 +327,7 @@ export async function finishConnectionImport(ctx: Ctx, importId: string, status:
     "UPDATE source_connections SET status = 'idle', last_commit = pending_commit, pending_commit = NULL, last_error = ? WHERE id = ?",
     status === 'completed_with_errors' ? `Import mit Fehlern: ${detail}` : null, c.id,
   );
+  await resyncIfRequested(ctx, c.id);
 }
 
 // ------------------------------------------------------------------ Confluence Cloud (ADR-028)
@@ -330,7 +350,7 @@ async function fetchConfluence(ctx: Ctx, c: Row) {
   const pages: { id: string; title: string; version: number; html: string }[] = [];
   let next: string | null = `${base}/rest/api/content?spaceKey=${encodeURIComponent(c.space_key)}&type=page&status=current&expand=body.storage,version&limit=50`;
   for (let guard = 0; next && guard < 1000; guard++) {
-    const res: Response = await fetch(next, { headers, redirect: 'error', signal: AbortSignal.timeout(ctx.config.git.timeoutMs) });
+    const res: Response = await confluenceFetch(ctx, next, headers);
     if (!res.ok) throw new Error(`Confluence antwortete mit ${res.status}${res.status === 401 || res.status === 403 ? ' (Zugangsdaten prüfen)' : ''}.`);
     const data = (await res.json()) as { results?: any[]; _links?: { next?: string; base?: string } };
     for (const p of data.results ?? []) {
@@ -362,7 +382,7 @@ async function fetchConfluence(ctx: Ctx, c: Row) {
         if (!file || !a || loaded.has(file)) continue;
         loaded.set(file, null);
         if (!MEDIA_EXT[path.extname(file).toLowerCase()] || a.size > settings.maxEntryBytes) continue;
-        const res = await fetch(confluenceLink(base, a.download), { headers, redirect: 'error', signal: AbortSignal.timeout(ctx.config.git.timeoutMs) });
+        const res = await confluenceFetch(ctx, confluenceLink(base, a.download), headers);
         if (!res.ok) continue;
         const buf = Buffer.from(await res.arrayBuffer());
         if (buf.length > settings.maxEntryBytes) continue;
@@ -393,8 +413,16 @@ function confluenceLink(base: string, link: string) {
   return url;
 }
 
+/** Confluence-Abruf: jede Adresse (auch „next“- und Download-Links) geprüft, Weiterleitungen gelten als Fehler */
+function confluenceFetch(ctx: Ctx, url: string, headers: Record<string, string>) {
+  return safeFetch(url, { headers, timeoutMs: ctx.config.git.timeoutMs }, ctx.config.integrations.allowInsecure).then((res) => {
+    if (res.status >= 300 && res.status < 400) throw new Error(`Confluence leitete weiter (${res.status}) – Weiterleitungen werden nicht verfolgt.`);
+    return res;
+  });
+}
+
 async function confluenceAttachments(ctx: Ctx, base: string, headers: Record<string, string>, pageId: string) {
-  const res = await fetch(`${base}/rest/api/content/${encodeURIComponent(pageId)}/child/attachment?limit=200&expand=version`, { headers, redirect: 'error', signal: AbortSignal.timeout(ctx.config.git.timeoutMs) });
+  const res = await confluenceFetch(ctx, `${base}/rest/api/content/${encodeURIComponent(pageId)}/child/attachment?limit=200&expand=version`, headers);
   if (!res.ok) return [];
   const data = (await res.json()) as { results?: any[] };
   return (data.results ?? []).map((a) => ({

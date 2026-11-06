@@ -27,6 +27,8 @@ export interface GenSnippet {
   scopeStatus: string; // Markt/Release bestätigt?
   sourceLabel: string; // Datei + Revision
   canonicalRedirect?: { topicId: string; topicTitle: string; leadChapterTitle: string } | null;
+  /** Detaillevel aus TRIAGE bzw. Label (ADR-100): edge → Abschnitt „Fehler und Ausnahmen“ */
+  detail?: string | null;
 }
 
 export interface GenBlock {
@@ -93,6 +95,8 @@ export function scopeStatusOf(snippets: Pick<GenSnippet, 'roles' | 'divisions' |
 
 export function assignSection(s: GenSnippet, ctx: { first: boolean; roleMajority: string; divMajority: string }): { section: SectionCode; kind: string } {
   const hk = hintKind(s.text);
+  // Edge = Ausnahmen und Sonderfälle (ADR-100): getrennt vom Standardablauf (HappyPath)
+  if (s.detail === 'edge') return { section: 'troubleshooting', kind: hk ?? (s.kind === 'ordered_list' || s.kind === 'list' ? 'list' : 'paragraph') };
   const baseKind = s.kind === 'ordered_list' || s.kind === 'list' ? 'list' : s.kind === 'table' ? 'table' : s.kind === 'code' ? 'code' : 'paragraph';
   const heading = H([s.subchapterTitle ?? '', ...s.headingPath].filter(Boolean).slice(-2).join(' '));
   const headingSection = HEADING_RULES.find(([re]) => re.test(heading))?.[1];
@@ -115,9 +119,11 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
   const confirmed = input.filter((s) => CONFIRMED_EVIDENCE.includes(s.evidenceStatus)).sort((a, b) => a.order - b.order);
   const skippedUnconfirmed = input.length - confirmed.length;
 
-  // Exakte Dopplungen innerhalb des Kapitels zusammenführen (allgemeine Aussagen nur einmal).
+  // Exakte Dopplungen innerhalb des Kapitels zusammenführen (allgemeine Aussagen nur einmal) – nur bei gleichem Markt und Release,
+  // sonst fehlte die Aussage im Handbuch des zweiten Markts (der Absatz trägt einen Markt)
   const byHash = new Map<string, GenSnippet[]>();
-  for (const s of confirmed) byHash.set(s.normHash, [...(byHash.get(s.normHash) ?? []), s]);
+  const keyOf = (s: GenSnippet) => `${s.normHash}|${s.market ?? ''}|${s.release ?? ''}`;
+  for (const s of confirmed) byHash.set(keyOf(s), [...(byHash.get(keyOf(s)) ?? []), s]);
   const unique = [...byHash.values()].map((g) => g[0]);
   const deduplicated = confirmed.length - unique.length;
 
@@ -129,7 +135,7 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
   let first = true;
 
   for (const s of unique) {
-    const group = byHash.get(s.normHash)!;
+    const group = byHash.get(keyOf(s))!;
     if (s.canonicalRedirect) {
       const r = s.canonicalRedirect;
       const x = xrefs.get(r.topicId) ?? { title: r.topicTitle, lead: r.leadChapterTitle, snippets: [] };
@@ -163,7 +169,7 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
     const confirmedRoles = new Map<string, string[]>();
     for (const s of unique) for (const r of s.roles) if (isConfirmed(r)) confirmedRoles.set(r.code, [...(confirmedRoles.get(r.code) ?? []), s.id]);
     if (confirmedRoles.size) {
-      const lines = ROLES.filter((r) => confirmedRoles.has(r.code)).map((r) => `- ${r.icon} ${r.label} (${r.description})`);
+      const lines = ROLES.filter((r) => confirmedRoles.has(r.code)).map((r) => `- ${r.label} (${r.description})`);
       blocks.push({ section: 'responsibilities', kind: 'list', text: `Dieses Kapitel betrifft folgende Rollen:\n\n${lines.join('\n')}`, sourceIds: [...new Set([...confirmedRoles.values()].flat())], roles: [...confirmedRoles.keys()], divisions: ['all'], market: null, release: null, scopeStatus: 'general' });
     }
   }
