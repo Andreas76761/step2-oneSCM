@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.27.0 – Etappe 27 (06.11.2026)
+
+### Hinzugefügt
+- **Häufige Fragen als Stapel übersetzen (ADR-079):** alle fehlenden und veralteten FAQ einer Sprache in einem Schritt als KI-Entwurf – im Hintergrund mit Fortschritt, Abbruch und Ergebnis-Hinweis; aktuelle Entwürfe und Freigaben bleiben unberührt, Einträge mit personenbezogenen Daten gehen nicht an externe KI-Dienste.
+- **Übersetzungswunsch mit Begründung (ADR-080):** optionale Begründung beim Anfordern in der Lesesprache; die Redaktion sieht Begründungen ohne Namen, der erste Hinweis im Kapitel nennt sie.
+- **Wochenübersicht mit Übersetzungen (ADR-081):** offene Übersetzungswünsche und veraltete Übersetzungen (Kapitel und häufige Fragen) in Benachrichtigung und Vorschau.
+- **Sprachnamen grammatisch (ADR-082):** Zielsprache je Anzeigesprache mit Präposition und richtiger Form („ins Englische“, „do češtiny“, „na język polski“); Auswahllisten mit großgeschriebener Eigenbezeichnung.
+- Migration `035_faq_batches_request_reasons.sql`; Tests T-209, T-210, E2E T-237 (axe); Anforderungen NFR-66 … NFR-69.
+
+### Geändert
+- E2E T-202 wählt den Absatz über seinen Text (robust gegenüber Layout-Unterschieden verschiedener Chromium-Versionen); T-235 sendet den Wunsch über das neue Formular.
+- Links in der Vorschau der Wochenübersicht mit Mindesthöhe 24 px (WCAG 2.5.8).
+
 ## 0.26.0 – Etappe 26 (27.09.2026)
 
 ### Hinzugefügt

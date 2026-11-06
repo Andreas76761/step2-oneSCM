@@ -15,7 +15,10 @@ import { badRequest, Problem } from '../problem.js';
 import { importMasterData } from '../services/masterDataImport.js';
 import { setRendition } from '../services/media.js';
 import { getSettings } from '../context.js';
-import { approveFaqTranslation, deleteFaqTranslation, faqTranslationSummary, listFaqTranslations, machineFaqTranslation, saveFaqTranslation } from '../services/faqTranslations.js';
+import {
+  approveFaqTranslation, cancelFaqBatch, deleteFaqTranslation, faqBatchPreview, faqTranslationSummary, getFaqBatch, listFaqBatches, listFaqTranslations, machineFaqTranslation,
+  saveFaqTranslation, startFaqBatch,
+} from '../services/faqTranslations.js';
 import { num, userOf } from './helpers.js';
 
 type P<T extends string> = { Params: Record<T, string> };
@@ -127,6 +130,15 @@ export function masterDataRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Querystring: Record<string, string> }>('/faq', async (req) => (userOf(req.ctx, req), listFaq(req.ctx, req.query)));
   // Übersetzungen häufiger Fragen (ADR-077): lesen mit Leserecht, bearbeiten mit Bearbeitungs-, freigeben mit Freigaberecht
   app.get('/faq/translations', async (req) => (userOf(req.ctx, req), faqTranslationSummary(req.ctx)));
+  // KI-Stapelübersetzung je Sprache (ADR-079)
+  app.get<{ Querystring: { language?: string } }>('/faq/translation-batches', async (req) => (userOf(req.ctx, req), listFaqBatches(req.ctx, req.query.language || undefined)));
+  app.get<{ Querystring: { language?: string } }>('/faq/translation-batches/preview', async (req) => (userOf(req.ctx, req, 'edit'), faqBatchPreview(req.ctx, String(req.query.language ?? ''))));
+  app.post<{ Body: any }>('/faq/translation-batches', async (req, reply) => {
+    const b = await startFaqBatch(req.ctx, req.body ?? {}, userOf(req.ctx, req, 'edit'));
+    return reply.code(202).send(b);
+  });
+  app.get<P<'batchId'>>('/faq/translation-batches/:batchId', async (req) => (userOf(req.ctx, req), getFaqBatch(req.ctx, req.params.batchId)));
+  app.post<P<'batchId'>>('/faq/translation-batches/:batchId/cancel', async (req) => cancelFaqBatch(req.ctx, req.params.batchId, userOf(req.ctx, req, 'edit')));
   app.get<P<'faqId'>>('/faq/:faqId/translations', async (req) => (userOf(req.ctx, req), listFaqTranslations(req.ctx, req.params.faqId)));
   app.put<{ Params: { faqId: string; language: string }; Body: any }>('/faq/:faqId/translations/:language', async (req) =>
     saveFaqTranslation(req.ctx, req.params.faqId, req.params.language, req.body ?? {}, userOf(req.ctx, req, 'edit')));

@@ -80,3 +80,7 @@
 | [ADR-076](ADR-076-notiz-im-kapitel.md) | Notizen direkt im Kapitel | akzeptiert, umgesetzt |
 | [ADR-077](ADR-077-faq-uebersetzen.md) | Häufige Fragen übersetzen | akzeptiert, umgesetzt |
 | [ADR-078](ADR-078-weitere-sprachen.md) | Alle Projektsprachen vollständig beschriftet | akzeptiert, umgesetzt |
+| [ADR-079](ADR-079-faq-stapeluebersetzung.md) | Häufige Fragen als Stapel übersetzen | akzeptiert, umgesetzt |
+| [ADR-080](ADR-080-wunsch-mit-begruendung.md) | Übersetzungswunsch mit Begründung | akzeptiert, umgesetzt |
+| [ADR-081](ADR-081-wochenuebersicht-uebersetzungen.md) | Wochenübersicht mit Übersetzungen | akzeptiert, umgesetzt |
+| [ADR-082](ADR-082-sprachnamen-grammatisch.md) | Sprachnamen grammatisch | akzeptiert, umgesetzt |

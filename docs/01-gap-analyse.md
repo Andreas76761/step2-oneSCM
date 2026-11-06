@@ -161,6 +161,17 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Stammdaten (NFR-19) | ✅ Gliederungen je Variante mit Versionen, Upload/Export; Abkürzungen, Glossar, Bildverzeichnis, FAQ, Planung ([ADR-032](adr/ADR-032-stammdaten-gliederungen.md)) |
 | Draft Manual (NFR-20) | ✅ Zuordnung automatisch/manuell, Kennzeichnung Dopplung/Lücke/Widerspruch/Warnung, Export ([ADR-033](adr/ADR-033-draft-manual.md)) |
 
+## 1.29 Stand nach Etappe 27 (06.11.2026)
+
+Umfang vom Auftraggeber am 06.11.2026 festgelegt: FAQ-Stapelübersetzung, Wunsch mit Begründung, Sprachnamen grammatisch, Wochenübersicht.
+
+| Punkt | Ergebnis |
+|---|---|
+| FAQ-Stapelübersetzung (NFR-66) | ✅ fehlende und veraltete FAQ je Sprache als KI-Entwurf im Hintergrund, Fortschritt, Abbruch, Hinweis ([ADR-079](adr/ADR-079-faq-stapeluebersetzung.md)) |
+| Wunsch mit Begründung (NFR-67) | ✅ optionale Begründung in der Lesesprache, bei der Redaktion ohne Namen ([ADR-080](adr/ADR-080-wunsch-mit-begruendung.md)) |
+| Sprachnamen grammatisch (NFR-68) | ✅ „ins Englische“, „do češtiny“ … je Anzeigesprache; Eigenbezeichnung in Auswahllisten ([ADR-082](adr/ADR-082-sprachnamen-grammatisch.md)) |
+| Wochenübersicht (NFR-69) | ✅ offene Übersetzungswünsche und veraltete Übersetzungen ([ADR-081](adr/ADR-081-wochenuebersicht-uebersetzungen.md)) |
+
 ## 1.28 Stand nach Etappe 26 (27.09.2026)
 
 Umfang vom Auftraggeber am 27.09.2026 festgelegt: Häufige Fragen übersetzen, weitere Sprachen vollständig.

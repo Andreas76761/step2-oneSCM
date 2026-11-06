@@ -6,7 +6,7 @@ import { api, currentProjectId, get, mediaUrl, post } from '../api';
 import { GlossText, GlossaryProvider, type GlossaryEntry } from '../components/Glossary';
 import { Card, Empty, ErrorBox, Md, Page, errorText, preloadMarkdown, useApp, useLoad } from '../components/ui';
 import { matches } from './FilteredView';
-import { NATIVE_NAMES, ReaderTextProvider, readerTexts, useReaderText } from '../readerText';
+import { languageLabel, ReaderTextProvider, readerTexts, useReaderText } from '../readerText';
 
 const CALLOUT: Record<string, { icon: string; label: 'tip' | 'warning' | 'note' }> = {
   tip: { icon: '💡', label: 'tip' },
@@ -172,17 +172,21 @@ function useReaderLanguage() {
 
 /** Hinweis, wenn ein Kapitel (noch) nicht in der Lesesprache vorliegt */
 function LanguageNote({ version, chapterId, requested, onRequested }: { version: any; chapterId: string; requested: boolean; onRequested: () => void }) {
-  const { t, uiLang } = useReaderText();
+  const { t, into, uiLang } = useReaderText();
   const { notify } = useApp();
   const [busy, setBusy] = useState(false);
+  // Wunsch mit optionaler Begründung (ADR-080): erst auf Klick, damit der Hinweis kurz bleibt
+  const [asking, setAsking] = useState(false);
+  const [reason, setReason] = useState('');
   if (!version || version.requestedLanguage === 'de' || !version.requestedLanguage) return null;
   const lang = version.requestedLanguage as string;
-  const name = NATIVE_NAMES[lang] ?? lang;
   // Übersetzung anfordern (ADR-075), wenn das Kapitel fehlt oder veraltet ist
   const request = async () => {
     setBusy(true);
     try {
-      await post('/reader/translation-requests', { chapterId, language: lang });
+      await post('/reader/translation-requests', { chapterId, language: lang, ...(reason.trim() ? { reason: reason.trim() } : {}) });
+      setAsking(false);
+      setReason('');
       onRequested();
     } catch (e) {
       notify(errorText(e), 'error');
@@ -192,9 +196,21 @@ function LanguageNote({ version, chapterId, requested, onRequested }: { version:
   };
   const ask = version.fallback && (requested
     ? <span className="small" role="status">{t('requested')}</span>
-    : <button type="button" className="btn small" disabled={busy} onClick={() => void request()}>{t('requestTranslation')}</button>);
-  if (version.fallback === 'missing') return <div className="reader-lang-note" role="note" lang={uiLang}><p>{t('langMissing', { lang: name })}</p>{ask}</div>;
-  if (version.fallback === 'outdated') return <div className="reader-lang-note" role="note" lang={uiLang}><p>{t('langOutdated', { lang: name })}</p>{ask}</div>;
+    : !asking
+      ? <button type="button" className="btn small" onClick={() => setAsking(true)}>{t('requestTranslation')}</button>
+      : (
+        <form className="request-form" onSubmit={(e) => (e.preventDefault(), void request())}>
+          <label className="block small">{t('requestReason')}
+            <textarea rows={2} maxLength={300} value={reason} placeholder={t('requestReasonPlaceholder')} onChange={(e) => setReason(e.target.value)} autoFocus />
+          </label>
+          <span className="row-actions">
+            <button type="submit" className="btn small primary" disabled={busy}>{t('sendRequest')}</button>
+            <button type="button" className="btn small" onClick={() => (setAsking(false), setReason(''))}>{t('cancel')}</button>
+          </span>
+        </form>
+      ));
+  if (version.fallback === 'missing') return <div className="reader-lang-note" role="note" lang={uiLang}><p>{t('langMissing', { into: into(lang) })}</p>{ask}</div>;
+  if (version.fallback === 'outdated') return <div className="reader-lang-note" role="note" lang={uiLang}><p>{t('langOutdated', { into: into(lang) })}</p>{ask}</div>;
   if (version.untranslatedBlocks > 0) return <p className="reader-lang-note" role="note" lang={uiLang}>{version.untranslatedBlocks === 1 ? t('untranslatedOne') : t('untranslatedMany', { n: version.untranslatedBlocks })}</p>;
   return null;
 }
@@ -561,7 +577,7 @@ export function ReaderPage() {
           {languages.length > 1 && (
             <label className="block">{t('language')}
               <select value={lang} onChange={(e) => setLang(e.target.value)}>
-                {languages.map((l) => <option key={l.code} value={l.code} lang={l.code}>{NATIVE_NAMES[l.code] ?? l.name}{l.chapters !== null ? ` (${t('translatedCount', { n: l.chapters })})` : ''}</option>)}
+                {languages.map((l) => <option key={l.code} value={l.code} lang={l.code}>{languageLabel(l.code)}{l.chapters !== null ? ` (${t('translatedCount', { n: l.chapters })})` : ''}</option>)}
               </select>
             </label>
           )}
@@ -730,7 +746,6 @@ export function PrintPage() {
   const role = params.get('rolle') ?? '';
   const languagesLoad = useLoad<{ code: string; name: string }[]>('/reader/languages');
   const lang = languagesLoad.data?.some((l) => l.code === params.get('sprache')) ? params.get('sprache')! : 'de';
-  const langName = languagesLoad.data?.find((l) => l.code === lang)?.name ?? lang;
   // Beschriftungen des gedruckten Handbuchs in der Druck-Sprache (ADR-074); Bedienelemente bleiben deutsch
   const rt = useMemo(() => readerTexts(lang), [lang]);
   const { t } = rt;
@@ -863,7 +878,7 @@ export function PrintPage() {
             <p className="print-cover-kicker">{lay?.companyName ? `${lay.companyName} · ` : ''}{t('manual')}</p>
             <h2 className="print-cover-title">{bookTitle}</h2>
             {lay?.coverSubtitle && <p className="print-cover-subtitle">{lay.coverSubtitle}</p>}
-            <p className="print-cover-edition">{edition}{roleLabel && ` · ${t('forRole', { role: roleLabel })}`}{lang !== 'de' && ` · ${NATIVE_NAMES[lang] ?? langName}`}</p>
+            <p className="print-cover-edition">{edition}{roleLabel && ` · ${t('forRole', { role: roleLabel })}`}{lang !== 'de' && ` · ${languageLabel(lang)}`}</p>
             <dl className="print-cover-meta">
               <div><dt>{t('asOf')}</dt><dd>{printDate}</dd></div>
               <div><dt>{t('chapters')}</dt><dd>{printed.length}</dd></div>

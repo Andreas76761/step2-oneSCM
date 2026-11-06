@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.26.0
+  version: 0.27.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -3345,34 +3345,34 @@ paths:
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ translationRequests: [{ chapterId, language }] (eigene Übersetzungswünsche, ADR-075), bookmarks: [{ chapterId, title, createdAt, note }], recent: [{ chapterId, title, visitedAt }], updates: { chapterId: new | changed }, lastVisitAt }' }
+        '200': { description: '{ translationRequests: [{ chapterId, language, reason }] (eigene Übersetzungswünsche, ADR-075, ADR-080), bookmarks: [{ chapterId, title, createdAt, note }], recent: [{ chapterId, title, visitedAt }], updates: { chapterId: new | changed }, lastVisitAt }' }
   /reader/translation-requests:
     post:
       operationId: requestTranslation
-      summary: 'Übersetzung eines Kapitels wünschen – je Person, Kapitel und Sprache einmal; erster Wunsch benachrichtigt die Redaktion (ADR-075)'
+      summary: 'Übersetzung eines Kapitels wünschen – je Person, Kapitel und Sprache einmal, optional mit Begründung (ein erneuter Wunsch ersetzt sie); erster Wunsch benachrichtigt die Redaktion (ADR-075, ADR-080)'
       tags: [Kapitel]
-      x-requirements: [NFR-62]
+      x-requirements: [NFR-62, NFR-67]
       x-extension: true
       requestBody:
         required: true
-        content: { application/json: { schema: { type: object, required: [chapterId, language], properties: { chapterId: { type: string }, language: { type: string, description: 'Projektsprache' } } } } }
+        content: { application/json: { schema: { type: object, required: [chapterId, language], properties: { chapterId: { type: string }, language: { type: string, description: 'Projektsprache' }, reason: { type: string, maxLength: 300, description: 'Begründung (optional, Leerraum zusammengefasst, auf 300 Zeichen gekürzt)' } } } } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ chapterId, language, requested: true, count, state: missing | outdated | in_progress }' }
+        '200': { description: '{ chapterId, language, requested: true, count, state: missing | outdated | in_progress, reason }' }
         '400': { $ref: '#/components/responses/Problem' }
         '404': { $ref: '#/components/responses/Problem' }
   /translation-requests:
     get:
       operationId: listTranslationRequests
-      summary: 'Gewünschte Übersetzungen je Kapitel und Sprache, meistgewünschte zuerst; erledigte nur mit all=true (ADR-075)'
+      summary: 'Gewünschte Übersetzungen je Kapitel und Sprache, meistgewünschte zuerst, mit Begründungen ohne Namen; erledigte nur mit all=true (ADR-075, ADR-080)'
       tags: [Kapitel]
-      x-requirements: [NFR-62]
+      x-requirements: [NFR-62, NFR-67]
       x-extension: true
       parameters:
         - { name: all, in: query, schema: { type: boolean, default: false } }
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '[{ chapterId, title, language, languageName, count, firstRequestedAt, lastRequestedAt, state: missing | outdated | in_progress | done }]' }
+        '200': { description: '[{ chapterId, title, language, languageName, count, firstRequestedAt, lastRequestedAt, state: missing | outdated | in_progress | done, reasons: [{ text, requestedAt }] }]' }
   /reader/visits:
     post:
       operationId: recordReaderVisit
@@ -3483,13 +3483,13 @@ paths:
   /digest/preview:
     get:
       operationId: previewDigest
-      summary: 'Vorschau der eigenen Wochenübersicht (ADR-064)'
+      summary: 'Vorschau der eigenen Wochenübersicht, auch mit offenen Übersetzungswünschen und veralteten Übersetzungen (ADR-064, ADR-081)'
       tags: [Kapitel]
-      x-requirements: [NFR-51]
+      x-requirements: [NFR-51, NFR-69]
       x-extension: true
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '{ week, openFeedback, feedbackByChapter, tasks, overdueTasks, weakChapters, empty, text }' }
+        '200': { description: '{ week, openFeedback, feedbackByChapter, tasks, overdueTasks, weakChapters, translationRequests: [{ chapterId, title, language, languageName, count, state }], openTranslationRequests, outdatedChapterTranslations: [{ chapterId, title, language }], outdatedFaqTranslations, empty, text }' }
   /digest/send:
     post:
       operationId: sendDigest
@@ -3618,6 +3618,72 @@ paths:
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '200': { description: '{ languages, entries: { [faqId]: { [language]: missing | draft | approved | outdated } } }' }
+  /faq/translation-batches:
+    get:
+      operationId: listFaqTranslationBatches
+      summary: 'Letzte KI-Stapelübersetzungen der FAQ (höchstens 10), optional je Sprache (ADR-079)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      parameters:
+        - { name: language, in: query, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, language, languageName, status: queued | processing | completed | cancelled | failed, total, done, translated, flagged, skipped, failed, error, cancelRequested, createdBy, createdAt, finishedAt }]' }
+    post:
+      operationId: startFaqTranslationBatch
+      summary: 'Alle fehlenden und veralteten FAQ einer Sprache als KI-Entwurf übersetzen (Hintergrundauftrag; Einträge mit personenbezogenen Daten bei externem KI-Dienst ausgenommen; Berechtigung edit, ADR-079)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [language], properties: { language: { type: string, description: 'Projektsprache' } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '202': { description: 'Auftrag angelegt: { id, language, languageName, status, total, done, … }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /faq/translation-batches/preview:
+    get:
+      operationId: previewFaqTranslationBatch
+      summary: 'Wie viele FAQ ein Auftrag übersetzen würde (fehlend oder veraltet) und wie viele wegen Datenschutz ausfallen (Berechtigung edit, ADR-079)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      parameters:
+        - { name: language, in: query, required: true, schema: { type: string } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ language, pending, privacy, eligible }' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /faq/translation-batches/{batchId}:
+    get:
+      operationId: getFaqTranslationBatch
+      summary: 'Stand eines FAQ-Übersetzungsauftrags (ADR-079)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      parameters: [{ name: batchId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ id, language, languageName, status, total, done, translated, flagged, skipped, failed, error, cancelRequested, createdBy, createdAt, finishedAt }' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /faq/translation-batches/{batchId}/cancel:
+    post:
+      operationId: cancelFaqTranslationBatch
+      summary: 'Laufenden FAQ-Übersetzungsauftrag abbrechen; bereits übersetzte Entwürfe bleiben (Berechtigung edit, ADR-079)'
+      tags: [Stammdaten]
+      x-requirements: [NFR-66]
+      x-extension: true
+      parameters: [{ name: batchId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Auftrag mit cancelRequested: true' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
   /faq/{faqId}/translations:
     get:
       operationId: listFaqTranslations

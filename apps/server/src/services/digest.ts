@@ -1,10 +1,13 @@
 // Wöchentliche Übersicht (ADR-064): jede Person mit Bearbeitungsrecht erhält einmal je Woche einen Hinweis mit offenen
-// Leser-Rückmeldungen, ihren offenen Aufgaben und den Kapiteln mit dem größten Handlungsbedarf – nur, wenn es etwas zu tun gibt.
+// Leser-Rückmeldungen, ihren offenen Aufgaben, den Kapiteln mit dem größten Handlungsbedarf sowie offenen Übersetzungswünschen
+// und veralteten Übersetzungen (ADR-081) – nur, wenn es etwas zu tun gibt.
 import { audit, type Ctx, type User } from '../context.js';
 import { now } from '../db.js';
 import { badRequest } from '../problem.js';
 import { collaborators, projectNotice } from './collaboration.js';
+import { faqHash } from './faqTranslations.js';
 import { guidanceSummary } from './guidance.js';
+import { listTranslationRequests } from './translationRequests.js';
 
 /** ISO-Kalenderwoche, z. B. 2026-W39 */
 export function isoWeek(d = new Date()) {
@@ -39,12 +42,39 @@ export async function digestShared(ctx: Ctx) {
      WHERE f.project_id = ? AND f.status = 'open' AND (f.helpful = 0 OR f.comment IS NOT NULL) GROUP BY f.chapter_id, c.title ORDER BY n DESC, c.title`, ctx.projectId,
   );
   const weak = (await guidanceSummary(ctx)).chapters.filter((c) => c.open.some((o) => o.status === 'warning')).slice(0, 3);
-  return { fb, weak };
+  return { fb, weak, ...(await digestTranslations(ctx)) };
+}
+
+/**
+ * Übersetzungsteil der Übersicht (ADR-081): offene Übersetzungswünsche aus der Leseransicht (meistgewünschte zuerst) und
+ * veraltete Übersetzungen – Kapitel, deren freigegebene Übersetzung zu einer älteren deutschen Fassung gehört (ohne aktuelle
+ * Freigabe), und häufige Fragen, deren deutsche Quelle sich seit der Übersetzung geändert hat.
+ */
+export async function digestTranslations(ctx: Ctx) {
+  const requests = (await listTranslationRequests(ctx)).filter((r) => r.state !== 'in_progress');
+  const latest = await ctx.db.all(
+    `SELECT c.id, c.title, (SELECT v.id FROM generated_chapter_versions v WHERE v.chapter_id = c.id AND v.status = 'approved' ORDER BY v.version_no DESC LIMIT 1) AS vid
+     FROM chapters c WHERE c.project_id = ?`, ctx.projectId,
+  );
+  const approved = await ctx.db.all("SELECT chapter_id, language, chapter_version_id FROM translations WHERE project_id = ? AND status = 'approved'", ctx.projectId);
+  const outdatedChapters: { chapterId: string; title: string; language: string }[] = [];
+  for (const c of latest) {
+    if (!c.vid) continue;
+    const mine = approved.filter((t) => t.chapter_id === c.id);
+    for (const language of [...new Set(mine.map((t) => t.language as string))].sort()) {
+      if (!mine.some((t) => t.language === language && t.chapter_version_id === c.vid)) outdatedChapters.push({ chapterId: c.id as string, title: String(c.title), language });
+    }
+  }
+  const faq = await ctx.db.all(
+    "SELECT t.language, f.question, f.answer, t.source_hash FROM faq_translations t JOIN faq_entries f ON f.id = t.faq_id WHERE t.project_id = ? AND f.language = 'de'", ctx.projectId,
+  );
+  const outdatedFaq = faq.filter((t) => t.source_hash !== faqHash(String(t.question), String(t.answer))).length;
+  return { requests, outdatedChapters, outdatedFaq };
 }
 
 /** Inhalt der Übersicht für eine Person (auch als Vorschau); `shared` aus digestShared() spart beim Versand die Wiederholung */
 export async function buildDigest(ctx: Ctx, userId: string, date = new Date(), shared?: Awaited<ReturnType<typeof digestShared>>) {
-  const { fb, weak } = shared ?? await digestShared(ctx);
+  const { fb, weak, requests, outdatedChapters, outdatedFaq } = shared ?? await digestShared(ctx);
   const openFeedback = fb.reduce((n, r) => n + Number(r.n), 0);
   const tasks = await ctx.db.all(
     "SELECT id, entity_type, entity_id, body, due_date FROM comments WHERE project_id = ? AND kind = 'task' AND status = 'open' AND assignee = ? ORDER BY COALESCE(due_date, '9999'), created_at", ctx.projectId, userId,
@@ -55,9 +85,18 @@ export async function buildDigest(ctx: Ctx, userId: string, date = new Date(), s
   if (openFeedback) lines.push(`${openFeedback} offene Leser-Rückmeldung${openFeedback === 1 ? '' : 'en'} (${fb.slice(0, 3).map((r) => `${r.title ?? r.chapter_id}: ${r.n}`).join(', ')})`);
   if (tasks.length) lines.push(`${tasks.length} offene Aufgabe${tasks.length === 1 ? '' : 'n'} für Sie${overdue ? `, davon ${overdue} überfällig` : ''}`);
   if (weak.length) lines.push(`Anleitungs-Check mit Pflichtpunkten offen: ${weak.map((c) => `${c.title} (${c.score})`).join(', ')}`);
+  const wishes = requests.reduce((n, r) => n + r.count, 0);
+  if (requests.length) lines.push(`${wishes === 1 ? '1 Übersetzungswunsch' : `${wishes} Übersetzungswünsche`} offen (${requests.slice(0, 3).map((r) => `${r.title} – ${r.languageName}: ${r.count}`).join(', ')})`);
+  const outdated = outdatedChapters.length + outdatedFaq;
+  if (outdated) {
+    const parts = [outdatedChapters.length && `${outdatedChapters.length} Kapitel`, outdatedFaq && `${outdatedFaq} häufige Frage${outdatedFaq === 1 ? '' : 'n'}`].filter(Boolean);
+    lines.push(`Veraltete Übersetzungen: ${parts.join(' und ')}`);
+  }
   return {
     week: isoWeek(date), openFeedback, feedbackByChapter: fb.slice(0, 5).map((r) => ({ chapterId: r.chapter_id as string, title: (r.title as string) ?? r.chapter_id, open: Number(r.n) })),
-    tasks: tasks.length, overdueTasks: overdue, weakChapters: weak.map((c) => ({ chapterId: c.chapterId, title: c.title, score: c.score, versionId: c.versionId })),
+    tasks: tasks.length, overdueTasks: overdue,
+    translationRequests: requests.slice(0, 5).map((r) => ({ chapterId: r.chapterId, title: r.title, language: r.language, languageName: r.languageName, count: r.count, state: r.state })),
+    openTranslationRequests: wishes, outdatedChapterTranslations: outdatedChapters.slice(0, 10), outdatedFaqTranslations: outdatedFaq, weakChapters: weak.map((c) => ({ chapterId: c.chapterId, title: c.title, score: c.score, versionId: c.versionId })),
     empty: !lines.length, text: lines.length ? `Wochenübersicht ${isoWeek(date)}: ${lines.join(' · ')}.` : null,
   };
 }
@@ -82,7 +121,7 @@ export async function sendDigests(ctx: Ctx, opts: { force?: boolean; date?: Date
     await ctx.db.tx(async () => {
       const res = await ctx.db.run('INSERT INTO digest_log (project_id, user_id, week, sent_at) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING', ctx.projectId, u.id, week, now());
       if (!res.changes) return;
-      await projectNotice(ctx, u.id, d.text!, 'digest', d.openFeedback ? '/rueckmeldungen' : '/aufgaben');
+      await projectNotice(ctx, u.id, d.text!, 'digest', d.openFeedback ? '/rueckmeldungen' : d.tasks ? '/aufgaben' : d.openTranslationRequests || d.outdatedChapterTranslations.length ? '/uebersetzungen' : '/aufgaben');
       sent++;
     });
   }

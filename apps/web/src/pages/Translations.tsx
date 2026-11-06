@@ -41,13 +41,20 @@ export function TranslationsPage() {
       {!projectLangs.length && <div className="alert">Für dieses Projekt sind keine Zielsprachen festgelegt. Die Administration legt sie unter <Link to="/projekte">Projekte</Link> fest.</div>}
       {!!requests.data?.length && (
         <Card title={`Gewünschte Übersetzungen (${requests.data.length})`}>
-          <p className="small muted">Leserinnen und Leser haben diese Kapitel in der Leseransicht angefordert – meistgewünschte zuerst. Erledigt ist ein Wunsch, sobald die Übersetzung der aktuellen Fassung freigegeben ist.</p>
+          <p className="small muted">Leserinnen und Leser haben diese Kapitel in der Leseransicht angefordert – meistgewünschte zuerst, mit ihren Begründungen (ohne Namen). Erledigt ist ein Wunsch, sobald die Übersetzung der aktuellen Fassung freigegeben ist.</p>
           <table className="table request-list">
             <thead><tr><th>Kapitel</th><th>Sprache</th><th>Wünsche</th><th>Stand</th><th>Zuletzt</th><th /></tr></thead>
             <tbody>
               {requests.data.map((r) => (
                 <tr key={`${r.chapterId}.${r.language}`}>
-                  <td>{r.title}</td>
+                  <td>{r.title}
+                    {r.reasons?.length > 0 && (
+                      <details className="request-reasons small">
+                        <summary>{r.reasons.length === 1 ? '1 Begründung' : `${r.reasons.length} Begründungen`}</summary>
+                        <ul>{r.reasons.map((x: any, i: number) => <li key={i}>„{x.text}“ <span className="muted">· {new Date(x.requestedAt).toLocaleDateString('de-DE')}</span></li>)}</ul>
+                      </details>
+                    )}
+                  </td>
                   <td>{r.languageName}</td>
                   <td className="count">{r.count}</td>
                   <td>{r.state === 'in_progress' ? <span className="tag">in Arbeit</span> : r.state === 'outdated' ? <span className="tag st-needs_regeneration">veraltet</span> : <span className="tag">fehlt</span>}</td>
