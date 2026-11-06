@@ -292,6 +292,8 @@ export function FaqPage() {
   const trans = useLoad<{ languages: string[]; entries: Record<string, Record<string, string>> }>('/faq/translations');
   const run = useRun(() => (list.reload(), sugg.reload(), trans.reload()));
   const [form, setForm] = useState<FaqForm | null>(null);
+  // nach einer Stapelübersetzung auch die Übersetzungslisten der einzelnen Einträge neu laden
+  const [rev, setRev] = useState(0);
   const toggle = (l: string[], v: string) => (l.includes(v) ? l.filter((x) => x !== v) : [...l, v]);
   const save = async () => {
     if (!form) return;
@@ -301,6 +303,7 @@ export function FaqPage() {
   return (
     <Page title="FAQ" subtitle="Häufige Fragen je Rolle und Sparte – mit Vorschlägen aus dem Handbuch-Assistenten" actions={canEdit && <button className="btn primary" onClick={() => setForm(emptyFaq())}>Frage hinzufügen</button>}>
       {canEdit && <MasterDataImport kind="faq" onDone={() => (list.reload(), sugg.reload())} />}
+      {canEdit && (trans.data?.languages.length ?? 0) > 0 && <FaqBatchCard languages={trans.data!.languages} entries={trans.data!.entries} onChanged={() => (trans.reload(), setRev((r) => r + 1))} />}
       {form && (
         <Card title={form.id ? 'FAQ-Eintrag bearbeiten' : 'Neuer FAQ-Eintrag'}>
           <label className="block">Frage <input value={form.question} onChange={(e) => setForm({ ...form, question: e.target.value })} /></label>
@@ -331,7 +334,7 @@ export function FaqPage() {
               {Object.entries(trans.data?.entries[f.id] ?? {}).map(([l, st]) => <span key={l} className={`tag small faq-tr faq-tr-${st}`} title={`${l.toUpperCase()}: ${TR_LABEL[st]}`}>{l.toUpperCase()} {TR_ICON[st]}</span>)}
             </summary>
             <Md text={f.answer} />
-            {f.language === 'de' && (trans.data?.languages.length ?? 0) > 0 && <FaqTranslations faqId={f.id} question={f.question} canEdit={canEdit} onChanged={() => trans.reload()} />}
+            {f.language === 'de' && (trans.data?.languages.length ?? 0) > 0 && <FaqTranslations faqId={f.id} question={f.question} canEdit={canEdit} rev={rev} onChanged={() => trans.reload()} />}
             {canEdit && (
               <div className="row-actions">
                 <button className="btn small" onClick={() => setForm({ id: f.id, question: f.question, answer: f.answer, roles: f.roles, divisions: f.divisions, status: f.status })}>Bearbeiten</button>
@@ -455,8 +458,92 @@ const TR_ICON: Record<string, string> = { missing: '–', draft: '✎', approved
 const ISSUE_LABEL: Record<string, string> = { empty: 'leer', numbers_changed: 'Zahlen abweichend', structure_changed: 'Aufzählung abweichend', no_sources: 'ohne Quellsatz', unknown_source: 'unbekannter Quellsatz', uncovered_source: 'Satz fehlt' };
 
 /** Übersetzungen eines FAQ-Eintrags (ADR-077): je Projektsprache von Hand oder als KI-Vorschlag, dann freigeben */
-function FaqTranslations({ faqId, question, canEdit, onChanged }: { faqId: string; question: string; canEdit: boolean; onChanged: () => void }) {
-  const list = useLoad<any[]>(`/faq/${faqId}/translations`, [faqId]);
+const LANG_DE: Record<string, string> = { en: 'Englisch', fr: 'Französisch', es: 'Spanisch', it: 'Italienisch', nl: 'Niederländisch', pl: 'Polnisch', cs: 'Tschechisch', pt: 'Portugiesisch' };
+
+/**
+ * KI-Stapelübersetzung (ADR-079): alle fehlenden und veralteten FAQ einer Sprache in einem Schritt als Entwurf übersetzen.
+ * Fortschritt mit Abbruch; danach wie gewohnt prüfen und (durch eine andere Person) freigeben.
+ */
+function FaqBatchCard({ languages, entries, onChanged }: { languages: string[]; entries: Record<string, Record<string, string>>; onChanged: () => void }) {
+  const { notify } = useApp();
+  const [params] = useSearchParams();
+  const [lang, setLang] = useState(() => (languages.includes(params.get('sprache') ?? '') ? params.get('sprache')! : languages[0]));
+  const llm = useLoad<any>('/llm/status');
+  const batches = useLoad<any[]>(`/faq/translation-batches?language=${lang}`, [lang]);
+  const last = batches.data?.[0];
+  const running = !!last && ['queued', 'processing'].includes(last.status);
+  useEffect(() => {
+    if (!running) return;
+    const timer = setInterval(() => batches.reload(), 1200);
+    return () => clearInterval(timer);
+  }, [running, last?.id]);
+  useEffect(() => {
+    if (last && !running) onChanged();
+  }, [last?.status]);
+  const count = (st: string) => Object.values(entries).filter((e) => e[lang] === st).length;
+  const missing = count('missing');
+  const outdated = count('outdated');
+  const drafts = count('draft');
+  const name = LANG_DE[lang] ?? lang.toUpperCase();
+  const start = async () => {
+    if (llm.data?.external && !confirm(`Die deutschen Fragen und Antworten werden zur Übersetzung an ${llm.data.provider} (${llm.data.model}) übertragen. Einträge mit personenbezogenen Daten bleiben ausgenommen. Fortfahren?`)) return;
+    try {
+      const b = await post<any>('/faq/translation-batches', { language: lang });
+      notify(`KI-Übersetzung von ${b.total} Frage${b.total === 1 ? '' : 'n'} ins ${name.replace(/isch$/, 'ische')} gestartet.`);
+      batches.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  const cancel = async () => {
+    try {
+      await post(`/faq/translation-batches/${last.id}/cancel`, {});
+      batches.reload();
+    } catch (e) {
+      notify(errorText(e), 'error');
+    }
+  };
+  return (
+    <Card title="Häufige Fragen übersetzen" className="rewrite-batch">
+      <div className="filters">
+        <label className="inline">Sprache
+          <select value={lang} onChange={(e) => setLang(e.target.value)} disabled={running}>
+            {languages.map((l) => <option key={l} value={l}>{LANG_DE[l] ?? l.toUpperCase()}</option>)}
+          </select>
+        </label>
+        <span className="small" aria-live="polite">{missing} fehlen · {outdated} veraltet · {drafts} Entwürfe warten auf Freigabe</span>
+      </div>
+      {!llm.data?.enabled ? <p className="small muted">Der KI-Dienst ist nicht eingerichtet – Übersetzungen werden je Frage von Hand erfasst.</p> : (
+        <div className="row-actions">
+          {running || missing + outdated > 0
+            ? <button className="btn primary" disabled={running} onClick={() => void start()}>{running ? 'KI übersetzt …' : `✨ ${missing + outdated} fehlende und veraltete mit KI übersetzen`}</button>
+            : <span className="small">✓ Alle Fragen liegen in {name} aktuell vor (als Entwurf oder freigegeben).</span>}
+        </div>
+      )}
+      {last && (
+        <div className="batch-status" role="status" aria-label={`Stand der KI-Übersetzung ${name}`}>
+          {running ? (
+            <>
+              <progress max={last.total} value={last.done} aria-label="Fortschritt" />
+              <span className="small">{last.done} von {last.total} übersetzt{last.flagged > 0 && ` · ${last.flagged} mit Prüfbefund`}</span>
+              <button className="btn small" disabled={last.cancelRequested} onClick={() => void cancel()}>{last.cancelRequested ? 'Wird abgebrochen …' : 'Abbrechen'}</button>
+            </>
+          ) : (
+            <span className="small">
+              Letzter Auftrag ({new Date(last.finishedAt ?? last.createdAt).toLocaleString('de-DE')}): {last.status === 'completed' ? 'abgeschlossen' : last.status === 'cancelled' ? 'abgebrochen' : 'fehlgeschlagen'} –{' '}
+              {last.translated} übersetzt{last.flagged > 0 && `, ${last.flagged} mit Prüfbefund`}{last.failed > 0 && `, ${last.failed} fehlgeschlagen`}{last.skipped > 0 && `, ${last.skipped} übersprungen`}.
+              {(last.translated + last.flagged) > 0 && ' Die Entwürfe stehen unten bei den Fragen zur Prüfung und Freigabe.'}
+              {last.error && <span className="sev-text"> {last.error}</span>}
+            </span>
+          )}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function FaqTranslations({ faqId, question, canEdit, rev, onChanged }: { faqId: string; question: string; canEdit: boolean; rev: number; onChanged: () => void }) {
+  const list = useLoad<any[]>(`/faq/${faqId}/translations`, [faqId, rev]);
   const me = useLoad<any>('/me');
   const canApprove = !!me.data?.permissions?.some((p: string) => p === 'approve' || p === 'admin');
   const run = useRun(() => (list.reload(), onChanged()));
