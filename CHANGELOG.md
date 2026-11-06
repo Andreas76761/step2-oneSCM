@@ -6,6 +6,9 @@
 - **Zweites Code-Review der Etappe 1:** Geprüft wurden die Grundbausteine am heutigen Stand: Markdown-Struktur, Klassifikation, Ähnlichkeit, Widerspruchsregeln, Kapitelgenerator, Qualitätsgate, Analyse und Textabschnitte. Von zehn Funden sind neun behoben, einer bleibt begründet bestehen. Damit sind alle Etappen bis 87 nachträglich mit dem heutigen Verfahren geprüft.
 - **Tests T-426 und T-427:** Jeder Teil scheitert ohne seine Korrektur. Das wurde je Datei einzeln geprüft, bei Analyse und Widerspruchsregeln zusätzlich je Teilkorrektur.
 
+### Sicherheit
+- **Abhängigkeiten:** `fastify` 5.12.8 und `@fastify/static` 10.1.10 (mit `glob` 14, `@fastify/send` 4.2) wegen neuer Sicherheitshinweise. Diese betreffen die Prüfung von Kopfzeilen und die Dateisuche mit Zeitlimit. Die Prüfung `npm audit` in der CI war seit diesen Hinweisen rot.
+
 ### Behoben
 - **Analyse:**
   - Wurde ein Widerspruch mit „A übernehmen“, „B übernehmen“ oder „veraltete Quelle“ entschieden, ist die andere Aussage ausgeschlossen. Sie erzeugte trotzdem weiter Befunde, etwa einen Datenschutz-Blocker, der die Freigabe sperrte. Ausgeschlossene Aussagen und entfernte Quellen werden jetzt nicht mehr analysiert. Offene, unentschiedene Befunde dazu werden „obsolet“.
