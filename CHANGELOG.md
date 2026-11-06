@@ -13,6 +13,9 @@
 - E2E T-202 wählt den Absatz über seinen Text (robust gegenüber Layout-Unterschieden verschiedener Chromium-Versionen); T-235 sendet den Wunsch über das neue Formular.
 - Links in der Vorschau der Wochenübersicht mit Mindesthöhe 24 px (WCAG 2.5.8).
 
+### Sicherheit
+- Abhängigkeiten aktualisiert, damit `npm audit` für Laufzeitpakete wieder ohne Befund ist: fastify 5.12.8, @fastify/static 10.1.10 (glob/minimatch), nodemailer 10.3.1, fast-uri, ip-address.
+
 ## 0.26.0 – Etappe 26 (27.09.2026)
 
 ### Hinzugefügt
