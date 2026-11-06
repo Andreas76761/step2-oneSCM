@@ -3331,5 +3331,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-426",
+    "title": "Regeln: Zahl vor dem Satzpunkt, Frist nur mit Einheit, Dopplung je Markt, Codeblock bis zur echten Schlusszeile",
+    "file": "apps/server/test/stage99.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-427",
+    "title": "Analyse ohne ausgeschlossene Aussagen, Begriffe mit Umlaut, entfernte Wissensnotiz, Klassifikation prüft Typen",
+    "file": "apps/server/test/stage99.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

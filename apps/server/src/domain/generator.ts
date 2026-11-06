@@ -119,9 +119,11 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
   const confirmed = input.filter((s) => CONFIRMED_EVIDENCE.includes(s.evidenceStatus)).sort((a, b) => a.order - b.order);
   const skippedUnconfirmed = input.length - confirmed.length;
 
-  // Exakte Dopplungen innerhalb des Kapitels zusammenführen (allgemeine Aussagen nur einmal).
+  // Exakte Dopplungen innerhalb des Kapitels zusammenführen (allgemeine Aussagen nur einmal) – nur bei gleichem Markt und Release,
+  // sonst fehlte die Aussage im Handbuch des zweiten Markts (der Absatz trägt einen Markt)
   const byHash = new Map<string, GenSnippet[]>();
-  for (const s of confirmed) byHash.set(s.normHash, [...(byHash.get(s.normHash) ?? []), s]);
+  const keyOf = (s: GenSnippet) => `${s.normHash}|${s.market ?? ''}|${s.release ?? ''}`;
+  for (const s of confirmed) byHash.set(keyOf(s), [...(byHash.get(keyOf(s)) ?? []), s]);
   const unique = [...byHash.values()].map((g) => g[0]);
   const deduplicated = confirmed.length - unique.length;
 
@@ -133,7 +135,7 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
   let first = true;
 
   for (const s of unique) {
-    const group = byHash.get(s.normHash)!;
+    const group = byHash.get(keyOf(s))!;
     if (s.canonicalRedirect) {
       const r = s.canonicalRedirect;
       const x = xrefs.get(r.topicId) ?? { title: r.topicTitle, lead: r.leadChapterTitle, snippets: [] };

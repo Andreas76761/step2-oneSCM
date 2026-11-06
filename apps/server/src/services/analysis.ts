@@ -64,12 +64,17 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
   const snippets = await db.all(
     `SELECT s.*, r.revision_no, r.is_current, d.id AS document_id, d.path FROM text_snippets s
      JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
-     WHERE d.project_id = ? AND r.is_current = 1 AND s.kind <> 'code' ORDER BY s.seq`,
+     WHERE d.project_id = ? AND r.is_current = 1 AND d.removed_at IS NULL AND s.excluded_reason IS NULL AND s.kind <> 'code' ORDER BY s.seq`,
     ctx.projectId,
   );
+  // ausgeschlossene Aussagen (Entscheidung „A/B übernehmen“, „veraltete Quelle“) fließen nicht ins Kapitel – und erzeugen keine neuen Befunde
   const byId = new Map(snippets.map((s) => [s.id as string, s]));
-  const rolesOf = groupCodes(await db.all('SELECT snippet_id, role_code AS code FROM snippet_roles'));
-  const divsOf = groupCodes(await db.all('SELECT snippet_id, division_code AS code FROM snippet_divisions'));
+  const ofProject = (table: string, col: string) => db.all(
+    `SELECT x.snippet_id, x.${col} AS code FROM ${table} x JOIN text_snippets s ON s.id = x.snippet_id JOIN source_revisions r ON r.id = s.revision_id
+     JOIN source_documents d ON d.id = r.document_id WHERE d.project_id = ? AND r.is_current = 1`, ctx.projectId,
+  );
+  const rolesOf = groupCodes(await ofProject('snippet_roles', 'role_code'));
+  const divsOf = groupCodes(await ofProject('snippet_divisions', 'division_code'));
   const found: NewFinding[] = [];
   const terms = await listTerms(ctx);
 
@@ -165,7 +170,7 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
     }
     for (const t of terms) {
       // UI-Begriffe (ADR-110): in Menüpfaden und Anführungszeichen erlaubt – wie in der Stilprüfung (inUiContext)
-      const hit = t.avoid.find((w) => [...s.text.matchAll(new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi'))]
+      const hit = t.avoid.find((w) => [...s.text.matchAll(new RegExp(`(?<![\\p{L}\\p{N}_])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_])`, 'giu'))]
         .some((m) => !t.uiAllowed || !inUiContext(s.text, m.index!, m.index! + m[0].length)));
       if (hit) found.push({ type: 'terminology', subtype: 'avoid_term', severity: 'low', chapterId: s.chapter_id, a: s.id, method: 'terminology-list', reason: `„${hit}“ → bevorzugt „${t.preferred}“`, details: { term: hit, preferred: t.preferred } });
     }

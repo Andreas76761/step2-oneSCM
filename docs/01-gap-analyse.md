@@ -195,6 +195,18 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.101 Stand nach Etappe 99 (06.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Zweites Code-Review der Etappe 1 (Markdown-Struktur, Klassifikation, Ähnlichkeit, Widerspruchsregeln, Kapitelgenerator, Qualitätsgate, Analyse, Textabschnitte): zehn Funde, neun behoben | ✅ T-426, T-427; Server-Tests auf SQLite und PostgreSQL |
+| Analyse | ausgeschlossene Aussagen (Entscheidung „A/B übernehmen“, „veraltete Quelle“) erzeugten weiter Widerspruchs- und Datenschutzblocker; Begriffe mit Umlaut am Wortanfang oder -ende wurden in der Terminologieprüfung nie gefunden; Rollen und Sparten aller Projekte wurden je Lauf gelesen |
+| Quellen | entfernte Wissensnotizen blieben aktuell und flossen weiter in Analyse und Kapitelerzeugung |
+| Widerspruchsregeln | Zahlen vor dem Satzpunkt („beträgt 50.“) wurden nie verglichen; Wörter wie „Tagesbericht“ oder „Mindestmenge“ galten als Frist |
+| Kapitelgenerator und Struktur | gleiche Aussagen zweier Märkte oder Releases wurden zu einem Absatz mit nur dem ersten Markt zusammengelegt; ein Codeblock endete schon an „```js“ oder einer eingerückten Zeile |
+| Klassifikation | Rollen oder Sparten als Text statt Liste ergaben 500; Markt „fr“ wurde nicht wie beim Import zu „FR“ |
+| Begründet belassen | Kapitelschlüssel ohne Trennzeichen nach der Nummer (z. B. „3D-Ansicht“): eine Änderung würde die gespeicherten Schlüssel bestehender Kapitel ändern und sie beim nächsten Import aufspalten |
+
 ## 1.100 Stand nach Etappe 98 (27.10.2026)
 
 | Punkt | Ergebnis |

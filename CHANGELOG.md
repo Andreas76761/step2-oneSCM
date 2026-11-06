@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.99.0 – Etappe 99 (06.11.2026)
+
+### Hinzugefügt
+- **Zweites Code-Review der Etappe 1:** Geprüft wurden die Grundbausteine am heutigen Stand: Markdown-Struktur, Klassifikation, Ähnlichkeit, Widerspruchsregeln, Kapitelgenerator, Qualitätsgate, Analyse und Textabschnitte. Von zehn Funden sind neun behoben, einer bleibt begründet bestehen. Damit sind alle Etappen bis 87 nachträglich mit dem heutigen Verfahren geprüft.
+- **Tests T-426 und T-427:** Jeder Teil scheitert ohne seine Korrektur. Das wurde je Datei einzeln geprüft, bei Analyse und Widerspruchsregeln zusätzlich je Teilkorrektur.
+
+### Behoben
+- **Analyse:**
+  - Wurde ein Widerspruch mit „A übernehmen“, „B übernehmen“ oder „veraltete Quelle“ entschieden, ist die andere Aussage ausgeschlossen. Sie erzeugte trotzdem weiter Befunde, etwa einen Datenschutz-Blocker, der die Freigabe sperrte. Ausgeschlossene Aussagen und entfernte Quellen werden jetzt nicht mehr analysiert. Offene, unentschiedene Befunde dazu werden „obsolet“.
+  - Die Terminologieprüfung fand Begriffe mit Umlaut am Wortanfang oder -ende nie, etwa „Übersicht“ oder „Änderungsantrag“. `\b` kennt in JavaScript nur ASCII.
+  - Je Lauf wurden Rollen und Sparten aller Projekte gelesen, jetzt nur die des Projekts.
+- **Wissensnotizen:** Eine entfernte Notiz blieb aktuell und floss weiter in Analyse und Kapitelerzeugung. Jetzt gilt sie wie eine beim Import entfernte Datei.
+- **Widerspruchsregeln:**
+  - Zahlen vor dem Satzpunkt („Die Gebühr beträgt 50.“) wurden nie verglichen.
+  - Wörter wie „Tagesbericht“ oder „Mindestmenge“ nach einer Zahl galten als Frist. Jetzt zählt nur die Einheit selbst, etwa Tage, Werktagen oder Std.
+- **Kapitelgenerator:** Gleiche Aussagen für zwei Märkte oder Releases wurden zu einem Absatz mit nur dem ersten Markt zusammengelegt. Im Handbuch des zweiten Markts fehlte die Aussage. Jetzt werden nur Dopplungen mit gleichem Markt und Release zusammengeführt.
+- **Markdown:** Ein Codeblock endete schon an einer Zeile wie „```js“ oder an einer eingerückten Zeile. Der Rest wurde als Text und Überschriften eingelesen. Jetzt gilt die Schlusszeile wie in CommonMark.
+- **Klassifikation von Textabschnitten:** Rollen oder Sparten als Text statt als Liste ergaben einen Serverfehler (500). Ein Markt „fr“ wurde nicht wie beim Import zu „FR“ und fehlte deshalb in Filtern und Exporten.
+
+### Bewusst belassen
+- **Kapitelschlüssel:** Eine Nummer ohne Trennzeichen am Titelanfang wird mit abgeschnitten, etwa bei „3D-Ansicht“. Eine Änderung würde die gespeicherten Schlüssel bestehender Kapitel ändern, und der nächste Import würde sie aufspalten. Abhilfe ist ein Titel mit Trennzeichen, etwa „3. 3D-Ansicht“.
+
 ## 0.98.0 – Etappe 98 (27.10.2026)
 
 ### Hinzugefügt

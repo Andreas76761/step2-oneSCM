@@ -150,6 +150,8 @@ export async function removeNote(ctx: Ctx, id: string, user: User) {
   await ctx.db.tx(async () => {
     await ctx.db.run("UPDATE knowledge_notes SET status = 'removed', updated_by = ?, updated_at = ? WHERE id = ?", user.id, now(), id);
     await ctx.db.run('UPDATE source_documents SET removed_at = ? WHERE project_id = ? AND path = ? AND removed_at IS NULL', now(), ctx.projectId, r.document_path);
+    // wie beim Import (ADR-036): entfernte Quelle hat keine aktuelle Revision mehr – sonst lesen Analyse und Kapitelerzeugung sie weiter
+    await ctx.db.run('UPDATE source_revisions SET is_current = 0 WHERE document_id IN (SELECT id FROM source_documents WHERE project_id = ? AND path = ?)', ctx.projectId, r.document_path);
     touchMetadata(ctx);
     await audit(ctx, user.id, 'knowledge_note.removed', 'knowledge_note', id, {});
   });
