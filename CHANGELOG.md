@@ -15,6 +15,7 @@
 
 ### Sicherheit
 - Abhängigkeiten aktualisiert, damit `npm audit` für Laufzeitpakete wieder ohne Befund ist: fastify 5.12.8, @fastify/static 10.1.10 (glob/minimatch), nodemailer 10.3.1, fast-uri, ip-address.
+- CI: Testjob auf `ubuntu-24.04` festgelegt, da Playwright 1.56 auf dem neuen `ubuntu-latest` (26.04) keinen Browser installieren kann.
 
 ## 0.26.0 – Etappe 26 (27.09.2026)
 
