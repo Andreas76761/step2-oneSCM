@@ -1722,6 +1722,7 @@ test('[T-235] Leseransicht auf Französisch mit Übersetzung anfordern, Notiz di
   await expect(article.getByText('Tipp:')).toBeVisible();
   // Übersetzung anfordern
   await article.getByRole('button', { name: 'Demander une traduction' }).click();
+  await article.getByRole('button', { name: 'Envoyer la demande' }).click();
   await expect(article.getByText('Traduction demandée – la rédaction a été informée.')).toBeVisible();
   expect(await axe()).toEqual([]);
 
@@ -4240,4 +4241,59 @@ test('[T-432] Regelwerk pflegen, Verstoß unter „Optimierungen“ sehen; Absat
   await page.getByLabel('Befundtyp').selectOption({ label: 'Regelwerk' });
   await expect(page.locator('tr', { hasText: '„Arbeitsliste“ ist nicht erlaubt' })).toContainText('Regelwerk');
   expect((await request.delete(`/api/v1/rulebook/rules/${rule.id}`, { headers: h })).ok()).toBe(true);
+});
+
+test('[T-446] Übersetzungswunsch mit Begründung auf Tschechisch (grammatische Sprachform), Begründung bei der Redaktion, FAQ-Stapelübersetzung, Wochenübersicht', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const red = { 'X-User-Id': 'u-redaktion' };
+  expect((await request.patch('/api/v1/projects/p_default', { headers: { 'X-User-Id': 'u-admin' }, data: { languages: ['en', 'cs'] } })).ok()).toBe(true);
+  const c = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: {
+    title: 'E2E Inventur zählen', purpose: 'Mit dieser Anleitung zählen Sie den Bestand eines Lagerplatzes.', steps: ['Öffnen Sie **Lager › Inventur**', 'Klicken Sie auf **Zählen**'], result: 'Erledigt.',
+  } })).json();
+  expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/submit`, { headers: red, data: {} })).ok()).toBe(true);
+  expect((await request.post(`/api/v1/chapter-versions/${c.versionId}/approve`, { headers: { 'X-User-Id': 'u-freigabe' }, data: { comment: 'ok' } })).ok()).toBe(true);
+  await request.post('/api/v1/faq', { headers: red, data: { question: 'E2E Wie zähle ich einen Lagerplatz?', answer: 'Öffnen Sie die Inventur und zählen Sie den Platz.', status: 'published' } });
+
+  // Leseransicht auf Tschechisch: Sprachname grammatisch („do češtiny“), Auswahl mit Eigenbezeichnung
+  await page.goto(`/lesen/${c.chapterId}?lang=cs`);
+  await expect(page.getByLabel('Jazyk')).toHaveValue('cs');
+  await expect(page.getByLabel('Jazyk').locator('option[value="cs"]')).toHaveText(/^Čeština/);
+  const article = page.getByRole('article', { name: 'E2E Inventur zählen' });
+  await expect(article.getByText('Tato kapitola zatím není přeložena do češtiny – čtete německou verzi.')).toBeVisible();
+  // Übersetzung anfordern mit Begründung
+  await article.getByRole('button', { name: 'Požádat o překlad' }).click();
+  await article.getByLabel('K čemu překlad potřebujete? (nepovinné)').fill('Školení nových kolegů ve skladu');
+  expect(await axe()).toEqual([]);
+  await article.getByRole('button', { name: 'Odeslat žádost' }).click();
+  await expect(article.getByText('O překlad bylo požádáno – redakce byla informována.')).toBeVisible();
+
+  // Redaktion: Begründung beim Wunsch (ohne Namen)
+  await page.goto('/uebersetzungen');
+  const row = page.locator('.card', { hasText: 'Gewünschte Übersetzungen' }).getByRole('row', { name: /E2E Inventur zählen/ });
+  await expect(row).toContainText('Tschechisch');
+  await row.getByText('1 Begründung').click();
+  await expect(row).toContainText('„Školení nových kolegů ve skladu“');
+  expect(await axe()).toEqual([]);
+
+  // Stammdaten › FAQ: alle fehlenden tschechischen Übersetzungen in einem Schritt als KI-Entwurf
+  await page.goto('/stammdaten/faq?sprache=cs');
+  const batch = page.locator('.card', { hasText: 'Häufige Fragen übersetzen' });
+  await expect(batch.getByLabel('Sprache')).toHaveValue('cs');
+  await expect(batch).toContainText(/\d+ fehlen · \d+ veraltet · \d+ Entwürfe warten auf Freigabe/);
+  expect(await axe()).toEqual([]);
+  await batch.getByRole('button', { name: /fehlende und veraltete mit KI übersetzen/ }).click();
+  await expect(batch.getByRole('status', { name: 'Stand der KI-Übersetzung Tschechisch' })).toContainText('abgeschlossen', { timeout: 30_000 });
+  await expect(batch).toContainText('0 fehlen · 0 veraltet');
+  await expect(batch.getByText('✓ Alle Fragen liegen in Tschechisch aktuell vor (als Entwurf oder freigegeben).')).toBeVisible();
+  await expect(page.locator('details.faq-entry', { hasText: 'E2E Wie zähle ich einen Lagerplatz?' }).locator('summary')).toContainText('CS ✎');
+  expect(await axe()).toEqual([]);
+
+  // Wochenübersicht (Vorschau): offene Übersetzungswünsche
+  await page.goto('/rueckmeldungen');
+  const preview = page.getByLabel('Vorschau Ihrer Übersicht');
+  await expect(preview).toContainText(/Übersetzungsw(unsch|ünsche) offen/);
+  await expect(preview).toContainText('E2E Inventur zählen (Tschechisch): 1');
+  expect(await axe()).toEqual([]);
 });

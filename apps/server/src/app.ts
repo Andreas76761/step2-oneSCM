@@ -63,6 +63,7 @@ import { terminologyRoutes } from './routes/terminology.js';
 import { failAnalysisJob, runAnalysis } from './services/analysis.js';
 import { failImportJob, runImportJob } from './services/imports.js';
 import { failBatch, runBatch } from './services/rewriteBatch.js';
+import { failFaqBatch, runFaqBatch } from './services/faqTranslations.js';
 import { assertParamsInProject, resolveProject, withProject } from './services/projects.js';
 import { runRedactionJob } from './services/imageRedaction.js';
 import { seedTerminology } from './services/terminology.js';
@@ -155,6 +156,12 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
     if (await archived(c)) return failBatch(c, p.batchId, ARCHIVED);
     await runBatch(c, p.batchId);
   }, async (p, err) => failBatch(await batchCtx(p), p.batchId, err));
+  const faqBatchCtx = (p: any) => jobCtx('SELECT project_id FROM faq_translation_batches WHERE id = ?', p.batchId);
+  jobs.register('faq-translate-batch', async (p) => {
+    const c = await faqBatchCtx(p);
+    if (await archived(c)) return failFaqBatch(c, p.batchId, ARCHIVED);
+    await runFaqBatch(c, p.batchId);
+  }, async (p, err) => failFaqBatch(await faqBatchCtx(p), p.batchId, err));
   const connectionCtx = (p: any) => jobCtx('SELECT project_id FROM source_connections WHERE id = ?', p.connectionId);
   jobs.register('source-sync', async (p) => {
     const c = await connectionCtx(p);

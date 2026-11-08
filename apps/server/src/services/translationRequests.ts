@@ -19,8 +19,11 @@ async function stateOf(ctx: Ctx, chapterId: string, language: string): Promise<R
 }
 
 /** Übersetzung wünschen (jede Person mit Lesezugriff); wiederholte Wünsche derselben Person zählen einmal */
-export async function requestTranslation(ctx: Ctx, input: { chapterId?: unknown; language?: unknown }, user: User) {
+export async function requestTranslation(ctx: Ctx, input: { chapterId?: unknown; language?: unknown; reason?: unknown }, user: User) {
   if (typeof input.chapterId !== 'string' || typeof input.language !== 'string') throw badRequest('chapterId und language sind Pflicht.');
+  if (input.reason !== undefined && input.reason !== null && typeof input.reason !== 'string') throw badRequest('reason muss Text sein.');
+  // Begründung (ADR-125): optional, kurz; leer zählt als keine
+  const reason = typeof input.reason === 'string' ? input.reason.replace(/\s+/g, ' ').trim().slice(0, 300) || null : null;
   const { chapterId, language } = input;
   const languages = parseJson<string[]>((await ctx.db.get('SELECT languages FROM projects WHERE id = ?', ctx.projectId))?.languages, []);
   if (!languages.includes(language)) throw badRequest(`Sprache „${language}“ ist keine Zielsprache des Projekts.`);
@@ -32,13 +35,19 @@ export async function requestTranslation(ctx: Ctx, input: { chapterId?: unknown;
   await ctx.db.tx(async () => {
     // ein früherer, schon erfüllter Wunsch derselben Person wird wieder offen
     const fresh = await ctx.db.run(
-      `INSERT INTO translation_requests (project_id, chapter_id, language, user_id, created_at) VALUES (?, ?, ?, ?, ?)
-       ON CONFLICT (project_id, chapter_id, language, user_id) DO UPDATE SET created_at = excluded.created_at, fulfilled_at = NULL WHERE translation_requests.fulfilled_at IS NOT NULL`,
-      ctx.projectId, chapterId, language, user.id, now(),
+      `INSERT INTO translation_requests (project_id, chapter_id, language, user_id, created_at, reason) VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT (project_id, chapter_id, language, user_id) DO UPDATE SET created_at = excluded.created_at, fulfilled_at = NULL, reason = COALESCE(excluded.reason, translation_requests.reason)
+       WHERE translation_requests.fulfilled_at IS NOT NULL`,
+      ctx.projectId, chapterId, language, user.id, now(), reason,
     );
+    // wiederholter (noch offener) Wunsch derselben Person: zählt nicht erneut, eine (neue) Begründung ergänzt bzw. ersetzt die bisherige
+    if (!fresh.changes && reason) {
+      await ctx.db.run('UPDATE translation_requests SET reason = ? WHERE project_id = ? AND chapter_id = ? AND language = ? AND user_id = ?', reason, ctx.projectId, chapterId, language, user.id);
+      await audit(ctx, user.id, 'translation.request_reason', 'chapter', chapterId, { language });
+    }
     count = Number((await ctx.db.get('SELECT COUNT(*) AS n FROM translation_requests WHERE project_id = ? AND chapter_id = ? AND language = ? AND fulfilled_at IS NULL', ctx.projectId, chapterId, language))?.n ?? 0);
     if (!fresh.changes) return;
-    await audit(ctx, user.id, 'translation.requested', 'chapter', chapterId, { language, count });
+    await audit(ctx, user.id, 'translation.requested', 'chapter', chapterId, { language, count, withReason: !!reason });
     // erster Wunsch: Hinweis im Kapitel an Autorin/Autor und Einreichende der neuesten Fassung (wie Leser-Rückmeldungen).
     // „Erster“ entscheidet das Einfügen der Hinweis-Zeile je Kapitel und Sprache – nicht die Zählung, die bei gleichzeitigen
     // Wünschen verschiedener Personen in beiden Transaktionen 1 ergeben kann
@@ -50,16 +59,17 @@ export async function requestTranslation(ctx: Ctx, input: { chapterId?: unknown;
       const v = await ctx.db.get('SELECT generated_by, submitted_by FROM generated_chapter_versions WHERE chapter_id = ? ORDER BY version_no DESC LIMIT 1', chapterId);
       const to = [v?.generated_by, v?.submitted_by].filter((x): x is string => typeof x === 'string' && x !== 'system' && x !== user.id);
       const name = LANGUAGES[language] ?? language;
-      if (to.length) await systemNotice(ctx, chapterId, `Übersetzung gewünscht: „${chapter.title}“ auf ${name}${state === 'outdated' ? ' (vorhandene Übersetzung ist veraltet)' : ''} – angefordert aus der Leseransicht.`, to, 'translation_request');
+      const why = reason ? ` Begründung: „${reason}“` : '';
+      if (to.length) await systemNotice(ctx, chapterId, `Übersetzung gewünscht: „${chapter.title}“ auf ${name}${state === 'outdated' ? ' (vorhandene Übersetzung ist veraltet)' : ''} – angefordert aus der Leseransicht.${why}`, to, 'translation_request');
     }
   });
-  return { chapterId, language, requested: true, count, state };
+  return { chapterId, language, requested: true, count, state, reason: (await ctx.db.get('SELECT reason FROM translation_requests WHERE project_id = ? AND chapter_id = ? AND language = ? AND user_id = ?', ctx.projectId, chapterId, language, user.id))?.reason ?? null };
 }
 
 /** Eigene offene Wünsche (für die Leseransicht) */
 export async function myTranslationRequests(ctx: Ctx, userId: string) {
-  const rows = await ctx.db.all('SELECT chapter_id, language FROM translation_requests WHERE project_id = ? AND user_id = ? AND fulfilled_at IS NULL', ctx.projectId, userId);
-  return rows.map((r) => ({ chapterId: r.chapter_id as string, language: r.language as string }));
+  const rows = await ctx.db.all('SELECT chapter_id, language, reason FROM translation_requests WHERE project_id = ? AND user_id = ? AND fulfilled_at IS NULL', ctx.projectId, userId);
+  return rows.map((r) => ({ chapterId: r.chapter_id as string, language: r.language as string, reason: (r.reason as string | null) ?? null }));
 }
 
 /** Offene Wünsche gesammelt je Kapitel und Sprache, meistgewünschte zuerst; mit `all` auch erfüllte (für die Statistik) */
@@ -68,6 +78,8 @@ export async function listTranslationRequests(ctx: Ctx, all = false) {
     `SELECT r.chapter_id, r.language, c.title, COUNT(*) AS n, MIN(r.created_at) AS first_at, MAX(r.created_at) AS last_at
      FROM translation_requests r JOIN chapters c ON c.id = r.chapter_id WHERE r.project_id = ?${all ? '' : ' AND r.fulfilled_at IS NULL'} GROUP BY r.chapter_id, r.language, c.title`, ctx.projectId,
   );
+  // Begründungen ohne Namen (die Redaktion sieht, warum, nicht wer), neueste zuerst
+  const reasons = await ctx.db.all(`SELECT chapter_id, language, reason, created_at FROM translation_requests WHERE project_id = ? AND reason IS NOT NULL${all ? '' : ' AND fulfilled_at IS NULL'} ORDER BY created_at DESC`, ctx.projectId);
   const out = [];
   for (const r of rows) {
     const state = await stateOf(ctx, r.chapter_id as string, r.language as string);
@@ -75,6 +87,7 @@ export async function listTranslationRequests(ctx: Ctx, all = false) {
     out.push({
       chapterId: r.chapter_id as string, title: String(r.title), language: r.language as string, languageName: LANGUAGES[r.language as string] ?? String(r.language),
       count: Number(r.n), firstRequestedAt: r.first_at as string, lastRequestedAt: r.last_at as string, state,
+      reasons: reasons.filter((x) => x.chapter_id === r.chapter_id && x.language === r.language).map((x) => ({ text: String(x.reason), requestedAt: x.created_at as string })),
     });
   }
   return out.sort((a, b) => b.count - a.count || b.lastRequestedAt.localeCompare(a.lastRequestedAt));

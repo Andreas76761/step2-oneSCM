@@ -154,7 +154,7 @@ function DigestCard({ isAdmin }: { isAdmin: boolean }) {
   };
   return (
     <Card title="Wöchentliche Übersicht">
-      <p className="small muted">Alle mit Bearbeitungsrecht erhalten einmal pro Woche eine Benachrichtigung mit offenen Rückmeldungen, ihren Aufgaben und Kapiteln mit Handlungsbedarf – nur, wenn es etwas zu tun gibt.</p>
+      <p className="small muted">Alle mit Bearbeitungsrecht erhalten einmal pro Woche eine Benachrichtigung mit offenen Rückmeldungen, ihren Aufgaben, Kapiteln mit Handlungsbedarf sowie offenen Übersetzungswünschen und veralteten Übersetzungen – nur, wenn es etwas zu tun gibt.</p>
       <ErrorBox error={settings.error ?? preview.error} />
       {s && (
         <div className="filters">
@@ -177,6 +177,9 @@ function DigestCard({ isAdmin }: { isAdmin: boolean }) {
               {p.openFeedback > 0 && <li><Link to="/rueckmeldungen">{p.openFeedback} offene Leser-Rückmeldung{p.openFeedback === 1 ? '' : 'en'}</Link>{p.feedbackByChapter.length > 0 && ` – ${p.feedbackByChapter.slice(0, 3).map((c: any) => `${c.title}: ${c.open}`).join(', ')}`}</li>}
               {p.tasks > 0 && <li><Link to="/aufgaben">{p.tasks} offene Aufgabe{p.tasks === 1 ? '' : 'n'} für Sie</Link>{p.overdueTasks > 0 && `, davon ${p.overdueTasks} überfällig`}</li>}
               {p.weakChapters.map((c: any) => <li key={c.chapterId}>Anleitungs-Check: <Link to={`/anleitungs-check/${c.versionId}`}>{c.title}</Link> ({c.score} Punkte)</li>)}
+              {p.openTranslationRequests > 0 && <li><Link to="/uebersetzungen">{p.openTranslationRequests === 1 ? '1 Übersetzungswunsch' : `${p.openTranslationRequests} Übersetzungswünsche`} offen</Link> – {p.translationRequests.slice(0, 3).map((r: any) => `${r.title} (${r.languageName}): ${r.count}`).join(', ')}</li>}
+              {p.outdatedChapterTranslations.length > 0 && <li><Link to="/uebersetzungen">Veraltete Übersetzungen</Link>: {p.outdatedChapterTranslations.slice(0, 3).map((c: any) => `${c.title} (${c.language.toUpperCase()})`).join(', ')}{p.outdatedChapterTranslations.length > 3 && ` und ${p.outdatedChapterTranslations.length - 3} weitere`}</li>}
+              {p.outdatedFaqTranslations > 0 && <li><Link to="/stammdaten/faq">{p.outdatedFaqTranslations} veraltete FAQ-Übersetzung{p.outdatedFaqTranslations === 1 ? '' : 'en'}</Link></li>}
             </ul>
           )}
         </div>

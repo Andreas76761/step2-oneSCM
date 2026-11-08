@@ -46,7 +46,7 @@ describe('Etappe 96', () => {
       const again = (await call('POST', '/reader/translation-requests', { chapterId: a.chapterId, language: 'en' }, 'u-leser')).json;
       expect(again).toMatchObject({ requested: true, count: 1, state: 'outdated' });
       expect(await notices(call, 'u-redaktion', 'translation_request')).toHaveLength(2);
-      expect((await call('GET', '/reader/me', undefined, 'u-leser')).json.translationRequests).toEqual([{ chapterId: a.chapterId, language: 'en' }]);
+      expect((await call('GET', '/reader/me', undefined, 'u-leser')).json.translationRequests).toEqual([{ chapterId: a.chapterId, language: 'en', reason: null }]);
       expect((await call('GET', '/translation-requests')).json.map((r: any) => [r.chapterId, r.count, r.state])).toEqual([[a.chapterId, 1, 'outdated']]);
     } finally {
       await built.app.close();

@@ -146,7 +146,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 57. **Etappe 103 – Code-Review der Korrekturen aus den Etappen 95 und 96 (✅ umgesetzt):** drei Funde behoben, zwei ohne Auswirkung.
 58. **Etappe 104 – Code-Review der Korrekturen aus den Etappen 92–94 (✅ umgesetzt):** vier Funde behoben, einer begründet belassen.
 59. **Etappe 105 – Code-Review der Korrekturen aus den Etappen 88–91 (✅ umgesetzt):** vier Funde behoben, einer begründet belassen. Damit sind alle Korrekturen der Review-Etappen 88–100 selbst nachgeprüft.
-60. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+60. **Etappe 106 – Zusammenführung mit main (✅ umgesetzt):** die auf main zusammengeführte Etappe 27 (FAQ-Stapelübersetzung, Übersetzungswunsch mit Begründung, Wochenübersicht mit Übersetzungen, Sprachnamen grammatisch) ist übernommen.
+61. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

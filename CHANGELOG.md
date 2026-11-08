@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.106.0 – Etappe 106: Zusammenführung mit main (Pull Request #29) (08.11.2026)
+
+Auf `main` wurde parallel eine eigene „Etappe 27“ zusammengeführt (Pull Request #29, v0.27.0 vom 06.11.2026). Sie ist hier vollständig übernommen; Kennungen, die es in diesem Zweig schon gab, sind neu nummeriert.
+
+### Hinzugefügt (aus main)
+- **Häufige Fragen als Stapel übersetzen (ADR-124, bisher ADR-079 auf main):** alle fehlenden und veralteten FAQ einer Sprache in einem Schritt als KI-Entwurf – im Hintergrund mit Fortschritt, Abbruch und Ergebnis-Hinweis; Einträge mit personenbezogenen Daten gehen nicht an externe KI-Dienste. Hier zusätzlich mit der Namensliste der Einstellungen und den festen Übersetzungen der Terminologie (wie die Einzelübersetzung).
+- **Übersetzungswunsch mit Begründung (ADR-125, bisher ADR-080):** optionale Begründung beim Anfordern in der Lesesprache; die Redaktion sieht Begründungen ohne Namen. Zusammen mit dem Zyklus aus Etappe 96: ein erfüllter Wunsch wird beim erneuten Wünschen wieder offen, die neue Begründung ersetzt die alte; die Übersicht zeigt nur Begründungen offener Wünsche.
+- **Wochenübersicht mit Übersetzungen (ADR-126, bisher ADR-081):** offene Übersetzungswünsche und veraltete Übersetzungen in Benachrichtigung und Vorschau.
+- **Sprachnamen grammatisch (ADR-127, bisher ADR-082):** Zielsprache je Anzeigesprache mit Präposition und richtiger Form („ins Englische“, „do češtiny“); Auswahllisten mit Eigenbezeichnung.
+- Migration `035_faq_batches_request_reasons.sql` (Name unverändert – Datenbanken von main haben sie schon, alle anderen holen sie nach); Tests T-444, T-445 (bisher T-209, T-210 auf main) und E2E T-446 (bisher T-237); Anforderungen NFR-162 … NFR-165 (bisher NFR-66 … NFR-69).
+
+### Geändert
+- E2E T-235 sendet den Übersetzungswunsch über das neue Formular; T-420 erwartet die Begründung bei den eigenen Wünschen.
+- nodemailer 10.3.1 wie auf main.
+
 ## 0.105.0 – Etappe 105: Code-Review der Korrekturen aus den Etappen 88–91 (08.11.2026)
 
 ### Hinzugefügt

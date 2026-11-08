@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.108 Stand nach Etappe 106 (08.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Zusammenführung mit main (Pull Request #29, dort Etappe 27) | ✅ T-444, T-445, E2E T-446; Server-Tests auf SQLite und PostgreSQL |
+| Häufige Fragen als Stapel übersetzen | ✅ (NFR-162, [ADR-124](adr/ADR-124-faq-stapeluebersetzung.md)) |
+| Übersetzungswunsch mit Begründung, zusammen mit dem Zyklus aus Etappe 96 | ✅ (NFR-163, [ADR-125](adr/ADR-125-wunsch-mit-begruendung.md)) |
+| Wochenübersicht mit Übersetzungen | ✅ (NFR-165, [ADR-126](adr/ADR-126-wochenuebersicht-uebersetzungen.md)) |
+| Sprachnamen grammatisch | ✅ (NFR-164, [ADR-127](adr/ADR-127-sprachnamen-grammatisch.md)) |
+
 ## 1.107 Stand nach Etappe 105 (08.11.2026)
 
 | Punkt | Ergebnis |

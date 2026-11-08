@@ -1644,5 +1644,41 @@
     "documentation": [
       "docs/adr/ADR-123-sparten-regelwerk-vormerkungen.md"
     ]
+  },
+  {
+    "id": "NFR-162",
+    "title": "Alle fehlenden und veralteten häufigen Fragen einer Sprache in einem Schritt per KI als Entwurf übersetzen, mit Fortschritt, Abbruch und Ergebnis-Hinweis",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-124-faq-stapeluebersetzung.md"
+    ]
+  },
+  {
+    "id": "NFR-163",
+    "title": "Übersetzungswunsch aus der Leseransicht mit optionaler Begründung; die Redaktion sieht Begründungen ohne Namen",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-125-wunsch-mit-begruendung.md"
+    ]
+  },
+  {
+    "id": "NFR-164",
+    "title": "Sprachnamen in der Leseransicht grammatisch richtig je Anzeigesprache („ins Englische“, „do češtiny“) und als Eigenbezeichnung in Auswahllisten",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-127-sprachnamen-grammatisch.md"
+    ]
+  },
+  {
+    "id": "NFR-165",
+    "title": "Wochenübersicht mit offenen Übersetzungswünschen und veralteten Übersetzungen (Kapitel und häufige Fragen)",
+    "priority": "P2",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-126-wochenuebersicht-uebersetzungen.md"
+    ]
   }
 ]

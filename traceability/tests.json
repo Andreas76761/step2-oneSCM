@@ -3494,5 +3494,36 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-444",
+    "title": "FAQ-Stapelübersetzung: fehlende und veraltete Einträge einer Sprache als KI-Entwurf, Fortschritt, Hinweis, Datenschutz, danach Freigabe",
+    "file": "apps/server/test/stage106.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-162"
+    ]
+  },
+  {
+    "id": "T-445",
+    "title": "Übersetzungswunsch mit Begründung; Wochenübersicht mit Übersetzungswünschen und veralteten Übersetzungen",
+    "file": "apps/server/test/stage106.test.ts",
+    "level": "api",
+    "requirements": [
+      "NFR-163",
+      "NFR-165"
+    ]
+  },
+  {
+    "id": "T-446",
+    "title": "Übersetzungswunsch mit Begründung auf Tschechisch (grammatische Sprachform), Begründung bei der Redaktion, FAQ-Stapelübersetzung, Wochenübersicht (Browser, axe)",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-162",
+      "NFR-163",
+      "NFR-164",
+      "NFR-165"
+    ]
   }
 ]

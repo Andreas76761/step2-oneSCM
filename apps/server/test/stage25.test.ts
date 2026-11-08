@@ -40,7 +40,7 @@ describe('Etappe 25', () => {
       expect((await call('POST', '/reader/translation-requests', { chapterId: 'ch_unbekannt', language: 'en' }, 'u-leser')).status).toBe(404);
       // erster Wunsch: Hinweis im Kapitel an die Redaktion (Autorin der Fassung)
       const r1 = (await call('POST', '/reader/translation-requests', { chapterId: a.chapterId, language: 'en' }, 'u-leser')).json;
-      expect(r1).toEqual({ chapterId: a.chapterId, language: 'en', requested: true, count: 1, state: 'missing' });
+      expect(r1).toEqual({ chapterId: a.chapterId, language: 'en', requested: true, count: 1, state: 'missing', reason: null });
       const notes = (await call('GET', '/notifications', undefined, 'u-redaktion')).json;
       expect(notes.items ?? notes).toEqual(expect.arrayContaining([expect.objectContaining({ type: 'translation_request', text: expect.stringContaining('Übersetzung gewünscht: „Lieferschein drucken“ auf Englisch') })]));
       // dieselbe Person erneut: zählt einmal; weitere Personen zählen
@@ -51,7 +51,7 @@ describe('Etappe 25', () => {
       const noticesB = (await call('GET', '/notifications', undefined, 'u-redaktion')).json;
       expect((noticesB.items ?? noticesB).filter((n: any) => n.type === 'translation_request' && n.text.includes('Auftrag anlegen'))).toHaveLength(1);
       // eigene Wünsche in /reader/me
-      expect((await call('GET', '/reader/me', undefined, 'u-leser')).json.translationRequests).toEqual(expect.arrayContaining([{ chapterId: a.chapterId, language: 'en' }, { chapterId: b.chapterId, language: 'fr' }]));
+      expect((await call('GET', '/reader/me', undefined, 'u-leser')).json.translationRequests).toEqual(expect.arrayContaining([{ chapterId: a.chapterId, language: 'en', reason: null }, { chapterId: b.chapterId, language: 'fr', reason: null }]));
       // Übersicht: meistgewünschte zuerst
       const list = (await call('GET', '/translation-requests')).json;
       expect(list.map((r: any) => [r.title, r.language, r.count, r.state])).toEqual([['Auftrag anlegen', 'fr', 3, 'missing'], ['Lieferschein drucken', 'en', 2, 'missing']]);

@@ -95,6 +95,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **103** ✅ | Code-Review der Korrekturen aus den Etappen 95 und 96 | Server-Tests grün auf SQLite und PostgreSQL; T-438, T-439 |
 | **104** ✅ | Code-Review der Korrekturen aus den Etappen 92–94 | Server-Tests grün auf SQLite und PostgreSQL; T-440, T-441 |
 | **105** ✅ | Code-Review der Korrekturen aus den Etappen 88–91 | Server-Tests grün auf SQLite und PostgreSQL; T-442, T-443 |
+| **106** ✅ | Zusammenführung mit main (Pull Request #29): FAQ-Stapelübersetzung, Wunsch mit Begründung, Wochenübersicht, Sprachnamen (ADR-124 … ADR-127) | Server-Tests grün auf SQLite und PostgreSQL; T-444, T-445, E2E T-446 |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

@@ -9,8 +9,8 @@ const de = {
   fbQuestion: 'War dieses Kapitel hilfreich?', yes: 'Ja', no: 'Nein', fbMissing: 'Was hat gefehlt oder war unklar? (optional)',
   fbPlaceholder: 'z. B. Schritt 3 passt nicht zur aktuellen Maske', fbSend: 'Rückmeldung senden', fbThanks: 'Danke für Ihre Rückmeldung', fbThanksNo: ' – die Redaktion kümmert sich darum',
   seeAlso: 'Siehe auch', faqRelated: 'Häufige Fragen dazu', allFaq: 'Alle häufigen Fragen',
-  langMissing: 'Dieses Kapitel ist noch nicht in {lang} übersetzt – Sie lesen die deutsche Fassung.',
-  langOutdated: 'Die {lang}-Übersetzung gehört zu einer älteren Fassung – Sie lesen die aktuelle deutsche Fassung.',
+  langMissing: 'Dieses Kapitel ist noch nicht {into} übersetzt – Sie lesen die deutsche Fassung.',
+  langOutdated: 'Die Übersetzung {into} gehört zu einer älteren Fassung – Sie lesen die aktuelle deutsche Fassung.',
   untranslatedOne: '1 Absatz ist noch nicht übersetzt und erscheint deutsch.', untranslatedMany: '{n} Absätze sind noch nicht übersetzt und erscheinen deutsch.',
   requestTranslation: 'Übersetzung anfordern', requested: 'Übersetzung angefordert – die Redaktion ist informiert.',
   bookmark: 'Merken', bookmarked: 'Gemerkt', addNote: 'Notiz hinzufügen', editNote: 'Notiz bearbeiten', noteLabel: 'Ihre Notiz zu diesem Kapitel',
@@ -31,6 +31,7 @@ const de = {
   manual: 'Benutzerhandbuch', workingState: 'Arbeitsstand', version: 'Version {v}', forRole: 'für {role}', asOf: 'Stand', chapters: 'Kapitel', published: 'Veröffentlicht',
   notice: 'Hinweis', includesDrafts: 'enthält nicht freigegebene Entwürfe', cover: 'Deckblatt', printToc: 'Inhaltsverzeichnis des Handbuchs', pageOf: 'Seite {page} von {pages}', quote: '„{x}“',
   faqFilter: 'Fragen filtern', faqPlaceholder: 'z. B. Passwort', faqEmpty: 'Noch keine veröffentlichten Fragen.', faqPartly: 'Einige Fragen sind noch nicht übersetzt und erscheinen deutsch.',
+  requestReason: 'Wofür brauchen Sie die Übersetzung? (optional)', requestReasonPlaceholder: 'z. B. für neue Kolleginnen und Kollegen im Lager', sendRequest: 'Anfordern',
 };
 export type ReaderTextKey = keyof typeof de;
 type Texts = Record<ReaderTextKey, string>;
@@ -41,8 +42,8 @@ const en: Texts = {
   fbQuestion: 'Was this chapter helpful?', yes: 'Yes', no: 'No', fbMissing: 'What was missing or unclear? (optional)',
   fbPlaceholder: 'e.g. step 3 does not match the current screen', fbSend: 'Send feedback', fbThanks: 'Thank you for your feedback', fbThanksNo: ' – the editorial team will look into it',
   seeAlso: 'See also', faqRelated: 'Related questions', allFaq: 'All frequently asked questions',
-  langMissing: 'This chapter has not been translated into {lang} yet – you are reading the German version.',
-  langOutdated: 'The {lang} translation belongs to an older version – you are reading the current German version.',
+  langMissing: 'This chapter has not been translated {into} yet – you are reading the German version.',
+  langOutdated: 'The translation {into} belongs to an older version – you are reading the current German version.',
   untranslatedOne: '1 paragraph has not been translated yet and appears in German.', untranslatedMany: '{n} paragraphs have not been translated yet and appear in German.',
   requestTranslation: 'Request translation', requested: 'Translation requested – the editorial team has been notified.',
   bookmark: 'Bookmark', bookmarked: 'Bookmarked', addNote: 'Add note', editNote: 'Edit note', noteLabel: 'Your note on this chapter',
@@ -63,6 +64,7 @@ const en: Texts = {
   manual: 'User manual', workingState: 'Working version', version: 'Version {v}', forRole: 'for {role}', asOf: 'As of', chapters: 'Chapters', published: 'Published',
   notice: 'Note', includesDrafts: 'contains drafts that are not yet approved', cover: 'Cover page', printToc: 'Table of contents of the manual', pageOf: 'Page {page} of {pages}', quote: '“{x}”',
   faqFilter: 'Filter questions', faqPlaceholder: 'e.g. password', faqEmpty: 'No published questions yet.', faqPartly: 'Some questions have not been translated yet and appear in German.',
+  requestReason: 'What do you need the translation for? (optional)', requestReasonPlaceholder: 'e.g. for new colleagues in the warehouse', sendRequest: 'Send request',
 };
 
 const fr: Texts = {
@@ -71,8 +73,8 @@ const fr: Texts = {
   fbQuestion: 'Ce chapitre vous a-t-il été utile ?', yes: 'Oui', no: 'Non', fbMissing: 'Qu’est-ce qui manquait ou n’était pas clair ? (facultatif)',
   fbPlaceholder: 'p. ex. l’étape 3 ne correspond pas à l’écran actuel', fbSend: 'Envoyer le retour', fbThanks: 'Merci pour votre retour', fbThanksNo: ' – la rédaction s’en occupe',
   seeAlso: 'Voir aussi', faqRelated: 'Questions associées', allFaq: 'Toutes les questions fréquentes',
-  langMissing: 'Ce chapitre n’est pas encore traduit en {lang} – vous lisez la version allemande.',
-  langOutdated: 'La traduction en {lang} correspond à une version antérieure – vous lisez la version allemande actuelle.',
+  langMissing: 'Ce chapitre n’est pas encore traduit {into} – vous lisez la version allemande.',
+  langOutdated: 'La traduction {into} correspond à une version antérieure – vous lisez la version allemande actuelle.',
   untranslatedOne: '1 paragraphe n’est pas encore traduit et apparaît en allemand.', untranslatedMany: '{n} paragraphes ne sont pas encore traduits et apparaissent en allemand.',
   requestTranslation: 'Demander une traduction', requested: 'Traduction demandée – la rédaction a été informée.',
   bookmark: 'Ajouter un signet', bookmarked: 'Signet ajouté', addNote: 'Ajouter une note', editNote: 'Modifier la note', noteLabel: 'Votre note sur ce chapitre',
@@ -93,6 +95,7 @@ const fr: Texts = {
   manual: 'Manuel utilisateur', workingState: 'Version de travail', version: 'Version {v}', forRole: 'pour {role}', asOf: 'État au', chapters: 'Chapitres', published: 'Publié le',
   notice: 'Remarque', includesDrafts: 'contient des brouillons non validés', cover: 'Page de garde', printToc: 'Table des matières du manuel', pageOf: 'Page {page} sur {pages}', quote: '« {x} »',
   faqFilter: 'Filtrer les questions', faqPlaceholder: 'p. ex. mot de passe', faqEmpty: 'Aucune question publiée pour l’instant.', faqPartly: 'Certaines questions ne sont pas encore traduites et apparaissent en allemand.',
+  requestReason: 'Pourquoi avez-vous besoin de cette traduction ? (facultatif)', requestReasonPlaceholder: 'p. ex. pour les nouveaux collègues de l’entrepôt', sendRequest: 'Envoyer la demande',
 };
 
 const es: Texts = {
@@ -101,8 +104,8 @@ const es: Texts = {
   fbQuestion: '¿Le ha resultado útil este capítulo?', yes: 'Sí', no: 'No', fbMissing: '¿Qué faltaba o no estaba claro? (opcional)',
   fbPlaceholder: 'p. ej. el paso 3 no coincide con la pantalla actual', fbSend: 'Enviar opinión', fbThanks: 'Gracias por su opinión', fbThanksNo: ': el equipo de redacción se ocupará de ello',
   seeAlso: 'Véase también', faqRelated: 'Preguntas relacionadas', allFaq: 'Todas las preguntas frecuentes',
-  langMissing: 'Este capítulo aún no está traducido al {lang}: está leyendo la versión alemana.',
-  langOutdated: 'La traducción al {lang} corresponde a una versión anterior: está leyendo la versión alemana actual.',
+  langMissing: 'Este capítulo aún no está traducido {into}: está leyendo la versión alemana.',
+  langOutdated: 'La traducción {into} corresponde a una versión anterior: está leyendo la versión alemana actual.',
   untranslatedOne: '1 párrafo aún no está traducido y aparece en alemán.', untranslatedMany: '{n} párrafos aún no están traducidos y aparecen en alemán.',
   requestTranslation: 'Solicitar traducción', requested: 'Traducción solicitada: se ha informado al equipo de redacción.',
   bookmark: 'Guardar', bookmarked: 'Guardado', addNote: 'Añadir nota', editNote: 'Editar nota', noteLabel: 'Su nota sobre este capítulo',
@@ -123,6 +126,7 @@ const es: Texts = {
   manual: 'Manual de usuario', workingState: 'Versión de trabajo', version: 'Versión {v}', forRole: 'para {role}', asOf: 'Fecha', chapters: 'Capítulos', published: 'Publicado',
   notice: 'Nota', includesDrafts: 'contiene borradores no aprobados', cover: 'Portada', printToc: 'Índice del manual', pageOf: 'Página {page} de {pages}', quote: '«{x}»',
   faqFilter: 'Filtrar preguntas', faqPlaceholder: 'p. ej. contraseña', faqEmpty: 'Aún no hay preguntas publicadas.', faqPartly: 'Algunas preguntas aún no están traducidas y aparecen en alemán.',
+  requestReason: '¿Para qué necesita la traducción? (opcional)', requestReasonPlaceholder: 'p. ej. para los nuevos compañeros del almacén', sendRequest: 'Enviar solicitud',
 };
 
 const it: Texts = {
@@ -131,8 +135,8 @@ const it: Texts = {
   fbQuestion: 'Questo capitolo è stato utile?', yes: 'Sì', no: 'No', fbMissing: 'Cosa mancava o non era chiaro? (facoltativo)',
   fbPlaceholder: 'ad es. il passo 3 non corrisponde alla schermata attuale', fbSend: 'Invia riscontro', fbThanks: 'Grazie per il riscontro', fbThanksNo: ': la redazione se ne occuperà',
   seeAlso: 'Vedi anche', faqRelated: 'Domande correlate', allFaq: 'Tutte le domande frequenti',
-  langMissing: 'Questo capitolo non è ancora tradotto in {lang}: state leggendo la versione tedesca.',
-  langOutdated: 'La traduzione in {lang} si riferisce a una versione precedente: state leggendo la versione tedesca attuale.',
+  langMissing: 'Questo capitolo non è ancora tradotto {into}: state leggendo la versione tedesca.',
+  langOutdated: 'La traduzione {into} si riferisce a una versione precedente: state leggendo la versione tedesca attuale.',
   untranslatedOne: '1 paragrafo non è ancora tradotto e appare in tedesco.', untranslatedMany: '{n} paragrafi non sono ancora tradotti e appaiono in tedesco.',
   requestTranslation: 'Richiedi traduzione', requested: 'Traduzione richiesta: la redazione è stata informata.',
   bookmark: 'Salva', bookmarked: 'Salvato', addNote: 'Aggiungi nota', editNote: 'Modifica nota', noteLabel: 'La vostra nota su questo capitolo',
@@ -153,6 +157,7 @@ const it: Texts = {
   manual: 'Manuale utente', workingState: 'Versione di lavoro', version: 'Versione {v}', forRole: 'per {role}', asOf: 'Aggiornato al', chapters: 'Capitoli', published: 'Pubblicato',
   notice: 'Nota', includesDrafts: 'contiene bozze non approvate', cover: 'Copertina', printToc: 'Indice del manuale', pageOf: 'Pagina {page} di {pages}', quote: '«{x}»',
   faqFilter: 'Filtra domande', faqPlaceholder: 'ad es. password', faqEmpty: 'Nessuna domanda pubblicata finora.', faqPartly: 'Alcune domande non sono ancora tradotte e appaiono in tedesco.',
+  requestReason: 'Per cosa vi serve la traduzione? (facoltativo)', requestReasonPlaceholder: 'ad es. per i nuovi colleghi del magazzino', sendRequest: 'Invia richiesta',
 };
 
 const nl: Texts = {
@@ -161,8 +166,8 @@ const nl: Texts = {
   fbQuestion: 'Was dit hoofdstuk nuttig?', yes: 'Ja', no: 'Nee', fbMissing: 'Wat ontbrak of was onduidelijk? (optioneel)',
   fbPlaceholder: 'bijv. stap 3 komt niet overeen met het huidige scherm', fbSend: 'Feedback versturen', fbThanks: 'Bedankt voor uw feedback', fbThanksNo: ' – de redactie gaat ermee aan de slag',
   seeAlso: 'Zie ook', faqRelated: 'Gerelateerde vragen', allFaq: 'Alle veelgestelde vragen',
-  langMissing: 'Dit hoofdstuk is nog niet vertaald in het {lang} – u leest de Duitse versie.',
-  langOutdated: 'De vertaling in het {lang} hoort bij een oudere versie – u leest de actuele Duitse versie.',
+  langMissing: 'Dit hoofdstuk is nog niet {into} vertaald – u leest de Duitse versie.',
+  langOutdated: 'De vertaling {into} hoort bij een oudere versie – u leest de actuele Duitse versie.',
   untranslatedOne: '1 alinea is nog niet vertaald en verschijnt in het Duits.', untranslatedMany: '{n} alinea’s zijn nog niet vertaald en verschijnen in het Duits.',
   requestTranslation: 'Vertaling aanvragen', requested: 'Vertaling aangevraagd – de redactie is op de hoogte gebracht.',
   bookmark: 'Bladwijzer', bookmarked: 'Bladwijzer gezet', addNote: 'Notitie toevoegen', editNote: 'Notitie bewerken', noteLabel: 'Uw notitie bij dit hoofdstuk',
@@ -183,6 +188,7 @@ const nl: Texts = {
   manual: 'Gebruikershandleiding', workingState: 'Werkversie', version: 'Versie {v}', forRole: 'voor {role}', asOf: 'Stand', chapters: 'Hoofdstukken', published: 'Gepubliceerd',
   notice: 'Opmerking', includesDrafts: 'bevat nog niet vrijgegeven concepten', cover: 'Titelpagina', printToc: 'Inhoudsopgave van de handleiding', pageOf: 'Pagina {page} van {pages}', quote: '‘{x}’',
   faqFilter: 'Vragen filteren', faqPlaceholder: 'bijv. wachtwoord', faqEmpty: 'Nog geen gepubliceerde vragen.', faqPartly: 'Sommige vragen zijn nog niet vertaald en verschijnen in het Duits.',
+  requestReason: 'Waarvoor hebt u de vertaling nodig? (optioneel)', requestReasonPlaceholder: 'bijv. voor nieuwe collega’s in het magazijn', sendRequest: 'Aanvraag versturen',
 };
 
 const pl: Texts = {
@@ -191,8 +197,8 @@ const pl: Texts = {
   fbQuestion: 'Czy ten rozdział był pomocny?', yes: 'Tak', no: 'Nie', fbMissing: 'Czego brakowało lub co było niejasne? (opcjonalnie)',
   fbPlaceholder: 'np. krok 3 nie pasuje do obecnego ekranu', fbSend: 'Wyślij opinię', fbThanks: 'Dziękujemy za opinię', fbThanksNo: ' – redakcja się tym zajmie',
   seeAlso: 'Zobacz także', faqRelated: 'Powiązane pytania', allFaq: 'Wszystkie najczęściej zadawane pytania',
-  langMissing: 'Ten rozdział nie został jeszcze przetłumaczony na język {lang} – czytasz wersję niemiecką.',
-  langOutdated: 'Tłumaczenie na język {lang} dotyczy starszej wersji – czytasz aktualną wersję niemiecką.',
+  langMissing: 'Ten rozdział nie został jeszcze przetłumaczony {into} – czytasz wersję niemiecką.',
+  langOutdated: 'Tłumaczenie {into} dotyczy starszej wersji – czytasz aktualną wersję niemiecką.',
   untranslatedOne: '1 akapit nie został jeszcze przetłumaczony i jest wyświetlany po niemiecku.', untranslatedMany: 'Akapity jeszcze nieprzetłumaczone i wyświetlane po niemiecku: {n}.',
   requestTranslation: 'Poproś o tłumaczenie', requested: 'Poproszono o tłumaczenie – redakcja została powiadomiona.',
   bookmark: 'Dodaj zakładkę', bookmarked: 'Zakładka dodana', addNote: 'Dodaj notatkę', editNote: 'Edytuj notatkę', noteLabel: 'Twoja notatka do tego rozdziału',
@@ -213,6 +219,7 @@ const pl: Texts = {
   manual: 'Podręcznik użytkownika', workingState: 'Wersja robocza', version: 'Wersja {v}', forRole: 'dla roli {role}', asOf: 'Stan na', chapters: 'Rozdziały', published: 'Opublikowano',
   notice: 'Informacja', includesDrafts: 'zawiera niezatwierdzone wersje robocze', cover: 'Strona tytułowa', printToc: 'Spis treści podręcznika', pageOf: 'Strona {page} z {pages}', quote: '„{x}”',
   faqFilter: 'Filtruj pytania', faqPlaceholder: 'np. hasło', faqEmpty: 'Brak opublikowanych pytań.', faqPartly: 'Niektóre pytania nie zostały jeszcze przetłumaczone i są wyświetlane po niemiecku.',
+  requestReason: 'Do czego potrzebujesz tłumaczenia? (opcjonalnie)', requestReasonPlaceholder: 'np. dla nowych współpracowników w magazynie', sendRequest: 'Wyślij prośbę',
 };
 
 const cs: Texts = {
@@ -221,8 +228,8 @@ const cs: Texts = {
   fbQuestion: 'Byla tato kapitola užitečná?', yes: 'Ano', no: 'Ne', fbMissing: 'Co chybělo nebo nebylo jasné? (nepovinné)',
   fbPlaceholder: 'např. krok 3 neodpovídá aktuální obrazovce', fbSend: 'Odeslat zpětnou vazbu', fbThanks: 'Děkujeme za zpětnou vazbu', fbThanksNo: ' – redakce se tím bude zabývat',
   seeAlso: 'Viz také', faqRelated: 'Související otázky', allFaq: 'Všechny časté dotazy',
-  langMissing: 'Tato kapitola zatím není přeložena do jazyka {lang} – čtete německou verzi.',
-  langOutdated: 'Překlad do jazyka {lang} patří ke starší verzi – čtete aktuální německou verzi.',
+  langMissing: 'Tato kapitola zatím není přeložena {into} – čtete německou verzi.',
+  langOutdated: 'Překlad {into} patří ke starší verzi – čtete aktuální německou verzi.',
   untranslatedOne: '1 odstavec zatím není přeložen a zobrazuje se německy.', untranslatedMany: 'Odstavce, které zatím nejsou přeloženy a zobrazují se německy: {n}.',
   requestTranslation: 'Požádat o překlad', requested: 'O překlad bylo požádáno – redakce byla informována.',
   bookmark: 'Přidat záložku', bookmarked: 'Záložka přidána', addNote: 'Přidat poznámku', editNote: 'Upravit poznámku', noteLabel: 'Vaše poznámka k této kapitole',
@@ -243,6 +250,7 @@ const cs: Texts = {
   manual: 'Uživatelská příručka', workingState: 'Pracovní verze', version: 'Verze {v}', forRole: 'pro roli {role}', asOf: 'Stav k', chapters: 'Kapitoly', published: 'Zveřejněno',
   notice: 'Poznámka', includesDrafts: 'obsahuje neschválené koncepty', cover: 'Titulní strana', printToc: 'Obsah příručky', pageOf: 'Strana {page} z {pages}', quote: '„{x}“',
   faqFilter: 'Filtrovat otázky', faqPlaceholder: 'např. heslo', faqEmpty: 'Zatím nejsou zveřejněny žádné otázky.', faqPartly: 'Některé otázky zatím nejsou přeloženy a zobrazují se německy.',
+  requestReason: 'K čemu překlad potřebujete? (nepovinné)', requestReasonPlaceholder: 'např. pro nové kolegy ve skladu', sendRequest: 'Odeslat žádost',
 };
 
 const pt: Texts = {
@@ -251,8 +259,8 @@ const pt: Texts = {
   fbQuestion: 'Este capítulo foi útil?', yes: 'Sim', no: 'Não', fbMissing: 'O que faltou ou não ficou claro? (opcional)',
   fbPlaceholder: 'p. ex. o passo 3 não corresponde ao ecrã atual', fbSend: 'Enviar feedback', fbThanks: 'Obrigado pelo seu feedback', fbThanksNo: ' – a equipa editorial vai tratar do assunto',
   seeAlso: 'Ver também', faqRelated: 'Perguntas relacionadas', allFaq: 'Todas as perguntas frequentes',
-  langMissing: 'Este capítulo ainda não foi traduzido para {lang} – está a ler a versão alemã.',
-  langOutdated: 'A tradução para {lang} pertence a uma versão anterior – está a ler a versão alemã atual.',
+  langMissing: 'Este capítulo ainda não foi traduzido {into} – está a ler a versão alemã.',
+  langOutdated: 'A tradução {into} pertence a uma versão anterior – está a ler a versão alemã atual.',
   untranslatedOne: '1 parágrafo ainda não foi traduzido e aparece em alemão.', untranslatedMany: '{n} parágrafos ainda não foram traduzidos e aparecem em alemão.',
   requestTranslation: 'Pedir tradução', requested: 'Tradução pedida – a equipa editorial foi informada.',
   bookmark: 'Marcar', bookmarked: 'Marcado', addNote: 'Adicionar nota', editNote: 'Editar nota', noteLabel: 'A sua nota sobre este capítulo',
@@ -273,13 +281,52 @@ const pt: Texts = {
   manual: 'Manual do utilizador', workingState: 'Versão de trabalho', version: 'Versão {v}', forRole: 'para {role}', asOf: 'Data', chapters: 'Capítulos', published: 'Publicado',
   notice: 'Nota', includesDrafts: 'contém rascunhos não aprovados', cover: 'Capa', printToc: 'Índice do manual', pageOf: 'Página {page} de {pages}', quote: '«{x}»',
   faqFilter: 'Filtrar perguntas', faqPlaceholder: 'p. ex. palavra-passe', faqEmpty: 'Ainda não há perguntas publicadas.', faqPartly: 'Algumas perguntas ainda não foram traduzidas e aparecem em alemão.',
+  requestReason: 'Para que precisa da tradução? (opcional)', requestReasonPlaceholder: 'p. ex. para os novos colegas do armazém', sendRequest: 'Enviar pedido',
 };
 
 const TEXTS: Record<string, Texts> = { de, en, fr, es, it, nl, pl, cs, pt };
-/** Sprachname in der Sprache selbst (für Hinweise wie „nicht in English übersetzt“) */
+/** Sprachname in der Sprache selbst, wie er in einer Auswahlliste steht (großgeschrieben: „Français“, „Čeština“) */
 export const NATIVE_NAMES: Record<string, string> = {
-  de: 'Deutsch', en: 'English', fr: 'français', es: 'español', it: 'italiano', nl: 'Nederlands', pl: 'polski', cs: 'čeština', pt: 'português',
+  de: 'Deutsch', en: 'English', fr: 'Français', es: 'Español', it: 'Italiano', nl: 'Nederlands', pl: 'Polski', cs: 'Čeština', pt: 'Português',
 };
+
+/**
+ * Zielsprache grammatisch im Satz („nicht {into} übersetzt“), je Beschriftungssprache (ADR-127): Präposition und die passende
+ * Form des Sprachnamens – „ins Englische“, „into English“, „en anglais“, „al inglés“, „in het Engels“, „na język angielski“,
+ * „do angličtiny“. Unbekannte Sprachen: Name aus Intl.DisplayNames mit neutraler Wendung.
+ */
+const INTO: Record<string, { forms: Record<string, string>; other: (name: string) => string }> = {
+  de: { forms: { de: 'ins Deutsche', en: 'ins Englische', fr: 'ins Französische', es: 'ins Spanische', it: 'ins Italienische', nl: 'ins Niederländische', pl: 'ins Polnische', cs: 'ins Tschechische', pt: 'ins Portugiesische' }, other: (n) => `in die Sprache „${n}“` },
+  en: { forms: { de: 'into German', en: 'into English', fr: 'into French', es: 'into Spanish', it: 'into Italian', nl: 'into Dutch', pl: 'into Polish', cs: 'into Czech', pt: 'into Portuguese' }, other: (n) => `into ${n}` },
+  fr: { forms: { de: 'en allemand', en: 'en anglais', fr: 'en français', es: 'en espagnol', it: 'en italien', nl: 'en néerlandais', pl: 'en polonais', cs: 'en tchèque', pt: 'en portugais' }, other: (n) => `en ${n}` },
+  es: { forms: { de: 'al alemán', en: 'al inglés', fr: 'al francés', es: 'al español', it: 'al italiano', nl: 'al neerlandés', pl: 'al polaco', cs: 'al checo', pt: 'al portugués' }, other: (n) => `al ${n}` },
+  it: { forms: { de: 'in tedesco', en: 'in inglese', fr: 'in francese', es: 'in spagnolo', it: 'in italiano', nl: 'in olandese', pl: 'in polacco', cs: 'in ceco', pt: 'in portoghese' }, other: (n) => `in ${n}` },
+  nl: { forms: { de: 'in het Duits', en: 'in het Engels', fr: 'in het Frans', es: 'in het Spaans', it: 'in het Italiaans', nl: 'in het Nederlands', pl: 'in het Pools', cs: 'in het Tsjechisch', pt: 'in het Portugees' }, other: (n) => `in het ${n}` },
+  pl: { forms: { de: 'na język niemiecki', en: 'na język angielski', fr: 'na język francuski', es: 'na język hiszpański', it: 'na język włoski', nl: 'na język niderlandzki', pl: 'na język polski', cs: 'na język czeski', pt: 'na język portugalski' }, other: (n) => `na język ${n}` },
+  cs: { forms: { de: 'do němčiny', en: 'do angličtiny', fr: 'do francouzštiny', es: 'do španělštiny', it: 'do italštiny', nl: 'do nizozemštiny', pl: 'do polštiny', cs: 'do češtiny', pt: 'do portugalštiny' }, other: (n) => `do jazyka ${n}` },
+  pt: { forms: { de: 'para alemão', en: 'para inglês', fr: 'para francês', es: 'para espanhol', it: 'para italiano', nl: 'para neerlandês', pl: 'para polaco', cs: 'para checo', pt: 'para português' }, other: (n) => `para ${n}` },
+};
+
+/** Name einer Sprache in der Beschriftungssprache (Intl), sonst der Code */
+function displayName(code: string, ui: string) {
+  try {
+    return new Intl.DisplayNames([ui], { type: 'language' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+/** „ins Englische“ / „into Swedish“: Zielsprache `code` als Satzteil in der Beschriftungssprache `ui` */
+export function intoLanguage(code: string, ui: string) {
+  const f = INTO[ui] ?? INTO.en;
+  return f.forms[code] ?? f.other(displayName(code, INTO[ui] ? ui : 'en'));
+}
+
+/** Sprachname für Auswahllisten und Deckblatt: Eigenbezeichnung (großgeschrieben), für weitere Sprachen über Intl */
+export function languageLabel(code: string) {
+  const n = NATIVE_NAMES[code] ?? displayName(code, code);
+  return n === code ? code : n.charAt(0).toLocaleUpperCase(code) + n.slice(1);
+}
 const LOCALES: Record<string, string> = { de: 'de-DE', en: 'en-GB', fr: 'fr-FR', es: 'es-ES', it: 'it-IT', nl: 'nl-NL', pl: 'pl-PL', cs: 'cs-CZ', pt: 'pt-PT' };
 
 /** Texte einer Sprache: vollständig übersetzte Sprachen direkt, übrige Englisch, Deutsch als Standard */
@@ -289,7 +336,9 @@ export function readerTexts(lang: string) {
     texts[key].replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
   /** Sprache der Beschriftungen (für das lang-Attribut) */
   const uiLang = TEXTS[lang] ? lang : lang === 'de' ? 'de' : 'en';
-  return { t, lang, uiLang, locale: LOCALES[lang] ?? 'de-DE', date: (d: string | number | Date) => new Date(d).toLocaleDateString(LOCALES[lang] ?? 'de-DE') };
+  /** Zielsprache als Satzteil in der Beschriftungssprache („ins Englische“) */
+  const into = (code: string) => intoLanguage(code, uiLang);
+  return { t, into, lang, uiLang, locale: LOCALES[lang] ?? 'de-DE', date: (d: string | number | Date) => new Date(d).toLocaleDateString(LOCALES[lang] ?? 'de-DE') };
 }
 export type ReaderTexts = ReturnType<typeof readerTexts>;
 

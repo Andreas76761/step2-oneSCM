@@ -125,3 +125,7 @@
 | [ADR-121](ADR-121-barrierefreiheit-html.md) | Prüfbericht Barrierefreiheit für den HTML-Export; Standard-HTML mit Hauptbereich | akzeptiert, umgesetzt |
 | [ADR-122](ADR-122-icons-rollen-sparten.md) | Lucide-Icons für Rollen, Sparten und Label-Gruppen statt Emoji (ändert E-11) | akzeptiert, umgesetzt |
 | [ADR-123](ADR-123-sparten-regelwerk-vormerkungen.md) | Sparten nur PKW und VAN; Regelwerk mit Regeln allgemein und je Kapitel; Kapitel „Intern“ und „In Planung“ für vorgemerkte Textabschnitte | akzeptiert, umgesetzt |
+| [ADR-124](ADR-124-faq-stapeluebersetzung.md) | Häufige Fragen als Stapel übersetzen | akzeptiert, umgesetzt (aus main, Etappe 106) |
+| [ADR-125](ADR-125-wunsch-mit-begruendung.md) | Übersetzungswunsch mit Begründung | akzeptiert, umgesetzt (aus main, Etappe 106) |
+| [ADR-126](ADR-126-wochenuebersicht-uebersetzungen.md) | Wochenübersicht mit Übersetzungen | akzeptiert, umgesetzt (aus main, Etappe 106) |
+| [ADR-127](ADR-127-sprachnamen-grammatisch.md) | Sprachnamen grammatisch | akzeptiert, umgesetzt (aus main, Etappe 106) |
