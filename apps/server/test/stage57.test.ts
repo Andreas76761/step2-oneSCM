@@ -56,20 +56,24 @@ describe('Etappe 57', () => {
       await call('PATCH', `/terminology/${created.json.id}`, { definition: 'Prüfung und Freigabe durch Market Operation' }, 'u-redaktion');
       expect(await count()).toBe(1);
 
-      // Vorlage SYNONYME.csv aus dem Arbeitsordner: entschiedene Zeile übernehmen, offene überspringen
+      // Vorlage SYNONYME.csv aus dem Arbeitsordner: alle Zeilen entschieden (S-04 am 08.11.2026, ADR-128) – alle übernehmen
       const csv = fs.readFileSync(path.resolve(__dirname, '../../../tools/handbuch-ordner/vorlagen/SYNONYME.csv'));
       const preview = await uploadFile(built, '/master-data/import?kind=glossary', 'SYNONYME.csv', csv, 'u-redaktion');
       expect(preview.status).toBe(200);
-      expect(preview.json.summary).toMatchObject({ skipped: 8, error: 0 });
+      expect(preview.json.summary).toMatchObject({ update: 1, create: 8, skipped: 0, error: 0 });
       expect(preview.json.rows.find((r: any) => r.key === 'MO-Prüfungen')).toMatchObject({ action: 'update' });
-      expect(preview.json.rows.find((r: any) => r.key.startsWith('Nemesis'))).toMatchObject({ action: 'skipped', message: expect.stringContaining('Status „offen“') });
       const applied = await uploadFile(built, '/master-data/import?kind=glossary&apply=true', 'SYNONYME.csv', csv, 'u-redaktion');
-      expect(applied.json.summary).toMatchObject({ update: 1, skipped: 8 });
+      expect(applied.json.summary).toMatchObject({ update: 1, create: 8, skipped: 0 });
       const mo = (await call('GET', '/terminology')).json.find((t: any) => t.preferred === 'MO-Prüfungen');
       expect(mo).toMatchObject({ uiAllowed: true, avoid: ['MO Checks', 'Marktprüfung'] });
-      expect((await call('GET', '/terminology')).json.some((t: any) => /Nemesis|Karenzzeit/.test(t.preferred))).toBe(false);
       // gleicher Stand: unverändert
-      expect((await uploadFile(built, '/master-data/import?kind=glossary', 'SYNONYME.csv', csv, 'u-redaktion')).json.summary).toMatchObject({ unchanged: 1 });
+      expect((await uploadFile(built, '/master-data/import?kind=glossary', 'SYNONYME.csv', csv, 'u-redaktion')).json.summary).toMatchObject({ unchanged: 9 });
+      // offene Zeilen werden übersprungen (nur entschiedene Begriffe gelangen in die App)
+      const open = Buffer.from('Bevorzugt;Vermeiden;Status\nAlpha-Begriff / Beta-Begriff;;offen\n');
+      const skipped = await uploadFile(built, '/master-data/import?kind=glossary&apply=true', 'offen.csv', open, 'u-redaktion');
+      expect(skipped.json.summary).toMatchObject({ skipped: 1 });
+      expect(skipped.json.rows[0]).toMatchObject({ action: 'skipped', message: expect.stringContaining('Status „offen“') });
+      expect((await call('GET', '/terminology')).json.some((t: any) => /Alpha-Begriff/.test(t.preferred))).toBe(false);
       // Spalte „UI-Begriff erlaubt“ leer → Merkmal aus
       const off = Buffer.from('Bevorzugt;Vermeiden;Status;UI-Begriff erlaubt\nMO-Prüfungen;MO Checks, Marktprüfung;entschieden;\n');
       expect((await uploadFile(built, '/master-data/import?kind=glossary&apply=true', 'x.csv', off, 'u-redaktion')).json.summary).toMatchObject({ update: 1 });

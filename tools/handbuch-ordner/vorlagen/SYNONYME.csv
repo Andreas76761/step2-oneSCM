@@ -1,10 +1,10 @@
 ﻿Bevorzugt;Vermeiden;Kontext;Sprache;Quelle;Status;UI-Begriff erlaubt
 MO-Prüfungen;MO Checks, Marktprüfung;Prüfung und Freigabe durch Market Operation – entschieden am 24.10.2026: im Fließtext „MO-Prüfungen“, „MO Checks“ nur in Menüpfaden (Vertragserstellung › MO Checks) und als UI-Begriff in Anführungszeichen (in der App: „UI-Begriff erlaubt“);de;Entscheidung Auftraggeber 24.10.2026;entschieden;ja
-Status FI-Beleg / Status FI-Dokument;;Finance – zu klären: welcher deutsche Begriff gilt und wie das Feld in der Oberfläche heißt;de;Terminologieklärung (Redaktion);offen;
-Belegart / Dokumenttyp;;Finance – zu klären: einheitlicher Begriff für die Art des Buchungsbelegs;de;Terminologieklärung (Redaktion);offen;
-Karenzzeit / Kulanzfrist-Kampagne;;UI-Begriff „Grace Period“ – zu klären: deutscher Handbuchbegriff und ob Karenzzeit und Kulanzfrist-Kampagne dasselbe meinen;de;Terminologieklärung (Redaktion);offen;
-Nemesis / NEMESIS;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen;
-VeDoc / VeDOC;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen;
-CoFiCo / COFICO;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen;
-oneERP / One-ERP;;Schreibweise des Systemnamens – nach Oberfläche bzw. Systemdokumentation festlegen;de;Terminologieklärung (Redaktion);offen;
-„Chassis Number“;;UI-Begriff – Widerspruch: Prüfregel V4 lehnt den Begriff ab, die Whitelist des Releaseletters schützt ihn – Regel oder Whitelist anpassen;en;Terminologieklärung (Redaktion);offen;
+Status FI-Beleg;Status FI-Dokument;Finance – entschieden am 08.11.2026: „Status FI-Beleg“ (UI: Finance › Status FI Document);de;Entscheidung Auftraggeber 08.11.2026;entschieden;
+Belegart;Dokumenttyp;Finance – entschieden am 08.11.2026: „Belegart“ für die Art des Buchungsbelegs (UI: Finance › Document Type);de;Entscheidung Auftraggeber 08.11.2026;entschieden;
+Kulanzfrist;Grace Period, Karenzzeit;entschieden am 08.11.2026: im Fließtext „Kulanzfrist“, „Grace Period“ nur in Menüpfaden und als UI-Begriff in Anführungszeichen;de;Entscheidung Auftraggeber 08.11.2026;entschieden;ja
+Nemesis;NEMESIS;Systemname – entschieden am 08.11.2026: Schreibweise der Oberfläche (Navigation);de;Entscheidung Auftraggeber 08.11.2026;entschieden;
+VeDoc;VeDOC;Systemname – entschieden am 08.11.2026: Schreibweise der Oberfläche bzw. des Systemkatalogs;de;Entscheidung Auftraggeber 08.11.2026;entschieden;
+CoFiCo;COFICO;Systemname – entschieden am 08.11.2026: Schreibweise der Oberfläche bzw. des Systemkatalogs;de;Entscheidung Auftraggeber 08.11.2026;entschieden;
+oneERP;One-ERP;Systemname – entschieden am 08.11.2026: Schreibweise der Oberfläche (Finance › oneERP Checks);de;Entscheidung Auftraggeber 08.11.2026;entschieden;
+Fahrgestellnummer;Chassis Number;entschieden am 08.11.2026: im deutschen Fließtext „Fahrgestellnummer“, „Chassis Number“ nur in Menüpfaden, Feldnamen in Anführungszeichen und englischen Texten;de;Entscheidung Auftraggeber 08.11.2026;entschieden;ja

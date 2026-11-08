@@ -170,7 +170,7 @@ export const LABEL_CATALOG: CatalogLabel[] = [
     ['oneerp', 'oneERP', 'oneERP'],
     ['cofico', 'CoFiCo', 'CoFiCo'],
     ['swt', 'SWT', 'SWT'],
-    ['nemesis', 'NEMESIS', 'NEMESIS'],
+    ['nemesis', 'Nemesis', 'Nemesis'],
     ['mpay', 'MPay', 'MPay'],
     ['alice', 'ALICE', 'ALICE', 'Berechtigungssystem'],
     ['datix', 'DATIX', 'DATIX'],

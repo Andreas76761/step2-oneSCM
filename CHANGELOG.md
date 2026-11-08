@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.111.0 – Etappe 111: Schreibweisen aus S-04 (08.11.2026)
+
+Entscheidung vom 08.11.2026 (ADR-128): „Kulanzfrist“ statt „Grace Period“ im Fließtext, „Fahrgestellnummer“ statt „Chassis Number“ im deutschen Fließtext, „Status FI-Beleg“ und „Belegart“, Systemnamen wie in der Oberfläche (Nemesis, VeDoc, CoFiCo, oneERP).
+
+### Hinzugefügt
+- **Vorlage `SYNONYME.csv`:** alle neun Zeilen entschieden; über Stammdaten › Glossar einlesbar. „Grace Period“ und „Chassis Number“ bleiben in Menüpfaden und Anführungszeichen erlaubt (UI-Begriff), „Karenzzeit“, „Status FI-Dokument“, „Dokumenttyp“, „NEMESIS“, „VeDOC“, „COFICO“ und „One-ERP“ werden gemeldet.
+- **Varianten in Groß-/Kleinschreibung:** Ein Begriff darf eine Variante haben, die sich nur in Groß-/Kleinschreibung unterscheidet („NEMESIS“ zu „Nemesis“). Stilprüfung und Analyse prüfen dann die genaue Schreibweise – bisher wäre der richtige Begriff selbst gemeldet und der Eintrag abgelehnt worden.
+- **Test T-452.**
+
+### Geändert
+- Label „Systeme › NEMESIS“ heißt „Nemesis“ (wie Menü und Terminologie).
+- Vorlagen `BEGRIFFE.md`, `GRAMMATIK.md` (G-R4), `CLAUDE.md`, `ENTSCHEIDUNGEN.md` und Agent `sprach-lektor` nennen die neuen Schreibweisen. Bestehende Arbeitsordner werden nicht überschrieben.
+- T-355 prüft das Überspringen offener Zeilen jetzt mit einer eigenen Datei, weil die Vorlage keine offenen Zeilen mehr hat.
+
 ## 0.110.0 – Etappe 110: GitHub-Actions auf Node 24 (08.11.2026)
 
 GitHub stellt die Laufzeit Node 20 für Actions ein und hatte die verwendeten Actions bereits zwangsweise auf Node 24 umgestellt (Warnung in jedem CI-Lauf).

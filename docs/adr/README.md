@@ -129,3 +129,4 @@
 | [ADR-125](ADR-125-wunsch-mit-begruendung.md) | Übersetzungswunsch mit Begründung | akzeptiert, umgesetzt (aus main, Etappe 106) |
 | [ADR-126](ADR-126-wochenuebersicht-uebersetzungen.md) | Wochenübersicht mit Übersetzungen | akzeptiert, umgesetzt (aus main, Etappe 106) |
 | [ADR-127](ADR-127-sprachnamen-grammatisch.md) | Sprachnamen grammatisch | akzeptiert, umgesetzt (aus main, Etappe 106) |
+| [ADR-128](ADR-128-schreibweisen-s04.md) | Schreibweisen aus S-04: Kulanzfrist, Fahrgestellnummer, FI-Beleg, Belegart, Systemnamen | akzeptiert, umgesetzt (Etappe 111) |

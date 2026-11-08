@@ -8,7 +8,7 @@ import { DECISION_CODES, DECISIONS, RESERVED_CHAPTER_KEYS, SEVERITIES, type Seve
 import { rulesFor, ruleViolations, violationReason } from '../domain/rulebook.js';
 import { loadRules } from './rulebook.js';
 import { clusterPairs, TfidfEngine, type SimilarityPair } from '../domain/similarity.js';
-import { inUiContext } from '../domain/style.js';
+import { avoidPattern, inUiContext } from '../domain/style.js';
 import { badRequest, notFound, unprocessable } from '../problem.js';
 import { listTerms } from './terminology.js';
 import { assertIdsInProject } from './projects.js';
@@ -174,7 +174,7 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
     }
     for (const t of terms) {
       // UI-Begriffe (ADR-110): in Menüpfaden und Anführungszeichen erlaubt – wie in der Stilprüfung (inUiContext)
-      const hit = t.avoid.find((w) => [...s.text.matchAll(new RegExp(`(?<![\\p{L}\\p{N}_])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\p{L}\\p{N}_])`, 'giu'))]
+      const hit = t.avoid.find((w) => [...s.text.matchAll(avoidPattern(w, t.preferred))]
         .some((m) => !t.uiAllowed || !inUiContext(s.text, m.index!, m.index! + m[0].length)));
       if (hit) found.push({ type: 'terminology', subtype: 'avoid_term', severity: 'low', chapterId: s.chapter_id, a: s.id, method: 'terminology-list', reason: `„${hit}“ → bevorzugt „${t.preferred}“`, details: { term: hit, preferred: t.preferred } });
     }

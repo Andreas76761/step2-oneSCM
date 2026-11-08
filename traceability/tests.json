@@ -3571,5 +3571,15 @@
     "requirements": [
       "NFR-18"
     ]
+  },
+  {
+    "id": "T-452",
+    "title": "Schreibweisen aus S-04: Vorlage übernehmen, Systemname in genauer Schreibweise, „Grace Period“ nur im Menüpfad, Analyse meldet „NEMESIS“, nicht „Nemesis“",
+    "file": "apps/server/test/stage111.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-145",
+      "US-015"
+    ]
   }
 ]

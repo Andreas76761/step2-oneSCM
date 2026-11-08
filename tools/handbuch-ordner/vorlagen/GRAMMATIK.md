@@ -9,7 +9,7 @@ Grundlage: amtliche deutsche Rechtschreibung (Duden, aktuelle Auflage). Diese Da
 | G-R1 | Produktname immer **oneSCM** (auch am Satzanfang) | „oneSCM zeigt …“ |
 | G-R2 | Zusammensetzungen mit englischen Begriffen mit Bindestrich, wenn sie sonst schwer lesbar sind | „Proposal-Nummer“, „MO-Prüfung“ |
 | G-R3 | Schreibweisen laut `00_Dokumentation/BEGRIFFE.md` und `02_Synonyme/SYNONYME.csv` (Status `entschieden`) | „Servicevertrag“ |
-| G-R4 | Systemnamen in der Schreibweise der Oberfläche; offene Varianten bis zur Entscheidung mit `[offen: Schreibweise]` | Nemesis/NEMESIS |
+| G-R4 | Systemnamen in der Schreibweise der Oberfläche (`SYNONYME.csv`); offene Varianten bis zur Entscheidung mit `[offen: Schreibweise]` | „Nemesis“, nicht „NEMESIS“ |
 
 ## Zeichensetzung
 

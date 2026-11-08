@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.100, 08.11.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.111, 08.11.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -40,7 +40,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 | S-01 | **Lesbarkeitswerte je Kapitel und Rolle:** LIX (unter 40 leicht, 40–50 mittel, über 50 schwer), Flesch-Amstad (mindestens 60 für Endanwender, 40 für Admin/Service), Ø Wörter je Satz (höchstens 15), Anteil langer Sätze (> 25), Passivanteil; als Soll-Werte im Anleitungs-Check | Werkstatt V4, Checkliste (Multi-Agent-Gate) | teilweise (lange Sätze, Passiv einzeln; kein Lesbarkeitsindex) | S | **umgesetzt in Etappe 44 (ADR-097)** |
 | S-02 | **Tonalität je Produktart bzw. Zielgruppe:** sachlich (Handbuch), freundlich, formell, knapp; sechs Rollenprofile mit eigener Tonalität; gilt für Prüfung und KI-Vorschläge | Ticket-Cockpit, Checkliste, `TONALITAET.md` | teilweise (nur Anrede Sie/du und freier Redaktionshinweis) | M | **umgesetzt in Etappe 49 (ADR-102)** |
 | S-03 | **Wortliste je Sprache** „falsch → richtig (Sprache)“, z. B. Dealer→Händler (de), Händler→Dealer (en), OneSCM→oneSCM; Prüfung „Text passt nicht zur Sprache des Labels“ | Screenarchiv | teilweise (eigene Regeln nur Deutsch; feste Übersetzung je Sprache) | S | **umgesetzt in Etappe 44 (ADR-097) – ohne Prüfung „Text passt nicht zur Sprache“ (mit U-02)** |
-| S-04 | **„Fix-Sprache“ je Begriff:** Begriff überall immer deutsch oder immer englisch (UI-Begriff), Anweisung an KI und Prüfung | Ticket-Cockpit v2.96 | teilweise (feste Übersetzung je Sprache; kein „immer so lassen“) | S | **umgesetzt in Etappe 44 (ADR-097) – welche Begriffe, entscheidet die Redaktion** |
+| S-04 | **„Fix-Sprache“ je Begriff:** Begriff überall immer deutsch oder immer englisch (UI-Begriff), Anweisung an KI und Prüfung | Ticket-Cockpit v2.96 | teilweise (feste Übersetzung je Sprache; kein „immer so lassen“) | S | **umgesetzt in Etappe 44 (ADR-097); Schreibweisen entschieden am 08.11.2026, umgesetzt in Etappe 111 (ADR-128)** |
 | S-05 | **Textvarianten je Kapitel:** Endanwender, Fachtext, Kurzfassung (Management, ~¼ Länge) | Ticket-Cockpit | teilweise (Quick Guide, One Pager, Lesefassung) | M | **umgesetzt in Etappe 52 (ADR-105)** |
 | S-06 | **Regelbasiertes Schreiben (tekom), ASD-STE100, Vale** als zuschaltbare Regelsätze | Checkliste | nicht vorhanden | L | **umgesetzt in Etappe 56 (ADR-109):** Regelbasiertes Schreiben, STE-Grundregeln (ohne Wörterbuch), Vale-Stile (existence, substitution, occurrence) |
 | S-07 | **Kapitelbewertung mit fünf Kriterien** (Sprache, Ziel, Tonalität, Quellenabgleich, Fakten) und Ampel | Wissenssuche | teilweise (Anleitungs-Check, Schreibstil, Evidenz getrennt) | S | **umgesetzt in Etappe 50 (ADR-103)** |
@@ -151,11 +151,12 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 62. **Etappe 108 – Code-Review der Korrekturen aus den Etappen 101–107 (✅ umgesetzt):** vier Funde behoben, einer begründet belassen.
 63. **Etappe 109 – Sicherheitshinweise in Entwicklungswerkzeugen (✅ umgesetzt):** vitest, vite, minimatch aktualisiert; s3rver ohne Korrektur belassen.
 64. **Etappe 110 – GitHub-Actions auf Node 24 (✅ umgesetzt):** CI und Release-Pipeline, T-451.
-65. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+65. **Etappe 111 – Schreibweisen aus S-04 (✅ umgesetzt, ADR-128):** Kulanzfrist, Fahrgestellnummer, Status FI-Beleg, Belegart, Systemnamen wie in der Oberfläche; Varianten in Groß-/Kleinschreibung.
+66. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
 
 ## 10.7 Offene Entscheidungen
 
 1. **LanguageTool:** entschieden am 24.10.2026 – lokal als Java-Dienst ohne Docker (G-04, umgesetzt in Etappe 55).
 2. **Sprachen:** de-CH und fr-CH entschieden am 24.10.2026. Weitere Märkte (Hindi und Türkisch stehen in den Artefakten) am 25.10.2026 vorerst zurückgestellt.
 3. **Übersetzungsbüros:** entschieden am 24.10.2026 – Austausch per XLIFF 1.2 und Excel (U-05, umgesetzt).
-4. **Schreibweise:** „MO-Prüfungen“ im Fließtext, „MO Checks“ als UI-Begriff – entschieden am 24.10.2026 (ADR-110). Offen: Systemnamen (Nemesis, VeDoc, CoFiCo, oneERP – später nach Oberfläche), „Grace Period“, Status FI-Beleg, Belegart, „Chassis Number“ (Redaktion).
+4. **Schreibweise:** „MO-Prüfungen“ im Fließtext, „MO Checks“ als UI-Begriff – entschieden am 24.10.2026 (ADR-110). Übrige Begriffe entschieden am 08.11.2026 (ADR-128): Kulanzfrist, Fahrgestellnummer, Status FI-Beleg, Belegart, Systemnamen wie in der Oberfläche (Nemesis, VeDoc, CoFiCo, oneERP).

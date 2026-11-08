@@ -42,4 +42,4 @@ Weiter offen bleiben:
 ## Folgen
 - Migration 063: `terminology_terms.ui_allowed`.
 - Die Gliederung behält den Kapitelnamen „09 MO Checks und fachliche Prüfungen“, weil die Ordnernamen der Arbeitsordner davon abhängen. Umbenennen ist auf Wunsch möglich, verlangt aber das Umbenennen der Ordner in bestehenden Arbeitsordnern.
-- Weiter offen: Systemnamen, „Grace Period“ sowie FI-Beleg, Belegart und „Chassis Number“ (S-04, Redaktion); U-07.
+- Weiter offen: Systemnamen, „Grace Period“ sowie FI-Beleg, Belegart und „Chassis Number“ (S-04, Redaktion); U-07. – Am 08.11.2026 entschieden, siehe ADR-128.

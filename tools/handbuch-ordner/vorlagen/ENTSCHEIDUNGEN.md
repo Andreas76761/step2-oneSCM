@@ -16,6 +16,7 @@
 | 23.10.2026 | Anrede im Handbuch: „Sie“ (O-03) |
 | 23.10.2026 | Funktionen und Daten aus bestehenden Artefakten nach Empfehlung (docs/07 der App, Entscheidungsseite) (O-05) |
 | 23.10.2026 | Ausgabesprachen: Deutsch, Englisch, Französisch, Italienisch, Spanisch, Tschechisch, Slowakisch, Koreanisch (Südkorea), Malaiisch (Malaysia) |
+| 08.11.2026 | Schreibweisen (S-04): „Kulanzfrist“ statt „Grace Period“ im Fließtext, „Fahrgestellnummer“ statt „Chassis Number“, „Status FI-Beleg“, „Belegart“, Systemnamen wie in der Oberfläche (Nemesis, VeDoc, CoFiCo, oneERP) – siehe `SYNONYME.csv` |
 
 ## Offen
 

@@ -157,7 +157,8 @@ async function cleanTranslations(ctx: Ctx, v: unknown) {
 
 /** Ein zu vermeidender Begriff darf nicht zugleich irgendwo bevorzugt sein (sonst widersprüchliche Befunde). */
 async function assertConsistent(ctx: Ctx, preferred: string, avoid: string[], selfId: string | null) {
-  if (avoid.some((a) => a.toLowerCase() === preferred.toLowerCase())) throw unprocessable('Der bevorzugte Begriff darf nicht zugleich zu vermeiden sein.');
+  // eine Variante, die sich nur in Groß-/Kleinschreibung unterscheidet (Systemnamen, ADR-128), ist erlaubt – genau gleich nicht
+  if (avoid.includes(preferred)) throw unprocessable('Der bevorzugte Begriff darf nicht zugleich zu vermeiden sein.');
   // Eindeutigkeit über alle Begriffe inkl. ausgemusterter (UNIQUE-Constraint), ohne Groß-/Kleinschreibung
   for (const t of await listTerms(ctx, { includeRetired: true })) {
     if (t.id === selfId || t.preferred.toLowerCase() !== preferred.toLowerCase()) continue;

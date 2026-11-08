@@ -146,6 +146,16 @@ export function segmentSentences(text: string): { start: number; end: number; te
 const wordCount = (s: string) => [...s.replace(/^\s*(?:\d+\.|[-*])\s+/, '').matchAll(WORD)].length;
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+/**
+ * Suchmuster für einen zu vermeidenden Begriff (ganzes Wort). Ohne Groß-/Kleinschreibung – außer die Variante unterscheidet
+ * sich vom bevorzugten Begriff nur darin (Systemnamen: „NEMESIS“ statt „Nemesis“, ADR-128): dann zählt die genaue Schreibweise,
+ * sonst wäre der bevorzugte Begriff selbst ein Fund.
+ */
+export function avoidPattern(avoid: string, preferred: string): RegExp {
+  const caseOnly = avoid.toLowerCase() === preferred.toLowerCase();
+  return new RegExp(String.raw`(?<![\p{L}\p{N}_])${escape(avoid)}(?![\p{L}\p{N}_])`, caseOnly ? 'gu' : 'giu');
+}
+
 /** Regelprüfung eines Textes */
 const QUOTED = /„[^“”"\n]*[“”"]|"[^"\n]*"|“[^”\n]*”|«[^»\n]*»|‚[^‘’\n]*[‘’]/g;
 
@@ -336,7 +346,7 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
     for (const [re, right] of ABBREVIATIONS) for (const m of t.matchAll(re)) add('abbreviation', 'info', `Abkürzung „${right}“ schreiben`, m.index!, m.index! + m[0].length, { replacement: right, label: `„${right}“` });
     for (const term of opts.terms ?? []) {
       for (const avoid of term.avoid) {
-        for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(avoid)}(?![\p{L}])`, 'giu'))) if (!term.uiAllowed || !inUiContext(t, m.index!, m.index! + m[0].length)) add('terminology', 'warning', `Terminologie: „${term.preferred}“ statt „${m[0]}“`, m.index!, m.index! + m[0].length, { replacement: term.preferred, label: `„${term.preferred}“` });
+        for (const m of t.matchAll(avoidPattern(avoid, term.preferred))) if (!term.uiAllowed || !inUiContext(t, m.index!, m.index! + m[0].length)) add('terminology', 'warning', `Terminologie: „${term.preferred}“ statt „${m[0]}“`, m.index!, m.index! + m[0].length, { replacement: term.preferred, label: `„${term.preferred}“` });
       }
     }
   }
