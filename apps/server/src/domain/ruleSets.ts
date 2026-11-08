@@ -140,8 +140,25 @@ export interface ValeImport { rules: ValeRule[]; unsupported: { name: string; re
 const MAX_TOKENS = 500;
 const MAX_TOKEN_LEN = 300;
 
-/** true, wenn eine wiederholte Gruppe (+, *, {n,}) innen eine Wiederholung oder Alternative enthält */
+/**
+ * true, wenn eine wiederholte Gruppe innen variabel lang passen kann – dann gibt es viele Zerlegungen desselben Textes und
+ * der Ausdruck kann katastrophal zurückspringen: (a+)+, (a|aa)+, aber auch mit fester Anzahl (a?){30} oder (a|a){30}.
+ * Wiederholt: +, *, {n,}, {n,m} und {n} ab 2. Variabel innen: +, *, ?, {n,}, {n,m} mit n ≠ m oder eine Alternative.
+ * Feste Anzahlen innen ((\d{2}\.){2}) sind eindeutig und erlaubt.
+ */
 function riskyRepetition(p: string): boolean {
+  // Quantor an Position i: Art und Länge (für Wiederholung der Gruppe bzw. innere Variabilität)
+  const quantAt = (i: number): { len: number; variable: boolean; repeats: boolean } | null => {
+    const c = p[i];
+    if (c === '+' || c === '*') return { len: 1, variable: true, repeats: true };
+    if (c === '?') return { len: 1, variable: true, repeats: false };
+    const m = c === '{' ? /^\{(\d*)(,?)(\d*)\}/.exec(p.slice(i)) : null;
+    if (!m || (!m[1] && !m[3])) return null;
+    const lo = Number(m[1] || 0);
+    const fixed = !m[2];
+    const hi = fixed ? lo : m[3] ? Number(m[3]) : Infinity;
+    return { len: m[0].length, variable: lo !== hi, repeats: hi >= 2 };
+  };
   const stack: { inner: boolean }[] = [];
   for (let i = 0; i < p.length; i++) {
     const c = p[i];
@@ -150,19 +167,35 @@ function riskyRepetition(p: string): boolean {
       for (i++; i < p.length && p[i] !== ']'; i++) if (p[i] === '\\') i++;
       continue;
     }
-    if (c === '(') { stack.push({ inner: false }); continue; }
-    const top = stack.at(-1);
-    if (c === '|' && top) { top.inner = true; continue; }
-    const quant = c === '+' || c === '*' || (c === '{' && /^\{\d*,\d*\}/.test(p.slice(i)) && !/^\{\d+\}/.test(p.slice(i)));
-    if (c === ')') {
-      const g = stack.pop();
-      const next = p[i + 1];
-      const repeated = next === '+' || next === '*' || (next === '{' && /^\{\d*,\d*\}/.test(p.slice(i + 1)) && !/^\{\d+\}/.test(p.slice(i + 1)));
-      if (g?.inner && repeated) return true;
-      if (g?.inner && stack.length) stack.at(-1)!.inner = true;
+    if (c === '(') {
+      stack.push({ inner: false });
+      // (?:  (?=  (?!  (?<name> – das „?“ gehört zur Gruppe, ist kein Quantor
+      if (p[i + 1] === '?') {
+        i++;
+        if (p[i + 1] === '<' && p[i + 2] !== '=' && p[i + 2] !== '!') { const end = p.indexOf('>', i); if (end > 0) i = end; }
+        else i++;
+      }
       continue;
     }
-    if (quant && top) top.inner = true;
+    const top = stack.at(-1);
+    if (c === '|') { if (top) top.inner = true; continue; }
+    if (c === ')') {
+      const g = stack.pop();
+      const q = quantAt(i + 1);
+      if (g?.inner && q?.repeats) return true;
+      // innere Variabilität vererbt sich nach außen, ebenso eine variabel wiederholte Gruppe
+      if (stack.length && (g?.inner || q?.variable)) stack.at(-1)!.inner = true;
+      if (q) i += q.len;
+      // „+?“ / „*?“ (genügsam) überspringen
+      if (q && p[i + 1] === '?') i++;
+      continue;
+    }
+    const q = quantAt(i);
+    if (q) {
+      if (q.variable && top) top.inner = true;
+      i += q.len - 1;
+      if (p[i + 1] === '?') i++;
+    }
   }
   return false;
 }

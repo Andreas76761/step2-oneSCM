@@ -3476,5 +3476,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-442",
+    "title": "Muster (Regelwerk, Vale): auch feste Wiederholungen mit Option oder Alternative gelten als riskant; übliche Muster bleiben erlaubt",
+    "file": "apps/server/test/stage105.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-160"
+    ]
+  },
+  {
+    "id": "T-443",
+    "title": "Word: fortgesetzte Unterliste („2.“ nach einem Zwischenabsatz) zählt mit ihrer Instanz weiter",
+    "file": "apps/server/test/stage105.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

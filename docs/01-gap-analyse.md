@@ -195,6 +195,15 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.107 Stand nach Etappe 105 (08.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Korrekturen aus den Etappen 88–91: fünf Funde, vier behoben | ✅ T-442, T-443; Server-Tests auf SQLite und PostgreSQL |
+| Sicherheit | riskante Muster mit fester Wiederholung ((a?){30}a{30}) im Regelwerk und in Vale-Stilen angenommen; Vale-ZIP erst nach dem Entpacken geprüft |
+| Vale, Word | gleicher Stilname in anderer Schreibweise abgelehnt; fortgesetzte Unterliste begann bei 1 |
+| Begründet belassen | Signalwort-Regel in der Leseransicht als Kopie (getrennte Pakete, T-407 prüft beide) |
+
 ## 1.106 Stand nach Etappe 104 (08.11.2026)
 
 | Punkt | Ergebnis |

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.105.0 – Etappe 105: Code-Review der Korrekturen aus den Etappen 88–91 (08.11.2026)
+
+### Hinzugefügt
+- **Tests T-442 und T-443.** Jeder scheitert ohne seine Korrektur (geprüft je Datei). Ohne eigenen Test: die Grenze beim Entpacken von Vale-ZIPs (das Ergebnis – 400 – ist gleich, nur der Speicherverbrauch nicht).
+
+### Behoben
+- **Riskante Muster (Sicherheit):** Die Prüfung aus Etappe 91 erkannte nur Gruppen, die mit +, * oder {n,} wiederholt werden. Muster mit fester Anzahl und innerer Option oder Alternative wie `(a?){30}a{30}` oder `(a|a){30}` galten als sicher, laufen aber exponentiell lange – im Regelwerk und in Vale-Stilen hätte ein solches Muster die Analyse für Minuten blockiert. Jetzt abgelehnt; übliche Muster wie `(\d{2}\.){2}\d{4}` oder `(?:Kunde|Kundin)` bleiben erlaubt.
+- **Vale-ZIP:** Die Größe je Datei wird beim Entpacken gezählt und darüber abgebrochen – die Angabe im ZIP selbst kann gefälscht sein (Zip-Bombe).
+- **Vale-Stil erneut einlesen:** Derselbe Name in anderer Groß-/Kleinschreibung („haus-stil“ statt „Haus-Stil“) wurde als fremder Stil abgelehnt.
+- **Word-Export:** Eine fortgesetzte Unterliste („2.“ nach einem Zwischenabsatz) begann wieder bei 1.
+
+### Begründet belassen
+- **Signalwörter in der Leseransicht:** Die Oberfläche hat eine eigene Kopie der Regel aus dem Server (getrennte Pakete ohne gemeinsamen Code); T-407 prüft beide Seiten.
+
 ## 0.104.0 – Etappe 104: Code-Review der Korrekturen aus den Etappen 92–94 (08.11.2026)
 
 ### Hinzugefügt

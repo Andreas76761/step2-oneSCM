@@ -27,8 +27,9 @@ const decode = (s: string) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').repl
 const hex = (c: string) => c.replace('#', '').toUpperCase();
 
 /** Nummerierte Listen je Dokument: eine Liste ab 1 beginnt neu, eine fortgesetzte (z. B. ab 6) zählt die vorige weiter */
-export interface ListState { next: number; last: number }
-export const newListState = (): ListState => ({ next: 1, last: 0 });
+/** nächste Word-Instanz und je Ebene die zuletzt begonnene (für Fortsetzungen ab n > 1) */
+export interface ListState { next: number; last: number; byLevel?: Record<number, number> }
+export const newListState = (): ListState => ({ next: 1, last: 0, byLevel: {} });
 interface Ctx { media: Map<string, MediaFile>; color: string; /** größte Bildbreite in px (Satzspiegel) */ maxWidth?: number; lists?: ListState; /** Bild in eigener Zeile (Designvorlagen) */ imageBreak?: boolean }
 
 function image(t: Tokens.Image, c: Ctx): ParagraphChild {
@@ -93,10 +94,14 @@ function blocks(tokens: Token[], c: Ctx, indent = 0): (Paragraph | Table)[] {
         let instance: number | undefined;
         // „last“ merkt sich nur Listen der obersten Ebene – eine verschachtelte Liste überschreibt sie nicht,
         // sonst zählte die Fortsetzung der äußeren Liste mit der Instanz der inneren wieder ab 1
+        // je Ebene gemerkt: eine fortgesetzte Unterliste („3.“ nach einem Zwischenabsatz) zählt mit ihrer Instanz weiter
         if (l.ordered && c.lists) {
-          if (Number(l.start || 1) > 1 && c.lists.last && level === 0) instance = c.lists.last;
+          const byLevel = (c.lists.byLevel ??= {});
+          const prev = level === 0 ? c.lists.last || byLevel[0] : byLevel[level];
+          if (Number(l.start || 1) > 1 && prev) instance = prev;
           else {
             instance = c.lists.next++;
+            byLevel[level] = instance;
             if (level === 0) c.lists.last = instance;
           }
         }

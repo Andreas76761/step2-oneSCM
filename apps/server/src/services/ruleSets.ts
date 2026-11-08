@@ -9,6 +9,26 @@ import { LANGUAGES } from '../domain/translate.js';
 
 const MAX_FILES = 300;
 const MAX_FILE_BYTES = 64 * 1024;
+
+/** Eintrag entpacken, höchstens max Bytes (darüber 400, ohne den Rest zu entpacken) */
+function boundedEntry(f: JSZip.JSZipObject, max: number): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const parts: Buffer[] = [];
+    let size = 0;
+    const s = f.nodeStream('nodebuffer');
+    s.on('data', (c: Buffer) => {
+      size += c.length;
+      if (size > max) {
+        s.pause();
+        reject(badRequest(`${f.name}: größer als ${max / 1024} KB.`));
+        return;
+      }
+      parts.push(c);
+    });
+    s.on('error', reject);
+    s.on('end', () => resolve(Buffer.concat(parts)));
+  });
+}
 const LANGS = ['de', ...Object.keys(LANGUAGES)];
 
 const rows = async (ctx: Ctx) => new Map((await ctx.db.all('SELECT * FROM style_rule_sets WHERE project_id = ?', ctx.projectId)).map((r) => [r.set_key as string, r]));
@@ -93,8 +113,8 @@ export async function valeFiles(fileName: string, data: Buffer): Promise<{ name:
   const out: { name: string; content: string }[] = [];
   for (const f of entries) {
     // angegebene Größe vor dem Entpacken prüfen – sonst entpackte eine Zip-Bombe erst alles in den Speicher
-    if (((f as any)._data?.uncompressedSize ?? 0) > MAX_FILE_BYTES) throw badRequest(`${f.name}: größer als ${MAX_FILE_BYTES / 1024} KB.`);
-    const buf = await f.async('nodebuffer');
+    // beim Entpacken mitzählen und abbrechen – die Größenangabe im ZIP kann gefälscht sein (Zip-Bombe)
+    const buf = await boundedEntry(f, MAX_FILE_BYTES);
     if (buf.length > MAX_FILE_BYTES) throw badRequest(`${f.name}: größer als ${MAX_FILE_BYTES / 1024} KB.`);
     out.push({ name: f.name, content: buf.toString('utf8') });
   }
@@ -116,7 +136,7 @@ export async function importValeStyle(ctx: Ctx, input: { name?: unknown; languag
   const key = `vale:${name.toLowerCase().replace(/\s+/g, '-')}`;
   const before = await ctx.db.get('SELECT name, enabled, disabled_rules FROM style_rule_sets WHERE project_id = ? AND set_key = ?', ctx.projectId, key);
   // ein anderer Stil mit ähnlichem Namen („Haus Stil“ ↔ „haus-stil“) wird nicht still ersetzt
-  if (before && before.name !== name) throw badRequest(`Ein Stil mit ähnlichem Namen ist schon vorhanden: „${before.name}“. Bitte diesen Namen verwenden oder einen anderen wählen.`);
+  if (before && String(before.name).toLowerCase() !== name.toLowerCase()) throw badRequest(`Ein Stil mit ähnlichem Namen ist schon vorhanden: „${before.name}“. Bitte diesen Namen verwenden oder einen anderen wählen.`);
   // beim erneuten Einlesen bleiben Ein/Aus und ausgeschaltete Regeln erhalten, soweit es die Regeln noch gibt
   const ids = new Set(parsed.rules.map((r) => r.name));
   const disabledRules = before ? parseJson<string[]>(before.disabled_rules, []).filter((r) => ids.has(r)) : [];
