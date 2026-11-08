@@ -3349,5 +3349,14 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-428",
+    "title": "Freigabestatus im Abschnitt „Quellen- und Freigabestatus“ folgt dem Stand der Version; Einzahl bei einem unbestätigten Abschnitt",
+    "file": "apps/server/test/stage99.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

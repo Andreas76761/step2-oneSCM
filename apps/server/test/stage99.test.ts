@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { detectContradictions, type Statement } from '../src/domain/contradictions.js';
-import { generateChapter, type GenSnippet } from '../src/domain/generator.js';
+import { generateChapter, releaseStatusText, type GenSnippet } from '../src/domain/generator.js';
 import { parseMarkdown } from '../src/domain/markdown.js';
 import { client, FM, importFile } from './api-helpers.js';
 import { freshDatabase, tempDir } from './helpers.js';
@@ -77,6 +77,43 @@ describe('Etappe 99', () => {
       expect((await call('PATCH', `/snippets/${snippet.id}`, { market: 7 }, 'u-redaktion')).status).toBe(400);
       expect((await call('PATCH', `/snippets/${snippet.id}`, { market: ' fr ' }, 'u-redaktion')).json.market).toBe('FR');
       expect((await call('GET', '/snippets?market=FR')).json.items.map((s: any) => s.id)).toEqual([snippet.id]);
+    } finally {
+      await built.app.close();
+    }
+  });
+
+  it('[T-428] Freigabestatus im Abschnitt „Quellen- und Freigabestatus“ folgt dem Stand der Version; Einzahl bei einem unbestätigten Abschnitt', async () => {
+    // Einheit: Stand der Version, Einzahl
+    const unconfirmed = { ...gen('fr', 'FR'), id: 'x', normHash: 'h2', text: 'Anderer Text.', evidenceStatus: 'unconfirmed' };
+    const status = generateChapter('Aufträge', [gen('fr', 'FR'), unconfirmed]).blocks.find((b) => b.section === 'status')!.text;
+    expect(status).toContain('1 unbestätigter Textabschnitt wurde nicht übernommen.');
+    expect(status).toContain('Freigabestatus: Entwurf (nicht freigegeben).');
+    expect(releaseStatusText(status, { status: 'approved', approvedAt: '2026-11-08T09:00:00.000Z' })).toContain('Freigabestatus: freigegeben am 08.11.2026.');
+    expect(releaseStatusText(status, { status: 'in_review' })).toContain('zur Freigabe eingereicht');
+    // ältere Entwürfe mit falscher Mehrzahl werden beim Anzeigen berichtigt
+    expect(releaseStatusText('Quellen: a.md. Freigabestatus: Entwurf (nicht freigegeben). 1 unbestätigte Textabschnitte wurden nicht übernommen.', { status: 'draft' }))
+      .toBe('Quellen: a.md. Freigabestatus: Entwurf (nicht freigegeben). 1 unbestätigter Textabschnitt wurde nicht übernommen.');
+
+    // durchgängig: freigegebenes Kapitel in Leseransicht und Export
+    const built = await build('e99s');
+    const call = client(built);
+    try {
+      await importFile(built, 'v.md', `${FM}# 4. Verträge\n\n## 4.1 Zweck\n\nSie erfassen Verträge im Menü Verträge.\n\n## 4.2 Schritte\n\n1. Öffnen Sie **Verträge**.\n2. Klicken Sie auf **Neu**.\n`);
+      const chapter = (await call('GET', '/chapters')).json.find((c: any) => c.title === '4. Verträge');
+      const draft = (await call('POST', `/chapters/${chapter.id}/generate`, {}, 'u-redaktion')).json;
+      const statusOf = (v: any) => v.sections.find((s: any) => s.code === 'status').blocks.map((b: any) => b.text).join(' ');
+      expect(statusOf(draft)).toContain('Entwurf (nicht freigegeben)');
+      for (const b of draft.sections.flatMap((s: any) => s.blocks)) if (b.kind === 'gap') await call('DELETE', `/content-blocks/${b.id}?reason=entfällt`, undefined, 'u-redaktion');
+      expect((await call('POST', `/chapter-versions/${draft.id}/submit`, {}, 'u-redaktion')).status).toBe(200);
+      expect(statusOf((await call('GET', `/chapter-versions/${draft.id}`)).json)).toContain('zur Freigabe eingereicht');
+      expect((await call('POST', `/chapter-versions/${draft.id}/approve`, { comment: 'ok' }, 'u-freigabe')).status).toBe(200);
+      const day = new Date().toISOString().slice(0, 10).split('-').reverse().join('.');
+      const reader = (await call('GET', `/reader/versions/${draft.id}`, undefined, 'u-leser')).json;
+      expect(statusOf(reader)).toContain(`Freigabestatus: freigegeben am ${day}.`);
+      const exp = (await call('POST', '/exports', { format: 'md', chapterIds: [chapter.id] }, 'u-leser')).json;
+      const md = (await call('GET', exp.downloadUrl.replace('/api/v1', ''), undefined, 'u-leser')).body as string;
+      expect(md).toContain(`Freigabestatus: freigegeben am ${day}.`);
+      expect(md).not.toContain('Entwurf (nicht freigegeben)');
     } finally {
       await built.app.close();
     }

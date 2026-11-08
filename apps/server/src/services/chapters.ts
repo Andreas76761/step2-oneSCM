@@ -3,7 +3,7 @@ import { DEFAULT_DETAIL_LEVELS } from '../domain/metadataLabels.js';
 import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { evaluateGate, type GateResult } from '../domain/gate.js';
-import { generateChapter, GENERATOR_ID, type GenSnippet } from '../domain/generator.js';
+import { generateChapter, GENERATOR_ID, releaseStatusText, type GenSnippet } from '../domain/generator.js';
 import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, ROLE_CODES, SECTION_CODES } from '../domain/reference.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { assertIdsInProject } from './projects.js';
@@ -374,10 +374,12 @@ export async function normalizePositions(ctx: Ctx, versionId: string) {
   for (const [i, r] of rows.entries()) await ctx.db.run('UPDATE content_blocks SET position = ? WHERE id = ?', i * 10, r.id);
 }
 
-export async function getChapterVersion(ctx: Ctx, versionId: string) {
+/** `raw`: Absätze wie gespeichert (Versionsvergleich); sonst mit dem Freigabestatus zum Stand der Version */
+export async function getChapterVersion(ctx: Ctx, versionId: string, opts: { raw?: boolean } = {}) {
   const v = await ctx.db.get('SELECT * FROM generated_chapter_versions WHERE id = ?', versionId);
   if (!v) throw notFound(`Kapitelversion ${versionId}`);
-  const blocks = await activeBlocks(ctx, versionId);
+  const stored = await activeBlocks(ctx, versionId);
+  const blocks = opts.raw ? stored : stored.map((b) => (b.section === 'status' ? { ...b, text: releaseStatusText(b.text, { status: v.status, approvedAt: v.approved_at }) } : b));
   const approvals = await ctx.db.all('SELECT id, approver, decision, comment, gate_result, created_at, stage, final FROM approvals WHERE chapter_version_id = ? ORDER BY created_at', versionId);
   return {
     id: v.id, chapterId: v.chapter_id, versionNo: v.version_no, status: v.status, title: v.title, basedOnVersionId: v.based_on_version_id,

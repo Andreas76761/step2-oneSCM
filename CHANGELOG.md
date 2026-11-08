@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.99.2 – Freigabestatus im Kapitel (08.11.2026)
+
+### Hinzugefügt
+- **Test T-428:** Freigabestatus je Stand der Version in Leseransicht und Export sowie die Einzahl. Er scheitert ohne die Korrektur.
+
+### Behoben
+- **Abschnitt „Quellen- und Freigabestatus“:** Freigegebene Kapitel zeigten in Leseransicht, Druck, Export und Releases weiter „Freigabestatus: Entwurf (nicht freigegeben)“. Der Generator schreibt den Satz beim Entwurf fest in den Absatz. Jetzt steht dort der Stand der Version: Entwurf, zur Freigabe eingereicht, „freigegeben am TT.MM.JJJJ“ oder „inzwischen durch eine neuere Version ersetzt“. Gespeichert bleibt der Absatz unverändert, der Versionsvergleich arbeitet weiter mit dem gespeicherten Text. Aufgefallen ist das beim Vorführen des Exports.
+- **Einzahl:** „1 unbestätigte Textabschnitte wurden …“ heißt jetzt „1 unbestätigter Textabschnitt wurde nicht übernommen“, auch in älteren Entwürfen.
+
 ## 0.99.1 – Leseransicht auf dem Smartphone (08.11.2026)
 
 ### Hinzugefügt

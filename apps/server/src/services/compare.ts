@@ -67,7 +67,7 @@ function stableIndexes(seq: number[]): Set<number> {
 export async function compareVersions(ctx: Ctx, chapterId: string, fromId: string, toId: string) {
   const chapter = await ctx.db.get('SELECT id, title FROM chapters WHERE id = ?', chapterId);
   if (!chapter) throw notFound(`Kapitel ${chapterId}`);
-  const [from, to] = await Promise.all([getChapterVersion(ctx, fromId), getChapterVersion(ctx, toId)]);
+  const [from, to] = await Promise.all([getChapterVersion(ctx, fromId, { raw: true }), getChapterVersion(ctx, toId, { raw: true })]);
   if (from.chapterId !== chapterId || to.chapterId !== chapterId) throw unprocessable('Beide Versionen müssen zum angegebenen Kapitel gehören.');
 
   const blocksOf = (v: typeof from) => v.sections.flatMap((s) => s.blocks) as unknown as Block[];

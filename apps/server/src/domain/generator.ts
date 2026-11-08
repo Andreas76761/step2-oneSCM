@@ -115,6 +115,24 @@ export function assignSection(s: GenSnippet, ctx: { first: boolean; roleMajority
   return { section: 'steps', kind: baseKind };
 }
 
+/** Satz im Abschnitt „Quellen- und Freigabestatus“; beim Anzeigen setzt releaseStatusText den tatsächlichen Stand ein */
+export const DRAFT_STATUS = 'Freigabestatus: Entwurf (nicht freigegeben).';
+const skippedNote = (n: number) => (n === 1 ? '1 unbestätigter Textabschnitt wurde nicht übernommen.' : n ? `${n} unbestätigte Textabschnitte wurden nicht übernommen.` : '');
+
+/**
+ * Freigabestatus zum Stand der Kapitelversion: Der Generator schreibt „Entwurf“ in den Absatz, die Version wird erst später
+ * eingereicht und freigegeben. Leseransicht, Druck, Export und Releases zeigen deshalb den aktuellen Stand (und die Einzahl
+ * „1 unbestätigter Textabschnitt“ auch für ältere Entwürfe).
+ */
+export function releaseStatusText(text: string, v: { status: string; approvedAt?: string | null }): string {
+  const day = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+  const status = v.status === 'approved' && v.approvedAt ? `Freigabestatus: freigegeben am ${day(v.approvedAt)}.`
+    : v.status === 'superseded' && v.approvedAt ? `Freigabestatus: freigegeben am ${day(v.approvedAt)}, inzwischen durch eine neuere Version ersetzt.`
+    : v.status === 'in_review' ? 'Freigabestatus: zur Freigabe eingereicht (noch nicht freigegeben).'
+    : DRAFT_STATUS;
+  return text.replace(DRAFT_STATUS, status).replace(/\b1 unbestätigte Textabschnitte wurden nicht übernommen\./, skippedNote(1));
+}
+
 export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenResult {
   const confirmed = input.filter((s) => CONFIRMED_EVIDENCE.includes(s.evidenceStatus)).sort((a, b) => a.order - b.order);
   const skippedUnconfirmed = input.length - confirmed.length;
@@ -180,7 +198,7 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
     blocks.push({
       section: 'status',
       kind: 'note',
-      text: `Quellen: ${labels.join('; ')}. Freigabestatus: Entwurf (nicht freigegeben). ${skippedUnconfirmed ? `${skippedUnconfirmed} unbestätigte Textabschnitte wurden nicht übernommen.` : ''}`.trim(),
+      text: `Quellen: ${labels.join('; ')}. ${DRAFT_STATUS} ${skippedNote(skippedUnconfirmed)}`.trim(),
       sourceIds: confirmed.map((s) => s.id),
       roles: ['all'],
       divisions: ['all'],
