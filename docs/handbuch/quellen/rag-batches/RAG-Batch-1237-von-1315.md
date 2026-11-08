@@ -1,0 +1,23 @@
+# Batch 1237 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Produkt bearbeiten**
+
+In der Produktkalkulation können MPC-Benutzer die Informationen eines bestehenden Produkts ändern. Dazu öffnen Sie die Produktübersichtsseite, klicken in der Spalte „Actions“ auf die drei Punkte und wählen im Menü die Option „Edit“. Daraufhin öffnet sich derselbe Assistent, der auch beim Anlegen eines Produkts verwendet wird, mit denselben Schritten. Die Felder sind mit den gespeicherten Informationen vorbelegt. Wenn Sie ein Produkt bearbeiten oder einen Entwurf weiterführen, öffnet sich der Assistent im zuletzt unvollständigen Schritt. Der erste Schritt ist nicht editierbar, seine Dropdown-Felder sind deaktiviert.
+
+Welche Felder Sie ändern können, hängt vom Status des Produkts ab. Bei Produkten im Status „DRAFT“, „CREATED“, „READY“ oder „DEACTIVATED“ lassen sich alle Felder bearbeiten. Nur bei Produkten im Status „DRAFT“ kann das Produkt auch dann als Entwurf gespeichert werden, wenn nicht alle Pflichtangaben ausgefüllt sind. Bei Produkten im Status „PUBLISHED“ sind nur die Felder „Product Name“, „Description“ und „Short description“ änderbar; alle übrigen Felder sind schreibgeschützt.
+
+Die Schaltflächen im Assistenten verhalten sich wie folgt: „Cancel“ ist stets aktiv. Auf allen Seiten steht anstelle von „Save as Draft“ die Schaltfläche „Save“ zur Verfügung, die deaktiviert bleibt, solange keine Änderungen vorliegen. „Back“ und „Next“ sind aktiv, wenn auf der aktuellen Seite keine Änderungen vorgenommen wurden. Im letzten Schritt, der Produktzusammenfassung („Product Summary“), wird „Next“ zu „Save“. Diese Schaltfläche ist deaktiviert, sobald mindestens ein Feld ungültig ist. Es gelten dieselben Validierungsregeln wie beim Anlegen, und alle Felder sind Pflichtfelder.
+
+Wenn Sie „Cancel“ wählen, ohne ein Feld geändert zu haben, wird der Bearbeitungsassistent geschlossen. Wurde mindestens ein Feld geändert, erscheint ein Hinweisfenster mit dem Titel „You have unsaved changes!“ und der Meldung, dass beim Schließen alle vorgenommenen Änderungen verloren gehen und ob Sie wirklich schließen möchten. Mit „Yes“ schließen Sie das Fenster und den Bearbeitungsvorgang und verwerfen alle Änderungen. Mit „No“ schließen Sie nur das Fenster, und der Bearbeitungsvorgang bleibt geöffnet. Mit „Back“ und „Next“ wechseln Sie zur vorherigen bzw. nächsten Seite. Mit „Save“ werden die Änderungen gespeichert und der Assistent geschlossen.
+
+Nach dem Speichern erscheint bei Erfolg die Meldung „<PRODUCT_NAME> was successfully updated“. Kann das Produkt nicht aktualisiert werden, wird die Fehlermeldung „<PRODUCT_NAME> could not be updated.“ angezeigt. Diese Fehlermeldung enthält eine Schaltfläche „Close“ und bleibt sichtbar, bis Sie sie schließen. Die Gestaltung richtet sich nach der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.
+
+**Produkt löschen**
+
+Wenn ein Produkt nicht mehr benötigt wird, können MPC-Benutzer es löschen, um die Produktliste übersichtlich zu halten. Die Löschoption steht für Produkte im Status „DRAFT“, „CREATED“, „READY“ und „DEACTIVATED“ zur Verfügung. Sie erreichen sie über die Produktübersichtsseite: Klicken Sie in der Spalte „Actions“ auf die drei Punkte und wählen Sie im Menü „Delete“.
+
+Daraufhin erscheint ein Bestätigungsfenster mit dem Titel „Delete Product“. Es fragt, ob Sie das Produkt wirklich löschen möchten, weist darauf hin, dass die Aktion nicht rückgängig gemacht werden kann, und bittet um Bestätigung. Mit „Cancel“ schließen Sie das Fenster und brechen das Löschen ab. Mit „Delete“ schließen Sie das Fenster, das Produkt wird als gelöscht markiert und aus der Liste entfernt.
+
+Das Löschen ist grundsätzlich ein „Soft Delete“: Gelöschte Produkte sind in der Standardliste ohne gesetzte Filter nicht enthalten, werden aber angezeigt, wenn die Option „Show Deleted Products“ aktiviert ist. Gelöschte Produkte können in keiner Weise bearbeitet oder verändert werden; es lassen sich ihnen keine Preise zuweisen, und ihr Status kann nicht geändert werden. Außerdem sind sie nicht mehr für den Ablauf der Vertragserstellung auswählbar. Aus dem Status „DRAFT“ heraus erfolgt dagegen ein endgültiges Löschen („Hard Delete“). Die Gestaltung entspricht der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.

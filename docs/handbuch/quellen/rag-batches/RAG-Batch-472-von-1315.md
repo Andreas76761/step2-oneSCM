@@ -1,0 +1,17 @@
+# Batch 472 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Dokumente & Kommunikation: E-Mail-Vorlage für übertragene Verträge erstellen**
+
+Im Bereich Dokumente & Kommunikation können Sie eine Benachrichtigungsvorlage als E-Mail anlegen, die den neuen Vertragsinhaber informiert, dass ein bestimmter Vertrag auf seinen Namen übertragen wurde. Die Vorlage wird verwendet, sobald der Übertragungsprozess im Vertragsmanagement abgeschlossen ist. Dann wird die E-Mail an den neuen Vertragsinhaber versendet.
+
+Voraussetzung ist, dass Sie mit den passenden Zugangsdaten angemeldet sind und die Vorlagen für Kopf- und Fußzeile bereits definiert sind. Navigieren Sie zunächst zum Admin-Bereich, öffnen Sie dort die Vorlagenverwaltung (Template Management) und wechseln Sie auf den Reiter „Notification“. Wählen Sie anschließend „Create Template" und danach „E-mail".
+
+Auf der Seite zur Vorlagenerstellung erfassen Sie zuerst die Pflichtangaben: den Vorlagennamen (Textfeld, maximal 25 Zeichen, zum Beispiel „Template-Active Status"), den Markt (vorbelegt mit Germany; in Zukunft abhängig vom Land), das Feld „Used For" sowie das Datum „Valid From". Da die Vorlage Mitteilungen nach dem Status „Active" eines Vertrags abdeckt, wählen Sie im Dropdown „Used For" den Eintrag „Transferring". Mit „Valid From" legen Sie fest, ab welchem Datum die Vorlage für den Geschäftsprozess gültig ist. Sind Pflichtfelder nicht ausgefüllt, werden Sie auf das jeweilige Feld hingewiesen. In diesem Fall ist „Save as Draft" aktiv, „Publish" jedoch nicht.
+
+Optional können Sie weitere Angaben machen: die Division (zunächst PC; Van folgt nach dem MVP), die Marke (zunächst Mercedes-Benz; Smart folgt nach dem MVP) und die Sprache, die sich nach der Marktrolle des Benutzers richtet und im MVP Englisch ist.
+
+Anschließend erfassen Sie den eigentlichen E-Mail-Inhalt, der gemäß dem MB Style Guide für E-Mails gestaltet wird. Der Betreff lautet „Service Contract Transferred (Contract Number: %Contract Number)". Der Text beginnt mit der Anrede („Dear %First Name %Last name") und teilt mit, dass der Vertrag erfolgreich übertragen wurde. Danach folgen die Vertragsdetails als Platzhalter: Vertragsnummer, Übertragungsdatum, Fahrgestellnummer, Datum der Erstzulassung, aktueller Kilometerstand, Kennzeichen, Produkt, verbleibende Laufleistung und verbleibende Laufzeit. Das Kennzeichen wird nur angezeigt, wenn ein Wert vorhanden ist; andernfalls entfällt das Feld in der E-Mail. Den Abschluss bilden der Hinweis, sich bei Fragen an das Customer Support Team zu wenden, die Grußformel „Yours sincerely, Service Contract Team", die marktspezifischen Angaben (Mercedes-Benz Cars Germany, Telefonnummer und E-Mail-Adresse des Kontakts) sowie der Hinweis, vor dem Drucken die Umwelt zu bedenken.
+
+Mit „Send Test E-mail" senden Sie die E-Mail im gleichen Format, wie sie später beim Kunden ankommt (Betreff, Kopfzeile, Fußzeile und Inhalt), an den angemeldeten Benutzer. So können Sie prüfen, wie die Nachricht in der Praxis aussieht. Mit „Save as Draft" speichern Sie eine Entwurfsversion, die noch nicht für Geschäftsprozesse gilt. Mit „Publish" veröffentlichen Sie die endgültige Version, die dann entsprechend dem Datum „Valid From" in den Prozessen angewendet wird.

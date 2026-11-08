@@ -1,0 +1,15 @@
+# Batch 1115 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 12 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragserstellung (Contract Generation)**
+
+Im ersten Schritt der Vertragserstellung, der Fahrzeugeingabe, ist das Feld für den Kilometerstand ein Pflichtfeld. Die Beschriftung dieses Feldes wurde von „Mileage (Km)“ in „Actual Mileage (Km)“ geändert. Diese Änderung ist abgeschlossen.
+
+Für den Schritt der Kundenerfassung war vorgesehen, die Suche nach doppelten Kunden zu vereinfachen. Bisher müssen dort vier Pflichtfelder ausgefüllt werden: Vorname, Nachname, E-Mail-Adresse bzw. MercedesMe-ID sowie Telefonnummer bzw. MercedesMe-ID. Geplant war, die Pflichtfelder auf Vorname und Nachname zu reduzieren und E-Mail-Adresse/MercedesMe-ID sowie Telefonnummer/MercedesMe-ID zu optionalen Feldern zu machen. Dabei sollte gelten: Sind nur die Pflichtfelder gefüllt, wird ausschließlich anhand dieser gesucht. Sind zusätzlich optionale Felder gefüllt, werden Pflicht- und optionale Felder in die Suche einbezogen. Dieses Vorhaben wurde allerdings abgebrochen und ist daher nicht umgesetzt. Es bleibt beim bisherigen Verhalten mit vier Pflichtfeldern.
+
+**Vertragskalkulation (Contract Calculation)**
+
+Für Sonderfälle und die Vertragsverlängerung wurde die Berechnung erweitert. Betroffen sind die Abläufe, die die Schnittstellen zur Preisneuberechnung (in den Versionen 1 und 2) sowie zur Verlängerung nutzen. Im Sonderfall der Preisneuberechnung enthält die Antwort nun zusätzlich die Berechnung des Preises pro Kilometer sowie des Preises pro Kilometer bei Unterschreitung der Laufleistung; diese Werte werden im Vertrag aktualisiert. Die Verlängerungsanfrage wird um zwei Angaben erweitert: den Gesamtpreis des Vertrags ohne Rabatt und den Gesamtpreis des Vertrags mit Rabatt, jeweils ohne Gebühren und Faktoren. Die Antwort enthält den Preis pro Kilometer und den Preis pro Kilometer bei Unterschreitung der Laufleistung, die im Vertrag gespeichert werden. Zudem wird die jährliche Laufleistung in die Anfrage zur Preisneuberechnung aufgenommen. Diese Arbeiten sind fertiggestellt.
+
+Weitere Themen in der Vertragskalkulation sind noch offen oder in Klärung, und zu ihnen liegen keine näheren Beschreibungen vor. Dazu gehören die Option „Unlimited Tire“ bei der Vertragsverlängerung, die Neuberechnung von Verträgen für Lieferanten-Zahlungspläne, die Kalkulation für Gebrauchtwagen bzw. Produktoptionen zur Garantieverlängerung, ein Aufschlag auf die COV aus VEGA bzw. der Werkstattrechnung, die Rolle des Leasing-Operators samt Funktionen sowie die Massenanlage in OTR mit Prüfung der untergeordneten Einträge einer Deal-ID. Ebenfalls offen ist die Prüfung, ob das System die Anzahl der mit einer Deal-ID in OTR verknüpften Fahrzeuge kontrolliert und den Erstellungsablauf zulässt, wenn genau ein Fahrzeug gefunden wird. Ein bekanntes Problem betrifft das Produktlimit für Händler, das derzeit nicht korrekt funktioniert und sich in Analyse befindet.

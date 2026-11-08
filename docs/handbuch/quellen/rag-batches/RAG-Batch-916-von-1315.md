@@ -1,0 +1,17 @@
+# Batch 916 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Sonderfälle bei der Massenanlage von Verträgen**
+
+Hat ein Flottenkunde für eine Massenanlage einen Sonderfall beantragt, entweder für den Preis oder für die Laufleistung bzw. die Laufzeit, so werden ausschließlich gültige Fahrzeuge aus der validierten Fahrzeugliste berücksichtigt. Sobald die Fahrzeugliste validiert und die Serviceverträge erfolgreich angelegt wurden, sendet das System eine Sonderfallanfrage für alle Serviceverträge, die unter derselben Gruppen-ID zusammengefasst sind. Verhalten, Layout und Aktionen bleiben dabei für Einzel- und Massenanfragen einheitlich.
+
+Auf der Sonderfall-Übersichtsseite sehen Sie die Verträge und Gruppen-IDs, für die ein Sonderfall beantragt wurde. Im Kopfbereich stehen Suchfelder für Vertragsnummer, Kundenname, Anfragetyp und Status sowie weitere Filter und die Schaltflächen zum Suchen und Abbrechen. Neu ist der zusätzliche Filter „Search by Group ID“. Er liefert die Gruppen-IDs, für die ein Sonderfall angefragt wurde. Die Tabelle zeigt Referenznummer bzw. Gruppen-ID, Kundenname, Anfragetyp, Fahrzeuganzahl, Eingangsdatum, Status, Fälligkeitsdatum und Aktionen. Bei Massenanfragen enthält die Referenznummer die Gruppen-ID, und die Fahrzeuganzahl nennt die Zahl der Fahrzeuge unter dieser Gruppen-ID. Kundenname, Anfragetyp, Eingangsdatum, Status, Fälligkeitsdatum und Aktionen verhalten sich wie bei Einzelverträgen.
+
+Wählen Sie die Aktion zur Prüfung, öffnet sich die Prüfseite. Ihr Kopfbereich zeigt Gruppen-ID als Referenznummer, Fahrzeuganzahl, Kundenname, Status, Eingangsdatum, Fälligkeitsdatum und Anfragetyp. Im Hauptbereich finden Sie eine Kommentartabelle mit allen Kommentaren von der Einreichung bis zur Genehmigung oder Ablehnung. Der Abschnitt mit den Änderungsdetails enthält ein Banner, das den aktuellen Status (genehmigt oder abgelehnt) anzeigt. Darunter erscheint der Kundenpreis als Gesamt-Nettopreis pro Fahrzeug, für die jeweilige Fahrzeuganzahl sowie jeweils pro Intervall. Wurde ein Preis geändert, wird der alte Wert durchgestrichen dargestellt.
+
+Im Fußbereich der Prüfseite stehen mehrere Funktionen zur Verfügung. Über „<“ gelangen Sie zurück zur Sonderfall-Übersichtsseite. „See Vehicles (Anzahl der Fahrzeuge)“ öffnet ein Fenster mit allen Fahrzeugen der Gruppen-ID. Über „Dealer Discount“ öffnet sich ein Fenster zur Bearbeitung des Händlerrabatts; der eingetragene Rabatt wird auf alle Serviceverträge der Gruppen-ID übertragen. Mit „Confirm“ werden die genehmigten Preise und Konfigurationen, einschließlich der Änderungen an Laufzeit und Laufleistung, auf alle zugehörigen Serviceverträge angewendet.
+
+Das Fenster „See Vehicles“ zeigt im Kopfbereich die Gruppen-ID und die Gesamtzahl der Fahrzeuge. Die Tabelle enthält Identifikatortyp, Identifikator, Erstzulassungsdatum, aktuellen Kilometerstand und Kennzeichen. Mit „Back“ oder „X“ schließen Sie das Fenster und kehren zur Detailseite der Anfrage zurück.
+
+Design und Grafiken entsprechen den Vorgaben der Mercedes-Benz Workbench.

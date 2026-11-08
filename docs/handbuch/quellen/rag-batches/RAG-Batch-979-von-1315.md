@@ -1,0 +1,23 @@
+# Batch 979 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kilometerstand bei Vertragsbeginn und Verkaufsdatum**
+
+Bei der Erstellung eines Angebots wird der aktuelle Kilometerstand des Fahrzeugs abgefragt. Dieser Wert dient ausschließlich dazu, passende Produkte und Preise zu ermitteln. Das gilt für fahrzeugbezogene Produkte, bei denen der Vertragsbeginn dem Datum der Erstzulassung (FRD) entspricht; Kontingentverträge sind davon ausgenommen. Nach der Vertragserstellung zeigt der Bereich „Overview / Vehicle Information" zwei getrennte Kilometerfelder an. Das Feld „Mileage at Contract Start" enthält immer den Wert 0. Das Feld „Mileage at Sales Date" zeigt den Kilometerstand, der bei Beginn der Angebotserstellung erfasst wurde. Beide Felder erscheinen auch im Vertragsdokument.
+
+Nachdem der Kunde den Vertrag bestätigt hat, werden dieselben beiden Felder in der Vertragsdetailansicht auf dem Reiter „Contract" angezeigt. Das Feld „Planned Vehicle Mileage (Km)" wurde dabei in „Planned Mileage at Contract End (Km)" umbenannt.
+
+Mit der Bestätigung des Vertrags wird die MIC-Prüfung angestoßen. Sind alle MIC-Validierungen erfolgreich, wird der Aktivierungsprozess fortgesetzt, wobei der Kilometerstand bei Vertragsbeginn als 0 gewertet wird. Bei der Aktivierung wird weiterhin geprüft, ob das Fahrzeug für das Produkt geeignet ist. Dazu wird der tatsächliche Kilometerstand für die MIC-Prüfung mit den Produktgrenzen verglichen; dies ist im neuen MIC-Ablauf bereits abgedeckt. Sobald der Vertrag aktiv ist, zeigt die Vertragsdetailansicht in Contract Management und Offer Management ebenfalls beide Felder an. Bei der Erzeugung der i155-Datei wird als Startkilometerstand statt des erfassten Wertes der Wert 0 übergeben, und zwar im Satz RC05 in den Positionen 116 bis 122 sowie im Satz RC20 für Coverages in den Positionen 98 bis 104.
+
+Bei der Vertragsprüfung (Contract Review) wurde die Logik geändert. Verglichen werden nun der geplante Kilometerstand bei Vertragsende („Planned Mileage at Contract End (Km)") und der tatsächliche Kilometerstand bei Vertragsende. Auf das Ergebnis wird, sofern definiert, eine Toleranz angewendet. Die Toleranz in Kilometern errechnet sich aus dem geplanten Kilometerstand bei Vertragsende multipliziert mit dem Toleranzprozentsatz. Der abzurechnende Wert in Kilometern ergibt sich aus dem tatsächlichen Kilometerstand bei Vertragsende abzüglich der geplanten Gesamtlaufleistung des Vertrags (jährliche Laufleistung mal Anzahl der Jahre) und abzüglich der Toleranz, falls vorhanden.
+
+**SEPA-Handling in der Vertragserstellung**
+
+Auf der Seite „Customer & Payment" der Vertragserstellung entfallen der SEPA-Schalter samt zugehörigem Text. Die bisherige Bedingung, dass der Schalter aktiviert sein muss, um zur Übersicht und damit zur Vertragserstellung zu gelangen, wurde entfernt. Das SEPA-Mandat wird stattdessen als vom Endkunden unterschriebenes Dokument benötigt, bevor der Vertrag aktiviert werden kann.
+
+Beim Anlegen des Vertrags werden in den MO-Checks zwei Punkte standardmäßig auf „NOK" gesetzt: das SEPA-Mandat (Direct Debit Code), das der MO manuell im Kundenbereich ergänzt, und das SEPA-Mandat-Dokument, das der Kunde bei der Unterschrift signieren muss. In der Übersicht und Bestätigung werden die Dokumente in folgender Reihenfolge erzeugt: zuerst der Servicevertrag als Entwurf, danach die Allgemeinen Geschäftsbedingungen. Anschließend folgt die Unterschrift.
+
+Bei digitaler Unterschrift wird der MO-Check „SEPA Mandate Document" auf „Ok" gesetzt, sobald der Kunde die Dokumente unterschrieben hat und der Vertrag den Status „CONFIRMED" erhält. Bei manueller Unterschrift mit Upload wird das SEPA-Mandat beim Anstoßen des Ausdrucks in die gedruckten Unterlagen aufgenommen. Sobald das unterschriebene Dokument hochgeladen wurde, bestätigt der Bereich Documents & Communication den Eingang des unterschriebenen SEPA-Mandats, und der MO-Check „SEPA Mandate Document" wird auf „Ok" gesetzt.
+
+Für die Validierung des Direct Debit Codes erhält der MO den Code aus dem FI-System und trägt ihn in oneSCM im Bereich „Customer" ein. Danach wird das Vertragsobjekt aktualisiert und der MO-Check „SEPA Mandate – Direct Debit Code" auf „Ok" gesetzt. Liegen sowohl das SEPA-Dokument als auch der Direct Debit Code vor, wird die Vertragsaktivierung fortgesetzt. Ohne SEPA-Mandat können dem Kunden die Kosten des Servicevertrags nicht in Rechnung gestellt werden.

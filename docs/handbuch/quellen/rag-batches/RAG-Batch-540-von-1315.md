@@ -1,0 +1,15 @@
+# Batch 540 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Customer Account Center: rechtliche Anforderungen und Gestaltung der Kundenoberfläche**
+
+Für das Customer Account Center, die kundenorientierte Website von oneSCM, wurde ein Rechtsfooter (Legal Footer) umgesetzt. Die Website ist für Endkunden gedacht und soll Anwendungsfälle wie die Aktualisierung von Kreditkartendaten, die Änderung von Bankdaten bzw. SEPA-Mandat sowie die Ablage und den Download von Dokumenten abdecken. Da Kundendaten geschützt werden müssen, sind rechtliche und datenschutzrechtliche Vorgaben sowie interne Anforderungen an kundenorientierte Websites einzuhalten. Zuvor war auf der Seite kein Rechtsfooter vorhanden. Endkunden sollen nun die rechtlichen Hinweise sehen, anklicken und lesen können, damit ihnen die rechtlichen Folgen der Nutzung der Website bewusst sind.
+
+Der Rechtsfooter wird auf allen Seiten des Customer Account Centers angezeigt. Er erscheint in allen Zugangsszenarien einheitlich, etwa beim Signieren von Dokumenten nach dem Scannen eines QR-Codes, bei der aktiv beim Hersteller angefragten Änderung der Kreditkartendaten oder wenn Kreditkartendaten wegen eines bevorstehenden Ablaufs geändert werden müssen. Das Erscheinungsbild ist auf allen Seiten einheitlich, und der Footer wird auf allen Gerätegrößen korrekt dargestellt.
+
+Der Footer enthält mehrere anklickbare Links, die jeweils ein Modalfenster öffnen. Dieses lässt sich vom Benutzer wieder schließen. Beim Klick auf „PROVIDER“ erscheint das Impressum-Dokument, das in der Marktkonfiguration hinterlegt ist. Der Link „Privacy Settings“ (diese Bezeichnung ist bewusst so zu verwenden) öffnet ein Fenster mit Informationen zu den Cookies. Sofern das Customer Account Center Cookies speichert, werden diese angezeigt, und der Benutzer kann optionalen Cookies aktiv zustimmen oder sie ablehnen. Das System speichert diese Auswahl, und sie bleibt über mehrere Sitzungen hinaus erhalten. Der Link „Privacy Policy“ zeigt die externe Datenschutzerklärung aus der Marktkonfiguration, der Link „Legal Notice“ den externen Rechtshinweis ebenfalls aus der Marktkonfiguration. Auch ein Link „Licenses“ ist vorgesehen, der alle von der Anwendung verwendeten Lizenzen anzeigt.
+
+Alle rechtlichen Dokumente werden, sofern verfügbar, in der vom Kunden gewählten Sprache angezeigt. Die jeweils passenden Dokumente werden aus den Einstellungen der Marktkonfiguration übernommen.
+
+**Hinweis zu den übrigen Einträgen:** Zu den weiteren Einträgen aus dem Bereich DevOps (Erstellung von oneERP-E169-Dateien, tägliche PR- und UI-Zertifikatserneuerungs-Workflows, Support und Monitoring sowie Behebung von AWS-Sicherheitsfeststellungen) liegen in den Rohdaten keine inhaltlichen Beschreibungen vor. Sie wurden daher nicht im Fließtext berücksichtigt, um nichts hinzuzuerfinden.

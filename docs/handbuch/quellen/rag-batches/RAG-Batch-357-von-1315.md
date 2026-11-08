@@ -1,0 +1,17 @@
+# Batch 357 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 12 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Dokumente und Kommunikation**
+
+Im Bereich Dokumente und Kommunikation wurden die Vorlagen und der Dokumentenversand an mehreren Stellen verbessert. Beim Produkttest verhalten sich Vorlagen nun passend zur Simulation zukünftiger Szenarien. Wenn ein Markt ein Dokument mit Allgemeinen Geschäftsbedingungen hochlädt, dessen Gültigkeit erst in der Zukunft beginnt, und anschließend einen Vertrag mit einem zukünftigen Datum testet, wird dieses Dokument verwendet. Zuvor wurde es gemäß den Vorlagenregeln nicht berücksichtigt, und es kam zu einer Fehlermeldung. Da im Produkttest auch Preisversionen oder Produkte genutzt werden, die erst in der Zukunft gültig sind, gilt dies nun ebenso für die Dokumente. Dasselbe betrifft das Dokument „Price Information“: Wenn seine Gültigkeit in der Zukunft liegt, wird es im Produkttest berücksichtigt.
+
+Bei der Vertragserstellung wird die Steuerart in den Vorlagen nun dynamisch eingesetzt. Sie richtet sich nach der Marktkonfiguration und wird an die Vorlagen übergeben. Außerdem wurde ein Fehler behoben, der auftrat, wenn bei der Adresserfassung mehr als 30 Zeichen eingegeben wurden und die Adresse einen Serverfehler (500) zurückgab.
+
+Im Assistenten „Payment Information“ erscheint bei der Erstellung eines Vertragsangebots mit der Zahlungsart „Pre Activation“ eine eigene Meldung: „The contract will become active once the payment is processed.“
+
+Die digitale Signatur über DSS (Oberfläche, E-Mails und SMS) war bisher immer auf Englisch. Der Ablauf wird an die Sprache des Kunden angepasst. Die Sprache wird an die Signatur-Initialisierung übergeben, in der Datenbank gespeichert und an DSS weitergegeben, sowohl für lokale (On-Premise) als auch für Remote-Signaturen. Dadurch gilt die Kundensprache auch bei einer Wiederholung fehlgeschlagener Vorgänge oder bei gespeicherten Entwürfen, die noch nicht versendet wurden. E-Mail-Inhalte basieren auf übersetzbaren Nachrichtenvorlagen, und auch die Betreffzeilen werden lokalisiert. Bei der Kundensprache Deutsch erscheinen der DSS-Ablauf und die Wiederholung für Umschlag und Ablauf auf Deutsch, bei Englisch auf Englisch und bei Slowakisch auf Slowakisch.
+
+Weitere Anpassungen sind in Vorbereitung. Das Hochladen signierter Dokumente über „Print and Upload Document“ soll beschleunigt werden. Derzeit dauern Upload und Prüfung etwa eine Minute. Dabei werden die Vorschlagsnummer per QR-Code mit der Nummer in oneSCM abgeglichen und die Unterschrift des Kunden erkannt. Ziel ist eine Dauer von unter 20 Sekunden. Die Oberfläche soll dabei einen Ladezustand anzeigen, der erklärt, dass Prüfungen durchgeführt werden. Der Dokumentinhalt wird dafür asynchron in DSS gespeichert, und ein Job synchronisiert ihn erneut, falls nötig. Dies dient einem effizienten Arbeitsablauf für Händler.
+
+Zudem wird der Platzhalter für den Link zum Customer Account Center (CAC) angepasst. Bisher ließen sich CAC-Links in Benachrichtigungen nicht direkt aus der E-Mail öffnen, sondern mussten in den Browser kopiert werden. Künftig kann der Empfänger den Link in der E-Mail direkt anklicken und gelangt zum CAC.

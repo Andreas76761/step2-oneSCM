@@ -1,0 +1,17 @@
+# Batch 609 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Privatkunden-Stammdaten im Status „In Bestätigung" ändern**
+
+Wurden die Daten eines Privatkunden oder seine Adressdaten fehlerhaft erfasst, können Mitarbeiter des Marktorganisationsbereichs (MO), Händler und MPCs diese künftig auch dann korrigieren, wenn sich der Kunde im Status „In Bestätigung" (InConfirmation) befindet. Bisher waren in diesem Status Änderungen nur für MOs möglich, und auch nur für Finanzdaten wie den SAP-Debitor, das Lastschriftverfahren und den FI-Status. Für Kunden in den Status „Temporär", „Aktiv" und „Inaktiv" ändert sich nichts; die bestehenden Abläufe gelten unverändert weiter.
+
+Zum Bearbeiten öffnen Sie den Privatkunden in der Kundenverwaltung und wählen „Kunde bearbeiten". Editierbar sind die Kundendaten (Vorname, Nachname, Telefon, E-Mail, Festnetznummer und Sprache) sowie die Adressdaten, ebenso die IBAN. Letzteres ist unkritisch, da die Synchronisation mit dem FI-System erst nach der Unterschrift des Vertrags im Status „Bestätigt" ausgelöst wird. Es gelten dieselben Datenvalidierungen wie bei der Neuanlage. Zusätzlich wird erneut eine Dublettenprüfung durchgeführt: Werden Daten eingegeben, die bereits zu einem bestehenden oneSCM-Kunden gehören, meldet das System einen Fehler und lässt die Änderung nicht zu.
+
+Nach dem Speichern protokolliert das System die Änderung in der Kundenhistorie und gibt sie an alle verknüpften Vertragsangebote und Verträge weiter. Wurden Name oder Adresse geändert, wird eine CAS-Prüfung angestoßen. Besitzt der Kunde bereits eine SAP-Debitorennummer, werden die Änderungen zudem mit dem FI-System synchronisiert. Außerdem werden alle Dokumente mit den aktualisierten Daten neu erzeugt. Sie stehen im Reiter „Kommunikation" des Vertrags zur Verfügung, und die Neuerzeugung wird in der Vertragshistorie vermerkt. Dokumente werden nicht für Verträge neu erzeugt, die sich nicht in den dafür vorgesehenen Status befinden.
+
+Wie es nach der Neuerzeugung weitergeht, hängt von der Unterschriftsmethode ab. Bei DSS wird, sofern ein verknüpfter Vertrag im Status „Wartet auf Bestätigung" ist, die bestehende Umschlag-ID automatisch storniert und eine neue DSS-Umschlag-ID erzeugt. Der Unterzeichner erhält daraufhin die aktualisierten Dokumente per E-Mail zur Unterschrift. Nach erfolgreicher Unterschrift wird wie bisher das FI-System informiert. Bei der Methode „Druck" druckt der Händler die neu erzeugten Dokumente manuell aus und lässt sie vom Kunden unterschreiben. Bei „OnPremise" wird das neu erzeugte Dokument geöffnet, der Kunde scannt den QR-Code mit seinem Gerät und unterschreibt. Die alten Dokumente mit den fehlerhaften Daten werden archiviert.
+
+**Weitere Korrekturen**
+
+Behoben wurde ein Fehler in der Kundenverwaltung, bei dem beim Aktualisieren eines Geschäftskunden fälschlicherweise die Fehlermeldung „Authentifizierung verboten" erschien. Ebenfalls korrigiert wurde, dass der Abbrechen-Dialog auf der Kundenansicht auch nach dem Abbrechen weiterhin angezeigt wurde.

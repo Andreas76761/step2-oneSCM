@@ -1,0 +1,29 @@
+# Batch 741 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Altteilesteuer: Berechnungslogik und Anzeige**
+
+Die Altteilesteuer ist die Steuer, die für Ersatzteile an Händler gezahlt wird, die keine Tochtergesellschaften der Mercedes-Benz AG sind. Die Berechnung basiert auf der Schnittstellendatei i156, die aus S3/AWS importiert wird. Aus dieser Datei wird zunächst die Fahrgestellnummer (FIN/VIN) aus Satzart RC10, Position 241-254, ermittelt. Anschließend wird die Vega-Händlernummer aus Satzart RC20, Position 17-21, gelesen und über die GSSN+-API geprüft. Ein Vega-Händler gilt als gültig, wenn im Feld „distributionLevels" der Eintrag „RETAILER" enthalten ist und das Feld „affiliate" den Wert „false" hat. Nur unabhängige Händler sind berücksichtigungsfähig. Wird der Händler validiert, wird der Schadenfall für die Berechnung der Altteilesteuer herangezogen.
+
+Im nächsten Schritt wird geprüft, ob die Teilenummer in RC60, Position 127-128, den Wert „60" enthält. Nur dann wird das Teil für die Altteilesteuer berücksichtigt. Danach wird ermittelt, ob ein Kundenanteil vorliegt. Dazu wird die Summe aller Werte aus RC60 ohne Löschkennzeichen (Position 150-161) multipliziert mit RC60 (Position 110-113) gebildet und davon der Wert aus RC20 (Position 150-161) abgezogen. Das Ergebnis wird mit dem Wert 1 verglichen. Ist es kleiner oder gleich 1, gibt es keinen Kundenanteil und die Verarbeitung wird fortgesetzt. Ist es größer als 1, liegt ein Kundenanteil vor und der Fall wird nicht für die Altteilesteuer berücksichtigt. Der Wert der Altteilesteuer ergibt sich anschließend aus den Datensätzen der Satzart 60, deren Teilenummer „60" enthält, als Nettopreis des Teils multipliziert mit der Menge. Die Daten werden danach in der Anwendung weiterverarbeitet und in der Finanzkontrolle angezeigt: Positionen ohne Löschkennzeichen erscheinen als Gutschrift (CREDIT), Positionen mit Löschkennzeichen als Rechnung (INVOICE).
+
+**Speicherung und Anzeige in der Oberfläche**
+
+Die ermittelten Informationen und Werte werden in die Datei E169OPT übernommen und in der OneSCM-Datenbank gespeichert. Im Admin-Bereich gibt es hierfür die neue Seite „Financial Control". Die Altteilesteuer-Einträge sind dort nach dem Datum gruppiert, an dem die i156 in OneSCM importiert wurde. Beim Öffnen der Seite sind die Tabelle und das Dropdown-Menü für das Importdatum zunächst leer. Das Dropdown enthält anschließend alle Daten, an denen eine i156 importiert wurde, absteigend sortiert, sodass das jüngste Datum oben steht. Wählt der Benutzer ein Datum aus, wird die Tabelle mit den Altteilesteuer-Einträgen dieses Datums befüllt. Die Werkstatt-ID entspricht dem Vega-Händlercode (Satzart 20, Position 17-21), die Schadennummer der i156 entspricht der Vega-Schadennummer (Satzart 10, Position 031-039).
+
+Für die Beträge gilt nach der letzten Aktualisierung: Der Gutschriftsbetrag aus der i156 entspricht dem berechneten Gutschriftswert der Altteilesteuer, der Rechnungsbetrag entspricht dem berechneten Rechnungswert. Gutschriftsbetrag und Rechnungsbetrag der E169 werden jeweils mit 0 angesetzt. Die Prüfung liefert „OK" (grün), wenn die Summe aus Rechnungsbetrag und Gutschriftsbetrag der i156 der Summe aus Gutschriftsbetrag und Rechnungsbetrag der E169 entspricht, andernfalls „Nicht OK" (rot).
+
+Die hier beschriebene Logik betrifft die Berechnung der Altteilesteuer-Positionen aus der i156. Die Ausgabe in der Datei, die an das Finanzsystem übermittelt wird, ist nicht Teil dieser Funktion. Zur Prüfung wird die i156 importiert, die Altteilesteuer nach der beschriebenen Logik berechnet und das Ergebnis mit dem Wert aus Vega verglichen. Stimmen die Ergebnisse überein, ist alles in Ordnung, andernfalls ist die Berechnung zu wiederholen.
+
+**Summe aller Vertragsschäden in der Werkstattrechnungs-Übersicht**
+
+Die Werkstattrechnung umfasst die Kosten, die der MPC zu tragen hat. Die Kosteninformationen werden in VEGA geführt und gelangen größtenteils von dort nach OneSCM. Einige wenige Kosten, die sogenannten Nicht-VEGA-Kosten, werden manuell erfasst. Das Feld „Summe aller Vertragsschäden" unterstützt das Reporting in OneSCM und fasst die gesamten Kosten zusammen, die ein Vertrag verursacht hat.
+
+Ein MPC-Benutzer kann diese Summe für einen bestimmten Vertrag, bezogen auf einen bestimmten Markt und eine FIN, im Bereich der Übersichtsansicht einsehen. Der „aktuelle Kontostand", der auf Vertragsebene oben rechts angezeigt wird, hängt bei seiner Berechnung von diesem Wert ab. Für die Summe werden die Beträge im Feld „Akzeptierter Rechnungsbetrag" addiert. Liegen für den Vertrag keine Schäden vor, wird „0 EUR" angezeigt. Der Wert ist unabhängig davon, ob Schäden vorhanden sind, immer verfügbar und wird aktualisiert, sobald ein neuer Schadeneintrag zum Vertrag hinzukommt. Voraussetzung ist, dass Fahrzeug und Servicevertrag in OneSCM vorhanden sind. Die Gestaltung folgt der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.
+
+Zur Kontrolle sucht man einen beliebigen Vertrag mit oder ohne Kosten, öffnet den Reiter „Payment Details", klickt im Bereich „Invoicing" auf „Workshop Invoice" und prüft anhand der akzeptierten Rechnungsbeträge, ob die Summe korrekt berechnet wurde. Zu beachten ist, dass bei VEGA-Schäden die angezeigten Informationen höchstens eine Woche alt sind, da die i156 einmal wöchentlich oder nach Vorgabe des Architekten erzeugt und verarbeitet wird.
+
+**Übersichtsansicht Kostenmanagement**
+
+Zur allgemeinen Übersichtsansicht des Kostenmanagements liegen keine inhaltlichen Angaben vor. Für das Benutzerhandbuch kann dazu derzeit keine Beschreibung erstellt werden.

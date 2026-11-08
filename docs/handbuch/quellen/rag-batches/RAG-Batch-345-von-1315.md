@@ -1,0 +1,15 @@
+# Batch 345 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 6 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Reporting: Datenaufbereitung für Kosten- und Vertragsdaten
+
+Im Bereich Reporting wurde eine neue ETL-Strecke für Kostendaten (Cost Data Product) aufgebaut. Sie wurde auf der grünen Wiese entwickelt und verarbeitet die Kostenberichte der drei Altsysteme ICON, Asset Global und Sirius. Sobald eine Berichtsdatei im Raw-Bucket bereitsteht, starten die Parse-Glue-Jobs automatisch. Sie bereinigen die Kostenberichte, wenden die erforderlichen Validierungen auf die Berichtsdaten an und schreiben die bereinigten Daten in den passenden Ordner des Trusted-Buckets. Nach erfolgreichem Lauf der Parse-Jobs werden die Quelldateien gelöscht.
+
+Anschließend startet für die jeweiligen Dateien automatisch ein Transform-Glue-Job. Er schreibt die transformierten Daten gemäß der Unified-Data-Model-Spezifikation (UDM) in den Refined-Bucket. Bei der Verarbeitung darf kein Datenverlust hinsichtlich der Anzahl der Datensätze auftreten. Vor dem Schreiben neuer Daten wird das UDM gesichert. Schlägt ein Job fehl, wird das UDM aus dieser Sicherung wiederhergestellt, und bei jedem Fehler eines Jobs erfolgt eine Benachrichtigung.
+
+Auch die Vertragsdaten wurden weiterentwickelt. Zunächst wurde eine ETL-Pipeline für Vertragsdaten eingerichtet. Die bisherigen Transformationsjobs für Verträge führten die Daten mehrerer Berichte zusammen und schrieben sie gebündelt in eine einzige Parquet-Datei an einem einzigen Speicherort (Contract im Unified Data Model). Diese Jobs wurden angepasst: Die Daten werden nun entsprechend ihrer Beziehungen in voneinander unabhängige Parquet-Dateien geschrieben, und zwar im Refined-Bucket gemäß der UDM-Spezifikation. Zusätzlich gibt es einen neuen Glue-Job, der automatisch startet, sobald die Refined-Vertragsdaten aktualisiert wurden. Er schreibt die für das Datenprodukt Base Service Contracts relevanten Felder in einen separaten Ordner im Data-Product-Bucket. Auch hier gelten die Vorgaben: keine Datensatzverluste, Benachrichtigung bei jedem Job-Fehler, Sicherung des UDM vor dem Schreiben neuer Daten und Wiederherstellung aus dieser Sicherung im Fehlerfall.
+
+Als technische Grundlage wurden die Raw-, Trusted- und Refined-S3-Buckets mit einer passenden Ordnerstruktur per Terraform-Skript bereitgestellt.
+
+Zwei ursprünglich geplante Vorhaben wurden nicht umgesetzt und abgebrochen. Sie sahen vor, für die Berichte von Asset Global und Sirius jeweils eine Vorlage zur Erfassung der Metadaten der für das Reporting benötigten Attribute zu erstellen und auszufüllen, einschließlich der Alias-Bezeichnungen der Attribute in den Berichten. Diese Dokumentation steht daher nicht zur Verfügung.

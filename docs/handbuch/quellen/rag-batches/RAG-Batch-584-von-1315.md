@@ -1,0 +1,15 @@
+# Batch 584 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Synchronisation der Daten zwischen oneSCM und CoFiCo**
+
+Bisher gab es keinen automatisierten Abgleich zwischen oneSCM und CoFiCo. Mit dieser Funktion werden die Daten beider Systeme nun bidirektional synchronisiert, sodass beide Systeme einen konsistenten und aktuellen Datenstand führen. Die Funktion gehört zum Bereich Customer & Partner Management.
+
+Für die Synchronisation stellt oneSCM einen neuen Sync-Endpunkt bereit, über den Änderungen aus CoFiCo schrittweise (inkrementell) übernommen werden. Jeder Änderungsdatensatz enthält einen Zeitstempel, der angibt, wann die Änderung erfolgt ist. Dieser Zeitstempel wird mit dem Zeitstempel des entsprechenden Datensatzes in oneSCM verglichen. Ist der Zeitstempel von CoFiCo neuer, wird der oneSCM-Datensatz mit den Daten aus CoFiCo aktualisiert. Ist der Zeitstempel in oneSCM neuer, bleiben die Daten in oneSCM unverändert und der oneSCM-Wert wird per Update an CoFiCo zurückgesendet. Der Endpunkt unterstützt Paginierung: Der erste Aufruf erfolgt mit den gewünschten Abfragekriterien und liefert die erste Ergebnisseite. Stehen weitere Ergebnisse zur Verfügung, werden diese durch Folgeaufrufe seitenweise abgerufen.
+
+Die Synchronisationsanfragen an CoFiCo werden durch einen Batch-Job nach Zeitplan ausgelöst. Der Zeitplan ist konfigurierbar, das Intervall darf jedoch höchstens 24 Stunden betragen. Bei einem 24-Stunden-Intervall läuft der Job nach 00:00 Uhr. Liefert CoFiCo Antworten, die sich auf den Vortag beziehen, kann es erforderlich sein, mehrere Anfragen pro Tag auszulösen. Dafür wird festgehalten, wann der Job zuletzt gelaufen ist, sodass die Anfragen in passende Zeiträume aufgeteilt werden können. Der Batch-Job verarbeitet paginierte Antworten, indem er alle verfügbaren Seiten nacheinander abruft, bis keine weitere Seite mehr geliefert wird.
+
+Zusätzlich gibt es einen Abgleichsprozess für Kundendaten über einen größeren Zeitraum von zwei bis drei Wochen. Dieser nutzt den bestehenden Get-Customer-Endpunkt von CoFiCo und ruft für vorhandene oneSCM-Kunden mehrfach Daten ab, um sie mit den Daten in oneSCM zu vergleichen. Auch hier gilt: Ist der Zeitstempel in oneSCM neuer, wird ein Update mit dem oneSCM-Wert an CoFiCo gesendet. Ist der Zeitstempel in CoFiCo neuer, wird der oneSCM-Datensatz entsprechend aktualisiert.
+
+Voraussetzung für die vollständige Umsetzung und den durchgängigen Test ist, dass CoFiCo zuvor die neue Sync-API bereitstellt und den bestehenden Get-Customer-Endpunkt so anpasst, dass für alle gelieferten Werte Zeitstempel enthalten sind. Als voraussichtlicher Liefertermin von CoFiCo für diese Anpassungen ist der 08.07. genannt.

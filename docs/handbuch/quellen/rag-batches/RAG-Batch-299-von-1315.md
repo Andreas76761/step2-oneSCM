@@ -1,0 +1,19 @@
+# Batch 299 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Reporting: Vorbereitung der Inbetriebnahme neuer Märkte**
+
+Für die geplanten Rollouts der Märkte Tschechien (CZ), Schweiz (CH), Malaysia und Korea wird die Datenbereitstellung aus oneSCM in die Data Foundation vorbereitet. Davon profitieren die Rollout-Märkte sowie die Konsumenten der Datenprodukte in der Zentrale. Nach aktuellem Planungsstand ist der Rollout der genannten Märkte für Februar 2026 vorgesehen. Derzeit liegen die Daten von zwei dieser Märkte bereits in der Data Foundation vor und stammen aus dem Legacy-System. Die beiden anderen Märkte sind noch nicht enthalten.
+
+Alle vier Märkte werden in den gesamten ETL-Prozess einbezogen, beginnend bei den Kafka-Nachrichten in oneSCM bis hin zu den Datenprodukten. Relevant sind die Datenprodukte base_service_contracts, base_sc_costs, base_sc_revenues, base_sc_customer und sc_price_details. Da die Parquet-Datenprodukte künftig eingestellt werden sollen, kommen voraussichtlich nur noch die Iceberg-Datenprodukte in Betracht; das hängt vom Zeitplan für den Start des Iceberg-Sharings ab. Im Data Capture Service sowie in der Verarbeitung des Reporting Service werden alle vier Märkte ergänzt. Für jeden dieser Märkte kommen zudem neue Glue-Transformationsjobs (job_onescm_delta_transform) hinzu. Die Jobs zur Erstellung der Datenprodukte berücksichtigen zusätzlich die beiden neuen Märkte Malaysia und Korea.
+
+Auch in oneSCM selbst sind Anpassungen vorgesehen. Für Malaysia und Korea werden neue Batch-Job-Einträge angelegt, und zwar Delta-, Full- und Bulkload-Jobs. Diese Jobs sind anschließend in der oneSCM-Admin-Konsole verfügbar. Im Datenkatalog werden die erforderlichen Tabellen für die beiden neuen Märkte ergänzt, und die Märkte werden in die Benachrichtigung bei fehlenden Marktdaten („Missed Market Notification“) aufgenommen.
+
+Besondere Aufmerksamkeit gilt den bereits bestehenden Märkten CZ und CH während der Migration. Bis die Migration vollständig abgeschlossen ist, müssen Legacy- und oneSCM-Daten parallel verarbeitet werden. Derzeit erfolgt für die Legacy-Märkte im UDM ein Full Load. Dieser müsste angepasst werden, da sonst Daten aus oneSCM durch das spätere Laden alter Dateien überschrieben würden. Als Alternative wird erwogen, im UDM zwei getrennte Datenbereiche zu führen, einen für Legacy-Daten und einen für oneSCM-Daten. Nach Abschluss der Migration werden die Legacy-Parse- und Transformationsjobs für CZ und CH eingestellt, sodass der Legacy-Pfad vollständig entfällt. Zudem wird geprüft, ob weitere Aufgaben nötig sind, damit der gesamte Prozess funktioniert und der Rückbau des Legacy-Pfads gelingt.
+
+Das Zielbild ist ein durchgängig funktionierender Prozess von der Datenübernahme aus oneSCM bis zur Bereitstellung in den Base-Datenprodukten und im Preis-Datenprodukt. Die Daten der vier Märkte werden so in den Datenprodukten abgebildet, wie sie in oneSCM vorliegen. Für CZ und CH berücksichtigt die Datenbereitstellung bis zum Ende der Migration alle Verträge aus beiden Quellen. Migrierte Legacy-Daten fließen in den oneSCM-Bezugsprozess ein, wobei in jedem Prozesszustand sichergestellt sein muss, dass in den Datenprodukten keine Dubletten entstehen.
+
+**Weitere Änderungen im Bereich Reporting**
+
+Die Retrieval-Lambda im Reporting wurde überarbeitet (Refactoring). Außerdem wurde ein Problem behoben, bei dem Kostendaten im Cost-Datenprodukt nicht vollständig aktualisiert wurden.

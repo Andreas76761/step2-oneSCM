@@ -1,0 +1,15 @@
+# Batch 909 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kampagnen bei der Angebotserstellung über das Baumuster**
+
+Beim Erstellen eines Angebots kann die Vertriebsmitarbeiterin bzw. der Vertriebsmitarbeiter den Vorgang mit einem Identifikator starten. Neben Fahrgestellnummer, Auftragsnummer oder Deal-ID ist dies auch das Baumuster (Model Code). Wird ein gültiges Baumuster eingegeben, ruft das System den Vehicle Microservice auf. Dieser validiert das Modell und liefert die passenden Fahrzeuge bzw. Produkte zurück. Aus diesen Ergebnissen wählt der Benutzer ein Produkt aus und setzt die Konfiguration fort. Die Funktion gilt für alle Divisionen, alle Kundentypen und alle Vertriebskanäle. Vorgesehen ist sie für die Rollen Dealer, Dealer+, MO und MPC bzw. für neu definierte Rollen.
+
+Ziel ist, dass die Produktkonfiguration unabhängig vom verwendeten Identifikator einheitlich funktioniert. Auch bei einem Angebot, das über das Baumuster begonnen wurde, soll der Endkunde eine Preisinformation erhalten, die aktuell gültige Kampagnen berücksichtigt. Der Ablauf über das Baumuster folgt daher derselben Logik wie der Ablauf über Fahrgestellnummer, Auftragsnummer oder Deal-ID.
+
+Nach der Auswahl eines Produkts über das Baumuster können technische Optionen, enthaltene und optionale Deckungen sowie Reifenoptionen konfiguriert werden. Ebenfalls möglich sind die Auswahl und Anzeige von Kampagnen, sofern solche verfügbar sind, sowie die Konfiguration von Händlerrabatten. Nicht möglich sind dagegen Sonderfälle (Special Case) und Massenanlage (Mass Creation). Diese beiden Funktionen stehen nur bei Fahrgestellnummer, Auftragsnummer, Verso-Auftrag und Deal-ID zur Verfügung. Alle übrigen Konfigurationsmöglichkeiten entsprechen denen der anderen Identifikatoren.
+
+Ist die Konfiguration abgeschlossen, erzeugt das System den Zahlungsplan. Dabei wird als Erstzulassungsdatum der aktuelle Tag zugrunde gelegt.
+
+Beim Klick auf „Angebot erstellen“ verlangt das System einen zusätzlichen konkreten Identifikator, also Fahrgestellnummer, Auftragsnummer oder Deal-ID. Wird keiner angegeben, fordert das System zur Eingabe auf. Anschließend prüft es, ob das konfigurierte Produkt und der neu angegebene Identifikator zueinander passen. Sind sie kompatibel, wird das Angebot erfolgreich erstellt. Sind sie nicht kompatibel, wird die Produktkonfiguration verworfen und auf den Ausgangszustand zurückgesetzt. Der Benutzer erhält einen Hinweis, dass die Konfiguration nicht kompatibel ist. Die Validierung des zusätzlich eingegebenen Identifikators erfolgt unverändert wie bisher. Zu beachten ist, dass ein Vertrag auch bei vollständig konfiguriertem Produkt nicht erstellt werden kann, solange kein passender konkreter Identifikator vorliegt.

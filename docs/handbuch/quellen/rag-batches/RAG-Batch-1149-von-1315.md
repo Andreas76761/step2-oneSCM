@@ -1,0 +1,21 @@
+# Batch 1149 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Bearbeitung von Deckungscodes (außer Basisdeckung) in bestehenden Blueprints und Produkten**
+
+Mit dieser Erweiterung können Anwenderinnen und Anwender der MPC HQ Deckungscodes (Coverage Codes) in einem bestehenden Blueprint hinzufügen oder entfernen, mit Ausnahme der Basisdeckung. Die Änderungen lassen sich auch auf ein bereits deaktiviertes Produkt übertragen, sodass das Produkt nach neuen Vorgaben aus dem Blueprint angepasst werden kann.
+
+Der Ablauf beginnt damit, dass ein neuer Deckungscode in den Vega-Codes angelegt wird. Anschließend öffnet man einen bereits erstellten Blueprint und fügt den neuen Deckungscode hinzu. Wird der Blueprint bereits von einem Produkt verwendet, erscheint am Ende des Blueprint-Ergebnisses eine Hinweismeldung. Sie bestätigt die Änderung und weist auf die Auswirkungen auf die zugehörigen Produkte hin. Danach deaktiviert man das Produkt, das diesen Blueprint nutzt.
+
+Öffnet man das deaktivierte Produkt zur Bearbeitung, zeigt das System einmalig ein Banner an, dass der Blueprint aktualisiert wurde. Das Banner erscheint nur beim ersten Bearbeiten. Sobald der Wizard abgeschlossen wurde, wird es für dieses Produkt nicht mehr angezeigt. Im Schritt 4 „Coverages“ des Wizards steht außerdem ein dauerhaftes Banner, das darauf hinweist, dass die verfügbaren Deckungen aus dem Blueprint aktualisiert wurden.
+
+Klickt man dort auf „Edit Coverages“, zeigt das Fenster die geänderten Deckungen aus dem Blueprint. Hinzugefügte und entfernte Deckungen sind dabei optisch klar voneinander unterschieden. Markiert man entfernte Deckungen als „NOT INCLUDED“ und schließt den Wizard ab, erscheinen diese Deckungen bei künftigen Bearbeitungen des Produkts nicht mehr im Fenster. Neu hinzugefügte Deckungscodes bleiben dagegen immer zur Auswahl sichtbar.
+
+Auswirkungen auf Prolongationen hängen davon ab, ob das Produkt mit dem Preis zum Vertragsverkaufsdatum oder zum Prolongationszeitpunkt geführt wird.
+
+Bei Produkten mit Preis zum Vertragsverkaufsdatum werden später hinzugefügte oder entfernte Deckungen für den bestehenden Vertrag ignoriert. Die Kundin oder der Kunde zahlt weiterhin den ursprünglichen Preis für die ursprünglich gekauften Deckungen. Bei entfernten Deckungen ist eine Prolongation weiterhin mit dieser Deckung möglich, auch wenn sie in der neuen Produktversion nicht mehr angeboten wird. Eine neu hinzugefügte optionale Deckung kann nicht nachträglich in den Vertrag aufgenommen werden, da sie zum Verkaufszeitpunkt nicht existierte und keinen Preis hatte. Für immer eingeschlossene Deckungen (Always Included, 100 %) werden die immer eingeschlossenen und optionalen Deckungen inklusive Preisen an Brabus übermittelt.
+
+Bei Produkten mit Preis zum Prolongationszeitpunkt gilt Folgendes: Wird eine immer eingeschlossene Deckung hinzugefügt, zahlt die Kundin oder der Kunde bei der Prolongation einen höheren Preis, weil die neue Basisdeckung in den aktuellen Preisen berücksichtigt wird, die Deckungen des Vertrags aber nicht erweitert werden. Wird eine immer eingeschlossene Deckung entfernt, fällt der Prolongationspreis niedriger aus, ohne dass die Deckungen des Vertrags reduziert werden. Wird eine optionale Deckung hinzugefügt, kann sie zum aktuellen Preis in den Vertrag aufgenommen werden, da zum Prolongationszeitpunkt ein Preis vorliegt. Wird eine optionale Deckung entfernt, obwohl sie im Vertrag enthalten ist, liegt zum Prolongationszeitpunkt kein Preis mehr vor. In diesem Fall greift eine Fallback-Logik, die den zuletzt verfügbaren Preis dieser Option verwendet. Die Preise werden unter den jeweils beschriebenen Bedingungen an Brabus übermittelt.
+
+Hinweis: Das Vertragsmanagement berücksichtigt diese Änderungen derzeit nicht; hierfür existiert ein Roadmap-Eintrag für Stream 2. Ebenfalls noch zu klären ist der Umgang mit der Vega-Datei bei hinzugefügten oder entfernten Deckungen.

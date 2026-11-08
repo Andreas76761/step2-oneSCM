@@ -1,0 +1,15 @@
+# Batch 1099 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 6 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Contract Generation – Änderungen und Neuerungen**
+
+Für Verträge, die über MBLD angelegt werden, stehen in den Testumgebungen nun im Vertragsmanagement die folgenden Aktionen zur Verfügung: Stornieren, vorzeitige Beendigung, Übertragung, Aussetzen, Reaktivieren (sofern der Vertrag ausgesetzt wurde) sowie Verlängerung.
+
+Bei der Aktivierungsanfrage von MBLD werden sowohl das Datum der Erstzulassung (FRD) als auch ein Vertragsbeginn übermittelt. Bisher wurde die Vertragslaufzeit in oneSCM anhand des von MBLD gelieferten Vertragsbeginns ermittelt. Künftig soll dieser Wert ignoriert werden. Bei Produkten mit FRD-Bezug sowie bei Reifen entspricht der Vertragsbeginn dem FRD. Bei Produkten ohne FRD-Bezug (Contingent) wird weiterhin der übermittelte Vertragsbeginn berücksichtigt. Diese Änderung befindet sich derzeit im BAT-Test, der blockiert ist.
+
+Dokumente für noch nicht aktivierte Verträge lassen sich über die Vertragsdetailseite im Reiter „Communication“, Unterreiter „Documents“, mit der Schaltfläche „Upload“ hochladen. Händler haben zurückgemeldet, dass sich diese Funktion schwer finden lässt. Deshalb wurde die Funktion „Upload Document“ zusätzlich in die Schaltfläche „Status“ auf der Vertragsdetailseite aufgenommen. Von dort aus öffnet sich dasselbe Fenster mit der Auswahl des Typs und dem Dokumenten-Upload. Nach dem Hochladen wird der Benutzer zum Reiter „Communication“ und dort zum Unterreiter „Documents“ weitergeleitet. Zu beachten ist, dass die Schaltfläche „Status“ für Händler bisher nicht sichtbar ist. Als mögliche weitere Funktionen für diese Schaltfläche wurden die Aktualisierung der Fahrzeugdaten (etwa FRD und Kennzeichen) sowie das erneute Auslösen der Signatur angeregt.
+
+Bei der Vertragserstellung durch den Vertrieb werden Produkten mit einer Auto-Apply-Kampagne, die im Gültigkeitszeitraum liegt, die Kampagne automatisch auf den Produktpreis angewendet. Weitere Kampagnen können dann nicht zusätzlich auf dieses Produkt angewendet werden. In diesem Fall wird anstelle von „Manage Campaigns“ nun „Campaigns“ angezeigt, und zwar ausgegraut.
+
+Nicht umgesetzt wurden zwei weitere Vorhaben, die abgebrochen wurden. Zum einen sollte das Impressum für oneSCM und das Customer Account Center aus der GENESIS-API bezogen werden, sodass die Anbindung an die Market Settings und der dortige Upload entfallen wären, was Auswirkungen auf das Vertragsteam gehabt hätte. Zum anderen sollte bei der Massenerstellung von Verträgen in der Druckvorschau des Zahlungsplans ein Tooltip eingeblendet werden. Dieser sollte darauf hinweisen, dass die Planvorschau für ein einzelnes Fahrzeug gilt und sich bei mehreren Fahrzeugen ändern kann, und dass die Mehrwertsteuerbeträge in Sammelrechnungen leicht abweichen können, da für die Rechnungsstellung die Beträge zum Zeitpunkt des Rechnungslaufs im Abrechnungssystem maßgeblich sind.

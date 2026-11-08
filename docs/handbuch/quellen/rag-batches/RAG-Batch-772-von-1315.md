@@ -1,0 +1,23 @@
+# Batch 772 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Externe Vertragsnummer im Vertragsdatenmodell**
+
+Externe Systeme und große Flottenkunden verwenden häufig eigene Kennungen für ihre Serviceverträge und möchten ihre Verträge in oneSCM ausschließlich mit diesen Kennungen finden, sei es über die Benutzeroberfläche oder über die API. Dafür wurde das Vertragsdatenmodell um ein optionales Feld für eine externe Vertragsnummer (External Contract ID) erweitert. Bisher ließen sich Verträge in oneSCM nur über die interne Vertragsreferenznummer identifizieren. Besonders für Mitarbeitende der Market Operations ist das neue Feld hilfreich: Wenn sich ein Flottenkunde nur mit seiner eigenen Vertragsnummer meldet, muss nicht mehr über andere Angaben wie das Kennzeichen nach dem Vertrag gesucht werden.
+
+Die externe Vertragsnummer ist stets optional und gilt für alle Kundentypen. Sie darf 1 bis 36 Zeichen lang sein und besteht aus Buchstaben und Ziffern sowie den Sonderzeichen „+“, „-“ und „/“. Sie muss nicht eindeutig sein, sodass dieselbe Nummer bei mehreren Verträgen vorkommen kann. Im Dokument i155 wird sie nicht aufgeführt. Wird ein Wert eingegeben, der den zulässigen Zeichensatz verletzt oder länger als 36 Zeichen ist, erscheint am Feld eine Standardfehlermeldung, dass das Format nicht akzeptiert wird.
+
+Im Retail-Prozess legen Sie zunächst einen Vertragsvorschlag an und durchlaufen alle Schritte, bis der Vertrag den Status „Waiting for Confirmation“ erreicht. Ab diesem Zeitpunkt wird in der Vertragsdetailansicht bzw. im Reiter „Vertrag“ das Feld „External Contract ID“ angezeigt. Es kann von Benutzern mit den Rollen Dealer, MO, MPC oder Dealer+ bearbeitet werden. Das Feld lässt sich ab „Waiting for Confirmation“ jederzeit ergänzen oder ändern. Bleibt es leer, kann die Vertragsaktivierung dennoch fortgesetzt werden. Ein gespeicherter Wert wird auf den erzeugten Dokumenten (Prolongation) ausgegeben. Wird er später geändert, übernehmen alle danach erzeugten Dokumente den neuen Wert; bereits erzeugte Dokumente enthalten weiterhin den früheren Wert. Die Änderungshistorie wird gemäß den bestehenden Regeln für die Vertragsprotokollierung geführt.
+
+Über die API kann die externe Vertragsnummer von angebundenen Systemen wie MBLD oder Online Sales übermittelt werden. Sie ist ein optionales Feld in den Aufrufen POST /contract/v1/leasing, POST /contract/v1/online-sales und PUT /contract/v1/leasing; der übermittelte Wert wird gespeichert und dauerhaft vorgehalten. Der Abruf über GET /contract/v1 kann nach der externen Vertragsnummer filtern, und sie wird, sofern vorhanden, in der Antwort zurückgegeben.
+
+Für die Suche in den Modulen zur Vertragserstellung und Vertragsverwaltung akzeptiert das Feld „Reference Number“ nun auch die externe Vertragsnummer. Gibt es passende Verträge, werden alle Treffer angezeigt, andernfalls erscheint die Meldung „No data to display“.
+
+Beachten Sie bei der Nutzung folgende Hinweise: Da die Nummer nicht eindeutig ist, können mehrere Verträge zu einer Suche passen. Da das Feld optional ist, kann es versehentlich leer bleiben, und Systeme, die später einen Abgleich erwarten, finden einen Vertrag nur, wenn die Nummer auch übermittelt wurde. Wird eine von einem externen System per API angelegte Nummer manuell geändert, kann das anliefernde System den Vertrag unter Umständen nicht mehr finden.
+
+**Vertragsprolongation bei geänderten Deckungen auf Produktebene**
+
+Dieses Vorhaben befindet sich derzeit im Dev Backlog und ist noch nicht umgesetzt. Auf Produktebene können optionale Deckungen (Coverages) hinzugefügt oder entfernt werden, sei es als zu 100 Prozent enthaltene oder als wählbare Option. Änderungen auf Ebene der Produktvorlage wirken sich künftig direkt auf Produkte aus, wodurch Produkte flexibler werden. Diese Änderbarkeit wird im Prozess der langfristigen Prolongation bislang nicht berücksichtigt.
+
+Ziel ist es, geänderte Deckungen in der langfristigen Prolongation angemessen zu behandeln, damit Änderungen auf Produktebene keine unerwünschten Nebeneffekte verursachen. Dabei sollen verschiedene Szenarien betrachtet werden, etwa ob eine Deckung hinzugefügt oder entfernt wurde, ob eine neue Deckung als 100-Prozent-Option oder als optionale Deckung aufgenommen wurde und ob bei der Prolongation die Preise zum Verkaufszeitpunkt oder zum Prolongationszeitpunkt gelten. Verträge prolongieren können MPC-Produktmanager und Market-Operations-Benutzer. Ein konkretes Zielverhalten ist in den vorliegenden Angaben noch nicht beschrieben.

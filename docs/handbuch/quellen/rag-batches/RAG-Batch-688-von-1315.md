@@ -1,0 +1,35 @@
+# Batch 688 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kundendaten in oneSCM: Datenmodell, Validierungen und Ergebnisseite**
+
+Für die Verwaltung von Kunden stellt oneSCM ein Kundendatenmodell bereit, das die Pflichtfelder festlegt, die erforderlich sind, um einen Kunden im System anzulegen und Geschäfte mit ihm abzuwickeln. Datenformate und Validierungen richten sich nach den hinterlegten Vorgaben. Das Anlegen und Ändern von Adresse, Kontakt, Bankdaten und weiteren kundenbezogenen Informationen wird protokolliert, einschließlich des Erstellungszeitpunkts, des Zeitpunkts der letzten Änderung sowie der Benutzer-ID der Person, die den Datensatz angelegt oder geändert hat. Pro Kunde können mehrere Adressen erfasst werden, zum Beispiel eine Rechtsadresse, die Adresse des Kontoinhabers, eine Postadresse und eine Rechnungsadresse. Da oneSCM künftig auch auf Geschäftskunden ausgeweitet werden soll, gibt es Kundentypen für Privatkunden und Geschäftskunden sowie Platzhalter für Identifikatoren von Geschäftskunden, etwa die Umsatzsteuer-ID. Kunden werden mandantenbezogen geführt und dem richtigen Rechtsträger (Legal Entity) zugeordnet.
+
+**Automatischer Statuswechsel**
+
+Der Kundenstatus wird automatisch gepflegt und kann „Temporär“, „Aktiv“ oder „Inaktiv“ lauten. Bei einem neuen Kunden ist der Status während der Vertragserstellung und vor der Vertragsaktivierung „Temporär“. Sobald der Vertrag aktiviert wird, wechselt er auf „Aktiv“. Bei bestehenden Kunden ist der Status „Aktiv“ oder „Inaktiv“.
+
+Ein Kunde ist aktiv, wenn mindestens ein aktiver Servicevertrag existiert. Reaktiviert ein Benutzer zu Anpassungszwecken einen Vertrag, der im Status „Beendet und final abgerechnet“ oder „Vertrag storniert“ ist, setzt das System den Kunden von „Inaktiv“ auf „Aktiv“. Wird für einen inaktiven Bestandskunden ein neuer Servicevertrag angelegt, setzt das System den Kunden nach der Aktivierung dieses Vertrags automatisch auf „Aktiv“. Inaktiv ist ein Kunde, wenn er keine aktiven Verträge hat und sich alle seine Verträge im Status „Beendet und final abgerechnet“ oder „Vertrag storniert“ befinden.
+
+**Automatische Dublettenprüfung**
+
+Die Dublettenprüfung läuft automatisch. In der MVP-Phase werden drei Szenarien unterschieden: das Direktvertriebsmodell, bei dem ein Privatkunde seine Daten selbst in einer kundenorientierten Oberfläche erfasst, die Eingabe durch einen Händler oder Market-Operations-Benutzer sowie die Übernahme der Kundendaten über eine Schnittstelle zwischen oneSCM und MercedesMe. Der Umfang der Prüfung hängt zusätzlich von der Benutzergruppe ab (Market-Operations-Benutzer und Händler oder Privatkunden). Die Hauptidentifikatoren gelten für alle Szenarien: die MercedesME-ID, die private Umsatzsteuer-ID sowie Vorname, Nachname, E-Mail-Adresse und Telefonnummer.
+
+Im Direktvertrieb gibt der Kunde seine Daten selbst ein und muss mindestens einen der Identifikatoren angeben. Ist beispielsweise die eingegebene E-Mail-Adresse bereits bekannt, erhält er entweder den Hinweis „An Account with this E-Mail Address already exists.“ oder er wird zu einer Oberfläche weitergeleitet, in der er sich direkt anmelden kann. Aus Datenschutzgründen werden keine Daten vorausgefüllt, damit niemand mit falsch erlangten Angaben Zugriff auf fremde Daten, etwa Zahlungsdaten, erhält. Möchte ein bereits registrierter Kunde einen weiteren Servicevertrag abschließen, meldet er sich in einer separaten Oberfläche an und setzt den Kaufprozess fort. Zudem wird eine kundenorientierte Oberfläche benötigt, in der der Kunde seine Daten, unter anderem die Zahlungsdaten, ändern kann.
+
+Erfasst ein Market-Operations-Benutzer oder Händler die Daten, erscheint nach der Eingabe in einem Identifikatorfeld ein Pop-up mit passenden Kundendatensätzen. Der Benutzer prüft die Angaben und wählt den richtigen Datensatz aus. Anschließend werden die Datenfelder vorausgefüllt, und der Datensatz wird mit dem Vertragsobjekt verknüpft. Market-Operations-Benutzer sehen die vorhandenen Zahlungsdaten im Kundendatensatz. Für Händler werden Zahlungsdaten anonymisiert, bleiben aber sichtbar, damit sie bei mehreren Einträgen den richtigen auswählen können.
+
+Bei der Schnittstelle zwischen MercedesMe und oneSCM stammen die Daten direkt aus dem MercedesMe-Konto des Nutzers. Der exakte Abgleich erfolgt anhand der Mobilfunknummer oder der MercedesME-ID, die eine E-Mail-Adresse ist. Auf dieser Basis prüft die Datenbank, ob bereits ein Kundendatensatz existiert.
+
+In allen Fällen nutzen die Domänen, die Kundendatensätze erzeugen, Services der Domäne Customer & Partner Management. Bei neuen Kundendatensätzen liefert der Service nach der Anlage die Kundennummer, die im Vertragsobjekt gespeichert wird. Bei bestehenden Datensätzen wird geprüft, ob der Kunde vom FI-System als gelöscht oder gesperrt markiert ist. Ist er als gelöscht markiert, wird der angelegte Kunde als neuer Kunde behandelt, und seine Kundennummer wird im Vertragsobjekt gespeichert. Ist er gesperrt, erscheint die Fehlermeldung „Customer exists in OneSCM with blocked status. Please contact dealership to unblock and proceed further“. Kunden können durch Market Operations oder durch das FI-System gesperrt werden. Der Händler kann den Kunden bearbeiten und bei Bedarf entsperren. Ist der Kunde weder gelöscht noch gesperrt, werden die vorhandenen Kundendaten verwendet, und ein inaktiver Kunde wird nach der Vertragsaktivierung auf „Aktiv“ gesetzt.
+
+**Ergebnisseite**
+
+Ein Market-Operations-Benutzer arbeitet in dem oneSCM-Markt, für den er berechtigt ist. Über das Menü „Customer Data“ (in den Testfällen als Navigationsleiste „Customer Management“ bezeichnet) sieht er alle Kunden seines Marktes in einer Tabelle. Die Tabelle enthält Name, E-Mail-Adresse, Telefonnummer, Partnertyp, Debitorennummer, Status, Stadt, Postleitzahl und eine Aktionsspalte. Die Aktionen werden in einer separaten Anforderung behandelt. In den Testfällen wird der Status als „FI-System Status“ bezeichnet.
+
+Standardmäßig werden 10 Datensätze pro Seite angezeigt. Über ein Auswahlfeld lässt sich die Anzahl auf 20, 30, 40 oder maximal 50 Datensätze erhöhen. Die Anzeige passt sich entsprechend an, sofern im Markt so viele Datensätze vorhanden sind. Über den Seitenbereich der Paginierung wechselt der Benutzer zwischen den Ergebnisseiten. Die Anzahl der Datensätze wird korrekt gezählt und angezeigt.
+
+Standardmäßig sind die Ergebnisse alphabetisch nach der ersten Spalte „Name“ sortiert. Alle Spalten können alphabetisch sortiert werden.
+
+Die Gestaltung muss der Mercedes-Benz Workbench entsprechen und dem vom Kunden freigegebenen UI-Design folgen, wie es im oneSCM-Styleguide festgehalten ist.

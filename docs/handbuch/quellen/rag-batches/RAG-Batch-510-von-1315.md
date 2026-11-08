@@ -1,0 +1,13 @@
+# Batch 510 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Dokumentvorlagen, Kopf- und Fußzeilen sowie statische Inhalte**
+
+Im Bereich Dokumente und Kommunikation stehen Marktvertretern Vorlagen für Kopf- und Fußzeilen zur Verfügung, die den Gestaltungsrichtlinien von Mercedes-Benz entsprechen. Der Styleguide beschreibt verbindliche Elemente des Mercedes-Benz Markendesigns, einschließlich detaillierter Vorgaben zu Abständen und Schriftgrößen. Die Vorlagen können je nach Marktbedarf verwendet und angepasst werden. Nach ihrer Erstellung stehen die Kopf- und Fußzeilen in der Auswahlliste für Vertrag, SEPA und Allgemeine Geschäftsbedingungen zur Verfügung.
+
+Die Kopfzeile enthält den Mercedes-Stern und die Wortmarke „Mercedes-Benz“. Der Stern hat einen Durchmesser von 20 mm, ist mittig positioniert und befindet sich 15 mm vom oberen Rand entfernt. Die Wortmarke wird 151 mm vom linken und 50 mm vom oberen Rand platziert. Der Satzspiegel ist wie folgt festgelegt: oben 15 mm, unten 6,5 mm, links 24 mm und rechts 11,5 mm.
+
+Für die Typografie sind vorrangig die Schriften MB Corpo A und MB Corpo S zu verwenden, da sie fester Bestandteil des Markendesigns sind. Nur wenn dies nicht möglich ist, dienen Arial Regular und Arial Bold als Ersatzschriften. Titel werden in Corpo S Text Bold mit 12 pt gesetzt, Überschriften in Corpo S Text Bold mit 10,5 pt und der Fließtext in Corpo S Text mit 10,5 pt. Die Fußzeile verwendet Corpo S Text mit 7,5 pt. Sie ist zweigeteilt: Links steht ein Platzhaltertext mit den rechtlichen Angaben der Mercedes-Benz AG, etwa Sitz und Registergericht, Aufsichtsrat, Vorstand sowie Steuer- und Umsatzsteuer-Identifikationsnummer, ergänzt um den Markenrechtshinweis. Rechts stehen die Adress- und Kontaktangaben der Mercedes-Benz AG samt Internetadresse.
+
+Darüber hinaus lassen sich statische Inhalte, beispielsweise Allgemeine Geschäftsbedingungen, als eigene Vorlagen anlegen. Diese können ausgewählt und an jede bestehende Vorlage angehängt beziehungsweise mit ihr zusammengeführt werden. So entsteht ein vollständiges Dokument gemäß den Vorgaben des jeweiligen Marktes, etwa ein Vertrag mit angefügten Geschäftsbedingungen sowie Kopf- und Fußzeile. Im Rahmen des MVP gilt dies zunächst für den deutschen Markt in englischer Sprache. Nach dem MVP sollen die Dokumente für jeden Markt in der jeweiligen Landessprache vorliegen und vom Markt entsprechend seinen Vorgaben angepasst werden können.

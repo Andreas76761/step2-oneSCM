@@ -1,0 +1,25 @@
+# Batch 263 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 6 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management: Neuerungen und Korrekturen**
+
+**Scheduler für Batch-Jobs**
+Die Oberfläche des Schedulers für Batch-Jobs wurde überarbeitet. Die Texte sind nun einheitlich ausgerichtet. Die Aktion „+Add Another Cron Expression" wird als eigenständige Aktion mit ausreichend Abstand dargestellt. Außerdem wurde ein Fehler behoben: Wenn ein Job aktiviert wurde, für den noch kein Cron-Scheduler hinterlegt war, trat zuvor ein Fehler auf.
+
+**Anbindung an Nemesis für Revenue-Stammdaten**
+Nemesis ist das System, das zum Monatsende die buchhalterischen Finanzdaten von Serviceverträgen und integrierten Serviceseiten verarbeitet. Der Schwerpunkt liegt auf Berechnungen für die Buchhaltung, etwa Umsatzrealisierung, Vertragsverbindlichkeiten und Rückstellungen. Die neue Schnittstelle wird als Webservice bzw. REST-API bereitgestellt. Nemesis stellt dafür einen Endpunkt zur Verfügung, an den oneSCM die benötigten Daten übermitteln kann. Die API liefert Informationen zu Verträgen, Vertragserlösen, Vertragsforderungen und Kundendaten. Es gibt einen gemeinsamen Endpunkt für alle Mandanten.
+
+Ein Beispiel ist die Aktivierung eines Fahrzeugvertrags. Dabei entsteht im oneSCM-Backend ein Vertragsereignis. Dieses wird per Batch an den Nemesis-Service gesendet, der die Informationen an Nemesis weitergibt, sodass das externe System die Daten zum aktivierten Vertrag erhält.
+
+Revenue-bezogene Informationen werden für jeden angelegten Erlös bereitgestellt. Das gilt sowohl für automatisch erzeugte Erlöse (etwa bei der Vertragsaktivierung oder der monatlichen Rechnungsstellung) als auch für manuell angelegte Erlöse. Die Daten werden als JSON erzeugt und umfassen unter anderem Ländercode, Fahrgestellnummer, VIN, FIN, Servicevertragsnummer, Währung, Gesamtbetrag der Erlöse, Gutschrifts- und Belastungsbeträge samt Datum, Beträge zu Verkaufssubventionen, Zahlungsart, kalkulierten Anfangspreis und monatlichen Preis. Die Zahlungsart richtet sich nach dem Preismodell und dem Zahlungsintervall: Bei Fest- oder variablem Preis gilt der Wert „01“, bei einmaliger Zahlung „02“, bei Stufenpreismodellen „03“. Staffelpreise für die Jahre 2 bis 15 werden nicht übermittelt, da keine Stufenpreise vorliegen. Ausgelöst werden die Ereignisse durch den Revenue-Export (Status „Exported") und durch die Revenue-Rückmeldung (Status „FI Document Created").
+
+**Kampagnenrechnungen**
+Hat ein Vertrag einen Kampagnenrabatt, wird automatisch eine Rechnung erzeugt, mit der die Kostenstelle gutgeschrieben wird. Grundlage sind Vertragsnummer, Rabattbetrag (netto), Vertragsbeginn, Rechnungstyp „CAMP – Sales campaign“, Partnerdaten (SAP-Debitorennummer, nicht für NACOS) sowie die Kostenstelle der Kampagne, jeweils aus dem Vertrag. Das Rechnungsdatum ist das aktuelle Datum. Beginn und Ende des Rechnungszeitraums entsprechen dem Vertragsbeginn. Der Dokumententyp ist „Invoice“, der Status „Accepted“, der Nettobetrag entspricht dem Rabattwert, und die Rechnungsempfängernummer ist die SAP-Debitorennummer. Die Kostenstelleninformationen (VegaID und GSSN-Outlet-ID) stehen in den Vertragsdetails. Daraus wird über die im Partnermanagement gepflegte Zuordnung die SAP-Debitorennummer ermittelt.
+
+Die erzeugte Kampagnenrechnung erscheint im Reiter „Payment“ im Bereich „Financial Flows“. Neben den Kunden- und Werkstattrechnungen gibt es dort einen eigenen Abschnitt „Price Reductions“. Er zeigt die Rechnungen sowie die Summe aller Rechnungen. Zur Tabelle gehören die Anzeige „Displaying x of y records“ und eine Auswahl für die Anzahl der Einträge pro Seite. Die Spalten sind: Flow Type (Sales campaign), Document Type (Invoice bzw. Credit Note), Invoice Date, Invoice Status, Net Amount (Nettobetrag des Rabatts mit Rechnungswährung im Format x.xxx,xx EUR), Invoice Period (Start- und Enddatum des Vertrags im Format dd.MM.yyyy - dd.MM.yyyy), Processing Number, FI-System Transfer Date, FI-System Invoice Number, oneSCM Invoice Number, Invoice Recipient und Actions. Für Rechnungen zu Kampagnenrabatten steht die Aktion „See History“ zur Verfügung, die ein Popup mit dem Verlauf öffnet.
+
+Ein Mitarbeiter der Market Operation kann die Rabattrechnung einer Verkaufskampagne im Bereich „Price Reductions“ einsehen. Die Rechnung hat den Status „Accepted“. Kampagnenrechnungen werden in einem anderen Dateityp exportiert.
+
+**Suche nach Vertragsnummer**
+Auf der Seite „Invoices“ im Admin-Bereich war die Suche nach einer Vertragsnummer zuvor nicht möglich: Es erschien ein Fehlersymbol, und die Schaltfläche „Search“ war deaktiviert. Dieses Problem wurde behoben.

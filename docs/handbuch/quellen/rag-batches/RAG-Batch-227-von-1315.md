@@ -1,0 +1,21 @@
+# Batch 227 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Plausibilitätsprüfung der Export-Rechnungsanzahlen (Revenue Management)**
+
+Im Bereich Admin unter „Financial Control“ steht Benutzern mit der Rolle MPC ein neuer Reiter „Export Counter / Checks“ zur Verfügung. Er beantwortet zwei Fragen, die sich bisher nicht klären ließen: Wie viele Rechnungen werden mit dem nächsten Export je Schnittstelle an NACOS übermittelt, und enthält die Exportdatei tatsächlich alle exportfähigen Rechnungen? Die Seite gliedert sich in einen Bereich für die Suchkriterien und einen Ergebnisbereich.
+
+Als Suchkriterien stehen Dateiname, Schnittstelle, Datum und Prüfergebnis zur Verfügung. Für Schnittstelle und Prüfergebnis werden Auswahllisten mit den in der Datenbank vorhandenen Werten angeboten. Änderungen an den Filterfeldern wirken sich nicht automatisch auf die Ergebnisse aus. Erst ein Klick auf „Search“ zeigt die Treffer zu den gewählten Filtern an. Mit „Reset“ werden alle Filterfelder geleert und die Ergebnisliste entsprechend aktualisiert.
+
+Der Ergebnisbereich listet die Exportdateien für NACOS der Schnittstellen E169, E174 und E167 auf. Zu jeder Datei werden Dateiname, Schnittstelle und Exportdatum (Zeitstempel der Datei) angezeigt. Die Liste ist standardmäßig nach dem Exportdatum sortiert, sodass neue Dateien oben stehen. Zusätzlich erscheint die Anzahl der nach den Regeln der jeweiligen Schnittstelle exportfähigen Rechnungen („Invoices“) sowie die Anzahl der tatsächlich in der Datei exportierten Rechnungen („Exported invoices“). Die Spalte „Check“ zeigt „OK“, wenn beide Anzahlen übereinstimmen und es sich um dieselben Rechnungen handelt, andernfalls „Not OK“. Bei „Not OK“ steht in der Spalte „Action“ die Option „More Details“ bereit. Sie öffnet ein Popup mit Vertragsnummer und Rechnungsnummern der Rechnungen, die in der Exportdatei fehlen oder die zwar enthalten sind, aber nicht als exportfähig gezählt wurden.
+
+Welche Rechnungen als exportfähig gelten, hängt von der Schnittstelle ab. Bei E169 ist eine MPPI-Rechnung exportfähig, wenn ihr Rechnungszeitraum heute oder früher liegt, also wenn sie bei einem jetzigen Lauf des CFDM-Batchjobs von „PLANNED“ nach „ACCEPTED“ wechseln würde. Eine MANU-Rechnung ist exportfähig, wenn sie den Status „ACCEPTED“ hat. Die Zählung erfolgt je Exportdateityp (SG, IF, FEA, EXTSER, EXTSUB und OldPartTax); der Zähler wird nach dem Export des jeweiligen Dateityps individuell zurückgesetzt. Bei E174 sind alle Rechnungen im Status „ACCEPTED“ exportfähig. Bei E167 gilt dasselbe für Rechnungen im Status „ACCEPTED“ von externen Händlern. Für alle drei Schnittstellen wird dabei vorausgesetzt, dass der Vertrag aktiv ist. Bei E169 werden für die Anzahl der exportierten Rechnungen alle Rechnungspositionen gezählt.
+
+**Anpassung des E174-Exports**
+
+Der Export der Schnittstelle E174 wurde in mehreren Punkten angepasst. Der World Manufacturer Code (WHC) wird aus den ersten drei Stellen der Fahrzeug-Identnummer (FIN) abgeleitet. Beträge werden mit einem Komma statt eines Punktes als Dezimaltrennzeichen ausgegeben. Die Materialnummer umfasst 18 Zeichen und setzt sich aus der FIN und einem Leerzeichen zusammen. Der Header-Text richtet sich nach der Rechnungsart und passt in 25 Zeichen: Für Dealer Discount (DD) lautet er „SC Sales Subsidies_MMYY“, für Dealer Commission (SCOM) „SC Sales Commissions_MMYY“, für Campaigns (CAMP) „SC Sales Campaigns_MMYY“ und für After Sales Campaigns (SDAS) „SC AS Subsidies_MMYY“.
+
+**Anpassung des Contract Reviews bei einem Wert von 0**
+
+Ergibt sich nach Abschluss des Contract Reviews ein Betrag von 0,00 Euro, der dem Kunden in Rechnung zu stellen oder gutzuschreiben wäre, wird der Wert nicht zur Rechnungsstellung bzw. Gutschrift an das Revenue Management übermittelt. Der Vertrag wird direkt auf „Closed“ gesetzt, ohne eine Bestätigung des Revenue Managements abzuwarten. Zusätzlich soll der Kunde per E-Mail über das Ergebnis informiert werden; diese Benachrichtigung wird zu einem späteren Zeitpunkt umgesetzt.

@@ -1,0 +1,13 @@
+# Batch 746 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 4 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+In der Detailansicht einer Werkstattrechnung im Bereich Cost Management stehen Ihnen vier Informationen zu einem bestimmten Vertrag und einer bestimmten Fahrzeugidentifikationsnummer (FIN) zur Verfügung: der Kilometerstand, die Einheit des Kilometerstands, der Name des Händlers bzw. der Werkstatt sowie das Reparaturdatum. Damit können Sie sich einen Überblick über den Saldo und die zugehörigen Informationen eines ausgewählten Vertrags verschaffen. Die Daten bilden außerdem die Grundlage für weitere Auswertungen und unterstützen die Sicht der Buchhaltung.
+
+Um die Angaben aufzurufen, öffnen Sie im Cost Management einen bestimmten Vertrag und wechseln zu den Zahlungsdetails. Wählen Sie dort die gewünschte Werkstattrechnungsnummer aus und öffnen Sie die Detailansicht. In den jeweils zugehörigen Bereichen werden der Kilometerstand, die Kilometereinheit, der Händler- bzw. Lieferantenname und das Reparaturdatum angezeigt. Der Kilometerstand wird im Format #.##0 dargestellt. Bei der Einheit gilt eine marktspezifische Regel: Liefert die Quelle den Wert 0, wird Kilometer (km) angezeigt, bei dem Wert 1 werden Meilen angezeigt. Der Händler- bzw. Werkstattname wird aus dem in den Quelldaten enthaltenen Vega-Händlercode über die GSSN-Schnittstelle ermittelt.
+
+Alle Angaben stammen aus der Datei i156. Gestaltung und Darstellung folgen der Mercedes-Benz Workbench sowie dem vom Kunden freigegebenen UI-Design.
+
+Damit die Informationen angezeigt werden können, muss die Datei i156 in AWS verfügbar sein; für den Händlernamen muss zusätzlich die GSSN-Schnittstelle betriebsbereit sein. Die Daten sollen jederzeit abrufbar sein. Bei jedem weiteren Import der Datei i156 werden bereits vorhandene Daten aktualisiert, und beim erstmaligen Import werden neue Daten hinzugefügt.
+
+Bitte beachten Sie folgende Einschränkungen: Die Datei i156 wird einmal pro Woche erzeugt und verarbeitet. Die angezeigten Informationen sind daher mindestens eine Woche alt. Steht die Datei i156 aus irgendeinem Grund nicht zur Verfügung, werden keine aktualisierten Informationen angezeigt. Außerdem dürfen Jobs, die auf gemeinsame Daten zugreifen, nicht gleichzeitig laufen. So kann beispielsweise der Job für die Datei i155 nicht gestartet werden, solange der Import der Datei i156 läuft.

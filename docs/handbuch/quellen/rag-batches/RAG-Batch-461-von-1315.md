@@ -1,0 +1,29 @@
+# Batch 461 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Systeminterne Benachrichtigungen (Notification Center)**
+
+Das System versendet automatisch Benachrichtigungen zu Vorgängen, die Aufmerksamkeit erfordern. Diese können von Market-Operation-Nutzern (MO) geprüft und bearbeitet werden. Der Nutzer, der den jeweiligen Vorgang angelegt hat, erhält dazu keine Benachrichtigung. Ziel ist ein direkter Freigabeprozess auf Basis von Benachrichtigungen zwischen den Nutzern. Erweiterte Funktionen wie Zuweisung und Abschluss des Kreislaufs sind für die Zukunft vorgesehen.
+
+**Glockensymbol und Benachrichtigungsübersicht**
+
+In der Navigationsleiste sehen MO-Nutzer ein Glockensymbol mit der Anzahl offener Benachrichtigungen. Die Anzahl steigt bis 9. Bei mehr als 9 Benachrichtigungen wird "9+" angezeigt. Ein Klick auf die Glocke öffnet rechts das Benachrichtigungscenter, das die Art der Benachrichtigungen zeigt, die bearbeitet werden müssen. Jede Benachrichtigung ist mit der passenden Seite verlinkt, um die Freigabe einfach und klar zu gestalten. Handlungsbedürftige Benachrichtigungen sind mit einem blauen Punkt markiert. Das Center lässt sich über das X schließen, danach kehrt der Nutzer zur vorherigen Seite zurück. Wurde eine Benachrichtigung bereits durch eine Aktion (z. B. Annahme oder Ablehnung) erledigt, wird sie dort nicht mehr angezeigt. Benachrichtigungen bleiben bestehen, bis die zugehörige Aktion durchgeführt wurde.
+
+**Anwendungsfall 1: Manuell erstellte Rechnungen oberhalb eines Schwellenwerts**
+
+Eine Benachrichtigung entsteht, wenn eine Rechnung von einem MO-Nutzer manuell angelegt wurde, sich im Status "Created" befindet (Rechnungstyp MANU) und einen Schwellenwert überschreitet. Der Schwellenwert beträgt derzeit 100 Euro. Das ist zunächst ein Platzhalterwert, der bei Bedarf vom jeweiligen Markt festgelegt werden muss. Der Nutzer, der die Rechnung manuell erstellt hat, darf seine eigene Rechnung nicht freigeben. Berechtigungen verhindern dies.
+
+Liegt genau eine Rechnung zur Freigabe vor, lautet die Meldung "Please approve invoice #Rechnungsnummer" mit einem Link "Go to invoices". Er führt zur Seite der betreffenden Rechnung. Dort stehen Symbole zum Ablehnen und Freigeben zur Verfügung, die beim Darüberfahren einen Tooltip anzeigen. Zusätzlich gibt es einen Link zur Vertragsnummer, der zur entsprechenden Vertragsseite im Contract Management führt. Dieser Link muss auf der bestehenden Rechnungsseite noch ergänzt werden. Mit der Zurück-Schaltfläche gelangt der Nutzer zur vorherigen Seite. Die Benachrichtigung bleibt gültig, solange weder freigegeben noch abgelehnt wurde.
+
+Liegen mehrere Rechnungen zur Freigabe vor, lautet die Meldung "Please approve multiple invoices". Sie verlinkt auf die Rechnungsübersicht. Diese ist bereits gefiltert und zeigt nur Rechnungen, die manuell erstellt wurden, im Status "Created" sind, den Schwellenwert von 100 Euro überschreiten und bei denen noch keine Aktion wie Annahme oder Ablehnung durchgeführt wurde. Rechnungen, die eine Aktion erfordern, sind mit einem blauen Punkt markiert. In der Übersicht stehen für sie nur die Aktionen "View", "Edit" und "History" zur Verfügung. Die Freigabe oder Ablehnung erfolgt auf der Rechnungsseite.
+
+Nach einer Freigabe oder Ablehnung wird die Rechnungshistorie um die durchgeführte Aktion ergänzt. Der blaue Punkt an der Rechnung verschwindet, die Benachrichtigung wird entfernt und die Anzahl am Glockensymbol aktualisiert.
+
+**Anwendungsfall 2: Kampagne mit Karenzzeit bei der Vertragserstellung**
+
+Dieser Fall betrifft Kampagnen, die sich noch in der Karenzzeit (Grace Period) befinden und beim Verkauf eines Servicevertrags in der Vertragserstellung angeboten werden. Im Ablauf der Vertragserstellung startet der Nutzer einen neuen Vertrag und wählt den gewünschten Ablauf (Available Chassis Number, Build to Stock oder Not Available Chassis Number). Anschließend füllt er die Pflichtfelder der Fahrzeugdaten aus. Das System fragt in der Vertragskalkulation Fahrzeuginformationen und passende Produkte ab und zeigt Fahrzeugdaten sowie verfügbare Produkte mit Preisen und Beschreibung an. Der Nutzer wählt ein Produkt und konfiguriert Laufzeit, Jahreslaufleistung und Zahlungsintervall. Danach aktiviert er unter dem Zahlungsintervall den Link für den Händlerrabatt und wählt einen Händlerrabatt aus. Sind keine Marktkampagnen angewendet, werden alle Kampagnen mit verfügbarer Karenzzeit angezeigt. Der Nutzer wählt eine solche Kampagne, trägt in einem Textfeld eine Begründung ein und sendet die Anfrage ab. Das Absenden löst den Benachrichtigungsablauf aus.
+
+Mit dem Absenden wird eine Benachrichtigung an den MPC (die zuständige Marktstelle) gesendet. Dabei werden folgende Daten übermittelt und gespeichert: Händlername, Datum und Uhrzeit des Versands (systemseitig erzeugt), Kampagnenname, Kampagnengültigkeit, Karenzzeit in Tagen, Fahrgestellnummer, Kennzeichen und die vom Händler angegebene Begründung. Der Händler sieht die Info-Meldung, dass die Anfrage übermittelt wurde, die zuständige Marktstelle informiert ist und eine Antwort geben wird.
+
+Der MPC sieht die Benachrichtigung über das Glockensymbol im Benachrichtigungscenter. Ein Klick darauf öffnet ein Pop-up mit allen Details, in dem der MPC die Anfrage freigeben oder ablehnen kann. Bei einer Freigabe erhält der Händler eine neue Benachrichtigung, dass die Karenzzeit-Kampagne für den jeweiligen Vertrag genehmigt wurde. Bei einer Ablehnung erhält er die Benachrichtigung, dass sie nicht genehmigt wurde. In beiden Fällen wird die Vertragserstellung über die Freigabe bzw. Ablehnung informiert. Der gesamte Ablauf folgt dem in den zugehörigen Ablaufdokumenten dargestellten Prozess.

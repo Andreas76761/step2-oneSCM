@@ -1,0 +1,29 @@
+# Batch 1000 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kilometerstand bei der Vertragserstellung**
+
+Bei der Vertragserstellung wird der aktuelle Kilometerstand eines Fahrzeugs automatisch ermittelt, sobald diese Information benötigt wird. Bisher musste der Kilometerstand manuell eingegeben werden oder wurde nur auf ausdrückliche Anforderung aus MIC abgerufen. Nachfolgende Prozesse, die auf dem Kilometerstand beruhen, können dadurch zügiger fortgesetzt werden.
+
+Ist das Feld „Kilometerstand“ erforderlich, geht das System in drei Stufen vor. Zunächst wird über die Fahrzeugverwaltung die MIC-Schnittstelle aufgerufen und der Kilometerstand zur eingegebenen Fahrgestellnummer angefragt. Liefert dies kein Ergebnis, wird die Warranty-and-Goodwill-Schnittstelle mit derselben Fahrgestellnummer abgefragt. Steht auch darüber kein Wert zur Verfügung, wird die manuelle Eingabe freigeschaltet. Der vom Kunden angegebene Wert wird dann als gültig übernommen, da es keine andere Möglichkeit gibt, den aktuellen Kilometerstand zu bestätigen.
+
+Wird ein Vertrag angelegt und die Fahrgestellnummer eingegeben, ruft das System den Kilometerstand also direkt ab. Wird der Wert manuell erfasst und ist er kleiner als der zuvor erfasste Wert, erscheint eine Fehlermeldung. Andernfalls kann der Prozess fortgesetzt werden, ohne dass geprüft werden kann, ob der eingegebene Wert tatsächlich zutrifft.
+
+**Vertragserstellung über die Deal-ID**
+
+Hinweis: Diese Anforderung wurde abgebrochen und ist daher nicht umgesetzt worden. Die folgende Beschreibung gibt den geplanten, aber nicht realisierten Umfang wieder.
+
+Bisher kann eine Vertragserstellung über die Fahrgestellnummer oder die Bestellnummer angestoßen werden. Geplant war, dass Händler oder die Marktorganisation einen Vertrag für den Endkunden auch anhand der Deal-ID anlegen können, die der Kunde beim Fahrzeugkauf erhält. Der Kunde sollte so durch den Servicevertrag abgesichert sein.
+
+Vorgesehen war folgender Ablauf: Im Menü „Contract Generation“ wird im Bereich „Create Contract“ die Deal-ID eingegeben, eine alphanumerische Zeichenfolge mit zwölf Stellen. Diese wird an die Vertragskalkulation übergeben, die über OTR anhand der Deal-ID Fahrzeuginformationen und Kundendaten abruft. Die Kundendaten sollten erst in einem späteren Programminkrement behandelt werden. Aus der Vertragskalkulation sollte zunächst die Fahrgestellnummer bezogen werden. Ist sie nicht verfügbar, sollte das Baumuster verwendet werden. Ist auch dieses nicht vorhanden, sollte die Meldung „Your identifier did not returned any results“ erscheinen.
+
+Liegt eine Fahrgestellnummer vor, sollte ein Umschalter „Erstzulassungsdatum nicht verfügbar“ bereitstehen, der die Vertragserstellung für ein Lagerfahrzeug (Build to Stock) auslöst. Ist das Erstzulassungsdatum in der Fahrzeugverwaltung vorhanden, sollte es schreibgeschützt angezeigt werden, andernfalls sollte ein Eingabefeld erscheinen. Der aktuelle Kilometerstand sollte über die oben beschriebene Kilometerstand-Funktion ermittelt werden. Liegt nur das Baumuster vor, sollte der Kilometerstand als „0“ und das Erstzulassungsdatum als „nicht verfügbar“ gelten.
+
+Anschließend sollten Marke, Geschäftsbereich und Verkaufsbezeichnung angezeigt werden. Die Vertragskalkulation sollte dazu passende Produkte und Preise liefern, die ausgewählt und konfiguriert werden. Danach wird die Schaltfläche „Create Contract“ aktiv. Optional können Rabatte oder Karenzzeit-Kampagnen angewendet werden. Mit Klick auf „Create Contract“ werden Kunden- und Zahlungsinformationen erfasst, der Vertrag angelegt, eine Vertragsnummer vergeben und der Kunde erstellt.
+
+In der Übersicht und Bestätigung sollten Erstzulassungsdatum, Kilometerstand und Kennzeichen angezeigt werden, sofern vorhanden, andernfalls der Hinweis „Will be updated“. Bei der Bestätigung öffnet sich ein Dialog, in dem der Händler den gewünschten DSS-Ablauf für die Unterschrift auswählt (Print & Sign in einem künftigen Programminkrement). Der Vertrag wird auf „Confirmed“ gesetzt, und an Kunde und Partner gehen Anfragen zu SAP-Debitorennummer, SEPA-Mandat und CAS-Prüfung. Sobald der Kunde das Fahrzeug zugelassen hat und zum Händler zurückkehrt, ergänzt dieser fehlendes Erstzulassungsdatum und Kennzeichen. Der Vertrag wird auf „Waiting for Activation“ gesetzt.
+
+Danach sollten die Daten von Kunde und Partner (SAP-Debitorennummer, SEPA-Mandat, CAS-Prüfung, DSS-Unterschrift) eingehen und automatische Prüfungen laufen. Fallen diese negativ aus, wird der Vorgang an die Marktorganisation gemeldet, die entscheidet, ob fortgefahren oder der Vertrag abgelehnt wird. Sind alle Prüfungen in Ordnung, folgt die Vertragsaktivierung: Es wird eine i155 erzeugt und an Vega gesendet, das Revenue Management wird benachrichtigt und der Kunde informiert. Wurden Erstzulassungsdatum und Kennzeichen vom Händler erfasst, werden sie an die Fahrzeugverwaltung übermittelt.
+
+Für Gestaltung und Grafik sollten die Vorgaben der Mercedes-Benz-Workbench und das vom Kunden freigegebene UI-Design gelten. Händler und Marktorganisation sollten Verträge über die Deal-ID anlegen können und in der Übersicht und Bestätigung eine abweichende Ansicht erhalten, in der Angaben als fehlend gekennzeichnet sind, die wegen fehlender Fahrgestellnummer, fehlendem Erstzulassungsdatum oder Kilometerstand sowie daraus abhängiger Angaben wie geplanter Vertragslaufzeit und Vertragsbeginn nicht erfasst werden können.

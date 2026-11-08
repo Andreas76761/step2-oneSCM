@@ -1,0 +1,17 @@
+# Batch 1240 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Produktkalkulation – Produkt anlegen: Schritt „Configuration 1"**
+
+Nachdem Sie im vorherigen Schritt „Base information" alle Pflichtangaben vollständig erfasst haben, gelangen Sie als MPC-Benutzer in den dritten Schritt des Assistenten, „Configuration 1". Hier sehen Sie die Optionen aus dem im ersten Schritt gewählten Blueprint und legen fest, welche davon für Ihr Produkt zulässig sein sollen. Alle angezeigten Listen werden aus dem ausgewählten Produkt-Blueprint gelesen. Der Wechsel in diesen Schritt ist über die Schaltfläche „Weiter" möglich, sobald diese im vorherigen Schritt aktiv ist.
+
+Die Sales Logic können Sie in diesem Schritt konfigurieren. Beim Sales Level stehen per Dropdown mehrere auswählbare Optionen zur Verfügung: Customer, Retail und Market. Auch der Sales Channel ist ein Dropdown mit Mehrfachauswahl. Zur Wahl stehen Stationary Retail Sales (stand-alone), Direct Online Sales (stand-alone), Leasing, Rental und Finance.
+
+Die Main Coverages werden ausschließlich zur Information angezeigt und können nicht verändert werden. Mögliche Einträge sind Maintenance (MAINTEN P001), General Wear & Tear (WEAR_MAIN P002), Vehicle Wear and Tear (WEAR_VEH P003), Parts Warranty (W_PT P004), Vehicle Warranty (W_VEH P006) und Residual Warranty (W_RESIDUE P007). Ebenfalls nur lesbar ist die Contract Logic, für die der Eintrag „Vehicle Related" vorgesehen ist. Die Pricing Logic wird gleichfalls schreibgeschützt dargestellt. Sie umfasst das Preismodell „Fixed Price" sowie als Aufschlag den „Payment-Dependent Markup".
+
+Konfigurieren können Sie darüber hinaus die Discounts, die Modifications und den Expiry. Bei den Discounts wählen Sie per Dropdown mit Mehrfachauswahl aus Sales, After Sales und Dealer. Bei den Modifications steht ebenfalls eine Mehrfachauswahl zur Verfügung: Contract Change, ShortTerm Extension und Contract Transfer. Beim Expiry ist dagegen nur eine einzelne Option wählbar, nämlich entweder Time oder Time or mileage.
+
+Sobald Sie alle Pflichtfelder ausgefüllt beziehungsweise ausgewählt haben, wird die Schaltfläche „Weiter" aktiviert. Für die Navigation stehen Ihnen in diesem Schritt folgende Aktionen zur Verfügung: Mit „Abbrechen" verlassen Sie den Assistenten und kehren zur Übersicht der Produktliste zurück, ohne dass Änderungen gespeichert werden. Haben Sie in diesem oder im vorherigen Schritt mindestens ein Feld ausgefüllt oder geändert, erscheint zuvor ein Bestätigungsdialog. Bestätigen Sie mit „Ja", werden der Dialog und der Assistent geschlossen und die Änderungen verworfen. Wählen Sie „Nein", wird der Dialog geschlossen und Sie kehren in den Assistenten zurück. Wurde seit der zuletzt gespeicherten Version nichts geändert, wird der Assistent direkt geschlossen.
+
+Mit „Als Entwurf speichern" werden alle Änderungen auf dieser Seite sowie aus vorherigen oder folgenden Schritten gespeichert. Anschließend gelangen Sie zur Produktübersicht, wo das Produkt in der Liste angezeigt wird. Dies ist möglich, sobald alle Pflichtfelder ausgefüllt oder ausgewählt sind. Mit „Zurück" wechseln Sie zum vorherigen Schritt, mit „Weiter" zum nächsten Schritt; in beiden Fällen werden die auf dieser Seite vorgenommenen Änderungen gespeichert.

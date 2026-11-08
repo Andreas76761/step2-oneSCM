@@ -1,0 +1,19 @@
+# Batch 550 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 10 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Customer & Partner Management: Überblick über aktuelle Themen und Vorhaben**
+
+Im Bereich Customer & Partner Management stehen mehrere Vorhaben an, die sowohl die technische Qualität des Systems als auch die Datenpflege und die Unterstützung mehrerer Märkte betreffen.
+
+Ein offenes Vorhaben befasst sich mit der Struktur des Quellcodes. Mehrere Service-Klassen, darunter jene für oneERP, Geschäftskunden, Händler, Privatkunden, Zahlungsdetails und SEPA-Mandate, sind stark gewachsen und lassen sich dadurch schwerer lesen, testen und sicher ändern. Sie sollen in kleinere, klar abgegrenzte Komponenten aufgeteilt werden. Für Anwenderinnen und Anwender ändert sich dadurch nichts: Die bestehende Logik bleibt unverändert, alle vorhandenen Unit- und End-to-End-Tests müssen weiterhin erfolgreich durchlaufen, und die Testabdeckung des überarbeiteten Codes soll mindestens so hoch sein wie zuvor. Ziel ist, Änderungen künftig sicherer und schneller umsetzen zu können und das Fehlerrisiko zu senken.
+
+Ein weiteres offenes Vorhaben betrifft die Protokollierung von Fehlern. Bei der Verwaltung von Kundendaten schlagen Eingabeprüfungen erwartungsgemäß manchmal fehl, etwa bei einer ungültigen Postleitzahl oder einem falschen Telefonformat. Solche Fälle sind erwartbare fachliche Ergebnisse und keine Systemfehler, werden derzeit aber auf demselben Level wie technische Störungen (etwa bei Datenbank, Schnittstellen oder Infrastruktur) als Fehler protokolliert. Künftig sollen gängige Validierungsfehler auf dem Level „warn“ oder „info“ protokolliert werden, während „error“ unerwarteten Fehlern vorbehalten bleibt, die Aufmerksamkeit erfordern. Dadurch lassen sich echte technische Probleme schneller erkennen, und Protokollvolumen sowie Überwachungskosten sinken. Als Erfolgskriterium gilt, dass das Fehlervolumen nach der Einführung messbar zurückgeht. Als Risiko wird genannt, dass relevante Fehler aufgrund der hohen Menge an Fehlermeldungen übersehen werden könnten.
+
+Ebenfalls offen ist die Bereinigung der Inhalte in der Vorlagenverwaltung. Die Standardvorlagen sollen vereinheitlicht werden, da der Inhalt für denselben Anwendungsfall in verschiedenen Umgebungen derzeit nicht übereinstimmt. Weitere Details sind noch nicht beschrieben.
+
+Für den Betrieb in mehreren Märkten sind zwei offene Vorhaben vorgesehen, die Kundenverwaltung mit Mehrmarkt-Setup für marktspezifische Kundenfelder sowie für oneERP. Das System soll es ermöglichen, pro Markt zu konfigurieren, welche Kundendaten in der Anwendung angezeigt werden und wie die Zuordnung für die Synchronisation mit dem Finanzsystem erfolgt. Die Konfiguration kombiniert zwei Arten von Werten: globale Kernwerte, die für nahezu jedes Finanzsystem und jeden Markt gleich sind, und regionale Werte, die sich von Markt zu Markt unterscheiden können. Diese Einrichtung wird für Markteinführungen genutzt, und die Zuordnung kann anhand der definierten Werte an die jeweiligen Besonderheiten angepasst werden.
+
+Abgeschlossen ist die Korrektur, dass die ID der Bankverbindung nicht aus oneERP importiert wurde. Zum Thema „Vertrag mit Kundendaten anlegen und aktivieren, die über die Deal-ID abgerufen werden“ existieren zwei Einträge: einer ist noch offen, der andere wurde geschlossen. Ein Defekt bei den Kundendaten im Zusammenhang mit OTR, bei dem ein bestehender Kunde in oneSCM nicht gefunden wird, befindet sich derzeit in Analyse.
+
+Nicht weiterverfolgt wird die Anforderung, eine USt-IdNr. nur dann an oneERP zu senden, wenn sie validiert ist. Sie sah vor, nicht validierte USt-IdNr. aus Anfragen an oneERP auszuschließen und sie erst nach einem Statuswechsel auf „gültig“ nachträglich zu übermitteln. Dieses Vorhaben wurde abgebrochen.

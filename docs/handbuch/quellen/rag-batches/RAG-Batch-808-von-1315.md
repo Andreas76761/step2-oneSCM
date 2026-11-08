@@ -1,0 +1,25 @@
+# Batch 808 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Langzeitverlängerung mit Kampagne (Contract Management)**
+
+Hinweis: Dieses Feature befindet sich noch in Planung (Status: Offen). Einzelne Punkte, etwa die Übermittlung der Kampagnendetails an die Fakturierung sowie die Darstellung der Kampagne in Übersicht und Angebot, sind noch nicht abschließend geklärt.
+
+Eine Langzeitverlängerung kann auf einen aktiven Vertrag angewendet werden, sofern das Produkt dafür konfiguriert ist. Bisher erhalten Kunden dadurch über einen längeren Zeitraum das gleiche Serviceniveau, indem sie das bestehende Produkt weiterführen oder zusätzliche Leistungen hinzufügen. Künftig sollen Kunden bei der Verlängerung zusätzlich alle Kampagnen nutzen können, die am Tag der Verlängerungsanfrage verfügbar sind. So profitieren sie von Aktionsangeboten, während ihr bestehender Vertrag weiterläuft. Verlängert werden können die Laufzeit und die Laufleistung, außerdem können Leistungen ergänzt werden.
+
+Voraussetzungen für die Verlängerung sind: Der Vertrag muss den Status „Aktiv“ haben, und die Verlängerung darf nur von einem MO- oder MPC-Benutzer durchgeführt werden. Das Produkt muss die Langzeitverlängerung unterstützen und darf kein Kontingentprodukt sein. Die Kampagne muss zum Zeitpunkt der Verlängerungsanfrage verfügbar sein. Außerdem darf nicht bereits eine Verlängerung im Gange sein, bei der noch die DSS-Unterschrift des Kunden aussteht, und der Vertrag darf nicht bereits über die für das Produkt konfigurierte maximale Laufzeit bzw. Laufleistung hinaus verlängert worden sein.
+
+Der Ablauf gestaltet sich wie folgt: Der MO- bzw. MPC-Benutzer meldet sich an und wählt den gewünschten Vertrag aus. Über die Aktionsschaltfläche wählt er „Verlängern“. Auf der sich öffnenden Seite mit den Verlängerungsarten wählt er „Langzeitverlängerung“. Das Startdatum wird automatisch mit dem nächsten Gültigkeitstag vorbelegt, und die Ausgangspreise werden angezeigt. Anschließend wird im Dropdown die gewünschte Laufzeit gewählt. Danach wird die jährliche Laufleistung aktiviert und ein Wert ausgewählt, im Anschluss das Zahlungsintervall. Nach Auswahl des Zahlungsintervalls wird der angezeigte Preis aktualisiert. Für B2C-Verträge wird der Bruttopreis angezeigt, beim Darüberfahren mit der Maus erscheinen Nettopreis und Mehrwertsteuerbetrag. Für B2B-Verträge wird der Nettopreis angezeigt, beim Darüberfahren erscheinen Bruttopreis und Mehrwertsteuerbetrag.
+
+Im Produktbereich sieht der Benutzer die enthaltenen Leistungen, die nur lesbar sind und nicht geändert werden können. Ebenso werden die optionalen Leistungen angezeigt: Bereits enthaltene lassen sich nicht entfernen, zusätzliche optionale Leistungen können hinzugefügt werden, wodurch der Preis aktualisiert wird. Außerdem sieht der Benutzer die verfügbaren Kampagnen und kann genau eine davon auswählen; mehrere Kampagnen gleichzeitig sind nicht möglich. Bei jeder Auswahl wird der Preis neu berechnet.
+
+Sind alle Pflichtfelder ausgefüllt und eine Kampagne gewählt, kann der Benutzer zur Übersicht und Bestätigung weitergehen. Inhalt und Darstellung entsprechen dem bestehenden Verlängerungsprozess. Der MO- bzw. MPC-Benutzer kann das Angebot vor der Bestätigung per E-Mail an den Kunden senden. Wird der Vorgang nicht abgeschlossen, bleiben die Einstellungen gespeichert, sodass der Benutzer bei der nächsten Langzeitverlängerung desselben Vertrags dort weitermachen kann. Mit dem Fortfahren wird der Unterschriftsprozess ausgelöst. Anschließend erscheint die Erfolgsmeldung „Contract Number <Vertragsnummer, z. B. DEPE001A> has been successfully submitted for prolongation“. Die weiteren Operationen entsprechen denen des bestehenden Verlängerungsprozesses.
+
+Sobald der Vertrag unterschrieben ist, werden die Vertragsdaten im Contract Management aktualisiert. Zudem sollen Informationen für die Fakturierung an Revenue übermittelt werden, einschließlich der Kampagnendetails (noch festzulegen).
+
+Ein MO- bzw. MPC-Benutzer kann Angebote zur Langzeitverlängerung über die Schaltfläche „E-Mail senden“ an den Kunden weitergeben und die Langzeitverlängerung für aktive Verträge mit Nicht-Kontingentprodukten durchführen. Mehrere Langzeitverlängerungen sind möglich, solange das System nicht auf die DSS-Unterschrift des Kunden wartet. Kurzzeit- und Langzeitverlängerung lassen sich auf einem Vertrag kombinieren, sofern alle Voraussetzungen erfüllt sind. Pro Langzeitverlängerung kann eine einzelne aktive Kampagne einbezogen werden.
+
+Gestaltung und Grafik richten sich nach den Vorgaben der Mercedes-Benz Workbench UI/UX.
+
+Offen ist noch, ob bei angewendeter Kampagne in der Übersicht ein Rabattlabel angezeigt wird, ob die Übersicht zusätzliche Informationen zur Kampagne enthalten soll und ob das an den Kunden gesendete Angebot Kampagnendetails enthalten muss.

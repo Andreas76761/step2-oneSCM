@@ -1,0 +1,15 @@
+# Batch 175 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 14 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management – Zahlungsbedingung an FI-Systeme, Performance und Dateiverarbeitung**
+
+Gewerbliche Kunden können einen Vertrag künftig per Banküberweisung bezahlen. Diese Zahlungsart steht ausschließlich für Kunden der Kategorien Commercial, Commercial Fleet und Commercial Governmental zur Verfügung. Bei der Erzeugung eines Vertrags wird die gewählte Zahlungsart im Vertrag gespeichert. Auf die Erzeugung des Zahlungsplans hat die Zahlungsart keinen Einfluss, und auch die Rechnungen werden unverändert verarbeitet. Geändert wurde allein der Export: Dieser übermittelt nun die Zahlungsart als Zahlungsbedingung an die FI-Systeme.
+
+Für oneERP gilt folgende Zuordnung: Bei Lastschrift bleibt die Zahlungsbedingung leer (vier Leerzeichen), bei Banküberweisung wird FB07 übermittelt und bei MPay-Kartenzahlung FA01. Für SWT und CoFiCo wird die Zahlungsbedingung im Feld „Payment Term“ des Headers übertragen. Dieses Feld ist derzeit leer und bleibt es auch weiterhin, da hierfür ein neuer Change Request in PI14 vorgesehen ist. Entsprechend bleibt die Zahlungsbedingung bei allen Zahlungsarten leer, nämlich bei Lastschrift, Banküberweisung, MPay-Karte, MPay-UPI und MPay-NetBanking. Die Exporte für oneERP, SWT und CoFiCo wurden gemäß diesen Zuordnungsregeln angepasst.
+
+Zusätzlich wurde die Performance beim Herunterladen großer Dateien verbessert. Der Download einer Datei mit 130 MB dauerte zuvor etwa 2,5 Minuten.
+
+Für die Verarbeitung von I156-Dateien wurde eine Prüfung eingeführt, die Dateien aus einem falschen Markt überspringt. Maßgeblich ist der VEGA-Ländercode im Satztyp 10 (Positionen 1 bis 5). Entspricht er dem Marktcode, gilt der Markt als korrekt, andernfalls als falsch. Die Prüfung wird anhand von I156-Dateien mit Claims und enthaltenen Steuerinformationen validiert, und zwar für vier Fälle: Alle Claims gehören zum richtigen Markt, alle Claims gehören zu einem falschen Markt, es liegt eine Mischung aus Claims des aktuellen und eines anderen Marktes vor, und es existiert ein Claim für den aktuellen Markt, wobei ein Händler im Händlermanagement verfügbar ist.
+
+Außerdem wird die Struktur der Outbound-Invoice-Datei angepasst: Anstelle der Merchant Reference wird die Operation-ID aufgenommen. Die Überprüfung betrifft CoFiCo und die Zahlungsarten Net Banking, UPI und Kreditkarte. Sie erfolgt für MANU-Zahlungen sowohl für Rechnungen als auch für Gutschriften sowie für MPPI-Zahlungen (Einmalzahlung) mit Net Banking und UPI. Voraussetzung für die Tests ist jeweils ein erstellter und aktivierter Vertrag für einen Kunden mit der entsprechenden Zahlungsart. Diese Prüfungen befinden sich derzeit noch in der Review-Phase.

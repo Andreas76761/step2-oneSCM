@@ -1,0 +1,19 @@
+# Batch 727 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 9 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Cost Management: Internationale Werkstattrechnungen**
+
+**Rechnungspositionen bearbeiten**
+
+Benutzer der Rolle Market Operation können eine Rechnungsposition einer internationalen Werkstattrechnung bearbeiten, und zwar in zwei Situationen: während die Werkstattrechnung angelegt wird und wenn sie sich im Bearbeitungsmodus befindet. Die Option „Edit“ finden Sie in der Spalte „Actions“ der jeweiligen Position (Schadencode). Über die drei Punkte in dieser Spalte öffnen Sie eine Liste, in der „Edit“ angeboten wird. Nach der Auswahl öffnet sich das Popup „Edit Invoice Position“. Alle Felder sind aktiviert und mit den gespeicherten Informationen vorbelegt.
+
+Der Coverage Code ist ein Pflichtfeld und wird über ein Dropdown mit allen Coverage Codes des eigenen Marktes ausgewählt. Eine Suchfunktion ist enthalten: Wer beispielsweise „P“ eingibt, erhält alle Coverage Codes, die mit „P“ beginnen. Der Damage Code ist ein Pflicht-Textfeld mit maximal sieben Zeichen. Die VAT Classification ist ein Pflicht-Dropdown mit Einfachauswahl; zur Auswahl stehen die im Tax Management gültigen Steuerklassifizierungen. Die Felder Labor Net Value, Materials Net Value, Sublets Net Value und Dealer Handling Net Value sind optionale Währungsfelder. Total Net Amount und Total Gross Amount sind deaktiviert und werden automatisch berechnet. Der Nettobetrag ergibt sich aus der Summe der vier genannten Nettowerte. Der Bruttobetrag errechnet sich aus dem Nettobetrag zuzüglich Nettobetrag multipliziert mit dem Steuersatz. Der Invoice Position Text ist ein optionales Textfeld, das Sonderzeichen zulässt und auf 240 Zeichen begrenzt ist.
+
+Im Popup stehen die Aktionen „Update“ und „Cancel“ zur Verfügung. „Update“ bleibt ausgegraut, bis alle Pflichtfelder gefüllt sind und mindestens einer der vier Nettowerte (Labor, Materials, Sublets oder Dealer Handling) einen Wert enthält. Nach dem Klick wird das Popup geschlossen und die neuen Positionsdetails erscheinen in der Tabelle der Rechnungspositionen. Die Details der Schadencodes werden aktualisiert und die Beträge der Coverage Codes neu berechnet. „Cancel“ schließt das Popup und verwirft die eingegebenen Daten. Die Gestaltung entspricht der Mercedes-Benz Workbench und dem vom Kunden validierten UI-Design.
+
+**Detailansicht einer internationalen Werkstattrechnung**
+
+Benutzer der Rolle Market Operation können die Details einer manuell angelegten Werkstattrechnung ansehen. Sie erreichen diese über das Admin-Menü, die Seite „International Workshop Invoices“ und dort den Tab „International Claims“. Ein Klick auf die oneSCM-Rechnungsnummer, die als Link dargestellt wird, öffnet die Detailseite.
+
+Die Ansicht zeigt folgende Felder: OneSCM Invoice Number, Processing Number, Financial System Transfer Date, FI System Invoice Number, Workshop Invoice Number, Market, Workshop Invoice Type (WSIN – Workshop financial document), Invoice Date im Format TT.MM.JJJJ (zum Beispiel 16.05.2023), Document Type, Actual Mileage (km), Repair Date im Format TT.MM.JJJJ, Currency, Partner No. (VEGA ID), Chassis Number (FIN/VIN), Contract Number, Total Net Amount und Total Gross Amount. Im Bereich der Rechnungspositionen werden die Coverage Codes und Damage Codes wie auf der Erstellungsseite dargestellt, jedoch ohne die Spalte „Actions“. Über die Schaltfläche „Back“ gelangen Sie zurück zur Seite „International Workshop Invoices“. Die Gestaltung entspricht ebenfalls der Mercedes-Benz Workbench und dem vom Kunden validierten UI-Design.

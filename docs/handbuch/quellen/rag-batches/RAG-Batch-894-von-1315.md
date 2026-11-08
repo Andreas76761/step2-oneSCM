@@ -1,0 +1,19 @@
+# Batch 894 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Deep Link zur Vertragserstellung mit den URL-Parametern „Customer Type“ und „Vehicle Identifier“**
+
+Bisher ist die Vertragserstellung in oneSCM nur über einen allgemeinen Link erreichbar, der auf den Schritt der Produktauswahl führt. Zusätzlich lässt sich dieser Link nun um die URL-Parameter customerType (Kundentyp) und vehicleIdentifier (Fahrzeugkennung) ergänzen. Externe Systeme, zum Beispiel OTR, können so gezielt in den Vertragserstellungsprozess verlinken und Daten vorbelegen. Beide Parameter sind optional und können einzeln oder gemeinsam verwendet werden.
+
+Für den Parameter customerType sind die Werte privateCustomer, commercialCustomer, commercialFleet, privateGovernmental und commercialGovernmental vorgesehen. Für den Parameter vehicleIdentifier werden folgende Kennungstypen unterstützt: Baumuster (Model Code), Vehicle Order Number, Deal Id sowie FIN/VIN. Ein Beispiel für einen Link lautet: .../contract-generation/generate/product-selection?customerType=commercialFleet&vehicleIdentifier=907633.
+
+Beim Aufruf des Links gelangen Sie zum Schritt der Produktauswahl. Wird nur der Kundentyp übergeben, wird ausschließlich dieser vorausgewählt. Wird nur die Fahrzeugkennung übergeben, bleibt die Kundentypauswahl beim Öffnen der Seite im Standardzustand, und das Feld für die Fahrzeugkennung wird mit dem übergebenen Wert gefüllt. Anschließend werden je nach Kennungstyp weitere Fahrzeugdaten angefordert bzw. geladen. Werden beide Parameter übergeben, werden beide Felder entsprechend vorbelegt. Die vorbelegten Felder bleiben jederzeit editierbar. Sie können also beispielsweise ein per Link übergebenes Baumuster 907633 entfernen und stattdessen einen anderen Wert eingeben.
+
+Enthält der Parameter customerType einen nicht unterstützten Wert, wird keine Fehlermeldung angezeigt. Stattdessen wird auf der Seite der Produktauswahl der Standardkundentyp ausgewählt. Der Wert des Parameters vehicleIdentifier wird in jedem Fall in das Feld für die Fahrzeugkennung übernommen. Ist das Format falsch oder kann zur Kennung kein Baumuster, Fahrzeug o. Ä. gefunden werden, erscheinen die üblichen Fehlermeldungen.
+
+Sind Sie beim Klick auf den Link noch nicht in oneSCM angemeldet, werden Sie zunächst zur Anmeldung aufgefordert. Nach erfolgreicher Anmeldung werden Sie zur Vertragserstellung weitergeleitet, und die URL-Parameter werden wie oben beschrieben verarbeitet.
+
+Wenn Sie oneSCM über einen Deep Link aus OTR aufrufen, werden Ihr Zugriff und Ihre Navigation in einer festgelegten Reihenfolge geprüft. Zuerst wird kontrolliert, ob Sie über die erforderlichen Berechtigungen verfügen. Fehlen diese, wird der Zugriff verweigert und eine verständliche Fehlermeldung angezeigt. Verfügen Sie über die Berechtigungen und melden sich zum ersten Mal an, wird die Seite mit den Nutzungsbedingungen angezeigt, die Sie ausdrücklich akzeptieren müssen, um fortzufahren. Haben Sie die Nutzungsbedingungen bereits in einer früheren Sitzung akzeptiert, entfällt dieser Schritt.
+
+Nach erfolgreicher Prüfung werden Sie auf die Seite „Create Proposal“ weitergeleitet. Dort wird der Kundentyp anhand des Deep Links vorbelegt, ersatzweise mit dem Standardwert „Private“, wenn kein Kundentyp übergeben wurde. Ebenfalls vorbelegt wird die Kennung (Identifier), und zwar mit der Deal Id. Sobald der Kundentyp gefüllt und die Kennung vom Frontend validiert wurde, werden über den Vehicle Microservice die Fahrzeuginformationen abgerufen und über den Produktdienst die passenden Produkte ermittelt.

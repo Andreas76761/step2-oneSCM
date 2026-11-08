@@ -1,0 +1,19 @@
+# Batch 892 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Hinweis zur Auswahl:** Das zweite Ticket (Long Term Extension – Tires, Unlimited) hat den Status „Cancelled" und enthält nur leere Vorlagentexte ohne inhaltliche Angaben. Dazu lässt sich kein Handbuchtext formulieren, ohne Inhalte zu erfinden, daher bleibt es unberücksichtigt. Der folgende Text beschreibt das abgeschlossene erste Ticket.
+
+**Prüfung der Produktgrenzen und Ermittlung der Vertragsdaten bei der Aktivierung eines Servicevertrags (Mercedes-Benz Leasing Deutschland)**
+
+Wenn Mercedes-Benz Leasing Deutschland (MBLD) die Aktivierung eines Servicevertrags anfordert, prüft das System zunächst, ob das Fahrzeug die im Produkt festgelegte Altersgrenze einhält. Anschließend ermittelt es die maßgeblichen Vertragsdaten, nämlich Aktivierungsdatum, Vertragsbeginn und geplantes Vertragsende. Dadurch werden nur zulässige Angebote aktiviert, und alle Vertragsdaten richten sich nach der Produktkonfiguration.
+
+Voraussetzung ist, dass ein gültiges MBLD-Servicevertragsangebot existiert, das mit einer Produktkonfiguration verknüpft ist. Die Produktkonfiguration enthält die Laufzeit, die Produktkonfigurationslogik (FRD_RELATED oder NOT_FRD_RELATED) und den Wert vehicleAgeLessThan. Das Angebot enthält das Angebotserstellungsdatum. Die Aktivierungsanfrage wird von MBLD über den EDGE-Service empfangen. Pflichtfelder der Anfrage sind contractStatus, contractNumber, chassisNumber, firstRegDate und licensePlate. Optional kann zusätzlich ein contractStartDate übermittelt werden. Fehlt eines der Pflichtfelder, ist eine Aktivierung nicht möglich.
+
+Zur Prüfung der Produktgrenze berechnet das System das Fahrzeugalter in Tagen als Differenz zwischen dem Angebotserstellungsdatum und dem Datum der Erstzulassung. Dieses Alter wird mit dem Wert vehicleAgeLessThan verglichen. In den Rohdaten ist zusätzlich das maximale Fahrzeugalter beim Vertragsverkauf als weiteres Kriterium markiert. Liegt das Fahrzeugalter innerhalb der Grenze, wird die Aktivierung fortgesetzt. Überschreitet es die Grenze, wird die Aktivierung verhindert.
+
+Die Vertragsdaten hängen von der Produktkonfigurationslogik ab. Bei Produkten mit FRD-Bezug gilt: Wird ein contractStartDate übermittelt, entspricht der Vertragsbeginn diesem Datum. Das geplante Vertragsende ergibt sich aus contractStartDate plus Laufzeit minus einem Tag. Wird kein contractStartDate übermittelt, entspricht der Vertragsbeginn dem FRD, und das geplante Vertragsende ist FRD plus Laufzeit minus einem Tag. Das Aktivierungsdatum ist in beiden Fällen das Datum des Aktivierungsaufrufs.
+
+Bei Produkten ohne FRD-Bezug gilt: Wird ein contractStartDate übermittelt, entspricht der Vertragsbeginn diesem Datum, und das geplante Vertragsende ist contractStartDate plus Laufzeit minus einem Tag. Wird kein contractStartDate übermittelt, entspricht der Vertragsbeginn dem Angebotserstellungsdatum, und das geplante Vertragsende ist Angebotserstellungsdatum plus Laufzeit minus einem Tag. Auch hier ist das Aktivierungsdatum das Datum des Aktivierungsaufrufs.
+
+Überschreitet das Fahrzeugalter die konfigurierte Grenze, wird die Aktivierung nicht verarbeitet, und der Vertrag bleibt in seinem aktuellen Status. An MBLD wird die Fehlermeldung „Difference between First Registration Date and Proposal Creation Date exceeds the product eligibility limit." zurückgegeben. MBLD kann die Aktivierungsanfrage mit korrigierten Daten, zum Beispiel mit einem angepassten Erstzulassungsdatum, erneut einreichen.

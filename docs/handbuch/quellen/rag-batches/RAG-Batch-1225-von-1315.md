@@ -1,0 +1,15 @@
+# Batch 1225 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kostenumverteilung bei Fahrzeugen mit zurückliegender Erstzulassung (Contract Calculation)**
+
+Die Preisberechnung für ein CompleteCare-Produkt (Excellent) geht immer vom Datum der Erstzulassung (FRD) des Fahrzeugs aus. Der Kunde kann den Vertrag jedoch erst bis zu sechs Monate später abschließen und darf deshalb erwarten, dass auch die Zahlungen erst später beginnen. Bisher berücksichtigt der vom System ermittelte Monatspreis nur die vertragliche Gesamtlaufzeit. Das hat zur Folge, dass bereits angefallene Beträge in der ersten Rechnung zu Vertragsbeginn gebündelt in einer hohen Summe eingefordert werden.
+
+Ein Beispiel verdeutlicht dies: Bei einer Vertragslaufzeit von 36 Monaten und einer tatsächlichen Zahlungsdauer von 32 Monaten beträgt der Preis 3.600 EUR, die Monatsrate somit 100 EUR. Die erste Rechnung, die vier Monate nach der Erstzulassung erstellt wird, umfasst dann fünf Monatsraten, also 500 EUR. Die folgenden 31 Rechnungen belaufen sich jeweils auf 100 EUR. Mit der neuen Funktion wird die Monatsrate stattdessen auf Basis der 32 Monate berechnet und beträgt 112,50 EUR. Die erste Rechnung zu Vertragsbeginn lautet dann ebenfalls auf 112,50 EUR, gefolgt von 31 Rechnungen in gleicher Höhe. Auf diese Weise werden die bereits zurückliegenden Zahlungen auf die verbleibende Vertragslaufzeit verteilt, sodass die Kosten gedeckt sind. Voraussetzung ist, dass der Anfragende die Anzahl der vollen Monate vom Zahlungsbeginn bis zum geplanten Vertragsende selbst ermittelt.
+
+Hierfür steht ein neuer, optionaler Anfrageparameter namens „requestedPaymentDuration“ zur Verfügung, den der Anfragende befüllen kann. Er akzeptiert ausschließlich eine ganze Zahl, die der Anzahl voller Monate entspricht. Wird der Parameter nicht angegeben oder entspricht er dem Wert von „requestedTotalDuration“, bleibt er unberücksichtigt, und die Berechnung erfolgt wie bisher.
+
+Weicht „requestedPaymentDuration“ bei einer Einzelpreisanfrage mit den Parametern „requestedTotalDuration“ und „requestedPaymentDuration“ von der Gesamtlaufzeit ab, werden alle Beträge mit einem anderen Zahlungsintervall als „OneTime“ auf Grundlage der „requestedPaymentDuration“ berechnet. Im oben genannten Beispiel werden die Gesamtbeträge des Kunden also durch 32 statt durch 36 Monate geteilt. Das führt zu einem höheren Monatspreis und vermeidet die hohe Rechnung zu Vertragsbeginn.
+
+Fehlt in der Preisanfrage die „requestedTotalDuration“ und wird nur die „requestedPaymentDuration“ übermittelt, liefert der Service wie bisher eine Liste oder Matrix von Preisen zurück. Da keine Gesamtlaufzeit vorgegeben ist, wird die oben beschriebene Berechnung für jeden Preispunkt durchgeführt, dessen Laufzeitdimension größer als die „requestedPaymentDuration“ ist. Alle übrigen Preispunkte liefern den Wert „null“ zurück, da ihre Monatsanzahl kleiner ist als die angefragte Zahlungsdauer.

@@ -1,0 +1,19 @@
+# Batch 1045 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 59 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragserstellung (Contract Generation)**
+
+In der Vertragserstellung wurden zahlreiche Anpassungen und Korrekturen vorgenommen. Einige davon befinden sich bereits im produktiven Einsatz, andere sind abgeschlossen. Dazu zählt unter anderem, dass beim Download aus der Kundenhistorie die Vertrags-, Fahrzeug- und Kundendaten in einer xlsx-Datei bereitgestellt werden. In den Markteinstellungen werden Sprachen nun per Soft Delete entfernt. Außerdem wurde die Produktauswahl und -konfiguration neu gestaltet, einschließlich der ISP-Produktbezeichnungen. Für gewerbliche Flottenkunden stehen branchenbezogene MO-Prüfungen zur Verfügung. Auch die Produktlinie VAN in der Schnittstelle i155 ist im Einsatz.
+
+Die Markteinstellungen wurden in der Benutzeroberfläche so angepasst, dass die Bereiche VAN und PC berücksichtigt werden. Die Inflationsrate lässt sich nun in den Markteinstellungen erfassen. Dazu wird der Inflationswert aus dem Get Available Product Store übernommen und dort gespeichert, wo er benötigt wird. Die Laufzeit eines Vertrags kann angepasst werden, ebenso die Anzahl der Rechnungen. Der Vertragsbeginn wird abhängig davon angepasst, ob ein FRD-Bezug besteht oder nicht. Die Liste der MO-Prüffelder wurde auf der PREPROD-Umgebung geprüft. Der Industry Code wird über i155 für beliebige sowie für nicht relevante Branchen verarbeitet.
+
+Für Kampagnen wurde der Datentyp der Kontonummer im Kampagnen-Entity auf String umgestellt. Die Kampagnen-ID wird bei Kampagnen in der Karenzzeit erst nach der Kampagnenfreigabe gesendet. Die E-Mail-Adresse des Verkäufers im Vertrags-Entity kann nun bis zu 255 Zeichen lang sein. Im Zahlungsplan von MBLD erfolgt keine Neuzuordnung.
+
+Der Übergang eines Vertrags von „Waiting for Confirmation“ zu „Confirmed“ hängt vom Ergebnis der CAS-Prüfung und von der Unterschrift ab. Bei negativer CAS-Prüfung ohne erfasste und validierte Unterschrift bleibt der Antrag im Status „Waiting for Confirmation“. Ist die CAS-Prüfung negativ und die Unterschrift erfasst und validiert, wechselt der Status auf „Waiting for Activation“ oder „Confirmed“. Bei einem Fehlalarm (False Positive) mit erfasster und validierter Unterschrift bleibt der Status „Waiting for Confirmation“. Fällt die CAS-Prüfung positiv aus, wird der Antrag auf „Rejected“ gesetzt.
+
+Die Dokumentensignatur kann erneut ausgelöst und die Kundendaten können aktualisiert werden. Das ist in den Vertragsstatus „Created“, „Waiting for Confirmation“, „Waiting for Activation“ und „Confirmed“ möglich. Im Status „Waiting for Confirmation“ wurde dies für die Signaturmethoden ESignature, Print und DSS berücksichtigt.
+
+Für Sonderfälle gilt: Die Prüfung durch MPC für PC ist für VAN-Sonderfälle nicht möglich, und umgekehrt kann MPC für VAN keine PC-Sonderfälle prüfen. Das Prüffenster für Sonderfälle zeigt Netto- statt Bruttopreise an.
+
+Zusätzlich wurden mehrere Fehler in der Vertragsaktivierung und im Datenversand behoben. Dazu gehören Fälle, in denen die Aktivierung oder Bestätigung eines Vertrags nicht möglich war, unter anderem wenn die DSS-Signatur ausgelöst, die unterschriebenen Dokumente aber manuell hochgeladen wurden. Weitere Korrekturen betreffen eine nicht erzeugte SAP-Debitorennummer, fehlende Contract-Master-Daten bei einigen Verträgen in der Produktivumgebung sowie ein nicht an Nemesis gesendetes Contract-Master-Event.

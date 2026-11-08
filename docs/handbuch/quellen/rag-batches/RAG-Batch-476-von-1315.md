@@ -1,0 +1,17 @@
+# Batch 476 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Header-Vorlagen erstellen (Documents & Communications)
+
+Im Bereich Documents & Communications können Sie Header-Vorlagen anlegen, die anschließend bei der Erstellung von E-Mail-Vorlagen verwendet werden. Um eine Header-Vorlage zu erstellen, melden Sie sich mit Ihren Zugangsdaten an, öffnen den Reiter „Notification“ und wählen dort „Create Templates“ und anschließend „Header“. Sie gelangen auf die Seite zur Erstellung der Vorlage. Dort geben Sie zunächst die Angaben zum Template Setup und zu den Template Details ein und gestalten danach den Inhalt im Designbereich. Header-Vorlagen sind vom Typ STATIC, daher werden keine Druckvariablen benötigt. Nach der Erstellung stehen sie je nach hinterlegten Parametern im Auswahlfeld des WYSIWYG-Editors zur Verfügung.
+
+Im Template Setup sind drei Pflichtfelder auszufüllen. Beim Template Name handelt es sich um ein Texteingabefeld mit höchstens 56 Zeichen, zum Beispiel „Header Corporate“. Der Market wird als Auswahlliste angeboten, richtet sich nach Ihrer Benutzerrolle und ist mit „Germany“ vorbelegt. Das Feld „Valid From“ ist ein Datumsfeld im Format TT.MM.JJJJ und legt fest, ab wann die Vorlage aktiv ist und im Prozess verwendet wird. Es sind nur das aktuelle und zukünftige Datumswerte zulässig, Datumswerte in der Vergangenheit werden nicht akzeptiert. Anhand des Datums werden die Vorlagen in der Auswahlliste in der Reihenfolge des nächstliegenden Datums angezeigt.
+
+Die Template Details enthalten drei optionale Felder. Bei „Division“ steht im MVP-Umfang PC (Passenger Car) zur Auswahl, VAN folgt erst nach dem MVP. Bei „Brand“ ist im MVP-Umfang Mercedes-Benz verfügbar, Smart folgt nach dem MVP. Die Auswahl bei „Language“ richtet sich nach dem Markt und der Benutzerrolle; im MVP steht Englisch zur Verfügung.
+
+Beim Gestalten des Inhalts nutzen Sie den WYSIWYG-Editor. Der Designbereich ist Teil dieses Editors und ermöglicht es Ihnen, Inhalte einzutippen oder Text einzufügen. Der Editor ist gemäß Punkt 5 des MB-Styleguides für E-Mails hinsichtlich der zu verwendenden Schriftart formatiert.
+
+Für die Bearbeitung stehen drei Schaltflächen zur Verfügung. Mit „Save as Draft“ speichern Sie die Vorlage als Entwurf. Dafür muss lediglich das Pflichtfeld „Template Name“ ausgefüllt sein. Der Entwurf wird 30 Tage aufbewahrt und kann in dieser Zeit bearbeitet werden; danach wird er gelöscht. Mit „Publish“ erstellen Sie die Vorlage. Mit „Cancel“ brechen Sie den Vorgang ab. Haben Sie bereits Daten in ein Feld oder in den Design-Editor eingegeben, erscheint zunächst eine Warnung vor Datenverlust. Wählen Sie dort „Cancel“, wird der Dialog geschlossen und Sie bleiben auf der Seite. Wählen Sie „Proceed“, werden die Daten nicht gespeichert und Sie gelangen zur vorherigen Seite. Wurden keine Daten eingegeben, kehren Sie direkt zur vorherigen Seite zurück, entsprechend dem Pfad, über den Sie die Seite aufgerufen haben. Dieses Abbruchverhalten gilt sowohl beim Erstellen als auch beim Bearbeiten einer Vorlage.
+
+Für den Vorlagennamen gilt zudem eine Prüfung auf Sonderzeichen: Erlaubt sind die Zeichen „-“, „_“, „/“ und „+“. Geben Sie andere Sonderzeichen im Feld „Template Name“ ein, erscheint eine Fehlermeldung.

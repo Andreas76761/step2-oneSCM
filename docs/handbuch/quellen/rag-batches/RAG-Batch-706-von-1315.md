@@ -1,0 +1,21 @@
+# Batch 706 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kostenweiterleitung an Lieferanten (Third Party Cost Forwarding – Suppliers)**
+
+Wenn in oneSCM ein Schaden bzw. eine Kostenposition eingeht, wird sie automatisch an den vorgesehenen Empfänger weitergeleitet. Maßgeblich dafür ist die Kostenstelle, die auf Ebene der Deckung (Coverage) hinterlegt ist. Mit dieser Erweiterung werden Kosten korrekt an den jeweils zuständigen Lieferanten weitergeleitet, sofern an der Deckung die Kostenstelle „Supplier" konfiguriert ist.
+
+Bei Schadenmeldungen, die über die Schnittstelle I156 aus Vega eingehen, erkennt oneSCM nun Fälle, in denen der Lieferant die Kosten tragen muss. Die Meldung wird wie bisher importiert, und es entsteht ein Vega-Schadeneintrag mit dem Status „Processed". Beim Einfügen prüft das System anhand der Vertragsnummer, ob die Kostenstelle „Supplier" ist und ob der Schaden für eine Kostenweiterleitung relevant ist. Dadurch werden Schäden entsprechend der jeweiligen Produktdetails korrekt zugeordnet. Anschließend wird im Bereich „Supplier Invoice" automatisch eine neue Rechnung angelegt. Sie hat den Flow-Typ „Cost Forwarding document" und die oneSCM-Rechnungsnummer. Die Processing Number bleibt leer (NULL). Der Dokumenttyp ist „Invoice", der Kundenrechnungstyp „Supplier Charge Invoice". Der Rechnungszeitraum (von und bis) entspricht jeweils dem Reparaturdatum, der Nettobetrag dem Schadenbetrag, und als Rechnungsempfänger wird der Name des Lieferanten eingetragen. Nach der Erstellung erhält die Rechnung automatisch den Status „Accepted". Wird ein Export-Batchjob ausgelöst, wird die akzeptierte Supplier Charge Invoice über Debit-basierte Batchjobs an das FI-System gesendet. Für Deutschland gilt dies nicht.
+
+Geht für Verträge ein Schaden in Papierform ein, legt der Mitarbeiter im Marktbetrieb (MO) die manuelle Werkstattrechnung an den Händler manuell im System an. Nach der Erstellung und Akzeptierung im üblichen Freigabeprozess wird die Rechnung an E167 gesendet, wenn es sich um einen externen Händler handelt; bei internen Händlern verbleibt sie im System. Auch hier prüft das System anhand der Vertragsnummer die Kostenstelle und ermittelt, ob der Schaden für die Kostenweiterleitung relevant ist. Ist die Kostenstelle der Deckung „Supplier", wird automatisch eine SCIN-Rechnung (Supplier Charge Invoice) im Bereich „Supplier Invoice" erzeugt. Sie hat dieselben Eigenschaften wie oben beschrieben, erhält ebenfalls den Status „Accepted" und wird bei einem Export-Batchjob über Debit-basierte Batchjobs an das FI-System übermittelt, wiederum nicht für Deutschland.
+
+Die Kostenereignisse zu diesen Rechnungen werden nicht an Nemesis gesendet.
+
+**Division-Feld bei der Erstellung internationaler Rechnungen über den Admin-Bereich**
+
+Um Rechnungen für Vans und Passenger Cars eindeutig zu unterscheiden, gibt es bei der Erstellung internationaler Rechnungen über den Admin-Bereich das Feld „Division". Es wird von MOs und Administratoren genutzt, dient der korrekten Kategorisierung der Rechnungen und kann zudem als Filter verwendet werden, um Suchergebnisse einzugrenzen.
+
+Der Ablauf ist wie folgt: Der Benutzer gibt die Fahrgestellnummer in das vorgesehene Eingabefeld ein. Daraufhin wird eine Abfrage an das System Vedoc ausgelöst, das Fahrzeugdokumentationssystem von Mercedes-Benz zur Speicherung und Verwaltung von Fahrzeuginformationen. Vedoc liefert die zur Fahrgestellnummer gehörige Division zurück, also die Kategorie oder das Segment des Fahrzeugs, etwa Passenger Cars oder Vans. Mit diesem Wert wird das Feld „Division" in der Benutzeroberfläche automatisch befüllt. Das Feld ist nicht editierbar und kann daher nicht manuell geändert werden. Dies stellt die Datenintegrität und -konsistenz sicher, da die Information direkt aus Vedoc stammt.
+
+Zusätzlich steht „Division" als neues Filterfeld zur Verfügung, mit den möglichen Werten „Passenger Cars" und „Vans". Das Feld wird außerdem als Spalte dargestellt.

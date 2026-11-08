@@ -1,0 +1,41 @@
+# Batch 935 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Hinweis: Das zugrunde liegende Vorhaben hat den Status „Cancelled“. Die beschriebenen Funktionen sind daher nicht als freigegebener Leistungsumfang zu verstehen.
+
+**Massenerstellung von Verträgen für Flottenkunden**
+
+In oneSCM soll es möglich sein, Serviceverträge auch an Flottenkunden zu verkaufen und dabei dasselbe Produkt gleichzeitig für mehrere Fahrzeuge anzubieten (Massenerstellung). Genutzt werden soll die Funktion je nach Rollenkonzept von KAM, MO, MPC und Händlern. Hintergrund ist, dass bisher weder eine Massenerstellung noch ein Vertragskontingent möglich ist. Vorgesehen ist die Massenerstellung für identische Fahrzeuge (gleiche Fahrzeugkonfiguration bzw. SA-Codes) mit FIN/VIN oder Auftragsnummer und mit gleichen Produktkonfigurationen. Sie soll für die Abläufe Fahrgestellnummer/VIN/FIN mit vorhandenem Erstzulassungsdatum, Build to Order und Build to Stock zur Verfügung stehen. Der Baumaster-Ablauf wird nicht unterstützt; dort ist die Schaltfläche zum Hinzufügen mehrerer Fahrzeuge nicht verfügbar. Voraussetzung sind außerdem verfügbare Produkte und Sonderkonfigurationen für Commercial-Fleet-Kunden sowie ein neuer Kundentyp „Commercial Fleet“.
+
+**Fahrzeugdaten erfassen und Produkt konfigurieren**
+
+Im Ablauf von der Vertragserstellung zum Vertragsvorschlag wählt der Nutzer zunächst den Kundentyp „Commercial Fleet“ aus. Optional kann eine Branche angegeben werden (Standard: „Not Relevant“). Anschließend wird eine Kennung wie Auftragsnummer, Fahrgestellnummer, VIN, FIN oder Baumaster eingegeben und um weitere Angaben ergänzt. Danach werden die verfügbaren Produkte abgerufen, das gewünschte Produkt wird ausgewählt und konfiguriert. Preise und Zahlungsplan werden zunächst für ein Fahrzeug angezeigt. Optional können zusätzliche Deckungen sowie Rabatte oder Kampagnen hinzugefügt werden.
+
+Über die neue Schaltfläche „Add Multiple Vehicles“ werden weitere Fahrzeuge hinzugefügt. Auf der Seite „Manage Vehicles“ muss der Nutzer zunächst alle Fehler beheben oder die betroffene Zeile vollständig löschen, bevor er zur Produktkonfiguration zurückkehren kann. Sobald keine Fehler mehr vorliegen, schließt sich die Fahrzeugliste automatisch, und der Nutzer gelangt zur Produktkonfiguration. Dort werden über Stream 1 die Preise für ein Fahrzeug und für die eingegebene Anzahl N von Fahrzeugen abgerufen.
+
+**Produktkonfiguration nach dem Hinzufügen mehrerer Fahrzeuge**
+
+Nach dem Hinzufügen wird die Schaltfläche „Add Multiple Vehicles“ durch „Manage Vehicles“ ersetzt, ergänzt um die Anzahl der hinzugefügten Fahrzeuge. Ein Klick darauf öffnet die Fahrzeugliste erneut, sodass weitere Fahrzeuge hinzugefügt werden können. Angezeigt werden sowohl der Preis für ein Fahrzeug als auch der Gesamtpreis für alle N Fahrzeuge, jeweils entsprechend dem gewählten Zahlungsintervall. Stream 1 liefert die Preise je Fahrzeug, die in BRABUS aufsummiert und in der Oberfläche dargestellt werden. Rabatte, Kampagnen und Provisionen werden je Fahrzeug angewendet und anschließend summiert. Beim Überfahren des Händlerrabatts erscheint der Hinweis „This discount will apply to all vehicles in this group“. Der Zahlungsplan für die Massenfahrzeuge wird von Stream 3 aktualisiert, ein Hinweistext dazu ist in einem Change Request definiert.
+
+Wünscht der Kunde eine Preisübersicht für die Fahrzeugliste, kann der Nutzer sie drucken oder per E-Mail versenden. Beim Druck wird ein Dokument mit den Fahrzeugpreisen angezeigt. Beim E-Mail-Versand gibt der Nutzer die Kundendaten ein, und die E-Mail enthält das Preisdokument als Anhang. Die Vorlagen dafür definiert Stream 4.
+
+Ändert der Nutzer Felder der Produktkonfiguration, werden die Preise für die N Fahrzeuge nicht mehr angezeigt, und „Create Proposal“ wird deaktiviert. Der Nutzer wird darauf hingewiesen, dass er unter „Manage Vehicle“ erneut bestätigen muss, weil die Preise neu berechnet werden müssen. Nach der Bestätigung werden die Validierungsmeldungen wie im vorherigen Ablauf angezeigt, und der Nutzer aktualisiert oder löscht Zeilen. Er kann auf der Seite warten, bis alle Fahrzeuge geladen sind, oder andere Aufgaben erledigen und später über das Glockensymbol fortfahren. Nach Abschluss aller Validierungen kehrt er zur Produktkonfiguration zurück, wo auch der Preis für alle N Fahrzeuge wieder angezeigt wird.
+
+**Vorschlag erstellen und Übersicht**
+
+Die Kundendaten des Flottenkunden werden wie bisher über das Modell für neue bzw. bestehende Kunden erfasst. Danach folgt die Übersichts- und Bestätigungsseite. Dort erhalten alle im Ablauf hinzugefügten Fahrzeuge Verträge im Status „Created“, und jedem Fahrzeug wird eine Referenznummer zugewiesen. Die sonst oben angezeigte Referenznummer eines einzelnen Vertrags entfällt, da es sich um eine Massenanfrage handelt. Produkt und Preise werden für ein Fahrzeug und für N Fahrzeuge dargestellt, der Zahlungsplan wird ebenfalls von Stream 3 aktualisiert.
+
+Unter den Fahrzeuginformationen erscheint ein neues Feld „Group ID“ mit einem fünfstelligen, fortlaufend hochgezählten Wert. Alle bei dieser Anfrage erzeugten Referenznummern werden dieser Gruppe zugeordnet. Angezeigt werden alle in der Massenfahrzeugliste erfassten Angaben (Kennungstyp, Kennung, Erstzulassungsdatum, tatsächlicher Kilometerstand, Kennzeichen), wobei fehlende Werte mit „-“ dargestellt werden. Zusätzlich gibt es die Spalten „Reference Numbers“ und „Contract Start Date“. Das Vertragsstartdatum wird nur gefüllt, wenn ein Erstzulassungsdatum vorliegt (Fahrgestellnummer mit Erstzulassungsdatum), sonst erscheint „-“. Das Bearbeiten ist für Massenfahrzeuge vorerst deaktiviert. Unter den Produktoptionen werden die vier Felder Produkt, Zahlungsoption, Jahreslaufleistung (km) und Vertragslaufzeit aus der Produktkonfiguration angezeigt. Über „Proposal Review“ öffnet sich ein zusammenfassendes Vertragsdokument mit allen Fahrzeugen, Vertragsnummern und Preisen gemäß Stream 4.
+
+**Vertrag bestätigen und Unterschrift**
+
+Der Nutzer wählt die Unterschriftsart (DSS, On-premise oder Druck). Bei DSS erhält der Kunde eine einzige E-Mail mit einer Zusammenfassungsseite für alle Fahrzeuge sowie SEPA und AGB. Mit seiner Unterschrift auf der Zusammenfassungsseite akzeptiert er alle Verträge der Group ID und unterzeichnet die weiteren relevanten Dokumente. Bei den anderen Unterschriftsarten steht entsprechend ein Zusammenfassungsdokument samt weiteren Dokumenten zur Verfügung. Die Erfolgsmeldung beim Versand per DSS sowie die Meldung bei Druck wurden angepasst, weil mehrere Verträge gleichzeitig zur Unterschrift gehen.
+
+Nach erfolgreicher Unterschrift erhält der Kunde eine einzige Bestätigungs-E-Mail mit dem Zusammenfassungsdokument, SEPA, AGB und weiteren Dokumenten. Die E-Mail nennt außerdem die Anzahl der Verträge der Group ID und enthält eine Tabelle aller Fahrzeuge. Die Vorlagen definiert Stream 4.
+
+**Vorschlags- und Vertragsverwaltung**
+
+Nach dem Versand zur Unterschrift wird jeder Vertrag als Einzelvertrag behandelt, und die MO-Prüfungen sowie die Aktivierung folgen dem bestehenden Verhalten der Abläufe Fahrgestellnummer, Build to Stock bzw. Build to Order. Der Zahlungsplan wird entsprechend je Vertrag erzeugt. Nach der letzten Aktivierung oder Ablehnung eines Vertrags der Group ID wird eine einzige Aktivierungs-E-Mail mit einer Tabelle aus Referenznummer und Vertragsstatus je Vertrag versendet. Aktivierte Verträge werden über i155 an Vega gesendet und an das Revenue Management übermittelt.
+
+In der Vorschlagsverwaltung wird in den Vorschlagsdetails eines Massenvertrags das Feld „Group ID“ mit dem bei der Erstellung vergebenen Wert angezeigt. Bei Einzelfahrzeugen steht dort „-“. Unter „More Filters“ gibt es ein neues Textfeld „Group ID“, das alle unter dieser Gruppe angelegten Referenznummern als Liste anzeigt. In der Vertragsverwaltung gilt dasselbe für die Vertragsdetails und die Filter. Unter „Communication → Documents“ wird jeweils die vom Kunden unterzeichnete Zusammenfassungsseite für alle Verträge der Group ID zusammen mit weiteren Dokumenten wie SEPA und AGB angezeigt.

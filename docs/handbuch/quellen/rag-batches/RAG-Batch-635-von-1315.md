@@ -1,0 +1,13 @@
+# Batch 635 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 21 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Kundenstamm- und Partnerverwaltung (Customer & Partner Management)
+
+Bei der Registrierung eines Händlers oder Marktes in der Mapping-Tabelle der Händlerverwaltung ruft das System nun über die GSSN+-Schnittstelle alle erforderlichen Daten zur angegebenen GSSN-ID ab. Die Angaben werden damit bereits während der Registrierung gegen die Schnittstelle validiert.
+
+Neu ist außerdem die Anbindung der SEPA-Lastschriftmandate zwischen oneSCM und oneERP. Ein Lastschriftcode (auch SEPA-ID genannt) ist eine alphanumerische Zeichenfolge, die benötigt wird, um Zahlungen für einen Kauf einzuziehen. Das System benötigt ihn bei der Bestätigung eines Servicevertrags und bei einer Änderung der IBAN, sei es in der Kundenverwaltung oder in der kundenseitigen Oberfläche. Wird eine IBAN gelöscht oder durch eine andere ersetzt, sendet das System ein Update an oneERP mit dem Status „4 – Storniert“.
+
+Sobald eine IBAN erfasst wird, prüft oneSCM, ob für diese IBAN bereits ein Lastschriftcode in der oneSCM-Datenbank vorhanden ist. Ist dies der Fall, werden die Details an den jeweiligen Ablauf weitergegeben, also an die Vertragserstellung, die Kundenverwaltung oder die kundenseitige Oberfläche. Ist kein Code vorhanden, ruft das System die SEPA-Schnittstelle auf und prüft in der Antwort, ob ein Lastschriftcode existiert und ob das Mandat für wiederkehrende Nutzung vorliegt. Sind diese Bedingungen nicht erfüllt, sendet das System eine Anfrage an die SEPA-Schnittstelle, um einen neuen Lastschriftcode anzulegen, entnimmt den erzeugten Code aus der Antwort und speichert ihn. Anschließend wird in einem ersten Aufruf ein PDF-Dokument an die Attach-Schnittstelle übermittelt. In einem zweiten Aufruf wird der Lastschriftcode als Verknüpfung zu diesem PDF gesendet. Das PDF dient als Nachweis der Zustimmung des Kunden zum Einzug von Zahlungen und erfüllt die Anforderungen für das Anlegen eines SEPA-Mandats in oneERP. Zusätzlich gleicht das System die Daten aus oneSCM mit den empfangenen SEPA-Informationen ab und aktualisiert bei Abweichungen den SEPA-Endpunkt über die Customer-API. Ein Batch-Job, der einmal pro Woche läuft, ist Teil des Ablaufs (Stand 12. September 2024).
+
+In der Kundenverwaltung wurde zudem die Anzeige in der Kundenvorschau korrigiert: Die zuletzt von Händlern angelegten Verträge werden für Benutzer der Rolle MO nun in der Vorschau der Kundenverwaltung angezeigt.

@@ -1,0 +1,19 @@
+# Batch 747 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Anzeige von Vertrags-, Kontostands- und Rechnungsdaten aus der Schnittstelle i156 im Bereich Cost Management**
+
+Im Bereich Cost Management werden Daten aus der Schnittstellendatei i156 direkt in der Benutzeroberfläche dargestellt. Diese Funktionen sind neu und waren zuvor nicht vorhanden. Sie richten sich an MPC-Nutzer und gestalten sich nach den Vorgaben der Mercedes-Benz Workbench sowie nach dem vom Kunden freigegebenen UI-Design.
+
+Die Vertragsnummer wird auf der linken Seite angezeigt, und zwar auf allen Seiten der Payments Details, also auf den Unterseiten „Payment Details“ und „Payment Summary“. So können Sie die Vertragsnummer jederzeit einsehen und bei Bedarf für spätere Suchen kopieren. Die Angabe stammt aus der Datei i156 (Satzart 20, Coverage-Stelle 110 bis 124).
+
+Der aktuelle Kontostand („Current Account Balance“) wird im Header oben rechts auf allen Seiten des Contract Managements angezeigt, bezogen auf eine Vertragsnummer und die zugehörige FIN. Damit haben Sie den Kontostatus dauerhaft im Blick, unter anderem auf den Seiten „Workshop Invoice Details“ und „Workshop Invoice Summary“, und können bei Bedarf Maßnahmen ergreifen. Der Betrag wird im Format „#.##0,00 EUR“ dargestellt und farblich gekennzeichnet: Grün bei einem positiven Betrag, Rot bei einem negativen Betrag und Grau bei null. Um die Anzeige zu sehen, rufen Sie das Contract Management auf, suchen einen bestimmten Vertrag und öffnen ihn über die Vertragsnummer.
+
+Der Kontostand berechnet sich aus der Summe der bezahlten Kundenrechnungen und der Summe der erhaltenen Subventionen, abzüglich der Summe aller Vertrags-Claims und abzüglich der Provisionen. Diese Formel wurde am 04.07.2023 angepasst, und zwar beim Anteil der Claims. Die Werte für bezahlte Kundenrechnungen, erhaltene Subventionen und Provisionen werden von Business Stream 3 ermittelt und übermittelt. Bis Stream 3 diese Werte im Rahmen von PI2 bereitstellt, werden sie in der Berechnung mit 0 angesetzt.
+
+Die Rechnungsnummer (Claim Number) wird in der Detailansicht zu einem bestimmten Vertrag und der zugehörigen FIN angezeigt. Sie stammt aus der Datei i156 (RC10, Positionen 31 bis 39). Die Funktion bietet Kunden die Möglichkeit, den Kontostand eines ausgewählten Vertrags einzusehen, bildet die Basis für weiteres Reporting und liefert einen Überblick aus buchhalterischer Sicht. Gutschriften werden in der Detailansicht nicht angezeigt. Um die Rechnungsnummer zu sehen, öffnen Sie im Cost Management einen bestimmten Vertrag, wechseln zu den Payment Details, wählen eine Workshop-Rechnungsnummer aus und gehen in die Detailansicht. Dort steht der Wert im Bereich „Invoice Number“. Ist für einen neuen Vertrag mit FIN in der Anwendung noch keine Rechnungsnummer in der Datei i156 vorhanden, erscheint in jedem Feld der Detailansicht die Meldung „No data“.
+
+Voraussetzung für alle Anzeigen ist, dass die Datei i156 in AWS verfügbar ist und die Daten jederzeit angezeigt werden können. Nach jedem weiteren Import der i156 werden vorhandene Daten aktualisiert; Daten, die erstmals importiert werden, werden neu angelegt.
+
+Beachten Sie folgende Einschränkungen: Die Datei i156 wird einmal pro Woche erzeugt und verarbeitet, daher sind die angezeigten Informationen mindestens eine Woche alt. Steht die i156 aus irgendeinem Grund nicht zur Verfügung, können keine aktualisierten Informationen angezeigt werden. Außerdem dürfen Jobs, die gemeinsame Daten betreffen, nicht gleichzeitig laufen. Während des Imports der i156 kann beispielsweise der Job für die i155 nicht gestartet werden.

@@ -1,0 +1,19 @@
+# Batch 811 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 37 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Release-Hinweise Vertragsmanagement
+
+In diesem Release wurden mehrere Verbesserungen im Vertragsmanagement umgesetzt, die sowohl die Bedienung als auch die Datenweitergabe an angebundene Systeme betreffen.
+
+Funktionen in der Verlängerung und im Vertragsdetail richten sich nun nach der Produktkonfiguration. Zuvor waren Kurzzeit- und Langzeitverlängerung sowie Vertragsübertragung bei aktiven Verträgen unabhängig von der Produktkonfiguration möglich. Jetzt werden die Kurzzeit- und die Langzeitverlängerung in der Verlängerung nur dann angeboten, wenn sie in der Produktkonfiguration ausgewählt wurden. Sind beide Varianten deaktiviert, steht die Option „Verlängerung“ im Aktionsmenü der Vertragsdetailansicht nicht mehr zur Verfügung. Die Vertragsübertragung ist im Aktionsmenü beziehungsweise in der Vertragsdetailansicht nur noch verfügbar, wenn sie im Produkt freigegeben ist. Außerdem lässt sich die Wartezeit für den Übertragungsprozess nun in der Marktkonfiguration einrichten; die Vertragsstornierung wurde ebenfalls an die Marktkonfiguration angepasst.
+
+In der Verlängerung werden Preise jetzt mit einem Tooltip dargestellt. Bei Privatkunden wird der Bruttopreis angezeigt, der Tooltip enthält den Nettopreis und den Mehrwertsteuerbetrag. Bei Geschäftskunden wird der Nettopreis angezeigt, der Tooltip enthält den Bruttopreis und den Mehrwertsteuerbetrag.
+
+Weitere Anpassungen betreffen die Oberfläche: Für Verträge im Status „Ruhend“ heißt die Schaltfläche „Aktivieren“ nun „Reaktivieren“. Beim Ruhendstellen eines Vertrags wird das Vertragsbestätigungsdatum nicht mehr als „-“ angezeigt. Bei der vorzeitigen Vertragsbeendigung erscheint das Feld für den Kilometerstand direkt unter der Vertragsnummer, ohne dass der Vertragseintrag zuvor aufgeklappt werden muss. Im Kundenreiter werden zusätzlich Rechtsform und Namenszusatz angezeigt. Außerdem wurde die Kopfzeile in den Vertragsdetails wieder ergänzt, und die Informationen in den Vertragsdetails der Vertragserstellung wurden aktualisiert.
+
+Mehrere Fehler wurden behoben. Die Schaltfläche „Übernehmen“ beim Händlerrabatt funktioniert wieder korrekt. Das Ändern des einem Vertrag zugeordneten Händlers ist auch nach der Aktivierung wieder möglich. Händler erhalten beim Öffnen eines Vertrags keine Fehlermeldung „Zugriff verweigert“ mehr. Die Benennung der Exportdatei aus dem Vertragsmanagement wurde korrigiert. In der Vertragshistorie wird das Feld „Geändert von“ nun richtig erfasst. Zudem wird für die tatsächliche Vertragsdauer bei Vertragsende nun ein Wert angezeigt.
+
+Auch die Schnittstellen wurden erweitert. Die Vertragsdaten werden nach der Vertragsaktivierung bei allen Änderungen übermittelt, einschließlich aller mit dem Vertrag verbundenen Datenänderungen, etwa zu Vertragslaufzeiten, Vertragsnummer, Fahrzeugdaten, Produkt, Zahlungsintervall, Preisen, Vertragsstatus und Händlerinformationen. In die Kafka-Ereignisse zum Zahlungsplan sowie zum kurzen und langen Zahlungsplan wurde das Feld Produktlinie aufgenommen. Beim Nemesis-Vertragsereignis muss die ZGUID 32 Zeichen umfassen; zudem wurden bestimmte Felder aus der Antwort des Nemesis-Vertrags entfernt. Die Schnittstelle liefert nun auch den Verweis auf den Coverage Code.
+
+Schließlich wurden die deutschen Übersetzungen überarbeitet, und zwar in den Bereichen Vertragsmanagement (Teil 2), Vertragserstellung, Kundenmanagement und Admin-Bereich. Dabei wurden in den deutschen Texten sämtliche Bindestriche entfernt.

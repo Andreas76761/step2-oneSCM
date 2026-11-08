@@ -1,0 +1,21 @@
+# Batch 131 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Hinweis zur Datenlage:** Von den drei Tickets enthält nur eines (Rückbuchung bei weitergeleiteten Werkstattrechnungen und Schadensfällen) verwertbare Inhalte. Die beiden anderen (Transaktionstyp statt Dokumenttyp sowie Multi-Market-Setup) bestehen nur aus unausgefüllten Vorlagentexten. Das erste ist zudem abgebrochen. Ich habe dazu daher keine Funktionsbeschreibung formuliert, um nichts zu erfinden.
+
+**Entwurf für das Benutzerhandbuch**
+
+**Auswirkung einer Rückbuchung auf Kundenrechnungen und Lieferantenrechnungen (CCIN/SCIN)**
+
+Wurde eine Werkstattrechnung (WSIN) oder ein Schadensfall (CLAI) an einen Kunden als CCIN oder an einen Lieferanten als SCIN weitergeleitet und wird die zugrunde liegende Entscheidung später geändert, darf dem Kunden keine Forderung mehr in Rechnung gestellt werden, die nicht mehr gültig ist. Dafür steht im Revenue Management eine Aktion „Reverse" (Rückbuchen) zur Verfügung. Sie wird dem MO bei jeder WSIN und jedem CLAI im Status „Forwarded" angezeigt. Bislang gab es für weitergeleitete Datensätze keine solche Aktion, und eine bereits erzeugte CCIN oder SCIN ließ sich nicht stornieren oder zurücknehmen.
+
+Die Rückbuchung läuft wie bei jeder anderen WSIN oder jedem anderen CLAI ab. Es öffnet sich ein neues Fenster mit dem Dokumenttyp „Credit note" (Gutschrift). Der MO erfasst dort die Daten des Rechnungskopfs und der Rechnungspositionen, anschließend wird eine Gutschriftposition erzeugt. Die ursprüngliche WSIN bzw. der ursprüngliche CLAI behält dabei seinen Status „Forwarded".
+
+Wie sich die Rückbuchung auf die zugehörige CCIN oder SCIN auswirkt, hängt von deren Bearbeitungsstand ab. CCINs erscheinen unter den Kundenrechnungen, SCINs unter den Lieferantenrechnungen. Beide verhalten sich ähnlich wie eine MPPI. Befindet sich die CCIN/SCIN im Status „Created" oder „Accepted", wird sie storniert. Ist sie bereits „Exported", wird eine Gutschrift im Status „Created/Planned" erzeugt, die der MO anschließend manuell freigibt. Hat die CCIN/SCIN den Status „FI_DOCUMENT_CREATED" oder „Paid", wird eine Gutschrift erzeugt, die das System automatisch freigibt.
+
+Die Gutschrift verweist auf die ursprüngliche Rechnung: Ihre Dokumentreferenz enthält die FI-Belegnummer der ursprünglichen CCIN/SCIN. Nach der Rückbuchung ist die Aktion „Reverse" für den betreffenden Datensatz in der Oberfläche deaktiviert, sodass derselbe Schadensfall nicht erneut zurückgebucht werden kann. Die entstandene Gutschrift kann jedoch ihrerseits zurückgebucht werden. So entsteht schrittweise eine Kette aus Rechnung, Gutschrift, Rechnung usw., allerdings nie mehrfach auf demselben Dokument.
+
+Für Änderungen an Schadenscodes gilt: Bei einem abgelehnten Schadenscode wird je nach Rechnungsstatus storniert oder eine Gutschrift erzeugt. Bei einem neuen Schadenscode wird eine neue CCIN/SCIN angelegt. Die Bildung von Teilrechnungen und Teilgutschriften soll über eine gesonderte Logik erfolgen, die zum Zeitpunkt der Ticketbeschreibung noch nicht in diesem Umfang umgesetzt war. Dabei wird der Wert des CLAI mit der Summe aller CCIN/SCIN zu diesem Schadensfall verglichen. Ist die Differenz positiv, wird eine neue Rechnung über den Differenzbetrag erstellt, ist sie negativ, eine Gutschrift über den Differenzbetrag.
+
+Drei Szenarien sind besonders zu beachten. Lehnt der MO den gesamten Betrag einer WSIN oder eines CLAI ab, gelten die oben beschriebenen Schritte der Rückbuchung und der Auswirkung auf CCIN/SCIN. Erhält das System von VEGA eine Aktualisierung zu einem CLAI mit geänderten Schadenscodes, werden CLAI-Betrag und Schadenscodes aktualisiert und die zugehörigen CCIN/SCIN-Beträge entsprechend angepasst. Da hier keine Rückbuchung stattfindet, greifen die Schritte der Rückbuchung nicht. Eine WSIN kann nicht teilweise geändert werden: Jede Änderung erfordert die vollständige Rückbuchung der ursprünglichen WSIN und die Erstellung einer neuen. In diesem Fall gelten die Schritte der Rückbuchung.

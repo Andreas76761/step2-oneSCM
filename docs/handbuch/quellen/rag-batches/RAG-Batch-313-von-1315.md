@@ -1,0 +1,19 @@
+# Batch 313 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 10 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Reporting: Neuerungen im Release**
+
+Die durchgängige Nachverfolgbarkeit des ETL-Workflows (Extract, Transform, Load) wurde umgesetzt. Bisher war die Nachverfolgung nur im ersten Teil des Ablaufs möglich, vom CFT-Upload bis zu den Parse-Jobs. Nun erhält jeder Ausführungszyklus eine eindeutige trace_id, die alle zugehörigen Jobs und Prozesse von Beginn bis Abschluss verbindet. Das verbessert Nachverfolgung, Fehlersuche und Auditierbarkeit der gesamten Datenpipeline.
+
+Die trace_id ist auf drei Ebenen umgesetzt. Bei Daten aus Altsystemen wird sie beim CFT-Dateiupload (Controlled File Transfer) marktspezifisch erzeugt und über alle nachfolgenden AWS-Glue-Transformationsjobs hinweg beibehalten. Im oneSCM-Workflow entsteht sie in der oneSCM-Lambda-Funktion, sobald ein Batch-Trigger den UDM-Prozess startet, und wird bis zu den Delta-Transform-Jobs weitergegeben. Bei Data-Product-Batch-Jobs wird sie beim Aufruf der Lambda-Funktion dp_from_udm festgelegt, die alle nachgelagerten Data-Product-Jobs steuert. Dort wird sie bis zu deren erfolgreichem Abschluss an jeden Job angehängt. Insgesamt erleichtert dies die Überwachung des Datenflusses, das Erkennen von Engpässen sowie die Sicherstellung von Datenintegrität und Compliance über den gesamten Lebenszyklus eines Data Products.
+
+Im DevOps-Bereich entfällt künftig die Notwendigkeit eines Abonnements für E-Mail-Benachrichtigungen. Bisher musste ein Abonnement abgeschlossen werden, um E-Mail-Warnungen zu erhalten. Nun werden Benachrichtigungen für Deployments an die konfigurierte Gruppenverteilerliste (dw_002_SC-Reporting) gesendet, ohne dass ein Abonnement erforderlich ist.
+
+Außerdem wurde die Infrastruktur weiter optimiert. Die bestehende Infrastruktur wird per Infrastructure as Code mit Terraform betrieben. Ziel ist es, die genutzten Ressourcen zu optimieren. Als Einstieg ist ein CI/CD-gestützter Scan vorgesehen, der AWS-Ressourcen (Lambda, S3, Glue, DynamoDB, Lake Formation, IAM, Benutzergruppen) auf ungenutzte oder gering ausgelastete Elemente prüft und automatisch einen Bericht erstellt. Geplant ist, diesen Scan zunächst mit einem Python-Skript auf Basis von boto3 umzusetzen, das einen CSV-Bericht erzeugt, dieses in die CI/CD-Pipeline mit GitHub Actions einzubinden und den Scan täglich, wöchentlich oder monatlich auszuführen. Die Berichte sollen erzeugt und veröffentlicht werden.
+
+Der AWS-Account wurde zudem von Hyperion nach Helios migriert, einschließlich der Netzwerkmigration und aller zugehörigen Konfigurationsanpassungen. Alle Funktionen und Implementierungen sollen nach der Migration wie erwartet weiterlaufen.
+
+Darüber hinaus wurde untersucht, wie partitionierte Tabellen für die Bereitstellung von Data Products im Iceberg-Format genutzt werden können. Betroffen sind die Data Products SC Base Contracts, SC Base Revenue, SC Base Cost bzw. SC Base Van Cost, SC Base Customer, SC Financials und ISP mit den zugehörigen UDMs. Ziel war ein Proof of Concept, der ein klares Verständnis des Umsetzungsansatzes liefert und unabhängig davon gilt, ob es sich um einen Voll- oder einen inkrementellen Ladevorgang handelt. Betrachtet wurden zwei Optionen: die Erzeugung des Partitionsschlüssels mit Terraform (einschließlich der Auswahl der dafür geeigneten Spalten) sowie die Erstellung der Iceberg-Tabellen mit AWS Glue unter Verwendung partitionierter Tabellen.
+
+Zusätzlich wurden zwei Fehlerbehebungen abgeschlossen: Das Laden von CZ-Nemesis-Daten im Reporting ist wieder möglich, und ein Problem bei der Erstellung von Cost Beans wurde behoben.

@@ -1,0 +1,21 @@
+# Batch 507 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 4 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Druckvariablen und Vorlagenverwaltung**
+
+In der Vorlagenverwaltung (Template Management) stehen im Bereich „Print variables" nun alle Druckvariablen zur Verfügung, also Platzhalter bzw. Merge-Felder, die beim Erzeugen eines Dokuments dynamisch mit Daten aus oneSCM befüllt werden und so die Ausgabe personalisieren. Sie lassen sich beim Anlegen von Vorlagen für Verträge, SEPA-Mandate und Benachrichtigungen verwenden. Die Variablen sind in einer Baumstruktur nach Kategorien gegliedert. Dazu gehören beispielsweise Adressdaten (Stadt, Land, Hausnummer, Postleitzahl, Straße, Adresszusatz), Kundendaten (BusinessMe-ID, E-Mail-Adresse, Vorname, Sprache, Nachname, Telefonnummer), Zahlungsdaten (Kontoinhaber, Bankname, BIC, Währung, Lastschriftcode, Zahlungsintervall) sowie Fahrzeugdaten (Marke, Fahrgestellnummer, Division, Erstzulassungsdatum, Kennzeichen, Laufleistung, Verkaufsbezeichnung).
+
+Für die Darstellung der Label-Wert-Paare im fertigen Dokument gelten feste Regeln. Da einige Felder, etwa in der Vertragserstellung, optional sind, kann es vorkommen, dass für einen Platzhalter kein Wert vorliegt. In diesem Fall wird das gesamte Paar aus Bezeichnung und Wert entfernt, und die übrigen Paare rücken nach oben. Sind alle Werte eines Blocks leer, entfällt der komplette Block. Bei zweispaltigen Blöcken werden die verbleibenden Paare möglichst gleichmäßig auf beide Spalten verteilt. Ziel ist es, leere Paare und Blöcke zu entfernen, das Layout an die vorhandenen Daten anzupassen und ein sauberes, kompaktes Druckbild zu erhalten.
+
+**Master-Vorlage für den Servicevertrag nach MB-Richtlinien**
+
+Für Marktvertreter wurde eine Master-Vorlage für die Vertragsaktivierung und das Angebot (Proposal) gemäß dem Mercedes-Benz-Styleguide bereitgestellt. Sie kann je nach Marktbedarf angepasst werden und wird dem Contract-Generation-Service bei der Aktivierung zur Verfügung gestellt. Der Styleguide beschreibt die verbindlichen Elemente des Mercedes-Benz-Markendesigns einschließlich Abständen und Schriftgrößen: Kopfzeile mit Stern-Logo, Wortmarke „Mercedes-Benz", Typografie für Kopfzeile, Titel, Überschriften, Fließtext und Fußzeile, den Satzspiegel (Bereich der Inhaltsdarstellung) sowie die Fußzeile.
+
+Die Vorlage wird in der Vorlagenverwaltung angelegt. Im Template-Setup sind Vorlagenname, Markt, Verwendungszweck (Used For) und Gültig ab (Valid From) Pflichtfelder; im Beispiel sind dies „Contract", „Germany", „Contract Activation" und der 14.08.2023. In den Template-Details sind Servicevertragsprodukt, Division, Marke und Sprache optional. Bleibt ein Feld leer, gilt die Vorlage für alle Ausprägungen. Eine Vorlage ist ab dem Datum „Gültig ab" für alle Angebote bzw. Vertragsaktivierungen im Einsatz. Dabei entspricht der Status „Aktiv" dem Verwendungszweck Vertragsaktivierung und der Status „Erstellt" dem Vertragsangebot. Ist für ein Servicevertragsprodukt, etwa „Excellent", eine eigene Vorlage hinterlegt, hat diese Vorrang; andernfalls wird die Vorlage ohne Produktangabe verwendet.
+
+Es gibt zwei Szenarien. Im ersten ist der Zahler gleich dem Halter; hier genügen die Kundendaten, zusätzliche Felder sind nicht nötig. Im zweiten ist der Zahler nicht der Halter; dann müssen zusätzlich Zahlerdaten und Zahleradresse im Vertrag erscheinen. In beiden Szenarien gilt: Angebot hat den Status „Erstellt", Vertragsaktivierung den Status „Aktiv". Der Status muss in jeder Phase deutlich auf der Vorlage angezeigt werden, damit Angebot und Aktivierung klar unterscheidbar sind. Nur bei Neukunden gilt: Ändert der Kunde etwa das Kennzeichen oder die Zahlungsdaten, wird das Vertragsdokument mit den neuen Daten überschrieben. Abhängig von der Phase wird die jeweils passende Datei an die Vertragserzeugung übergeben.
+
+**Nicht umgesetzte Vorhaben**
+
+Die geplanten Arbeiten für eine statische Vorlage als Fußzeile sowie für eine Master-Kopfzeile nach MB-Richtlinien wurden abgebrochen und nicht umgesetzt.

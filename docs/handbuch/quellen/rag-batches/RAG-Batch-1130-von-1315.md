@@ -1,0 +1,19 @@
+# Batch 1130 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 11 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Marktspezifische Anpassung der Vega Codes**
+
+Die Vega Codes (Coverage Codes und Industry Codes) werden zentral vom HQ definiert und den Märkten als Vorgabe zur Verfügung gestellt. Bisher legte das HQ pro Division und pro Markt, in dem ein Coverage Code verwendbar sein soll, auch die Übersetzungen der Märkte fest. Künftig erfasst das HQ lediglich eine Empfehlung für die Codes. Die einzelnen Märkte ergänzen ihre eigenen, sprachspezifischen Bezeichnungen anschließend selbst in den Market Settings. So erhalten die Märkte die gewünschte Flexibilität, eigene Übersetzungen zu hinterlegen. Die Übermittlung erfolgt unidirektional vom HQ in die Market Settings.
+
+Beim Anlegen eines Coverage Codes legt ein HQ-Administrator in Schritt 1 den Coverage Code bzw. Industry Code an und konfiguriert ihn je Division. In Schritt 2, der Marktspezifität, definiert das HQ die Märkte, in denen der Coverage Code verwendet werden kann. Angezeigt werden dabei die Division sowie der Coverage-Name und die Codes aus Schritt 1, außerdem je Division ein schreibgeschütztes Vorschlagsfeld. Zusätzlich stehen die Auswahlmöglichkeiten „Current and Upcoming Markets“ und „Custom Markets“ zur Verfügung, aus denen die Märkte per Checkbox ausgewählt werden. Sprachfelder oder eine Sprachauswahl gibt es in diesem Schritt nicht mehr. Nach der Bestätigung gelangt das HQ zu Schritt 3, der eine Übersicht und Bestätigung mit einer Zusammenfassung des angelegten Coverage Codes bietet.
+
+Die im HQ erfassten Daten werden anschließend an die Market Settings übergeben, und zwar Markt, Coverage Category, Division, Coverage Name, Coverage Code, Long Description und Family Tag. Benutzer der Market Settings (MPC-Benutzer) sehen diese HQ-Felder ausschließlich lesend und können nur das Feld für die Marktsprache ausfüllen. Die Bezeichnungen der Coverage Codes für die jeweilige Sprache werden aus den Market Settings übernommen. Nach dem Speichern erscheint die Meldung „Settings saved successfully“, und der eingegebene Text bleibt erhalten.
+
+Aktualisiert das HQ einen bestehenden Coverage Code bzw. ein Industry-Feld, wird die Änderung an die Market Settings übermittelt. Alle Aktualisierungen durch das HQ, also Bearbeitungen und Deaktivierungen, sind in den Market Settings sichtbar. Eine bereits gespeicherte lokale Übersetzung bleibt bei einer Änderung des HQ-Namens erhalten. Wird ein Coverage Code im HQ deaktiviert, erscheint er in den Market Settings nicht mehr in der Liste der aktiven Coverage Codes.
+
+Für Sprachen gilt das Prinzip des Soft-Delete: Wird eine Sprache für einen Markt per Soft-Delete entfernt, verschwindet sie aus der aktiven Anzeige der Benutzeroberfläche, ohne dass die Datensätze dauerhaft aus der Datenbank gelöscht werden. Wird die Sprache wiederhergestellt, ist das Eingabefeld wieder sichtbar und enthält die zuvor gespeicherte Übersetzung.
+
+**Fahrzeugsuche nach Division**
+
+Im Bereich der Vertragskalkulation ist die Fahrzeugsuche nach Division getrennt. Benutzer der Divisionen Van sowie Passenger Car können über die FIN/VIN oder die Bestellnummer Marke, Division und Verkaufsbezeichnung eines Fahrzeugs ihrer Division abrufen. Benutzer, die sowohl für Passenger Car als auch für Van berechtigt sind, können diese Angaben über die Bestellnummer für beide Fahrzeugarten abrufen. Sucht ein Van-Benutzer nach einem Passenger Car oder ein Passenger-Benutzer nach einem Van, erscheint eine Validierungsfehlermeldung. Dies gilt für die Suche über die Bestellnummer, den Modellcode und die FIN/VIN.

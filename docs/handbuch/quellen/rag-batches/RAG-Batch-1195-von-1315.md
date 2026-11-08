@@ -1,0 +1,29 @@
+# Batch 1195 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragsbezogene Produkte (nicht FRD-bezogen)**
+
+Bisher unterstützt oneSCM Service-Contract-Produkte, deren Laufzeit immer auf dem Datum der Erstzulassung (First Registration Date, FRD) des versicherten Fahrzeugs beruht. Sämtliche Prüfungen zu Berechtigung, Laufzeit und Ablauf orientieren sich an diesem Datum. Neu hinzu kommt eine zweite Produktkategorie, das sogenannte „Contract Based Product“ (nicht FRD-bezogenes Produkt). Seine Laufzeit beginnt mit dem Kaufdatum des Vertrags bzw. an einem definierten Startdatum und läuft für die gewählte Laufzeit oder Laufleistung. Das Produkt endet, sobald eines der beiden Limits erreicht ist, je nachdem, was zuerst eintritt. Erstzulassung oder Alter des Fahrzeugs haben auf die Preisberechnung keinen Einfluss.
+
+Gegenüber den FRD-bezogenen Produkten gibt es folgende Unterschiede: Die Definition von Blueprint und Produkt umfasst eine von Zeit und Laufleistung abhängige Preismatrix. Die Ablaufkriterien beziehen sich auf Zeit und Laufleistung. Der Produkt- und Preisbereitstellungsservice muss ein geplantes Startdatum als Beginn der Vertragslaufzeit entgegennehmen können, und das geplante Vertragsende wird aus der gewählten Laufzeit bzw. Laufleistung exakt berechnet. Die Prüfungen zur Produktberechtigung und zu den Produktlimits basieren auf dem Fahrzeugalter bzw. der Laufleistung bei Vertragsbeginn und Vertragsende.
+
+Die Preisberechnung funktioniert wie folgt: Ein Kunde besitzt ein 24 Monate altes Fahrzeug und möchte ein Produkt mit 36 Monaten Laufzeit und 30.000 km Laufleistung erwerben. Bei der Vertragserstellung wird eine Anfrage für ein nicht FRD-bezogenes Produkt mit 36 Monaten Laufzeit, einer jährlichen Laufleistung von 30.000 km und dem aktuellen Fahrzeugalter von 24 Monaten gesendet. Im Produktmanagement wird anschließend in der Preismatrix das passende Feld für die gewünschte Laufzeit und die gewünschte jährliche Laufleistung ausgewählt. In der Beispielmatrix steht dort ein Wert von 10.800 €. Der Monatspreis ergibt sich aus dem Wert im Feld geteilt durch die angefragte Laufzeit, also 10.800 € ÷ 36 Monate = 300 € pro Monat.
+
+Auch die Einrichtung von Blueprints und Produkten wurde angepasst. Die bisherige Bezeichnung „Contract Logic“ wird in „Calculation Logic“ (Berechnungslogik) umbenannt. Bisher war diese Logik fest als „Vehicle-related“ hinterlegt. Auf der Blueprint-Einrichtungsseite steht nun ein Dropdown „Calculation Logic“ mit den Optionen „Vehicle Related“ und „Contract Related“ zur Verfügung. Die gewählte Berechnungslogik wird auf der Zusammenfassungsseite nach der Blueprint-Einrichtung angezeigt.
+
+Bei der Produkt- und Preispflege gilt: Während fahrzeugbezogene Produkte für die Preisberechnung auf die Erstzulassung zurückgreifen, benötigen vertragsbezogene Produkte ein Vertragsstartdatum und ein Vertragsenddatum. Das Vertragsstartdatum ist der Tag, an dem das Produkt gekauft bzw. aktiviert wird. Das Vertragsenddatum ergibt sich aus der gewählten Zeit für eine bestimmte Laufleistung, die im Modul zur Vertragserstellung ausgewählt wird. Im Schritt „Vehicle Preconditions“, in dem Limits für die drei Personas MPC/MOC, Händler und Direct-to-Customer festgelegt werden, gibt es zwei zusätzliche Eingabefelder: „Maximum Vehicle Age at Contract End“ und „Maximum Vehicle Mileage at Contract End“. Damit wird verhindert, dass ein Produkt mit einer Laufzeit über ein definiertes Alters- oder Laufleistungslimit hinaus verkauft wird. Die Monate sowie die Fahrzeuglaufleistung sind dabei als ganze Zahlen einzugeben. Alle übrigen Felder und Schritte in der Blueprint- und Produkteinrichtung bleiben unverändert.
+
+**Blueprint-Erweiterung für Vans inklusive Produktlinien und Bildern**
+
+Die Blueprint-Erstellung wurde um Vans erweitert. Bisher war der Blueprint auf Pkw ausgelegt, mit nur geringen Möglichkeiten für Vans. Für Vans gilt nun hinsichtlich der Blueprint-Erstellung eine ähnliche Logik wie für Pkw. Die Funktion richtet sich an HQ-Administratoren, die Blueprints für Vans anlegen können.
+
+Für Vans stehen die Produktlinien Complete, Comfort, SelectPlus, Maintenance, Extended Warranty und Tires zur Verfügung. Ihnen sind die I155-Codes 16, 22, 20, 19, 18 und 06 zugeordnet, die im Payload an die Generierung übergeben werden. Bei der Blueprint-Erstellung für Vans können diese Produktlinien ausgewählt werden. Van-Bilder werden in einem eigenen S3-Speicher abgelegt, stehen zur Auswahl bereit und werden nur angezeigt, wenn die Division Vans ausgewählt ist.
+
+**Anbindung der AFAB-API für Van-Fahrzeugauftragsstammdaten**
+
+Bei Pkw wird für Auftragsnummern die Go-Order-API verwendet. Für Vans ruft das System nun immer dann die AFAB-API auf, wenn eine Auftragsnummer für Vans verwendet wird. AFAB dient dem Abruf von Stammdaten zu Van-Fahrzeugaufträgen aus dem van-spezifischen Bestellsystem. Damit werden Vertriebsfälle unterstützt, in denen noch keine Fahrgestellnummer vorliegt, sondern nur eine Auftragsnummer. Das System verbindet sich mit AFAB, ruft die Details zu einer Auftragsnummer ab und sendet die Daten an die Generierung, wenn eine Auftragsnummer für Vans verwendet wird, analog zur Auftragsnummer bei Pkw.
+
+**Weitere Anpassungen**
+
+Das Ablaufkriterium aller Produkt-Blueprints und Produkte in der Produktionsumgebung wurde auf „Zeit“ umgestellt. Zudem wurden Probleme mit Preisfaktoren in der Vorproduktionsumgebung behoben.

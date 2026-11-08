@@ -1,0 +1,27 @@
+# Batch 1010 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Fahrzeugidentifikation im Ablauf der Vertragserstellung**
+
+Wenn ein Händler auf der Startseite der Vertragserstellung die Schaltfläche „Generate Contract" auslöst, startet der Assistent für die Vertragserstellung. Anstelle einer Auswahl der Abläufe über ein Dropdown-Menü (verfügbare Fahrgestellnummer, nicht verfügbare Fahrgestellnummer im Build-to-Order-Prozess oder nicht verfügbares FRD im Build-to-Stock-Prozess) steht nun ein einziges Eingabefeld zur Verfügung. Das System erkennt anhand der Eingabe selbst, um welche Art von Kennung es sich handelt, und führt den passenden Prozess weiter aus. Möglich sind drei Eingaben: Fahrgestellnummer, Auftragsnummer oder Baumuster (Model Code). Nach der Erkennung wird das Feld „Vehicle Identifier" entsprechend umbenannt und zeigt den eingegebenen Wert an.
+
+Bei der Fahrgestellnummer handelt es sich um ein alphanumerisches Textfeld mit maximal 17 Zeichen. Nach der Erkennung ruft das System aus dem Fahrzeugmanagement die Fahrzeugdaten ab: FRD, Laufleistung, Marke, Division und Verkaufsbezeichnung. Zusätzlich gibt es einen Schalter, der angibt, ob ein FRD vorhanden ist; standardmäßig ist er ausgeschaltet. Ist der Schalter ausgeschaltet, wird das aus dem Fahrzeugmanagement erhaltene FRD schreibgeschützt angezeigt, sofern es vorliegt. Andernfalls erscheint ein Kalenderfeld, in dem der Nutzer das FRD selbst erfassen kann. Ebenso wird die aktuelle Laufleistung schreibgeschützt angezeigt, sofern sie vom Fahrzeugmanagement (über die MIC-API, die in PI4 nicht verfügbar ist) geliefert wird; andernfalls ist das Feld ein numerisches Eingabefeld. Marke, Division und Verkaufsbezeichnung werden ebenfalls angezeigt. Ist der Schalter eingeschaltet, wird die aktuelle Laufleistung schreibgeschützt mit dem Wert 0 angezeigt, und die übrigen Fahrzeuginformationen werden wie zuvor dargestellt.
+
+Die Auftragsnummer ist ein numerisches Textfeld mit maximal 10 Zeichen. Das System fragt beim Fahrzeugmanagement die Fahrgestellnummer und das Baumuster zur Auftragsnummer an; das Fahrzeugmanagement wiederum ruft dafür die Order-API auf. Wird eine Fahrgestellnummer zurückgegeben, erscheint sie schreibgeschützt im darunterliegenden Feld. Wird keine geliefert, steht dort schreibgeschützt „Not Available". Das Baumuster wird ebenfalls schreibgeschützt angezeigt. Anhand des Baumusters werden anschließend Marke, Division und Verkaufsbezeichnung vom Fahrzeugmanagement abgerufen und dargestellt.
+
+Das Baumuster ist ein numerisches Textfeld mit maximal 6 Zeichen. Nach der Erkennung wird das Feld in „Model Code" umbenannt und zeigt den eingegebenen Wert an. Die aktuelle Laufleistung erscheint schreibgeschützt mit dem Wert 0. Marke, Division und Verkaufsbezeichnung werden anhand des Baumusters vom Fahrzeugmanagement abgerufen und angezeigt.
+
+In allen drei Abläufen werden anschließend aus der Vertragskalkulation die Produkte ermittelt, die zu den eingegebenen Kriterien passen. Der Nutzer kann sie auswählen und konfigurieren und danach mit der Vertragserstellung fortfahren. Liefert eine Eingabe kein Ergebnis, erscheint die Fehlermeldung „Enter a valid chassis number, order number or model code". Im Produktbereich wird zusätzlich der Hinweis angezeigt: „The vehicle identifier did not return any results Please check and adjust your input if needed and try again. Enter a valid Chassis Number, Order Number or Model Code".
+
+Die Oberfläche entspricht der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design. Verträge können von Händlern (Dealer) und Mitarbeitern der Market Operations erstellt werden, und zwar über jeden der drei Abläufe.
+
+**Händlerrabatt in Höhe des Vertragswerts**
+
+Bisher mussten die Summe aus Marktkampagne und Händlerrabatt sowie die kumulierten Rabatte aus bestehenden Kampagnen oder Kampagnen in der Kulanzfrist unter dem Vertragswert liegen; sie durften ihn weder erreichen noch überschreiten.
+
+Künftig kann ein Händler dem Kunden einen Bonus gewähren, indem er den gesamten Vertragswert übernimmt. Der Händlerrabatt allein oder die Summe aus Marktkampagne und Händlerrabatt darf also dem Vertragswert entsprechen. Ein Rabatt, der den Vertragswert übersteigt, kann weder vom Händler gewährt noch vom Kunden durch die Kombination aus Marktkampagne und Händlerrabatt erreicht werden.
+
+Entspricht der Händlerrabatt oder die Summe aus Marktkampagne und Händlerrabatt dem Vertragswert, ist der Endkunde der Vertragsinhaber, und der Händler wird zum Zahler des Vertrags. In allen anderen Fällen läuft der Prozess wie bisher. Ist der Händler der Zahler, wird seine Händler-ID erfasst und zusammen mit dem vom Händler getragenen Betrag an das Revenue Management übermittelt. Das Revenue Management wird angewiesen, den Zahlungsplan und die Rechnungen als Einmalzahlung direkt an den Händler zu erstellen.
+
+In der Vertragsverwaltung wird in der Vertragsdetailansicht unter „Kunde" im Bereich „Zahler" ein leerer Eintrag zum Händler angezeigt. Welche Informationen dort dargestellt werden dürfen, wird noch bei Mercedes-Benz festgelegt. Mitarbeiter der Market Operations sehen die Händlerinformationen im Zahlungsbereich in den Fällen, in denen der Händler den gesamten Vertragswert übernommen hat.

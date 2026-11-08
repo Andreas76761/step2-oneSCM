@@ -1,0 +1,17 @@
+# Batch 776 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragsverlängerung bei Sonderfall-Verträgen (Special Case)**
+
+Servicevorträge, die über einen Sonderfall (Special Case) angelegt wurden, lassen sich nun in oneSCM per Long Term Prolongation (LTP) verlängern. Bei einem Sonderfall kann ein Market User mehrere Preiskomponenten anpassen, damit der Kunde einen individuellen Preis erhält. Bisher war für solche Verträge keine Verlängerung möglich. Mit dieser Funktion steht Market Operations (MO) und MPC Product Managern (MPC) ein definierter Prozess dafür zur Verfügung. Die Verlängerung kann ausschließlich von MO bzw. MPC angestoßen werden.
+
+Voraussetzung ist, dass der Servicevertrag mit einem genehmigten Sonderfall erstellt wurde, den Status „Aktiv“ hat und das zugrunde liegende Produkt die Long Term Prolongation unterstützt. Für die Verlängerung eines Sonderfall-Vertrags ist keine 4-Augen-Freigabe erforderlich. Es gelten folgende Einschränkungen: Negative Raten sind nicht zulässig. Es dürfen keine zusätzlichen Sonderfall-Rabatte über diejenigen hinaus vergeben werden, die bereits im Vertrag enthalten sind. Die Werte der Sonderfall-Rabatte sind nicht flexibel änderbar. Spezielle Laufzeit- oder Laufleistungskonfigurationen werden bei Sonderfall-Verträgen nicht unterstützt.
+
+Der Ablauf gestaltet sich wie folgt: MO bzw. MPC wählt einen aktiven Servicevertrag aus, der über einen Sonderfall erstellt wurde, und startet die Long Term Prolongation. Das System ruft daraufhin den Produktservice ab, um die verfügbaren Verlängerungsoptionen und Preise zu ermitteln. Die Anfrage enthält neben den Standardparametern sämtliche Preisreduktionskomponenten aus dem ursprünglichen Sonderfall-Vertrag: Included Coverage Price, Optional Coverage Price, Industry Factor, Technical Options, Sales Commission, Administration Fee, Payment Interval Fee, Campaign Price, Dealer Discount sowie den MPC Discount (Special Case). Der Produktservice berechnet den Verlängerungspreis, indem er dieselbe Rabattstruktur auf die neue Konfiguration anwendet. Dadurch spiegelt der Preis den ursprünglichen Vertragswert und die genehmigten Rabatte korrekt wider. Die berechneten Werte werden an das Vertragsmanagement zurückgegeben und MO bzw. MPC angezeigt. Die Konfiguration ist dabei nur innerhalb der zulässigen Parameter möglich.
+
+Anschließend konfiguriert MO bzw. MPC die gewünschte Verlängerung und sendet das Angebot an den Kunden. Wird der Ablauf vorzeitig verlassen, bleibt die Konfiguration gespeichert, solange die Gültigkeitsdauer des Verlängerungsangebots (Long Term Prolongation Offer Validity) gesetzt ist.
+
+Nimmt der Kunde das Angebot an und bestätigt der Benutzer die Verlängerung, werden die Vertragswerte entsprechend aktualisiert, der Zahlungsplan neu berechnet und angepasst und die Oberfläche mit den neuen Vertragsdaten aktualisiert. Zudem wird das Dokument i155 erzeugt, und die Systeme Revenue und Nemesis werden benachrichtigt.
+
+Das Design des Bedienablaufs bleibt unverändert. Um negative Raten durch kumulierte Rabatte zu vermeiden, ist im Produktservice eine Validierungsregel zu berücksichtigen, die ausschließlich Werte größer oder gleich null zurückgibt.

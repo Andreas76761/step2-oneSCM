@@ -1,0 +1,25 @@
+# Batch 516 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 9 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Neuerungen und geplante Themen im Bereich DevOps**
+
+Im Bereich DevOps ist ein Vorhaben bereits abgeschlossen: Für alle externen Systeme ist nun eine vollständige Abdeckung bei der Erneuerung von Zertifikaten erreicht. Eine weitere Beschreibung liegt hierzu nicht vor.
+
+Mehrere weitere Themen befinden sich im Backlog und sind noch nicht umgesetzt. Zur Deployment-Strategie und Ausfallsicherheit von Releases soll die Sicherheit von ECS-Deployments erhöht und die Beeinträchtigung während eines Deployments verringert werden. Geprüft werden Canary- und Linear-Strategien für Fargate. Außerdem soll das Draining der Target Groups bewusst konfiguriert werden, statt sich auf den AWS-Standard zu verlassen. Das Ziel ist eine festgelegte Deployment-Strategie mit einem Rollback-Konzept, sodass Deployments keine vermeidbaren Anfragefehler mehr verursachen.
+
+Bei der Effizienz und den Kosten der CI/CD-Pipelines sollen Laufzeit und Runner-Kosten sinken. Dazu dienen das Caching von Abhängigkeiten, ein über ECR bereitgestelltes Caching von Docker-Layern und eine korrekte Eingrenzung der Trigger. Pipelines sollen nur noch laufen, wenn eine Änderung ihr Ergebnis tatsächlich beeinflussen kann. Erfolgreich ist das Vorhaben, wenn Build-Dauer und Runner-Minuten messbar geringer sind.
+
+Die Migration auf AWS Graviton (arm64) betrifft Lambda, ECS Fargate und die selbst gehosteten GitHub-Runner, einschließlich der Build-Kette für die Container-Images. Aktuell läuft nichts auf Graviton. Angestrebt werden rund 20 Prozent geringere Rechenkosten sowie schnellere, native arm64-Builds. Abgeschlossen ist das Vorhaben, wenn Lambda, Fargate-Services und CI-Runner in allen vier Umgebungen auf arm64 laufen, die Images nativ für arm64 gebaut werden und die Kostenveränderung je Workload gemessen ist.
+
+Beim Ausbau von Observability und Monitoring soll das Monitoring von der Ebene einzelner Ressourcen auf die Ebene von Kennzahlen (KPIs) und Systemverhalten umgestellt werden. Geplant sind zudem eigene Alarme für DevOps-CI/CD-Fehler, Synthetics, die echte Endpunkte prüfen, sowie weniger Rauschen und geringere Kosten bei der Log-Erfassung. Ziel sind KPI-Dashboards in allen vier Umgebungen, Benachrichtigungen über Pipeline-Fehler an einen eigenen Kanal, Synthetics, die echte Payloads prüfen, und messbar geringere Kosten für die Log-Erfassung.
+
+Die DevOps-Dokumentation soll in einen geprüften, auditfähigen Zustand gebracht werden. Vorgesehen sind ein vollständiges Handbuch, ein Abgleich der dokumentierten Werte mit der tatsächlichen AWS-Konfiguration, die Übernahme der Themen zu externen Schnittstellen sowie die Beseitigung von Abweichungen (Drift) in der Produktion. Erreicht ist das Ziel, wenn das Handbuch veröffentlicht und mit einem Verantwortlichen versehen ist, jeder dokumentierte Parameter mit AWS übereinstimmt, der Schnittstellenkatalog Version 1.0 erreicht hat und der Produktionsplan bereinigt und freigegeben ist.
+
+**Edge Service: Fahrzeug-Kilometerstand-API**
+
+Neu im Edge Service ist die Fahrzeug-Kilometerstand-API. Der aktuelle Kilometerstand ist für viele After-Sales-Anwendungsfälle eine wichtige Information. Deshalb können nun Systeme, die den Kilometerstand bei unterschiedlichen Gelegenheiten erfassen, diese Information austauschen. Nutzer der Schnittstelle sind angebundene Systeme der oneSCM-API, zum Beispiel Alfa (Leasing). Sie können den zuletzt bekannten Kilometerstand oder die vollständige Kilometerstandshistorie abrufen und selbst einen Kilometerstand übermitteln. Zuvor ließ sich der Kilometerstand eines Fahrzeugs nicht über die oneSCM-API abrufen.
+
+Die externe API wurde um drei Endpunkte erweitert. Mit GET /vehicle/v1/mileage-history lässt sich die vollständige Kilometerstandshistorie eines Fahrzeugs abrufen. Mit GET /vehicle/v1/mileage wird der jüngste Eintrag der Historie abgefragt. In beiden Fällen dient die Fahrgestellnummer (FIN bzw. VIN) als Anfrageparameter. Jeder Eintrag der Antwort enthält den Kilometerstand (zum Beispiel 16459), die Einheit (zum Beispiel km), die Quelle (zum Beispiel Werkstattrechnung) und den Zeitstempel des Kilometerstands.
+
+Mit POST /vehicle/v1/mileage übermittelt ein System einen Kilometerstand, der in die Historie des Fahrzeugs aufgenommen wird. Auch hier wird die Fahrgestellnummer als Parameter verwendet. Die Anfrage enthält einen Eintrag mit Kilometerstand, Einheit, Quelle (zum Beispiel Leasing) und Zeitstempel. Wird nur ein Datum übermittelt, wird es akzeptiert und mit der Uhrzeit 00:00:00 ergänzt. Der übermittelte Wert wird mit der bestehenden Historie abgeglichen: Er darf nicht niedriger sein als ein vorhandener Wert mit früherem Zeitstempel und nicht höher als ein vorhandener Wert mit späterem Zeitstempel. Dabei gilt dieselbe Validierung wie bei der manuellen Erfassung von Kilometerständen durch Benutzer im Frontend.

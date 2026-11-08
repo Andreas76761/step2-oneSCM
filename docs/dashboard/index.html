@@ -1,0 +1,660 @@
+<style>
+  .hb { font-family: var(--font-anthropic-sans); font-variant-numeric: tabular-nums; max-width: 72rem; margin-inline: auto; }
+  .hb-head { display: flex; flex-direction: column; gap: var(--cds-gap-xs); margin-bottom: var(--cds-gap-lg); }
+  .hb-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+  .hb-head p { margin: 0; color: var(--color-fg-muted); font-size: var(--cds-font-size-body); }
+  .hb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-lg); }
+  .hb-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-lg); }
+  .hb-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-xs); min-width: 0; }
+  .hb-card h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .hb-card .hb-note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0; }
+  .hb-tile .hb-label { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb-tile .hb-num { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 2.25rem; line-height: 1.1; }
+  .hb-tile .hb-sub { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb-tile.hb-active { outline: 2px solid var(--cds-chart-reference); cursor: pointer; }
+  .hb-tile[role=button] { cursor: pointer; }
+  .hb-swatch { display: inline-block; width: .625rem; height: .625rem; border-radius: 999px; margin-right: .375rem; vertical-align: middle; }
+  .hb-chart { position: relative; min-height: 34rem; }
+  .hb-chart svg { display: block; width: 100%; height: auto; }
+  .hb-chart .hb-bar { cursor: pointer; }
+  .hb-chart .hb-bar.hb-dim { opacity: .3; }
+  .hb-chart text { fill: var(--color-fg); font-size: var(--cds-font-size-caption); }
+  .hb-chart text.hb-muted { fill: var(--color-fg-muted); }
+  .hb-chart .hb-rowlabel { cursor: pointer; }
+  .hb-tip { position: absolute; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); pointer-events: none; display: none; max-width: 18rem; }
+  .hb-tip .hb-tip-k { color: var(--cds-text-secondary); }
+  .hb-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; }
+  .hb-controls input { flex: 1 1 12rem; min-width: 0; font: inherit; padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); }
+  .hb-chip { font: inherit; font-size: var(--cds-font-size-caption); padding: .25rem .625rem; border: 1px solid var(--cds-border); border-radius: 999px; background: var(--color-bg); color: var(--color-fg); cursor: pointer; }
+  .hb-chip.hb-on { background: var(--color-fg); color: var(--color-bg); border-color: var(--color-fg); }
+  .hb-tablebox { max-height: 34rem; overflow: auto; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); }
+  .hb table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-body); }
+  .hb th { position: sticky; top: 0; background: var(--color-panel); text-align: left; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); font-weight: var(--cds-font-weight-medium); white-space: nowrap; }
+  .hb th button { all: unset; cursor: pointer; }
+  .hb th button::after { content: ' ↕'; color: var(--color-fg-muted); }
+  .hb th[aria-sort=ascending] button::after { content: ' ↑'; }
+  .hb th[aria-sort=descending] button::after { content: ' ↓'; }
+  .hb td { padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+  .hb tr.hb-l1 td { font-weight: var(--cds-font-weight-medium); background: color-mix(in srgb, var(--color-panel) 60%, var(--color-bg)); }
+  .hb tr.hb-l2 td.hb-thema { padding-left: 1.75rem; }
+  .hb td.hb-kap { white-space: nowrap; color: var(--color-fg-muted); }
+  .hb-badge { display: inline-block; font-size: var(--cds-font-size-caption); padding: .1rem .5rem; border-radius: 999px; border: 1px solid var(--cds-border); color: var(--color-fg-muted); white-space: nowrap; }
+  .hb-flow { position: relative; min-height: 15rem; }
+  .hb-flow svg { display: block; width: 100%; height: auto; }
+  .hb-flow .hb-node { cursor: pointer; }
+  .hb-flow .hb-node rect { fill: var(--color-bg); stroke-width: 2; }
+  .hb-flow .hb-node.hb-dim { opacity: .35; }
+  .hb-flow .hb-node.hb-sel rect { fill: color-mix(in srgb, var(--color-fg) 8%, var(--color-bg)); }
+  .hb-flow text { fill: var(--color-fg); font-size: var(--cds-font-size-caption); }
+  .hb-flow text.hb-nodenum { font-family: var(--font-anthropic-serif); font-size: 1.25rem; }
+  .hb-flow .hb-pdf text { font-size: 0.62rem; }
+  .hb-flow text.hb-muted { fill: var(--color-fg-muted); }
+  .hb-flow .hb-pdf text { fill: var(--color-fg); text-decoration: underline; font-weight: 600; }
+  .hb-flow .hb-pdf:hover text { fill: var(--color-fg-muted); }
+  .hb-flow .hb-edge { fill: none; stroke: var(--cds-chart-axis); stroke-width: 2; stroke-linecap: round; cursor: pointer; }
+  .hb-flow .hb-edge.hb-dim { opacity: .35; }
+  .hb-flow .hb-edgelabel { cursor: pointer; }
+  .hb-qg { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr)); gap: var(--cds-gap-sm); }
+  .hb-qg .hb-qg-tile { display: flex; gap: .5rem; align-items: flex-start; padding: var(--cds-pad-sm); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); text-decoration: none; font-size: var(--cds-font-size-caption); }
+  .hb-qg .hb-qg-links { display: inline-block; margin-top: .25rem; }
+  .hb-qg .hb-qg-nr { font-family: var(--font-anthropic-serif); font-size: 1.25rem; line-height: 1; min-width: 1.6rem; color: var(--color-fg-muted); }
+  .hb-qg .hb-qg-head { grid-column: 1 / -1; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); margin-top: var(--cds-gap-xs); }
+  .hb-qg .hb-qg-tile.hb-qg-all { grid-column: 1 / -1; background: color-mix(in srgb, var(--color-fg) 6%, var(--color-bg)); }
+  .hb-qg-link { color: var(--color-fg); text-decoration: underline; text-underline-offset: .15em; white-space: nowrap; }
+  .hb-src-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; }
+  .hb-src-controls select, .hb-src-controls input { font: inherit; padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); }
+  .hb-src-controls input { flex: 1 1 12rem; min-width: 0; }
+  .hb-src-list { display: flex; flex-direction: column; gap: var(--cds-gap-xs); max-height: 40rem; overflow: auto; }
+  .hb-src-item { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); }
+  .hb-src-item summary { cursor: pointer; padding: var(--cds-pad-xs) var(--cds-pad-sm); display: flex; gap: var(--cds-gap-sm); align-items: baseline; flex-wrap: wrap; }
+  .hb-src-item summary .hb-src-batch { font-family: var(--font-anthropic-serif); color: var(--color-fg-muted); white-space: nowrap; }
+  .hb-src-item summary .hb-src-title { font-weight: var(--cds-font-weight-medium); }
+  .hb-src-item summary .hb-badge { margin-left: auto; }
+  .hb-src-text { padding: 0 var(--cds-pad-sm) var(--cds-pad-sm); white-space: pre-wrap; font-size: var(--cds-font-size-caption); line-height: 1.5; }
+  .hb-src-bars { display: grid; grid-template-columns: max-content 1fr max-content; gap: .2rem .6rem; align-items: center; font-size: var(--cds-font-size-caption); }
+  .hb-src-bars .hb-src-bar { height: .6rem; border-radius: 999px; background: var(--cds-chart-muted); min-width: 2px; }
+  .hb-src-bars .hb-src-bar.hb-on { background: var(--color-fg); }
+  .hb-src-bars button { all: unset; cursor: pointer; text-align: left; color: var(--color-fg); }
+  .hb-src-bars button:hover { text-decoration: underline; }
+  .hb-fail { display: flex; align-items: center; justify-content: center; gap: .375rem; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .hb-fail::before { content: ''; width: .375rem; height: .375rem; border-radius: 999px; background: var(--color-bad); }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+  @media (max-width: 40rem) { .hb-col-hide { display: none; } }
+</style>
+
+<div class="hb">
+  <header class="hb-head">
+    <h1 id="titel">oneSCM Handbuch: Struktur und Klickstrecke</h1>
+    <p id="takeaway" class="dash-skeleton">—</p>
+  </header>
+
+  <section class="hb-grid" id="kennzahlen">
+    <div class="hb-card hb-tile" role="button" data-teil="Hauptteil" data-ebene="1" data-source="kpis" data-field="hauptkapitel">
+      <span class="hb-label">Hauptkapitel</span>
+      <span class="hb-num dash-skeleton">—</span>
+      <span class="hb-sub">Ebene 1, Kapitel 1 bis 23</span>
+    </div>
+    <div class="hb-card hb-tile" role="button" data-teil="Hauptteil" data-ebene="2" data-source="kpis" data-field="unterkapitel">
+      <span class="hb-label">Unterkapitel</span>
+      <span class="hb-num dash-skeleton">—</span>
+      <span class="hb-sub">Ebene 2 im Hauptteil</span>
+    </div>
+    <div class="hb-card hb-tile" role="button" data-teil="Anhang" data-source="kpis" data-field="anhaenge">
+      <span class="hb-label">Anhänge</span>
+      <span class="hb-num dash-skeleton">—</span>
+      <span class="hb-sub">Glossar bis Testdatenkatalog</span>
+    </div>
+    <div class="hb-card hb-tile" role="button" data-teil="Übergang" data-source="kpis" data-field="uebergaenge">
+      <span class="hb-label">Übergangsmodule</span>
+      <span class="hb-num dash-skeleton">—</span>
+      <span class="hb-sub">Ebene 0, verbinden zwei Kapitel</span>
+    </div>
+    <div class="hb-card hb-tile" role="button" data-teil="Vorspann" data-source="kpis" data-field="vorspann">
+      <span class="hb-label">Vorspann</span>
+      <span class="hb-num dash-skeleton">—</span>
+      <span class="hb-sub">Willkommen und Lesepfade</span>
+    </div>
+    <div class="hb-card hb-tile" role="button" data-teil="" data-source="kpis" data-field="gesamt">
+      <span class="hb-label">Einträge gesamt</span>
+      <span class="hb-num dash-skeleton">—</span>
+      <span class="hb-sub">Alle Zeilen der Gliederung</span>
+    </div>
+  </section>
+
+  <section class="hb-grid2">
+    <div class="hb-card">
+      <h2 id="bereiche">Bereiche des Hauptteils</h2>
+      <p class="hb-note">Sechs Lesebereiche, Kapitel 1 bis 23. Klick filtert Diagramm und Tabelle.</p>
+      <div id="bereich-list" class="hb-grid" style="margin:0" data-source="perBereich"></div>
+    </div>
+  </section>
+
+  <section class="hb-card" style="margin-bottom: var(--cds-gap-lg)">
+    <h2 id="klickstrecke">Klickstrecke Vertragsprozess</h2>
+    <p class="hb-note">Kapitel als Stationen, Übergangsmodule als Pfeile. Zwei Ketten: Vertragsprozess (6 bis 10) und Pflege (14 bis 16). Klick auf eine Station filtert die Tabelle, die Links im Knoten öffnen den Quick Guide des Kapitels in der jeweiligen Sprache und Sparte, Klick auf einen Pfeil zeigt das Übergangsmodul.</p>
+    <div id="flow" class="hb-flow dash-skeleton" data-source="uebergaenge gliederung quickguides"></div>
+  </section>
+
+  <section class="hb-card" style="margin-bottom: var(--cds-gap-lg)">
+    <h2 id="tiefe">Unterkapitel je Hauptkapitel</h2>
+    <p class="hb-note">Länge der Balken ist die Zahl der Unterkapitel. Farbe ist der Bereich. Klick auf einen Balken filtert die Tabelle.</p>
+    <div id="chart" class="hb-chart dash-skeleton" data-source="perChapter"></div>
+  </section>
+
+  <section class="hb-card" style="margin-bottom: var(--cds-gap-lg)">
+    <h2 id="quickguides">Quick Guides je Kapitel</h2>
+    <p class="hb-note" id="qg-note">Zweiseitige Quick Guides zu Hauptkapiteln, Übergangsmodulen, Anhängen und Vorspann als PDF, je in Deutsch (Van, Pkw) und Englisch (Vans, Cars). Klick öffnet die PDF in einem neuen Tab.</p>
+    <div id="qg-list" class="hb-qg dash-skeleton" data-source="quickguides"></div>
+  </section>
+
+  <section class="hb-card" style="margin-bottom: var(--cds-gap-lg)">
+    <h2 id="quelltexte">Quelltexte je Gliederung</h2>
+    <p class="hb-note" id="src-note">Abschnitte aus 1315 RAG-Batches, per Schlüsselwortanalyse den Kapiteln zugeordnet. Die Zuordnung ist ein Vorschlag zur redaktionellen Prüfung.</p>
+    <div class="hb-grid2" style="margin:0 0 var(--cds-gap-md)">
+      <div>
+        <div id="src-bars" class="hb-src-bars dash-skeleton" data-source="srcCounts"></div>
+      </div>
+      <div>
+        <div class="hb-src-controls">
+          <select id="src-kapitel" aria-label="Kapitel"></select>
+          <input id="src-suche" type="search" placeholder="Suche in Titel und Text" aria-label="Suche in Quelltexten">
+        </div>
+        <p class="hb-note" id="src-count" style="margin-top: var(--cds-gap-xs)">—</p>
+        <div id="src-list" class="hb-src-list" data-source="quelltexteIndex quelltexte1 quelltexte2 quelltexte3"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hb-card">
+    <h2 id="gliederung">Gliederung durchsuchen</h2>
+    <p class="hb-note" id="tabelle-note">Alle Einträge. Suche nach Kapitelnummer oder Thema, Chips filtern nach Teil.</p>
+    <div class="hb-controls">
+      <input id="suche" type="search" placeholder="Suche in Kapitel oder Thema" aria-label="Suche">
+      <div id="teil-chips"></div>
+      <button class="hb-chip" id="reset">Zurücksetzen</button>
+    </div>
+    <div class="hb-tablebox">
+      <table id="tabelle" data-source="gliederung quickguides" data-row-key="kapitel">
+        <thead>
+          <tr>
+            <th data-field="kapitel" aria-sort="none"><button data-col="kapitel">Kapitel</button></th>
+            <th data-field="thema" aria-sort="none"><button data-col="thema">Thema</button></th>
+            <th data-field="ebene" aria-sort="none" class="hb-col-hide"><button data-col="ebene">Ebene</button></th>
+            <th data-field="bereich" aria-sort="none" class="hb-col-hide"><button data-col="bereich">Bereich</button></th>
+            <th data-source="guideLinks" data-field="url_van">Quick Guide</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+  dash.calc('kpis', {
+    title: 'Kennzahlen der Gliederung',
+    description: 'Zählt Einträge der Gliederung nach Teil und Ebene.',
+    inputs: ['gliederung'],
+    fn: (gliederung) => ({
+      hauptkapitel: gliederung.filter(r => r.teil === 'Hauptteil' && Number(r.ebene) === 1).length,
+      unterkapitel: gliederung.filter(r => r.teil === 'Hauptteil' && Number(r.ebene) === 2).length,
+      anhaenge: gliederung.filter(r => r.teil === 'Anhang').length,
+      uebergaenge: gliederung.filter(r => r.teil === 'Übergang').length,
+      vorspann: gliederung.filter(r => r.teil === 'Vorspann').length,
+      gesamt: gliederung.length
+    })
+  });
+
+  dash.calc('perChapter', {
+    title: 'Unterkapitel je Hauptkapitel',
+    description: 'Je Hauptkapitel (Ebene 1) die Zahl seiner Unterkapitel (Ebene 2 mit gleicher Kapitelnummer vor dem Punkt).',
+    inputs: ['gliederung'],
+    fn: (gliederung) => gliederung
+      .filter(r => r.teil === 'Hauptteil' && Number(r.ebene) === 1)
+      .map(k => ({
+        kapitel: k.kapitel, thema: k.thema, bereich: k.bereich,
+        unterkapitel: gliederung.filter(r => Number(r.ebene) === 2 && r.kapitel.split('.')[0] === k.kapitel).length
+      }))
+  });
+
+  dash.calc('perBereich', {
+    title: 'Kapitel je Bereich',
+    description: 'Je Bereich des Hauptteils die Zahl der Haupt- und Unterkapitel.',
+    inputs: ['gliederung'],
+    fn: (gliederung) => [...new Set(gliederung.filter(r => r.teil === 'Hauptteil').map(r => r.bereich))]
+      .map(bereich => ({
+        bereich,
+        hauptkapitel: gliederung.filter(r => r.bereich === bereich && Number(r.ebene) === 1).length,
+        unterkapitel: gliederung.filter(r => r.bereich === bereich && Number(r.ebene) === 2).length
+      }))
+  });
+
+  dash.calc('uebergaenge', {
+    title: 'Übergangsmodule',
+    description: 'Die Übergangsmodule (Ebene 0) mit Start- und Zielkapitel aus ihrer Kennung, in Prozessreihenfolge.',
+    inputs: ['gliederung'],
+    fn: (gliederung) => gliederung
+      .filter(r => r.teil === 'Übergang')
+      .map(r => ({ kapitel: r.kapitel, thema: r.thema, von: r.kapitel.slice(1).split('-')[0], nach: r.kapitel.split('-')[1] }))
+      .sort((a, b) => Number(a.von) - Number(b.von) || Number(a.nach) - Number(b.nach))
+  });
+
+  dash.calc('guideLinks', {
+    title: 'Quick-Guide-Link je Hauptkapitel',
+    description: 'Verknüpft jede Zeile der Gliederung mit den PDFs ihres Quick Guides in den Varianten DE Van, DE Pkw, EN Vans und EN Cars: exakte Kennung (Anhang, Übergangsmodul, Vorspann) oder sonst das Hauptkapitel vor dem Punkt.',
+    inputs: ['gliederung', 'quickguides'],
+    fn: (gliederung, quickguides) => gliederung.map(r => {
+      const pick = (v) => quickguides.find(g => g.variante === v && g.kapitel === r.kapitel) || quickguides.find(g => g.variante === v && g.kapitel === r.kapitel.split('.')[0]);
+      const van = pick('Van'), pkw = pick('Pkw'), envan = pick('EN Vans'), encars = pick('EN Cars');
+      return { kapitel: r.kapitel, url_van: van ? van.url : '', url_pkw: pkw ? pkw.url : '', url_en_vans: envan ? envan.url : '', url_en_cars: encars ? encars.url : '' };
+    })
+  });
+
+  dash.calc('srcCounts', {
+    title: 'Quelltext-Abschnitte je Kapitel',
+    description: 'Zählt die zugeordneten Abschnitte der RAG-Batches je Hauptkapitel der Gliederung; Abschnitte ohne Zuordnung stehen unter „Ohne Zuordnung“.',
+    inputs: ['quelltexteIndex', 'gliederung'],
+    fn: (quelltexteIndex, gliederung) => {
+      const counts = {};
+      quelltexteIndex.forEach(r => { const k = r.kapitel || ''; counts[k] = (counts[k] || 0) + 1; });
+      const rows = gliederung.filter(r => Number(r.ebene) === 1).map(r => ({ kapitel: r.kapitel, thema: r.thema, abschnitte: counts[r.kapitel] || 0 }));
+      rows.push({ kapitel: '', thema: 'Ohne Zuordnung', abschnitte: counts[''] || 0 });
+      return rows;
+    }
+  });
+</script>
+
+<script>
+  window.hbVariants = [['Van', 'DE Van'], ['Pkw', 'DE Pkw'], ['EN Vans', 'EN Vans'], ['EN Cars', 'EN Cars']];
+  window.hbState = { teil: '', bereich: '', kapitel: '', suche: '', sortCol: '', sortDir: 1, animated: false, srcKapitel: '6', srcSuche: '' };
+  const S = window.hbState;
+  const root = document.querySelector('.hb');
+  const fmt = d3.format(',');
+
+  const bereichOrder = ['Einstieg', 'Vertragsprozess', 'Betrieb', 'Steuerung', 'Einführung und Technik', 'Spezifika und Support'];
+  const bereichColor = (b) => dash.colors[Math.max(0, bereichOrder.indexOf(b)) % dash.colors.length];
+
+  const text = (el, v) => { el.textContent = v; el.classList.remove('dash-skeleton'); };
+  const fail = (el) => { el.classList.remove('dash-skeleton'); el.textContent = ''; const d = document.createElement('div'); d.className = 'hb-fail'; d.textContent = 'Nicht geladen'; el.appendChild(d); };
+
+  const setFilter = (patch) => { Object.assign(S, patch); draw(); };
+  const resetFilter = () => setFilter({ teil: '', bereich: '', kapitel: '', suche: '', sortCol: '', sortDir: 1 });
+
+  document.getElementById('suche').addEventListener('input', (e) => setFilter({ suche: e.target.value.trim().toLowerCase() }));
+  document.getElementById('reset').addEventListener('click', () => { document.getElementById('suche').value = ''; resetFilter(); });
+  document.querySelectorAll('#kennzahlen .hb-tile').forEach(t => t.addEventListener('click', () => {
+    const teil = t.dataset.teil;
+    setFilter({ teil: S.teil === teil && !S.bereich && !S.kapitel ? '' : teil, bereich: '', kapitel: '' });
+  }));
+  document.querySelectorAll('#tabelle th button').forEach(b => b.addEventListener('click', () => {
+    const col = b.dataset.col;
+    setFilter({ sortCol: col, sortDir: S.sortCol === col ? -S.sortDir : 1 });
+  }));
+
+  const chipTeile = ['Hauptteil', 'Anhang', 'Übergang', 'Vorspann'];
+  const chipBox = document.getElementById('teil-chips');
+  chipTeile.forEach(t => { const b = document.createElement('button'); b.className = 'hb-chip'; b.textContent = t; b.addEventListener('click', () => setFilter({ teil: S.teil === t ? '' : t, bereich: '', kapitel: '' })); chipBox.appendChild(b); });
+
+  const kapNum = (k) => { const m = /^(\d+)(?:\.(\d+))?$/.exec(k); return m ? Number(m[1]) * 1000 + Number(m[2] || 0) : Infinity; };
+
+  function drawTiles() {
+    const k = dash.data('kpis');
+    document.querySelectorAll('#kennzahlen .hb-tile').forEach(t => {
+      const el = t.querySelector('.hb-num');
+      if (k.status === 'ok') text(el, fmt(k.data[t.dataset.field]));
+      else if (k.status === 'error' || k.status === 'connect') text(el, '—');
+      t.classList.toggle('hb-active', !!t.dataset.teil && S.teil === t.dataset.teil && !S.bereich && !S.kapitel);
+    });
+    const tk = document.getElementById('takeaway');
+    if (k.status === 'ok') text(tk, `${fmt(k.data.hauptkapitel)} Hauptkapitel mit ${fmt(k.data.unterkapitel)} Unterkapiteln, dazu ${fmt(k.data.anhaenge)} Anhänge, ${fmt(k.data.uebergaenge)} Übergangsmodule und ${fmt(k.data.vorspann)} Vorspannseiten: ${fmt(k.data.gesamt)} Einträge insgesamt.`);
+    else if (k.status === 'error' || k.status === 'connect') text(tk, 'Die Gliederung konnte nicht geladen werden.');
+  }
+
+  function drawBereiche() {
+    const d = dash.data('perBereich');
+    const box = document.getElementById('bereich-list');
+    box.textContent = '';
+    if (d.status === 'error' || d.status === 'connect') { fail(box); return; }
+    if (d.status !== 'ok') return;
+    const rows = [...d.data].sort((a, b) => bereichOrder.indexOf(a.bereich) - bereichOrder.indexOf(b.bereich));
+    rows.forEach(r => {
+      const c = document.createElement('div');
+      c.className = 'hb-card hb-tile';
+      c.setAttribute('role', 'button');
+      c.style.padding = 'var(--cds-pad-sm)';
+      c.classList.toggle('hb-active', S.bereich === r.bereich);
+      const l = document.createElement('span'); l.className = 'hb-label';
+      const sw = document.createElement('span'); sw.className = 'hb-swatch'; sw.style.background = bereichColor(r.bereich);
+      l.appendChild(sw); l.appendChild(document.createTextNode(r.bereich));
+      const n = document.createElement('span'); n.className = 'hb-num'; n.style.fontSize = '1.75rem';
+      n.setAttribute('data-source', 'perBereich'); n.setAttribute('data-field', 'unterkapitel');
+      n.setAttribute('data-where', 'bereich=' + encodeURIComponent(r.bereich));
+      n.textContent = fmt(r.unterkapitel);
+      const s = document.createElement('span'); s.className = 'hb-sub';
+      s.textContent = `Unterkapitel in ${fmt(r.hauptkapitel)} Kapiteln`;
+      c.append(l, n, s);
+      c.addEventListener('click', () => setFilter({ bereich: S.bereich === r.bereich ? '' : r.bereich, teil: 'Hauptteil', kapitel: '' }));
+      box.appendChild(c);
+    });
+  }
+
+  function drawFlow() {
+    const u = dash.data('uebergaenge'), g = dash.data('gliederung'), q = dash.data('quickguides');
+    const guides = q.status === 'ok' ? q.data : [];
+    const guideUrl = (k, v = 'Van') => { const r = guides.find(x => x.kapitel === k && (x.variante || 'Van') === v); return r && /^(\/_blob\/|guides\/)/.test(r.url) ? r.url : ''; };
+    const box = document.getElementById('flow');
+    if (u.status === 'error' || u.status === 'connect' || g.status === 'error' || g.status === 'connect') { fail(box); return; }
+    if (u.status !== 'ok' || g.status !== 'ok') return;
+    box.classList.remove('dash-skeleton');
+    box.textContent = '';
+    const edges = u.data;
+    const titleOf = (k) => { const r = g.data.find(x => x.kapitel === k); return r ? r.thema : ''; };
+    const bereichOf = (k) => { const r = g.data.find(x => x.kapitel === k); return r ? r.bereich : ''; };
+    const nodesAll = [...new Set(edges.flatMap(e => [e.von, e.nach]))].sort((a, b) => Number(a) - Number(b));
+    const parent = {}; nodesAll.forEach(n => parent[n] = n);
+    const find = (n) => parent[n] === n ? n : (parent[n] = find(parent[n]));
+    edges.forEach(e => { parent[find(e.von)] = find(e.nach); });
+    const chains = {};
+    nodesAll.forEach(n => { const r = find(n); (chains[r] = chains[r] || []).push(n); });
+    const rows = Object.values(chains).sort((a, b) => Number(a[0]) - Number(b[0]));
+
+    const avail = Math.max(240, box.clientWidth);
+    const narrow = avail < 560;
+    const maxN = d3.max(rows, r => r.length);
+    const padX = 12, gap = narrow ? 20 : 56, rowH = 160, nodeH = 76, minNodeW = 72;
+    const needed = 2 * padX + maxN * minNodeW + (maxN - 1) * gap;
+    const width = Math.max(avail, needed);
+    const nodeW = (width - 2 * padX - (maxN - 1) * gap) / maxN;
+    const height = rows.length * rowH + 20;
+    box.style.overflowX = width > avail ? 'auto' : '';
+    const svg = d3.select(box).append('svg').attr('width', width > avail ? width : '100%').attr('viewBox', `0 0 ${width} ${height}`);
+    if (width > avail) svg.style('min-width', width + 'px');
+    const defs = svg.append('defs');
+    defs.append('marker').attr('id', 'hb-arrow').attr('viewBox', '0 0 10 10').attr('refX', 9).attr('refY', 5)
+      .attr('markerWidth', 7).attr('markerHeight', 7).attr('orient', 'auto-start-reverse')
+      .append('path').attr('d', 'M 0 0 L 10 5 L 0 10 z').attr('fill', 'var(--cds-chart-axis)');
+
+    const pos = {};
+    rows.forEach((chain, ri) => {
+      const total = chain.length * nodeW + (chain.length - 1) * gap;
+      const x0 = (width - total) / 2;
+      chain.forEach((n, i) => { pos[n] = { x: x0 + i * (nodeW + gap), y: 36 + ri * rowH }; });
+    });
+
+    const isDimNode = (n) => (S.kapitel && S.kapitel !== n) || (S.bereich && S.bereich !== bereichOf(n)) || (S.teil && S.teil !== 'Hauptteil');
+    const isDimEdge = (e) => isDimNode(e.von) && isDimNode(e.nach);
+
+    const eg = svg.append('g').selectAll('g').data(edges).join('g');
+    eg.append('path').attr('class', e => 'hb-edge' + (isDimEdge(e) ? ' hb-dim' : '')).attr('marker-end', 'url(#hb-arrow)')
+      .attr('d', e => {
+        const a = pos[e.von], b = pos[e.nach];
+        const forward = a.x < b.x;
+        if (forward && a.y === b.y) return `M ${a.x + nodeW} ${a.y + nodeH / 2 - 8} L ${b.x} ${b.y + nodeH / 2 - 8}`;
+        const y1 = a.y + nodeH, y2 = b.y + nodeH, dip = y1 + 30;
+        return `M ${a.x + nodeW / 2} ${y1} C ${a.x + nodeW / 2} ${dip}, ${b.x + nodeW / 2} ${dip}, ${b.x + nodeW / 2} ${y2 + 1}`;
+      });
+    eg.append('text').attr('class', e => 'hb-edgelabel hb-muted' + (isDimEdge(e) ? ' hb-dim' : ''))
+      .attr('data-source', 'uebergaenge').attr('data-field', 'kapitel').attr('data-where', e => 'kapitel=' + encodeURIComponent(e.kapitel))
+      .attr('text-anchor', 'middle')
+      .attr('x', e => { const a = pos[e.von], b = pos[e.nach]; return a.x < b.x && a.y === b.y ? (a.x + nodeW + b.x) / 2 : (a.x + b.x + nodeW) / 2; })
+      .attr('y', e => { const a = pos[e.von], b = pos[e.nach]; return a.x < b.x && a.y === b.y ? a.y + nodeH / 2 - 14 : a.y + nodeH + 36; })
+      .text(e => e.kapitel);
+
+    const tip = document.createElement('div'); tip.className = 'hb-tip'; box.appendChild(tip);
+    const showTip = (ev, lines) => {
+      tip.textContent = '';
+      lines.forEach((l, i) => { const d = document.createElement('div'); if (i === 0) d.className = 'hb-tip-k'; d.textContent = l; tip.appendChild(d); });
+      tip.style.display = 'block';
+      const bx = box.getBoundingClientRect();
+      let lx = ev.clientX - bx.left + 12, ly = ev.clientY - bx.top + 12;
+      if (lx + tip.offsetWidth > bx.width) lx = Math.max(0, ev.clientX - bx.left - tip.offsetWidth - 12);
+      if (ly + tip.offsetHeight > bx.height) ly = Math.max(0, ev.clientY - bx.top - tip.offsetHeight - 12);
+      tip.style.left = lx + 'px'; tip.style.top = ly + 'px';
+    };
+    eg.on('mousemove', (ev, e) => showTip(ev, [`${e.kapitel}: Kapitel ${e.von} nach ${e.nach}`, e.thema]))
+      .on('mouseleave', () => { tip.style.display = 'none'; })
+      .on('click', (ev, e) => { setFilter({ teil: 'Übergang', bereich: '', kapitel: '', suche: e.kapitel.toLowerCase() }); document.getElementById('suche').value = e.kapitel; });
+
+    const ng = svg.append('g').selectAll('g').data(nodesAll).join('g')
+      .attr('class', n => 'hb-node' + (isDimNode(n) ? ' hb-dim' : '') + (S.kapitel === n ? ' hb-sel' : ''))
+      .attr('transform', n => `translate(${pos[n].x},${pos[n].y})`);
+    ng.append('rect').attr('width', nodeW).attr('height', nodeH).attr('rx', 8).attr('stroke', n => bereichColor(bereichOf(n)));
+    ng.append('text').attr('class', 'hb-nodenum').attr('x', 10).attr('y', 28).text(n => n);
+    const title = ng.append('text').attr('x', 10).attr('y', 52)
+      .attr('data-source', 'gliederung').attr('data-field', 'thema').attr('data-where', n => 'kapitel=' + n)
+      .text(n => titleOf(n));
+    title.each(function () {
+      const el = this, max = nodeW - 72; let t = el.textContent;
+      if (narrow) { el.textContent = ''; return; }
+      while (t.length > 1 && el.getComputedTextLength() > max) { t = t.slice(0, -1); el.textContent = t.trimEnd() + '…'; }
+    });
+    window.hbVariants.forEach(([v, lab], i) => {
+      ng.filter(n => guideUrl(n, v)).append('a').attr('class', 'hb-pdf')
+        .attr('href', n => guideUrl(n, v)).attr('target', '_blank').attr('rel', 'noopener')
+        .attr('data-source', 'quickguides').attr('data-field', 'url').attr('data-where', n => 'kapitel=' + n + '&variante=' + v)
+        .on('click', (ev) => ev.stopPropagation())
+        .on('mousemove', (ev, n) => { ev.stopPropagation(); showTip(ev, [`Quick Guide Kapitel ${n} (${lab})`, 'PDF in neuem Tab öffnen']); })
+        .append('text').attr('x', nodeW - 8).attr('y', 20 + i * 13).attr('text-anchor', 'end').text(lab);
+    });
+    ng.on('mousemove', (ev, n) => showTip(ev, [`Kapitel ${n}`, titleOf(n), `Bereich ${bereichOf(n)}`]))
+      .on('mouseleave', () => { tip.style.display = 'none'; })
+      .on('click', (ev, n) => { setFilter({ kapitel: S.kapitel === n ? '' : n, teil: 'Hauptteil', bereich: '', suche: '' }); document.getElementById('suche').value = ''; });
+  }
+
+  function drawChart() {
+    const d = dash.data('perChapter');
+    const box = document.getElementById('chart');
+    if (d.status === 'error' || d.status === 'connect') { fail(box); return; }
+    if (d.status !== 'ok') return;
+    box.classList.remove('dash-skeleton');
+    box.textContent = '';
+    const rows = [...d.data].sort((a, b) => kapNum(a.kapitel) - kapNum(b.kapitel));
+    const width = Math.max(320, box.clientWidth);
+    const rowH = 22, top = 24, bottom = 8;
+    const height = top + rows.length * rowH + bottom;
+    const svg = d3.select(box).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${width} ${height}`);
+    const narrow = width < 560;
+    const labelOf = (r) => narrow ? `${r.kapitel}` : `${r.kapitel}  ${r.thema}`;
+    const probe = svg.append('text').attr('class', 'hb-rowlabel').style('visibility', 'hidden');
+    let labelW = 0;
+    rows.forEach(r => { probe.text(labelOf(r)); labelW = Math.max(labelW, probe.node().getComputedTextLength()); });
+    probe.remove();
+    const left = Math.min(labelW + 12, width * 0.55);
+    const right = 36;
+    const x = d3.scaleLinear([0, d3.max(rows, r => r.unterkapitel) || 1], [left, width - right]);
+    const y = d3.scaleBand(rows.map(r => r.kapitel), [top, height - bottom]).padding(0.25);
+
+    const ticks = x.ticks(Math.min(6, Math.floor((width - left) / 60)));
+    svg.append('g').selectAll('line').data(ticks).join('line')
+      .attr('x1', t => x(t)).attr('x2', t => x(t)).attr('y1', top - 4).attr('y2', height - bottom)
+      .attr('stroke', 'var(--cds-chart-grid)').attr('stroke-width', 1);
+    svg.append('g').selectAll('text').data(ticks).join('text').attr('class', 'hb-muted')
+      .attr('x', t => x(t)).attr('y', top - 8).attr('text-anchor', 'middle').text(t => fmt(t));
+
+    const isDim = (r) => (S.kapitel && S.kapitel !== r.kapitel) || (S.bereich && S.bereich !== r.bereich) || (S.teil && S.teil !== 'Hauptteil');
+    const g = svg.append('g').selectAll('g').data(rows).join('g').attr('class', r => 'hb-bar' + (isDim(r) ? ' hb-dim' : ''));
+    g.append('text').attr('class', 'hb-rowlabel').attr('x', left - 8).attr('y', r => y(r.kapitel) + y.bandwidth() / 2).attr('dy', '0.35em').attr('text-anchor', 'end').text(labelOf);
+    g.append('rect').attr('x', x(0)).attr('y', r => y(r.kapitel)).attr('height', y.bandwidth()).attr('rx', 4)
+      .attr('width', r => Math.max(0, x(r.unterkapitel) - x(0))).attr('fill', r => bereichColor(r.bereich));
+    g.append('text').attr('class', 'hb-muted').attr('x', r => x(r.unterkapitel) + 6).attr('y', r => y(r.kapitel) + y.bandwidth() / 2).attr('dy', '0.35em').text(r => fmt(r.unterkapitel));
+
+    const tip = document.createElement('div'); tip.className = 'hb-tip'; box.appendChild(tip);
+    g.on('mousemove', (ev, r) => {
+      tip.textContent = '';
+      const k = document.createElement('div'); k.className = 'hb-tip-k'; k.textContent = `Kapitel ${r.kapitel}: ${r.thema}`;
+      const v = document.createElement('div'); v.textContent = `${fmt(r.unterkapitel)} Unterkapitel, Bereich ${r.bereich}`;
+      tip.append(k, v); tip.style.display = 'block';
+      const bx = box.getBoundingClientRect();
+      let lx = ev.clientX - bx.left + 12, ly = ev.clientY - bx.top + 12;
+      if (lx + tip.offsetWidth > bx.width) lx = Math.max(0, ev.clientX - bx.left - tip.offsetWidth - 12);
+      if (ly + tip.offsetHeight > bx.height) ly = Math.max(0, ev.clientY - bx.top - tip.offsetHeight - 12);
+      tip.style.left = lx + 'px'; tip.style.top = ly + 'px';
+    }).on('mouseleave', () => { tip.style.display = 'none'; })
+      .on('click', (ev, r) => { setFilter({ kapitel: S.kapitel === r.kapitel ? '' : r.kapitel, teil: 'Hauptteil', bereich: '' }); });
+  }
+
+  const srcSel = document.getElementById('src-kapitel');
+  srcSel.addEventListener('change', () => { S.srcKapitel = srcSel.value; drawSources(); });
+  document.getElementById('src-suche').addEventListener('input', (e) => { S.srcSuche = e.target.value.trim().toLowerCase(); drawSources(); });
+
+  function drawSources() {
+    const idx = dash.data('quelltexteIndex'), cnt = dash.data('srcCounts');
+    const bars = document.getElementById('src-bars');
+    const list = document.getElementById('src-list');
+    // Balken je Kapitel
+    bars.textContent = '';
+    if (cnt.status === 'error' || cnt.status === 'connect') { fail(bars); }
+    else if (cnt.status === 'ok') {
+      bars.classList.remove('dash-skeleton');
+      const max = d3.max(cnt.data, r => r.abschnitte) || 1;
+      cnt.data.forEach(r => {
+        const b = document.createElement('button'); b.textContent = (r.kapitel ? r.kapitel + ' ' : '') + r.thema;
+        b.addEventListener('click', () => { S.srcKapitel = r.kapitel; srcSel.value = r.kapitel; drawSources(); });
+        const bar = document.createElement('div'); bar.className = 'hb-src-bar' + (S.srcKapitel === r.kapitel ? ' hb-on' : ''); bar.style.width = (100 * r.abschnitte / max) + '%';
+        const n = document.createElement('span'); n.setAttribute('data-source', 'srcCounts'); n.setAttribute('data-field', 'abschnitte');
+        n.setAttribute('data-where', 'kapitel=' + encodeURIComponent(r.kapitel)); n.textContent = fmt(r.abschnitte);
+        bars.append(b, bar, n);
+      });
+      if (!srcSel.options.length) {
+        cnt.data.forEach(r => { const o = document.createElement('option'); o.value = r.kapitel; o.textContent = (r.kapitel ? r.kapitel + ' ' : '') + r.thema; srcSel.appendChild(o); });
+        srcSel.value = S.srcKapitel;
+      }
+    }
+    // Liste
+    list.textContent = '';
+    if (idx.status === 'error' || idx.status === 'connect') { fail(list); return; }
+    if (idx.status !== 'ok') return;
+    const k = S.srcKapitel; const kn = Number(k);
+    const part = !k ? 3 : kn <= 8 ? 1 : kn <= 14 ? 2 : 3;
+    const full = dash.data('quelltexte' + part);
+    const texts = full.status === 'ok' ? new Map(full.data.map(r => [r.batch + ':' + r.abschnitt, r.text])) : null;
+    let rows = idx.data.filter(r => (r.kapitel || '') === k);
+    if (S.srcSuche) rows = rows.filter(r => (r.titel + ' ' + (texts ? (texts.get(r.batch + ':' + r.abschnitt) || '') : r.auszug)).toLowerCase().includes(S.srcSuche));
+    rows.sort((a, b) => Number(b.treffer) - Number(a.treffer) || Number(a.batch) - Number(b.batch));
+    document.getElementById('src-count').textContent = `${fmt(rows.length)} Abschnitte` + (full.status === 'ok' ? '' : ', Volltexte werden geladen …');
+    rows.slice(0, 300).forEach(r => {
+      const d = document.createElement('details'); d.className = 'hb-src-item';
+      d.setAttribute('data-source', 'quelltexteIndex'); d.setAttribute('data-field', 'titel');
+      d.setAttribute('data-where', 'batch=' + r.batch + '&abschnitt=' + r.abschnitt);
+      const sum = document.createElement('summary');
+      const b = document.createElement('span'); b.className = 'hb-src-batch'; b.textContent = 'Batch ' + r.batch + '.' + r.abschnitt;
+      const t = document.createElement('span'); t.className = 'hb-src-title'; t.textContent = r.titel;
+      const badge = document.createElement('span'); badge.className = 'hb-badge'; badge.textContent = 'Treffer ' + fmt(Number(r.treffer)) + ' · ' + fmt(Number(r.zeichen)) + ' Zeichen';
+      sum.append(b, t, badge);
+      const tx = document.createElement('div'); tx.className = 'hb-src-text';
+      tx.textContent = texts ? (texts.get(r.batch + ':' + r.abschnitt) || r.auszug) : r.auszug + ' …';
+      d.append(sum, tx);
+      list.appendChild(d);
+    });
+    if (rows.length > 300) { const m = document.createElement('p'); m.className = 'hb-note'; m.textContent = 'Nur die ersten 300 Abschnitte werden angezeigt; grenzen Sie mit der Suche ein.'; list.appendChild(m); }
+  }
+
+  function drawGuides() {
+    const d = dash.data('quickguides');
+    const box = document.getElementById('qg-list');
+    if (d.status === 'error' || d.status === 'connect') { fail(box); return; }
+    if (d.status !== 'ok') return;
+    box.classList.remove('dash-skeleton');
+    box.textContent = '';
+    const order = ['Alle', 'Kapitel', 'Übergangsmodul', 'Anhang', 'Vorspann'];
+    const rows = [...d.data].sort((a, b) => order.indexOf(a.art) - order.indexOf(b.art) || kapNum(a.kapitel) - kapNum(b.kapitel) || a.kapitel.localeCompare(b.kapitel, 'de', { numeric: true }));
+    let lastArt = '';
+    const seen = new Set();
+    rows.forEach(r => {
+      if (!/^(\/_blob\/|guides\/)/.test(r.url) || seen.has(r.kapitel)) return;
+      seen.add(r.kapitel);
+      const van = d.data.find(x => x.kapitel === r.kapitel && x.variante === 'Van') || r;
+      const byVar = (v) => d.data.find(x => x.kapitel === r.kapitel && x.variante === v);
+      if (r.art !== lastArt && r.art !== 'Alle') {
+        const h = document.createElement('div'); h.className = 'hb-qg-head';
+        h.textContent = r.art === 'Kapitel' ? 'Hauptkapitel' : r.art === 'Übergangsmodul' ? 'Übergangsmodule' : r.art === 'Anhang' ? 'Anhänge' : 'Vorspann';
+        box.appendChild(h); lastArt = r.art;
+      }
+      const a = document.createElement('div');
+      a.className = 'hb-qg-tile' + (r.kapitel === 'Alle' ? ' hb-qg-all' : '');
+      a.setAttribute('data-source', 'quickguides'); a.setAttribute('data-field', 'titel');
+      a.setAttribute('data-where', 'kapitel=' + encodeURIComponent(van.kapitel) + '&variante=' + encodeURIComponent(van.variante));
+      const n = document.createElement('span'); n.className = 'hb-qg-nr'; n.textContent = r.kapitel === 'Alle' ? '∑' : r.kapitel;
+      const body = document.createElement('span');
+      const t = document.createElement('span'); t.textContent = r.titel + ' (' + fmt(Number(r.seiten)) + ' Seiten)';
+      const ln = document.createElement('span'); ln.className = 'hb-qg-links';
+      window.hbVariants.forEach(([v, lab]) => {
+        const row = byVar(v); const url = row && row.url;
+        if (!url || !/^(\/_blob\/|guides\/)/.test(url)) return;
+        if (ln.childNodes.length) ln.appendChild(document.createTextNode(' · '));
+        const l = document.createElement('a'); l.className = 'hb-qg-link'; l.href = url; l.target = '_blank'; l.rel = 'noopener'; l.textContent = lab;
+        ln.appendChild(l);
+      });
+      body.append(t, document.createElement('br'), ln);
+      a.append(n, body);
+      box.appendChild(a);
+    });
+    document.getElementById('qg-note').textContent = `${fmt(seen.size - 1)} Quick Guides (Hauptkapitel, Übergangsmodule, Anhänge, Vorspann), je in den Varianten DE Van, DE Pkw, EN Vans und EN Cars, dazu je eine Gesamtdatei. Klick öffnet die PDF in einem neuen Tab.`;
+  }
+
+  function drawTable() {
+    const d = dash.data('gliederung');
+    const tbody = document.querySelector('#tabelle tbody');
+    tbody.textContent = '';
+    const note = document.getElementById('tabelle-note');
+    document.querySelectorAll('#teil-chips .hb-chip').forEach(c => c.classList.toggle('hb-on', c.textContent === S.teil));
+    document.querySelectorAll('#tabelle th').forEach(th => {
+      const btn = th.querySelector('button');
+      if (!btn) return;
+      const col = btn.dataset.col;
+      th.setAttribute('aria-sort', S.sortCol === col ? (S.sortDir > 0 ? 'ascending' : 'descending') : 'none');
+    });
+    if (d.status === 'error' || d.status === 'connect') { note.textContent = 'Die Gliederung konnte nicht geladen werden.'; return; }
+    if (d.status !== 'ok') return;
+    const gl = dash.data('guideLinks');
+    const links = gl.status === 'ok' ? gl.data : [];
+    let rows = d.data.filter(r =>
+      (!S.teil || r.teil === S.teil) &&
+      (!S.bereich || r.bereich === S.bereich) &&
+      (!S.kapitel || r.kapitel.split('.')[0] === S.kapitel) &&
+      (!S.suche || (r.kapitel + ' ' + r.thema).toLowerCase().includes(S.suche))
+    );
+    if (S.sortCol) {
+      const c = S.sortCol;
+      rows = [...rows].sort((a, b) => {
+        if (c === 'kapitel') return (kapNum(a.kapitel) - kapNum(b.kapitel) || a.kapitel.localeCompare(b.kapitel, 'de')) * S.sortDir;
+        if (c === 'ebene') return (Number(a.ebene) - Number(b.ebene)) * S.sortDir;
+        return a[c].localeCompare(b[c], 'de') * S.sortDir;
+      });
+    }
+    const parts = [];
+    if (S.kapitel) parts.push(`Kapitel ${S.kapitel}`);
+    if (S.bereich) parts.push(`Bereich ${S.bereich}`);
+    if (S.teil && !S.bereich && !S.kapitel) parts.push(S.teil);
+    if (S.suche) parts.push(`Suche „${S.suche}“`);
+    note.textContent = `${fmt(rows.length)} von ${fmt(d.data.length)} Einträgen` + (parts.length ? ` (${parts.join(', ')})` : '') + '.';
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.className = Number(r.ebene) === 1 ? 'hb-l1' : 'hb-l2';
+      const tdK = document.createElement('td'); tdK.className = 'hb-kap'; tdK.textContent = r.kapitel;
+      const tdT = document.createElement('td'); tdT.className = 'hb-thema'; tdT.textContent = r.thema;
+      const tdE = document.createElement('td'); tdE.className = 'hb-col-hide'; tdE.textContent = r.ebene;
+      const tdB = document.createElement('td'); tdB.className = 'hb-col-hide';
+      const badge = document.createElement('span'); badge.className = 'hb-badge';
+      const sw = document.createElement('span'); sw.className = 'hb-swatch'; sw.style.background = r.teil === 'Hauptteil' ? bereichColor(r.bereich) : 'var(--cds-chart-muted)';
+      badge.append(sw, document.createTextNode(r.bereich)); tdB.appendChild(badge);
+      const tdQ = document.createElement('td');
+      const link = links.find(l => l.kapitel === r.kapitel);
+      [['DE Van', link && link.url_van], ['DE Pkw', link && link.url_pkw], ['EN Vans', link && link.url_en_vans], ['EN Cars', link && link.url_en_cars]].forEach(([lab, url], i) => {
+        if (!url || !/^(\/_blob\/|guides\/)/.test(url)) return;
+        if (tdQ.childNodes.length) tdQ.appendChild(document.createTextNode(' · '));
+        const a = document.createElement('a'); a.className = 'hb-qg-link'; a.href = url; a.target = '_blank'; a.rel = 'noopener';
+        a.textContent = lab; tdQ.appendChild(a);
+      });
+      tr.append(tdK, tdT, tdE, tdB, tdQ);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function draw() { drawTiles(); drawBereiche(); drawFlow(); drawChart(); drawGuides(); drawSources(); drawTable(); }
+  dash.onData(draw);
+
+  const named = document.getElementById(location.hash.slice(1));
+  if (named) { named.scrollIntoView(); dash.setLink(named.id); }
+</script>

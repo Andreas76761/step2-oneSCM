@@ -1,0 +1,19 @@
+# Batch 599 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 11 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Customer & Partner Management**
+
+Im Bereich Customer & Partner Management wurden mehrere Anpassungen umgesetzt, die bereits im Einsatz sind. Für Benutzer mit deutscher Spracheinstellung zeigt das Registrierungsfenster für Händler (Dealership Registration) nun aktualisierte deutsche Übersetzungen sowie geänderte Bezeichnungen für die MPC-Rolle an. Außerdem wurde die Profilverwaltung verbessert: Der Profilbereich ist nicht mehr scrollbar.
+
+Im Rahmen der Umsetzung der Datenschutz-Grundverordnung (DSGVO) wurden mehrere Löschprozesse bereitgestellt und getestet. Der DocumentGdprDeletionJob löscht die Dokumente eines Kunden in DSS bzw. DMS. Der CustomerGDPRDeletionJob löscht Kunden, denen keine Verträge mehr zugeordnet sind. Mit DeleteContracts wird geprüft, dass alle Verträge mit dem Status „Rejected" oder „Suspended" gelöscht werden.
+
+Ebenfalls zur DSGVO gehört die Löschung von Benachrichtigungen zu stornierten und abgelehnten Verträgen. Das System soll alle Details zu einem Kunden oder Vertrag endgültig löschen, sobald die in der Marktkonfiguration hinterlegte Löschregel greift. Die Regel richtet sich nach dem Ende der Angebotsgültigkeit zuzüglich sechs Monaten bzw. nach dem Jahresende des Status „CLOSED" zuzüglich zehn Jahren. So werden keine Daten gespeichert, die ihren Zweck in der Verwaltung eines Servicevertrags erfüllt haben. Die Regelung gilt für Geschäfts- und Privatkunden (B2B und B2C). Zur Löschung der Benachrichtigungen wird ein Batch-Job eingerichtet, der einmal im Monat läuft. Verträge, die gelöscht werden sollen, werden an den Benachrichtigungsdienst (Notifications-Microservice) übermittelt und dort gelöscht. Dieser Punkt ist abgeschlossen.
+
+Abgeschlossen ist auch die Umstellung auf die DSS-API in Version 2. Die DSS-v1-API wird in den Umgebungen INT und PROD zum 30. September 2025 abgekündigt, sodass auf die v2-API gewechselt werden musste. Zudem wurde ein Fehler behoben, bei dem ein Wert für ein Feld vom Typ „character varying(20)" zu lang war.
+
+Weitere Vorhaben befinden sich noch in Planung. Für den Markt MBIL soll die Kundensuche für Geschäftskunden angepasst werden, da dort statt der USt-IdNr./Steuernummer die GST verwendet wird. Als Suchattribute sollen künftig Firmenname und GST dienen. Die Änderung betrifft die Vertragserstellung, die Vertragsübertragung sowie das Bearbeiten eines Vertrags im Status „Created", wenn dabei der Kunde geändert und die Kundensuche aufgerufen wird. Das System soll jeweils alle Kunden anzeigen, die zu GST und Firmenname passen. Zielgruppe sind Händler, Market Operations (MO) und MPCs.
+
+Geplant ist außerdem das automatische Speichern von Änderungen in der Historie (Elasticsearch). Bisher erfolgt dieses Speichern manuell, sodass eine Änderung versehentlich nicht erfasst werden kann. Künftig soll die Kundenhistorie ohne manuelles Auslösen gespeichert werden, beispielsweise über einen Entity Listener ähnlich dem PrivateCustomerListener. Nutzen können dies Market Operations, MPC, HQ und Admin-Benutzer mit der Rolle customer_history_r. Als Risiko wird genannt, dass nach Datenänderungen historische Daten fehlen könnten.
+
+Offen ist zudem die Datensynchronisation zwischen oneSCM und SWT. Da oneSCM das führende System ist, sollen bestehende Kundendaten synchronisiert werden, damit beide Systeme im Abgleich bleiben. Vorgesehen ist, dass oneSCM von SWT Aktualisierungsanfragen mit Seitenaufteilung (Pagination) in einem Zeitfenster von 12 Stunden erhält. Dafür muss SWT einen entsprechenden Endpunkt bereitstellen.

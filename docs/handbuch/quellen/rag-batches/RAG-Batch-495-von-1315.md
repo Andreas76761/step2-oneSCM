@@ -1,0 +1,23 @@
+# Batch 495 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**E-Mail-Vorlage für den Vertragsstatus „Aktiv“ erstellen**
+
+Im Bereich Dokumente und Kommunikation können Sie eine Benachrichtigungsvorlage für E-Mails anlegen, die an den Vertragshalter versendet wird, sobald ein Vertrag im Rahmen der Vertragserstellung aktiviert wird. Die Vorlage enthält einen Inhalt, der speziell auf den Vertragsstatus „Aktiv“ zugeschnitten ist. Die Funktion deckt die Erstellung der Vorlage ab. Der tatsächliche Versand der E-Mails mit den erstellten Vorlagen wird im Rahmen der Vertragserstellung geprüft.
+
+Voraussetzung ist, dass Sie mit Ihren Zugangsdaten angemeldet sind und dass die Vorlagen für Kopfzeile und Fußzeile bereits definiert wurden. Navigieren Sie zunächst im Administrationsbereich zur Vorlagenverwaltung und öffnen Sie dort den Reiter „Benachrichtigung“. Wählen Sie anschließend „Vorlage erstellen“ und danach „E-Mail“.
+
+Auf der Seite zur Vorlagenerstellung erfassen Sie zunächst die Pflichtangaben. Dazu gehören der Vorlagenname (Textfeld mit maximal 25 Zeichen, zum Beispiel „Template-Active Status“), der Markt, der für die erste Version (MVP) mit Deutschland vorbelegt ist und künftig je nach Land angezeigt wird, sowie das Feld „Verwendet für“. Hier wählen Sie für den Status „Aktiv“ den Eintrag „ACTIVATION“ aus. Außerdem legen Sie über „Gültig ab“ fest, ab welchem Datum die Vorlage für den Geschäftsprozess gilt. Sind Pflichtfelder nicht ausgefüllt, werden Sie auf das jeweilige Feld hingewiesen. „Als Entwurf speichern“ bleibt dann verfügbar, „Veröffentlichen“ hingegen nicht.
+
+Optional können Sie weitere Angaben machen: die Sparte (im MVP „PC“, Van folgt nach dem MVP), die Marke (im MVP „Mercedes-Benz“, Smart folgt nach dem MVP) und die Sprache, die sich nach der Marktrolle des Benutzers richtet und im MVP Englisch ist.
+
+Anschließend erfassen Sie den eigentlichen E-Mail-Inhalt, der gemäß dem MB Style Guide für E-Mails gestaltet wird. Der Betreff lautet „Service Contract Activation (Contract Number: %Contract Number)“. Die Vertragsnummer wird erst beim Versand an den Kunden eingesetzt und entspricht dem jeweiligen Vertrag. Kopfzeile und Fußzeile wählen Sie aus den angebotenen Werten per Dropdown aus. Im Design-Editor geben Sie den Text der E-Mail ein. Alle mit „%“ gekennzeichneten Werte sind Platzhalter, die Sie per Drag-and-drop einfügen.
+
+Der Text beginnt mit der Anrede „Dear (%First Name) (%Last name)“ und bedankt sich dafür, dass sich der Kunde für einen Mercedes-Benz Service Contract entschieden hat. Er informiert darüber, dass der Vertrag erfolgreich aktiviert wurde und dass alle vertragsbezogenen Dokumente beigefügt sind, nämlich der Fahrzeugvertrag sowie die Allgemeinen Geschäftsbedingungen. Weiter wird mitgeteilt, dass die Zahlungen ab dem Platzhalter „%Contract Start Date“ per Lastschrift eingezogen werden. Genannt werden dabei die Mercedes-Benz Group AG, Deutschland, der Creditor Code DE02ZZZ00000151350 und die SEPA-Mandatsreferenz „%Direct Debit Code“. Bei Fragen wird auf das Customer Support Team verwiesen. Der Text schließt mit der Grußformel „Yours sincerely, Service Contract Team, Mercedes-Benz Cars Germany“. Es folgen marktspezifische Angaben zu Telefonnummer und E-Mail-Adresse sowie der Hinweis, vor dem Drucken der E-Mail die Umwelt zu bedenken.
+
+Mit der Schaltfläche „Test-E-Mail senden“ erhalten Sie eine E-Mail an Ihre eigene Adresse. Sie hat dasselbe Format wie die spätere Kunden-E-Mail, einschließlich Betreff, Kopfzeile, Fußzeile und Inhalt. So sehen Sie, wie die Nachricht beim Kunden aussehen wird.
+
+Mit „Als Entwurf speichern“ sichern Sie eine Entwurfsversion der Vorlage. Diese wird in Geschäftsprozessen noch nicht angewendet, auch dann nicht, wenn das Datum „Gültig ab“ erreicht ist. Mit „Veröffentlichen“ legen Sie die endgültige Version fest. Sie steht danach für die Prozesse bereit und wird entsprechend dem Datum „Gültig ab“ angewendet. „Veröffentlichen“ steht erst zur Verfügung, wenn alle Pflichtfelder erfasst sind. Die erstellte Vorlage wird anschließend in der Übersichtsseite der Vorlagen angezeigt.
+
+Wird ein Vertrag angelegt und aktiviert, erhält der Kunde die wie oben definierte E-Mail, wobei der Fahrzeugvertrag und die Allgemeinen Geschäftsbedingungen als Anhang beigefügt sind.

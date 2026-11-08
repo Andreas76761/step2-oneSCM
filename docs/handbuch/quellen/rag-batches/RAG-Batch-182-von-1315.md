@@ -1,0 +1,23 @@
+# Batch 182 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 10 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management: Neuerungen und Korrekturen**
+
+**Plausibilitätsprüfung der Rechnungsanzahl beim SWT-Export**
+
+Im Bereich Admin → Financial Control steht auf dem Tab „Export Counter / Checks" eine neue Plausibilitätsprüfung zur Verfügung. Sie unterstützt MPC- und MO-Anwender dabei, vor dem nächsten Export nachzuvollziehen, wie viele Rechnungen pro Schnittstelle an SWT übermittelt werden sollen, und zu prüfen, ob eine Exportdatei alle exportfähigen Rechnungen enthält. Da künftig mehrere Märkte mit unterschiedlichen FI-Systemen unterstützt werden, ist die Seite so aufgebaut, dass sich gezielt die Werte einzelner Märkte betrachten lassen, etwa die indischen Werte für SWT.
+
+Die Seite gliedert sich in Suchkriterien und Ergebnisse. Als Suchkriterien stehen der Dateiname, die Schnittstelle (Outbound oder Workshop), das Datum und die Prüfung (Check) zur Verfügung; für Schnittstelle und Check werden die möglichen Werte in Auswahllisten aus der Datenbank bereitgestellt. Änderungen an den Filtern wirken sich nicht automatisch auf die Ergebnisse aus. Erst ein Klick auf „Search" zeigt die Treffer passend zu den gewählten Filtern an. Die Schaltfläche „Reset" setzt alle Filterfelder auf den Ausgangszustand (leer) zurück und aktualisiert die Ergebnisliste.
+
+Der Ergebnisbereich listet alle Exportdateien für SWT (Outbound, Workshop). Zu jeder Datei werden der Dateiname, die Schnittstelle und der Exportzeitpunkt angezeigt. Standardmäßig ist die Liste nach dem Exportzeitpunkt sortiert, sodass neue Dateien oben stehen. Die Spalte „Invoices" zeigt die Anzahl der nach den Regeln der jeweiligen Schnittstelle exportfähigen Rechnungen, die Spalte „Exported invoices" die Anzahl der tatsächlich in der Datei exportierten Rechnungen (dabei werden alle Rechnungspositionen gezählt). Die Spalte „Check" zeigt „OK", wenn beide Anzahlen übereinstimmen und es sich um dieselben Rechnungen handelt. Weichen die Anzahlen voneinander ab, lautet das Ergebnis „Not OK". In diesem Fall steht in der Spalte „Action" die Option „More Details" zur Verfügung. Sie öffnet ein Popup mit den Vertragsnummern und Rechnungsnummern, die in der Exportdatei fehlen oder zwar enthalten sind, aber nicht als exportfähig gezählt wurden.
+
+Für die Schnittstelle SWTInvExp gelten folgende Regeln zur Ermittlung der exportfähigen Rechnungen. Im Non-MPay-Flow ist eine Rechnung exportfähig, wenn sie vom Typ MPPI ist und der Rechnungszeitraum heute oder früher liegt (hypothetisch würde die Rechnung beim Lauf des CFDM-Batchjobs von „Planned" auf „Accepted" wechseln), oder wenn sie vom Typ MANU ist und den Status „Accepted" hat. Beim Lauf des Export-Batchjobs werden alle Rechnungen mit dem Status „Accepted" berücksichtigt. Im MPay-Flow gelten dieselben Regeln für MPPI und MANU, zusätzlich muss der MPay-Status „Captured" oder „Refunded" lauten. Die Zählung der exportfähigen Rechnungen erfolgt für jede Exportdatei getrennt, und der Zähler wird nach dem Export jedes Dateityps einzeln zurückgesetzt. Der Rechnungsstatus bleibt nach dem Export „Exported". Weitere Statusänderungen werden vom FI-System anhand der empfangenen Rechnungsrückmeldung ausgelöst.
+
+**Weitere Änderungen**
+
+Die Zuordnungsregeln für die SAP-Debitorennummer wurden für SWT und CoFiCo angepasst, sodass sie auch alphanumerische Werte zulassen. In Indien kann die Nummer Ziffern und Buchstaben enthalten, beispielsweise INC802418, und wird entsprechend an die SWT-Schnittstelle exportiert. Diese Änderung befindet sich derzeit im BAT-Test.
+
+Beim Export der E169-Datei wurde die Betriebsnummer des Rechnungsstellers bzw. der Werkstatt für alle E169-Varianten aktualisiert. Für Vans gilt: Sales Org 268, MB Vans Care Complete 00 (Complete/Excellent), MB Vans Care Wartung 02 (Compact), Internationaler Servicevertrag 05 (International SC). Für Pkw gilt: Sales Org 268, MBC Komplettservicepaket KSP 0C (Complete/Excellent), MBC Wartungspaket WP 2C (Compact), Internationaler Servicevertrag 5C (International SC). Außerdem wurde ein Fehler behoben, durch den eine E169-Datei nicht in der Liste der generierten Dateien angezeigt wurde.
+
+Weitere Korrekturen betreffen die Marktkonfiguration und die Rechnungsbenachrichtigungen. Ein Market-Configurator-Benutzer kann nun Steuersätze anlegen. Außerdem verschwindet eine Rechnungsbenachrichtigung nun, nachdem die Rechnung storniert oder abgelehnt wurde.

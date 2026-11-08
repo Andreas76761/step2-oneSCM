@@ -1,0 +1,27 @@
+# Batch 260 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 7 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management: Neuerungen und Korrekturen**
+
+**Kundenrechnungen und Zahlungsplan**
+
+Bei Rechnungen aus dem Zahlungsplan, die an NACOS exportiert wurden (Status „Exported"), fehlten in der Ansicht der Steuerbetrag und der Bruttobetrag. Dieses Problem wurde behoben. Netto-, Steuer- und Bruttobetrag werden in der Ansicht der Rechnung nun korrekt berechnet und angezeigt. Die UTC-Werte sind in der Historie korrekt hinterlegt.
+
+Außerdem wurde ein Fehler behandelt, bei dem nach der Erstellung und Aktivierung eines Vertrags im Bereich „Kundenrechnungen" der Zahlungsdetails keine Daten angezeigt wurden. Das betraf sowohl Einmalzahlungen als auch monatliche Zahlungen. Der Bereich soll mit den entsprechenden Rechnungsdaten befüllt werden. Der Fehler wurde in der Entwicklungsumgebung behoben und wird auf der Integrationsumgebung bereitgestellt.
+
+**Batch-Job-Verwaltung**
+
+Beim Herunterladen von Dateien aus der Batch-Job-Verwaltung wurde die Dateiendung doppelt angehängt, zum Beispiel „.dat.dat" oder „.csv.csv". Dies wurde korrigiert, sodass heruntergeladene Dateien nur noch ihre ursprüngliche Endung tragen.
+
+Zudem funktionierte die Sortierung der Spalte „Modification Date" nicht. Die Sortierung folgt nun der vom Benutzer gewählten Richtung (aufsteigend oder absteigend).
+
+Für Administratoren steht die Suche nach Dateien eines Batch Jobs zur Verfügung, die in S3 abgelegt sind. Klickt ein Administrator in der Job-Liste auf den Namen eines Batch Jobs, öffnet sich eine neue Seite, die ausschließlich die zugehörigen herunterladbaren Dateien dieses Jobs anzeigt. Im Filterbereich sind zunächst alle Felder leer, und es werden noch keine Dateien angezeigt. Gesucht werden kann nach dem Dateinamen (enthält-Suche) sowie über ein Dropdown zum Zeitraum mit den Werten „Today", „Last week", „Last month" und „Last 3 months". Änderungen an den Filtern wirken sich nicht automatisch auf die Ergebnisse aus. Erst ein Klick auf „Search for Files" zeigt die Treffer an. Die Schaltfläche „Reset" setzt die Filter auf den Ausgangszustand zurück und aktualisiert die Ergebnisse.
+
+Der Ergebnisbereich zeigt den Namen des gewählten Batch Jobs und eine Tabelle mit den Dateien. Die Tabelle enthält ein Kontrollkästchen, mit dem alle Dateien der aktuellen Seite aus- oder abgewählt werden können, sowie die Spalten Dateiname, Größe und Datum. Dateiname und Datum entsprechen den Angaben in S3. Übersteigt die Trefferzahl die maximale Anzahl pro Seite, werden die Ergebnisse auf mehrere Seiten verteilt, zwischen denen Administratoren wechseln können. Standardmäßig werden 10 Einträge pro Seite angezeigt. Über ein Dropdown lässt sich dieser Wert auf 10, 20, 30, 40 oder 50 ändern. Die Auswahl wird nicht gespeichert und nach einem Neuladen der Seite wieder auf 10 zurückgesetzt. Die Gestaltung entspricht der Mercedes-Benz Workbench und dem vom Kunden freigegebenen UI-Design.
+
+**Vertragsprüfung und Endsaldo**
+
+Die Vertragsprüfung ist ein Prozess des Vertragsmanagements. Verträge bestimmter Produkte werden jährlich zum nahenden Vertragsjubiläum geprüft. Dabei wird die tatsächlich gefahrene Strecke des Jahres mit der geplanten Jahresfahrleistung verglichen. Bei einer Überschreitung wird dem Kunden die zusätzlich gefahrene Strecke berechnet. Bei einer Unterschreitung erfolgt nach aktueller Geschäftsentscheidung keine Erstattung, wobei sich diese Entscheidung künftig ändern kann. Es gilt eine Toleranz von 10 Prozent: Liegt die Überschreitung innerhalb von 10 Prozent der geplanten Jahresfahrleistung, wird dem Kunden in diesem Jahr nichts berechnet, und er kann die Abweichung im Folgejahr ausgleichen. Bei der nächsten jährlichen Prüfung werden die Strecken kumuliert betrachtet, und es wird entschieden, ob berechnet wird oder die Entscheidung auf das dritte Jahr verschoben wird. Ist die Überschreitung zu hoch, wird der Kunde gebeten, den Vertrag anzupassen, und die geplante Jahresfahrleistung wird für die folgenden Jahre angepasst. Bei Beendigung des Vertrags erfolgt eine Schlussprüfung, in der jeder zusätzlich gefahrene Kilometer zu bezahlen ist. Ein Übertrag in die Zukunft ist dabei nicht möglich.
+
+Aus Sicht des Revenue Managements wird dieses angestoßen, wenn der Prüfprozess die Erstellung des Finanzdokuments auslöst. Bei einer Überschreitung wird die zusätzliche Strecke berechnet, bei einer Unterschreitung wird dem Kunden eine Gutschrift ausgestellt. Die Finanzdokumente werden per E169-Export-Batch an das FI-System (NACOS) gesendet, und die Rückmeldung wird über den E169-Import-Batch empfangen. Je nach jährlicher oder abschließender Prüfung wird der entsprechende Rechnungstyp gewählt: BDCR (Balancing Document Contract Review) oder FDCR (Final Document Contract Review). Der Flow-Typ lautet „Contract Review Documents". Die Erstellung der Finanzdokumente erfolgt automatisiert auf Basis der Informationen aus dem Vertragsmanagement. Da diese Rechnungen dem Kunden berechnet werden, erscheinen sie im Bereich „Kundenrechnungen". Vom Vertragsmanagement werden dafür der Rechnungsbetrag, der Dokumenttyp (Rechnung oder Gutschrift), die Vertragsnummer, der Partner und der Ereignistyp (jährliche oder abschließende Prüfung) erwartet.

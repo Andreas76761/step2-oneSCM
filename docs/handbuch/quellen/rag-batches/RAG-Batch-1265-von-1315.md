@@ -1,0 +1,15 @@
+# Batch 1265 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 6 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Contract Calculation – Neuerungen und Änderungen**
+
+In mehreren Bereichen der Anwendung wurden die Schaltflächen am Seitenende vereinheitlicht. Das betrifft die Erstellung von Steuern (Tax Management), die Erstellung internationaler Werkstattrechnungen (International Workshop Invoices) sowie die VEGA-Codes bzw. Schadenscodes (Damage Codes). Die Schaltfläche „Cancel“ ist jeweils mit einem „X“-Symbol gekennzeichnet, die Schaltfläche „Create“ mit einem Häkchen-Symbol. Beim Tax Management und bei den internationalen Werkstattrechnungen ist „Cancel“ stets als sekundäre und „Create“ stets als primäre Schaltfläche dargestellt. Fährt man mit der Maus über eine der beiden Schaltflächen, erscheint ein Tooltip mit der jeweiligen Bezeichnung („Cancel“ bzw. „Create“). Bei den VEGA-Codes bzw. Schadenscodes gibt es zusätzlich die Schaltflächen „Back“ mit einem „<“-Symbol und „Next“ mit einem „>“-Symbol. Auch hier wird beim Überfahren mit der Maus ein Tooltip mit der Bezeichnung „Cancel“, „Back“, „Next“ bzw. „Create“ angezeigt.
+
+Für die Eingabefelder „Product Name“ und „Review Profile Name“ gelten neue Längenbegrenzungen. Der Product Name bleibt ein Pflichtfeld mit dem Platzhalter „Product Name“ und muss mindestens 3 Zeichen enthalten. Die maximale Länge wurde von bisher 100 auf 20 Zeichen reduziert. Der Review Profile Name musste bisher mindestens 1 Zeichen enthalten und hatte keine Obergrenze. Nun sind mindestens 3 und höchstens 30 Zeichen erlaubt.
+
+Bei der Logik für Reifenprodukte wurde eine Anpassung vorgenommen. Bisher konnten die Eingaben in der Haupt-Cluster-Tabelle für Reifenprodukte Dezimalwerte enthalten, und die dort angegebene Zahl entsprach nicht der Anzahl der Reifen, die der Kunde in seinem Vertrag haben darf. Bei der Produkterstellung in Schritt 5 (Definition der maximalen Reifenanzahl für einen Vertrag) sowie im Schritt zum Hinzufügen von Reifen zu einem Vertrag akzeptieren die Eingaben in der Haupt-Cluster-Tabelle für Reifenprodukte nun ausschließlich ganze Zahlen. Der Wert aus dieser Tabelle wird außerdem an die Vertragserstellung (Stream 2) übermittelt.
+
+Ferner wurde die Preisabfrage für Langzeitverlängerungen (Long Term Prolongation) verbessert. Wurde ein Vertrag zuvor um 1 bis 6 Monate kurzfristig verlängert und anschließend eine Langzeitverlängerung angefragt, lieferte die Vertragskalkulation bisher den Wert „null“ zurück. Nun werden nur Vertragslaufzeiten zurückgegeben, die oberhalb der aktuellen Vertragslaufzeit liegen.
+
+Schließlich wurde ein Fehler behoben, bei dem beim Duplizieren einer Preisversion die Fahrzeuggruppen nicht mitkopiert wurden.

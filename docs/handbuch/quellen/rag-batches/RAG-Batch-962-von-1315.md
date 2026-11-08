@@ -1,0 +1,21 @@
+# Batch 962 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 2 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kampagnen in der Vertragserstellung**
+
+Bei der Vertragserstellung werden Kampagnen berücksichtigt, die auf einen Servicevertrag angewendet werden können. Bisher unterstützte die Vertragserstellung ausschließlich Sticker-Price-Kampagnen, bei denen der Verkäufer die Kampagne auswählen kann, die zum Bestelldatum des Fahrzeugs passt. Nun werden alle Kampagnentypen abgedeckt, um eine korrekte Preisgestaltung, eine übersichtliche Kampagnenverwaltung und eine hohe Kundenzufriedenheit zu gewährleisten. Kampagnen können entweder als Festbetrag oder als Prozentwert definiert sein. Der jeweilige Wert wird vom Produktservice berechnet.
+
+Handelt es sich um eine Auto-Apply-Kampagne und liegt sie innerhalb ihres Gültigkeitszeitraums, wird die Preisreduktion automatisch auf das Produkt angewendet. Der Vertrag enthält dann die Produkte mit den bereits angepassten Preisen, und weitere Kampagnen können auf dieses Produkt nicht mehr angewendet werden. Der Händlerrabatt darf den Produktwert, einschließlich der Kampagne, nicht überschreiten. Stehen sowohl eine Auto-Apply- als auch eine Sticker-Price-Kampagne zur Verfügung, wird ausschließlich die Auto-Apply-Kampagne, die für den Kunden am besten geeignet ist, an den Vertrag übergeben.
+
+Befindet sich eine Auto-Apply-Kampagne in der Kulanzfrist (Grace Period), wird die Preisreduktion nicht automatisch angewendet. Die Produkte werden zunächst ohne Kampagne in den Vertrag aufgenommen. Der Händler kann die Kulanzfrist-Kampagne aktiv auswählen und deren Anwendung auf den Vertrag anfordern. Stehen gleichzeitig mehrere Kampagnen zur Verfügung, kann er zwischen Kulanzfrist-Kampagnen und Sticker-Price-Kampagnen wählen. Wählt er eine Sticker-Price-Kampagne, werden die Kulanzfrist-Kampagnen deaktiviert. Wählt er eine Kulanzfrist-Kampagne, werden umgekehrt die Sticker-Price-Kampagnen deaktiviert. Pro Produkt kann nur eine Kampagne ausgewählt werden.
+
+Sind Sticker-Price-Kampagnen verfügbar, werden dem Vertrag alle zutreffenden Kampagnen angezeigt. Der Händler ist dafür verantwortlich, die für den Kunden passendste Kampagne auszuwählen, beispielsweise anhand des Bestelldatums des Kunden. Auch hier gilt, dass nur eine Kampagne pro Produkt gewählt werden kann und der Händlerrabatt den Produktwert nicht überschreiten darf.
+
+**Signaturablauf erneut auslösen**
+
+Bisher konnte eine einmal gewählte und gestartete Signaturart nicht mehr geändert werden. Als einzige Alternative blieb dem Verkäufer, in der Detailansicht des Vertrags im Bereich „Communication“ das Dokument auszuwählen, auszudrucken und wieder hochzuladen. Künftig können Verkäufer die gewählte Signaturart ändern oder den Signaturablauf erneut auslösen. So können sie dem Kunden Alternativen anbieten und die Kundenbindung stärken.
+
+Voraussetzung ist, dass die Signatur für das Angebot bereits gestartet wurde und sich der Vertrag im Status „Waiting for Confirmation“ befindet. Kann der Kunde die gewählte Signaturmethode nicht nutzen oder möchte er sie ändern, öffnet der Verkäufer die Angebotsverwaltung (Proposal Management) und sucht den betreffenden Vertrag heraus.
+
+Hat der Vertrag den Status „Created“, gelangt der Verkäufer durch Anklicken des Vertrags in den Schritt „Overview and Confirmation“, in dem der Signaturprozess gestartet werden kann. Hat der Vertrag den Status „Waiting for Confirmation“, steht auf der Startseite der Angebotsverwaltung in der Spalte „Action“ die Schaltfläche „Retrigger Signature“ zur Verfügung. Ein Klick darauf öffnet einen Dialog, in dem der Verkäufer eine neue Signaturart auswählen kann, beispielsweise DSS, eSignature oder den Ausdruck des Dokuments. Mit der Auswahl wird die bisherige Signaturanfrage durch die neu gewählte Art überschrieben. Die Gültigkeitsdauer der DSS-Signatur wird neu gestartet, während die ursprüngliche Angebotsgültigkeit erhalten bleibt. Wird eine digitale Signatur gewählt und sofort abgeschlossen, erscheint wie im bisherigen Ablauf die Erfolgsseite. Die Funktion steht Verkäufern der Händler, MPC und MO zur Verfügung. Design und Grafiken entsprechen der Mercedes-Benz Workbench.

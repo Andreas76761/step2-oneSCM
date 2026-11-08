@@ -1,0 +1,21 @@
+# Batch 1245 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 20 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Contract Calculation – Release-Hinweise**
+
+In der Domäne Contract Calculation ist eine Änderung bei den Verwaltungsgebühren (Admin Fee) bereits abgeschlossen. Die Verwaltungsgebühr wird künftig auf alle Rechnungen verteilt, genauso wie die übrigen Kosten. Sie fällt damit nicht mehr gesondert an einer einzelnen Stelle an.
+
+Ein weiteres Vorhaben wurde geschlossen: der Ablauf für Produkte, die über Bestellnummern (IDs) aus den Bereichen GO, AFAB, VERSO und OTR angeboten werden. Enthalten die Bestelldaten bereits eine Fahrgestellnummer, ist diese aber noch nicht in VEDOC vorhanden, werden die Produkte dennoch angezeigt. Vor der Aktivierung prüft der Vertrag die Kompatibilität von Produkt und Preis. Als Anwendungsfall wurde eine OTR-ID dokumentiert, bei der die Fahrgestellnummer vorlag, aber in VEDOC noch nicht zu finden war.
+
+Derzeit in Entwicklung bzw. im Test befindet sich die Übergabe des Blueprint-Typs an die Generierung. Der Vertrag nutzt diese Angabe, um Produkte wie Servicevertrag und Reifenprodukte miteinander zu vergleichen. Im Entwicklungs-Backlog liegt die Frontend-Umsetzung der Produktprüfung „Regular Service“ über ein externes DSB-System. Die Backend-Seite dieser Prüfung ist noch offen. Als Testfälle sind Fahrzeuge ohne Service, mit Service, regelmäßig gewartete Fahrzeuge, Fahrzeuge mit lückenloser Wartungshistorie, Fahrzeuge mit Service nicht nach MB-Standard sowie Fahrzeuge ohne vollständige, durchgängige Wartungshistorie vorgesehen.
+
+Noch offen sind außerdem mehrere Themen rund um Preisberechnung und Kampagnen. Eine Preisprüfungs-API soll die prozentuale Abweichung zwischen Ausgangspreis und aktualisiertem Preis berechnen und vor der Aktivierung an die Generierung senden. Die Formel lautet: Prozentuale Abweichung = ((aktualisierter Preis − Ausgangspreis) ÷ Ausgangspreis) × 100. Zudem soll die Produktverwaltung ein vom Vertrag gesendetes Ereignis verarbeiten und den entsprechenden Kampagnenbetrag von den Gesamtausgaben abziehen, sodass das Kampagnenbudget wieder den korrekten Stand vor der Aktivierung zeigt. Hintergrund sind abweichende Kampagnenwerte zwischen dem Kampagnenbereich und dem Bereich der Finanzdokumente.
+
+Für die Umstellung der Berechnungslogik gilt: Der Feature-Toggle muss in der Produktivumgebung auf TRUE stehen, solange die geänderte Berechnung noch nicht umgesetzt ist. TRUE bedeutet, dass die bisherige Berechnungsformel verwendet wird. Diese baut in folgender Reihenfolge auf: Basispreis, im Preis enthaltener Optionsschutz, optional gewählter Optionsschutz, technische Optionen und Industriefaktor-Preis. Darauf folgen Händlerprovision, zahlungsbezogene Verwaltungsgebühr (einmalig oder monatlich, abhängig vom Zahlungsintervall des Kunden), Verwaltungsgebühr pro Betrag und Inflationsaufschlag. Anschließend werden Kampagnenrabatt und Händlerrabatt abgezogen, zuletzt wird die Mehrwertsteuer auf den Kundennettopreis berechnet.
+
+Weitere Verbesserungen sind geplant, aber noch nicht umgesetzt:
+
+Fehlermeldungen sollen in allen Domänen für Benutzer aussagekräftiger werden. Die Inflationstabelle samt Marktseinstellungen und Berechnung soll erweitert werden. Produkte sollen in allen Umgebungen gesperrt werden können, um versehentliche Änderungen zu vermeiden. Fahrzeugvoraussetzungen sollen pro Sales Level getrennt definiert werden können. Sonderfälle bei Laufleistung und Laufzeit sowie die Sonderfallberechnung sollen optimiert werden.
+
+Auch das Kampagnenstatusmodell (einschließlich der Anzeige des Gültigkeitszeitraums) soll überarbeitet werden. Produkt- und Kampagnenübersicht sollen optimiert und aneinander angeglichen werden. Hinzu kommen die Provisionsbehandlung für Leasingverträge, mehr Transparenz in der Produktdefinition (welche Produkte ein bestimmtes Limit verwenden) sowie eine neue Sortierreihenfolge für die Anzeige von Produkten und Optionen in der Oberfläche.

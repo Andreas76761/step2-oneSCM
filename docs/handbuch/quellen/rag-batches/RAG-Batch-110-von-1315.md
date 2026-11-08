@@ -1,0 +1,17 @@
+# Batch 110 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 6 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management: Supplier Revenue Report (Report Supplier Payment Plan)**
+
+Für Lieferanten, die als „Self-Billing Light" konfiguriert sind, erstellt oneSCM die Rechnung nicht selbst. Der Lieferant muss seine Rechnung eigenständig ausstellen und benötigt dafür eine klare, strukturierte Übersicht darüber, was er oneSCM in Rechnung stellen darf. Diese Übersicht liefert der neue Supplier Revenue Report, der auch als „Report Supplier Payment Plan" bezeichnet wird. Besonders wichtig ist er für Märkte, in denen Self-Billing nicht erlaubt ist (zum Beispiel Indien bei Provisionen), denn dort hängt der Provisionsprozess mit Händlern und Lieferanten vollständig von diesem Report ab. Er ist vom Cost Breakdown Report für Schadencodes zu unterscheiden, der separat behandelt wird. Bisher wurde der Supplier Payment Plan als Excel-Datei exportiert.
+
+Der Report wird für jede Kombination aus Lieferant und Coverage Code erzeugt, sofern für diese Kombination berechtigte, akzeptierte Positionen des Supplier Payment Plans vorliegen. Die Erstellung erfolgt, wenn der Lieferanten-Batchjob ausgeführt wird (oneERPSupplierE167EXP, CoFiCoE167EXP oder SWTE167EXP). Erbringt ein Lieferant mehrere Leistungen, etwa Reifen und Wartung, entsteht pro Coverage Code ein eigener Report und nicht ein gemeinsamer. Der Report enthält alle berechtigten, akzeptierten Positionen der jeweiligen Kombination.
+
+Inhalt und Layout richten sich nach dem Report-Typ, der sich aus dem dem Lieferanten zugeordneten Coverage Code ableitet, zum Beispiel Reifen-Coverage, Verkaufsprovision oder Rückversicherer-/Versicherungsprämien-Coverage. Alle Report-Typen enthalten die folgenden allgemeinen Spalten: Reference No. (Referenz- bzw. Processing-Nummer für den Abgleich mit dem FI-System), FIN, VIN, Contract Start, Contract End, Invoice No. (oneSCM-Rechnungsnummer), Processing No. (oneSCM-Processing-Nummer), Invoice Period Start, Invoice Period End, Net Amount, Tax Amount und Total (Netto plus Steuer). Die Processing No. steht in jeder Zeile, damit das FI-System die eingehende Rechnung des Lieferanten dem richtigen oneSCM-Datensatz zuordnen kann. Für den Report sollen sämtliche Rechnungsdetails verfügbar sein, damit die Marktorganisation (MO) eine Vorlage erstellen kann. Welche Spalten je Report-Typ gelten, ist in der zugehörigen Excel-Datei dokumentiert.
+
+Bei jedem Lauf wird der Report gleichzeitig im CSV- und im XML-Format erzeugt. Er wird in der Sprache erstellt, die im Lieferantenmanagement (Supplier Management) für den Lieferanten hinterlegt ist.
+
+Der Versand richtet sich nach der Konfiguration des Report-Typs im Supplier Management. Ist der Lieferant als Empfänger eingestellt, wird der Report direkt an dessen hinterlegte Kontakt-E-Mail-Adresse gesendet. Ist der MPC als Empfänger eingestellt, geht der Report zunächst an den MPC, der die Daten anreichert und an den Lieferanten weiterleitet.
+
+Zusätzlich ist eine Seite in oneSCM vorgesehen, auf der erzeugte Reports eingesehen, nach Lieferant, Datum und Report-Typ gefiltert, heruntergeladen und erneut versendet werden können. Diese Seite ist Teil eines übergeordneten Epics.

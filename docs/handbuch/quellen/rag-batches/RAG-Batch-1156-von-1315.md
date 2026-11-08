@@ -1,0 +1,19 @@
+# Batch 1156 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 30 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Contract Calculation**
+
+Die Produktverwaltung unterscheidet nun zwischen der PC- und der Van-Division. Benutzer mit einer HQ-Rolle und einer PC-divisionsspezifischen Rolle sehen unter „Manage Blueprints“ und beim Anlegen eines Blueprints ausschließlich Blueprint-Informationen, die zur PC-Division gehören. Für beide Divisionen (PC und Van) werden in der Oberfläche alle Zahlungsintervalle angezeigt, darunter halbjährlich und vierteljährlich. Für die PC-Division gilt das auch beim Hinzufügen von Zahlungsintervallen zu einem deaktivierten Produkt.
+
+Bei der Berechnung von Unter- und Mehrkilometern wird der Preis pro Kilometer jeweils nach der vorgesehenen Formel ermittelt. Ergibt die Berechnung bei Minderkilometern einen negativen Wert, wird dieser zwingend auf 0 (null) gesetzt. Ebenso wurde die Bezeichnung „Prices at Contract Signing“ in „Prices at Contract Sales Date“ geändert.
+
+Für das Produkt „Van Unlimited Service Contract“ wurde der Filter „Mehr“ um die Kundentypen „Private Governmental“ und „Commercial Governmental“ erweitert. Für die PC-Division lässt sich die Coverage-Konfiguration mit Reifenoption (Tire Option) einrichten. Die Attribute Reifenoption und Blueprint-Typ werden im Blueprint-Setup, in der Produktzusammenfassung und auf der Ansichtsseite dargestellt. Voraussetzung ist, dass Vega-Codes mit Reifenoption angelegt wurden.
+
+Die Massenerstellung von Verträgen ermöglicht es, Informationen anhand einer Liste von Kennungen für mehrere Fahrzeuge abzurufen. Die Funktion „Add Multiple Vehicles“ steht für FIN/VIN-Kennungen zur Verfügung, nicht jedoch für die Kundentypen Private und Commercial. Die Fahrzeuge werden asynchron hinzugefügt, getestet wurde dies mit einer Liste von 10 gültigen FIN/VINs. Wird eine Liste nachträglich bearbeitet, erfolgt die asynchrone Prüfung in der Vertragserstellung erneut (getestet mit 20 gültigen FIN/VINs). Händlerrabatt bzw. Kampagne werden für jedes Fahrzeug korrekt angewendet. Das System weist Baumuster-Kennungen korrekt zurück. Ebenso wird die Übermittlung von mehr als 100 Kennungen geprüft (Testeingabe: 101 FIN/VINs).
+
+Die Berechnung auf Basis der Markteinstellungen unterstützt einen Inflationsaufschlag. Beim Anlegen einer Preisversion kann der Benutzer den Inflationsaufschlag aktivieren und sieht die Inflationsänderungen in der Oberfläche. Sind der Inflationsaufschlag aktiviert und ein Jahr gewählt, wird pro Produkt eine Inflationstabelle angezeigt. In der Coverages-Tabelle erscheint die Spalte „Inflation Factor“ nach „Industry Surcharge“, sowohl beim Bearbeiten eines Produkts als auch in den Ergebnissen von Schritt 4. Ein MPC-Benutzer kann den Inflationsaufschlag deaktivieren und den Inflationsfaktor für optionale Coverages ausschließen. Wird er nicht ausgeschlossen, fließt der Inflationsfaktor in die Generierung ein. Beim Duplizieren einer Preisversion werden die aktuellen Inflationsdaten der ursprünglichen Version korrekt übernommen.
+
+Bei Leasing verändert die Auswahl eines Preispunkts dessen Wert nicht; eine Interpolation wird nur auf Zwischenwerte angewendet. In der Preismatrix-Definition steht für den Schritt der Laufzeit (in Monaten) neben 6 und 12 nun auch 24 im Dropdown zur Verfügung. Auf dieser Grundlage wird die maximale Monatszahl korrekt berechnet, und die Laufzeiten der Preismatrix ergeben sich aus dem festgelegten Minimum, Maximum und Schritt.
+
+Für die Preislogik bei langfristigen Verlängerungen gilt der Preis zum Zeitpunkt der Verlängerung. Dies wurde für den Fall geprüft, dass das Produkt nicht veröffentlicht ist und in seiner Historie mehrere Preisversionen besitzt.

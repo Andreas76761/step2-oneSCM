@@ -1,0 +1,21 @@
+# Batch 1112 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 16 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragserstellung (Contract Generation): Änderungen und Neuerungen**
+
+Beim Start eines Vertragsangebots ist als Kundentyp nun standardmäßig „Privat“ vorausgewählt. Die Auswahl zwischen Privat- und Geschäftskunde bleibt weiterhin möglich.
+
+Die Seite „Übersicht & Bestätigung“ wurde neu gegliedert. Der Kopfbereich mit Bild, Produktname, Label, Produktbeschreibungen und Preisen bleibt unverändert. Die übrigen Angaben erscheinen nun in dieser Reihenfolge: Fahrzeuginformationen, Produktoptionen, Kundendetails, Adressdetails, Zahlungsinformationen, Steuern und Rechtliches, Forderungen aus dem FI-System, Planvorschau, Sammelrechnungen, Präferenzen, DSGVO sowie Marketingpräferenzen. Wird auf dieser Seite ein Kennzeichen ergänzt oder geändert, wird die Information auf Vertragsebene aktualisiert und auch im Dokument des Vertragsentwurfs übernommen. Für die Erstellung des Zahlungsplans stehen zusätzliche Felder zur Verfügung, und der Zahlungsplan wird an die Benachrichtigungsvorlage übermittelt.
+
+Bei der Kilometerstandsprüfung gilt folgendes Verhalten: Wird nach Eingabe der Fahrgestellnummer und dem Abruf der Fahrzeugdaten der Kilometerstand als Eingabefeld angeboten, weil keine Angabe vorliegt, wird der eingegebene Wert mit dem zuletzt bekannten Kilometerstand aus Gewährleistung und Kulanz verglichen. Liegt er darunter, erscheint eine Fehlermeldung mit dem letzten bekannten Kilometerstand. In diesem Fall werden weder Produkte noch Preise berechnet oder angezeigt. Ist der Wert gleich oder höher, werden passende Produkte ermittelt und der Vertrag kann erstellt werden.
+
+Ein Vertrag kann nur aktiviert werden, wenn die Fahrgestellnummer erfolgreich in VeDOC validiert wurde. Das gilt für die manuelle ebenso wie für die automatische Aktivierung. In der Vertragserstellung und der Vertragsdetailansicht wurde die Option „Aktivieren“ aus dem Aktionsmenü entfernt. Schlägt die Validierung fehl, erscheint auf der Seite MO Intelligence die Meldung „Vehicle Check / Chassis Number – NOK – Chassis Number not validated by VeDOC“.
+
+Wird ein Vertrag über eine Bestellnummer erstellt (Build to Order) und liegt die Fahrgestellnummer noch nicht vor, ist die Schaltfläche „Aktualisieren“ auf der Startseite ausgegraut. So wird vermieden, dass Nutzer darauf klicken und eine Aktion erwarten.
+
+Bei der Signatur wurde die Option „Dokument drucken“ entfernt. Im Dialog zur Signaturerfassung stehen daher nur noch die elektronische Signatur vor Ort und die DSS-Signatur zur Auswahl. Die Druckoption entfällt auch im Signaturdialog und in der Marktkonfiguration. Für die Signatur werden außerdem die V2-Schnittstellen für Dokumentsignatur und DSS-Stornierung verwendet, und die Dokumentversion wird am Vertragsdokument gespeichert.
+
+Bei der Signatur vor Ort lautet der Hinweistext nun: „Die digitale Signatur kann durch Scannen des QR-Codes auf Ihrem Gerät gestartet werden. Alternativ folgen Sie diesem Link, um die Unterzeichnung des Vertrags abzuschließen. Sobald der Vertrag von Mercedes-Benz aktiviert wurde, wird er per E-Mail versendet.“ Zusätzlich gibt es die Schaltfläche „See All Contract“, die wie bei der DSS-Signatur zur Startseite der Vertragserstellung führt.
+
+Im Hintergrund liefert der Abruf der Verträge jetzt für jeden Vertrag ein Feld mit dem Aktivierungsdatum. Außerdem wurden Funktionen für Sonderfälle bereitgestellt: Preisermittlung auf Basis von Deal-ID, VIN/FIN oder Bestellnummer (Build to Order), Produktsuche über die Modellbezeichnung (ein endgültiger Preis ist nur verfügbar, wenn das Fahrzeug mit Ausstattungscodes vorliegt) sowie die Berechnung eines Endpreises für ein bestimmtes Produkt anhand von Kriterien wie Kilometerstand, gewählten Deckungen und Laufzeit. Die Funktion für Deckungscodes ist noch nicht im Kern enthalten.

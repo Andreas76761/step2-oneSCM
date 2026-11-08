@@ -1,0 +1,11 @@
+# Batch 139 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Revenue Management**
+
+Für den Export an CoFiCo und SWT werden einige Felder nicht mehr mit festen Werten aus der ursprünglichen Mapping-Tabelle befüllt. Stattdessen übernimmt der Export die Werte, die in den Markteinstellungen unter „FI System Feature“ hinterlegt sind. So lassen sich einzelne Felder marktspezifisch anpassen. Konkret wird das Feld „oneSCM Mandate“ aus den Markteinstellungen in das Feld „oneSCM Mandate“ der F-Zeile übertragen. Der „Sales organization name“ aus den Markteinstellungen wird in das Feld „Sales Organization“ der F-Zeile geschrieben. Das Feld „Language“ aus den Markteinstellungen wird in das Feld „Language“ der H-Zeile übernommen.
+
+Rechnungen im Mahnwesen werden in der Vertragsansicht und im Financial Management nun farblich hervorgehoben, damit sie für die Sachbearbeitung leichter zu erkennen sind. Bisher wurden alle Status in Blau dargestellt. Die Farbgebung richtet sich nach den Markteinstellungen: Dort kann der Administrator für jede Division festlegen, ab welcher Mahnstufe und bei welcher Anzahl von Rechnungen ein Vertrag automatisch gesperrt wird. Ist die Mahnstufe in den Markteinstellungen beispielsweise auf 3 gesetzt, wird der Status von Rechnungen in Mahnstufe 1 oder 2 gelb dargestellt, der Status von Rechnungen in Mahnstufe 3, 4 oder 5 rot. Da die Regeln in den Markteinstellungen divisionsbezogen sind, wird bei jedem Vertrag die zugehörige Division berücksichtigt.
+
+Zusätzlich gibt es ein Feld, das die Summe aller Rechnungen in einer Mahnstufe ausweist. Es wird nur angezeigt, wenn im Vertrag Rechnungen in den Mahnstufen 1 bis 5 vorhanden sind, und erscheint in roter Farbe. Der angezeigte Wert entspricht der Summe der Nettobeträge aller Rechnungen in den Mahnstufen 1 bis 5.

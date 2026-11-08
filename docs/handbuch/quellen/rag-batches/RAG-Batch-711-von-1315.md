@@ -1,0 +1,19 @@
+# Batch 711 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 3 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Validierung des I156-Imports nach Markt**
+
+Beim Import einer I156-Datei in oneSCM wird jede Forderung (Claim) daraufhin geprüft, ob sie zum aktuellen Markt gehört. Dazu wird der VEGA-Ländercode aus dem Satztyp 10 (Positionen 1 bis 5) mit dem Marktcode des Marktes verglichen, in dem die Datei importiert wird. Stimmen beide Werte nicht überein, wird die Forderung übersprungen, und für die übersprungene Forderung erscheint eine aussagekräftige Fehlermeldung in Datadog. Die Datei selbst wird dennoch importiert. Enthält sie ausschließlich Forderungen eines anderen Marktes, werden also alle Forderungen übersprungen. Enthält sie Forderungen für den aktuellen und für andere Märkte, werden nur die Forderungen des aktuellen Marktes importiert, sofern sie auch die übrigen Importkriterien erfüllen, etwa den passenden Vertrag und die Fahrgestellnummer. Importierte Forderungen werden im zugehörigen Vertrag angezeigt. Der I156-Import ist ein Batch-Job und keiner direkten Rolle zugeordnet, unterstützt aber die Anwender im Market Operations (MO).
+
+Auch der Umgang mit Händlern, die in der Händlerverwaltung (Dealership Management) fehlen, wurde angepasst. Da VEGA als maßgebliche Quelle für Forderungen gilt und die Händlerverwaltung in oneSCM möglicherweise nicht aktuell ist, wird eine Forderung auch dann importiert, wenn der Händler dort nicht vorhanden ist und sich kein Händlername ermitteln lässt. Der Händlername bleibt in diesem Fall leer, und die Oberfläche zeigt stattdessen einen Bindestrich („-“) an. Wird der Händler später in der Händlerverwaltung angelegt, erscheint der Name auch in den Daten der Forderung. Ist der Händler dagegen vorhanden, wird sein Name in den Werkstattrechnungen angezeigt.
+
+**Schadencode in der Financial-Control-Ansicht**
+
+Die Seite „Financial Control“ im Bereich Administration wurde für Administratoren erweitert, damit sich die Korrektheit der Werte leichter nachverfolgen lässt. Wer unter Administration > Financial Control den Bereich „Old Part Tax“ öffnet, findet in der Tabelle zusätzlich zu den bisherigen Spalten die neuen Spalten „Damage Code“ und „Damage Type“, die neben der Werkstattrechnungsnummer angeordnet sind. Diese Änderung gilt auch für die manuelle Altteilesteuer. Der Coverage Code wird ausschließlich in der Datenbank gespeichert, da er für die Erstellung einer Rechnung bei stornierten Schadencodes benötigt wird.
+
+Beim Öffnen einer Rechnung über die oneSCM-Rechnungsnummer zeigt die Rechnungsseite weiterhin die drei bestehenden Bereiche. Die Bezeichnung „Customer Invoice“ wurde in „Old Part Tax Invoice“ umbenannt, alles andere bleibt unverändert. Wird ein Altteilesteuer-Datensatz geöffnet, sind dort ebenfalls Schadencode und Schadenstyp sichtbar. Nach dem Import einer I156-Forderung aus VEGA für einen aktiven Vertrag entsteht unter Financial Control > Old Part Tax ein entsprechender Eintrag.
+
+**Werkstattname bei internationalen Werkstattrechnungen**
+
+Wenn ein Administrator unter Admin > International Workshop Invoice eine Rechnung für eine internationale Werkstatt anlegt, blieb das Feld für den Werkstattnamen bisher leer. Nun wird der Werkstattname automatisch aus der Händlerverwaltung übernommen, und zwar anhand der bei der Rechnungserstellung eingegebenen VEGA-ID. Dabei muss die VEGA-ID des deutschen Marktes verwendet werden. Ist die Werkstatt in der Händlerverwaltung (GSSN) vorhanden, wird der zugehörige Name in das Feld eingetragen. Ist sie dort nicht vorhanden, bleibt das Feld leer, und dem Benutzer wird eine passende Fehlermeldung angezeigt.

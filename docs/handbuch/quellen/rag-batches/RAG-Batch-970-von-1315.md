@@ -1,0 +1,19 @@
+# Batch 970 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Gruppierung von Leistungen (Coverages) nach Textbezeichnung**
+
+In oneSCM lassen sich einzelne Leistungen (Coverages) künftig zu Gruppen zusammenfassen, den sogenannten Familien. Bisher wurde in den Ansichten eine Liste aller enthaltenen Leistungen angezeigt. Da einige Leistungen ähnlich benannt sind, führte das bei Nutzern zu Verwirrung. Die Gruppierung soll den Verkaufs- und den Nachbetreuungsprozess verständlicher machen. Sie ist für Händler, MO und MPC in der Oberfläche sichtbar. Ein Beispiel: Die Leistungen „Warranty Powertrain", „Warranty Vehicle" und „Warranty Residual" können unter der Bezeichnung „Warranty Extension" zusammengefasst werden.
+
+Die Familien werden bereits bei der Produktdefinition festgelegt und zusammen mit den Produktdetails übermittelt. Die Gruppierung gilt sowohl für enthaltene als auch für optionale Leistungen. Sie wird nur angezeigt, wenn eine Familie vorhanden ist. Andernfalls werden die Leistungen wie bisher einzeln aufgelistet.
+
+Wenn ein Verkäufer (Händler, MO oder MPC) ein Vertragsangebot startet und passende Produkte abruft, zeigen die Produktkarten beim Darüberfahren mit der Maus die enthaltenen Leistungen an. Sind diese in Familien gegliedert, erscheint der Familienname, gefolgt von der Anzahl der enthaltenen Leistungen in Klammern, zum Beispiel „Wear and Tear (2)". Wählt der Nutzer ein Produkt aus, gelangt er in die Produktdetailansicht. Dort werden unter Produktname und Beschreibung die enthaltenen Leistungen sowie die Familiennamen angezeigt. Im Reiter „Included Coverages" erscheinen die Familiennamen mit den darunter aufgelisteten Leistungen und ihren Beschreibungen.
+
+Optionale Leistungen können über ein Modal hinzugefügt werden. Es zeigt die Familiennamen, sofern vorhanden, mit den zugehörigen Leistungen und deren Preisen. Es ist möglich, eine oder mehrere optionale Leistungen auszuwählen, und der Preis des Produkts aktualisiert sich dynamisch entsprechend der Auswahl. Mit „Apply" wird die Auswahl gespeichert und der Vertrag aktualisiert. „Cancel" oder das „X" verwerfen die Änderungen und führen zum vorherigen Bildschirm zurück. Wurden optionale Leistungen hinzugefügt, zeigt der Reiter „Optional Coverages" die Familiennamen und die Leistungen mit Beschreibung und Preis. Auch hier werden Leistungen ohne Familie einzeln aufgeführt.
+
+Beim Erstellen eines Angebots für den Kunden, per Druck oder E-Mail, werden die Familiennamen mit der Anzahl der enthaltenen Leistungen in Klammern aufgeführt. Das gilt für enthaltene und, falls gewählt, für optionale Leistungen. Im nächsten Schritt, „Overview & Confirmation", werden Kunden- und Zahlungsdetails erfasst, eine Referenznummer vergeben und der Vertragsstatus auf „Created" gesetzt. Diese Seite zeigt die enthaltenen und gegebenenfalls die ausgewählten optionalen Leistungen jeweils mit Familiennamen, der Anzahl in Klammern und den einzelnen Leistungen. Eigenständige Leistungen ohne Familie werden separat angezeigt.
+
+Sobald die Unterschrift angestoßen oder der Vertrag aktiviert wurde, erscheint in der Vertragsverwaltung im Reiter „Contract" im Abschnitt „Coverages" die zusätzliche Spalte „Family Tag". Sie zeigt für jede Leistung die zugehörige Familie. Gehört eine Leistung zu keiner Familie, wird „-" angezeigt.
+
+Zu beachten ist: Die Coverage i155 bleibt von der Neuerung unberührt und verweist nicht auf Familien. Der Produktvergleich vergleicht die enthaltenen Leistungen der Produkte weiterhin ohne Berücksichtigung der Familien. Design und Grafik entsprechen den Vorgaben der Mercedes-Benz Workbench.

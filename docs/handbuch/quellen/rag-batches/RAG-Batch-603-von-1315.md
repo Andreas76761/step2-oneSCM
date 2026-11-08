@@ -1,0 +1,23 @@
+# Batch 603 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Mit der Trennung der Geschäftsbereiche Passenger Cars (PC) und Vans (VAN) wurde die Benutzeroberfläche von oneSCM angepasst, damit Anwenderinnen und Anwender in beiden Bereichen weiterhin komfortabel arbeiten können. Bisher kannte die Anwendung keine Rollen für den PC- oder den VAN-Bereich. Nun gibt es Rollen mit Zugriff auf die Daten des jeweiligen Bereichs. Diese Rollen sind relevant für Händler, MO, MPC und HQ-Admins.
+
+Im Benutzerprofil wird die zugewiesene Rolle künftig schreibgeschützt angezeigt. Außerdem wird für den Geschäftsbereich in der gesamten Anwendung die einheitliche Bezeichnung „Vans“ verwendet.
+
+Zentrales Element ist ein zusätzlicher Filter für den Geschäftsbereich, der im Bereich „Weitere Filter“ zu finden ist. Er verhält sich überall gleich: Auswählbar ist nur der Bereich, der dem Benutzer zugewiesen ist. Mit einer reinen VAN-Rolle lässt sich somit nur VAN wählen, mit einer reinen PC-Rolle nur PC. Bei Rollen für beide Bereiche stehen beide Optionen zur Verfügung; man kann einen Bereich auswählen und erhält die passenden Ergebnisse, oder beide auswählen. Wird kein Bereich gewählt (Standardzustand), werden die Daten beider Bereiche angezeigt. Der nicht zugewiesene Bereich wird deaktiviert und ausgegraut dargestellt.
+
+In der Vertragserstellung, im Vertragsmanagement und bei den MO-Prüfungen wurde der neue Filter für die Rollen MO und MPC ergänzt. Das betrifft das Proposal Management (Ansicht der MO-Rolle), das Special Case Center, das Vertragsmanagement und die MO Checks. Auch für die Vertragsprüfungen ist der Filter vorgesehen; der entsprechende Tab ist jedoch noch nicht umgesetzt. Im Kundenmanagement sind keine Änderungen erforderlich.
+
+Im Produktmanagement gilt das einheitliche Filterverhalten bei den bestehenden Filtern der VEGA-Codes für Coverage Codes und Damage Codes sowie bei „Manage Product & Prices“. Für Industry Codes und „Manage Campaigns“ kommt ein neuer Divisionsfilter hinzu. Bei „Manage Product Blueprint“ ist die Tabelle bereits nach Geschäftsbereich sortiert, daher ist kein zusätzlicher Filter nötig. Bei „Manage Vehicle Groups“ gibt es für jeden Bereich einen eigenen Tab, und es wird der Tab passend zur zugewiesenen Rolle angezeigt. Beim Product Testing gibt es keine Änderungen.
+
+Im Admin-Bereich erhält in der Fahrzeugverwaltung die Ansicht „Technical Options“ einen neuen Divisionsfilter, wobei die Tabelle bereits nach Bereich sortiert ist. Beim „Service Interval (K/JX Codes)“ passt sich der bestehende Filter dem einheitlichen Verhalten an, auch hier ist die Tabelle bereits sortiert. Engine Series und ISP Codes bleiben unverändert, ebenso Health Check, Cross File Transfer (CFT) und Batch Jobs.
+
+Im Finanzmanagement wird für Rechnungen (Invoices) und internationale Werkstattrechnungen ein neuer Divisionsfilter eingeführt. Bei der Materialnummernverwaltung (Material Numbers Management) richtet sich der vorhandene Filter nach dem neuen Verhalten; die Tabelle ist bereits nach Bereich sortiert. Keine Änderungen gibt es bei Financial Control (Old Part Taxes, Old Part Taxes – Manual, E169 Check, Export Counter / Checks) sowie bei Nemesis.
+
+In den Markteinstellungen erhalten die Vertragsprüfungsprofile einen neuen Divisionsfilter, und zwar sowohl bei den Review Profiles (Tabelle bereits nach Bereich sortiert) als auch bei der Operative Review. In der Template-Verwaltung folgen die bestehenden Filter im Bereich „Weitere Filter“ für Dokumente und E-Mails dem einheitlichen Verhalten. Zusätzlich gibt es in den Template-Tabellen eine neue sortierbare Spalte für den Geschäftsbereich. Beim Anlegen eines Dokument- oder E-Mail-Templates ist das Divisionsfeld nur für den zugewiesenen Bereich auswählbar, der andere Bereich wird ausgegraut angezeigt.
+
+Konkret bedeutet das für MPC- und HQ-Admin-Rollen: Mit einer PC-Rolle werden nur PC-Dokumente und -E-Mails angezeigt, und es können nur PC-Templates angelegt werden. Mit einer Vans-Rolle gilt dies entsprechend für Vans. Das betrifft Dokumente wie Vertrag, Datenschutzerklärung, AGB, SEPA-Mandat, Block, Header und Footer sowie E-Mail-Templates. Mit beiden Rollen stehen im Filter und bei der Template-Erstellung beide Bereiche zur Wahl, und die Filterung liefert jeweils die korrekten Ergebnisse.
+
+Die Markteinstellungen (Market Config) mit den General Settings und Feature Settings sowie die Steuerverwaltung (Tax Types, Tax Rates) bleiben von dieser Änderung unberührt. Die Markteinstellungen werden separat umstrukturiert.

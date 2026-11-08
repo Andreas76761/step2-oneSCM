@@ -1,0 +1,27 @@
+# Batch 304 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 19 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Überwachung und Benachrichtigung im Datenfluss des Reportings**
+
+Im Bereich Reporting existieren bereits mehrere Benachrichtigungen und Fehlerbehandlungen für den Fall, dass ein Job fehlschlägt oder Daten fehlen. Diese werden derzeit überarbeitet, damit sie alle relevanten Fälle abdecken und eine durchgängige Überwachung vom Datenempfang bis zur Verarbeitung ermöglichen. Damit soll sichergestellt werden, dass die Datenprodukte mit den Quellanwendungen übereinstimmen und Abweichungen zeitnah gemeldet und untersucht werden können. Die Umsetzung befindet sich derzeit in der Prüfung (Status „In Review“).
+
+Berücksichtigt werden nicht verarbeitete Datensätze aus den oneSCM-Domänendaten (Vertrag und Kunde, Umsatz, Kosten), aus Nemesis und aus ISP. Hinzu kommen fehlende Daten für bestimmte Märkte oder Divisionen sowie Jobfehler. Ein Datensatz, der nicht verarbeitet werden kann, etwa weil wesentliche Angaben fehlen, wird von der Verarbeitung ausgeschlossen und gemeldet. Die übrigen Datensätze werden weiterverarbeitet, sodass der Job erfolgreich abgeschlossen wird. In der Meldung wird angegeben, welche Daten betroffen sind, damit sie in der Quelle geprüft werden können.
+
+Eine Benachrichtigung wird ausgelöst, wenn Daten per Kafka-Nachricht empfangen, vom Data Capture Service (DCS) aber nicht verarbeitet werden konnten. Bei Nemesis gilt dies auch, wenn Dateien im Eingangsordner angekommen, aber nicht in den Zielbereich des DCS weitergeleitet wurden. Wenn dagegen einzelne Nemesis-Dateien für einen Markt oder eine Division noch nicht eingetroffen sind, erfolgt zunächst keine Meldung, da einzelne Dateien später als andere geliefert werden können. Fehlende I131-Dateien erfordern derzeit keine Maßnahme, da angenommen wird, dass hierfür bereits ein Prozess besteht.
+
+Die Benachrichtigung, zum Beispiel per E-Mail, geht an einen definierten Empfängerkreis, der nicht nur das technische Team, sondern auch Mitglieder des Fachbereichs umfassen kann. Sie enthält den Hinweis auf den DCS-Bezug, die Art bzw. Quelle der Daten (zum Beispiel Nemesis), den Markt und die Anzahl der unvollständigen Daten. Die Meldungen werden gruppiert, damit nicht für jeden Datensatz eine eigene Nachricht entsteht, etwa: „23 Verträge aus Nemesis für den Markt BE, Division VAN konnten nicht verarbeitet werden“. Fehlen verschiedene Datensätze, erhalten die Empfänger eine zusammenfassende E-Mail mit den Details. Nemesis liefert Daten gebündelt, daher erfolgt die Meldung nach vollständiger Verarbeitung des jeweiligen Pakets. Bei einem Bulk Load von oneSCM-Domänendaten wird direkt nach Abschluss des Ladevorgangs benachrichtigt. Bei Daten aus dem regulären Prozess, der durch Kafka-Ereignisse aus oneSCM ausgelöst wird, benötigt der Fachbereich die Details erst zum Zeitpunkt der Erstellung des Datenprodukts, falls die Daten bis dahin noch nicht verarbeitet sind. Die passende Lösung dafür wird noch geklärt, möglicherweise genügt hier die Erstellung eines Incident-Tickets.
+
+Zusätzlich wird automatisch ein Incident-Ticket angelegt, das alle Angaben enthält, um die betroffenen Datensätze zu identifizieren und im Detail zu untersuchen. Ein Abonnement der Benachrichtigung ist nicht erforderlich. Damit entfällt die bisherige Einschränkung, dass E-Mail-Empfänger sich nach jedem neuen Deployment erneut anmelden müssen. Offen ist noch, ob Jobfehler auch für Nemesis und ISP relevant sind. Für oneSCM-Domänendaten scheint dies nicht der Fall zu sein.
+
+**Stabilität der Reporting-Jobs**
+
+Mehrere Probleme bei Reporting-Jobs wurden behoben. Dazu gehören Fehler bei der Verarbeitung der Umsatzdaten (ReportingRevenueData) bei sehr vielen CSV-Dateien oder großen Datenmengen, auch beim Aktualisieren des Status. Ebenso behoben wurden Ausfälle der Jobs für Vertrags- und Kundendaten (ReportingContractData, ReportingContractDeltaData sowie der Bulk-Update-Jobs für Verträge und Kunden), die im AWS-Glue-Monitoring aufgefallen waren. Weitere Korrekturen betrafen die Behandlung von ASSETG: Der Ausschluss aus den Iceberg-Märkten und ein fest codierter Kostenschlüssel (cost_damage_technical_key_num_pk) wurden angepasst.
+
+**Datenqualität bei Nemesis-Verträgen**
+
+Nemesis sendet im Umsatzbericht alle dort vorhandenen Verträge, auch solche mit dem Status „NOT YET ACTIVATED“. Diese sind für das Reporting nicht relevant, und vor der Aktivierung fehlen Angaben wie das Datum der Erstzulassung, die für ein erfolgreiches Laden in die Datenbasis nötig wären. Deshalb wurde in den initialen Nemesis-Ladeprozess in Glue eine Regel aufgenommen, die diese Verträge herausfiltert. Bereits geladene Datensätze mit diesem Status werden aus UDM Financials gelöscht.
+
+**Preiskomponenten**
+
+Preisdaten aus oneSCM werden bereits per Kafka-Nachricht in die Reporting-UDM-Tabellen übernommen. Der Job für das Datenprodukt der Preiskomponenten ist jedoch noch nicht eingeplant, und die Datenfreigabe an ADP (Reporting- und ASADI-Layer) ist noch nicht eingerichtet. Diese Arbeiten sind derzeit zurückgestellt (Status „On Hold“). Vorgesehen sind eine monatliche Ausführung des Jobs jeweils am 1. eines Monats sowie die Einrichtung der Datenfreigabe analog zu den übrigen Datenprodukten.

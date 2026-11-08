@@ -1,0 +1,27 @@
+# Batch 1206 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 4 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Preise für Technische Optionen in der Vertragskalkulation**
+
+Als MPC-Nutzer können Sie Preise für Technische Optionen (TO) definieren, die für Ihre Fahrzeuggruppen relevant sind. Ist ein Kundenfahrzeug mit einer der enthaltenen Ausstattungen ausgerüstet, werden die Kosten der zugehörigen Leistungen in den Endpreis einbezogen. Dafür steht beim Erstellen oder Bearbeiten eines Clusters der neue Reiter „Technical Options" zur Verfügung. Standardmäßig zeigt er die Liste aller vorhandenen TO-Gruppen an, wobei die erste Gruppe vorausgewählt ist. Für jede TO-Gruppe legen Sie den Preis als einzelnen Prozentwert fest, der unabhängig von Laufzeit und Fahrleistung gilt. Zulässig sind Werte von 0,01 % bis 100,00 %. Der Prozentsatz wird auf die Preise der Basisabdeckung (Base Coverage) angewendet, um die Kosten der Technischen Option zu berechnen, sofern die VeDoc-Antwort des Fahrzeugs entsprechende Ausstattungscodes enthält. Kosten und Abhängigkeitsdefinition werden angezeigt, sind aber fest vorgegeben und nicht vom Nutzer veränderbar. Zusätzlich sehen Sie die Details der TO-Gruppe: Name, Beschreibung und die hinzugefügten Ausstattungscodes.
+
+Über die Schaltfläche „Edit" wählen Sie bestehende TO-Gruppen aus oder ab. Wird eine Gruppe abgewählt und der Dialog mit „Apply" bestätigt, erscheint sie nach dem Schließen nicht mehr in der Liste und ist für dieses Cluster keine Preiskomponente mehr in der Preisberechnung. Zuvor abgewählte Gruppen können Sie über „Edit" wieder hinzufügen; ihre Zellen sind dann leer.
+
+Fehlende Preise werden durch Warnsymbole kenntlich gemacht. Wurde ein Cluster bereits angelegt und enthält der Reiter „Technical Options" mindestens eine TO-Gruppe mit leerer Zelle, erscheint das Warnsymbol am Reiter, am Cluster und an der betroffenen Technischen Option. Derselbe Tooltip erscheint auch, wenn im Cluster Preise für Optionen oder für Technische Optionen fehlen. Direkt beim erstmaligen Anlegen eines Clusters werden noch keine Warnsymbole angezeigt.
+
+**Übersicht der Technical-Option-Gruppen**
+
+HQ-Admin-Nutzer finden auf der Seite „Manage Vehicle Data" einen neuen Reiter „Technical Options", in dem sie die vorhandenen TO-Gruppen einsehen und verwalten können. Die Gruppen werden auf HQ-Ebene definiert. Alle Märkte sehen dieselben TO-Gruppen, wenn sie in ihrem Reiter „Technical Options" Preiscluster anlegen. Neue Gruppen lassen sich über die Schaltfläche zum Erstellen einer TO-Gruppe anlegen.
+
+Zur Suche und Filterung stehen ein Auswahlfeld für die Anzahl der Einträge pro Seite sowie zwei Suchfelder zur Verfügung: eines für den Gruppennamen und eines für Ausstattungscodes. Beide prüfen lediglich die maximale Zeichenanzahl. Die Suche wird über die Schaltfläche „Search" ausgelöst. In der Ergebnisliste wird die Anzahl der Treffer angezeigt. Die Spalten „Group Name" und „Division" sind sortierbar, die Spalte „Equipment Codes" zeigt alle konfigurierten Ausstattungscodes als blaue Kennzeichnungen an.
+
+Als Aktionen stehen Löschen, Deaktivieren und Bearbeiten zur Verfügung. Nicht verwendete TO-Gruppen können gelöscht werden. Verwendete Gruppen lassen sich deaktivieren; sie können dann in neuen Preisversionen nicht mehr genutzt werden, während bestehende Preisversionen und Cluster, die sie verwenden, unverändert bleiben. Beim Bearbeiten können Division und Gruppenname nicht geändert werden, die Beschreibung hingegen schon. Außerdem können Ausstattungscodes hinzugefügt oder entfernt werden: Ein hinzugefügter Code wird für die Zuordnung zur zusätzlichen Preiskomponente herangezogen, ein entfernter Code wird aus dieser Zuordnungslogik herausgenommen.
+
+**Branchenpreise bearbeiten**
+
+Bisher konnten Preise nur für Basis- und optionale Abdeckungen definiert werden. Nun können MPC-Nutzer die Branchenaufschläge (Industry Surcharges) für die im Produkt enthaltenen Branchencodes bearbeiten und die Branchen so gemäß der Geschäftslogik bepreisen. Dafür stehen die Schaltflächen „Edit" und „Duplicate" zur Verfügung.
+
+Preisversionen mit einem Startdatum in der Zukunft können vollständig bearbeitet werden: Versionsname, Startdatum und Aufschlagsmatrix sind änderbar. Bei der aktuellen Preisversion lässt sich nur der Versionsname ändern. Abgelaufene Preisversionen können nicht bearbeitet werden. Die Bearbeitung ist somit nur für zukünftige Preisversionen möglich. Bleibt ein Aufschlagsfeld leer und wechselt der Nutzer zu einer anderen Branche, wird ein Fehlersymbol (Ausrufezeichen) angezeigt. Werden bei der Bearbeitung bestehender Preisversionen Änderungen an den beteiligten Preisstrukturen vorgenommen, erscheint nach dem Aktualisieren der Werte eine Meldung mit dem Titel „Change Price Version Pricing Structure". Sie fragt, ob Sie die Preisstruktur Ihrer Preisversion wirklich ändern möchten, und weist darauf hin, dass die Änderung der Struktur der Bestandteile alle vorhandenen Preisdaten zurücksetzt. Die Bearbeitung der Branchenaufschläge schließen Sie mit der Schaltfläche „Update" ab.
+
+Mit „Duplicate" wird eine neue Aufschlagsversion auf Basis der bestehenden Konditionen erstellt, wobei alle Aufschlagskonfigurationen übernommen werden.

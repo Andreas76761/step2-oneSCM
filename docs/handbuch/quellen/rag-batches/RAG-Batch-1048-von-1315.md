@@ -1,0 +1,17 @@
+# Batch 1048 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 30 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragserstellung (Contract Generation) – Stand der Änderungen und bekannte Themen**
+
+Im Bereich der Vertragserstellung wurden zahlreiche Prüfungen zur Rollen- und Sparten-Berechtigung durchgeführt, und die meisten davon sind abgeschlossen. Geprüft wurde, dass Benutzer der Rollen Händler, Dealer+, HQ Admin, MPC und MO in den Modulen zur Vertragserstellung und Vertragsverwaltung jeweils nur auf die Daten ihrer Sparte (PC oder VAN) zugreifen, sie einsehen und damit arbeiten können. Benutzer, denen beide Sparten zugeordnet sind, sehen und bearbeiten die Daten beider Sparten. Die Prüfung für Händler mit beiden Sparten (PC und VAN) befindet sich im Status „Reviewed“.
+
+Weitere Prüfungen betreffen den Zähler in der Datei i155, der ausschließlich für Basisdeckungen bei den Produkten Reifen und Contingent kontrolliert wurde. Voraussetzung ist jeweils ein aktiver Vertrag für das jeweilige Produkt. Ebenfalls abgeschlossen ist die Prüfung der Kreditkartenzahlung für Gewerbekunden im indischen Markt. Die Anpassung des MPay-Ablaufs in der Vertragserstellung ist derzeit im Review. Dabei wird die Unterschrift per eSignature erfasst, während Kartendaten nicht erfasst werden, und es wird ein negativer Fall der CAS-Prüfung getestet.
+
+Für den Standardablauf, in dem ein Benutzer (Händler oder MO) einen Vertrag mit Fahrgestellnummer für einen neuen Gewerbekunden aktiviert und per eSignature unterschreiben lässt, ist ein Testszenario im Status „In Use“. Voraussetzungen sind ein vorkonfiguriertes Produkt für ein bestehendes Fahrzeug sowie Vorlagen für Vertrag, SEPA, Preisinformation, Bestätigung und Aktivierungs-E-Mail.
+
+Auf technischer Seite wurde umgesetzt, dass beim Aufruf der Proceed-Schnittstelle der korrekte Dateiname übergeben wird. Er richtet sich nach dem angeforderten Dokumenttyp und wird im Feld replacedDocumentNames der Anfrage an den Dokumentenservice mitgegeben. Behoben wurden außerdem mehrere Fehler: ein Fehler bei der USt-IdNr. in mehreren Verträgen, die fehlende Übermittlung der Referenznummer an BS4 bei abgelehnten Anträgen, ein nicht vollständig erkanntes hochgeladenes Dokument bei einem Vertrag, ein Produktfehler im Ablauf der Vertragserstellung sowie ein fehlender Zahlungsplan, der durch fehlende Zahlungstermine verursacht wurde.
+
+Einige Themen sind noch offen. Bei einem Privatkunden wird die digitale Unterschrift nicht im Dokument gespeichert: Nach der digitalen Auswahl der Unterschrift wird ein QR-Code erzeugt, der im Browser das Dokument mit dem Unterschriftsfeld öffnet. Nach der Unterschrift und dem Abschluss steht das Dokument zwar in oneSCM zur Verfügung, enthält aber die digitale Unterschrift nicht. Außerdem wird im Antragsdokument bei „MB Van Uptime“ weiterhin ein Preis in Euro pro Monat ausgewiesen, obwohl MB Uptime seit dem 01.01.2025 kostenfrei ist. Schließlich lässt sich beim manuellen Ablauf mit Kundenunterschrift ein unterschriebenes PDF nicht hochladen, da ein Fehler zum Upload-Typ erscheint. Erwartet wird ein erfolgreicher PDF-Upload.
+
+Nicht weiterverfolgt wird die Meldung, dass bei einer Vertragsdauer von 54 Monaten die jährliche Zahlweise nicht auswählbar ist. Dieses Ticket wurde abgebrochen, obwohl erwartet wurde, dass die jährliche Zahlweise auch bei dieser Laufzeit wählbar sein sollte.

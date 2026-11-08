@@ -1,0 +1,15 @@
+# Batch 566 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Verfeinerte Behandlung von Sperrstatus und Löschkennzeichen in FI-Systemen
+
+Bisher wurden Sperr- und Löschstatus bei oneERP gemeinsam behandelt. Künftig werden beide Statuswerte getrennt voneinander verarbeitet. Zudem wurden Kundenstatus aus FI-Systemen für CoFiCo in oneSCM bislang nicht berücksichtigt. Sie müssen jedoch auch in oneSCM gespeichert werden, damit gesperrte Kunden keine weiteren Geschäfte wie Vertragsverkauf oder Abrechnung mehr tätigen können.
+
+Beim Import von Kundendaten aus oneERP wertet das System nun das Löschkennzeichen aus. Ist das Löschkennzeichen in den Beziehungen "to_Customer" oder "to_customerCompany" gesetzt, werden die Kundendaten nicht importiert, sodass keine veralteten Kundendatensätze ins System gelangen. Die Sperrstatus OrderIsBlockedForCustomer, PostingIsBlocked und BusinessPartnerIsBlocked werden beim Import übernommen und gespeichert. Der Kunde wird dabei mit dem Sperrstatus importiert, wie er in oneERP geführt wird. In den MO-Checks und in der Kundenverwaltung entsprechen die angezeigten Werte denen aus oneERP: Bei OrderIsBlockedForCustomer wird "Order is blocked for customer" angezeigt, bei PostingIsBlocked "Posting is blocked" und bei BusinessPartnerIsBlocked "Business partner is blocked". In den MO-Checks erscheinen sie als Grund, in der Kundenverwaltung als Status.
+
+Für bereits in oneSCM vorhandene Kunden gilt: Erhält das System über oneERP ein Update mit gesetztem Löschkennzeichen, wird der Kunde nicht gelöscht, sondern bleibt im System erhalten. Wird ein Sperrstatus übermittelt, wird dieser auf Kundenebene aktualisiert.
+
+Bei CoFiCo gilt Folgendes, wenn eine POST-Anfrage zur Anlage eines Kunden gesendet wird: Wird ein Löschkennzeichen zurückgemeldet und der Kunde ist zur Löschung markiert, werden die Kundendaten nicht importiert. Das gilt auch, wenn sowohl eine Sperre als auch ein Löschkennzeichen gemeldet werden; dann wird kein Kunde importiert. Wird in derselben Antwort zusätzlich ein weiterer Kunde erkannt, der manuell bearbeitet werden muss, wird dessen Kundennummer vorerst nicht importiert. Der Grund: Die manuelle Aktion muss abgewartet werden, damit der Kunde in CoFiCo korrekt auf die notwendigen Bereiche erweitert wird. Die SAP-Debitorennummer dieses Kunden wird anschließend über die Sync-API übernommen, sobald die Änderung erfolgt und die oneSCM-Kundennummer gepflegt wurde. Wird dagegen nur eine Buchungssperre gemeldet, werden Kundennummer und Kundendaten mit dem Status "Blocked" importiert.
+
+Bei Synchronisierungen bestehender Kunden wird der FI-System-Status auf "Marked for deletion" gesetzt, wenn ein Löschkennzeichen eingeht. Bei einer Buchungssperre wird er auf "Posting Blocked" gesetzt. In beiden Fällen wird der Kunde in den MO-Checks als NOK gewertet.

@@ -1,0 +1,15 @@
+# Batch 371 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 37 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Documents & Communications**
+
+Im Bereich Benachrichtigungen wurde die interne Benachrichtigungsansicht überarbeitet, damit sie übersichtlicher ist und Nutzer gezielt auf relevante Meldungen reagieren können. Sowohl für MO/MPC-Nutzer als auch für Dealer-Nutzer zeigt der Benachrichtigungsbereich nur noch die nötigsten Informationen an. Jede Benachrichtigung trägt eine deutlich sichtbare Kategorie, etwa für Verträge, Rechnungen, Sonderanfragen oder Kunden. Benachrichtigungen können einzeln oder alle auf einmal gelöscht werden. Für MO/MPC-Nutzer werden ausschließlich Benachrichtigungen angezeigt, zu denen eine Übersichtsseite existiert und die keine gesperrten Fahrzeuge betreffen. Zusätzlich löscht das System bereits gesehene Benachrichtigungen nach 45 Tagen automatisch für den jeweiligen Nutzer. Die Funktionen für Dealer-Nutzer befinden sich derzeit noch in der Prüfung (Status „In Review“), während die Umsetzung für MO/MPC-Nutzer bereits im Einsatz ist. Außerdem wurde ein Fehler behoben, durch den Benachrichtigungen in den Browsern Edge und Firefox nicht sichtbar waren.
+
+Im Template Management wurden mehrere Verbesserungen vorgenommen. Kopf- und Fußzeile sind Pflichtfelder und werden nun in der Oberfläche entsprechend mit einem Stern (*) gekennzeichnet. Bleiben beide Felder leer, erscheint die Fehlermeldung „Header and Footer must not be null for contract, sepa mandate or term and conditions templates.“ Für die Version der Datenschutzerklärung (Privacy Policy) eines Marktes gilt nun eine Begrenzung auf maximal 10 Zeichen. Damit wird verhindert, dass bei ungültiger Eingabe eine allgemeine Fehlermeldung erscheint und das Template nicht angelegt werden kann. Darüber hinaus wurde die Fehlermeldung bei der Validierung von Sonderzeichen in Eingabefeldern vereinheitlicht. Behoben wurde zudem, dass der Signaturtyp beim Vertragsangebot nicht gespeichert und beim Bearbeiten nicht angezeigt wurde. Ebenso wurde ein Problem gelöst, bei dem in einer bestimmten Konfiguration beim Klick auf die Vorschau der Preisinformation der Zugriff verweigert wurde.
+
+Für die folgenden Vorlagentypen, jeweils für Gewerbe- und Privatkunden, sind die Anpassungen im Einsatz: Preisinformation, Verlängerung von Servicevertrag, Übertragung von Servicevertrag und Angebot für Servicevertrag.
+
+Weitere Korrekturen betreffen den Markt Slowakei (SK): Nutzer können die Nutzungsbedingungen nun akzeptieren, und Nutzungsbedingungen lassen sich auch bei aktivem Schalter „New Version“ hochladen. Zudem wurde das Hochladen von SEPA-Dokumenten korrigiert und ein Fehler im Job „DeleteContracts“ behoben. Auch der fehlende Unterschriftsnachweis bei einer Verlängerung wurde bearbeitet.
+
+Für mehrere Dokument- und E-Mail-Vorlagen (SEPA, AGB, Dokumente und E-Mails für Privat- und Gewerbekunden, jeweils in Deutsch und Englisch) stehen die Arbeiten noch aus.

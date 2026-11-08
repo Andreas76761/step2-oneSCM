@@ -1,0 +1,27 @@
+# Batch 183 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kostenmanagement für Management-Verträge einschließlich Altteilsteuer**
+
+Mit dieser Erweiterung kann oneSCM Schadenfälle erkennen, bei denen die Kosten vom Kunden getragen werden sollen, und die darin enthaltene Altteilsteuer an den Kunden weiterberechnen. Der Prozess beginnt wie bisher: oneSCM empfängt über die Schnittstelle I156 einen Schaden von Vega und importiert ihn. Anschließend wird in oneSCM ein Vega-Schadeneintrag mit dem Status „Processed" angelegt. Beim Einfügen des Schadens prüft das System die Vertragsnummer und ermittelt die zugehörigen Deckungen. Lautet die Kostenstelle (Cost Unit) einer Deckung „Customer", stuft oneSCM den Schaden als relevant für die Kostenweiterleitung ein.
+
+**Altteilsteuer bei Management-Verträgen**
+
+Enthält ein über I156 empfangener Schaden für einen Management-Vertrag eine Altteilsteuer, berechnet oneSCM den Gesamtbetrag der Altteilsteuer aus dem über I156 gelieferten Basisbetrag. Die Ermittlung des Basisbetrags ist bereits als Funktion vorhanden. Die Berechnung erfolgt aus der zum Reparaturdatum gültigen Mehrwertsteuer auf 10 % des Basisbetrags. Der Text für den Kunden erläutert dies so: Die Altteilsteuer ermittelt sich aus der zum Leistungszeitraum gültigen Mehrwertsteuer auf 10 % der Differenz (60er Teil) aus dem zu verbauenden aufbereiteten Teil (Tauschteil, auch 80er Teil genannt) und dem „alten" Teil (70er Teil), das an das Logistik Center verkauft wird. Im Beispielfall gilt: Basispreis × 10 % × 19 % MwSt. Alt-Teile.
+
+Anschließend wird im Bereich der Kundenrechnungen automatisch eine neue Rechnung angelegt. Sie hat den Flow Type „Old Part Tax", eine oneSCM-Rechnungsnummer, keine Processing Number (NULL), den Dokumenttyp „Invoice" und den Kundenrechnungstyp „Customer Charge Invoice (CCIN)". Der Rechnungszeitraum (von/bis) entspricht jeweils dem Reparaturdatum. Als Nettobetrag wird der Basisbetrag der Altteilsteuer verwendet. Rechnungsempfänger ist der Kunde, also der Zahler des Vertrags. Nach der Erstellung erhält die Rechnung automatisch den Status „Accepted". Wird ein Export-Batch-Job ausgelöst, sendet das System die akzeptierte Kundenrechnung im Batch-Job E169 an das FI-System. Die Materialnummer ist noch abzustimmen.
+
+Bei einem Schaden mit Altteilsteuer auf einem Management-Vertrag soll dem Kunden gesammelt eine Rechnung gestellt werden (ein Header, HTXT01, HTXT06 sowie zwei Positionen und zwei PTXT), wobei die Einstellungen auf Vertragsebene ignoriert werden. Dieser Punkt ist noch zu klären. Ist Altteilsteuer im Dokument enthalten, lautet die „Art des Geschäftsvorfalls" immer „4". HTXT01 ist bei Management-Vertragsrechnungen leer, HTXT06 entspricht der regulären Kundenrechnung. PTXT01 für die CCIN entspricht ebenfalls der regulären Kundenrechnung, jedoch mit dem Zahlungsintervall immer „oneTime". PTXT01 für MPPIs innerhalb von Management-Verträgen bleibt unverändert. Für die Altteilsteuer bei Management-Verträgen werden zudem die relevante Schadennummer und die Werkstattrechnungsnummer (Betreffende Antragsnummer) benötigt.
+
+**Manuelle Werkstattrechnung bei Papierschäden**
+
+Geht für einen Management-Vertrag ein Papierschaden ein, legt ein Mitarbeiter des Marktes (MO) die manuelle Werkstattrechnung an den Händler im System selbst an. Dabei kann er anhand der Papierrechnung den Altteilsteuerbetrag im Feld „Old Part Tax - Calculated" erfassen. Nach Erstellung und Freigabe im üblichen Genehmigungsprozess wird die Rechnung an E167 (für externe Händler) gesendet. Wird dabei erkannt, dass es sich um einen Management-Vertrag handelt, läuft die Weiterberechnung wie oben beschrieben ab: Das System erstellt automatisch die CCIN-Rechnung für die Altteilsteuer an den Kunden, mit denselben Rechnungsdaten, demselben Status „Accepted", demselben Export über E169 und denselben Regeln für Texte und Geschäftsvorfallsart. Die Materialnummer ist auch hier noch festzulegen.
+
+**Behandlung in Nemesis**
+
+Für Management-Verträge sollen keine Kunden-, Vertrags-, Erlös- oder Kosteninformationen an Nemesis übertragen werden. Es werden daher weder Kunden-Trigger-Events noch Vertragsstamm-Events, Erlös-Events oder Händler-Events an Nemesis gesendet. Die Kunden- und Vertragsstamm-Events hängen von anderen Arbeitsströmen ab. Vorgesehen ist, dass es für Management-Verträge ein eigenes Produkt gibt, für das der Marktverantwortliche (MPC) Nemesis deaktivieren kann. Dieser Punkt ist noch offen.
+
+**Fachliche Prüfung**
+
+Zu prüfen ist, dass ein Händler- oder MO-Benutzer einen Management-Vertrag anlegen kann und dass nach der Aktivierung der Schaden samt Altteilsteuer von Vega importiert, der Schadeneintrag in oneSCM erfasst und automatisch eine neue Altteilsteuer-Rechnung im Bereich der Kundenrechnungen erstellt wird. Beim Auslösen des Export-Batch-Jobs E169 muss die Rechnung zur weiteren Verarbeitung an oneERP gesendet werden. Außerdem ist zu bestätigen, dass keine Kunden-, Vertrags-, Erlös- oder Kosten-Events an Nemesis gesendet werden. Schließlich ist zu prüfen, dass bei einer Papierrechnung mit Altteilsteuer nach Anlage der manuellen Werkstattrechnung an den Händler das System die CCIN-Rechnung für die Altteilsteuer an den Kunden automatisch erstellt, sofern ein Management-Vertrag erkannt wird.

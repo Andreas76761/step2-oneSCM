@@ -1,0 +1,25 @@
+# Batch 850 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 5 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Stornierung eines Vertrags nach der Aktivierung**
+
+Im Bereich Contract Management können Benutzer der Rollen Market Operations und MPC einen aktivierten Vertrag innerhalb von 14 Tagen nach der Aktivierung stornieren. Das ist etwa dann sinnvoll, wenn ein Vertrag irrtümlich aktiviert wurde oder wenn der Endkunde von seiner 14-tägigen Widerrufsfrist Gebrauch machen möchte, in der er ohne Angabe von Gründen vom Vertrag zurücktreten kann.
+
+In der Vertragsdetailansicht steht dafür bei den Status die zusätzliche Option „Cancel“ zur Verfügung. Sie ist nur aktiv, wenn der Vertrag den Status „Active“ hat und seine Aktivierung im Vergleich zum aktuellen Datum höchstens 14 Tage zurückliegt. Ab dem 15. Tag ist die Option nicht mehr auswählbar. Bei Verträgen mit einem anderen Status als „Active“ oder bei Verträgen, die vor mehr als 14 Tagen aktiviert wurden, lässt sich die Stornierung entsprechend nicht starten.
+
+Nach Auswahl der Option öffnet sich ein Dialogfenster. Dort wählen Sie im Pflichtfeld „Contract Selection“ einen oder mehrere Verträge desselben Eigentümers aus, sofern die Voraussetzungen erfüllt sind. Im Pflichtfeld „Input Date“ geben Sie über einen Kalender das Stornierungsdatum an. Eine Rückdatierung ist über den Kalender nicht möglich. Wird per Tastatur ein zurückliegendes Datum eingegeben, erscheint die Fehlermeldung „Backdating not possible, please enter a valid date“. Das Datum darf zudem nicht mehr als 14 Tage nach dem Aktivierungstag des Vertrags liegen. Bei einer entsprechenden Tastatureingabe erscheint die Meldung „Cancellation date cannot exceed 14 days since activation“.
+
+Das Feld „Mileage“ ist optional und nimmt numerische Werte mit bis zu neun Stellen und Tausendertrennzeichen auf. Im Pflichtfeld „Reason“ wählen Sie aus einer Dropdown-Liste einen vordefinierten Grund, etwa „Human Error“ oder „Customer Request“. Wird „Other“ ausgewählt, erscheint ein zusätzliches alphanumerisches Textfeld mit höchstens 200 Zeichen. Der dort eingegebene Grund wird später in der Vertragsdetailansicht unter „History“, „History of Change“ in der Spalte „Reason“ angezeigt. Das Feld „Comments“ ist optional. Sobald alle Pflichtfelder ausgefüllt sind, wird die Bestätigungsschaltfläche aktiv.
+
+Nach dem Klick auf „Cancel Contract“ erscheint ein Bestätigungs-Pop-up mit dem Hinweis, dass die Aktion nicht rückgängig gemacht werden kann und der Vertrag nicht erneut aktiviert werden kann. Mit „Cancel“ brechen Sie den Vorgang ab und schließen das Dialogfenster, mit „Proceed“ führen Sie die Stornierung durch. Anschließend erscheint die Meldung „Selected Contract was successfully Canceled“, und der Vertrag erhält den Status „Cancel“. Im Hintergrund wird eine i155-Nachricht erzeugt, in der der Status auf „010“ gesetzt wird. Das Revenue Management wird benachrichtigt, damit es gegebenenfalls weitere Schritte zur Abstimmung durchführen kann. Außerdem erhält der Kunde eine E-Mail-Benachrichtigung über die vorgesehene Vorlage.
+
+**Weitere Verbesserungen im Contract Management**
+
+Auf der Landingpage des Contract Management zeigt die Tabelle mit den Vertragsinformationen in der Spalte „Product Name“ das ausgewählte Produkt des Vertrags an. Bislang wurde dort fälschlicherweise „PRO-123“ angezeigt. Für das MVP erscheint dort künftig „Excellent“.
+
+In der i155-Nachricht enthält die Position 140 bis 147 des Satzes RC05 nun das Datum der Statusänderung. Wurde der Vertrag aktiviert, ist das das Aktivierungsdatum, bei einer Suspendierung das Datum der Suspendierung und bei einer Beendigung das Datum der Beendigung. Zuvor stand dort das Vertragsende. Außerdem wurden die Leerzeichen zwischen den Positionen 98 bis 104, 105 bis 111 und 112 bis 118 des Satzes RC05 entfernt.
+
+In der Vertragsansicht unter „History“ und „History of Change“ werden die Statusbezeichnungen in den Spalten „Old Status“ und „New Status“ einheitlich geschrieben. Es heißt nun „Waiting for Activation“ und „Close Terminated“, jeweils mit großem Anfangsbuchstaben.
+
+Die Vega History zeichnet derzeit sehr viele Änderungen auf Ebene der Coverages auf, bei einem Testvertrag mehr als vier Seiten. Die Coverages werden von der Vertragsberechnung einem an den Vertrag gebundenen Produkt zugewiesen. Aktuell lassen sich Coverages eines aktiven Vertrags über keine Benutzeroberfläche ändern. Die Änderungen auf Coverage-Ebene wurden daher untersucht. Bei den Aktionen Erstellen, Suspendieren und Reaktivieren wird jeweils eine i155-Nachricht ausgelöst, wobei sich der Status bei der Suspendierung von 001 auf 002 und bei der Reaktivierung von 002 auf 001 ändern soll.

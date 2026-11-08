@@ -1,0 +1,11 @@
+# Batch 46 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+Im Bereich Revenue Management wurde ein automatisierter End-to-End-Test ergänzt, der die Anzahl der Rechnungen im Reiter „Zahlungen" (Payments) eines Vertrags prüft. Bisher gab es dafür keine automatisierte Prüfung. Am Verhalten der Anwendung ändert sich nichts: Der Test dient ausschließlich dazu, das bestehende Verhalten abzusichern.
+
+Im Modul Vertragsmanagement können Benutzer mit der Rolle MO Verträge über die Referenznummer suchen. Nach dem Öffnen eines Vertrags zeigt der Reiter „Zahlungen" die Liste der Rechnungen an, die zu diesem Vertrag gehören. Der neue, mit Playwright umgesetzte Test durchläuft genau diesen Ablauf: Er meldet sich mit der Rolle MO an, öffnet die Seite des Vertragsmanagements und sucht nach dem Vertrag mit der Referenznummer 90N2O7XT/DE26PE. Anschließend öffnet er die Vertragsdetails aus den Suchergebnissen, wechselt in den Reiter „Zahlungen" und prüft, dass die Rechnungsliste angezeigt wird und genau 6 Rechnungen enthält.
+
+Der Test deckt dabei mehrere Teilschritte ab. Nach der Anmeldung als MO wird die Seite des Vertragsmanagements mit verfügbarer Suchfunktion angezeigt. Die Suche nach der Referenznummer liefert den passenden Vertrag, und beim Öffnen werden die korrekten Vertragsinformationen dargestellt. Im Reiter „Zahlungen" erscheinen exakt 6 Rechnungen. Zusätzlich gibt es einen negativen Testfall: Wird eine ungültige Referenznummer wie „INVALID_REF_000" gesucht, zeigt das System entweder die Meldung, dass keine Ergebnisse gefunden wurden, oder eine leere Ergebnistabelle an, und es lässt sich keine Vertragsdetailseite öffnen.
+
+Nicht Gegenstand des Tests sind die Inhalte der Rechnungen wie Beträge, Datumsangaben oder Status. Ebenso wenig werden Verträge geändert oder angelegt, andere Reiter der Vertragsdetailseite geprüft oder Zahlungsvorgänge und finanzielle Operationen ausgeführt.

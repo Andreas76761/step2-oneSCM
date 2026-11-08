@@ -1,0 +1,15 @@
+# Batch 713 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 9 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Kostenmanagement: Altteilsteuer und Werkstattrechnungen**
+
+Für die Altteilsteuer (Old Part Tax) wurde die Verarbeitung von I156-Dateien erweitert, wenn ein Schadencode storniert wird. Dieser Punkt befindet sich derzeit im Status „Blocked BAT Testing“ und ist daher noch nicht abschließend getestet. Wird eine Werkstattrechnung (Claim) zunächst mit der Entscheidungsnummer 1 importiert und enthält einen Schadencode mit Altteilsteuer, entstehen nach dem Import eine Werkstattrechnung im Vertrag sowie eine Altteilsteuer-Gutschrift in der Financial Control unter „Old Part Taxes/I156“. Wird anschließend eine weitere I156-Datei mit denselben Werkstattrechnungen und der Entscheidungsnummer 2 importiert, hängt das Ergebnis vom Inhalt der Datei ab.
+
+Ist der Schadencode mit Altteilsteuer in der neuen Datei mit dem Löschkennzeichen 1 versehen (Satzart 60, Position 174 bis 174), wird in der Financial Control unter „Old Part Taxes/I156“ eine Altteilsteuer-Rechnung erzeugt, welche die bestehende Gutschrift storniert. Diese Rechnung erhält den Status „Exported“. Die Werkstattrechnung im Vertrag bleibt bestehen und enthält die geänderten Schadencodes. Ohne Löschkennzeichen geschieht nichts.
+
+Wird dagegen der gesamte Claim abgelehnt, wird geprüft, ob das Feld „total of part on this coverage code“ (Satzart 20, Position 150 bis 161) den Wert 0 hat. In diesem Fall wird ebenfalls eine Altteilsteuer-Rechnung zur Stornierung der bestehenden Gutschrift erzeugt, und zwar mit dem Status „Exported“. Ist der Wert nicht 0, geschieht nichts. Bei einem abgelehnten Claim liegt anschließend keine Werkstattrechnung mehr im Vertrag vor, sofern das zugehörige Epic umgesetzt ist. Andernfalls ist die Rechnung mit dem Betrag 0 vorhanden.
+
+Außerdem wurden mehrere Fehler und technische Themen im Bereich Cost Management behoben. Dazu zählen die Korrektur der End-to-End-Tests, ein fehlgeschlagener E167-Batchjob (SAPInvE167EXP), die Anzeige der SAP-Debitorennummer bei Werkstattrechnungen sowie die Filterfunktion in der Financial Control. Die Abfrage des Deckungscodes (Coverage Code) beim Vertrag wurde an die neue Schnittstelle angepasst.
+
+Für manuell erstellte Werkstattrechnungen ist geplant, dass der aktuelle Kilometerstand und das Reparaturdatum an den Vertrag übermittelt werden, sobald die Rechnung im Vertrag akzeptiert wird. Damit soll im Vertrag die Historie des Fahrzeug-Kilometerstands nachvollziehbar sein. Die Funktion soll sich ähnlich verhalten wie die Übermittlung des Reparaturkilometerstands aus Claims, die über die I156-Datei eingehen. Dieser Punkt wurde geschlossen, eine Umsetzung ist aus den vorliegenden Angaben jedoch nicht ersichtlich.

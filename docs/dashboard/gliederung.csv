@@ -1,0 +1,237 @@
+kapitel,thema,ebene,bereich,teil
+1,Einführung und Überblick,1,Einstieg,Hauptteil
+1.1,Ziele und Nutzen von oneSCM,2,Einstieg,Hauptteil
+1.2,Projekthintergrund und Einordnung,2,Einstieg,Hauptteil
+1.3,Beteiligte Rollen und Aufgaben,2,Einstieg,Hauptteil
+1.4,Rollen im oneSCM-Ökosystem,2,Einstieg,Hauptteil
+1.5,Fachliche Domänen und ihre Zusammenarbeit,2,Einstieg,Hauptteil
+1.6,Globaler Standard und lokale Ausprägungen,2,Einstieg,Hauptteil
+2,"Zugang, Rollen und Berechtigungen",1,Einstieg,Hauptteil
+2.1,Login und Single Sign-on,2,Einstieg,Hauptteil
+2.2,Fachliche Rollen und technische Berechtigungen,2,Einstieg,Hauptteil
+2.3,Berechtigungsantrag und Freigabe,2,Einstieg,Hauptteil
+2.4,"Markt-, Sparten- und Betriebskontext prüfen",2,Einstieg,Hauptteil
+2.5,Fehlende Berechtigungen und Zugangsprobleme,2,Einstieg,Hauptteil
+2.6,Sicherer Umgang mit Benutzerkonto und Sitzung,2,Einstieg,Hauptteil
+3,"Grundlagen, Navigation und Customer Journey",1,Einstieg,Hauptteil
+3.1,Startseite und Menü,2,Einstieg,Hauptteil
+3.2,Suche und Filter,2,Einstieg,Hauptteil
+3.3,Oberflächenelemente und Bedienmuster,2,Einstieg,Hauptteil
+3.4,Prozesslandkarte,2,Einstieg,Hauptteil
+3.5,"Preisinformation, Angebot, Antrag und Vertrag",2,Einstieg,Hauptteil
+3.6,Lead und CRM-Übergabe,2,Einstieg,Hauptteil
+3.7,Schnittstellen und Systemübergaben,2,Einstieg,Hauptteil
+3.8,Statusinformationen richtig einordnen,2,Einstieg,Hauptteil
+3.9,Persoenlicher Arbeitskontext und Sprachen,2,Einstieg,Hauptteil
+4,"Kunden, Partner und Vertragsrollen",1,Vertragsprozess,Hauptteil
+4.1,Privatkunden und Geschäftskunden,2,Vertragsprozess,Hauptteil
+4.2,Vorhandene Kunden suchen und zuordnen,2,Vertragsprozess,Hauptteil
+4.3,Kundendaten und Pflichtangaben prüfen,2,Vertragsprozess,Hauptteil
+4.4,"Vertragsinhaber, Zahler, Nutzer, Kontakt und Rechnungsempfänger",2,Vertragsprozess,Hauptteil
+4.5,Datenübernahme aus angebundenen Systemen,2,Vertragsprozess,Hauptteil
+4.6,Dubletten und widersprüchliche Stammdaten,2,Vertragsprozess,Hauptteil
+4.7,Partner- und Dealerbeziehungen,2,Vertragsprozess,Hauptteil
+4.8,Dealer-Onboarding und Partnerprozess,2,Vertragsprozess,Hauptteil
+5,"Fahrzeug, Produkt und Angebot vorbereiten",1,Vertragsprozess,Hauptteil
+5.1,Vertragsarten und Einstiegspunkte,2,Vertragsprozess,Hauptteil
+5.2,Fahrzeug- und Vorgangskennungen,2,Vertragsprozess,Hauptteil
+5.3,"Fahrzeugdaten, Pflichtfelder und Validierungsregeln",2,Vertragsprozess,Hauptteil
+5.4,Produkte und Leistungsumfang auswählen,2,Vertragsprozess,Hauptteil
+5.5,"Laufzeit, Laufleistung und Optionen konfigurieren",2,Vertragsprozess,Hauptteil
+5.6,"Preise, Kampagnen und Rabatte im Angebot",2,Vertragsprozess,Hauptteil
+5.7,Angebotsgültigkeit und Änderungen,2,Vertragsprozess,Hauptteil
+5.8,Übergabe zur Antragserstellung,2,Vertragsprozess,Hauptteil
+6,Servicevertrag anlegen und Antrag abschließen,1,Vertragsprozess,Hauptteil
+6.1,Voraussetzungen und Vertragsart prüfen,2,Vertragsprozess,Hauptteil
+6.2,Vertragsdaten und Pflichtfelder erfassen,2,Vertragsprozess,Hauptteil
+6.3,"Kunden-, Fahrzeug- und Produktzuordnung kontrollieren",2,Vertragsprozess,Hauptteil
+6.4,Validierungsregeln und Fehlermeldungen,2,Vertragsprozess,Hauptteil
+6.5,Sonderfreigaben im Standardprozess erkennen,2,Vertragsprozess,Hauptteil
+6.6,Übersicht und Abschlusskontrolle,2,Vertragsprozess,Hauptteil
+6.7,Antrag speichern und Referenz prüfen,2,Vertragsprozess,Hauptteil
+7,"Zahlungsdaten, Dokumente und Unterschrift",1,Vertragsprozess,Hauptteil
+7.1,Zahlungsarten und Zahlungsintervalle,2,Vertragsprozess,Hauptteil
+7.2,Vertragszahler und Rechnungsempfänger,2,Vertragsprozess,Hauptteil
+7.3,Bankdaten und Mandate,2,Vertragsprozess,Hauptteil
+7.4,Vertragsdokumente und Sprachvarianten,2,Vertragsprozess,Hauptteil
+7.5,Digitale Unterschrift,2,Vertragsprozess,Hauptteil
+7.6,Manuelle Unterschrift und Dokumentupload,2,Vertragsprozess,Hauptteil
+7.7,Mehrfachunterschriften und erneute Signatur,2,Vertragsprozess,Hauptteil
+7.8,"Signatur-, Dokument- und Antragsstatus kontrollieren",2,Vertragsprozess,Hauptteil
+8,Antrag verfolgen und aktivieren,1,Vertragsprozess,Hauptteil
+8.1,"Anträge suchen, filtern und verfolgen",2,Vertragsprozess,Hauptteil
+8.2,Statusübersicht und zulässige Übergänge,2,Vertragsprozess,Hauptteil
+8.3,Fehlende Fahrzeugdaten und Dokumente ergänzen,2,Vertragsprozess,Hauptteil
+8.4,Freigabeprozess und Aktivierungsvoraussetzungen,2,Vertragsprozess,Hauptteil
+8.5,Automatische und manuelle Aktivierungsvarianten,2,Vertragsprozess,Hauptteil
+8.6,Aktivierung und Ergebnis kontrollieren,2,Vertragsprozess,Hauptteil
+8.7,"Ablehnung, Verzögerung und Wiederaufnahme",2,Vertragsprozess,Hauptteil
+9,MO Checks und fachliche Prüfungen,1,Vertragsprozess,Hauptteil
+9.1,Aufgaben und Abgrenzung der MO-Rolle,2,Vertragsprozess,Hauptteil
+9.2,MO Checks innerhalb der Vertragsanlage,2,Vertragsprozess,Hauptteil
+9.3,"Prüfstatus, Gründe und offene Prüfungen",2,Vertragsprozess,Hauptteil
+9.4,Qualitätssicherung und Systemprüfungen,2,Vertragsprozess,Hauptteil
+9.5,Abweichungen und erneute Prüfung,2,Vertragsprozess,Hauptteil
+9.6,Übergabe zur Entscheidung oder zum Support,2,Vertragsprozess,Hauptteil
+9.7,MO Checks bei Vertragsänderungen,2,Vertragsprozess,Hauptteil
+9.8,Contract Review: Profile und Übersicht,2,Vertragsprozess,Hauptteil
+10,Verträge im Alltag verwalten,1,Betrieb,Hauptteil
+10.1,Verträge suchen und Details prüfen,2,Betrieb,Hauptteil
+10.2,"Vertrags-, Kunden- und Zahlungsdaten ändern",2,Betrieb,Hauptteil
+10.3,Zahlerwechsel und Vertragsübertragung,2,Betrieb,Hauptteil
+10.4,Aussetzen und Reaktivieren,2,Betrieb,Hauptteil
+10.5,"Verlängerung, Folgeangebot und Folgevertrag",2,Betrieb,Hauptteil
+10.6,"Kündigung, Stornierung und Beendigung",2,Betrieb,Hauptteil
+10.7,Finanzielle Folgen und Abschlussnachweise,2,Betrieb,Hauptteil
+10.8,Änderungshistorie und Nachvollziehbarkeit,2,Betrieb,Hauptteil
+10.9,"Laufleistung, Kilometerstandshistorie und Prognose",2,Betrieb,Hauptteil
+11,"Rechnung, Zahlung, Kosten und Auswertungen",1,Betrieb,Hauptteil
+11.1,Rechnungsstellung und Zahlpläne,2,Betrieb,Hauptteil
+11.2,Rechnungsstatus und Zahlungsstatus unterscheiden,2,Betrieb,Hauptteil
+11.3,Abweichende Rechnungsempfänger und Sammelrechnung,2,Betrieb,Hauptteil
+11.4,Kostenmanagement und Claims,2,Betrieb,Hauptteil
+11.5,Werkstatt- und Lieferantenbezüge,2,Betrieb,Hauptteil
+11.6,"Endabrechnung, Erstattung und Korrekturen",2,Betrieb,Hauptteil
+11.7,"Reporting, Filter und Exporte",2,Betrieb,Hauptteil
+11.8,Abweichungen an Fachbereich oder Support übergeben,2,Betrieb,Hauptteil
+12,"Geschäftskunden, Kampagnen und Sonderfälle",1,Betrieb,Hauptteil
+12.1,Zusätzliche Anforderungen für Geschäftskunden,2,Betrieb,Hauptteil
+12.2,Flotten- und besondere Kundenkonstellationen,2,Betrieb,Hauptteil
+12.3,Kampagnen und Sonderkonditionen,2,Betrieb,Hauptteil
+12.4,Sonderfallanfrage und Begründung,2,Betrieb,Hauptteil
+12.5,Dealer-Zuordnung und Weiterbearbeitung,2,Betrieb,Hauptteil
+12.6,"Validierung, Freigabe und Ablehnung",2,Betrieb,Hauptteil
+12.7,Interne und externe Kommentare,2,Betrieb,Hauptteil
+12.8,Customer Account Center,2,Betrieb,Hauptteil
+12.9,Massenanlage und Validierung von Fahrzeuglisten,2,Betrieb,Hauptteil
+13,Reifenprodukte – Tyres,1,Betrieb,Hauptteil
+13.1,Einordnung und Abgrenzung zum Standardprozess,2,Betrieb,Hauptteil
+13.2,"Produkt, Reifentyp und Reifengröße",2,Betrieb,Hauptteil
+13.3,"Laufzeit, Laufleistung und Leistungsumfang",2,Betrieb,Hauptteil
+13.4,"Preis, Optionen und Kampagnen",2,Betrieb,Hauptteil
+13.5,"Antrag, Dokumente und Aktivierung",2,Betrieb,Hauptteil
+13.6,Laufende Verwaltung und Leistungsbezug,2,Betrieb,Hauptteil
+13.7,Verlängerung und Beendigung,2,Betrieb,Hauptteil
+14,"Marktrolle, Produkt- und Preispflege sowie Administration",1,Steuerung,Hauptteil
+14.1,Aufgaben und Abgrenzung der Marktrolle,2,Steuerung,Hauptteil
+14.2,Marktspezifische Einstellungen,2,Steuerung,Hauptteil
+14.3,Länderabweichungen vom Blueprint,2,Steuerung,Hauptteil
+14.4,Vorlagenverwaltung und Template Management,2,Steuerung,Hauptteil
+14.5,Administrationsbereich und zulässige Aktionen,2,Steuerung,Hauptteil
+14.6,Marktbezogene Sichtbarkeit und Berechtigungen,2,Steuerung,Hauptteil
+14.7,"Änderungen prüfen, freigeben und dokumentieren",2,Steuerung,Hauptteil
+14.8,"Produktdefinition, Anlage und Veröffentlichung",2,Steuerung,Hauptteil
+14.9,"Preisversionen, Cluster und Faktorgrenzen",2,Steuerung,Hauptteil
+14.10,"Produktänderung, Versionierung und Bestandswirkung",2,Steuerung,Hauptteil
+14.11,Fahrzeuggruppen und Van-Baumuster-Clustering,2,Steuerung,Hauptteil
+14.12,Product Testing als Arbeitsbereich,2,Steuerung,Hauptteil
+14.13,Kampagnenanlage und Rabattpflege,2,Steuerung,Hauptteil
+14.14,"Preiskomponenten, Cost Unit Split und Inflation",2,Steuerung,Hauptteil
+15,"HQ-Rolle, Blueprint und zentrale Stammdaten",1,Steuerung,Hauptteil
+15.1,Aufgaben und Abgrenzung der HQ-Rolle,2,Steuerung,Hauptteil
+15.2,Blueprint-Pflege und globale Standards,2,Steuerung,Hauptteil
+15.3,Umgang mit Länderabweichungen,2,Steuerung,Hauptteil
+15.4,Governance und Freigaben auf HQ-Ebene,2,Steuerung,Hauptteil
+15.5,Zusammenarbeit mit Markt und MO,2,Steuerung,Hauptteil
+15.6,Aufgabenbeschreibung versus dokumentierte Navigation,2,Steuerung,Hauptteil
+15.7,"Technical Options, SA-Matching, Coverage- und Industry-Codes",2,Steuerung,Hauptteil
+16,"Governance, Qualität, Datenschutz und Archivierung",1,Steuerung,Hauptteil
+16.1,Datenschutz und sichere Beispieldaten,2,Steuerung,Hauptteil
+16.2,Datenqualität und Datenführerschaft,2,Steuerung,Hauptteil
+16.3,Fachliche Prüfung und Freigabeworkflow,2,Steuerung,Hauptteil
+16.4,Testnachweise und produktiver Funktionsstand,2,Steuerung,Hauptteil
+16.5,Dokumentenverwaltung und Archivierung unterscheiden,2,Steuerung,Hauptteil
+16.6,"Quellen, Ticketreferenzen und Versionsführung",2,Steuerung,Hauptteil
+16.7,"Widersprüche, Lücken und Klärungsregister",2,Steuerung,Hauptteil
+16.8,Dealer-Governance und Reportingnachweise,2,Steuerung,Hauptteil
+17,Rollout und Einführung,1,Einführung und Technik,Hauptteil
+17.1,Zielmärkte und Einführungsumfang,2,Einführung und Technik,Hauptteil
+17.2,"Voraussetzungen für Zugang, Konfiguration und Schulung",2,Einführung und Technik,Hauptteil
+17.3,Marktvorbereitung und fachliche Abnahme,2,Einführung und Technik,Hauptteil
+17.4,Schulung und Übergabe in den Betrieb,2,Einführung und Technik,Hauptteil
+17.5,Begleitung nach Einführung und offene Punkte,2,Einführung und Technik,Hauptteil
+18,Migration und Übernahme von Bestandsdaten,1,Einführung und Technik,Hauptteil
+18.1,Umfang und Abgrenzung der Migration,2,Einführung und Technik,Hauptteil
+18.2,Quellsysteme und Datenobjekte,2,Einführung und Technik,Hauptteil
+18.3,Datenzuordnung und Qualitätsprüfung,2,Einführung und Technik,Hauptteil
+18.4,Übernommene Kunden und Verträge prüfen,2,Einführung und Technik,Hauptteil
+18.5,"Fehlerfälle, Korrekturwege und Nachweise",2,Einführung und Technik,Hauptteil
+18.6,Cutover und Parallelbetrieb,2,Einführung und Technik,Hauptteil
+19,IT Architektur,1,Einführung und Technik,Hauptteil
+19.1,Architekturüberblick und Systemlandkarte,2,Einführung und Technik,Hauptteil
+19.2,GO – Pkw-Auftragsinformationen,2,Einführung und Technik,Hauptteil
+19.3,AFAB – Van-Auftragsinformationen,2,Einführung und Technik,Hauptteil
+19.4,CEPRO – Van-Fahrzeugstammdaten,2,Einführung und Technik,Hauptteil
+19.5,OTR – Auftrags- und Fahrzeugbezug,2,Einführung und Technik,Hauptteil
+19.6,DSB – Kilometerstandsinformationen,2,Einführung und Technik,Hauptteil
+19.7,Warranty-and-Goodwill-API,2,Einführung und Technik,Hauptteil
+19.8,MIC – Fahrzeugdaten-API,2,Einführung und Technik,Hauptteil
+19.9,"VEGA – Vertrag, Coverage und Claim",2,Einführung und Technik,Hauptteil
+19.10,BS4 beziehungsweise SDB4,2,Einführung und Technik,Hauptteil
+19.11,oneERP – Kunden- und Finanzintegration,2,Einführung und Technik,Hauptteil
+19.12,CoFiCo – FI-Anbindung,2,Einführung und Technik,Hauptteil
+19.13,SWT – FI-Anbindung,2,Einführung und Technik,Hauptteil
+19.14,NEMESIS – Buchhalterische Verarbeitung,2,Einführung und Technik,Hauptteil
+19.15,MPay – Zahlungsintegration,2,Einführung und Technik,Hauptteil
+19.16,ALICE – Berechtigungsmanagement,2,Einführung und Technik,Hauptteil
+19.17,DATIX – Manuelle Übergabe,2,Einführung und Technik,Hauptteil
+19.18,Weitere Systeme und Dienste,2,Einführung und Technik,Hauptteil
+19.19,Datenplattformen und Reporting,2,Einführung und Technik,Hauptteil
+19.20,Legacy-Systeme und Übergangsarchitektur,2,Einführung und Technik,Hauptteil
+19.21,Technische Integrationswege,2,Einführung und Technik,Hauptteil
+19.22,Schnittstellenbetrieb und Fehlerbehandlung,2,Einführung und Technik,Hauptteil
+19.23,Architekturregister und offene Nachweise,2,Einführung und Technik,Hauptteil
+19.24,VeDoc: Einzelsteckbrief,2,Einführung und Technik,Hauptteil
+19.25,VERSO/VOM: Einzelsteckbrief,2,Einführung und Technik,Hauptteil
+19.26,oneDoC: Einzelsteckbrief,2,Einführung und Technik,Hauptteil
+19.27,Xentry: Einzelsteckbrief,2,Einführung und Technik,Hauptteil
+19.28,MBFS Bundling: Einzelsteckbrief,2,Einführung und Technik,Hauptteil
+19.29,POS-Kanäle: Einzelsteckbrief,2,Einführung und Technik,Hauptteil
+19.30,Versicherer: Einzelsteckbrief,2,Einführung und Technik,Hauptteil
+19.31,Lieferanten: Einzelsteckbrief,2,Einführung und Technik,Hauptteil
+20,Länderspezifische Themen,1,Spezifika und Support,Hauptteil
+20.1,Länder- und Marktprofil,2,Spezifika und Support,Hauptteil
+20.2,Lokale Rollen und Zugangsvarianten,2,Spezifika und Support,Hauptteil
+20.3,"Lokale Produkte, Preise und Kampagnen",2,Spezifika und Support,Hauptteil
+20.4,"Zahlung, Dokumente und Signatur je Land",2,Spezifika und Support,Hauptteil
+20.5,Länderbezogene Einführung und Migration,2,Spezifika und Support,Hauptteil
+20.6,Länderabweichungsregister und Qualität,2,Spezifika und Support,Hauptteil
+21,Spartenspezifische Themen,1,Spezifika und Support,Hauptteil
+21.1,Spartenprofil und Abgrenzung Pkw/Van,2,Spezifika und Support,Hauptteil
+21.2,Fahrzeugdaten und Kennungen je Sparte,2,Spezifika und Support,Hauptteil
+21.3,Produkte und Preisparameter je Sparte,2,Spezifika und Support,Hauptteil
+21.4,"Antrag, Signatur und Aktivierung je Sparte",2,Spezifika und Support,Hauptteil
+21.5,Verwaltung und Finanzfolgen je Sparte,2,Spezifika und Support,Hauptteil
+21.6,"Spartenplanung, Tests und Freigaben",2,Spezifika und Support,Hauptteil
+22,Ausblick und Weiterentwicklung,1,Spezifika und Support,Hauptteil
+22.1,Bestätigter Funktionsstand,2,Spezifika und Support,Hauptteil
+22.2,Geplante Erweiterungen und offene Anforderungen,2,Spezifika und Support,Hauptteil
+22.3,Auswirkungen auf Schulung und Handbuch,2,Spezifika und Support,Hauptteil
+22.4,Releaseinformationen und Änderungsübersicht,2,Spezifika und Support,Hauptteil
+23,"FAQ, Troubleshooting und Support",1,Spezifika und Support,Hauptteil
+23.1,Häufig gestellte Fragen nach Prozessphase,2,Spezifika und Support,Hauptteil
+23.2,Bekannte Fehler mit Markt- und Releasebezug,2,Spezifika und Support,Hauptteil
+23.3,"Bedienfrage, Datenabweichung und Störung",2,Spezifika und Support,Hauptteil
+23.4,Informationen für einen Supportfall,2,Spezifika und Support,Hauptteil
+23.5,Support- und Eskalationswege,2,Spezifika und Support,Hauptteil
+23.6,Bestätigte Workarounds und Ergebnisprüfung,2,Spezifika und Support,Hauptteil
+A.1,Glossar und Abkürzungen,2,Anhang,Anhang
+B.1,Alltagschecklisten,2,Anhang,Anhang
+C.1,Prozessdiagramme,2,Anhang,Anhang
+D.1,Rollen-/Status-/Scopematrizen,2,Anhang,Anhang
+E.1,Ticket-zu-Kapitel-Zuordnung,2,Anhang,Anhang
+F.1,Quellen und Klärungsregister,2,Anhang,Anhang
+G.1,Bildverzeichnis und Nachweise,2,Anhang,Anhang
+H.1,Wissenschecks und Lösungen,2,Anhang,Anhang
+I.1,Praxisbeispiele entlang des Vertragsprozesses,2,Anhang,Anhang
+I.2,Rechenbeispiele und Finanzbezug,2,Anhang,Anhang
+I.3,Testdatenkatalog und Nachweise,2,Anhang,Anhang
+T14-15,Marktpflege und zentrale Vorgaben verbinden,0,Übergang,Übergang
+T15-14,Zentrale Grundlagen an die Marktpflege übergeben,0,Übergang,Übergang
+T15-16,Von der Pflegeentscheidung zum Governance-Nachweis,0,Übergang,Übergang
+T6-7,Vom gespeicherten Antrag zu Zahlungsdaten und Signatur,0,Übergang,Übergang
+T7-8,Von Dokumenten und Signatur zur Aktivierungsprüfung,0,Übergang,Übergang
+T8-9,Gesamtprozess und MO-Rollenvertiefung,0,Übergang,Übergang
+T9-10,Vom Prüfergebnis zur laufenden Vertragsverwaltung,0,Übergang,Übergang
+V.1,Willkommen und Dokumentkontext,2,Vorspann,Vorspann
+V.2,Inhaltsverzeichnis und Lesepfade,2,Vorspann,Vorspann

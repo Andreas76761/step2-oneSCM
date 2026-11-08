@@ -1,0 +1,15 @@
+# Batch 858 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 4 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragsverwaltung: Historie, Dokumente, Produkt- und Zahlungsdetails**
+
+Die Vertragsverwaltung bietet Benutzern mit entsprechenden Rechten (Power User) eine umfassende und benutzerfreundliche Oberfläche, um die Details eines bestimmten Vertrags einzusehen und zu verwalten. Sie soll wichtige Vertragsinformationen übersichtlich darstellen und zugleich Optionen bieten, einen Vertrag bei Bedarf zu bearbeiten, etwa ihn auszusetzen, zu kündigen, zu stornieren oder zu reaktivieren. Die angezeigten Daten stehen in oneSCM zur Verfügung, sobald ein Vertrag angelegt wurde. Voraussetzung ist daher, dass der Vertrag bereits erstellt wurde, damit er ausgewählt werden kann und seine Daten angezeigt werden. Das Erscheinungsbild entspricht dem Mercedes-Benz Workbench sowie dem vom Kunden freigegebenen UI-Design.
+
+Um die Informationen aufzurufen, melden Sie sich mit den entsprechenden Berechtigungen an und öffnen den gewünschten Vertrag. Im Bereich „Historie" stehen zwei Ansichten zur Verfügung: die VEGA-Historie und die Vertragsstatus-Historie. Die Vertragsstatus-Historie zeigt zu jeder Statusänderung den bisherigen Status, den neuen Status, den Grund, das Datum sowie den Benutzernamen an.
+
+Der Bereich „Dokumente" stellt Verknüpfungen zum Vertrag und zu den Allgemeinen Geschäftsbedingungen bereit. Die Dokumente können gedruckt oder per E-Mail versendet werden.
+
+Die Produktdetails werden auf einer Seite mit dem Produktnamen angezeigt, und zwar auf Basis der jeweiligen Vertragsnummer. Dazu gehören Angaben wie der Verkäufer, die Vertragswerkstatt bzw. der Vertragshändler (Name mit der Nummer in Klammern), die Vertriebspartner-ID (GSSN+), das Bestätigungsdatum, das mit der Aktivierung des Vertrags festgelegt wird, sowie das Quellsystem bzw. der Vertriebskanal, zum Beispiel UICON oder EPOS. Weitere Felder sind der Kampagnenbetrag und die Angebotsnummer. Nach dem MVP sollen die übrigen Vertriebsoptionen folgen; zunächst ist der Direktvertrieb berücksichtigt.
+
+Die Zahlungsdetails werden auf einer eigenen Seite angezeigt. Dort sind die zum Vertrag passende Zahlungsdauer, das Zahlungsintervall und das Zahlungsratenintervall zu sehen. Bei monatlicher Zahlung ergibt sich das Zahlungsintervall aus dem Preis des Produkts geteilt durch die Vertragslaufzeit. Bei einer Einmalzahlung entspricht der Betrag dem gesamten Vertragsbetrag. Die Bearbeitung von Zahlungsdauer und Zahlungsintervall ist in dieser Funktion nicht enthalten, da sie sich auf den Zahlungsplan auswirkt und gesondert abgestimmt werden muss. Sie wird in anderen Epics behandelt.

@@ -1,0 +1,23 @@
+# Batch 335 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 27 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Vertragsprüfung: Prüfprofile (Contract Review Profiles)**
+
+Im Administrationsbereich steht ein neuer Menüeintrag „Contract Review Profiles“ zur Verfügung. Zusätzlich gibt es neben dem Reiter „Operative Review“ einen neuen Reiter „Review Profiles“. Beide führen zur Übersichtsseite der Prüfprofile.
+
+Die Suche auf dieser Seite bietet vier Filter. Mit dem Datumsfilter, einem Kalenderfeld, werden Profile gefunden, die am eingegebenen Datum angelegt wurden. Über den Filter „Review Profile Name“ wird per Texteingabe nach Profilen mit passendem Namen gesucht. Der Filter „Application Area“ ist ein Dropdown mit Mehrfachauswahl (Leasing, Standalone, Finance). Der Filter „Approval“ ist ein Dropdown mit Einfachauswahl (Automatic, Manual, Threshold). Die Auswahloptionen sind fest vorgegeben und werden nicht vom Server geladen. Die Funktion „More Filters“ ist nicht vorgesehen. Die gewählten Filterkriterien werden während des Suchvorgangs gespeichert und lassen sich zurücksetzen.
+
+Die Ergebnisse erscheinen in einer Tabelle mit Sortierung und Seitenaufteilung. Die Spaltenwerte folgen dem vorgesehenen Design. Datum und Ersteller sind wie in der Produkttabelle in einer Spalte „Last modified by“ zusammengefasst, die sowohl das Datum als auch die Benutzer-ID anzeigt. Die Profile werden anhand der Filterkriterien, der Sortierung und der Seitenaufteilung abgerufen. Die Optionen im Aktionsmenü stammen aus den vom Backend bereitgestellten Aktionen. Wird ein gesuchter Eintrag nicht gefunden oder können aus anderen Gründen keine Einträge abgerufen werden, erscheint eine von zwei unterschiedlichen Meldungen, wie sie auch an anderen Stellen der Anwendung verwendet werden.
+
+Zum Anlegen eines Profils steht eine Vorlage zur Verfügung, in der alle Felder Pflichtfelder sind und entsprechend validiert werden. „Application Area“ ist ein Dropdown mit Mehrfachauswahl (Leasing, Standalone, Finance). „Review Type“ ist ein Dropdown mit Einfachauswahl (Annual, Final). „Division“ ist ein Dropdown mit Einfachauswahl (Passenger Cars, Vans). „Products“ ist ein Dropdown mit Mehrfachauswahl, dessen Liste alle verfügbaren Produkte enthält. Diese werden über die Produkt-Schnittstelle abgerufen.
+
+Der Abschnitt „Overmileage“ enthält ein Dropdown mit Einfachauswahl (No Customer Charge, Customer Charge). Nur bei „Customer Charge“ erscheinen drei weitere Dropdowns: „Tolerance“, „Maximum Charge“ und „Approval“. Alle drei sind Einfachauswahlen, aber nur „Approval“ ist ein Pflichtfeld. Für „Tolerance“ und „Maximum Charge“ stehen die Optionen „Percentage“ und „Absolute Amount“ zur Verfügung. Nach der Auswahl erscheint rechts daneben ein zusätzliches Eingabefeld für den Prozentwert bzw. den Betrag, das ein Pflichtfeld ist. Wird bei „Approval“ die Option „Threshold“ gewählt, erscheint rechts ein Pflichtfeld für den Schwellenwert. Für jedes Feld gelten die im Epic festgelegten Validierungen.
+
+Der Abschnitt „Undermileage“ enthält ein Dropdown mit Einfachauswahl (No Compensation, Compensation, Compensation on Customer Request). Nur bei „Compensation“ oder „Compensation on Customer Request“ werden die Dropdowns „Tolerance“, „Maximum Charge“ und „Approval“ angezeigt, für die dieselben Bedingungen wie im Abschnitt „Overmileage“ gelten. Auch hier sind alle Optionen im Frontend fest vorgegeben.
+
+**Produkttest**
+
+Auf der Seite zum Testen von Produkten wurden die Berechtigungen für den MPC-Benutzer angepasst. Der Ablauf wurde für den MPC-Benutzer unter „Product Management > Product Testing“ und für den MO-Benutzer unter „Contract Generation > Contract Offering“ geprüft. Die Produktbeschreibung sowie die Identifikatoren Modellcode und Auftragsnummer wurden angepasst. Auch für die Identifikation über die Fahrgestellnummer wurden Oberfläche, Datenhaltung und Backend-Anbindung angepasst. Der MPC-Benutzer sieht dabei zusätzliche Felder zur Einrichtung des Tests.
+
+Im Hintergrund wurde die Preisermittlung so geändert, dass das Simulationsdatum berücksichtigt wird. Die Produktsuche berücksichtigt nun den Produktstatus. Außerdem wurde in der Fahrzeug- und Produktverwaltung eine neue Schnittstelle zum Abrufen verfügbarer Produkte mit den nötigen Feldern geschaffen.

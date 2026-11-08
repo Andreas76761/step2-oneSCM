@@ -1,0 +1,15 @@
+# Batch 1085 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Erweiterte Feldlänge für den Steuersatz**
+
+Das Eingabefeld für den Steuersatz in der Vertragsverwaltung (Service Contract Management) von oneSCM wurde in seiner zulässigen Zeichenlänge erweitert. Bisher wurde der Steuersatz als Dezimalbruch mit Komma als Trennzeichen erfasst, zum Beispiel 0,19 für 19 %. Das Feld erlaubte dafür vier Zeichen: eine Stelle vor dem Trennzeichen, das Trennzeichen selbst und zwei Nachkommastellen. Damit ließen sich nur ganzzahlige Prozentsätze zwischen 0 und 99 % speichern. Steuersätze mit Nachkommastellen im Prozentwert, etwa der Schweizer Normalsatz von 8,1 % (entspricht 0,081), konnten nicht korrekt abgelegt werden, weil dafür eine dritte Nachkommastelle im Dezimalbruch nötig ist.
+
+Anlass der Änderung ist der Rollout in Märkten mit nicht ganzzahligen Steuersätzen. Dazu zählt die Schweiz mit 8,1 %, 2,6 % und 3,8 %. Eine Verlängerung um nur ein Zeichen (von vier auf fünf Zeichen, Format 0,081) würde den Schweizer Fall lösen und auch Sätze wie Finnland mit 25,5 % abdecken. Für eine weltweite Abbildung von Mehrwert- und Gütersteuern reicht das jedoch nicht aus. Kamerun erhebt etwa 19,25 % (0,1925, sechs Zeichen), und die Québec-Steuer QST beträgt 9,975 % (0,09975, sieben Zeichen). Bei nur fünf Zeichen würden solche Sätze abgeschnitten.
+
+Die Feldlänge ist deshalb auf sieben Zeichen ausgelegt (Format 0,ddddd). Damit lassen sich Prozentsätze mit bis zu drei Nachkommastellen darstellen, und alle bekannten Mehrwert- und Gütersteuersätze einschließlich Québec sind abgedeckt. Diese Länge entspricht zudem gängiger Praxis in ERP-Systemen. Da die Anpassung einmalig und marktunabhängig erfolgt, vermeidet die großzügigere Länge weitere Änderungen bei künftigen Rollouts, auch wenn sich Steuersätze im Lauf der Zeit ändern, wie in der Schweiz, wo der Satz seit 2024 von 7,7 % auf 8,1 % gestiegen ist.
+
+Für die Bedienung gilt: Bestehende Werte im Format 0,dd, zum Beispiel 0,19, bleiben weiterhin gültig und werden unverändert als 19 % interpretiert. Eine Datenmigration ist nicht erforderlich. Neue Eingaben wie 0,081 werden korrekt als 8,1 % gespeichert, und 0,09975 wird ohne Genauigkeitsverlust als 9,975 % übernommen. Gibt jemand mehr Nachkommastellen ein, als zulässig sind, wird die Eingabe mit einer Fehlermeldung abgelehnt. Es erfolgt keine stillschweigende Rundung, damit keine falschen Rechnungsbeträge oder Verstöße gegen steuerliche Vorgaben entstehen.
+
+Zu beachten ist außerdem, dass die Erweiterung nicht allein die Oberfläche betrifft. Datenmodell, Validierung, Schnittstellen und Dateischnittstellen zu nachgelagerten Finanzsystemen müssen dieselbe Genauigkeit unterstützen, damit die Steuersätze durchgängig korrekt verarbeitet werden.

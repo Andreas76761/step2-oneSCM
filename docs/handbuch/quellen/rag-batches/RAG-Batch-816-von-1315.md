@@ -1,0 +1,17 @@
+# Batch 816 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 1 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**Fortschrittsanzeige für laufende Hintergrundaktionen im Vertrag**
+
+Im Vertragsmanagement zeigt oneSCM jetzt eine Fortschrittsanzeige an, wenn für einen Vertrag eine Aktion im Hintergrund läuft. Dies betrifft die Prozesse Übertragung (Transfer), Zahlerwechsel (Change Payer) und langfristige Verlängerung (Prolongation). Sobald ein Vertrag in einen dieser Prozesse eintritt, erscheint die Anzeige in der Kopfzeile der Vertragsdetailansicht, direkt neben der Referenznummer. Das System erfasst dabei alle zum Prozess gehörenden Aufgaben samt Abschlussstatus und Zeitstempeln.
+
+Die Fortschrittsanzeige ist standardmäßig orange und zeigt ein sich dauerhaft drehendes Symbol, jedoch weder einen Prozentwert noch eine verbleibende Zeit. Der Text nennt die ausgelöste Aktion, gefolgt vom Zusatz „in progress", also „Transfer in progress", „Change Payer in progress" oder „Prolongation in progress". Klicken Sie auf die Anzeige, werden Sie zu den MO Checks weitergeleitet und sehen dort die Details des Vertrags, bei dem die Anzeige eingeblendet war, sofern der Vertrag in den MO Checks vorhanden ist. Ist er dort nicht vorhanden, passiert beim Klicken nichts.
+
+Fahren Sie mit der Maus über die Fortschrittsanzeige, öffnet sich eine Detailansicht der im Hintergrund laufenden Aufgaben. Sie enthält das Startdatum samt Uhrzeit im Format TT.MM.JJJJ HH:MM:SS (UTC) sowie das Fälligkeitsdatum der Unterschrift im Format TT.MM.JJJJ. Außerdem werden die für die jeweilige Aktion zu prüfenden Aufgaben aufgelistet. Ein Farbcode vor jeder Aufgabe zeigt den Status: Grün steht für abgeschlossen, ergänzt um den Zeitstempel der Fertigstellung (TT.MM.JJJJ HH:MM:SS UTC). Orange bedeutet, dass die Aufgabe gerade bearbeitet wird. Grau kennzeichnet ausstehende Aufgaben, die noch nicht begonnen wurden. Rot bedeutet, dass die Prüfung nicht in Ordnung ist; in diesem Fall wird sie in den MO Checks markiert. Auch bei fehlgeschlagenen Aufgaben wird der Zeitstempel des Abschlusses hinzugefügt.
+
+Sind alle Aufgaben abgeschlossen und ist die Aktion beendet, wird die Fortschrittsanzeige entfernt. Schlägt eine Aufgabe fehl und erfordert ein Eingreifen, wird sie beim Überfahren der Anzeige rot dargestellt und in den MO Checks markiert. Behebt MO/MPC das Problem, wird die Prüfung aus der Fortschrittsanzeige heraus erneut gestartet und validiert, und der Status wird sowohl in der Anzeige als auch in den MO Checks aktualisiert.
+
+Eine Ausnahme gilt für den CAS-Check: Fällt die CAS-Antwort positiv aus, wird die Aktion gestoppt und die Fortschrittsanzeige entfernt, ohne dass die übrigen Aufgaben abgeschlossen werden. Der Vertrag wird dann auf den entsprechenden Folgestatus gesetzt. Dieser Fall ist nicht umkehrbar. Welcher Status bei einer ausgelösten Übertragung bzw. einem ausgelösten Zahlerwechsel gesetzt wird, ist in den vorliegenden Angaben noch nicht festgelegt.
+
+Zu beachten ist, dass nicht mehrere Aktionen gleichzeitig ausgelöst werden können. Eine Aktion muss zunächst abgeschlossen sein, bevor eine weitere gestartet werden kann. Läuft beispielsweise eine Übertragung, kann keine Verlängerung angestoßen werden. Gestaltung und Grafiken folgen den Vorgaben der Mercedes-Benz Workbench.

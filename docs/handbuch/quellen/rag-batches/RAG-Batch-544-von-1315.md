@@ -1,0 +1,15 @@
+# Batch 544 von 1315 (aus Auswahl) – Fließtext, Teilschritt
+
+_Automatisch mit Claude generiert – Teilergebnis aus 24 Tickets dieser Auswahl. Wird am Ende aller Batches mit den übrigen Teilschritt-Dateien zu einem Gesamttext zusammengeführt. Bitte redaktionell prüfen._
+
+**DevOps – Änderungen und Verbesserungen**
+
+Im Bereich DevOps wurden zahlreiche Arbeiten abgeschlossen, die den Betrieb, die Überwachung und die Sicherheit der Plattform verbessern. Ein Schwerpunkt lag auf der Beobachtbarkeit des Systems: Die Überwachungs- und Alarmierungsfunktionen von DataDog wurden erweitert, um die Systemtransparenz und die Reaktion auf Störungen zu verbessern. Dazu gehören verfeinerte Dashboards, optimierte Alarmschwellenwerte und die Anbindung zusätzlicher Dienste für eine umfassendere Überwachung der gesamten Infrastruktur. Ergänzend wurde ein aufgetretener Fehler beim DataDog-Agenten dokumentiert, und auch der GitHub-Action-Runner erhielt eine erweiterte Beobachtbarkeit. Für OpenSearch wurde ein Monitoring eingerichtet, und die Unterstützung und Überwachung der Umgebungen PRE-PROD und PROD wurde ebenfalls umgesetzt.
+
+Auch Automatisierung und Release-Prozesse wurden weiterentwickelt. Workflows sollen automatisch in allen Repositories aktualisiert werden, wobei die End-to-End-Repositories ausgenommen sind; zusätzlich wurde eine Versionierung vorgesehen. Die neuesten Funktionen wurden dokumentiert. Für die Produktivumgebung wurde ein Continuous Release eingerichtet. Außerdem wurden Probleme mit dem Release-Tag, mit dem Workflow zur Aktualisierung von Images und mit der Terraform-Formatter-Action behoben. Eine automatische Aktualisierung von Images, die über eine geplante Aufgabe läuft, soll die Zahl der Schwachstellen verringern.
+
+Weitere Verbesserungen betreffen Infrastruktur und Sicherheit. Es wurden AWS-Best-Practices umgesetzt und Schwachstellen behoben, und eine Begrenzung der Anfragerate (Rate Limiting) wurde implementiert. Die Lambda-Funktionen für die Kostenkontrolle und für ECR-Benachrichtigungen wurden korrigiert. Die Ressourcen der DEV-Umgebung werden nun zeitgesteuert optimiert. Zudem wurde die Validierung von CFT-Ordnern erweitert. Die Umstellung des Docker-Images auf eine native Variante wurde mit dem Ziel umgesetzt, die teils längeren Bereitstellungszeiten zu verkürzen; Alternativen wie Jib wurden dabei betrachtet. Für die FileScanner-App liegt nun eine Dokumentation vor.
+
+Darüber hinaus wurden Probleme bei der Erzeugung der Datei i155 behoben, die nicht korrekt generiert worden war. Die Beobachtbarkeitsvalidierung und der Fall der in PREPROD nicht erzeugten i155-Datei wurden abgeschlossen.
+
+Nicht umgesetzt wurden zwei Vorhaben. Die Umstellung von einer Intranet- auf eine Internet-Domäne wurde abgebrochen. Hintergrund war die Erkenntnis, dass die autorisierten Servicepartner nicht Teil des internen Netzwerks sind und die Anwendung daher bislang nur im Intranet erreichbar war. Der Login-Endpunkt war bereits konfiguriert, die Konfiguration des Logouts stand noch aus, da hierfür nur ein einziger Endpunkt möglich ist. Ebenfalls abgebrochen wurde das Vorhaben zur Sicherung und Wiederherstellung von Kafka.
