@@ -34,6 +34,8 @@ export function WorkshopPage() {
   const navigate = useNavigate();
   const { notify } = useApp();
   const chapters = useLoad<any[]>('/chapters?outline=all');
+  // Kapitel „Intern“ und „In Planung“ (Etappe 100): vorgemerkte Abschnitte, nicht im Handbuch
+  const parked = useLoad<any[]>('/parked', [chapters.data]);
   const outlines = useLoad<any>('/outlines');
   const chapter = chapters.data?.find((c) => c.id === chapterId);
   useDocTitle('Kapitelwerkstatt', chapter?.title);
@@ -127,6 +129,15 @@ export function WorkshopPage() {
         </ul>
         </div>
         ))}
+        <h3 className="toc-group">Nicht im Handbuch</h3>
+        <ul className="toc" aria-label="Nicht im Handbuch">
+          {[['intern', 'Intern'], ['planning', 'In Planung']].map(([code, title]) => (
+            <li key={code}>
+              <Link to={`/vormerkungen?ziel=${code}`}>{title}</Link>
+              <div className="small muted">{(parked.data ?? []).filter((p) => p.target === code).length} vorgemerkt</div>
+            </li>
+          ))}
+        </ul>
       </aside>
 
       <section className="ws-main">
@@ -292,6 +303,14 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
             <select aria-label="In Abschnitt verschieben" value="" onChange={(e) => e.target.value && run(() => patch(`/content-blocks/${b.id}`, { section: e.target.value }), 'In anderen Abschnitt verschoben.')}>
               <option value="">Verschieben nach …</option>
               {ref?.sections.filter((s) => s.code !== b.section).map((s) => <option key={s.code} value={s.code}>{s.title}</option>)}
+            </select>
+          )}
+          {/* Etappe 100: Quellen des Absatzes ins Kapitel „Intern“ bzw. „In Planung“ – der Absatz entfällt im Entwurf */}
+          {!locked && b.sources?.length > 0 && (
+            <select aria-label="Für Intern oder In Planung vormerken" value="" onChange={(e) => e.target.value && run(() => post(`/content-blocks/${b.id}/park`, { target: e.target.value }), `Für „${e.target.value === 'intern' ? 'Intern' : 'In Planung'}“ vorgemerkt – der Absatz entfällt im Entwurf.`)}>
+              <option value="">Vormerken für …</option>
+              <option value="intern">Intern</option>
+              <option value="planning">In Planung</option>
             </select>
           )}
           <button className="btn small" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { mode: locked ? 'manually_edited' : 'locked' }), locked ? 'Block entsperrt.' : 'Block gesperrt.')}>{locked ? <><Ico icon={LockOpenIcon} />Entsperren</> : <><Ico icon={LockIcon} />Sperren</>}</button>

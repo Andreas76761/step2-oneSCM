@@ -3631,7 +3631,7 @@ test('[T-390] Feinschliff nach Sichtprüfung: Quick Reference Guide zweispaltig 
 });
 
 /** alle Seiten ohne Pfadparameter (wie in App.tsx) – für die Seitenprüfungen T-391 und T-392 */
-const ALL_PAGES = ['/', '/agenten', '/agenten/goal', '/analytik', '/anleitungs-check', '/assistent', '/aufgaben', '/backlog', '/benutzer', '/bildarchiv', '/bilder',
+const ALL_PAGES = ['/', '/agenten', '/agenten/goal', '/analytik', '/anleitungs-check', '/assistent', '/aufgaben', '/backlog', '/benutzer', '/bildarchiv', '/bilder', '/regelwerk', '/vormerkungen',
   '/cluster', '/dashboard', '/dopplungen', '/draft-manual', '/einstellungen', '/evidenz', '/export', '/fehlerliste', '/freigabe', '/generator', '/integrationen',
   '/intern', '/kapitel-assistent', '/kapitelbewertung', '/kapitelsteuerung', '/kontexthilfe', '/lesen', '/lesen/druck', '/lesen/faq', '/lesen/lesezeichen',
   '/metadaten', '/metadaten/befragung', '/metadaten/chunks', '/metadaten/dubletten', '/metadaten/einlesen', '/metadaten/fragen', '/metadaten/inhalte',
@@ -4184,4 +4184,48 @@ test('[T-406] Gliederung jeder Seite: genau eine Überschrift erster Ebene am An
     for (const f of own) findings.push(`${r}: ${f}`);
   }
   expect(findings).toEqual([]);
+});
+
+test('[T-432] Regelwerk pflegen; Absatz in der Werkstatt für „In Planung“ vormerken, im Kapitel „In Planung“ sehen und zurück ins Handbuch', async ({ page, request }) => {
+  const { default: AxeBuilder } = await import('@axe-core/playwright');
+  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
+    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  // Regelwerk: allgemeine Regel anlegen, ausschalten, löschen
+  await page.goto('/regelwerk');
+  const form = page.locator('.card', { hasText: 'Neue Regel' });
+  await form.getByRole('combobox', { name: /^Art/ }).selectOption({ label: 'Verbotener Begriff' });
+  await form.getByRole('textbox', { name: 'Begriff', exact: true }).fill('Faxnummer');
+  await form.getByRole('combobox', { name: /^Schweregrad/ }).selectOption('high');
+  await page.getByRole('button', { name: 'Regel anlegen' }).click();
+  await expect(page.getByText('Regel angelegt.')).toBeVisible();
+  const row = page.locator('tr', { hasText: 'Faxnummer' });
+  await expect(row).toContainText('Allgemein');
+  expect(await axe()).toEqual([]);
+  await row.getByLabel('Regel „Faxnummer“ aktiv').click();
+  await expect(page.getByText('Regel ausgeschaltet.')).toBeVisible();
+  await expect(row.getByLabel('Regel „Faxnummer“ aktiv')).not.toBeChecked();
+  await row.getByRole('button', { name: 'Regel „Faxnummer“ löschen' }).click();
+  await expect(page.getByText('Regel gelöscht.')).toBeVisible();
+
+  // Werkstatt: Absatz zur VAN-Laufleistung für „In Planung“ vormerken
+  const h = { 'X-User-Id': 'u-redaktion' };
+  const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '4. Vertragsbearbeitung');
+  expect((await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).ok()).toBe(true);
+  await page.goto(`/werkstatt/${ch.id}`);
+  const block = page.locator('article.block', { hasText: 'Laufleistung' });
+  await block.getByLabel('Für Intern oder In Planung vormerken').selectOption('planning');
+  await expect(page.getByText('Für „In Planung“ vorgemerkt – der Absatz entfällt im Entwurf.')).toBeVisible();
+  await expect(page.locator('article.block', { hasText: 'Laufleistung' })).toHaveCount(0);
+  const toc = page.getByRole('list', { name: 'Nicht im Handbuch' });
+  await expect(toc.locator('li', { hasText: 'In Planung' })).toContainText('1 vorgemerkt');
+  await toc.getByRole('link', { name: 'In Planung' }).click();
+
+  // Kapitel „In Planung“: Herkunft sichtbar, zurück ins Handbuch
+  await expect(page.getByRole('heading', { name: 'Intern und In Planung', level: 1 })).toBeVisible();
+  const item = page.locator('tr', { hasText: 'Laufleistung' });
+  await expect(item).toContainText('4. Vertragsbearbeitung');
+  expect(await axe()).toEqual([]);
+  await item.getByRole('button', { name: /zurück ins Handbuch/ }).click();
+  await expect(page.getByText('Zurück im Kapitel „4. Vertragsbearbeitung“ – ab dem nächsten Entwurf wieder im Text.')).toBeVisible();
+  await expect(page.locator('tr', { hasText: 'Laufleistung' })).toHaveCount(0);
 });

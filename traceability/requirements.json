@@ -1617,5 +1617,32 @@
     "documentation": [
       "docs/09-benutzerdokumentation.md"
     ]
+  },
+  {
+    "id": "NFR-159",
+    "title": "Sparten nur PKW und VAN, ohne Angabe beide als Standard (unbestätigt); bisherige Bus-/Truck-Zuordnungen werden zu PKW und VAN",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-123-sparten-regelwerk-vormerkungen.md"
+    ]
+  },
+  {
+    "id": "NFR-160",
+    "title": "Regelwerk: Text-Regeln allgemein oder je Kapitel (Pflichtbegriff, verbotener Begriff, Textmuster), geprüft in der Analyse als Befund; Blocker-Regeln sperren Einreichen und Freigabe",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-123-sparten-regelwerk-vormerkungen.md"
+    ]
+  },
+  {
+    "id": "NFR-161",
+    "title": "Kapitel „Intern“ und „In Planung“: Textabschnitte vormerken; nie im Handbuch, ab der nächsten Version entfernt, in Entwürfen sofort; Vormerkung überdauert erneuten Import",
+    "priority": "P1",
+    "idStatus": "decided",
+    "documentation": [
+      "docs/adr/ADR-123-sparten-regelwerk-vormerkungen.md"
+    ]
   }
 ]

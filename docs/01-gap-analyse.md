@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.102 Stand nach Etappe 100 (08.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Sparten nur PKW und VAN; ohne Angabe beide (unbestätigt); Bus/Truck beim Start auf PKW und VAN umgestellt | ✅ T-429 (NFR-159) |
+| Regelwerk: Pflichtbegriff, verbotener Begriff, Textmuster – allgemein oder je Kapitel; Befund „Regelwerk“ in der Analyse, Blocker-Regeln sperren Einreichen und Freigabe | ✅ T-430, T-432 (NFR-160) |
+| Kapitel „Intern“ und „In Planung“: Textabschnitte vormerken, im Entwurf sofort weg, ab der nächsten Version nicht im Handbuch, auch nach erneutem Import; zurück ins Handbuch | ✅ T-431, T-432 (NFR-161) |
+
 ## 1.101 Stand nach Etappe 99 (06.11.2026)
 
 | Punkt | Ergebnis |

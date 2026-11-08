@@ -1,6 +1,6 @@
 ---
 roles: [dealer]
-divisions: [truck]
+divisions: [van]
 evidence_status: source_confirmed
 market: DE
 ---
@@ -8,4 +8,4 @@ market: DE
 
 ## 4.3 Vertrag anlegen
 
-Für Truck-Verträge ist zusätzlich die Laufleistung in Kilometern bei Vertragsbeginn anzugeben.
+Für VAN-Verträge ist zusätzlich die Laufleistung in Kilometern bei Vertragsbeginn anzugeben.

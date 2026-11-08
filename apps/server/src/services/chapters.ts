@@ -1,10 +1,11 @@
 // Kapitel, Generierung, Kapitelwerkstatt, Qualitätsgate und Freigabe (US-008, US-009, US-010, US-012).
+import { rulebookGateCheck } from './rulebook.js';
 import { DEFAULT_DETAIL_LEVELS } from '../domain/metadataLabels.js';
 import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { evaluateGate, type GateResult } from '../domain/gate.js';
 import { generateChapter, GENERATOR_ID, releaseStatusText, type GenSnippet } from '../domain/generator.js';
-import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, ROLE_CODES, SECTION_CODES } from '../domain/reference.js';
+import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, RESERVED_CHAPTER_KEYS, ROLE_CODES, SECTION_CODES } from '../domain/reference.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { assertIdsInProject } from './projects.js';
 import { systemNotice } from './collaboration.js';
@@ -21,10 +22,11 @@ import { checkDecider, clearWorkflowSql, recordApproval, startWorkflow, workflow
 /** Standard: Kapitel der Quellen; `outlineFamilyId`: Kapitel einer Handbuch-Variante; `all`: beide (ADR-034) */
 export async function listChapters(ctx: Ctx, opts: { outlineFamilyId?: string; outlineId?: string } = {}) {
   const chapters = opts.outlineFamilyId === 'all'
-    ? await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? ORDER BY CASE WHEN outline_family_id IS NULL THEN 0 ELSE 1 END, outline_family_id, position, title', ctx.projectId)
+    ? await ctx.db.all(`SELECT * FROM chapters WHERE project_id = ? AND key NOT IN (${RESERVED_CHAPTER_KEYS.map(() => '?').join(', ')}) ORDER BY CASE WHEN outline_family_id IS NULL THEN 0 ELSE 1 END, outline_family_id, position, title`, ctx.projectId, ...RESERVED_CHAPTER_KEYS)
     : opts.outlineFamilyId
     ? await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id = ? ORDER BY position, title', ctx.projectId, opts.outlineFamilyId)
-    : await ctx.db.all('SELECT * FROM chapters WHERE project_id = ? AND outline_family_id IS NULL AND history_at IS NULL ORDER BY position, title', ctx.projectId);
+    // Kapitel „Intern“ und „In Planung“ (Etappe 100) sind keine Handbuchkapitel – eigene Liste unter /parked
+    : await ctx.db.all(`SELECT * FROM chapters WHERE project_id = ? AND outline_family_id IS NULL AND history_at IS NULL AND key NOT IN (${RESERVED_CHAPTER_KEYS.map(() => '?').join(', ')}) ORDER BY position, title`, ctx.projectId, ...RESERVED_CHAPTER_KEYS);
   // outlineId: Inhalte der Variantenkapitel an dieser Gliederungsversion messen
   return Promise.all(chapters.map((c) => chapterSummary(ctx, opts.outlineId && c.outline_family_id ? { ...c, outline_id: opts.outlineId } : c)));
 }
@@ -147,6 +149,12 @@ export async function gateForChapter(ctx: Ctx, chapterId: string, purpose: 'gene
   // Anleitungs-Check als Freigabebedingung, wenn im Projekt ein Mindestwert bzw. „alle Muss-Punkte“ eingestellt ist (ADR-057, ADR-092)
   // Handbuch-Varianten (outline_family_id) sind ausgenommen (ADR-057)
   const isVariant = !!(await ctx.db.get('SELECT outline_family_id FROM chapters WHERE id = ?', chapterId))?.outline_family_id;
+  // Regelwerk (Etappe 100): Verstöße gegen Blocker-Regeln im Text der Version sperren Freigabe und Export
+  if (versionId && purpose !== 'generate') {
+    const check = await rulebookGateCheck(ctx, chapterId, active.map((b) => ({ id: b.id as string, kind: b.kind as string, text: b.text as string })));
+    result.checks.push(check);
+    result.passed = result.passed && check.passed;
+  }
   if (purpose === 'approve' && versionId && !isVariant) {
     const checks = await guidanceGateChecks(ctx, active.map((b) => ({ id: b.id as string, section: b.section as string, kind: b.kind as string, text: b.text as string, versionNo: b.versionNo as number, mode: b.mode as string })));
     for (const check of checks) {
@@ -160,6 +168,8 @@ export async function gateForChapter(ctx: Ctx, chapterId: string, purpose: 'gene
 export async function generate(ctx: Ctx, chapterId: string, actor: string) {
   const chapter = await ctx.db.get('SELECT * FROM chapters WHERE id = ?', chapterId);
   if (!chapter) throw notFound(`Kapitel ${chapterId}`);
+  // Kapitel „Intern“ und „In Planung“ (Etappe 100) sammeln nur vorgemerkte Abschnitte und werden nie Teil des Handbuchs
+  if (RESERVED_CHAPTER_KEYS.includes(chapter.key)) throw conflict(`„${chapter.title}“ ist kein Handbuchkapitel – vorgemerkte Abschnitte werden nicht veröffentlicht.`);
   const gate = await gateForChapter(ctx, chapterId, 'generate');
   if (!gate.passed) throw conflict('Generierung blockiert: offene Blocker-Befunde müssen zuerst geklärt werden.', { gate });
 

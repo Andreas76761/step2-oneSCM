@@ -1,6 +1,6 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ArchiveIcon, ArrowLeftRightIcon, BadgeCheckIcon, BadgeHelpIcon, BellIcon, BlocksIcon, BookAIcon, BookMarkedIcon, BookOpenIcon, BookOpenCheckIcon, BotIcon, BoxesIcon, CalendarDaysIcon, CarIcon, CaseSensitiveIcon, ChartLineIcon, ChartPieIcon, ChevronDownIcon, ChevronRightIcon, CircleCheckIcon, CircleHelpIcon, ClipboardListIcon, CompassIcon, ConstructionIcon, CopyIcon, CopyCheckIcon, DatabaseIcon, EllipsisIcon, FileInputIcon, FileOutputIcon, FilePenIcon, FileTextIcon, FilesIcon, FlagIcon, FolderInputIcon, FolderKanbanIcon, GaugeIcon, GitCompareIcon, GitCompareArrowsIcon, GroupIcon, HouseIcon, ImageIcon, ImagesIcon, LanguagesIcon, LayoutDashboardIcon, LibraryIcon, LifeBuoyIcon, LinkIcon, ListChecksIcon, ListFilterIcon, ListOrderedIcon, ListTreeIcon, LockIcon, MenuIcon, MessageCircleQuestionIcon, MessageSquareIcon, MessagesSquareIcon, NetworkIcon, NewspaperIcon, PaletteIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PenLineIcon, PlugIcon, PuzzleIcon, RefreshCwIcon, RocketIcon, ScaleIcon, SearchCheckIcon, SettingsIcon, ShieldCheckIcon, SlidersHorizontalIcon, SparklesIcon, SpellCheckIcon, StickyNoteIcon, TagsIcon, TargetIcon, UserCogIcon, UserRoundSearchIcon, UsersIcon, UsersRoundIcon, WandSparklesIcon, XIcon, type LucideIcon,
+  ArchiveIcon, ArrowLeftRightIcon, BookmarkIcon, GavelIcon, BadgeCheckIcon, BadgeHelpIcon, BellIcon, BlocksIcon, BookAIcon, BookMarkedIcon, BookOpenIcon, BookOpenCheckIcon, BotIcon, BoxesIcon, CalendarDaysIcon, CarIcon, CaseSensitiveIcon, ChartLineIcon, ChartPieIcon, ChevronDownIcon, ChevronRightIcon, CircleCheckIcon, CircleHelpIcon, ClipboardListIcon, CompassIcon, ConstructionIcon, CopyIcon, CopyCheckIcon, DatabaseIcon, EllipsisIcon, FileInputIcon, FileOutputIcon, FilePenIcon, FileTextIcon, FilesIcon, FlagIcon, FolderInputIcon, FolderKanbanIcon, GaugeIcon, GitCompareIcon, GitCompareArrowsIcon, GroupIcon, HouseIcon, ImageIcon, ImagesIcon, LanguagesIcon, LayoutDashboardIcon, LibraryIcon, LifeBuoyIcon, LinkIcon, ListChecksIcon, ListFilterIcon, ListOrderedIcon, ListTreeIcon, LockIcon, MenuIcon, MessageCircleQuestionIcon, MessageSquareIcon, MessagesSquareIcon, NetworkIcon, NewspaperIcon, PaletteIcon, PanelLeftCloseIcon, PanelLeftOpenIcon, PenLineIcon, PlugIcon, PuzzleIcon, RefreshCwIcon, RocketIcon, ScaleIcon, SearchCheckIcon, SettingsIcon, ShieldCheckIcon, SlidersHorizontalIcon, SparklesIcon, SpellCheckIcon, StickyNoteIcon, TagsIcon, TargetIcon, UserCogIcon, UserRoundSearchIcon, UsersIcon, UsersRoundIcon, WandSparklesIcon, XIcon, type LucideIcon,
 } from 'lucide-react';
 import { NavLink, Navigate, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { currentProjectId, currentUserId, get, setCurrentProjectId, setCurrentUserId } from './api';
@@ -85,6 +85,8 @@ const ContentDashboardPage = lazy(() => import('./pages/Triage').then((m) => ({ 
 const AgentsPage = lazy(() => import('./pages/Agents').then((m) => ({ default: m.AgentsPage })));
 const GoalPage = lazy(() => import('./pages/Agents').then((m) => ({ default: m.GoalPage })));
 const WorkAreaPage = lazy(() => import('./pages/WorkAreas').then((m) => ({ default: m.WorkAreaPage })));
+const RulebookPage = lazy(() => import('./pages/Rulebook').then((m) => ({ default: m.RulebookPage })));
+const ParkedPage = lazy(() => import('./pages/Parked').then((m) => ({ default: m.ParkedPage })));
 const FeedbackPage = lazy(() => import('./pages/Feedback').then((m) => ({ default: m.FeedbackPage })));
 
 // Navigation nach Arbeitsablauf (ADR-053): Sammeln → Schreiben → Prüfen → Veröffentlichen; Selteneres unter „Weitere“
@@ -126,6 +128,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/pipeline', label: 'Pipeline', icon: ConstructionIcon },
     { to: '/backlog', label: 'Backlog', icon: ArchiveIcon },
     { to: '/intern', label: 'Intern', icon: LockIcon },
+    { to: '/vormerkungen', label: 'Kapitel Intern & In Planung', icon: BookmarkIcon },
   ] },
   { id: 'schreiben', label: '2 Schreiben', items: [
     { to: '/kapitelsteuerung', label: 'Kapitelsteuerung', icon: SlidersHorizontalIcon },
@@ -147,6 +150,7 @@ const NAV_GROUPS: { id: string; label: string; items: NavItem[] }[] = [
     { to: '/schreibstil', label: 'Schreibstil', icon: SpellCheckIcon },
     { to: '/fehlerliste', label: 'Fehlerliste', icon: ClipboardListIcon },
     { to: '/terminologie', label: 'Terminologie', icon: BookAIcon },
+    { to: '/regelwerk', label: 'Regelwerk', icon: GavelIcon },
     { to: '/evidenz', label: 'Evidenz', icon: SearchCheckIcon },
     { to: '/freigabe', label: 'Freigabe', icon: CircleCheckIcon },
   ] },
@@ -565,6 +569,8 @@ function Studio({ mode }: { mode: 'demo' | 'oidc' }) {
             <Route path="/sparten" element={<FilteredViewPage mode="division" />} />
             <Route path="/optimierungen" element={<OptimizationsPage />} />
             <Route path="/terminologie" element={<TerminologyPage />} />
+            <Route path="/regelwerk" element={<RulebookPage />} />
+            <Route path="/vormerkungen" element={<ParkedPage />} />
             <Route path="/evidenz" element={<EvidencePage />} />
             <Route path="/evidenz/:versionId" element={<EvidencePage />} />
             <Route path="/vergleich/:chapterId" element={<ComparePage />} />

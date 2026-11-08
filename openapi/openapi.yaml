@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.99.2
+  version: 0.100.0
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -6652,3 +6652,110 @@ paths:
         '422': { $ref: '#/components/responses/Problem' }
         '502': { $ref: '#/components/responses/Problem' }
         '503': { $ref: '#/components/responses/Problem' }
+  /rulebook/rules:
+    get:
+      operationId: listRulebookRules
+      summary: 'Regelwerk (ADR-123): Regeln allgemein und je Kapitel mit Arten und Schweregraden'
+      tags: [Qualität]
+      x-requirements: [NFR-160]
+      x-extension: true
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ kinds: [{ code, label }], severities, rules: [{ id, chapterId, chapterTitle, kind, kindLabel, term, message, severity, active, createdBy, createdAt, updatedAt }] }' }
+    post:
+      operationId: createRulebookRule
+      summary: 'Regel anlegen – Pflichtbegriff, verbotener Begriff oder Textmuster; riskante Muster werden abgelehnt (Berechtigung edit)'
+      tags: [Qualität]
+      x-requirements: [NFR-160]
+      x-extension: true
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [kind, term], properties: { chapterId: { type: [string, 'null'], description: 'leer = allgemein' }, kind: { type: string, enum: [required, forbidden, pattern] }, term: { type: string, minLength: 1, maxLength: 200 }, message: { type: [string, 'null'], maxLength: 500 }, severity: { type: string, enum: [blocker, high, medium, low] }, active: { type: boolean } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '201': { description: 'Regel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /rulebook/rules/{id}:
+    patch:
+      operationId: updateRulebookRule
+      summary: 'Regel ändern, ein- oder ausschalten (Berechtigung edit)'
+      tags: [Qualität]
+      x-requirements: [NFR-160]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { chapterId: { type: [string, 'null'] }, kind: { type: string, enum: [required, forbidden, pattern] }, term: { type: string }, message: { type: [string, 'null'] }, severity: { type: string, enum: [blocker, high, medium, low] }, active: { type: boolean } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: 'Regel' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteRulebookRule
+      summary: 'Regel löschen (Berechtigung edit)'
+      tags: [Qualität]
+      x-requirements: [NFR-160]
+      x-extension: true
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '204': { description: 'gelöscht' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /parked:
+    get:
+      operationId: listParkedSnippets
+      summary: 'Kapitel „Intern“ und „In Planung“ (ADR-123): vorgemerkte Textabschnitte mit Herkunftskapitel'
+      tags: [Kapitel]
+      x-requirements: [NFR-161]
+      x-extension: true
+      parameters: [{ name: target, in: query, required: false, schema: { type: string, enum: [intern, planning] } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '[{ id, seq, text, target, path, fromChapter, note, parkedBy, parkedAt }]' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /snippets/{snippetId}/park:
+    post:
+      operationId: parkSnippet
+      summary: 'Textabschnitt für „Intern“ oder „In Planung“ vormerken – ab der nächsten Version nicht im Handbuch, in Entwürfen sofort; gilt auch nach erneutem Import (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-161]
+      x-extension: true
+      parameters: [{ name: snippetId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [target], properties: { target: { type: string, enum: [intern, planning] }, note: { type: [string, 'null'], maxLength: 500 } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ snippetId, target, chapterId, removedBlocks }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: unparkSnippet
+      summary: 'Zurück ins Handbuch: Herkunftskapitel wiederherstellen (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-161]
+      x-extension: true
+      parameters: [{ name: snippetId, in: path, required: true, schema: { type: string } }]
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ snippetId, chapterId }' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /content-blocks/{blockId}/park:
+    post:
+      operationId: parkContentBlock
+      summary: 'Absatz der Werkstatt vormerken: alle Quellen des Absatzes nach „Intern“ bzw. „In Planung“, der Absatz entfällt im Entwurf (Berechtigung edit)'
+      tags: [Kapitel]
+      x-requirements: [NFR-161]
+      x-extension: true
+      parameters: [{ name: blockId, in: path, required: true, schema: { type: string } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [target], properties: { target: { type: string, enum: [intern, planning] }, note: { type: [string, 'null'] } } } } } }
+      responses:
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '200': { description: '{ blockId, parked, removedBlocks }' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }

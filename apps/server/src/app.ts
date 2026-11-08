@@ -1,4 +1,5 @@
 // HTTP-Anwendung (ADR-002). Basispfad /api/v1, Fehler als application/problem+json.
+import { rulebookRoutes } from './routes/rulebook.js';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import Fastify from 'fastify';
@@ -297,6 +298,7 @@ export async function buildApp(overrides: Partial<AppConfig> = {}, options: Buil
       workAreaRoutes(api, ctx);
       agentRoutes(api, ctx);
       transitionRoutes(api, ctx);
+      rulebookRoutes(api, ctx);
     },
     { prefix: '/api/v1' },
   );

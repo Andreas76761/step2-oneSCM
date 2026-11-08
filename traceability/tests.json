@@ -3358,5 +3358,42 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-429",
+    "title": "Sparten nur PKW und VAN, ohne Angabe beide; bisherige Bus-/Truck-Zuordnungen werden zu PKW und VAN (unbestätigt)",
+    "file": "apps/server/test/stage100.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-159"
+    ]
+  },
+  {
+    "id": "T-430",
+    "title": "Regelwerk: Regeln allgemein und je Kapitel, als Befund in der Analyse, Blocker-Regel sperrt die Freigabe",
+    "file": "apps/server/test/stage100.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-160"
+    ]
+  },
+  {
+    "id": "T-431",
+    "title": "Kapitel „Intern“ und „In Planung“: Abschnitte vormerken, im Entwurf sofort weg, nach erneutem Import weiter vorgemerkt, zurück ins Handbuch",
+    "file": "apps/server/test/stage100.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-161"
+    ]
+  },
+  {
+    "id": "T-432",
+    "title": "Regelwerk pflegen; Absatz in der Werkstatt für „In Planung“ vormerken, im Kapitel „In Planung“ sehen und zurück ins Handbuch",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-160",
+      "NFR-161"
+    ]
   }
 ]

@@ -1,4 +1,5 @@
 // Importpipeline (US-001, US-002, US-003, US-004).
+import { parkingFor, reservedChapter } from './parking.js';
 import JSZip from 'jszip';
 import { touchMetadata } from './metadataCache.js';
 import path from 'node:path';
@@ -502,9 +503,14 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
     const releases = new Set<string>();
     let seq = parsed.blocks.length ? await db.nextSeq('text_snippets') : 0;
     const created = now();
+    // Vormerkungen für „Intern“ / „In Planung“ (Etappe 100) gelten je Datei und Text, auch für neue Revisionen
+    const parked = await parkingFor(ctx, doc.id);
     for (const b of parsed.blocks) {
-      const chapter = await chapterFor(b.chapterTitle);
-      const sub = b.subchapterTitle ? await subFor(b.chapterTitle, b.subchapterTitle) : null;
+      const home = await chapterFor(b.chapterTitle);
+      const homeSub = b.subchapterTitle ? await subFor(b.chapterTitle, b.subchapterTitle) : null;
+      const parkTarget = parked.get(normalizedHash(b.text));
+      const chapter = parkTarget ? await reservedChapter(ctx, parkTarget) : home;
+      const sub = parkTarget ? null : homeSub;
       const cls = classifySnippet({ text: b.text, headings: [b.chapterTitle ?? '', b.subchapterTitle ?? '', ...b.headingPath], path: filePath, frontMatter: parsed.frontMatter });
       const snippetId = newId('sn');
       // Fundstelle: letzte Markierung bis zum Beginn des Absatzes (Folie, Seite, Abschnitt)
@@ -514,7 +520,7 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
         snippetId, seq++, revisionId, chapter.id, sub?.id ?? null, json(b.headingPath), b.position, b.lineStart, b.lineEnd, b.kind, b.text,
         sha256(b.text), normalizedHash(b.text), cls.evidenceStatus, cls.market?.code ?? null, cls.release?.code ?? null,
         (cls.market?.status ?? 'confirmed') === 'confirmed' && (cls.release?.status ?? 'confirmed') === 'confirmed' ? 'confirmed' : 'unconfirmed', created,
-        locator ? json(locator) : null,
+        locator ? json(locator) : null, parkTarget ? home.id : null, parkTarget ? homeSub?.id ?? null : null,
       ]);
       for (const r of cls.roles) roleRows.push([snippetId, r.code, r.score, r.method, r.modelVersion, r.evidenceStatus, r.evidence]);
       for (const d of cls.divisions) divisionRows.push([snippetId, d.code, d.score, d.method, d.modelVersion, d.evidenceStatus, d.evidence]);
@@ -523,7 +529,7 @@ async function storeRevision(ctx: Ctx, importId: string, filePath: string, data:
       snippetCount++;
     }
     await insertMany(ctx, `text_snippets (id, seq, revision_id, chapter_id, subchapter_id, heading_path, position, line_start, line_end, kind, text, text_hash, norm_hash,
-      evidence_status, market_code, release_code, scope_status, created_at, locator)`, snippetRows);
+      evidence_status, market_code, release_code, scope_status, created_at, locator, parked_from_chapter_id, parked_from_subchapter_id)`, snippetRows);
     await insertMany(ctx, 'snippet_roles', roleRows);
     await insertMany(ctx, 'snippet_divisions', divisionRows);
     for (const m of markets) await db.run('INSERT INTO markets (code, label) VALUES (?, ?) ON CONFLICT (code) DO NOTHING', m, m);

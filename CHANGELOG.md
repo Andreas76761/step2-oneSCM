@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.100.0 – Etappe 100: Sparten, Regelwerk, Kapitel „Intern“ und „In Planung“ (08.11.2026)
+
+### Hinzugefügt
+- **Regelwerk (ADR-123):** Neue Seite unter „Prüfen“. Regeln gelten allgemein oder je Kapitel. Es gibt drei Arten: Pflichtbegriff, verbotener Begriff (ganzes Wort, auch mit Umlauten) und Textmuster (regulärer Ausdruck; riskante Muster werden abgelehnt).
+  - Die Qualitätsanalyse meldet Verstöße als Befund „Regelwerk“ mit dem gewählten Schweregrad.
+  - Regeln mit Schweregrad „Blocker“ prüft das Qualitätsgate außerdem im Kapiteltext vor dem Einreichen und vor der Freigabe.
+- **Kapitel „Intern“ und „In Planung“:** In der Kapitelwerkstatt merken Sie einen Absatz mit „Vormerken für …“ vor.
+  - Der Absatz entfällt im Entwurf sofort. Freigegebene Kapitel bleiben unverändert bis zur nächsten Freigabe.
+  - Die Vormerkung überdauert einen erneuten Import.
+  - Die beiden Kapitel stehen in der Werkstatt unter „Nicht im Handbuch“ und auf der neuen Seite „Kapitel Intern & In Planung“, mit „Zurück ins Handbuch“.
+  - Sie erscheinen nie in Leseransicht, Export, Release oder Übersetzung, und die Analyse prüft sie nicht.
+- **Tests:** T-429 bis T-431 (Server) und T-432 (E2E). Die Seitenprüfungen über alle Seiten schließen die zwei neuen Seiten ein.
+
+### Geändert
+- **Sparten:** Es gibt nur noch PKW und VAN. Ohne Spartenangabe gelten beide, unbestätigt (bisher „Ungeklärt“).
+  - Bus und Truck entfallen. Vorhandene Zuordnungen werden beim Start zu PKW und VAN, unbestätigt, damit die Redaktion sie prüft. Das gilt auch für Gliederungen, FAQ, Wissensnotizen und Bildmerkmale. Releaseletter mit entfallener Sparte gelten für „Alle“.
+  - Die Demodaten sind angepasst: Truck → VAN, Bus → Transporter.
+  - Tests, die das alte Verhalten festschrieben (T-003, T-104, T-105, T-110, T-113, T-117 und T-387), prüfen jetzt das neue.
+
 ## 0.99.2 – Freigabestatus im Kapitel (08.11.2026)
 
 ### Hinzugefügt

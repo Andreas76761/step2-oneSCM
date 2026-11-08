@@ -143,7 +143,7 @@ export const PERMS: { code: string; label: string }[] = [
 ];
 export const permLabel = (p: string) => PERMS.find((x) => x.code === p)?.label ?? p;
 
-export const TYPE_LABEL: Record<string, string> = { gap: 'Lücke', duplicate: 'Dopplung', contradiction: 'Widerspruch', terminology: 'Terminologie', privacy: 'Datenschutz', readability: 'Lesbarkeit' };
+export const TYPE_LABEL: Record<string, string> = { gap: 'Lücke', duplicate: 'Dopplung', contradiction: 'Widerspruch', terminology: 'Terminologie', privacy: 'Datenschutz', readability: 'Lesbarkeit', rule: 'Regelwerk' };
 
 // ---------- Layout-Bausteine ----------
 

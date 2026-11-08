@@ -1,6 +1,6 @@
 # 09 Benutzerdokumentation
 
-Stand: Version 0.99 (06.11.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
+Stand: Version 0.100 (08.11.2026). oneSCM Handbook Studio erstellt aus vielen Quellen ein geprüftes, freigegebenes Benutzerhandbuch für oneSCM – und beantwortet Fragen über alle Quellen mit Belegen (Bereich **oneSCM_Metadaten**). Installation und Betrieb: [08 Installation und Betrieb](08-installation-betrieb.md).
 
 ## 1. Grundlagen
 
@@ -68,6 +68,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
 - **Intern:** Reiter Testing, Reporting, Systeme, Migration, Rollout, Other. Einträge erscheinen nie im Handbuch, Export, Release oder in Übersetzungen.
 - Personenbezogene Daten werden wie bei Wissensnotizen abgewiesen oder auf Wunsch pseudonymisiert. Eigene Einträge lassen sich löschen; Jira-Einträge setzen Sie auf „abgebrochen“.
 - **Arbeitsordner:** `abgleich --app …` schreibt die Einträge nach `09_Pipeline/<Kapitel>/<Unterkapitel>/<Ticket>.md`, `10_Backlog/` und `11_Intern/<Thema>/`.
+- **Kapitel „Intern“ und „In Planung“:** Textabschnitte, die nicht (mehr) ins Benutzerhandbuch gehören, merken Sie in der Kapitelwerkstatt am Absatz mit „Vormerken für …“ vor. Der Absatz entfällt im Entwurf sofort; freigegebene Kapitel bleiben unverändert, bis die nächste Version freigegeben ist. Die beiden Kapitel stehen in der Werkstatt unter „Nicht im Handbuch“ und auf der Seite „Kapitel Intern & In Planung“ mit Herkunft und Notiz; „Zurück ins Handbuch“ macht die Vormerkung rückgängig. Die Vormerkung gilt auch, wenn die Datei neu eingelesen wird. Diese Abschnitte erscheinen nie in Leseransicht, Export, Release oder Übersetzung und werden von der Analyse nicht geprüft.
 
 ## 5. Agenten
 
@@ -114,6 +115,7 @@ Kommende Funktionen und interne Themen – getrennt vom Handbuch.
   - **Tonalität:** Unter Schreibstil › Regeln › Tonalität legen Sie den Ton je Produktart (Vorgabe aus TONALITAET.md: Handbuch sachlich, Releaseletter und Quick Guide knapp, Schulung freundlich, Interne Dokumente formell) und je Rolle fest. Beim Prüfen wählen Sie Produktart und Rolle; die Regel „Tonalität“ meldet z. B. Werbesprache, Verkürzungen oder strenge Formulierungen, und die KI-Vorschläge treffen den gewählten Ton. Im Kapitel gilt das Rollenprofil für Absätze genau einer Rolle.
   - **Terminologie:** „nicht übersetzen“ – der Begriff steht in jeder Sprache unverändert (z. B. Begriffe der Oberfläche).
   - **Terminologie:** „UI-Begriff erlaubt“ – die zu vermeidende Variante ist in Menüpfaden (**Vertragserstellung › MO Checks**) und in Anführungszeichen („MO Checks“) erlaubt; im Fließtext meldet die Stilprüfung sie und schlägt den bevorzugten Begriff vor (z. B. „MO-Prüfungen“). `SYNONYME.csv` aus dem Arbeitsordner lässt sich unter „Stammdaten › Glossar“ importieren; Zeilen mit Status „offen“ oder „Vorschlag“ werden übersprungen.
+- **Regelwerk:** eigene Regeln allgemein oder je Kapitel – **Pflichtbegriff** (muss im Kapitel vorkommen), **verbotener Begriff** (ganzes Wort, Groß-/Kleinschreibung egal) oder **Textmuster** (regulärer Ausdruck). Die Qualitätsanalyse meldet Verstöße als Befund „Regelwerk“ mit dem gewählten Schweregrad; Regeln mit Schweregrad „Blocker“ prüft die App zusätzlich im Kapiteltext vor dem Einreichen und vor der Freigabe. Regeln lassen sich ausschalten, ändern und löschen.
 - **Evidenz:** Herkunft jedes Absatzes.
 - **Freigabe:** einreichen, mehrstufig freigeben; das Qualitätsgate zeigt, was noch fehlt.
 

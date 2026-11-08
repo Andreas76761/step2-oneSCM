@@ -168,7 +168,7 @@ function riskyRepetition(p: string): boolean {
 }
 
 /** Regex aus Vale (RE2) für JavaScript prüfen; Lookbehind und Rückverweise gibt es in RE2 nicht, sie bleiben abgelehnt */
-function safePattern(p: string): string | null {
+export function safeRulePattern(p: string): string | null {
   if (typeof p !== 'string' || !p || p.length > MAX_TOKEN_LEN) return null;
   if (/\\[1-9]|\(\?<[=!]/.test(p)) return null;
   // Gruppen, die selbst wiederholt werden und eine Wiederholung oder Alternative enthalten ((a+)+, ((a+))+, (a|aa)+),
@@ -203,7 +203,7 @@ export function parseValeStyle(files: { name: string; content: string }[]): Vale
     const base = { name, extends: kind as ValeRule['extends'], message: String(y.message ?? name).slice(0, 300), level, ignorecase: !!y.ignorecase, nonword: !!y.nonword };
     if (kind === 'existence') {
       const raw: unknown[] = Array.isArray(y.tokens) ? y.tokens : [];
-      const tokens = raw.map((t) => safePattern(String(t))).filter((t): t is string => !!t);
+      const tokens = raw.map((t) => safeRulePattern(String(t))).filter((t): t is string => !!t);
       if (!tokens.length) { unsupported.push({ name, reason: 'keine verwendbaren tokens' }); continue; }
       if (raw.length > MAX_TOKENS) { unsupported.push({ name, reason: `zu viele tokens (höchstens ${MAX_TOKENS})` }); continue; }
       if (tokens.length < raw.length) unsupported.push({ name, reason: `${raw.length - tokens.length} von ${raw.length} tokens nicht übernommen (Muster nicht unterstützt)` });
@@ -211,12 +211,12 @@ export function parseValeStyle(files: { name: string; content: string }[]): Vale
     } else if (kind === 'substitution') {
       const sw = y.swap && typeof y.swap === 'object' ? Object.entries(y.swap as Record<string, unknown>) : [];
       const swap: Record<string, string> = {};
-      for (const [k, v] of sw.slice(0, MAX_TOKENS)) { const p = safePattern(k); if (p) swap[p] = String(v ?? ''); }
+      for (const [k, v] of sw.slice(0, MAX_TOKENS)) { const p = safeRulePattern(k); if (p) swap[p] = String(v ?? ''); }
       if (!Object.keys(swap).length) { unsupported.push({ name, reason: 'keine verwendbaren swap-Einträge' }); continue; }
       if (Object.keys(swap).length < sw.length) unsupported.push({ name, reason: `${sw.length - Object.keys(swap).length} von ${sw.length} Ersetzungen nicht übernommen` });
       rules.push({ ...base, swap });
     } else {
-      const token = safePattern(String(y.token ?? ''));
+      const token = safeRulePattern(String(y.token ?? ''));
       const max = Number(y.max);
       if (!token || !Number.isInteger(max) || max < 0) { unsupported.push({ name, reason: 'occurrence braucht token und max' }); continue; }
       rules.push({ ...base, token, max });

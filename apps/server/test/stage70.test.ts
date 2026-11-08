@@ -8,7 +8,7 @@ import { freshDatabase, tempDir } from './helpers.js';
 
 // Bildzeichen (Emoji, Piktogramme) – Pfeile und einfache Textzeichen sind nicht gemeint
 const EMOJI = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{1F000}-\u{1F2FF}]/u;
-const CHAPTER = `---\nroles: [hq, dealer]\ndivisions: [truck]\nevidence_status: source_confirmed\n---\n# 6. Preise pflegen\n\n## 6.1 Zweck\n\nHQ pflegt Preislisten zentral.\n\n## 6.2 Schritte\n\n1. Öffnen Sie **Produkte › Preislisten**.\n`;
+const CHAPTER = `---\nroles: [hq, dealer]\ndivisions: [van]\nevidence_status: source_confirmed\n---\n# 6. Preise pflegen\n\n## 6.1 Zweck\n\nHQ pflegt Preislisten zentral.\n\n## 6.2 Schritte\n\n1. Öffnen Sie **Produkte › Preislisten**.\n`;
 
 describe('Etappe 70', () => {
   const dataDir = tempDir();
@@ -41,7 +41,7 @@ describe('Etappe 70', () => {
       expect(EMOJI.test(text)).toBe(false);
 
       const md = (await call('POST', '/exports', { format: 'md' }, 'u-redaktion')).json.preview as string;
-      expect(md).toContain('> Dealer · HQ · Truck');
+      expect(md).toContain('> Dealer · HQ · VAN');
       expect(EMOJI.test(md)).toBe(false);
     } finally {
       await built.app.close();

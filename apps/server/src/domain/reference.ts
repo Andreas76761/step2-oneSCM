@@ -14,8 +14,6 @@ export const ROLES = [
 export const DIVISIONS = [
   { code: 'car', label: 'PKW', icon: 'car', color: '#1d4ed8' },
   { code: 'van', label: 'VAN', icon: 'van', color: '#0f766e' },
-  { code: 'truck', label: 'Truck', icon: 'truck', color: '#b91c1c' },
-  { code: 'bus', label: 'Bus', icon: 'bus', color: '#a16207' },
   { code: 'all', label: 'Alle', icon: 'layers', color: '#475569' },
   { code: 'unconfirmed', label: 'Ungeklärt', icon: 'circle-help', color: '#64748b' },
 ] as const;
@@ -25,13 +23,24 @@ export type DivisionCode = (typeof DIVISIONS)[number]['code'];
 
 export const ROLE_CODES = ROLES.map((r) => r.code) as string[];
 export const DIVISION_CODES = DIVISIONS.map((d) => d.code) as string[];
+/** Sparten nur noch PKW und VAN (Entscheidung 08.11.2026); ohne Angabe gelten beide */
+export const DEFAULT_DIVISIONS = ['car', 'van'] as const;
+/** Kapitel „Intern“ und „In Planung“ (Etappe 100): vorgemerkte Textabschnitte, nie im Handbuch, Export, Release oder in der Übersetzung */
+export const RESERVED_CHAPTERS = {
+  intern: { key: '__intern__', title: 'Intern', position: 100000 },
+  planning: { key: '__planung__', title: 'In Planung', position: 100001 },
+} as const;
+export type ParkTarget = keyof typeof RESERVED_CHAPTERS;
+export const RESERVED_CHAPTER_KEYS: string[] = Object.values(RESERVED_CHAPTERS).map((c) => c.key);
+/** entfallene Sparten: bisherige Zuordnungen werden zu PKW und VAN (unbestätigt) */
+export const RETIRED_DIVISIONS = ['truck', 'bus'] as const;
 
 // ENTSCHEIDUNG(E-08): zulässige Evidenzstatus.
 export const EVIDENCE_STATUSES = ['source_confirmed', 'manually_confirmed', 'unconfirmed', 'open_question'] as const;
 export type EvidenceStatus = (typeof EVIDENCE_STATUSES)[number];
 export const CONFIRMED_EVIDENCE: readonly string[] = ['source_confirmed', 'manually_confirmed'];
 
-export const FINDING_TYPES = ['gap', 'duplicate', 'contradiction', 'terminology', 'privacy', 'readability'] as const;
+export const FINDING_TYPES = ['gap', 'duplicate', 'contradiction', 'terminology', 'privacy', 'readability', 'rule'] as const;
 export type FindingType = (typeof FINDING_TYPES)[number];
 export const SEVERITIES = ['blocker', 'high', 'medium', 'low'] as const;
 export type Severity = (typeof SEVERITIES)[number];

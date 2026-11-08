@@ -124,3 +124,4 @@
 | [ADR-120](ADR-120-barrierefreiheit-word-powerpoint.md) | Barrierefreiheit für Word und PowerPoint: Prüfbericht, Icons dekorativ, Sprache, Folientitel als Platzhalter | akzeptiert, umgesetzt |
 | [ADR-121](ADR-121-barrierefreiheit-html.md) | Prüfbericht Barrierefreiheit für den HTML-Export; Standard-HTML mit Hauptbereich | akzeptiert, umgesetzt |
 | [ADR-122](ADR-122-icons-rollen-sparten.md) | Lucide-Icons für Rollen, Sparten und Label-Gruppen statt Emoji (ändert E-11) | akzeptiert, umgesetzt |
+| [ADR-123](ADR-123-sparten-regelwerk-vormerkungen.md) | Sparten nur PKW und VAN; Regelwerk mit Regeln allgemein und je Kapitel; Kapitel „Intern“ und „In Planung“ für vorgemerkte Textabschnitte | akzeptiert, umgesetzt |
