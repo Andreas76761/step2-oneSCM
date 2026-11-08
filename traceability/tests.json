@@ -3440,5 +3440,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-438",
+    "title": "Online-Hilfe: gepflegte Verweise wirken sofort, nicht erst nach Ablauf des Zwischenspeichers",
+    "file": "apps/server/test/stage103.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-439",
+    "title": "Dubletten über alle Formate: fehlen die Abschnitte später (z. B. nach dem Zurückspielen einer Sicherung), werden sie neu aufgebaut",
+    "file": "apps/server/test/stage103.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

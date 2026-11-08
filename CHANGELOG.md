@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.103.0 – Etappe 103: Code-Review der Korrekturen aus den Etappen 95 und 96 (08.11.2026)
+
+### Hinzugefügt
+- **Tests T-438 und T-439.** Jeder scheitert ohne seine Korrektur (geprüft je Datei).
+
+### Behoben
+- **Online-Hilfe:** Seit Etappe 96 hält die App „Siehe auch“ und häufige Fragen je Release 60 Sekunden vor. Gepflegte Verweise, ausgeblendete Vorschläge und geänderte FAQ erschienen deshalb erst nach bis zu einer Minute. Der Stand von Verweisen und FAQ gehört jetzt zum Schlüssel; Änderungen wirken sofort.
+- **Dubletten über alle Formate:** Der Vermerk „schon aufgebaut“ galt bis zum Neustart. Fehlten die Abschnitte danach (z. B. nach dem Zurückspielen einer Sicherung im laufenden Betrieb), blieb die Seite leer. Jetzt wird neu aufgebaut, sobald Abschnitte fehlen und sich die Quellen seit dem letzten Aufbau geändert haben.
+- **Bildarchiv:** Die Zuordnung der Bilder zu Absätzen kopierte die Liste bei jedem Vorkommen (quadratischer Aufwand bei oft verwendeten Bildern, z. B. Logos).
+
+### Geprüft, keine Änderung nötig
+- **Stilwert-Verlauf:** Zwei Einträge mit gleichem Zeitstempel vor dem Zeitraum ergeben zwar zwei Startzeilen, der spätere überschreibt aber den früheren – das Ergebnis ist gleich.
+- **Deckungsmatrix:** nutzt die Bildliste und damit schon die gemeinsame Abfrage aller Verwendungen.
+
 ## 0.102.0 – Etappe 102: Code-Review der Korrekturen aus den Etappen 97–99 (08.11.2026)
 
 ### Hinzugefügt

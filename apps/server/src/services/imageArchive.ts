@@ -97,7 +97,13 @@ async function usageIndex(ctx: Ctx): Promise<UsageIndex> {
   );
   const bySha = (rows: Row[]) => {
     const m = new Map<string, Row[]>();
-    for (const r of rows) for (const sha of new Set([...String(r.text).matchAll(/media:([a-f0-9]{64})/g)].map((x) => x[1]))) m.set(sha, [...(m.get(sha) ?? []), r]);
+    for (const r of rows) {
+      for (const sha of new Set([...String(r.text).matchAll(/media:([a-f0-9]{64})/g)].map((x) => x[1]))) {
+        const list = m.get(sha);
+        if (list) list.push(r);
+        else m.set(sha, [r]);
+      }
+    }
     return m;
   };
   return { blocks: bySha(blocks), snippets: bySha(snippets) };

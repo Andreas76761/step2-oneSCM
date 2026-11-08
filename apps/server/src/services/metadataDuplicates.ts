@@ -100,12 +100,21 @@ export async function refreshDuplicates(ctx: Ctx, documentIds?: string[]) {
  * Bestände von vor M4 einmal aufbauen. Erreicht kein Abschnitt die Mindestlänge (nur Tickets, kurze Folien), entsteht
  * keine Zeile – ohne Vermerk würde dann jede Anfrage alles neu vergleichen. Danach hält der Import den Stand aktuell.
  */
-const built = new Set<string>();
+const built = new Map<string, string>();
 async function ensureBuilt(ctx: Ctx) {
-  if (built.has(ctx.projectId)) return;
-  const has = await ctx.db.get('SELECT 1 FROM metadata_sections WHERE project_id = ? LIMIT 1', ctx.projectId);
-  if (!has && (await ctx.db.get('SELECT 1 FROM source_documents WHERE project_id = ? AND removed_at IS NULL LIMIT 1', ctx.projectId))) await refreshDuplicates(ctx);
-  built.add(ctx.projectId);
+  // Abschnitte vorhanden: aktuell (der Import hält sie nach). Der Vermerk spart nur den vollen Vergleich, wenn dabei keine
+  // Zeile entstand – er gilt bis zum nächsten Neustart; fehlen später die Abschnitte (z. B. Sicherung zurückgespielt), wird neu gebaut
+  if (await ctx.db.get('SELECT 1 FROM metadata_sections WHERE project_id = ? LIMIT 1', ctx.projectId)) return;
+  // Stand der Quellen als Schlüssel: Zahl der aktuellen Revisionen und die jüngste
+  const st = await ctx.db.get<{ n: number; last: string | null }>(
+    `SELECT COUNT(*) AS n, MAX(r.imported_at) AS last FROM source_revisions r JOIN source_documents d ON d.id = r.document_id
+     WHERE d.project_id = ? AND d.removed_at IS NULL AND r.is_current = 1`, ctx.projectId,
+  );
+  if (!Number(st?.n)) return;
+  const stand = `${st!.n}|${st!.last ?? ''}`;
+  if (built.get(ctx.projectId) === stand) return;
+  await refreshDuplicates(ctx);
+  built.set(ctx.projectId, stand);
 }
 
 const sectionDto = (s: Row, prefix: string) => ({

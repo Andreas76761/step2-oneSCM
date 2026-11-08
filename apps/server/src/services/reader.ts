@@ -280,7 +280,15 @@ export async function readerRelatedMap(ctx: Ctx, drafts: boolean, lang?: unknown
 const RELATED_TTL_MS = 60_000;
 const relatedCache = new Map<string, { at: number; value: Promise<Awaited<ReturnType<typeof relatedAll>>> }>();
 export async function relatedForVersions(ctx: Ctx, versionIds: string[], chapterId: string, lang: string) {
-  const key = `${ctx.projectId}|${lang}|${versionIds.join(',')}`;
+  // Stand von Verweisen und FAQ gehört zum Schlüssel: gepflegte Verweise, ausgeblendete Vorschläge und FAQ-Änderungen
+  // wirken sofort (eine kleine Abfrage statt der ganzen Berechnung)
+  const st = (await ctx.db.get(
+    `SELECT (SELECT COUNT(*) FROM chapter_links WHERE project_id = ?) AS ln, (SELECT MAX(created_at) FROM chapter_links WHERE project_id = ?) AS lt,
+       (SELECT COUNT(*) FROM faq_entries WHERE project_id = ?) AS fn, (SELECT MAX(updated_at) FROM faq_entries WHERE project_id = ?) AS ft,
+       (SELECT COUNT(*) FROM faq_translations WHERE project_id = ?) AS tn, (SELECT MAX(COALESCE(approved_at, updated_at)) FROM faq_translations WHERE project_id = ?) AS tt`,
+    ...Array(6).fill(ctx.projectId),
+  ))!;
+  const key = `${ctx.projectId}|${lang}|${versionIds.join(',')}|${st.ln}/${st.lt}|${st.fn}/${st.ft}|${st.tn}/${st.tt}`;
   let hit = relatedCache.get(key);
   if (!hit || Date.now() - hit.at > RELATED_TTL_MS) {
     hit = { at: Date.now(), value: relatedAll(ctx, false, { lang, versionIds }) };
