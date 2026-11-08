@@ -149,7 +149,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 60. **Etappe 106 – Zusammenführung mit main (✅ umgesetzt):** die auf main zusammengeführte Etappe 27 (FAQ-Stapelübersetzung, Übersetzungswunsch mit Begründung, Wochenübersicht mit Übersetzungen, Sprachnamen grammatisch) ist übernommen.
 61. **Etappe 107 – Code-Review der aus main übernommenen Etappe 27 (✅ umgesetzt):** vier Funde behoben.
 62. **Etappe 108 – Code-Review der Korrekturen aus den Etappen 101–107 (✅ umgesetzt):** vier Funde behoben, einer begründet belassen.
-63. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+63. **Etappe 109 – Sicherheitshinweise in Entwicklungswerkzeugen (✅ umgesetzt):** vitest, vite, minimatch aktualisiert; s3rver ohne Korrektur belassen.
+64. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

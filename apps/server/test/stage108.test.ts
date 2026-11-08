@@ -36,7 +36,7 @@ describe('Etappe 108', () => {
 
   it('[T-450] Leseransicht: Sprachen ohne eigene Beschriftungen zeigen das Datum in ihrer Sprache, nicht deutsch', async () => {
     // Datei der Web-App (außerhalb des Server-Projekts für die Typprüfung, daher dynamisch)
-    const webFile = '../../web/src/readerText.ts';
+    const webFile = new URL('../../web/src/readerText.ts', import.meta.url).href;
     const { readerTexts } = (await import(webFile)) as { readerTexts: (lang: string) => { uiLang: string; locale: string; date: (d: Date) => string } };
     const d = new Date('2026-11-08T12:00:00Z');
     const sv = readerTexts('sv');

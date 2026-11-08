@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.109.0 – Etappe 109: Sicherheitshinweise in Entwicklungswerkzeugen (08.11.2026)
+
+`npm audit` meldete 17 neue Hinweise (2 kritisch, 4 hoch, 11 mittel) – alle in Werkzeugen für Tests und Build, keiner im ausgelieferten Programm (`npm audit --omit=dev` ohne Befund, wie in der CI geprüft).
+
+### Hinzugefügt
+- **Overrides** in `package.json`: eslint und typescript-eslint verwenden `minimatch` 11.0.5 (Hinweis zu Denial of Service über Glob-Muster).
+
+### Geändert
+- **vitest** 3.2 → 4.1.12 (behebt die Hinweise zu `@vitest/mocker` und `tinypool`; läuft weiter mit Node 20) und **vite** 6.4.3 → 6.4.5 (Hinweise zu `launch-editor`). Ein Test (T-450) lädt die Datei der Web-App jetzt über `import.meta.url`, weil vitest 4 relative Pfade anders auflöst.
+
+### Belassen
+- **s3rver** (lokaler S3-Testserver für den Test des Objektspeichers): Die Hinweise zu `dicer`, `busboy` und `fast-xml-parser` haben in s3rver keine Korrektur (3.7.1 ist die neueste Version; npm schlägt nur einen Rückschritt auf 2.2.9 vor). s3rver läuft nur während dieses Tests auf 127.0.0.1 und ist nicht Teil der Installation.
+
 ## 0.108.0 – Etappe 108: Code-Review der Korrekturen aus den Etappen 101–107 (08.11.2026)
 
 ### Hinzugefügt
