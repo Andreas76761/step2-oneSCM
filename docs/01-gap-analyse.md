@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.103 Stand nach Etappe 101 (08.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review von Etappe 100 (Regelwerk, Vormerkungen, Sparten): acht Funde, sieben behoben | ✅ T-433 … T-435, T-432; Server-Tests auf SQLite und PostgreSQL |
+| Vormerkungen | „Vormerken für …“ an Rollen- oder Quellenübersicht verschob das ganze Kapitel; mehrere Quellen wurden nicht gemeinsam vorgemerkt; „Zurück ins Handbuch“ übernahm ein fremdes Unterkapitel |
+| Regelwerk | Blocker-Befunde aus der Analyse sperrten Generieren und Export und blieben nach einer Korrektur im Entwurf offen; die Prüfung vor der Freigabe zählte generierte Übersichten und galt für „Ohne Kapitel“ |
+| Sparten | alte Absatzfassungen mit Truck/Bus ließen sich nicht wiederherstellen |
+| Begründet belassen | gleichlautende Absätze einer Datei werden gemeinsam vorgemerkt (die Position im Text ist kein stabiler Schlüssel) |
+
 ## 1.102 Stand nach Etappe 100 (08.11.2026)
 
 | Punkt | Ergebnis |

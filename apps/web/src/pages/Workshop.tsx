@@ -305,8 +305,8 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
               {ref?.sections.filter((s) => s.code !== b.section).map((s) => <option key={s.code} value={s.code}>{s.title}</option>)}
             </select>
           )}
-          {/* Etappe 100: Quellen des Absatzes ins Kapitel „Intern“ bzw. „In Planung“ – der Absatz entfällt im Entwurf */}
-          {!locked && b.sources?.length > 0 && (
+          {/* Etappe 100: Quellen des Absatzes ins Kapitel „Intern“ bzw. „In Planung“ – der Absatz entfällt im Entwurf; nicht bei Rollen- und Quellenübersicht */}
+          {!locked && !b.summary && b.sources?.length > 0 && (
             <select aria-label="Für Intern oder In Planung vormerken" value="" onChange={(e) => e.target.value && run(() => post(`/content-blocks/${b.id}/park`, { target: e.target.value }), `Für „${e.target.value === 'intern' ? 'Intern' : 'In Planung'}“ vorgemerkt – der Absatz entfällt im Entwurf.`)}>
               <option value="">Vormerken für …</option>
               <option value="intern">Intern</option>

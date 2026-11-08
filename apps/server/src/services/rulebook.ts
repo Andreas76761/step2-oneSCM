@@ -4,6 +4,7 @@ import { newId, now, type Row } from '../db.js';
 import { SEVERITIES } from '../domain/reference.js';
 import { RULE_KINDS, RULE_KIND_LABELS, ruleMatcher, rulesFor, ruleViolations, violationReason, type RulebookRule, type RuleKind } from '../domain/rulebook.js';
 import type { GateCheck } from '../domain/gate.js';
+import { isChapterSummary } from '../domain/generator.js';
 import { badRequest, notFound } from '../problem.js';
 
 const dto = (r: Row, chapterTitle?: string | null): RulebookRule & { kindLabel: string; chapterTitle: string | null; createdBy: string; createdAt: string; updatedAt: string | null } => ({
@@ -81,9 +82,12 @@ export async function deleteRule(ctx: Ctx, id: string, user: User) {
 }
 
 /** Freigabe: Absätze der Version gegen Regeln mit Schweregrad „Blocker“ (übrige Regeln melden sich als Befund der Analyse) */
-export async function rulebookGateCheck(ctx: Ctx, chapterId: string, blocks: { id: string; kind: string; text: string }[]): Promise<GateCheck> {
-  const rules = rulesFor(await loadRules(ctx), chapterId).filter((r) => r.severity === 'blocker');
-  const texts = blocks.filter((b) => b.kind !== 'gap').map((b) => ({ id: b.id, text: b.text }));
+export async function rulebookGateCheck(ctx: Ctx, chapterId: string, blocks: { id: string; kind: string; section: string; text: string }[]): Promise<GateCheck> {
+  // wie in der Analyse: Pflichtbegriffe nicht im Sammelkapitel „Ohne Kapitel“
+  const none = (await ctx.db.get('SELECT key FROM chapters WHERE id = ?', chapterId))?.key === '__none__';
+  const rules = rulesFor(await loadRules(ctx), chapterId).filter((r) => r.severity === 'blocker' && !(none && r.kind === 'required'));
+  // nur Inhalt: keine Lücken-Hinweise, keine generierten Übersichten (Rollen, Quellen- und Freigabestatus mit Dateipfaden)
+  const texts = blocks.filter((b) => b.kind !== 'gap' && !isChapterSummary(b.section, b.text)).map((b) => ({ id: b.id, text: b.text }));
   const found = ruleViolations(rules, texts);
   return {
     code: 'rulebook',

@@ -68,9 +68,9 @@ describe('Etappe 100', () => {
       expect((await call('GET', '/rulebook/rules')).json.rules.map((r: any) => [r.kind, r.chapterTitle])).toEqual([['forbidden', null], ['required', '4. Verträge']]);
       expect(required.chapterTitle).toBe('4. Verträge');
 
-      // Gate nennt Blocker-Befunde mit deutschem Typ (nicht „rule“)
-      const g = evaluateGate([], [{ id: 'f1', seq: 7, type: 'rule', severity: 'blocker', status: 'open', reason: 'Regelwerk (…)' }], { purpose: 'approve' });
-      expect(g.checks.find((c) => c.code === 'no_open_blockers')!.details).toEqual(['#7 Regelwerk: Regelwerk (…)']);
+      // Gate nennt Blocker-Befunde mit deutschem Typ (nicht „contradiction“)
+      const g = evaluateGate([], [{ id: 'f1', seq: 7, type: 'contradiction', severity: 'blocker', status: 'open', reason: 'A widerspricht B' }], { purpose: 'approve' });
+      expect(g.checks.find((c) => c.code === 'no_open_blockers')!.details).toEqual(['#7 Widerspruch: A widerspricht B']);
       expect((await call('POST', '/quality/analysis', {}, 'u-redaktion')).status).toBe(202);
       await built.ctx.jobs.idle();
       const rules = (await call('GET', '/quality/findings?type=rule')).json;

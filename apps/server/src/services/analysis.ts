@@ -189,7 +189,11 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
   if (rules.some((r) => r.active)) {
     const keyOf = new Map((await db.all('SELECT id, key FROM chapters WHERE project_id = ?', ctx.projectId)).map((c) => [c.id as string, c.key as string]));
     const byChapter = new Map<string, Row[]>();
-    for (const s of snippets) byChapter.set(s.chapter_id, [...(byChapter.get(s.chapter_id) ?? []), s]);
+    for (const s of snippets) {
+      const list = byChapter.get(s.chapter_id);
+      if (list) list.push(s);
+      else byChapter.set(s.chapter_id, [s]);
+    }
     for (const [chapterId, list] of byChapter) {
       const applicable = rulesFor(rules, chapterId).filter((r) => r.kind !== 'required' || keyOf.get(chapterId) !== '__none__');
       for (const v of ruleViolations(applicable, list.map((s) => ({ id: s.id as string, text: s.text as string })))) {

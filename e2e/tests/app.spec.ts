@@ -4212,6 +4212,8 @@ test('[T-432] Regelwerk pflegen, Verstoß unter „Optimierungen“ sehen; Absat
   const ch = (await (await request.get('/api/v1/chapters', { headers: h })).json()).find((c: any) => c.title === '4. Vertragsbearbeitung');
   expect((await request.post(`/api/v1/chapters/${ch.id}/generate`, { headers: h })).ok()).toBe(true);
   await page.goto(`/werkstatt/${ch.id}`);
+  // Rollen- und Quellenübersicht fassen das Kapitel zusammen – dort kein „Vormerken für …“
+  await expect(page.locator('article.block', { hasText: 'Quellen:' }).getByLabel('Für Intern oder In Planung vormerken')).toHaveCount(0);
   const block = page.locator('article.block', { hasText: 'Laufleistung' });
   await block.getByLabel('Für Intern oder In Planung vormerken').selectOption('planning');
   await expect(page.getByText('Für „In Planung“ vorgemerkt – der Absatz entfällt im Entwurf.')).toBeVisible();

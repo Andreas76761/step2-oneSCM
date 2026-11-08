@@ -3395,5 +3395,32 @@
       "NFR-160",
       "NFR-161"
     ]
+  },
+  {
+    "id": "T-433",
+    "title": "Regelwerk: Blocker-Regel sperrt nur Einreichen und Freigabe am Text der Version – nicht Generieren; Übersichtsabsätze und „Ohne Kapitel“ wie in der Analyse",
+    "file": "apps/server/test/stage101.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-160"
+    ]
+  },
+  {
+    "id": "T-434",
+    "title": "Vormerken: nicht für Rollen- und Quellenübersicht, alle Quellen eines Absatzes oder keine; zurück ins Handbuch ohne fremdes Unterkapitel",
+    "file": "apps/server/test/stage101.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-161"
+    ]
+  },
+  {
+    "id": "T-435",
+    "title": "Absatzversion aus der Zeit vor dem Spartenwechsel wiederherstellen: Truck/Bus werden PKW und VAN",
+    "file": "apps/server/test/stage101.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-159"
+    ]
   }
 ]

@@ -44,10 +44,12 @@ const isOpen = (f: GateFinding) => f.status === 'open' || f.status === 'deferred
 
 export function evaluateGate(blocks: GateBlock[], findings: GateFinding[], opts: { purpose: 'generate' | 'approve' | 'export' }): GateResult {
   const checks: GateCheck[] = [];
-  const blockers = findings.filter((f) => isOpen(f) && f.severity === 'blocker' && f.type !== 'privacy');
+  // Regelwerk-Befunde (ADR-123) sperren nicht hier: Blocker-Regeln prüft das Gate am Text der Version (Prüfpunkt „rulebook“),
+  // damit eine Korrektur im Entwurf genügt und Generieren und Export nicht an der Quelle hängen
+  const blockers = findings.filter((f) => isOpen(f) && f.severity === 'blocker' && f.type !== 'privacy' && f.type !== 'rule');
   checks.push({
     code: 'no_open_blockers',
-    label: 'Keine offenen Blocker-Befunde (Widersprüche, Regelwerk u. a.)',
+    label: 'Keine offenen Blocker-Befunde (Widersprüche u. a.)',
     passed: blockers.length === 0,
     details: blockers.map((f) => `#${f.seq} ${FINDING_LABEL[f.type] ?? f.type}: ${f.reason}`),
   });

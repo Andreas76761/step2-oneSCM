@@ -141,7 +141,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 52. **Etappe 98 – zweites Code-Review der Etappen 2–10 (✅ umgesetzt):** neun Funde behoben, einer war schon erledigt, einer begründet belassen.
 53. **Etappe 99 – zweites Code-Review der Etappe 1 (✅ umgesetzt):** neun Funde behoben, einer begründet belassen. Damit sind alle Etappen bis 87 nachträglich mit dem heutigen Verfahren geprüft.
 54. **Etappe 100 – Sparten, Regelwerk, Kapitel „Intern“ und „In Planung“ (✅ umgesetzt, ADR-123):** Wünsche vom 08.11.2026 mit den Entscheidungen aus der Rückfrage.
-55. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+55. **Etappe 101 – Code-Review von Etappe 100 (✅ umgesetzt):** sieben Funde behoben, einer begründet belassen.
+56. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

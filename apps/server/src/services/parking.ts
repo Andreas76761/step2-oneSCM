@@ -3,6 +3,7 @@
 import { audit, type Ctx, type User } from '../context.js';
 import { newId, now, type Row } from '../db.js';
 import { RESERVED_CHAPTER_KEYS, RESERVED_CHAPTERS, type ParkTarget } from '../domain/reference.js';
+import { isChapterSummary } from '../domain/generator.js';
 import { badRequest, conflict, notFound } from '../problem.js';
 import { deleteBlock, snapshot } from './chapters.js';
 
@@ -90,8 +91,10 @@ export async function unparkSnippet(ctx: Ctx, id: string, user: User) {
     ? s.parked_from_chapter_id
     : (await ctx.db.get("SELECT id FROM chapters WHERE project_id = ? AND key = '__none__'", ctx.projectId))?.id;
   if (!back) throw conflict('Das Herkunftskapitel gibt es nicht mehr.');
+  // Unterkapitel nur, wenn es noch zum Zielkapitel gehört (sonst z. B. beim Rückfall auf „Ohne Kapitel“ ein fremdes)
+  const sub = s.parked_from_subchapter_id && (await ctx.db.get('SELECT id FROM subchapters WHERE id = ? AND chapter_id = ?', s.parked_from_subchapter_id, back)) ? s.parked_from_subchapter_id : null;
   await ctx.db.tx(async () => {
-    await ctx.db.run('UPDATE text_snippets SET chapter_id = ?, subchapter_id = ?, parked_from_chapter_id = NULL, parked_from_subchapter_id = NULL WHERE id = ?', back, s.parked_from_subchapter_id ?? null, id);
+    await ctx.db.run('UPDATE text_snippets SET chapter_id = ?, subchapter_id = ?, parked_from_chapter_id = NULL, parked_from_subchapter_id = NULL WHERE id = ?', back, sub, id);
     await ctx.db.run('DELETE FROM snippet_parking WHERE project_id = ? AND document_id = ? AND norm_hash = ?', ctx.projectId, s.document_id, s.norm_hash);
     await audit(ctx, user.id, 'snippet.unparked', 'snippet', id, { chapterId: back });
   });
@@ -101,10 +104,17 @@ export async function unparkSnippet(ctx: Ctx, id: string, user: User) {
 /** Absatz in der Werkstatt vormerken: alle Quellen des Absatzes (der Absatz entfällt im Entwurf) */
 export async function parkBlock(ctx: Ctx, blockId: string, input: { target?: string; note?: string | null }, user: User) {
   targetOf(input.target);
-  const sources = await ctx.db.all('SELECT snippet_id FROM content_block_sources WHERE block_id = ?', blockId);
+  const block = await ctx.db.get('SELECT section_code, text FROM content_blocks WHERE id = ?', blockId);
+  if (!block) throw notFound(`Absatz ${blockId}`);
+  // Rollenübersicht und Quellenstatus fassen das ganze Kapitel zusammen – vormerken hieße, das ganze Kapitel zu verschieben
+  if (isChapterSummary(block.section_code, block.text)) throw badRequest('Dieser Absatz fasst das Kapitel zusammen (Rollen bzw. Quellen) – vormerken lassen sich nur Inhaltsabsätze.');
+  const sources = await ctx.db.all('SELECT x.snippet_id FROM content_block_sources x JOIN text_snippets s ON s.id = x.snippet_id WHERE x.block_id = ? ORDER BY s.seq', blockId);
   if (!sources.length) throw badRequest('Der Absatz hat keine Quelle (manuell geschrieben) – löschen Sie ihn stattdessen.');
-  const results = [];
-  for (const s of sources) results.push(await parkSnippet(ctx, s.snippet_id, input, user));
+  const results: Awaited<ReturnType<typeof parkSnippet>>[] = [];
+  // alle Quellen oder keine: scheitert eine (z. B. ältere Revision), bleibt der Absatz unverändert
+  await ctx.db.tx(async () => {
+    for (const s of sources) results.push(await parkSnippet(ctx, s.snippet_id, input, user));
+  });
   return { blockId, parked: results.length, removedBlocks: results.reduce((n, r) => n + r.removedBlocks, 0) };
 }
 

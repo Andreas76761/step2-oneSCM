@@ -117,6 +117,10 @@ export function assignSection(s: GenSnippet, ctx: { first: boolean; roleMajority
 
 /** Satz im Abschnitt „Quellen- und Freigabestatus“; beim Anzeigen setzt releaseStatusText den tatsächlichen Stand ein */
 export const DRAFT_STATUS = 'Freigabestatus: Entwurf (nicht freigegeben).';
+export const ROLES_SUMMARY_INTRO = 'Dieses Kapitel betrifft folgende Rollen:';
+/** vom Generator zusammengefasste Absätze (Rollenübersicht, Quellen- und Freigabestatus): Quellen sind alle Abschnitte des Kapitels, kein eigener Inhalt */
+export const isChapterSummary = (section: string, text: string | null | undefined) =>
+  section === 'status' || (section === 'responsibilities' && String(text ?? '').startsWith(ROLES_SUMMARY_INTRO));
 const skippedNote = (n: number) => (n === 1 ? '1 unbestätigter Textabschnitt wurde nicht übernommen.' : n ? `${n} unbestätigte Textabschnitte wurden nicht übernommen.` : '');
 
 /**
@@ -188,7 +192,7 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
     for (const s of unique) for (const r of s.roles) if (isConfirmed(r)) confirmedRoles.set(r.code, [...(confirmedRoles.get(r.code) ?? []), s.id]);
     if (confirmedRoles.size) {
       const lines = ROLES.filter((r) => confirmedRoles.has(r.code)).map((r) => `- ${r.label} (${r.description})`);
-      blocks.push({ section: 'responsibilities', kind: 'list', text: `Dieses Kapitel betrifft folgende Rollen:\n\n${lines.join('\n')}`, sourceIds: [...new Set([...confirmedRoles.values()].flat())], roles: [...confirmedRoles.keys()], divisions: ['all'], market: null, release: null, scopeStatus: 'general' });
+      blocks.push({ section: 'responsibilities', kind: 'list', text: `${ROLES_SUMMARY_INTRO}\n\n${lines.join('\n')}`, sourceIds: [...new Set([...confirmedRoles.values()].flat())], roles: [...confirmedRoles.keys()], divisions: ['all'], market: null, release: null, scopeStatus: 'general' });
     }
   }
 

@@ -29,11 +29,12 @@ Entscheidungen dazu (Rückfrage am 08.11.2026):
 - Tabelle `rulebook_rules` (Migration 068): Geltung (allgemein oder Kapitel), Art, Begriff/Muster, Erklärung, Schweregrad, aktiv.
 - Begriffe gelten als ganzes Wort (Unicode-Wortgrenzen, auch mit Umlauten), unabhängig von Groß-/Kleinschreibung. Muster werden wie die Vale-Regeln geprüft: riskante Wiederholungen, Rückverweise und Lookbehind werden abgelehnt (Schutz vor blockierenden Ausdrücken).
 - Die Qualitätsanalyse prüft je Kapitel die allgemeinen und die Kapitelregeln gegen die Textabschnitte; Verstöße werden Befunde vom Typ `rule` (je Regel ein eigener Befund). Ein Pflichtbegriff gilt nicht für „Ohne Kapitel“.
-- Regeln mit Schweregrad „Blocker“ prüft das Qualitätsgate außerdem im Kapiteltext der Version vor dem Einreichen und vor der Freigabe (Prüfpunkt `rulebook`) – so greifen sie auch für Text, der erst in der Werkstatt entstanden ist.
+- Regeln mit Schweregrad „Blocker“ prüft das Qualitätsgate außerdem im Kapiteltext der Version vor dem Einreichen und vor der Freigabe (Prüfpunkt `rulebook`) – so greifen sie auch für Text, der erst in der Werkstatt entstanden ist. Generierte Übersichten (Rollen, Quellen- und Freigabestatus) zählen nicht; Pflichtbegriffe gelten nicht für „Ohne Kapitel“.
+- Befunde „Regelwerk“ aus der Analyse sperren nicht (auch nicht als Blocker): Die Korrektur im Entwurf genügt, Generieren und Export hängen nicht an der Quelle (Etappe 101).
 
 **Kapitel „Intern“ und „In Planung“**
 - Zwei reservierte Kapitel je Projekt (`__intern__`, `__planung__`), beim ersten Vormerken angelegt; sie stehen in keiner Kapitelliste des Handbuchs, lassen sich nicht generieren und erscheinen damit nie in Leseransicht, Export, Release oder Übersetzung. Die Analyse prüft ihre Abschnitte nicht.
-- Vormerken (Textabschnitt oder Absatz der Werkstatt mit allen Quellen): Der Abschnitt wandert in das reservierte Kapitel, das Herkunftskapitel wird gemerkt. In Entwürfen des Herkunftskapitels entfallen Absätze nur aus diesem Abschnitt sofort (mit Protokoll), bei mehreren Quellen nur die Quellenangabe. Freigegebene Kapitel bleiben unverändert, bis die nächste Version freigegeben ist.
+- Vormerken (Textabschnitt oder Absatz der Werkstatt mit allen Quellen, alle oder keine; nicht die generierten Übersichten Rollen und Quellenstatus): Der Abschnitt wandert in das reservierte Kapitel, das Herkunftskapitel wird gemerkt. In Entwürfen des Herkunftskapitels entfallen Absätze nur aus diesem Abschnitt sofort (mit Protokoll), bei mehreren Quellen nur die Quellenangabe. Freigegebene Kapitel bleiben unverändert, bis die nächste Version freigegeben ist.
 - Die Vormerkung gilt je Datei und normalisiertem Text (`snippet_parking`) und überdauert einen erneuten Import.
 - „Zurück ins Handbuch“ stellt Kapitel und Unterkapitel wieder her; ab dem nächsten Entwurf steht der Text wieder im Kapitel.
 

@@ -4,8 +4,8 @@ import { DEFAULT_DETAIL_LEVELS } from '../domain/metadataLabels.js';
 import { audit, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { evaluateGate, type GateResult } from '../domain/gate.js';
-import { generateChapter, GENERATOR_ID, releaseStatusText, type GenSnippet } from '../domain/generator.js';
-import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DIVISION_CODES, RESERVED_CHAPTER_KEYS, ROLE_CODES, SECTION_CODES } from '../domain/reference.js';
+import { generateChapter, GENERATOR_ID, isChapterSummary, releaseStatusText, type GenSnippet } from '../domain/generator.js';
+import { BLOCK_KINDS, CHAPTER_SECTIONS, CONFIRMED_EVIDENCE, DEFAULT_DIVISIONS, DIVISION_CODES, RESERVED_CHAPTER_KEYS, RETIRED_DIVISIONS, ROLE_CODES, SECTION_CODES } from '../domain/reference.js';
 import { badRequest, conflict, notFound, unprocessable } from '../problem.js';
 import { assertIdsInProject } from './projects.js';
 import { systemNotice } from './collaboration.js';
@@ -151,7 +151,7 @@ export async function gateForChapter(ctx: Ctx, chapterId: string, purpose: 'gene
   const isVariant = !!(await ctx.db.get('SELECT outline_family_id FROM chapters WHERE id = ?', chapterId))?.outline_family_id;
   // Regelwerk (Etappe 100): Verstöße gegen Blocker-Regeln im Text der Version sperren Freigabe und Export
   if (versionId && purpose !== 'generate') {
-    const check = await rulebookGateCheck(ctx, chapterId, active.map((b) => ({ id: b.id as string, kind: b.kind as string, text: b.text as string })));
+    const check = await rulebookGateCheck(ctx, chapterId, active.map((b) => ({ id: b.id as string, kind: b.kind as string, section: b.section as string, text: b.text as string })));
     result.checks.push(check);
     result.passed = result.passed && check.passed;
   }
@@ -344,7 +344,7 @@ export async function blockDto(ctx: Ctx, b: Row) {
   return {
     id: b.id, chapterVersionId: b.chapter_version_id, lineageId: b.lineage_id, section: b.section_code, position: b.position, kind: b.kind, text: b.text, mode: b.mode,
     market: b.market_code, release: b.release_code, scopeStatus: b.scope_status, justification: b.justification, comment: b.comment, versionNo: b.version_no,
-    deletedAt: b.deleted_at, updatedAt: b.updated_at,
+    deletedAt: b.deleted_at, updatedAt: b.updated_at, summary: isChapterSummary(b.section_code, b.text),
     moduleId: (b.module_id ?? null) as string | null, moduleVersion: b.module_version == null ? null : Number(b.module_version),
     sentences: parseJson<Sentence[] | null>(b.sentence_sources, null),
     roles: (await db.all('SELECT role_code FROM content_block_roles WHERE block_id = ? ORDER BY role_code', b.id)).map((r) => r.role_code as string),
@@ -581,7 +581,9 @@ export async function restoreBlock(ctx: Ctx, id: string, versionNo: number, acto
     await db.run('DELETE FROM content_block_roles WHERE block_id = ?', id);
     for (const r of s.roles ?? []) await db.run('INSERT INTO content_block_roles VALUES (?, ?)', id, r);
     await db.run('DELETE FROM content_block_divisions WHERE block_id = ?', id);
-    for (const d of s.divisions ?? []) await db.run('INSERT INTO content_block_divisions VALUES (?, ?)', id, d);
+    // Sparten Bus/Truck entfallen (ADR-123): ältere Fassungen bekommen PKW und VAN
+    const divisions = new Set((s.divisions ?? []).flatMap((d: string) => ((RETIRED_DIVISIONS as readonly string[]).includes(d) ? [...DEFAULT_DIVISIONS] : DIVISION_CODES.includes(d) ? [d] : [])));
+    for (const d of divisions) await db.run('INSERT INTO content_block_divisions VALUES (?, ?)', id, d);
     await db.run('DELETE FROM content_block_sources WHERE block_id = ?', id);
     for (const sid of s.sourceIds ?? []) await db.run('INSERT INTO content_block_sources VALUES (?, ?)', id, sid);
     await normalizePositions(ctx, b.chapter_version_id);

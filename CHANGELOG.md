@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.101.0 – Etappe 101: Code-Review von Etappe 100 (08.11.2026)
+
+### Hinzugefügt
+- **Tests T-433 bis T-435** (Server) und eine Prüfung in T-432 (E2E). Jeder Test scheitert ohne seine Korrektur; geprüft je Datei und je Teil.
+
+### Behoben
+- **Vormerken an Übersichtsabsätzen:** „Vormerken für …“ stand auch an der Rollenübersicht („Dieses Kapitel betrifft folgende Rollen“) und am Abschnitt „Quellen- und Freigabestatus“. Deren Quellen sind alle Textabschnitte des Kapitels – ein Klick hätte das ganze Kapitel nach „Intern“ bzw. „In Planung“ verschoben. Die Auswahl fehlt dort jetzt, die Schnittstelle lehnt es ab.
+- **Vormerken mit mehreren Quellen:** Scheiterte eine Quelle (z. B. aus einer abgelösten Revision), blieben die vorherigen trotzdem vorgemerkt. Jetzt alle oder keine.
+- **Zurück ins Handbuch:** Gab es das Herkunftskapitel nicht mehr, landete der Abschnitt in „Ohne Kapitel“, aber mit dem Unterkapitel des alten Kapitels. Das Unterkapitel wird jetzt nur übernommen, wenn es zum Zielkapitel gehört.
+- **Blocker-Regeln:** Ein Befund „Regelwerk“ mit Schweregrad „Blocker“ aus der Analyse sperrte auch das Generieren und den Export – und blieb offen, auch wenn die Redaktion den Text im Entwurf korrigiert hatte, weil die Analyse die Quelle prüft. Blocker-Regeln sperren jetzt wie in ADR-123 beschrieben Einreichen und Freigabe am Text der Version; die Korrektur im Entwurf genügt. Der Befund bleibt als Hinweis sichtbar.
+- **Regelprüfung vor der Freigabe:** zählte die generierten Übersichtsabsätze mit – ein Pflichtbegriff galt z. B. als erfüllt, wenn er nur im Dateipfad unter „Quellen: …“ stand. Außerdem galt ein allgemeiner Pflichtbegriff hier auch für „Ohne Kapitel“, die Analyse nimmt das aus. Beides wie in der Analyse.
+- **Absatzversion wiederherstellen:** Eine Fassung aus der Zeit vor dem Spartenwechsel mit Truck oder Bus ergab einen Fehler (die Sparten gibt es nicht mehr). Sie erhält jetzt PKW und VAN.
+- **Analyse:** Die Gruppierung der Textabschnitte je Kapitel für das Regelwerk kopierte die Liste bei jedem Abschnitt (quadratischer Aufwand).
+
+### Begründet belassen
+- **Gleichlautende Absätze in einer Datei:** Die Vormerkung gilt je Datei und Text. Steht derselbe Absatz zweimal in einer Datei, sind nach einem erneuten Import beide vorgemerkt. Eine Unterscheidung bräuchte die Position im Text, die sich beim Bearbeiten der Datei verschiebt; dann ginge die Vormerkung schon bei kleinen Änderungen verloren.
+
 ## 0.100.2 – Seite „Intern und In Planung“ (08.11.2026)
 
 ### Hinzugefügt
