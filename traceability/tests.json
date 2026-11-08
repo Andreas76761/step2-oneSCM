@@ -3388,7 +3388,7 @@
   },
   {
     "id": "T-432",
-    "title": "Regelwerk pflegen; Absatz in der Werkstatt für „In Planung“ vormerken, im Kapitel „In Planung“ sehen und zurück ins Handbuch",
+    "title": "Regelwerk pflegen, Verstoß unter „Optimierungen“ sehen; Absatz in der Werkstatt für „In Planung“ vormerken, im Kapitel „In Planung“ sehen und zurück ins Handbuch",
     "file": "e2e/tests/app.spec.ts",
     "level": "e2e",
     "requirements": [

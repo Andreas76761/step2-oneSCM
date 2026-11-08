@@ -42,7 +42,7 @@ async function validate(ctx: Ctx, input: RuleInput, base?: Row) {
 }
 
 async function ruleRow(ctx: Ctx, id: string) {
-  const r = await ctx.db.get('SELECT * FROM rulebook_rules WHERE id = ? AND project_id = ?', id, ctx.projectId);
+  const r = await ctx.db.get('SELECT r.*, c.title AS chapter_title FROM rulebook_rules r LEFT JOIN chapters c ON c.id = r.chapter_id WHERE r.id = ? AND r.project_id = ?', id, ctx.projectId);
   if (!r) throw notFound(`Regel ${id}`);
   return r;
 }
@@ -57,7 +57,8 @@ export async function createRule(ctx: Ctx, input: RuleInput, user: User) {
     );
     await audit(ctx, user.id, 'rulebook_rule.created', 'rulebook_rule', id, v);
   });
-  return dto(await ruleRow(ctx, id));
+  const row = await ruleRow(ctx, id);
+  return dto(row, row.chapter_title);
 }
 
 export async function updateRule(ctx: Ctx, id: string, input: RuleInput, user: User) {
@@ -67,7 +68,8 @@ export async function updateRule(ctx: Ctx, id: string, input: RuleInput, user: U
       v.chapterId, v.kind, v.term, v.message, v.severity, v.active ? 1 : 0, user.id, now(), id);
     await audit(ctx, user.id, 'rulebook_rule.updated', 'rulebook_rule', id, v);
   });
-  return dto(await ruleRow(ctx, id));
+  const row = await ruleRow(ctx, id);
+  return dto(row, row.chapter_title);
 }
 
 export async function deleteRule(ctx: Ctx, id: string, user: User) {

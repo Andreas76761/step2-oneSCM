@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.100.1 – Regelwerk-Befunde sichtbar (08.11.2026)
+
+### Hinzugefügt
+- **Test T-432 erweitert:** Eine verletzte Kapitelregel erzeugt nach dem Analyselauf einen Befund, der unter „Optimierungen“ im Filter „Regelwerk“ erscheint. Der Test scheitert ohne die Korrektur. T-430 prüft zusätzlich den Kapiteltitel in der Antwort beim Anlegen und die Typbezeichnung im Qualitätsgate.
+
+### Behoben
+- **Regelwerk-Befunde:** Die Seite „Optimierungen“ blendete Befunde vom Typ „Regelwerk“ aus, und der Typ fehlte im Filter. Verstöße waren damit nur im Qualitätsgate zu sehen. Jetzt stehen sie dort mit Filter „Regelwerk“, und die Seite „Regelwerk“ verweist darauf (bisher auf eine Seite „Befunde“, die es nicht gibt). Aufgefallen ist das beim Vorführen des Regelwerks.
+- **Regel anlegen/ändern:** Die Antwort enthielt den Kapiteltitel nicht (`chapterTitle: null` trotz Kapitelregel).
+- **Qualitätsgate:** Offene Blocker-Befunde nannten den internen Typ („#11 rule: …“), und die Prüfung hieß „Keine offenen Blocker-Befunde (Widersprüche)“, obwohl dort auch Regelwerk-Befunde stehen. Jetzt steht der deutsche Typ da („#11 Regelwerk: …“), und die Prüfung heißt „Keine offenen Blocker-Befunde (Widersprüche, Regelwerk u. a.)“. T-430 prüft das.
+
+### Geändert
+- **CI:** Die Workflows prüft actionlint jetzt über das offizielle Container-Image (Version 1.7.7). Der Download des Release-Archivs lieferte zuletzt kein Archiv mehr.
+
 ## 0.100.0 – Etappe 100: Sparten, Regelwerk, Kapitel „Intern“ und „In Planung“ (08.11.2026)
 
 ### Hinzugefügt

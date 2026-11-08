@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { del, patch, post } from '../api';
 import { Card, Empty, ErrorBox, Gated, Page, Severity, SEVERITY_NAME, errorText, useApp, useLoad } from '../components/ui';
 
@@ -75,7 +76,7 @@ export function RulebookPage() {
         </Card>
         <Card title="So wirken die Regeln">
           <ul className="small">
-            <li>Die Qualitätsanalyse prüft alle aktiven Regeln gegen die Textabschnitte der Quellen und meldet Verstöße unter „Befunde“ (Typ „Regelwerk“).</li>
+            <li>Die Qualitätsanalyse prüft alle aktiven Regeln gegen die Textabschnitte der Quellen und meldet Verstöße unter <Link to="/optimierungen">„Optimierungen“</Link> (Typ „Regelwerk“).</li>
             <li>Regeln mit Schweregrad „Blocker“ prüft die App außerdem im Kapiteltext vor dem Einreichen und vor der Freigabe.</li>
             <li>Allgemeine Regeln gelten für jedes Kapitel; ein Pflichtbegriff gilt nicht für „Ohne Kapitel“.</li>
             <li>Abschnitte in „Intern“ und „In Planung“ werden nicht geprüft.</li>

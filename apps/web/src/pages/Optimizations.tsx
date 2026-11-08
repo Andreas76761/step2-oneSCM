@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { BarList, Card, Empty, ErrorBox, Page, Severity, Status, TYPE_LABEL, useLoad } from '../components/ui';
 import { CompareDialog } from './Contradictions';
 
-const TYPES = ['gap', 'terminology', 'readability', 'privacy'];
+const TYPES = ['gap', 'terminology', 'readability', 'privacy', 'rule'];
 
 export function OptimizationsPage() {
   const [type, setType] = useState('');
@@ -18,7 +18,7 @@ export function OptimizationsPage() {
     freigabe: () => '/freigabe', optimierungen: () => '/optimierungen',
   };
   return (
-    <Page title="Optimierungen" subtitle="Lücken, Terminologie, Lesbarkeit und Datenschutz – Hinweise zur redaktionellen Verbesserung">
+    <Page title="Optimierungen" subtitle="Lücken, Terminologie, Lesbarkeit, Datenschutz und Regelwerk – Hinweise zur redaktionellen Verbesserung">
       {o.data && (
         <>
           <div className="tiles">

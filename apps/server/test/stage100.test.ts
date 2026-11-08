@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { classifySnippet } from '../src/domain/classify.js';
+import { evaluateGate } from '../src/domain/gate.js';
 import { client, FM, importFile } from './api-helpers.js';
 import { freshDatabase, tempDir } from './helpers.js';
 
@@ -65,7 +66,11 @@ describe('Etappe 100', () => {
       const forbidden = (await call('POST', '/rulebook/rules', { kind: 'forbidden', term: 'Sammelfreigabe', message: 'Funktion noch nicht freigegeben', severity: 'high' }, 'u-redaktion')).json;
       const required = (await call('POST', '/rulebook/rules', { kind: 'required', term: 'Vertragsnummer', chapterId: ch4, severity: 'medium' }, 'u-redaktion')).json;
       expect((await call('GET', '/rulebook/rules')).json.rules.map((r: any) => [r.kind, r.chapterTitle])).toEqual([['forbidden', null], ['required', '4. Verträge']]);
+      expect(required.chapterTitle).toBe('4. Verträge');
 
+      // Gate nennt Blocker-Befunde mit deutschem Typ (nicht „rule“)
+      const g = evaluateGate([], [{ id: 'f1', seq: 7, type: 'rule', severity: 'blocker', status: 'open', reason: 'Regelwerk (…)' }], { purpose: 'approve' });
+      expect(g.checks.find((c) => c.code === 'no_open_blockers')!.details).toEqual(['#7 Regelwerk: Regelwerk (…)']);
       expect((await call('POST', '/quality/analysis', {}, 'u-redaktion')).status).toBe(202);
       await built.ctx.jobs.idle();
       const rules = (await call('GET', '/quality/findings?type=rule')).json;

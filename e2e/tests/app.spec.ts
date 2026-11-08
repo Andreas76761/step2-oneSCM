@@ -4186,7 +4186,7 @@ test('[T-406] Gliederung jeder Seite: genau eine Überschrift erster Ebene am An
   expect(findings).toEqual([]);
 });
 
-test('[T-432] Regelwerk pflegen; Absatz in der Werkstatt für „In Planung“ vormerken, im Kapitel „In Planung“ sehen und zurück ins Handbuch', async ({ page, request }) => {
+test('[T-432] Regelwerk pflegen, Verstoß unter „Optimierungen“ sehen; Absatz in der Werkstatt für „In Planung“ vormerken, im Kapitel „In Planung“ sehen und zurück ins Handbuch', async ({ page, request }) => {
   const { default: AxeBuilder } = await import('@axe-core/playwright');
   const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
     .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
@@ -4228,4 +4228,14 @@ test('[T-432] Regelwerk pflegen; Absatz in der Werkstatt für „In Planung“ v
   await item.getByRole('button', { name: /zurück ins Handbuch/ }).click();
   await expect(page.getByText('Zurück im Kapitel „4. Vertragsbearbeitung“ – ab dem nächsten Entwurf wieder im Text.')).toBeVisible();
   await expect(page.locator('tr', { hasText: 'Laufleistung' })).toHaveCount(0);
+
+  // Verstoß als Befund: Kapitelregel anlegen, Analyse laufen lassen, unter „Optimierungen“ (Typ „Regelwerk“) sehen
+  const rule = await (await request.post('/api/v1/rulebook/rules', { headers: h, data: { chapterId: ch.id, kind: 'forbidden', term: 'Arbeitsliste', message: 'heißt Aufgabenliste', severity: 'low' } })).json();
+  expect(rule.chapterTitle).toBe('4. Vertragsbearbeitung');
+  const run = await (await request.post('/api/v1/quality/analysis', { headers: h, data: {} })).json();
+  await expect.poll(async () => (await (await request.get(`/api/v1/quality/analysis/${run.id}`, { headers: h })).json()).status, { timeout: 30000 }).toBe('completed');
+  await page.goto('/optimierungen');
+  await page.getByLabel('Befundtyp').selectOption({ label: 'Regelwerk' });
+  await expect(page.locator('tr', { hasText: '„Arbeitsliste“ ist nicht erlaubt' })).toContainText('Regelwerk');
+  expect((await request.delete(`/api/v1/rulebook/rules/${rule.id}`, { headers: h })).ok()).toBe(true);
 });

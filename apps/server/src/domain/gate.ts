@@ -37,6 +37,9 @@ export interface GateResult {
   checks: GateCheck[];
 }
 
+// wie TYPE_LABEL in der Oberfläche
+const FINDING_LABEL: Record<string, string> = { gap: 'Lücke', duplicate: 'Dopplung', contradiction: 'Widerspruch', terminology: 'Terminologie', privacy: 'Datenschutz', readability: 'Lesbarkeit', rule: 'Regelwerk' };
+
 const isOpen = (f: GateFinding) => f.status === 'open' || f.status === 'deferred';
 
 export function evaluateGate(blocks: GateBlock[], findings: GateFinding[], opts: { purpose: 'generate' | 'approve' | 'export' }): GateResult {
@@ -44,9 +47,9 @@ export function evaluateGate(blocks: GateBlock[], findings: GateFinding[], opts:
   const blockers = findings.filter((f) => isOpen(f) && f.severity === 'blocker' && f.type !== 'privacy');
   checks.push({
     code: 'no_open_blockers',
-    label: 'Keine offenen Blocker-Befunde (Widersprüche)',
+    label: 'Keine offenen Blocker-Befunde (Widersprüche, Regelwerk u. a.)',
     passed: blockers.length === 0,
-    details: blockers.map((f) => `#${f.seq} ${f.type}: ${f.reason}`),
+    details: blockers.map((f) => `#${f.seq} ${FINDING_LABEL[f.type] ?? f.type}: ${f.reason}`),
   });
   const privacy = findings.filter((f) => isOpen(f) && f.type === 'privacy');
   checks.push({
