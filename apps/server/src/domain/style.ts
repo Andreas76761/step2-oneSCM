@@ -147,13 +147,13 @@ const wordCount = (s: string) => [...s.replace(/^\s*(?:\d+\.|[-*])\s+/, '').matc
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
- * Suchmuster für einen zu vermeidenden Begriff (ganzes Wort). Ohne Groß-/Kleinschreibung – außer die Variante unterscheidet
- * sich vom bevorzugten Begriff nur darin (Systemnamen: „NEMESIS“ statt „Nemesis“, ADR-128): dann zählt die genaue Schreibweise,
- * sonst wäre der bevorzugte Begriff selbst ein Fund.
+ * Fundstellen eines zu vermeidenden Begriffs (ganzes Wort, ohne Groß-/Kleinschreibung). Unterscheidet sich die Variante vom
+ * bevorzugten Begriff nur in Groß-/Kleinschreibung (Systemnamen: „NEMESIS“ zu „Nemesis“, ADR-128), ist jede Schreibweise außer
+ * der bevorzugten ein Fund („nemesis“ ebenso) – der bevorzugte Begriff selbst nie.
  */
-export function avoidPattern(avoid: string, preferred: string): RegExp {
+export function avoidMatches(text: string, avoid: string, preferred: string): RegExpMatchArray[] {
   const caseOnly = avoid.toLowerCase() === preferred.toLowerCase();
-  return new RegExp(String.raw`(?<![\p{L}\p{N}_])${escape(avoid)}(?![\p{L}\p{N}_])`, caseOnly ? 'gu' : 'giu');
+  return [...text.matchAll(new RegExp(String.raw`(?<![\p{L}\p{N}_])${escape(avoid)}(?![\p{L}\p{N}_])`, 'giu'))].filter((m) => !caseOnly || m[0] !== preferred);
 }
 
 /** Regelprüfung eines Textes */
@@ -346,7 +346,7 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
     for (const [re, right] of ABBREVIATIONS) for (const m of t.matchAll(re)) add('abbreviation', 'info', `Abkürzung „${right}“ schreiben`, m.index!, m.index! + m[0].length, { replacement: right, label: `„${right}“` });
     for (const term of opts.terms ?? []) {
       for (const avoid of term.avoid) {
-        for (const m of t.matchAll(avoidPattern(avoid, term.preferred))) if (!term.uiAllowed || !inUiContext(t, m.index!, m.index! + m[0].length)) add('terminology', 'warning', `Terminologie: „${term.preferred}“ statt „${m[0]}“`, m.index!, m.index! + m[0].length, { replacement: term.preferred, label: `„${term.preferred}“` });
+        for (const m of avoidMatches(t, avoid, term.preferred)) if (!term.uiAllowed || !inUiContext(t, m.index!, m.index! + m[0].length)) add('terminology', 'warning', `Terminologie: „${term.preferred}“ statt „${m[0]}“`, m.index!, m.index! + m[0].length, { replacement: term.preferred, label: `„${term.preferred}“` });
       }
     }
   }

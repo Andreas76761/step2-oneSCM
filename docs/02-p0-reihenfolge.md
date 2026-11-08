@@ -101,6 +101,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **109** ✅ | Sicherheitshinweise in Entwicklungswerkzeugen (vitest, vite, minimatch) | Server-Tests grün auf SQLite und PostgreSQL; `npm audit --omit=dev` ohne Befund |
 | **110** ✅ | GitHub-Actions auf Node 24 (CI und Release-Pipeline) | T-451; CI grün |
 | **111** ✅ | Schreibweisen aus S-04 (ADR-128) | Server-Tests grün auf SQLite und PostgreSQL; T-452, T-355 angepasst |
+| **112** ✅ | Code-Review der Etappen 109–111 | Server-Tests grün auf SQLite und PostgreSQL; T-453 |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

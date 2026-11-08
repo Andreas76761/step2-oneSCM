@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.112.0 – Etappe 112: Code-Review der Etappen 109–111 (08.11.2026)
+
+Geprüft: Sicherheitsupdates der Entwicklungswerkzeuge und Lockfile (`npm ls` ohne Befund), GitHub-Actions auf Node 24, Schreibweisen aus S-04. Ein Fund, behoben.
+
+### Hinzugefügt
+- **Test T-453.** Er scheitert ohne die Korrektur.
+
+### Behoben
+- **Terminologie (Etappe 111):** Bei einer Variante, die sich nur in Groß-/Kleinschreibung unterscheidet („NEMESIS“ zu „Nemesis“), meldeten Stilprüfung und Analyse nur genau diese Schreibweise – „nemesis“ oder „NeMeSiS“ blieben unbemerkt. Jetzt ist jede Schreibweise außer der bevorzugten ein Fund, mit Korrektur per Klick zu „Nemesis“.
+
 ## 0.111.0 – Etappe 111: Schreibweisen aus S-04 (08.11.2026)
 
 Entscheidung vom 08.11.2026 (ADR-128): „Kulanzfrist“ statt „Grace Period“ im Fließtext, „Fahrgestellnummer“ statt „Chassis Number“ im deutschen Fließtext, „Status FI-Beleg“ und „Belegart“, Systemnamen wie in der Oberfläche (Nemesis, VeDoc, CoFiCo, oneERP).

@@ -3581,5 +3581,15 @@
       "NFR-145",
       "US-015"
     ]
+  },
+  {
+    "id": "T-453",
+    "title": "Systemname: jede andere Schreibweise ist ein Fund („nemesis“, „NeMeSiS“), die bevorzugte nie",
+    "file": "apps/server/test/stage112.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-145",
+      "US-015"
+    ]
   }
 ]
