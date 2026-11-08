@@ -3701,7 +3701,7 @@ test('[T-393] Barrierefreiheit aller Seiten im dunklen Modus: axe (WCAG 2.2 AA, 
   expect(findings).toEqual([]);
 });
 
-test('[T-394] Alle Seiten in Smartphone-Breite (390 px): kein waagerechtes Scrollen der Seite (WCAG 1.4.10), axe ohne Befund', async ({ page }) => {
+test('[T-394] Alle Seiten in Smartphone-Breite (390 px): kein waagerechtes Scrollen der Seite (WCAG 1.4.10), nichts Großes klebt und verdeckt den Inhalt, axe ohne Befund', async ({ page }) => {
   test.setTimeout(360_000);
   const { default: AxeBuilder } = await import('@axe-core/playwright');
   await page.setViewportSize({ width: 390, height: 844 });
@@ -3712,6 +3712,11 @@ test('[T-394] Alle Seiten in Smartphone-Breite (390 px): kein waagerechtes Scrol
     // breite Tabellen dürfen in ihrem eigenen Bereich scrollen, die Seite selbst nicht
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     if (overflow > 1) findings.push(`${r}: Seite ${overflow} px zu breit`);
+    // einspaltig darf nichts Großes am oberen Rand kleben – es verdeckte sonst beim Scrollen den Inhalt (z. B. Suche der Leseransicht)
+    const sticky = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('body *')]
+      .filter((el) => getComputedStyle(el).position === 'sticky' && el.getBoundingClientRect().height > window.innerHeight * 0.25)
+      .map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join('.')}`));
+    for (const x of sticky) findings.push(`${r}: ${x} klebt beim Scrollen und verdeckt den Inhalt`);
     const v = (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations;
     for (const x of v) findings.push(`${r}: ${x.id} (${x.impact}) ${x.nodes.map((n) => n.target.join(' ')).join(' | ')}`);
   }

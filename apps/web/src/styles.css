@@ -578,8 +578,9 @@ ul.plain li { margin: 4px 0; overflow-wrap: anywhere; }
 
 /* ---------- Etappe 19: Leseransicht, Vorlagen, Einführung, Check in der Freigabe ---------- */
 .reader { display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr); gap: 16px; align-items: start; }
-@media (max-width: 900px) { .reader { grid-template-columns: 1fr; } }
+/* einspaltig nicht kleben: Suche und Inhalt stehen dann über dem Kapitel und verdeckten es beim Scrollen */
 .reader-toc { position: sticky; top: 16px; }
+@media (max-width: 900px) { .reader { grid-template-columns: 1fr; } .reader-toc { position: static; } }
 .reader-toc ol { margin: 8px 0 0; display: flex; flex-direction: column; gap: 2px; }
 .reader-toc a { display: inline-block; padding: 4px 6px; border-radius: 4px; color: var(--link); }
 .reader-toc a.active { background: var(--surface-2); font-weight: 600; }

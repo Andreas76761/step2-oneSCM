@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.99.1 – Leseransicht auf dem Smartphone (08.11.2026)
+
+### Hinzugefügt
+- **T-394 erweitert:** In Smartphone-Breite darf auf keiner der 77 Seiten ein klebendes Element mehr als ein Viertel der Bildschirmhöhe einnehmen. Ohne die Korrektur meldet der Test genau die Leseransicht.
+
+### Behoben
+- **Leseransicht in schmaler Ansicht (Smartphone, bis 900 px):** Der Kasten „Im Handbuch suchen“ mit Inhaltsverzeichnis blieb beim Scrollen oben kleben und verdeckte den Kapiteltext. Aufgefallen ist das beim Vorführen der App. Jetzt klebt er nur noch in der zweispaltigen Ansicht.
+
 ## 0.99.0 – Etappe 99 (06.11.2026)
 
 ### Hinzugefügt
