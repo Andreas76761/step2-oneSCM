@@ -121,6 +121,7 @@ describe('Etappe 100', () => {
       expect(blocksOf((await call('GET', `/chapter-versions/${draft.id}`)).json).some((b: any) => b.text.includes('Sammelfreigabe'))).toBe(false);
       const list = (await call('GET', '/parked')).json;
       expect(list.map((p: any) => [p.target, p.fromChapter, p.note])).toEqual([['planning', '4. Verträge', 'kommt mit PI 14']]);
+      expect(list[0]).toMatchObject({ parkedBy: 'u-redaktion', parkedByName: 'Redaktion (Demo)' });
       // nicht im Handbuch: Kapitelliste, Neuerzeugung, Analyse
       expect((await call('GET', '/chapters')).json.some((c: any) => c.title === 'In Planung')).toBe(false);
       const next = (await call('POST', `/chapters/${ch4}/generate`, {}, 'u-redaktion')).json;

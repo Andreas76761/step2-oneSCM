@@ -112,17 +112,18 @@ export async function listParked(ctx: Ctx, target?: string) {
   const targets = target ? [targetOf(target)] : TARGETS;
   const keys = targets.map((t) => RESERVED_CHAPTERS[t].key);
   const rows = await ctx.db.all(
-    `SELECT s.id, s.seq, s.text, c.key, d.path, fc.title AS from_title, p.note, p.parked_by, p.parked_at
+    `SELECT s.id, s.seq, s.text, c.key, d.path, fc.title AS from_title, p.note, p.parked_by, u.name AS parked_by_name, p.parked_at
      FROM text_snippets s JOIN chapters c ON c.id = s.chapter_id JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
      LEFT JOIN chapters fc ON fc.id = s.parked_from_chapter_id
      LEFT JOIN snippet_parking p ON p.project_id = d.project_id AND p.document_id = d.id AND p.norm_hash = s.norm_hash
+     LEFT JOIN users u ON u.id = p.parked_by
      WHERE c.project_id = ? AND c.key IN (${keys.map(() => '?').join(', ')}) AND r.is_current = 1 ORDER BY c.key, d.path, s.position`,
     ctx.projectId, ...keys,
   );
   const targetByKey = new Map(TARGETS.map((t) => [RESERVED_CHAPTERS[t].key, t]));
   return rows.map((r) => ({
     id: r.id, seq: r.seq, text: r.text, target: targetByKey.get(r.key), path: r.path, fromChapter: r.from_title ?? null,
-    note: r.note ?? null, parkedBy: r.parked_by ?? null, parkedAt: r.parked_at ?? null,
+    note: r.note ?? null, parkedBy: r.parked_by ?? null, parkedByName: r.parked_by_name ?? r.parked_by ?? null, parkedAt: r.parked_at ?? null,
   }));
 }
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.100.2 – Seite „Intern und In Planung“ (08.11.2026)
+
+### Hinzugefügt
+- **Test T-431 erweitert:** Die Liste der Vormerkungen nennt den Namen der Person, die vorgemerkt hat. Der Test scheitert ohne die Korrektur.
+
+### Behoben
+- **Spalte „Vorgemerkt“:** Dort stand die Benutzerkennung („u-redaktion“), jetzt der Name („Redaktion (Demo)“). Die Schnittstelle `/parked` liefert dazu `parkedByName`.
+- **Hinweistext „Intern“:** begann mit kleinem Buchstaben („interne Themen …“).
+- Beides ist beim Vorführen der Seite aufgefallen.
+
 ## 0.100.1 – Regelwerk-Befunde sichtbar (08.11.2026)
 
 ### Hinzugefügt

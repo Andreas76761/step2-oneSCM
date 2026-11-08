@@ -3,7 +3,7 @@ import { del } from '../api';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 
 const TARGETS = [
-  { code: 'intern', title: 'Intern', hint: 'interne Themen, die nicht ins Benutzerhandbuch gehören' },
+  { code: 'intern', title: 'Intern', hint: 'Interne Themen, die nicht ins Benutzerhandbuch gehören' },
   { code: 'planning', title: 'In Planung', hint: 'Inhalte zu Funktionen, die noch nicht produktiv sind' },
 ];
 
@@ -50,7 +50,7 @@ export function ParkedPage() {
                       <td>{p.text}</td>
                       <td className="small">{p.fromChapter ?? '–'}<br /><span className="muted">{p.path}</span></td>
                       <td className="small">{p.note ?? '–'}</td>
-                      <td className="small">{p.parkedBy ?? '–'}{p.parkedAt ? `, ${new Date(p.parkedAt).toLocaleDateString('de-DE')}` : ''}</td>
+                      <td className="small">{p.parkedByName ?? p.parkedBy ?? '–'}{p.parkedAt ? `, ${new Date(p.parkedAt).toLocaleDateString('de-DE')}` : ''}</td>
                       <td className="row-actions"><button className="btn small" aria-label={`„${p.text.slice(0, 40)}“ zurück ins Handbuch`} onClick={() => back(p)}>Zurück ins Handbuch</button></td>
                     </tr>
                   ))}

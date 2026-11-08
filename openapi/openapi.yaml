@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: oneSCM Handbook Studio API
-  version: 0.100.1
+  version: 0.100.2
   description: |
     Revisionssichere Erstellung rollen- und spartenspezifischer Benutzerhandbücher aus Markdown-Quellen.
     Jede Operation referenziert über `x-requirements` die zugehörigen User Stories (US-020).
@@ -6712,7 +6712,7 @@ paths:
       parameters: [{ name: target, in: query, required: false, schema: { type: string, enum: [intern, planning] } }]
       responses:
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '200': { description: '[{ id, seq, text, target, path, fromChapter, note, parkedBy, parkedAt }]' }
+        '200': { description: '[{ id, seq, text, target, path, fromChapter, note, parkedBy, parkedByName, parkedAt }]' }
         '400': { $ref: '#/components/responses/Problem' }
   /snippets/{snippetId}/park:
     post:
