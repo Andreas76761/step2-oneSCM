@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.107.0 – Etappe 107: Code-Review der aus main übernommenen Etappe 27 (08.11.2026)
+
+### Hinzugefügt
+- **Test T-447** (Server) und eine Prüfung in T-446 (E2E). Jeder scheitert ohne seine Korrektur (geprüft je Datei).
+
+### Behoben
+- **Leseransicht in Sprachen mit Region (de-ch, fr-ch aus Etappe 48):** Beschriftungen, Datumsformat und Sprachkennung fielen auf Englisch bzw. deutsches Format zurück – für „Français (Suisse)“ hieß es „Request translation“. Jetzt gelten die Beschriftungen der Grundsprache (in de-ch ohne „ß“), das Datum im Schweizer Format, und die Zielsprache steht mit Land da („en français (Suisse)“, „ins Französische (Schweiz)“).
+- **FAQ-Stapelübersetzung:** Scheiterte ein Auftrag endgültig (nach den Wiederholungen der Jobqueue), erfuhr die auftraggebende Person davon nichts – nur Abschluss und Abbruch meldeten sich. Jetzt kommt ein Hinweis mit Grund und Stand.
+- **Wochenübersicht:** Bestand sie nur aus veralteten FAQ-Übersetzungen, führte der Hinweis in die (leere) Aufgabenliste statt in die FAQ-Pflege.
+
 ## 0.106.0 – Etappe 106: Zusammenführung mit main (Pull Request #29) (08.11.2026)
 
 Auf `main` wurde parallel eine eigene „Etappe 27“ zusammengeführt (Pull Request #29, v0.27.0 vom 06.11.2026). Sie ist hier vollständig übernommen; Kennungen, die es in diesem Zweig schon gab, sind neu nummeriert.

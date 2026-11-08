@@ -195,6 +195,14 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.109 Stand nach Etappe 107 (08.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der aus main übernommenen Etappe 27: vier Funde, alle behoben | ✅ T-447, E2E T-446; Server-Tests auf SQLite und PostgreSQL |
+| Leseransicht | Sprachen mit Region (de-ch, fr-ch) zeigten englische Beschriftungen; Zielsprache ohne grammatische Form |
+| FAQ-Stapelübersetzung, Wochenübersicht | endgültig gescheiterter Auftrag ohne Hinweis; Hinweis bei nur veralteten FAQ führte in die Aufgabenliste |
+
 ## 1.108 Stand nach Etappe 106 (08.11.2026)
 
 | Punkt | Ergebnis |

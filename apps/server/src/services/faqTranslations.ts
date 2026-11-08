@@ -254,7 +254,11 @@ export async function runFaqBatch(ctx: Ctx, batchId: string) {
 }
 
 export async function failFaqBatch(ctx: Ctx, batchId: string, error: string) {
-  await ctx.db.run("UPDATE faq_translation_batches SET status = 'failed', error = ?, finished_at = ? WHERE id = ? AND status IN ('queued','processing')", error.slice(0, 500), now(), batchId);
+  const res = await ctx.db.run("UPDATE faq_translation_batches SET status = 'failed', error = ?, finished_at = ? WHERE id = ? AND status IN ('queued','processing')", error.slice(0, 500), now(), batchId);
+  // wie bei Abschluss und Abbruch: die auftraggebende Person erfährt es
+  if (!res.changes) return;
+  const b = batchDto(await batchRow(ctx, batchId));
+  await projectNotice(ctx, b.createdBy, `KI-Übersetzung der häufigen Fragen (${b.languageName}) fehlgeschlagen: ${b.error}. ${b.done} von ${b.total} Einträgen bearbeitet.`, 'faq_batch', `/stammdaten/faq?sprache=${b.language}`);
 }
 
 /** Letzte Aufträge des Projekts (optional je Sprache) */

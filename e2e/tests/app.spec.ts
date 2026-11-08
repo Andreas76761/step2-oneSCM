@@ -4243,12 +4243,12 @@ test('[T-432] Regelwerk pflegen, Verstoß unter „Optimierungen“ sehen; Absat
   expect((await request.delete(`/api/v1/rulebook/rules/${rule.id}`, { headers: h })).ok()).toBe(true);
 });
 
-test('[T-446] Übersetzungswunsch mit Begründung auf Tschechisch (grammatische Sprachform), Begründung bei der Redaktion, FAQ-Stapelübersetzung, Wochenübersicht', async ({ page, request }) => {
+test('[T-446] Übersetzungswunsch mit Begründung auf Tschechisch (grammatische Sprachform), Sprache mit Region (fr-ch) mit eigenen Beschriftungen, Begründung bei der Redaktion, FAQ-Stapelübersetzung, Wochenübersicht', async ({ page, request }) => {
   const { default: AxeBuilder } = await import('@axe-core/playwright');
   const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
     .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
   const red = { 'X-User-Id': 'u-redaktion' };
-  expect((await request.patch('/api/v1/projects/p_default', { headers: { 'X-User-Id': 'u-admin' }, data: { languages: ['en', 'cs'] } })).ok()).toBe(true);
+  expect((await request.patch('/api/v1/projects/p_default', { headers: { 'X-User-Id': 'u-admin' }, data: { languages: ['en', 'cs', 'fr-ch'] } })).ok()).toBe(true);
   const c = await (await request.post('/api/v1/chapter-assistant', { headers: red, data: {
     title: 'E2E Inventur zählen', purpose: 'Mit dieser Anleitung zählen Sie den Bestand eines Lagerplatzes.', steps: ['Öffnen Sie **Lager › Inventur**', 'Klicken Sie auf **Zählen**'], result: 'Erledigt.',
   } })).json();
@@ -4268,6 +4268,12 @@ test('[T-446] Übersetzungswunsch mit Begründung auf Tschechisch (grammatische 
   expect(await axe()).toEqual([]);
   await article.getByRole('button', { name: 'Odeslat žádost' }).click();
   await expect(article.getByText('O překlad bylo požádáno – redakce byla informována.')).toBeVisible();
+
+  // Sprache mit Region (fr-ch, Etappe 48): französische Beschriftungen, Zielsprache mit Land
+  await page.goto(`/lesen/${c.chapterId}?lang=fr-ch`);
+  const fr = page.getByRole('article', { name: 'E2E Inventur zählen' });
+  await expect(fr.getByText('Ce chapitre n’est pas encore traduit en français (Suisse) – vous lisez la version allemande.')).toBeVisible();
+  await expect(fr.getByRole('button', { name: 'Demander une traduction' })).toBeVisible();
 
   // Redaktion: Begründung beim Wunsch (ohne Namen)
   await page.goto('/uebersetzungen');

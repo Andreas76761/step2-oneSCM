@@ -121,7 +121,7 @@ export async function sendDigests(ctx: Ctx, opts: { force?: boolean; date?: Date
     await ctx.db.tx(async () => {
       const res = await ctx.db.run('INSERT INTO digest_log (project_id, user_id, week, sent_at) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING', ctx.projectId, u.id, week, now());
       if (!res.changes) return;
-      await projectNotice(ctx, u.id, d.text!, 'digest', d.openFeedback ? '/rueckmeldungen' : d.tasks ? '/aufgaben' : d.openTranslationRequests || d.outdatedChapterTranslations.length ? '/uebersetzungen' : '/aufgaben');
+      await projectNotice(ctx, u.id, d.text!, 'digest', d.openFeedback ? '/rueckmeldungen' : d.tasks ? '/aufgaben' : d.openTranslationRequests || d.outdatedChapterTranslations.length ? '/uebersetzungen' : d.outdatedFaqTranslations ? '/stammdaten/faq' : '/aufgaben');
       sent++;
     });
   }

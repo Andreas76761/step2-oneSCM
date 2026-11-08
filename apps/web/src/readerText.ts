@@ -319,7 +319,19 @@ function displayName(code: string, ui: string) {
 /** „ins Englische“ / „into Swedish“: Zielsprache `code` als Satzteil in der Beschriftungssprache `ui` */
 export function intoLanguage(code: string, ui: string) {
   const f = INTO[ui] ?? INTO.en;
-  return f.forms[code] ?? f.other(displayName(code, INTO[ui] ? ui : 'en'));
+  if (f.forms[code]) return f.forms[code];
+  // Sprache mit Region (fr-ch): Form der Grundsprache mit dem Land – „ins Französische (Schweiz)“
+  const [base, region] = code.split('-');
+  if (region && f.forms[base]) {
+    let land = region.toUpperCase();
+    try {
+      land = new Intl.DisplayNames([INTO[ui] ? ui : 'en'], { type: 'region' }).of(land) ?? land;
+    } catch {
+      /* Kürzel genügt */
+    }
+    return `${f.forms[base]} (${land})`;
+  }
+  return f.other(displayName(code, INTO[ui] ? ui : 'en'));
 }
 
 /** Sprachname für Auswahllisten und Deckblatt: Eigenbezeichnung (großgeschrieben), für weitere Sprachen über Intl */
@@ -331,14 +343,20 @@ const LOCALES: Record<string, string> = { de: 'de-DE', en: 'en-GB', fr: 'fr-FR',
 
 /** Texte einer Sprache: vollständig übersetzte Sprachen direkt, übrige Englisch, Deutsch als Standard */
 export function readerTexts(lang: string) {
-  const texts = TEXTS[lang] ?? (lang === 'de' ? de : en);
-  const t = (key: ReaderTextKey, vars: Record<string, string | number> = {}) =>
-    texts[key].replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
+  // Sprache mit Region (de-ch, fr-ch – Etappe 48): Beschriftungen der Grundsprache, in der Schweiz ohne „ß“
+  const [base, region] = lang.split('-');
+  const texts = TEXTS[lang] ?? TEXTS[base] ?? en;
+  const swiss = base === 'de' && region === 'ch';
+  const t = (key: ReaderTextKey, vars: Record<string, string | number> = {}) => {
+    const out = texts[key].replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
+    return swiss ? out.replace(/ß/g, 'ss') : out;
+  };
   /** Sprache der Beschriftungen (für das lang-Attribut) */
-  const uiLang = TEXTS[lang] ? lang : lang === 'de' ? 'de' : 'en';
+  const uiLang = TEXTS[lang] ? lang : TEXTS[base] ? base : 'en';
   /** Zielsprache als Satzteil in der Beschriftungssprache („ins Englische“) */
   const into = (code: string) => intoLanguage(code, uiLang);
-  return { t, into, lang, uiLang, locale: LOCALES[lang] ?? 'de-DE', date: (d: string | number | Date) => new Date(d).toLocaleDateString(LOCALES[lang] ?? 'de-DE') };
+  const locale = LOCALES[lang] ?? (region && LOCALES[base] ? `${base}-${region.toUpperCase()}` : LOCALES[base] ?? 'de-DE');
+  return { t, into, lang, uiLang, locale, date: (d: string | number | Date) => new Date(d).toLocaleDateString(locale) };
 }
 export type ReaderTexts = ReturnType<typeof readerTexts>;
 

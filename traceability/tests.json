@@ -3516,13 +3516,23 @@
   },
   {
     "id": "T-446",
-    "title": "Übersetzungswunsch mit Begründung auf Tschechisch (grammatische Sprachform), Begründung bei der Redaktion, FAQ-Stapelübersetzung, Wochenübersicht (Browser, axe)",
+    "title": "Übersetzungswunsch mit Begründung auf Tschechisch (grammatische Sprachform), Sprache mit Region (fr-ch) mit eigenen Beschriftungen, Begründung bei der Redaktion, FAQ-Stapelübersetzung, Wochenübersicht",
     "file": "e2e/tests/app.spec.ts",
     "level": "e2e",
     "requirements": [
       "NFR-162",
       "NFR-163",
       "NFR-164",
+      "NFR-165"
+    ]
+  },
+  {
+    "id": "T-447",
+    "title": "FAQ-Stapelübersetzung endgültig gescheitert: Hinweis an die auftraggebende Person; Wochenübersicht mit nur veralteten FAQ verlinkt die FAQ-Pflege",
+    "file": "apps/server/test/stage107.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-162",
       "NFR-165"
     ]
   }
