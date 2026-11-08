@@ -87,9 +87,9 @@ export async function safeFetch(raw: string, init: { method?: string; headers?: 
   const url = await assertSafeUrl(raw, allowInsecure);
   if (allowInsecure) return fetch(raw, { method: init.method, headers: init.headers, body: init.body, redirect: 'manual', signal: AbortSignal.timeout(init.timeoutMs) });
   return new Promise<Response>((resolve, reject) => {
-    // Zeitlimit für die ganze Anfrage samt Antwortkörper (die Socket-Option „timeout“ misst nur Leerlauf)
-    const timer = setTimeout(() => req.destroy(new Error('Zeitüberschreitung der Anfrage.')), init.timeoutMs);
-    timer.unref?.();
+    // Zeitlimit für die ganze Anfrage samt Antwortkörper (die Socket-Option „timeout“ misst nur Leerlauf) – erst nach
+    // https.request: wirft das synchron (z. B. ungültiges Zeichen im Header), bleibt kein Timer zurück
+    let timer: NodeJS.Timeout | undefined;
     const req = https.request(url, { method: init.method ?? 'GET', headers: init.headers, lookup: guardedLookup as any, timeout: init.timeoutMs }, (res) => {
       res.on('close', () => clearTimeout(timer));
       const headers = new Headers();
@@ -99,6 +99,8 @@ export async function safeFetch(raw: string, init: { method?: string; headers?: 
       if (empty) res.resume();
       resolve(new Response(empty ? null : (Readable.toWeb(res) as ReadableStream), { status, headers }));
     });
+    timer = setTimeout(() => req.destroy(new Error('Zeitüberschreitung der Anfrage.')), init.timeoutMs);
+    timer.unref?.();
     req.on('timeout', () => req.destroy(new Error('Zeitüberschreitung der Anfrage.')));
     req.on('error', (e) => { clearTimeout(timer); reject(e); });
     if (init.body) req.write(init.body);

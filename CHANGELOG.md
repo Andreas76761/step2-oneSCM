@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.108.0 – Etappe 108: Code-Review der Korrekturen aus den Etappen 101–107 (08.11.2026)
+
+### Hinzugefügt
+- **Tests T-448 … T-450** (Server). Jeder scheitert ohne seine Korrektur (geprüft je Datei).
+
+### Behoben
+- **Webhooks und Confluence (Etappe 102):** Das Zeitlimit für die ganze Anfrage startete vor dem Aufbau der Anfrage. Scheiterte dieser sofort – etwa an einem Zeilenende im Zugang aus der Umgebungsvariable (`CONFLUENCE_CREDENTIAL_*` aus einer Datei mit Windows-Zeilenenden) –, lief das Zeitlimit weiter und beendete nach Ablauf den Server mit einem unbehandelten Fehler. Jetzt beginnt es erst mit der Anfrage.
+- **Leseransicht (Etappe 107):** In Sprachen ohne eigene Beschriftungen (z. B. Schwedisch) stand das Datum im deutschen Format auf einer englisch beschrifteten Seite. Jetzt im Format der Sprache selbst; ein unbekanntes Kürzel fällt auf Englisch zurück.
+- **Word-Export (Etappe 105):** Eine Unterliste einer neuen Liste, die mit einer Nummer über 1 beginnt, zählte mit der Unterliste einer früheren Liste weiter. Eine neue Liste beginnt jetzt auch ihre Unterlisten neu; die doppelte Merkliste für die oberste Ebene entfällt.
+- **Übersetzungswünsche (Etappe 106):** Begründungen werden einmal je Kapitel und Sprache gruppiert statt für jede Zeile über alle Wünsche gefiltert.
+
+### Belassen
+- **Handbuch-Generator (Etappe 102):** Steht derselbe Satz einmal für ein Release (alle Märkte) und einmal für einen Markt (alle Releases), bleiben beide Absätze – keine Fassung ist allgemeiner als die andere, und zusammengelegt fehlte der Satz in einem der übrigen Handbücher. Im Handbuch genau dieses Markts und Release steht er dann zweimal; der Fall ist selten und in der Dublettenprüfung sichtbar.
+
 ## 0.107.0 – Etappe 107: Code-Review der aus main übernommenen Etappe 27 (08.11.2026)
 
 ### Hinzugefügt

@@ -79,7 +79,14 @@ export async function listTranslationRequests(ctx: Ctx, all = false) {
      FROM translation_requests r JOIN chapters c ON c.id = r.chapter_id WHERE r.project_id = ?${all ? '' : ' AND r.fulfilled_at IS NULL'} GROUP BY r.chapter_id, r.language, c.title`, ctx.projectId,
   );
   // Begründungen ohne Namen (die Redaktion sieht, warum, nicht wer), neueste zuerst
-  const reasons = await ctx.db.all(`SELECT chapter_id, language, reason, created_at FROM translation_requests WHERE project_id = ? AND reason IS NOT NULL${all ? '' : ' AND fulfilled_at IS NULL'} ORDER BY created_at DESC`, ctx.projectId);
+  const reasons = new Map<string, { text: string; requestedAt: string }[]>();
+  for (const x of await ctx.db.all(`SELECT chapter_id, language, reason, created_at FROM translation_requests WHERE project_id = ? AND reason IS NOT NULL${all ? '' : ' AND fulfilled_at IS NULL'} ORDER BY created_at DESC`, ctx.projectId)) {
+    const k = `${x.chapter_id}|${x.language}`;
+    const list = reasons.get(k);
+    const item = { text: String(x.reason), requestedAt: x.created_at as string };
+    if (list) list.push(item);
+    else reasons.set(k, [item]);
+  }
   const out = [];
   for (const r of rows) {
     const state = await stateOf(ctx, r.chapter_id as string, r.language as string);
@@ -87,7 +94,7 @@ export async function listTranslationRequests(ctx: Ctx, all = false) {
     out.push({
       chapterId: r.chapter_id as string, title: String(r.title), language: r.language as string, languageName: LANGUAGES[r.language as string] ?? String(r.language),
       count: Number(r.n), firstRequestedAt: r.first_at as string, lastRequestedAt: r.last_at as string, state,
-      reasons: reasons.filter((x) => x.chapter_id === r.chapter_id && x.language === r.language).map((x) => ({ text: String(x.reason), requestedAt: x.created_at as string })),
+      reasons: reasons.get(`${r.chapter_id}|${r.language}`) ?? [],
     });
   }
   return out.sort((a, b) => b.count - a.count || b.lastRequestedAt.localeCompare(a.lastRequestedAt));

@@ -339,6 +339,14 @@ export function languageLabel(code: string) {
   const n = NATIVE_NAMES[code] ?? displayName(code, code);
   return n === code ? code : n.charAt(0).toLocaleUpperCase(code) + n.slice(1);
 }
+/** von Intl unterstütztes Gebietsschema zu `code` oder null (ungültiges oder unbekanntes Kürzel) */
+function intlLocale(code: string) {
+  try {
+    return Intl.DateTimeFormat.supportedLocalesOf([code])[0] ?? null;
+  } catch {
+    return null;
+  }
+}
 const LOCALES: Record<string, string> = { de: 'de-DE', en: 'en-GB', fr: 'fr-FR', es: 'es-ES', it: 'it-IT', nl: 'nl-NL', pl: 'pl-PL', cs: 'cs-CZ', pt: 'pt-PT' };
 
 /** Texte einer Sprache: vollständig übersetzte Sprachen direkt, übrige Englisch, Deutsch als Standard */
@@ -355,7 +363,8 @@ export function readerTexts(lang: string) {
   const uiLang = TEXTS[lang] ? lang : TEXTS[base] ? base : 'en';
   /** Zielsprache als Satzteil in der Beschriftungssprache („ins Englische“) */
   const into = (code: string) => intoLanguage(code, uiLang);
-  const locale = LOCALES[lang] ?? (region && LOCALES[base] ? `${base}-${region.toUpperCase()}` : LOCALES[base] ?? 'de-DE');
+  // Datum und Zahlen in der Sprache der Leserin bzw. des Lesers; Sprachen ohne eigene Beschriftungen (z. B. sv) nicht deutsch
+  const locale = LOCALES[lang] ?? (region && LOCALES[base] ? `${base}-${region.toUpperCase()}` : LOCALES[base] ?? (!lang ? 'de-DE' : intlLocale(lang) ?? 'en-GB'));
   return { t, into, lang, uiLang, locale, date: (d: string | number | Date) => new Date(d).toLocaleDateString(locale) };
 }
 export type ReaderTexts = ReturnType<typeof readerTexts>;

@@ -28,8 +28,8 @@ const hex = (c: string) => c.replace('#', '').toUpperCase();
 
 /** Nummerierte Listen je Dokument: eine Liste ab 1 beginnt neu, eine fortgesetzte (z. B. ab 6) zählt die vorige weiter */
 /** nächste Word-Instanz und je Ebene die zuletzt begonnene (für Fortsetzungen ab n > 1) */
-export interface ListState { next: number; last: number; byLevel?: Record<number, number> }
-export const newListState = (): ListState => ({ next: 1, last: 0, byLevel: {} });
+export interface ListState { next: number; byLevel?: Record<number, number> }
+export const newListState = (): ListState => ({ next: 1, byLevel: {} });
 interface Ctx { media: Map<string, MediaFile>; color: string; /** größte Bildbreite in px (Satzspiegel) */ maxWidth?: number; lists?: ListState; /** Bild in eigener Zeile (Designvorlagen) */ imageBreak?: boolean }
 
 function image(t: Tokens.Image, c: Ctx): ParagraphChild {
@@ -92,17 +92,17 @@ function blocks(tokens: Token[], c: Ctx, indent = 0): (Paragraph | Table)[] {
         const level = Math.min(Math.round(indent / 360), 3);
         // eigene Zählung je Liste (Word-Instanz); Fortsetzung ab n > 1 behält die vorige
         let instance: number | undefined;
-        // „last“ merkt sich nur Listen der obersten Ebene – eine verschachtelte Liste überschreibt sie nicht,
-        // sonst zählte die Fortsetzung der äußeren Liste mit der Instanz der inneren wieder ab 1
-        // je Ebene gemerkt: eine fortgesetzte Unterliste („3.“ nach einem Zwischenabsatz) zählt mit ihrer Instanz weiter
+        // je Ebene gemerkt: eine verschachtelte Liste überschreibt die Instanz der äußeren nicht, und eine fortgesetzte
+        // Unterliste („3.“ nach einem Zwischenabsatz) zählt mit ihrer Instanz weiter
         if (l.ordered && c.lists) {
           const byLevel = (c.lists.byLevel ??= {});
-          const prev = level === 0 ? c.lists.last || byLevel[0] : byLevel[level];
+          const prev = byLevel[level];
           if (Number(l.start || 1) > 1 && prev) instance = prev;
           else {
             instance = c.lists.next++;
             byLevel[level] = instance;
-            if (level === 0) c.lists.last = instance;
+            // neue Liste: Unterlisten einer früheren Liste setzen sich in ihr nicht fort
+            for (const k of Object.keys(byLevel)) if (Number(k) > level) delete byLevel[Number(k)];
           }
         }
         for (const item of l.items) {
