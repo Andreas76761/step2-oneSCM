@@ -64,13 +64,16 @@ const ROLE_PATTERNS: [string, RegExp][] = [
   ['hq', ub(/\b(?:hq|zentrale|headquarters?|hauptverwaltung)\b/iu)],
 ];
 const FRONT_ROLE: Record<string, string> = { dealer: 'dealer', mo: 'mo', market: 'market', hq: 'hq' };
+// einmal gebaut (nicht je Chunk)
+const MO_UPPER = ub(/\bMO\b|market operation/i);
+const MARKET_AS_COUNTRY = ub(/\b(?:markt|market)\s+(?:prüft|gibt|legt|pflegt|sieht|freigabe|approves|reviews)|\bmpc\d?\b|marktorganisation|marktverantwortlich/iu);
 
 export function detectRoles(t: TriageInput): Pick {
   const text = `${t.headingPath.join(' ')} ${t.text}`;
   // „MO“ nur groß geschrieben als Rolle (nicht „mo“ wie Montag)
-  const found = ROLE_PATTERNS.filter(([code, re]) => (code === 'mo' ? ub(/\bMO\b|market operation/i).test(text) : re.test(text))).map(([c]) => c);
+  const found = ROLE_PATTERNS.filter(([code, re]) => (code === 'mo' ? MO_UPPER.test(text) : re.test(text))).map(([c]) => c);
   // „Markt“ allein ist meist der Ländermarkt, nicht die Rolle: nur mit Rollenbezug
-  const market = found.includes('market') && !ub(/\b(?:markt|market)\s+(?:prüft|gibt|legt|pflegt|sieht|freigabe|approves|reviews)|\bmpc\d?\b|marktorganisation|marktverantwortlich/iu).test(text);
+  const market = found.includes('market') && !MARKET_AS_COUNTRY.test(text);
   const codes = found.filter((c) => !(c === 'market' && market));
   const front = t.roles.filter((r) => FRONT_ROLE[r]).map((r) => FRONT_ROLE[r]);
   if (t.roles.includes('all')) return { codes: ['dealer', 'mo', 'market', 'hq'], confidence: 0.8, reason: 'Quelle gilt für alle Rollen' };

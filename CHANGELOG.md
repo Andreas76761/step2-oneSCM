@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.104.0 – Etappe 104: Code-Review der Korrekturen aus den Etappen 92–94 (08.11.2026)
+
+### Hinzugefügt
+- **Tests T-440 und T-441.** Jeder scheitert ohne seine Korrektur (geprüft je Datei). Ohne eigenen Test: die einmal gebauten Ausdrücke der Triage (reine Laufzeit) und die Sortierung älterer Änderungsvorschläge (betrifft nur Listen von vor v0.92).
+
+### Behoben
+- **Bilder (Datenschutz):** Wurde die Erkennung erneut gestartet und die Texterkennung fehlte oder scheiterte (z. B. Tesseract nach einem Update nicht mehr installiert), verwarf die App die bisher gefundenen Stellen – Namen und Kennungen waren im Handbuch wieder lesbar. Jetzt bleiben sie, und der Status nennt den Grund.
+- **Transaktionen:** Warf eine Funktion, die nach dem Festschreiben läuft (z. B. Zwischenspeicher verwerfen), meldete die App einen Fehler, obwohl die Daten gespeichert waren; die übrigen liefen nicht. Jetzt laufen alle, ein Fehler wird nur protokolliert.
+- **Triage:** zwei Ausdrücke wurden bei jedem Chunk neu gebaut.
+- **Änderungsvorschläge:** Ältere Listen ohne laufende Nummer sortierten in SQLite und PostgreSQL unterschiedlich.
+
+### Begründet belassen
+- **Triage-Lauf länger als zwei Stunden:** gilt beim nächsten Start als abgebrochen. Bei den gemessenen Laufzeiten (Sekunden für tausende Chunks) tritt das nur nach einem Neustart mitten im Lauf auf – genau dafür ist die Grenze da.
+
 ## 0.103.0 – Etappe 103: Code-Review der Korrekturen aus den Etappen 95 und 96 (08.11.2026)
 
 ### Hinzugefügt

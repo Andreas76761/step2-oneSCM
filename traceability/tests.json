@@ -3458,5 +3458,23 @@
     "requirements": [
       "NFR-03"
     ]
+  },
+  {
+    "id": "T-440",
+    "title": "Bilder: erneute Erkennung ohne verfügbare oder mit gescheiterter Texterkennung behält die unkenntlich gemachten Stellen",
+    "file": "apps/server/test/stage104.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-441",
+    "title": "Transaktion: wirft eine Nach-Commit-Funktion, gilt die festgeschriebene Transaktion trotzdem als gelungen, und die übrigen laufen",
+    "file": "apps/server/test/stage104.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

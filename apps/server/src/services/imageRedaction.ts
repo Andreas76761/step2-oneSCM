@@ -147,10 +147,12 @@ export async function detectRedaction(ctx: Ctx, sha: string, actor: string) {
     status = 'failed';
     error = (e as Error).message.slice(0, 500);
   }
+  // Texterkennung nicht verfügbar oder gescheitert: bisher gefundene Stellen behalten – sonst wären Namen wieder lesbar
+  if (status !== 'done' && prev) found = parseJson<RedactionRegion[]>(prev.regions, []).filter((r) => r.source === 'ocr');
   const regions = renumber([...found, ...manual]).slice(0, MAX_REGIONS);
   const enabled = prev ? !!Number(prev.enabled) : inh ? inh.enabled : true;
   await save(ctx, a, { regions, enabled, ocrStatus: status, ocrError: error, detected: status === 'done' }, actor);
-  await audit(ctx, actor, 'image.redaction_detected', 'media', sha, { status, found: found.length, manual: manual.length, kinds: [...new Set(found.map((r) => r.kind))] });
+  await audit(ctx, actor, 'image.redaction_detected', 'media', sha, { status, found: status === 'done' ? found.length : 0, kept: status === 'done' ? 0 : found.length, manual: manual.length, kinds: [...new Set(found.map((r) => r.kind))] });
   return getRedaction(ctx, sha);
 }
 

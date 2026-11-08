@@ -172,7 +172,7 @@ export async function getBatch(ctx: Ctx, id: string) {
   const b = await ctx.db.get('SELECT * FROM revision_batches WHERE id = ? AND project_id = ?', id, ctx.projectId);
   if (!b) throw notFound(`Vorschlagsliste ${id}`);
   const rows = await ctx.db.all(
-    `SELECT p.*, c.title AS chapter_title, c.position FROM revision_proposals p JOIN chapters c ON c.id = p.chapter_id WHERE p.batch_id = ? ORDER BY c.position, p.created_at, p.seq, p.id`, id,
+    `SELECT p.*, c.title AS chapter_title, c.position FROM revision_proposals p JOIN chapters c ON c.id = p.chapter_id WHERE p.batch_id = ? ORDER BY c.position, p.created_at, COALESCE(p.seq, 0), p.id`, id,
   );
   type Group = { chapterId: string; title: string; proposals: Awaited<ReturnType<typeof proposalDto>>[] };
   const chapters = new Map<string, Group>();
@@ -217,7 +217,7 @@ async function apply(ctx: Ctx, p: Row, text: string | null, actor: string) {
     let after = block && block.section_code === p.section_code ? Number(block.position) : null;
     const siblings = await ctx.db.all(
       `SELECT id, applied_lineage_id FROM revision_proposals WHERE batch_id = ? AND chapter_id = ? AND section_code = ? AND change = 'added' AND ${p.lineage_id ? 'lineage_id = ?' : 'lineage_id IS NULL'}
-       ORDER BY created_at, seq, id`, p.batch_id, p.chapter_id, p.section_code, ...(p.lineage_id ? [p.lineage_id] : []),
+       ORDER BY created_at, COALESCE(seq, 0), id`, p.batch_id, p.chapter_id, p.section_code, ...(p.lineage_id ? [p.lineage_id] : []),
     );
     for (const s of siblings.slice(0, siblings.findIndex((s) => s.id === p.id)).reverse()) {
       const prev = s.applied_lineage_id && await ctx.db.get('SELECT position FROM content_blocks WHERE chapter_version_id = ? AND lineage_id = ? AND section_code = ? AND deleted_at IS NULL', draft, s.applied_lineage_id, p.section_code);
@@ -272,7 +272,7 @@ export async function acceptAll(ctx: Ctx, batchId: string, input: { chapterId?: 
   const b = await ctx.db.get('SELECT id FROM revision_batches WHERE id = ? AND project_id = ?', batchId, ctx.projectId);
   if (!b) throw notFound(`Vorschlagsliste ${batchId}`);
   const chapterId = typeof input.chapterId === 'string' && input.chapterId ? input.chapterId : null;
-  const rows = await ctx.db.all(`SELECT * FROM revision_proposals WHERE batch_id = ? AND status = 'open'${chapterId ? ' AND chapter_id = ?' : ''} ORDER BY created_at, seq, id`, batchId, ...(chapterId ? [chapterId] : []));
+  const rows = await ctx.db.all(`SELECT * FROM revision_proposals WHERE batch_id = ? AND status = 'open'${chapterId ? ' AND chapter_id = ?' : ''} ORDER BY created_at, COALESCE(seq, 0), id`, batchId, ...(chapterId ? [chapterId] : []));
   let accepted = 0;
   let stale = 0;
   await ctx.db.tx(async () => {

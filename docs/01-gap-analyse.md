@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.106 Stand nach Etappe 104 (08.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Korrekturen aus den Etappen 92–94: fünf Funde, vier behoben | ✅ T-440, T-441; Server-Tests auf SQLite und PostgreSQL |
+| Bilder (Datenschutz) | erneute Erkennung ohne bzw. mit gescheiterter Texterkennung verwarf die unkenntlichen Stellen |
+| Transaktionen | Fehler einer Nach-Commit-Funktion meldete eine gespeicherte Änderung als gescheitert |
+| Triage, Änderungsvorschläge | Ausdrücke je Chunk neu gebaut; Sortierung älterer Listen je Datenbank verschieden |
+| Begründet belassen | Triage-Lauf über zwei Stunden gilt als abgebrochen (Schutz nach einem Neustart) |
+
 ## 1.105 Stand nach Etappe 103 (08.11.2026)
 
 | Punkt | Ergebnis |

@@ -63,6 +63,17 @@ async function migrate(db: Db, exec: (sql: string) => Promise<void>, translate: 
 
 // ---------------------------------------------------------------- SQLite
 
+/** Nach-Commit-Funktionen: alle ausführen; ein Fehler darf die schon festgeschriebene Transaktion nicht als gescheitert melden */
+function runAfter(fns: (() => void)[]) {
+  for (const f of fns) {
+    try {
+      f();
+    } catch (e) {
+      console.error('afterCommit:', e);
+    }
+  }
+}
+
 class SqliteDb implements Db {
   readonly dialect = 'sqlite' as const;
   private readonly raw: Database.Database;
@@ -123,7 +134,7 @@ class SqliteDb implements Db {
     } finally {
       this.lock = null;
       release();
-      for (const f of after) f();
+      runAfter(after);
     }
   }
 
@@ -210,7 +221,7 @@ class PostgresDb implements Db {
       const store = { client, after: [] as (() => void)[] };
       const result = await this.als.run(store, fn);
       await client.query('COMMIT');
-      for (const f of store.after) f();
+      runAfter(store.after);
       return result;
     } catch (e) {
       await client.query('ROLLBACK').catch(() => undefined);
