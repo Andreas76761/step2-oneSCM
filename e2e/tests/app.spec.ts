@@ -664,7 +664,7 @@ test('[T-222] Varianten-Handbuch aus dem Draft Manual, Varianten-Export, Suche, 
 
   // Export: Handbuch der Variante mit Verzeichnissen wählbar
   await nav.getByRole('link', { name: 'Export' }).click();
-  await page.getByLabel('Handbuch').selectOption({ label: 'Variante: E2E Händler Pkw – V2' });
+  await page.getByRole('combobox', { name: 'Handbuch', exact: true }).selectOption({ label: 'Variante: E2E Händler Pkw – V2' });
   await expect(page.getByLabel(/Verzeichnisse anhängen/)).toBeChecked();
 
   // Globale Suche mit Tastenkürzel „/“
