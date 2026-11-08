@@ -3562,5 +3562,14 @@
     "requirements": [
       "NFR-164"
     ]
+  },
+  {
+    "id": "T-451",
+    "title": "CI und Release-Pipeline verwenden nur Actions, die auf Node 24 laufen (GitHub stellt Node 20 ein)",
+    "file": "apps/server/test/stage110.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-18"
+    ]
   }
 ]

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.110.0 – Etappe 110: GitHub-Actions auf Node 24 (08.11.2026)
+
+GitHub stellt die Laufzeit Node 20 für Actions ein und hatte die verwendeten Actions bereits zwangsweise auf Node 24 umgestellt (Warnung in jedem CI-Lauf).
+
+### Hinzugefügt
+- **Test T-451:** prüft, dass CI und Release-Pipeline nur Hauptversionen verwenden, die auf Node 24 laufen.
+
+### Geändert
+- **CI und Release-Pipeline:** `actions/checkout` v6, `actions/setup-node` v6, `actions/upload-artifact` v6, `actions/download-artifact` v7, `azure/setup-helm` v5, `docker/setup-qemu-action` v4, `docker/setup-buildx-action` v4, `docker/login-action` v4, `docker/metadata-action` v6, `docker/build-push-action` v7. Versionen und Eingaben an den `action.yml` der jeweiligen Tags geprüft. Unverändert: `actions/attest-build-provenance` und `sigstore/cosign-installer` (Composite-Actions), `anchore/sbom-action@v0` (läuft schon auf Node 24).
+- Die Release-Pipeline läuft erst beim nächsten Versions-Tag; dabei auf die neuen Hauptversionen achten.
+
 ## 0.109.0 – Etappe 109: Sicherheitshinweise in Entwicklungswerkzeugen (08.11.2026)
 
 `npm audit` meldete 17 neue Hinweise (2 kritisch, 4 hoch, 11 mittel) – alle in Werkzeugen für Tests und Build, keiner im ausgelieferten Programm (`npm audit --omit=dev` ohne Befund, wie in der CI geprüft).

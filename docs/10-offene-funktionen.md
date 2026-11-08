@@ -150,7 +150,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 61. **Etappe 107 – Code-Review der aus main übernommenen Etappe 27 (✅ umgesetzt):** vier Funde behoben.
 62. **Etappe 108 – Code-Review der Korrekturen aus den Etappen 101–107 (✅ umgesetzt):** vier Funde behoben, einer begründet belassen.
 63. **Etappe 109 – Sicherheitshinweise in Entwicklungswerkzeugen (✅ umgesetzt):** vitest, vite, minimatch aktualisiert; s3rver ohne Korrektur belassen.
-64. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
+64. **Etappe 110 – GitHub-Actions auf Node 24 (✅ umgesetzt):** CI und Release-Pipeline, T-451.
+65. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt), Schreibweise der übrigen offenen Begriffe (S-04: Systemnamen später nach Oberfläche, „Grace Period“, FI-Beleg, Belegart, „Chassis Number“ durch die Redaktion).
 
 ## 10.7 Offene Entscheidungen
 

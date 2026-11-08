@@ -25,8 +25,8 @@ jobs:
           --health-cmd "pg_isready -U onescm -d onescm_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
           cache: npm
@@ -61,7 +61,7 @@ jobs:
         working-directory: e2e
       - name: E2E-Tests
         run: npm run test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: playwright-${{ matrix.node }}
@@ -71,8 +71,8 @@ jobs:
     name: Helm-Chart
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-helm@v4
+      - uses: actions/checkout@v6
+      - uses: azure/setup-helm@v5
         with:
           version: v3.18.4
       - name: Chart prüfen und mit mehreren Wertesätzen rendern
@@ -86,8 +86,8 @@ jobs:
     name: Release-Pipeline prüfen
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
