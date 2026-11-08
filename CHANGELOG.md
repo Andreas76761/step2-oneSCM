@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.102.0 – Etappe 102: Code-Review der Korrekturen aus den Etappen 97–99 (08.11.2026)
+
+### Hinzugefügt
+- **Tests T-436 und T-437.** Jeder scheitert ohne seine Korrektur (geprüft je Datei und je Teil). Zwei Korrekturen haben keinen eigenen Test: das Gesamtzeitlimit gilt nur auf dem gesicherten Weg (https mit Adressprüfung), den ein lokaler Test nicht erreicht; das Vormerken während eines Abgleichs betrifft einen Wettlauf von Millisekunden.
+
+### Behoben
+- **Kapitelerzeugung:** Seit Etappe 99 werden gleiche Sätze nur bei gleichem Markt und Release zusammengeführt. Stand derselbe Satz allgemein und zusätzlich für DE in den Quellen, erschien er im Handbuch für DE zweimal. Die marktspezifische Fassung geht jetzt in der allgemeinen auf (beide Quellen bleiben am Absatz); verschiedene Märkte bleiben getrennt.
+- **Webhooks:** Die Antwort des Empfängers wurde nie gelesen oder verworfen, die Verbindung blieb offen. Bei vielen Zustellungen häuften sich offene Verbindungen. Ebenso bei abgelehnten Confluence-Anhängen.
+- **Webhooks und Confluence:** Das Zeitlimit galt seit Etappe 98 nur für Leerlauf. Ein Server, der alle paar Sekunden ein Byte schickt, hielt den Abgleich beliebig lange auf. Jetzt gilt es wieder für die ganze Anfrage.
+- **Abgleich:** Der vorgemerkte Abgleich nach einem Push las denselben Commit vollständig neu ein, wenn der laufende Abgleich ihn schon mitgebracht hatte. Außerdem konnte die Vormerkung verloren gehen, wenn der laufende Abgleich genau in diesem Moment endete; jetzt wird dann sofort ein neuer eingereiht.
+
+### Begründet belassen
+- **Kontexthilfe:** Nennen zwei Dateien dieselbe Kontext-ID im Front-Matter, gilt die zuletzt eingelesene. Das ist ein Fehler in den Quellen; welche Datei gemeint ist, kann die App nicht entscheiden.
+- **API-Token:** Jede Anfrage prüft die heutigen Rechte des Erstellers mit ein paar Datenbankabfragen. Ein Zwischenspeicher würde einen Entzug der Rechte verzögern.
+
 ## 0.101.0 – Etappe 101: Code-Review von Etappe 100 (08.11.2026)
 
 ### Hinzugefügt

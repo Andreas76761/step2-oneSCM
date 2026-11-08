@@ -189,9 +189,11 @@ export async function requestSync(ctx: Ctx, id: string, actor: string, force = f
   const c = await load(ctx, id);
   if (c.status === 'queued') return dto(c); // der wartende Abgleich holt ohnehin den neuesten Stand
   if (c.status === 'syncing' || c.status === 'importing') {
-    // läuft gerade: vormerken, sonst ginge z. B. ein zweiter Push verloren (Abgleich startet nach dem laufenden erneut)
-    await ctx.db.run('UPDATE source_connections SET resync_requested = 1 WHERE id = ?', id);
-    return getConnection(ctx, id);
+    // läuft gerade: vormerken, sonst ginge z. B. ein zweiter Push verloren (Abgleich startet nach dem laufenden erneut).
+    // Nur, solange er noch läuft – ist er inzwischen fertig, wird unten gleich ein neuer eingereiht
+    const r = await ctx.db.run("UPDATE source_connections SET resync_requested = 1 WHERE id = ? AND status IN ('syncing', 'importing')", id);
+    if (r.changes) return getConnection(ctx, id);
+    if ((await load(ctx, id)).status === 'queued') return getConnection(ctx, id);
   }
   await ctx.db.tx(async () => {
     await ctx.db.run("UPDATE source_connections SET status = 'queued', resync_requested = 0 WHERE id = ?", id);
@@ -204,7 +206,8 @@ export async function requestSync(ctx: Ctx, id: string, actor: string, force = f
 /** Vorgemerkten Abgleich starten, sobald der laufende fertig ist (idle oder failed) */
 async function resyncIfRequested(ctx: Ctx, id: string) {
   const r = await ctx.db.run('UPDATE source_connections SET resync_requested = 0 WHERE id = ? AND resync_requested = 1', id);
-  if (r.changes) await requestSync(ctx, id, 'system', true);
+  // ohne force: brachte der laufende Abgleich den neuen Stand schon mit, wird nichts erneut eingelesen
+  if (r.changes) await requestSync(ctx, id, 'system');
 }
 
 /** Nächsten Abgleich planen. Ein neues Token macht ältere geplante Jobs wirkungslos (keine doppelten Ketten). */
@@ -383,7 +386,7 @@ async function fetchConfluence(ctx: Ctx, c: Row) {
         loaded.set(file, null);
         if (!MEDIA_EXT[path.extname(file).toLowerCase()] || a.size > settings.maxEntryBytes) continue;
         const res = await confluenceFetch(ctx, confluenceLink(base, a.download), headers);
-        if (!res.ok) continue;
+        if (!res.ok) { await res.body?.cancel().catch(() => undefined); continue; }
         const buf = Buffer.from(await res.arrayBuffer());
         if (buf.length > settings.maxEntryBytes) continue;
         if (++files > settings.maxZipFiles) throw new Error(`Mehr als ${settings.maxZipFiles} Dateien im Bereich.`);
@@ -423,7 +426,7 @@ function confluenceFetch(ctx: Ctx, url: string, headers: Record<string, string>)
 
 async function confluenceAttachments(ctx: Ctx, base: string, headers: Record<string, string>, pageId: string) {
   const res = await confluenceFetch(ctx, `${base}/rest/api/content/${encodeURIComponent(pageId)}/child/attachment?limit=200&expand=version`, headers);
-  if (!res.ok) return [];
+  if (!res.ok) { await res.body?.cancel().catch(() => undefined); return []; }
   const data = (await res.json()) as { results?: any[] };
   return (data.results ?? []).map((a) => ({
     title: String(a.title ?? ''), download: String(a._links?.download ?? ''), version: Number(a.version?.number ?? 0), size: Number(a.extensions?.fileSize ?? 0),

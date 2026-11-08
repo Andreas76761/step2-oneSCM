@@ -195,6 +195,16 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.104 Stand nach Etappe 102 (08.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Korrekturen aus den Etappen 97–99 und v0.99.1/v0.99.2: sieben Funde, fünf behoben | ✅ T-436, T-437; Server-Tests auf SQLite und PostgreSQL |
+| Kapitelerzeugung | gleicher Satz allgemein und für einen Markt stand im Handbuch des Markts doppelt |
+| Webhooks, Confluence | Antworten hielten Verbindungen offen; Zeitlimit galt nur für Leerlauf |
+| Abgleich | vorgemerkter Abgleich las denselben Commit erneut ein; Vormerkung konnte im Moment des Abschlusses verloren gehen |
+| Begründet belassen | gleiche Kontext-ID in zwei Dateien (Quellfehler, die zuletzt eingelesene gilt); Rechteprüfung je Token-Anfrage ohne Zwischenspeicher |
+
 ## 1.103 Stand nach Etappe 101 (08.11.2026)
 
 | Punkt | Ergebnis |

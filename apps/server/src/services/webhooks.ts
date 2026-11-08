@@ -87,7 +87,11 @@ export async function safeFetch(raw: string, init: { method?: string; headers?: 
   const url = await assertSafeUrl(raw, allowInsecure);
   if (allowInsecure) return fetch(raw, { method: init.method, headers: init.headers, body: init.body, redirect: 'manual', signal: AbortSignal.timeout(init.timeoutMs) });
   return new Promise<Response>((resolve, reject) => {
+    // Zeitlimit für die ganze Anfrage samt Antwortkörper (die Socket-Option „timeout“ misst nur Leerlauf)
+    const timer = setTimeout(() => req.destroy(new Error('Zeitüberschreitung der Anfrage.')), init.timeoutMs);
+    timer.unref?.();
     const req = https.request(url, { method: init.method ?? 'GET', headers: init.headers, lookup: guardedLookup as any, timeout: init.timeoutMs }, (res) => {
+      res.on('close', () => clearTimeout(timer));
       const headers = new Headers();
       for (const [k, v] of Object.entries(res.headers)) if (v !== undefined) headers.set(k, Array.isArray(v) ? v.join(', ') : v);
       const status = res.statusCode ?? 502;
@@ -96,7 +100,7 @@ export async function safeFetch(raw: string, init: { method?: string; headers?: 
       resolve(new Response(empty ? null : (Readable.toWeb(res) as ReadableStream), { status, headers }));
     });
     req.on('timeout', () => req.destroy(new Error('Zeitüberschreitung der Anfrage.')));
-    req.on('error', reject);
+    req.on('error', (e) => { clearTimeout(timer); reject(e); });
     if (init.body) req.write(init.body);
     req.end();
   });
@@ -224,6 +228,8 @@ export async function deliverWebhook(ctx: Ctx, payload: { deliveryId: string }) 
       body,
     }, ctx.config.integrations.allowInsecure);
     code = res.status;
+    // Antwortkörper wird nicht gebraucht – verwerfen, sonst bleibt die Verbindung offen
+    await res.body?.cancel().catch(() => undefined);
     if (res.status < 200 || res.status >= 300) throw new Error(`Empfänger antwortete mit ${res.status}`);
     await ctx.db.run("UPDATE webhook_deliveries SET status = 'delivered', response_code = ?, error = NULL, delivered_at = ? WHERE id = ?", code, now(), d.id);
   } catch (e) {

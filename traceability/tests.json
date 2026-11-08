@@ -3422,5 +3422,23 @@
     "requirements": [
       "NFR-159"
     ]
+  },
+  {
+    "id": "T-436",
+    "title": "Kapitelerzeugung: gleicher Satz allgemein und für einen Markt bzw. ein Release nur einmal (die allgemeine Fassung), verschiedene Märkte weiter getrennt",
+    "file": "apps/server/test/stage102.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
+  },
+  {
+    "id": "T-437",
+    "title": "Abgleich: vorgemerkter Abgleich liest denselben Commit nicht erneut ein; Webhook-Zustellung schließt die Verbindung",
+    "file": "apps/server/test/stage102.test.ts",
+    "level": "integration",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

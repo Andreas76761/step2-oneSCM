@@ -141,12 +141,20 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
   const confirmed = input.filter((s) => CONFIRMED_EVIDENCE.includes(s.evidenceStatus)).sort((a, b) => a.order - b.order);
   const skippedUnconfirmed = input.length - confirmed.length;
 
-  // Exakte Dopplungen innerhalb des Kapitels zusammenführen (allgemeine Aussagen nur einmal) – nur bei gleichem Markt und Release,
+  // Exakte Dopplungen innerhalb des Kapitels zusammenführen (allgemeine Aussagen nur einmal) – je Markt und Release getrennt,
   // sonst fehlte die Aussage im Handbuch des zweiten Markts (der Absatz trägt einen Markt)
   const byHash = new Map<string, GenSnippet[]>();
-  const keyOf = (s: GenSnippet) => `${s.normHash}|${s.market ?? ''}|${s.release ?? ''}`;
+  // eine allgemeine Aussage (ohne Markt bzw. Release) gilt für jeden Markt und jedes Release: die spezifische Fassung desselben
+  // Textes geht in ihr auf, sonst stünde der Satz im Handbuch des Markts doppelt
+  const general = new Set(confirmed.filter((s) => !s.market || !s.release).map((s) => `${s.normHash}|${s.market ?? ''}|${s.release ?? ''}`));
+  const keyOf = (s: GenSnippet) => {
+    for (const k of [`${s.normHash}||`, `${s.normHash}||${s.release ?? ''}`, `${s.normHash}|${s.market ?? ''}|`]) if (general.has(k)) return k;
+    return `${s.normHash}|${s.market ?? ''}|${s.release ?? ''}`;
+  };
   for (const s of confirmed) byHash.set(keyOf(s), [...(byHash.get(keyOf(s)) ?? []), s]);
-  const unique = [...byHash.values()].map((g) => g[0]);
+  // Vertreter ist die allgemeinste Fassung der Gruppe (sie bestimmt Markt und Release des Absatzes)
+  for (const g of byHash.values()) g.sort((a, b) => Number(!!a.market) + Number(!!a.release) - (Number(!!b.market) + Number(!!b.release)) || a.order - b.order);
+  const unique = [...byHash.values()].map((g) => g[0]).sort((a, b) => a.order - b.order);
   const deduplicated = confirmed.length - unique.length;
 
   const roleMajority = majority(unique.map((s) => setKey(specificCodes(s.roles))));
