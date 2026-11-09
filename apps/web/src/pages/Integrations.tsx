@@ -1,7 +1,8 @@
 // Integrationen (ADR-028): API-Tokens und ausgehende Webhooks des Projekts
 import { useState } from 'react';
 import { del, patch, post } from '../api';
-import { Card, Empty, ErrorBox, Modal, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Modal, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { formatDate, formatDateTime } from '../format';
 
 const SCOPES = [
   { code: 'read', label: 'Lesen' },
@@ -65,7 +66,7 @@ export function IntegrationsPage() {
             ))}
           </fieldset>
           <label className="inline">Gültig (Tage) <input type="number" min={1} max={365} value={tokenForm.expiresInDays} onChange={(e) => setTokenForm({ ...tokenForm, expiresInDays: e.target.value })} /></label>
-          <button className="btn primary" type="submit" disabled={!tokenForm.name.trim() || !tokenForm.scopes.length}>Token erstellen</button>
+          <Gated className="btn primary" type="submit" missing={[!tokenForm.name.trim() && 'Name', !tokenForm.scopes.length && 'mindestens eine Berechtigung']}>Token erstellen</Gated>
         </form>
         {!tokens.data?.length ? <Empty>Keine API-Tokens.</Empty> : (
           <table className="table compact">
@@ -77,8 +78,8 @@ export function IntegrationsPage() {
                   <td className="mono small">{t.prefix}…</td>
                   <td className="small">{t.scopes.join(', ')}</td>
                   <td><span className={`tag ${t.status === 'active' ? 'st-approved' : 'st-ignored'}`}>{t.status === 'active' ? 'aktiv' : t.status === 'revoked' ? 'widerrufen' : 'abgelaufen'}</span></td>
-                  <td className="small">{new Date(t.expiresAt).toLocaleDateString('de-DE')}</td>
-                  <td className="small">{t.lastUsedAt ? new Date(t.lastUsedAt).toLocaleString('de-DE') : '–'}</td>
+                  <td className="small">{formatDate(t.expiresAt)}</td>
+                  <td className="small">{t.lastUsedAt ? formatDateTime(t.lastUsedAt) : '–'}</td>
                   <td>{t.status === 'active' && <button className="btn small ghost" aria-label={`Token ${t.name} widerrufen`} onClick={() => confirm(`Token „${t.name}“ widerrufen?`) && void run(() => del(`/api-tokens/${t.id}`), 'Token widerrufen.')}>Widerrufen</button>}</td>
                 </tr>
               ))}
@@ -109,7 +110,7 @@ export function IntegrationsPage() {
                       <td><Status s={d.status === 'delivered' ? 'completed' : d.status === 'failed' ? 'failed' : 'queued'} />{d.error && <div className="small">{d.error}</div>}</td>
                       <td>{d.attempts}</td>
                       <td>{d.responseCode ?? '–'}</td>
-                      <td className="small">{new Date(d.createdAt).toLocaleString('de-DE')}</td>
+                      <td className="small">{formatDateTime(d.createdAt)}</td>
                       <td>{d.status === 'failed' && <button className="btn small" onClick={() => void run(() => post(`/webhook-deliveries/${d.id}/redeliver`), 'Erneut zugestellt.')}>Erneut senden</button>}</td>
                     </tr>
                   ))}
@@ -131,11 +132,11 @@ export function IntegrationsPage() {
             ))}
           </fieldset>
           <div className="actions">
-            <button className="btn primary" disabled={!hookForm.url || !hookForm.events.length} onClick={() => void run(async () => {
+            <Gated className="btn primary" missing={[!hookForm.url && 'URL', !hookForm.events.length && 'mindestens ein Ereignis']} onClick={() => void run(async () => {
               const h = await post('/webhooks', hookForm);
               setHookForm(null);
               setSecret({ label: 'Webhook-Geheimnis', value: h.secret });
-            })}>Anlegen</button>
+            })}>Anlegen</Gated>
           </div>
         </Modal>
       )}

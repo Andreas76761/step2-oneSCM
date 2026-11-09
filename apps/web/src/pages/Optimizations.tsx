@@ -1,9 +1,10 @@
+import { BlockerIcon } from '../components/icons';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BarList, Card, Empty, ErrorBox, Page, Severity, Status, TYPE_LABEL, useLoad } from '../components/ui';
 import { CompareDialog } from './Contradictions';
 
-const TYPES = ['gap', 'terminology', 'readability', 'privacy'];
+const TYPES = ['gap', 'terminology', 'readability', 'privacy', 'rule'];
 
 export function OptimizationsPage() {
   const [type, setType] = useState('');
@@ -11,13 +12,13 @@ export function OptimizationsPage() {
   const [sel, setSel] = useState<any | null>(null);
   const rows = (f.data ?? []).filter((x) => TYPES.includes(x.type));
   const o = useLoad<any>('/optimizations');
-  const PRIO: Record<number, string> = { 1: '⛔ sofort', 2: '▲ wichtig', 3: '▽ optional' };
+  const PRIO: Record<number, string> = { 1: 'sofort', 2: '▲ wichtig', 3: '▽ optional' };
   const ROUTE: Record<string, (id: string) => string> = {
     widersprueche: () => '/widersprueche', quellen: () => '/quellen', generator: () => '/generator', werkstatt: (id) => `/werkstatt/${id}`,
     freigabe: () => '/freigabe', optimierungen: () => '/optimierungen',
   };
   return (
-    <Page title="Optimierungen" subtitle="Lücken, Terminologie, Lesbarkeit und Datenschutz – Hinweise zur redaktionellen Verbesserung">
+    <Page title="Optimierungen" subtitle="Lücken, Terminologie, Lesbarkeit, Datenschutz und Regelwerk – Hinweise zur redaktionellen Verbesserung">
       {o.data && (
         <>
           <div className="tiles">
@@ -31,7 +32,7 @@ export function OptimizationsPage() {
                 <ul className="finding-list">
                   {o.data.recommendations.slice(0, 15).map((r: any, i: number) => (
                     <li key={i}>
-                      <span className={`tag ${r.priority === 1 ? 'sev-blocker' : r.priority === 2 ? 'sev-high' : ''}`}>{PRIO[r.priority]}</span> <strong>{r.chapter}:</strong> {r.text}{' '}
+                      <span className={`tag ${r.priority === 1 ? 'sev-blocker' : r.priority === 2 ? 'sev-high' : ''}`}>{r.priority === 1 && <BlockerIcon />}{PRIO[r.priority]}</span> <strong>{r.chapter}:</strong> {r.text}{' '}
                       <Link to={ROUTE[r.target](r.chapterId)} className="small">öffnen →</Link>
                     </li>
                   ))}

@@ -1,0 +1,15 @@
+# ADR-092 Punktmodell Muss/Soll, Expertenbefragung zu Wissenslücken, Deckungsmatrix der Bilder
+
+**Status:** akzeptiert, umgesetzt in Etappe 40 (optionale Funktionen F-08, F-16, F-30 aus [docs/07](../07-bestehende-artefakte.md); nutzt ADR-051, ADR-057, ADR-085, ADR-089, ADR-091)
+
+## Kontext
+Nach M1–M7 bleiben optionale Funktionen aus den bestehenden Artefakten: die Checkliste unterscheidet Muss- und Soll-Kriterien (F-08), der Wissens-Check befragt Fachleute zu Wissenslücken (F-16), das Screenarchiv zeigt, für welche Sprache, Rolle und Sparte ein Bild fehlt (F-30). Alles bleibt regelbasiert und lokal.
+
+## Entscheidung
+- **Punktmodell (F-08):** Jeder Prüfpunkt des Anleitungs-Checks ist ein Muss-Punkt (10 Punkte) oder Soll-Punkt (5 Punkte). Standard: Zweck, Schritte, nummeriert, eine Handlung je Schritt, keine Platzhalter, Warnhinweise nach Schema = Muss; Voraussetzungen, Menüpfade, Ergebnis, Schrittzahl, Abkürzungen, kurze Absätze = Soll. Die Administration stellt die Stufe je Projekt um (gespeichert werden nur Abweichungen) und kann „alle Muss-Punkte erfüllt“ als zusätzliche Bedingung für Einreichen und Freigabe setzen – neben dem Mindestwert aus ADR-057. Der bisherige Wert 0–100 bleibt unverändert; Punkte und offene Muss-Punkte erscheinen zusätzlich in Checkliste, Übersicht und Freigabe.
+- **Expertenbefragung (F-16):** Eine Befragung enthält Fragen aus einem Fragenkatalog (Status „keine Aussage“ bzw. „nicht gefragt“), aus einem Prüflauf der Antwortqualität (Testfragen ohne Antwort, also auch Lückenfragen) oder von Hand. Antwort per Option (Standard: Ja, Nein, Teilweise, Weiß nicht; je Befragung bzw. Frage anpassbar) und/oder Freitext – in der App mit dem Recht „Lesen“ oder per Excel-Datei (Auswahlliste je Frage) für Fachleute ohne Zugang; die ausgefüllte Datei wird über ID bzw. Nr. zugeordnet, ungültige Optionen werden je Zeile gemeldet. Zielgruppe wird als Fachbereich oder Rolle erfasst, Personennamen sind nicht nötig. „Als Frage & Antwort übernehmen“ legt eine gespeicherte Frage & Antwort **ohne Quellenbeleg mit dem Label „Prüfen“** an; danach ist die Antwort gesperrt. Abgeschlossene Befragungen nehmen keine Antworten mehr an.
+- **Deckungsmatrix (F-30):** Zeilen = Stelle, wahlweise Reiter/Menüpunkt des Bildes (Navigations-Label) oder Kapitel, in dem es verwendet wird; Spalten = Kombination der gewählten Merkmale Sprache (Projektsprachen, sonst aus den Bildern), Rolle (Händler, Markt, MO, Zentrale) und Sparte (Pkw, Van). Ein Bild deckt eine Spalte ab bei gleicher Sprache und passender bzw. „alle“ Rolle und Sparte. Felder: abgedeckt, nur Platzhalter, Lücke; Bilder ohne Angabe zum Merkmal werden als „keiner Spalte zugeordnet“ gezählt. Export als Excel (farbig) oder CSV.
+
+## Folgen
+- Migration `047_points_surveys.sql` (Projektspalten für das Punktmodell, Tabellen der Befragung); Tests T-279 … T-282, E2E T-283; Anforderungen NFR-94 … NFR-96.
+- Weiter optional: F-10 (Prüferprofile mit lokalem Modell), F-11 (Grammatikprüfung), F-22, F-24; „später“: F-19, F-31.

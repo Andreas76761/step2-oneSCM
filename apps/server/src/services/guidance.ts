@@ -7,8 +7,11 @@ import { segmentSentences } from '../domain/style.js';
 import { badRequest } from '../problem.js';
 import { getChapterVersion, insertBlock, normalizePositions } from './chapters.js';
 import { assertIdsInProject } from './projects.js';
-import { applyChapterTexts } from './style.js';
-import { knownAcronyms, SKIP_SECTIONS } from './guidanceBase.js';
+import { applyChapterTexts, getStyleRules } from './style.js';
+import { assessReadability, readability } from '../domain/readability.js';
+import { getGuidanceSettings, knownAcronyms, SKIP_SECTIONS } from './guidanceBase.js';
+import { checkAgainst, isEmpty } from '../domain/chapterInstruction.js';
+import { instructionFor } from './structure.js';
 
 const SECTION_TITLE = new Map<string, string>(CHAPTER_SECTIONS.map((s) => [s.code, s.title]));
 
@@ -18,9 +21,21 @@ export async function chapterGuidance(ctx: Ctx, versionId: string) {
   const blocks: GuidanceBlock[] = v.sections.filter((s) => !SKIP_SECTIONS.has(s.code)).flatMap((s) => s.blocks.map((b: any) => ({
     id: b.id as string, section: s.code, kind: b.kind as string, text: b.text as string, versionNo: b.versionNo as number, locked: b.mode === 'locked',
   })));
-  const a = analyzeGuidance(blocks, { knownAcronyms: await knownAcronyms(ctx) });
+  const a = analyzeGuidance(blocks, { knownAcronyms: await knownAcronyms(ctx), levels: (await getGuidanceSettings(ctx)).levels });
   const where = new Map(blocks.map((b) => [b.id, SECTION_TITLE.get(b.section) ?? b.section]));
+  // Kapitelanweisung (ADR-096): ausgeschlossene Themen im Text, wichtige Themen fehlen – zusätzlich zum Punktwert
+  const ins = await instructionFor(ctx, v.chapterId);
+  const subs = await ctx.db.all('SELECT instruction_topics, instruction_excluded FROM subchapters WHERE chapter_id = ? AND history_at IS NULL', v.chapterId);
+  for (const s of subs) {
+    ins.topics.push(...JSON.parse(s.instruction_topics ?? '[]').filter((t: string) => !ins.topics.includes(t)));
+    ins.excluded.push(...JSON.parse(s.instruction_excluded ?? '[]').filter((t: string) => !ins.excluded.includes(t)));
+  }
+  const instruction = isEmpty(ins) ? null : { ...ins, ...checkAgainst(ins, blocks.filter((b) => b.kind !== 'gap')), excludedMentioned: checkAgainst(ins, blocks.filter((b) => b.kind !== 'gap')).excludedMentioned.map((m) => ({ ...m, section: where.get(m.blockId) ?? null })) };
+  // Lesbarkeit mit Sollwerten der Zielgruppe (ADR-097, S-01) – zusätzlich zum Punktwert
+  const read = assessReadability(readability(blocks.filter((b) => b.kind !== 'gap').map((b) => b.text)), (await getStyleRules(ctx)).audience ?? 'enduser');
   return {
+    instruction,
+    readability: read,
     versionId: v.id, chapterId: v.chapterId, title: v.title, versionNo: v.versionNo, status: v.status, editable: v.status === 'draft',
     ...a, checks: a.checks.map((c) => ({ ...c, items: c.items.map((i) => ({ ...i, section: i.blockId ? where.get(i.blockId) ?? null : null })) })),
   };
@@ -41,13 +56,17 @@ export async function guidanceSummary(ctx: Ctx) {
      WHERE c.project_id = ? AND c.outline_family_id IS NULL AND v.version_no = (SELECT MAX(x.version_no) FROM generated_chapter_versions x WHERE x.chapter_id = c.id)`, ctx.projectId,
   );
   const known = await knownAcronyms(ctx);
+  const { levels } = await getGuidanceSettings(ctx);
+  const audience = (await getStyleRules(ctx)).audience ?? 'enduser';
   const out = [];
   for (const v of versions) {
     const rows = await ctx.db.all('SELECT id, section_code, kind, text, version_no, mode FROM content_blocks WHERE chapter_version_id = ? AND deleted_at IS NULL ORDER BY position', v.version_id);
-    const a = analyzeGuidance(rows.filter((b) => !SKIP_SECTIONS.has(b.section_code)).map((b) => ({ id: b.id, section: b.section_code, kind: b.kind, text: b.text, versionNo: b.version_no, locked: b.mode === 'locked' })), { knownAcronyms: known });
+    const a = analyzeGuidance(rows.filter((b) => !SKIP_SECTIONS.has(b.section_code)).map((b) => ({ id: b.id, section: b.section_code, kind: b.kind, text: b.text, versionNo: b.version_no, locked: b.mode === 'locked' })), { knownAcronyms: known, levels });
     out.push({
       chapterId: v.chapter_id as string, title: v.title as string, versionId: v.version_id as string, versionNo: Number(v.version_no), status: v.status as string,
-      score: a.score, passed: a.passed, total: a.total, fixable: a.fixable, open: a.checks.filter((c) => c.status !== 'ok').map((c) => ({ code: c.code, label: GUIDANCE_OPEN_LABEL[c.code], status: c.status })),
+      score: a.score, passed: a.passed, total: a.total, fixable: a.fixable, open: a.checks.filter((c) => c.status !== 'ok').map((c) => ({ code: c.code, label: GUIDANCE_OPEN_LABEL[c.code], status: c.status, level: c.level })),
+      points: a.points, mustPassed: a.mustPassed,
+      readability: (({ flesch, lix, avgWords, ok }) => ({ flesch, lix, avgWords, ok }))(assessReadability(readability(rows.filter((b) => b.kind !== 'gap' && !SKIP_SECTIONS.has(b.section_code)).map((b) => b.text)), audience)),
     });
   }
   out.sort((x, y) => x.score - y.score || x.title.localeCompare(y.title));

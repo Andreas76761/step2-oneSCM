@@ -1,21 +1,21 @@
 // Glossar in der Leseransicht (ADR-066): Fachbegriffe und Abkürzungen im Text werden beim ersten Vorkommen je Absatz
 // markiert und erklären sich bei Maus, Tastatur oder Antippen – WCAG 1.4.13: per Esc schließbar, überfahrbar, bleibt stehen.
-import { createContext, useContext, useId, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { escapeRegExp } from '../format';
 
 export interface GlossaryEntry { term: string; text: string; kind: 'term' | 'abbreviation' }
 
 interface Glossary { entries: GlossaryEntry[]; regex: RegExp | null; byKey: Map<string, GlossaryEntry> }
 const lower = (s: string) => s.toLocaleLowerCase('de');
-const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function buildGlossary(entries: GlossaryEntry[]): Glossary {
   if (!entries.length) return { entries, regex: null, byKey: new Map() };
   // Begriffe: Anfangsbuchstabe groß oder klein (Satzanfang); Abkürzungen: genau so geschrieben. Längste zuerst.
   const alts = [...entries].sort((a, b) => b.term.length - a.term.length).map((e) => {
-    const t = esc(e.term);
+    const t = escapeRegExp(e.term);
     if (e.kind === 'abbreviation') return t;
     const first = e.term[0];
-    return first.toLowerCase() !== first.toUpperCase() ? `[${esc(first.toUpperCase())}${esc(first.toLowerCase())}]${esc(e.term.slice(1))}` : t;
+    return first.toLowerCase() !== first.toUpperCase() ? `[${escapeRegExp(first.toUpperCase())}${escapeRegExp(first.toLowerCase())}]${escapeRegExp(e.term.slice(1))}` : t;
   });
   return { entries, regex: new RegExp(`(?<![\\p{L}\\p{N}])(${alts.join('|')})(?![\\p{L}\\p{N}])`, 'gu'), byKey: new Map(entries.map((e) => [lower(e.term), e])) };
 }
@@ -55,6 +55,13 @@ export function GlossText({ text, seen }: { text: string; seen: Set<string> }) {
 export function GlossTerm({ entry, children }: { entry: GlossaryEntry; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const id = useId();
+  // Esc schließt die Erklärung auch, wenn sie per Maus geöffnet wurde und der Fokus woanders steht (WCAG 1.4.13)
+  useEffect(() => {
+    if (!open) return;
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('keydown', h);
+    return () => document.removeEventListener('keydown', h);
+  }, [open]);
   return (
     <span className="gloss" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
       {/* Name = der Begriff selbst: steht er in einer Schritt-Beschriftung, bleibt deren zugänglicher Name unverändert */}

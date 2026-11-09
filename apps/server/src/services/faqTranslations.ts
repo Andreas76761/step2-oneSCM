@@ -1,9 +1,10 @@
 // Übersetzungen häufiger Fragen (ADR-077): je deutschem FAQ-Eintrag und Projektsprache eine Übersetzung – von Hand oder als
 // KI-Vorschlag, mit Freigabe. Leseransicht, Druck und Online-Hilfe zeigen die freigegebene, aktuelle Übersetzung, sonst deutsch.
 import { createHash } from 'node:crypto';
-import { audit, type Ctx, type User } from '../context.js';
+import { audit, privacyNames, type Ctx, type User } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
+import { fixedTranslations } from './terminology.js';
 import { buildTranslatePrompt, checkTranslation, LANGUAGES, parseTranslateResponse, splitSentences, TRANSLATION_ISSUE_LABELS, type TranslationIssue } from '../domain/translate.js';
 import { badRequest, conflict, notFound, Problem } from '../problem.js';
 import { projectNotice } from './collaboration.js';
@@ -85,7 +86,8 @@ export async function saveFaqTranslation(ctx: Ctx, faqId: string, lang: string, 
   const source = await sourceOf(ctx, faqId);
   await targetLanguage(ctx, lang);
   const text = fields(input);
-  const issues = [...new Set([...checkTranslation(String(source.question), text.question), ...checkTranslation(String(source.answer), text.answer)])];
+  const opts = { language: lang, terms: await fixedTranslations(ctx) };
+  const issues = [...new Set([...checkTranslation(String(source.question), text.question, null, opts), ...checkTranslation(String(source.answer), text.answer, null, opts)])];
   await ctx.db.tx(async () => {
     await upsert(ctx, source, lang, text, 'manual', issues, user);
     await audit(ctx, user.id, 'faq.translation_saved', 'faq', faqId, { language: lang });
@@ -103,7 +105,8 @@ export async function machineFaqTranslation(ctx: Ctx, faqId: string, lang: strin
   return dto(source, await ctx.db.get('SELECT * FROM faq_translations WHERE faq_id = ? AND language = ?', faqId, lang), lang);
 }
 
-const hasPrivacy = (source: Row) => detectPrivacy(`${source.question}\n${source.answer}`).length > 0;
+/** personenbezogene Daten im Eintrag – mit der Namensliste der Einstellungen */
+const hasPrivacy = (source: Row, names: string[]) => detectPrivacy(`${source.question}\n${source.answer}`, { names }).length > 0;
 
 /** Übersetzt einen Eintrag per KI und speichert ihn als Entwurf; liefert die Prüfbefunde (für Einzel- und Stapelübersetzung) */
 async function machineTranslate(ctx: Ctx, source: Row, lang: string, userId: string, batchId?: string) {
@@ -111,12 +114,13 @@ async function machineTranslate(ctx: Ctx, source: Row, lang: string, userId: str
   const q = String(source.question);
   const a = String(source.answer);
   // keine personenbezogenen Daten an externe Dienste (ADR-013)
-  if (provider.external && hasPrivacy(source)) throw badRequest('Der Eintrag enthält personenbezogene Daten und wird nicht an den externen KI-Dienst gesendet.');
-  const terms = (await ctx.db.all("SELECT preferred FROM terminology_terms WHERE project_id = ? AND status = 'active'", ctx.projectId)).map((x) => ({ preferred: String(x.preferred) }));
+  if (provider.external && hasPrivacy(source, await privacyNames(ctx.db))) throw badRequest('Der Eintrag enthält personenbezogene Daten und wird nicht an den externen KI-Dienst gesendet.');
+  const fixed = await fixedTranslations(ctx);
+  const terms = fixed.map((x) => ({ preferred: x.preferred, fixed: x.translations[lang] ?? x.translations[lang.split('-')[0]] ?? null }));
   const run = async (text: string, kind: string) => {
     const out = parseTranslateResponse((await provider.complete(buildTranslatePrompt({ language: lang, kind, sentences: splitSentences(text, kind), terms }))).text);
     const joined = out.map((s) => s.text).filter(Boolean).join(/^\s*(\d+\.|[-*])\s+/m.test(text) ? '\n' : ' ');
-    return { text: joined, issues: checkTranslation(text, joined, out) };
+    return { text: joined, issues: checkTranslation(text, joined, out, { language: lang, terms: fixed }) };
   };
   let tq: Awaited<ReturnType<typeof run>>;
   let ta: Awaited<ReturnType<typeof run>>;
@@ -136,7 +140,7 @@ async function machineTranslate(ctx: Ctx, source: Row, lang: string, userId: str
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-// Stapelübersetzung (ADR-079): alle fehlenden und veralteten FAQ einer Sprache in einem Hintergrundauftrag als KI-Entwurf.
+// Stapelübersetzung (ADR-124): alle fehlenden und veralteten FAQ einer Sprache in einem Hintergrundauftrag als KI-Entwurf.
 // Aktuelle Entwürfe und Freigaben bleiben unberührt; jede Übersetzung braucht danach die übliche Freigabe (Vier-Augen-Prinzip).
 
 const isUniqueViolation = (e: any) => e?.code === '23505' || /UNIQUE constraint failed/i.test(String(e?.message));
@@ -169,7 +173,8 @@ async function pendingSources(ctx: Ctx, lang: string) {
 export async function faqBatchPreview(ctx: Ctx, lang: string) {
   await targetLanguage(ctx, lang);
   const pending = await pendingSources(ctx, lang);
-  const privacy = ctx.llm?.external ? pending.filter(hasPrivacy).length : 0;
+  const names = await privacyNames(ctx.db);
+  const privacy = ctx.llm?.external ? pending.filter((s) => hasPrivacy(s, names)).length : 0;
   return { language: lang, pending: pending.length, privacy, eligible: pending.length - privacy };
 }
 
@@ -179,7 +184,8 @@ export async function startFaqBatch(ctx: Ctx, input: { language?: unknown }, use
   const lang = await targetLanguage(ctx, input.language);
   const running = await ctx.db.get("SELECT id FROM faq_translation_batches WHERE project_id = ? AND language = ? AND status IN ('queued','processing')", ctx.projectId, lang);
   if (running) throw conflict('Für diese Sprache läuft bereits eine Stapelübersetzung.', { batchId: running.id });
-  const pending = (await pendingSources(ctx, lang)).filter((s) => !(ctx.llm!.external && hasPrivacy(s)));
+  const names = await privacyNames(ctx.db);
+  const pending = (await pendingSources(ctx, lang)).filter((s) => !(ctx.llm!.external && hasPrivacy(s, names)));
   if (!pending.length) throw new Problem(422, 'Unprocessable Content', 'Keine fehlenden oder veralteten Übersetzungen in dieser Sprache.');
   const id = newId('fqb');
   try {
@@ -210,6 +216,7 @@ export async function runFaqBatch(ctx: Ctx, batchId: string) {
   await db.run("UPDATE faq_translation_batches SET status = 'processing' WHERE id = ?", batchId);
   const ids = parseJson<string[]>(b.faq_ids, []).slice(Number(b.done));
   const lang = b.language as string;
+  const names = await privacyNames(ctx.db);
   let aborted: string | null = null;
   for (const faqId of ids) {
     if ((await db.get('SELECT cancel_requested FROM faq_translation_batches WHERE id = ?', batchId))?.cancel_requested) {
@@ -223,7 +230,7 @@ export async function runFaqBatch(ctx: Ctx, batchId: string) {
     const source = await db.get("SELECT * FROM faq_entries WHERE id = ? AND project_id = ? AND language = 'de'", faqId, ctx.projectId);
     const t = source && await db.get('SELECT source_hash FROM faq_translations WHERE faq_id = ? AND language = ?', faqId, lang);
     let field: 'translated' | 'flagged' | 'skipped' | 'failed';
-    if (!source || (t && t.source_hash === faqHash(String(source.question), String(source.answer))) || (ctx.llm.external && hasPrivacy(source))) field = 'skipped';
+    if (!source || (t && t.source_hash === faqHash(String(source.question), String(source.answer))) || (ctx.llm.external && hasPrivacy(source, names))) field = 'skipped';
     else {
       try {
         field = (await machineTranslate(ctx, source, lang, b.created_by as string, batchId)).length ? 'flagged' : 'translated';
@@ -247,7 +254,11 @@ export async function runFaqBatch(ctx: Ctx, batchId: string) {
 }
 
 export async function failFaqBatch(ctx: Ctx, batchId: string, error: string) {
-  await ctx.db.run("UPDATE faq_translation_batches SET status = 'failed', error = ?, finished_at = ? WHERE id = ? AND status IN ('queued','processing')", error.slice(0, 500), now(), batchId);
+  const res = await ctx.db.run("UPDATE faq_translation_batches SET status = 'failed', error = ?, finished_at = ? WHERE id = ? AND status IN ('queued','processing')", error.slice(0, 500), now(), batchId);
+  // wie bei Abschluss und Abbruch: die auftraggebende Person erfährt es
+  if (!res.changes) return;
+  const b = batchDto(await batchRow(ctx, batchId));
+  await projectNotice(ctx, b.createdBy, `KI-Übersetzung der häufigen Fragen (${b.languageName}) fehlgeschlagen: ${b.error}. ${b.done} von ${b.total} Einträgen bearbeitet.`, 'faq_batch', `/stammdaten/faq?sprache=${b.language}`);
 }
 
 /** Letzte Aufträge des Projekts (optional je Sprache) */
@@ -300,6 +311,8 @@ export async function deleteFaqTranslation(ctx: Ctx, faqId: string, lang: string
 
 export interface ReaderFaq {
   id: string; question: string; answer: string; language: string; translated: boolean;
+  /** Zielgruppe wie im Eintrag (leer oder „all“ = alle) – die Online-Hilfe filtert danach wie die Kapitel */
+  roles: string[]; divisions: string[];
   /** deutsche Quelle (bei deutschen und übersetzten Einträgen) – für sprachunabhängige Ähnlichkeit */
   source: { question: string; answer: string } | null;
 }
@@ -309,15 +322,16 @@ export interface ReaderFaq {
  * `translated: false`), dazu direkt in dieser Sprache verfasste Einträge – in der gepflegten Reihenfolge.
  */
 export async function readerFaqEntries(ctx: Ctx, lang: string): Promise<ReaderFaq[]> {
-  const rows = await ctx.db.all("SELECT id, question, answer, language FROM faq_entries WHERE project_id = ? AND status = 'published' AND language IN ('de', ?) ORDER BY position, created_at", ctx.projectId, lang);
+  const rows = await ctx.db.all("SELECT id, question, answer, language, roles, divisions FROM faq_entries WHERE project_id = ? AND status = 'published' AND language IN ('de', ?) ORDER BY position, created_at", ctx.projectId, lang);
   const src = (r: Row) => ({ question: String(r.question), answer: String(r.answer) });
-  if (lang === 'de') return rows.map((r) => ({ id: r.id as string, ...src(r), language: 'de', translated: true, source: src(r) }));
+  const scope = (r: Row) => ({ roles: parseJson<string[]>(r.roles, []), divisions: parseJson<string[]>(r.divisions, []) });
+  if (lang === 'de') return rows.map((r) => ({ id: r.id as string, ...src(r), ...scope(r), language: 'de', translated: true, source: src(r) }));
   const tr = await ctx.db.all("SELECT faq_id, question, answer, source_hash FROM faq_translations WHERE project_id = ? AND language = ? AND status = 'approved'", ctx.projectId, lang);
   const byId = new Map(tr.map((t) => [t.faq_id as string, t]));
   return rows.map((r) => {
-    if (r.language === lang) return { id: r.id as string, ...src(r), language: lang, translated: true, source: null };
+    if (r.language === lang) return { id: r.id as string, ...src(r), ...scope(r), language: lang, translated: true, source: null };
     const t = byId.get(r.id as string);
-    if (t && t.source_hash === faqHash(String(r.question), String(r.answer))) return { id: r.id as string, question: String(t.question), answer: String(t.answer), language: lang, translated: true, source: src(r) };
-    return { id: r.id as string, ...src(r), language: 'de', translated: false, source: src(r) };
+    if (t && t.source_hash === faqHash(String(r.question), String(r.answer))) return { id: r.id as string, question: String(t.question), answer: String(t.answer), ...scope(r), language: lang, translated: true, source: src(r) };
+    return { id: r.id as string, ...src(r), ...scope(r), language: 'de', translated: false, source: src(r) };
   });
 }

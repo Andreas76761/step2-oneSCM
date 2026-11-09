@@ -1,6 +1,6 @@
 ---
 roles: [hq]
-divisions: [car, van, truck, bus]
+divisions: [car, van]
 evidence_status: source_confirmed
 ---
 # 6. Preis- und Produktpflege

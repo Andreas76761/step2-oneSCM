@@ -7,7 +7,8 @@ on:
 jobs:
   test:
     name: Node ${{ matrix.node }}
-    runs-on: ubuntu-24.04 # Playwright 1.56 unterstützt Ubuntu 26.04 (ubuntu-latest) noch nicht
+    # fest auf 24.04: Playwright 1.56 unterstützt Chromium auf ubuntu-latest (26.04) noch nicht
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -24,8 +25,8 @@ jobs:
           --health-cmd "pg_isready -U onescm -d onescm_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
           cache: npm
@@ -60,7 +61,7 @@ jobs:
         working-directory: e2e
       - name: E2E-Tests
         run: npm run test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: playwright-${{ matrix.node }}
@@ -70,8 +71,8 @@ jobs:
     name: Helm-Chart
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-helm@v4
+      - uses: actions/checkout@v6
+      - uses: azure/setup-helm@v5
         with:
           version: v3.18.4
       - name: Chart prüfen und mit mehreren Wertesätzen rendern
@@ -85,8 +86,8 @@ jobs:
     name: Release-Pipeline prüfen
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -95,8 +96,8 @@ jobs:
         run: npm run -s release -- check
       - name: Workflows prüfen (actionlint)
         run: |
-          bash <(curl -sSf https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
-          ./actionlint -color
+          # offizielles Image statt Release-Download (der Download lieferte zuletzt kein Archiv mehr)
+          docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.7 -color
       - name: Container-Image bauen und starten (Smoke-Test)
         run: |
           docker build --build-arg "APP_VERSION=ci-${GITHUB_SHA::7}" -t onescm:ci .

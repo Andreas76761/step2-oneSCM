@@ -45,6 +45,10 @@ export async function variantSnippetRefs(ctx: Ctx, chapter: Row): Promise<{ refs
 /** SQL-Bedingung für die Schnipsel eines Kapitels (Quelle: chapter_id, Variante: Zuordnungen) */
 export async function snippetScope(ctx: Ctx, chapter: Row, alias = 's'): Promise<{ sql: string; params: unknown[] }> {
   if (!chapter.outline_family_id) return { sql: `${alias}.chapter_id = ?`, params: [chapter.id] };
-  const ids = (await variantSnippetRefs(ctx, chapter)).refs.map((r) => r.snippetId);
+  return idScope((await variantSnippetRefs(ctx, chapter)).refs.map((r) => r.snippetId), alias);
+}
+
+/** SQL-Bedingung für feste Schnipsel-Kennungen (Variantenkapitel mit bereits ermittelten Zuordnungen) */
+export function idScope(ids: string[], alias = 's'): { sql: string; params: unknown[] } {
   return ids.length ? { sql: `${alias}.id IN (${ids.map(() => '?').join(',')})`, params: ids } : { sql: '1 = 0', params: [] };
 }

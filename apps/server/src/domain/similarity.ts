@@ -74,17 +74,22 @@ export interface SimilarityPair {
 export interface SimilarityEngine {
   method: string;
   version: string;
-  /** Liefert alle Paare mit Score >= minScore (a < b). */
-  pairs(docs: Doc[], minScore: number): SimilarityPair[];
+  /** Liefert alle Paare mit Score >= minScore (a < b); mit `involving` nur Paare mit mindestens einem dieser Dokumente. */
+  pairs(docs: Doc[], minScore: number, opts?: { involving?: Set<string> }): SimilarityPair[];
 }
 
 type Vec = Map<string, number>;
+
+/** Ab diesem Mindestwert lohnt der Präfix-Filter (ADR-094) */
+const PREFIX_FILTER_FROM = 0.7;
 
 export class TfidfEngine implements SimilarityEngine {
   method = SIMILARITY_METHOD;
   version = SIMILARITY_VERSION;
 
-  pairs(docs: Doc[], minScore: number): SimilarityPair[] {
+  pairs(docs: Doc[], minScore: number, opts: { involving?: Set<string> } = {}): SimilarityPair[] {
+    const inv = opts.involving;
+    const skip = (i: number, j: number) => !!inv && !inv.has(docs[i].id) && !inv.has(docs[j].id);
     const tokens = docs.map((d) => features(d.text));
     const df = new Map<string, number>();
     for (const ts of tokens) for (const t of new Set(ts)) df.set(t, (df.get(t) ?? 0) + 1);
@@ -104,6 +109,56 @@ export class TfidfEngine implements SimilarityEngine {
       return v;
     });
 
+    // Niedrige Schwellen (Textcluster): voller invertierter Index; ab 0,7 (Dubletten) mit Präfix-Filter – gleiches Ergebnis
+    if (minScore < PREFIX_FILTER_FROM) return this.allPairs(docs, vecs, n, minScore, skip);
+    // Sehr häufige Terme zählen nicht (weder für die Kandidaten noch für den Wert) – wie bisher
+    const maxPostings = Math.max(50, Math.ceil(n * 0.3));
+    const allowed = (t: string) => (df.get(t) ?? 0) <= maxPostings;
+    // Präfix-Filter (All-Pairs, Bayardo et al. 2007): je Vektor werden die Terme nach absteigender Häufigkeit sortiert und
+    // erst ab dem Punkt indexiert, an dem die obere Schranke Σ w·maxw den Mindestwert erreicht. Jedes Paar mit Wert ≥
+    // minScore teilt dann mindestens einen indexierten Term; der Wert selbst wird exakt berechnet – Ergebnis unverändert.
+    const maxw = new Map<string, number>();
+    for (const v of vecs) for (const [t, w] of v) if (allowed(t) && w > (maxw.get(t) ?? 0)) maxw.set(t, w);
+    const bound = minScore - 0.0005; // gerundeter Wert ≥ minScore schon ab minScore − 0,0005
+    const index = new Map<string, number[]>();
+    const restricted = vecs.map((v) => [...v.keys()].filter(allowed).sort((x, y) => (df.get(y)! - df.get(x)!) || (x < y ? -1 : 1)));
+    const dot = (a: Vec, b: Vec) => {
+      const [small, large] = a.size <= b.size ? [a, b] : [b, a];
+      let d = 0;
+      for (const [t, w] of small) if (allowed(t)) d += w * (large.get(t) ?? 0);
+      return d;
+    };
+    const found: [number, number, number][] = [];
+    for (let y = 0; y < n; y++) {
+      const cand = new Set<number>();
+      for (const t of restricted[y]) for (const x of index.get(t) ?? []) cand.add(x);
+      for (const x of cand) {
+        if (skip(x, y)) continue;
+        const score = Math.min(1, Math.round(dot(vecs[x], vecs[y]) * 1000) / 1000);
+        if (score >= minScore) found.push([x, y, score]);
+      }
+      let b = 0;
+      for (const t of restricted[y]) {
+        b += vecs[y].get(t)! * maxw.get(t)!;
+        if (b >= bound) {
+          const list = index.get(t);
+          if (list) list.push(y);
+          else index.set(t, [y]);
+        }
+      }
+    }
+    // gleiche Reihenfolge wie zuvor: nach erstem, dann zweitem Dokument
+    found.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+    const out: SimilarityPair[] = [];
+    for (const [i, j, score] of found) {
+      const shared = [...vecs[i].keys()].filter((t) => vecs[j].has(t) && !t.startsWith('~'));
+      shared.sort((x, y) => (vecs[i].get(y)! + vecs[j].get(y)!) - (vecs[i].get(x)! + vecs[j].get(x)!));
+      out.push({ a: docs[i].id, b: docs[j].id, score, sharedTerms: shared.slice(0, 6) });
+    }
+    return out;
+  }
+
+  private allPairs(docs: Doc[], vecs: Vec[], n: number, minScore: number, skip: (i: number, j: number) => boolean): SimilarityPair[] {
     // Invertierter Index: nur Dokumente mit gemeinsamen Termen werden verglichen.
     const index = new Map<string, number[]>();
     vecs.forEach((v, i) => {
@@ -124,6 +179,7 @@ export class TfidfEngine implements SimilarityEngine {
         for (const j of postings) if (j > i) dots.set(j, (dots.get(j) ?? 0) + w * (vecs[j].get(t) ?? 0));
       }
       for (const [j, dot] of dots) {
+        if (skip(i, j)) continue;
         const score = Math.min(1, Math.round(dot * 1000) / 1000);
         if (score >= minScore) {
           const shared = [...vecs[i].keys()].filter((t) => vecs[j].has(t) && !t.startsWith('~'));

@@ -46,7 +46,6 @@ export async function shutdownTracing() {
 }
 
 export const tracer = (): Tracer => trace.getTracer('onescm');
-export const tracingActive = () => provider !== null;
 
 /** Funktion in einem Span ausführen; Fehler werden am Span vermerkt */
 export async function withSpan<T>(name: string, attributes: Record<string, string | number | boolean | undefined>, fn: (span: Span) => Promise<T>, kind = SpanKind.INTERNAL): Promise<T> {

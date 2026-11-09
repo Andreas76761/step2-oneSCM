@@ -8,3 +8,6 @@ playwright-report/
 coverage/
 .env
 e2e/.e2e-data/
+
+# LanguageTool-Bibliotheken (ADR-108) werden lokal geholt
+tools/languagetool/lib/

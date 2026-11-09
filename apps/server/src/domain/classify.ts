@@ -1,7 +1,7 @@
 // Klassifikation von Rolle, Sparte, Markt und Release (US-003, US-004).
 // ENTSCHEIDUNG(E-03, E-04): Schlüsselwortregeln; automatische Zuordnungen bleiben immer `unconfirmed`.
 // Nur explizite Angaben im Front-Matter der Quelle gelten als `source_confirmed`.
-import { DIVISION_CODES, ROLE_CODES, type EvidenceStatus } from './reference.js';
+import { DEFAULT_DIVISIONS, DIVISION_CODES, ROLE_CODES, type EvidenceStatus } from './reference.js';
 
 export const CLASSIFIER_METHOD = 'keyword-rules';
 export const CLASSIFIER_VERSION = 'rules-1.0';
@@ -42,8 +42,6 @@ const MO_CI = /\bmarket operations?\b/i;
 const DIVISION_RULES: Record<string, RegExp> = {
   car: /\b(pkw|personenkraftwagen|cars?)\b/i,
   van: /\b(vans?|transporter)\b/i,
-  truck: /\b(trucks?|lkw|lastkraftwagen)\b/i,
-  bus: /\b(bus|busse|omnibus\w*)\b/i,
   all: /\b(alle sparten|spartenübergreifend\w*)\b/i,
 };
 
@@ -53,7 +51,7 @@ function asList(v: unknown): string[] {
   return [];
 }
 
-const DIVISION_ALIASES: Record<string, string> = { pkw: 'car', lkw: 'truck', transporter: 'van' };
+const DIVISION_ALIASES: Record<string, string> = { pkw: 'car', transporter: 'van' };
 
 function ruleMatches(rules: Record<string, RegExp>, text: string, extra?: (code: string, t: string) => boolean): string[] {
   return Object.entries(rules)
@@ -97,8 +95,9 @@ export function classifySnippet(input: ClassificationInput): Classification {
   for (const code of ruleMatches(ROLE_RULES, p, moExtra)) add(roles, code, 0.5, 'path-derivation', `Dateipfad: ${input.path}`);
   for (const code of ruleMatches(DIVISION_RULES, p)) add(divisions, code, 0.5, 'path-derivation', `Dateipfad: ${input.path}`);
 
+  // ohne Angabe gelten beide Sparten (PKW und VAN) – als Vorschlag, die Redaktion bestätigt
   if (divisions.size === 0) {
-    divisions.set('unconfirmed', { code: 'unconfirmed', score: 0, method: 'default', modelVersion: CLASSIFIER_VERSION, evidenceStatus: 'open_question', evidence: 'Keine Spartenangabe gefunden' });
+    for (const code of DEFAULT_DIVISIONS) divisions.set(code, { code, score: 0.5, method: 'default', modelVersion: CLASSIFIER_VERSION, evidenceStatus: 'unconfirmed', evidence: 'Keine Spartenangabe – Standard: PKW und VAN' });
   }
 
   // Markt/Release

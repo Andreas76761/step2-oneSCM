@@ -3,7 +3,7 @@
 //   Komposita, aber keine Synonyme.
 // - openai: OpenAI-kompatibler /embeddings-Endpunkt (OpenAI, Azure OpenAI, Voyage AI, Ollama, vLLM …) – echte
 //   semantische Nähe, Texte werden an den Dienst übertragen.
-import { LlmError } from './llm.js';
+import { isLocalUrl, LlmError } from './llm.js';
 import { tokenize } from './domain/similarity.js';
 
 export interface EmbeddingConfig {
@@ -13,6 +13,8 @@ export interface EmbeddingConfig {
   baseUrl?: string;
   timeoutMs?: number;
   batchSize?: number;
+  /** selbst betriebener Dienst (z. B. Ollama mit bge-m3): gilt nur mit lokaler Adresse als intern (ADR-099) */
+  local?: boolean;
 }
 
 export interface EmbeddingProvider {
@@ -68,10 +70,11 @@ export class LocalEmbeddingProvider implements EmbeddingProvider {
 
 export class OpenAiEmbeddingProvider implements EmbeddingProvider {
   readonly id = 'openai' as const;
-  readonly external = true;
+  readonly external: boolean;
   readonly model: string;
   constructor(private readonly cfg: EmbeddingConfig) {
     this.model = cfg.model;
+    this.external = !(cfg.local && isLocalUrl(cfg.baseUrl));
   }
   async embed(texts: string[]) {
     const out: Float32Array[] = [];
@@ -122,6 +125,7 @@ export function embeddingsFromEnv(): EmbeddingConfig {
     baseUrl: process.env.EMBEDDINGS_BASE_URL || undefined,
     timeoutMs: Number(process.env.EMBEDDINGS_TIMEOUT_MS || 60_000),
     batchSize: Number(process.env.EMBEDDINGS_BATCH_SIZE || 64),
+    local: process.env.EMBEDDINGS_LOCAL === 'true',
   };
 }
 

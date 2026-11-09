@@ -1,4 +1,4 @@
--- Etappe 27: KI-Stapelübersetzung häufiger Fragen je Sprache (ADR-079) und Begründung zu Übersetzungswünschen (ADR-080)
+-- Etappe 27: KI-Stapelübersetzung häufiger Fragen je Sprache (ADR-124) und Begründung zu Übersetzungswünschen (ADR-125)
 CREATE TABLE faq_translation_batches (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL REFERENCES projects(id),

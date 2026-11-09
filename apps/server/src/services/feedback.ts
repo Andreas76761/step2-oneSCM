@@ -149,10 +149,14 @@ export async function feedbackToTask(ctx: Ctx, id: string, input: { assignee?: u
   if (r.status !== 'open') throw conflict('Die Rückmeldung ist bereits erledigt.');
   const assignee = typeof input.assignee === 'string' && input.assignee ? input.assignee : user.id;
   const body = `Leser-Rückmeldung (${r.helpful ? 'hilfreich' : 'nicht hilfreich'}${r.source === 'online-help' ? ', Online-Hilfe' : ''}): ${r.comment ? `„${r.comment}“` : 'ohne Kommentar'} – bitte das Kapitel prüfen und verbessern.`;
-  const task = await createComment(ctx, { entityType: 'chapter', entityId: r.chapter_id, body, kind: 'task', assignee, dueDate: typeof input.dueDate === 'string' ? input.dueDate : undefined }, user);
-  await ctx.db.tx(async () => {
-    await ctx.db.run("UPDATE chapter_feedback SET status = 'done', handled_by = ?, handled_at = ? WHERE id = ?", user.id, now(), id);
-    await audit(ctx, user.id, 'feedback.task_created', 'chapter', r.chapter_id, { feedbackId: id, taskId: task.id, assignee });
+  // erledigen und Aufgabe anlegen in einer Transaktion; nur wer die Rückmeldung von „offen“ auf „erledigt“ setzt, legt
+  // die Aufgabe an – zwei gleichzeitige Klicks ergaben sonst zwei Aufgaben
+  const task = await ctx.db.tx(async () => {
+    const res = await ctx.db.run("UPDATE chapter_feedback SET status = 'done', handled_by = ?, handled_at = ? WHERE id = ? AND status = 'open'", user.id, now(), id);
+    if (!res.changes) throw conflict('Die Rückmeldung ist bereits erledigt.');
+    const t = await createComment(ctx, { entityType: 'chapter', entityId: r.chapter_id, body, kind: 'task', assignee, dueDate: typeof input.dueDate === 'string' ? input.dueDate : undefined }, user);
+    await audit(ctx, user.id, 'feedback.task_created', 'chapter', r.chapter_id, { feedbackId: id, taskId: t.id, assignee });
+    return t;
   });
   return { task, feedback: dto({ ...(await ctx.db.get('SELECT * FROM chapter_feedback WHERE id = ?', id))!, title: r.title }) };
 }

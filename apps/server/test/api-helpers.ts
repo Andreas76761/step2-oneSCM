@@ -29,6 +29,12 @@ export async function importFile(built: Built, name: string, content: string | B
   await built.ctx.jobs.idle();
   return res.json();
 }
+/** Datei an einen Upload-Endpunkt (multipart, Feld „file“) */
+export async function uploadFile(built: Built, url: string, name: string, content: Buffer, user = 'u-admin') {
+  const mp = multipart(name, content);
+  const res = await built.app.inject({ method: 'POST', url: `/api/v1${url}`, payload: mp.payload, headers: { ...mp.headers, 'x-user-id': user } });
+  return { status: res.statusCode, json: res.json() as any };
+}
 export const FM = '---\nroles: [all]\ndivisions: [all]\nevidence_status: source_confirmed\n---\n';
 
 export async function approveChapter(call: ReturnType<typeof client>, chapterId: string) {

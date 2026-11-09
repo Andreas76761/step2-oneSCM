@@ -27,6 +27,8 @@ export interface Db {
   tx<T>(fn: () => Promise<T>, opts?: { snapshot?: boolean }): Promise<T>;
   /** Fortlaufende, lesbare Nummer (#34) für Tabellen mit Spalte `seq`. */
   nextSeq(table: 'text_snippets' | 'quality_findings'): Promise<number>;
+  /** Führt `fn` nach dem COMMIT der laufenden Transaktion aus (nicht nach einem ROLLBACK); ohne Transaktion sofort. */
+  afterCommit(fn: () => void): void;
   /** Führt `fn` außerhalb eines Transaktionskontexts aus (für Timer/Hintergrundarbeit, die sonst die Transaktion erben würde). */
   outside<T>(fn: () => T): T;
   close(): Promise<void>;
@@ -61,10 +63,21 @@ async function migrate(db: Db, exec: (sql: string) => Promise<void>, translate: 
 
 // ---------------------------------------------------------------- SQLite
 
+/** Nach-Commit-Funktionen: alle ausführen; ein Fehler darf die schon festgeschriebene Transaktion nicht als gescheitert melden */
+function runAfter(fns: (() => void)[]) {
+  for (const f of fns) {
+    try {
+      f();
+    } catch (e) {
+      console.error('afterCommit:', e);
+    }
+  }
+}
+
 class SqliteDb implements Db {
   readonly dialect = 'sqlite' as const;
   private readonly raw: Database.Database;
-  private readonly als = new AsyncLocalStorage<true>();
+  private readonly als = new AsyncLocalStorage<{ after: (() => void)[] }>();
   /** Offene Transaktion (eine Verbindung → Transaktionen werden serialisiert). */
   private lock: Promise<void> | null = null;
 
@@ -104,12 +117,15 @@ class SqliteDb implements Db {
     if (this.als.getStore()) return fn();
     while (this.lock) await this.lock;
     let release!: () => void;
+    let after: (() => void)[] = [];
     this.lock = new Promise<void>((r) => (release = r));
     try {
       this.raw.exec('BEGIN IMMEDIATE');
       try {
-        const result = await this.als.run(true, fn);
+        const store = { after: [] as (() => void)[] };
+        const result = await this.als.run(store, fn);
         this.raw.exec('COMMIT');
+        after = store.after;
         return result;
       } catch (e) {
         this.raw.exec('ROLLBACK');
@@ -118,7 +134,14 @@ class SqliteDb implements Db {
     } finally {
       this.lock = null;
       release();
+      runAfter(after);
     }
+  }
+
+  afterCommit(fn: () => void) {
+    const store = this.als.getStore();
+    if (store) store.after.push(fn);
+    else fn();
   }
 
   async nextSeq(table: 'text_snippets' | 'quality_findings') {
@@ -160,7 +183,7 @@ const translateMigration = (sql: string) => sql.replace(/\bREAL\b/g, 'DOUBLE PRE
 class PostgresDb implements Db {
   readonly dialect = 'postgres' as const;
   private readonly pool: pg.Pool;
-  private readonly als = new AsyncLocalStorage<pg.PoolClient>();
+  private readonly als = new AsyncLocalStorage<{ client: pg.PoolClient; after: (() => void)[] }>();
 
   constructor(connectionString: string) {
     this.pool = new pg.Pool({ connectionString, max: Number(process.env.DB_POOL_SIZE ?? 10) });
@@ -172,7 +195,7 @@ class PostgresDb implements Db {
   }
 
   private client(): pg.Pool | pg.PoolClient {
-    return this.als.getStore() ?? this.pool;
+    return this.als.getStore()?.client ?? this.pool;
   }
 
   private async query(sql: string, params: unknown[]) {
@@ -195,8 +218,10 @@ class PostgresDb implements Db {
     try {
       // READ COMMITTED sieht je Abfrage einen neuen Stand; für konsistente Backups ein fester Snapshot
       await client.query(opts?.snapshot ? 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY' : 'BEGIN');
-      const result = await this.als.run(client, fn);
+      const store = { client, after: [] as (() => void)[] };
+      const result = await this.als.run(store, fn);
       await client.query('COMMIT');
+      runAfter(store.after);
       return result;
     } catch (e) {
       await client.query('ROLLBACK').catch(() => undefined);
@@ -204,6 +229,12 @@ class PostgresDb implements Db {
     } finally {
       client.release();
     }
+  }
+
+  afterCommit(fn: () => void) {
+    const store = this.als.getStore();
+    if (store) store.after.push(fn);
+    else fn();
   }
 
   async nextSeq(table: 'text_snippets' | 'quality_findings') {

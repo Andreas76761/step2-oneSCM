@@ -104,7 +104,7 @@ describe('Import (US-001, US-002)', () => {
   });
 
   it('[T-103] unzulässiger Dateityp liefert application/problem+json', async () => {
-    const res = await upload('handbuch.pdf', Buffer.from('%PDF'));
+    const res = await upload('handbuch.exe', Buffer.from('MZ'));
     expect(res.status).toBe(415);
     expect(res.headers['content-type']).toContain('application/problem+json');
     expect(res.json).toMatchObject({ status: 415, title: 'Unsupported Media Type' });
@@ -123,24 +123,27 @@ describe('Suche und Klassifikation (US-003, US-004, US-017)', () => {
       expect(s.chapter.id).toBe(ch3);
       expect(s.evidenceStatus).toBe('source_confirmed');
     }
-    const truck = (await call('GET', '/snippets?division=truck&role=dealer')).json;
-    expect(truck.items.map((s: any) => s.text)).toEqual(['Für Truck-Verträge ist zusätzlich die Laufleistung in Kilometern bei Vertragsbeginn anzugeben.']);
+    // Sparten nur PKW und VAN (08.11.2026): ohne Angabe gelten beide, die VAN-Vorgabe ist dabei
+    const van = (await call('GET', '/snippets?division=van&role=dealer&pageSize=100')).json;
+    expect(van.items.map((s: any) => s.text)).toContain('Für VAN-Verträge ist zusätzlich die Laufleistung in Kilometern bei Vertragsbeginn anzugeben.');
+    expect((await call('GET', '/snippets?division=car&role=dealer&pageSize=100')).json.items.map((s: any) => s.text)).not.toContain('Für VAN-Verträge ist zusätzlich die Laufleistung in Kilometern bei Vertragsbeginn anzugeben.');
     const de = (await call('GET', '/snippets?market=DE&pageSize=2&page=1')).json;
     expect(de.items).toHaveLength(2);
     expect(de.total).toBe(7);
   });
 
   it('[T-105] Mehrfachzuordnung, Ursprungstext bleibt unverändert, Berechtigung geprüft', async () => {
-    const s = (await call('GET', '/snippets?q=Busse')).json.items[0];
+    const s = (await call('GET', '/snippets?q=Transporter%20legt')).json.items[0];
     expect(s.roles.every((r: any) => r.evidenceStatus === 'unconfirmed')).toBe(true);
     const denied = await call('PATCH', `/snippets/${s.id}`, { roles: ['dealer'] }, 'u-leser');
     expect(denied.status).toBe(403);
     expect(denied.headers['content-type']).toContain('application/problem+json');
-    const res = await call('PATCH', `/snippets/${s.id}`, { roles: ['dealer', 'market'], divisions: ['bus', 'van'], text: 'manipuliert' }, 'u-redaktion');
+    const res = await call('PATCH', `/snippets/${s.id}`, { roles: ['dealer', 'market'], divisions: ['car', 'van'], text: 'manipuliert' }, 'u-redaktion');
     expect(res.status).toBe(200);
     expect(res.json.text).toBe(s.text);
     expect(res.json.roles.map((r: any) => [r.code, r.evidenceStatus, r.method])).toEqual([['dealer', 'manually_confirmed', 'manual'], ['market', 'manually_confirmed', 'manual']]);
-    expect(res.json.divisions.map((d: any) => d.code)).toEqual(['bus', 'van']);
+    expect(res.json.divisions.map((d: any) => d.code)).toEqual(['car', 'van']);
+    expect((await call('PATCH', `/snippets/${s.id}`, { divisions: ['bus'] })).status).toBe(400); // Sparte entfallen
     expect((await call('PATCH', `/snippets/${s.id}`, { roles: ['kunde'] })).status).toBe(400);
     const audit = (await call('GET', `/audit-events?entityType=snippet&entityId=${s.id}`)).json;
     expect(audit[0]).toMatchObject({ actor: 'u-redaktion', action: 'snippet.classified' });
@@ -269,10 +272,10 @@ describe('Kapitelgenerierung und Werkstatt (US-008, US-009)', () => {
 
     const ch4 = (await call('POST', `/chapters/${await chapterId('4.')}/generate`, {}, 'u-redaktion')).json;
     // Rollen wurden in T-105 manuell bestätigt, der Evidenzstatus des Textes selbst ist aber unbestätigt → nicht übernommen
-    expect(blocks(ch4).some((b: any) => b.text.includes('Busse'))).toBe(false);
+    expect(blocks(ch4).some((b: any) => b.text.includes('Transporter legt'))).toBe(false);
     expect(ch4.generation.skippedUnconfirmed).toBe(1);
-    const bus = (await call('GET', '/snippets?q=Busse')).json.items[0];
-    expect(bus.evidenceStatus).toBe('unconfirmed');
+    const transporter = (await call('GET', '/snippets?q=Transporter%20legt')).json.items[0];
+    expect(transporter.evidenceStatus).toBe('unconfirmed');
   });
 
   it('[T-111] ändern, verschieben, löschen, wiederherstellen; manuelle Änderungen sind geschützt', async () => {
@@ -367,14 +370,14 @@ describe('Export (US-010, US-012, US-014)', () => {
     await approveChapter('4.');
     const ch3 = await chapterId('3.');
     const ch4 = await chapterId('4.');
-    const truck = await call('POST', '/exports', { chapterIds: [ch3, ch4], roles: ['dealer'], divisions: ['truck'] }, 'u-leser');
-    expect(truck.status).toBe(201);
-    const md = (await call('GET', `/exports/${truck.json.id}/download`)).body;
+    const van = await call('POST', '/exports', { chapterIds: [ch3, ch4], roles: ['dealer'], divisions: ['van'] }, 'u-leser');
+    expect(van.status).toBe(201);
+    const md = (await call('GET', `/exports/${van.json.id}/download`)).body;
     expect(md).toContain('## 4. Vertragsbearbeitung');
     expect(md).toContain('Laufleistung');
-    expect(md).toContain('> 🏪 Dealer · 🚛 Truck');
+    expect(md).toContain('> Dealer · VAN');
     expect(md).not.toContain('Produkt nicht verfügbar');
-    expect(md).toContain('Filter: Rollen: Dealer · Sparten: Truck');
+    expect(md).toContain('Filter: Rollen: Dealer · Sparten: VAN');
     const car = (await call('GET', `/exports/${(await call('POST', '/exports', { chapterIds: [ch4], divisions: ['car'] })).json.id}/download`)).body;
     expect(car).toContain('Produkt nicht verfügbar');
     expect(car).not.toContain('Laufleistung');
@@ -437,8 +440,9 @@ describe('Traceability (US-020)', () => {
     const s = (await call('PUT', '/settings', { analysis: { clusterThreshold: 0.6 } })).json;
     expect(s.analysis).toMatchObject({ clusterThreshold: 0.6, duplicateThreshold: 0.85 });
     const ref = (await call('GET', '/reference')).json;
-    expect(ref.roles.map((r: any) => `${r.icon} ${r.label}`)).toEqual(['🏪 Dealer', '🌍 Markt', '✅ MO', '🏢 HQ', '👥 Alle']);
-    expect(ref.divisions.map((r: any) => `${r.icon} ${r.label}`)).toEqual(['🚘 PKW', '🚐 VAN', '🚛 Truck', '🚌 Bus', '🔄 Alle', '❓ Ungeklärt']);
+    // Icons als Lucide-Namen (E-11 geändert, ADR-122)
+    expect(ref.roles.map((r: any) => `${r.icon} ${r.label}`)).toEqual(['store Dealer', 'globe Markt', 'badge-check MO', 'building-2 HQ', 'users Alle']);
+    expect(ref.divisions.map((r: any) => `${r.icon} ${r.label}`)).toEqual(['car PKW', 'van VAN', 'layers Alle', 'circle-help Ungeklärt']);
     const dash = (await call('GET', '/dashboard')).json;
     expect(dash.snippets).toBeGreaterThan(20);
   });

@@ -38,22 +38,25 @@ describe('Markdown-Struktur (US-002)', () => {
 
 describe('Klassifikation (US-003, US-004)', () => {
   it('[T-003] Mehrfachzuordnung, Front-Matter bestätigt, Pfadableitung bleibt unbestätigt', () => {
-    const c = classifySnippet({ text: 'Das Autohaus sendet den Vertrag an MO. Gilt für PKW und Truck.', headings: ['Vertrag'], path: 'bus/datei.md', frontMatter: {} });
+    // Sparten nur noch PKW und VAN (08.11.2026): Truck/Bus werden nicht mehr erkannt
+    const c = classifySnippet({ text: 'Das Autohaus sendet den Vertrag an MO. Gilt für PKW und Truck.', headings: ['Vertrag'], path: 'van/datei.md', frontMatter: {} });
     expect(c.roles.map((r) => r.code).sort()).toEqual(['dealer', 'mo']);
-    expect(c.divisions.map((d) => d.code).sort()).toEqual(['bus', 'car', 'truck']);
+    expect(c.divisions.map((d) => d.code).sort()).toEqual(['car', 'van']);
     expect(c.roles.every((r) => r.evidenceStatus === 'unconfirmed' && r.modelVersion === 'rules-1.0' && r.score > 0)).toBe(true);
-    const bus = c.divisions.find((d) => d.code === 'bus')!;
-    expect(bus.method).toBe('path-derivation');
-    expect(bus.evidenceStatus).toBe('unconfirmed');
+    const van = c.divisions.find((d) => d.code === 'van')!;
+    expect(van.method).toBe('path-derivation');
+    expect(van.evidenceStatus).toBe('unconfirmed');
 
+    // Front-Matter: „lkw“ ist keine Sparte mehr, PKW bleibt bestätigt
     const fm = classifySnippet({ text: 'Text', headings: [], path: 'x.md', frontMatter: { roles: ['hq'], sparten: 'PKW, lkw', evidence_status: 'source_confirmed', market: 'de', release: '2026.3' } });
     expect(fm.roles).toMatchObject([{ code: 'hq', evidenceStatus: 'source_confirmed', method: 'front-matter' }]);
-    expect(fm.divisions.map((d) => d.code).sort()).toEqual(['car', 'truck']);
+    expect(fm.divisions.map((d) => d.code)).toEqual(['car']);
     expect(fm.evidenceStatus).toBe('source_confirmed');
     expect(fm.market).toEqual({ code: 'DE', status: 'confirmed' });
 
+    // ohne Angabe: beide Sparten als Standard, unbestätigt
     const none = classifySnippet({ text: 'Allgemeiner Text.', headings: [], path: 'x.md', frontMatter: {} });
-    expect(none.divisions).toMatchObject([{ code: 'unconfirmed', evidenceStatus: 'open_question' }]);
+    expect(none.divisions).toMatchObject([{ code: 'car', evidenceStatus: 'unconfirmed', method: 'default' }, { code: 'van', evidenceStatus: 'unconfirmed', method: 'default' }]);
     expect(none.evidenceStatus).toBe('unconfirmed');
   });
 });

@@ -1,17 +1,19 @@
 // Draft Manual (ADR-033): Textschnipsel einer Gliederung zuordnen, Dopplungen, Lücken, Widersprüche und Warnungen farblich
+import { CircleDashedIcon, CopyIcon, OctagonAlertIcon, TriangleAlertIcon, type LucideIcon } from 'lucide-react';
+import { Ico, WarnIcon } from '../components/icons';
 import { useEffect, useState } from 'react';
 import type React from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { del, download, patch, post, qs } from '../api';
-import { Card, Empty, ErrorBox, Md, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Md, Page, Status, errorText, useApp, useLoad } from '../components/ui';
 import { variantText } from './Outlines';
 
 type FlagType = 'duplicate' | 'contradiction' | 'gap' | 'warning';
-const FLAG: Record<FlagType, { icon: string; label: string }> = {
-  contradiction: { icon: '⛔', label: 'Widerspruch' },
-  duplicate: { icon: '⧉', label: 'Dopplung' },
-  gap: { icon: '◌', label: 'Lücke' },
-  warning: { icon: '⚠', label: 'Warnung' },
+const FLAG: Record<FlagType, { icon: LucideIcon; label: string }> = {
+  contradiction: { icon: OctagonAlertIcon, label: 'Widerspruch' },
+  duplicate: { icon: CopyIcon, label: 'Dopplung' },
+  gap: { icon: CircleDashedIcon, label: 'Lücke' },
+  warning: { icon: TriangleAlertIcon, label: 'Warnung' },
 };
 const ORDER: FlagType[] = ['contradiction', 'duplicate', 'warning', 'gap'];
 
@@ -32,14 +34,14 @@ const droppedSnippets = (e: React.DragEvent): string[] | null => {
 const accepts = (e: React.DragEvent) => e.dataTransfer.types.includes(DND);
 
 export const FlagChip = ({ type, count }: { type: FlagType; count?: number }) => (
-  <span className={`flag flag-${type}`}><span aria-hidden="true">{FLAG[type].icon}</span> {FLAG[type].label}{count !== undefined ? `: ${count}` : ''}</span>
+  <span className={`flag flag-${type}`}><Ico icon={FLAG[type].icon} size={14} />{FLAG[type].label}{count !== undefined ? `: ${count}` : ''}</span>
 );
 
 function FlagList({ flags }: { flags: { type: FlagType; label: string }[] }) {
   if (!flags.length) return null;
   return (
     <ul className="draft-flags" aria-label="Kennzeichnungen">
-      {flags.map((f, i) => <li key={i} style={{ listStyle: 'none' }}><span className={`flag flag-${f.type}`} title={f.label}><span aria-hidden="true">{FLAG[f.type].icon}</span> {FLAG[f.type].label}</span> <span className="small">{f.label}</span></li>)}
+      {flags.map((f, i) => <li key={i} style={{ listStyle: 'none' }}><span className={`flag flag-${f.type}`} title={f.label}><Ico icon={FLAG[f.type].icon} size={14} />{FLAG[f.type].label}</span> <span className="small">{f.label}</span></li>)}
     </ul>
   );
 }
@@ -77,7 +79,7 @@ function Candidates({ outline, nodes, canEdit, onAssigned }: { outline: any; nod
               {nodes.map((n) => <option key={n.id} value={n.id}>{n.level === 2 ? '  ' : ''}{n.number} {n.title}</option>)}
             </select>
           </label>
-          <button className="btn small primary" disabled={!target || !selected.length} onClick={assign}>{selected.length || ''} Zuordnen</button>
+          <Gated className="btn small primary" missing={[!target && 'Ziel', !selected.length && 'mindestens ein ausgewählter Schnipsel']} onClick={assign}>{selected.length || ''} Zuordnen</Gated>
         </div>
       )}
       <ErrorBox error={data.error} />
@@ -173,8 +175,8 @@ function SyncCard({ outline, outlines, canEdit, onApplied }: { outline: any; out
                     <span>
                       <span className="small muted">#{x.seq} · {x.path}{x.elsewhere ? ` · im Ziel bereits unter ${x.elsewhere}` : ''}</span><br />
                       {x.text}
-                      {x.problems.map((pr: string) => <span key={pr} className="flag flag-warning"><span aria-hidden="true">⚠</span> {pr}</span>)}
-                      {!x.isCurrent && <span className="flag flag-warning"><span aria-hidden="true">⚠</span> veraltet</span>}
+                      {x.problems.map((pr: string) => <span key={pr} className="flag flag-warning"><WarnIcon />{pr}</span>)}
+                      {!x.isCurrent && <span className="flag flag-warning"><WarnIcon />veraltet</span>}
                     </span>
                   </label>
                 ))}
@@ -285,7 +287,7 @@ export function DraftManualPage() {
   const nodes = d?.nodes ?? [];
 
   return (
-    <Page title="Draft Manual" subtitle="Handbuchentwurf entlang einer Gliederung – Textschnipsel zuordnen und Auffälligkeiten klären">
+    <Page title="Draft Manual" docTitle={list.data?.items.find((o: any) => o.id === d?.outline?.id)?.name} subtitle="Handbuchentwurf entlang einer Gliederung – Textschnipsel zuordnen und Auffälligkeiten klären">
       <ErrorBox error={list.error ?? draft.error} />
       {list.data && !list.data.items.length && (
         <Empty>Noch keine Gliederung vorhanden. Legen Sie unter <Link to="/stammdaten/inhaltsverzeichnis">Stammdaten › Inhaltsverzeichnis</Link> eine an.</Empty>

@@ -1,10 +1,12 @@
 // Bilder aus Text (ADR-041, ADR-042): Textstelle → Struktur (Regeln oder KI) → ASCII-Bild, Klickstrecke, Prozessbild, Infografik.
 // Struktur und Darstellung (Farbe, Form, Schriftgröße, Stationen je Zeile) lassen sich nachbearbeiten und als Vorlage speichern;
 // gespeicherte Bilder erhalten eine im Browser gerasterte PNG-Fassung für Word. Genutzt auf der Seite „Bilder“ und in der Werkstatt.
+import { XIcon } from 'lucide-react';
+import { Ico } from './icons';
 import { useEffect, useState } from 'react';
 import { del, post } from '../api';
 import { storeRendition, svgDataUrl } from '../images';
-import { Card, Empty, errorText, useApp, useLoad } from './ui';
+import { Gated, Card, Empty, errorText, useApp, useLoad } from './ui';
 
 export type Kind = 'ascii' | 'clickpath' | 'process' | 'infographic';
 export const KINDS: { kind: Kind; label: string; hint: string }[] = [
@@ -75,7 +77,7 @@ function StructureEditor({ s, o, onChange, onOptions, onApply, busy }: {
                 <label className="inline small"><input type="checkbox" checked={!!st.decision} onChange={(e) => setStep(i, { decision: e.target.checked })} /> Entscheidung</label>
                 <button type="button" className="btn small" aria-label={`Schritt ${i + 1} nach oben`} disabled={i === 0} onClick={() => onChange({ ...s, steps: move(s.steps, i, -1) })}>↑</button>
                 <button type="button" className="btn small" aria-label={`Schritt ${i + 1} nach unten`} disabled={i === s.steps.length - 1} onClick={() => onChange({ ...s, steps: move(s.steps, i, 1) })}>↓</button>
-                <button type="button" className="btn small danger" aria-label={`Schritt ${i + 1} entfernen`} onClick={() => onChange({ ...s, steps: s.steps.filter((_, j) => j !== i) })}>✕</button>
+                <button type="button" className="btn small danger" aria-label={`Schritt ${i + 1} entfernen`} onClick={() => onChange({ ...s, steps: s.steps.filter((_, j) => j !== i) })}><Ico icon={XIcon} /></button>
               </div>
               {st.decision && (
                 <div className="step-row">
@@ -233,7 +235,7 @@ export function DiagramStudio({ initialText = '', canEdit, onSaved, showSample =
           <div className="filters"><label className="inline"><input type="checkbox" checked={useAi} onChange={(e) => setUseAi(e.target.checked)} /> Struktur mit KI erkennen (sonst Regeln)</label></div>
         )}
         <div className="filters">
-          <button className="btn primary" disabled={busy || !text.trim() || !kinds.length} onClick={() => generate({ text, kinds, useAi: useAi && canEdit, ...(opts ? { options: opts } : {}) })}>Bilder erzeugen</button>
+          <Gated className="btn primary" busy={busy} missing={[!text.trim() && 'Text', !kinds.length && 'mindestens eine Bildart']} onClick={() => generate({ text, kinds, useAi: useAi && canEdit, ...(opts ? { options: opts } : {}) })}>Bilder erzeugen</Gated>
           {showSample && <button className="btn ghost" disabled={busy} onClick={() => setText(SAMPLE)}>Beispiel einfügen</button>}
         </div>
         <Templates canEdit={canEdit} current={draft && opts ? { structure: draft, options: opts, kinds } : null} onLoad={(t) => {

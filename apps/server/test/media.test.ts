@@ -100,7 +100,9 @@ describe('Bilder & Medien (ADR-029)', () => {
       expect(got.status).toBe(200);
       expect(got.headers['content-type']).toBe('image/png');
       expect(got.headers['x-content-type-options']).toBe('nosniff');
-      expect(got.headers['cache-control']).toContain('immutable');
+      // eine neue Fassung ersetzt das Bild überall (ADR-085): revalidieren per ETag statt „immutable“
+      expect(got.headers['cache-control']).toBe('private, no-cache');
+      expect(got.headers.etag).toBe(`"${sha}"`);
       expect(Buffer.compare(got.raw, maske)).toBe(0);
       expect((await call('GET', '/media/nicht-hex')).status).toBe(404);
       // Projekttrennung: dasselbe Bild ist in einem anderen Projekt nicht abrufbar

@@ -1,6 +1,7 @@
+import { WarnIcon } from '../components/icons';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Card, Empty, ErrorBox, Md, Page, Status, useLoad } from '../components/ui';
+import { Card, Empty, ErrorBox, Md, Page, Status, useLoad, statusLabel } from '../components/ui';
 import { SourceViewer } from './Sources';
 
 /** Evidenz- und Quellenansicht (US-011): welcher Absatz beruht auf welcher Quelle? */
@@ -17,10 +18,10 @@ export function EvidencePage() {
   const rows = (d?.blocks ?? []).filter((b: any) => !onlyIssues || b.issues.length);
 
   return (
-    <Page title="Evidenz" subtitle="Quellen je Absatz: Herkunft, Revision, Bestätigung und Lücken der Nachweise">
+    <Page title="Evidenz" docTitle={withVersion.find((c) => c.versions.some((v: any) => v.id === effectiveId))?.title} subtitle="Quellen je Absatz: Herkunft, Revision, Bestätigung und Lücken der Nachweise">
       <div className="filters">
         <select aria-label="Kapitelversion" value={effectiveId ?? ''} onChange={(e) => navigate(`/evidenz/${e.target.value}`)}>
-          {withVersion.flatMap((c) => c.versions.map((v: any) => <option key={v.id} value={v.id}>{c.title} – Version {v.versionNo} ({v.status})</option>))}
+          {withVersion.flatMap((c) => c.versions.map((v: any) => <option key={v.id} value={v.id}>{c.title} – Version {v.versionNo} ({statusLabel(v.status)})</option>))}
         </select>
         <label><input type="checkbox" checked={onlyIssues} onChange={(e) => setOnlyIssues(e.target.checked)} /> nur Absätze mit Auffälligkeiten</label>
         {d && <Link to={`/werkstatt/${d.chapterId}`}>In der Kapitelwerkstatt öffnen →</Link>}
@@ -56,7 +57,7 @@ export function EvidencePage() {
                         {!b.sources.length && '–'}
                       </td>
                       <td className="small">
-                        {b.issues.length ? b.issues.map((i: string) => <div key={i} className={i === 'no_evidence' ? 'fail' : ''}>⚠ {d.issueLabels[i]}</div>) : <span className="ok">✔ belegt</span>}
+                        {b.issues.length ? b.issues.map((i: string) => <div key={i} className={i === 'no_evidence' ? 'fail' : ''}><WarnIcon />{d.issueLabels[i]}</div>) : <span className="ok">✔ belegt</span>}
                       </td>
                     </tr>
                   ))}

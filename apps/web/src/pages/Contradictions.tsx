@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { post, qs } from '../api';
 import { Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Severity, Status, errorText, useApp, useLoad } from '../components/ui';
 import { SourceViewer } from './Sources';
+import { formatDateTime } from '../format';
 
 export function ContradictionsPage() {
   const [minScore, setMinScore] = useState(40);
@@ -15,8 +16,8 @@ export function ContradictionsPage() {
       <Card>
         <div className="filters">
           <label className="slider">Treffer ab Ähnlichkeit
-            <input type="range" min={10} max={100} value={minScore} onChange={(e) => setMinScore(Number(e.target.value))} aria-label="Mindestähnlichkeit" />
-            <strong>{minScore} %</strong>
+            <input type="range" min={10} max={100} value={minScore} onChange={(e) => setMinScore(Number(e.target.value))} aria-label="Treffer ab Ähnlichkeit" aria-valuetext={`${minScore} %`} />
+            <output aria-hidden="true">{minScore} %</output>
           </label>
           <label><input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)} /> Nur offene Hinweise</label>
           <button className="btn ghost" onClick={findings.reload}>⟳ Aktualisieren</button>
@@ -103,7 +104,7 @@ export function CompareDialog({ finding: f, onClose, onDecided }: { finding: any
         <Statement label="Aussage B" s={f.b} />
       </div>
       {decided ? (
-        <div className="alert">Entschieden: <strong>{ref?.decisions.find((d) => d.code === f.decision)?.label ?? f.decision}</strong> von {f.decidedBy} am {new Date(f.decidedAt).toLocaleString('de-DE')} — {f.decisionReason}</div>
+        <div className="alert">Entschieden: <strong>{ref?.decisions.find((d) => d.code === f.decision)?.label ?? f.decision}</strong> von {f.decidedBy} am {formatDateTime(f.decidedAt)} — {f.decisionReason}</div>
       ) : (
         <fieldset className="decision">
           <legend>Entscheidung (Begründung, Entscheider und Zeitstempel werden protokolliert)</legend>

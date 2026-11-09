@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { currentProjectId, del, post, put, qs } from '../api';
-import { Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { Gated, Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 import { LANG_NAMES } from './Assistant';
 import { RefSelect } from './Sources';
 
@@ -52,7 +52,7 @@ export function ContextHelpAdminPage() {
               </select>
             </label>
             <label className="inline">Beschreibung <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Maske „Auftrag anlegen“" /></label>
-            <button className="btn primary" type="submit" disabled={!form.key.trim() || !form.chapterId}>Zuordnen</button>
+            <Gated className="btn primary" type="submit" missing={[!form.key.trim() && 'Kontext-ID', !form.chapterId && 'Kapitel']}>Zuordnen</Gated>
           </form>
         )}
         {data.data && !data.data.items.length ? <Empty>Noch keine Kontext-IDs. Tipp: Im Front-Matter einer Quelldatei setzt <code>help_context: order.create</code> die Zuordnung beim Import.</Empty> : (
