@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { del, patch, post } from '../api';
 import { Gated, Card, Empty, ErrorBox, Modal, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { formatDate, formatDateTime } from '../format';
 
 const SCOPES = [
   { code: 'read', label: 'Lesen' },
@@ -77,8 +78,8 @@ export function IntegrationsPage() {
                   <td className="mono small">{t.prefix}…</td>
                   <td className="small">{t.scopes.join(', ')}</td>
                   <td><span className={`tag ${t.status === 'active' ? 'st-approved' : 'st-ignored'}`}>{t.status === 'active' ? 'aktiv' : t.status === 'revoked' ? 'widerrufen' : 'abgelaufen'}</span></td>
-                  <td className="small">{new Date(t.expiresAt).toLocaleDateString('de-DE')}</td>
-                  <td className="small">{t.lastUsedAt ? new Date(t.lastUsedAt).toLocaleString('de-DE') : '–'}</td>
+                  <td className="small">{formatDate(t.expiresAt)}</td>
+                  <td className="small">{t.lastUsedAt ? formatDateTime(t.lastUsedAt) : '–'}</td>
                   <td>{t.status === 'active' && <button className="btn small ghost" aria-label={`Token ${t.name} widerrufen`} onClick={() => confirm(`Token „${t.name}“ widerrufen?`) && void run(() => del(`/api-tokens/${t.id}`), 'Token widerrufen.')}>Widerrufen</button>}</td>
                 </tr>
               ))}
@@ -109,7 +110,7 @@ export function IntegrationsPage() {
                       <td><Status s={d.status === 'delivered' ? 'completed' : d.status === 'failed' ? 'failed' : 'queued'} />{d.error && <div className="small">{d.error}</div>}</td>
                       <td>{d.attempts}</td>
                       <td>{d.responseCode ?? '–'}</td>
-                      <td className="small">{new Date(d.createdAt).toLocaleString('de-DE')}</td>
+                      <td className="small">{formatDateTime(d.createdAt)}</td>
                       <td>{d.status === 'failed' && <button className="btn small" onClick={() => void run(() => post(`/webhook-deliveries/${d.id}/redeliver`), 'Erneut zugestellt.')}>Erneut senden</button>}</td>
                     </tr>
                   ))}

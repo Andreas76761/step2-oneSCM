@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { patch, post } from '../api';
 import { Gated, Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDateTime } from '../format';
 
 const KINDS: [string, string][] = [['paragraph', 'Absatz'], ['note', 'Hinweis'], ['tip', 'Tipp'], ['warning', 'Warnung'], ['list', 'Liste'], ['table', 'Tabelle']];
 const SECTIONS: [string, string][] = [['purpose', 'Zweck'], ['prerequisites', 'Voraussetzungen'], ['steps', 'Schrittweise Durchführung'], ['result', 'Ergebnis und Systemstatus'], ['hints', 'Hinweise, Tipps und Warnungen'], ['troubleshooting', 'Fehlerbehebung']];
@@ -85,7 +86,7 @@ function ModuleDetail({ id, canEdit, onChange }: { id: string; canEdit: boolean;
         </>
       )}
       <h3>Fassungen</h3>
-      <ol className="small" reversed>{m.versions.map((v: any) => <li key={v.versionNo}>Fassung {v.versionNo} · {new Date(v.createdAt).toLocaleString('de-DE')}{v.note ? ` · ${v.note}` : ''}</li>)}</ol>
+      <ol className="small" reversed>{m.versions.map((v: any) => <li key={v.versionNo}>Fassung {v.versionNo} · {formatDateTime(v.createdAt)}{v.note ? ` · ${v.note}` : ''}</li>)}</ol>
     </Card>
   );
 }

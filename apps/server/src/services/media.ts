@@ -5,6 +5,7 @@ import { imageRefs, mediaShas, sniffImage } from '../domain/media.js';
 import { looksLikeSvg, sanitizeSvg, SvgRejected } from '../domain/svg.js';
 import { sha256 } from '../domain/similarity.js';
 import { badRequest, notFound } from '../problem.js';
+import { redactedShaOf } from './imageRedaction.js';
 
 export interface MediaFile {
   sha: string;
@@ -60,10 +61,7 @@ export async function currentSha(ctx: Ctx, sha: string): Promise<string> {
 export async function getMedia(ctx: Ctx, requested: string, opts: { exact?: boolean; unredacted?: boolean } = {}): Promise<MediaFile> {
   if (!/^[a-f0-9]{64}$/.test(requested)) throw notFound(`Bild ${requested}`);
   let sha = opts.exact ? requested : await currentSha(ctx, requested);
-  if (!opts.unredacted) {
-    const red = await ctx.db.get('SELECT redacted_sha FROM media_redactions WHERE project_id = ? AND sha = ? AND enabled = 1 AND redacted_sha IS NOT NULL', ctx.projectId, sha);
-    if (red) sha = red.redacted_sha;
-  }
+  if (!opts.unredacted) sha = (await redactedShaOf(ctx, sha)) ?? sha;
   const r = await ctx.db.get('SELECT * FROM media_assets WHERE project_id = ? AND sha256 = ?', ctx.projectId, sha);
   if (!r) throw notFound(`Bild ${sha}`);
   const m: MediaFile = { sha, mime: r.mime, data: await ctx.store.get(r.storage_key), width: r.width ?? null, height: r.height ?? null };

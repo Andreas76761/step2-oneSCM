@@ -357,15 +357,6 @@ export function BarList({ rows, label }: { rows: { key: string; label: ReactNode
   );
 }
 
-export function useDialog<T>() {
-  const [value, setValue] = useState<T | null>(null);
-  return { value, open: (v: T) => setValue(v), close: () => setValue(null) };
-}
-
-export function useRef2() {
-  return useApp().ref;
-}
-
 /** Download-Schaltfläche mit Anmeldung */
 export function DownloadButton({ href, name, children, className }: { href: string; name: string; children: ReactNode; className?: string }) {
   const { notify } = useApp();

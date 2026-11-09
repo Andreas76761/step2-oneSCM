@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { currentProjectId, del, patch, post, put, setCurrentProjectId } from '../api';
 import { Gated, Card, Empty, ErrorBox, PERMS, Page, errorText, permLabel, useApp, useLoad } from '../components/ui';
+import { formatDate } from '../format';
 
 
 /** Mandanten/Projekte (ADR-014): Übersicht, Anlegen, Sichtbarkeit, Archivierung und Mitglieder */
@@ -111,7 +112,7 @@ function Members({ projectId, name }: { projectId: string; name: string }) {
               <tr key={m.userId}>
                 <td>{m.name ?? m.userId} <span className="small muted">{m.userId}</span></td>
                 <td className="small">{m.permissions.map(permLabel).join(', ')}</td>
-                <td className="small">{m.addedBy} · {new Date(m.addedAt).toLocaleDateString('de-DE')}</td>
+                <td className="small">{m.addedBy} · {formatDate(m.addedAt)}</td>
                 <td><button className="btn small danger" onClick={() => act(() => del(`/projects/${projectId}/members/${encodeURIComponent(m.userId)}`), 'Mitglied entfernt.')}>Entfernen</button></td>
               </tr>
             ))}

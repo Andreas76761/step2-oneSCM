@@ -1,15 +1,11 @@
 // Warnhinweis-Schema (ADR-083, F-07): Signalwort + Art und Quelle der Gefahr + Folgen + Vermeidung (ANSI Z535.6 / SAFE),
 // feste Signalwörter je Sprache. Rein regelbasiert; geprüft im Anleitungs-Check und beim Übersetzen.
 
+/**
+ * Stufen (Checkliste Benutzerhandbuch, Phase 3): danger – Tod oder schwere Verletzung; warning – mögliche schwere Verletzung;
+ * caution – leichte bis mittlere Verletzung; notice – Sachschaden, Datenverlust oder Störung im Ablauf
+ */
 export type SignalLevel = 'danger' | 'warning' | 'caution' | 'notice';
-export const SIGNAL_LEVELS: SignalLevel[] = ['danger', 'warning', 'caution', 'notice'];
-/** Bedeutung der Stufen (Checkliste Benutzerhandbuch, Phase 3) */
-export const SIGNAL_MEANING: Record<SignalLevel, string> = {
-  danger: 'Tod oder schwere Verletzung',
-  warning: 'mögliche schwere Verletzung',
-  caution: 'leichte bis mittlere Verletzung',
-  notice: 'Sachschaden, Datenverlust oder Störung im Ablauf',
-};
 
 /** Feste Signalwörter je Sprache (Großschreibung wie gedruckt) */
 export const SIGNAL_WORDS: Record<string, Record<SignalLevel, string>> = {

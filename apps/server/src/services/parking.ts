@@ -23,12 +23,6 @@ export async function reservedChapter(ctx: Ctx, target: ParkTarget): Promise<Row
   return (await ctx.db.get('SELECT * FROM chapters WHERE project_id = ? AND key = ?', ctx.projectId, def.key))!;
 }
 
-/** beide Kapitel anlegen (Inhaltsverzeichnis zeigt sie auch ohne vorgemerkte Abschnitte) */
-export async function ensureReservedChapters(ctx: Ctx) {
-  for (const t of TARGETS) await reservedChapter(ctx, t);
-}
-
-export const isReserved = (chapter: Row | undefined | null) => !!chapter && RESERVED_CHAPTER_KEYS.includes(chapter.key);
 
 async function snippetRow(ctx: Ctx, id: string) {
   const s = await ctx.db.get(

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { del, patch, post, put } from '../api';
 import { Card, Empty, ErrorBox, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDateTime } from '../format';
 
 // Agenten in der App (ADR-100): ORCHESTRATOR plant und verfeinert Aufgaben aller Agenten und legt Entscheidungen vor,
 // ein Mensch entscheidet; GOAL vergleicht den Stand aller Funktionen mit dem Ziel und erstellt Empfehlungen
@@ -69,7 +70,7 @@ export function AgentsPage() {
       <Tabs />
       <ErrorBox error={agents.error ?? tasks.error ?? decisions.error} />
       {plan && (
-        <Card title={`Plan des Orchestrators (${new Date(plan.plannedAt).toLocaleString('de-DE')})`}>
+        <Card title={`Plan des Orchestrators (${formatDateTime(plan.plannedAt)})`}>
           {!plan.plan.length ? <Empty>Nichts zu tun – alle Ziele laut Stand erfüllt.</Empty> : (
             <ol>
               {plan.plan.map((s: any) => (
@@ -269,7 +270,7 @@ export function GoalPage() {
               {perms.edit && <div className="row-actions"><button type="submit" className="btn" disabled={busy}>Ziel speichern</button></div>}
             </form>
           </Card>
-          <Card title={last ? `Letzter Abgleich: ${new Date(last.createdAt).toLocaleString('de-DE')} – ${Math.round(last.score * 100)} % erfüllt` : 'Noch kein Abgleich'}>
+          <Card title={last ? `Letzter Abgleich: ${formatDateTime(last.createdAt)} – ${Math.round(last.score * 100)} % erfüllt` : 'Noch kein Abgleich'}>
             {!last ? <Empty>„Abgleich ausführen“ misst den Stand gegen alle aktiven Kriterien.</Empty> : (
               <table className="table">
                 <caption className="sr-only">Ergebnis des Ziel-Abgleichs mit Empfehlungen</caption>

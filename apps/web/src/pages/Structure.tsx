@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { patch, post } from '../api';
 import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDate } from '../format';
 
 // Kapitelsteuerung (ADR-096): Kapitelanweisung je Kapitel und Unterkapitel, fehlende Kapitel ergänzen, Version
 // („gültig ab“), veraltete Funktionen ablösen – das Abgelöste kommt in die Historie
@@ -137,7 +138,7 @@ export function StructurePage() {
                   <td>{h.validFrom ? `${h.validFrom} – ` : 'bis '}{h.validUntil ?? h.createdAt.slice(0, 10)}</td>
                   <td>{h.replacedBy?.title ?? '–'}{Object.entries(h.moved ?? {}).some(([, n]) => Number(n) > 0) && <span className="small muted"> ({Object.entries(h.moved).map(([k, n]) => `${n} ${k === 'chunks' ? 'Chunks' : k === 'qa' ? 'F&A' : 'Bilder'}`).join(', ')} übertragen)</span>}</td>
                   <td>{h.note ?? ''}</td>
-                  <td className="small">{new Date(h.createdAt).toLocaleDateString('de-DE')} · {h.createdBy}</td>
+                  <td className="small">{formatDate(h.createdAt)} · {h.createdBy}</td>
                   <td>{canEdit && (h.kind !== 'label' || isAdmin) && <button type="button" className="btn small ghost" onClick={() => void restore(h)}>Zurückholen</button>}</td>
                 </tr>
               ))}

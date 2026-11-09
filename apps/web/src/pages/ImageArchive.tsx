@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { api, del, forgetMedia, mediaUrl, patch, post, put } from '../api';
 import { readClipboardImage, usePasteImage } from '../components/clipboard';
 import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad, Status } from '../components/ui';
+import { formatDate } from '../format';
 
 // Bildarchiv (ADR-085, F-20, F-21, F-23): feste Bildnummer, Merkmale, Prüfregeln, Versionen, Platzhalter, Bildabdeckung je Kapitel
 
@@ -230,7 +231,7 @@ export function ImageArchivePage() {
               <ol className="small">
                 {item.versions.map((v: any) => (
                   <li key={v.sha}>
-                    Fassung {v.versionNo}{v.sha === item.currentSha && <span className="tag">aktuell</span>} · {new Date(v.createdAt).toLocaleDateString('de-DE')}{v.createdBy ? ` · ${v.createdBy}` : ''}{v.note ? ` – ${v.note}` : ''}{' '}
+                    Fassung {v.versionNo}{v.sha === item.currentSha && <span className="tag">aktuell</span>} · {formatDate(v.createdAt)}{v.createdBy ? ` · ${v.createdBy}` : ''}{v.note ? ` – ${v.note}` : ''}{' '}
                     <DownloadButton className="btn link" href={v.url} name={`${item.imageNo}-v${v.versionNo}`}>Herunterladen</DownloadButton>
                     {canEdit && <> · <DownloadButton className="btn link" href={v.originalUrl} name={`${item.imageNo}-v${v.versionNo}-original`}>Original (ohne Unkenntlichmachung)</DownloadButton></>}
                   </li>

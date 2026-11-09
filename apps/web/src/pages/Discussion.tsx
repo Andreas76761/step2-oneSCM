@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { patch, post } from '../api';
 import { Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDate, formatDateTime } from '../format';
 
 /** Diskussion zu einem Absatz, Befund oder Kapitel (ADR-019): Kommentare, Antworten, Aufgaben mit @Erwähnung */
 export function DiscussionPanel({ entityType, entityId, canEdit }: { entityType: 'block' | 'finding' | 'chapter'; entityId: string; canEdit: boolean }) {
@@ -40,9 +41,9 @@ export function DiscussionPanel({ entityType, entityId, canEdit }: { entityType:
           {list.map((c) => (
             <li key={c.id} className={c.parentId ? 'reply' : ''}>
               <div className="small">
-                <strong>{c.authorName}</strong> · {new Date(c.createdAt).toLocaleString('de-DE')}
+                <strong>{c.authorName}</strong> · {formatDateTime(c.createdAt)}
                 {c.kind === 'task' && (
-                  <> · <span className={`tag ${c.status === 'done' ? 'st-approved' : 'st-open'}`}>{c.status === 'done' ? 'Aufgabe erledigt' : 'Aufgabe offen'}</span> für {c.assigneeName}{c.dueDate && <> bis {new Date(c.dueDate).toLocaleDateString('de-DE')}</>}</>
+                  <> · <span className={`tag ${c.status === 'done' ? 'st-approved' : 'st-open'}`}>{c.status === 'done' ? 'Aufgabe erledigt' : 'Aufgabe offen'}</span> für {c.assigneeName}{c.dueDate && <> bis {formatDate(c.dueDate)}</>}</>
                 )}
               </div>
               <Md text={c.body} />
@@ -120,7 +121,7 @@ export function InboxPage({ onRead }: { onRead: () => void }) {
                 <li key={n.id} className={n.readAt ? '' : 'unread'}>
                   <div>{n.text}</div>
                   <div className="small muted">
-                    {new Date(n.createdAt).toLocaleString('de-DE')}
+                    {formatDateTime(n.createdAt)}
                     {n.link && <> · <Link to={n.link} onClick={() => !n.readAt && read([n.id])}>öffnen</Link></>}
                     {!n.readAt && <> · <button className="btn link small" onClick={() => read([n.id])}>gelesen</button></>}
                   </div>
@@ -137,7 +138,7 @@ export function InboxPage({ onRead }: { onRead: () => void }) {
                 <li key={t.id}>
                   <Md text={t.body} />
                   <div className="small muted">
-                    {t.label} · von {t.authorName}{t.dueDate && <> · bis {new Date(t.dueDate).toLocaleDateString('de-DE')}</>}
+                    {t.label} · von {t.authorName}{t.dueDate && <> · bis {formatDate(t.dueDate)}</>}
                     {t.link && <> · <Link to={t.link}>öffnen</Link></>}
                   </div>
                 </li>

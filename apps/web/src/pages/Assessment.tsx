@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { patch, post, qs } from '../api';
 import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDate } from '../format';
 
 const TRAFFIC_CLS: Record<string, string> = { green: 'st-approved', yellow: 'sev-medium', red: 'sev-high' };
 const CLASS_CLS: Record<string, string> = { supported: 'st-approved', unsupported: 'sev-medium', contradiction: 'sev-high', missing: 'sev-low' };
@@ -144,7 +145,7 @@ function ErrorRow({ e, categories, canEdit, onChange }: { e: any; categories: st
   return (
     <tr>
       <th scope="row" className="small">{e.nr}</th>
-      <td className="small">{new Date(e.foundAt).toLocaleDateString('de-DE')}</td>
+      <td className="small">{formatDate(e.foundAt)}</td>
       <td className="small">{e.location}</td>
       <td>{e.error}</td>
       <td>{e.correction ?? '–'}</td>

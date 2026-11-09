@@ -241,7 +241,3 @@ export async function embeddingPairs(ctx: Ctx, snippets: { id: string; text: str
   for (const [i, j, score] of knnPairs(vecs, 10, threshold)) push(i, j, score);
   return { pairs, skipped: false, approximate: true, model: ctx.embeddings.model };
 }
-
-export async function semanticSettings(ctx: Ctx) {
-  return (await getSettings(ctx.db)).semantic;
-}

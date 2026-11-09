@@ -6,6 +6,7 @@ import {
   Gated, Decision, Card, DivisionBadges, Empty, ErrorBox, Md, Modal, Page, RoleBadges, Status, TYPE_LABEL, errorText, statusLabel, useApp, useLoad,
   activatable,
 } from '../components/ui';
+import { formatDateTime } from '../format';
 
 const ENGINE_LABEL: Record<string, string> = { exact: 'exakte Suche', hnsw: 'HNSW-Näherung', pgvector: 'pgvector' };
 
@@ -104,7 +105,7 @@ export function SourcesPage() {
                     <td>{i.stats.identical ?? '–'}</td>
                     <td>{i.stats.failed ?? '–'}</td>
                     <td>{i.stats.removed || '–'}</td>
-                    <td>{new Date(i.createdAt).toLocaleString('de-DE')}</td>
+                    <td>{formatDateTime(i.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -122,7 +123,7 @@ export function SourcesPage() {
               {removed.map((d) => (
                 <tr key={d.id}>
                   <td>{d.path}</td>
-                  <td>{new Date(d.removedAt).toLocaleString('de-DE')}</td>
+                  <td>{formatDateTime(d.removedAt)}</td>
                   <td><button className="btn small" onClick={() => restore(d.id, d.path)}>Wiederherstellen</button></td>
                 </tr>
               ))}
@@ -461,7 +462,7 @@ function Connections({ onSynced }: { onSynced: () => void }) {
                 <td>{c.name}</td>
                 <td className="small">{c.kind === 'confluence' ? 'Confluence · ' : ''}{c.url}{c.spaceKey && <> · Bereich {c.spaceKey}</>}{c.branch && <> · {c.branch}</>}{c.subPath && <> · /{c.subPath}</>}{c.credentialAvailable === false && <div className="tag st-failed">{c.credentialEnv} fehlt</div>}</td>
                 <td><Status s={c.status} />{c.lastError && <div className="small" role="note">{c.lastError}</div>}</td>
-                <td className="small">{c.lastSyncAt ? new Date(c.lastSyncAt).toLocaleString('de-DE') : '–'}{c.lastCommit && <><br />Commit {c.lastCommit.slice(0, 7)}</>}</td>
+                <td className="small">{c.lastSyncAt ? formatDateTime(c.lastSyncAt) : '–'}{c.lastCommit && <><br />Commit {c.lastCommit.slice(0, 7)}</>}</td>
                 <td className="small">{c.intervalMinutes ? `alle ${c.intervalMinutes} min` : 'manuell'}{c.nextSyncAt && <><br />nächster: {new Date(c.nextSyncAt).toLocaleTimeString('de-DE')}</>}</td>
                 <td><div className="actions">
                   {canSync && <button className="btn small" aria-label={`${c.name} jetzt abgleichen`} disabled={['queued', 'syncing', 'importing'].includes(c.status)} onClick={() => run(() => post(`/source-connections/${c.id}/sync`))}>Jetzt abgleichen</button>}

@@ -1,6 +1,7 @@
 // Vier Prüferprofile (ADR-105, W-12): fachlich, Redaktion, Compliance, Endanwender. Jedes Profil liest das Kapitel mit
 // eigenem Blick; die Regeln hier sind die Grundlage, ein lokaler KI-Dienst kann je Profil Funde ergänzen.
 import { segmentSentences } from './style.js';
+import { escapeRegExp } from './text.js';
 
 export const REVIEW_PROFILES = ['domain', 'editorial', 'compliance', 'enduser'] as const;
 export type ReviewProfile = (typeof REVIEW_PROFILES)[number];
@@ -53,7 +54,7 @@ const PROMISES: { re: RegExp; message: string; suggestion: string }[] = [
 const CONSEQUENTIAL = /\b(?:löschen|gelöscht|unwiderruflich|endgültig|kündigen|stornieren|überschreiben|zurücksetzen|versenden)\b/i;
 /** Fachjargon und interne Begriffe, die Endanwender nicht kennen müssen */
 export const JARGON = ['Backend', 'Frontend', 'Payload', 'Request', 'Response', 'Endpoint', 'Deployment', 'Batch', 'Job', 'Queue', 'Cache', 'Datenbank', 'Datensatz-ID', 'Schnittstelle', 'API', 'Workflow-Engine', 'Persistenz', 'Timeout', 'Flag'];
-const JARGON_RE = new RegExp(`(?<![\\p{L}])(${JARGON.map((j) => j.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})(?![\\p{L}])`, 'u');
+const JARGON_RE = new RegExp(`(?<![\\p{L}])(${JARGON.map(escapeRegExp).join('|')})(?![\\p{L}])`, 'u');
 export const LONG_SENTENCE = 25;
 
 export function compliancePromises(blocks: ReviewBlock[]): ReviewFinding[] {

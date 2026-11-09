@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { download, post } from '../api';
 import { Gated, Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDateTime } from '../format';
 
 const CHANGE: Record<string, { label: string; cls: string }> = {
   new: { label: 'neu', cls: 'st-approved' },
@@ -98,7 +99,7 @@ export function ReleasesPage() {
                 <li key={r.id}>
                   <div className="block-meta">
                     <strong>Version {r.version}</strong>{r.outlineId && <span className="tag">Variante</span>}
-                    <span className="small muted">{r.title} · {new Date(r.createdAt).toLocaleString('de-DE')} · {r.createdBy} · {r.chapters.length} Kapitel · {changed.length} Änderungen{r.languages?.length ? ` · Sprachen: DE, ${r.languages.map((l: any) => l.language.toUpperCase()).join(', ')}` : ''}</span>
+                    <span className="small muted">{r.title} · {formatDateTime(r.createdAt)} · {r.createdBy} · {r.chapters.length} Kapitel · {changed.length} Änderungen{r.languages?.length ? ` · Sprachen: DE, ${r.languages.map((l: any) => l.language.toUpperCase()).join(', ')}` : ''}</span>
                   </div>
                   <div className="row-actions">
                     <button className="btn small" onClick={() => get(r.id, 'site', `online-hilfe-${r.version}.zip`)}>Online-Hilfe (ZIP)</button>

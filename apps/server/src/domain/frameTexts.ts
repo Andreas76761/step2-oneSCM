@@ -98,7 +98,6 @@ const T: Record<string, FrameTexts> = {
 T['de-ch'] = { ...T.de, native: 'Deutsch (Schweiz)' };
 T['fr-ch'] = { ...T.fr, native: 'Français (Suisse)' };
 
-export const FRAME_LANGUAGES = Object.keys(T);
 /** Rahmentexte einer Sprache; unbekannte Sprachen bekommen Englisch, Deutsch bleibt Standard */
 export function frameTexts(language: string | null | undefined = 'de'): FrameTexts {
   const l = (language ?? 'de').toLowerCase();

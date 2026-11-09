@@ -1,6 +1,7 @@
 // Tonalität je Produktart und Rolle (ADR-102, S-02): Einstellung je Projekt, wirkt auf die Stilprüfung und die KI-Vorschläge.
 // Grundlage ist TONALITAET.md des Arbeitsordners (Ton je Produktart). Reine Fachlogik ohne I/O.
 import { ROLES } from './reference.js';
+import { escapeRegExp } from './text.js';
 
 export const TONES = ['factual', 'friendly', 'formal', 'concise'] as const;
 export type Tone = (typeof TONES)[number];
@@ -93,7 +94,6 @@ export const CONCISE_MAX_WORDS = 15;
 
 export interface ToneHit { start: number; end: number; severity: 'warning' | 'info'; message: string }
 
-const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * Fundstellen eines Satzes für den Ton (Positionen relativ zum Satz). Ausrufezeichen meldet schon die Zeichensetzung;
@@ -105,7 +105,7 @@ export function toneHits(sentence: string, tone: Tone, opts: { longReported?: bo
   const words = (sentence.match(/[\p{L}\d][\p{L}\d'’-]*/gu) ?? []).length;
   if (tone === 'factual' || tone === 'concise') {
     for (const w of PROMO_WORDS) {
-      for (const m of sentence.matchAll(new RegExp(String.raw`(?<![\p{L}])${esc(w)}(?![\p{L}])`, 'giu'))) {
+      for (const m of sentence.matchAll(new RegExp(String.raw`(?<![\p{L}])${escapeRegExp(w)}(?![\p{L}])`, 'giu'))) {
         out.push({ start: m.index!, end: m.index! + m[0].length, severity: 'info', message: `Ton „${L}“: Werbesprache „${m[0]}“ – streichen oder sachlich belegen` });
       }
     }
@@ -117,12 +117,12 @@ export function toneHits(sentence: string, tone: Tone, opts: { longReported?: bo
   if (tone === 'concise') {
     if (words > CONCISE_MAX_WORDS && !opts.longReported) out.push({ start: 0, end: sentence.length, severity: 'info', message: `Ton „${L}“: ${words} Wörter – höchstens ${CONCISE_MAX_WORDS} je Satz` });
     for (const p of PADDING) {
-      for (const m of sentence.matchAll(new RegExp(String.raw`(?<![\p{L}])${esc(p)}(?![\p{L}])`, 'giu'))) out.push({ start: m.index!, end: m.index! + m[0].length, severity: 'info', message: `Ton „${L}“: Floskel „${m[0]}“ – direkt formulieren` });
+      for (const m of sentence.matchAll(new RegExp(String.raw`(?<![\p{L}])${escapeRegExp(p)}(?![\p{L}])`, 'giu'))) out.push({ start: m.index!, end: m.index! + m[0].length, severity: 'info', message: `Ton „${L}“: Floskel „${m[0]}“ – direkt formulieren` });
     }
   }
   if (tone === 'friendly') {
     for (const h of HARSH) {
-      for (const m of sentence.matchAll(new RegExp(String.raw`(?<![\p{L}])${esc(h)}(?![\p{L}])`, 'gu'))) out.push({ start: m.index!, end: m.index! + m[0].length, severity: 'info', message: `Ton „${L}“: „${m[0]}“ wirkt streng – als Empfehlung formulieren („Bitte …“, „Wir empfehlen …“)` });
+      for (const m of sentence.matchAll(new RegExp(String.raw`(?<![\p{L}])${escapeRegExp(h)}(?![\p{L}])`, 'gu'))) out.push({ start: m.index!, end: m.index! + m[0].length, severity: 'info', message: `Ton „${L}“: „${m[0]}“ wirkt streng – als Empfehlung formulieren („Bitte …“, „Wir empfehlen …“)` });
     }
   }
   return out;

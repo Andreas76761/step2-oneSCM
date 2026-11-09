@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { post } from '../api';
 import { Gated, Card, DownloadButton, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDateTime } from '../format';
 
 const TRAFFIC_CLS: Record<string, string> = { green: 'st-approved', yellow: 'sev-medium', red: 'sev-high' };
 const SEVERITY_CLS: Record<string, string> = { high: 'sev-high', medium: 'sev-medium', low: 'sev-low' };
@@ -121,7 +122,7 @@ export function ProfileReviewsPage() {
             {d.latest.map((x: any) => (
               <Card key={x.id} title={<>{x.label} <span className={`tag ${TRAFFIC_CLS[x.traffic]}`}>{x.trafficLabel} · {x.score}</span></>}>
                 <p className="small muted">{x.focus}</p>
-                <p className="small">{x.counts.high} hoch, {x.counts.medium} mittel, {x.counts.low} gering · {x.method === 'ai' ? 'Regeln und KI-Dienst' : 'Regeln'} · {new Date(x.createdAt).toLocaleString('de-DE')}</p>
+                <p className="small">{x.counts.high} hoch, {x.counts.medium} mittel, {x.counts.low} gering · {x.method === 'ai' ? 'Regeln und KI-Dienst' : 'Regeln'} · {formatDateTime(x.createdAt)}</p>
                 {!x.findings.length ? <Empty>Keine Funde.</Empty> : (
                   <ul className="plain" aria-label={`Funde ${x.label}`}>
                     {x.findings.map((f: any, i: number) => (
@@ -143,7 +144,7 @@ export function ProfileReviewsPage() {
                 <table className="table compact">
                   <caption className="sr-only">Werte früherer Prüfungen</caption>
                   <thead><tr><th scope="col">Zeit</th><th scope="col">Profil</th><th scope="col">Wert</th><th scope="col">Verfahren</th></tr></thead>
-                  <tbody>{d.history.map((h: any) => <tr key={h.id}><td>{new Date(h.createdAt).toLocaleString('de-DE')}</td><td>{h.label}</td><td>{h.score}</td><td>{h.method === 'ai' ? 'Regeln und KI' : 'Regeln'}</td></tr>)}</tbody>
+                  <tbody>{d.history.map((h: any) => <tr key={h.id}><td>{formatDateTime(h.createdAt)}</td><td>{h.label}</td><td>{h.score}</td><td>{h.method === 'ai' ? 'Regeln und KI' : 'Regeln'}</td></tr>)}</tbody>
                 </table>
               </div>
             </Card>

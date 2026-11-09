@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.113.0 – Etappe 113: Code aufgeräumt (09.11.2026)
+
+Ohne Änderung an Funktionen und Oberfläche – alle Server- und E2E-Tests unverändert grün.
+
+### Hinzugefügt
+- **Gemeinsame Bausteine:** `escapeRegExp` im Server (`domain/text.ts`) statt acht Kopien; `formatDateTime`, `formatDate` und `escapeRegExp` in der Oberfläche (`format.ts`) statt 59 einzeln geschriebener Datumsformate und drei Kopien.
+
+### Geändert
+- **Große Seiten in eigenständige Dateien zerlegt** (nur verschoben, kein neues Verhalten):
+  - Leseransicht (1014 → 512 Zeilen): Druck (`ReaderPrint`), Lesezeichen und FAQ (`ReaderLists`), Rückmeldungen (`FeedbackCard`), gemeinsame Bausteine (`ReaderShared`).
+  - oneSCM_Metadaten (918 → 536 Zeilen): Zugriffsmatrix und Zuordnung (`MetadataAccess`), Labelkatalog (`MetadataLabels`), gemeinsame Bausteine (`MetadataShared`).
+  - Kapitelwerkstatt: Freigabe-Bereich als `ApprovalPanel`.
+- **Weniger Ladezeit:** Die Seite „Freigabe“ lädt nicht mehr die ganze Kapitelwerkstatt (vorher 40 KB zusätzlich), Druck-, Lesezeichen- und FAQ-Seite sowie „Prüfen & Verständlichkeit“ nicht mehr die ganze Leseransicht (77 KB).
+- Bildauslieferung nutzt die vorhandene Funktion für die unkenntliche Fassung statt einer zweiten, gleichen Abfrage.
+
+### Entfernt
+- Ungenutzter Code: `ensureReservedChapters`, `isReserved`, `semanticSettings`, `tracingActive`, `KIND_LABELS`, `SIGNAL_LEVELS`/`SIGNAL_MEANING` (Bedeutung als Kommentar am Typ), `FRAME_LANGUAGES`, `useDialog`, `useRef2`, `SCOPE_LABEL` und dadurch ungenutzte Imports.
+
 ## 0.112.0 – Etappe 112: Code-Review der Etappen 109–111 (08.11.2026)
 
 Geprüft: Sicherheitsupdates der Entwicklungswerkzeuge und Lockfile (`npm ls` ohne Befund), GitHub-Actions auf Node 24, Schreibweisen aus S-04. Ein Fund, behoben.

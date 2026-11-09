@@ -3,6 +3,7 @@ import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { post } from '../api';
 import { Badge, BarList, Card, ErrorBox, Page, Status, TYPE_LABEL, errorText, useApp, useLoad, statusLabel } from '../components/ui';
+import { formatDate, formatDateTime } from '../format';
 
 /**
  * Verlauf des durchschnittlichen Stilwerts (ADR-048): eine Linie (2px) mit Endpunkt-Beschriftung, Achse 0–100,
@@ -52,12 +53,12 @@ function StyleTrend({ points }: { points: { day: string; average: number | null 
           </g>
         )}
       </svg>
-      {h && <div className="trend-tip" role="status" style={{ left: `${(x(h.day) / W) * 100}%` }}><strong>{h.average}</strong> <span>{new Date(h.day).toLocaleDateString('de-DE')}</span></div>}
+      {h && <div className="trend-tip" role="status" style={{ left: `${(x(h.day) / W) * 100}%` }}><strong>{h.average}</strong> <span>{formatDate(h.day)}</span></div>}
       <details>
         <summary className="small">Werte als Tabelle</summary>
         <table className="table compact">
           <thead><tr><th>Tag</th><th>Stilwert (Durchschnitt)</th></tr></thead>
-          <tbody>{pts.map((p) => <tr key={p.day}><td>{new Date(p.day).toLocaleDateString('de-DE')}</td><td>{p.average}</td></tr>)}</tbody>
+          <tbody>{pts.map((p) => <tr key={p.day}><td>{formatDate(p.day)}</td><td>{p.average}</td></tr>)}</tbody>
         </table>
       </details>
     </div>
@@ -176,7 +177,7 @@ export function DashboardPage() {
             ))}
           </tbody>
         </table>
-        {d?.lastAnalysis && <p className="muted small">Letzte Analyse: {new Date(d.lastAnalysis.startedAt).toLocaleString('de-DE')} ({statusLabel(d.lastAnalysis.status)})</p>}
+        {d?.lastAnalysis && <p className="muted small">Letzte Analyse: {formatDateTime(d.lastAnalysis.startedAt)} ({statusLabel(d.lastAnalysis.status)})</p>}
       </Card>
     </Page>
   );

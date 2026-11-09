@@ -6,6 +6,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { currentProjectId, post } from '../api';
 import { Gated, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 import { RefSelect } from './Sources';
+import { formatDateTime } from '../format';
 
 export const LANG_NAMES: Record<string, string> = { de: 'Deutsch', en: 'Englisch', fr: 'Französisch', es: 'Spanisch', it: 'Italienisch', nl: 'Niederländisch', pl: 'Polnisch', cs: 'Tschechisch', pt: 'Portugiesisch' };
 
@@ -109,7 +110,7 @@ export function AssistantPage() {
                     <td>{q.question}{q.feedback && <div className="small muted">„{q.feedback}“</div>}</td>
                     <td>{q.language.toUpperCase()}</td>
                     <td>{q.answered ? 'als nicht hilfreich bewertet' : 'keine Aussage im Handbuch'}</td>
-                    <td className="small">{new Date(q.createdAt).toLocaleString('de-DE')}</td>
+                    <td className="small">{formatDateTime(q.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

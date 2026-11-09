@@ -7,7 +7,6 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { currentProjectId, del, download, patch, post } from '../api';
 import { Gated, Card, Empty, ErrorBox, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
 
-export const SCOPE_LABEL: Record<string, string> = { blueprint: 'Blueprint', markets: 'Märkte' };
 const STATUS_LABEL: Record<string, string> = { draft: 'Entwurf', active: 'aktiv', archived: 'archiviert' };
 
 /** Variante als lesbare Kurzform: „Dealer · PKW · Blueprint“ */

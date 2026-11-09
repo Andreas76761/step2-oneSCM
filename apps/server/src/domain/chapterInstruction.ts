@@ -1,3 +1,4 @@
+import { escapeRegExp } from './text.js';
 // Kapitelanweisung (ADR-096): je Kapitel und Unterkapitel eine kurze Anleitung, wichtige Themen und Themen, die nicht
 // beschrieben werden. Sie gilt mit Vorrang für Generator, KI-Vorschläge und Anleitungs-Check – Quellenbindung und
 // Datenschutz gehen ihr vor.
@@ -10,13 +11,12 @@ export interface Instruction {
 
 export const MAX_TOPICS = 30;
 export const MAX_INSTRUCTION = 2000;
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Thema kommt im Text vor: Wortanfang muss passen, Endungen sind frei („Kündigung“ findet „Kündigungen“) */
 export function mentions(text: string, topic: string): boolean {
   const t = topic.trim();
   if (t.length < 3) return false;
-  return new RegExp(`(?<![\\p{L}\\d])${escapeRe(t).replace(/\s+/g, '\\s+')}`, 'iu').test(text);
+  return new RegExp(`(?<![\\p{L}\\d])${escapeRegExp(t).replace(/\s+/g, '\\s+')}`, 'iu').test(text);
 }
 
 /** Themenliste bereinigen: getrimmt, ohne Dubletten (Groß-/Kleinschreibung egal), 3–80 Zeichen */

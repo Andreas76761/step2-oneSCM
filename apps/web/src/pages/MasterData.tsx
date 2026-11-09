@@ -6,6 +6,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { api, del, mediaUrl, patch, post, put } from '../api';
 import { Gated, Card, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
 import { createRenditionFor } from '../images';
+import { formatDateTime } from '../format';
 
 function useCanEdit() {
   const me = useLoad<any>('/me');
@@ -535,7 +536,7 @@ function FaqBatchCard({ languages, entries, onChanged }: { languages: string[]; 
             </>
           ) : (
             <span className="small">
-              Letzter Auftrag ({new Date(last.finishedAt ?? last.createdAt).toLocaleString('de-DE')}): {last.status === 'completed' ? 'abgeschlossen' : last.status === 'cancelled' ? 'abgebrochen' : 'fehlgeschlagen'} –{' '}
+              Letzter Auftrag ({formatDateTime(last.finishedAt ?? last.createdAt)}): {last.status === 'completed' ? 'abgeschlossen' : last.status === 'cancelled' ? 'abgebrochen' : 'fehlgeschlagen'} –{' '}
               {last.translated} übersetzt{last.flagged > 0 && `, ${last.flagged} mit Prüfbefund`}{last.failed > 0 && `, ${last.failed} fehlgeschlagen`}{last.skipped > 0 && `, ${last.skipped} übersprungen`}.
               {(last.translated + last.flagged) > 0 && ' Die Entwürfe stehen unten bei den Fragen zur Prüfung und Freigabe.'}
               {last.error && <span className="sev-text"> {last.error}</span>}

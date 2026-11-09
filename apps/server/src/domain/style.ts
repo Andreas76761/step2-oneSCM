@@ -3,6 +3,7 @@
 // Reine Fachlogik ohne I/O.
 import { ruleSetIssues, type ActiveSet } from './ruleSets.js';
 import { toneHits, type Tone } from './tone.js';
+import { escapeRegExp } from './text.js';
 
 export type StyleRule =
   | 'long_sentence' | 'passive' | 'future' | 'past' | 'filler' | 'double_word' | 'punctuation' | 'capitalization'
@@ -144,7 +145,6 @@ export function segmentSentences(text: string): { start: number; end: number; te
 }
 
 const wordCount = (s: string) => [...s.replace(/^\s*(?:\d+\.|[-*])\s+/, '').matchAll(WORD)].length;
-const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * Fundstellen eines zu vermeidenden Begriffs (ganzes Wort, ohne Groß-/Kleinschreibung). Unterscheidet sich die Variante vom
@@ -153,7 +153,7 @@ const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  */
 export function avoidMatches(text: string, avoid: string, preferred: string): RegExpMatchArray[] {
   const caseOnly = avoid.toLowerCase() === preferred.toLowerCase();
-  return [...text.matchAll(new RegExp(String.raw`(?<![\p{L}\p{N}_])${escape(avoid)}(?![\p{L}\p{N}_])`, 'giu'))].filter((m) => !caseOnly || m[0] !== preferred);
+  return [...text.matchAll(new RegExp(String.raw`(?<![\p{L}\p{N}_])${escapeRegExp(avoid)}(?![\p{L}\p{N}_])`, 'giu'))].filter((m) => !caseOnly || m[0] !== preferred);
 }
 
 /** Regelprüfung eines Textes */
@@ -214,7 +214,7 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
       // eigene Formulierungsregeln des Projekts
       for (const p of opts.phrases ?? []) {
         if (!p.avoid.trim() || (p.language ?? 'de').toLowerCase().slice(0, 2) !== lang) continue;
-        for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(p.avoid.trim())}(?![\p{L}])`, 'giu'))) {
+        for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escapeRegExp(p.avoid.trim())}(?![\p{L}])`, 'giu'))) {
           const msg = p.note?.trim() || (typeof p.use === 'string' ? (p.use ? `„${p.use}“ statt „${m[0]}“` : `„${m[0]}“ streichen`) : `„${m[0]}“ vermeiden`);
           if (typeof p.use !== 'string') add('custom', 'warning', msg, m.index!, m.index! + m[0].length);
           else if (p.use) add('custom', 'warning', msg, m.index!, m.index! + m[0].length, { replacement: p.use, label: `„${p.use}“` });
@@ -280,7 +280,7 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
       }
       for (const m of t.matchAll(/(?<![\p{L}'.])i(?![\p{L}'.])/gu)) if (!inCode(m.index!)) add('grammar', 'warning', '„I“ großschreiben', m.index!, m.index! + 1, { replacement: 'I', label: '„I“' });
       for (const [wrong, right] of Object.entries(SPELLING_EN)) {
-        for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}-])${escape(wrong)}(?![\p{L}])`, 'giu'))) {
+        for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}-])${escapeRegExp(wrong)}(?![\p{L}])`, 'giu'))) {
           const fixWord = m[0][0] === m[0][0].toUpperCase() ? right[0].toUpperCase() + right.slice(1) : right;
           if (fixWord !== m[0]) add('spelling', 'warning', `Spelling: „${fixWord}“`, m.index!, m.index! + m[0].length, { replacement: fixWord, label: `„${fixWord}“` });
         }
@@ -312,7 +312,7 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
     if (pass && !s.issues.some((i) => i.rule === 'future' && i.start <= s.start + pass.index! + pass[0].length)) add('passive', 'info', 'Passiv – aktiv formulieren (wer macht was?)', pass.index!, pass.index! + pass[0].length);
 
     for (const f of FILLERS) {
-      for (const m of t.matchAll(new RegExp(String.raw`(^|\s)(${escape(f)})(?=[\s,.!?;:])`, 'giu'))) {
+      for (const m of t.matchAll(new RegExp(String.raw`(^|\s)(${escapeRegExp(f)})(?=[\s,.!?;:])`, 'giu'))) {
         const st = m.index! + m[1].length;
         add('filler', 'info', `Füllwort „${m[2]}“ – streichen`, st, st + m[2].length, { replacement: '', label: 'streichen', relStart: m.index!, relEnd: st + m[2].length });
       }
@@ -328,15 +328,15 @@ export function analyzeStyle(text: string, opts: StyleOptions = {}): { sentences
         if (m.index! > lead) add('address', 'warning', `Anrede: „du“ statt „${m[0]}“`, m.index!, m.index! + m[0].length);
       }
     }
-    for (const w of COLLOQUIAL) for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(w)}(?![\p{L}])`, 'giu'))) add('colloquial', 'info', `Umgangssprache „${m[0]}“ – sachlich formulieren`, m.index!, m.index! + m[0].length);
+    for (const w of COLLOQUIAL) for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escapeRegExp(w)}(?![\p{L}])`, 'giu'))) add('colloquial', 'info', `Umgangssprache „${m[0]}“ – sachlich formulieren`, m.index!, m.index! + m[0].length);
     // Tonalität (ADR-102): Werbesprache, Verkürzungen, Floskeln, harte Formulierungen je nach Ton
     if (opts.tone) for (const h of toneHits(t, opts.tone, { longReported: words > maxWords })) if (!inCode(h.start, h.end)) add('tone', h.severity, h.message, h.start, h.end);
-    for (const w of HEDGING) for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escape(w)}(?![\p{L}])`, 'giu'))) add('hedging', 'info', `Unklare Anweisung „${m[0]}“ – eindeutig formulieren`, m.index!, m.index! + m[0].length);
+    for (const w of HEDGING) for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}])${escapeRegExp(w)}(?![\p{L}])`, 'giu'))) add('hedging', 'info', `Unklare Anweisung „${m[0]}“ – eindeutig formulieren`, m.index!, m.index! + m[0].length);
     const nominal = [...t.matchAll(/(?<![\p{L}\p{N}])[\p{Lu}][\p{Ll}]+(?:ung|heit|keit|ion|ierung|schaft)(?:en)?(?![\p{L}\p{N}])/gu)];
     if (nominal.length >= 3) add('nominal', 'info', `Nominalstil (${nominal.map((n) => n[0]).slice(0, 4).join(', ')}) – mit Verben formulieren`, nominal[0].index!, nominal.at(-1)!.index! + nominal.at(-1)![0].length);
     for (const [wrong, right] of Object.entries(SPELLING)) {
       if (wrong === right) continue;
-      for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}-])${escape(wrong)}(?![\p{L}])`, 'giu'))) {
+      for (const m of t.matchAll(new RegExp(String.raw`(?<![\p{L}-])${escapeRegExp(wrong)}(?![\p{L}])`, 'giu'))) {
         // Groß-/Kleinschreibung des Fundes übernehmen
         const fixWord = right === 'E-Mail' ? right : m[0][0] === m[0][0].toUpperCase() ? right[0].toUpperCase() + right.slice(1) : right;
         if (fixWord === m[0]) continue;

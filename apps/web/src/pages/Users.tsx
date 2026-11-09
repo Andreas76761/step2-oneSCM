@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { del, patch, post, put } from '../api';
 import { Gated, Card, Empty, ErrorBox, PERMS, Page, errorText, permLabel, useApp, useLoad } from '../components/ui';
+import { formatDateTime } from '../format';
 const ORIGIN: Record<string, string> = { demo: 'Demo', local: 'lokal', oidc: 'OIDC (Identity Provider)' };
 
 function PermChecks({ value, onChange, disabled, legend }: { value: string[]; onChange: (v: string[]) => void; disabled?: boolean; legend: string }) {
@@ -231,7 +232,7 @@ export function UsersPage() {
                 <td className="small">{tpl.find((t) => t.id === u.roleTemplateId)?.name ?? '–'}</td>
                 <td className="small">{ORIGIN[u.origin] ?? u.origin}</td>
                 <td>{u.disabled ? <span className="tag st-failed">gesperrt</span> : <span className="tag st-approved">aktiv</span>}</td>
-                <td className="small">{u.lastActivity ? new Date(u.lastActivity).toLocaleString('de-DE') : '–'}</td>
+                <td className="small">{u.lastActivity ? formatDateTime(u.lastActivity) : '–'}</td>
                 <td><button className="btn small" aria-label={`${u.name} bearbeiten`} onClick={() => setSel(u.id)}>Bearbeiten</button></td>
               </tr>
             ))}

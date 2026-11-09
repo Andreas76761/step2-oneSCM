@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api, patch, post } from '../api';
 import { Gated, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDateTime } from '../format';
 
 const STATUS_CLS: Record<string, string> = { open: 'sev-medium', accepted: 'st-approved', rejected: 'sev-low', stale: 'sev-high' };
 const ORIGIN_DE: Record<string, string> = { word: 'Word-Prüfung', ai: 'KI-Lektorat' };
@@ -106,7 +107,7 @@ function BatchDetail({ id }: { id: string }) {
   const s = d.stats ?? {};
   return (
     <>
-      <Card title={<>{ORIGIN_DE[d.origin] ?? d.origin}{d.fileName ? ` – ${d.fileName}` : ''} <span className="muted small">{new Date(d.createdAt).toLocaleString('de-DE')}</span></>}
+      <Card title={<>{ORIGIN_DE[d.origin] ?? d.origin}{d.fileName ? ` – ${d.fileName}` : ''} <span className="muted small">{formatDateTime(d.createdAt)}</span></>}
         actions={<Link className="btn small" to="/ueberarbeitung">Alle Listen</Link>}>
         <p className="small">
           {s.proposals ?? 0} Vorschläge: {s.changed ?? 0} geändert, {s.added ?? 0} neu, {s.removed ?? 0} entfällt
@@ -221,7 +222,7 @@ export function RevisionsPage() {
                     <tr key={b.id}>
                       <td><Link to={`/ueberarbeitung/${b.id}`}>{ORIGIN_DE[b.origin] ?? b.origin}</Link></td>
                       <td>{b.fileName ?? '–'}</td>
-                      <td>{new Date(b.createdAt).toLocaleString('de-DE')}</td>
+                      <td>{formatDateTime(b.createdAt)}</td>
                       <td>{b.counts.open ?? 0}</td><td>{b.counts.accepted ?? 0}</td><td>{b.counts.rejected ?? 0}</td><td>{b.counts.stale ?? 0}</td>
                     </tr>
                   ))}

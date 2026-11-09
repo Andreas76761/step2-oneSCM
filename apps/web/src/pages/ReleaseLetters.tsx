@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { del, patch, post, put, qs } from '../api';
 import { Gated, Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDateTime } from '../format';
 
 // Release-Abgleich und Releaseletter aus Jira-Tickets (ADR-083, F-02, F-03)
 
@@ -193,7 +194,7 @@ function LetterDetail({ id, onChange, onOpen }: { id: string; onChange: () => vo
           ))}
         </ul>
       )}
-      <label className="block">Text (Markdown){!draft && <span className="muted small"> – freigegeben am {new Date(x.approvedAt).toLocaleString('de-DE')} von {x.approvedBy}, unveränderlich</span>}
+      <label className="block">Text (Markdown){!draft && <span className="muted small"> – freigegeben am {formatDateTime(x.approvedAt)} von {x.approvedBy}, unveränderlich</span>}
         <textarea id="rl-text" rows={18} value={text} readOnly={!draft || !canEdit} onChange={(e) => setText(e.target.value)} className="mono" />
       </label>
       {draft && (

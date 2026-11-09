@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react';
 import { patch, post } from '../api';
 import { Gated, Card, Empty, ErrorBox, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { formatDateTime } from '../format';
 
 /** Terminologieverwaltung (US-015): bevorzugte Begriffe, zu vermeidende Varianten, Definition */
 export function TerminologyPage() {
@@ -104,7 +105,7 @@ export function TerminologyPage() {
                     <td>{t.avoid.map((a: string) => <span key={a} className="tag">{a}</span>)}</td>
                     <td className="small">{t.definition ?? '–'}{Object.keys(t.translations ?? {}).map((c) => <span key={c} className="tag small" title={`${t.translations[c].term}: ${t.translations[c].definition ?? ''}`}>{c.toUpperCase()}</span>)}</td>
                     <td><Status s={t.status === 'active' ? 'confirmed' : 'superseded'} /></td>
-                    <td className="small">{t.updatedBy}, {new Date(t.updatedAt).toLocaleString('de-DE')}</td>
+                    <td className="small">{t.updatedBy}, {formatDateTime(t.updatedAt)}</td>
                     <td className="row-actions">
                       {t.status === 'active' && <button className="btn small" onClick={() => setEdit({ id: t.id, preferred: t.preferred, avoid: t.avoid.join(', '), definition: t.definition ?? '', translations: { ...(t.translations ?? {}) }, keepUntranslated: !!t.keepUntranslated, uiAllowed: !!t.uiAllowed })}>Bearbeiten</button>}
                       <button className="btn small" onClick={() => save(() => patch(`/terminology/${t.id}`, { status: t.status === 'active' ? 'retired' : 'active' }), t.status === 'active' ? 'Begriff ausgemustert.' : 'Begriff reaktiviert.')}>

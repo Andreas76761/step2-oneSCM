@@ -1,3 +1,4 @@
+import { escapeRegExp } from './text.js';
 // Datenschutzprüfung (§13, US-012). Treffer sind Blocker für Freigabe und Export.
 // ENTSCHEIDUNG(E-07): Musterliste; Beispiel-Domains (RFC 2606) und Platzhalter werden nicht gemeldet.
 // ADR-080 (F-04): zusätzlich Fahrgestellnummern (FIN/VIN), Kfz-Kennzeichen, Benutzerkennungen, Straßenadressen,
@@ -34,7 +35,6 @@ const ADDRESS = /\b[A-ZÄÖÜ][a-zäöüß]+(?:straße|strasse|str\.|weg|allee|p
 const NAME_FIELD = /\b(?:Autor(?:in)?|Bearbeiter(?:in)?|Verfasser(?:in)?|Ansprechpartner(?:in)?|Kontaktperson|Assignee|Reporter|Author|Created by|Prepared by|Exported by|Responsible PO|(?:Export )?[Ee]rstellt von)\s*[:=]?\s*([A-ZÄÖÜ][a-zäöüß]+(?:[ -][A-ZÄÖÜ][a-zäöüß]+){1,2})/g;
 
 const mask = (s: string) => (s.length <= 4 ? '****' : `${s.slice(0, 2)}…${s.slice(-2)}`);
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Alle Treffer mit Position. Reihenfolge der Arten wie bisher (E-Mail, IBAN, Telefon), dann die Arten aus ADR-080. */
 function findRaw(text: string, opts: PrivacyOptions = {}): RawHit[] {
@@ -73,7 +73,7 @@ function namesRe(list: string[]): RegExp | null {
   const key = list.join('\u0000');
   if (NAMES_CACHE.has(key)) return NAMES_CACHE.get(key)!;
   const names = [...new Set(list.map((x) => x.trim()).filter((x) => x.length >= 3))].sort((a, b) => b.length - a.length);
-  const re = names.length ? new RegExp(`(?<![\\p{L}\\d])(?:${names.map(escapeRe).join('|')})(?![\\p{L}\\d])`, 'giu') : null;
+  const re = names.length ? new RegExp(`(?<![\\p{L}\\d])(?:${names.map(escapeRegExp).join('|')})(?![\\p{L}\\d])`, 'giu') : null;
   if (NAMES_CACHE.size >= 20) NAMES_CACHE.delete(NAMES_CACHE.keys().next().value!);
   NAMES_CACHE.set(key, re);
   return re;

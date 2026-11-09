@@ -3,6 +3,7 @@ import { Ico, OkMark } from '../components/icons';
 import { useState } from 'react';
 import { api, post } from '../api';
 import { Badge, Card, DownloadButton, Empty, ErrorBox, Md, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDateTime } from '../format';
 
 export function ExportPage() {
   const { ref, notify } = useApp();
@@ -190,7 +191,7 @@ export function ExportPage() {
             <tbody>
               {history.data.map((h) => (
                 <tr key={h.id}>
-                  <td>{new Date(h.createdAt).toLocaleString('de-DE')}</td>
+                  <td>{formatDateTime(h.createdAt)}</td>
                   <td>{h.fileName}</td>
                   <td className="small">{[h.params.roles?.join(','), h.params.divisions?.join(','), h.params.market, h.params.release].filter(Boolean).join(' · ') || 'ungefiltert'}</td>
                   <td>{h.createdBy}</td>

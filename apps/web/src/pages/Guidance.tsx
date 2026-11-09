@@ -4,7 +4,7 @@ import { Ico } from '../components/icons';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { post, put } from '../api';
-import { FeedbackCard } from './Reader';
+import { FeedbackCard } from './FeedbackCard';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 import { ReadabilityPanel } from './Style';
 

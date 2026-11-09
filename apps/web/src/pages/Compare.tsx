@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Card, Diff, DivisionBadges, Empty, ErrorBox, Md, Page, RoleBadges, Status, useLoad, statusLabel } from '../components/ui';
+import { formatDateTime } from '../format';
 
 const CHANGE: Record<string, { label: string; cls: string }> = {
   added: { label: '＋ hinzugefügt', cls: 'st-approved' },
@@ -29,7 +30,7 @@ export function ComparePage() {
   const entries = (d?.entries ?? []).filter((e: any) => showUnchanged || e.change !== 'unchanged');
   const title = (code: string) => d?.sections.find((s: any) => s.code === code)?.title ?? code;
 
-  const option = (v: any) => <option key={v.id} value={v.id}>Version {v.versionNo} ({statusLabel(v.status)}, {new Date(v.generatedAt).toLocaleString('de-DE')})</option>;
+  const option = (v: any) => <option key={v.id} value={v.id}>Version {v.versionNo} ({statusLabel(v.status)}, {formatDateTime(v.generatedAt)})</option>;
 
   return (
     <Page title="Versionsvergleich" docTitle={d?.chapterTitle} subtitle={d ? `${d.chapterTitle}: Version ${d.from.versionNo} → Version ${d.to.versionNo}` : 'Zwei Kapitelversionen gegenüberstellen'} actions={chapterId && <Link className="btn" to={`/werkstatt/${chapterId}`}>Zur Kapitelwerkstatt</Link>}>

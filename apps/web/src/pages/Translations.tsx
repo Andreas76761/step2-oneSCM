@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { del, download, get, patch, post } from '../api';
 import { Card, Empty, ErrorBox, Md, Page, Status, errorText, useApp, useLoad } from '../components/ui';
+import { formatDate, formatDateTime } from '../format';
 
 /** Mehrsprachigkeit (ADR-020): Übersetzungen freigegebener Kapitel je Zielsprache */
 export function TranslationsPage() {
@@ -52,7 +53,7 @@ export function TranslationsPage() {
             {mine.data.items.map((r) => (
               <li key={r.id}>
                 <button type="button" className="linklike" onClick={() => (setChapterId(r.chapterId), setOpenId(r.translationId))}>{r.chapterTitle}</button>
-                <span className="small muted"> · {name(r.language)}{r.market ? ` · Markt ${r.market}` : ''}{r.asDeputy ? ` · als Vertretung für ${r.reviewerName}` : ''} · seit {new Date(r.requestedAt).toLocaleDateString('de-DE')}</span>
+                <span className="small muted"> · {name(r.language)}{r.market ? ` · Markt ${r.market}` : ''}{r.asDeputy ? ` · als Vertretung für ${r.reviewerName}` : ''} · seit {formatDate(r.requestedAt)}</span>
               </li>
             ))}
           </ul>
@@ -70,14 +71,14 @@ export function TranslationsPage() {
                     {r.reasons?.length > 0 && (
                       <details className="request-reasons small">
                         <summary>{r.reasons.length === 1 ? '1 Begründung' : `${r.reasons.length} Begründungen`}</summary>
-                        <ul>{r.reasons.map((x: any, i: number) => <li key={i}>„{x.text}“ <span className="muted">· {new Date(x.requestedAt).toLocaleDateString('de-DE')}</span></li>)}</ul>
+                        <ul>{r.reasons.map((x: any, i: number) => <li key={i}>„{x.text}“ <span className="muted">· {formatDate(x.requestedAt)}</span></li>)}</ul>
                       </details>
                     )}
                   </td>
                   <td>{r.languageName}</td>
                   <td className="count">{r.count}</td>
                   <td>{r.state === 'in_progress' ? <span className="tag">in Arbeit</span> : r.state === 'outdated' ? <span className="tag st-needs_regeneration">veraltet</span> : <span className="tag">fehlt</span>}</td>
-                  <td className="small">{new Date(r.lastRequestedAt).toLocaleDateString('de-DE')}</td>
+                  <td className="small">{formatDate(r.lastRequestedAt)}</td>
                   <td>
                     {canEdit && r.state !== 'in_progress' && approved.some((c) => c.id === r.chapterId)
                       ? <button className="btn small" aria-label={`„${r.title}“ übersetzen (${r.languageName})`} onClick={() => create(r.language, r.chapterId)}>Übersetzen</button>
@@ -252,7 +253,7 @@ function TranslationEditor({ id, me, canEdit, canApprove, llm, langs, onChanged 
           <button className="btn primary" disabled={!comment.trim()} onClick={() => act(() => post(`/translations/${id}/approve`, { comment }), `Übersetzung ${d.languageName} freigegeben.`)}>Übersetzung freigeben</button>
         </div>
       )}
-      {!draft && <p className="small">Freigegeben von {d.approvedBy} am {new Date(d.approvedAt).toLocaleString('de-DE')}.</p>}
+      {!draft && <p className="small">Freigegeben von {d.approvedBy} am {formatDateTime(d.approvedAt)}.</p>}
     </Card>
   );
 }
@@ -411,7 +412,7 @@ function BackcheckPanel({ translation: d, canEdit, onChanged }: { translation: a
       <h3 id={`bck-${d.id}`}>Rückübersetzung der Sicherheitshinweise</h3>
       {b ? (
         <>
-          <p className="small">Stichprobe vom {new Date(b.createdAt).toLocaleString('de-DE')}: {b.checked} von {b.candidates} Hinweisen geprüft, {b.passed} stimmen mit dem Deutschen überein, <span className={b.failed ? 'sev-text' : ''}>{b.failed} weichen ab</span> (Schwelle {Math.round(b.threshold * 100)} %).</p>
+          <p className="small">Stichprobe vom {formatDateTime(b.createdAt)}: {b.checked} von {b.candidates} Hinweisen geprüft, {b.passed} stimmen mit dem Deutschen überein, <span className={b.failed ? 'sev-text' : ''}>{b.failed} weichen ab</span> (Schwelle {Math.round(b.threshold * 100)} %).</p>
           <ul className="small">
             {b.sample.map((x: any) => (
               <li key={x.blockId}>{x.ok === null ? '–' : <OkMark ok={x.ok} />} „{x.source.slice(0, 80)}“ → zurück: „{x.back ?? x.skipped}“{x.similarity !== null ? ` (${Math.round(x.similarity * 100)} %)` : ''}</li>

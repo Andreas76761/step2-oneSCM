@@ -1,6 +1,7 @@
 // Übersetzung (ADR-020): Satzzerlegung, Anfrage, Antwort und Prüfung mit Satz-Zuordnung zur deutschen Quelle.
 import { RewriteParseError } from './rewrite.js';
 import { SIGNAL_WORDS, signalWordsMissing } from './warnings.js';
+import { escapeRegExp } from './text.js';
 
 export const TRANSLATE_PROMPT_VERSION = 'translate-1.2';
 
@@ -137,7 +138,6 @@ const bold = (t: string) => (t.match(/\*\*[^*\n]+\*\*/g) ?? []).length;
 const KEEP = /\{[^{}\s]{1,40}\}|%(?:\d\$)?[sdf]|\[[\p{Lu}][\p{L}-]*(?: [\p{L}-]+)? \d+\]|<\/?[a-z][^<>]{0,60}>|`[^`\n]+`|https?:\/\/[^\s)>\]]+|\]\([^)\s]+\)|\b[A-Z][A-Z0-9]{1,9}-\d+\b/gu;
 const keepTokens = (t: string) => (t.match(KEEP) ?? []).sort();
 const SIGNAL_EXAMPLE = (language: string) => SIGNAL_WORDS[language]?.warning ?? 'WARNING';
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Begriffe mit fester Übersetzung, die in der Quelle vorkommen und in der Übersetzung fehlen */
 export function missingFixedTerms(source: string, text: string, language: string, terms: FixedTerm[]): string[] {
@@ -146,7 +146,7 @@ export function missingFixedTerms(source: string, text: string, language: string
   for (const t of terms) {
     const fixed = fixedFor(t, language);
     if (!fixed || !t.preferred.trim()) continue;
-    if (!new RegExp(`(?<![\\p{L}\\d])${escapeRe(t.preferred)}`, 'iu').test(source)) continue;
+    if (!new RegExp(`(?<![\\p{L}\\d])${escapeRegExp(t.preferred)}`, 'iu').test(source)) continue;
     if (!hay.includes(fixed.toLocaleLowerCase(language))) out.push(t.preferred);
   }
   return out;

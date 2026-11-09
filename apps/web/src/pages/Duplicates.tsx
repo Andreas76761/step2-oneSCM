@@ -3,6 +3,7 @@ import { del, put, post } from '../api';
 import { Card, Empty, ErrorBox, Page, Status, errorText, useApp, useLoad } from '../components/ui';
 import { CanonicalDialog } from './Clusters';
 import { CompareDialog } from './Contradictions';
+import { formatDateTime } from '../format';
 
 const LEVELS = [
   { level: 1, title: 'Stufe 1 – identischer Hash', subtypes: ['exact_hash'] },
@@ -89,7 +90,7 @@ export function DuplicatesPage() {
             <thead><tr><th>Titel</th><th>Führendes Kapitel</th><th>Textabschnitte</th><th>Begründung</th><th>Entschieden</th></tr></thead>
             <tbody>
               {topics.data.map((t) => (
-                <tr key={t.id}><td>{t.title}</td><td>{t.leadChapter}</td><td>{t.snippetIds.length}</td><td>{t.reason}</td><td className="small">{t.decidedBy}, {new Date(t.decidedAt).toLocaleString('de-DE')}</td></tr>
+                <tr key={t.id}><td>{t.title}</td><td>{t.leadChapter}</td><td>{t.snippetIds.length}</td><td>{t.reason}</td><td className="small">{t.decidedBy}, {formatDateTime(t.decidedAt)}</td></tr>
               ))}
             </tbody>
           </table>

@@ -1,5 +1,6 @@
 // Regelwerk (Etappe 100): Text-Regeln allgemein oder je Kapitel – Pflichtbegriff, verbotener Begriff, Textmuster.
 import { safeRulePattern } from './ruleSets.js';
+import { escapeRegExp } from './text.js';
 
 export const RULE_KINDS = ['required', 'forbidden', 'pattern'] as const;
 export type RuleKind = (typeof RULE_KINDS)[number];
@@ -22,7 +23,6 @@ export interface RuleViolation {
   match?: string;
 }
 
-const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Begriffe als ganzes Wort (auch mit Umlauten am Rand), Muster wie eingegeben; null = ungültiges oder riskantes Muster */
 export function ruleMatcher(rule: Pick<RulebookRule, 'kind' | 'term'>): RegExp | null {
@@ -31,7 +31,7 @@ export function ruleMatcher(rule: Pick<RulebookRule, 'kind' | 'term'>): RegExp |
     return p ? new RegExp(p, 'giu') : null;
   }
   const term = rule.term.trim();
-  return term ? new RegExp(`(?<![\\p{L}\\p{N}_])${escape(term)}(?![\\p{L}\\p{N}_])`, 'giu') : null;
+  return term ? new RegExp(`(?<![\\p{L}\\p{N}_])${escapeRegExp(term)}(?![\\p{L}\\p{N}_])`, 'giu') : null;
 }
 
 /** Regeln, die für ein Kapitel gelten: allgemeine und die des Kapitels, nur aktive */

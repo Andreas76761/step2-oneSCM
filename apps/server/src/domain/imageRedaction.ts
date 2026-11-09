@@ -17,10 +17,6 @@ export interface RedactionRegion {
   active: boolean;
 }
 
-export const KIND_LABELS: Record<RedactionRegion['kind'], string> = {
-  email: 'E-Mail', phone: 'Telefon', iban: 'IBAN', vin: 'FIN', plate: 'Kennzeichen', user_id: 'User-ID', address: 'Adresse', name: 'Name', manual: 'manuell',
-};
-
 /** Tesseract-TSV: level page block par line word left top width height conf text – Wörter (level 5) mit Text */
 export function parseOcrTsv(tsv: string): OcrWord[] {
   const out: OcrWord[] = [];

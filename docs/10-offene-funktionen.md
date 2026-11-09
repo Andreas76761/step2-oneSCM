@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.112, 08.11.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.113, 09.11.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -153,7 +153,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 64. **Etappe 110 – GitHub-Actions auf Node 24 (✅ umgesetzt):** CI und Release-Pipeline, T-451.
 65. **Etappe 111 – Schreibweisen aus S-04 (✅ umgesetzt, ADR-128):** Kulanzfrist, Fahrgestellnummer, Status FI-Beleg, Belegart, Systemnamen wie in der Oberfläche; Varianten in Groß-/Kleinschreibung.
 66. **Etappe 112 – Code-Review der Etappen 109–111 (✅ umgesetzt):** ein Fund behoben.
-67. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
+67. **Etappe 113 – Code aufgeräumt (✅ umgesetzt):** toter Code, gemeinsame Bausteine, große Seiten zerlegt – ohne Änderung an Funktionen.
+68. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
 
 ## 10.7 Offene Entscheidungen
 

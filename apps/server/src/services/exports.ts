@@ -28,6 +28,7 @@ import { checkDocxAccessibility, checkPptxAccessibility } from '../domain/office
 import { checkPdfAccessibility } from '../domain/pdfAccessibility.js';
 import { renderDesignPptx } from './designPptx.js';
 import { DESIGNS, normalizeTheme, renderDesign, type Design, type DesignChapter } from '../domain/designs.js';
+import { escapeRegExp } from '../domain/text.js';
 
 type Media = Map<string, MediaFile>;
 
@@ -130,7 +131,7 @@ export const KIND_LABEL: Record<string, string> = { note: 'Hinweis', tip: 'Tipp'
 const APPENDIX_KEY: Record<string, keyof FrameTexts> = { abkuerzungen: 'abbreviations', glossar: 'glossary', bildverzeichnis: 'images', faq: 'faq', historie: 'history' };
 function localizeAppendixMarkdown(md: string, F: FrameTexts) {
   let out = md;
-  for (const a of APPENDIX_ANCHORS) out = out.replace(new RegExp(`^(#{1,6} )${a.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'), `$1${F[APPENDIX_KEY[a.id]]}`);
+  for (const a of APPENDIX_ANCHORS) out = out.replace(new RegExp(`^(#{1,6} )${escapeRegExp(a.title)}$`, 'm'), `$1${F[APPENDIX_KEY[a.id]]}`);
   return out;
 }
 

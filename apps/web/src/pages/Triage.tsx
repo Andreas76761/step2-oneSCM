@@ -3,6 +3,7 @@ import { Ico } from '../components/icons';
 import { useState } from 'react';
 import { post } from '../api';
 import { BarList, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDateTime } from '../format';
 
 // Agent TRIAGE (ADR-100): nach dem Einlesen Pflichtlabels je Chunk (direkt gesetzt, Mensch geht vor) und Kapitel-/Unterkapitelvorschläge
 // (Verschieben, neues Unterkapitel „neu“) zum Übernehmen oder Verwerfen; Inhalts-Dashboard je Kapitel und Domäne
@@ -59,7 +60,7 @@ export function TriagePage() {
       )}>
       <ErrorBox error={res.error ?? runs.error} />
       {last && (
-        <p className="muted small">Letzter Lauf: {new Date(last.startedAt).toLocaleString('de-DE')} ({last.scope.startsWith('import:') ? 'nach dem Einlesen' : last.scope === 'all' ? 'alle Chunks' : 'ohne Pflichtlabels'}) – {last.stats.chunks ?? 0} Chunks, {last.stats.move ?? 0} verschieben, {last.stats.newSubchapter ?? 0} neu, {last.stats.unassigned ?? 0} nicht zugeordnet, {last.stats.review ?? 0} zu prüfen.</p>
+        <p className="muted small">Letzter Lauf: {formatDateTime(last.startedAt)} ({last.scope.startsWith('import:') ? 'nach dem Einlesen' : last.scope === 'all' ? 'alle Chunks' : 'ohne Pflichtlabels'}) – {last.stats.chunks ?? 0} Chunks, {last.stats.move ?? 0} verschieben, {last.stats.newSubchapter ?? 0} neu, {last.stats.unassigned ?? 0} nicht zugeordnet, {last.stats.review ?? 0} zu prüfen.</p>
       )}
       {(neu.data?.items.length ?? 0) > 0 && (
         <Card title={`Neue Unterkapitel „neu“ (${neu.data!.items.length})`}>

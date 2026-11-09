@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { ApiError, api, patch, post } from '../api';
 import { Card, Empty, ErrorBox, Modal, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDate } from '../format';
 
 // Arbeitsbereiche Pipeline, Backlog und Intern (ADR-098): Pipeline = Jira-Tickets in Bearbeitung, noch nicht produktiv,
 // je Gliederungspunkt mit Erstelldatum, Stream, Produktionsdatum und Vorab-Dokumentation; Backlog = noch nicht begonnen;
@@ -168,7 +169,7 @@ function Editor({ item, outline, topicLabels, canEdit, onClose, onSaved }: { ite
   return (
     <Modal title={isNew ? 'Neuer Eintrag' : `${item.jiraKey ? `${item.jiraKey} – ` : ''}${item.title}`} onClose={onClose} wide>
       <ErrorBox error={err} />
-      {item.state === 'live' && <p className="alert info">Ins Handbuch übernommen am {new Date(item.liveAt).toLocaleDateString('de-DE')} – Änderungen bitte im Kapitel.</p>}
+      {item.state === 'live' && <p className="alert info">Ins Handbuch übernommen am {formatDate(item.liveAt)} – Änderungen bitte im Kapitel.</p>}
       <div className="filters">
         <label>Bereich
           <select value={f.area} disabled={locked} onChange={set('area')}>

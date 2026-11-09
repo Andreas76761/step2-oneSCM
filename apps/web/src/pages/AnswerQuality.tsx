@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, del, post } from '../api';
 import { Card, DownloadButton, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
 import { InlineMd } from '../components/InlineMd';
+import { formatDateTime } from '../format';
 
 // oneSCM_Metadaten › Antwortqualität (ADR-091, M7): Testfragen mit erwarteten Quellen, Prüflauf mit Kennzahlen, Verlauf
 
@@ -175,7 +176,7 @@ export function AnswerQualityPage() {
               </div>
               <p className="small muted">
                 {r.metrics.passed} von {r.metrics.questions} bestanden · {r.metrics.withSources} mit erwarteter Quelle · {r.metrics.noAnswerItems} Lückenfragen · {r.config.units} durchsuchte Stellen · {r.config.llm ? `KI: ${r.config.llm.provider}` : 'ohne KI (extraktiv)'} · Verfahren {r.config.method ?? 'v1'} · Ø {r.metrics.avgMs} ms je Frage
-                {r.compare && <> · verglichen mit dem Lauf vom {new Date(r.compare.previousAt).toLocaleString('de-DE')}: {r.compare.improved.length} neu bestanden, {r.compare.regressed.length} neu durchgefallen</>}
+                {r.compare && <> · verglichen mit dem Lauf vom {formatDateTime(r.compare.previousAt)}: {r.compare.improved.length} neu bestanden, {r.compare.regressed.length} neu durchgefallen</>}
               </p>
             </>
           )}
@@ -187,7 +188,7 @@ export function AnswerQualityPage() {
                 <tbody>
                   {s.runs.map((x: any) => (
                     <tr key={x.id} aria-current={x.id === runId}>
-                      <td>{new Date(x.createdAt).toLocaleString('de-DE')}</td><td>{pct(x.metrics.passRate)}</td><td>{pct(x.metrics.hitAt1)}</td><td>{pct(x.metrics.hitAt6)}</td>
+                      <td>{formatDateTime(x.createdAt)}</td><td>{pct(x.metrics.passRate)}</td><td>{pct(x.metrics.hitAt1)}</td><td>{pct(x.metrics.hitAt6)}</td>
                       <td>{x.metrics.mrr?.toFixed(2)}</td><td>{pct(x.metrics.citedRate)}</td><td>{x.metrics.noAnswerItems ? pct(x.metrics.noAnswerAccuracy) : '–'}</td>
                       <td><button className="btn small ghost" onClick={() => setRunId(x.id)}>Anzeigen</button></td>
                     </tr>

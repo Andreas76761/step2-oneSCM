@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, post, put } from '../api';
 import { BarList, Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDate } from '../format';
 
 const trendText = (t: number | null) => (t === null ? '–' : t === 0 ? '→ unverändert' : t > 0 ? `▲ ${t} Punkte schlechter` : `▼ ${-t} Punkte besser`);
 
@@ -98,7 +99,7 @@ export function FeedbackPage() {
                 <li key={f.id}>
                   <Ico icon={f.helpful ? ThumbsUpIcon : ThumbsDownIcon} /><span className="sr-only">{f.helpful ? 'hilfreich' : 'nicht hilfreich'}:</span>
                   <strong>{f.title}</strong> – „{f.comment}“
-                  <span className="small muted"> · {f.source === 'online-help' ? 'Online-Hilfe' : f.createdBy}, {new Date(f.createdAt).toLocaleDateString('de-DE')}{f.status === 'done' ? ' · erledigt' : ''}</span>
+                  <span className="small muted"> · {f.source === 'online-help' ? 'Online-Hilfe' : f.createdBy}, {formatDate(f.createdAt)}{f.status === 'done' ? ' · erledigt' : ''}</span>
                   {canEdit && f.status === 'open' && (
                     <span className="row-actions">
                       <Link className="btn small" to={`/werkstatt/${f.chapterId}`}>In der Werkstatt öffnen</Link>
