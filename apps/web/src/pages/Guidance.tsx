@@ -6,7 +6,7 @@ import { Link, useParams } from 'react-router-dom';
 import { post, put } from '../api';
 import { FeedbackCard } from './FeedbackCard';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
-import { ReadabilityPanel } from './Style';
+import { ReadabilityPanel } from './StyleShared';
 
 const STATUS_ICON: Record<string, { icon: string; label: string }> = {
   ok: { icon: '✓', label: 'erfüllt' },

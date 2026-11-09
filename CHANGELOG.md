@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.114.0 – Etappe 114: Code aufgeräumt, Teil 2 (09.11.2026)
+
+Ohne Änderung an Funktionen und Oberfläche – alle Server- und E2E-Tests unverändert grün.
+
+### Hinzugefügt
+- **Gemeinsame Bausteine des Schreibstils** (`StyleShared`): Prüfergebnis mit markierten Sätzen, Satz bearbeiten, Korrekturen anwenden, Lesbarkeit.
+
+### Geändert
+- **Schreibstil** (808 → 270 Zeilen): Regeln, Tonalität, Regelsätze, Austausch und Bibliotheken in `StyleRules`.
+- **Kapitelwerkstatt** (811 → 401 Zeilen): Stilkorrektur und KI-Umformulierung in `WorkshopRewrite`, Seitenleiste und Hinweise in `WorkshopPanels`.
+- **Weniger Ladezeit:** Kapitelwerkstatt und „Prüfen & Verständlichkeit“ laden statt der ganzen Seite „Schreibstil“ (33 KB) nur noch die gemeinsamen Bausteine (4 KB).
+
 ## 0.113.0 – Etappe 113: Code aufgeräumt (09.11.2026)
 
 Ohne Änderung an Funktionen und Oberfläche – alle Server- und E2E-Tests unverändert grün.
