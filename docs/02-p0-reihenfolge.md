@@ -104,6 +104,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **112** ✅ | Code-Review der Etappen 109–111 | Server-Tests grün auf SQLite und PostgreSQL; T-453 |
 | **113** ✅ | Code aufgeräumt (ohne Änderung an Funktionen) | Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
 | **114** ✅ | Code aufgeräumt, Teil 2 (Schreibstil, Kapitelwerkstatt) | Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
+| **115** ✅ | Abhängigkeiten aktualisiert (innerhalb der Hauptversionen) | Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

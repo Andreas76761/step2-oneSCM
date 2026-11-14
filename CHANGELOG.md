@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.115.0 – Etappe 115: Abhängigkeiten aktualisiert (14.11.2026)
+
+Updates innerhalb der Hauptversionen, ohne Änderung an Funktionen – alle Server- und E2E-Tests unverändert grün; `npm audit --omit=dev` ohne Befund.
+
+### Hinzugefügt
+- Keine neuen Funktionen. Die aktualisierten Bibliotheken bringen eigene Fehlerkorrekturen mit (Einzelheiten unter „Geändert“).
+
+### Geändert
+- **Ausgabe und Import:** docx 9.7 → 9.15, pdfmake 0.3.11 → 0.3.14, marked 18.0 → 18.2, mammoth 1.12 → 1.13.
+- **Server:** nodemailer 10.3 → 10.5, jose 6.2.12 → 6.2.17, pg 8.23.0 → 8.23.1, @fastify/static 10.1.10 → 10.1.11, @fastify/rate-limit 11.2.0 → 11.2.2.
+- **Oberfläche und Prüfung:** react/react-dom 19.3.0 → 19.3.1, @axe-core/playwright 4.13 → 4.14.
+
+### Belassen
+- **pdfjs-dist** bleibt bei 5.4: Die Versionen 5.6.83 bis vor 6.2.108 haben einen Sicherheitshinweis; ein Wechsel auf 6.x ist eine neue Hauptversion und braucht eine eigene Prüfung des PDF-Imports.
+- **eslint** bleibt bei 10.11, weil das Update den minimatch-Override (Etappe 109) erneut durcheinanderbrachte; größere Sprünge (z. B. Playwright 1.65, better-sqlite3 13, OpenTelemetry 3) sind eigene Etappen.
+
 ## 0.114.0 – Etappe 114: Code aufgeräumt, Teil 2 (09.11.2026)
 
 Ohne Änderung an Funktionen und Oberfläche – alle Server- und E2E-Tests unverändert grün.

@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.114, 09.11.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.115, 14.11.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -155,7 +155,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 66. **Etappe 112 – Code-Review der Etappen 109–111 (✅ umgesetzt):** ein Fund behoben.
 67. **Etappe 113 – Code aufgeräumt (✅ umgesetzt):** toter Code, gemeinsame Bausteine, große Seiten zerlegt – ohne Änderung an Funktionen.
 68. **Etappe 114 – Code aufgeräumt, Teil 2 (✅ umgesetzt):** Schreibstil und Kapitelwerkstatt zerlegt – ohne Änderung an Funktionen.
-69. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
+69. **Etappe 115 – Abhängigkeiten aktualisiert (✅ umgesetzt):** innerhalb der Hauptversionen; pdfjs-dist bewusst bei 5.4.
+70. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
 
 ## 10.7 Offene Entscheidungen
 

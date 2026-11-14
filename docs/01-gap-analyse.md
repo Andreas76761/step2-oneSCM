@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.117 Stand nach Etappe 115 (14.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Abhängigkeiten innerhalb der Hauptversionen aktualisiert | ✅ alle Server- und E2E-Tests unverändert grün; `npm audit --omit=dev` ohne Befund |
+| Belassen | pdfjs-dist 5.4 (Sicherheitshinweis in 5.6–6.2), eslint 10.11 |
+
 ## 1.116 Stand nach Etappe 114 (09.11.2026)
 
 | Punkt | Ergebnis |
