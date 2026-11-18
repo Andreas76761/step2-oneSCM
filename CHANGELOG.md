@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.116.0 – Etappe 116: PDF-Import mit pdf.js 6, Mindestversion Node 22.13 (18.11.2026)
+
+### Hinzugefügt
+- **Node 24** in der CI (neben Node 22); das Installationspaket prüft beim Einrichten auf mindestens Node 22.13.
+
+### Geändert
+- **PDF-Import:** pdfjs-dist 5.4 → 6.5 (nicht im Bereich des Sicherheitshinweises zu 5.6 bis vor 6.2). pdf.js 6 übersetzt PDF-Funktionen nicht mehr per `eval`/`new Function`; die frühere Schutzoption `isEvalSupported` ist damit entfallen – keine Skriptausführung wie bisher.
+- **Bilder:** @napi-rs/canvas 0.1 → 1.1 (unkenntlich machen, Klickstrecken, Vorher/Nachher, Designvorlagen, Texterkennung gescannter PDF-Seiten); das Windows-Paket enthält die passende Windows-Bibliothek.
+- **Mindestversion Node.js 22.13** (pdf.js 6 setzt sie voraus): `package.json`, Installationsskripte (`install.sh`, `install.ps1`), README, Installationsanleitung; CI auf Node 22 und 24 statt 20 und 22. Das Windows-Paket bringt Node 22.23 mit, der Container nutzt Node 22 – dort ändert sich nichts.
+
+### Entfernt
+- **Unterstützung für Node 20** (seit April 2026 ohne Pflege).
+
 ## 0.115.0 – Etappe 115: Abhängigkeiten aktualisiert (14.11.2026)
 
 Updates innerhalb der Hauptversionen, ohne Änderung an Funktionen – alle Server- und E2E-Tests unverändert grün; `npm audit --omit=dev` ohne Befund.

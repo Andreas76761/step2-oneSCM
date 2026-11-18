@@ -111,7 +111,8 @@ export async function pdfToMarkdown(data: Buffer, fallbackTitle: string, opts: {
   const { getDocument } = await loadPdfJs();
   let doc: any;
   try {
-    doc = await getDocument({ data: new Uint8Array(data), isEvalSupported: false, useSystemFonts: false, disableFontFace: true, verbosity: 0 }).promise;
+    // ohne Skriptausführung: pdf.js 6 übersetzt keine PDF-Funktionen mehr per eval/new Function (Option isEvalSupported entfallen)
+    doc = await getDocument({ data: new Uint8Array(data), useSystemFonts: false, disableFontFace: true, verbosity: 0 }).promise;
   } catch (e) {
     const msg = (e as Error).message ?? '';
     throw new Error(/password/i.test(msg) ? 'PDF ist kennwortgeschützt – bitte ohne Kennwort exportieren' : `Keine gültige PDF-Datei (${msg})`);

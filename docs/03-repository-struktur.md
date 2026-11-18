@@ -6,7 +6,7 @@
 ├── CHANGELOG.md
 ├── package.json                   npm-Workspaces (apps/server, apps/web, e2e)
 ├── Dockerfile / docker-compose.yml
-├── .github/workflows/ci.yml       Node 20 + 22: Typecheck, Unit/API-Tests, Build, E2E; Helm; Release-Prüfung (Versionen, actionlint, Image)
+├── .github/workflows/ci.yml       Node 22 + 24: Typecheck, Unit/API-Tests, Build, E2E; Helm; Release-Prüfung (Versionen, actionlint, Image)
 ├── .github/workflows/release.yml  Tag vX.Y.Z → GHCR-Image, SBOM, cosign, Helm-OCI, GitHub-Release (ADR-031)
 ├── reference/                     unverändertes Projektpaket (Masterprompt, Referenz-UI)
 ├── deploy/helm/onescm/       Helm-Chart (ADR-027)

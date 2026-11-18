@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
-# Abhängigkeiten installieren: braucht Node.js 20.16+ (empfohlen 22 LTS)
+# Abhängigkeiten installieren: braucht Node.js 22.13+ (22 oder 24 LTS)
 set -e
 cd "$(dirname "$0")"
-node -e "if (+process.versions.node.split('.')[0] < 20) { console.error('Node.js ' + process.version + ' ist zu alt – bitte Node.js 22 LTS installieren.'); process.exit(1) }"
+node -e "const [a, b] = process.versions.node.split('.').map(Number); if (a < 22 || (a === 22 && b < 13)) { console.error('Node.js ' + process.version + ' ist zu alt – bitte Node.js 22 LTS (mindestens 22.13) oder 24 LTS installieren.'); process.exit(1) }"
 npm ci --omit=dev --workspace apps/server --include-workspace-root
 echo "Fertig. Starten mit ./start.sh"

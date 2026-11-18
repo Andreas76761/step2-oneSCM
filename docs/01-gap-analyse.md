@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.118 Stand nach Etappe 116 (18.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| PDF-Import mit pdfjs-dist 6.5, Bilder mit @napi-rs/canvas 1.1 | ✅ alle Server- und E2E-Tests grün, Texterkennung gescannter PDF-Seiten (T-38) |
+| Mindestversion Node 22.13, CI auf Node 22 und 24 | ✅ Installationsskripte prüfen die Version; Windows-Paket mit Node 22.23 gebaut |
+
 ## 1.117 Stand nach Etappe 115 (14.11.2026)
 
 | Punkt | Ergebnis |
