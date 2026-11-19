@@ -199,7 +199,8 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 
 | Punkt | Ergebnis |
 |---|---|
-| vitest 5.1, Playwright 1.65, CI-Testjob auf ubuntu-latest | ✅ alle Server- und E2E-Tests unverändert grün |
+| vitest 5.1 | ✅ alle Server- und E2E-Tests unverändert grün |
+| Playwright 1.65 (Chromium 159), CI-Testjob auf ubuntu-latest | zurückgestellt: T-367 (axe mit Vorschau-iframe) scheitert in der CI; bleibt Playwright 1.56 auf Ubuntu 24.04 |
 
 ## 1.118 Stand nach Etappe 116 (18.11.2026)
 

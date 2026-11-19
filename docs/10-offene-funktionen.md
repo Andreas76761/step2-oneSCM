@@ -157,7 +157,7 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 68. **Etappe 114 – Code aufgeräumt, Teil 2 (✅ umgesetzt):** Schreibstil und Kapitelwerkstatt zerlegt – ohne Änderung an Funktionen.
 69. **Etappe 115 – Abhängigkeiten aktualisiert (✅ umgesetzt):** innerhalb der Hauptversionen; pdfjs-dist bewusst bei 5.4.
 70. **Etappe 116 – PDF-Import mit pdf.js 6, Mindestversion Node 22.13 (✅ umgesetzt):** Node 20 wird nicht mehr unterstützt.
-71. **Etappe 117 – Testwerkzeuge aktualisiert (✅ umgesetzt):** vitest 5, Playwright 1.65, CI wieder auf ubuntu-latest.
+71. **Etappe 117 – Testwerkzeuge aktualisiert (✅ umgesetzt):** vitest 5. Playwright 1.65 und der Testjob auf ubuntu-latest sind zurückgestellt: Unter Chromium 159 scheitert in der CI die Barrierefreiheitsprüfung der Seite mit Vorschau-iframe (T-367); es bleibt Playwright 1.56 auf Ubuntu 24.04.
 72. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
 
 ## 10.7 Offene Entscheidungen

@@ -5,11 +5,10 @@
 Ohne Änderung an der ausgelieferten App – alle Server- und E2E-Tests unverändert grün.
 
 ### Hinzugefügt
-- **CI wieder auf `ubuntu-latest`** (Ubuntu 26.04) für den Testjob: Playwright 1.65 unterstützt die Plattform; vorher fest auf 24.04.
+- **vitest 5** für die Server-Tests (seit Etappe 116 möglich, weil vitest 5 Node 22 voraussetzt); vorher 4.1. Konfiguration unverändert, keine Warnungen.
 
-### Geändert
-- **vitest** 4.1 → 5.1 (seit Etappe 116 möglich, weil vitest 5 Node 22 voraussetzt); Konfiguration unverändert, keine Warnungen.
-- **Playwright** 1.56 → 1.65 (E2E- und Barrierefreiheitsprüfungen); die CI lädt den passenden Chromium 159.
+### Zurückgestellt
+- **Playwright 1.65** (Chromium 159) und der Testjob auf `ubuntu-latest` (Ubuntu 26.04): In der CI scheiterte dort die Barrierefreiheitsprüfung der Seite mit Vorschau-iframe (T-367, `Target.createTarget`), lokal mit Chromium 141 nicht nachstellbar. Playwright bleibt bei 1.56, der Testjob fest auf Ubuntu 24.04 – der letzte grüne Stand.
 
 ## 0.116.0 – Etappe 116: PDF-Import mit pdf.js 6, Mindestversion Node 22.13 (18.11.2026)
 

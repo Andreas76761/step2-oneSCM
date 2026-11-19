@@ -223,7 +223,7 @@ POSTGRES_PASSWORD=… docker compose up --build      # http://localhost:3000
 147. **Code aufgeräumt, Teil 2:** Schreibstil und Kapitelwerkstatt in eigenständige Dateien zerlegt – ohne Änderung an Funktionen; Kapitelwerkstatt und „Prüfen & Verständlichkeit“ laden nicht mehr die ganze Stilseite.
 148. **Abhängigkeiten aktualisiert:** Updates innerhalb der Hauptversionen (docx, pdfmake, marked, mammoth, nodemailer, jose, pg, React u. a.); pdfjs-dist bewusst bei 5.4 (Sicherheitshinweis in 5.6–6.2).
 149. **PDF-Import mit pdf.js 6, Mindestversion Node 22.13:** pdfjs-dist 6.5 und @napi-rs/canvas 1.1; CI auf Node 22 und 24; Node 20 wird nicht mehr unterstützt.
-150. **Testwerkzeuge aktualisiert:** vitest 5.1, Playwright 1.65; CI-Testjob wieder auf `ubuntu-latest`.
+150. **Testwerkzeuge aktualisiert:** vitest 5.1; Playwright 1.65 zurückgestellt (Barrierefreiheitsprüfung mit Vorschau-iframe scheitert unter Chromium 159), CI-Testjob bleibt auf Ubuntu 24.04.
 
 ### Import
 
