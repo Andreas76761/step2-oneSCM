@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.117.0 – Etappe 117: Testwerkzeuge aktualisiert (19.11.2026)
+
+Ohne Änderung an der ausgelieferten App – alle Server- und E2E-Tests unverändert grün.
+
+### Hinzugefügt
+- **CI wieder auf `ubuntu-latest`** (Ubuntu 26.04) für den Testjob: Playwright 1.65 unterstützt die Plattform; vorher fest auf 24.04.
+
+### Geändert
+- **vitest** 4.1 → 5.1 (seit Etappe 116 möglich, weil vitest 5 Node 22 voraussetzt); Konfiguration unverändert, keine Warnungen.
+- **Playwright** 1.56 → 1.65 (E2E- und Barrierefreiheitsprüfungen); die CI lädt den passenden Chromium 159.
+
 ## 0.116.0 – Etappe 116: PDF-Import mit pdf.js 6, Mindestversion Node 22.13 (18.11.2026)
 
 ### Hinzugefügt

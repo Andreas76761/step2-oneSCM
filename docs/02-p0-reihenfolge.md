@@ -106,6 +106,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **114** ✅ | Code aufgeräumt, Teil 2 (Schreibstil, Kapitelwerkstatt) | Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
 | **115** ✅ | Abhängigkeiten aktualisiert (innerhalb der Hauptversionen) | Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
 | **116** ✅ | PDF-Import mit pdf.js 6, canvas 1.1, Mindestversion Node 22.13 | Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests; Windows-Paket gebaut |
+| **117** ✅ | Testwerkzeuge aktualisiert (vitest 5, Playwright 1.65) | Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

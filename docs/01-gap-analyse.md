@@ -195,6 +195,12 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.119 Stand nach Etappe 117 (19.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| vitest 5.1, Playwright 1.65, CI-Testjob auf ubuntu-latest | ✅ alle Server- und E2E-Tests unverändert grün |
+
 ## 1.118 Stand nach Etappe 116 (18.11.2026)
 
 | Punkt | Ergebnis |
