@@ -2803,7 +2803,7 @@
   },
   {
     "id": "T-367",
-    "title": "Designvorlagen anpassen in den Einstellungen: Kontrastprüfung sperrt Speichern, Vorschau folgt, speichern und zurücksetzen – barrierefrei",
+    "title": "Designvorlagen anpassen in den Einstellungen: Kontrastprüfung sperrt Speichern, Vorschau folgt, speichern und zurücksetzen – barrierefrei (Seite und Vorschau-Inhalt getrennt geprüft)",
     "file": "e2e/tests/app.spec.ts",
     "level": "e2e",
     "requirements": [

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.118.0 – Etappe 118: Playwright 1.65 nachgezogen (20.11.2026)
+
+Ohne Änderung an der ausgelieferten App – alle Server- und E2E-Tests grün, jetzt auch mit Chromium 159.
+
+### Hinzugefügt
+- **Playwright 1.65** (Chromium 159) für die E2E- und Barrierefreiheitsprüfungen; der CI-Testjob läuft wieder auf `ubuntu-latest` (Ubuntu 26.04).
+- **T-367 prüft den Inhalt der Designvorschau als eigene Seite** mit axe, dazu den Titel des Vorschau-iframe ausdrücklich.
+
+### Behoben
+- **T-367 hing unter Chromium 159** (Etappe 117 zurückgestellt): Die Vorschau der Designvorlagen ist ein iframe mit `sandbox=""` ohne Skripte. Die Teilprüfung von axe (`runPartial`) kehrt darin ab Chromium 159 nicht mehr zurück; der Test lief ins Zeitlimit, gemeldet als Fehler von `newPage`. Mit Chromium 141 dauerte derselbe Schritt fast das ganze Zeitlimit. Jetzt prüft axe die Seite ohne das iframe und dessen Inhalt getrennt – in 10 s statt knapp 60 s. Die App bleibt unverändert: Die Vorschau bleibt ohne Skripte.
+
 ## 0.117.0 – Etappe 117: Testwerkzeuge aktualisiert (19.11.2026)
 
 Ohne Änderung an der ausgelieferten App – alle Server- und E2E-Tests unverändert grün.

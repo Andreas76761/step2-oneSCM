@@ -3377,8 +3377,11 @@ test('[T-364] PDF im Design: Hinweis auf den lokalen Browser, Muster als PDF, Ex
 
 test('[T-367] Designvorlagen anpassen: Farbe mit Kontrastprüfung, Schrift und Logo, Vorschau, speichern und zurücksetzen – barrierefrei', async ({ page }) => {
   const { default: AxeBuilder } = await import('@axe-core/playwright');
-  const axe = async () => (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()).violations
-    .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  const axe = async (p: import('@playwright/test').Page, exclude?: string) => {
+    const builder = new AxeBuilder({ page: p }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']);
+    return (await (exclude ? builder.exclude(exclude) : builder).analyze()).violations
+      .map((v) => `${v.id} (${v.impact}): ${v.nodes.slice(0, 2).map((n) => n.target.join(' ')).join(' | ')}`);
+  };
   await page.goto('/einstellungen');
   await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
   const card = page.locator('.card', { has: page.getByRole('heading', { name: 'Designvorlagen anpassen' }) });
@@ -3397,7 +3400,19 @@ test('[T-367] Designvorlagen anpassen: Farbe mit Kontrastprüfung, Schrift und L
   await card.getByLabel('Logo').selectOption('left');
   await expect(preview.locator('h1')).toHaveCSS('color', 'rgb(91, 42, 134)');
   await expect(preview.locator('h1')).toHaveCSS('font-family', /Georgia/);
-  expect(await axe()).toEqual([]);
+  // Die Vorschau ist ein iframe mit sandbox="" (ohne Skripte). Ab Chromium 159 kehrt axe darin nicht zurück (Etappe 118):
+  // Seite ohne die Vorschau prüfen, den Inhalt der Vorschau als eigene Seite, den Titel des iframe ausdrücklich
+  const frame = card.locator('iframe.theme-preview');
+  await expect(frame).toHaveAttribute('title', 'Vorschau: Handbuch-Kapitel (Fachdokumentation)');
+  expect(await axe(page, 'iframe.theme-preview')).toEqual([]);
+  const own = await page.context().newPage();
+  try {
+    await own.setContent((await frame.getAttribute('srcdoc')) ?? '');
+    await expect(own.locator('h1')).toHaveCSS('color', 'rgb(91, 42, 134)');
+    expect(await axe(own)).toEqual([]);
+  } finally {
+    await own.close();
+  }
   await card.getByRole('button', { name: 'Anpassung speichern' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'gespeichert' })).toBeVisible();
   await expect(card.getByLabel('Vorlage').locator('option:checked')).toHaveText('Handbuch-Kapitel (Fachdokumentation) (angepasst)');

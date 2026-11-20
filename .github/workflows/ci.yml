@@ -7,9 +7,8 @@ on:
 jobs:
   test:
     name: Node ${{ matrix.node }}
-    # fest auf 24.04: Playwright 1.56 unterstützt Chromium auf ubuntu-latest (26.04) noch nicht; Playwright 1.65
-    # (Chromium 159) zurückgestellt – die axe-Prüfung mit Vorschau-iframe (T-367) scheitert dort (Etappe 117)
-    runs-on: ubuntu-24.04
+    # wieder ubuntu-latest: Playwright 1.65 unterstützt Ubuntu 26.04 (vorher fest auf 24.04)
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
