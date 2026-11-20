@@ -43,14 +43,16 @@ build_tree "$WORK/$NAME"
 (cd "$WORK" && rm -f "$OUT/$NAME.zip" && zip -qr "$OUT/$NAME.zip" "$NAME")
 echo "$OUT/$NAME.zip"
 
-# 3. Windows offline: Abhängigkeiten für win32-x64 (ohne Skripte), better-sqlite3 als Windows-Binärdatei, Node.js portable
+# 3. Windows offline: Abhängigkeiten für win32-x64 (ohne Skripte), Node.js portable
+#    better-sqlite3 (ab 13, N-API) bringt die Windows-Binärdatei im Paket mit (prebuilds/win32-x64.node)
 if [ -n "$NODEZIP" ]; then
   W="$WORK/$NAME-windows-x64"
   build_tree "$W"
   (cd "$W" && npm ci --omit=dev --workspace apps/server --include-workspace-root --os=win32 --cpu=x64 --ignore-scripts --no-audit --no-fund > /dev/null)
   NODEV="$(basename "$NODEZIP" | sed -E 's/node-v([0-9]+)\..*/\1/')"
-  (cd "$W/node_modules/better-sqlite3" && node ../prebuild-install/bin.js --platform win32 --arch x64 --runtime node --target "$(basename "$NODEZIP" | sed -E 's/node-v([0-9.]+)-.*/\1/')")
-  [ -f "$W/node_modules/better-sqlite3/build/Release/better_sqlite3.node" ] || { echo "better-sqlite3 für Windows fehlt"; exit 1; }
+  [ -f "$W/node_modules/better-sqlite3/prebuilds/win32-x64.node" ] || { echo "better-sqlite3 für Windows fehlt"; exit 1; }
+  # eine lokal übersetzte Linux-Binärdatei hätte Vorrang vor der Windows-Datei
+  [ ! -d "$W/node_modules/better-sqlite3/build" ] || { echo "better-sqlite3: unerwartetes build-Verzeichnis"; exit 1; }
   unzip -q "$NODEZIP" -d "$WORK/nodezip"; mv "$WORK"/nodezip/node-v*-win-x64 "$W/node"
   rm "$W/install.ps1" "$W/install.sh" "$W/start.sh"
   (cd "$WORK" && rm -f "$OUT/$NAME-windows-x64.zip" && zip -qr "$OUT/$NAME-windows-x64.zip" "$NAME-windows-x64")

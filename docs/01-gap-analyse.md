@@ -195,6 +195,12 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.121 Stand nach Etappe 119 (20.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| better-sqlite3 13 (N-API, SQLite 3.54.1) | ✅ alle Server- und E2E-Tests grün; Windows-Paket mit mitgelieferter Binärdatei |
+
 ## 1.120 Stand nach Etappe 118 (20.11.2026)
 
 | Punkt | Ergebnis |

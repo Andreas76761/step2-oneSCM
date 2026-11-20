@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.118, 20.11.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.119, 20.11.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -159,7 +159,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 70. **Etappe 116 – PDF-Import mit pdf.js 6, Mindestversion Node 22.13 (✅ umgesetzt):** Node 20 wird nicht mehr unterstützt.
 71. **Etappe 117 – Testwerkzeuge aktualisiert (✅ umgesetzt):** vitest 5. Playwright 1.65 und der Testjob auf ubuntu-latest sind zurückgestellt: Unter Chromium 159 scheitert in der CI die Barrierefreiheitsprüfung der Seite mit Vorschau-iframe (T-367); es bleibt Playwright 1.56 auf Ubuntu 24.04.
 72. **Etappe 118 – Playwright 1.65 nachgezogen (✅ umgesetzt):** Ursache der Etappe 117: axe kehrte im Vorschau-iframe ohne Skripte (`sandbox=""`) unter Chromium 159 nicht zurück. T-367 prüft die Seite ohne das iframe und den Vorschau-Inhalt als eigene Seite; CI wieder auf ubuntu-latest.
-73. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
+73. **Etappe 119 – better-sqlite3 13 (✅ umgesetzt):** N-API mit Binärdateien im Paket; Windows-Paket ohne `prebuild-install`, nicht mehr an Node 22 gebunden.
+74. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
 
 ## 10.7 Offene Entscheidungen
 

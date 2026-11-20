@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.119.0 – Etappe 119: better-sqlite3 13 (20.11.2026)
+
+### Hinzugefügt
+- **better-sqlite3 13** (N-API, SQLite 3.54.1) statt 11.10: Die Binärdateien für Linux, macOS und Windows (x64 und arm64) liegen im Paket selbst; `prebuild-install` und rund 20 weitere Hilfspakete (u. a. `tar-fs`) entfallen. Die Binärdatei ist nicht mehr an eine Node-Hauptversion gebunden.
+
+### Geändert
+- **Windows-Offline-Paket** (`tools/paket/paket.sh`): lädt die Windows-Binärdatei nicht mehr nachträglich, sondern prüft, dass `prebuilds/win32-x64.node` im Paket liegt und kein lokal übersetztes `build`-Verzeichnis Vorrang hätte. Das Paket passt damit zu jeder unterstützten Node-Version ab 22.13.
+- `@types/better-sqlite3` 7.6 → 9.6.
+
 ## 0.118.0 – Etappe 118: Playwright 1.65 nachgezogen (20.11.2026)
 
 Ohne Änderung an der ausgelieferten App – alle Server- und E2E-Tests grün, jetzt auch mit Chromium 159.
