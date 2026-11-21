@@ -4,8 +4,11 @@ import { audit, getSettings, type Ctx } from '../context.js';
 import { json, newId, now, parseJson, type Row } from '../db.js';
 import { detectContradictions, RULE_LABELS, type Statement } from '../domain/contradictions.js';
 import { detectPrivacy } from '../domain/privacy.js';
-import { DECISION_CODES, DECISIONS, SEVERITIES, type Severity } from '../domain/reference.js';
+import { DECISION_CODES, DECISIONS, RESERVED_CHAPTER_KEYS, SEVERITIES, type Severity } from '../domain/reference.js';
+import { rulesFor, ruleViolations, violationReason } from '../domain/rulebook.js';
+import { loadRules } from './rulebook.js';
 import { clusterPairs, TfidfEngine, type SimilarityPair } from '../domain/similarity.js';
+import { avoidMatches, inUiContext } from '../domain/style.js';
 import { badRequest, notFound, unprocessable } from '../problem.js';
 import { listTerms } from './terminology.js';
 import { assertIdsInProject } from './projects.js';
@@ -24,7 +27,8 @@ interface NewFinding {
   details?: Record<string, unknown>;
 }
 
-const fingerprint = (f: NewFinding) => `${f.type}:${f.subtype}:${[f.a, f.b].filter(Boolean).sort().join('|') || f.chapterId}:${f.type === 'gap' ? f.reason : ''}`;
+// Regelwerk: je Regel ein eigener Befund (mehrere Regeln können denselben Abschnitt treffen)
+const fingerprint = (f: NewFinding) => `${f.type}:${f.subtype}:${[f.a, f.b].filter(Boolean).sort().join('|') || f.chapterId}:${f.type === 'gap' ? f.reason : f.type === 'rule' ? f.details?.ruleId : ''}`;
 const maxSeverity = (list: Severity[]) => SEVERITIES.find((s) => list.includes(s)) ?? 'low';
 
 export async function startAnalysis(ctx: Ctx, actor: string) {
@@ -63,12 +67,18 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
   const snippets = await db.all(
     `SELECT s.*, r.revision_no, r.is_current, d.id AS document_id, d.path FROM text_snippets s
      JOIN source_revisions r ON r.id = s.revision_id JOIN source_documents d ON d.id = r.document_id
-     WHERE d.project_id = ? AND r.is_current = 1 AND s.kind <> 'code' ORDER BY s.seq`,
-    ctx.projectId,
+     WHERE d.project_id = ? AND r.is_current = 1 AND d.removed_at IS NULL AND s.excluded_reason IS NULL AND s.kind <> 'code'
+       AND s.chapter_id NOT IN (SELECT id FROM chapters WHERE project_id = d.project_id AND key IN (${RESERVED_CHAPTER_KEYS.map(() => '?').join(', ')})) ORDER BY s.seq`,
+    ctx.projectId, ...RESERVED_CHAPTER_KEYS,
   );
+  // ausgeschlossene Aussagen (Entscheidung „A/B übernehmen“, „veraltete Quelle“) fließen nicht ins Kapitel – und erzeugen keine neuen Befunde
   const byId = new Map(snippets.map((s) => [s.id as string, s]));
-  const rolesOf = groupCodes(await db.all('SELECT snippet_id, role_code AS code FROM snippet_roles'));
-  const divsOf = groupCodes(await db.all('SELECT snippet_id, division_code AS code FROM snippet_divisions'));
+  const ofProject = (table: string, col: string) => db.all(
+    `SELECT x.snippet_id, x.${col} AS code FROM ${table} x JOIN text_snippets s ON s.id = x.snippet_id JOIN source_revisions r ON r.id = s.revision_id
+     JOIN source_documents d ON d.id = r.document_id WHERE d.project_id = ? AND r.is_current = 1`, ctx.projectId,
+  );
+  const rolesOf = groupCodes(await ofProject('snippet_roles', 'role_code'));
+  const divsOf = groupCodes(await ofProject('snippet_divisions', 'division_code'));
   const found: NewFinding[] = [];
   const terms = await listTerms(ctx);
 
@@ -148,27 +158,50 @@ export async function runAnalysis(ctx: Ctx, runId: string) {
     found.push({ type: 'gap', subtype: 'empty_subchapter', severity: 'medium', chapterId: sc.chapter_id, method: 'structure-rules-1.0', reason: `Unterkapitel „${sc.title}“ enthält keinen Text`, details: { subchapterId: sc.id } });
   }
   for (const c of await db.all(
-    `SELECT c.id, c.title FROM chapters c WHERE c.project_id = ? AND c.outline_family_id IS NULL AND NOT EXISTS (
+    `SELECT c.id, c.title FROM chapters c WHERE c.project_id = ? AND c.outline_family_id IS NULL AND c.key NOT IN (${RESERVED_CHAPTER_KEYS.map(() => '?').join(', ')}) AND NOT EXISTS (
        SELECT 1 FROM text_snippets s JOIN source_revisions r ON r.id = s.revision_id WHERE s.chapter_id = c.id AND r.is_current = 1
        AND s.evidence_status IN ('source_confirmed','manually_confirmed'))`,
-    ctx.projectId,
+    ctx.projectId, ...RESERVED_CHAPTER_KEYS,
   )) {
     found.push({ type: 'gap', subtype: 'no_confirmed_source', severity: 'high', chapterId: c.id, method: 'structure-rules-1.0', reason: `Kapitel „${c.title}“ hat keine bestätigte Quelle` });
   }
 
   // Datenschutz, Terminologie, Lesbarkeit je Textabschnitt
   for (const s of snippets) {
-    const privacy = detectPrivacy(s.text);
+    const privacy = detectPrivacy(s.text, { names: all.privacy.names });
     if (privacy.length) {
       found.push({ type: 'privacy', subtype: privacy[0].kind, severity: 'blocker', chapterId: s.chapter_id, a: s.id, method: 'privacy-patterns-1.0', reason: `Mögliche personenbezogene Daten: ${privacy.map((h) => `${h.kind} (${h.match})`).join(', ')}`, details: { hits: privacy } });
     }
     for (const t of terms) {
-      const hit = t.avoid.find((w) => new RegExp(`\\b${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(s.text));
+      // UI-Begriffe (ADR-110): in Menüpfaden und Anführungszeichen erlaubt – wie in der Stilprüfung (inUiContext)
+      const hit = t.avoid.find((w) => avoidMatches(s.text, w, t.preferred)
+        .some((m) => !t.uiAllowed || !inUiContext(s.text, m.index!, m.index! + m[0].length)));
       if (hit) found.push({ type: 'terminology', subtype: 'avoid_term', severity: 'low', chapterId: s.chapter_id, a: s.id, method: 'terminology-list', reason: `„${hit}“ → bevorzugt „${t.preferred}“`, details: { term: hit, preferred: t.preferred } });
     }
     const long = s.text.split(/(?<=[.!?])\s+/).filter((x: string) => x.split(/\s+/).length > all.readability.maxSentenceWords);
     if (long.length && s.kind === 'paragraph') {
       found.push({ type: 'readability', subtype: 'long_sentence', severity: 'low', chapterId: s.chapter_id, a: s.id, method: 'readability-rules-1.0', reason: `${long.length} Satz/Sätze mit mehr als ${all.readability.maxSentenceWords} Wörtern`, details: { sentences: long.length } });
+    }
+  }
+
+  // Regelwerk (Etappe 100): je Kapitel die allgemeinen und die Kapitelregeln; Pflichtbegriffe nicht im Sammelkapitel „Ohne Kapitel“
+  const rules = await loadRules(ctx);
+  if (rules.some((r) => r.active)) {
+    const keyOf = new Map((await db.all('SELECT id, key FROM chapters WHERE project_id = ?', ctx.projectId)).map((c) => [c.id as string, c.key as string]));
+    const byChapter = new Map<string, Row[]>();
+    for (const s of snippets) {
+      const list = byChapter.get(s.chapter_id);
+      if (list) list.push(s);
+      else byChapter.set(s.chapter_id, [s]);
+    }
+    for (const [chapterId, list] of byChapter) {
+      const applicable = rulesFor(rules, chapterId).filter((r) => r.kind !== 'required' || keyOf.get(chapterId) !== '__none__');
+      for (const v of ruleViolations(applicable, list.map((s) => ({ id: s.id as string, text: s.text as string })))) {
+        found.push({
+          type: 'rule', subtype: v.rule.kind, severity: v.rule.severity as Severity, chapterId, a: v.id ?? null, method: 'rulebook-1.0',
+          reason: violationReason(v), details: { ruleId: v.rule.id, term: v.rule.term, kind: v.rule.kind, scope: v.rule.chapterId ? 'chapter' : 'general', match: v.match ?? null },
+        });
+      }
     }
   }
 

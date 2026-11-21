@@ -57,7 +57,7 @@ export function ClustersPage() {
               {c.members.map((m: any) => (
                 <li key={m.snippetId}>
                   <label>
-                    <input type="checkbox" aria-label="Zum Teilen auswählen" checked={(splitSel[c.id] ?? []).includes(m.snippetId)} onChange={() => setSplitSel((s) => ({ ...s, [c.id]: (s[c.id] ?? []).includes(m.snippetId) ? s[c.id].filter((x) => x !== m.snippetId) : [...(s[c.id] ?? []), m.snippetId] }))} />
+                    <input type="checkbox" checked={(splitSel[c.id] ?? []).includes(m.snippetId)} onChange={() => setSplitSel((s) => ({ ...s, [c.id]: (s[c.id] ?? []).includes(m.snippetId) ? s[c.id].filter((x) => x !== m.snippetId) : [...(s[c.id] ?? []), m.snippetId] }))} />
                     <strong>#{m.seq}</strong> {m.text.slice(0, 160)}
                   </label>
                   <div className="small muted">{m.chapter}{m.subchapter ? ` / ${m.subchapter}` : ''} · {m.path} · Score {Math.round(m.score * 100)} % · {m.reason}</div>

@@ -5,6 +5,7 @@ import { badRequest } from '../problem.js';
 import { createImport, getImport, restoreDocument, getRevisionOriginal, getRevisionRaw, listImports, listSources } from '../services/imports.js';
 import { getSnippet, patchSnippet, searchSnippets } from '../services/snippets.js';
 import { getMedia, listMedia, storeMedia } from '../services/media.js';
+import { queueRedaction } from '../services/imageRedaction.js';
 import { audit, getSettings } from '../context.js';
 import { Problem } from '../problem.js';
 import { num, userOf } from './helpers.js';
@@ -37,29 +38,40 @@ export function sourceRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Params: { revisionId: string } }>('/source-revisions/:revisionId/original', async (req, reply) => {
     userOf(req.ctx, req);
     const o = await getRevisionOriginal(req.ctx, req.params.revisionId);
-    reply.header('Content-Type', o.contentType).header('Content-Disposition', `attachment; filename="${encodeURIComponent(o.fileName)}"`);
+    // immer als Download, nie im Browser ausführen (PDF kann Skripte enthalten)
+    reply.header('Content-Type', o.contentType).header('Content-Disposition', `attachment; filename="${encodeURIComponent(o.fileName)}"`)
+      .header('X-Content-Type-Options', 'nosniff').header('Content-Security-Policy', "default-src 'none'; sandbox");
     return o.data;
   });
 
   // Bilder & Medien (ADR-029)
   app.get('/media', async (req) => (userOf(req.ctx, req), listMedia(req.ctx)));
-  app.get<{ Params: { mediaSha: string } }>('/media/:mediaSha', async (req, reply) => {
-    userOf(req.ctx, req);
-    const m = await getMedia(req.ctx, req.params.mediaSha);
-    // Inhaltsadressiert → unveränderlich; privat (projektgebunden), nie als etwas anderes als Bild interpretieren
-    reply.header('Content-Type', m.mime).header('X-Content-Type-Options', 'nosniff').header('Cache-Control', 'private, max-age=31536000, immutable')
+  app.get<{ Params: { mediaSha: string }; Querystring: { original?: string; unredacted?: string } }>('/media/:mediaSha', async (req, reply) => {
+    // ?unredacted=1: Original ohne Unkenntlichmachung (ADR-095) – nur mit Bearbeitungsrecht
+    const unredacted = req.query.unredacted === '1';
+    userOf(req.ctx, req, unredacted ? 'edit' : undefined);
+    // aktuelle Fassung (ADR-085): eine neue Fassung ersetzt das Bild überall; ?original=1 liefert genau diese Fassung
+    const m = await getMedia(req.ctx, req.params.mediaSha, { exact: req.query.original === '1', unredacted });
+    // Inhalt kann durch eine neue Fassung wechseln → mit ETag revalidieren statt „immutable“; privat (projektgebunden)
+    const etag = `"${m.sha}"`;
+    reply.header('ETag', etag).header('Cache-Control', 'private, no-cache').header('X-Content-Type-Options', 'nosniff')
       .header('Content-Security-Policy', "default-src 'none'; sandbox");
+    if (req.headers['if-none-match'] === etag) return reply.code(304).send();
+    reply.header('Content-Type', m.mime);
     return m.data;
   });
   app.post('/media', async (req, reply) => {
     const user = userOf(req.ctx, req, 'edit');
     if (!req.isMultipart()) throw badRequest('Erwartet multipart/form-data mit Feld „file“.');
-    const file = await req.file();
-    if (!file) throw badRequest('Feld „file“ fehlt.');
-    const data = await file.toBuffer();
+    // Grenze schon beim Einlesen: größere Bilder brechen ab, statt erst vollständig im Speicher zu landen
     const max = (await getSettings(req.ctx.db)).import.maxEntryBytes;
-    if (data.length > max) throw new Problem(413, 'Content Too Large', `Bild überschreitet ${max} Bytes.`);
+    const file = await req.file({ limits: { fileSize: max } });
+    if (!file) throw badRequest('Feld „file“ fehlt.');
+    const data = await file.toBuffer().catch((e) => {
+      throw e?.code === 'FST_REQ_FILE_TOO_LARGE' ? new Problem(413, 'Content Too Large', `Bild überschreitet ${max} Bytes.`) : e;
+    });
     const m = await storeMedia(req.ctx, data, file.filename);
+    await queueRedaction(req.ctx, m.sha, m.mime);
     await audit(req.ctx, user.id, 'media.uploaded', 'media', m.sha, { fileName: file.filename, mime: m.mime, byteSize: data.length });
     reply.code(201);
     return { sha256: m.sha, mime: m.mime, width: m.width, height: m.height, url: `/api/v1/media/${m.sha}`, markdown: `![Alternativtext](media:${m.sha})` };

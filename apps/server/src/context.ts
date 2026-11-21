@@ -3,7 +3,7 @@ import type { AppConfig, Settings } from './config.js';
 import { DEFAULT_SETTINGS } from './config.js';
 import { json, newId, now, parseJson, type Db } from './db.js';
 import { seedRoleTemplates } from './services/roleTemplates.js';
-import { DEMO_USERS, DIVISIONS, ROLES, type Permission } from './domain/reference.js';
+import { DEMO_USERS, DIVISIONS, RETIRED_DIVISIONS, ROLES, type Permission } from './domain/reference.js';
 import type { JobQueue } from './jobs.js';
 import type { LlmProvider } from './llm.js';
 import type { EmbeddingProvider } from './embeddings.js';
@@ -33,7 +33,7 @@ export interface User {
   name: string;
   permissions: string[];
   /** API-Token (ADR-028): gebunden an ein Projekt, wirksame Berechtigungen = Scopes */
-  token?: { id: string; projectId: string; scopes: string[] };
+  token?: { id: string; projectId: string; scopes: string[]; createdBy?: string };
 }
 
 export async function seedReferenceData(db: Db, authMode: AppConfig['authMode']) {
@@ -51,6 +51,7 @@ export async function seedReferenceData(db: Db, authMode: AppConfig['authMode'])
         d.code, d.label, d.icon, d.color,
       );
     }
+    await retireDivisions(db);
     await seedRoleTemplates(db);
     // Demo-Benutzer nur im Demo-Modus (ENTSCHEIDUNG E-15)
     if (authMode === 'demo') {
@@ -73,6 +74,11 @@ export async function getSettings(db: Db): Promise<Settings> {
     if (v !== null && row.key in out) out[row.key] = typeof v === 'object' && !Array.isArray(v) ? { ...out[row.key], ...v } : v;
   }
   return out as Settings;
+}
+
+/** Gepflegte Klarnamen für die Datenschutzprüfung (Einstellungen → Datenschutz), auch vor externen Diensten. */
+export async function privacyNames(db: Db): Promise<string[]> {
+  return (await getSettings(db)).privacy?.names ?? [];
 }
 
 export async function saveSettings(db: Db, patch: Partial<Settings>) {
@@ -125,4 +131,40 @@ export async function audit(scope: Pick<Ctx, 'db' | 'projectId'> | Db, actor: st
       await (scope as Ctx).jobs.enqueue('webhook-deliver', { deliveryId: id }, 5);
     }
   }
+}
+
+/**
+ * Sparten Bus und Truck entfallen (08.11.2026): bisherige Zuordnungen werden zu PKW und VAN – unbestätigt, damit die Redaktion
+ * sie prüft. Läuft bei jedem Start, tut aber nur etwas, solange die alten Sparten noch vorhanden sind.
+ */
+async function retireDivisions(db: Db) {
+  const old = [...RETIRED_DIVISIONS];
+  const marks = old.map(() => '?').join(', ');
+  if (!(await db.get(`SELECT 1 FROM divisions WHERE code IN (${marks})`, ...old))) return;
+  const note = 'Sparte Bus/Truck entfällt – Standard: PKW und VAN';
+  for (const code of ['car', 'van']) {
+    await db.run(
+      `INSERT INTO snippet_divisions (snippet_id, division_code, score, method, model_version, evidence_status, evidence)
+       SELECT DISTINCT snippet_id, ?, 0.5, 'retired-division', 'rules-1.0', 'unconfirmed', ? FROM snippet_divisions WHERE division_code IN (${marks})
+       ON CONFLICT (snippet_id, division_code) DO NOTHING`, code, note, ...old,
+    );
+    await db.run(
+      `INSERT INTO content_block_divisions (block_id, division_code) SELECT DISTINCT block_id, ? FROM content_block_divisions WHERE division_code IN (${marks})
+       ON CONFLICT (block_id, division_code) DO NOTHING`, code, ...old,
+    );
+  }
+  await db.run(`DELETE FROM snippet_divisions WHERE division_code IN (${marks})`, ...old);
+  await db.run(`DELETE FROM content_block_divisions WHERE division_code IN (${marks})`, ...old);
+  // Listen in JSON (Gliederungen, FAQ, Wissensnotizen, Bilder): alte Codes durch PKW und VAN ersetzen, ohne Doppelte
+  const keys: Record<string, string[]> = { outlines: ['id'], faq_entries: ['id'], knowledge_notes: ['id'], media_meta: ['project_id', 'base_sha'] };
+  for (const [table, key] of Object.entries(keys)) {
+    for (const r of await db.all(`SELECT ${key.join(', ')}, divisions FROM ${table} WHERE divisions LIKE '%truck%' OR divisions LIKE '%bus%'`)) {
+      const list = parseJson<string[]>(r.divisions, []);
+      if (!list.some((c) => (old as string[]).includes(c))) continue;
+      const next = [...new Set(list.flatMap((c) => ((old as string[]).includes(c) ? ['car', 'van'] : [c])))];
+      await db.run(`UPDATE ${table} SET divisions = ? WHERE ${key.map((k) => `${k} = ?`).join(' AND ')}`, json(next), ...key.map((k) => r[k]));
+    }
+  }
+  await db.run(`UPDATE release_letters SET division = 'all' WHERE division IN (${marks})`, ...old);
+  await db.run(`DELETE FROM divisions WHERE code IN (${marks})`, ...old);
 }

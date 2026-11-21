@@ -27,6 +27,8 @@ export interface GenSnippet {
   scopeStatus: string; // Markt/Release bestätigt?
   sourceLabel: string; // Datei + Revision
   canonicalRedirect?: { topicId: string; topicTitle: string; leadChapterTitle: string } | null;
+  /** Detaillevel aus TRIAGE bzw. Label (ADR-100): edge → Abschnitt „Fehler und Ausnahmen“ */
+  detail?: string | null;
 }
 
 export interface GenBlock {
@@ -93,6 +95,8 @@ export function scopeStatusOf(snippets: Pick<GenSnippet, 'roles' | 'divisions' |
 
 export function assignSection(s: GenSnippet, ctx: { first: boolean; roleMajority: string; divMajority: string }): { section: SectionCode; kind: string } {
   const hk = hintKind(s.text);
+  // Edge = Ausnahmen und Sonderfälle (ADR-100): getrennt vom Standardablauf (HappyPath)
+  if (s.detail === 'edge') return { section: 'troubleshooting', kind: hk ?? (s.kind === 'ordered_list' || s.kind === 'list' ? 'list' : 'paragraph') };
   const baseKind = s.kind === 'ordered_list' || s.kind === 'list' ? 'list' : s.kind === 'table' ? 'table' : s.kind === 'code' ? 'code' : 'paragraph';
   const heading = H([s.subchapterTitle ?? '', ...s.headingPath].filter(Boolean).slice(-2).join(' '));
   const headingSection = HEADING_RULES.find(([re]) => re.test(heading))?.[1];
@@ -111,14 +115,46 @@ export function assignSection(s: GenSnippet, ctx: { first: boolean; roleMajority
   return { section: 'steps', kind: baseKind };
 }
 
+/** Satz im Abschnitt „Quellen- und Freigabestatus“; beim Anzeigen setzt releaseStatusText den tatsächlichen Stand ein */
+export const DRAFT_STATUS = 'Freigabestatus: Entwurf (nicht freigegeben).';
+export const ROLES_SUMMARY_INTRO = 'Dieses Kapitel betrifft folgende Rollen:';
+/** vom Generator zusammengefasste Absätze (Rollenübersicht, Quellen- und Freigabestatus): Quellen sind alle Abschnitte des Kapitels, kein eigener Inhalt */
+export const isChapterSummary = (section: string, text: string | null | undefined) =>
+  section === 'status' || (section === 'responsibilities' && String(text ?? '').startsWith(ROLES_SUMMARY_INTRO));
+const skippedNote = (n: number) => (n === 1 ? '1 unbestätigter Textabschnitt wurde nicht übernommen.' : n ? `${n} unbestätigte Textabschnitte wurden nicht übernommen.` : '');
+
+/**
+ * Freigabestatus zum Stand der Kapitelversion: Der Generator schreibt „Entwurf“ in den Absatz, die Version wird erst später
+ * eingereicht und freigegeben. Leseransicht, Druck, Export und Releases zeigen deshalb den aktuellen Stand (und die Einzahl
+ * „1 unbestätigter Textabschnitt“ auch für ältere Entwürfe).
+ */
+export function releaseStatusText(text: string, v: { status: string; approvedAt?: string | null }): string {
+  const day = (iso: string) => `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(0, 4)}`;
+  const status = v.status === 'approved' && v.approvedAt ? `Freigabestatus: freigegeben am ${day(v.approvedAt)}.`
+    : v.status === 'superseded' && v.approvedAt ? `Freigabestatus: freigegeben am ${day(v.approvedAt)}, inzwischen durch eine neuere Version ersetzt.`
+    : v.status === 'in_review' ? 'Freigabestatus: zur Freigabe eingereicht (noch nicht freigegeben).'
+    : DRAFT_STATUS;
+  return text.replace(DRAFT_STATUS, status).replace(/\b1 unbestätigte Textabschnitte wurden nicht übernommen\./, skippedNote(1));
+}
+
 export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenResult {
   const confirmed = input.filter((s) => CONFIRMED_EVIDENCE.includes(s.evidenceStatus)).sort((a, b) => a.order - b.order);
   const skippedUnconfirmed = input.length - confirmed.length;
 
-  // Exakte Dopplungen innerhalb des Kapitels zusammenführen (allgemeine Aussagen nur einmal).
+  // Exakte Dopplungen innerhalb des Kapitels zusammenführen (allgemeine Aussagen nur einmal) – je Markt und Release getrennt,
+  // sonst fehlte die Aussage im Handbuch des zweiten Markts (der Absatz trägt einen Markt)
   const byHash = new Map<string, GenSnippet[]>();
-  for (const s of confirmed) byHash.set(s.normHash, [...(byHash.get(s.normHash) ?? []), s]);
-  const unique = [...byHash.values()].map((g) => g[0]);
+  // eine allgemeine Aussage (ohne Markt bzw. Release) gilt für jeden Markt und jedes Release: die spezifische Fassung desselben
+  // Textes geht in ihr auf, sonst stünde der Satz im Handbuch des Markts doppelt
+  const general = new Set(confirmed.filter((s) => !s.market || !s.release).map((s) => `${s.normHash}|${s.market ?? ''}|${s.release ?? ''}`));
+  const keyOf = (s: GenSnippet) => {
+    for (const k of [`${s.normHash}||`, `${s.normHash}||${s.release ?? ''}`, `${s.normHash}|${s.market ?? ''}|`]) if (general.has(k)) return k;
+    return `${s.normHash}|${s.market ?? ''}|${s.release ?? ''}`;
+  };
+  for (const s of confirmed) byHash.set(keyOf(s), [...(byHash.get(keyOf(s)) ?? []), s]);
+  // Vertreter ist die allgemeinste Fassung der Gruppe (sie bestimmt Markt und Release des Absatzes)
+  for (const g of byHash.values()) g.sort((a, b) => Number(!!a.market) + Number(!!a.release) - (Number(!!b.market) + Number(!!b.release)) || a.order - b.order);
+  const unique = [...byHash.values()].map((g) => g[0]).sort((a, b) => a.order - b.order);
   const deduplicated = confirmed.length - unique.length;
 
   const roleMajority = majority(unique.map((s) => setKey(specificCodes(s.roles))));
@@ -129,7 +165,7 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
   let first = true;
 
   for (const s of unique) {
-    const group = byHash.get(s.normHash)!;
+    const group = byHash.get(keyOf(s))!;
     if (s.canonicalRedirect) {
       const r = s.canonicalRedirect;
       const x = xrefs.get(r.topicId) ?? { title: r.topicTitle, lead: r.leadChapterTitle, snippets: [] };
@@ -163,8 +199,8 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
     const confirmedRoles = new Map<string, string[]>();
     for (const s of unique) for (const r of s.roles) if (isConfirmed(r)) confirmedRoles.set(r.code, [...(confirmedRoles.get(r.code) ?? []), s.id]);
     if (confirmedRoles.size) {
-      const lines = ROLES.filter((r) => confirmedRoles.has(r.code)).map((r) => `- ${r.icon} ${r.label} (${r.description})`);
-      blocks.push({ section: 'responsibilities', kind: 'list', text: `Dieses Kapitel betrifft folgende Rollen:\n\n${lines.join('\n')}`, sourceIds: [...new Set([...confirmedRoles.values()].flat())], roles: [...confirmedRoles.keys()], divisions: ['all'], market: null, release: null, scopeStatus: 'general' });
+      const lines = ROLES.filter((r) => confirmedRoles.has(r.code)).map((r) => `- ${r.label} (${r.description})`);
+      blocks.push({ section: 'responsibilities', kind: 'list', text: `${ROLES_SUMMARY_INTRO}\n\n${lines.join('\n')}`, sourceIds: [...new Set([...confirmedRoles.values()].flat())], roles: [...confirmedRoles.keys()], divisions: ['all'], market: null, release: null, scopeStatus: 'general' });
     }
   }
 
@@ -174,7 +210,7 @@ export function generateChapter(chapterTitle: string, input: GenSnippet[]): GenR
     blocks.push({
       section: 'status',
       kind: 'note',
-      text: `Quellen: ${labels.join('; ')}. Freigabestatus: Entwurf (nicht freigegeben). ${skippedUnconfirmed ? `${skippedUnconfirmed} unbestätigte Textabschnitte wurden nicht übernommen.` : ''}`.trim(),
+      text: `Quellen: ${labels.join('; ')}. ${DRAFT_STATUS} ${skippedNote(skippedUnconfirmed)}`.trim(),
       sourceIds: confirmed.map((s) => s.id),
       roles: ['all'],
       divisions: ['all'],

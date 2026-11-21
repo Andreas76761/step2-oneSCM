@@ -1,8 +1,10 @@
-import { defineConfig } from '@playwright/test';
+import { chromium as pw, defineConfig } from '@playwright/test';
 
 const PORT = 3200;
 const DATA = './.e2e-data';
 const chromium = process.env.PLAYWRIGHT_CHROMIUM_PATH;
+// PDF im Design (ADR-113): der Server druckt mit demselben Chromium; im Container ohne Sandbox
+const pdfBrowser = chromium ?? pw.executablePath();
 
 export default defineConfig({
   testDir: './tests',
@@ -18,7 +20,7 @@ export default defineConfig({
   },
   webServer: {
     // Frische Demo-Datenbank, danach gebauten Server (inkl. Web-UI) starten
-    command: `rm -rf ${DATA} && DATA_DIR=${DATA} npx tsx ../apps/server/scripts/seed-demo.ts && DATA_DIR=${DATA} PORT=${PORT} LOG=0 LLM_PROVIDER=demo GIT_ALLOW_FILE=1 INTEGRATIONS_ALLOW_INSECURE=1 HELP_EMBED_ORIGINS=http://localhost:${PORT} node ../apps/server/dist/index.js`,
+    command: `rm -rf ${DATA} && DATA_DIR=${DATA} npx tsx ../apps/server/scripts/seed-demo.ts && DATA_DIR=${DATA} PORT=${PORT} LOG=0 WEEKLY_DIGEST=0 LLM_PROVIDER=demo GIT_ALLOW_FILE=1 INTEGRATIONS_ALLOW_INSECURE=1 HELP_EMBED_ORIGINS=http://localhost:${PORT} PDF_BROWSER_PATH='${pdfBrowser}' PDF_BROWSER_NO_SANDBOX=1 node ../apps/server/dist/index.js`,
     url: `http://localhost:${PORT}/api/v1/health`,
     reuseExistingServer: false,
     timeout: 120_000,

@@ -113,6 +113,11 @@ export interface SnippetPatch {
 export async function patchSnippet(ctx: Ctx, id: string, patch: SnippetPatch, actor: string) {
   const before = await getSnippet(ctx, id);
   const { db } = ctx;
+  for (const k of ['roles', 'divisions'] as const) if (patch[k] !== undefined && (!Array.isArray(patch[k]) || patch[k]!.some((x) => typeof x !== 'string'))) throw badRequest(`${k} muss eine Liste von Codes sein.`);
+  for (const k of ['market', 'release', 'note'] as const) if (patch[k] !== undefined && patch[k] !== null && typeof patch[k] !== 'string') throw badRequest(`${k} muss Text oder null sein.`);
+  // Märkte wie beim Import in Großbuchstaben (Filter, Exporte, Gliederungen vergleichen „FR“)
+  if (typeof patch.market === 'string') patch = { ...patch, market: patch.market.trim().toUpperCase() };
+  if (typeof patch.release === 'string') patch = { ...patch, release: patch.release.trim() };
   if (patch.roles?.some((r) => !ROLE_CODES.includes(r))) throw badRequest(`Unbekannte Rolle. Erlaubt: ${ROLE_CODES.join(', ')}`);
   if (patch.divisions?.some((r) => !DIVISION_CODES.includes(r))) throw badRequest(`Unbekannte Sparte. Erlaubt: ${DIVISION_CODES.join(', ')}`);
   if (patch.evidenceStatus && !(EVIDENCE_STATUSES as readonly string[]).includes(patch.evidenceStatus)) throw badRequest(`Unbekannter Evidenzstatus. Erlaubt: ${EVIDENCE_STATUSES.join(', ')}`);

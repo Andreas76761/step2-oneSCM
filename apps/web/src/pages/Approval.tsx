@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { put } from '../api';
 import { GuidanceSummaryLine } from './Guidance';
 import { Card, Decision, Empty, ErrorBox, Page, Status, errorText, useApp, useLoad, activatable } from '../components/ui';
-import { ApprovalPanel } from './Workshop';
+import { ApprovalPanel } from './ApprovalPanel';
+import { formatDate } from '../format';
 
 const ORDER: Record<string, number> = { in_review: 0, draft: 1, approved: 2, superseded: 3 };
 
@@ -29,8 +30,8 @@ export function ApprovalPage() {
                   <td>{p.chapter}</td>
                   <td>V{p.versionNo}</td>
                   <td>{p.stageIndex + 1}/{p.stages} {p.stage}</td>
-                  <td className="small">{p.submittedBy} · {new Date(p.submittedAt).toLocaleDateString('de-DE')}</td>
-                  <td>{p.dueAt ? <span className={p.overdue ? 'tag sev-blocker' : ''}>{new Date(p.dueAt).toLocaleDateString('de-DE')}{p.overdue ? ' überfällig' : ''}</span> : '–'}</td>
+                  <td className="small">{p.submittedBy} · {formatDate(p.submittedAt)}</td>
+                  <td>{p.dueAt ? <span className={p.overdue ? 'tag sev-blocker' : ''}>{formatDate(p.dueAt)}{p.overdue ? ' überfällig' : ''}</span> : '–'}</td>
                 </tr>
               ))}
             </tbody>

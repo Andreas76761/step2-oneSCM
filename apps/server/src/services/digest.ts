@@ -1,6 +1,6 @@
 // Wöchentliche Übersicht (ADR-064): jede Person mit Bearbeitungsrecht erhält einmal je Woche einen Hinweis mit offenen
 // Leser-Rückmeldungen, ihren offenen Aufgaben, den Kapiteln mit dem größten Handlungsbedarf sowie offenen Übersetzungswünschen
-// und veralteten Übersetzungen (ADR-081) – nur, wenn es etwas zu tun gibt.
+// und veralteten Übersetzungen (ADR-126) – nur, wenn es etwas zu tun gibt.
 import { audit, type Ctx, type User } from '../context.js';
 import { now } from '../db.js';
 import { badRequest } from '../problem.js';
@@ -46,7 +46,7 @@ export async function digestShared(ctx: Ctx) {
 }
 
 /**
- * Übersetzungsteil der Übersicht (ADR-081): offene Übersetzungswünsche aus der Leseransicht (meistgewünschte zuerst) und
+ * Übersetzungsteil der Übersicht (ADR-126): offene Übersetzungswünsche aus der Leseransicht (meistgewünschte zuerst) und
  * veraltete Übersetzungen – Kapitel, deren freigegebene Übersetzung zu einer älteren deutschen Fassung gehört (ohne aktuelle
  * Freigabe), und häufige Fragen, deren deutsche Quelle sich seit der Übersetzung geändert hat.
  */
@@ -121,7 +121,7 @@ export async function sendDigests(ctx: Ctx, opts: { force?: boolean; date?: Date
     await ctx.db.tx(async () => {
       const res = await ctx.db.run('INSERT INTO digest_log (project_id, user_id, week, sent_at) VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING', ctx.projectId, u.id, week, now());
       if (!res.changes) return;
-      await projectNotice(ctx, u.id, d.text!, 'digest', d.openFeedback ? '/rueckmeldungen' : d.tasks ? '/aufgaben' : d.openTranslationRequests || d.outdatedChapterTranslations.length ? '/uebersetzungen' : '/aufgaben');
+      await projectNotice(ctx, u.id, d.text!, 'digest', d.openFeedback ? '/rueckmeldungen' : d.tasks ? '/aufgaben' : d.openTranslationRequests || d.outdatedChapterTranslations.length ? '/uebersetzungen' : d.outdatedFaqTranslations ? '/stammdaten/faq' : '/aufgaben');
       sent++;
     });
   }

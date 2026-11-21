@@ -120,10 +120,14 @@ export async function applySync(
     return wanted;
   };
   const result = { added: 0, created: 0 };
+  // ein Schnipsel je Gliederung nur einmal, auch wenn er in der Anfrage doppelt steht
+  const taken = new Set<string>();
   await ctx.db.tx(async () => {
     const assign = async (nodeId: string, ids: string[]) => {
       let pos = (await ctx.db.get<{ m: number | null }>('SELECT MAX(position) AS m FROM outline_assignments WHERE node_id = ?', nodeId))?.m ?? 0;
       for (const sid of ids) {
+        if (taken.has(sid)) continue;
+        taken.add(sid);
         await ctx.db.run('INSERT INTO outline_assignments (outline_id, snippet_id, node_id, position, assigned_by, assigned_at) VALUES (?, ?, ?, ?, ?, ?)', targetId, sid, nodeId, (pos += 10), user.id, now());
         result.added++;
       }

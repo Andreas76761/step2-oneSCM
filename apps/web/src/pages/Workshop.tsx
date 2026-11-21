@@ -1,18 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { ArrowUpRightIcon, CircleDashedIcon, InfoIcon, LightbulbIcon, ListChecksIcon, LockIcon, LockOpenIcon, MessageSquareIcon, PaletteIcon, PuzzleIcon, SparklesIcon, SpellCheckIcon, TriangleAlertIcon, WandSparklesIcon, type LucideIcon } from 'lucide-react';
+import { BlockerIcon, Ico } from '../components/icons';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { del, get, patch, post } from '../api';
-import {
-  Badge, Diff, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Severity, Status, TYPE_LABEL, errorText, useApp, useLoad,
-  Modal, activatable,
-} from '../components/ui';
+import { del, patch, post } from '../api';
+import { Badge, DivisionBadges, Empty, ErrorBox, ImageInsert, Md, RoleBadges, Status, errorText, useApp, useLoad, Modal, activatable, statusLabel, useDocTitle } from '../components/ui';
 import { DiagramStudio } from '../components/DiagramStudio';
-import { MarkedText, SentenceEditor, type Analysis } from './Style';
-import { SourceViewer } from './Sources';
+import { MarkedText, SentenceEditor, type Analysis } from './StyleShared';
 import { DiscussionPanel } from './Discussion';
+import { ApprovalPanel } from './ApprovalPanel';
+import { ChapterRewrite, REWRITABLE, RewriteProposal, StyleBatch } from './WorkshopRewrite';
+import { FindingsTab, HistoryTab, InstructionBanner, PipelineBanner, SaveTemplateButton, SourcesTab } from './WorkshopPanels';
 
-const REWRITABLE = ['paragraph', 'list', 'note', 'tip', 'warning'];
 
-const KIND_LABEL: Record<string, string> = { paragraph: 'Absatz', list: 'Liste', note: 'ℹ️ Hinweis', tip: '💡 Tipp', warning: '⚠️ Warnung', xref: '↗️ Querverweis', gap: '⚠ Lücke', table: 'Tabelle', code: 'Code' };
+const KIND_ICON: Record<string, LucideIcon> = { note: InfoIcon, tip: LightbulbIcon, warning: TriangleAlertIcon, xref: ArrowUpRightIcon, gap: CircleDashedIcon };
+const KIND_LABEL: Record<string, string> = { paragraph: 'Absatz', list: 'Liste', note: 'Hinweis', tip: 'Tipp', warning: 'Warnung', xref: 'Querverweis', gap: 'Lücke', table: 'Tabelle', code: 'Code' };
 
 /** Kapitel nach Handbuch gruppieren: Quellenkapitel zuerst, danach je Handbuch-Variante (ADR-034) */
 function groupByHandbook(chapters: any[], outlines: any[]) {
@@ -34,8 +35,11 @@ export function WorkshopPage() {
   const navigate = useNavigate();
   const { notify } = useApp();
   const chapters = useLoad<any[]>('/chapters?outline=all');
+  // Kapitel „Intern“ und „In Planung“ (Etappe 100): vorgemerkte Abschnitte, nicht im Handbuch
+  const parked = useLoad<any[]>('/parked', [chapters.data]);
   const outlines = useLoad<any>('/outlines');
   const chapter = chapters.data?.find((c) => c.id === chapterId);
+  useDocTitle('Kapitelwerkstatt', chapter?.title);
   const [versionId, setVersionId] = useState<string | null>(null);
   const version = useLoad<any>(versionId ? `/chapter-versions/${versionId}` : null, [versionId]);
   const llm = useLoad<any>('/llm/status');
@@ -78,7 +82,29 @@ export function WorkshopPage() {
     }
   };
 
+  // Seitenkopf vor dem Raster: Die Seite beginnt mit der Überschrift der ersten Ebene, danach Inhaltsverzeichnis und Kapitel
   return (
+    <>
+    <header className="page-head">
+      <div>
+        <h1>Kapitelwerkstatt</h1>
+        <p className="muted">{chapter?.title ?? 'Kapitel wählen'}</p>
+      </div>
+      <div className="actions">
+        {chapter && chapter.versions.length > 0 && (
+          <select aria-label="Version" value={versionId ?? ''} onChange={(e) => setVersionId(e.target.value)}>
+            {chapter.versions.map((x: any) => <option key={x.id} value={x.id}>Version {x.versionNo} ({statusLabel(x.status)})</option>)}
+          </select>
+        )}
+        {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}
+        {v && <Link className="btn" to={`/anleitungs-check/${v.id}`}><ListChecksIcon className="btn-icon" aria-hidden="true" size={16} />Anleitungs-Check</Link>}
+        {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}><SpellCheckIcon className="btn-icon" aria-hidden="true" size={16} />Stil anzeigen</button>}
+        {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}><WandSparklesIcon className="btn-icon" aria-hidden="true" size={16} />Stil korrigieren</button>}
+        {v && me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin') && <SaveTemplateButton versionId={v.id} title={v.title} />}
+        {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}><SparklesIcon className="btn-icon" aria-hidden="true" size={16} />Kapitel umformulieren</button>}
+        {chapter && <button className="btn primary" onClick={regenerate}>{chapter.versions.length ? 'Neu generieren' : 'Generieren'}</button>}
+      </div>
+    </header>
     <div className="workshop">
       <aside className="ws-left" aria-label="Inhaltsverzeichnis">
         <h2>Inhaltsverzeichnis</h2>
@@ -91,7 +117,7 @@ export function WorkshopPage() {
               <button className="btn link" onClick={() => navigate(`/werkstatt/${c.id}`)}>{c.title}</button>
               <div className="small">
                 {c.versions[0] ? <Status s={c.versions[0].status} /> : <span className="muted">nicht generiert</span>}
-                {c.openBlockers > 0 && <span className="tag sev-blocker">⛔ {c.openBlockers}</span>}
+                {c.openBlockers > 0 && <span className="tag sev-blocker"><BlockerIcon />{c.openBlockers}<span className="sr-only"> offene Blocker</span></span>}
               </div>
               {c.id === chapterId && (
                 <div className="coverage small">
@@ -104,30 +130,21 @@ export function WorkshopPage() {
         </ul>
         </div>
         ))}
+        <h3 className="toc-group">Nicht im Handbuch</h3>
+        <ul className="toc" aria-label="Nicht im Handbuch">
+          {[['intern', 'Intern'], ['planning', 'In Planung']].map(([code, title]) => (
+            <li key={code}>
+              <Link to={`/vormerkungen?ziel=${code}`}>{title}</Link>
+              <div className="small muted">{(parked.data ?? []).filter((p) => p.target === code).length} vorgemerkt</div>
+            </li>
+          ))}
+        </ul>
       </aside>
 
       <section className="ws-main">
-        <header className="page-head">
-          <div>
-            <h1>Kapitelwerkstatt</h1>
-            <p className="muted">{chapter?.title ?? 'Kapitel wählen'}</p>
-          </div>
-          <div className="actions">
-            {chapter && chapter.versions.length > 0 && (
-              <select aria-label="Version" value={versionId ?? ''} onChange={(e) => setVersionId(e.target.value)}>
-                {chapter.versions.map((x: any) => <option key={x.id} value={x.id}>Version {x.versionNo} ({x.status})</option>)}
-              </select>
-            )}
-            {chapter && chapter.versions.length > 1 && <Link className="btn" to={`/vergleich/${chapter.id}`}>Versionen vergleichen</Link>}
-            {v && <Link className="btn" to={`/anleitungs-check/${v.id}`}>🔍 Anleitungs-Check</Link>}
-            {v && <button className={`btn${styleOn ? ' active' : ''}`} aria-pressed={styleOn} onClick={() => setStyleOn(!styleOn)}>🖋️ Stil anzeigen</button>}
-            {v && editable && <button className="btn" onClick={() => setBatchStyleOpen(true)}>🖋️ Stil korrigieren</button>}
-            {v && me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin') && <SaveTemplateButton versionId={v.id} title={v.title} />}
-            {v && editable && llm.data?.enabled && <button className="btn" onClick={() => setBatchOpen(true)}>✨ Kapitel umformulieren</button>}
-            {chapter && <button className="btn primary" onClick={regenerate}>{chapter.versions.length ? 'Neu generieren' : 'Generieren'}</button>}
-          </div>
-        </header>
         <ErrorBox error={version.error} />
+        {chapterId && <InstructionBanner chapterId={chapterId} />}
+        {chapterId && <PipelineBanner chapterId={chapterId} />}
         {!v && <Empty>Für dieses Kapitel gibt es noch keine generierte Version.</Empty>}
         {styleOn && styleData.data && (
           <p className="small" role="status">
@@ -170,12 +187,13 @@ export function WorkshopPage() {
         {tab === 'sources' && <SourcesTab block={selectedBlock} />}
         {tab === 'discussion' && (selectedBlock
           ? <DiscussionPanel entityType="block" entityId={selectedBlock.lineageId} canEdit={!!me.data?.permissions.some((p: string) => p === 'edit' || p === 'admin')} />
-          : <Empty>Block in der Mitte auswählen, um die Diskussion zu sehen – sie bleibt über neue Versionen erhalten.</Empty>)}
+          : <Empty>Wählen Sie im Kapitel einen Absatz, um die Diskussion zu sehen – sie bleibt über neue Versionen erhalten.</Empty>)}
         {tab === 'findings' && chapterId && <FindingsTab chapterId={chapterId} />}
         {tab === 'history' && <HistoryTab block={selectedBlock} editable={editable} onRestored={refresh} />}
         {tab === 'approval' && v && <ApprovalPanel version={v} onApproved={refresh} />}
       </aside>
     </div>
+    </>
   );
 }
 
@@ -223,13 +241,14 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
   return (
     <article className={`block kind-${b.kind} mode-${b.mode} ${selected ? 'selected' : ''}`} {...activatable(onSelect)} aria-current={selected ? 'true' : undefined} aria-label={`Block ${KIND_LABEL[b.kind] ?? b.kind}`}>
       <div className="block-meta">
-        <span className="tag">{KIND_LABEL[b.kind] ?? b.kind}</span>
+        <span className="tag">{KIND_ICON[b.kind] && <Ico icon={KIND_ICON[b.kind]} size={14} />}{KIND_LABEL[b.kind] ?? b.kind}</span>
         <Status s={b.mode} />
         {b.scopeStatus !== 'confirmed' && <Status s={b.scopeStatus} />}
         <RoleBadges codes={b.roles.filter((r: string) => r !== 'all')} />
         <DivisionBadges codes={b.divisions.filter((d: string) => d !== 'all')} />
         {b.market && <span className="tag">Markt {b.market}</span>}
         {b.release && <span className="tag">Release {b.release}</span>}
+        {b.moduleId && <span className="tag" title="Absatz aus einem Textbaustein – gepflegt unter „Textbausteine“; eigener Text löst die Verknüpfung"><Ico icon={PuzzleIcon} />Textbaustein F{b.moduleVersion}</span>}
         <span className="small muted">{b.sources.length ? `${b.sources.length} Quelle(n)` : b.justification ? 'manuell begründet' : 'ohne Evidenz'} · v{b.versionNo}</span>
       </div>
       {mode === 'edit' ? (
@@ -260,7 +279,7 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
       )}
       {proposal && <RewriteProposal proposal={proposal} block={b} llm={llm} onClose={() => setProposal(null)} onDecided={() => (setProposal(null), onChanged())} />}
       {b.justification && <p className="small muted">Begründung: {b.justification}</p>}
-      {b.comment && <p className="small comment">💬 {b.comment}</p>}
+      {b.comment && <p className="small comment"><Ico icon={MessageSquareIcon} />{b.comment}</p>}
       {mode === 'classify' && <ClassifyForm block={b} onDone={() => (setMode('view'), onChanged())} />}
       {imageOpen && (
         // Bild aus diesem Absatz (ADR-042): gespeicherte Bilder werden an den Absatz angehängt
@@ -277,8 +296,8 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
         <div className="row-actions" onClick={(e) => e.stopPropagation()}>
           {!locked && <button className="btn small" onClick={() => setMode('edit')}>Bearbeiten</button>}
           {!locked && <button className="btn small" onClick={() => setMode('classify')}>Zuordnen</button>}
-          {!locked && <button className="btn small" onClick={() => setImageOpen(true)}>🎨 Bild erzeugen</button>}
-          {!locked && canRewrite && !proposal && <button className="btn small" disabled={busy} onClick={requestRewrite}>{busy ? 'KI formuliert …' : '✨ KI-Vorschlag'}</button>}
+          {!locked && <button className="btn small" onClick={() => setImageOpen(true)}><PaletteIcon className="btn-icon" aria-hidden="true" size={16} />Bild erzeugen</button>}
+          {!locked && canRewrite && !proposal && <button className="btn small" disabled={busy} onClick={requestRewrite}>{busy ? 'KI formuliert …' : <><SparklesIcon className="btn-icon" aria-hidden="true" size={16} />KI-Vorschlag</>}</button>}
           {!locked && prev && <button className="btn small" aria-label="nach oben" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { position: prev.position - 5 }), 'Verschoben.')}>↑</button>}
           {!locked && next && <button className="btn small" aria-label="nach unten" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { position: next.position + 5 }), 'Verschoben.')}>↓</button>}
           {!locked && (
@@ -287,267 +306,20 @@ function BlockCard({ block: b, editable, selected, onSelect, prev, next, llm, on
               {ref?.sections.filter((s) => s.code !== b.section).map((s) => <option key={s.code} value={s.code}>{s.title}</option>)}
             </select>
           )}
-          <button className="btn small" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { mode: locked ? 'manually_edited' : 'locked' }), locked ? 'Block entsperrt.' : 'Block gesperrt.')}>{locked ? '🔓 Entsperren' : '🔒 Sperren'}</button>
-          <button className="btn small" onClick={() => { const c = prompt('Kommentar', b.comment ?? ''); if (c !== null) void run(() => patch(`/content-blocks/${b.id}`, { comment: c }), 'Kommentar gespeichert.'); }}>💬</button>
+          {/* Etappe 100: Quellen des Absatzes ins Kapitel „Intern“ bzw. „In Planung“ – der Absatz entfällt im Entwurf; nicht bei Rollen- und Quellenübersicht */}
+          {!locked && !b.summary && b.sources?.length > 0 && (
+            <select aria-label="Für Intern oder In Planung vormerken" value="" onChange={(e) => e.target.value && run(() => post(`/content-blocks/${b.id}/park`, { target: e.target.value }), `Für „${e.target.value === 'intern' ? 'Intern' : 'In Planung'}“ vorgemerkt – der Absatz entfällt im Entwurf.`)}>
+              <option value="">Vormerken für …</option>
+              <option value="intern">Intern</option>
+              <option value="planning">In Planung</option>
+            </select>
+          )}
+          <button className="btn small" onClick={() => run(() => patch(`/content-blocks/${b.id}`, { mode: locked ? 'manually_edited' : 'locked' }), locked ? 'Block entsperrt.' : 'Block gesperrt.')}>{locked ? <><Ico icon={LockOpenIcon} />Entsperren</> : <><Ico icon={LockIcon} />Sperren</>}</button>
+          <button className="btn small" onClick={() => { const c = prompt('Kommentar', b.comment ?? ''); if (c !== null) void run(() => patch(`/content-blocks/${b.id}`, { comment: c }), 'Kommentar gespeichert.'); }} aria-label="Kommentar" title="Kommentar"><Ico icon={MessageSquareIcon} /></button>
           {!locked && <button className="btn small danger" onClick={() => { const r = prompt('Grund für das Löschen (wird protokolliert)'); if (r !== null) void run(() => del(`/content-blocks/${b.id}?reason=${encodeURIComponent(r)}`), 'Block gelöscht – über Historie wiederherstellbar.'); }}>Löschen</button>}
         </div>
       )}
     </article>
-  );
-}
-
-/**
- * Stapelkorrektur Schreibstil (ADR-043) bzw. KI-Stapelumformulierung (ADR-044): Vorschau je Absatz, Auswahl, Übernahme mit Versionsprüfung.
- * Regeln: serverseitige Vorschau. KI: je Absatz über /style/rewrite (Fortschritt sichtbar, Absätze mit Bildern ausgenommen).
- */
-function StyleBatch({ version, llm, onClose, onChanged }: { version: any; llm: any; onClose: () => void; onChanged: () => void }) {
-  const { notify } = useApp();
-  const [mode, setMode] = useState<'rules' | 'professional' | 'present'>('rules');
-  const [items, setItems] = useState<any[] | null>(null);
-  const [chosen, setChosen] = useState<string[]>([]);
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
-  const [busy, setBusy] = useState(false);
-  const cancelled = useRef(false);
-  useEffect(() => () => {
-    cancelled.current = true;
-  }, []);
-
-  const load = async (m: typeof mode) => {
-    setItems(null);
-    setChosen([]);
-    cancelled.current = false;
-    try {
-      if (m === 'rules') {
-        const r = await post<any>(`/style/chapter-versions/${version.id}/autofix`, {});
-        setItems(r.blocks.map((b: any) => ({ ...b, note: `${b.applied} Korrektur(en)` })));
-        setChosen(r.blocks.filter((b: any) => !b.locked).map((b: any) => b.id));
-        return;
-      }
-      if (llm?.external && !confirm(`Die Absätze werden zur Umformulierung an ${llm.provider} (${llm.model}) übertragen. Fortfahren?`)) return setMode('rules');
-      const blocks = version.sections.flatMap((s: any) => s.blocks.map((b: any) => ({ ...b, sectionTitle: s.title })))
-        .filter((b: any) => REWRITABLE.includes(b.kind) && b.mode !== 'locked' && !b.text.includes('](media:'));
-      const out: any[] = [];
-      setProgress({ done: 0, total: blocks.length });
-      for (const [n, b] of blocks.entries()) {
-        if (cancelled.current) break;
-        try {
-          const r = await post<any>('/style/rewrite', { text: b.text, mode: m });
-          if (r.text.trim() !== b.text.trim()) {
-            out.push({ id: b.id, section: b.sectionTitle, versionNo: b.versionNo, before: b.text, after: r.text, lostNumbers: r.lostNumbers,
-              note: r.lostNumbers.length ? `⚠ Zahlen fehlen: ${r.lostNumbers.join(', ')}` : r.method === 'ai' ? 'KI-Vorschlag' : 'Regelkorrektur' });
-          }
-        } catch (e) {
-          out.push({ id: b.id, section: b.sectionTitle, versionNo: b.versionNo, before: b.text, after: null, note: `nicht umformuliert: ${errorText(e)}` });
-        }
-        setProgress({ done: n + 1, total: blocks.length });
-      }
-      setItems(out);
-      // Vorschläge mit fehlenden Zahlen nicht vorauswählen
-      setChosen(out.filter((x) => x.after && !x.lostNumbers?.length).map((x) => x.id));
-    } catch (e) {
-      notify(errorText(e), 'error');
-    } finally {
-      setProgress(null);
-    }
-  };
-  useEffect(() => {
-    void load(mode);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version.id, mode]);
-
-  const apply = async () => {
-    if (!items) return;
-    setBusy(true);
-    try {
-      const sel = items.filter((b) => chosen.includes(b.id));
-      const r = mode === 'rules'
-        ? await post<any>(`/style/chapter-versions/${version.id}/autofix`, { apply: true, blocks: sel.map((b) => ({ id: b.id, versionNo: b.versionNo })) })
-        : await post<any>(`/style/chapter-versions/${version.id}/apply`, { blocks: sel.map((b) => ({ id: b.id, versionNo: b.versionNo, text: b.after })), reason: mode === 'present' ? 'Schreibstil: ins Präsens (KI)' : 'Schreibstil: professionell umformuliert (KI)' });
-      notify(`${r.saved.length} Absatz/Absätze ${mode === 'rules' ? 'korrigiert' : 'umformuliert'}${r.skipped.length ? `, ${r.skipped.length} übersprungen (${r.skipped.map((x: any) => x.reason).join('; ')})` : ''}.`);
-      onChanged();
-      onClose();
-    } catch (e) {
-      notify(errorText(e), 'error');
-    } finally {
-      setBusy(false);
-    }
-  };
-  const usable = (items ?? []).filter((b) => b.after);
-  return (
-    <Modal title="Schreibstil: Kapitel automatisch korrigieren" wide onClose={onClose}>
-      <div className="filters" role="group" aria-label="Art der Überarbeitung">
-        <button className={`chip${mode === 'rules' ? ' active' : ''}`} aria-pressed={mode === 'rules'} disabled={!!progress} onClick={() => setMode('rules')}>Regelkorrekturen</button>
-        {llm?.enabled && <button className={`chip${mode === 'professional' ? ' active' : ''}`} aria-pressed={mode === 'professional'} disabled={!!progress} onClick={() => setMode('professional')}>✨ KI: professionell umformulieren</button>}
-        {llm?.enabled && <button className={`chip${mode === 'present' ? ' active' : ''}`} aria-pressed={mode === 'present'} disabled={!!progress} onClick={() => setMode('present')}>✨ KI: ins Präsens</button>}
-      </div>
-      {progress && (
-        <div role="status">
-          <p className="small">KI formuliert Absatz {Math.min(progress.done + 1, progress.total)} von {progress.total} …</p>
-          <progress max={progress.total} value={progress.done} aria-label="Fortschritt der Umformulierung" />
-          <button className="btn small" onClick={() => (cancelled.current = true)}>Abbrechen</button>
-        </div>
-      )}
-      {!items && !progress && <p className="small">Vorschau wird berechnet …</p>}
-      {items && !usable.length && <Empty>{mode === 'rules' ? 'Keine automatischen Korrekturen nötig.' : 'Keine Änderungsvorschläge.'}</Empty>}
-      {items && items.length > 0 && (
-        <>
-          <p className="small" role="status">{usable.length} Absätze mit {mode === 'rules' ? 'automatischen Korrekturen' : 'Vorschlägen'} · {chosen.length} ausgewählt</p>
-          <ul className="plain style-batch">
-            {items.map((b: any) => (
-              <li key={b.id}>
-                <label className="inline"><input type="checkbox" disabled={b.locked || !b.after} checked={chosen.includes(b.id)} onChange={() => setChosen(chosen.includes(b.id) ? chosen.filter((x) => x !== b.id) : [...chosen, b.id])} /> {b.section} · {b.note}{b.locked ? ' · gesperrt' : ''}</label>
-                {b.after && <Diff a={b.before} b={b.after} />}
-              </li>
-            ))}
-          </ul>
-          <div className="row-actions">
-            <button className="btn primary" disabled={busy || !!progress || !chosen.length} onClick={apply}>Auswahl übernehmen ({chosen.length})</button>
-            <button className="btn" onClick={onClose}>Abbrechen</button>
-          </div>
-        </>
-      )}
-    </Modal>
-  );
-}
-
-/**
- * KI-Umformulierung des ganzen Kapitels: Auftrag starten, Fortschritt verfolgen, Vorschläge gesammelt prüfen.
- * Sichtbar, sobald ein Auftrag läuft, offene Vorschläge vorliegen oder der Auftrag gestartet werden soll.
- */
-function ChapterRewrite({ version: v, llm, editable, open, onClose, onChanged }: { version: any; llm: any; editable: boolean; open: boolean; onClose: () => void; onChanged: () => void }) {
-  const { notify, ref } = useApp();
-  const batches = useLoad<any[]>(`/chapter-versions/${v.id}/rewrite-jobs`, [v.id]);
-  const proposals = useLoad<any[]>(`/chapter-versions/${v.id}/rewrite-proposals`, [v.id, JSON.stringify(v.sections.map((s: any) => s.blocks.map((b: any) => b.versionNo)))]);
-  const [instructions, setInstructions] = useState('');
-  const latest = batches.data?.[0];
-  const running = latest && ['queued', 'processing'].includes(latest.status);
-  useEffect(() => {
-    if (!running) return;
-    const t = setInterval(() => {
-      batches.reload();
-      proposals.reload();
-    }, 1500);
-    return () => clearInterval(t);
-  }, [running]);
-  useEffect(() => {
-    if (latest && !running) proposals.reload();
-  }, [latest?.status]);
-  const act = async (fn: () => Promise<any>, msg: (r: any) => string) => {
-    try {
-      const r = await fn();
-      notify(msg(r));
-      batches.reload();
-      proposals.reload();
-      onChanged();
-    } catch (e) {
-      notify(errorText(e), 'error');
-    }
-  };
-  const start = () => {
-    if (llm.external && !confirm(`Alle geeigneten Absätze dieses Kapitels und ihre Quelltexte werden an ${llm.provider} (${llm.model}) übertragen. Fortfahren?`)) return;
-    void act(() => post(`/chapter-versions/${v.id}/rewrite-jobs`, { instructions }), (b) => `Umformulierung gestartet: ${b.total} Absätze.`);
-    onClose();
-  };
-  const list = proposals.data ?? [];
-  const valid = list.filter((p) => p.status === 'proposed' && p.valid);
-  if (!open && !running && !list.length) return null;
-  const title = (code: string) => ref?.sections.find((s) => s.code === code)?.title ?? code;
-  return (
-    <section className="card rewrite-batch" aria-label="KI-Umformulierung des Kapitels">
-      <div className="card-head">
-        <h2>✨ KI-Umformulierung des Kapitels</h2>
-        {open && <button className="btn ghost small" onClick={onClose} aria-label="Schließen">✕</button>}
-      </div>
-      {open && !running && editable && (
-        <div className="form-row">
-          <label>Hinweis an die KI (optional) <input value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="z. B. kürzer, einfache Sprache" /></label>
-          <button className="btn primary" onClick={start}>Vorschläge für alle Absätze anfordern</button>
-        </div>
-      )}
-      {latest && (
-        <div className="batch-status">
-          <progress max={latest.total || 1} value={latest.done} aria-label="Fortschritt der Umformulierung" />
-          <span className="small">
-            <Status s={latest.status} /> {latest.done} / {latest.total} Absätze · gültig {latest.valid} · ungültig {latest.invalid}
-            {latest.skipped > 0 && <> · übersprungen {latest.skipped}</>}{latest.failed > 0 && <> · Fehler {latest.failed}</>}
-            {' '}· Tokens {latest.inputTokens + latest.outputTokens}
-          </span>
-          {running && <button className="btn small" onClick={() => act(() => post(`/rewrite-jobs/${latest.id}/cancel`, {}), () => 'Abbruch angefordert.')}>Abbrechen</button>}
-          {latest.error && <span className="small sev-text">{latest.error}</span>}
-        </div>
-      )}
-      {list.length > 0 && (
-        <>
-          <div className="card-head">
-            <h3>Sammelprüfung: {list.length} offene Vorschläge</h3>
-            {editable && valid.length > 0 && (
-              <button className="btn primary small" onClick={() => act(() => post(`/chapter-versions/${v.id}/rewrite-proposals/accept-valid`, {}), (r) => `${r.accepted.length} Vorschläge übernommen${r.errors.length ? `, ${r.errors.length} nicht (veraltet)` : ''}.`)}>
-                Alle gültigen übernehmen ({valid.length})
-              </button>
-            )}
-          </div>
-          <ul className="batch-list">
-            {list.map((p) => (
-              <li key={p.id}>
-                <div className="block-meta">
-                  <strong>{title(p.section)}</strong>
-                  <span className={`tag ${p.valid ? 'st-approved' : 'sev-blocker'}`}>{p.valid ? 'jeder Satz belegt' : 'Satzprüfung nicht bestanden'}</span>
-                </div>
-                <Diff a={p.originalText} b={p.proposedText} />
-                {!p.valid && <ul className="small">{p.sentences.filter((s: any) => s.issues.length).map((s: any, i: number) => <li key={i} className="sev-text">{s.text} – {s.issues.map((x: string) => llm.issueLabels?.[x] ?? x).join(', ')}</li>)}</ul>}
-                {editable && (
-                  <div className="row-actions">
-                    <button className="btn small" disabled={!p.valid || p.status !== 'proposed'} onClick={() => act(() => post(`/rewrite-proposals/${p.id}/accept`, {}), () => 'Vorschlag übernommen.')}>Übernehmen</button>
-                    <button className="btn small" onClick={() => act(() => post(`/rewrite-proposals/${p.id}/reject`, {}), () => 'Vorschlag verworfen.')}>Verwerfen</button>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </section>
-  );
-}
-
-/** KI-Vorschlag: Textdiff, Sätze mit Quellen und Prüfergebnis; übernehmen nur bei bestandener Satzprüfung (ADR-013). */
-function RewriteProposal({ proposal: p, block: b, llm, onClose, onDecided }: { proposal: any; block: any; llm: any; onClose: () => void; onDecided: () => void }) {
-  const { notify } = useApp();
-  const seqOf = (id: string) => b.sources.find((s: any) => s.snippetId === id)?.seq;
-  const decide = async (action: 'accept' | 'reject') => {
-    try {
-      await post(`/rewrite-proposals/${p.id}/${action}`, {});
-      notify(action === 'accept' ? 'KI-Vorschlag übernommen – jeder Satz ist mit seinen Quellen verknüpft.' : 'KI-Vorschlag verworfen.');
-      onDecided();
-    } catch (e) {
-      notify(errorText(e), 'error');
-    }
-  };
-  return (
-    <div className="rewrite" onClick={(e) => e.stopPropagation()} aria-label="KI-Vorschlag">
-      <div className="block-meta">
-        <strong>✨ KI-Vorschlag</strong>
-        <span className="small muted">{p.provider} · {p.model}</span>
-        <span className={`tag ${p.valid ? 'st-approved' : 'sev-blocker'}`}>{p.valid ? 'jeder Satz belegt' : 'Satzprüfung nicht bestanden'}</span>
-      </div>
-      <Diff a={p.originalText} b={p.proposedText} />
-      <ol className="rewrite-sentences small">
-        {p.sentences.map((s: any, i: number) => (
-          <li key={i} className={s.issues.length ? 'fail' : 'ok'}>
-            {s.text}{' '}
-            {s.sourceIds.map((id: string) => <span key={id} className="tag">#{seqOf(id)}</span>)}
-            <span className="muted"> · Abdeckung {Math.round(s.support * 100)} %</span>
-            {s.issues.map((x: string) => <div key={x} className="sev-text">✖ {llm?.issueLabels?.[x] ?? x}</div>)}
-            {s.details.map((d: string, j: number) => <div key={j} className="muted">{d}</div>)}
-          </li>
-        ))}
-      </ol>
-      <div className="row-actions">
-        <button className="btn primary small" disabled={!p.valid} onClick={() => decide('accept')}>Übernehmen</button>
-        <button className="btn small" onClick={() => decide('reject')}>Verwerfen</button>
-        <button className="btn ghost small" onClick={onClose}>Schließen</button>
-      </div>
-    </div>
   );
 }
 
@@ -625,197 +397,5 @@ function AddBlock({ versionId, section, onAdded }: { versionId: string; section:
         <button className="btn small" onClick={() => setOpen(false)}>Abbrechen</button>
       </div>
     </div>
-  );
-}
-
-function SourcesTab({ block }: { block?: any }) {
-  const [texts, setTexts] = useState<Record<string, string>>({});
-  const [viewer, setViewer] = useState<any | null>(null);
-  useEffect(() => {
-    if (!block) return;
-    for (const s of block.sources) get<any>(`/snippets/${s.snippetId}`).then((sn) => setTexts((t) => ({ ...t, [s.snippetId]: sn.text }))).catch(() => undefined);
-  }, [block?.id]);
-  if (!block) return <Empty>Block in der Mitte auswählen, um seine Quellen zu sehen.</Empty>;
-  if (!block.sources.length) return <Empty>{block.justification ? `Keine Quelle – manuelle Begründung: ${block.justification}` : 'Dieser Block hat weder Quelle noch Begründung (Qualitätsgate!).'}</Empty>;
-  return (
-    <div>
-      {block.sentences && (
-        <div className="source-item">
-          <h3>Satz-Evidenz (KI-umformuliert)</h3>
-          <ol className="small">
-            {block.sentences.map((s: any, i: number) => (
-              <li key={i}>{s.text} {s.sourceIds.map((id: string) => <span key={id} className="tag">#{block.sources.find((x: any) => x.snippetId === id)?.seq ?? '?'}</span>)}</li>
-            ))}
-          </ol>
-        </div>
-      )}
-      {block.sources.map((s: any) => (
-        <div key={s.snippetId} className="source-item">
-          <div className="small"><strong>#{s.seq}</strong> {s.path} · Rev. {s.revisionNo}{s.isCurrent ? '' : ' (veraltet)'} · Z. {s.lineStart}–{s.lineEnd} · <Status s={s.evidenceStatus} /></div>
-          <pre tabIndex={0} aria-label="Quelltext" className="source small">{texts[s.snippetId] ?? '…'}</pre>
-          <button className="btn link small" onClick={() => setViewer(s)}>Quelle öffnen</button>
-        </div>
-      ))}
-      {viewer && <SourceViewer revisionId={viewer.revisionId} lineStart={viewer.lineStart} lineEnd={viewer.lineEnd} onClose={() => setViewer(null)} />}
-    </div>
-  );
-}
-
-function FindingsTab({ chapterId }: { chapterId: string }) {
-  const f = useLoad<any[]>(`/quality/findings?chapterId=${chapterId}&status=open,deferred`, [chapterId]);
-  if (!f.data?.length) return <Empty>Keine offenen Befunde für dieses Kapitel.</Empty>;
-  return (
-    <ul className="finding-list">
-      {f.data.map((x) => (
-        <li key={x.id}><Severity s={x.severity} /> <strong>#{x.seq} {TYPE_LABEL[x.type]}</strong><div className="small">{x.reason}</div></li>
-      ))}
-    </ul>
-  );
-}
-
-function HistoryTab({ block, editable, onRestored }: { block?: any; editable: boolean; onRestored: () => void }) {
-  const { notify } = useApp();
-  const h = useLoad<any[]>(block ? `/content-blocks/${block.id}/versions` : null, [block?.id, block?.versionNo]);
-  const [cmp, setCmp] = useState<[number, number] | null>(null);
-  if (!block) return <Empty>Block auswählen, um die Historie zu sehen.</Empty>;
-  const versions = h.data ?? [];
-  const find = (n: number) => versions.find((v) => v.versionNo === n)?.snapshot.text ?? '';
-  return (
-    <div>
-      <ErrorBox error={h.error} />
-      <ul className="history">
-        {versions.map((v) => (
-          <li key={v.versionNo}>
-            <strong>v{v.versionNo}</strong> {v.changeType} · {v.author} · {new Date(v.createdAt).toLocaleString('de-DE')}
-            {v.reason && <div className="small muted">{v.reason}</div>}
-            <div className="row-actions">
-              {v.versionNo !== block.versionNo && <button className="btn small" onClick={() => setCmp([v.versionNo, block.versionNo])}>mit aktueller vergleichen</button>}
-              {editable && v.versionNo !== block.versionNo && (
-                <button className="btn small" onClick={async () => {
-                  try {
-                    await post(`/content-blocks/${block.id}/restore`, { versionNo: v.versionNo });
-                    notify(`Version ${v.versionNo} wiederhergestellt.`);
-                    onRestored();
-                  } catch (e) {
-                    notify(errorText(e), 'error');
-                  }
-                }}>wiederherstellen</button>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
-      {cmp && (
-        <div>
-          <h3>Vergleich v{cmp[0]} → v{cmp[1]}</h3>
-          <Diff a={find(cmp[0])} b={find(cmp[1])} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function ApprovalPanel({ version, onApproved }: { version: any; onApproved: () => void }) {
-  const { notify } = useApp();
-  const gate = useLoad<any>(`/chapter-versions/${version.id}/gate`, [version.id, version.status, JSON.stringify(version.sections.map((s: any) => s.blocks.map((b: any) => b.versionNo)))]);
-  const [comment, setComment] = useState('');
-  const act = async (path: string, body: unknown, msg: string) => {
-    try {
-      await post(`/chapter-versions/${version.id}/${path}`, body);
-      notify(msg);
-      setComment('');
-      onApproved();
-    } catch (e) {
-      notify(errorText(e), 'error');
-    }
-  };
-  return (
-    <div>
-      <p className="small">Status: <Status s={version.status} />{version.submittedBy && version.status === 'in_review' && <> · eingereicht von {version.submittedBy} am {new Date(version.submittedAt).toLocaleString('de-DE')}{version.submitComment && <> – „{version.submitComment}“</>}</>}</p>
-      <h3>Qualitätsgate {gate.data && (gate.data.passed ? <span className="tag st-approved">bestanden</span> : <span className="tag sev-blocker">nicht bestanden</span>)}</h3>
-      <ul className="gate">
-        {gate.data?.checks.map((c: any) => (
-          <li key={c.code} className={c.passed ? 'ok' : 'fail'}>
-            {c.passed ? '✔' : '✖'} {c.label}
-            {!c.passed && <ul className="small">{c.details.slice(0, 6).map((d: string, i: number) => <li key={i}>{d}</li>)}{c.details.length > 6 && <li>… {c.details.length - 6} weitere</li>}</ul>}
-          </li>
-        ))}
-      </ul>
-      <Link className="small" to={`/evidenz/${version.id}`}>Evidenz je Absatz ansehen →</Link>
-      {version.status === 'draft' && (
-        <>
-          <h3>Zur Freigabe einreichen</h3>
-          <p className="small muted">Nach dem Einreichen ist die Version bis zur Entscheidung gesperrt (Freigabestufen des Projekts siehe Seite „Freigabe“).</p>
-          <label className="block">Hinweis an die Freigabe (optional) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
-          <button className="btn primary" disabled={!gate.data?.passed} onClick={() => act('submit', { comment }, 'Zur Freigabe eingereicht.')}>Zur Freigabe einreichen</button>
-        </>
-      )}
-      {version.workflow && (
-        <>
-          <h3>Freigabestufen{version.workflow.fourEyes && <span className="tag">Vier-Augen-Prinzip</span>}</h3>
-          <ol className="stages">
-            {version.workflow.stages.map((st: any) => (
-              <li key={st.key} className={`stage-${st.status}`} aria-current={st.status === 'active' ? 'step' : undefined}>
-                <strong>{st.name}</strong> – {st.status === 'done' ? 'abgeschlossen' : st.status === 'active' ? 'aktuell' : 'ausstehend'}
-                {' '}· {st.votes.length}/{st.minApprovals} Zustimmung(en){st.approvers.length ? ` · zuständig: ${st.approvers.join(', ')}` : ''}
-                {st.votes.length > 0 && <span className="small"> ({st.votes.map((x: any) => x.approver).join(', ')})</span>}
-                {st.status === 'active' && version.workflow.dueAt && (
-                  <span className={version.workflow.overdue ? 'tag sev-blocker' : 'small'}> Frist {new Date(version.workflow.dueAt).toLocaleDateString('de-DE')}{version.workflow.overdue ? ' – überfällig' : ''}</span>
-                )}
-              </li>
-            ))}
-          </ol>
-        </>
-      )}
-      {version.status === 'in_review' && (
-        <>
-          <h3>Fachliche Entscheidung</h3>
-          <label className="block">Kommentar (Pflicht) <textarea rows={2} value={comment} onChange={(e) => setComment(e.target.value)} /></label>
-          <div className="row-actions">
-            <button className="btn primary" disabled={!gate.data?.passed || !comment.trim()} onClick={() => act('approve', { comment, decision: 'approved' }, version.workflow?.stages.length > 1 ? 'Zustimmung gespeichert.' : 'Kapitelversion freigegeben.')}>{version.workflow?.stages.length > 1 ? `Zustimmen (${version.workflow.stages[version.workflow.currentStage]?.name})` : 'Freigeben'}</button>
-            <button className="btn" disabled={!comment.trim()} onClick={() => act('approve', { comment, decision: 'rejected' }, 'Abgelehnt – Version ist wieder ein bearbeitbarer Entwurf.')}>Ablehnen</button>
-            <button className="btn ghost" onClick={() => act('withdraw', { reason: comment }, 'Einreichung zurückgezogen.')}>Einreichung zurückziehen</button>
-          </div>
-        </>
-      )}
-      <h3>Freigabeprotokoll</h3>
-      {!version.approvals.length ? <p className="small muted">Noch keine Entscheidung.</p> : (
-        <ul className="small">
-          {version.approvals.map((a: any) => <li key={a.id}><Status s={a.decision} /> {a.approver}{a.stage && a.stage !== 'freigabe' ? ` (${a.stage})` : ''} · {new Date(a.createdAt).toLocaleString('de-DE')} — {a.comment}</li>)}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-/** „Als Vorlage speichern“ (ADR-059): Aufbau dieses Kapitels als eigene Vorlage für den Kapitel-Assistenten */
-function SaveTemplateButton({ versionId, title }: { versionId: string; title: string }) {
-  const { notify } = useApp();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  return (
-    <>
-      <button className="btn" onClick={() => { setName(title.replace(/^\d+(\.\d+)*\.?\s*/, '')); setOpen(true); }}>💾 Als Vorlage</button>
-      {open && (
-        <Modal title="Als Vorlage speichern" onClose={() => setOpen(false)}>
-          <p className="small">Zweck, Voraussetzungen, Schritte, Ergebnis und Tipps dieses Kapitels werden zur Vorlage im Kapitel-Assistenten. Ersetzen Sie danach konkrete Begriffe bei Bedarf durch „…“.</p>
-          <label className="block">Name der Vorlage <input value={name} maxLength={80} onChange={(e) => setName(e.target.value)} /></label>
-          <label className="block">Beschreibung (optional) <input value={description} maxLength={300} onChange={(e) => setDescription(e.target.value)} placeholder="Wofür eignet sich die Vorlage?" /></label>
-          <div className="row-actions">
-            <button className="btn primary" disabled={!name.trim()} onClick={async () => {
-              try {
-                await post('/chapter-templates', { name, description, fromVersionId: versionId });
-                notify(`Vorlage „${name}“ gespeichert – im Kapitel-Assistenten wählbar.`);
-                setOpen(false);
-              } catch (e) {
-                notify(errorText(e), 'error');
-              }
-            }}>Speichern</button>
-            <button className="btn" onClick={() => setOpen(false)}>Abbrechen</button>
-          </div>
-        </Modal>
-      )}
-    </>
   );
 }

@@ -18,7 +18,11 @@ const FIELDS: Record<Kind, { fields: Record<string, string[]>; required: string[
     required: ['abbreviation', 'expansion'],
   },
   glossary: {
-    fields: { preferred: ['Begriff', 'Bevorzugter Begriff', 'term', 'preferred'], definition: ['Definition', 'Erklärung', 'definition'], avoid: ['Vermeiden', 'Zu vermeiden', 'Synonyme vermeiden', 'avoid'] },
+    // auch SYNONYME.csv des Arbeitsordners (Bevorzugt; Vermeiden; …; Status) – übernommen werden nur entschiedene Zeilen (ADR-110)
+    fields: {
+      preferred: ['Begriff', 'Bevorzugter Begriff', 'Bevorzugt', 'term', 'preferred'], definition: ['Definition', 'Erklärung', 'definition'], avoid: ['Vermeiden', 'Zu vermeiden', 'Synonyme vermeiden', 'avoid'],
+      uiAllowed: ['UI-Begriff erlaubt', 'UI erlaubt', 'uiAllowed'], status: ['Status', 'status'],
+    },
     required: ['preferred'],
   },
   faq: {
@@ -30,11 +34,11 @@ const FIELDS: Record<Kind, { fields: Record<string, string[]>; required: string[
 export interface ImportRow {
   row: number;
   key: string;
-  action: 'create' | 'update' | 'unchanged' | 'error';
+  action: 'create' | 'update' | 'unchanged' | 'skipped' | 'error';
   message: string | null;
 }
 
-async function readTable(fileName: string, data: Buffer): Promise<string[][]> {
+export async function readTable(fileName: string, data: Buffer): Promise<string[][]> {
   const ext = path.extname(fileName).toLowerCase();
   if (ext === '.csv' || ext === '.txt') {
     try {
@@ -91,6 +95,16 @@ export async function importMasterData(ctx: Ctx, kind: string, fileName: string,
     try {
       if (!key) throw badRequest(`${spec.fields[spec.required[0]][0]} fehlt.`);
       if (seen.has(key.toLowerCase())) throw badRequest('Doppelt in der Datei – nur die erste Zeile zählt.');
+      // Terminologie aus SYNONYME.csv: nur entschiedene Zeilen (oder ohne Status); offen, Vorschlag und verworfen nicht.
+      // Eine übersprungene Zeile zählt nicht als „erste Zeile“ – eine spätere entschiedene Zeile desselben Begriffs gilt.
+      const termStatus = k === 'glossary' ? get('status')?.trim().toLowerCase() : undefined;
+      if (termStatus && !['entschieden', 'decided', 'aktiv', 'active', 'freigegeben', 'approved'].includes(termStatus)) {
+        r.action = 'skipped';
+        r.message = ['verworfen', 'abgelehnt', 'rejected', 'discarded'].includes(termStatus)
+          ? `Status „${get('status')}“ – verworfene Begriffe werden nicht übernommen.`
+          : `Status „${get('status')}“ – wird erst nach der Entscheidung übernommen.`;
+        continue;
+      }
       seen.add(key.toLowerCase());
       const input = toInput(k, get);
       if (id && sameAs(existing.rows.get(id)!, input)) {
@@ -111,7 +125,7 @@ export async function importMasterData(ctx: Ctx, kind: string, fileName: string,
       r.message = e.detail ?? e.title;
     }
   }
-  const summary = { rows: rows.length, create: 0, update: 0, unchanged: 0, error: 0 };
+  const summary = { rows: rows.length, create: 0, update: 0, unchanged: 0, skipped: 0, error: 0 };
   for (const r of rows) summary[r.action]++;
   if (apply) await audit(ctx, user.id, 'master_data.imported', 'project', ctx.projectId, { kind: k, fileName, ...summary });
   return { kind: k, applied: apply, summary, rows: rows.slice(0, 500) };
@@ -120,7 +134,7 @@ export async function importMasterData(ctx: Ctx, kind: string, fileName: string,
 async function existingEntries(ctx: Ctx, k: Kind) {
   const sql = {
     abbreviations: 'SELECT id, abbreviation AS k, expansion, description FROM abbreviations WHERE project_id = ?',
-    glossary: 'SELECT id, preferred AS k, definition, avoid, status FROM terminology_terms WHERE project_id = ?',
+    glossary: 'SELECT id, preferred AS k, definition, avoid, status, ui_allowed FROM terminology_terms WHERE project_id = ?',
     faq: 'SELECT id, question AS k, answer, roles, divisions, status FROM faq_entries WHERE project_id = ?',
   }[k];
   const list = await ctx.db.all(sql, ctx.projectId);
@@ -131,7 +145,7 @@ async function existingEntries(ctx: Ctx, k: Kind) {
 
 function toInput(k: Kind, get: (f: string) => string | undefined): any {
   if (k === 'abbreviations') return { abbreviation: get('abbreviation'), expansion: get('expansion'), ...(get('description') !== undefined ? { description: get('description') || null } : {}) };
-  if (k === 'glossary') return { preferred: get('preferred'), ...(get('definition') !== undefined ? { definition: get('definition') || null } : {}), ...(get('avoid') !== undefined ? { avoid: cellList(get('avoid')) } : {}), status: 'active' };
+  if (k === 'glossary') return { preferred: get('preferred'), ...(get('definition') !== undefined ? { definition: get('definition') || null } : {}), ...(get('avoid') !== undefined ? { avoid: cellList(get('avoid')) } : {}), ...(get('uiAllowed') !== undefined ? { uiAllowed: /^(ja|j|x|yes|true|1)$/i.test(get('uiAllowed')!) } : {}), status: 'active' };
   const status = get('status')?.toLowerCase();
   return {
     question: get('question'), answer: get('answer'),
@@ -155,7 +169,8 @@ function sameAs(r: any, input: any) {
   const eq = (a: unknown, b: unknown) => (a ?? '') === (b ?? '');
   if (input.expansion !== undefined) return eq(r.expansion, input.expansion) && (input.description === undefined || eq(r.description, input.description));
   if (input.preferred !== undefined) {
-    return r.status === 'active' && (input.definition === undefined || eq(r.definition, input.definition)) && (input.avoid === undefined || list(r.avoid) === list(input.avoid));
+    return r.status === 'active' && (input.definition === undefined || eq(r.definition, input.definition)) && (input.avoid === undefined || list(r.avoid) === list(input.avoid))
+      && (input.uiAllowed === undefined || !!Number(r.ui_allowed) === input.uiAllowed);
   }
   return eq(r.answer, input.answer) && (input.roles === undefined || list(r.roles) === list(input.roles))
     && (input.divisions === undefined || list(r.divisions) === list(input.divisions)) && (input.status === undefined || r.status === input.status);
