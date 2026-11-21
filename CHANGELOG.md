@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.120.0 – Etappe 120: OpenTelemetry 3, Mindestversion Node 22.15 (21.11.2026)
+
+### Hinzugefügt
+- **OpenTelemetry 3** für das verteilte Tracing (ADR-027): `@opentelemetry/sdk-trace` 3.1 statt `sdk-trace-base`/`sdk-trace-node` 2.11, `core`/`resources` 3.1, OTLP-Exporter 0.301, `context-async-hooks` 3.1, API 1.10. Spans, Attribute und Umgebungsvariablen bleiben gleich.
+- **T-454** prüft, dass die Mindestversion aus `engines` in den Installationsskripten und der Doku gleich steht und jede Laufzeit-Abhängigkeit damit läuft.
+
+### Geändert
+- **Mindestversion Node.js 22.15** (vorher 22.13; Entscheidung vom 21.11.2026): OpenTelemetry 3 setzt sie voraus. `engines`, die Prüfung in `install.sh`/`install.ps1`, README und docs/08. Das Windows-Paket bringt Node 22.23 mit.
+- OpenTelemetry 3 kennt kein `NodeTracerProvider.register()` mehr: Kontextmanager (AsyncLocalStorage), W3C-Propagator und Provider werden einzeln angemeldet; die Span-Prozessoren erhalten den Exporter als Option. Die API liegt nur noch einmal (1.10) im Abhängigkeitsbaum, auch für prom-client.
+
 ## 0.119.0 – Etappe 119: better-sqlite3 13 (20.11.2026)
 
 ### Hinzugefügt

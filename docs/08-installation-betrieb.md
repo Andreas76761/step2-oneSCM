@@ -1,13 +1,13 @@
 # 08 Installation und Betrieb
 
-Stand: Version 0.119 (20.11.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
+Stand: Version 0.120 (21.11.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
 
 ## 1. Welche Installation passt?
 
 | Weg | Für wen | Voraussetzung | Internet bei der Installation |
 |---|---|---|---|
 | **Windows-Paket (offline)** `onescm-studio-<Version>-windows-x64.zip` | Arbeitsplatz unter Windows 10/11 (x64), auch ohne Administratorrechte | keine – Node.js ist enthalten | nein |
-| **Universelles Paket** `onescm-studio-<Version>.zip` | Linux, macOS oder Windows mit eigenem Node.js | Node.js 22 LTS (mindestens 22.13) oder 24 LTS | ja (npm-Registry) |
+| **Universelles Paket** `onescm-studio-<Version>.zip` | Linux, macOS oder Windows mit eigenem Node.js | Node.js 22 LTS (mindestens 22.15) oder 24 LTS | ja (npm-Registry) |
 | **Container** (`docker compose`) | Server, Team-Betrieb mit PostgreSQL | Docker bzw. Podman | ja (Abbild bauen) |
 | **Kubernetes** (Helm-Chart) | Produktivbetrieb, mehrere Instanzen | Cluster, PostgreSQL, S3-Speicher | ja |
 

@@ -109,6 +109,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **117** ✅ | Testwerkzeuge aktualisiert (vitest 5; Playwright 1.65 zurückgestellt) | Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
 | **118** ✅ | Playwright 1.65 nachgezogen (axe prüft die Designvorschau getrennt) | alle E2E-Tests mit Chromium 159 und 141; CI auf ubuntu-latest |
 | **119** ✅ | better-sqlite3 13 (N-API, Binärdateien im Paket) | Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests; Windows-Paket gebaut |
+| **120** ✅ | OpenTelemetry 3, Mindestversion Node 22.15 | Server-Tests grün auf SQLite und PostgreSQL (T-454 neu); alle E2E-Tests |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

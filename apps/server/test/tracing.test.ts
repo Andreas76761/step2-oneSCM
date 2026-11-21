@@ -1,6 +1,6 @@
 // Eigene Testdatei: der Tracer wird prozessweit registriert (Vitest isoliert Dateien)
 import fs from 'node:fs';
-import { InMemorySpanExporter } from '@opentelemetry/sdk-trace-base';
+import { InMemorySpanExporter } from '@opentelemetry/sdk-trace';
 import { afterAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
 import { initTracing, shutdownTracing } from '../src/tracing.js';

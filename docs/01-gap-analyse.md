@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.122 Stand nach Etappe 120 (21.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| OpenTelemetry 3 (sdk-trace 3.1, OTLP-Exporter 0.301) | ✅ Tracing-Test T-152 grün; Gegenprobe ohne Kontextmanager bzw. Propagator scheitert |
+| Mindestversion Node 22.15 | ✅ engines, Installationsskripte, Doku; T-454 |
+
 ## 1.121 Stand nach Etappe 119 (20.11.2026)
 
 | Punkt | Ergebnis |

@@ -3591,5 +3591,14 @@
       "NFR-145",
       "US-015"
     ]
+  },
+  {
+    "id": "T-454",
+    "title": "Mindestversion Node: engines, Installationsskripte und Doku stimmen überein, jede Laufzeit-Abhängigkeit läuft damit",
+    "file": "apps/server/test/stage120.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-14"
+    ]
   }
 ]
