@@ -2469,9 +2469,12 @@ test('[T-287] Bildarchiv: Varianten einer Maske verknüpfen, Klickstrecke aus Sc
   await page.goto('/');
   await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
   await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Bildarchiv', exact: true }).click();
+  const phField = page.getByLabel('Was soll das Bild zeigen?');
   for (const t of ['E2E Maske Liste DE', 'E2E Maske Liste EN', 'E2E Maske Kopieren']) {
-    await page.getByLabel('Was soll das Bild zeigen?').fill(t);
+    await phField.fill(t);
     await page.getByRole('button', { name: 'Platzhalter anlegen' }).click();
+    // erst weiter, wenn dieser Platzhalter angelegt ist: das Feld leert sich (die Meldung des vorigen stünde schon da)
+    await expect(phField).toHaveValue('');
     await expect(page.getByText(/^Platzhalter B-\d{4} angelegt\.$/).last()).toBeVisible();
   }
   // aktuelles Bild: „E2E Maske Kopieren“ – mit der deutschen Liste verknüpfen
@@ -2496,6 +2499,25 @@ test('[T-287] Bildarchiv: Varianten einer Maske verknüpfen, Klickstrecke aus Sc
   await expect(page.getByText('Klickstrecke E2E Vertrag anlegen: 1 Vertragsliste öffnen → 2a Neu oder 2b Kopieren', { exact: false })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Klickstrecke aktualisieren' })).toBeVisible();
   expect(await axe()).toEqual([]);
+});
+
+test('[T-455] Bildarchiv: nächster Titel bleibt stehen, wenn er eingetippt wird, während der vorige Platzhalter noch angelegt wird', async ({ page }) => {
+  // Anlegen verzögern, damit der nächste Titel sicher vor der Antwort eingetippt ist
+  await page.route('**/api/v1/image-archive/placeholders', async (r) => {
+    await new Promise((x) => setTimeout(x, 1000));
+    await r.continue();
+  });
+  await page.goto('/');
+  await page.getByLabel('Demo-Benutzer').selectOption('u-admin');
+  await page.getByRole('navigation', { name: 'Hauptnavigation' }).getByRole('link', { name: 'Bildarchiv', exact: true }).click();
+  const field = page.getByLabel('Was soll das Bild zeigen?');
+  await field.fill('E2E Platzhalter Eins');
+  await page.getByRole('button', { name: 'Platzhalter anlegen' }).click();
+  await field.fill('E2E Platzhalter Zwei');
+  await expect(page.getByText(/^Platzhalter B-\d{4} angelegt\.$/)).toBeVisible();
+  await expect(field).toHaveValue('E2E Platzhalter Zwei');
+  await expect(page.getByRole('button', { name: 'Platzhalter anlegen' })).toBeEnabled();
+  await page.unroute('**/api/v1/image-archive/placeholders');
 });
 
 test('[T-291] Bildarchiv: Stelle im Bild unkenntlich machen und rückgängig, mehrere Labels (Domäne, Gliederung) und Kapitel je Bild', async ({ page, request }) => {

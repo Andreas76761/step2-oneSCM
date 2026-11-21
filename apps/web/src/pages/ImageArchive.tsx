@@ -94,9 +94,11 @@ export function ImageArchivePage() {
   usePasteImage((f) => void upload(f), canEdit && !!item);
   const placeholder = async () => {
     try {
-      const r = await post('/image-archive/placeholders', { title: phTitle });
+      const sent = phTitle;
+      const r = await post('/image-archive/placeholders', { title: sent });
       setMade(r.markdown);
-      setPhTitle('');
+      // nur leeren, wenn inzwischen nichts Neues eingetippt wurde (sonst ginge der nächste Titel verloren)
+      setPhTitle((cur) => (cur === sent ? '' : cur));
       notify(`Platzhalter ${r.imageNo} angelegt.`);
       reload();
       setSel(r.sha);

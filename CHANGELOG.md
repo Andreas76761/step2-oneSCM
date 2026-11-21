@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.120.1 – Bildarchiv: nächster Titel bleibt stehen (21.11.2026)
+
+### Hinzugefügt
+- **T-455:** Wer im Bildarchiv den nächsten Platzhalter-Titel eintippt, während der vorige noch angelegt wird, behält den Text. Der Test scheitert ohne die Korrektur.
+
+### Behoben
+- **Platzhalter anlegen:** Nach dem Anlegen leerte die App das Feld „Was soll das Bild zeigen?“ – auch wenn dort inzwischen schon der nächste Titel stand; der Text war weg und die Schaltfläche gesperrt. Jetzt wird nur geleert, wenn noch der gespeicherte Titel darin steht. Aufgefallen ist das, weil T-287 in der CI zweimal ins Zeitlimit lief (Etappen 117 und 119): Der Test wartete auf die Meldung „Platzhalter … angelegt.“, die vom vorigen Platzhalter schon dastand. T-287 wartet jetzt, bis sich das Feld geleert hat.
+
 ## 0.120.0 – Etappe 120: OpenTelemetry 3, Mindestversion Node 22.15 (21.11.2026)
 
 ### Hinzugefügt

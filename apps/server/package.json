@@ -1,6 +1,6 @@
 {
   "name": "@onescm/server",
-  "version": "0.120.0",
+  "version": "0.120.1",
   "private": true,
   "type": "module",
   "main": "dist/index.js",

@@ -3600,5 +3600,14 @@
     "requirements": [
       "NFR-14"
     ]
+  },
+  {
+    "id": "T-455",
+    "title": "Bildarchiv: nächster Titel bleibt stehen, wenn er eingetippt wird, während der vorige Platzhalter noch angelegt wird",
+    "file": "e2e/tests/app.spec.ts",
+    "level": "e2e",
+    "requirements": [
+      "NFR-97"
+    ]
   }
 ]
