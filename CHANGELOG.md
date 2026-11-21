@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.121.0 – Etappe 121: eslint 10.15 (21.11.2026)
+
+Ohne Änderung an der ausgelieferten App.
+
+### Hinzugefügt
+- **eslint 10.15** (vorher 10.11) und **typescript-eslint 8.73** (vorher 8.70): eslint bringt `minimatch` 11 jetzt selbst mit – die Overrides aus Etappe 109 bleiben als Absicherung, das Lockfile enthält weiter nur minimatch 11.0.5 für eslint. Keine neuen Lint-Befunde.
+
 ## 0.120.1 – Bildarchiv: nächster Titel bleibt stehen (21.11.2026)
 
 ### Hinzugefügt

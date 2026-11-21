@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.120, 21.11.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.121, 21.11.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -161,7 +161,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 72. **Etappe 118 – Playwright 1.65 nachgezogen (✅ umgesetzt):** Ursache der Etappe 117: axe kehrte im Vorschau-iframe ohne Skripte (`sandbox=""`) unter Chromium 159 nicht zurück. T-367 prüft die Seite ohne das iframe und den Vorschau-Inhalt als eigene Seite; CI wieder auf ubuntu-latest.
 73. **Etappe 119 – better-sqlite3 13 (✅ umgesetzt):** N-API mit Binärdateien im Paket; Windows-Paket ohne `prebuild-install`, nicht mehr an Node 22 gebunden.
 74. **Etappe 120 – OpenTelemetry 3, Mindestversion Node 22.15 (✅ umgesetzt):** Entscheidung vom 21.11.2026; T-454 prüft Mindestversion gegen Installationsskripte, Doku und alle Laufzeit-Abhängigkeiten.
-75. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
+75. **Etappe 121 – eslint 10.15 (✅ umgesetzt):** in Etappe 115 zurückgestellt, weil das Update damals die minimatch-Overrides durcheinanderbrachte; eslint bringt minimatch 11 jetzt selbst mit.
+76. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
 
 ## 10.7 Offene Entscheidungen
 
