@@ -195,6 +195,12 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.124 Stand nach Etappe 122 (21.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| @fastify/multipart 10.1 | ✅ Uploads und Größengrenze (413) unverändert; drei Sicherheitskorrekturen der 10er-Linie enthalten |
+
 ## 1.123 Stand nach Etappe 121 (21.11.2026)
 
 | Punkt | Ergebnis |

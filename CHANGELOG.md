@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.122.0 – Etappe 122: @fastify/multipart 10 (21.11.2026)
+
+### Hinzugefügt
+- **@fastify/multipart 10.1** (vorher 9.4) für alle Datei-Uploads: enthält die Sicherheitskorrekturen der 10er-Linie (GHSA-62qx-hpj5-j6hc, GHSA-vmph-573x-85f6 in 10.1.1, GHSA-5849-5m6q-9632 in 10.1.7) und bereinigt die Dateiendung temporärer Dateien (10.1.8). `npm audit` meldete für 9.4 nichts, die Korrekturen gibt es aber nur in 10.x. Die genutzte Schnittstelle (`req.file()`, `toBuffer()`, Größengrenzen mit 413) ist unverändert.
+
+### Geändert
+- `fastify-plugin` liegt nur noch einmal (6.0) im Abhängigkeitsbaum, für multipart, rate-limit und static.
+
 ## 0.121.0 – Etappe 121: eslint 10.15 (21.11.2026)
 
 Ohne Änderung an der ausgelieferten App.
