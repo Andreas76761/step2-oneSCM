@@ -112,6 +112,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **120** ✅ | OpenTelemetry 3, Mindestversion Node 22.15 | Server-Tests grün auf SQLite und PostgreSQL (T-454 neu); alle E2E-Tests |
 | **121** ✅ | eslint 10.15, typescript-eslint 8.73 | Lint ohne Befund; Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
 | **122** ✅ | @fastify/multipart 10 (Sicherheitskorrekturen) | Server-Tests grün auf SQLite und PostgreSQL (Upload-Grenze 413); alle E2E-Tests |
+| **123** ✅ | vite 8, plugin-react 6 | Build, Typprüfung, Lint; Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

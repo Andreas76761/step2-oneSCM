@@ -12,6 +12,13 @@ export default defineConfig({
     outDir: 'dist',
     chunkSizeWarningLimit: 600,
     // React und Router ändern sich selten: eigener Chunk bleibt über App-Updates im Browser-Cache
-    rollupOptions: { output: { manualChunks: { vendor: ['react', 'react-dom', 'react-dom/client', 'react-router-dom'] } } },
+    // (vite 8/Rolldown: Gruppen statt manualChunks-Objekt)
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [{ name: 'vendor', test: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom)[\\/]/ }],
+        },
+      },
+    },
   },
 });

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.123.0 – Etappe 123: vite 8 (21.11.2026)
+
+Ohne Änderung an der Oberfläche – gleiche Ladepakete, gebaut mit Rolldown.
+
+### Hinzugefügt
+- **vite 8** (Rolldown statt Rollup und esbuild, vorher 6.4) und **@vitejs/plugin-react 6** (ohne Babel, vorher 4.7) für den Build der Web-App; vitest nutzt dieselbe vite-Version. Der Build dauert rund 0,5 s, die Ladepakete sind gleich groß oder kleiner (z. B. `index` 92 statt 113 kB).
+
+### Geändert
+- `vite.config.ts`: Der eigene Chunk für React und den Router (`vendor`) entsteht über `rolldownOptions.output.codeSplitting.groups` – Rolldown kennt `manualChunks` nur noch als Funktion.
+- Im Abhängigkeitsbaum fallen Babel, Rollup und das esbuild von vite 6 weg; es gibt nur noch eine vite-Version.
+- **T-454** (Etappe 120) lud `semver` aus dem Baum von Babel; `semver` steht jetzt ausdrücklich in den Entwicklungsabhängigkeiten des Servers.
+
 ## 0.122.0 – Etappe 122: @fastify/multipart 10 (21.11.2026)
 
 ### Hinzugefügt
