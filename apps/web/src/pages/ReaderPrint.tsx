@@ -87,7 +87,7 @@ export function PrintPage() {
     for (const v of printed) for (const f of related.data?.[v.chapterId]?.faq ?? []) if (!seen.has(f.id)) seen.set(f.id, f);
     return [...seen.values()];
   })();
-  const date = formatDate();
+  const date = formatDate(Date.now());
   const printDate = rt.date(new Date());
   const projects = useLoad<any[]>('/projects');
   const releases = useLoad<any[]>('/releases');

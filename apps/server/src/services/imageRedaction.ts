@@ -22,12 +22,6 @@ async function asset(ctx: Ctx, sha: string) {
 
 const rowOf = (ctx: Ctx, sha: string) => ctx.db.get('SELECT * FROM media_redactions WHERE project_id = ? AND sha = ?', ctx.projectId, sha);
 
-/** Verpixelte Kopie, die statt dieser Fassung ausgeliefert wird; null = Original ausliefern */
-export async function redactedShaOf(ctx: Ctx, sha: string): Promise<string | null> {
-  const r = await ctx.db.get('SELECT redacted_sha FROM media_redactions WHERE project_id = ? AND sha = ? AND enabled = 1', ctx.projectId, sha);
-  return (r?.redacted_sha as string | undefined) ?? null;
-}
-
 export function redactionDto(r: any, sha: string, available: boolean) {
   const regions = parseJson<RedactionRegion[]>(r?.regions, []);
   return {

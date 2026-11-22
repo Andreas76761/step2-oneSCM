@@ -195,6 +195,12 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.126 Stand nach Etappe 124 (22.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| Code-Review der Etappen 113–123 | ✅ 3 Funde behoben: universelles Paket installiert ohne C++-Werkzeuge (T-456), fehlendes Datum nicht mehr „heute“, Importzyklus media ↔ imageRedaction aufgelöst |
+
 ## 1.125 Stand nach Etappe 123 (21.11.2026)
 
 | Punkt | Ergebnis |

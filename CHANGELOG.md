@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.124.0 – Etappe 124: Code-Review der Etappen 113–123 (22.11.2026)
+
+Drei Funde, alle behoben.
+
+### Hinzugefügt
+- **T-456:** Die Installationsskripte des universellen Pakets installieren ohne Installationsskripte der Abhängigkeiten; better-sqlite3 ist die einzige Laufzeit-Abhängigkeit mit einem solchen Skript, und seine Binärdateien liegen für alle unterstützten Plattformen im Paket. Der Test scheitert ohne die Korrektur.
+
+### Behoben
+- **Universelles Paket brauchte seit Etappe 119 C++-Werkzeuge:** better-sqlite3 13 hat keine `prebuild-install`-Stufe mehr; npm führt wegen der mitgelieferten `binding.gyp` immer `node-gyp rebuild` aus. Das baut nichts, braucht aber Python, einen C++-Compiler (unter Windows Visual Studio Build Tools) und lädt die Node-Header aus dem Netz – auf einem üblichen Windows-PC scheiterte `install.ps1`. `install.sh`/`install.ps1` rufen `npm ci` jetzt mit `--ignore-scripts` auf; geprüft mit einer Installation wie im Paket (better-sqlite3 lädt `prebuilds/`, SQLite 3.54.1). Das Windows-Offline-Paket war nicht betroffen.
+- **Fehlendes Datum zeigte „heute“:** `formatDate`/`formatDateTime` (Etappe 113) hatten „jetzt“ als Standardwert; ein fehlendes Datum in den Daten erschien so als aktuelles Datum. Der Standardwert entfällt, die zwei Stellen, die „heute“ meinen (Druckansicht, neuer Stand in oneSCM_Metadaten), übergeben ihn ausdrücklich.
+- **Importzyklus Bilder ↔ Unkenntlichmachen** (Etappe 113): `redactedShaOf` liegt jetzt in `services/media.ts`; `services/imageRedaction.ts` importiert media.ts, aber nicht umgekehrt.
+
 ## 0.123.0 – Etappe 123: vite 8 (21.11.2026)
 
 Ohne Änderung an der Oberfläche – gleiche Ladepakete, gebaut mit Rolldown.

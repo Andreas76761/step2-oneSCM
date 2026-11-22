@@ -3609,5 +3609,14 @@
     "requirements": [
       "NFR-97"
     ]
+  },
+  {
+    "id": "T-456",
+    "title": "Installationspaket: npm ci ohne Installationsskripte – keine C++-Werkzeuge nötig, better-sqlite3 bringt die Binärdateien mit",
+    "file": "apps/server/test/stage124.test.ts",
+    "level": "unit",
+    "requirements": [
+      "NFR-03"
+    ]
   }
 ]

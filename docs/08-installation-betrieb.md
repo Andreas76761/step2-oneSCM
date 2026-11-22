@@ -1,6 +1,6 @@
 # 08 Installation und Betrieb
 
-Stand: Version 0.123 (21.11.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
+Stand: Version 0.124 (22.11.2026). Diese Anleitung beschreibt, wie Sie oneSCM Handbook Studio auf einem Arbeitsplatzrechner oder Server installieren, starten, sichern und aktualisieren. Die Benutzung der Oberfläche steht in [09 Benutzerdokumentation](09-benutzerdokumentation.md).
 
 ## 1. Welche Installation passt?
 
@@ -40,7 +40,7 @@ Hinweise:
 
 ```bash
 unzip onescm-studio-0.41.0.zip && cd onescm-studio-0.41.0
-./install.sh            # npm ci --omit=dev (nur Laufzeit-Abhängigkeiten)
+./install.sh            # npm ci --omit=dev --ignore-scripts (nur Laufzeit-Abhängigkeiten, ohne C++-Werkzeuge)
 ./start.sh              # http://localhost:3000, Port als Argument: ./start.sh 3100
 ```
 

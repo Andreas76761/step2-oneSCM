@@ -5,7 +5,6 @@ import { imageRefs, mediaShas, sniffImage } from '../domain/media.js';
 import { looksLikeSvg, sanitizeSvg, SvgRejected } from '../domain/svg.js';
 import { sha256 } from '../domain/similarity.js';
 import { badRequest, notFound } from '../problem.js';
-import { redactedShaOf } from './imageRedaction.js';
 
 export interface MediaFile {
   sha: string;
@@ -58,6 +57,12 @@ export async function currentSha(ctx: Ctx, sha: string): Promise<string> {
  * Bild ausliefern. `exact` liefert genau diese Fassung statt der neuesten; ist für die Fassung die Unkenntlichmachung
  * eingeschaltet (ADR-095), kommt die verpixelte Kopie – das Original nur mit `unredacted` (Bearbeitungsrecht).
  */
+/** Verpixelte Kopie, die statt dieser Fassung ausgeliefert wird (ADR-095); null = Original ausliefern */
+export async function redactedShaOf(ctx: Ctx, sha: string): Promise<string | null> {
+  const r = await ctx.db.get('SELECT redacted_sha FROM media_redactions WHERE project_id = ? AND sha = ? AND enabled = 1', ctx.projectId, sha);
+  return (r?.redacted_sha as string | undefined) ?? null;
+}
+
 export async function getMedia(ctx: Ctx, requested: string, opts: { exact?: boolean; unredacted?: boolean } = {}): Promise<MediaFile> {
   if (!/^[a-f0-9]{64}$/.test(requested)) throw notFound(`Bild ${requested}`);
   let sha = opts.exact ? requested : await currentSha(ctx, requested);

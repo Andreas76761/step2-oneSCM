@@ -508,7 +508,7 @@ export function MetadataQaPage() {
                         {x.note && <p className="small muted">Notiz: {x.note}</p>}
                         {reask[x.id] && (
                           <section className="ask-compare" aria-label="Vergleich mit dem neuen Stand">
-                            <h4>Neuer Stand vom {formatDateTime()}</h4>
+                            <h4>Neuer Stand vom {formatDateTime(Date.now())}</h4>
                             <p className="small">{reask[x.id].changes.answerChanged ? 'Antwort geändert' : 'Antwort unverändert'} · Belege: {reask[x.id].changes.sourcesAdded.length} neu, {reask[x.id].changes.sourcesRemoved.length} entfallen, {reask[x.id].changes.sourcesKept.length} gleich</p>
                             {reask[x.id].changes.answerChanged && <p className="md-text small dp-diff">{reask[x.id].changes.diff.map(DIFF_PART)}</p>}
                             <AskResult r={reask[x.id].current} />
