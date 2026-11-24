@@ -203,8 +203,76 @@
     const g = el('div', 'grid'); r.charts.forEach((c) => { const cd = el('div', 'card'), h = el('div', 'cardhead'); h.append(el('h3', null, c.t)); const ch = el('div', 'chart'); cd.append(h, ch); g.append(cd); try { c.draw(ch); } catch (e) { ch.textContent = 'Diagramm nicht verfügbar.'; } }); box.append(g);
     if (r.table) { const cd = el('div', 'card'), tw = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; const th = el('thead'), tr = el('tr'); r.table.head.forEach((h, i) => tr.append(el('th', i ? 'num' : null, h))); th.append(tr); t.append(th); const tb = el('tbody'); r.table.rows.forEach((row) => { const q = el('tr'); row.forEach((v, i) => q.append(el('td', i ? 'num' : null, v))); tb.append(q); }); t.append(tb); tw.append(t); cd.append(tw); box.append(cd); }
     if (r.text) { const cd = el('div', 'card'), h = el('div', 'cardhead'); h.append(el('h3', null, 'Was das Ergebnis sagt')); const ul = el('ul', 'dcl'); r.text.forEach((x) => ul.append(el('li', null, x))); cd.append(h, ul); box.append(cd); }
+    try { drawSc(r); } catch (e) { /* Szenarien sind optional */ }
     window.__sim.last = { id: S.cur, title: sim.title, tiles: r.tiles.map((t) => [t.l, t.f(t.v)]), text: r.text, table: r.table };
   }
-  window.__sim = { SIMS, S, summary: () => { const out = []; const keep = { cur: S.cur }; SIMS.forEach((s) => { try { const ps = params(s.id), vals = Object.fromEntries(ps.map((p) => [p.key, p.value])), st = S.ex[s.id] = S.ex[s.id] || { redo: () => 0, seed: S.seed }; const v = S.vals[s.id] || vals; const r = s.run(v, Object.assign(st, { seed: S.seed })); if (r) out.push({ id: s.id, title: s.title, tiles: r.tiles.map((t) => [t.l, t.f(t.v)]), text: r.text, table: r.table }); } catch (e) { /* Simulation überspringen */ } }); S.cur = keep.cur; return out; } };
+  // ======================= Szenarien speichern und vergleichen =======================
+  // Ablage: gemeinsame Datenbank (Sammlung „scenarios“, für alle sichtbar) oder lokal im Browser, wenn keine Schreibrechte bestehen.
+  const LSK = 'aftersales-scenarios-v1';
+  const lsGet = () => { try { const v = JSON.parse(localStorage.getItem(LSK) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
+  const SCN = { db: null, uid: null, shared: [], local: lsGet(), cmp: {}, ctx: null, msg: '' };
+  const lsSet = () => { try { localStorage.setItem(LSK, JSON.stringify(SCN.local)); } catch (e) { /* ohne Speicher */ } };
+  const scList = (id) => SCN.shared.concat(SCN.local).filter((x) => x.sim === id).sort((a, b) => (a.created < b.created ? 1 : -1));
+  const fdt = (iso) => (iso ? iso.slice(8, 10) + '.' + iso.slice(5, 7) + '.' + iso.slice(0, 4) + ' ' + iso.slice(11, 16) : '–');
+  const redrawSc = () => { if (SCN.ctx && SCN.ctx.id === S.cur) { try { drawSc(SCN.ctx.r); } catch (e) { /* ignorieren */ } } };
+  (async () => {
+    try {
+      const c = window.claude; if (!c || !c.use) return; SCN.db = await c.use('db');
+      try { const u = await c.use('user'); SCN.uid = u && u.id ? await u.id() : null; } catch (e) { SCN.uid = null; }
+      if (SCN.db) SCN.db.collection('scenarios').onSnapshot((snap) => { SCN.shared = snap.docs.map((d) => Object.assign({ id: d.id, shared: true }, d.data())); redrawSc(); }, () => {});
+    } catch (e) { SCN.db = null; }
+  })();
+  async function scSave(name, share, r) {
+    const st = S.ex[S.cur] || {}, nm = name.trim() || 'Szenario ' + (scList(S.cur).length + 1);
+    const obj = { sim: S.cur, name: nm, vals: Object.assign({}, S.vals[S.cur]), seed: S.seed, extra: { supplier: st.supplier || null, hubs: st.hubs ? Array.from(st.hubs) : null }, tiles: r.tiles.map((t) => ({ l: t.l, v: isFinite(t.v) ? t.v : null, f: t.f(t.v) })), created: new Date().toISOString(), createdBy: SCN.uid || null };
+    if (share && SCN.db) { try { await SCN.db.collection('scenarios').add(obj); SCN.msg = 'Szenario „' + nm + '“ gespeichert (für alle sichtbar).'; return; } catch (e) { SCN.msg = 'Gemeinsames Speichern nicht möglich – lokal im Browser gespeichert.'; } } else SCN.msg = 'Szenario „' + nm + '“ lokal im Browser gespeichert.';
+    SCN.local.push(Object.assign({ id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), shared: false }, obj)); lsSet();
+  }
+  async function scDelete(sc) {
+    if (sc.shared) { try { await SCN.db.doc('scenarios/' + sc.id).delete(); SCN.msg = 'Szenario gelöscht.'; } catch (e) { SCN.msg = 'Löschen nicht möglich.'; } } else { SCN.local = SCN.local.filter((x) => x.id !== sc.id); lsSet(); SCN.msg = 'Szenario gelöscht.'; }
+    const set = SCN.cmp[sc.sim]; if (set) set.delete(sc.id);
+  }
+  function scLoad(sc) {
+    S.vals[sc.sim] = Object.assign({}, sc.vals); if (sc.seed) S.seed = sc.seed; const st = S.ex[sc.sim] = S.ex[sc.sim] || { redo: null };
+    if (sc.extra && sc.extra.supplier) st.supplier = sc.extra.supplier; if (sc.extra && sc.extra.hubs) st.hubs = new Set(sc.extra.hubs);
+    render();
+  }
+  function scCompare(c, r, list) {
+    const ids = SCN.cmp[S.cur] || new Set(), sel = list.filter((x) => ids.has(x.id)); if (!sel.length) { c.append(el('p', 'note', 'Haken bei einem oder mehreren Szenarien setzen, um sie mit der aktuellen Einstellung nebeneinander zu stellen.')); return; }
+    const ps = params(S.cur), cur = S.vals[S.cur] || {}, cols = [{ n: 'Aktuell', vals: cur, tiles: r.tiles.map((t) => ({ l: t.l, v: t.v, f: t.f(t.v) })) }].concat(sel.map((x) => ({ n: x.name, vals: x.vals || {}, tiles: x.tiles || [] })));
+    const wrap = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; t.id = 'sim-cmp'; const th = el('thead'), hr = el('tr'); hr.append(el('th', null, '')); cols.forEach((k) => hr.append(el('th', 'num', k.n))); th.append(hr); t.append(th);
+    const tb = el('tbody'), sec = (txt) => { const tr = el('tr'), td = el('td', null, txt); td.colSpan = cols.length + 1; td.style.fontWeight = '600'; tr.append(td); tb.append(tr); };
+    sec('Annahmen und Regler');
+    ps.forEach((p) => { const tr = el('tr'); tr.append(el('td', null, p.label)); const vs = cols.map((k) => k.vals[p.key]), diff = vs.some((v) => v !== vs[0]); cols.forEach((k) => { const td = el('td', 'num', k.vals[p.key] == null ? '–' : fmtV(p, k.vals[p.key])); if (diff) { td.style.fontWeight = '600'; td.style.background = 'rgba(224,160,48,0.16)'; } tr.append(td); }); tb.append(tr); });
+    sec('Ergebnisse (Stand beim Speichern; Veränderung gegenüber „Aktuell“)');
+    r.tiles.forEach((tl) => { const tr = el('tr'); tr.append(el('td', null, tl.l)); cols.forEach((k, i) => { const m = k.tiles.find((q) => q.l === tl.l), td = el('td', 'num', m ? m.f : '–'); if (i && m && m.v != null && isFinite(tl.v) && isFinite(m.v)) { const d = m.v - tl.v, sm = el('div', 'simh', (d >= 0 ? '+' : '−') + tl.f(Math.abs(d))); sm.style.fontSize = '11px'; td.append(sm); } tr.append(td); }); tb.append(tr); });
+    t.append(tb); wrap.append(t); c.append(wrap);
+    const row = el('div', 'toprow regrow'), lab = el('label', 'flt', 'Diagramm für '), sel2 = el('select'); sel2.setAttribute('aria-label', 'Ergebnis für das Diagramm'); r.tiles.forEach((tl, i) => sel2.append(new Option(tl.l, String(i)))); sel2.value = String(SCN.chart && SCN.chart < r.tiles.length ? SCN.chart : 0); lab.append(sel2); row.append(lab); c.append(row);
+    const host = el('div', 'chart'); host.id = 'sim-cmp-chart'; host.style.maxWidth = '640px'; c.append(host);
+    const draw = () => { host.replaceChildren(); const i = +sel2.value, tl = r.tiles[i]; SCN.chart = i; const items = cols.map((k, j) => { const m = j === 0 ? { v: tl.v } : k.tiles.find((q) => q.l === tl.l); return m && m.v != null && isFinite(m.v) ? { n: k.n, v: m.v, c: j === 0 ? COL()[0] : COL()[(j % 5) + 1] } : null; }).filter(Boolean); if (items.length) barChart(host, items, { f: (v) => tl.f(v), l: 150 }); };
+    sel2.addEventListener('change', draw); draw();
+  }
+  function drawSc(r) {
+    const box = document.getElementById('sim-res'); if (!box) return; SCN.ctx = { id: S.cur, r }; const old = document.getElementById('sim-sc'); if (old) old.remove();
+    const c = el('div', 'card'); c.id = 'sim-sc'; const hd = el('div', 'cardhead'); hd.append(el('h3', null, 'Szenarien speichern und vergleichen')); c.append(hd, el('p', 'note', 'Die aktuelle Einstellung samt Ergebnis unter einem Namen sichern, später wieder laden und mehrere Szenarien nebeneinander vergleichen.'));
+    const row = el('div', 'toprow regrow'), inp = el('input'); inp.type = 'text'; inp.id = 'sim-sc-name'; inp.placeholder = 'Name, z. B. „Preis +3 %, Lager −10 %“'; inp.setAttribute('aria-label', 'Name des Szenarios'); inp.maxLength = 80; inp.style.minWidth = '260px'; row.append(inp);
+    let chk = null; if (SCN.db) { const l = el('label', 'flt'); chk = el('input'); chk.type = 'checkbox'; chk.checked = true; chk.id = 'sim-sc-share'; l.append(chk, ' für alle sichtbar speichern'); row.append(l); }
+    const bs = el('button', 'bkbtn', 'Szenario speichern'); bs.type = 'button'; bs.id = 'sim-sc-save'; row.append(bs); c.append(row);
+    bs.addEventListener('click', async () => { bs.disabled = true; try { await scSave(inp.value, chk ? chk.checked : false, r); } finally { bs.disabled = false; } redrawSc(); });
+    const msg = el('p', 'note', SCN.msg || ''); msg.setAttribute('role', 'status'); c.append(msg);
+    const list = scList(S.cur);
+    if (!list.length) c.append(el('p', 'note', 'Noch keine Szenarien für dieses Modell gespeichert.'));
+    else {
+      const wrap = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; t.id = 'sim-sc-list'; const th = el('thead'), hr = el('tr'); ['Vergleichen', 'Name', 'Gespeichert', 'Ablage', ''].forEach((h) => hr.append(el('th', null, h))); th.append(hr); t.append(th); const tb = el('tbody');
+      list.forEach((sc) => {
+        const tr = el('tr'), td0 = el('td'), cb = el('input'); cb.type = 'checkbox'; cb.setAttribute('aria-label', 'Szenario ' + sc.name + ' vergleichen'); const set = SCN.cmp[S.cur] = SCN.cmp[S.cur] || new Set(); cb.checked = set.has(sc.id); cb.addEventListener('change', () => { if (cb.checked) { if (set.size >= 4) { cb.checked = false; SCN.msg = 'Höchstens vier Szenarien gleichzeitig vergleichen.'; redrawSc(); return; } set.add(sc.id); } else set.delete(sc.id); SCN.msg = ''; redrawSc(); }); td0.append(cb);
+        const td4 = el('td', 'acts'), bl = el('button', null, 'Laden'), bd = el('button', null, 'Löschen'); bl.type = bd.type = 'button'; bl.addEventListener('click', () => scLoad(sc)); let arm = false;
+        bd.addEventListener('click', async () => { if (!arm) { arm = true; bd.textContent = 'Wirklich löschen?'; setTimeout(() => { arm = false; bd.textContent = 'Löschen'; }, 4000); return; } await scDelete(sc); redrawSc(); }); td4.append(bl, bd);
+        tr.append(td0, el('td', null, sc.name), el('td', null, fdt(sc.created)), el('td', null, sc.shared ? 'für alle' : 'nur dieser Browser'), td4); tb.append(tr);
+      }); t.append(tb); wrap.append(t); c.append(wrap); scCompare(c, r, list);
+    }
+    box.append(c);
+  }
+  window.__sim = { SIMS, S, SCN, summary: () => { const out = []; const keep = { cur: S.cur }; SIMS.forEach((s) => { try { const ps = params(s.id), vals = Object.fromEntries(ps.map((p) => [p.key, p.value])), st = S.ex[s.id] = S.ex[s.id] || { redo: () => 0, seed: S.seed }; const v = S.vals[s.id] || vals; const r = s.run(v, Object.assign(st, { seed: S.seed })); if (r) out.push({ id: s.id, title: s.title, tiles: r.tiles.map((t) => [t.l, t.f(t.v)]), text: r.text, table: r.table }); } catch (e) { /* Simulation überspringen */ } }); S.cur = keep.cur; return out; } };
   window.__hodDraw.sim = () => { build(); render(); };
 })();

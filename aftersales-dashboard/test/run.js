@@ -75,6 +75,34 @@ const sec = (s) => { section = s; console.log('\n' + s); };
   ok('Vorschlagsliste enthält Bereiche der neuen Register', sugBu.some((b) => ['Teileverfügbarkeit', 'Ertrag und Händler', 'Qualität und Garantie', 'Luxus und Kundenerlebnis', 'Elektro, Nachhaltigkeit, Digital'].includes(b)), sugBu);
   await take('massnahmen-tv');
 
+  sec('4c Szenarien speichern und vergleichen');
+  const openSim = async (id) => { await page.evaluate((i) => { window.__hod.show('sim'); window.__sim.S.cur = i; window.__hodDraw.sim(); }, id); await page.waitForTimeout(500); };
+  errors.length = 0; await openSim('s9');
+  ok('Karte „Szenarien speichern und vergleichen“ vorhanden', await page.evaluate(() => !!document.getElementById('sim-sc') && !!document.getElementById('sim-sc-save')));
+  const price0 = await page.evaluate(() => window.__sim.S.vals.s9.price_pct);
+  await page.fill('#sim-sc-name', 'Basis'); await page.click('#sim-sc-save'); await page.waitForTimeout(300);
+  await page.evaluate(() => { const i = document.querySelector('#sim-body input[type=range]'); i.value = '6'; i.dispatchEvent(new Event('input', { bubbles: true })); }); await page.waitForTimeout(500);
+  await page.fill('#sim-sc-name', 'Preis +6 %'); await page.click('#sim-sc-save'); await page.waitForTimeout(300);
+  const rows = await page.evaluate(() => [...document.querySelectorAll('#sim-sc-list tbody tr')].map((r) => r.children[1].textContent));
+  ok('Zwei Szenarien gespeichert und gelistet', rows.length === 2 && rows.includes('Basis') && rows.includes('Preis +6 %'), rows);
+  ok('Speicher: lokal im Browser (keine Datenbank im Test)', await page.evaluate(() => JSON.parse(localStorage.getItem('aftersales-scenarios-v1')).length === 2));
+  for (let k = 0; k < 2; k++) { await page.evaluate((n) => document.querySelectorAll('#sim-sc-list tbody input[type=checkbox]')[n].click(), k); await page.waitForTimeout(250); }
+  const cmp = await page.evaluate(() => { const t = document.getElementById('sim-cmp'); if (!t) return null; const heads = [...t.tHead.rows[0].cells].map((c) => c.textContent); const hl = [...t.tBodies[0].rows].filter((r) => r.children[1] && r.children[1].style.fontWeight === '600' && r.children.length > 1 && r.children[1].style.background).map((r) => r.children[0].textContent); const ebit = [...t.tBodies[0].rows].find((r) => /Betriebsergebnis/.test(r.children[0].textContent)); return { heads, hl, ebit: ebit ? ebit.innerText : '', chart: !!document.querySelector('#sim-cmp-chart svg') }; });
+  ok('Vergleich: Spalten Aktuell + zwei Szenarien', cmp && cmp.heads.length === 4 && cmp.heads[1] === 'Aktuell', cmp && cmp.heads);
+  ok('Vergleich: abweichende Regler hervorgehoben (Preisänderung)', cmp && cmp.hl.some((x) => /Preis/.test(x)) && cmp.hl.length === 1, cmp && cmp.hl);
+  ok('Vergleich: Ergebnisse mit Veränderung und Diagramm', cmp && /[+−]/.test(cmp.ebit) && cmp.chart, cmp && cmp.ebit);
+  await take('szenarien-vergleich');
+  await page.evaluate(() => { const r = [...document.querySelectorAll('#sim-sc-list tbody tr')].find((x) => x.children[1].textContent === 'Basis'); [...r.querySelectorAll('button')].find((b) => b.textContent === 'Laden').click(); }); await page.waitForTimeout(500);
+  const back = await page.evaluate(() => ({ v: window.__sim.S.vals.s9.price_pct, ui: document.querySelector('#sim-body input[type=range]').value }));
+  ok('„Laden“ stellt die Regler des Szenarios wieder her', back.v === price0 && +back.ui === price0, JSON.stringify(back) + ' / ' + price0);
+  await page.reload({ waitUntil: 'load' }); await page.waitForTimeout(600); await openSim('s9');
+  ok('Szenarien bleiben nach dem Neuladen erhalten', await page.evaluate(() => document.querySelectorAll('#sim-sc-list tbody tr').length === 2));
+  await openSim('s1'); ok('Szenarien gelten je Modell (s1 hat noch keine)', await page.evaluate(() => !document.getElementById('sim-sc-list')));
+  await openSim('s9');
+  await page.evaluate(() => { const r = [...document.querySelectorAll('#sim-sc-list tbody tr')].find((x) => x.children[1].textContent === 'Preis +6 %'); const b = [...r.querySelectorAll('button')].find((x) => x.textContent === 'Löschen'); b.click(); b.click(); }); await page.waitForTimeout(400);
+  ok('Löschen (mit Rückfrage) entfernt das Szenario', await page.evaluate(() => [...document.querySelectorAll('#sim-sc-list tbody tr')].map((r) => r.children[1].textContent).join() === 'Basis'));
+  ok('Szenarien ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
+
   sec('5 Daten');
   const abs = DATA('er_monthly').map((r) => r.absorption_pct);
   ok('Absorptionsquote: Ziel 100 % erreichbar (Werte über 99,6 %)', Math.max(...abs) >= 100, Math.max(...abs));
