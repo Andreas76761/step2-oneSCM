@@ -1,8 +1,8 @@
 (function () {
   const H = window.__hod; if (!H) return;
   const $ = (id) => document.getElementById(id);
-  const BU_LIST = ['Market Operation', 'Productmanagement', 'Pricing', 'Markt', 'Logistik', 'Bestand', 'Training', 'Warranty', 'Customer', 'Competitor', 'Marketing', 'Händler', 'Treiberbaum', 'Alarme', 'Forecast', 'Marge', 'Pareto', 'Workshop', 'Europa-Netz', 'Übergreifend'];
-  const PANEL_BU = { mo: 'Market Operation', pm: 'Productmanagement', pr: 'Pricing', mk: 'Markt', lg: 'Logistik', iv: 'Bestand', tr: 'Training', wa: 'Warranty', cu: 'Customer', co: 'Competitor', mt: 'Marketing', dl: 'Händler', dt: 'Treiberbaum', al: 'Alarme', fc: 'Forecast', mg: 'Marge', pa: 'Pareto', ws: 'Workshop', net: 'Europa-Netz', head: 'Übergreifend' };
+  const BU_LIST = ['Market Operation', 'Productmanagement', 'Pricing', 'Markt', 'Logistik', 'Bestand', 'Training', 'Warranty', 'Customer', 'Competitor', 'Marketing', 'Händler', 'Treiberbaum', 'Alarme', 'Forecast', 'Marge', 'Pareto', 'Workshop', 'Europa-Netz', 'Teileverfügbarkeit', 'Ertrag und Händler', 'Qualität und Garantie', 'Luxus und Kundenerlebnis', 'Elektro, Nachhaltigkeit, Digital', 'Übergreifend'];
+  const PANEL_BU = { mo: 'Market Operation', pm: 'Productmanagement', pr: 'Pricing', mk: 'Markt', lg: 'Logistik', iv: 'Bestand', tr: 'Training', wa: 'Warranty', cu: 'Customer', co: 'Competitor', mt: 'Marketing', dl: 'Händler', dt: 'Treiberbaum', al: 'Alarme', fc: 'Forecast', mg: 'Marge', pa: 'Pareto', ws: 'Workshop', net: 'Europa-Netz', head: 'Übergreifend', tv: 'Teileverfügbarkeit', er: 'Ertrag und Händler', qg: 'Qualität und Garantie', lx: 'Luxus und Kundenerlebnis', el: 'Elektro, Nachhaltigkeit, Digital' };
   const STAT = ['Offen', 'In Arbeit', 'Verzögert', 'Erledigt'], PRIO = { A: 'hoch', B: 'mittel', C: 'niedrig' };
   const nf0 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
   let db = null, uid = null, actions = [], editId = null, delArm = null, filt = { status: 'Alle', bu: 'Alle' };
@@ -29,6 +29,8 @@
   }
   const qOf = (id) => { const i = document.querySelector('.tsearch2[data-for="' + id + '"]'); return i ? i.value.trim().toLowerCase() : ''; };
   const rowsOf = (id) => { const d = dash.data(id); return d.status === 'ok' ? d.data : null; };
+  // Vorschläge: Bereiche bis Version 2 und die fünf Register der Version 3.0
+  const sugRows = () => { const a = rowsOf('ma_suggest'); if (!a) return null; const b = rowsOf('ma_suggest3'); return b ? a.concat(b) : a; };
 
   // ---------- Maßnahmen ----------
   const F = { title: $('ma-title'), bu: $('ma-bu'), ref: $('ma-ref'), owner: $('ma-owner'), due: $('ma-due'), prio: $('ma-prio'), impact: $('ma-impact'), impk: $('ma-impk'), note: $('ma-note') };
@@ -104,11 +106,11 @@
   sugTbl.addEventListener('click', (ev) => {
     const th = ev.target.closest('th[data-field]'); if (th) { const s = sorts.get(sugTbl); sorts.set(sugTbl, { f: th.dataset.field, dir: s && s.f === th.dataset.field && s.dir === 'asc' ? 'desc' : 'asc' }); drawSug(); return; }
     const b = ev.target.closest('button[data-sid]'); if (!b) return;
-    const r = (rowsOf('ma_suggest') || []).find((x) => x.id === b.dataset.sid); if (!r) return;
+    const r = (sugRows() || []).find((x) => x.id === b.dataset.sid); if (!r) return;
     openForm({ title: r.action, bu: r.bu_label, ref: r.kpi + ' (' + r.gap + ')', owner: r.owner_role, due: addDays(r.days), prio: r.prio, impact: r.effect });
   });
   function drawSug() {
-    const all = rowsOf('ma_suggest'); if (!all) return;
+    const all = sugRows(); if (!all) return;
     const rows = all.filter((r) => r.region === H.REGSEL() && r.month === H.M());
     const s = sorts.get(sugTbl);
     const data = rows.slice().sort((a, b) => (s ? ((a[s.f] < b[s.f] ? -1 : a[s.f] > b[s.f] ? 1 : 0) * (s.dir === 'asc' ? 1 : -1)) : (a.prio < b.prio ? -1 : a.prio > b.prio ? 1 : 0)));

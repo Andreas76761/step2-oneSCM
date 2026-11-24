@@ -17,7 +17,7 @@ Dieser Ordner ist die Quelle der Wahrheit für das veröffentlichte Dashboard. E
 
 ```bash
 npm install                 # d3 für den Laufzeit-Ersatz (Playwright wird mitgeführt)
-npm test                    # Browser-Testlauf, 83 Prüfungen
+npm test                    # Browser-Testlauf, 91 Prüfungen
 npm run test:shots          # zusätzlich Screenshots nach test/screenshots/
 npm run test:excel          # Excel-Template bauen, mit LibreOffice rechnen, Kernwerte prüfen
 ```

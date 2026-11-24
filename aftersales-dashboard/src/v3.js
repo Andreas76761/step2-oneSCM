@@ -79,14 +79,28 @@
   };
   // ---------- Zeichnen
   const SUB = { tv: 'Verfügbarkeit, Lieferzeit, Lieferanten und Bestandsqualität – die Kennzahlen, die ein stehendes Fahrzeug verhindern.', er: 'Wie viel des Händlerergebnisses trägt der Aftersales, und womit wird es verdient?', qg: 'Garantiekosten, Reklamationen, Wiederholreparaturen, Rückrufe und Frühwarnung.', lx: 'Klassiker, Individualisierung, Servicepakete, Besitzer-Bindung und Servicekomfort.', el: 'Hochvolt, Batterie, Software, Ladeservice, Aufbereitung, CO₂ und digitale Kanäle.' };
+  // Maßnahmen aus dem Playbook: Vorschläge je Kennzahl unter Ziel und Hinweise in der Management-Übersicht
+  const advOf = (key) => { const d = dash.data('ma_playbook'); if (d.status !== 'ok') return null; const pre = key + '_'; return d.data.filter((r) => r.kpi_id.indexOf(pre) === 0).map((r) => ({ y: r.kpi_id.slice(pre.length), miss: r.action + ' (' + r.owner_role + ', Frist ' + r.days + ' Tage)' })); };
+  const addDays = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const PRIO = { A: 'hoch', B: 'mittel', C: 'niedrig' };
+  function sugCard(key, host) {
+    const d = dash.data('ma_suggest3'); if (d.status !== 'ok') return; const rg = H.REGSEL(), m = H.M(), rows = d.data.filter((r) => r.bu === key && r.region === rg && r.month === m).sort((a, b) => (a.prio < b.prio ? -1 : a.prio > b.prio ? 1 : 0));
+    const c = el('div', 'card'), hd = el('div', 'cardhead'); hd.append(el('h3', null, 'Maßnahmenvorschläge · ' + NAME[key])); c.append(hd, el('p', 'note', 'Kennzahlen unter Ziel (' + rg + ', ' + H.mlabel(m) + ') mit Vorschlag aus dem Maßnahmen-Playbook. „Übernehmen“ legt die Maßnahme im Register Maßnahmen an.'));
+    if (!rows.length) { c.append(el('p', 'note', 'Keine Kennzahl unter Ziel – keine Maßnahmen nötig.')); host.append(c); return; }
+    const done = (t) => { try { return window.__hodAct.list().some((a) => a.title === t); } catch (e) { return false; } };
+    const tw = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; const th = el('thead'), hr = el('tr'); ['Kennzahl', 'Abstand', 'Priorität', 'Vorschlag', 'Rolle', 'Frist', ''].forEach((h) => hr.append(el('th', null, h))); th.append(hr); t.append(th);
+    const tb = el('tbody'); rows.forEach((r) => { const tr = el('tr'); [r.kpi, r.gap, r.prio + ' · ' + PRIO[r.prio], r.action, r.owner_role, r.days + ' Tage'].forEach((v) => tr.append(el('td', null, v))); const td = el('td', 'acts'), b = el('button', null, done(r.action) ? 'Übernommen' : 'Übernehmen'); b.type = 'button'; b.disabled = done(r.action);
+      b.addEventListener('click', () => { try { window.__hodAct.open({ title: r.action, bu: r.bu_label, ref: r.kpi + ' (' + r.gap + ')', owner: r.owner_role, due: addDays(r.days), prio: r.prio, impact: r.effect }); } catch (e) { /* Register Maßnahmen nicht verfügbar */ } }); td.append(b); tr.append(td); tb.append(tr); }); t.append(tb); tw.append(t); c.append(tw); host.append(c);
+  }
   function drawReg(key) {
     const panel = document.getElementById(key); if (!panel || panel.hidden) return;
-    const card0 = X.slot(key); if (!card0) return; const calc = O.calc(key); X.fillKpi(card0, NAME[key], calc, null, ' · ' + SUB[key] + ' Alle Zahlen sind Testdaten (erfunden).');
+    const card0 = X.slot(key); if (!card0) return; const calc = O.calc(key); X.fillKpi(card0, NAME[key], calc, advOf(key), ' · ' + SUB[key] + ' Alle Zahlen sind Testdaten (erfunden).');
     let box = document.getElementById('v3x-' + key); if (!box) { box = el('div'); box.id = 'v3x-' + key; card0.after(box); } box.replaceChildren();
     const reg = H.REGSEL(), ks = kp(key), g = el('div', 'grid');
     ks.forEach((k) => { const c = el('div', 'card'), hd = el('div', 'cardhead'); hd.append(el('h3', null, k.l)); c.append(hd, el('p', 'note', (k.target == null ? 'ohne Zielwert' : 'Ziel ' + (F[k.unit] ? F[k.unit](k.target) : N1.format(k.target)) + (k.hib ? ' (höher ist besser)' : ' (niedriger ist besser)')))); const ch = el('div', 'chart'); ch.id = 'v3c-' + key + '-' + k.k; c.append(ch); g.append(c); });
     box.append(g);
     ks.forEach((k) => { try { H.timeChart(document.getElementById('v3c-' + key + '-' + k.k), key + '_monthly', { y: k.k, unit: k.unit, target: k.target == null ? '__none' : k.target, hib: k.hib ? 1 : 0, cnt: k.kind === 'sum' ? 1 : 0, type: 'line' }); } catch (e) { /* Verlauf optional */ } });
+    try { sugCard(key, box); } catch (e) { /* Vorschläge optional */ }
     const det = el('div'); box.append(det); try { CONF[key](det, reg); } catch (e) { det.append(el('p', 'note', 'Detailtabellen konnten nicht aufgebaut werden.')); }
   }
   Object.keys(NAME).forEach((k) => { window.__hodDraw[k] = () => drawReg(k); });

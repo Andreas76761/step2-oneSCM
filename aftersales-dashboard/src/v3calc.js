@@ -89,3 +89,20 @@ dash.calc('kpi_el', { title: 'KPIs Elektro, Nachhaltigkeit, Digital', descriptio
   }
   return out;
 } });
+
+// Maßnahmenvorschläge für die fünf neuen Register: Kennzahlen unter Ziel mit Vorschlag, Rolle und Frist aus dem Maßnahmen-Playbook (Schlüssel <Register>_<Kennzahl>).
+dash.calc('ma_suggest3', { title: 'Maßnahmenvorschläge (Version 3.0)', description: 'Kennzahlen der Register Teileverfügbarkeit, Ertrag, Qualität, Luxus und Elektro unter Ziel (je Region und Monat) mit Vorschlag, Rolle und Frist aus dem Maßnahmen-Playbook.', inputs: ['kpi_tv', 'kpi_er', 'kpi_qg', 'kpi_lx', 'kpi_el', 'ma_playbook'],
+  fn: (kpi_tv, kpi_er, kpi_qg, kpi_lx, kpi_el, ma_playbook) => {
+    const NFC = {}, nf = (v, d) => (NFC[d] || (NFC[d] = new Intl.NumberFormat('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d }))).format(v);
+    const F = { eur_k: (v) => nf(v, 0) + ' k€', pct: (v) => nf(v, 1) + ' %', int: (v) => nf(v, 0), days: (v) => nf(v, 1) + ' Tage', eur: (v) => nf(v, 2) + ' €', eur0: (v) => nf(v, 0) + ' €', score: (v) => nf(v, 2), idx: (v) => nf(v, 1), n1: (v) => nf(v, 1) };
+    const LAB = { tv: 'Teileverfügbarkeit', er: 'Ertrag und Händler', qg: 'Qualität und Garantie', lx: 'Luxus und Kundenerlebnis', el: 'Elektro, Nachhaltigkeit, Digital' };
+    const pb = new Map(ma_playbook.map((p) => [p.kpi_id, p])), out = [];
+    [['tv', kpi_tv], ['er', kpi_er], ['qg', kpi_qg], ['lx', kpi_lx], ['el', kpi_el]].forEach(([bu, rows]) => {
+      for (const r of rows) {
+        if (r.ok !== false) continue; const p = pb.get(bu + '_' + r.kpi); if (!p) continue;
+        const fm = F[r.unit] || ((v) => nf(v, 1)), gap = Math.abs(r.value - r.target) / Math.abs(r.target) * 100;
+        out.push({ id: [r.region, r.month, bu, r.kpi].join('|'), region: r.region, month: r.month, bu, bu_label: LAB[bu], kpi: r.label, gap: fm(r.value) + ' vs. Ziel ' + fm(r.target), prio: gap > 5 ? 'A' : gap > 2 ? 'B' : 'C', action: p.action, owner_role: p.owner_role, effect: p.effect, days: p.days });
+      }
+    });
+    return out;
+  } });

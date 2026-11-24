@@ -56,6 +56,25 @@ const sec = (s) => { section = s; console.log('\n' + s); };
   errors.length = 0; await page.evaluate(() => window.__hod.show('sim')); await page.waitForTimeout(500);
   for (const id of sim.ids) { await page.evaluate((i) => { window.__sim.S.cur = i; window.__hodDraw.sim(); }, id); await page.waitForTimeout(400); const txt = await page.evaluate(() => (document.getElementById('sim-res') || {}).innerText || ''); ok('Oberfläche ' + id + ' zeigt Ergebnis', txt.length > 60 && errors.length === 0, txt.slice(0, 80) + ' ' + errors.slice(0, 1)); if (id === 's9' || id === 's3') await take('sim-' + id); }
 
+  sec('4b Maßnahmen aus Kennzahlen (neue Register)');
+  const pb = DATA('ma_playbook'), v3keys = { tv: 'vor_pct', er: 'absorption_pct', qg: 'claims_per_1000', lx: 'classic_fill_pct', el: 'hv_repair_rev_k' };
+  ok('Playbook enthält Vorschläge für alle fünf neuen Register', Object.entries(v3keys).every(([b, k]) => pb.some((r) => r.kpi_id === b + '_' + k)), pb.length);
+  ok('Playbook: 72 Einträge (27 + 45 für Kennzahlen mit Ziel)', pb.length === 72, pb.length);
+  const sg = await page.evaluate(() => { const d = dash.data('ma_suggest3'); if (d.status !== 'ok') return { status: d.status, err: d.error }; const kp = ['tv', 'er', 'qg', 'lx', 'el'].map((b) => dash.data('kpi_' + b).data.filter((r) => r.region === 'Alle' && r.month === '2026-09' && r.ok === false).length); return { n: d.data.filter((r) => r.region === 'Alle' && r.month === '2026-09').length, red: kp.reduce((a, b) => a + b, 0), bad: d.data.filter((r) => !r.action || !r.owner_role || !['A', 'B', 'C'].includes(r.prio)).length }; });
+  ok('ma_suggest3: jede rote Kennzahl hat einen Vorschlag (' + (sg.red) + ')', sg.n === sg.red && sg.n > 0 && sg.bad === 0, JSON.stringify(sg));
+  errors.length = 0; await page.evaluate(() => { dash.resetParams(); window.__hod.show('tv'); }); await page.waitForTimeout(500);
+  const tvc = await page.evaluate(() => { const c = [...document.querySelectorAll('#v3x-tv .card')].find((x) => /Maßnahmenvorschläge/.test(x.innerText)); const rec = document.querySelector('#ov-tv .ovbot') ? document.querySelector('#ov-tv .ovbot').innerText : ''; return { card: !!c, rows: c ? c.querySelectorAll('tbody tr').length : 0, generic: /Ursachen im Register analysieren/.test(rec), rec: rec.slice(0, 300) }; });
+  ok('Register Teileverfügbarkeit zeigt Karte „Maßnahmenvorschläge“', tvc.card && tvc.rows > 0, JSON.stringify(tvc));
+  ok('Empfohlene nächste Schritte nennen Playbook-Maßnahmen statt Standardtext', !tvc.generic, tvc.rec);
+  await page.evaluate(() => { const b = [...document.querySelectorAll('#v3x-tv .card button')].find((x) => x.textContent === 'Übernehmen'); b && b.click(); }); await page.waitForTimeout(400);
+  const fm = await page.evaluate(() => ({ cur: window.__hod.cur(), title: document.getElementById('ma-title').value, bu: document.getElementById('ma-bu').value, owner: document.getElementById('ma-owner').value }));
+  ok('„Übernehmen“ öffnet das Maßnahmen-Formular mit Vorschlag', fm.cur === 'ma' && fm.title.length > 20 && fm.bu === 'Teileverfügbarkeit' && /Leitung/.test(fm.owner), JSON.stringify(fm));
+  const mt = await page.evaluate(() => { const t = document.getElementById('tb-ma-sug'); return t ? t.tBodies[0].querySelectorAll('tr').length : -1; });
+  ok('Register Maßnahmen listet Vorschläge der neuen Register (' + mt + ')', mt > 0 && errors.length === 0, errors.slice(0, 2).join(' | '));
+  const sugBu = await page.evaluate(() => [...new Set([...document.querySelectorAll('#tb-ma-sug tbody tr')].map((r) => r.children[0].textContent))]);
+  ok('Vorschlagsliste enthält Bereiche der neuen Register', sugBu.some((b) => ['Teileverfügbarkeit', 'Ertrag und Händler', 'Qualität und Garantie', 'Luxus und Kundenerlebnis', 'Elektro, Nachhaltigkeit, Digital'].includes(b)), sugBu);
+  await take('massnahmen-tv');
+
   sec('5 Daten');
   const abs = DATA('er_monthly').map((r) => r.absorption_pct);
   ok('Absorptionsquote: Ziel 100 % erreichbar (Werte über 99,6 %)', Math.max(...abs) >= 100, Math.max(...abs));
