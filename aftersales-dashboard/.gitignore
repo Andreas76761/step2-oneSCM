@@ -1,0 +1,6 @@
+node_modules/
+test/screenshots/
+test/ergebnis.json
+*.xlsx
+__pycache__/
+!data/
