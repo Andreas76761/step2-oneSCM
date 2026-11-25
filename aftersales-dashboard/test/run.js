@@ -94,6 +94,48 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
   ok('Register Datenanbindung zeigt Prüfungen und Katalog der neuen Datensätze', da.dq > 0 && da.cat && errors.length === 0, JSON.stringify(da) + errors.slice(0, 1));
   await take('datenanbindung');
 
+  sec('4f Rollen und Rechte, Änderungsprotokoll');
+  const rp = await browser.newPage({ viewport: { width: 1360, height: 900 } }), rerr = []; rp.on('pageerror', (e) => rerr.push(e.message));
+  await rp.goto(url + '?stub=editor', { waitUntil: 'load' }); await rp.waitForTimeout(900);
+  const roleOf = () => rp.evaluate(() => window.__roles.role());
+  ok('Rolle aus den Plattformrechten: Schreibrecht → Bearbeiter', (await roleOf()) === 'Bearbeiter', await roleOf());
+  await rp.evaluate(() => window.__hod.show('ma')); await rp.waitForTimeout(400);
+  ok('Register Maßnahmen nennt die Rolle', await rp.evaluate(() => /Ihre Rolle: Bearbeiter/.test(document.getElementById('ma-role').textContent)));
+  await rp.fill('#ma-title', 'Testmaßnahme Teilelogistik'); await rp.click('#ma-save'); await rp.waitForTimeout(500);
+  const n1 = await rp.evaluate(() => document.querySelectorAll('#tb-ma tbody tr b').length); ok('Bearbeiter legt eine Maßnahme an', n1 === 1, n1);
+  const au1 = await rp.evaluate(() => [...document.querySelectorAll('#tb-ma-audit tbody tr')].map((r) => r.innerText.replace(/\s+/g, ' ')));
+  ok('Änderungsprotokoll: Maßnahme angelegt, mit Namen des Nutzers', au1.length === 1 && /Maßnahme angelegt/.test(au1[0]) && /Test u_editor/.test(au1[0]), au1);
+  await rp.evaluate(() => window.__roles.set('Bearbeiter', 'u_anderer')); await rp.waitForTimeout(300);
+  const lk = await rp.evaluate(() => ({ edit: document.querySelector('#tb-ma button[data-act=edit]').disabled, del: document.querySelector('#tb-ma button[data-act=del]').disabled, st: document.querySelector('#tb-ma select[data-id]').disabled }));
+  ok('Anderer Bearbeiter kann fremde Maßnahme nicht ändern (Schaltflächen gesperrt)', lk.edit && lk.del && lk.st, JSON.stringify(lk));
+  await rp.evaluate(() => { const s = document.querySelector('#tb-ma select[data-id]'); s.disabled = false; s.value = 'Erledigt'; s.dispatchEvent(new Event('change', { bubbles: true })); }); await rp.waitForTimeout(400);
+  const st1 = await rp.evaluate(() => ({ status: [...window.__stubDb.actions.values()][0].status, msg: document.getElementById('ma-msg').textContent }));
+  ok('Auch ein umgangener Klick ändert den Status nicht (Prüfung im Code)', st1.status === 'Offen' && /Ersteller|Administrator/.test(st1.msg), JSON.stringify(st1));
+  await rp.evaluate(() => window.__roles.set('Administrator')); await rp.waitForTimeout(300);
+  ok('Administrator darf fremde Maßnahme ändern (Schaltflächen frei)', await rp.evaluate(() => !document.querySelector('#tb-ma button[data-act=edit]').disabled && !document.querySelector('#tb-ma select[data-id]').disabled));
+  await rp.evaluate(() => { const s = document.querySelector('#tb-ma select[data-id]'); s.value = 'In Arbeit'; s.dispatchEvent(new Event('change', { bubbles: true })); }); await rp.waitForTimeout(400);
+  const st2 = await rp.evaluate(() => ({ status: [...window.__stubDb.actions.values()][0].status, log: [...window.__stubDb.audit.values()].map((x) => x.kind) }));
+  ok('Statusänderung wird gespeichert und protokolliert', st2.status === 'In Arbeit' && st2.log.some((k) => /Status geändert: In Arbeit/.test(k)), JSON.stringify(st2));
+  await rp.evaluate(() => window.__roles.set('Betrachter')); await rp.waitForTimeout(300);
+  const vw = await rp.evaluate(() => ({ save: document.getElementById('ma-save').disabled, role: document.getElementById('ma-role').textContent, msg: document.getElementById('ma-msg').textContent }));
+  ok('Betrachter kann nicht speichern (Schaltfläche gesperrt, Hinweis)', vw.save && /Betrachter/.test(vw.role) && /nur gelesen/.test(vw.msg), JSON.stringify(vw));
+  // Szenarien: gemeinsames Szenario nur durch Ersteller oder Administrator löschbar
+  await rp.evaluate(() => window.__roles.set('Bearbeiter', 'u_editor')); await rp.evaluate(() => { window.__hod.show('sim'); window.__sim.S.cur = 's9'; window.__hodDraw.sim(); }); await rp.waitForTimeout(600);
+  await rp.fill('#sim-sc-name', 'Gemeinsam A'); await rp.click('#sim-sc-save'); await rp.waitForTimeout(500);
+  const sh = await rp.evaluate(() => ({ n: window.__stubDb.scenarios ? window.__stubDb.scenarios.size : 0, row: !!document.querySelector('#sim-sc-list tbody tr') }));
+  ok('Szenario wird für alle gespeichert (gemeinsame Datenbank)', sh.n === 1 && sh.row, JSON.stringify(sh));
+  await rp.evaluate(() => window.__roles.set('Bearbeiter', 'u_anderer')); await rp.waitForTimeout(400);
+  ok('Fremdes gemeinsames Szenario: Löschen gesperrt', await rp.evaluate(() => [...document.querySelectorAll('#sim-sc-list tbody button')].find((b) => /Löschen|Wirklich/.test(b.textContent)).disabled));
+  await rp.evaluate(() => window.__roles.set('Administrator')); await rp.waitForTimeout(400);
+  await rp.evaluate(() => { const b = [...document.querySelectorAll('#sim-sc-list tbody button')].find((x) => x.textContent === 'Löschen'); b.click(); b.click(); }); await rp.waitForTimeout(500);
+  ok('Administrator löscht das Szenario, Vorgang im Protokoll', await rp.evaluate(() => window.__stubDb.scenarios.size === 0 && [...window.__stubDb.audit.values()].some((x) => /Szenario gelöscht/.test(x.kind))));
+  ok('Rollen ohne Skriptfehler', rerr.length === 0, rerr.slice(0, 2));
+  await rp.close();
+  const vp = await browser.newPage(); await vp.goto(url + '?stub=viewer', { waitUntil: 'load' }); await vp.waitForTimeout(900);
+  ok('Rolle aus den Plattformrechten: nur Lesen → Betrachter', (await vp.evaluate(() => window.__roles.role())) === 'Betrachter'); await vp.close();
+  const ap = await browser.newPage(); await ap.goto(url + '?stub=admin', { waitUntil: 'load' }); await ap.waitForTimeout(900);
+  ok('Rolle aus den Plattformrechten: Eigentümer → Administrator', (await ap.evaluate(() => window.__roles.role())) === 'Administrator'); await ap.close();
+
   sec('4b Maßnahmen aus Kennzahlen (neue Register)');
   const pb = DATA('ma_playbook'), v3keys = { tv: 'vor_pct', er: 'absorption_pct', qg: 'claims_per_1000', lx: 'classic_fill_pct', el: 'hv_repair_rev_k' };
   ok('Playbook enthält Vorschläge für alle fünf neuen Register', Object.entries(v3keys).every(([b, k]) => pb.some((r) => r.kpi_id === b + '_' + k)), pb.length);

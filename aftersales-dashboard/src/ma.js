@@ -36,6 +36,7 @@
   const F = { title: $('ma-title'), bu: $('ma-bu'), ref: $('ma-ref'), owner: $('ma-owner'), due: $('ma-due'), prio: $('ma-prio'), impact: $('ma-impact'), impk: $('ma-impk'), note: $('ma-note') };
   F.bu.replaceChildren(...BU_LIST.map((b) => new Option(b, b)));
   $('ma-fbu').replaceChildren(new Option('Alle Bereiche', 'Alle'), ...BU_LIST.map((b) => new Option(b, b)));
+  const RL = () => window.__roles || null, canNew = () => !RL() || RL().can.write(), canMod = (a) => !RL() || RL().can.modify(a && a.createdBy), logA = (k, t, r) => { try { if (RL()) RL().log(k, t, r); } catch (e) { /* Protokoll optional */ } };
   const msg = (t, bad) => { const m = $('ma-msg'); m.textContent = t || ''; m.className = 'mut small' + (bad ? ' bad' : ''); };
   function openForm(p, quiet) {
     p = p || {}; editId = p.id || null;
@@ -48,17 +49,20 @@
   async function save() {
     if (!db) { msg('Speichern ist in dieser Ansicht nicht verfügbar (keine Schreibrechte).', true); return; }
     const title = F.title.value.trim(); if (!title) { msg('Bitte einen Titel eingeben.', true); return; }
-    const old = actions.find((a) => a.id === editId), now = new Date().toISOString(), k = parseFloat(String(F.impk.value).replace(',', '.'));
+    const old = actions.find((a) => a.id === editId);
+    if (old ? !canMod(old) : !canNew()) { msg(old ? 'Diese Maßnahme darf nur der Ersteller oder ein Administrator ändern.' : 'Mit der Rolle Betrachter können keine Maßnahmen angelegt werden.', true); return; }
+    const now = new Date().toISOString(), k = parseFloat(String(F.impk.value).replace(',', '.'));
     const obj = { title, bu: F.bu.value, ref: F.ref.value.trim(), owner: F.owner.value.trim(), due: F.due.value || addDays(30), prio: F.prio.value, status: old ? old.status : 'Offen',
       impact: F.impact.value.trim(), impact_k: Number.isFinite(k) ? k : null, note: F.note.value.trim(), created: old ? old.created : now, updated: now, createdBy: old ? old.createdBy || null : uid };
     $('ma-save').disabled = true;
     try {
       if (editId) await db.doc('actions/' + editId).set(obj); else await db.collection('actions').add(obj);
+      logA(editId ? 'Maßnahme geändert' : 'Maßnahme angelegt', title, obj.bu + (obj.ref ? ' · ' + obj.ref : ''));
       openForm({}, true); $('ma-cancel').hidden = true; msg('Gespeichert.');
     } catch (e) { msg('Speichern fehlgeschlagen' + (e && e.code ? ' (' + e.code + ')' : '') + '.', true); } finally { $('ma-save').disabled = false; }
   }
-  async function setStatus(id, status) { if (!db) return; try { await db.doc('actions/' + id).update({ status, updated: new Date().toISOString() }); } catch (e) { msg('Statusänderung fehlgeschlagen.', true); } }
-  async function del(id) { if (!db) return; try { await db.doc('actions/' + id).delete(); } catch (e) { msg('Löschen fehlgeschlagen.', true); } }
+  async function setStatus(id, status) { if (!db) return; const a0 = actions.find((x) => x.id === id); if (a0 && !canMod(a0)) { msg('Den Status darf nur der Ersteller oder ein Administrator ändern.', true); drawMa(); return; } try { await db.doc('actions/' + id).update({ status, updated: new Date().toISOString() }); logA('Status geändert: ' + status, a0 ? a0.title : id, a0 ? a0.bu : ''); } catch (e) { msg('Statusänderung fehlgeschlagen.', true); } }
+  async function del(id) { if (!db) return; const a0 = actions.find((x) => x.id === id); if (a0 && !canMod(a0)) { msg('Diese Maßnahme darf nur der Ersteller oder ein Administrator löschen.', true); drawMa(); return; } try { await db.doc('actions/' + id).delete(); logA('Maßnahme gelöscht', a0 ? a0.title : id, a0 ? a0.bu : ''); } catch (e) { msg('Löschen fehlgeschlagen.', true); } }
   $('ma-save').addEventListener('click', save);
   $('ma-cancel').addEventListener('click', () => { openForm({}, true); $('ma-cancel').hidden = true; });
   $('ma-fbu').addEventListener('change', () => { filt.bu = $('ma-fbu').value; drawMa(); });
@@ -80,7 +84,8 @@
     $('ma-c-late').parentElement.parentElement.dataset.ok = late.length ? 'false' : 'true';
     const tab = document.querySelector('.tab[data-tab="ma"]'); if (tab) tab.textContent = 'Maßnahmen' + (open.length ? ' (' + open.length + ')' : '');
     $('ma-chips').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s === filt.status)));
-    $('ma-save').disabled = !db; if (!db) msg('Hinweis: Speichern ist in dieser Ansicht nicht verfügbar – Maßnahmen können nur gelesen werden.');
+    $('ma-save').disabled = !db || !canNew(); if (!db) msg('Hinweis: Speichern ist in dieser Ansicht nicht verfügbar – Maßnahmen können nur gelesen werden.'); else if (!canNew()) msg('Mit der Rolle Betrachter können Maßnahmen nur gelesen werden.');
+    try { drawRole(); drawAudit(); } catch (e) { /* optional */ }
     let rows = actions.filter((a) => (filt.status === 'Alle' || a.status === filt.status) && (filt.bu === 'Alle' || a.bu === filt.bu));
     const q = qOf('tb-ma'), s = sorts.get(maTbl) || { f: 'due', dir: 'asc' };
     rows = rows.slice().sort((a, b) => ((a[s.f] || '') < (b[s.f] || '') ? -1 : (a[s.f] || '') > (b[s.f] || '') ? 1 : 0) * (s.dir === 'asc' ? 1 : -1));
@@ -93,6 +98,7 @@
       const st = el('select'); st.dataset.id = a.id; STAT.forEach((x) => st.append(new Option(x, x))); st.value = a.status;
       const act = el('td', 'acts'), e1 = el('button', null, 'Bearbeiten'), e2 = el('button', delArm === a.id ? 'bad' : null, delArm === a.id ? 'Sicher löschen?' : 'Löschen');
       e1.dataset.act = 'edit'; e1.dataset.id = a.id; e2.dataset.act = 'del'; e2.dataset.id = a.id; act.append(e1, e2);
+      if (!canMod(a)) { [e1, e2, st].forEach((x) => { x.disabled = true; x.title = 'Nur der Ersteller oder ein Administrator darf diese Maßnahme ändern.'; }); }
       const dueTd = el('td', isLate(a) ? 'bad' : '', fdate(a.due) + (isLate(a) ? ' ⚠' : ''));
       const stTd = el('td'); stTd.append(st);
       tr.append(el('td', null, a.prio + ' · ' + (PRIO[a.prio] || '')), t, el('td', null, a.bu), el('td', null, [a.ref, a.owner].filter(Boolean).join(' · ') || '–'), dueTd, stTd,
@@ -160,6 +166,20 @@
   window.__hodDraw = { ma: drawMa, da: drawDa };
   window.__hodAct = { open: (p) => { openForm(p); H.show('ma'); }, list: () => actions.slice() };
   dash.onData(decorate);
+  // ---------- Rolle und Änderungsprotokoll ----------
+  const fdt2 = (iso) => (iso ? iso.slice(8, 10) + '.' + iso.slice(5, 7) + '.' + iso.slice(0, 4) + ' ' + iso.slice(11, 16) : '–');
+  function drawRole() {
+    const R = RL(); if (!R) return; let p = $('ma-role'); if (!p) { p = el('p', 'note'); p.id = 'ma-role'; $('ma-form-card').before(p); }
+    p.textContent = 'Ihre Rolle: ' + R.role() + (R.mode() === 'lokal' ? ' (ohne Plattformanmeldung)' : '') + ' – ' + R.text();
+  }
+  function drawAudit() {
+    const R = RL(); if (!R) return; const panel = document.getElementById('ma'); if (!panel) return; let c = $('ma-audit');
+    if (!c) { c = el('div', 'card'); c.id = 'ma-audit'; const hd = el('div', 'cardhead'); hd.append(el('h3', null, 'Änderungsprotokoll')); const tw = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; t.id = 'tb-ma-audit'; const th = el('thead'), tr = el('tr'); ['Zeitpunkt', 'Wer', 'Aktion', 'Maßnahme / Szenario', 'Bereich'].forEach((h) => tr.append(el('th', null, h))); th.append(tr); t.append(th, el('tbody')); tw.append(t); c.append(hd, el('p', 'note', 'Wer hat wann welche Maßnahme oder welches Szenario angelegt, geändert oder gelöscht (die letzten 40 Einträge).'), tw); const ma = $('ma-sug-empty'); (ma && ma.closest('.card') ? ma.closest('.card') : panel.lastElementChild).after(c); }
+    const body = $('tb-ma-audit').tBodies[0]; body.replaceChildren(); const list = R.entries();
+    if (!list.length) { const tr = el('tr'), td = el('td', 'mut', 'Noch keine Einträge.'); td.colSpan = 5; tr.append(td); body.append(tr); }
+    list.forEach((e) => { const tr = el('tr'); [fdt2(e.at), R.who(e.by), e.kind, e.title, e.ref || '–'].forEach((v) => tr.append(el('td', null, v))); body.append(tr); });
+  }
+  if (RL()) RL().on(() => { try { drawMa(); } catch (e) { /* optional */ } });
   // ---------- db ----------
   (async () => {
     try {

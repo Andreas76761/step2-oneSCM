@@ -239,10 +239,15 @@
   async function scSave(name, share, r) {
     const st = S.ex[S.cur] || {}, nm = name.trim() || 'Szenario ' + (scList(S.cur).length + 1);
     const obj = { sim: S.cur, name: nm, vals: Object.assign({}, S.vals[S.cur]), seed: S.seed, extra: { supplier: st.supplier || null, hubs: st.hubs ? Array.from(st.hubs) : null }, tiles: r.tiles.map((t) => ({ l: t.l, v: isFinite(t.v) ? t.v : null, f: t.f(t.v) })), created: new Date().toISOString(), createdBy: SCN.uid || null };
-    if (share && SCN.db) { try { await SCN.db.collection('scenarios').add(obj); SCN.msg = 'Szenario „' + nm + '“ gespeichert (für alle sichtbar).'; return; } catch (e) { SCN.msg = 'Gemeinsames Speichern nicht möglich – lokal im Browser gespeichert.'; } } else SCN.msg = 'Szenario „' + nm + '“ lokal im Browser gespeichert.';
+    if (share && SCN.db && RLs() && !RLs().can.write()) { share = false; }
+    if (share && SCN.db) { try { await SCN.db.collection('scenarios').add(obj); scLog('Szenario gespeichert (für alle)', nm, SIMS.find((x) => x.id === S.cur).title); SCN.msg = 'Szenario „' + nm + '“ gespeichert (für alle sichtbar).'; return; } catch (e) { SCN.msg = 'Gemeinsames Speichern nicht möglich – lokal im Browser gespeichert.'; } } else SCN.msg = 'Szenario „' + nm + '“ lokal im Browser gespeichert.';
     SCN.local.push(Object.assign({ id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), shared: false }, obj)); lsSet();
   }
+  const RLs = () => window.__roles || null, scMod = (sc) => !sc.shared || !RLs() || RLs().can.modify(sc.createdBy), scLog = (k, t, r) => { try { if (RLs()) RLs().log(k, t, r); } catch (e) { /* Protokoll optional */ } };
+  if (RLs()) RLs().on(() => { try { redrawSc(); } catch (e) { /* optional */ } });
   async function scDelete(sc) {
+    if (!scMod(sc)) { SCN.msg = 'Dieses gemeinsame Szenario darf nur der Ersteller oder ein Administrator löschen.'; return; }
+    scLog('Szenario gelöscht', sc.name, SIMS.find((x) => x.id === sc.sim) ? SIMS.find((x) => x.id === sc.sim).title : sc.sim);
     if (sc.shared) { try { await SCN.db.doc('scenarios/' + sc.id).delete(); SCN.msg = 'Szenario gelöscht.'; } catch (e) { SCN.msg = 'Löschen nicht möglich.'; } } else { SCN.local = SCN.local.filter((x) => x.id !== sc.id); lsSet(); SCN.msg = 'Szenario gelöscht.'; }
     const set = SCN.cmp[sc.sim]; if (set) set.delete(sc.id);
   }
@@ -270,7 +275,7 @@
     const box = document.getElementById('sim-res'); if (!box) return; SCN.ctx = { id: S.cur, r }; const old = document.getElementById('sim-sc'); if (old) old.remove();
     const c = el('div', 'card'); c.id = 'sim-sc'; const hd = el('div', 'cardhead'); hd.append(el('h3', null, 'Szenarien speichern und vergleichen')); c.append(hd, el('p', 'note', 'Die aktuelle Einstellung samt Ergebnis unter einem Namen sichern, später wieder laden und mehrere Szenarien nebeneinander vergleichen.'));
     const row = el('div', 'toprow regrow'), inp = el('input'); inp.type = 'text'; inp.id = 'sim-sc-name'; inp.placeholder = 'Name, z. B. „Preis +3 %, Lager −10 %“'; inp.setAttribute('aria-label', 'Name des Szenarios'); inp.maxLength = 80; inp.style.minWidth = '260px'; row.append(inp);
-    let chk = null; if (SCN.db) { const l = el('label', 'flt'); chk = el('input'); chk.type = 'checkbox'; chk.checked = true; chk.id = 'sim-sc-share'; l.append(chk, ' für alle sichtbar speichern'); row.append(l); }
+    let chk = null; if (SCN.db) { const l = el('label', 'flt'); chk = el('input'); chk.type = 'checkbox'; chk.checked = !RLs() || RLs().can.write(); chk.disabled = !!RLs() && !RLs().can.write(); chk.id = 'sim-sc-share'; l.append(chk, ' für alle sichtbar speichern'); row.append(l); }
     const bs = el('button', 'bkbtn', 'Szenario speichern'); bs.type = 'button'; bs.id = 'sim-sc-save'; row.append(bs); c.append(row);
     bs.addEventListener('click', async () => { bs.disabled = true; try { await scSave(inp.value, chk ? chk.checked : false, r); } finally { bs.disabled = false; } redrawSc(); });
     const msg = el('p', 'note', SCN.msg || ''); msg.setAttribute('role', 'status'); c.append(msg);
@@ -280,7 +285,7 @@
       const wrap = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; t.id = 'sim-sc-list'; const th = el('thead'), hr = el('tr'); ['Vergleichen', 'Name', 'Gespeichert', 'Ablage', ''].forEach((h) => hr.append(el('th', null, h))); th.append(hr); t.append(th); const tb = el('tbody');
       list.forEach((sc) => {
         const tr = el('tr'), td0 = el('td'), cb = el('input'); cb.type = 'checkbox'; cb.setAttribute('aria-label', 'Szenario ' + sc.name + ' vergleichen'); const set = SCN.cmp[S.cur] = SCN.cmp[S.cur] || new Set(); cb.checked = set.has(sc.id); cb.addEventListener('change', () => { if (cb.checked) { if (set.size >= 4) { cb.checked = false; SCN.msg = 'Höchstens vier Szenarien gleichzeitig vergleichen.'; redrawSc(); return; } set.add(sc.id); } else set.delete(sc.id); SCN.msg = ''; redrawSc(); }); td0.append(cb);
-        const td4 = el('td', 'acts'), bl = el('button', null, 'Laden'), bd = el('button', null, 'Löschen'); bl.type = bd.type = 'button'; bl.addEventListener('click', () => scLoad(sc)); let arm = false;
+        const td4 = el('td', 'acts'), bl = el('button', null, 'Laden'), bd = el('button', null, 'Löschen'); bl.type = bd.type = 'button'; if (!scMod(sc)) { bd.disabled = true; bd.title = 'Nur der Ersteller oder ein Administrator darf dieses gemeinsame Szenario löschen.'; } bl.addEventListener('click', () => scLoad(sc)); let arm = false;
         bd.addEventListener('click', async () => { if (!arm) { arm = true; bd.textContent = 'Wirklich löschen?'; setTimeout(() => { arm = false; bd.textContent = 'Löschen'; }, 4000); return; } await scDelete(sc); redrawSc(); }); td4.append(bl, bd);
         tr.append(td0, el('td', null, sc.name), el('td', null, fdt(sc.created)), el('td', null, sc.shared ? 'für alle' : 'nur dieser Browser'), td4); tb.append(tr);
       }); t.append(tb); wrap.append(t); c.append(wrap); scCompare(c, r, list);
