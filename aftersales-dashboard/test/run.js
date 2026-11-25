@@ -189,6 +189,31 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
   ok('Booklet: 41 Kapitel vorgewählt, mindestens 40 werden erstellt', chap.sel === 41 && chap.secs >= 40, JSON.stringify(chap));
   ok('Documentation und Booklet ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
 
+  sec('4n Erinnerung an überfällige Maßnahmen und Neu rechnen veralteter Szenarien');
+  const ep = await browser.newPage({ viewport: { width: 1360, height: 900 } }), eerr = []; ep.on('pageerror', (e) => eerr.push(e.message));
+  await ep.goto(url + '?stub=admin', { waitUntil: 'load' }); await ep.waitForTimeout(900);
+  const yday = new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10), soon = new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10);
+  await ep.evaluate(([y, s]) => { const db = window.__stubDb; db.actions = db.actions || new Map(); db.actions.set('a1', { title: 'Überfällige Testmaßnahme', bu: 'Logistik', owner: 'Frau Test', due: y, status: 'Offen', prio: 'A', created: new Date().toISOString(), createdBy: 'u_admin' }); db.actions.set('a2', { title: 'Bald fällige Maßnahme', bu: 'Pricing', owner: 'Herr Test', due: s, status: 'In Arbeit', prio: 'B', created: new Date().toISOString(), createdBy: 'u_admin' }); db.actions.set('a3', { title: 'Erledigte Maßnahme', bu: 'Training', due: y, status: 'Erledigt', prio: 'C', created: new Date().toISOString(), createdBy: 'u_admin' }); window.__roles.set('Administrator'); }, [yday, soon]);
+  await ep.evaluate(() => { const c = window.claude; c.use('db').then((db) => db.collection('actions').add({ title: 'Anstoß', bu: 'Pricing', due: '2099-01-01', status: 'Offen', prio: 'C', created: new Date().toISOString() })); }); await ep.waitForTimeout(700);
+  const rem = await ep.evaluate(() => { const b = document.getElementById('ma-remind'); return { vis: !!b && !b.hidden, txt: b ? b.innerText : '', tab: document.querySelector('.tab[data-tab=ma]').textContent }; });
+  ok('Erinnerung auf jeder Seite: 1 überfällig, 1 bald fällig (erledigte zählen nicht)', rem.vis && /1 Maßnahme überfällig/.test(rem.txt) && /1 in den nächsten 7 Tagen/.test(rem.txt) && /Überfällige Testmaßnahme/.test(rem.txt) && !/Erledigte Maßnahme/.test(rem.txt), rem.txt);
+  ok('Reiter „Maßnahmen“ nennt die überfälligen', /überfällig/.test(rem.tab), rem.tab);
+  await ep.evaluate(() => [...document.querySelectorAll('#ma-remind button')].find((b) => /ausblenden/.test(b.textContent)).click());
+  ok('„Heute ausblenden“ blendet die Erinnerung aus', await ep.evaluate(() => document.getElementById('ma-remind').hidden === true));
+  await ep.evaluate(() => [...document.querySelectorAll('#ma-remind button')][0].click());
+  await ep.evaluate(() => { window.__hod.show('sim'); window.__sim.S.cur = 's3'; window.__hodDraw.sim(); }); await ep.waitForTimeout(600);
+  await ep.fill('#sim-sc-name', 'Preis Standard'); await ep.click('#sim-sc-save'); await ep.waitForTimeout(500);
+  const sc0 = await ep.evaluate(() => ({ stand: document.querySelector('#sim-sc-list tbody tr').children[4].textContent, tile: window.__stubDb.scenarios.values().next().value.tiles[1].f }));
+  ok('Neues Szenario: Stand „aktuell“', sc0.stand === 'aktuell', sc0.stand);
+  await ep.evaluate(() => { const r = dash.data('sim_assumptions').data.find((x) => x.sim === 's3' && x.key === 'cost_share_pct'); r.value = 70; window.__hodDraw.sim(); }); await ep.waitForTimeout(700);
+  const sc1 = await ep.evaluate(() => { const tr = document.querySelector('#sim-sc-list tbody tr'); return { stand: tr.children[4].textContent, btn: !![...tr.querySelectorAll('button')].find((b) => b.textContent === 'Neu rechnen') }; });
+  ok('Geänderte Annahme: Szenario als veraltet markiert mit Knopf „Neu rechnen“', /geändert/.test(sc1.stand) && sc1.btn, JSON.stringify(sc1));
+  await ep.evaluate(() => [...document.querySelectorAll('#sim-sc-list tbody button')].find((b) => b.textContent === 'Neu rechnen').click()); await ep.waitForTimeout(700);
+  const sc2 = await ep.evaluate(() => { const sc = window.__stubDb.scenarios.values().next().value, tr = document.querySelector('#sim-sc-list tbody tr'); return { stand: tr.children[4].textContent, tile: sc.tiles[1].f, recalc: !!sc.recalc, audit: [...window.__stubDb.audit.values()].some((x) => /neu gerechnet/.test(x.kind)) }; });
+  ok('„Neu rechnen“ ersetzt die Ergebnisse, Stand wieder „aktuell“, Vorgang protokolliert', sc2.stand === 'aktuell' && sc2.tile !== sc0.tile && sc2.recalc && sc2.audit, JSON.stringify([sc0.tile, sc2]));
+  ok('Annahmen zeigen den Beleg', await ep.evaluate(() => /Modellannahme, nicht belegt/.test(document.getElementById('sim-as').textContent)));
+  ok('Erinnerung und Neu rechnen ohne Skriptfehler', eerr.length === 0, eerr.slice(0, 2)); await ep.close();
+
   sec('4m Handy-Ansicht (390 px): keine Seite läuft über');
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }), mob = await mctx.newPage(), moberr = []; mob.on('pageerror', (e) => moberr.push(e.message));
   await mob.goto(url, { waitUntil: 'load' }); await mob.waitForTimeout(900);

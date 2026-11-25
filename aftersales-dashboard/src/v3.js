@@ -95,7 +95,7 @@
   const PRIO = { A: 'hoch', B: 'mittel', C: 'niedrig' };
   function sugCard(key, host) {
     const d = dash.data('ma_suggest3'); if (d.status !== 'ok') return; const rg = H.REGSEL(), m = H.M(), rows = d.data.filter((r) => r.bu === key && r.region === rg && r.month === m).sort((a, b) => (a.prio < b.prio ? -1 : a.prio > b.prio ? 1 : 0));
-    const c = el('div', 'card'), hd = el('div', 'cardhead'); hd.append(el('h3', null, 'Maßnahmenvorschläge · ' + NAME[key])); c.append(hd, el('p', 'note', 'Kennzahlen unter Ziel (' + rg + ', ' + H.mlabel(m) + ') mit Vorschlag aus dem Maßnahmen-Playbook. „Übernehmen“ legt die Maßnahme im Register Maßnahmen an.'));
+    const c = el('div', 'card'), hd = el('div', 'cardhead'); hd.append(el('h3', null, 'Maßnahmenvorschläge · ' + NAME[key])); c.append(hd, el('p', 'note', 'Kennzahlen unter Ziel (' + rg + ', ' + H.mlabel(m) + ') mit Vorschlag aus dem Maßnahmen-Playbook. „Übernehmen“ legt die Maßnahme im Register Maßnahmen an. Die Playbook-Texte sind Entwürfe und fachlich zu prüfen.'));
     if (!rows.length) { c.append(el('p', 'note', 'Keine Kennzahl unter Ziel – keine Maßnahmen nötig.')); host.append(c); return; }
     const done = (t) => { try { return window.__hodAct.list().some((a) => a.title === t); } catch (e) { return false; } };
     const tw = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; const th = el('thead'), hr = el('tr'); ['Kennzahl', 'Abstand', 'Priorität', 'Vorschlag', 'Rolle', 'Frist', ''].forEach((h) => hr.append(el('th', null, h))); th.append(hr); t.append(th);

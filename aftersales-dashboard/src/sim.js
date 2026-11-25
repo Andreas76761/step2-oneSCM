@@ -217,8 +217,8 @@
     const box = document.getElementById('sim-res'), d = dash.data('sim_assumptions'); if (!box || d.status !== 'ok') return; const rows = d.data.filter((x) => x.sim === S.cur); if (!rows.length) return;
     const old = document.getElementById('sim-as'); if (old) old.remove();
     const c = el('div', 'card'); c.id = 'sim-as'; const det = el('details'), sm = el('summary', null, 'Feste Annahmen dieses Modells (' + rows.length + ')'); sm.style.cursor = 'pointer'; sm.style.fontWeight = '600'; det.append(sm, el('p', 'note', 'Diese Rechengrößen stehen nicht im Programmcode, sondern im Datensatz „sim_assumptions“ (Register Import, Kapitel „Simulationen (Annahmen)“). Eine Änderung wirkt auf alle Läufe.'));
-    const wrap = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; const th = el('thead'), hr = el('tr'); ['Annahme', 'Wert', 'Einheit', 'Hinweis'].forEach((h, i) => hr.append(el('th', i === 1 ? 'num' : null, h))); th.append(hr); t.append(th); const tb = el('tbody');
-    rows.forEach((r) => { const tr = el('tr'); tr.append(el('td', null, r.label), el('td', 'num', N2.format(+r.value).replace(/,00$/, '')), el('td', null, r.unit || ''), el('td', null, r.hint || '')); tb.append(tr); }); t.append(tb); wrap.append(t); det.append(wrap); c.append(det); box.append(c);
+    const wrap = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; const th = el('thead'), hr = el('tr'); ['Annahme', 'Wert', 'Einheit', 'Hinweis', 'Beleg'].forEach((h, i) => hr.append(el('th', i === 1 ? 'num' : null, h))); th.append(hr); t.append(th); const tb = el('tbody');
+    rows.forEach((r) => { const tr = el('tr'); tr.append(el('td', null, r.label), el('td', 'num', N2.format(+r.value).replace(/,00$/, '')), el('td', null, r.unit || ''), el('td', null, r.hint || ''), el('td', null, r.source || 'nicht angegeben')); tb.append(tr); }); t.append(tb); wrap.append(t); det.append(wrap); c.append(det); box.append(c);
   }
   // ======================= Szenarien speichern und vergleichen =======================
   // Ablage: gemeinsame Datenbank (Sammlung „scenarios“, für alle sichtbar) oder lokal im Browser, wenn keine Schreibrechte bestehen.
@@ -236,9 +236,21 @@
       if (SCN.db) SCN.db.collection('scenarios').onSnapshot((snap) => { SCN.shared = snap.docs.map((d) => Object.assign({ id: d.id, shared: true }, d.data())); redrawSc(); }, () => {});
     } catch (e) { SCN.db = null; }
   })();
+  // Stand der Eingangsdaten und Annahmen eines Modells: ändert er sich, sind gespeicherte Ergebnisse veraltet
+  const DEP = { s1: ['tv_supplier'], s2: ['vp_group', 'vp_parc'], s3: ['sim_regions'], s4: ['sim_sku'], s5: ['sim_hubs', 'branches'], s6: [], s7: [], s8: ['sim_programs'], s9: ['sim_coupling', 'wa_monthly', 'er_monthly'] };
+  const hashStr = (str) => { let h = 5381; for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0; return (h >>> 0).toString(36); };
+  const fpOf = (id) => { const B = base(), a = (rowsOf('sim_assumptions') || []).filter((x) => x.sim === id).map((x) => x.key + '=' + x.value).join(';'), deps = (DEP[id] || []).map((n) => { const r = rowsOf(n); return r ? hashStr(JSON.stringify(r)) : '–'; }).join(','); return hashStr(a + '|' + deps + '|' + (B ? Math.round(B.rev) : '–')); };
+  function scStale(sc) { return !!sc.fp && sc.fp !== fpOf(sc.sim); }
+  async function scRecalc(sc) {
+    const sim = SIMS.find((x) => x.id === sc.sim); if (!sim) return; const st = { seed: sc.seed || S.seed, redo: () => 0, supplier: sc.extra && sc.extra.supplier, hubs: sc.extra && sc.extra.hubs ? new Set(sc.extra.hubs) : undefined };
+    let r = null; try { r = sim.run(Object.assign({}, sc.vals), st); } catch (e) { r = null; } if (!r) { SCN.msg = 'Neu rechnen nicht möglich (Daten sind noch nicht geladen).'; return; }
+    const upd = { tiles: r.tiles.map((t) => ({ l: t.l, v: isFinite(t.v) ? t.v : null, f: t.f(t.v) })), fp: fpOf(sc.sim), recalc: new Date().toISOString() };
+    if (sc.shared) { if (!scMod(sc)) { SCN.msg = 'Dieses gemeinsame Szenario darf nur der Ersteller oder ein Administrator neu rechnen.'; return; } try { await SCN.db.doc('scenarios/' + sc.id).update(upd); } catch (e) { SCN.msg = 'Neu rechnen konnte nicht gemeinsam gespeichert werden (Stufe „Editor“ nötig).'; return; } } else { Object.assign(sc, upd); lsSet(); }
+    scLog('Szenario neu gerechnet', sc.name, sim.title); SCN.msg = 'Szenario „' + sc.name + '“ mit den aktuellen Daten und Annahmen neu gerechnet.';
+  }
   async function scSave(name, share, r) {
     const st = S.ex[S.cur] || {}, nm = name.trim() || 'Szenario ' + (scList(S.cur).length + 1);
-    const obj = { sim: S.cur, name: nm, vals: Object.assign({}, S.vals[S.cur]), seed: S.seed, extra: { supplier: st.supplier || null, hubs: st.hubs ? Array.from(st.hubs) : null }, tiles: r.tiles.map((t) => ({ l: t.l, v: isFinite(t.v) ? t.v : null, f: t.f(t.v) })), created: new Date().toISOString(), createdBy: SCN.uid || null };
+    const obj = { sim: S.cur, name: nm, vals: Object.assign({}, S.vals[S.cur]), seed: S.seed, extra: { supplier: st.supplier || null, hubs: st.hubs ? Array.from(st.hubs) : null }, tiles: r.tiles.map((t) => ({ l: t.l, v: isFinite(t.v) ? t.v : null, f: t.f(t.v) })), created: new Date().toISOString(), createdBy: SCN.uid || null, fp: fpOf(S.cur) };
     if (share && SCN.db && RLs() && !RLs().can.write()) { share = false; }
     if (share && SCN.db) { try { await SCN.db.collection('scenarios').add(obj); scLog('Szenario gespeichert (für alle)', nm, SIMS.find((x) => x.id === S.cur).title); SCN.msg = 'Szenario „' + nm + '“ gespeichert (für alle sichtbar).'; return; } catch (e) { SCN.msg = 'Gemeinsames Speichern ist nur mit der Stufe „Editor“ am Dashboard möglich – das Szenario liegt lokal in Ihrem Browser. Den Eigentümer um die Stufe „Editor“ bitten.'; } } else SCN.msg = 'Szenario „' + nm + '“ lokal im Browser gespeichert.';
     SCN.local.push(Object.assign({ id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), shared: false }, obj)); lsSet();
@@ -282,16 +294,16 @@
     const list = scList(S.cur);
     if (!list.length) c.append(el('p', 'note', 'Noch keine Szenarien für dieses Modell gespeichert.'));
     else {
-      const wrap = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; t.id = 'sim-sc-list'; const th = el('thead'), hr = el('tr'); ['Vergleichen', 'Name', 'Gespeichert', 'Ablage', ''].forEach((h) => hr.append(el('th', null, h))); th.append(hr); t.append(th); const tb = el('tbody');
+      const wrap = el('div', 'tbl-wrap'), t = el('table', 'tbl'); t.dataset.own = '1'; t.id = 'sim-sc-list'; const th = el('thead'), hr = el('tr'); ['Vergleichen', 'Name', 'Gespeichert', 'Ablage', 'Stand', ''].forEach((h) => hr.append(el('th', null, h))); th.append(hr); t.append(th); const tb = el('tbody');
       list.forEach((sc) => {
         const tr = el('tr'), td0 = el('td'), cb = el('input'); cb.type = 'checkbox'; cb.setAttribute('aria-label', 'Szenario ' + sc.name + ' vergleichen'); const set = SCN.cmp[S.cur] = SCN.cmp[S.cur] || new Set(); cb.checked = set.has(sc.id); cb.addEventListener('change', () => { if (cb.checked) { if (set.size >= 4) { cb.checked = false; SCN.msg = 'Höchstens vier Szenarien gleichzeitig vergleichen.'; redrawSc(); return; } set.add(sc.id); } else set.delete(sc.id); SCN.msg = ''; redrawSc(); }); td0.append(cb);
         const td4 = el('td', 'acts'), bl = el('button', null, 'Laden'), bd = el('button', null, 'Löschen'); bl.type = bd.type = 'button'; if (!scMod(sc)) { bd.disabled = true; bd.title = 'Nur der Ersteller oder ein Administrator darf dieses gemeinsame Szenario löschen.'; } bl.addEventListener('click', () => scLoad(sc)); let arm = false;
-        bd.addEventListener('click', async () => { if (!arm) { arm = true; bd.textContent = 'Wirklich löschen?'; setTimeout(() => { arm = false; bd.textContent = 'Löschen'; }, 4000); return; } await scDelete(sc); redrawSc(); }); td4.append(bl, bd);
-        tr.append(td0, el('td', null, sc.name), el('td', null, fdt(sc.created)), el('td', null, sc.shared ? 'für alle' : 'nur dieser Browser'), td4); tb.append(tr);
+        bd.addEventListener('click', async () => { if (!arm) { arm = true; bd.textContent = 'Wirklich löschen?'; setTimeout(() => { arm = false; bd.textContent = 'Löschen'; }, 4000); return; } await scDelete(sc); redrawSc(); }); td4.append(bl); if (scStale(sc)) { const br = el('button', null, 'Neu rechnen'); br.type = 'button'; br.dataset.act = 'recalc'; br.addEventListener('click', async () => { await scRecalc(sc); redrawSc(); }); td4.append(br); } td4.append(bd);
+        tr.append(td0, el('td', null, sc.name), el('td', null, fdt(sc.created)), el('td', null, sc.shared ? 'für alle' : 'nur dieser Browser'), el('td', scStale(sc) ? 'bad' : null, !sc.fp ? 'unbekannt' : scStale(sc) ? 'Daten oder Annahmen geändert' : 'aktuell'), td4); tb.append(tr);
       }); t.append(tb); wrap.append(t); c.append(wrap); scCompare(c, r, list);
     }
     box.append(c);
   }
-  window.__sim = { SIMS, S, SCN, scenarios: (id) => scList(id), summary: () => { const out = []; const keep = { cur: S.cur }; SIMS.forEach((s) => { try { const ps = params(s.id), vals = Object.fromEntries(ps.map((p) => [p.key, p.value])), st = S.ex[s.id] = S.ex[s.id] || { redo: () => 0, seed: S.seed }; const v = S.vals[s.id] || vals; const r = s.run(v, Object.assign(st, { seed: S.seed })); if (r) out.push({ id: s.id, title: s.title, tiles: r.tiles.map((t) => [t.l, t.f(t.v)]), text: r.text, table: r.table }); } catch (e) { /* Simulation überspringen */ } }); S.cur = keep.cur; return out; } };
+  window.__sim = { SIMS, S, SCN, scenarios: (id) => scList(id), fingerprint: fpOf, summary: () => { const out = []; const keep = { cur: S.cur }; SIMS.forEach((s) => { try { const ps = params(s.id), vals = Object.fromEntries(ps.map((p) => [p.key, p.value])), st = S.ex[s.id] = S.ex[s.id] || { redo: () => 0, seed: S.seed }; const v = S.vals[s.id] || vals; const r = s.run(v, Object.assign(st, { seed: S.seed })); if (r) out.push({ id: s.id, title: s.title, tiles: r.tiles.map((t) => [t.l, t.f(t.v)]), text: r.text, table: r.table }); } catch (e) { /* Simulation überspringen */ } }); S.cur = keep.cur; return out; } };
   window.__hodDraw.sim = () => { build(); render(); };
 })();

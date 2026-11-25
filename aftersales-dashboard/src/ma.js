@@ -82,10 +82,10 @@
     $('ma-c-late').textContent = String(late.length); $('ma-c-done').textContent = String(actions.filter((a) => a.status === 'Erledigt').length);
     $('ma-c-eff').textContent = nf0.format(open.reduce((s, a) => s + (a.impact_k || 0), 0)) + ' k€';
     $('ma-c-late').parentElement.parentElement.dataset.ok = late.length ? 'false' : 'true';
-    const tab = document.querySelector('.tab[data-tab="ma"]'); if (tab) tab.textContent = 'Maßnahmen' + (open.length ? ' (' + open.length + ')' : '');
+    const tab = document.querySelector('.tab[data-tab="ma"]'); if (tab) tab.textContent = 'Maßnahmen' + (open.length ? ' (' + open.length + (late.length ? ', ' + late.length + ' überfällig ⚠' : '') + ')' : '');
     $('ma-chips').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.s === filt.status)));
     $('ma-save').disabled = !db || !canNew(); if (!db) msg('Hinweis: Speichern ist in dieser Ansicht nicht verfügbar – Maßnahmen können nur gelesen werden.'); else if (!canNew()) msg('Mit der Rolle Betrachter können Maßnahmen nur gelesen werden.');
-    try { drawRole(); drawAudit(); } catch (e) { /* optional */ }
+    try { drawRole(); drawAudit(); remind(); } catch (e) { /* optional */ }
     let rows = actions.filter((a) => (filt.status === 'Alle' || a.status === filt.status) && (filt.bu === 'Alle' || a.bu === filt.bu));
     const q = qOf('tb-ma'), s = sorts.get(maTbl) || { f: 'due', dir: 'asc' };
     rows = rows.slice().sort((a, b) => ((a[s.f] || '') < (b[s.f] || '') ? -1 : (a[s.f] || '') > (b[s.f] || '') ? 1 : 0) * (s.dir === 'asc' ? 1 : -1));
@@ -166,6 +166,19 @@
   window.__hodDraw = { ma: drawMa, da: drawDa };
   window.__hodAct = { open: (p) => { openForm(p); H.show('ma'); }, list: () => actions.slice() };
   dash.onData(decorate);
+  // ---------- Erinnerung an überfällige und bald fällige Maßnahmen (Hinweis auf jeder Seite, pro Tag ausblendbar) ----------
+  const RKEY = 'aftersales-remind-v1';
+  function remind() {
+    const late = actions.filter(isLate), soon = actions.filter((a) => isOpen(a) && !isLate(a) && a.due && a.due <= addDays(7)), sig = today() + '|' + late.length + '|' + soon.length;
+    let box = $('ma-remind'); const take = document.querySelector('#dash-root .take');
+    if (!box) { if (!take) return; box = el('div', 'card'); box.id = 'ma-remind'; box.setAttribute('role', 'status'); take.after(box); }
+    let hidden = false; try { hidden = localStorage.getItem(RKEY) === sig; } catch (e) { hidden = false; }
+    if ((!late.length && !soon.length) || hidden) { box.hidden = true; return; }
+    box.hidden = false; box.replaceChildren(); box.style.borderLeft = '4px solid var(--cds-chart-status-critical, #c0392b)'; box.style.padding = '8px 12px';
+    const lst = late.concat(soon).slice(0, 3).map((a) => a.title + (a.owner ? ' (' + a.owner + ', fällig ' + fdate(a.due) + ')' : ' (fällig ' + fdate(a.due) + ')')).join(' · ');
+    box.append(el('b', null, '⚠ ' + (late.length ? late.length + (late.length === 1 ? ' Maßnahme überfällig' : ' Maßnahmen überfällig') : '') + (late.length && soon.length ? ', ' : '') + (soon.length ? soon.length + ' in den nächsten 7 Tagen fällig' : '')), el('div', 'mut small', lst + (late.length + soon.length > 3 ? ' · …' : '')));
+    const bar = el('div', 'toprow regrow'), go = el('button', 'bkbtn', 'Zu den Maßnahmen'), hide = el('button', 'bkbtn', 'Heute ausblenden'); go.type = hide.type = 'button'; go.addEventListener('click', () => H.show('ma')); hide.addEventListener('click', () => { try { localStorage.setItem(RKEY, sig); } catch (e) { /* ohne Speicher */ } box.hidden = true; }); bar.append(go, hide); box.append(bar);
+  }
   // ---------- Rolle und Änderungsprotokoll ----------
   const fdt2 = (iso) => (iso ? iso.slice(8, 10) + '.' + iso.slice(5, 7) + '.' + iso.slice(0, 4) + ' ' + iso.slice(11, 16) : '–');
   function drawRole() {
