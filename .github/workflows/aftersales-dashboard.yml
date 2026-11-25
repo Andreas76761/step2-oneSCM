@@ -1,0 +1,65 @@
+name: Aftersales-Dashboard
+
+# Läuft nur, wenn der Ordner aftersales-dashboard oder diese Datei geändert wird.
+on:
+  push:
+    paths:
+      - 'aftersales-dashboard/**'
+      - '.github/workflows/aftersales-dashboard.yml'
+  pull_request:
+    paths:
+      - 'aftersales-dashboard/**'
+      - '.github/workflows/aftersales-dashboard.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aftersales-dashboard-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: aftersales-dashboard
+
+jobs:
+  browser:
+    name: Browser-Tests (Seite, Simulationen, Rollen, Daten)
+    runs-on: ubuntu-24.04 # wie in ci.yml: Playwright unterstützt ubuntu-latest noch nicht überall
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: aftersales-dashboard/package-lock.json
+      - run: npm ci
+      - name: Chromium für Playwright installieren
+        run: npx playwright install --with-deps chromium
+      - name: Browser-Tests mit Screenshots
+        run: npm run test:shots
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aftersales-testergebnis
+          path: |
+            aftersales-dashboard/test/ergebnis.json
+            aftersales-dashboard/test/screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  excel:
+    name: Excel-Template (Formeln mit LibreOffice rechnen)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install openpyxl
+      - name: LibreOffice installieren
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libreoffice-calc
+      - name: Excel-Template bauen und prüfen
+        run: python3 excel/test_template.py

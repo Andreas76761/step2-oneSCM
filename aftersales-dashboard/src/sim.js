@@ -292,6 +292,6 @@
     }
     box.append(c);
   }
-  window.__sim = { SIMS, S, SCN, summary: () => { const out = []; const keep = { cur: S.cur }; SIMS.forEach((s) => { try { const ps = params(s.id), vals = Object.fromEntries(ps.map((p) => [p.key, p.value])), st = S.ex[s.id] = S.ex[s.id] || { redo: () => 0, seed: S.seed }; const v = S.vals[s.id] || vals; const r = s.run(v, Object.assign(st, { seed: S.seed })); if (r) out.push({ id: s.id, title: s.title, tiles: r.tiles.map((t) => [t.l, t.f(t.v)]), text: r.text, table: r.table }); } catch (e) { /* Simulation überspringen */ } }); S.cur = keep.cur; return out; } };
+  window.__sim = { SIMS, S, SCN, scenarios: (id) => scList(id), summary: () => { const out = []; const keep = { cur: S.cur }; SIMS.forEach((s) => { try { const ps = params(s.id), vals = Object.fromEntries(ps.map((p) => [p.key, p.value])), st = S.ex[s.id] = S.ex[s.id] || { redo: () => 0, seed: S.seed }; const v = S.vals[s.id] || vals; const r = s.run(v, Object.assign(st, { seed: S.seed })); if (r) out.push({ id: s.id, title: s.title, tiles: r.tiles.map((t) => [t.l, t.f(t.v)]), text: r.text, table: r.table }); } catch (e) { /* Simulation überspringen */ } }); S.cur = keep.cur; return out; } };
   window.__hodDraw.sim = () => { build(); render(); };
 })();

@@ -15,9 +15,11 @@ Dieser Ordner ist die Quelle der Wahrheit für das veröffentlichte Dashboard. E
 
 ## Tests
 
+Die CI (`.github/workflows/aftersales-dashboard.yml`) führt beide Testläufe bei jeder Änderung an diesem Ordner aus (Browser-Tests mit Screenshots als Artefakt, Excel-Template mit LibreOffice).
+
 ```bash
 npm install                 # d3 für den Laufzeit-Ersatz (Playwright wird mitgeführt)
-npm test                    # Browser-Testlauf, 156 Prüfungen
+npm test                    # Browser-Testlauf, 159 Prüfungen
 npm run test:shots          # zusätzlich Screenshots nach test/screenshots/
 npm run test:excel          # Excel-Template bauen, mit LibreOffice rechnen, Kernwerte prüfen
 ```
@@ -52,6 +54,8 @@ Größenlimit: `index.html` darf als Dokument 262.144 Byte nicht überschreiten 
 ## Rollen und Rechte
 
 `src/roles.js` leitet die Rolle aus den Rechten ab, die die Plattform meldet: Eigentümer oder Bearbeiter des Artifacts = **Administrator**, Schreibrecht = **Bearbeiter**, sonst **Betrachter**. Bearbeiter ändern und löschen nur eigene Maßnahmen und Szenarien, Administratoren alle, Betrachter lesen nur. Jede Änderung steht im Änderungsprotokoll (Register Maßnahmen, Sammlung `audit`). Die Prüfungen in der Oberfläche führen die Nutzer; **durchgesetzt werden Rechte nur über die Zugriffsregeln der Datenbank** (Fähigkeit `db` beim Veröffentlichen). Ohne Plattform (Test, lokale Ansicht) arbeitet die Seite als Bearbeiter mit lokalem Protokoll.
+
+Die Datenbankregeln, die ein Bearbeiten durch Bearbeiter erst ermöglichen und Betrachter sperren, stehen mit Begründung in [docs/datenbankregeln.md](docs/datenbankregeln.md).
 
 ## Barrierefreiheit der Diagramme
 

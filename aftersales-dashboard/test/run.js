@@ -152,6 +152,18 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
   ok('Rankings ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
   await page.evaluate(() => window.__hod.show('qg')); await page.waitForTimeout(400); await take('ranking-qg');
 
+  sec('4h Szenarien im Booklet');
+  errors.length = 0; await page.evaluate(() => { localStorage.removeItem('aftersales-scenarios-v1'); window.__sim.SCN.local.length = 0; });
+  const bkEmpty = await page.evaluate(() => { const B = window.__bk; B.S.sel = new Set(['v3scn']); const m = B.buildModel(), sec = m.sections.find((x) => /Szenarien/.test(x.title || x.name || '')); return { n: m.sections.length, txt: JSON.stringify(m).slice(0, 4000) }; });
+  ok('Booklet enthält das Kapitel „Gespeicherte Szenarien“ (auch ohne Szenarien, mit Hinweis)', /Gespeicherte Szenarien/.test(bkEmpty.txt) && /noch keine Szenarien/.test(bkEmpty.txt), bkEmpty.txt.slice(0, 300));
+  await openSim4a(page); await page.fill('#sim-sc-name', 'Booklet Basis'); await page.click('#sim-sc-save'); await page.waitForTimeout(300);
+  await page.evaluate(() => { const i = document.querySelector('#sim-body input[type=range]'); i.value = '5'; i.dispatchEvent(new Event('input', { bubbles: true })); }); await page.waitForTimeout(500);
+  await page.fill('#sim-sc-name', 'Booklet Preis +5'); await page.click('#sim-sc-save'); await page.waitForTimeout(300);
+  const bk = await page.evaluate(() => { const B = window.__bk; B.S.sel = new Set(['v3scn']); const m = B.buildModel(), t = JSON.stringify(m); return { txt: t, has: ['Booklet Basis', 'Booklet Preis +5', 'Gesamtrechnung', 'Preisänderung 5', 'Betriebsergebnis'].map((k) => t.includes(k)) }; });
+  ok('Booklet zeigt gespeicherte Szenarien mit Namen, Reglern und Ergebnissen', bk.has.every(Boolean), bk.has);
+  ok('Booklet ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
+  await page.evaluate(() => { localStorage.removeItem('aftersales-scenarios-v1'); window.__sim.SCN.local.length = 0; });
+
   sec('4b Maßnahmen aus Kennzahlen (neue Register)');
   const pb = DATA('ma_playbook'), v3keys = { tv: 'vor_pct', er: 'absorption_pct', qg: 'claims_per_1000', lx: 'classic_fill_pct', el: 'hv_repair_rev_k' };
   ok('Playbook enthält Vorschläge für alle fünf neuen Register', Object.entries(v3keys).every(([b, k]) => pb.some((r) => r.kpi_id === b + '_' + k)), pb.length);
@@ -173,7 +185,7 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
 
   sec('4c Szenarien speichern und vergleichen');
   const openSim = async (id) => { await page.evaluate((i) => { window.__hod.show('sim'); window.__sim.S.cur = i; window.__hodDraw.sim(); }, id); await page.waitForTimeout(500); };
-  errors.length = 0; await openSim('s9');
+  errors.length = 0; await page.evaluate(() => { localStorage.removeItem('aftersales-scenarios-v1'); window.__sim.SCN.local.length = 0; }); await openSim('s9');
   ok('Karte „Szenarien speichern und vergleichen“ vorhanden', await page.evaluate(() => !!document.getElementById('sim-sc') && !!document.getElementById('sim-sc-save')));
   const price0 = await page.evaluate(() => window.__sim.S.vals.s9.price_pct);
   await page.fill('#sim-sc-name', 'Basis'); await page.click('#sim-sc-save'); await page.waitForTimeout(300);

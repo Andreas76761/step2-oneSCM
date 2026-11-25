@@ -13,7 +13,7 @@
     gl: { chap: ['gl'], raw: ['Glossar'] }, da: { extra: ['da'], raw: ['Datenanbindung'] }, dc: { chap: ['dc'], raw: [] }
   };
   BU.forEach((k) => { MAP[k] = { chap: ['bu_' + k], raw: [I.CH.find((c) => ({ mo: 'Market Operation', pm: 'Productmanagement', pr: 'Pricing', lg: 'Logistik', tr: 'Training', wa: 'Warranty', cu: 'Customer', co: 'Competitor', mt: 'Marketing' })[k] === c[0])[0]] }; });
-  Object.assign(MAP, { tv: { extra: ['tv'], raw: ['Teileverfügbarkeit'] }, er: { extra: ['er'], raw: ['Ertrag und Händler'] }, qg: { extra: ['qg'], raw: ['Qualität und Garantie'] }, lx: { extra: ['lx'], raw: ['Luxus und Kundenerlebnis'] }, el: { extra: ['el'], raw: ['Elektro, Nachhaltigkeit, Digital'] }, sim: { chap: ['v3sim'], raw: ['Simulationen (Annahmen)'] } });
+  Object.assign(MAP, { tv: { extra: ['tv'], raw: ['Teileverfügbarkeit'] }, er: { extra: ['er'], raw: ['Ertrag und Händler'] }, qg: { extra: ['qg'], raw: ['Qualität und Garantie'] }, lx: { extra: ['lx'], raw: ['Luxus und Kundenerlebnis'] }, el: { extra: ['el'], raw: ['Elektro, Nachhaltigkeit, Digital'] }, sim: { chap: ['v3sim', 'v3scn'], raw: ['Simulationen (Annahmen)'] } });
   const S = { sel: new Set(['head']), fmt: new Set(['xlsx']), raw: true, busy: false }; let built = false;
   const msg = (t, bad) => { const e = $('exp-msg'); if (e) { e.textContent = t || ''; e.className = 'bkmsg' + (bad ? ' bad' : ''); } };
   const regs = () => [...document.querySelectorAll('#dash-root .tabs .tab')].map((b) => [b.dataset.tab, b.textContent.replace(/\s*NEU\s*$/, '').trim()]).filter(([k]) => MAP[k]);
