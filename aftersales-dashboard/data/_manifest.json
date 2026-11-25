@@ -30,10 +30,28 @@
   "file": "co_monthly.json"
  },
  {
+  "id": "co_py",
+  "title": "Competitor – Vorjahreswerte",
+  "description": "Competitor – Vorjahreswerte (erfundene Testdaten)",
+  "file": "co_py.json"
+ },
+ {
+  "id": "cu_dealer",
+  "title": "Customer – Händler",
+  "description": "Customer – Händler (erfundene Testdaten)",
+  "file": "cu_dealer.json"
+ },
+ {
   "id": "cu_monthly",
   "title": "Customer – Monatswerte",
   "description": "Monatliche Kundenkennzahlen (CLV, CSI, TCO, NPS, Abwanderung, Wiederkauf, aktive Kunden) je Region und Dimension (Testdaten).",
   "file": "cu_monthly.json"
+ },
+ {
+  "id": "cu_py",
+  "title": "Customer – Vorjahreswerte",
+  "description": "Customer – Vorjahreswerte (erfundene Testdaten)",
+  "file": "cu_py.json"
  },
  {
   "id": "cu_segment",
@@ -162,6 +180,12 @@
   "file": "iv_monthly.json"
  },
  {
+  "id": "iv_py",
+  "title": "Bestand – Vorjahreswerte",
+  "description": "Bestand – Vorjahreswerte (erfundene Testdaten)",
+  "file": "iv_py.json"
+ },
+ {
   "id": "lead_funnel",
   "title": "Lead-Trichter bis Werkstatttermin",
   "description": "Leads, Kontakte, Termine, Auftrag und Antwortzeit je Markt und Monat (erfundene Testdaten).",
@@ -174,10 +198,22 @@
   "file": "lg_carrier.json"
  },
  {
+  "id": "lg_dealer",
+  "title": "Logistik – Händler",
+  "description": "Logistik – Händler (erfundene Testdaten)",
+  "file": "lg_dealer.json"
+ },
+ {
   "id": "lg_monthly",
   "title": "Logistik – Monatswerte",
   "description": "Monatliche Lieferfähigkeits-, Durchlaufzeit- und Kostenkennzahlen je Region sowie je Baumuster, Alter und Produktgruppe (Testdaten).",
   "file": "lg_monthly.json"
+ },
+ {
+  "id": "lg_py",
+  "title": "Logistik – Vorjahreswerte",
+  "description": "Logistik – Vorjahreswerte (erfundene Testdaten)",
+  "file": "lg_py.json"
  },
  {
   "id": "lx_classic",
@@ -228,10 +264,22 @@
   "file": "mk_monthly.json"
  },
  {
+  "id": "mk_py",
+  "title": "Markt – Vorjahreswerte",
+  "description": "Markt – Vorjahreswerte (erfundene Testdaten)",
+  "file": "mk_py.json"
+ },
+ {
   "id": "mo_country",
   "title": "Market Op – Länder",
   "description": "Umsatz gegen Ziel je Land im letzten Monat, mit Europa-Region (Testdaten).",
   "file": "mo_country.json"
+ },
+ {
+  "id": "mo_dealer",
+  "title": "Market Operation – Händler",
+  "description": "Market Operation – Händler (erfundene Testdaten)",
+  "file": "mo_dealer.json"
  },
  {
   "id": "mo_monthly",
@@ -240,16 +288,34 @@
   "file": "mo_monthly.json"
  },
  {
+  "id": "mo_py",
+  "title": "Market Operation – Vorjahreswerte",
+  "description": "Market Operation – Vorjahreswerte (erfundene Testdaten)",
+  "file": "mo_py.json"
+ },
+ {
   "id": "mt_channel",
   "title": "Marketing – Kanäle",
   "description": "Ausgaben, Leads, Conversion, ROMI und CAC je Marketingkanal (Testdaten).",
   "file": "mt_channel.json"
  },
  {
+  "id": "mt_dealer",
+  "title": "Marketing – Händler",
+  "description": "Marketing – Händler (erfundene Testdaten)",
+  "file": "mt_dealer.json"
+ },
+ {
   "id": "mt_monthly",
   "title": "Marketing – Monatswerte",
   "description": "Monatliche Marketingkennzahlen (ROMI, CAC, Leads, Conversion, Ausgaben, Reichweite, Online-Anteil) je Region und Dimension (Testdaten).",
   "file": "mt_monthly.json"
+ },
+ {
+  "id": "mt_py",
+  "title": "Marketing – Vorjahreswerte",
+  "description": "Marketing – Vorjahreswerte (erfundene Testdaten)",
+  "file": "mt_py.json"
  },
  {
   "id": "pg_margin",
@@ -270,16 +336,34 @@
   "file": "pm_monthly.json"
  },
  {
+  "id": "pm_py",
+  "title": "Productmanagement – Vorjahreswerte",
+  "description": "Productmanagement – Vorjahreswerte (erfundene Testdaten)",
+  "file": "pm_py.json"
+ },
+ {
   "id": "pr_category",
   "title": "Pricing – Kategorien",
   "description": "Preisindex, Rabattquote und Marge je Produktkategorie und Region (Testdaten).",
   "file": "pr_category.json"
  },
  {
+  "id": "pr_dealer",
+  "title": "Pricing – Händler",
+  "description": "Pricing – Händler (erfundene Testdaten)",
+  "file": "pr_dealer.json"
+ },
+ {
   "id": "pr_monthly",
   "title": "Pricing – Monatswerte",
   "description": "Monatliche Marge, Preisindex, Rabatt- und Preisdurchsetzungskennzahlen je Region sowie je Baumuster, Alter und Produktgruppe (Testdaten).",
   "file": "pr_monthly.json"
+ },
+ {
+  "id": "pr_py",
+  "title": "Pricing – Vorjahreswerte",
+  "description": "Pricing – Vorjahreswerte (erfundene Testdaten)",
+  "file": "pr_py.json"
  },
  {
   "id": "prog_effect",
@@ -390,10 +474,22 @@
   "file": "tr_course.json"
  },
  {
+  "id": "tr_dealer",
+  "title": "Training – Händler",
+  "description": "Training – Händler (erfundene Testdaten)",
+  "file": "tr_dealer.json"
+ },
+ {
   "id": "tr_monthly",
   "title": "Training – Monatswerte",
   "description": "Monatliche Schulungs-, Teilnehmer- und Zufriedenheitskennzahlen je Region sowie je Baumuster, Alter und Produktgruppe (Testdaten).",
   "file": "tr_monthly.json"
+ },
+ {
+  "id": "tr_py",
+  "title": "Training – Vorjahreswerte",
+  "description": "Training – Vorjahreswerte (erfundene Testdaten)",
+  "file": "tr_py.json"
  },
  {
   "id": "tv_dealer",
@@ -462,10 +558,22 @@
   "file": "wa_cause.json"
  },
  {
+  "id": "wa_dealer",
+  "title": "Warranty – Händler",
+  "description": "Warranty – Händler (erfundene Testdaten)",
+  "file": "wa_dealer.json"
+ },
+ {
   "id": "wa_monthly",
   "title": "Warranty – Monatswerte",
   "description": "Monatliche Reklamations-, Kosten- und Bearbeitungskennzahlen je Region sowie je Baumuster, Alter und Produktgruppe (Testdaten).",
   "file": "wa_monthly.json"
+ },
+ {
+  "id": "wa_py",
+  "title": "Warranty – Vorjahreswerte",
+  "description": "Warranty – Vorjahreswerte (erfundene Testdaten)",
+  "file": "wa_py.json"
  },
  {
   "id": "wf_monthly",

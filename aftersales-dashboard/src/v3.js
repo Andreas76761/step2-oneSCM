@@ -104,7 +104,7 @@
   }
   // Vorjahresvergleich: echte Vorjahreswerte (Datensätze tv_py … el_py) statt der Trendschätzung
   window.__vjReal = (id, rows, o) => {
-    const m = /^(tv|er|qg|lx|el)_monthly$/.exec(id || ''); if (!m) return null; const py = rowsOf(m[1] + '_py'); if (!py) return null;
+    const m = /^(tv|er|qg|lx|el|mo|pm|pr|lg|tr|wa|cu|co|mt|mk|iv)_monthly$/.exec(id || ''); if (!m) return null; if (rows.some((r) => (r.dim != null && r.dim !== 'Alle') || (r.member != null && r.member !== 'Alle'))) return null; const py = rowsOf(m[1] + '_py'); if (!py) return null;
     const idx = new Map(py.map((r) => [r.region + '|' + r.month, r])), pp = o.unit === 'pct' || o.unit === 'pct2', out = [];
     for (const r of rows) { const p = idx.get(r.region + '|' + r.month), v = p ? p[o.y] : null; if (v == null) return null; out.push({ v, d: pp ? r[o.y] - v : (v ? (r[o.y] / v - 1) * 100 : 0), real: true, pp }); }
     return out;
@@ -131,5 +131,5 @@
   }
   Object.keys(NAME).forEach((k) => { window.__hodDraw[k] = () => drawReg(k); });
   setTimeout(() => { Object.assign(O.NAME, NAME); }, 200); // Übersichten für Booklet, Export und Chat
-  window.__v3 = { NAME, SPEC, drawReg, CONF };
+  window.__v3 = { NAME, SPEC, drawReg, CONF, dtable, card, F, rk, RK, best };
 })();

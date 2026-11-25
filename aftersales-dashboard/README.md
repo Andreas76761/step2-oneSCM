@@ -19,7 +19,7 @@ Die CI (`.github/workflows/aftersales-dashboard.yml`) führt beide Testläufe be
 
 ```bash
 npm install                 # d3 für den Laufzeit-Ersatz (Playwright wird mitgeführt)
-npm test                    # Browser-Testlauf, 172 Prüfungen
+npm test                    # Browser-Testlauf, 211 Prüfungen
 npm run test:shots          # zusätzlich Screenshots nach test/screenshots/
 npm run test:excel          # Excel-Template bauen, mit LibreOffice rechnen, Kernwerte prüfen
 npm run test:export         # Booklet als PDF, Word und PowerPoint erzeugen (nach test/export/), zum Ansehen

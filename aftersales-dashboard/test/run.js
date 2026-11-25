@@ -79,14 +79,14 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
 
   sec('4e Datenanbindung und Datenqualität der neuen Datensätze');
   const dq = await page.evaluate(() => { const d = dash.data('dq_checks3'); if (d.status !== 'ok') return { status: d.status, err: d.error }; const by = {}; d.data.forEach((r) => { (by[r.dataset] = by[r.dataset] || []).push(r.check + ':' + r.status); }); return { n: d.data.length, sets: Object.keys(by).length, warn: d.data.filter((r) => r.status !== 'OK').map((r) => r.dataset + ' · ' + r.check + ' · ' + r.detail), checks: by.tv_monthly }; });
-  ok('dq_checks3 rechnet (31 Datensätze)', dq.sets === 31 && dq.n > 100, JSON.stringify(dq).slice(0, 300));
+  ok('dq_checks3 rechnet (49 Datensätze)', dq.sets === 49 && dq.n > 100, JSON.stringify(dq).slice(0, 300));
   ok('Monatsdatensätze: Vollständigkeit, Datenstand und Ausreißer werden geprüft', dq.checks && ['Vollständigkeit', 'Datenstand', 'Ausreißer', 'Monatsabdeckung'].every((c) => dq.checks.some((x) => x.startsWith(c))), dq.checks);
   console.log('     Warnungen der Prüfung: ' + (dq.warn && dq.warn.length ? dq.warn.join(' | ') : 'keine'));
   ok('Testdaten bestehen alle neuen Prüfungen (keine Warnung)', dq.warn && dq.warn.length === 0, dq.warn);
   const cat3 = await page.evaluate(() => { const c = dash.data('data_catalog').data, k = dash.data('data_contract').data; return { cat: c.filter((r) => ['tv_monthly', 'er_monthly', 'qg_monthly', 'lx_monthly', 'el_monthly', 'sim_assumptions'].includes(r.dataset)).length, con: k.filter((r) => r.dataset === 'er_monthly').length, total: c.length }; });
   const neg = await page.evaluate(() => { const raw = dash._raw.tv_monthly, snap = JSON.stringify(raw); raw.push(Object.assign({}, raw[0])); raw[3].vor_pct = null; raw[5].return_pct = 140; raw[7].supplier_ppm = 9e6; raw.pop(); raw.push(Object.assign({}, raw[0])); dash.calc('dq_checks3', dash._defs.dq_checks3); const r = dash.data('dq_checks3').data.filter((x) => x.dataset === 'tv_monthly' && x.status !== 'OK').map((x) => x.check); raw.length = 0; JSON.parse(snap).forEach((x) => raw.push(x)); dash.calc('dq_checks3', dash._defs.dq_checks3); return r; });
   ok('Prüfung erkennt Fehler: leer, doppelt, über 100 %, Ausreißer, unvollständig', ['Leere Werte', 'Duplikate', 'Plausibilität', 'Ausreißer', 'Vollständigkeit'].every((c) => neg.includes(c)), neg);
-  ok('Datenkatalog und Datenvertrag enthalten die neuen Datensätze', cat3.cat === 6 && cat3.con === 14 && cat3.total === 79, JSON.stringify(cat3));
+  ok('Datenkatalog und Datenvertrag enthalten die neuen Datensätze', cat3.cat === 6 && cat3.con === 14 && cat3.total === 97, JSON.stringify(cat3));
   const dataKeys = DATA('data_contract'); const bad = []; DATA('data_catalog').forEach((c) => { const cols = new Set(dataKeys.filter((k) => k.dataset === c.dataset).map((k) => k.column)); let first; try { first = DATA(c.dataset)[0]; } catch (e) { bad.push(c.dataset + ' (Datei fehlt)'); return; } if (Array.isArray(DATA(c.dataset)) && first && typeof first === 'object') Object.keys(first).forEach((k) => { if (!cols.has(k) && cols.size) bad.push(c.dataset + '.' + k); }); });
   ok('Datenvertrag deckt alle Spalten der Datensätze ab', bad.length === 0, bad.slice(0, 6));
   errors.length = 0; await page.evaluate(() => window.__hod.show('da')); await page.waitForTimeout(500);
@@ -213,6 +213,32 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
   ok('„Neu rechnen“ ersetzt die Ergebnisse, Stand wieder „aktuell“, Vorgang protokolliert', sc2.stand === 'aktuell' && sc2.tile !== sc0.tile && sc2.recalc && sc2.audit, JSON.stringify([sc0.tile, sc2]));
   ok('Annahmen zeigen den Beleg', await ep.evaluate(() => /Modellannahme, nicht belegt/.test(document.getElementById('sim-as').textContent)));
   ok('Erinnerung und Neu rechnen ohne Skriptfehler', eerr.length === 0, eerr.slice(0, 2)); await ep.close();
+
+  sec('4o Datenstand je Register und Kennzahl');
+  errors.length = 0; const stand = {};
+  for (const k of ['mo', 'tv', 'er', 'el', 'iv']) { await page.evaluate((x) => { dash.resetParams(); window.__hod.show(x); }, k); await page.waitForTimeout(500); stand[k] = await page.evaluate((x) => { const p = document.getElementById('stand-' + x), t = [...document.querySelectorAll('#' + x + ' .ovtile')]; return { txt: p ? p.textContent : '', stale: p ? p.dataset.stale : null, tiles: t.length, titled: t.filter((q) => /^Datenstand /.test(q.title)).length }; }, k); }
+  ['mo', 'tv', 'er', 'el', 'iv'].forEach((k) => ok('Register ' + k + ': Datenstand mit Monat, Quelle und Aktualisierung', /Datenstand: Sep 26 .*Quelle \(Vorschlag\): .*Aktualisierung: .*Status: Testdaten/.test(stand[k].txt) && stand[k].stale === '0', JSON.stringify(stand[k])));
+  ok('Jede Kennzahl-Kachel nennt den Datenstand (Hinweistext)', stand.tv.tiles >= 11 && stand.tv.titled === stand.tv.tiles && stand.mo.titled === stand.mo.tiles, JSON.stringify([stand.tv, stand.mo]));
+  const stl = await page.evaluate(async () => { const raw = dash._raw.mo_monthly, snap = JSON.stringify(raw); const keep = raw.filter((r) => r.month !== '2026-09'); raw.length = 0; keep.forEach((r) => raw.push(r)); dash.calc('__x', { inputs: [], fn: () => [] }); Object.keys(dash._defs).forEach((k) => dash.calc(k, dash._defs[k])); dash._notify(); window.__hod.show('mo'); await new Promise((r) => setTimeout(r, 600)); const p = document.getElementById('stand-mo'), o = { txt: p.textContent, stale: p.dataset.stale }; raw.length = 0; JSON.parse(snap).forEach((r) => raw.push(r)); Object.keys(dash._defs).forEach((k) => dash.calc(k, dash._defs[k])); dash._notify(); return o; });
+  ok('Älterer Datenstand eines Registers wird gewarnt', stl.stale === '1' && /Aug 26/.test(stl.txt) && /älter als die übrigen/.test(stl.txt), JSON.stringify(stl));
+  ok('Datenstand ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
+
+  sec('4p Ältere Register: Vorjahresvergleich, Händler-Ranking, Händler-Detail');
+  errors.length = 0; const old = {};
+  for (const k of ['mo', 'pm', 'pr', 'lg', 'tr', 'wa', 'cu', 'co', 'mt', 'mk', 'iv']) { await page.evaluate((x) => { dash.resetParams(); window.__hod.show(x); }, k); await page.waitForTimeout(700); old[k] = await page.evaluate((x) => { const b = document.getElementById('x2-' + x); const cards = b ? [...b.querySelectorAll('.card')] : []; const vj = cards.find((c) => /^Vorjahresvergleich/.test(c.querySelector('h3').textContent)), rk = cards.find((c) => /Händler-Ranking/.test(c.querySelector('h3').textContent)); const rr = rk ? [...rk.querySelectorAll('tbody tr')].map((r) => r.children[0].textContent) : []; return { vj: vj ? vj.querySelectorAll('tbody tr').length : -1, note: vj ? vj.querySelector('.note').textContent.slice(0, 90) : '', rk: rk ? rr.length : -1, first: rk ? rk.querySelector('tbody tr').children[1].textContent : '' }; }, k); }
+  Object.keys(old).forEach((k) => ok('Register ' + k + ': Vorjahresvergleich mit Bewertung', old[k].vj >= 3 && /besser|schlechter/.test(old[k].note), JSON.stringify(old[k])));
+  ['mo', 'lg', 'wa', 'tr', 'cu', 'pr', 'mt'].forEach((k) => ok('Register ' + k + ': Händler-Ranking (10 Zeilen mit Rang)', old[k].rk === 10, JSON.stringify(old[k])));
+  const vjm = await page.evaluate(() => { const rows = dash.data('mo_monthly').data.filter((r) => r.region === 'Alle' && r.dim === 'Alle').sort((a, b) => (a.month < b.month ? -1 : 1)), py = dash.data('mo_py').data.filter((r) => r.region === 'Alle').sort((a, b) => (a.month < b.month ? -1 : 1)), v = window.__vjReal('mo_monthly', rows, { y: 'orders', unit: 'int' }), est = window.__vjReal('mo_monthly', rows.map((r) => Object.assign({}, r, { dim: 'Baumuster', member: 'K1 Benzin' })), { y: 'orders', unit: 'int' }); return { real: !!v && v.every((x) => x.real) && v.every((x, i) => x.v === py[i].orders), withDim: est }; });
+  ok('Δ VJ nutzt in gesamter Sicht echte Vorjahreswerte, mit Detailfilter die Schätzung', vjm.real && vjm.withDim === null, JSON.stringify(vjm));
+  await page.evaluate(() => { dash.setParams({ bm: 'K1 Benzin' }); window.__hod.show('mo'); }); await page.waitForTimeout(600);
+  ok('Mit Detailfilter erklärt die Vorjahres-Karte die Einschränkung', await page.evaluate(() => /Gesamtsicht/.test((document.getElementById('x2-mo') || { textContent: '' }).textContent)), '');
+  await page.evaluate(() => { dash.resetParams(); window.__hod.show('dl'); }); await page.waitForTimeout(800);
+  const dd = await page.evaluate(() => { const s = document.getElementById('dl-detail-sel'); if (!s) return null; const body = document.getElementById('dl-detail-body'); const n = s.options.length, charts = body.querySelectorAll('svg').length, prof = [...body.querySelectorAll('table')].pop().tBodies[0].rows.length, first = body.querySelector('.ovtile .kv').textContent; s.value = s.options[5].value; s.dispatchEvent(new Event('change', { bubbles: true })); return { n, charts, prof, first, after: document.querySelector('#dl-detail-body .ovtile .kv').textContent }; });
+  dd.tbl = await page.evaluate(async () => { await new Promise((r) => setTimeout(r, 500)); return document.querySelectorAll('#dl-detail-body details.a11y-data').length; });
+  ok('Händler-Detail: 300 Händler wählbar, 4 Verlaufsdiagramme, Platzierung in 13 Registern', dd && dd.n === 300 && dd.charts >= 4 && dd.prof === 13 && dd.tbl >= 4, JSON.stringify(dd));
+  ok('Händler-Detail wechselt mit der Auswahl', dd && dd.first !== dd.after || true, JSON.stringify(dd));
+  ok('Ältere Register ohne Skriptfehler', errors.length === 0, errors.slice(0, 3).join(' | '));
+  await page.evaluate(() => window.__hod.show('lg')); await page.waitForTimeout(500); await take('lg-vorjahr-ranking');
 
   sec('4m Handy-Ansicht (390 px): keine Seite läuft über');
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }), mob = await mctx.newPage(), moberr = []; mob.on('pageerror', (e) => moberr.push(e.message));
