@@ -79,14 +79,14 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
 
   sec('4e Datenanbindung und Datenqualität der neuen Datensätze');
   const dq = await page.evaluate(() => { const d = dash.data('dq_checks3'); if (d.status !== 'ok') return { status: d.status, err: d.error }; const by = {}; d.data.forEach((r) => { (by[r.dataset] = by[r.dataset] || []).push(r.check + ':' + r.status); }); return { n: d.data.length, sets: Object.keys(by).length, warn: d.data.filter((r) => r.status !== 'OK').map((r) => r.dataset + ' · ' + r.check + ' · ' + r.detail), checks: by.tv_monthly }; });
-  ok('dq_checks3 rechnet (23 Datensätze)', dq.sets === 23 && dq.n > 100, JSON.stringify(dq).slice(0, 300));
+  ok('dq_checks3 rechnet (31 Datensätze)', dq.sets === 31 && dq.n > 100, JSON.stringify(dq).slice(0, 300));
   ok('Monatsdatensätze: Vollständigkeit, Datenstand und Ausreißer werden geprüft', dq.checks && ['Vollständigkeit', 'Datenstand', 'Ausreißer', 'Monatsabdeckung'].every((c) => dq.checks.some((x) => x.startsWith(c))), dq.checks);
   console.log('     Warnungen der Prüfung: ' + (dq.warn && dq.warn.length ? dq.warn.join(' | ') : 'keine'));
   ok('Testdaten bestehen alle neuen Prüfungen (keine Warnung)', dq.warn && dq.warn.length === 0, dq.warn);
   const cat3 = await page.evaluate(() => { const c = dash.data('data_catalog').data, k = dash.data('data_contract').data; return { cat: c.filter((r) => ['tv_monthly', 'er_monthly', 'qg_monthly', 'lx_monthly', 'el_monthly', 'sim_assumptions'].includes(r.dataset)).length, con: k.filter((r) => r.dataset === 'er_monthly').length, total: c.length }; });
   const neg = await page.evaluate(() => { const raw = dash._raw.tv_monthly, snap = JSON.stringify(raw); raw.push(Object.assign({}, raw[0])); raw[3].vor_pct = null; raw[5].return_pct = 140; raw[7].supplier_ppm = 9e6; raw.pop(); raw.push(Object.assign({}, raw[0])); dash.calc('dq_checks3', dash._defs.dq_checks3); const r = dash.data('dq_checks3').data.filter((x) => x.dataset === 'tv_monthly' && x.status !== 'OK').map((x) => x.check); raw.length = 0; JSON.parse(snap).forEach((x) => raw.push(x)); dash.calc('dq_checks3', dash._defs.dq_checks3); return r; });
   ok('Prüfung erkennt Fehler: leer, doppelt, über 100 %, Ausreißer, unvollständig', ['Leere Werte', 'Duplikate', 'Plausibilität', 'Ausreißer', 'Vollständigkeit'].every((c) => neg.includes(c)), neg);
-  ok('Datenkatalog und Datenvertrag enthalten die neuen Datensätze', cat3.cat === 6 && cat3.con === 14 && cat3.total === 71, JSON.stringify(cat3));
+  ok('Datenkatalog und Datenvertrag enthalten die neuen Datensätze', cat3.cat === 6 && cat3.con === 14 && cat3.total === 79, JSON.stringify(cat3));
   const dataKeys = DATA('data_contract'); const bad = []; DATA('data_catalog').forEach((c) => { const cols = new Set(dataKeys.filter((k) => k.dataset === c.dataset).map((k) => k.column)); let first; try { first = DATA(c.dataset)[0]; } catch (e) { bad.push(c.dataset + ' (Datei fehlt)'); return; } if (Array.isArray(DATA(c.dataset)) && first && typeof first === 'object') Object.keys(first).forEach((k) => { if (!cols.has(k) && cols.size) bad.push(c.dataset + '.' + k); }); });
   ok('Datenvertrag deckt alle Spalten der Datensätze ab', bad.length === 0, bad.slice(0, 6));
   errors.length = 0; await page.evaluate(() => window.__hod.show('da')); await page.waitForTimeout(500);
@@ -135,6 +135,22 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
   ok('Rolle aus den Plattformrechten: nur Lesen → Betrachter', (await vp.evaluate(() => window.__roles.role())) === 'Betrachter'); await vp.close();
   const ap = await browser.newPage(); await ap.goto(url + '?stub=admin', { waitUntil: 'load' }); await ap.waitForTimeout(900);
   ok('Rolle aus den Plattformrechten: Eigentümer → Administrator', (await ap.evaluate(() => window.__roles.role())) === 'Administrator'); await ap.close();
+
+  sec('4g Händler-Rankings und Vorjahresvergleich der neuen Register');
+  errors.length = 0; const rkRes = {};
+  for (const t of ['tv', 'er', 'qg', 'lx', 'el']) {
+    await page.evaluate((x) => { dash.resetParams(); window.__hod.show(x); }, t); await page.waitForTimeout(500);
+    rkRes[t] = await page.evaluate((x) => { const box = document.getElementById('v3x-' + x); const cards = [...box.querySelectorAll('.card')]; const rank = cards.find((c) => /Ranking|je Händler/.test(c.querySelector('h3').textContent) && [...c.querySelectorAll('th')].some((h) => h.textContent === 'Rang')); const vj = cards.find((c) => /^Vorjahresvergleich/.test(c.querySelector('h3').textContent)); const rr = rank ? [...rank.querySelectorAll('tbody tr')].map((r) => +r.children[0].textContent.replace(/\D/g, '')) : []; const vr = vj ? [...vj.querySelectorAll('tbody tr')].map((r) => [...r.children].map((c) => c.textContent)) : []; return { rank: !!rank, n: rr.length, desc: rr.every((v, i) => i === 0 || rr[i - 1] - v >= -2), vj: !!vj, vrows: vr.length, first: vr[0], note: vj ? vj.querySelector('.note').textContent : '' }; }, t);
+  }
+  ['tv', 'er', 'qg', 'lx', 'el'].forEach((t) => ok('Register ' + t + ': Händler-Ranking mit Rang-Spalte', rkRes[t].rank && rkRes[t].n === 15 && rkRes[t].desc, JSON.stringify(rkRes[t])));
+  ['tv', 'er', 'qg', 'lx', 'el'].forEach((t) => ok('Register ' + t + ': Karte Vorjahresvergleich mit Bewertung', rkRes[t].vj && rkRes[t].vrows >= 6 && /besser|schlechter/.test(rkRes[t].note) && rkRes[t].first.length === 5, JSON.stringify(rkRes[t])));
+  const vjr = await page.evaluate(() => { const rows = dash.data('tv_monthly').data.filter((r) => r.region === 'Alle').sort((a, b) => (a.month < b.month ? -1 : 1)), v = window.__vjReal('tv_monthly', rows, { y: 'vor_pct', unit: 'pct' }), py = dash.data('tv_py').data.filter((r) => r.region === 'Alle').sort((a, b) => (a.month < b.month ? -1 : 1)); return { n: v && v.length, real: v && v.every((x) => x.real), same: v && v.every((x, i) => x.v === py[i].vor_pct), d: v && Math.abs(v[11].d - (rows[11].vor_pct - py[11].vor_pct)) < 1e-9, old: window.__vjReal('mo_monthly', rows, { y: 'x' }) }; });
+  ok('Δ VJ der Verlaufsdiagramme nutzt echte Vorjahreswerte (nicht die Trendschätzung)', vjr.n === 12 && vjr.real && vjr.same && vjr.d && vjr.old === null, JSON.stringify(vjr));
+  const pyc = ['tv', 'er', 'qg', 'lx', 'el'].map((r) => { const m = DATA(r + '_monthly'), p = DATA(r + '_py'); return m.length === p.length && m.every((x, i) => x.region === p[i].region && x.month === p[i].month); });
+  ok('Vorjahresdatensätze passen zu den Monatsdatensätzen (Region, Monat)', pyc.every(Boolean), pyc);
+  ok('Händler-Datensätze: 300 Händler je Register, Kennungen wie im Händlerstamm', ['tv_dealer', 'er_dealer', 'qg_dealer', 'lx_dealer', 'el_dealer'].every((n) => DATA(n).length === 300 && DATA(n).every((r, i) => r.id === DATA('tv_dealer')[i].id)));
+  ok('Rankings ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
+  await page.evaluate(() => window.__hod.show('qg')); await page.waitForTimeout(400); await take('ranking-qg');
 
   sec('4b Maßnahmen aus Kennzahlen (neue Register)');
   const pb = DATA('ma_playbook'), v3keys = { tv: 'vor_pct', er: 'absorption_pct', qg: 'claims_per_1000', lx: 'classic_fill_pct', el: 'hv_repair_rev_k' };

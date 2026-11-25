@@ -72,10 +72,22 @@
   "file": "dt5.json"
  },
  {
+  "id": "el_dealer",
+  "title": "Elektro, Nachhaltigkeit, Digital – Händler",
+  "description": "Elektro, Nachhaltigkeit, Digital – Händler (erfundene Testdaten)",
+  "file": "el_dealer.json"
+ },
+ {
   "id": "el_monthly",
   "title": "Elektro, Nachhaltigkeit, Digital – Monatswerte",
   "description": "Monatliche Kennzahlen je Region: Hochvolt, Batterie, Software, Ladeservice, Aufbereitung, CO₂, Online, App (erfundene Testdaten).",
   "file": "el_monthly.json"
+ },
+ {
+  "id": "el_py",
+  "title": "Elektro, Nachhaltigkeit, Digital – Vorjahreswerte",
+  "description": "Elektro, Nachhaltigkeit, Digital – Vorjahreswerte (erfundene Testdaten)",
+  "file": "el_py.json"
  },
  {
   "id": "el_segment",
@@ -94,6 +106,12 @@
   "title": "Ertrag und Händler – Monatswerte",
   "description": "Monatliche Kennzahlen je Region: Deckungsgrad, Marge je Auftrag, Zahlerarten, Originalteile, Deckungsbeitrag, Betriebsergebnis, Kapital, Zoll (erfundene Testdaten).",
   "file": "er_monthly.json"
+ },
+ {
+  "id": "er_py",
+  "title": "Ertrag – Vorjahreswerte",
+  "description": "Ertrag – Vorjahreswerte (erfundene Testdaten)",
+  "file": "er_py.json"
  },
  {
   "id": "europe_geo",
@@ -168,10 +186,22 @@
   "file": "lx_classic.json"
  },
  {
+  "id": "lx_dealer",
+  "title": "Luxus und Kundenerlebnis – Händler",
+  "description": "Luxus und Kundenerlebnis – Händler (erfundene Testdaten)",
+  "file": "lx_dealer.json"
+ },
+ {
   "id": "lx_monthly",
   "title": "Luxus und Kundenerlebnis – Monatswerte",
   "description": "Monatliche Kennzahlen je Region: Klassiker, Zubehör, Servicepakete, Besitzer-Bindung, Wartezeit, Hol- und Bringservice (erfundene Testdaten).",
   "file": "lx_monthly.json"
+ },
+ {
+  "id": "lx_py",
+  "title": "Luxus und Kundenerlebnis – Vorjahreswerte",
+  "description": "Luxus und Kundenerlebnis – Vorjahreswerte (erfundene Testdaten)",
+  "file": "lx_py.json"
  },
  {
   "id": "lx_segment",
@@ -264,6 +294,12 @@
   "file": "programme.json"
  },
  {
+  "id": "qg_dealer",
+  "title": "Qualität und Garantie – Händler",
+  "description": "Qualität und Garantie – Händler (erfundene Testdaten)",
+  "file": "qg_dealer.json"
+ },
+ {
   "id": "qg_issue",
   "title": "Frühwarnung je Bauteil",
   "description": "Reklamationen je 1000 gegen Basis mit z-Wert (erfundene Testdaten).",
@@ -274,6 +310,12 @@
   "title": "Qualität und Garantie – Monatswerte",
   "description": "Monatliche Kennzahlen je Region: Garantiekosten je Fahrzeug, Reklamationen je 1000, Wiederholreparaturen, Rückruf, Frühwarnung (erfundene Testdaten).",
   "file": "qg_monthly.json"
+ },
+ {
+  "id": "qg_py",
+  "title": "Qualität und Garantie – Vorjahreswerte",
+  "description": "Qualität und Garantie – Vorjahreswerte (erfundene Testdaten)",
+  "file": "qg_py.json"
  },
  {
   "id": "qg_recall",
@@ -370,6 +412,12 @@
   "title": "Teile – Prognose und Bestand",
   "description": "Je Teil: Prognosefehler, Bestandsalter, Retourenquote, Erstlieferquote (erfundene Testdaten).",
   "file": "tv_part.json"
+ },
+ {
+  "id": "tv_py",
+  "title": "Teileverfügbarkeit – Vorjahreswerte",
+  "description": "Teileverfügbarkeit – Vorjahreswerte (erfundene Testdaten)",
+  "file": "tv_py.json"
  },
  {
   "id": "tv_supplier",

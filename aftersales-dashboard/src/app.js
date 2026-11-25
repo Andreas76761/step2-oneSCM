@@ -296,7 +296,8 @@ function measure(svg, texts) {
 const decimals = (step) => (step >= 1 ? 0 : step >= 0.1 ? 1 : 2);
 
 const copt = (el) => (window.__copt && el.id ? window.__copt.get(el.id) : { leg: true, vj: false, unit: true });
-function vjOf(rows, o) {
+function vjOf(rows, o, id) {
+  if (id && window.__vjReal) { try { const real = window.__vjReal(id, rows, o); if (real) return real; } catch (e) { /* Schätzung */ } }
   const pp = o.unit === 'pct' || o.unit === 'pct2';
   if (o.y === 'revenue_k' && rows.every((r) => r.yoy_pct != null)) return rows.map((r) => ({ v: r.revenue_k / (1 + r.yoy_pct / 100), d: r.yoy_pct, real: true, pp: false }));
   const n = rows.length, mx = (n - 1) / 2, my = d3.mean(rows, (r) => r[o.y]); let num = 0, den = 0;
@@ -314,7 +315,7 @@ function timeChart(el, id, o) {
   const rows = ready(el, id, (r) => (!M() || r.month <= M()) && (r.region == null || r.region === REGSEL()) && (r.dim == null || (r.dim === DS().dim && r.member === DS().member)) && (!o.rowf || o.rowf(r))); if (!rows) return;
   const w = el.clientWidth; if (!w) return;
   el.replaceChildren(); el.dataset.vj = '1';
-  const vj = copt(el).vj ? vjOf(rows, o) : null;
+  const vj = copt(el).vj ? vjOf(rows, o, id) : null;
   const H = 230, MG = { t: 12, r: 14, b: 26 }, fmt = FMT[o.unit];
   const tv = rows.map((r) => (typeof o.target === 'string' ? r[o.target] : o.target * (o.cnt ? SH[REGSEL()] * (o.nodim ? 1 : MSP()) : 1)));
   const vals = rows.map((r) => r[o.y]).concat(tv.filter((x) => x != null)).concat(vj ? vj.map((x) => x.v) : []);
