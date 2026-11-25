@@ -43,7 +43,11 @@ Das erfordert eine Änderung des Datenmodells in `src/ma.js` (Dokument je Nutzer
 
 ## Warum die Regeln nicht schon gesetzt sind
 
-Die Deklaration des Artifacts ist ein Gesamtpaket (Fähigkeiten `assets`, `comments`, `db`, `downloads`, `flags`, `mcp`, `room`, `tts`, `user`). Wer sie beim Veröffentlichen neu setzt, muss **alle** Teile nennen; was fehlt, wird entzogen. Die Funktionen `flags` (Funktionsschalter des Dashboard-Typs) und `tts` lassen sich aus dieser Umgebung nicht sicher mitschreiben. Die Regeln sollten deshalb vom Eigentümer im Berechtigungsmenü des Artifacts (Datenbank → Regeln) oder durch eine Veröffentlichung gesetzt werden, die die bestehende Deklaration vollständig übernimmt.
+Die Deklaration des Artifacts ist ein Gesamtpaket (Fähigkeiten `assets`, `comments`, `db`, `downloads`, `flags`, `mcp`, `room`, `tts`, `user`). Wer sie beim Veröffentlichen neu setzt, muss **alle** Teile nennen; was fehlt, wird entzogen. Die Funktionen `flags` (Funktionsschalter des Dashboard-Typs) und `tts` lassen sich aus dieser Umgebung nicht sicher mitschreiben. Ob das Berechtigungsmenü des Artifacts eine Eingabe für Regeln bietet, ist nicht geprüft. Gesichert ist nur der Weg über eine Veröffentlichung der Deklaration, die für das typbasierte Dashboard von hier nicht möglich war (Werkzeug verlangt eine Seitendatei).
+
+## Weg ohne Regeländerung: Stufe „Editor“
+
+Gemeinsam schreiben darf, wer am Dashboard die Stufe **Editor** (Administrator) hat. Der Eigentümer vergibt sie im Teilen-Menü. Die App zeigt allen anderen den Hinweis „Gemeinsames Speichern ist nur mit der Stufe Editor möglich“. Nachteil: Editoren dürfen auch Seite und Datensätze ändern.
 
 ## Prüfen
 

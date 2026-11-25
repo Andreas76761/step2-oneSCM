@@ -4,7 +4,7 @@
 (function () {
   if (window.__roles) return;
   const ROLES = { Betrachter: 'Betrachter', Bearbeiter: 'Bearbeiter', Administrator: 'Administrator' };
-  const TEXT = { Betrachter: 'Sie können alles ansehen, aber keine Maßnahmen anlegen oder ändern.', Bearbeiter: 'Sie können Maßnahmen und Szenarien anlegen und Ihre eigenen ändern oder löschen.', Administrator: 'Sie können alle Maßnahmen und Szenarien ändern oder löschen.' };
+  const TEXT = { Betrachter: 'Sie können alles ansehen, aber keine Maßnahmen anlegen oder ändern.', Bearbeiter: 'Sie können Maßnahmen und Szenarien anlegen und Ihre eigenen ändern oder löschen. Gemeinsam gespeichert wird nur mit der Stufe „Editor“ am Dashboard.', Administrator: 'Sie können alle Maßnahmen und Szenarien ändern oder löschen.' };
   const LSK = 'aftersales-audit-v1';
   const R = { role: ROLES.Bearbeiter, uid: null, mode: 'lokal', db: null, audit: [], local: [], names: {}, cbs: [] };
   try { R.local = JSON.parse(localStorage.getItem(LSK) || '[]'); } catch (e) { R.local = []; }

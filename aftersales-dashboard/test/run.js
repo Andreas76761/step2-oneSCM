@@ -164,6 +164,19 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
   ok('Booklet ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
   await page.evaluate(() => { localStorage.removeItem('aftersales-scenarios-v1'); window.__sim.SCN.local.length = 0; });
 
+  sec('4i Hinweis auf Editor-Rechte');
+  const dp = await browser.newPage({ viewport: { width: 1360, height: 900 } }), derr = []; dp.on('pageerror', (e) => derr.push(e.message));
+  await dp.goto(url + '?stub=editor&deny=1', { waitUntil: 'load' }); await dp.waitForTimeout(900);
+  await dp.evaluate(() => window.__hod.show('ma')); await dp.waitForTimeout(400); await dp.fill('#ma-title', 'Test ohne Schreibrecht'); await dp.click('#ma-save'); await dp.waitForTimeout(500);
+  const dm = await dp.evaluate(() => document.getElementById('ma-msg').textContent);
+  ok('Maßnahme: verweigertes Speichern nennt die Stufe „Editor“', /Editor/.test(dm) && !/Datenbankregeln/.test(dm), dm);
+  await dp.evaluate(() => { window.__hod.show('sim'); window.__sim.S.cur = 's9'; window.__hodDraw.sim(); }); await dp.waitForTimeout(600);
+  await dp.fill('#sim-sc-name', 'Nur lokal'); await dp.click('#sim-sc-save'); await dp.waitForTimeout(500);
+  const sm = await dp.evaluate(() => ({ msg: document.querySelector('#sim-sc .note[role=status]').textContent, local: JSON.parse(localStorage.getItem('aftersales-scenarios-v1') || '[]').length }));
+  ok('Szenario: verweigertes gemeinsames Speichern nennt „Editor“ und sichert lokal', /Editor/.test(sm.msg) && sm.local === 1, JSON.stringify(sm));
+  ok('Hinweise ohne Skriptfehler', derr.length === 0, derr.slice(0, 2)); await dp.close();
+  await page.evaluate(() => { localStorage.removeItem('aftersales-scenarios-v1'); window.__sim.SCN.local.length = 0; });
+
   sec('4b Maßnahmen aus Kennzahlen (neue Register)');
   const pb = DATA('ma_playbook'), v3keys = { tv: 'vor_pct', er: 'absorption_pct', qg: 'claims_per_1000', lx: 'classic_fill_pct', el: 'hv_repair_rev_k' };
   ok('Playbook enthält Vorschläge für alle fünf neuen Register', Object.entries(v3keys).every(([b, k]) => pb.some((r) => r.kpi_id === b + '_' + k)), pb.length);
