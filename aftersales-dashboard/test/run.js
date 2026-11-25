@@ -77,6 +77,23 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
   ok('Barrierefreiheit ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
   await take('barrierefrei-tv');
 
+  sec('4e Datenanbindung und Datenqualität der neuen Datensätze');
+  const dq = await page.evaluate(() => { const d = dash.data('dq_checks3'); if (d.status !== 'ok') return { status: d.status, err: d.error }; const by = {}; d.data.forEach((r) => { (by[r.dataset] = by[r.dataset] || []).push(r.check + ':' + r.status); }); return { n: d.data.length, sets: Object.keys(by).length, warn: d.data.filter((r) => r.status !== 'OK').map((r) => r.dataset + ' · ' + r.check + ' · ' + r.detail), checks: by.tv_monthly }; });
+  ok('dq_checks3 rechnet (23 Datensätze)', dq.sets === 23 && dq.n > 100, JSON.stringify(dq).slice(0, 300));
+  ok('Monatsdatensätze: Vollständigkeit, Datenstand und Ausreißer werden geprüft', dq.checks && ['Vollständigkeit', 'Datenstand', 'Ausreißer', 'Monatsabdeckung'].every((c) => dq.checks.some((x) => x.startsWith(c))), dq.checks);
+  console.log('     Warnungen der Prüfung: ' + (dq.warn && dq.warn.length ? dq.warn.join(' | ') : 'keine'));
+  ok('Testdaten bestehen alle neuen Prüfungen (keine Warnung)', dq.warn && dq.warn.length === 0, dq.warn);
+  const cat3 = await page.evaluate(() => { const c = dash.data('data_catalog').data, k = dash.data('data_contract').data; return { cat: c.filter((r) => ['tv_monthly', 'er_monthly', 'qg_monthly', 'lx_monthly', 'el_monthly', 'sim_assumptions'].includes(r.dataset)).length, con: k.filter((r) => r.dataset === 'er_monthly').length, total: c.length }; });
+  const neg = await page.evaluate(() => { const raw = dash._raw.tv_monthly, snap = JSON.stringify(raw); raw.push(Object.assign({}, raw[0])); raw[3].vor_pct = null; raw[5].return_pct = 140; raw[7].supplier_ppm = 9e6; raw.pop(); raw.push(Object.assign({}, raw[0])); dash.calc('dq_checks3', dash._defs.dq_checks3); const r = dash.data('dq_checks3').data.filter((x) => x.dataset === 'tv_monthly' && x.status !== 'OK').map((x) => x.check); raw.length = 0; JSON.parse(snap).forEach((x) => raw.push(x)); dash.calc('dq_checks3', dash._defs.dq_checks3); return r; });
+  ok('Prüfung erkennt Fehler: leer, doppelt, über 100 %, Ausreißer, unvollständig', ['Leere Werte', 'Duplikate', 'Plausibilität', 'Ausreißer', 'Vollständigkeit'].every((c) => neg.includes(c)), neg);
+  ok('Datenkatalog und Datenvertrag enthalten die neuen Datensätze', cat3.cat === 6 && cat3.con === 14 && cat3.total === 71, JSON.stringify(cat3));
+  const dataKeys = DATA('data_contract'); const bad = []; DATA('data_catalog').forEach((c) => { const cols = new Set(dataKeys.filter((k) => k.dataset === c.dataset).map((k) => k.column)); let first; try { first = DATA(c.dataset)[0]; } catch (e) { bad.push(c.dataset + ' (Datei fehlt)'); return; } if (Array.isArray(DATA(c.dataset)) && first && typeof first === 'object') Object.keys(first).forEach((k) => { if (!cols.has(k) && cols.size) bad.push(c.dataset + '.' + k); }); });
+  ok('Datenvertrag deckt alle Spalten der Datensätze ab', bad.length === 0, bad.slice(0, 6));
+  errors.length = 0; await page.evaluate(() => window.__hod.show('da')); await page.waitForTimeout(500);
+  const da = await page.evaluate(() => { const t = document.getElementById('tb-da-dq'), c = document.getElementById('tb-da-cat'); return { dq: t ? [...t.tBodies[0].rows].filter((r) => /tv_monthly|sim_assumptions/.test(r.textContent)).length : -1, cat: c ? [...c.tBodies[0].rows].some((r) => /sim_assumptions/.test(r.textContent)) : false }; });
+  ok('Register Datenanbindung zeigt Prüfungen und Katalog der neuen Datensätze', da.dq > 0 && da.cat && errors.length === 0, JSON.stringify(da) + errors.slice(0, 1));
+  await take('datenanbindung');
+
   sec('4b Maßnahmen aus Kennzahlen (neue Register)');
   const pb = DATA('ma_playbook'), v3keys = { tv: 'vor_pct', er: 'absorption_pct', qg: 'claims_per_1000', lx: 'classic_fill_pct', el: 'hv_repair_rev_k' };
   ok('Playbook enthält Vorschläge für alle fünf neuen Register', Object.entries(v3keys).every(([b, k]) => pb.some((r) => r.kpi_id === b + '_' + k)), pb.length);

@@ -148,7 +148,7 @@
     sorts.set(t, { f: th.dataset.field, dir: s && s.f === th.dataset.field && s.dir === 'asc' ? 'desc' : 'asc' }); drawDa();
   }));
   function drawDa() {
-    const cat = rowsOf('data_catalog'), dq = rowsOf('dq_checks'), con = rowsOf('data_contract');
+    const cat = rowsOf('data_catalog'), dq0 = rowsOf('dq_checks'), dq3 = rowsOf('dq_checks3'), dq = dq0 ? dq0.concat(dq3 || []) : null, con = rowsOf('data_contract');
     if (cat) simpleTable($('tb-da-cat'), cat, ['dataset', 'title', 'used_in', 'grain', 'rows', 'last_month', 'source_proposal', 'refresh', 'status'].map((f) => ({ get: (r) => (f === 'rows' ? nf0.format(r.rows) : String(r[f])), cls: (r) => (f === 'status' ? 'warn' : '') })), 'dataset', qOf('tb-da-cat'));
     if (dq) simpleTable($('tb-da-dq'), dq.filter((r) => dqF.value === 'Alle' || r.status === dqF.value), ['dataset', 'check', 'status', 'detail'].map((f) => ({ get: (r) => String(r[f]), cls: (r) => (f === 'status' ? (r.status === 'OK' ? 'good' : 'bad') : '') })), 'id', qOf('tb-da-dq'));
     if (con) {

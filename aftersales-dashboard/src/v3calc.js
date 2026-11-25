@@ -106,3 +106,41 @@ dash.calc('ma_suggest3', { title: 'Maßnahmenvorschläge (Version 3.0)', descrip
     });
     return out;
   } });
+
+// Datenqualität der Datensätze der Version 3.0: Zeilen, Vollständigkeit, Monatsabdeckung, Datenstand, leere Werte, Duplikate, Plausibilität und Ausreißer.
+dash.calc('dq_checks3', { title: 'Datenqualitäts-Prüfungen (Version 3.0)', description: 'Prüfungen der neuen Datensätze: Zeilen, Vollständigkeit, Monatsabdeckung, Datenstand, leere Werte, Duplikate, Plausibilität und Ausreißer.', inputs: ["tv_monthly", "er_monthly", "qg_monthly", "lx_monthly", "el_monthly", "tv_dealer", "er_dealer", "tv_part", "tv_supplier", "qg_issue", "qg_recall", "qg_series", "lx_segment", "lx_classic", "el_segment", "sim_params", "sim_assumptions", "sim_hubs", "sim_programs", "sim_regions", "sim_sku", "sim_coupling", "ma_playbook"],
+  fn: (...args) => {
+    const spec = [["tv_monthly", ["region", "month"]], ["er_monthly", ["region", "month"]], ["qg_monthly", ["region", "month"]], ["lx_monthly", ["region", "month"]], ["el_monthly", ["region", "month"]], ["tv_dealer", ["id"]], ["er_dealer", ["id"]], ["tv_part", ["part_no"]], ["tv_supplier", ["supplier"]], ["qg_issue", ["component"]], ["qg_recall", ["campaign"]], ["qg_series", ["series"]], ["lx_segment", ["segment"]], ["lx_classic", ["age_band"]], ["el_segment", ["topic"]], ["sim_params", ["sim", "key"]], ["sim_assumptions", ["sim", "key"]], ["sim_hubs", ["hub"]], ["sim_programs", ["id"]], ["sim_regions", ["region"]], ["sim_sku", ["klass"]], ["sim_coupling", ["effect", "driver"]], ["ma_playbook", ["kpi_id"]]], REGIONS = 6, NOPCT = ['absorption_pct', 'fx_effect_pct', 'price_gap_pct', 'effect_pct', 'effect_sd'], OPTIONAL = ['hint', 'note', 'unit']; // Spalten, die laut Datenvertrag leer sein dürfen
+    const isCount = (c) => /_k$|_m$|_count$/.test(c) || ['orders_month', 'claims', 'vehicles_k', 'daily_demand', 'annual_demand', 'ppm', 'open_days', 'lead_time_d'].includes(c);
+    const mi = (m) => +m.slice(0, 4) * 12 + +m.slice(5, 7);
+    const data = Object.fromEntries(spec.map(([id], i) => [id, args[i]]));
+    const stand = Object.values(data).filter((r) => r.length && 'month' in r[0]).flatMap((r) => r.map((x) => x.month)).sort().pop();
+    const out = [];
+    for (const [id, keys] of spec) {
+      const rows = data[id], add = (check, bad, detail) => out.push({ id: id + '|' + check, dataset: id, check, status: bad ? 'Warnung' : 'OK', detail });
+      add('Zeilen', !rows.length, rows.length.toLocaleString('de-DE') + ' Zeilen'); if (!rows.length) continue;
+      const cols = Object.keys(rows[0]), monthly = 'month' in rows[0];
+      if (monthly) {
+        const ms = [...new Set(rows.map((r) => r.month))].sort(); let gaps = 0; for (let i = 1; i < ms.length; i++) if (mi(ms[i]) - mi(ms[i - 1]) !== 1) gaps += 1;
+        add('Monatsabdeckung', gaps > 0 || ms.length < 12, ms.length + ' Monate (' + ms[0] + ' bis ' + ms[ms.length - 1] + ')' + (gaps ? ', ' + gaps + ' Lücke(n)' : ''));
+        add('Datenstand', ms[ms.length - 1] !== stand, 'letzter Monat ' + ms[ms.length - 1] + (ms[ms.length - 1] === stand ? ' (aktuell)' : ', erwartet ' + stand));
+        if ('region' in rows[0]) { const exp = REGIONS * ms.length; add('Vollständigkeit', rows.length !== exp, rows.length + ' von ' + exp + ' erwarteten Zeilen (' + REGIONS + ' Regionen × ' + ms.length + ' Monate)'); }
+      }
+      const nums = cols.filter((c) => typeof rows[0][c] === 'number'); let empty = 0, neg = 0, pct = 0;
+      for (const r of rows) for (const c of cols) {
+        const v = r[c]; if (v === null || v === undefined || v === '' || (typeof v === 'number' && !Number.isFinite(v))) { if (!OPTIONAL.includes(c)) empty += 1; continue; }
+        if (typeof v === 'number') { if (isCount(c) && v < 0) neg += 1; if (/_pct$/.test(c) && !NOPCT.includes(c) && (v < 0 || v > 100)) pct += 1; }
+      }
+      add('Leere Werte', empty > 0, empty + ' leere oder ungültige Werte');
+      const seen = new Set(); let dup = 0; for (const r of rows) { const k = keys.map((c) => r[c]).join('|'); if (seen.has(k)) dup += 1; else seen.add(k); }
+      add('Duplikate', dup > 0, dup + ' doppelte Schlüssel (' + keys.join(' + ') + ')');
+      add('Plausibilität', neg + pct > 0, pct + ' Quoten außerhalb 0–100 %, ' + neg + ' negative Mengen');
+      if (monthly && 'region' in rows[0]) {
+        let out3 = 0; const byR = new Map(); rows.forEach((r) => { if (!byR.has(r.region)) byR.set(r.region, []); byR.get(r.region).push(r); });
+        const med = (v) => { const q = v.slice().sort((x, y) => x - y), h = q.length >> 1; return q.length % 2 ? q[h] : (q[h - 1] + q[h]) / 2; };
+        for (const [, rr] of byR) for (const c of nums) { const vs = rr.map((r) => r[c]), m = med(vs), mad = med(vs.map((v) => Math.abs(v - m))); if (!mad) continue; vs.forEach((v) => { if (0.6745 * Math.abs(v - m) / mad > 3.5 * 2) out3 += 1; }); }
+        add('Ausreißer', out3 > 0, out3 + ' Werte, die robust (Median und MAD) stark vom Verlauf der Region abweichen');
+      }
+    }
+    return out;
+  } });
