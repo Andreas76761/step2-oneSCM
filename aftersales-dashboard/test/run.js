@@ -240,6 +240,14 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
   ok('Ältere Register ohne Skriptfehler', errors.length === 0, errors.slice(0, 3).join(' | '));
   await page.evaluate(() => window.__hod.show('lg')); await page.waitForTimeout(500); await take('lg-vorjahr-ranking');
 
+  sec('4q Szenarien als CSV exportieren');
+  await openSim4a(page); await page.fill('#sim-sc-name', 'CSV Test'); await page.click('#sim-sc-save'); await page.waitForTimeout(300);
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 5000 }).catch(() => null), page.click('#sim-sc-csv')]);
+  let csvTxt = ''; if (dl) { const pth = await dl.path(); csvTxt = fs.readFileSync(pth, 'utf8'); }
+  ok('Szenarien als CSV: Datei „Szenarien_….csv“ wird erzeugt', !!dl && /^Szenarien_\d{4}-\d{2}-\d{2}\.csv$/.test(dl.suggestedFilename()), dl && dl.suggestedFilename());
+  ok('CSV: Kopfzeile wie im Excel-Blatt, Szenario mit Ergebnissen', /Modell;Szenario;Gespeichert;Ablage;Abweichende Regler;Ergebnis;Wert/.test(csvTxt) && /Gesamtrechnung \(gekoppelt\);CSV Test;/.test(csvTxt) && /Betriebsergebnis, Planwert/.test(csvTxt), csvTxt.slice(0, 300));
+  await page.evaluate(() => { localStorage.removeItem('aftersales-scenarios-v1'); window.__sim.SCN.local.length = 0; });
+
   sec('4m Handy-Ansicht (390 px): keine Seite läuft über');
   const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }), mob = await mctx.newPage(), moberr = []; mob.on('pageerror', (e) => moberr.push(e.message));
   await mob.goto(url, { waitUntil: 'load' }); await mob.waitForTimeout(900);

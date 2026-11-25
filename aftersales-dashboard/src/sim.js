@@ -263,6 +263,17 @@
     if (sc.shared) { try { await SCN.db.doc('scenarios/' + sc.id).delete(); SCN.msg = 'Szenario gelöscht.'; } catch (e) { SCN.msg = 'Löschen nicht möglich.'; } } else { SCN.local = SCN.local.filter((x) => x.id !== sc.id); lsSet(); SCN.msg = 'Szenario gelöscht.'; }
     const set = SCN.cmp[sc.sim]; if (set) set.delete(sc.id);
   }
+  // Export aller gespeicherten Szenarien als CSV (Spalten wie das Blatt „Szenarien“ im Excel-Template)
+  function scCsv() {
+    const q = (v) => { const t = String(v == null ? '' : v); return /[;"\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; }, fd = (iso) => (iso ? iso.slice(0, 10) : ''), rows = [['Modell', 'Szenario', 'Gespeichert', 'Ablage', 'Abweichende Regler', 'Ergebnis', 'Wert']];
+    SIMS.forEach((m) => { const ps = params(m.id); scList(m.id).slice().reverse().forEach((sc) => { const dev = ps.filter((p) => sc.vals && sc.vals[p.key] !== p.value).map((p) => p.label + ' ' + sc.vals[p.key] + (p.unit ? ' ' + p.unit : '')).join('; ') || 'Voreinstellungen'; (sc.tiles && sc.tiles.length ? sc.tiles : [{ l: '', f: '' }]).forEach((t) => rows.push([m.title, sc.name, fd(sc.created), sc.shared ? 'für alle' : 'lokal', dev, t.l, t.f])); }); });
+    return '\ufeff' + rows.map((r) => r.map(q).join(';')).join('\r\n') + '\r\n';
+  }
+  async function scExport() {
+    const blob = new Blob([scCsv()], { type: 'text/csv;charset=utf-8' }), name = 'Szenarien_' + new Date().toISOString().slice(0, 10) + '.csv';
+    try { const c = window.claude, dl = c && c.use ? await c.use('downloads') : null; if (dl) { await dl.save({ filename: name, data: blob }); SCN.msg = 'CSV gespeichert.'; return; } } catch (e) { if (e && e.code === 'declined') { SCN.msg = 'Speichern abgebrochen.'; return; } }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); SCN.msg = 'CSV erzeugt.';
+  }
   function scLoad(sc) {
     S.vals[sc.sim] = Object.assign({}, sc.vals); if (sc.seed) S.seed = sc.seed; const st = S.ex[sc.sim] = S.ex[sc.sim] || { redo: null };
     if (sc.extra && sc.extra.supplier) st.supplier = sc.extra.supplier; if (sc.extra && sc.extra.hubs) st.hubs = new Set(sc.extra.hubs);
@@ -288,7 +299,7 @@
     const c = el('div', 'card'); c.id = 'sim-sc'; const hd = el('div', 'cardhead'); hd.append(el('h3', null, 'Szenarien speichern und vergleichen')); c.append(hd, el('p', 'note', 'Die aktuelle Einstellung samt Ergebnis unter einem Namen sichern, später wieder laden und mehrere Szenarien nebeneinander vergleichen.'));
     const row = el('div', 'toprow regrow'), inp = el('input'); inp.type = 'text'; inp.id = 'sim-sc-name'; inp.placeholder = 'Name, z. B. „Preis +3 %, Lager −10 %“'; inp.setAttribute('aria-label', 'Name des Szenarios'); inp.maxLength = 80; inp.style.minWidth = '260px'; row.append(inp);
     let chk = null; if (SCN.db) { const l = el('label', 'flt'); chk = el('input'); chk.type = 'checkbox'; chk.checked = !RLs() || RLs().can.write(); chk.disabled = !!RLs() && !RLs().can.write(); chk.id = 'sim-sc-share'; l.append(chk, ' für alle sichtbar speichern'); row.append(l); }
-    const bs = el('button', 'bkbtn', 'Szenario speichern'); bs.type = 'button'; bs.id = 'sim-sc-save'; row.append(bs); c.append(row);
+    const bs = el('button', 'bkbtn', 'Szenario speichern'); bs.type = 'button'; bs.id = 'sim-sc-save'; row.append(bs); const bx = el('button', 'bkbtn', 'Szenarien als CSV'); bx.type = 'button'; bx.id = 'sim-sc-csv'; bx.addEventListener('click', async () => { await scExport(); redrawSc(); }); row.append(bx); c.append(row);
     bs.addEventListener('click', async () => { bs.disabled = true; try { await scSave(inp.value, chk ? chk.checked : false, r); } finally { bs.disabled = false; } redrawSc(); });
     const msg = el('p', 'note', SCN.msg || ''); msg.setAttribute('role', 'status'); c.append(msg);
     const list = scList(S.cur);
@@ -304,6 +315,6 @@
     }
     box.append(c);
   }
-  window.__sim = { SIMS, S, SCN, scenarios: (id) => scList(id), fingerprint: fpOf, summary: () => { const out = []; const keep = { cur: S.cur }; SIMS.forEach((s) => { try { const ps = params(s.id), vals = Object.fromEntries(ps.map((p) => [p.key, p.value])), st = S.ex[s.id] = S.ex[s.id] || { redo: () => 0, seed: S.seed }; const v = S.vals[s.id] || vals; const r = s.run(v, Object.assign(st, { seed: S.seed })); if (r) out.push({ id: s.id, title: s.title, tiles: r.tiles.map((t) => [t.l, t.f(t.v)]), text: r.text, table: r.table }); } catch (e) { /* Simulation überspringen */ } }); S.cur = keep.cur; return out; } };
+  window.__sim = { SIMS, S, SCN, scenarios: (id) => scList(id), fingerprint: fpOf, csv: scCsv, summary: () => { const out = []; const keep = { cur: S.cur }; SIMS.forEach((s) => { try { const ps = params(s.id), vals = Object.fromEntries(ps.map((p) => [p.key, p.value])), st = S.ex[s.id] = S.ex[s.id] || { redo: () => 0, seed: S.seed }; const v = S.vals[s.id] || vals; const r = s.run(v, Object.assign(st, { seed: S.seed })); if (r) out.push({ id: s.id, title: s.title, tiles: r.tiles.map((t) => [t.l, t.f(t.v)]), text: r.text, table: r.table }); } catch (e) { /* Simulation überspringen */ } }); S.cur = keep.cur; return out; } };
   window.__hodDraw.sim = () => { build(); render(); };
 })();
