@@ -1,0 +1,282 @@
+[
+{
+"sim": "s1",
+"key": "horizon_weeks",
+"label": "Betrachtungszeitraum",
+"value": 40,
+"unit": "Wochen",
+"hint": "Länge der Wochenrechnung"
+},
+{
+"sim": "s1",
+"key": "outage_start_week",
+"label": "Beginn des Ausfalls",
+"value": 4,
+"unit": "Woche",
+"hint": "Ab dieser Woche (0 = erste) fällt der Lieferant aus"
+},
+{
+"sim": "s1",
+"key": "service_threshold_pct",
+"label": "Schwelle Lieferfähigkeit",
+"value": 92,
+"unit": "%",
+"hint": "Wochen darunter zählen als „unter Ziel“"
+},
+{
+"sim": "s1",
+"key": "buffer_refill_pct",
+"label": "Wiederauffüllung Sicherheitsbestand",
+"value": 15,
+"unit": "% der Wochenmenge",
+"hint": "Je Woche ohne Ausfall"
+},
+{
+"sim": "s2",
+"key": "sales_rate_pct",
+"label": "Neuzulassungsrate",
+"value": 7.5,
+"unit": "% des Bestands p. a.",
+"hint": "Anteil Neufahrzeuge am Fahrzeugbestand"
+},
+{
+"sim": "s2",
+"key": "bev_share_2026",
+"label": "Elektroanteil Neufahrzeuge 2026",
+"value": 14,
+"unit": "%",
+"hint": "Ausgangswert für die Entwicklung bis 2030"
+},
+{
+"sim": "s2",
+"key": "phev_cap_pct",
+"label": "Obergrenze Plug-in-Hybrid",
+"value": 15,
+"unit": "% der Neufahrzeuge",
+"hint": ""
+},
+{
+"sim": "s2",
+"key": "phev_factor",
+"label": "Teileumsatz Plug-in-Hybrid zu Verbrenner",
+"value": 0.9,
+"unit": "Faktor",
+"hint": ""
+},
+{
+"sim": "s2",
+"key": "scrap_base_pct",
+"label": "Verschrottungsrate Grundwert",
+"value": 5.5,
+"unit": "% p. a.",
+"hint": ""
+},
+{
+"sim": "s2",
+"key": "scrap_ice_extra_pct",
+"label": "Verschrottung Zuschlag Verbrenner",
+"value": 1,
+"unit": "Pkt. p. a.",
+"hint": "Gewichtet mit dem Verbrenner-Anteil"
+},
+{
+"sim": "s3",
+"key": "cost_share_pct",
+"label": "Kostenanteil am Preis",
+"value": 62,
+"unit": "%",
+"hint": "Warenkosten; Teilemarge = 100 % minus Anteil"
+},
+{
+"sim": "s3",
+"key": "leak_slope_pct",
+"label": "Parallelimport-Verlust je Prozentpunkt",
+"value": 1.2,
+"unit": "% der Menge",
+"hint": "Über der Schwelle"
+},
+{
+"sim": "s3",
+"key": "leak_cap_pct",
+"label": "Obergrenze Parallelimport-Verlust",
+"value": 15,
+"unit": "% der Menge",
+"hint": ""
+},
+{
+"sim": "s4",
+"key": "items",
+"label": "Artikel im Sortiment",
+"value": 4000,
+"unit": "Artikel",
+"hint": "Hochrechnung der Teileklassen"
+},
+{
+"sim": "s4",
+"key": "days",
+"label": "Simulierte Tage je Lauf",
+"value": 240,
+"unit": "Tage",
+"hint": ""
+},
+{
+"sim": "s4",
+"key": "runs",
+"label": "Läufe je Servicegrad",
+"value": 14,
+"unit": "Läufe",
+"hint": ""
+},
+{
+"sim": "s5",
+"key": "road_factor",
+"label": "Umwegfaktor Straße",
+"value": 1.3,
+"unit": "Faktor",
+"hint": "Luftlinie mal Faktor = Fahrstrecke"
+},
+{
+"sim": "s5",
+"key": "shipments_per_dealer_week",
+"label": "Sendungen je Händler und Woche",
+"value": 0.4,
+"unit": "Sendungen",
+"hint": ""
+},
+{
+"sim": "s5",
+"key": "shipments_scale_dealers",
+"label": "Bezugsgröße Händler für Fracht",
+"value": 120,
+"unit": "Händler",
+"hint": "Frachtkosten werden auf diese Händlerzahl bezogen"
+},
+{
+"sim": "s6",
+"key": "runs",
+"label": "Zufallsläufe",
+"value": 4000,
+"unit": "Läufe",
+"hint": ""
+},
+{
+"sim": "s6",
+"key": "base_cv_pct",
+"label": "Schwankung laufende Reklamationen",
+"value": 8,
+"unit": "%",
+"hint": "Je Jahr"
+},
+{
+"sim": "s6",
+"key": "systemic_mult",
+"label": "Faktor bei systemischem Serienfehler",
+"value": 1.9,
+"unit": "Faktor",
+"hint": "Mittel der Zusatzreklamationen"
+},
+{
+"sim": "s6",
+"key": "tail_cv",
+"label": "Streuung (Serienfehler und Rückruf)",
+"value": 0.35,
+"unit": "Variationskoeffizient",
+"hint": ""
+},
+{
+"sim": "s7",
+"key": "days",
+"label": "Betrachtete Arbeitstage",
+"value": 20,
+"unit": "Tage",
+"hint": ""
+},
+{
+"sim": "s7",
+"key": "open_h",
+"label": "Öffnung der Werkstatt",
+"value": 8,
+"unit": "Uhr",
+"hint": ""
+},
+{
+"sim": "s7",
+"key": "close_h",
+"label": "Schluss der Werkstatt",
+"value": 17,
+"unit": "Uhr",
+"hint": ""
+},
+{
+"sim": "s7",
+"key": "hv_job_factor",
+"label": "Dauer Hochvolt-Auftrag zu Standard",
+"value": 1.4,
+"unit": "Faktor",
+"hint": ""
+},
+{
+"sim": "s7",
+"key": "job_cv",
+"label": "Streuung der Auftragsdauer",
+"value": 0.45,
+"unit": "Variationskoeffizient",
+"hint": ""
+},
+{
+"sim": "s7",
+"key": "max_job_h",
+"label": "Längste Auftragsdauer",
+"value": 8.5,
+"unit": "Std.",
+"hint": "Längere Aufträge werden gekappt"
+},
+{
+"sim": "s8",
+"key": "runs",
+"label": "Zufallsläufe",
+"value": 2000,
+"unit": "Läufe",
+"hint": ""
+},
+{
+"sim": "s8",
+"key": "scale_dealers",
+"label": "Bezugsgröße Händler",
+"value": 120,
+"unit": "Händler",
+"hint": "Programmkosten und Nutzen skalieren mit Händler / Bezugsgröße"
+},
+{
+"sim": "s9",
+"key": "warranty_variable_pct",
+"label": "Variabler Anteil der Garantiekosten",
+"value": 90,
+"unit": "%",
+"hint": "Rest sind feste Garantiekosten"
+},
+{
+"sim": "s9",
+"key": "fill_otd_coef",
+"label": "Wirkung Termintreue auf Lieferfähigkeit",
+"value": 0.8,
+"unit": "Faktor",
+"hint": "Zusätzlich zum Kopplungsfaktor Fehlmenge/Termintreue"
+},
+{
+"sim": "s9",
+"key": "fill_stock_coef",
+"label": "Wirkung Lager auf Lieferfähigkeit",
+"value": 0.2,
+"unit": "Faktor",
+"hint": "Zusätzlich zum Kopplungsfaktor Lager/Lieferfähigkeit"
+},
+{
+"sim": "s9",
+"key": "fill_cap",
+"label": "Obergrenze Lieferfähigkeit",
+"value": 99.5,
+"unit": "%",
+"hint": ""
+}
+]

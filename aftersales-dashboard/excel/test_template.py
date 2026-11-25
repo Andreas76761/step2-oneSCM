@@ -24,6 +24,8 @@ g = wb['Sim_Gesamt']; ohne = by_label(g, 'ohne Hebel (k€)'); abw = by_label(g,
 chk('Sim_Gesamt: ohne Hebel = Betriebsergebnis Register Ertrag', isinstance(ohne, (int, float)) and abs(ohne - ref) < 0.01, (ohne, ref))
 chk('Sim_Gesamt: Abweichung zum Register = 0', isinstance(abw, (int, float)) and abs(abw) < 1e-6, abw)
 p = wb['Sim_Preis_Zoll']; chk('Sim_Preis_Zoll: Zeile „Neue Regionen“ vorhanden', any('Neue Regionen' in str(p.cell(rw, 1).value) for rw in range(20, 35)))
+s1 = wb['Sim_Stresstest']; chk('Sim_Stresstest: Umsatz im Risiko = Dashboard-Referenz (429,19)', abs(by_label(s1, 'Umsatz im Risiko') - 429.194423) < 0.01, by_label(s1, 'Umsatz im Risiko'))
+chk('Sim_Preis_Zoll: Δ Umsatz = Dashboard-Referenz (−1355,29)', abs(by_label(p, 'Δ Umsatz') + 1355.289716) < 0.01, by_label(p, 'Δ Umsatz'))
 abs_ = [x['absorption_pct'] for x in load('er_monthly')]; chk('Absorptionsquote ohne Deckelung', max(abs_) >= 100, max(abs_))
 shutil.rmtree(tmp, ignore_errors=True)
 print('\n%d von %d Prüfungen bestanden' % (sum(res), len(res))); sys.exit(0 if all(res) else 1)

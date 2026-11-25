@@ -17,6 +17,8 @@ def s1(wb):
     ws['A4']='Ausgefallener Lieferant'; ws['B4']=best; ws['B4'].fill=INP
     dv=DataValidation(type='list',formula1=f'=tv_supplier!$A$2:$A${len(sup)+1}'); ws.add_data_validation(dv); dv.add('B4')
     c=inputs(ws,5,[('Ausfalldauer','O',pv('s1.outage_weeks'),'Wochen'),('Sicherheitsbestand','S',pv('s1.safety_weeks'),'Wochen'),('Zusätzliche Alternativ-Quelle','A',pv('s1.alt_boost'),'% der Menge'),('Wiederanlauf','R',pv('s1.recovery_weeks'),'Wochen'),('Teilemarge','M',pv('s1.margin_pct'),'%'),('VOR-Fahrzeuge je 100 k€ Fehlmenge','V',pv('s1.vor_per_100k'),'Fahrzeuge')])
+    ws['D5']='Beginn des Ausfalls (Woche, 0 = erste)'; ws['E5']='='+'SUMIFS(sim_assumptions!$D$2:$D$60,sim_assumptions!$A$2:$A$60,"s1",sim_assumptions!$B$2:$B$60,"outage_start_week")'; ws['D6']='Schwelle Lieferfähigkeit (%)'; ws['E6']='='+'SUMIFS(sim_assumptions!$D$2:$D$60,sim_assumptions!$A$2:$A$60,"s1",sim_assumptions!$B$2:$B$60,"service_threshold_pct")'; ws['D7']='Wiederauffüllung Sicherheitsbestand (%)'; ws['E7']='='+'SUMIFS(sim_assumptions!$D$2:$D$60,sim_assumptions!$A$2:$A$60,"s1",sim_assumptions!$B$2:$B$60,"buffer_refill_pct")'
+    ws['D4']='Annahmen (Datenblatt sim_assumptions)'; ws['D4'].font=BOLD
     ws['A12']='Umsatz der letzten zwölf Monate'; ws['B12']='='+BASEREV; ws['C12']='k€'
     ws['A13']='Wochenumsatz'; ws['B13']='=B12/52'; ws['B13'].number_format='#,##0.0'; ws['B12'].number_format='#,##0'
     ws['A14']='Anteil an den Einkaufsausgaben'; ws['B14']='=INDEX(tv_supplier!$D$2:$D$19,MATCH($B$4,tv_supplier!$A$2:$A$19,0))/100'; ws['B14'].number_format='0.0%'
@@ -39,11 +41,11 @@ def s1(wb):
         r=T0+t; ws.cell(r,1,t+1)
         for i,b0 in enumerate(blocks):
             sr=18+i; o,d,bf,u=[CL(b0+k) for k in range(4)]
-            ws.cell(r,b0,f'=IF(AND({t}>=4,{t}<4+$B$5),1,IF(AND({t}>=4+$B$5,{t}<4+$B$5+$D${sr}),1-({t}-4-$B$5+1)/($D${sr}+1),0))')
+            ws.cell(r,b0,f'=IF(AND({t}>=$E$5,{t}<$E$5+$B$5),1,IF(AND({t}>=$E$5+$B$5,{t}<$E$5+$B$5+$D${sr}),1-({t}-$E$5-$B$5+1)/($D${sr}+1),0))')
             ws.cell(r,b0+1,f'=$B$14*$B$13*(1-$E${sr})*{o}{r}')
             prev=f'$F${sr}' if t==0 else f'{bf}{r-1}'
             # Puffer nach der Woche
-            ws.cell(r,b0+2,f'=IF({d}{r}>0,{prev}-MIN({prev},{d}{r}),IF({prev}<$F${sr},MIN($F${sr},{prev}+$B$14*$B$13*0.15),{prev}))')
+            ws.cell(r,b0+2,f'=IF({d}{r}>0,{prev}-MIN({prev},{d}{r}),IF({prev}<$F${sr},MIN($F${sr},{prev}+$B$14*$B$13*$E$7/100),{prev}))')
             ws.cell(r,b0+3,f'=IF({d}{r}>0,{d}{r}-MIN({prev},{d}{r}),0)')
         ws.cell(r,19,f'=100*(1-F{r}/$B$13)'); ws.cell(r,20,f'=F{r}/100*$B$10')
         for cc in range(3,21): ws.cell(r,cc).number_format='0.0'
@@ -52,7 +54,7 @@ def s1(wb):
         for cc in (5,): ws.cell(r,cc).number_format='0.0%'
         for cc in (6,7,8): ws.cell(r,cc).number_format='#,##0'
     ws['A24']='Ergebnisse (Basis)'; ws['A24'].font=BOLD
-    res=[('Umsatz im Risiko (k€)','=G18','#,##0'),('Margenverlust (k€)','=G18*B9/100','#,##0'),('Spitze stehender Fahrzeuge je Woche',f'=MAX(T{T0}:T{T0+39})','0.0'),('Wochen unter 92 % Lieferfähigkeit',f'=COUNTIF(S{T0}:S{T0+39},"<92")','0'),('Sicherheitsbestand reicht (Wochen)','=IF(B14*(1-E18)>0,F18/(B14*B13*(1-E18)),99)','0.0'),('Hebel mit der größten Wirkung','=INDEX(A19:A21,MATCH(MIN(H19:H21),H19:H21,0))',None)]
+    res=[('Umsatz im Risiko (k€)','=G18','#,##0'),('Margenverlust (k€)','=G18*B9/100','#,##0'),('Spitze stehender Fahrzeuge je Woche',f'=MAX(T{T0}:T{T0+39})','0.0'),('Wochen unter der Schwelle Lieferfähigkeit',f'=COUNTIF(S{T0}:S{T0+39},"<"&$E$6)','0'),('Sicherheitsbestand reicht (Wochen)','=IF(B14*(1-E18)>0,F18/(B14*B13*(1-E18)),99)','0.0'),('Hebel mit der größten Wirkung','=INDEX(A19:A21,MATCH(MIN(H19:H21),H19:H21,0))',None)]
     for i,(a,f,nf) in enumerate(res):
         ws.cell(25+i,1,a); c=ws.cell(25+i,2,f); c.font=BOLD
         if nf: c.number_format=nf
@@ -65,17 +67,18 @@ def s3(wb):
     inputs(ws,4,[('Preisänderung Teile','p',pv('s3.price_pct'),'%'),('Zollsatz auf Importteile','t',pv('s3.tariff_pct'),'%'),('Währungsänderung (Lokalwährung zum Euro)','f',pv('s3.fx_pct'),'%'),('Preiselastizität der Nachfrage','e',pv('s3.elasticity'),''),('Weitergabe der Kosten in den Preis','w',pv('s3.passthrough'),'%'),('Schwelle Parallelimport (Preisabstand)','h',pv('s3.parallel_thr'),'%')])
     ws['A10']='Umsatz der letzten zwölf Monate'; ws['B10']='='+BASEREV; ws['C10']='k€'
     ws['D3']='Alle Änderungen (Δ) sind gegen die Basis gerechnet: Parallelimport, der schon ohne Preis-, Zoll- und Währungsänderung auftritt, ist herausgerechnet.'; ws['D3'].font=BOLD
-    ws['A11']='Annahme Kostenanteil am Preis'; ws['B11']=0.62; ws['B11'].fill=INP; ws['B11'].number_format='0%'
+    ws['A11']='Annahme Kostenanteil am Preis'; ws['B11']='='+'SUMIFS(sim_assumptions!$D$2:$D$60,sim_assumptions!$A$2:$A$60,"s3",sim_assumptions!$B$2:$B$60,"cost_share_pct")'+'/100'; ws['B11'].number_format='0%'
+    ws['D4']='Annahmen (Datenblatt sim_assumptions)'; ws['D4'].font=BOLD; ws['D5']='Parallelimport-Verlust je Prozentpunkt (%)'; ws['E5']='='+'SUMIFS(sim_assumptions!$D$2:$D$60,sim_assumptions!$A$2:$A$60,"s3",sim_assumptions!$B$2:$B$60,"leak_slope_pct")'; ws['D6']='Obergrenze Verlust (%)'; ws['E6']='='+'SUMIFS(sim_assumptions!$D$2:$D$60,sim_assumptions!$A$2:$A$60,"s3",sim_assumptions!$B$2:$B$60,"leak_cap_pct")'
     h=['Region','Importanteil %','Währungsanteil %','Preisabstand %','Menge k/Monat','Kostenanstieg','Preis Δ','Umsatzbasis (k€)','Preisabstand neu %','Verlust Parallelimport','Menge Δ','Umsatz neu (k€)','Marge Basis (k€)','Marge neu (k€)','Δ Umsatz (k€)','Δ Marge (k€)','Basis-Parallelimport (Verlust Menge)','Umsatz Basis (k€)']
     head(ws,13,h)
     for i in range(5):
         r=14+i; s=i+2
         for j,cn in enumerate('ABCDE'): ws.cell(r,1+j,f'=sim_regions!{cn}{s}')
         ws.cell(r,6,f'=$B$11*($B$5/100*B{r}/100+MAX(0,-$B$6/100)*C{r}/100)'); ws.cell(r,7,f'=$B$4/100+$B$8/100*F{r}')
-        ws.cell(r,8,f'=$B$10*E{r}/4600'); ws.cell(r,9,f'=D{r}+(G{r}-$G$14)*100')
-        ws.cell(r,10,f'=IF(I{r}>$B$9,MIN(0.15,0.012*(I{r}-$B$9)),0)'); ws.cell(r,11,f'=$B$7*G{r}-J{r}')
+        ws.cell(r,8,f'=$B$10*E{r}/SUM($E$14:$E$18)'); ws.cell(r,9,f'=D{r}+(G{r}-$G$14)*100')
+        ws.cell(r,10,f'=IF(I{r}>$B$9,MIN($E$6/100,$E$5/100*(I{r}-$B$9)),0)'); ws.cell(r,11,f'=$B$7*G{r}-J{r}')
         ws.cell(r,12,f'=H{r}*(1+G{r})*(1+K{r})*(1+$B$6/100*C{r}/100)')
-        ws.cell(r,17,f'=IF(D{r}>$B$9,MIN(0.15,0.012*(D{r}-$B$9)),0)'); ws.cell(r,18,f'=H{r}*(1-Q{r})')
+        ws.cell(r,17,f'=IF(D{r}>$B$9,MIN($E$6/100,$E$5/100*(D{r}-$B$9)),0)'); ws.cell(r,18,f'=H{r}*(1-Q{r})')
         ws.cell(r,13,f'=R{r}-H{r}*$B$11*(1-Q{r})'); ws.cell(r,14,f'=L{r}-H{r}*$B$11*(1+K{r})*(1+F{r})')
         ws.cell(r,15,f'=L{r}-R{r}'); ws.cell(r,16,f'=N{r}-M{r}')
         for cc,nf in ((6,'0.0%'),(7,'0.0%'),(10,'0.0%'),(11,'0.0%'),(8,'#,##0'),(12,'#,##0'),(13,'#,##0'),(14,'#,##0'),(15,'#,##0'),(16,'#,##0'),(17,'0.0%'),(18,'#,##0')): ws.cell(r,cc).number_format=nf
@@ -108,6 +111,7 @@ def s9(wb):
     k=lambda e,d: f'SUMIFS(sim_coupling!$C$2:$C$8,sim_coupling!$A$2:$A$8,"{e}",sim_coupling!$B$2:$B$8,"{d}")'
     ws['E4']='Faktor Menge/Preis'; ws['F4']='='+k('Menge','Preis'); ws['E5']='Faktor Menge/Lieferfähigkeit'; ws['F5']='='+k('Menge','Lieferfähigkeit')
     ws['E6']='Faktor Fehlmenge/Termintreue'; ws['F6']='='+k('Fehlmengen-Anteil','Termintreue'); ws['E7']='Faktor Lager/Lieferfähigkeit'; ws['F7']='='+k('Lagerbestand','Lieferfähigkeit'); ws['E8']='Faktor Umsatz/Währung'; ws['F8']='='+k('Umsatz','Währung')
+    ws['E9']='Variabler Anteil Garantie (%)'; ws['F9']='='+'SUMIFS(sim_assumptions!$D$2:$D$60,sim_assumptions!$A$2:$A$60,"s9",sim_assumptions!$B$2:$B$60,"warranty_variable_pct")'; ws['E10']='Wirkung Termintreue auf Lieferfähigkeit'; ws['F10']='='+'SUMIFS(sim_assumptions!$D$2:$D$60,sim_assumptions!$A$2:$A$60,"s9",sim_assumptions!$B$2:$B$60,"fill_otd_coef")'; ws['E11']='Wirkung Lager auf Lieferfähigkeit'; ws['F11']='='+'SUMIFS(sim_assumptions!$D$2:$D$60,sim_assumptions!$A$2:$A$60,"s9",sim_assumptions!$B$2:$B$60,"fill_stock_coef")'; ws['E12']='Obergrenze Lieferfähigkeit (%)'; ws['F12']='='+'SUMIFS(sim_assumptions!$D$2:$D$60,sim_assumptions!$A$2:$A$60,"s9",sim_assumptions!$B$2:$B$60,"fill_cap")'
     levers=[('Preis ± 2 %','pr',2),('Marktmenge ± 3 %','vo',3),('Termintreue ± 2 Pkt.','ot',2),('Lager ± 10 %','st',10),('Garantierate ± 15 %','wa',15),('Währung ± 5 %','fx',5)]
     order=['pr','vo','ot','st','wa','fx']; cell={'pr':'$B$4','vo':'$B$5','ot':'$B$6','st':'$B$7','wa':'$B$8','fx':'$B$9'}
     scen=[('Ohne Hebel',None,0),('Aktuell',None,None)]+[(f'{n} (+)',kk,d) for n,kk,d in levers]+[(f'{n} (−)',kk,-d) for n,kk,d in levers]
@@ -121,11 +125,11 @@ def s9(wb):
             elif kk is None: f='='+cell[key]
             else: f='='+cell[key]+(f'+{d}' if (key==kk and d>0) else (f'{d}' if key==kk else ''))
             ws[R(i)]=f
-        ws[R(6)]=f'=MIN(99.5,$B$14+{R(2)}*0.8*(-$F$6)+{R(3)}*$F$7*0.2)'
+        ws[R(6)]=f'=MIN($F$12,$B$14+{R(2)}*$F$10*(-$F$6)+{R(3)}*$F$7*$F$11)'
         ws[R(7)]=f'={R(0)}/100'; ws[R(8)]=f'=$F$5*({R(6)}-$B$14)/100'; ws[R(9)]=f'={R(5)}/100*$F$8'
         ws[R(10)]=f'=$B$17*(1+{R(1)}/100)*(1+{R(7)})*(1+$F$4*{R(7)}+{R(8)})*(1+{R(9)})'
         ws[R(11)]=f'=$B$12/100*(1+{R(1)}/100)*(1+$F$4*{R(7)}+{R(8)})'; ws[R(12)]=f'=$B$17*{R(11)}'
-        ws[R(13)]=f'=$B$18*(1+{R(4)}/100)*(1+{R(1)}/100)*0.9+$B$18*0.1'; ws[R(14)]=f'=$B$19*(1+{R(3)}/100)*$B$13/100'
+        ws[R(13)]=f'=$B$18*(1+{R(4)}/100)*(1+{R(1)}/100)*$F$9/100+$B$18*(1-$F$9/100)'; ws[R(14)]=f'=$B$19*(1+{R(3)}/100)*$B$13/100'
         ws[R(15)]=f'={R(10)}-{R(12)}-{R(13)}-{R(14)}-$B$22-$B$20'
         for i in (10,12,13,14,15): ws[R(i)].number_format='#,##0'
     e=R0+16; E0=R0+18

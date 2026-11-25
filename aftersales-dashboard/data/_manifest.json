@@ -300,6 +300,12 @@
   "file": "se_monthly.json"
  },
  {
+  "id": "sim_assumptions",
+  "title": "Simulationen – Annahmen (feste Rechengrößen)",
+  "description": "Rechengrößen der neun Simulationen, die bisher im Programmcode standen: je Modell Schlüssel, Wert, Einheit und Hinweis (erfundene Annahmen).",
+  "file": "sim_assumptions.json"
+ },
+ {
   "id": "sim_coupling",
   "title": "Simulation – Kopplungsfaktoren",
   "description": "Zusammenhänge der Gesamtrechnung zwischen Preis, Menge, Lieferfähigkeit und Garantie (Annahmen).",

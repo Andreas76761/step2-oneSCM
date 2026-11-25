@@ -8,6 +8,7 @@ const results = []; let section = '';
 const ok = (name, cond, info) => { results.push({ section, name, ok: !!cond, info }); console.log((cond ? '  ok   ' : '  FEHLER ') + name + (info !== undefined && !cond ? '  → ' + info : '')); };
 const near = (a, b, tol) => Math.abs(a - b) <= (tol == null ? 0.5 : tol);
 const sec = (s) => { section = s; console.log('\n' + s); };
+async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('sim'); window.__sim.S.cur = 's9'; window.__hodDraw.sim(); }); await page.waitForTimeout(500); }
 (async () => {
   const srv = await start(0), url = 'http://127.0.0.1:' + srv.address().port + '/';
   const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH, args: ['--no-sandbox'] } : {}), page = await browser.newPage({ viewport: { width: 1360, height: 900 }, deviceScaleFactor: 1 });
@@ -55,6 +56,26 @@ const sec = (s) => { section = s; console.log('\n' + s); };
   for (const id of ['s2', 's4', 's6', 's7', 's8']) { const r = await run(id); ok(id + ': liefert Kacheln', !!r && r.tiles.length >= 3); }
   errors.length = 0; await page.evaluate(() => window.__hod.show('sim')); await page.waitForTimeout(500);
   for (const id of sim.ids) { await page.evaluate((i) => { window.__sim.S.cur = i; window.__hodDraw.sim(); }, id); await page.waitForTimeout(400); const txt = await page.evaluate(() => (document.getElementById('sim-res') || {}).innerText || ''); ok('Oberfläche ' + id + ' zeigt Ergebnis', txt.length > 60 && errors.length === 0, txt.slice(0, 80) + ' ' + errors.slice(0, 1)); if (id === 's9' || id === 's3') await take('sim-' + id); }
+
+  sec('4a Feste Annahmen der Simulationen liegen in Daten, Ergebnisse unverändert');
+  const base = JSON.parse(fs.readFileSync(path.join(__dirname, 'baseline.json'), 'utf8')), nowv = await require('./baseline').collect(page);
+  Object.keys(base).forEach((id) => { const a = base[id], b = nowv[id]; const same = a && b && a.length === b.length && a.every((x, i) => x[0] === b[i][0] && Math.abs(x[1] - b[i][1]) <= 1e-6 * Math.max(1, Math.abs(x[1]))); ok('Modell ' + id + ': Ergebnisse gleich der Referenz', same, JSON.stringify(b && b.slice(0, 2)) + ' vs ' + JSON.stringify(a && a.slice(0, 2))); });
+  const asm = DATA('sim_assumptions'); ok('Annahmen für alle neun Modelle hinterlegt', ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9'].every((i) => asm.some((r) => r.sim === i)), asm.length);
+  const chg = await page.evaluate(() => { const d = dash.data('sim_assumptions').data, r = d.find((x) => x.sim === 's3' && x.key === 'cost_share_pct'); const S = window.__sim, s = S.SIMS.find((x) => x.id === 's3'), ps = dash.data('sim_params').data.filter((p) => p.sim === 's3'), v = Object.fromEntries(ps.map((p) => [p.key, p.value])); const run = () => s.run(v, { seed: 1, redo: () => 0 }).tiles[1].v; const a = run(); r.value = 70; const b = run(); r.value = 62; return [a, b]; });
+  ok('Änderung der Annahme (Kostenanteil 62 → 70 %) verändert das Ergebnis', Math.abs(chg[0] - chg[1]) > 1, chg);
+  errors.length = 0; await openSim4a(page); const asBox = await page.evaluate(() => { const c = document.getElementById('sim-as'); return c ? c.querySelectorAll('tbody tr').length : -1; }); ok('Oberfläche zeigt die Annahmen des Modells', asBox > 0 && errors.length === 0, asBox);
+
+  sec('4d Barrierefreiheit der Diagramme');
+  errors.length = 0; const a11y = {}; 
+  for (const t of ['head', 'tv', 'er', 'mo', 'iv', 'sim', 'qg']) { await page.evaluate((x) => { window.__hod.show(x); }, t); await page.waitForTimeout(350); a11y[t] = await page.evaluate((x) => { const p = document.getElementById(x); const svgs = [...p.querySelectorAll('svg')].filter((s) => s.clientWidth > 30); return { n: svgs.length, noRole: svgs.filter((s) => s.getAttribute('role') !== 'img').length, noName: svgs.filter((s) => !(s.getAttribute('aria-label') || '').trim()).length, tables: p.querySelectorAll('details.a11y-data').length, rows12: [...p.querySelectorAll('details.a11y-data table')].filter((q) => q.tBodies[0].rows.length === 12).length, described: svgs.filter((s) => s.getAttribute('aria-describedby')).length }; }, t); }
+  ok('Alle Grafiken haben Rolle und Namen (' + Object.values(a11y).reduce((s, v) => s + v.n, 0) + ' geprüft)', Object.values(a11y).every((v) => v.n > 0 && v.noRole === 0 && v.noName === 0), JSON.stringify(a11y));
+  ok('Register Teileverfügbarkeit: Datentabellen zu den Verlaufsdiagrammen', a11y.tv.tables >= 10 && a11y.tv.described >= 10 && a11y.tv.rows12 >= 10, JSON.stringify(a11y.tv));
+  ok('Simulationen: Datentabellen zu den Diagrammen', a11y.sim.tables >= 1, JSON.stringify(a11y.sim));
+  const sumTxt = await page.evaluate(() => { window.__hod.show('tv'); const s = [...document.querySelectorAll('#tv details.a11y-data summary')].find((x) => /Verlauf/.test(x.textContent)); return s ? s.textContent : ''; }); await page.waitForTimeout(300);
+  ok('Datentabelle nennt Verlauf, Minimum, Maximum und Ziel in Worten', /Verlauf .* bis .*zuletzt.*niedrigster.*höchster/.test(sumTxt), sumTxt);
+  const kb = await page.evaluate(() => { const d = document.querySelector('#tv details.a11y-data'); const s = d.querySelector('summary'); s.focus(); return { focus: document.activeElement === s, tag: s.tagName }; }); ok('Datentabelle ist per Tastatur erreichbar (summary)', kb.focus, kb);
+  ok('Barrierefreiheit ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
+  await take('barrierefrei-tv');
 
   sec('4b Maßnahmen aus Kennzahlen (neue Register)');
   const pb = DATA('ma_playbook'), v3keys = { tv: 'vor_pct', er: 'absorption_pct', qg: 'claims_per_1000', lx: 'classic_fill_pct', el: 'hv_repair_rev_k' };

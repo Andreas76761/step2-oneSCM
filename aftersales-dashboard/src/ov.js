@@ -39,7 +39,7 @@
     g.append('line').attr('x1', x(100)).attr('x2', x(100)).attr('y1', 10).attr('y2', 16 + rows.length * rh).attr('stroke', MUT).attr('stroke-dasharray', '4 3'); g.append('text').attr('x', x(100)).attr('y', 9).attr('text-anchor', 'middle').attr('fill', MUT).text('Ziel 100 %');
     rows.forEach((r, k) => { const y = 18 + k * rh, c = COL[stat(r.i)], v = clamp(r.i, 0, 140); g.append('text').attr('x', L - 8).attr('y', y + 13).attr('text-anchor', 'end').attr('fill', 'var(--color-fg)').text(short(r.label));
       g.append('rect').attr('x', L).attr('y', y + 3).attr('width', Math.max(2, x(v) - L)).attr('height', 15).attr('rx', 3).attr('fill', c).attr('opacity', 0.85).on('mousemove', (ev) => H.showTip(ev, [H.line(r.label, 'tt'), H.line('Ist ' + fmt(r) + ' · Ziel ' + fmtV(r, r.target)), H.line('Zielerfüllung ' + N1.format(r.i) + ' %')])).on('mouseleave', () => H.hideTip());
-      g.append('text').attr('x', Math.min(x(v) + 5, w - R + 4)).attr('y', y + 15).attr('fill', 'var(--color-fg)').text(pc(r.i)); });
+      g.append('text').attr('x', Math.min(x(v) + 5, w - R + 4)).attr('y', y + 15).attr('fill', 'var(--color-fg)').text(pc(r.i)); });    try { if (window.__a11y) window.__a11y.table(host, { summary: rows.length + ' Kennzahlen, Zielerfüllung von ' + pc(d3.min(rows, (r) => r.i)) + ' bis ' + pc(d3.max(rows, (r) => r.i)), head: ['Kennzahl', 'Ist', 'Ziel', 'Zielerfüllung'], rows: rows.map((r) => [r.label, fmt(r), fmtV(r, r.target), pc(r.i)]) }); } catch (e) { /* optional */ }
   }
   function matrix(host, list, rg, cats) {
     cats = cats || REG5;

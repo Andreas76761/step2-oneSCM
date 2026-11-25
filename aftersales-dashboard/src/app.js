@@ -304,6 +304,12 @@ function vjOf(rows, o) {
   const b = den ? num / den : 0;
   return rows.map((r) => { const v = r[o.y] - 12 * b; return { v, d: pp ? r[o.y] - v : (v ? (r[o.y] / v - 1) * 100 : 0), real: false, pp }; });
 }
+function a11yTime(el, rows, o, tv, vj, fmt) {
+  const A = window.__a11y; if (!A || !rows.length) return; const ys = rows.map((r) => r[o.y]), iMin = ys.indexOf(d3.min(ys)), iMax = ys.indexOf(d3.max(ys)), hasT = tv.some((x) => x != null), last = rows.length - 1;
+  const head = ['Monat', 'Wert'].concat(hasT ? ['Ziel'] : []).concat(vj ? ['Vorjahr'] : []);
+  A.table(el, { summary: 'Verlauf ' + mlabel(rows[0].month) + ' bis ' + mlabel(rows[last].month) + ': zuletzt ' + fmt(ys[last]) + ', niedrigster Wert ' + fmt(ys[iMin]) + ' (' + mlabel(rows[iMin].month) + '), höchster Wert ' + fmt(ys[iMax]) + ' (' + mlabel(rows[iMax].month) + ')' + (hasT && tv[last] != null ? ', Ziel ' + fmt(tv[last]) : ''), head,
+    rows: rows.map((r, i) => [mlabel(r.month), fmt(ys[i])].concat(hasT ? [tv[i] != null ? fmt(tv[i]) : '–'] : []).concat(vj ? [fmt(vj[i].v) + (vj[i].real ? '' : ' (Schätzung)')] : [])) });
+}
 function timeChart(el, id, o) {
   const rows = ready(el, id, (r) => (!M() || r.month <= M()) && (r.region == null || r.region === REGSEL()) && (r.dim == null || (r.dim === DS().dim && r.member === DS().member)) && (!o.rowf || o.rowf(r))); if (!rows) return;
   const w = el.clientWidth; if (!w) return;
@@ -365,6 +371,7 @@ function timeChart(el, id, o) {
       rows.forEach((r, i) => { const dd = Math.abs(xp(r.month) - px); if (dd < bd) { bd = dd; bi = i; } });
       if (rows[bi].month !== firstMonth) dash.setParams({ month: rows[bi].month });
     });
+  try { a11yTime(el, rows, o, tv, vj, fmt); } catch (e) { /* Textalternative optional */ }
 }
 
 function barChart(el, id, o) {
@@ -396,6 +403,7 @@ function barChart(el, id, o) {
   if (o.limit != null) {
     g.append('line').attr('x1', x(o.limit)).attr('x2', x(o.limit)).attr('y1', 8).attr('y2', H - 8).attr('stroke', 'var(--cds-chart-reference)').attr('stroke-width', 1.5).attr('stroke-dasharray', '5 4');
   }
+  try { const A = window.__a11y; if (A && rows.length) { const mx = rows[0], mn = rows[rows.length - 1], hasT = !!o.tcol; A.table(el, { summary: rows.length + ' Einträge, höchster Wert ' + fmt(d3.max(rows, (r) => r[o.val])) + ' (' + String(rows.reduce((b, r) => (r[o.val] > b[o.val] ? r : b), rows[0])[o.cat]) + '), niedrigster Wert ' + fmt(d3.min(rows, (r) => r[o.val])) + ' (' + String(rows.reduce((b, r) => (r[o.val] < b[o.val] ? r : b), rows[0])[o.cat]) + ')', head: ['Eintrag', 'Wert'].concat(hasT ? ['Ziel'] : []), rows: rows.map((r) => [String(r[o.cat]), fmt(r[o.val])].concat(hasT ? [r[o.tcol] != null ? fmt(r[o.tcol]) : '–'] : [])) }); } } catch (e) { /* optional */ }
 }
 
 const sorts = new WeakMap();

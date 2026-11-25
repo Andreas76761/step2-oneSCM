@@ -1,0 +1,196 @@
+{
+ "s1": [
+  [
+   "Umsatz im Risiko",
+   429.194423
+  ],
+  [
+   "Margenverlust",
+   163.093881
+  ],
+  [
+   "Spitze stehender Fahrzeuge je Woche",
+   2.661005
+  ],
+  [
+   "Wochen unter 92 % Lieferfähigkeit",
+   3
+  ],
+  [
+   "Sicherheitsbestand reicht",
+   3
+  ]
+ ],
+ "s2": [
+  [
+   "Teileumsatz 2035 gegen 2026",
+   -0.739878
+  ],
+  [
+   "Spitzenjahr Teileumsatz",
+   2030
+  ],
+  [
+   "Elektro übertrifft Verbrenner ab",
+   9999
+  ],
+  [
+   "Verbrenner-Fahrzeuge 2040 (Tsd.)",
+   895.432597
+  ],
+  [
+   "Haltekosten Verbrenner-Teile p. a.",
+   756
+  ]
+ ],
+ "s3": [
+  [
+   "Umsatz",
+   -1355.289716
+  ],
+  [
+   "Marge",
+   -376.385249
+  ],
+  [
+   "Menge",
+   -6.769584
+  ],
+  [
+   "Margenquote",
+   38.280161
+  ],
+  [
+   "Neue Regionen mit Parallelimport-Risiko",
+   0
+  ]
+ ],
+ "s4": [
+  [
+   "Servicegrad (umsatzgewichtet)",
+   97.520141
+  ],
+  [
+   "Gebundenes Kapital (Mio. €)",
+   9.090248
+  ],
+  [
+   "Kapitalkosten p. a. (Mio. €)",
+   1.999854
+  ],
+  [
+   "Einsparung gegenüber gleichem Faktor für alle (Mio. €)",
+   0.828701
+  ]
+ ],
+ "s5": [
+  [
+   "Ø Bestellung bis Werkstatt (Std.)",
+   27.412298
+  ],
+  [
+   "P90 Lieferzeit (Std.)",
+   43.967162
+  ],
+  [
+   "Frachtkosten (k€ p. a.)",
+   8410.081195
+  ],
+  [
+   "Lagerfixkosten (k€ p. a.)",
+   5200
+  ],
+  [
+   "Gesamtkosten (k€ p. a.)",
+   13610.081195
+  ]
+ ],
+ "s6": [
+  [
+   "Erwartung (Mio. €)",
+   11.866116
+  ],
+  [
+   "P50 mittlerer Fall (Mio. €)",
+   9.885135
+  ],
+  [
+   "P90 (Mio. €)",
+   19.680276
+  ],
+  [
+   "P99 (Mio. €)",
+   39.055729
+  ],
+  [
+   "Rückruf-Anteil im Risikoschwanz",
+   58.738708
+  ]
+ ],
+ "s7": [
+  [
+   "Ø Wartezeit bis Arbeitsbeginn (Std.)",
+   1.676038
+  ],
+  [
+   "P90 Wartezeit (Std.)",
+   2.442826
+  ],
+  [
+   "Auslastung Techniker",
+   69.039244
+  ],
+  [
+   "Aufträge mit über 8 Std. Wartezeit",
+   7.080745
+  ],
+  [
+   "Aufträge je Tag",
+   40.25
+  ]
+ ],
+ "s8": [
+  [
+   "Nutzen minus Kosten, mittlerer Fall (k€)",
+   34.606348
+  ],
+  [
+   "Ungünstiger Fall P10 (k€)",
+   7.586956
+  ],
+  [
+   "Günstiger Fall P90 (k€)",
+   63.019336
+  ],
+  [
+   "Wahrscheinlichkeit, dass es sich lohnt",
+   95.4
+  ],
+  [
+   "Amortisation (mittlerer Fall)",
+   5
+  ]
+ ],
+ "s9": [
+  [
+   "Betriebsergebnis, Planwert (k€)",
+   9155.2472
+  ],
+  [
+   "P10 (k€)",
+   7657.590629
+  ],
+  [
+   "P50 (k€)",
+   9144.10873
+  ],
+  [
+   "P90 (k€)",
+   10794.63815
+  ],
+  [
+   "Lieferfähigkeit im Plan",
+   90.2
+  ]
+ ]
+}
