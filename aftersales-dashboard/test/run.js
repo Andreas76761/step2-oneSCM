@@ -177,6 +177,18 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
   ok('Hinweise ohne Skriptfehler', derr.length === 0, derr.slice(0, 2)); await dp.close();
   await page.evaluate(() => { localStorage.removeItem('aftersales-scenarios-v1'); window.__sim.SCN.local.length = 0; });
 
+  sec('4j Documentation und Booklet auf aktuellem Stand');
+  errors.length = 0; await page.evaluate(() => window.__hod.show('dc')); await page.waitForTimeout(400);
+  const dc = await page.evaluate(() => { const t = document.getElementById('dc').innerText; return { n: t.length, has: ['Szenarien speichern', 'sim_assumptions', 'Rollen und Rechte', 'Änderungsprotokoll', 'Vorjahresvergleich', 'Händler-Ranking', 'Maßnahmenvorschläge', 'Gesamtrechnung (Simulation 9)', 'Datenqualität (Version 3.0)', 'Sim_Gesamt', 'Stufe „Editor“', 'Datentabelle'].map((k) => [k, t.includes(k)]), old: ['Parameter', 'Dashboard_Register', 'Planung wird nicht gespeichert', 'Das Excel-Template rechnet über alle Monate'].filter((k) => t.includes(k)), cards: document.querySelectorAll('#dc .card').length }; });
+  ok('Documentation nennt alle neuen Features', dc.has.every(([, v]) => v), dc.has.filter(([, v]) => !v).map(([k]) => k));
+  ok('Documentation: veraltete Excel-Angaben entfernt', dc.old.length === 0 && dc.cards === 5, JSON.stringify(dc.old) + dc.cards);
+  const dbk = await page.evaluate(() => { const B = window.__bk; B.S.sel = new Set(['dc']); const m = B.buildModel(), t = JSON.stringify(m); return { has: ['Szenarien speichern', 'Rollen und Rechte', 'Sim_Gesamt', 'Vorjahresvergleich'].map((k) => t.includes(k)), n: (document.getElementById('bk-sec') ? [...document.querySelectorAll('#bk-sec input[type=checkbox]')].length : 0) }; });
+  ok('Booklet-Kapitel Documentation enthält die neuen Features', dbk.has.every(Boolean), dbk.has);
+  await page.reload({ waitUntil: 'load' }); await page.waitForTimeout(700);
+  const chap = await page.evaluate(() => { const B = window.__bk; return { sel: B.S.sel.size, secs: B.buildModel().sections.length }; });
+  ok('Booklet: 41 Kapitel vorgewählt, mindestens 40 werden erstellt', chap.sel === 41 && chap.secs >= 40, JSON.stringify(chap));
+  ok('Documentation und Booklet ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
+
   sec('4b Maßnahmen aus Kennzahlen (neue Register)');
   const pb = DATA('ma_playbook'), v3keys = { tv: 'vor_pct', er: 'absorption_pct', qg: 'claims_per_1000', lx: 'classic_fill_pct', el: 'hv_repair_rev_k' };
   ok('Playbook enthält Vorschläge für alle fünf neuen Register', Object.entries(v3keys).every(([b, k]) => pb.some((r) => r.kpi_id === b + '_' + k)), pb.length);
