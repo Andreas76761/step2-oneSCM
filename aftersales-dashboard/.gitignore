@@ -4,3 +4,4 @@ test/ergebnis.json
 *.xlsx
 __pycache__/
 !data/
+test/export/

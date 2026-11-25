@@ -8,7 +8,7 @@ Dieser Ordner ist die Quelle der Wahrheit für das veröffentlichte Dashboard. E
 
 | Ordner | Inhalt |
 |---|---|
-| `src/` | Die Seite: `index.html` (Markup und Stile) und 43 Skripte (`app.js` Kern, `calcs.js` und `v3calc.js` berechnete Datensätze, `v3.js` neue Register, `sim.js` Simulationen, `imp*.js`/`exp.js` Import und Export, `bk*.js` Booklet, `chat.js` Chat …). Die Reihenfolge der Skripte steht in `index.html`. |
+| `src/` | Die Seite: `index.html` (Markup), `styles.css` (Stile) und 43 Skripte (`app.js` Kern, `calcs.js` und `v3calc.js` berechnete Datensätze, `v3.js` neue Register, `sim.js` Simulationen, `imp*.js`/`exp.js` Import und Export, `bk*.js` Booklet, `chat.js` Chat …). Die Reihenfolge der Skripte steht in `index.html`. |
 | `data/` | Alle 83 Datensätze als JSON (`_manifest.json` listet Titel und Beschreibung). Blattnamen des Excel-Imports = Dateinamen. |
 | `excel/` | Generator des Excel-Templates (`main.py`) mit 16 Registern, 3 Formel-Simulationen und allen Datenblättern. |
 | `test/` | Browser-Testlauf mit Laufzeit-Ersatz (`dash-mock.js`), Server (`server.js`) und Prüfungen (`run.js`). |
@@ -19,9 +19,10 @@ Die CI (`.github/workflows/aftersales-dashboard.yml`) führt beide Testläufe be
 
 ```bash
 npm install                 # d3 für den Laufzeit-Ersatz (Playwright wird mitgeführt)
-npm test                    # Browser-Testlauf, 167 Prüfungen
+npm test                    # Browser-Testlauf, 172 Prüfungen
 npm run test:shots          # zusätzlich Screenshots nach test/screenshots/
 npm run test:excel          # Excel-Template bauen, mit LibreOffice rechnen, Kernwerte prüfen
+npm run test:export         # Booklet als PDF, Word und PowerPoint erzeugen (nach test/export/), zum Ansehen
 ```
 
 Der Browser-Testlauf lädt die Seite mit einem Ersatz für die Dashboard-Laufzeitumgebung (`window.dash`, Datensätze aus `data/`), öffnet alle 41 Register und prüft: keine Skriptfehler, Inhalt sichtbar, Summen-Kennzahlen, alle 9 Simulationen (u. a. Ausgangslage der Gesamtrechnung = Betriebsergebnis im Register Ertrag, Preis/Zoll ohne Änderung = 0) und Eckdaten der Datensätze.
@@ -49,7 +50,7 @@ Das Dashboard ist ein Artifact vom Typ „Dashboard“. Jede Datei in `src/` ent
 
 Wichtig: Vor dem Überschreiben eines Dokuments immer den **aktuellen** veröffentlichten Stand holen. Eine veraltete lokale Kopie hat schon einmal Änderungen überschrieben; der Testlauf hat das sofort gezeigt.
 
-Größenlimit: `index.html` darf als Dokument 262.144 Byte nicht überschreiten (aktuell rund 245 KB). Neue Programmteile gehören in eigene Skripte unter `src/`.
+Größenlimit: `index.html` darf als Dokument 262.144 Byte nicht überschreiten (aktuell rund 222 KB; die Stile liegen in `styles.css`). Neue Programmteile gehören in eigene Skripte unter `src/`.
 
 ## Rollen und Rechte
 

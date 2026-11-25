@@ -1,6 +1,6 @@
 // Kleiner Server: liefert die Seite (src/index.html in einem #dash-root) mit dem Laufzeit-Ersatz und die Datensätze.
 const http = require('http'), fs = require('fs'), path = require('path');
-const ROOT = path.join(__dirname, '..'), TYPES = { '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.html': 'text/html; charset=utf-8' };
+const ROOT = path.join(__dirname, '..'), TYPES = { '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.html': 'text/html; charset=utf-8' };
 function page(stub) {
   const body = fs.readFileSync(path.join(ROOT, 'src', 'index.html'), 'utf8');
   return '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Test</title>' +

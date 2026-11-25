@@ -8,7 +8,8 @@
     "test": "node test/run.js",
     "test:shots": "node test/run.js --shots test/screenshots",
     "excel": "python3 excel/main.py Aftersales_Parts_Excel_Template_v3.xlsx",
-    "test:excel": "python3 excel/test_template.py"
+    "test:excel": "python3 excel/test_template.py",
+    "test:export": "node test/export-check.js test/export"
   },
   "devDependencies": {
     "d3": "^7.9.0",

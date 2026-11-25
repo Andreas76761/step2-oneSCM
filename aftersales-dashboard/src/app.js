@@ -375,6 +375,14 @@ function timeChart(el, id, o) {
   try { a11yTime(el, rows, o, tv, vj, fmt); } catch (e) { /* Textalternative optional */ }
 }
 
+// Beschriftung kürzen („…“), wenn sie nicht in den linken Rand passt; der volle Text steht als Tooltip (title)
+function fitLabel(node, maxW, full) {
+  try {
+    if (!node || !node.getComputedTextLength || node.getComputedTextLength() <= maxW) return;
+    let t = full; while (t.length > 3 && node.getComputedTextLength() > maxW) { t = t.slice(0, -1); node.textContent = t.trimEnd() + '…'; }
+    const ti = document.createElementNS('http://www.w3.org/2000/svg', 'title'); ti.textContent = full; node.appendChild(ti);
+  } catch (e) { /* Beschriftung bleibt wie sie ist */ }
+}
 function barChart(el, id, o) {
   let rows = ready(el, id, o.flt); if (!rows) return;
   const w = el.clientWidth; if (!w) return;
@@ -386,14 +394,14 @@ function barChart(el, id, o) {
   const fmt = FMT[o.unit], RH = 30, H = rows.length * RH + 24;
   const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${w} ${H}`);
   const L = Math.min(measure(svg, rows.map((r) => String(r[o.cat]))) + 12, w * 0.45);
-  const R = measure(svg, rows.map((r) => fmt(r[o.val]) + vjt(r))) + 12;
+  const R = measure(svg, rows.map((r) => fmt(r[o.val]) + vjt(r))) * 1.1 + 12; // Zuschlag: die Schrift im Browser kann breiter sein als gemessen
   const maxV = d3.max(rows, (r) => r[o.val]), x = d3.scaleLinear([0, Math.max(maxV, o.limit || 0, o.tcol ? d3.max(rows, (r) => r[o.tcol]) : 0) * 1.05], [L, w - R]);
   const g = svg.append('g').style('font-size', 'var(--cds-font-size-caption)');
   const miss = (v) => o.limit != null && (o.hib ? v < o.limit : v > o.limit);
   const missRow = (r) => (o.tcol ? r[o.tcol] != null && (o.hib ? r[o.val] < r[o.tcol] : r[o.val] > r[o.tcol]) : miss(r[o.val]));
   rows.forEach((r, i) => {
     const cy = 18 + i * RH + RH / 2 - 9;
-    g.append('text').attr('x', L - 8).attr('y', cy).attr('dy', '0.32em').attr('text-anchor', 'end').attr('fill', 'var(--color-fg)').text(String(r[o.cat]));
+    fitLabel(g.append('text').attr('x', L - 8).attr('y', cy).attr('dy', '0.32em').attr('text-anchor', 'end').attr('fill', 'var(--color-fg)').text(String(r[o.cat])).node(), L - 12, String(r[o.cat]));
     g.append('rect').attr('x', L).attr('y', cy - 8).attr('height', 16).attr('width', Math.max(2, x(r[o.val]) - L)).attr('rx', 4)
       .attr('data-pg', o.cat === 'group' ? String(r[o.cat]) : null).attr('data-ct', o.cat === 'country' ? String(r[o.cat]) : null).attr('data-bs', o.cat === 'series' ? String(r[o.cat]) : null).attr('data-ba', o.cat === 'age' ? String(r[o.cat]) : null).attr('fill', missRow(r) ? CRIT : dash.colors[0]).attr('stroke', o.focus != null && String(r[o.cat]) === o.focus ? 'var(--color-fg)' : 'none').attr('stroke-width', 2).style('cursor', o.click ? 'pointer' : null)
       .on('mousemove', (ev) => (o.cat === 'group' && window.__groupPop ? window.__groupPop.show(ev, String(r[o.cat])) : o.cat === 'country' && window.__ctryPop ? window.__ctryPop.show(ev, String(r[o.cat])) : (o.cat === 'series' || o.cat === 'age') && window.__carPop ? window.__carPop.show(ev, o.cat === 'series' ? { series: String(r[o.cat]), age: o.ctxAge || null } : { age: String(r[o.cat]), series: o.ctxSeries || null }) : showTip(ev, [line(String(r[o.cat]), 'tt'), line(fmt(r[o.val]))].concat(o.tcol ? [line('Ziel ' + fmt(r[o.tcol]), 'tt')] : [])))).on('mouseleave', () => { hideTip(); if (window.__groupPop) window.__groupPop.hide(); if (window.__ctryPop) window.__ctryPop.hide(); })

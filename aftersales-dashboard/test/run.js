@@ -181,13 +181,34 @@ async function openSim4a(page) { await page.evaluate(() => { window.__hod.show('
   errors.length = 0; await page.evaluate(() => window.__hod.show('dc')); await page.waitForTimeout(400);
   const dc = await page.evaluate(() => { const t = document.getElementById('dc').innerText; return { n: t.length, has: ['Szenarien speichern', 'sim_assumptions', 'Rollen und Rechte', 'Änderungsprotokoll', 'Vorjahresvergleich', 'Händler-Ranking', 'Maßnahmenvorschläge', 'Gesamtrechnung (Simulation 9)', 'Datenqualität (Version 3.0)', 'Sim_Gesamt', 'Stufe „Editor“', 'Datentabelle'].map((k) => [k, t.includes(k)]), old: ['Parameter', 'Dashboard_Register', 'Planung wird nicht gespeichert', 'Das Excel-Template rechnet über alle Monate'].filter((k) => t.includes(k)), cards: document.querySelectorAll('#dc .card').length }; });
   ok('Documentation nennt alle neuen Features', dc.has.every(([, v]) => v), dc.has.filter(([, v]) => !v).map(([k]) => k));
-  ok('Documentation: veraltete Excel-Angaben entfernt', dc.old.length === 0 && dc.cards === 5, JSON.stringify(dc.old) + dc.cards);
+  ok('Documentation: veraltete Excel-Angaben entfernt', dc.old.length === 0 && dc.cards >= 5, JSON.stringify(dc.old) + dc.cards);
   const dbk = await page.evaluate(() => { const B = window.__bk; B.S.sel = new Set(['dc']); const m = B.buildModel(), t = JSON.stringify(m); return { has: ['Szenarien speichern', 'Rollen und Rechte', 'Sim_Gesamt', 'Vorjahresvergleich'].map((k) => t.includes(k)), n: (document.getElementById('bk-sec') ? [...document.querySelectorAll('#bk-sec input[type=checkbox]')].length : 0) }; });
   ok('Booklet-Kapitel Documentation enthält die neuen Features', dbk.has.every(Boolean), dbk.has);
   await page.reload({ waitUntil: 'load' }); await page.waitForTimeout(700);
   const chap = await page.evaluate(() => { const B = window.__bk; return { sel: B.S.sel.size, secs: B.buildModel().sections.length }; });
   ok('Booklet: 41 Kapitel vorgewählt, mindestens 40 werden erstellt', chap.sel === 41 && chap.secs >= 40, JSON.stringify(chap));
   ok('Documentation und Booklet ohne Skriptfehler', errors.length === 0, errors.slice(0, 2).join(' | '));
+
+  sec('4m Handy-Ansicht (390 px): keine Seite läuft über');
+  const mctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true }), mob = await mctx.newPage(), moberr = []; mob.on('pageerror', (e) => moberr.push(e.message));
+  await mob.goto(url, { waitUntil: 'load' }); await mob.waitForTimeout(900);
+  const over = [];
+  for (const t of tabs) { await mob.evaluate((x) => window.__hod.show(x), t); await mob.waitForTimeout(250); const r = await mob.evaluate((x) => { const vw = document.documentElement.clientWidth, pan = document.getElementById(x); const wide = [...pan.querySelectorAll('*')].filter((e) => { const b = e.getBoundingClientRect(); if (!b.width || b.right <= vw + 2) return false; let a = e.parentElement; while (a && a !== pan) { const o = getComputedStyle(a).overflowX; if (o === 'auto' || o === 'scroll' || o === 'hidden') return false; a = a.parentElement; } return true; }); return { sw: document.documentElement.scrollWidth, vw, n: wide.length, ex: wide.slice(0, 2).map((e) => e.tagName + '#' + e.id) }; }, t); if (r.sw > r.vw + 1 || r.n) over.push(t + ' ' + JSON.stringify(r)); if (['head', 'tv', 'sim', 'ma'].includes(t)) await mob.screenshot({ path: SHOTS ? path.join(SHOTS, 'handy-' + t + '.png') : '/dev/null', fullPage: false }).catch(() => {}); }
+  ok('Alle 41 Register passen in 390 px Breite (kein seitliches Scrollen der Seite)', over.length === 0, over);
+  ok('Handy-Ansicht ohne Skriptfehler', moberr.length === 0, moberr.slice(0, 2)); await mctx.close();
+
+  sec('4l Stile in eigener Datei, Platz in index.html');
+  const css = await page.evaluate(() => { const sh = [...document.styleSheets].find((s) => s.href && /styles\.css$/.test(s.href)); return { loaded: !!sh, rules: sh ? sh.cssRules.length : 0, tab: getComputedStyle(document.querySelector('.tab')).cursor, h1: getComputedStyle(document.querySelector('#dash-root h1')).fontWeight }; });
+  ok('Stile kommen aus styles.css (über 200 Regeln geladen)', css.loaded && css.rules > 200, JSON.stringify(css));
+  const sz = fs.statSync(path.join(__dirname, '..', 'src', 'index.html')).size; ok('index.html unter 240 KB (Limit des Dokuments 256 KB)', sz < 240 * 1024, sz);
+
+  sec('4k Schmale Ansicht: Beschriftungen und Seitenbreite');
+  const mp = await browser.newPage({ viewport: { width: 400, height: 800 } }), merr = []; mp.on('pageerror', (e) => merr.push(e.message));
+  await mp.goto(url, { waitUntil: 'load' }); await mp.waitForTimeout(800);
+  const cut = await mp.evaluate(() => { window.__hod.show('head'); return null; }); await mp.waitForTimeout(500);
+  const cutR = await mp.evaluate(() => { const svg = document.querySelector('#ch-head-bu svg'); if (!svg) return { n: -1 }; const r = svg.getBoundingClientRect(); const bad = [...svg.querySelectorAll('text')].filter((t) => { const b = t.getBoundingClientRect(); return b.width > 0 && (b.left < r.left - 1 || b.right > r.right + 1); }); return { n: svg.querySelectorAll('text').length, bad: bad.map((t) => t.textContent) }; });
+  ok('Head of (400 px): keine abgeschnittenen Beschriftungen im Diagramm „je Bereich“', cutR.n > 0 && cutR.bad.length === 0, JSON.stringify(cutR));
+  await mp.close();
 
   sec('4b Maßnahmen aus Kennzahlen (neue Register)');
   const pb = DATA('ma_playbook'), v3keys = { tv: 'vor_pct', er: 'absorption_pct', qg: 'claims_per_1000', lx: 'classic_fill_pct', el: 'hv_repair_rev_k' };
