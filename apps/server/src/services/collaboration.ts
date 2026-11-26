@@ -32,11 +32,11 @@ async function entityInfo(ctx: Ctx, type: string, id: string): Promise<{ link: s
   throw notFound(`${type} ${id}`);
 }
 
-/** Benutzer mit Zugriff auf das Projekt (für Erwähnungen und Zuweisungen). */
+/** Aktive Benutzer mit Zugriff auf das Projekt (für Erwähnungen, Zuweisungen und Hinweise); gesperrte zählen nicht. */
 export async function collaborators(ctx: Ctx) {
   const project = await ctx.db.get('SELECT * FROM projects WHERE id = ?', ctx.projectId);
   const out: { id: string; name: string; permissions: string[] }[] = [];
-  for (const u of await ctx.db.all('SELECT id, name, permissions FROM users ORDER BY name')) {
+  for (const u of await ctx.db.all('SELECT id, name, permissions FROM users WHERE disabled_at IS NULL ORDER BY name')) {
     const eff = await effectiveUser(ctx, { id: u.id, name: u.name, permissions: parseJson(u.permissions, []) }, project!);
     if (eff) out.push({ id: u.id, name: u.name, permissions: eff.permissions });
   }

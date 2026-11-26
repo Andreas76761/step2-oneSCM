@@ -137,7 +137,8 @@ describe('Terminologieverwaltung (US-015)', () => {
     expect((await call('POST', '/terminology', { preferred: 'kennwort' })).status).toBe(409);
     expect((await call('POST', '/terminology', { preferred: 'Genehmigung' })).status).toBe(422); // steht bei „Freigabe“ als zu vermeiden
     expect((await call('POST', '/terminology', { preferred: 'Zugang', avoid: ['Freigabe'] })).status).toBe(422); // anderswo bevorzugt
-    expect((await call('POST', '/terminology', { preferred: 'Zugang', avoid: ['zugang'] })).status).toBe(422);
+    // genau gleiche Schreibweise unzulässig; eine Variante nur in Groß-/Kleinschreibung ist seit ADR-128 erlaubt (T-452)
+    expect((await call('POST', '/terminology', { preferred: 'Zugang', avoid: ['Zugang'] })).status).toBe(422);
 
     const anmelden = initial.find((t: any) => t.preferred === 'anmelden');
     const retired = await call('PATCH', `/terminology/${anmelden.id}`, { status: 'retired' }, 'u-redaktion');

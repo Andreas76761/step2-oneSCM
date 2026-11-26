@@ -2,11 +2,11 @@
 // (OTEL_EXPORTER_OTLP_ENDPOINT bzw. …_TRACES_ENDPOINT); sonst liefert die API No-op-Spans ohne Kosten.
 // Spans: HTTP-Anfragen (mit W3C traceparent des Aufrufers), Datenbankabfragen, Jobs, KI- und Embedding-Aufrufe.
 import { context, propagation, SpanKind, SpanStatusCode, trace, type Span, type Tracer } from '@opentelemetry/api';
+import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { resourceFromAttributes } from '@opentelemetry/resources';
-import { BatchSpanProcessor, SimpleSpanProcessor, type SpanExporter } from '@opentelemetry/sdk-trace-base';
-import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
+import { BatchSpanProcessor, SimpleSpanProcessor, TracerProvider, type SpanExporter } from '@opentelemetry/sdk-trace';
 import type { FastifyInstance } from 'fastify';
 import type { Db } from './db.js';
 import type { EmbeddingProvider } from './embeddings.js';
@@ -24,16 +24,19 @@ export function tracingFromEnv(): TracingConfig {
   return { exporter: enabled ? 'otlp' : 'none', serviceName: process.env.OTEL_SERVICE_NAME || 'onescm-handbook-studio' };
 }
 
-let provider: NodeTracerProvider | null = null;
+let provider: TracerProvider | null = null;
 
 /** Tracing einrichten (einmal je Prozess). `exporter` für Tests (z. B. InMemorySpanExporter). */
 export function initTracing(cfg: TracingConfig, exporter?: SpanExporter) {
   if (provider || (cfg.exporter === 'none' && !exporter)) return provider;
-  provider = new NodeTracerProvider({
+  provider = new TracerProvider({
     resource: resourceFromAttributes({ 'service.name': cfg.serviceName, 'service.version': APP_VERSION }),
-    spanProcessors: [exporter ? new SimpleSpanProcessor(exporter) : new BatchSpanProcessor(new OTLPTraceExporter())],
+    spanProcessors: [exporter ? new SimpleSpanProcessor({ exporter }) : new BatchSpanProcessor({ exporter: new OTLPTraceExporter() })],
   });
-  provider.register({ propagator: new W3CTraceContextPropagator() });
+  // OpenTelemetry 3 hat kein NodeTracerProvider.register() mehr: Kontext (AsyncLocalStorage), Propagator und Provider selbst anmelden
+  context.setGlobalContextManager(new AsyncLocalStorageContextManager().enable());
+  propagation.setGlobalPropagator(new W3CTraceContextPropagator());
+  trace.setGlobalTracerProvider(provider);
   return provider;
 }
 
@@ -46,7 +49,6 @@ export async function shutdownTracing() {
 }
 
 export const tracer = (): Tracer => trace.getTracer('onescm');
-export const tracingActive = () => provider !== null;
 
 /** Funktion in einem Span ausführen; Fehler werden am Span vermerkt */
 export async function withSpan<T>(name: string, attributes: Record<string, string | number | boolean | undefined>, fn: (span: Span) => Promise<T>, kind = SpanKind.INTERNAL): Promise<T> {

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { download } from '../api';
 import { Card, Empty, ErrorBox, Page, errorText, useApp, useLoad } from '../components/ui';
+import { formatDate } from '../format';
 
 const SERIES = [
   { key: 'openFindings', label: 'Offene Befunde', color: '#c2410c' },
@@ -38,8 +39,8 @@ function LineChart({ title, rows, lines, max }: { title: string; rows: any[]; li
         <line x1={30} x2={W - 10} y1={H - 20} y2={H - 20} stroke="currentColor" opacity={0.3} />
         <text x={0} y={y(top) + 4} fontSize={10} fill="currentColor">{top}</text>
         <text x={0} y={H - 16} fontSize={10} fill="currentColor">0</text>
-        <text x={30} y={H - 4} fontSize={10} fill="currentColor">{new Date(rows[0].day).toLocaleDateString('de-DE')}</text>
-        <text x={W - 10} y={H - 4} fontSize={10} fill="currentColor" textAnchor="end">{new Date(rows.at(-1).day).toLocaleDateString('de-DE')}</text>
+        <text x={30} y={H - 4} fontSize={10} fill="currentColor">{formatDate(rows[0].day)}</text>
+        <text x={W - 10} y={H - 4} fontSize={10} fill="currentColor" textAnchor="end">{formatDate(rows.at(-1).day)}</text>
         {lines.map((l) => (
           <polyline key={l.key} fill="none" stroke={l.color} strokeWidth={2} points={rows.map((r, i) => `${x(i)},${y(Number(r[l.key]) || 0)}`).join(' ')} />
         ))}

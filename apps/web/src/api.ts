@@ -95,10 +95,11 @@ export async function download(path: string, fallbackName: string) {
 
 /** Bild aus der Medienablage (ADR-029) als Objekt-URL – mit Anmeldung, daher nicht direkt per <img src> */
 const mediaCache = new Map<string, Promise<string>>();
-export function mediaUrl(sha: string): Promise<string> {
-  const key = `${currentProjectId()}/${sha}`;
+/** `query` z. B. „original=1&unredacted=1“ (Original ohne Unkenntlichmachung, ADR-095) oder ein Stand wie „v=…“ */
+export function mediaUrl(sha: string, query = ''): Promise<string> {
+  const key = `${currentProjectId()}/${sha}${query ? `?${query}` : ''}`;
   if (!mediaCache.has(key)) {
-    const p = fetch(`/api/v1/media/${sha}`, { headers: authHeaders() }).then(async (res) => {
+    const p = fetch(`/api/v1/media/${sha}${query ? `?${query}` : ''}`, { headers: authHeaders() }).then(async (res) => {
       if (!res.ok) throw new ApiError(res.status, null);
       return URL.createObjectURL(await res.blob());
     });
@@ -106,4 +107,12 @@ export function mediaUrl(sha: string): Promise<string> {
     mediaCache.set(key, p);
   }
   return mediaCache.get(key)!;
+}
+
+/** Nach einer neuen Fassung (ADR-085): zwischengespeicherte Objekt-URL verwerfen, damit die neue Fassung erscheint */
+export function forgetMedia(sha: string) {
+  const key = `${currentProjectId()}/${sha}`;
+  const p = mediaCache.get(key);
+  mediaCache.delete(key);
+  p?.then((u) => URL.revokeObjectURL(u), () => undefined);
 }

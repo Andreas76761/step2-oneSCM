@@ -1,5 +1,5 @@
 // Semantische Suche und Embedding-Index je Projekt (ADR-017).
-import { audit, getSettings, type Ctx } from '../context.js';
+import { audit, getSettings, privacyNames, type Ctx } from '../context.js';
 import { newId, now, type Row } from '../db.js';
 import { detectPrivacy } from '../domain/privacy.js';
 import { sha256, tokenize, type SimilarityPair } from '../domain/similarity.js';
@@ -67,7 +67,8 @@ async function privacyBlocked(ctx: Ctx, snippets?: { id: string; text: string }[
   );
   const blocked = new Set(findings.filter((f) => f.status === 'open' || f.status === 'deferred').map((f) => f.id as string));
   const cleared = new Set(findings.filter((f) => f.status === 'resolved' || f.status === 'ignored').map((f) => f.id as string));
-  for (const s of snippets ?? (await currentSnippets(ctx))) if (!cleared.has(s.id) && detectPrivacy(s.text).length) blocked.add(s.id);
+  const names = await privacyNames(ctx.db);
+  for (const s of snippets ?? (await currentSnippets(ctx))) if (!cleared.has(s.id) && detectPrivacy(s.text, { names }).length) blocked.add(s.id);
   return blocked;
 }
 
@@ -239,8 +240,4 @@ export async function embeddingPairs(ctx: Ctx, snippets: { id: string; text: str
   // große Bestände (ADR-024): je Abschnitt die 10 nächsten Nachbarn über HNSW statt n² Vergleiche
   for (const [i, j, score] of knnPairs(vecs, 10, threshold)) push(i, j, score);
   return { pairs, skipped: false, approximate: true, model: ctx.embeddings.model };
-}
-
-export async function semanticSettings(ctx: Ctx) {
-  return (await getSettings(ctx.db)).semantic;
 }

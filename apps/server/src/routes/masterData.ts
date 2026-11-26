@@ -130,7 +130,7 @@ export function masterDataRoutes(app: FastifyInstance, _ctx: Ctx) {
   app.get<{ Querystring: Record<string, string> }>('/faq', async (req) => (userOf(req.ctx, req), listFaq(req.ctx, req.query)));
   // Übersetzungen häufiger Fragen (ADR-077): lesen mit Leserecht, bearbeiten mit Bearbeitungs-, freigeben mit Freigaberecht
   app.get('/faq/translations', async (req) => (userOf(req.ctx, req), faqTranslationSummary(req.ctx)));
-  // KI-Stapelübersetzung je Sprache (ADR-079)
+  // KI-Stapelübersetzung je Sprache (ADR-124)
   app.get<{ Querystring: { language?: string } }>('/faq/translation-batches', async (req) => (userOf(req.ctx, req), listFaqBatches(req.ctx, req.query.language || undefined)));
   app.get<{ Querystring: { language?: string } }>('/faq/translation-batches/preview', async (req) => (userOf(req.ctx, req, 'edit'), faqBatchPreview(req.ctx, String(req.query.language ?? ''))));
   app.post<{ Body: any }>('/faq/translation-batches', async (req, reply) => {

@@ -13,4 +13,4 @@ npm-Workspaces-Monorepo: `apps/server`, `apps/web`, `e2e`. Eine Sprache über al
 - *Getrennte Repositories:* erschwert atomare Änderungen an API + UI + Tests und damit die Traceability.
 
 ## Konsequenzen
-Gemeinsame Toolchain (tsc, Vitest, Playwright). CI auf Node 20 und 22.
+Gemeinsame Toolchain (tsc, Vitest, Playwright). CI auf Node 20 und 22, seit Etappe 116 auf Node 22 und 24 (Mindestversion 22.13 wegen pdf.js 6, seit Etappe 120 22.15 wegen OpenTelemetry 3).
