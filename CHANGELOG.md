@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.125.0 – Etappe 125: TypeScript 6.0, Doku nachgetragen (26.11.2026)
+
+Ohne Änderung an der ausgelieferten App.
+
+### Hinzugefügt
+- **TypeScript 6.0** (vorher 5.9) für Server und Web-App; von typescript-eslint 8.73 unterstützt. Typprüfung, Build und Lint ohne neue Fehler oder Warnungen, keine Änderung an den `tsconfig`-Dateien nötig. TypeScript 7 bleibt zurückgestellt, bis typescript-eslint es unterstützt.
+
+### Geändert
+- **docs/07:** Bei allen Funktionen F-01 … F-31 steht jetzt, in welcher Etappe sie umgesetzt wurden (Quelle: CHANGELOG und ADRs). Nachgetragen u. a. F-10 Prüferprofile (Etappe 52), F-11 LanguageTool lokal (Etappe 55), F-31 Übersetzungsspeicher (Etappe 48); die ursprüngliche Empfehlung bleibt stehen.
+- **docs/01:** Der offene Punkt aus Etappe 30 „englische UI-Begriffe 3.1–3.5 bestätigen, Domänenzuordnung fachlich prüfen“ ist als erledigt vermerkt (bestätigt am 23.10.2026, ADR-082).
+
 ## 0.124.0 – Etappe 124: Code-Review der Etappen 113–123 (22.11.2026)
 
 Drei Funde, alle behoben.

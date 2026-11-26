@@ -114,6 +114,7 @@ Die Reihenfolge folgt den technischen Abhängigkeiten des Zielworkflows (Abschni
 | **122** ✅ | @fastify/multipart 10 (Sicherheitskorrekturen) | Server-Tests grün auf SQLite und PostgreSQL (Upload-Grenze 413); alle E2E-Tests |
 | **123** ✅ | vite 8, plugin-react 6 | Build, Typprüfung, Lint; Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
 | **124** ✅ | Code-Review der Etappen 113–123 (3 Funde behoben) | Server-Tests grün auf SQLite und PostgreSQL (T-456 neu); Installation wie im Paket geprüft; alle E2E-Tests |
+| **125** ✅ | TypeScript 6.0; Umsetzungsstand in docs/07 nachgetragen | Typprüfung, Build, Lint; Server-Tests grün auf SQLite und PostgreSQL; alle E2E-Tests |
 | **66** ✅ | Barrierefreies PDF im Design (Tags, Lesezeichen) mit Prüfbericht (ADR-118) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-378 |
 | **65** ✅ | Lesestil „Handbuch-Kapitel“ für Leseransicht, Druck und Online-Hilfe (ADR-117) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-375 |
 | **64** ✅ | Designvorlagen als PowerPoint (16:9) mit Titelfolie, Karten, Kennzahlen, Tabellen, Fortsetzung (ADR-116) | Server-Tests grün auf SQLite und PostgreSQL; E2E mit T-373 |

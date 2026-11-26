@@ -195,6 +195,13 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Deckungsmatrix der Bilder Stelle × Sprache/Rolle/Sparte (F-30, NFR-96) | ✅ ([ADR-092](adr/ADR-092-punktmodell-befragung-deckung.md)) |
 | Offen | optional F-10, F-11, F-22, F-24; später F-19, F-31; fastify-Hinweis „low“ (Update braucht Anpassung der Abhängigkeiten) |
 
+## 1.127 Stand nach Etappe 125 (26.11.2026)
+
+| Punkt | Ergebnis |
+|---|---|
+| TypeScript 6.0 | ✅ Typprüfung, Build und Lint ohne neue Befunde; alle Tests grün |
+| Umsetzungsstand in docs/07 | ✅ alle Funktionen F-01 … F-31 mit Etappe und ADR |
+
 ## 1.126 Stand nach Etappe 124 (22.11.2026)
 
 | Punkt | Ergebnis |
@@ -946,7 +953,7 @@ Umfang vom Auftraggeber am 24.09.2026 festgelegt: einklappbare Navigation mit St
 | Menüpunkte Contract Management 3.1–3.5 | ✅ eigene Navigations-Labels, Zugriffsmatrix vollständig ([ADR-082](adr/ADR-082-zuordnung-domaene-ordner.md)) |
 | Zuordnung Domäne → Gliederung → Ordner (NFR-74) | ✅ Seite „Zuordnung“ mit Kapitel- und Unterordnern, Vorschlägen aus Chunks, CSV ([ADR-082](adr/ADR-082-zuordnung-domaene-ordner.md)) |
 | Steuerungsordner im Arbeitsordner | ✅ 05_I_Output, 06_II_Stil_und_Design, 07_III_Grammatik_Synonyme_Fehlerliste, 08_IV_Translation mit Agenten |
-| Offen | englische UI-Begriffe für 3.1–3.5 bestätigen; Domänenzuordnung fachlich prüfen; F-02, F-03, M2–M7 |
+| Offen | englische UI-Begriffe für 3.1–3.5 bestätigen; Domänenzuordnung fachlich prüfen; F-02, F-03, M2–M7 (nachgetragen: UI-Begriffe und Domänenzuordnung am 23.10.2026 bestätigt, ADR-082; F-02/F-03 in Etappe 31, M2–M7 in den Etappen 34–39) |
 
 ## 1.31 Stand nach Etappe 29 (23.10.2026)
 

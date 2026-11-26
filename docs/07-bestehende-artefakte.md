@@ -68,52 +68,52 @@ Status gegenüber der App: **neu** = gibt es nicht, **teilweise** = Ansatz vorha
 
 | ID | Funktion | Herkunft | Status | Aufwand | Empfehlung | Entscheidung |
 |---|---|---|---|---|---|---|
-| F-01 | **Jira-Import als Datei** (XML, HTML, DOCX, CSV): Feldparser (Typ, Status, PI, Komponente, Epic, Links, Acceptance Criteria), Ticketreferenz je Kapitel | Ticket-Cockpit, Prüfer, V4, DokuPress | neu | M | übernehmen – lokal, ohne Jira-Anbindung | |
-| F-02 | **Releaseletter aus Tickets** (DE/EN, Kurzfassung), feste Guardrails (Datum nur aus „Erstellt“, „PI TBD“, verlinkte Tickets kein Inhalt), 12 Prüfregeln Ticket ↔ Letter, Urteil „freigeben/bedingt/nicht“, Vorlage mit 25 Abschnitten | Generator, Prüfer | neu | L | übernehmen – mit lokalem Modell und vorhandener Belegprüfung statt Dify/OpenAI | |
-| F-03 | Release-Abgleich: Ticketliste gegen Bestand (Bug = intern, sonst Handbuch-Kandidat) | Ticket-Cockpit | neu | S | übernehmen (mit F-01) | |
+| F-01 | **Jira-Import als Datei** (XML, HTML, DOCX, CSV): Feldparser (Typ, Status, PI, Komponente, Epic, Links, Acceptance Criteria), Ticketreferenz je Kapitel | Ticket-Cockpit, Prüfer, V4, DokuPress | neu | M | übernehmen – lokal, ohne Jira-Anbindung | umgesetzt in Etappe 29 (ADR-081) |
+| F-02 | **Releaseletter aus Tickets** (DE/EN, Kurzfassung), feste Guardrails (Datum nur aus „Erstellt“, „PI TBD“, verlinkte Tickets kein Inhalt), 12 Prüfregeln Ticket ↔ Letter, Urteil „freigeben/bedingt/nicht“, Vorlage mit 25 Abschnitten | Generator, Prüfer | neu | L | übernehmen – mit lokalem Modell und vorhandener Belegprüfung statt Dify/OpenAI | umgesetzt in Etappe 31 (ADR-083) |
+| F-03 | Release-Abgleich: Ticketliste gegen Bestand (Bug = intern, sonst Handbuch-Kandidat) | Ticket-Cockpit | neu | S | übernehmen (mit F-01) | umgesetzt in Etappe 31 (ADR-083) |
 
 ### Datenschutz und Qualität
 
 | ID | Funktion | Herkunft | Status | Aufwand | Empfehlung | Entscheidung |
 |---|---|---|---|---|---|---|
-| F-04 | **Datenschutz erweitern:** FIN/VIN, Kennzeichen, User-ID, Adresse, PLZ+Ort, Namen aus Metadaten, Pseudonymisierung „Person N“, eigene Namensliste | Ticket-Cockpit, Prüfer | teilweise (nur E-Mail, Telefon, IBAN) | M | übernehmen – wichtig vor D-09/D-10 | |
-| F-05 | **Update-Eingang:** geänderte Quelle → Absatz-Diff (ersetzen, ergänzen, löschen) im Posteingang | DokuPress | teilweise | M | übernehmen – größte Lücke laut DokuPress-Audit | |
-| F-06 | Zugriffsstufe je Rolle und Menüpunkt (V/L/–) als Matrix | V4 | teilweise | M | übernehmen (mit D-02) | |
-| F-07 | Warnhinweis-Schema (Signalwort + Gefahr + Folge + Vermeidung) als Prüfregel, feste Signalwörter je Sprache | Checkliste | neu | S | übernehmen | |
+| F-04 | **Datenschutz erweitern:** FIN/VIN, Kennzeichen, User-ID, Adresse, PLZ+Ort, Namen aus Metadaten, Pseudonymisierung „Person N“, eigene Namensliste | Ticket-Cockpit, Prüfer | teilweise (nur E-Mail, Telefon, IBAN) | M | übernehmen – wichtig vor D-09/D-10 | umgesetzt in Etappe 28 (ADR-080) |
+| F-05 | **Update-Eingang:** geänderte Quelle → Absatz-Diff (ersetzen, ergänzen, löschen) im Posteingang | DokuPress | teilweise | M | übernehmen – größte Lücke laut DokuPress-Audit | umgesetzt in Etappe 29 (ADR-081) |
+| F-06 | Zugriffsstufe je Rolle und Menüpunkt (V/L/–) als Matrix | V4 | teilweise | M | übernehmen (mit D-02) | umgesetzt in Etappe 29 (ADR-081) |
+| F-07 | Warnhinweis-Schema (Signalwort + Gefahr + Folge + Vermeidung) als Prüfregel, feste Signalwörter je Sprache | Checkliste | neu | S | übernehmen | umgesetzt in Etappe 31 (ADR-083) |
 | F-08 | Punktmodell Muss/Soll im Anleitungs-Check | Checkliste | teilweise | S | optional | umgesetzt in Etappe 40 (ADR-092) |
-| F-09 | Platzhalter- und Strukturvergleich bei Übersetzungen | Checkliste | teilweise | S | übernehmen | |
-| F-10 | Vier Prüferprofile (fachlich, Redaktion, Compliance, Endanwender) mit lokalem Modell | Ticket-Cockpit | teilweise | M | optional | |
-| F-11 | Lokale Grammatikprüfung (LanguageTool, selbst betrieben) | DokuPress-Konzept | neu | M | optional | |
-| F-12 | Synonyme mit fester Übersetzung; Begriffskandidaten aus Tickets | Ticket-Cockpit | teilweise | S | übernehmen (mit D-06) | |
+| F-09 | Platzhalter- und Strukturvergleich bei Übersetzungen | Checkliste | teilweise | S | übernehmen | umgesetzt in Etappe 31 (ADR-083) |
+| F-10 | Vier Prüferprofile (fachlich, Redaktion, Compliance, Endanwender) mit lokalem Modell | Ticket-Cockpit | teilweise | M | optional | umgesetzt in Etappe 52 (ADR-105, W-12) |
+| F-11 | Lokale Grammatikprüfung (LanguageTool, selbst betrieben) | DokuPress-Konzept | neu | M | optional | umgesetzt in Etappe 55 (ADR-108, G-04: LanguageTool als Java-Dienst ohne Docker) |
+| F-12 | Synonyme mit fester Übersetzung; Begriffskandidaten aus Tickets | Ticket-Cockpit | teilweise | S | übernehmen (mit D-06) | umgesetzt in Etappe 31 (ADR-083) |
 
 ### oneSCM_Metadaten und Wissen
 
 | ID | Funktion | Herkunft | Status | Aufwand | Empfehlung | Entscheidung |
 |---|---|---|---|---|---|---|
-| F-13 | Automatischer Gliederungs-Vorschlag je Chunk mit Trefferwert (nie automatisch bestätigt) | Struktur und Klickstrecke | geplant (Label-Agent) | M | übernehmen in M3 | |
-| F-14 | Handbuch ↔ Quellen zweispaltig je Kapitel | V4, Wissenssuche | geplant (M3) | S | in M3 | |
-| F-15 | Wissensnotizen (Frage, Erkenntnis, Screenshot) als eigene Quelle | Wissenssuche | neu | M | übernehmen | |
+| F-13 | Automatischer Gliederungs-Vorschlag je Chunk mit Trefferwert (nie automatisch bestätigt) | Struktur und Klickstrecke | geplant (Label-Agent) | M | übernehmen in M3 | umgesetzt in Etappe 32 (ADR-084) |
+| F-14 | Handbuch ↔ Quellen zweispaltig je Kapitel | V4, Wissenssuche | geplant (M3) | S | in M3 | umgesetzt in Etappe 32 (ADR-084) |
+| F-15 | Wissensnotizen (Frage, Erkenntnis, Screenshot) als eigene Quelle | Wissenssuche | neu | M | übernehmen | umgesetzt in Etappe 32 (ADR-084) |
 | F-16 | Expertenbefragung zu Wissenslücken (Optionen + Freitext → Antwort mit Label „Prüfen“) | Wissens-Check | teilweise | M | optional | umgesetzt in Etappe 40 (ADR-092) |
-| F-17 | Ausschlussliste „nicht einlesen“ für den Eingangsordner | Wissenssuche | neu | S | übernehmen in M2 | |
-| F-18 | Zielkapitel je Dopplung („zusammenführen in Kapitel X“) | V4 | teilweise | S | übernehmen in M4 | |
-| F-19 | Textbausteine (Single Sourcing) für wiederkehrende Absätze | V4 | teilweise | L | **umgesetzt in Etappe 54 (ADR-107)** | |
+| F-17 | Ausschlussliste „nicht einlesen“ für den Eingangsordner | Wissenssuche | neu | S | übernehmen in M2 | umgesetzt in Etappe 32 (ADR-084) |
+| F-18 | Zielkapitel je Dopplung („zusammenführen in Kapitel X“) | V4 | teilweise | S | übernehmen in M4 | umgesetzt in Etappe 32 (ADR-084) |
+| F-19 | Textbausteine (Single Sourcing) für wiederkehrende Absätze | V4 | teilweise | L | später | umgesetzt in Etappe 54 (ADR-107) |
 
 ### Bilder und Ausgabe
 
 | ID | Funktion | Herkunft | Status | Aufwand | Empfehlung | Entscheidung |
 |---|---|---|---|---|---|---|
-| F-20 | Labels für Bilder (Sprache, Rolle, Sparte, Markt, Version, Reiter) + Bildprüfregeln + Bildabdeckung je Kapitel | Screenarchiv | teilweise | M | übernehmen | |
-| F-21 | Bildversionen: Original bleibt, neue Fassung ersetzt das Bild überall; Platzhalterbild mit reservierter Nummer | Screenarchiv, DokuPress | teilweise | M | übernehmen | |
+| F-20 | Labels für Bilder (Sprache, Rolle, Sparte, Markt, Version, Reiter) + Bildprüfregeln + Bildabdeckung je Kapitel | Screenarchiv | teilweise | M | übernehmen | umgesetzt in Etappe 33 (ADR-085) |
+| F-21 | Bildversionen: Original bleibt, neue Fassung ersetzt das Bild überall; Platzhalterbild mit reservierter Nummer | Screenarchiv, DokuPress | teilweise | M | übernehmen | umgesetzt in Etappe 33 (ADR-085) |
 | F-22 | Varianten einer Maske verknüpfen (Sprache/Rolle/Sparte/Markt) | Screenarchiv | neu | M | optional | umgesetzt in Etappe 41 (ADR-093) |
-| F-23 | Screenshot aus der Zwischenablage einfügen mit Zuschnitt | Screenarchiv | teilweise | S | übernehmen | |
+| F-23 | Screenshot aus der Zwischenablage einfügen mit Zuschnitt | Screenarchiv | teilweise | S | übernehmen | umgesetzt in Etappe 33 (ADR-085) |
 | F-24 | Klickstrecke aus Screenshots (parallele Schritte 3a/3b) | Screenarchiv | teilweise | M | optional | umgesetzt in Etappe 41 (ADR-093) |
-| F-25 | Bild → Gliederungsstelle über den Folientext beim PPTX-Import | Screenarchiv | geplant (M2) | S | in M2 | |
-| F-26 | Video → Einzelbilder mit Änderungserkennung und roten Rahmen, lokal | Screenarchiv, Screenshot-Studio | neu | M | übernommen in Etappe 38 (ADR-090, ffmpeg lokal) | |
-| F-27 | Ausgabe „Quick Guide“ und „One Pager“ je Variante | Struktur, Screenarchiv | teilweise | M | übernehmen | |
-| F-28 | Lesefassung ohne Quellenbezüge; Wasserzeichen „Entwurf“ im Druck | V4, DokuPress | teilweise | S | übernehmen | |
-| F-29 | Klickstrecke/Übergangskapitel im Lesen („weiter zu Kapitel …“) | Struktur und Klickstrecke | neu | S | übernehmen | |
+| F-25 | Bild → Gliederungsstelle über den Folientext beim PPTX-Import | Screenarchiv | geplant (M2) | S | in M2 | umgesetzt in Etappe 34 (ADR-086) |
+| F-26 | Video → Einzelbilder mit Änderungserkennung und roten Rahmen, lokal | Screenarchiv, Screenshot-Studio | neu | M | übernommen in Etappe 38 (ADR-090, ffmpeg lokal) | umgesetzt in Etappe 38 (ADR-090) |
+| F-27 | Ausgabe „Quick Guide“ und „One Pager“ je Variante | Struktur, Screenarchiv | teilweise | M | übernehmen | umgesetzt in Etappe 33 (ADR-085) |
+| F-28 | Lesefassung ohne Quellenbezüge; Wasserzeichen „Entwurf“ im Druck | V4, DokuPress | teilweise | S | übernehmen | umgesetzt in Etappe 33 (ADR-085) |
+| F-29 | Klickstrecke/Übergangskapitel im Lesen („weiter zu Kapitel …“) | Struktur und Klickstrecke | neu | S | übernehmen | umgesetzt in Etappe 33 (ADR-085) |
 | F-30 | Deckungsmatrix Stelle × Sprache/Rolle/Sparte | Screenarchiv | teilweise | M | optional | umgesetzt in Etappe 40 (ADR-092) |
-| F-31 | Translation Memory | DokuPress-Audit | neu | L | später | |
+| F-31 | Translation Memory | DokuPress-Audit | neu | L | später | umgesetzt in Etappe 48 (ADR-101, U-01: Übersetzungsspeicher) |
 
 ## 7.5 Nicht übernehmen
 

@@ -1,4 +1,4 @@
-# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.124, 22.11.2026)
+# 10. Offene Funktionen: Abgleich mit den oneSCM-Artefakten (Stand v0.125, 26.11.2026)
 
 Abgeglichen wurden die zwölf oneSCM-Artefakte aus [docs/07](07-bestehende-artefakte.md). Vier davon wurden seit der ersten Auswertung geändert: Screenarchiv (23.10.), Ticket-Cockpit (v3.0, 19.10.), Releaseletter-Prüfer und Screenshot-Studio (18.10.). Grundlage ist der Stand der App v0.43.0 und des Arbeitsordners (`tools/handbuch-ordner`). Die Artefakte wurden nur gelesen.
 
@@ -165,7 +165,8 @@ Alle Vorschläge gelten mit der Vorgabe „Daten bleiben lokal“. KI nur über 
 76. **Etappe 122 – @fastify/multipart 10 (✅ umgesetzt):** Sicherheitskorrekturen der 10er-Linie für alle Uploads.
 77. **Etappe 123 – vite 8 (✅ umgesetzt):** Rolldown, plugin-react 6; `vendor`-Chunk über `codeSplitting.groups`. Bewusst nicht aktualisiert: TypeScript 7 (typescript-eslint unterstützt es noch nicht), uuid 14 (reines ESM, wird nur für exceljs per Override gehalten).
 78. **Etappe 124 – Code-Review der Etappen 113–123 (✅ umgesetzt):** drei Funde behoben (Installation ohne C++-Werkzeuge, Datumsanzeige, Importzyklus); T-456.
-79. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
+79. **Etappe 125 – TypeScript 6.0, Doku nachgetragen (✅ umgesetzt):** Umsetzungsstand F-01 … F-31 in docs/07.
+80. **Weiter offen:** U-07 (weitere Märkte und Sprachen – am 25.10.2026 vorerst zurückgestellt).
 
 ## 10.7 Offene Entscheidungen
 
